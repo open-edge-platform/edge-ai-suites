@@ -2,6 +2,8 @@
 
 To enable multiple GMSL cameras, for the same or different vendors, define the MIPI camera ACPI device in UEFI/BIOS settings.
 
+![Devkit GMSL positions](../../../images/gmsl/fakra-1-to-4-configuration.svg)
+
 1. Review Intel®-enabled GMSL2 camera modules with their corresponding ACPI device custom HIDs:
 
    | ACPI custom HID | Camera module label | Sensor type         | GMSL2 serializer | Max resolution | Vendor URL                                                                             |
@@ -32,16 +34,15 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
     <!--hide_directive:sync: realsensehide_directive-->
     Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
-    This specific setup applies if you have 4 cameras connected to both GMSL ports, and connected to the cables at top right for rotation 90, and 180 is top left. If you are using a single GMSL port, then use the setting for Camera suffix a, c.
+    This specific setup applies if you have 4 cameras connected to both GMSL ports using FAKRA 1-to-4 configiration. Connecting the cameras to the cables on the position top right for rotation 90, and 180 is top left.
 
    | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
    | ------------------- | ---------- | ---------- | ---------- | ---------- |
-   | GMSL Camera suffix   | b          | c          | f          | g          |
    | Custom HID          | `INTC10CD` | `INTC10CD` | `INTC10CD` | `INTC10CD` |
    | PPR Value           | 2          | 2          | 2          | 2          |
    | PPR Unit            | 1          | 1          | 1          | 1          |
    | Position            | Back       | Back       | Front      | Front      |
-   | Rotation            | 90          | 180       | 90         | 180        |
+   | Rotation            | 90         | 180        | 90         | 180        |
    | Camera module label | `d4xx`     | `d4xx`     | `d4xx`     | `d4xx`     |
    | MIPI Port (Index)   | 0          | 0          | 2          | 2          |
    | LaneUsed            | x2         | x2         | x2         | x2         |
@@ -51,7 +52,6 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    | Device1 I2C Address | 42         | 44         | 42         | 44         |
    | Device2 I2C Address | 27         | 27         | 27         | 27         |
 
-    Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D3:
     <!--hide_directive:::
     :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
     <!--hide_directive:sync: d3cmc106hide_directive-->

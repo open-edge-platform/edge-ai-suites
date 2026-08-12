@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="560" viewBox="0 0 900 560" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <linearGradient id="topFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3d4045"/>
+      <stop offset="1" stop-color="#26282c"/>
+    </linearGradient>
+    <linearGradient id="ioFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c2e32"/>
+      <stop offset="1" stop-color="#141517"/>
+    </linearGradient>
+    <linearGradient id="sideFace" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1c1e21"/>
+      <stop offset="1" stop-color="#0c0d0f"/>
+    </linearGradient>
+    <radialGradient id="fanHole" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#494c51"/>
+      <stop offset="1" stop-color="#1a1c1f"/>
+    </radialGradient>
+    <linearGradient id="gmsl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"   stop-color="#2f8bef"/>
+      <stop offset="0.35" stop-color="#1466c9"/>
+      <stop offset="1"   stop-color="#083f8c"/>
+    </linearGradient>
+    <linearGradient id="gmslBevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fb8ff"/>
+      <stop offset="1" stop-color="#2f8bef"/>
+    </linearGradient>
+    <radialGradient id="port" cx="0.42" cy="0.36" r="0.75">
+      <stop offset="0"   stop-color="#4a5158"/>
+      <stop offset="0.6" stop-color="#181c21"/>
+      <stop offset="1"   stop-color="#04060a"/>
+    </radialGradient>
+    <radialGradient id="antHole" cx="0.5" cy="0.5" r="0.6">
+      <stop offset="0" stop-color="#5a5f66"/>
+      <stop offset="1" stop-color="#0e1013"/>
+    </radialGradient>
+    <linearGradient id="metalPort" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9ccd1"/>
+      <stop offset="1" stop-color="#868a90"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="560" fill="#0f2b52"/>
+  <text x="360" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#ffffff">GMSL Development Kit — I/O Panel</text>
+
+  <!-- ===================== CHASSIS (isometric) ===================== -->
+  <!-- top face -->
+  <polygon points="120,150 560,150 660,100 220,100" fill="url(#topFace)" stroke="#0a0b0d" stroke-width="2"/>
+  <!-- circular perforated fan grille -->
+  <ellipse cx="390" cy="125" rx="70" ry="24" fill="url(#fanHole)" stroke="#0a0b0d" stroke-width="1.5"/>
+  <g fill="#0a0b0d">
+    <circle cx="362" cy="118" r="2.3"/><circle cx="378" cy="115" r="2.3"/><circle cx="394" cy="114" r="2.3"/><circle cx="410" cy="115" r="2.3"/><circle cx="426" cy="118" r="2.3"/>
+    <circle cx="356" cy="125" r="2.3"/><circle cx="372" cy="123" r="2.3"/><circle cx="388" cy="122" r="2.3"/><circle cx="404" cy="122" r="2.3"/><circle cx="420" cy="123" r="2.3"/><circle cx="436" cy="125" r="2.3"/>
+    <circle cx="362" cy="132" r="2.3"/><circle cx="378" cy="131" r="2.3"/><circle cx="394" cy="130" r="2.3"/><circle cx="410" cy="131" r="2.3"/><circle cx="426" cy="132" r="2.3"/>
+  </g>
+
+  <!-- right side face -->
+  <polygon points="560,150 660,100 660,410 560,460" fill="url(#sideFace)" stroke="#090a0c" stroke-width="2"/>
+  <g fill="#4a4d52" stroke="#0a0b0d" stroke-width="1">
+    <circle cx="640" cy="135" r="5"/><circle cx="640" cy="360" r="5"/>
+  </g>
+
+  <!-- FRONT I/O face -->
+  <polygon points="120,150 560,150 560,460 120,460" fill="url(#ioFace)" stroke="#090a0c" stroke-width="2"/>
+
+  <!-- corner screws -->
+  <g fill="#4a4d52" stroke="#0a0b0d" stroke-width="1">
+    <circle cx="134" cy="164" r="5"/><circle cx="546" cy="164" r="5"/>
+    <circle cx="134" cy="446" r="5"/><circle cx="546" cy="446" r="5"/>
+  </g>
+
+  <!-- ANT. holes -->
+  <circle cx="150" cy="176" r="10" fill="url(#antHole)" stroke="#0a0b0d" stroke-width="2"/>
+  <circle cx="530" cy="176" r="10" fill="url(#antHole)" stroke="#0a0b0d" stroke-width="2"/>
+  <text x="150" y="200" text-anchor="middle" font-size="9" fill="#8a9098">ANT.</text>
+  <text x="530" y="200" text-anchor="middle" font-size="9" fill="#8a9098">ANT.</text>
+
+  <!-- angled vent louvers between the two ANT holes (24 lines, leaning right) -->
+  <g stroke="#000000" stroke-width="3" stroke-linecap="round">
+    <line x1="197" y1="216" x2="185" y2="276"/>
+    <line x1="210" y1="216" x2="198" y2="276"/>
+    <line x1="224" y1="216" x2="212" y2="276"/>
+    <line x1="237" y1="216" x2="225" y2="276"/>
+    <line x1="251" y1="216" x2="239" y2="276"/>
+    <line x1="264" y1="216" x2="252" y2="276"/>
+    <line x1="278" y1="216" x2="266" y2="276"/>
+    <line x1="291" y1="216" x2="279" y2="276"/>
+    <line x1="305" y1="216" x2="293" y2="276"/>
+    <line x1="318" y1="216" x2="306" y2="276"/>
+    <line x1="332" y1="216" x2="320" y2="276"/>
+    <line x1="345" y1="216" x2="333" y2="276"/>
+    <line x1="359" y1="216" x2="347" y2="276"/>
+    <line x1="372" y1="216" x2="360" y2="276"/>
+    <line x1="386" y1="216" x2="374" y2="276"/>
+    <line x1="399" y1="216" x2="387" y2="276"/>
+    <line x1="413" y1="216" x2="401" y2="276"/>
+    <line x1="426" y1="216" x2="414" y2="276"/>
+    <line x1="440" y1="216" x2="428" y2="276"/>
+    <line x1="453" y1="216" x2="441" y2="276"/>
+    <line x1="467" y1="216" x2="455" y2="276"/>
+    <line x1="480" y1="216" x2="468" y2="276"/>
+    <line x1="494" y1="216" x2="482" y2="276"/>
+    <line x1="507" y1="216" x2="495" y2="276"/>
+  </g>
+
+  <!-- ===================== I/O ROW (evenly spaced, aligned) ===================== -->
+  <!-- AUDIO: two stacked jacks (pink top, green bottom) -->
+  <text x="175" y="330" text-anchor="middle" font-size="10" fill="#8a9098">AUDIO</text>
+  <circle cx="175" cy="356" r="12" fill="#0c0d0f" stroke="#e26aa0" stroke-width="3"/>
+  <circle cx="175" cy="356" r="4" fill="#2a2c30"/>
+  <circle cx="175" cy="392" r="12" fill="#0c0d0f" stroke="#5fd06a" stroke-width="3"/>
+  <circle cx="175" cy="392" r="4" fill="#2a2c30"/>
+
+  <!-- HDMI (top) / DP (bottom) stacked -->
+  <text x="248" y="330" text-anchor="middle" font-size="10" fill="#8a9098">HDMI</text>
+  <path d="M220 344 H276 V360 L270 368 H226 L220 360 Z" fill="url(#metalPort)" stroke="#5c6067" stroke-width="1.2"/>
+  <path d="M224 348 H272 V358 L267 364 H229 L224 358 Z" fill="#2a2c30"/>
+  <rect x="234" y="354" width="28" height="4" rx="1" fill="#8a8e94"/>
+  <path d="M222 380 H268 L274 386 V402 H222 Z" fill="url(#metalPort)" stroke="#5c6067" stroke-width="1.2"/>
+  <path d="M226 384 H266 L270 388 V398 H226 Z" fill="#2a2c30"/>
+  <rect x="232" y="390" width="32" height="4" rx="1" fill="#8a8e94"/>
+  <text x="248" y="418" text-anchor="middle" font-size="10" fill="#8a9098">DP</text>
+
+  <!-- MICRO USB (top row) -->
+  <text x="318" y="330" text-anchor="middle" font-size="9" fill="#8a9098">MICRO USB</text>
+  <rect x="300" y="346" width="36" height="16" rx="2" fill="url(#metalPort)" stroke="#5c6067" stroke-width="1.2"/>
+  <rect x="305" y="350" width="26" height="8" rx="1.5" fill="#3a3d42"/>
+
+  <!-- COM (DB9) centered vertically -->
+  <text x="380" y="345" text-anchor="middle" font-size="10" fill="#8a9098">COM</text>
+  <path d="M344 371 h72 l-9 30 h-54 z" fill="url(#metalPort)" stroke="#5c6067" stroke-width="1.5"/>
+  <g fill="#2a2c30">
+    <circle cx="356" cy="382" r="2.6"/><circle cx="370" cy="382" r="2.6"/><circle cx="384" cy="382" r="2.6"/><circle cx="398" cy="382" r="2.6"/><circle cx="412" cy="382" r="2.6"/>
+    <circle cx="363" cy="393" r="2.6"/><circle cx="377" cy="393" r="2.6"/><circle cx="391" cy="393" r="2.6"/><circle cx="405" cy="393" r="2.6"/>
+  </g>
+
+  <!-- ===================== TWO BLUE GMSL QUAD CONNECTORS ===================== -->
+  <!-- GMSL A -->
+  <text x="454" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#3f9bff">GMSL</text>
+  <rect x="424" y="342" width="60" height="70" rx="6" fill="url(#gmsl)" stroke="#062f6b" stroke-width="2.5"/>
+  <rect x="424" y="342" width="60" height="14" rx="6" fill="url(#gmslBevel)"/>
+  <circle cx="442" cy="378" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="442" cy="378" r="3.5" fill="#0a1119"/>
+  <circle cx="466" cy="378" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="466" cy="378" r="3.5" fill="#0a1119"/>
+  <circle cx="442" cy="400" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="442" cy="400" r="3.5" fill="#0a1119"/>
+  <circle cx="466" cy="400" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="466" cy="400" r="3.5" fill="#0a1119"/>
+
+  <!-- GMSL B -->
+  <text x="518" y="330" text-anchor="middle" font-size="10" font-weight="700" fill="#3f9bff">GMSL</text>
+  <rect x="488" y="342" width="60" height="70" rx="6" fill="url(#gmsl)" stroke="#062f6b" stroke-width="2.5"/>
+  <rect x="488" y="342" width="60" height="14" rx="6" fill="url(#gmslBevel)"/>
+  <circle cx="506" cy="378" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="506" cy="378" r="3.5" fill="#0a1119"/>
+  <circle cx="530" cy="378" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="530" cy="378" r="3.5" fill="#0a1119"/>
+  <circle cx="506" cy="400" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="506" cy="400" r="3.5" fill="#0a1119"/>
+  <circle cx="530" cy="400" r="11" fill="url(#port)" stroke="#0a3f7a" stroke-width="2"/>
+  <circle cx="530" cy="400" r="3.5" fill="#0a1119"/>
+
+  <!-- GMSL position labels -->
+  <text x="454" y="430" text-anchor="middle" font-size="10" font-weight="700" fill="#8a9098">Back</text>
+  <text x="518" y="430" text-anchor="middle" font-size="10" font-weight="700" fill="#8a9098">Front</text>
+
+  <!-- ===================== FAKRA 1-to-4 SPLITTER CALL-OUT ===================== -->
+  <line x1="548" y1="385" x2="690" y2="240" stroke="#8fa4c4" stroke-width="2" stroke-dasharray="5 4"/>
+  <text x="775" y="115" text-anchor="middle" font-size="15" font-weight="700" fill="#8fd0ff">FAKRA 1-to-4 head — rotation</text>
+  <rect x="695" y="135" width="160" height="160" rx="14" fill="url(#gmsl)" stroke="#062f6b" stroke-width="3"/>
+  <rect x="695" y="135" width="160" height="26" rx="14" fill="url(#gmslBevel)"/>
+  <circle cx="742" cy="188" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
+  <text x="742" y="194" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">180°</text>
+  <circle cx="808" cy="188" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
+  <text x="808" y="194" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">90°</text>
+  <circle cx="742" cy="254" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
+  <text x="742" y="260" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">270°</text>
+  <circle cx="808" cy="254" r="28" fill="url(#port)" stroke="#0a3f7a" stroke-width="3.5"/>
+  <text x="808" y="260" text-anchor="middle" font-size="15" font-weight="800" fill="#ffffff">0°</text>
+
+  <!-- Legend -->
+  <g font-size="13" fill="#12233a">
+    <rect x="640" y="330" width="230" height="66" rx="8" fill="#eef2f7" stroke="#c7ced7"/>
+    <text x="656" y="352" font-weight="700" fill="#0f5cbe">Rotation layout</text>
+    <text x="656" y="372">Top-left = 180°   •   Top-right = 90°</text>
+    <text x="656" y="388">Bottom-left = 270°  •  Bottom-right = 0°</text>
+  </g>
+</svg>
