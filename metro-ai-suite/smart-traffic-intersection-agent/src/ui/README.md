@@ -42,9 +42,6 @@ python app.py
 Configure the system using environment variables or by editing `config.py`:
 
 ```bash
-# Data refresh interval (seconds)
-export REFRESH_INTERVAL=5
-
 # API endpoint configuration
 export API_URL="http://localhost:8081/api/v1/traffic/current"
 
