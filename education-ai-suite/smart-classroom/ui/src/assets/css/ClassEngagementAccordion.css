@@ -1,0 +1,212 @@
+/* Class engagement accordion — live status header, KPI tiles and the
+   per-student "most active" leaderboard. Sits in the narrow right panel, so
+   everything is sized to stay readable in a ~300px column. */
+
+.ce-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ───────── Live status header ───────── */
+
+.ce-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+  color: #666;
+}
+
+.ce-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #bdbdbd;
+  flex: 0 0 auto;
+}
+
+.ce-status-dot--live {
+  background: #2e7d32;
+  animation: cePulse 1.8s ease-in-out infinite;
+}
+
+/* Playback: the session ended and these are the final numbers — steady, not
+   pulsing, but clearly distinct from the inert "waiting" grey. */
+.ce-status-dot--playback {
+  background: var(--color-theme, #0071c5);
+}
+
+@keyframes cePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.5); }
+  50%      { box-shadow: 0 0 0 4px rgba(46, 125, 50, 0); }
+}
+
+.ce-status-label {
+  font-weight: 600;
+  color: #2b2b2b;
+}
+
+.ce-status-time {
+  color: #888;
+}
+
+/* Participation summary sits on the right of the status row. */
+.ce-participation {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ce-participation-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-theme, #0071c5);
+}
+
+.ce-participation-detail {
+  font-size: 11px;
+  color: #888;
+}
+
+/* ───────── KPI tiles ───────── */
+
+.ce-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ce-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 6px;
+  background: #fff;
+  border: 1px solid #e6e7e8;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  min-width: 0;
+}
+
+.ce-tile-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+}
+
+.ce-tile-label {
+  font-size: 11px;
+  color: #6b7280;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* ───────── Leaderboard ───────── */
+
+.ce-section-title {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.ce-board {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ce-board-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 24px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.ce-board-id {
+  color: #444;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ce-board-track {
+  display: block;
+  width: 100%;
+  height: 8px;
+  background: #eef0f2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.ce-board-bar {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: 4px;
+  background: var(--color-theme, #0071c5);
+  transition: width 0.3s ease;
+}
+
+.ce-board-count {
+  text-align: right;
+  color: #444;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.ce-board-toggle {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 0;
+  font-size: 12px;
+  color: var(--color-theme, #0071c5);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.ce-board-toggle:hover {
+  text-decoration: underline;
+}
+
+/* Keep long rosters from pushing the Timeline off-screen. */
+.ce-board--scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* ───────── Empty / error states ───────── */
+
+.ce-empty {
+  margin: 0;
+  padding: 10px;
+  font-size: 12px;
+  font-style: italic;
+  color: #888;
+  background: #f5f5f5;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.ce-error {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #d32f2f;
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+}

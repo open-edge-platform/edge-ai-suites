@@ -1,4 +1,5 @@
-
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 import { CheckCircleFilled, CloseCircleFilled, ExclamationCircleFilled, InfoCircleFilled } from "@ant-design/icons-vue";
 import { notification } from "ant-design-vue";

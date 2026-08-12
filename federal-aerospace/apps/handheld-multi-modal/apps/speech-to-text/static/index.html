@@ -450,6 +450,19 @@ transcribeBtn.addEventListener('click', async () => {
 
     const res = await fetch(url, { method: 'POST', body: form });
 
+    if (!res.ok) {
+      // Server rejected the request (e.g. unsupported file format) — the
+      // response is JSON, not a stream.
+      let message = `Request failed (${res.status})`;
+      try {
+        const err = await res.json();
+        if (err && err.error) message = err.error;
+      } catch (e) { 
+        console.error('Error parsing error response:', e);
+       }
+      throw new Error(message);
+    }
+
     if (useStreaming) {
       // Handle streaming NDJSON response
       const reader = res.body.getReader();

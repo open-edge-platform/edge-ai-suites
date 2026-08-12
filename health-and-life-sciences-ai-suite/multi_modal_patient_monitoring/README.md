@@ -1,8 +1,8 @@
 # Multi-Modal Patient Monitoring
 
 > This application is for **reference and evaluation purposes**. It is
-> **not intended for direct use in clinical or diagnostic environments** and is not
-> validated as such.
+  **not intended for direct use in clinical or diagnostic environments** and is not
+  validated for such a purpose.
 
 The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors, demonstrating that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 

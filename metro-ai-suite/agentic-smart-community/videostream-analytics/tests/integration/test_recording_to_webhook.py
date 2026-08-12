@@ -23,7 +23,7 @@ class TestRecordingToWebhook:
     @pytest.fixture(autouse=True)
     def register_source(self, http_client, analytics_url, rtsp_url, webhook_url):
         """Register a source with recording enabled at a short interval."""
-        data_root = Path(os.environ.get("SMARTBUILDING_DATA_DIR", str(Path.home() / ".mcp-smartbuilding")))
+        data_root = Path(os.environ.get("SMART_COMMUNITY_DATA_DIR", str(Path.home() / ".mcp-smart-community")))
         self.data_dir = str(data_root / "segments" / f"rec_cam_{uuid4().hex[:8]}")
         http_client.post(f"{analytics_url}/register_source", json={
             "source_id": "rec_cam",

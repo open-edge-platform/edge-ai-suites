@@ -1,14 +1,14 @@
 {
-  "name": "@smartbuilding-video/tools",
+  "name": "@smart-community-video/tools",
   "version": "0.1.0",
-  "description": "SmartBuilding Video tool implementations",
+  "description": "Smart Community Video tool implementations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc"
   },
   "dependencies": {
-    "@smartbuilding-video/db": "*",
+    "@smart-community-video/db": "*",
     "undici": "^7.29.0"
   },
   "devDependencies": {

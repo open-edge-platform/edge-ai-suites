@@ -6,7 +6,7 @@
       <div class="timeline-header-left flex-left">
         <div class="timeline-title-row flex-left">
           <div class="section-title">
-            {{ $t("smartBuilding.todayActivity") }}
+            {{ $t("smartCommunity.todayActivity") }}
           </div>
         </div>
       </div>
@@ -35,7 +35,7 @@
           </label>
         </div>
         <div class="timeline-title-tip">
-          {{ $t("smartBuilding.timelineZoomTip") }}
+          {{ $t("smartCommunity.timelineZoomTip") }}
         </div>
       </div>
     </div>
@@ -70,18 +70,18 @@
                   {{ tooltipRecordForEntry(entry).title }}
                 </div>
                 <div class="timeline-tooltip-row">
-                  <span>{{ $t("smartBuilding.tooltipStatus") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipStatus") }}</span>
                   <span>{{ tooltipRecordForEntry(entry).statusLabel }}</span>
                 </div>
                 <div class="timeline-tooltip-row">
-                  <span>{{ $t("smartBuilding.tooltipTime") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipTime") }}</span>
                   <span>{{ tooltipRecordForEntry(entry).timestampLabel }}</span>
                 </div>
                 <div
                   v-if="tooltipRecordForEntry(entry).recordKind === 'motion'"
                   class="timeline-tooltip-row"
                 >
-                  <span>{{ $t("smartBuilding.tooltipDuration") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipDuration") }}</span>
                   <span>{{
                     tooltipRecordForEntry(entry).durationSecondsLabel
                   }}</span>
@@ -133,7 +133,7 @@
       </div>
     </template>
     <div v-else class="timeline-empty-state vertical-center">
-      <a-empty :description="$t('smartBuilding.noActivityRecords')" />
+      <a-empty :description="$t('smartCommunity.noActivityRecords')" />
     </div>
     <div v-if="showAlertFilter" class="timeline-legend">
       <div
@@ -152,17 +152,17 @@
 
   <div class="history-section section-card">
     <div class="section-head">
-      <div class="section-title">{{ $t("smartBuilding.recordTimeline") }}</div>
+      <div class="section-title">{{ $t("smartCommunity.recordTimeline") }}</div>
     </div>
     <div v-if="loading" class="history-loading-state vertical-center">
       <div class="activity-loading-indicator">
         <i class="iconfont icon-loading activity-loading-icon"></i>
         <div class="activity-loading-copy">
           <div class="activity-loading-title">
-            {{ $t("smartBuilding.activityLoadingTitle") }}
+            {{ $t("smartCommunity.activityLoadingTitle") }}
           </div>
           <div class="activity-loading-tip">
-            {{ $t("smartBuilding.activityLoadingTip") }}
+            {{ $t("smartCommunity.activityLoadingTip") }}
           </div>
         </div>
       </div>
@@ -233,8 +233,8 @@
             >
               {{
                 isDescriptionExpanded(record.id)
-                  ? $t("smartBuilding.collapseDescription")
-                  : $t("smartBuilding.expandDescription")
+                  ? $t("smartCommunity.collapseDescription")
+                  : $t("smartCommunity.expandDescription")
               }}
             </button>
           </div>
@@ -261,7 +261,7 @@
                 <span class="history-preview-placeholder-play-icon"></span>
               </span>
               <span class="history-preview-placeholder-title">
-                {{ $t("smartBuilding.loadPreview") }}
+                {{ $t("smartCommunity.loadPreview") }}
               </span>
               <span class="history-preview-placeholder-time">
                 {{ record.time }}
@@ -272,7 +272,7 @@
       </div>
     </div>
     <div v-else class="history-inline-empty vertical-center">
-      <a-empty :description="$t('smartBuilding.noActivityRecords')" />
+      <a-empty :description="$t('smartCommunity.noActivityRecords')" />
     </div>
   </div>
 </template>
@@ -287,7 +287,7 @@ import { useI18n } from "vue-i18n";
 import { videoPlay as VideoPlayer } from "vue3-video-play/dist/index.mjs";
 import CustomRenderer from "@/utils/customRenderer";
 import type { ActivityRecord, CameraTaskRecord } from "../type";
-import { getSmartBuildingSourceMeta } from "../deviceMeta";
+import { getSmartCommunitySourceMeta } from "../deviceMeta";
 
 type AlertFilterValue = "motion" | "alert";
 
@@ -365,7 +365,7 @@ const KNOWN_ALERT_CONFIG: Record<
   { label: () => string; tokens: AlertVisualTokens; order: number }
 > = {
   alert: {
-    label: () => t("smartBuilding.timelineAlert"),
+    label: () => t("smartCommunity.timelineAlert"),
     order: 0,
     tokens: {
       color:
@@ -377,7 +377,7 @@ const KNOWN_ALERT_CONFIG: Record<
     },
   },
   motion: {
-    label: () => t("smartBuilding.timelineMotionEvent"),
+    label: () => t("smartCommunity.timelineMotionEvent"),
     order: 1,
     tokens: {
       color:
@@ -437,13 +437,13 @@ const buildRecordStatus = (status: string) => {
     return "";
   }
 
-  return status === "completed" ? t("smartBuilding.recordStatusCompleted") : status;
+  return status === "completed" ? t("smartCommunity.recordStatusCompleted") : status;
 };
 
 const buildRecordTitle = (eventType: unknown) => {
   return eventType === "motion"
-    ? t("smartBuilding.recordTypeUsage")
-    : t("smartBuilding.recordTypeMonitoring");
+    ? t("smartCommunity.recordTypeUsage")
+    : t("smartCommunity.recordTypeMonitoring");
 };
 
 const normalizeAlertType = (alertType: CameraTaskRecord["alert"]) => {
@@ -613,7 +613,7 @@ const buildDurationLabel = (duration: number) => {
   const seconds =
     duration >= 10 ? Math.round(duration) : Number(duration.toFixed(1));
 
-  return `${t("smartBuilding.recordDurationPrefix")} ${seconds} ${t("smartBuilding.recordDurationSeconds")}`;
+  return `${t("smartCommunity.recordDurationPrefix")} ${seconds} ${t("smartCommunity.recordDurationSeconds")}`;
 };
 
 const buildDurationSecondsLabel = (duration: number) => {
@@ -633,7 +633,7 @@ const mapTaskToRecord = (task: CameraTaskRecord): ActivityRecord => {
     minutes: timestamp.hour() * 60 + timestamp.minute(),
     sortValue: timestamp.valueOf(),
     title: buildRecordTitle(task.event_type),
-    camera: getSmartBuildingSourceMeta(task.source_id, t).cameraLabel,
+    camera: getSmartCommunitySourceMeta(task.source_id, t).cameraLabel,
     description: task.summary_text,
     videoSrc,
     poster: "",

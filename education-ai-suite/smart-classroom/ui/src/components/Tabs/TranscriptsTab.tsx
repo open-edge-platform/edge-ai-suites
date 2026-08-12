@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   appendTranscriptChunk,
@@ -45,6 +46,7 @@ const SPEAKER_LABELS: Record<
 
 const TranscriptsTab: React.FC = () => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation();
   const streamStartedRef = useRef(false);
   const transcriptionStartedRef = useRef(false);
   const finishedRef = useRef(false);
@@ -57,6 +59,7 @@ const TranscriptsTab: React.FC = () => {
   // Check if summary feature is enabled in backend
   const { guard, loaded: featuresLoaded } = useFeatureConfig();
   const hasSummaryFeature = featuresLoaded && guard.hasFeature('summary');
+  const asrChunkingEnabled = !featuresLoaded || guard.isAsrChunkingEnabled();
 
   const [segmentDisplayTexts, setSegmentDisplayTexts] = useState<string[]>([]);
   const [groupedSegments, setGroupedSegments] = useState<GroupedSegment[]>([]);
@@ -503,9 +506,23 @@ const TranscriptsTab: React.FC = () => {
     [renderedGroups]
   );
 
+  // Whole-file mode emits nothing until the entire recording is transcribed
+  const showWholeFileNotice =
+    !asrChunkingEnabled &&
+    aiProcessing &&
+    !transcriptionDone &&
+    uploadedAudioPath !== "MICROPHONE" &&
+    visibleGroups.length === 0;
+
   return (
     <div className="transcripts-tab chat-ui-root">
       <div className="transcript-content chat-ui-content">
+        {showWholeFileNotice && (
+          <div className="transcript-placeholder transcript-processing-notice">
+            <span className="transcript-processing-spinner" aria-hidden="true" />
+            <span>{t('transcript.processingWholeFile')}</span>
+          </div>
+        )}
         {visibleGroups.length > 0 && (
           <div className="transcript-list chat-ui-list">
             {visibleGroups.map((group) => (

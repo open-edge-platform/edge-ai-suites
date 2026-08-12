@@ -12,8 +12,12 @@
     - OpenVINO Model Server on 2026.3 and OpenVINO development image on 2026.3.0.
     - Scenescape components updated to 2026.2.0-rc1.
 - **Gen AI SDK Enhancements**
-    - Audio Analyzer, Multimodal Embedding Serving, and Model Download updated to 2026.2.0-rc1.
-    - VLM OpenVINO Serving updated to 2026.2.0-rc1.
+    - Audio Analyzer updated to 2026.2.0-rc2.
+    - Multimodal Embedding Serving and Model Download updated to 2026.2.0-rc1.
+    - Document Ingestion and Chat Q&A UI updated to 2026.2.0-rc1.
+    - Chat Q&A is deprecated; the Gen AI SDK now uses Chat Q&A Core (2026.2.0-rc1).
+    - Replaced Visual Data Preparation For Retrieval (VDMS) with Multimodal Data Preparation (2026.2.0-rc1).
+    - Removed the VLM OpenVINO Serving microservice.
 - **Visual AI Demo Kit**
     - Grafana updated to 13.1.3.
 - **Updated Documentation**

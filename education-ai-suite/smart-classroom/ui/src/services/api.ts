@@ -59,6 +59,7 @@ export interface FeatureDescriptor {
   requires: string[];
   endpoints?: Record<string, string>;
   mode?: string;
+  chunking?: boolean;
 }
 
 /**
@@ -93,11 +94,25 @@ export function getFeatureEndpoint(
  * e.g. "local://content-search/runs/.../image.jpg" → "/api/v1/object/download?file_key=runs%2F...%2Fimage.jpg&inline=true"
  */
 export function getContentSearchFileUrl(filePath: string): string {
+  return csDownloadUrl(extractFileKey(filePath), true);
+}
+
+/**
+ * Strip the `local://<bucket>/` prefix from a search result's file_path, yielding the
+ * storage file_key. Paths that are already keys are returned unchanged.
+ */
+export function extractFileKey(filePath: string): string {
   const LOCAL_PREFIX = 'local://content-search/';
-  const fileKey = filePath.startsWith(LOCAL_PREFIX)
-    ? filePath.slice(LOCAL_PREFIX.length)
-    : filePath;
-  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
+  return filePath.startsWith(LOCAL_PREFIX) ? filePath.slice(LOCAL_PREFIX.length) : filePath;
+}
+
+/**
+ * Build the backend /download URL for a storage file_key.
+ * `inline` renders in the browser (preview); otherwise it downloads as an attachment.
+ */
+export function csDownloadUrl(fileKey: string, inline = false): string {
+  const base = `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+  return inline ? `${base}&inline=true` : base;
 }
 
 /**

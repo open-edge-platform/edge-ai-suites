@@ -82,7 +82,7 @@ mcp_tool_call() {
 }
 ```
 
-### `smartbuilding_alert_query`
+### `smart_community_alert_query`
 
 Query or acknowledge alerts for one monitor.
 
@@ -95,11 +95,11 @@ Query or acknowledge alerts for one monitor.
 | `alert_id`, `ack_by` | number, string | For `ack` | Alert ID and acknowledging user |
 
 ```bash
-mcp_tool_call smartbuilding_alert_query \
+mcp_tool_call smart_community_alert_query \
   '{"monitor_id":"cam_child","action":"latest","limit":20}'
 ```
 
-### `smartbuilding_plan_ctl`
+### `smart_community_plan_ctl`
 
 Manage arbitrary per-monitor JSON plans used by rule evaluators.
 
@@ -113,11 +113,11 @@ Manage arbitrary per-monitor JSON plans used by rule evaluators.
 | `active_only` | boolean | No | `list` defaults to active plans only |
 
 ```bash
-mcp_tool_call smartbuilding_plan_ctl \
+mcp_tool_call smart_community_plan_ctl \
   '{"monitor_id":"cam_elder_bedroom","action":"upsert","name":"morning-check","plan_date":"2026-07-29","plan":{"expected_wakeup":"07:30"}}'
 ```
 
-### `smartbuilding_scene_query`
+### `smart_community_scene_query`
 
 Analyze the monitor's current `latest.jpg` frame with the configured VLM.
 
@@ -130,11 +130,11 @@ Analyze the monitor's current `latest.jpg` frame with the configured VLM.
 | `max_edge_px` | number | No | Maximum frame edge sent to the VLM |
 
 ```bash
-mcp_tool_call smartbuilding_scene_query \
+mcp_tool_call smart_community_scene_query \
   '{"monitor_id":"cam_fridge","prompt":"List the visible food items."}'
 ```
 
-### `smartbuilding_generate_report`
+### `smart_community_generate_report`
 
 Generate and store a report using the monitor's use-case report configuration.
 
@@ -147,11 +147,11 @@ Generate and store a report using the monitor's use-case report configuration.
 | `filter` | object | No | Exact column/value filters for the selected data source |
 
 ```bash
-mcp_tool_call smartbuilding_generate_report \
+mcp_tool_call smart_community_generate_report \
   '{"monitor_id":"cam_child","type":"daily"}'
 ```
 
-### `smartbuilding_monitor_ctl`
+### `smart_community_monitor_ctl`
 
 Manage one monitor across the database, videostream-analytics, and video worker.
 
@@ -168,17 +168,17 @@ Manage one monitor across the database, videostream-analytics, and video worker.
 List all monitors:
 
 ```bash
-mcp_tool_call smartbuilding_monitor_ctl '{"action":"list"}'
+mcp_tool_call smart_community_monitor_ctl '{"action":"list"}'
 ```
 
 Register and persist a source:
 
 ```bash
-mcp_tool_call smartbuilding_monitor_ctl \
+mcp_tool_call smart_community_monitor_ctl \
   '{"action":"register_source","monitor_id":"cam_child","name":"Child Safety Camera","source_url":"rtsp://localhost:8555/live","use_case":"child_safety","persist":true}'
 ```
 
-### `smartbuilding_monitors_compose`
+### `smart_community_monitors_compose`
 
 Validate or apply all monitor declarations in a `monitors.yaml` file.
 
@@ -189,11 +189,11 @@ Validate or apply all monitor declarations in a `monitors.yaml` file.
 | `monitor_id` | string | No | Restrict the action to one declared monitor |
 
 ```bash
-mcp_tool_call smartbuilding_monitors_compose \
+mcp_tool_call smart_community_monitors_compose \
   '{"action":"ps","file":"demo/monitors.demo.yaml"}'
 ```
 
-### `smartbuilding_video_db`
+### `smart_community_video_db`
 
 Run a parameterized, read-only SQLite query. Only `SELECT` statements are accepted.
 
@@ -203,11 +203,11 @@ Run a parameterized, read-only SQLite query. Only `SELECT` statements are accept
 | `params` | array | No | Values for positional `?` placeholders |
 
 ```bash
-mcp_tool_call smartbuilding_video_db \
+mcp_tool_call smart_community_video_db \
   '{"query":"SELECT id, status, use_case FROM monitors WHERE id = ?","params":["cam_child"]}'
 ```
 
-### `smartbuilding_use_case_validate`
+### `smart_community_use_case_validate`
 
 Validate the config entry, VLM task registration, and prompt/schema consistency for a use case.
 
@@ -216,10 +216,10 @@ Validate the config entry, VLM task registration, and prompt/schema consistency 
 | `use_case` | string | Yes |
 
 ```bash
-mcp_tool_call smartbuilding_use_case_validate '{"use_case":"child_safety"}'
+mcp_tool_call smart_community_use_case_validate '{"use_case":"child_safety"}'
 ```
 
-### `smartbuilding_use_case_register`
+### `smart_community_use_case_register`
 
 Manage a use case at runtime. New use cases normally use `generate_task` first,
 then `register` after the prompt and final schema have been confirmed.
@@ -240,18 +240,18 @@ then `register` after the prompt and final schema have been confirmed.
 Step 1, register the VLM task and save its prompt:
 
 ```bash
-mcp_tool_call smartbuilding_use_case_register \
+mcp_tool_call smart_community_use_case_register \
   '{"action":"generate_task","use_case":"door_watch","description":"Door activity monitoring","prompt_text":"## GLOBAL_PROMPT\nSummarize door activity over the full period.\n## MACRO_CHUNK_PROMPT\nSummarize notable door activity in this chunk.\n## LOCAL_PROMPT\nReturn exactly:\nSEVERITY: <text>\nEVENT: <text>\nDESC: <text>\n## T_MINUS_1_PROMPT\nUse the previous chunk only as context for the current observation."}'
 ```
 
 Step 2, apply the schema and persist the use case:
 
 ```bash
-mcp_tool_call smartbuilding_use_case_register \
+mcp_tool_call smart_community_use_case_register \
   '{"action":"register","use_case":"door_watch","persist":true}'
 ```
 
-### `smartbuilding_rule_eval`
+### `smart_community_rule_eval`
 
 Re-run a rule against a completed summary task. The default is a dry run.
 
@@ -262,7 +262,7 @@ Re-run a rule against a completed summary task. The default is a dry run.
 | `create_alert` | boolean | No | Persist an alert when the rule fires; default false |
 
 ```bash
-mcp_tool_call smartbuilding_rule_eval \
+mcp_tool_call smart_community_rule_eval \
   '{"monitor_id":"cam_child","create_alert":false}'
 ```
 
@@ -276,7 +276,7 @@ Use `resources/read` with the resource URI:
   "id": 20,
   "method": "resources/read",
   "params": {
-    "uri": "smartbuilding://monitors"
+    "uri": "smart-community://monitors"
   }
 }
 ```
@@ -299,21 +299,21 @@ mcp_resource_read() {
 
 | Resource URI | Content |
 | ------------ | ------- |
-| `smartbuilding://monitors` | `{ monitors }`: every registered monitor and its database status |
-| `smartbuilding://monitor/{id}/latest-frame` | Placeholder frame response; currently returns `frame: null` until analytics frame integration is implemented |
-| `smartbuilding://monitor/{id}/stats` | `{ monitorId, events, alerts }`: today's event and alert counts |
-| `smartbuilding://monitor/{id}/alerts` | `{ monitorId, latestId, alerts }`: latest 20 delivered alerts |
-| `smartbuilding://monitor/{id}/alerts{?since}` | Up to 200 delivered alerts whose IDs are greater than the cursor; call it as `smartbuilding://monitor/{id}/alerts?since={alert_id}` |
+| `smart-community://monitors` | `{ monitors }`: every registered monitor and its database status |
+| `smart-community://monitor/{id}/latest-frame` | Placeholder frame response; currently returns `frame: null` until analytics frame integration is implemented |
+| `smart-community://monitor/{id}/stats` | `{ monitorId, events, alerts }`: today's event and alert counts |
+| `smart-community://monitor/{id}/alerts` | `{ monitorId, latestId, alerts }`: latest 20 delivered alerts |
+| `smart-community://monitor/{id}/alerts{?since}` | Up to 200 delivered alerts whose IDs are greater than the cursor; call it as `smart-community://monitor/{id}/alerts?since={alert_id}` |
 
 ```bash
-mcp_resource_read 'smartbuilding://monitors'
-mcp_resource_read 'smartbuilding://monitor/cam_child/stats'
-mcp_resource_read 'smartbuilding://monitor/cam_child/alerts'
-mcp_resource_read 'smartbuilding://monitor/cam_child/alerts?since=42'
+mcp_resource_read 'smart-community://monitors'
+mcp_resource_read 'smart-community://monitor/cam_child/stats'
+mcp_resource_read 'smart-community://monitor/cam_child/alerts'
+mcp_resource_read 'smart-community://monitor/cam_child/alerts?since=42'
 ```
 
 The alerts resources exclude audit rows suppressed by cooldown. Use
-`smartbuilding_alert_query` when the full alert audit trail is required. For an incremental read,
+`smart_community_alert_query` when the full alert audit trail is required. For an incremental read,
 save the returned `latestId` and pass it as the next `since` cursor. The cursor must be a
 non-negative integer.
 
@@ -327,7 +327,7 @@ curl -fsS -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "mcp-session-id: $SID" \
-  -d '{"jsonrpc":"2.0","id":30,"method":"resources/subscribe","params":{"uri":"smartbuilding://monitor/cam_child/alerts"}}'
+  -d '{"jsonrpc":"2.0","id":30,"method":"resources/subscribe","params":{"uri":"smart-community://monitor/cam_child/alerts"}}'
 
 curl -fsS -N -X GET "$MCP_URL" \
   -H "Accept: text/event-stream" \
@@ -338,7 +338,7 @@ When a delivered alert is created, the SSE connection receives:
 
 ```text
 event: message
-data: {"jsonrpc":"2.0","method":"notifications/resources/updated","params":{"uri":"smartbuilding://monitor/cam_child/alerts"}}
+data: {"jsonrpc":"2.0","method":"notifications/resources/updated","params":{"uri":"smart-community://monitor/cam_child/alerts"}}
 ```
 
 The notification does not contain the alert. Call `resources/read` with the last `latestId` as
@@ -349,7 +349,7 @@ curl -fsS -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "mcp-session-id: $SID" \
-  -d '{"jsonrpc":"2.0","id":31,"method":"resources/unsubscribe","params":{"uri":"smartbuilding://monitor/cam_child/alerts"}}'
+  -d '{"jsonrpc":"2.0","id":31,"method":"resources/unsubscribe","params":{"uri":"smart-community://monitor/cam_child/alerts"}}'
 ```
 
 ## Errors and state-changing calls
@@ -361,7 +361,7 @@ curl -fsS -X POST "$MCP_URL" \
 - Confirm intent before `monitor_ctl` `stop` or `unregister`, `monitors_compose` `down` or
   `restart`, `plan_ctl` `delete`, `alert_query` `ack`, `use_case_register` mutations, or
   `rule_eval` with `create_alert: true`.
-- `smartbuilding_video_db` is read-only and rejects non-`SELECT` SQL.
+- `smart_community_video_db` is read-only and rejects non-`SELECT` SQL.
 
 ## See also
 
