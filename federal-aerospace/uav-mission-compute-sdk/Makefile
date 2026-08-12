@@ -36,11 +36,17 @@ init:
 # Camera mode is controlled via .env (multi-cam default, single-cam by switching vars)
 up-sim-camera:
 	@# Help: Start core infra with PX4 Gazebo sim cameras (sim-camera profile)
-	$(COMPOSE_LOCAL) --profile sim-camera up -d --build
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
+	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera up -d --build
 
 up-usb-camera:
 	@# Help: Start core infra with real USB camera + lightweight PX4 SIH + companion telemetry services
-	PX4_NETWORK_SERVICE=px4-sih PX4_ADDRESS=udpin://0.0.0.0:14550 $(COMPOSE_LOCAL) --profile usb-camera up -d --build
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile usb-camera up -d --build
 
 build:
 	@# Help: Build all images (core infra + apps), using Docker layer cache
