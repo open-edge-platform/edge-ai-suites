@@ -415,9 +415,8 @@ Generate a competitive analysis report for Unitree Robotics G1 Basic and compara
 If the LLM model is not strong enough to use knowledgebase skill automaticly , you can add below instruction in OpenClaw's AGENTS.md:
 
 ```text
-用户的任何问题，查询，总结，概括，比较，必须使用knowledgebase skill！
-不得使用查找文件的方式回答问题！
-knowledgebase skill在'~/.openclaw/workspace/skills'下
+For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
+Do not answer questions by searching for files!
 ```
 
 please insert above text into Tools chapter in $HOME/.openclaw/workspace/AGENTS.md, e.g. :
@@ -426,7 +425,6 @@ please insert above text into Tools chapter in $HOME/.openclaw/workspace/AGENTS.
 
 Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
 
-用户的任何问题，查询，总结，概括，比较，必须使用knowledgebase skill！
-不得使用查找文件的方式回答问题！
-knowledgebase skill在'~/.openclaw/workspace/skills'下
+For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
+Do not answer questions by searching for files!
 ```
