@@ -1,0 +1,192 @@
+<!-- SPDX-FileCopyrightText: (C) 2026 Intel Corporation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+
+# Deployment Reference — UAV Vision Analytics
+
+## Docker Compose Service Map
+
+### pymavlink mode (`docker-compose-pymavlink.yml`)
+
+| Service | Image | Ports | Role |
+|---------|-------|-------|------|
+| `dlstreamer-pipeline-server` | `${DLSTREAMER_PIPELINE_SERVER_IMAGE}`-pymavlink (built inline with `pip install pymavlink`) | `8081`, `8555`, `5600-5602` | AI inference + RTSP/UDP output |
+| `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker for detection metadata |
+| `px4` | `px4io/px4-sitl:latest` | — | PX4 SITL flight controller simulator |
+| `mavlink-router` | custom build | — | Routes MAVLink :14550 → :14541 |
+| `metrics-manager` | `intel/metrics-manager:2026.1.0-*` | — | CPU/GPU/NPU/power metrics collection |
+
+### MAVSDK mode (`docker-compose-mavsdk.yml`)
+
+| Service | Image | Ports | Role |
+|---------|-------|-------|------|
+| `dlstreamer-pipeline-server` | `${DLSTREAMER_PIPELINE_SERVER_IMAGE}` | `8081`, `8555` | AI inference + RTSP output |
+
+**Prerequisite:** `uav-mission-compute-sdk` must already be running.
+
+---
+
+## DLSPS Docker Compose Fragment
+
+```yaml
+dlstreamer-pipeline-server:
+  build:
+    context: .
+    dockerfile_inline: |
+      FROM ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
+      RUN pip install --no-cache-dir pymavlink    # pymavlink mode only
+  image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}-pymavlink
+  container_name: dlstreamer-pipeline-server
+  environment:
+    - http_proxy=${http_proxy}
+    - https_proxy=${https_proxy}
+    - no_proxy=${no_proxy},${HOST_IP}
+    - NO_PROXY=${no_proxy},${HOST_IP}
+    - ENABLE_RTSP=true
+    - RTSP_PORT=8555
+    - RUN_MODE=EVA
+    - EMIT_SOURCE_AND_DESTINATION=true
+    - REST_SERVER_PORT=8081
+    - SERVICE_NAME=dlstreamer-pipeline-server
+    - MQTT_HOST=broker
+    - MQTT_PORT=1883
+    - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
+    - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+  volumes:
+    - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
+    - "./resources:/home/pipeline-server/resources"
+    - "./configs/config-pymavlink.json:/home/pipeline-server/config.json"
+    - "./gvapython/telemetry-overlay-pymavlink.py:/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py"
+    - "./scripts/mavlink_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+    - "/run/udev:/run/udev:ro"
+    - "/dev:/dev"
+    - "/tmp:/tmp"
+  group_add:
+    - "44"    # video
+    - "109"   # render (adjust per host: stat -c %g /dev/dri/render*)
+    - "110"
+    - "990"
+    - "992"
+    - "993"
+    - "994"
+    - "996"
+  device_cgroup_rules:
+    - "c 189:* rmw"
+    - "c 209:* rmw"
+    - "a 189:* rwm"
+  devices:
+    - "/dev:/dev"
+  ports:
+    - '8081:8081'
+    - "8555:8555"
+    - "5600:5600"   # UDP sink output (pymavlink mode)
+    - "5601:5601"
+    - "5602:5602"
+  networks:
+    - app_network
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+```
+
+**For MAVSDK mode** mount the MAVSDK overlay and manager instead:
+```yaml
+    - "./gvapython/telemetry-overlay-mavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-mavsdk.py"
+    - "./scripts/mavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+```
+And set `UAV_ID` env var (default `uav-1`).
+
+---
+
+## .env Variables
+
+```bash
+# Host network
+HOST_IP=192.168.1.x           # LAN IP — NOT 127.0.0.1; used for RTSP URLs
+
+# DL Streamer image
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
+
+# Proxy (leave blank if not behind corporate proxy)
+http_proxy=
+https_proxy=
+no_proxy=localhost,127.0.0.0/8
+```
+
+---
+
+## Makefile Targets
+
+```makefile
+.PHONY: model pymav-up pymav-down mavsdk-up mavsdk-down start-rtsp start-udpsink
+
+model:       ## Download and export YOLOv8n-VisDrone to OpenVINO FP16
+pymav-up:    ## Start pymavlink stack (docker-compose-pymavlink.yml)
+pymav-down:  ## Stop pymavlink stack
+mavsdk-up:   ## Start MAVSDK stack (requires uav-mission-compute-sdk running first)
+mavsdk-down: ## Stop MAVSDK stack
+start-rtsp:  ## Launch pipeline_manager.py --sink rtsp inside container
+start-udpsink: ## Launch pipeline_manager.py --sink udp inside container
+```
+
+Full Makefile is in `apps/uav-vision-analytics/Makefile`.
+
+---
+
+## Network Architecture
+
+### pymavlink
+
+```
+PX4 SITL ──MAVLink──▶ mavlink-router (:14550 server → :14541 broadcast)
+                                           │
+                           DLSPS ◀─UDP :14541─┘
+                             │
+                        ┌────┤
+                        │    ├──▶ RTSP :8555 → QGC / ffplay
+                        │    └──▶ UDP :5600-5602 (udpsink mode)
+                        │
+                    MQTT :1883 ──▶ Mosquitto broker
+```
+
+### MAVSDK
+
+```
+uav-mission-compute-sdk:
+  PX4+Gazebo → companion-bridge → MQTT broker (:1884)
+                               → RTSP server (:8554) [camera streams]
+
+DLSPS container:
+  MQTT subscriber → on ARMED → POST pipelines
+  rtspsrc ← RTSP (:8554) [nadir/forward/rear]
+  appsink → RTSP output :8555
+```
+
+---
+
+## Device Group IDs
+
+The `group_add` list must include the numeric GIDs for `/dev/dri` (GPU) and
+`/dev/accel` (NPU). Check on the host:
+
+```bash
+stat -c %g /dev/dri/render*
+stat -c %g /dev/accel/accel*
+```
+
+Update the `group_add` list in the compose file accordingly.
+
+---
+
+## Volumes
+
+```yaml
+volumes:
+  dlstreamer-pipeline-server-pipeline-root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+```
+
+The pipeline root is a tmpfs (in-memory) volume, reset on every container
+recreation. Always use `docker compose up -d --force-recreate` (not `restart`)
+when changing `config.json` — plain `restart` keeps the stale tmpfs.
