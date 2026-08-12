@@ -109,7 +109,7 @@ http://localhost:8101
   \- Embedding generation service architecture and API documentation
 - [Multimodal Data Preparation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/docs/user-guide/Overview.md)
   \- Multimodal data ingestion and preparation workflows for retrieval
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html)
   \- Complete development toolkit documentation and microservice API references
 - [Edge AI Suites](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html)
   \- Comprehensive application suite documentation with Gen AI implementation examples

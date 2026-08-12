@@ -20,7 +20,7 @@ Intel® edge hardware in handheld deployment scenarios.
 
 This composite application combines a conversational agent exposed via Chat UI that is backed by
 a LLM inference server, a speech-to-text service and
-[Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
+[Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 All components of the composite application share the visual pipeline solution's Docker network.
 
 Deployment of the the full solution consists of two main stages:
@@ -42,7 +42,7 @@ configuration of workload parameters, performance benchmarking, and analysis of 
 CPU usage, and GPU usage. With its intuitive interface, the tool provides actionable insights that support
 optimized hardware selection and performance tuning.
 
-For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
+For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 
 > **Notice:**
 > The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld
