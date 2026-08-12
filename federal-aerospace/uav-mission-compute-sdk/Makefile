@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-sweep bench-bridge-sweep help
+.PHONY: init up-sim-camera up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -160,12 +160,8 @@ $(VENV)/.installed: $(REQ)
 bench:  ## Run the MAVLink->MQTT telemetry benchmark (stack must be running); pass args with ARGS="--duration 30 --clients 4"
 	$(PY) benchmarks/benchmark_mavlink_mqtt.py $(ARGS)
 
-# SWEEP_RATES: comma-separated Hz tiers to stress-test (default covers a wide range)
-SWEEP_RATES    ?= 10,25,50,100,200,500
 # SWEEP_DURATION: measurement window per tier in seconds
 SWEEP_DURATION ?= 10
-bench-sweep:  ## Broker-only stress: synthetic publisher at increasing Hz measures drop/latency; tune with SWEEP_RATES="10,25,50,100,200,500" SWEEP_DURATION=10
-	$(PY) benchmarks/benchmark_mavlink_mqtt.py --sweep --sweep-rates $(SWEEP_RATES) --sweep-duration $(SWEEP_DURATION) $(ARGS)
 
 # BRIDGE_SWEEP_RATES: caps applied to attitude/velocity/position on each tier
 BRIDGE_SWEEP_RATES ?= 20,50,100,200
