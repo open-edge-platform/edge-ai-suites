@@ -18,6 +18,7 @@ Demo setup steps, including OpenClaw service, EC-RAG service, Router service, co
   - [3.4 Enable the Skill in OpenClaw Configuration](#34-enable-the-skill-in-openclaw-configuration)
 - [4. Setup UI](#4-setup-ui)
 - [5. Test the Configuration](#5-test-the-configuration)
+- [6. How to use knowledgebase skill](#6-how-to-use-knowledgebase-skill)
 
 ## 1. Setup Router and Compressor services
 
@@ -407,4 +408,30 @@ After completing the setup steps above, verify the configuration as follows:
 
 ```text
 Generate a competitive analysis report for Unitree Robotics G1 Basic and comparable products on the market.
+```
+
+## 6. How to use knowledgebase skill
+
+If the LLM model is not strong enough to use knowledgebase skill automaticly , you can add below instruction in OpenClaw's AGENTS.md:
+
+```text
+不得使用web search或者web fetch！
+不得使用网络搜索工具！
+用户的任何问题，查询，总结，概括，比较，必须使用knowledgebase skill！
+不得使用查找文件的方式回答问题！
+knowledgebase skill在'~/.openclaw/workspace/skills'下
+```
+
+please insert above text into $HOME/.openclaw/workspace/AGENTS.md##tools, e.g. :
+```md
+## Tools
+
+Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
+
+不得使用web search或者web fetch！
+不得使用网络搜索工具！
+用户的任何问题，查询，总结，概括，比较，必须使用knowledgebase skill！
+不得使用查找文件的方式回答问题！
+用户的任何照片图片查找，必须使用helicon-search skill, 不得改变tool输出格式！
+knowledgebase skill和helicon-search skill在'~/.openclaw/workspace/skills'下
 ```
