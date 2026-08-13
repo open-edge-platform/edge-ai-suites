@@ -392,7 +392,7 @@ models-download:
 			-H 'Content-Type: application/json') || true; \
 		case "$$CODE" in \
 			2[0-9][0-9]) break;; \
-			*)           echo "  [$$i/$(MODELS_RETRIES)] HTTP $$CODE — waiting for model-download...";; \
+			*)           echo "  [$$i/$(MODELS_RETRIES)] — waiting for model-download...";; \
 		esac; \
 		[ $$i -eq $(MODELS_RETRIES) ] && break; \
 		sleep 5; \
