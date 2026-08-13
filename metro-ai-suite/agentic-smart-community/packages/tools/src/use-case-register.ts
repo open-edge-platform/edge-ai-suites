@@ -4,6 +4,7 @@ import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseDocument, isMap, Scalar } from "yaml";
 import { SchemaManager, type SchemaExtension } from "@smart-community-video/db";
+import { parseOverrideStdout } from "./rule-engine/index.js";
 import type { UseCaseValidateResult } from "./use-case-validate.js";
 import { useCaseValidate } from "./use-case-validate.js";
 
@@ -935,8 +936,9 @@ async function validateEvaluateRulesOverride(
       overridePath,
       JSON.stringify(smokeFields),
     ], { timeout: 10_000 });
-    const text = stdout.trim();
-    const parsed = text ? JSON.parse(text) : null;
+    // Same contract as the runtime rule engine: JSON on the LAST stdout line;
+    // earlier lines are debugging output and ignored.
+    const parsed = parseOverrideStdout(stdout) as { alertType?: unknown; severity?: unknown } | null;
     if (parsed === null) return null;
     if (!parsed || typeof parsed !== "object") {
       return `evaluate_rules_path "${overridePath}" must print JSON object or null`;
