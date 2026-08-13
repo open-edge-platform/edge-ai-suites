@@ -90,6 +90,7 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	if [ ! -d data/nginx-certs/ ]; then \
 		sudo mkdir -p data/nginx-certs/; \
 		sudo openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout data/nginx-certs/key.pem -out data/nginx-certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'; \
+		sudo chmod 644 ./data/nginx-certs/key.pem; \
 		echo "Created self-signed TLS cert for localhost"; \
 	fi; \
 	echo "✓ .env updated  (RENDER_GID=$$RENDER_GID)"
@@ -136,7 +137,7 @@ vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vi
 		echo "✓ nginx.conf patched (frame-ancestors added)"; \
 	fi; \
 	# pallet_defect_detection needs updated model server (higher than 2026.1.0), otherwise it will fail to download
-	yq -i -y 'del(.[] | select(.name == "pallet_defect_detection"))' $(VIPPET_CWD)/shared/models/supported_models.yaml; \
+	yq -i -y 'del(.[] | select(.name == "pallet_defect_detection" or .name == "mars-small128"))' $(VIPPET_CWD)/shared/models/supported_models.yaml; \
 	# disable HTTP port with metrics
 	yq -i -y '.services."metrics-manager".ports = ["9090:9090"]' $(VIPPET_CWD)/compose.yml; \
 	echo "✓ vippet configured (telegraf.conf copied)"
