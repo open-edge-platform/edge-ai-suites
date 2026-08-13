@@ -298,6 +298,8 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-change-me}
       INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:-change-me-token}
       INFLUXDB_ORG:               ${INFLUXDB_ORG:-uav-sdk}
+      no_proxy:                   localhost,127.0.0.1,influxdb
+      NO_PROXY:                   localhost,127.0.0.1,influxdb
     volumes:
       - grafana-data:/var/lib/grafana
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -348,6 +350,8 @@ services:
       INFLUXDB_ORG:               ${INFLUXDB_ORG:-uav-sdk}
       INFLUXDB_BUCKET:            telemetry
       METRICS_MANAGER_HOSTNAME:   uav-sdk-host
+      no_proxy:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
+      NO_PROXY:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
     devices:
       - /dev/dri             # Intel GPU — required for qmassa
     volumes:

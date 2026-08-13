@@ -23,11 +23,14 @@ init:
 		if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
 			GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
 			if [ -n "$$GPU_RENDER" ]; then \
+				GPU_RENDER_GID=$$(stat -c "%g" "$$GPU_RENDER" 2>/dev/null); \
 				echo "✅ GPU devices detected. Adding to .env:"; \
 				echo "   GPU_DEVICE=$$GPU_CARD"; \
 				echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
+				echo "   GPU_RENDER_GID=$$GPU_RENDER_GID"; \
 				echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
 				echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
+				echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
 			fi; \
 		fi; \
 	fi
