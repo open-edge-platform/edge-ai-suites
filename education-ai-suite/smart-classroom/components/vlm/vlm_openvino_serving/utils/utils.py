@@ -52,6 +52,80 @@ def _download_preconverted_ov_model(repo_id: str, cache_dir: str):
 
 _CONVERT_WORKER = Path(__file__).resolve().parent / "convert_worker.py"
 
+# ---------------------------------------------------------------------------
+# Export-time transformers pin
+# ---------------------------------------------------------------------------
+# optimum-intel 2.1.0 advertises transformers>=4.51,<5.6, but its
+# per-architecture support table caps Qwen3_5 / Qwen3_5Moe / Qwen3_5Text /
+# Qwen3_5MoeText at transformers 5.2.0. Qwen3.5-9B and Qwen3.6-35B-A3B both
+# report model_type qwen3_5_moe, so they are governed by that cap: above 5.2.0
+# the OpenVINO export patcher fails with "cannot import name
+# 'Qwen3_5DynamicCache' from transformers.models.qwen3_5.modeling_qwen3_5"
+# (optimum-intel issue #1786).
+#
+# Only the *export* is affected -- inference runs through VLMPipeline and does
+# not touch the patchers. Since convert_worker.py is a standalone script in its
+# own process, we install the older transformers into a side directory and put
+# it at the front of that subprocess's PYTHONPATH instead of downgrading the
+# whole environment. requirements.txt keeps the newer, CVE-patched pin.
+_EXPORT_TRANSFORMERS_VERSION = "5.2.0"
+
+# Models whose export must run against _EXPORT_TRANSFORMERS_VERSION.
+_EXPORT_TRANSFORMERS_MODEL_MARKERS = ("qwen3.5", "qwen3.6")
+
+_SC_ROOT = Path(__file__).resolve().parents[4]
+
+
+def _export_overlay_dir() -> Path:
+    """Directory holding the export-only transformers build.
+
+    Lives under the gitignored ``models/`` tree. ``SC_EXPORT_DEPS_DIR`` overrides
+    it so a setup script can provision the overlay ahead of time (e.g. for an
+    offline install).
+    """
+    override = os.environ.get("SC_EXPORT_DEPS_DIR")
+    if override:
+        return Path(override)
+    return (
+        _SC_ROOT / "models" / ".export-deps" /
+        f"transformers-{_EXPORT_TRANSFORMERS_VERSION}"
+    )
+
+
+def _needs_transformers_overlay(model_id: str) -> bool:
+    name = str(model_id).lower()
+    return any(marker in name for marker in _EXPORT_TRANSFORMERS_MODEL_MARKERS)
+
+
+def _ensure_transformers_overlay() -> Path:
+    """Return the overlay dir, installing the pinned transformers if missing.
+
+    Installed with ``--no-deps``: transformers 5.2.0 needs huggingface-hub>=1.3,
+    tokenizers>=0.22,<=0.23, safetensors>=0.4.3 and typer-slim, all of which the
+    versions pinned in requirements.txt already satisfy, so only the one pure
+    Python wheel is duplicated.
+    """
+    overlay = _export_overlay_dir()
+    marker = overlay / "transformers" / "__init__.py"
+    if marker.exists():
+        logger.info(f"Using export-only transformers overlay at {overlay}")
+        return overlay
+
+    spec = f"transformers=={_EXPORT_TRANSFORMERS_VERSION}"
+    logger.info(f"Provisioning {spec} for the export subprocess in {overlay}...")
+    overlay.mkdir(parents=True, exist_ok=True)
+    completed = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "--no-deps",
+         "--target", str(overlay), spec]
+    )
+    if completed.returncode != 0 or not marker.exists():
+        raise RuntimeError(
+            f"Could not provision {spec}, required to export this model. "
+            f"Install it manually and retry:\n"
+            f'  python -m pip install --no-deps --target "{overlay}" {spec}'
+        )
+    return overlay
+
 
 def convert_model(
     model_id: str, cache_dir: str, model_type: str = "vlm", weight_format: str = "int4"
@@ -89,7 +163,13 @@ def convert_model(
             # (main.py) in the child, which needlessly re-imports the whole app
             # and breaks on top-level package-name collisions in sys.path.
             env = os.environ.copy()
-            env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(p for p in sys.path if p))
+            search_path = [p for p in sys.path if p]
+            if _needs_transformers_overlay(model_id):
+                # Must come first: search_path also carries the parent's
+                # site-packages, which holds the newer transformers, and
+                # PYTHONPATH entries are searched in order.
+                search_path.insert(0, str(_ensure_transformers_overlay()))
+            env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(search_path))
             completed = subprocess.run(
                 [
                     sys.executable,
