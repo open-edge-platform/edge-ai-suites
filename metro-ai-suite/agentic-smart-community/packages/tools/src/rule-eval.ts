@@ -20,6 +20,11 @@ export interface RuleEvalDeps {
       schema?: SchemaDefinition;
     }
   >;
+  /**
+   * Alert notification cooldown in seconds — same semantics as task-poller:
+   * inside the window the row is written with notified=false. Omit/0 disables.
+   */
+  alertCooldownSeconds?: number;
 }
 
 export interface RuleEvalParams {
@@ -43,6 +48,8 @@ export interface RuleEvalResult {
   rule_result: RuleResult;
   alert_created?: boolean;
   alert_id?: number;
+  /** Present when an alert was created: whether it notified (false = cooled down). */
+  alert_notified?: boolean;
 }
 
 /**
@@ -130,15 +137,23 @@ export async function ruleEval(
     return out;
   }
 
+  // Cooldown, same semantics as task-poller: a *notified* alert for this
+  // monitor+use_case inside the window suppresses notification only — the
+  // row is still written for audit with notified=false.
+  const cooldownSeconds = deps.alertCooldownSeconds ?? 0;
+  const inCooldown =
+    cooldownSeconds > 0 &&
+    db.latestAlertWithin(params.monitor_id, useCase, cooldownSeconds) !== undefined;
   const alert = db.createAlert({
     monitorId: params.monitor_id,
     taskId: task.id,
     eventId: task.eventId,
     useCase,
     description: ruleResult.alertMessage,
-    notified: true,
+    notified: !inCooldown,
   });
   out.alert_created = true;
   out.alert_id = alert.id;
+  out.alert_notified = !inCooldown;
   return out;
 }
