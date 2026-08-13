@@ -41,7 +41,7 @@ License-Identifier: Apache 2.0
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
-- coturn/coturn:4.12.0
+- coturn/coturn:4.17.2-alpine
 
 ---------------------------------------------------------------------------------------------------------------------------
 
