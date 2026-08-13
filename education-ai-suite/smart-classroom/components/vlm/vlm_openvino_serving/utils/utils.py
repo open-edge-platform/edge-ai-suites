@@ -55,24 +55,16 @@ _CONVERT_WORKER = Path(__file__).resolve().parent / "convert_worker.py"
 # ---------------------------------------------------------------------------
 # Export-time transformers pin
 # ---------------------------------------------------------------------------
-# optimum-intel 2.1.0 advertises transformers>=4.51,<5.6, but its
-# per-architecture support table caps Qwen3_5 / Qwen3_5Moe / Qwen3_5Text /
-# Qwen3_5MoeText at transformers 5.2.0. Qwen3.5-9B and Qwen3.6-35B-A3B both
-# report model_type qwen3_5_moe, so they are governed by that cap: above 5.2.0
-# the OpenVINO export patcher fails with "cannot import name
+# optimum-intel 2.1.0's per-architecture support table caps Qwen3_5 / 
+# Qwen3_5Moe / Qwen3_5Text / Qwen3_5MoeText at transformers 5.2.0. 
+# Above 5.2.0 the OpenVINO export patcher fails with "cannot import name
 # 'Qwen3_5DynamicCache' from transformers.models.qwen3_5.modeling_qwen3_5"
-# (optimum-intel issue #1786).
-#
-# Only the *export* is affected -- inference runs through VLMPipeline and does
-# not touch the patchers. Since convert_worker.py is a standalone script in its
-# own process, we install the older transformers into a side directory and put
-# it at the front of that subprocess's PYTHONPATH instead of downgrading the
-# whole environment. requirements.txt keeps the newer, CVE-patched pin.
+# (optimum-intel issue #1786). Installed with --no-deps into a side directory
+# used only by the export subprocess, so requirements.txt keeps the newer pin:
+# 5.2.0 needs huggingface-hub>=1.3.0, tokenizers>=0.22.0,<=0.23.0,
+# safetensors>=0.4.3 and typer-slim, all satisfied by requirements.txt.
 _EXPORT_TRANSFORMERS_VERSION = "5.2.0"
-
-# Models whose export must run against _EXPORT_TRANSFORMERS_VERSION.
 _EXPORT_TRANSFORMERS_MODEL_MARKERS = ("qwen3.5", "qwen3.6")
-
 _SC_ROOT = Path(__file__).resolve().parents[4]
 
 
@@ -98,13 +90,7 @@ def _needs_transformers_overlay(model_id: str) -> bool:
 
 
 def _ensure_transformers_overlay() -> Path:
-    """Return the overlay dir, installing the pinned transformers if missing.
-
-    Installed with ``--no-deps``: transformers 5.2.0 needs huggingface-hub>=1.3,
-    tokenizers>=0.22,<=0.23, safetensors>=0.4.3 and typer-slim, all of which the
-    versions pinned in requirements.txt already satisfy, so only the one pure
-    Python wheel is duplicated.
-    """
+    """Return the overlay dir, installing the pinned transformers with --no-deps if missing."""
     overlay = _export_overlay_dir()
     marker = overlay / "transformers" / "__init__.py"
     if marker.exists():
@@ -165,9 +151,7 @@ def convert_model(
             env = os.environ.copy()
             search_path = [p for p in sys.path if p]
             if _needs_transformers_overlay(model_id):
-                # Must come first: search_path also carries the parent's
-                # site-packages, which holds the newer transformers, and
-                # PYTHONPATH entries are searched in order.
+                # Must come first: PYTHONPATH entries are searched in order.
                 search_path.insert(0, str(_ensure_transformers_overlay()))
             env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(search_path))
             completed = subprocess.run(
