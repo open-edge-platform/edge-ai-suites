@@ -266,6 +266,7 @@ services:
   influxdb:
     image: influxdb:2.9.1
     container_name: influxdb
+    profiles: ["observability"]
     restart: unless-stopped
     ports:
       - "127.0.0.1:8086:8086"
@@ -288,6 +289,7 @@ services:
   grafana:
     image: grafana/grafana:11.4.0
     container_name: grafana
+    profiles: ["observability"]
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:3000"
@@ -313,6 +315,7 @@ services:
         https_proxy: ${HTTPS_PROXY:-}
         no_proxy:    ${NO_PROXY:-localhost,127.0.0.0/8}
     container_name: topic-extractor
+    profiles: ["observability"]
     restart: unless-stopped
     environment:
       MQTT_BROKER_HOST: mosquitto
@@ -332,6 +335,7 @@ services:
   metrics-manager:
     image: intel/metrics-manager:2026.1.0
     container_name: metrics-manager
+    profiles: ["observability"]
     restart: unless-stopped
     privileged: true
     pid: host
