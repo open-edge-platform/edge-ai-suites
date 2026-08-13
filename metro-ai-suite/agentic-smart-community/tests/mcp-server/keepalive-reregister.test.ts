@@ -6,7 +6,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { SmartBuildingDB } from "@smartbuilding-video/db";
+import { SmartCommunityDB } from "@smart-community-video/db";
 import { reregisterUnknownMonitor } from "../../packages/mcp-server/src/monitor-bootstrap.js";
 import { startKeepaliveSender } from "../../packages/mcp-server/src/keepalive-sender.js";
 import type { ServerConfig } from "../../packages/mcp-server/src/config.js";
@@ -74,7 +74,7 @@ function fakeWorkerService(): { svc: WorkerService; calls: string[] } {
 function fakeConfig(baseDir: string, monitorsPath: string): ServerConfig {
   return {
     dataDir: baseDir,
-    dbPath: join(baseDir, "smartbuilding.db"),
+    dbPath: join(baseDir, "smart-community.db"),
     segmentsDir: join(baseDir, "segments"),
     reportsLogsDir: join(baseDir, "logs", "reports"),
     monitorsLogsDir: join(baseDir, "logs", "monitors"),
@@ -94,10 +94,10 @@ function fakeConfig(baseDir: string, monitorsPath: string): ServerConfig {
 
 async function withTempEnv(
   monitorsYaml: string,
-  run: (env: { db: SmartBuildingDB; baseDir: string; monitorsPath: string }) => Promise<void>,
+  run: (env: { db: SmartCommunityDB; baseDir: string; monitorsPath: string }) => Promise<void>,
 ): Promise<void> {
   const baseDir = await mkdtemp(join(tmpdir(), "keepalive-reregister-"));
-  const db = new SmartBuildingDB(join(baseDir, "test.db"));
+  const db = new SmartCommunityDB(join(baseDir, "test.db"));
   db.initialize();
   try {
     const monitorsPath = join(baseDir, "monitors.yaml");
@@ -110,7 +110,7 @@ async function withTempEnv(
 }
 
 /** Seed the state right after a VSA recreate: DB still says online, MCP-side worker still running. */
-function seedOnlineMonitor(db: SmartBuildingDB, svc: WorkerService, id = "cam_pet_safety"): void {
+function seedOnlineMonitor(db: SmartCommunityDB, svc: WorkerService, id = "cam_pet_safety"): void {
   db.createMonitor({
     id,
     name: "Pet safety cam",

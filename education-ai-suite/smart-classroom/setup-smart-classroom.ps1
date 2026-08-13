@@ -2139,12 +2139,26 @@ if (-not (Test-Path $venvBackend)) {
     }
     Write-Host "Installing Backend dependencies..." -ForegroundColor Yellow
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] Failed to upgrade pip in Backend venv, continuing..." -ForegroundColor Yellow
+    }
     & "$venvBackend\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to install Backend dependencies" -ForegroundColor Red
+        exit 1
+    }
     Write-Host "[OK] Backend dependencies installed" -ForegroundColor Green
 } elseif ($upgradeVenvs) {
     Write-Host "Upgrading Backend dependencies (keeping existing venv)..." -ForegroundColor Yellow
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade pip --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[WARN] Failed to upgrade pip in Backend venv, continuing..." -ForegroundColor Yellow
+    }
     & "$venvBackend\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "requirements.txt") --no-input
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "Failed to upgrade Backend dependencies" -ForegroundColor Red
+        exit 1
+    }
     Write-Host "[OK] Backend dependencies upgraded" -ForegroundColor Green
 } else {
     Write-Host "[OK] Backend venv already exists" -ForegroundColor Green
@@ -2165,12 +2179,26 @@ if ($gradingEnabled -eq "true") {
         }
         Write-Host "Installing Grading model conversion dependencies..." -ForegroundColor Yellow
         & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[WARN] Failed to upgrade pip in Grading conversion venv, continuing..." -ForegroundColor Yellow
+        }
         & "$venvConvert\Scripts\python.exe" -m pip install -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to install Grading model conversion dependencies" -ForegroundColor Red
+            exit 1
+        }
         Write-Host "[OK] Grading conversion dependencies installed" -ForegroundColor Green
     } elseif ($upgradeVenvs) {
         Write-Host "Upgrading Grading conversion dependencies..." -ForegroundColor Yellow
         & "$venvConvert\Scripts\python.exe" -m pip install --upgrade pip --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "[WARN] Failed to upgrade pip in Grading conversion venv, continuing..." -ForegroundColor Yellow
+        }
         & "$venvConvert\Scripts\python.exe" -m pip install --upgrade -r (Join-Path $ScriptDir "components\grading\providers\layout_detection_service\requirements_convert.txt") --no-input
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to upgrade Grading model conversion dependencies" -ForegroundColor Red
+            exit 1
+        }
         Write-Host "[OK] Grading conversion dependencies upgraded" -ForegroundColor Green
     } else {
         Write-Host "[OK] Grading conversion venv already exists" -ForegroundColor Green

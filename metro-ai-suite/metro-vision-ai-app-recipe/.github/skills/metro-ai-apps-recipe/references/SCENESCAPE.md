@@ -4,7 +4,7 @@ Load this file **only when `{{SCENESCAPE}}=yes`**. It replaces the
 MediaMTX/WebRTC + Node-RED-alert + Grafana-MQTT *video/analytics tail* of
 the default recipe with an Intel® **SceneScape** multi-camera
 **scene-fusion** stack, modeled on the open-edge-platform
-[smart-intersection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection)
+[smart-intersection](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection)
 reference application.
 
 **Do not reproduce the SceneScape orchestration by hand.** SceneScape ships a
@@ -116,7 +116,7 @@ before handing off, and state that `camera_ids` uniqueness was checked.
    `pgserver`, `web`, `scene`, `nginx` on one `scenescape` network, with TLS
    secrets and the `tracker-config.json` config), pulling the concrete files
    from
-   [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src)
+   [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src)
    (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`,
    `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
 

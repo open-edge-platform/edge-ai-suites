@@ -23,21 +23,29 @@ License-Identifier: MIT
 - bluenviron/mediamtx:1.19.3
 ----------------------------------------------------------------------
 
-License-Identifier: AGPLv3
+License-Identifier: AGPL-3.0-only
 - grafana/grafana-oss:13.0.2
 ----------------------------------------------------------------------
- 
-License-Identifier: EPL-2.0/EPL-1.0
+
+License-Identifier: EPL-2.0 OR EPL-1.0
 - eclipse-mosquitto:2.0.22
 ----------------------------------------------------------------------
 
-License-Identifier: 2-clause BSD-like
+License-Identifier: BSD-2-Clause
 - nginx:1.31.3
 ----------------------------------------------------------------------
 
-License-Identifier: Apache 2.0
-- intel/dlstreamer-pipeline-server:2026.1.0-20260505-weekly-ubuntu24
+License-Identifier: Apache-2.0
+- intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24
 - chrislusf/seaweedfs:4.40
+- intel/vllm:0.21.0-ubuntu24.04
+- openvino/model_server:2026.2.1-gpu
+- prom/prometheus:v2.53.4
+- intel/agent-quality-handler:2026.2.0
+- intel/model-download:2026.2.0
+- intel/metrics-manager:2026.2.0
+- intel/multimodal-agentic-ui:2026.2.0
+- intel/ia-insights-workbench:2026.2.0
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
@@ -49,7 +57,7 @@ License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or
 ia-time-series-analytics-microservice:
 ======================================
 
-Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/third-party-programs.txt)
+Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/time-series-analytics/third-party-programs.txt)
 
 ----------------------------------------------------------------------
 
@@ -87,31 +95,34 @@ ia-weld-data-simulator:
 ===============================
 
 1. Base docker image: python:3.13-slim
-License-Identifier: PSF License
+License-Identifier: PSF-2.0
 
 
 2. requirements.txt
-License-Identifier: BSD License
+License-Identifier: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
 numpy==2.2.6
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause
 pandas==2.3.2
 ----------------------------------------------------------------------
 
-License-Identifier: Apache License 2.0
+License-Identifier: Apache-2.0
 opencv-python==4.12.0.88
-tzdata==2026.2
+tzdata==2026.3
 ----------------------------------------------------------------------
 
 License-Identifier: EPL-2.0 OR BSD-3-Clause
 paho-mqtt==2.1.0
 ----------------------------------------------------------------------
 
-License-Identifier: BSD-3-Clause
+License-Identifier: Apache-2.0 OR BSD-3-Clause
 python-dateutil==2.9.0.post0
 ----------------------------------------------------------------------
 
-License-Identifier: MIT License
-pip==26.1.1
-pytz==2026.2
+License-Identifier: MIT
+pip==26.2.1
+pytz==2026.3.post1
 six==1.17.0
 ---------------------------------------------------------------------------------------------------------------------------
 
@@ -119,43 +130,165 @@ ia-fusion-analytics:
 ===============================
 
 1. Base docker image: python:3.13-slim
-License-Identifier: PSF License
+License-Identifier: PSF-2.0
 
 2. requirements.txt
-License-Identifier: Apache License 2.0
-influxdb==5.3.2
-msgpack==1.1.2
-requests==2.34.0
-tzdata==2026.2
+License-Identifier: Apache-2.0
+msgpack==1.2.1
+requests==2.34.2
 ----------------------------------------------------------------------
 
 License-Identifier: EPL-2.0 OR BSD-3-Clause
 paho-mqtt==2.1.0
 ----------------------------------------------------------------------
 
+License-Identifier: MIT
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.14.2
+charset-normalizer==3.4.9
+fastapi==0.136.3
+h11==0.16.0
+influxdb==5.3.2
+pydantic==2.13.4
+pydantic_core==2.46.4
+pytz==2026.3.post1
+six==1.17.0
+typing-inspection==0.4.3
+urllib3==2.7.0
+----------------------------------------------------------------------
+
+License-Identifier: Apache-2.0
+tzdata==2026.3
+----------------------------------------------------------------------
+
 License-Identifier: BSD-3-Clause
-idna==3.14
-numpy==2.3.3
+click==8.4.2
+idna==3.18
 pandas==2.3.3
+starlette==1.6.0
+uvicorn==0.49.0
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+numpy==2.3.3
+----------------------------------------------------------------------
+
+License-Identifier: Apache-2.0 OR BSD-3-Clause
 python-dateutil==2.9.0.post0
 ----------------------------------------------------------------------
 
+License-Identifier: MPL-2.0
+certifi==2026.7.22
+----------------------------------------------------------------------
+
+License-Identifier: PSF-2.0
+typing_extensions==4.16.0
+----------------------------------------------------------------------
+
 License-Identifier: MIT
-certifi==2026.4.22
-charset-normalizer==3.4.7
-pip==26.1.1
-pytz==2026.2
-six==1.17.0
-urllib3==2.7.0
+pip==26.2.1
 
 ---------------------------------------------------------------------------------------------------------------------------
+
+ia-insights-workbench:
+===============================
+
+1. Base docker image: python:3.13-slim
+License-Identifier: PSF-2.0
+
+2. requirements.txt
+License-Identifier: BSD-3-Clause
+Flask==3.1.3
+----------------------------------------------------------------------
+
+License-Identifier: MIT
+gunicorn==23.0.0
+influxdb==5.3.2
+----------------------------------------------------------------------
+
+License-Identifier: Apache-2.0
+openai==2.44.0
+----------------------------------------------------------------------
+
+License-Identifier: HPND
+Pillow==12.3.0
+
+---------------------------------------------------------------------------------------------------------------------------
+
+multimodal-agentic-ui:
+===============================
+
+1. Base docker image: python:3.13-slim
+License-Identifier: PSF-2.0
+
+2. requirements.txt
+License-Identifier: MIT
+fastapi==0.136.3
+pydantic==2.13.4
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause
+httpx==0.28.1
+jinja2==3.1.6
+uvicorn==0.49.0
+----------------------------------------------------------------------
+
+License-Identifier: EPL-2.0 OR BSD-3-Clause
+paho-mqtt==2.1.0
+----------------------------------------------------------------------
+
+License-Identifier: Apache-2.0
+python-multipart==0.0.20
+
+---------------------------------------------------------------------------------------------------------------------------
+
+classification-training/requirements.txt
+================================================================
+License-Identifier: Apache-2.0
+scikit-learn-intelex==2025.11.0
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause
+joblib==1.5.3
+pandas==2.3.3
+scikit-learn==1.6.1
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
+numpy==2.2.6
+
+---------------------------------------------------------------------------------------------------------------------------
+
+vlm-fine-tuning/requirements.txt
+================================================================
+License-Identifier: Apache-2.0
+accelerate==1.11.0
+datasets==5.0.0
+peft==0.19.1
+pyarrow==22.0.0
+transformers==4.57.1
+trl==0.24.0
+unsloth==2025.11.9
+unsloth_zoo==2025.11.10
+----------------------------------------------------------------------
+
+License-Identifier: BSD-3-Clause
+pandas==2.3.3
+----------------------------------------------------------------------
+
+License-Identifier: HPND
+pillow==12.0.0
+
+---------------------------------------------------------------------------------------------------------------------------
+
 Dataset:
 ========
 
 Distributing only subset of video and csv files for testing
 
 Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset
-License-Identifier: Apache License 2.0
+License-Identifier: Apache-2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 

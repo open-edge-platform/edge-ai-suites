@@ -17,7 +17,7 @@
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -96,8 +96,8 @@ Otherwise, if you would like to use your own data (images and video), make sure 
      ```
 
      > **Important:** You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
-     > [Supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for Multimodal Embedding Serving for available embedding models, and
-     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
+     > [Supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for Multimodal Embedding Serving for available embedding models, and
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
      You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 

@@ -26,7 +26,7 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
 ```
 
 ![OEP Vision AI SDK Installation](images/oep-vision-ai-sdk-install.png)
@@ -76,7 +76,7 @@ docker run --rm -it --name dlstreamer \
   -v $PWD:/data \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  intel/dlstreamer:2026.1.0-ubuntu24
+  intel/dlstreamer:2026.2.0-ubuntu24-rc1
 ```
 
 ```bash
@@ -156,17 +156,17 @@ Profiling and monitoring performance of OEP Vision AI workloads using command-li
 
 ### Technical Documentation
 
-- [DL Streamer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
+- [DL Streamer](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment
 - [OpenVINO](https://docs.openvino.ai/2026/get-started.html)
   \- Complete reference for Intel's cross-platform inference optimization toolkit
 - [OpenVINO Model Server](https://docs.openvino.ai/2026/model-server/ovms_what_is_openvino_model_server.html)
   \- Model serving infrastructure documentation for production deployments
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html)
   \- Comprehensive development toolkit documentation and API references
-- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+- [Edge AI Suites](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html)
   \- Complete application suite documentation with implementation examples
 
 ### Support Channels

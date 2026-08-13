@@ -1,4 +1,4 @@
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { ServerConfig } from "./config.js";
 import { logger } from "./logger.js";
 
@@ -22,7 +22,7 @@ import { logger } from "./logger.js";
  */
 export function startKeepaliveSender(
   config: ServerConfig,
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   onSourceUnknown?: (monitorId: string) => void,
 ): () => void {
   if (!config.keepalive.enabled) {

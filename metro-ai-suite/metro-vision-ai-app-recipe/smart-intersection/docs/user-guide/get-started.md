@@ -30,7 +30,7 @@ To get started:
 
    Go to the target directory of your choice and clone the suite.
    If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
    git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -185,16 +185,16 @@ Choose one of the following methods to deploy the Smart Intersection Sample Appl
 
 With AI systems handling sensitive city data and making autonomous decisions, robust security
 is essential. Intel platforms provide built-in security features to protect data, infrastructure,
-and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
+and AI processing. See the [Security Enablement Guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/application-security.html)
 that uses the example of Smart Intersection to show how to secure Open Edge Platform
 applications.
 
 ## Learn More
 
-- [Security Enablement Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/application-security.html)
+- [Security Enablement Guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/application-security.html)
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
-- [Scenescape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
+- [Scenescape](https://docs.openedgeplatform.intel.com/2026.2/scenescape/index.html): Intel Scene-based AI software framework.
 
 <!--hide_directive
 :::{toctree}

@@ -30,7 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 
 # GPU support (if using OpenVINO with GPU plugin, ensure the base image has necessary drivers/libraries)
-ARG INSTALL_DRIVER_VERSION="25.31.34666"
+ARG INSTALL_DRIVER_VERSION="26.18.38308"
 ARG USER_ID=1000
 ARG USER_GROUP_ID=1000
 

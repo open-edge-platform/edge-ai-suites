@@ -27,7 +27,13 @@ This section shows how to download the **`Unsloth Qwen3.5-2B` model and `Unsloth
 
    > **Note:** The [Low-Rank Adaptation (LoRA) adapter](https://huggingface.co/Intel/qwen3.5-2b-vlm-weld-explainability-lora) was specifically trained on a subset of the [Intel Robotic Welding Multimodal Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset) and may not generalize to generic weld datasets.
 
-2. Download the model and adapter:
+2. Go to the root folder of the multimodal sample app:
+
+```bash
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+```
+
+3. Download the model and adapter:
 
 ```bash
 mkdir -p configs/vllm/huggingface configs/vllm/models && \

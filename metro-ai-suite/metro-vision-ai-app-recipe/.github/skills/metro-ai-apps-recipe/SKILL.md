@@ -31,7 +31,7 @@ vertical-agnostic** — the same seven-container topology below serves any
 DL Streamer / OpenVINO CV pipeline; only the invoking prompt's model,
 class filter, alert rule, dashboard, and topic names differ. It follows the
 open-edge-platform
-[Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe)
+[Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe)
 **MediaMTX + Coturn + WebRTC** video path but is streamlined:
 **no Prometheus, no OTel**. SceneScape is **off by default**, available
 as an **opt-in multi-camera spatial-analysis path** (see
@@ -263,7 +263,7 @@ templates.
 ## Reference implementation
 
 The upstream
-[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
+[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
 recipe uses the same MediaMTX + Coturn + WebRTC path. Consult it for
 `config.json`, `mosquitto.conf`, `nginx.conf`, `datasources.yml`,
 `dashboards.yml`, and `flows.json` shapes; drop `prometheus`,

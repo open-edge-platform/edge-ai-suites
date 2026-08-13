@@ -18,19 +18,18 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.1.0|edge-ai-libraries"
-  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.1.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.2.0|edge-ai-libraries"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.2.0|edge-ai-suites"
 )
 
 images=(
-  "intel/audio-analyzer:1.3.3"
-  "intel/document-ingestion:2026.1.0"
-  "intel/multimodal-embedding-serving:2026.1.0"
-  "intel/vdms-dataprep:2026.1.0"
-  "intel/vlm-openvino-serving:1.3.2"
-  "intel/model-download:2026.1.0"
-  "intel/chatqna:2026.1.0"
-  "intel/chatqna-ui:2026.1.0"
+  "intel/audio-analyzer:2026.2.0-rc2"
+  "intel/document-ingestion:2026.2.0-rc1"
+  "intel/multimodal-embedding-serving:2026.2.0-rc1"
+  "intel/multimodal-dataprep:2026.2.0-rc1"
+  "intel/model-download:2026.2.0-rc1"
+  "intel/chatqna:2026.2.0-rc1"
+  "intel/chatqna-ui:2026.2.0-rc1"
 )
 NAME="OEP Gen AI SDK"
 

@@ -20,6 +20,10 @@ param(
 $ErrorActionPreference = "Stop"
 $WarningPreference = "SilentlyContinue"
 
+# PowerShell 7.4+ can promote native non-zero exits to PowerShell errors.
+# Track whether this preference exists so wrappers can temporarily disable it.
+$Script:HasPSNativeCommandUseErrorActionPreference = $null -ne (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue)
+
 # Color output for readability
 function Write-Header {
     param([string]$Message)
@@ -433,6 +437,140 @@ function Ensure-WindowsVenv {
     }
 }
 
+function Invoke-NativeInstallCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Command,
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$ScriptBlock,
+        [switch]$Quiet
+    )
+
+    # Under Windows PowerShell with ErrorActionPreference=Stop, native stderr can
+    # surface as terminating RemoteException. Run installs with Continue and use
+    # the process exit code as the source of truth.
+    $SavedEAP = $ErrorActionPreference
+    $SavedPSNative = $null
+    $ErrorActionPreference = 'Continue'
+    if ($Script:HasPSNativeCommandUseErrorActionPreference) {
+        $SavedPSNative = $Global:PSNativeCommandUseErrorActionPreference
+        $Global:PSNativeCommandUseErrorActionPreference = $false
+    }
+    try {
+        if ($Quiet) {
+            & $ScriptBlock *> $null
+        }
+        else {
+            & $ScriptBlock
+        }
+    }
+    finally {
+        $ErrorActionPreference = $SavedEAP
+        if ($Script:HasPSNativeCommandUseErrorActionPreference) {
+            $Global:PSNativeCommandUseErrorActionPreference = $SavedPSNative
+        }
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Command failed with exit code $LASTEXITCODE"
+    }
+}
+
+function Invoke-OpenWakeWordOnnxSync {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PythonExe
+    )
+
+    $SyncPy = @"
+import pathlib
+import sys
+import time
+
+try:
+    import requests
+    import openwakeword
+except Exception as exc:
+    print(f"OWW_SYNC_IMPORT_FAILED: {exc}")
+    sys.exit(1)
+
+target = pathlib.Path(openwakeword.__file__).resolve().parent / "resources" / "models"
+target.mkdir(parents=True, exist_ok=True)
+
+urls = []
+for group in (openwakeword.FEATURE_MODELS, openwakeword.MODELS, openwakeword.VAD_MODELS):
+    for item in group.values():
+        url = item.get("download_url")
+        if not url:
+            continue
+        if url.endswith(".tflite"):
+            urls.append(url.replace(".tflite", ".onnx"))
+        elif url.endswith(".onnx"):
+            urls.append(url)
+
+seen = set()
+required = []
+for url in urls:
+    if url in seen:
+        continue
+    seen.add(url)
+    required.append((url.rsplit("/", 1)[-1], url))
+
+missing = [name for name, _ in required if not (target / name).exists()]
+if not missing:
+    print(f"OWW_ONNX_SYNC_OK: all {len(required)} ONNX assets already present")
+    sys.exit(0)
+
+print(f"OWW_ONNX_SYNC: downloading {len(missing)} missing ONNX assets")
+errors = []
+session = requests.Session()
+
+for name, url in required:
+    out = target / name
+    if out.exists() and out.stat().st_size > 0:
+        continue
+
+    success = False
+    for attempt in range(1, 4):
+        try:
+            with session.get(url, stream=True, timeout=180) as resp:
+                resp.raise_for_status()
+                tmp = out.with_suffix(out.suffix + ".tmp")
+                with open(tmp, "wb") as handle:
+                    for chunk in resp.iter_content(chunk_size=1024 * 1024):
+                        if chunk:
+                            handle.write(chunk)
+                tmp.replace(out)
+            print(f"OWW_ONNX_SAVED: {name}")
+            success = True
+            break
+        except Exception as exc:
+            if attempt == 3:
+                errors.append(f"{name} <- {url} :: {exc}")
+            else:
+                time.sleep(attempt * 2)
+
+    if not success and out.exists() and out.stat().st_size == 0:
+        try:
+            out.unlink()
+        except Exception:
+            pass
+
+if errors:
+    print("OWW_ONNX_SYNC_FAILED:")
+    for err in errors:
+        print(err)
+    sys.exit(1)
+
+print(f"OWW_ONNX_SYNC_OK: downloaded/verified {len(required)} ONNX assets")
+"@
+
+    # Show sync output so failures include direct URL/file diagnostics.
+    Invoke-NativeInstallCommand -Command "openwakeword ONNX model sync" -ScriptBlock {
+        $SyncPy | & $PythonExe -
+    }
+}
+
 foreach ($Service in $Services) {
     try {
         Ensure-WindowsVenv -Service $Service
@@ -483,11 +621,31 @@ foreach ($Service in $Services) {
         if ($LASTEXITCODE -ne 0) {
             & $PythonExe -m ensurepip --default-pip *> $null
         }
-        & $PythonExe -m pip install --upgrade pip setuptools wheel | Out-Null
-        & $PythonExe -m pip install -r $RequirementsFile
+        Invoke-NativeInstallCommand -Command "pip install --upgrade pip setuptools wheel" -Quiet -ScriptBlock {
+            & $PythonExe -m pip install --upgrade pip setuptools wheel
+        }
+        Invoke-NativeInstallCommand -Command "pip install -r $RequirementsFile" -ScriptBlock {
+            & $PythonExe -m pip install -r $RequirementsFile
+        }
         
         if ($LASTEXITCODE -eq 0) {
             Write-Success "Dependencies installed for $($Service.Name)"
+
+            # openwakeword pip package ships only .tflite files; download the
+            # .onnx models (melspectrogram, embedding_model, etc.) explicitly.
+            if ($Service.Name -eq "kiosk-core") {
+                Write-Info "Downloading openwakeword ONNX model assets..."
+                try {
+                    Invoke-OpenWakeWordOnnxSync -PythonExe $PythonExe
+                    Write-Success "openwakeword ONNX assets ready"
+                }
+                catch {
+                    # Wake-word is optional by default. Keep setup usable even if
+                    # model download fails due to transient network/cert/proxy issues.
+                    Write-Warning "openwakeword ONNX model sync failed: $_"
+                    Write-Warning "Continuing setup. Wake-word detection will not work until models are available."
+                }
+            }
         }
         else {
             throw "pip install failed with exit code $LASTEXITCODE"

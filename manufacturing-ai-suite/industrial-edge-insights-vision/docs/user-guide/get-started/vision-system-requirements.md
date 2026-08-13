@@ -39,7 +39,7 @@ See the list of certified edge AI systems as enabled through the  Intel® Edge S
 > **Note:** Only a subset of sample applications are represented by the Intel® ESQ package. See [Test Suites](https://open-edge-platform.github.io/edge-system-qualification/main/getting-started/suites/) for more information.
 
 > **Note:** You can also create apps tailored to your use case using models supported by DL Streamer.
-> Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
+> Check [the list of supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
 ## Validation
 

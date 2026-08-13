@@ -56,7 +56,7 @@ To configure Docker:
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -135,7 +135,7 @@ curl -k -X 'POST' \
 By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
 To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the following command:
 
-- To run inference on with GPU, 
+- To run inference on with GPU,
 
   ```sh
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
@@ -206,7 +206,7 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
    - Use link `https://localhost:3000` to launch Grafana from browser (preferably, chrome browser)
 
-   > **Note:** 
+   > **Note:**
    > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
    > - For remote access, set `HOST_IP` in `.env` to the host system IP address and access `https://<HOST_IP>:3000` (or `https://<HOST_IP>:30001` for Helm).
 

@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { useCaseRegister } from "@smartbuilding-video/tools";
+import { useCaseRegister } from "@smart-community-video/tools";
 
 async function withTempDir(run: (baseDir: string) => Promise<void>): Promise<void> {
   const baseDir = await mkdtemp(join(tmpdir(), "use-case-unregister-"));
