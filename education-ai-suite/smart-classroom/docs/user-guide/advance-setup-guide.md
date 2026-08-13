@@ -13,7 +13,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 ### B. Install DL Streamer
 
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
-For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
+For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
 > Note: DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
@@ -73,7 +73,7 @@ features:
   asr:                { enabled: true }   # Speech-to-text transcription
   summary:            { enabled: true }   # AI class summary / report
   mindmap:            { enabled: true }   # Mind map generation
-  topic_segmentation: { enabled: true }   
+  topic_segmentation: { enabled: true }
   video_analytics:    { enabled: true }   # Video ingestion / analytics
   board_ocr:          { enabled: true }   # OCR of the teacher's display (IFPD)
   content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)

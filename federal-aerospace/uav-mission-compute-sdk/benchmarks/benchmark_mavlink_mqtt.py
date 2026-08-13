@@ -12,7 +12,7 @@ by companion-bridge.  Optionally spawns multiple concurrent subscribers
 
 Usage:
     python3 benchmark_mavlink_mqtt.py [--duration 30] [--clients 4]
-    python3 benchmark_mavlink_mqtt.py --sweep [--sweep-rates 10,25,50,100,200,500]
+    python3 benchmark_mavlink_mqtt.py --bridge-sweep [--sweep-rates 20,50,100,200]
 
     # or, if deps are installed via `make deps`:
     .venv/bin/python benchmarks/benchmark_mavlink_mqtt.py [--duration 30]
@@ -20,12 +20,6 @@ Usage:
 Passive observation (default):
     Subscribes to uav telemetry and reports observed rate, latency, and
     jitter per topic.  Requires the stack to be running and the uav armed.
-
-Broker stress sweep (--sweep):
-    Runs an active publish/subscribe stress test.  For each rate in
-    --sweep-rates a dedicated publisher pushes synthetic telemetry messages
-    (stamped with bridge_ts_ns) at exactly that Hz for --sweep-duration
-    seconds while a subscriber measures what actually arrives.
 
 Bridge stress sweep (--bridge-sweep):
     Real end-to-end stress test of the full PX4 → MAVSDK → companion-bridge
@@ -37,6 +31,7 @@ Bridge stress sweep (--bridge-sweep):
 import argparse
 import json
 import os
+import math
 import statistics
 import subprocess
 import sys
@@ -60,10 +55,196 @@ UAV_ID         = os.getenv("UAV_ID", "uav-1")
 
 # Repo root — used by --bridge-sweep to locate docker-compose.yml.
 REPO_ROOT = Path(__file__).resolve().parent.parent
+RESOURCE_CONTAINERS = ("companion-bridge", "mqtt-broker")
+RESOURCE_SAMPLING_INTERVAL_S = 1.0
 
 
 def _iso_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _parse_pct(value: str | None) -> float | None:
+    if not value:
+        return None
+    text = value.strip()
+    if text.endswith("%"):
+        text = text[:-1]
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _parse_size_to_mib(value: str | None) -> float | None:
+    if not value:
+        return None
+    text = value.strip().lower()
+    units = [
+        ("tib", 1024.0 * 1024.0),
+        ("tb", 1024.0 * 1024.0),
+        ("gib", 1024.0),
+        ("gb", 1024.0),
+        ("mib", 1.0),
+        ("mb", 1.0),
+        ("kib", 1.0 / 1024.0),
+        ("kb", 1.0 / 1024.0),
+        ("b", 1.0 / (1024.0 * 1024.0)),
+    ]
+    for suffix, factor in units:
+        if text.endswith(suffix):
+            try:
+                return float(text[:-len(suffix)].strip()) * factor
+            except ValueError:
+                return None
+    return None
+
+
+def _safe_mean(values: list[float]) -> float | None:
+    return statistics.mean(values) if values else None
+
+
+def _safe_max(values: list[float]) -> float | None:
+    return max(values) if values else None
+
+
+def _resource_summary(samples: list[dict]) -> dict:
+    cpu = [sample["cpu_pct"] for sample in samples if sample.get("cpu_pct") is not None]
+    mem_pct = [sample["mem_pct"] for sample in samples if sample.get("mem_pct") is not None]
+    mem_mib = [sample["mem_mib"] for sample in samples if sample.get("mem_mib") is not None]
+    return {
+        "samples": len(samples),
+        "avg_cpu_pct": _safe_mean(cpu),
+        "peak_cpu_pct": _safe_max(cpu),
+        "avg_mem_pct": _safe_mean(mem_pct),
+        "peak_mem_pct": _safe_max(mem_pct),
+        "avg_mem_mib": _safe_mean(mem_mib),
+        "peak_mem_mib": _safe_max(mem_mib),
+    }
+
+
+class _DockerStatsSampler:
+    def __init__(self, containers: tuple[str, ...], interval_s: float = RESOURCE_SAMPLING_INTERVAL_S):
+        self.containers = containers
+        self.interval_s = interval_s
+        self._samples: dict[str, list[dict]] = {name: [] for name in containers}
+        self._errors: list[str] = []
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self) -> dict:
+        self._stop.set()
+        self._thread.join(timeout=self.interval_s + 5.0)
+        resources = {
+            name: _resource_summary(samples)
+            for name, samples in self._samples.items()
+        }
+        if self._errors:
+            resources["_errors"] = list(self._errors)
+        return resources
+
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            self._capture_once()
+            if self._stop.wait(self.interval_s):
+                break
+
+    def _capture_once(self) -> None:
+        cmd = [
+            "docker", "stats", "--no-stream",
+            "--format", "{{json .}}",
+            *self.containers,
+        ]
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+        except FileNotFoundError:
+            self._errors.append("docker not found on PATH")
+            self._stop.set()
+            return
+        except subprocess.TimeoutExpired:
+            self._errors.append("docker stats timed out")
+            return
+
+        if result.returncode != 0:
+            stderr = result.stderr.strip() or f"docker stats rc={result.returncode}"
+            self._errors.append(stderr)
+            return
+
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                self._errors.append(f"unparseable docker stats row: {line[:120]}")
+                continue
+
+            name = row.get("Name")
+            if name not in self._samples:
+                continue
+            mem_usage = row.get("MemUsage", "").split("/", 1)[0].strip()
+            self._samples[name].append({
+                "cpu_pct": _parse_pct(row.get("CPUPerc")),
+                "mem_pct": _parse_pct(row.get("MemPerc")),
+                "mem_mib": _parse_size_to_mib(mem_usage),
+            })
+
+
+def _measure_with_resources(duration_s: float, measure) -> tuple[object, dict]:
+    interval = max(0.5, min(RESOURCE_SAMPLING_INTERVAL_S, duration_s / 4.0 if duration_s > 0 else RESOURCE_SAMPLING_INTERVAL_S))
+    sampler = _DockerStatsSampler(RESOURCE_CONTAINERS, interval_s=interval)
+    sampler.start()
+    try:
+        result = measure()
+    finally:
+        resources = sampler.stop()
+    return result, resources
+
+
+def _fmt_metric(value: float | None, digits: int = 2, empty: str = "n/a") -> str:
+    if value is None:
+        return empty
+    if isinstance(value, float) and math.isnan(value):
+        return empty
+    return f"{value:.{digits}f}"
+
+
+def _print_resource_table(label: str, tiers: list[dict], tier_label: str, tier_fmt) -> None:
+    if not tiers:
+        return
+    W = 112
+    print(f"\n{'─'*80}")
+    print(f"  {label}")
+    print(f"  {'─'*W}")
+    print(f"  {tier_label:>10}  {'Container':<18}  {'CPU Avg %':>9}  {'CPU Peak %':>10}  {'Mem Avg %':>9}  {'Mem Peak %':>10}  {'Mem Avg MiB':>11}  {'Mem Peak MiB':>12}")
+    print(f"  {'─'*W}")
+    for tier in tiers:
+        key = tier_fmt(tier)
+        for container in RESOURCE_CONTAINERS:
+            summary = tier.get("resources", {}).get(container, {})
+            print(
+                f"  {key:>10}  {container:<18}  "
+                f"{_fmt_metric(summary.get('avg_cpu_pct')):>9}  "
+                f"{_fmt_metric(summary.get('peak_cpu_pct')):>10}  "
+                f"{_fmt_metric(summary.get('avg_mem_pct')):>9}  "
+                f"{_fmt_metric(summary.get('peak_mem_pct')):>10}  "
+                f"{_fmt_metric(summary.get('avg_mem_mib')):>11}  "
+                f"{_fmt_metric(summary.get('peak_mem_mib')):>12}"
+            )
+        errors = tier.get("resources", {}).get("_errors") or []
+        if errors:
+            print(f"  {'':>10}  {'sampler':<18}  {'; '.join(errors)}")
+        print(f"  {'·'*W}")
+    print(f"  {'─'*W}")
 
 
 # Sentinel for `--html-report` used with no PATH argument: resolved to a
@@ -287,169 +468,6 @@ def _print_topic_table(stats: ClientStats, elapsed: float, label: str) -> None:
 
 
 # --------------------------------------------------------------------------
-# Broker stress sweep
-# --------------------------------------------------------------------------
-
-@dataclass
-class _StressTierResult:
-    hz:        float
-    published: int
-    received:  int
-    elapsed_s: float
-    latencies: list
-    intervals: list
-
-
-def _run_stress_tier(
-    host: str,
-    port: int,
-    hz: float,
-    duration_s: float,
-    uav_id: str,
-) -> _StressTierResult:
-    # Publish synthetic telemetry at *hz* and measure what the subscriber sees.
-    topic    = f"uav/{uav_id}/telemetry/stress"
-    interval = 1.0 / hz
-
-    received_count = 0
-    latencies: list[float] = []
-    intervals: list[float] = []
-    last_mono: list = [None]
-    lock       = threading.Lock()
-    subscribed = threading.Event()
-
-    def _on_sub_connect(client, userdata, flags, reason_code, properties):
-        client.subscribe(topic, qos=0)
-
-    def _on_sub_subscribe(client, userdata, mid, reason_codes, properties):
-        subscribed.set()
-
-    def _on_message(client, userdata, msg):
-        nonlocal received_count
-        now_ns   = time.time_ns()
-        now_mono = time.monotonic()
-        lat_ms   = None
-        try:
-            ts_ns = json.loads(msg.payload).get("bridge_ts_ns")
-            if isinstance(ts_ns, (int, float)):
-                lat_ms = (now_ns - int(ts_ns)) / 1e6
-        except Exception:
-            pass
-        with lock:
-            received_count += 1
-            if last_mono[0] is not None:
-                intervals.append((now_mono - last_mono[0]) * 1000.0)
-            last_mono[0] = now_mono
-            if lat_ms is not None and -100 < lat_ms < 60_000:
-                latencies.append(lat_ms)
-
-    sub = mqtt.Client(
-        callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-        client_id=f"stress-sub-{hz:.0f}hz",
-    )
-    sub.on_connect   = _on_sub_connect
-    sub.on_subscribe = _on_sub_subscribe
-    sub.on_message   = _on_message
-    sub.connect(host, port, keepalive=60)
-    sub.loop_start()
-    if not subscribed.wait(timeout=5.0):
-        sub.loop_stop(); sub.disconnect()
-        raise RuntimeError(f"Subscriber did not subscribe within 5 s at {host}:{port}")
-
-    pub = mqtt.Client(
-        callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
-        client_id=f"stress-pub-{hz:.0f}hz",
-    )
-    pub.connect(host, port, keepalive=60)
-    pub.loop_start()
-
-    # Absolute-deadline publish loop — avoids cumulative drift at high rates.
-    published = 0
-    start     = time.monotonic()
-    while time.monotonic() - start < duration_s:
-        next_pub = start + published * interval
-        now      = time.monotonic()
-        gap      = next_pub - now
-        if gap > 0.001:
-            time.sleep(gap * 0.8)
-            continue
-        if gap > 0:
-            while time.monotonic() < next_pub:
-                pass
-        pub.publish(
-            topic,
-            json.dumps({"bridge_ts_ns": time.time_ns(), "seq": published}).encode(),
-            qos=0,
-        )
-        published += 1
-
-    actual_elapsed = time.monotonic() - start
-    # Drain in-flight messages before tearing down.
-    time.sleep(min(0.5, interval * 10))
-
-    pub.loop_stop(); pub.disconnect()
-    sub.loop_stop(); sub.disconnect()
-
-    with lock:
-        return _StressTierResult(
-            hz=hz,
-            published=published,
-            received=received_count,
-            elapsed_s=actual_elapsed,
-            latencies=list(latencies),
-            intervals=list(intervals),
-        )
-
-
-_DROP_WARN_PCT = 2.0
-
-
-def _print_stress_table(
-    results: list[_StressTierResult], duration_s: float, host: str, port: int
-) -> None:
-    W = 90
-    print(f"\n{'─'*80}")
-    print(f"  MQTT Broker Stress Sweep  "
-          f"({duration_s:.0f}s per tier · QoS 0 · broker {host}:{port})")
-    print(f"  Payload: JSON with bridge_ts_ns for end-to-end latency measurement")
-    print(f"{'─'*80}")
-    hdr1 = (f"  {'Config':>11}  {'Published':>10}  {'Received':>10}  {'Drop':>6}  "
-            f"{'Eff. Rate':>10}  {'Avg Lat':>9}  {'P99 Lat':>9}  {'Jitter':>9}")
-    hdr2 = (f"  {'(Hz)':>11}  {'':>10}  {'':>10}  {'%':>6}  "
-            f"{'(Hz)':>10}  {'(ms)':>9}  {'(ms)':>9}  {'(ms)':>9}")
-    print(hdr1)
-    print(hdr2)
-    print(f"  {'─'*W}")
-
-    first_bad_hz: float | None = None
-    for r in results:
-        drop_pct = (1.0 - r.received / r.published) * 100 if r.published else 0.0
-        eff_rate = r.received / r.elapsed_s if r.elapsed_s > 0 else 0.0
-        if r.latencies:
-            avg_lat = statistics.mean(r.latencies)
-            p99_lat = sorted(r.latencies)[int(len(r.latencies) * 0.99)]
-            lat_str = f"{avg_lat:>9.2f}  {p99_lat:>9.2f}"
-        else:
-            lat_str = f"{'n/a':>9}  {'n/a':>9}"
-        jitter = statistics.stdev(r.intervals) if len(r.intervals) > 1 else 0.0
-        flag   = " ⚠" if drop_pct >= _DROP_WARN_PCT else ""
-        if drop_pct >= _DROP_WARN_PCT and first_bad_hz is None:
-            first_bad_hz = r.hz
-        print(f"  {r.hz:>11.1f}  {r.published:>10}  {r.received:>10}  "
-              f"{drop_pct:>5.1f}%  {eff_rate:>10.1f}  {lat_str}  {jitter:>9.2f}{flag}")
-
-    print(f"  {'─'*W}")
-    if first_bad_hz is not None:
-        print(f"  ⚠  Drop ≥ {_DROP_WARN_PCT:.0f}% first seen at {first_bad_hz:.0f} Hz — "
-              f"broker saturates above this point.")
-    else:
-        print(f"  All tiers clean (drop < {_DROP_WARN_PCT:.0f}%). "
-              f"Broker handled up to {results[-1].hz:.0f} Hz without saturation.")
-    print(f"  Note: companion-bridge caps the MAVLink→MQTT path at "
-          f"20 Hz (attitude/velocity) and 10 Hz (position).\n")
-
-
-# --------------------------------------------------------------------------
 # Bridge stress sweep
 # --------------------------------------------------------------------------
 
@@ -469,6 +487,7 @@ class _BridgeTierResult:
     per_topic:     dict   # leaf -> (count, obs_hz, avg_lat, p99_lat, jitter)
     total_received: int
     elapsed_s:     float
+    resources:     dict
 
 
 def _recreate_companion_bridge(env_overrides: dict, compose_file: Path) -> None:
@@ -533,9 +552,12 @@ def _run_bridge_tier(
     sub.subscribe(f"uav/{uav_id}/telemetry/#", qos=0)
     sub.loop_start()
 
-    start = time.monotonic()
-    time.sleep(duration_s)
-    elapsed = time.monotonic() - start
+    def _measure_window() -> float:
+        start = time.monotonic()
+        time.sleep(duration_s)
+        return time.monotonic() - start
+
+    elapsed, resources = _measure_with_resources(duration_s, _measure_window)
 
     sub.loop_stop(); sub.disconnect()
 
@@ -556,6 +578,7 @@ def _run_bridge_tier(
         per_topic=per_topic,
         total_received=sum(stats.counts.values()),
         elapsed_s=elapsed,
+        resources=resources,
     )
 
 
@@ -607,6 +630,7 @@ class _ClientSweepTier:
     per_client_counts: list
     per_client_lats:   list
     all_lats:          list
+    resources:         dict
 
 
 def _run_client_sweep_tier(
@@ -625,9 +649,12 @@ def _run_client_sweep_tier(
             c.subscribe(f"uav/{uav_id}/telemetry/#", qos=0)
             c.loop_start()
             clients.append(c)
-        start = time.monotonic()
-        time.sleep(duration_s)
-        elapsed = time.monotonic() - start
+        def _measure_window() -> float:
+            start = time.monotonic()
+            time.sleep(duration_s)
+            return time.monotonic() - start
+
+        elapsed, resources = _measure_with_resources(duration_s, _measure_window)
     finally:
         for c in clients:
             try:
@@ -648,6 +675,7 @@ def _run_client_sweep_tier(
         per_client_counts=per_counts,
         per_client_lats=per_lats,
         all_lats=all_lats,
+        resources=resources,
     )
 
 
@@ -691,6 +719,7 @@ def _client_scaling_report_dict(tiers: list[_ClientSweepTier]) -> dict:
             "cv":        cv,
             "avg_lat":   avg_lat,
             "p99_lat":   p99_lat,
+            "resources": t.resources,
         })
     # Duration of the last tier serves as a representative window value.
     duration = tiers[-1].duration_s if tiers else 0.0
@@ -710,16 +739,10 @@ def main():
     parser.add_argument("--clients", type=int, default=1,
                         help="Number of concurrent MQTT subscribers (default: 1). "
                              "Increase to test broker fan-out under load.")
-    parser.add_argument("--sweep", action="store_true",
-                        help="Run an active broker stress sweep instead of (or after) "
-                             "passive observation.  A publisher injects synthetic "
-                             "telemetry at each rate in --sweep-rates while a "
-                             "subscriber measures throughput, drop%%, and latency. "
-                             "Only the MQTT broker needs to be running.")
-    parser.add_argument("--sweep-rates", default="10,25,50,100,200,500",
+    parser.add_argument("--sweep-rates", default="20,50,100,200",
                         metavar="HZ_LIST",
-                        help="Comma-separated publish rates (Hz) for the stress sweep "
-                             "(default: 10,25,50,100,200,500).")
+                        help="Comma-separated publish rates (Hz) for the bridge "
+                             "stress sweep (default: 20,50,100,200).")
     parser.add_argument("--sweep-duration", type=float, default=10.0,
                         metavar="SECS",
                         help="Measurement window per tier in seconds (default: 10).")
@@ -772,7 +795,6 @@ def main():
     report_system: dict | None = None
     report_health: dict | None = None
     report_client_scaling: dict | None = None
-    report_broker: dict | None = None
     report_bridge: dict | None = None
     if args.html_report:
         # System info + health snapshot are cheap; grab them once up front so
@@ -811,6 +833,12 @@ def main():
         if client_tiers:
             _print_client_sweep_table(client_tiers)
             report_client_scaling = _client_scaling_report_dict(client_tiers)
+            _print_resource_table(
+                "Client scaling resource utilization",
+                report_client_scaling["tiers"],
+                "Clients",
+                lambda tier: str(tier["n_clients"]),
+            )
 
     # ── Bridge stress sweep ───────────────────────────────────────────────
     if args.bridge_sweep:
@@ -875,29 +903,32 @@ def main():
                             }
                             for leaf, data in r.per_topic.items()
                         },
+                        "resources": r.resources,
                     }
                     for r in bridge_results
                 ],
             }
+            _print_resource_table(
+                "Bridge sweep resource utilization",
+                report_bridge["tiers"],
+                "Cap (Hz)",
+                lambda tier: f"{tier['hz']:.0f}",
+            )
         # If user only asked for bridge sweep, exit here.
-        if not args.sweep and not args.client_sweep:
+        if not args.client_sweep:
             if args.html_report:
                 _emit_html(args.html_report, report_meta, report_system,
                            report_health, report_client_scaling,
-                           report_broker, report_bridge)
+                           report_bridge)
             return
 
     # If --client-sweep is set we skip the one-shot passive observation
     # (client-sweep already covers that at multiple N values).
     if args.client_sweep:
-        if args.sweep:
-            _run_broker_sweep_and_report(args, report_meta, report_system,
-                                          report_health, report_client_scaling,
-                                          report_bridge)
-        elif args.html_report:
+        if args.html_report:
             _emit_html(args.html_report, report_meta, report_system,
                        report_health, report_client_scaling,
-                       report_broker, report_bridge)
+                       report_bridge)
         return
 
     n = max(1, args.clients)
@@ -993,102 +1024,26 @@ def main():
     if warned:
         print()
 
-    if args.sweep:
-        sweep_rates = sorted({
-            float(r.strip()) for r in args.sweep_rates.split(",") if r.strip()
-        })
-        print(f"\n{'─'*80}")
-        print(f"  Starting broker stress sweep: {len(sweep_rates)} tier(s), "
-              f"{args.sweep_duration:.0f}s each …")
-        results: list[_StressTierResult] = []
-        for hz in sweep_rates:
-            print(f"  → {hz:.0f} Hz … ", end="", flush=True)
-            try:
-                r = _run_stress_tier(
-                    args.host, args.port, hz, args.sweep_duration, UAV_ID
-                )
-                results.append(r)
-                drop = (1 - r.received / r.published) * 100 if r.published else 0
-                print(f"published={r.published}  received={r.received}  "
-                      f"drop={drop:.1f}%")
-            except Exception as exc:
-                print(f"FAILED: {exc}", file=sys.stderr)
-        _print_stress_table(results, args.sweep_duration, args.host, args.port)
-        report_broker = _broker_report_dict(results, args.sweep_duration)
-
     if args.html_report:
         _emit_html(args.html_report, report_meta, report_system,
-                   report_health, report_client_scaling,
-                   report_broker, report_bridge)
+                   report_health, report_client_scaling, report_bridge)
 
 
 # --------------------------------------------------------------------------
 # HTML report snapshot helpers
 # --------------------------------------------------------------------------
 
-def _broker_report_dict(results, duration_s):
-    tiers = []
-    for r in results:
-        drop_pct = (1.0 - r.received / r.published) * 100 if r.published else 0.0
-        eff_rate = r.received / r.elapsed_s if r.elapsed_s > 0 else 0.0
-        avg_lat  = statistics.mean(r.latencies) if r.latencies else None
-        p99_lat  = (sorted(r.latencies)[int(len(r.latencies) * 0.99)]
-                    if r.latencies else None)
-        jitter   = statistics.stdev(r.intervals) if len(r.intervals) > 1 else 0.0
-        tiers.append({
-            "hz":        r.hz,
-            "published": r.published,
-            "received":  r.received,
-            "drop_pct":  drop_pct,
-            "eff_rate":  eff_rate,
-            "avg_lat":   avg_lat,
-            "p99_lat":   p99_lat,
-            "jitter":    jitter,
-        })
-    return {"duration_s": duration_s, "tiers": tiers}
-
-
-def _emit_html(path, meta, system, health, client_scaling, broker, bridge):
+def _emit_html(path, meta, system, health, client_scaling, bridge):
     try:
         write_html_report(
             Path(path),
             meta=meta, system=system, health=health,
-            client_scaling=client_scaling,
-            broker=broker, bridge=bridge,
+            client_scaling=client_scaling, bridge=bridge,
         )
         print(f"\n  HTML report written to {path}")
     except Exception as exc:
         print(f"\n  WARNING: could not write HTML report: {exc}",
               file=sys.stderr)
-
-
-def _run_broker_sweep_and_report(args, meta, system, health,
-                                  client_scaling, bridge):
-    """Run the broker stress sweep and (optionally) emit the HTML report."""
-    sweep_rates = sorted({
-        float(r.strip()) for r in args.sweep_rates.split(",") if r.strip()
-    })
-    print(f"\n{'─'*80}")
-    print(f"  Starting broker stress sweep: {len(sweep_rates)} tier(s), "
-          f"{args.sweep_duration:.0f}s each …")
-    results: list[_StressTierResult] = []
-    for hz in sweep_rates:
-        print(f"  → {hz:.0f} Hz … ", end="", flush=True)
-        try:
-            r = _run_stress_tier(
-                args.host, args.port, hz, args.sweep_duration, UAV_ID
-            )
-            results.append(r)
-            drop = (1 - r.received / r.published) * 100 if r.published else 0
-            print(f"published={r.published}  received={r.received}  "
-                  f"drop={drop:.1f}%")
-        except Exception as exc:
-            print(f"FAILED: {exc}", file=sys.stderr)
-    _print_stress_table(results, args.sweep_duration, args.host, args.port)
-    broker_dict = _broker_report_dict(results, args.sweep_duration) if results else None
-    if args.html_report:
-        _emit_html(args.html_report, meta, system, health,
-                   client_scaling, broker_dict, bridge)
 
 
 if __name__ == "__main__":
