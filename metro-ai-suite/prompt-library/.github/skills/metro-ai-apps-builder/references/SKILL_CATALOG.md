@@ -14,13 +14,17 @@ refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 
 | If the user wants… | Primary skill | Supporting |
 |---|---|---|
-| A full **end-to-end analytics stack** (live annotated video + dashboard + alerts) for detection/classification/counting/zone-alerting on any vertical (smart city, retail, industrial, PPE, parking, healthcare…) | **`metro-ai-apps-recipe`** *(this repo)* | `model-download-user` (custom IR), `dlstreamer-coding-agent` (custom pipeline JSON) |
+| A full **end-to-end analytics stack** (live annotated video + dashboard + alerts) for detection/classification/counting/zone-alerting on any vertical (smart city, retail, industrial, PPE, parking, healthcare…) | **`metro-ai-apps-recipe`** *(this repo)* — production mode (`MODE=production`, the default) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (custom pipeline JSON) |
+| A **quick local demo / PoC** — a single lightweight app (no full stack) that just proves a model runs and emits inference: a simple DL Streamer pipeline **or** a minimal OpenVINO inference script | **`metro-ai-apps-recipe`** *(this repo)* — demo/PoC mode (`MODE=demo`) | `dlstreamer-coding-agent` (DL Streamer sub-path), OpenVINO 2026 docs (OpenVINO sub-path), `model-download-user` (model IR) |
 | **Multi-camera / spatial** cross-camera tracking & scene fusion (smart-intersection style) | **`scenescape-setup`** — reached via the `metro-ai-apps-recipe` SceneScape opt-in path | `metro-ai-apps-recipe` for the detection front-end |
 | A **custom vision pipeline / sample app in code** (Python/C/C++/GStreamer): detection, classification, tracking, VLM, recording, custom elements | **`dlstreamer-coding-agent`** | `model-download-user` |
 
 Deliverable shape: *end-to-end solution* (Compose stack) for
-`metro-ai-apps-recipe`; *single app / code* for `dlstreamer-coding-agent`;
-*multi-camera solution* for the SceneScape path.
+`metro-ai-apps-recipe` in **production mode**; *quick single app / PoC* for
+`metro-ai-apps-recipe` in **demo mode** (`MODE=demo`) or for
+`dlstreamer-coding-agent`; *multi-camera solution* for the SceneScape path. Map
+the Step 1 **deployment-target** answer to the recipe mode: "quick local
+demo/POC" → `MODE=demo`; "Docker Compose end-to-end" → `MODE=production`.
 
 ## 2. Conversational AI — chatbot / Q&A / RAG over documents
 
@@ -95,7 +99,15 @@ Typical robot pipeline: train (`physicalai-train-*`) → export
   *detect/count/track + camera* → §1; *ask/answer + documents* → §2;
   *search/summarize + video* → §3; *download/convert + model* → §4;
   *train/fine-tune + dataset* → §5; *run/deploy + robot policy* → §6.
-- **Deployment target** picks the Docker vs Helm variant (chatqna, vss).
+- **Deployment target** picks the Docker vs Helm variant (chatqna, vss) and the
+  `metro-ai-apps-recipe` mode: a *quick local demo/POC* → recipe **demo mode**
+  (`MODE=demo`, a single DL Streamer or OpenVINO app); a *Docker Compose
+  end-to-end* stack → recipe **production mode** (`MODE=production`). Prefer the
+  recipe's demo mode over calling `dlstreamer-coding-agent` directly when the
+  user came in via a **business objective** (it wraps the same DL Streamer
+  hand-off and also offers the OpenVINO path); route straight to
+  `dlstreamer-coding-agent` only when the user explicitly wants to author custom
+  pipeline **code**.
 - **"Custom model"** almost always adds `model-download-user` as a supporting
   step before a deploy/build skill.
 - When two domains appear (e.g. *train then deploy*), sequence the skills and

@@ -11,11 +11,8 @@ tags:
   - metro-ai-apps-builder
   - intel
 prompt: |
-  I want to detect and count vehicles across my roadway and parking camera
-  feeds for traffic flow, parking occupancy, or congestion monitoring and be
-  notified when counts cross a threshold.
+  I want to detect and count vehicles across my roadway and parking camera feeds for traffic flow, parking occupancy, or congestion monitoring and be notified when counts cross a threshold.
 
-  Use the metro-ai-apps-builder skill to guide this process. Install and
-  invoke it:
+  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
 
   npx skills add open-edge-platform/skills --skill metro-ai-apps-builder

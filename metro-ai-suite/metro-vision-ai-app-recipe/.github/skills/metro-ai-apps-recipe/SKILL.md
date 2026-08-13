@@ -9,9 +9,12 @@ description: >-
   spatial-analysis path. USE FOR standing up an object-detection, classification,
   counting, or zone-alerting pipeline for any vertical (smart city/ITS, retail,
   industrial, logistics, healthcare, or a custom OpenVINO/ONNX model) where only
-  the model, class filter, alert rule, and dashboard change. DO NOT USE FOR
-  non-Intel or cloud-only deployments, Prometheus/OpenTelemetry metrics stacks,
-  or training and exporting models.
+  the model, class filter, alert rule, and dashboard change. Also USE FOR a
+  lightweight **demo/PoC** single application (no full stack) — a simple DL
+  Streamer pipeline (via the `dlstreamer-coding-agent` skill) or a simple
+  OpenVINO inference app (guided by the OpenVINO 2026 docs) selected via the
+  mode question. DO NOT USE FOR non-Intel or cloud-only deployments,
+  Prometheus/OpenTelemetry metrics stacks, or training and exporting models.
 license: Apache-2.0
 compatibility: >-
   Requires Docker + Docker Compose v2, host with Intel CPU (and optionally
@@ -67,14 +70,19 @@ skeleton changes across verticals.
 ## How to use this skill
 
 1. Read this file end-to-end.
-2. Ask the 7 questions in ONE batched message (defaults in brackets); accept
+2. Ask **Question 0 (mode)** first. If the user selects **Demo/PoC**, branch
+   immediately to the [Demo/PoC mode](#demopoc-mode) section and load
+   [`references/DEMO_POC.md`](references/DEMO_POC.md) — skip questions 1–7 and
+   the full-stack build entirely. Otherwise (**Full-stack production**, the
+   default) continue with the steps below.
+3. Ask the 7 questions in ONE batched message (defaults in brackets); accept
    `go` / `defaults` / empty to proceed. Question 7 selects the **SceneScape**
    opt-in spatial-analysis path.
-3. Run parameter validation (see below). Refuse to proceed on any failure.
-4. Load reference file(s) on demand per component — **do not load all up
+4. Run parameter validation (see below). Refuse to proceed on any failure.
+5. Load reference file(s) on demand per component — **do not load all up
    front**. Load [`references/SCENESCAPE.md`](references/SCENESCAPE.md) only
    when `{{SCENESCAPE}}=yes`.
-5. Verify against the completion criteria before declaring success, and
+6. Verify against the completion criteria before declaring success, and
    record measured throughput/latency against the baselines in `benchmark.md`.
 
 ## Reference files (load on demand)
@@ -87,11 +95,13 @@ skeleton changes across verticals.
 | [`references/INSTALL.md`](references/INSTALL.md) | `.env`, `validate_env.sh`, `install.sh`, `docker-compose.yml` (MediaMTX + Coturn) volumes |
 | [`references/TESTS.md`](references/TESTS.md) | `conftest.py`, `test_webrtc_stream.py`, assertion contracts for other tests |
 | [`references/SCENESCAPE.md`](references/SCENESCAPE.md) | **Only when `{{SCENESCAPE}}=yes`** — opt-in multi-camera scene-fusion path (Scene Controller + InfluxDB + Grafana Flux + Scene Management UI), delegating to the external `scenescape-setup` skill |
+| [`references/DEMO_POC.md`](references/DEMO_POC.md) | **Only when `{{MODE}}=demo`** — lightweight single-app demo/PoC path: simple DL Streamer pipeline (via `dlstreamer-coding-agent`) or simple OpenVINO inference app (via OpenVINO 2026 docs); no full stack |
 
 ## Parameters (from invoking prompt)
 
 | Param | Purpose |
 |---|---|
+| `{{MODE}}` | `demo` \| `production` (default `production`). `demo` selects the lightweight single-app demo/PoC path — see [`references/DEMO_POC.md`](references/DEMO_POC.md); parameters below apply only to `production` |
 | `{{OBJECT}}` | class label in dashboard/alerts (e.g. `person`, `vehicle`, `hardhat`, `defect`, `fall`) — any string valid for MQTT topics and Grafana titles |
 | `{{STACK_DIR}}` | e.g. `person-detect-stack`, `ppe-compliance-stack`, `retail-queue-stack`, `anpr-stack` |
 | `{{DEFAULT_MODEL}}`, `{{OTHER_MODELS}}` | allowed model options |
@@ -113,6 +123,11 @@ skeleton changes across verticals.
 
 ## Questions (single batched prompt)
 
+**Question 0 — Mode** [`production`]: `demo` (lightweight single-app PoC) or
+`production` (full end-to-end stack). If `demo`, STOP here and follow
+[Demo/PoC mode](#demopoc-mode) / [`references/DEMO_POC.md`](references/DEMO_POC.md);
+do **not** ask questions 1–7. Questions 1–7 below apply only to `production`.
+
 1. Model [`{{DEFAULT_MODEL}}`] (also: `{{OTHER_MODELS}}`)
 2. Classifier [`{{CLASSIFIER}}`] (or `none`)
 3. Device [CPU] (GPU, NPU, AUTO)
@@ -131,6 +146,7 @@ and call as step 0 of `install.sh`. Rules:
 
 | Param | Rule | Failure mode |
 |---|---|---|
+| `MODE` | `demo`\|`production` | wrong path selected |
 | `HOST_IP` | `^([0-9]{1,3}\.){3}[0-9]{1,3}$`, not `0.0.0.0`/`127.0.0.1` | LAN clients can't reach Grafana |
 | `NUM_SOURCES` | int, 1–16 | CPU saturates before REST launcher finishes |
 | `DEVICE` | `cpu`\|`gpu`\|`npu`\|`auto` | REST 404 on missing variant |
@@ -165,6 +181,24 @@ DLSPS ─WebRTC/WHIP───────▶ MediaMTX (peer-id={{DETECTIONS_TOPI
                               │
                          Grafana <iframe src="/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_N/">
 ```
+
+## Demo/PoC mode
+
+When Question 0 selects `demo`, **do not build the full stack** — no Docker
+Compose topology, no MediaMTX/Coturn/Node-RED/Grafana/Nginx, no SceneScape.
+Instead produce a single lightweight application that proves a model runs on
+Intel hardware and emits inference output. Two sub-paths (ask the user which):
+
+- **DL Streamer app** — a simple DL Streamer / GStreamer pipeline (detect and
+  overlay/print results). Delegate to the `dlstreamer-coding-agent` skill.
+- **OpenVINO app** — a minimal Python inference script using the OpenVINO
+  runtime (load → `compile_model` → infer → post-process). No dedicated skill
+  exists; follow the OpenVINO 2026 docs.
+
+Full authoring guidance, delegation details, and the lightweight completion
+criteria live in [`references/DEMO_POC.md`](references/DEMO_POC.md) — load it
+only on this branch. The production completion criteria (1–11 below) do **not**
+apply in demo mode.
 
 ## SceneScape spatial-analysis path (optional, `{{SCENESCAPE}}=yes`)
 
@@ -256,7 +290,8 @@ JSON, or the test files is a syntax error.
 
 If available in the session, invoke; otherwise write files from the reference
 templates.
-- `dlstreamer-coding-agent` — pipeline JSON authoring
+- `dlstreamer-coding-agent` — pipeline JSON authoring (also the **demo/PoC** DL Streamer single-app path when `{{MODE}}=demo`)
+- `dlsps-user` (open-edge-platform/skills) — DL Streamer Pipeline Server deploy/config/REST operations; invoke when building the **full-stack multi-microservice** app that runs DLSPS (this recipe's default `{{MODE}}=production` path — see [`references/PIPELINE.md`](references/PIPELINE.md))
 - `model-download` (open-edge-platform/edge-ai-libraries) — OMZ model IR
 - `scenescape-setup` (open-edge-platform/skills) — **only when `{{SCENESCAPE}}=yes`**; orchestrates the multi-camera SceneScape deploy (see [`references/SCENESCAPE.md`](references/SCENESCAPE.md))
 
