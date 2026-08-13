@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
+.PHONY: init up-sim-camera up-sim-camera-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -39,10 +39,24 @@ up-sim-camera:
 	@touch .env \
 		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
 		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
+	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera --profile observability up -d --build
+
+up-sim-camera-lean:
+	@# Help: Start sim-camera without observability stack (saves ~300 MB RAM)
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
 	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera up -d --build
 
 up-usb-camera:
 	@# Help: Start core infra with real USB camera + lightweight PX4 SIH + companion telemetry services
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile usb-camera --profile observability up -d --build
+
+up-usb-camera-lean:
+	@# Help: Start usb-camera without observability stack (saves ~300 MB RAM)
 	@touch .env \
 		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env \
 		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
@@ -60,7 +74,7 @@ build-nc:
 
 down:
 	@# Help: Stop core infra (works for both sim-camera and usb-camera profiles)
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down
 
 logs:
 	@# Help: Tail logs for core infra
@@ -108,12 +122,12 @@ deploy-remote:
 # ── Misc ──────────────────────────────────────────────────────────────────
 clean:
 	@# Help: Remove stopped containers and dangling images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
 	docker image prune -f
 
 clean-all:
 	@# Help: Remove containers, compose volumes, and all unused images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down --remove-orphans --volumes
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans --volumes
 	docker image prune -a -f
 
 help:
