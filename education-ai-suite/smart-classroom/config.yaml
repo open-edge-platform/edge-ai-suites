@@ -40,6 +40,7 @@ models:
     max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
   
   diarization: #Only applicable when diarization is set to True for ASR
+    backend: pyannote  # pyannote, or campplus for funasr/paraformer-zh
     provider: "huggingface"
     name: "pyannote/speaker-diarization-community-1"
     models_base_path: "models"
@@ -92,6 +93,7 @@ mindmap:
   min_token: 20
 
 audio_preprocessing:
+  chunking: true # false: transcribe and diarize the whole recording in one pass, funasr/paraformer-zh only
   chunk_duration_sec: 30
   silence_threshold: -35  # in dB
   silence_duration: 0.3   # minimum silence length in seconds

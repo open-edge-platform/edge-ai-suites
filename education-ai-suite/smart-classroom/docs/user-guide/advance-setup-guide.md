@@ -13,7 +13,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 ### B. Install DL Streamer
 
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
-For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
+For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
 > Note: DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
@@ -73,7 +73,7 @@ features:
   asr:                { enabled: true }   # Speech-to-text transcription
   summary:            { enabled: true }   # AI class summary / report
   mindmap:            { enabled: true }   # Mind map generation
-  topic_segmentation: { enabled: true }   
+  topic_segmentation: { enabled: true }
   video_analytics:    { enabled: true }   # Video ingestion / analytics
   board_ocr:          { enabled: true }   # OCR of the teacher's display (IFPD)
   content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
@@ -151,8 +151,15 @@ board_ocr:
 
 ### F. Speaker Diarization Setup (Optional)
 
-Speaker diarization is supported using Pyannote Audio models.
-To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
+Speaker diarization labels each transcript line with the speaker who said it. Two backends are
+available:
+
+| Backend | Gated access | Speed (CPU) | Notes |
+| :--- | :--- | :--- | :--- |
+| `pyannote` (default) | Yes, Hugging Face token required | ~0.43x realtime | Detects overlapping speech |
+| `campplus` | No | ~0.01x realtime | FunASR VAD + CAM++, requires the funASR setup from section C |
+
+Steps a-c below set up the default pyannote backend. Skip to step d for CAM++.
 
 #### a. Request Model Access on Hugging Face
 
@@ -186,6 +193,33 @@ models:
 ```
 
 > **Note:** The diarization model downloads automatically on next startup once `diarization: true` is set.
+
+#### d. CAM++ Backend (funASR only)
+
+`campplus` needs no token and no gated access, but it requires `provider: funasr` and
+`name: paraformer-zh` from section C. Its speaker and VAD models are downloaded from ModelScope
+on first use and reused offline afterwards.
+
+```yaml
+models:
+  asr:
+    diarization: true
+  diarization:
+    backend: campplus
+```
+
+#### e. Whole-File Processing (funASR only)
+
+By default audio is transcribed and diarized in chunks, which streams results to the UI while
+the recording is still being processed. Setting `chunking: false` processes the whole recording
+in a single pass instead: speaker clustering sees all the speech at once, at the cost of no
+intermediate results. It also requires `provider: funasr` and `name: paraformer-zh`, and is
+ignored for microphone capture, where the recording is not available up front.
+
+```yaml
+audio_preprocessing:
+  chunking: false
+```
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
