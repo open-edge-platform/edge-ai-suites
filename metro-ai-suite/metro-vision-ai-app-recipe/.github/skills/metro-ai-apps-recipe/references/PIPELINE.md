@@ -1,5 +1,11 @@
 # DLSPS pipeline reference
 
+> **Skill pointer:** for deploying, configuring, and operating DL Streamer
+> Pipeline Server (container startup, `config.json` pipeline definitions, REST
+> API launch/stop/status, MQTT/publisher wiring, GPU/NPU device access), invoke
+> the external `dlsps-user` skill (open-edge-platform/skills) when available.
+> The settings below are the recipe-specific overrides this stack requires.
+
 ## Required env
 
 - `REST_SERVER_PORT=8080`, `RUN_MODE=EVA`,
