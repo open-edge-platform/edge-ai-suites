@@ -1,4 +1,9 @@
-"""Fixed-interval segment writer with min_duration filter."""
+"""Fixed-interval segment writer.
+
+Segment length is bounded by `max_duration`. Nothing recorded is dropped for
+being short — `min_duration` only gates forced cuts upstream (see the
+early-split logic in rtsp_monitor), so motion-end tails always reach the VLM.
+"""
 
 from __future__ import annotations
 
@@ -32,7 +37,6 @@ class SegmentExtractor:
         frame_size: tuple[int, int] = (640, 480),
     ):
         self.max_duration = config.max_duration
-        self.min_duration = config.min_duration
         self.output_dir = output_dir
         self.source_id = source_id
         self.fps = fps
@@ -49,13 +53,25 @@ class SegmentExtractor:
     def is_recording(self) -> bool:
         return self._writer is not None
 
+    @property
+    def current_duration(self) -> float:
+        """Seconds recorded in the open segment (0 when idle).
+
+        Read by the early-split gate in rtsp_monitor: forced cuts are not
+        allowed before a segment reaches min_duration.
+        """
+        return self._frame_count / self.fps if self.fps > 0 else 0.0
+
     def start_segment(self):
         """Start a new segment."""
         now = datetime.now()
         date_dir = os.path.join(self.output_dir, now.strftime("%Y-%m-%d"))
         os.makedirs(date_dir, exist_ok=True)
 
-        filename = f"{self.source_id}_{now.strftime('%H%M%S')}.mp4"
+        # Millisecond suffix: an ROI early-split (or any sub-second restart) must
+        # not reuse the name of the segment just emitted — a 1s-resolution name
+        # would truncate the file the MCP side is about to read.
+        filename = f"{self.source_id}_{now.strftime('%H%M%S')}_{now.microsecond // 1000:03d}.mp4"
         self._current_path = os.path.join(date_dir, filename)
         self._start_time = now_local_str()
         self._frame_count = 0
@@ -79,7 +95,12 @@ class SegmentExtractor:
         return None
 
     def finish(self) -> Optional[SegmentResult]:
-        """Finalize current segment."""
+        """Finalize the current segment and return it for emission.
+
+        Recorded content is never dropped for being short — a short tail at
+        motion end still reaches the VLM. The only discarded file is an empty
+        one (0 frames written — nothing to analyze).
+        """
         if self._writer is None or self._current_path is None:
             return None
 
@@ -89,7 +110,7 @@ class SegmentExtractor:
         duration = self._frame_count / self.fps
         end_time = now_local_str()
 
-        if duration < self.min_duration:
+        if self._frame_count == 0:
             try:
                 os.unlink(self._current_path)
             except OSError:
@@ -108,15 +129,12 @@ class SegmentExtractor:
         self._frame_count = 0
         return result
 
-    def close(self):
-        if self._writer:
-            self._writer.release()
-            self._writer = None
-            if self._current_path and os.path.exists(self._current_path):
-                duration = self._frame_count / self.fps if self.fps > 0 else 0
-                if duration < self.min_duration:
-                    try:
-                        os.unlink(self._current_path)
-                    except OSError:
-                        pass
-                    self._current_path = None
+    def close(self) -> Optional[SegmentResult]:
+        """Release the writer, finalizing the open segment.
+
+        Delegates to finish(): the segment is returned for the caller to emit
+        (only 0-frame files are removed). Never leaves an un-finalized file
+        behind — the previous implementation could keep a file on disk without
+        handing it to anyone.
+        """
+        return self.finish()
