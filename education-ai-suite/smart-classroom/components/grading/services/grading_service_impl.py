@@ -867,6 +867,8 @@ def update_grading_config(
     dpi: int | None = None,
     page_columns: int | None = None,
     column_split_ratio: float | None = None,
+    force_split: bool | None = None,
+    force_split_pairs: list[list[int]] | None = None,
     contrast_enhance: bool | None = None,
     contrast_factor: float | None = None,
     max_tokens: int | None = None,
@@ -897,12 +899,63 @@ def update_grading_config(
     def yaml_bool(v: bool) -> str:
         return "true" if v else "false"
 
+    def replace_force_split_pairs(t: str, pairs: list[list[int]]) -> str:
+        lines = t.splitlines()
+        for i, line in enumerate(lines):
+            m = re.match(r"^(\s*)force_split_pairs\s*:\s*(.*)$", line)
+            if not m:
+                continue
+            indent = m.group(1)
+            j = i + 1
+            while j < len(lines):
+                nxt = lines[j]
+                if not nxt.strip():
+                    break
+                if len(nxt) - len(nxt.lstrip(" ")) <= len(indent):
+                    break
+                if not re.match(r"^\s*-\s*\[[^\]]+\]\s*$", nxt):
+                    break
+                j += 1
+
+            if pairs:
+                new_lines = [f"{indent}force_split_pairs:"]
+                new_lines.extend(f"{indent}  - [{int(p[0])}, {int(p[1])}]" for p in pairs)
+            else:
+                new_lines = [f"{indent}force_split_pairs: []"]
+
+            out = lines[:i] + new_lines + lines[j:]
+            return "\n".join(out) + ("\n" if t.endswith("\n") else "")
+
+        for i, line in enumerate(lines):
+            if re.match(r"^section_split\s*:\s*$", line):
+                if pairs:
+                    new_lines = ["  force_split_pairs:"]
+                    new_lines.extend(f"  - [{int(p[0])}, {int(p[1])}]" for p in pairs)
+                else:
+                    new_lines = ["  force_split_pairs: []"]
+                out = lines[: i + 1] + new_lines + lines[i + 1:]
+                return "\n".join(out) + ("\n" if t.endswith("\n") else "")
+        return t
+
     if dpi is not None:
         text = replace_scalar(text, "dpi", str(int(dpi)))
     if page_columns is not None:
         text = replace_scalar(text, "page_columns", str(int(page_columns)))
     if column_split_ratio is not None:
         text = replace_scalar(text, "column_split_ratio", str(float(column_split_ratio)))
+    if force_split is not None:
+        text = replace_scalar(text, "force_split", yaml_bool(force_split))
+    if force_split_pairs is not None:
+        normalized_pairs: list[list[int]] = []
+        for pair in force_split_pairs:
+            if not isinstance(pair, list) or len(pair) != 2:
+                raise ValueError("force_split_pairs must be a list of [start_page, end_page] pairs")
+            start_page = int(pair[0])
+            end_page = int(pair[1])
+            if start_page <= 0 or end_page <= 0 or end_page != start_page + 1:
+                raise ValueError("each force_split_pairs entry must be adjacent positive pages, e.g. [4, 5]")
+            normalized_pairs.append([start_page, end_page])
+        text = replace_force_split_pairs(text, normalized_pairs)
     if contrast_enhance is not None:
         text = replace_scalar(text, "contrast_enhance", yaml_bool(contrast_enhance))
     if contrast_factor is not None:
@@ -947,6 +1000,7 @@ def get_grading_config() -> dict[str, Any]:
     vlm = cfg.get("vlm") if isinstance(cfg.get("vlm"), dict) else {}
     watch = cfg.get("watch") if isinstance(cfg.get("watch"), dict) else {}
     detection = cfg.get("detection_service") if isinstance(cfg.get("detection_service"), dict) else {}
+    section_split = cfg.get("section_split") if isinstance(cfg.get("section_split"), dict) else {}
 
     sc_config_path = _component_root().parents[1] / "config.yaml"
     try:
@@ -969,6 +1023,8 @@ def get_grading_config() -> dict[str, Any]:
         "dpi": image.get("dpi"),
         "page_columns": image.get("page_columns"),
         "column_split_ratio": image.get("column_split_ratio"),
+        "force_split": section_split.get("force_split"),
+        "force_split_pairs": section_split.get("force_split_pairs"),
         "contrast_enhance": image.get("contrast_enhance"),
         "contrast_factor": image.get("contrast_factor"),
         "max_tokens": vlm.get("max_tokens"),

@@ -1,4 +1,4 @@
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 
 export interface AlertQueryParams {
   monitor_id: string;
@@ -14,7 +14,7 @@ export interface AlertQueryParams {
 }
 
 export async function alertQuery(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   params: AlertQueryParams
 ): Promise<unknown> {
   switch (params.action) {

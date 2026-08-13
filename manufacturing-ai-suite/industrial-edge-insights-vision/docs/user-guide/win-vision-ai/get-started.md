@@ -23,7 +23,7 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 ### Install Intel DL Streamer
 
-Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
+Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
 > **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 
@@ -34,7 +34,7 @@ Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer
 ### Clone the Suite
 
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```powershell
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -87,7 +87,7 @@ Run this once to download `bin\gstgencamsrc.dll` (from the Edge AI Libraries Git
 .\src\setup_genicam_runtime.ps1
 ```
 
-> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 ##### Set Camera Environment Variables
 
@@ -268,7 +268,7 @@ input:
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
-`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+`serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
 > **Note:** If specified, `width` and `height` values must be greater than 60.
 

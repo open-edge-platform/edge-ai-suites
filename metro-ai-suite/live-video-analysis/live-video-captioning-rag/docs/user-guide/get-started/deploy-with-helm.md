@@ -19,19 +19,19 @@ Before you begin, ensure that you have the following:
 - A worker node reachable by your browser client. Prefer a GPU-capable worker node when available, because the chart pins media and inference workloads to the selected node.
 - An Intel GPU/NPU-capable worker node is recommended so the `metrics-manager` can report GPU and NPU utilization (via qmassa). GPU/NPU metrics are omitted on nodes without the hardware.
 - An RTSP source reachable from the Kubernetes node that runs `dlstreamer-pipeline-server`.
-- Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html), which is responsible for downloading and converting models used by this deployment. If you use gated Hugging Face models, a Hugging Face token is required.
+- Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html), which is responsible for downloading and converting models used by this deployment. If you use gated Hugging Face models, a Hugging Face token is required.
 
 ## Prepare/Deploy model-download chart
 
-[Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) is used for model management.
+[Model Download Service](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/model-download/index.html) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) is used for model management.
 
 1. Install the model-download chart.
 
-	 Refer to this [guide section](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
+	 Refer to this [guide section](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
 
 2. Configure the values.yaml file.
 
-	 Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/chart/values.yaml) located in the model-download chart.
+	 Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/model-download/chart/values.yaml) located in the model-download chart.
 
 	 Configure the following:
 
@@ -338,4 +338,4 @@ This chart is designed to run on a single worker node.
 - [System Requirements](../get-started/system-requirements.md)
 - [How it Works](../how-it-works.md)
 - [Build from Source](../get-started/build-from-source.md)
-- [Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html)
+- [Model Download Service](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html)

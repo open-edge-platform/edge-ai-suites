@@ -14,10 +14,10 @@ compliance (Size, Weight, Power, and Cost).
 
 The application introduces the following features:
 
-- Deployment on top of [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/main/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html), an edge computing platform that enables hardware acceleration capabilities
+- Deployment on top of [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html), an edge computing platform that enables hardware acceleration capabilities
 - Text and audio modality support through Conversational Agent exposed via Chat UI that is backed by LLM served by OpenVINO Model Server
 - Audio modality support through Speech To Text Service (Whisper)
-- Visual modality support through [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
+- Visual modality support through [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 - Insight into application and platform metrics through the Observability Dashboard
 
 **Known issues and limitations**

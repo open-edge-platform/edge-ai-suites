@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 type Translate = (key: string) => string;
 
-export const KNOWN_SMART_BUILDING_SOURCE_IDS = [
+export const KNOWN_SMART_COMMUNITY_SOURCE_IDS = [
   "cam_fridge",
   "cam_child",
   "cam_elder_bedroom",
   "cam_elder_bedroom_2",
 ] as const;
 
-export type KnownSmartBuildingSourceId =
-  (typeof KNOWN_SMART_BUILDING_SOURCE_IDS)[number];
+export type KnownSmartCommunitySourceId =
+  (typeof KNOWN_SMART_COMMUNITY_SOURCE_IDS)[number];
 
-export interface SmartBuildingSourceMeta {
+export interface SmartCommunitySourceMeta {
   id: string;
   name?: string;
   location: string;
@@ -24,50 +24,50 @@ export interface SmartBuildingSourceMeta {
 const buildDefaultMeta = (
   sourceId: string,
   t: Translate,
-): SmartBuildingSourceMeta => ({
+): SmartCommunitySourceMeta => ({
   id: sourceId,
-  location: t("smartBuilding.elderlyCareLocation"),
+  location: t("smartCommunity.elderlyCareLocation"),
   cameraLabel: sourceId,
-  liveTitle: t("smartBuilding.liveGenericView"),
-  liveDescription: t("smartBuilding.liveGenericMonitoringDescription"),
+  liveTitle: t("smartCommunity.liveGenericView"),
+  liveDescription: t("smartCommunity.liveGenericMonitoringDescription"),
 });
 
-export const getSmartBuildingSourceMeta = (
+export const getSmartCommunitySourceMeta = (
   sourceId: string,
   t: Translate,
-): SmartBuildingSourceMeta => {
+): SmartCommunitySourceMeta => {
   switch (sourceId) {
     case "cam_fridge":
       return {
         id: sourceId,
-        location: t("smartBuilding.fridgeLocationKitchen"),
-        cameraLabel: t("smartBuilding.fridgeCamera"),
-        liveTitle: t("smartBuilding.liveFridgeView"),
-        liveDescription: t("smartBuilding.liveMonitoringDescription"),
+        location: t("smartCommunity.fridgeLocationKitchen"),
+        cameraLabel: t("smartCommunity.fridgeCamera"),
+        liveTitle: t("smartCommunity.liveFridgeView"),
+        liveDescription: t("smartCommunity.liveMonitoringDescription"),
       };
     case "cam_child":
       return {
         id: sourceId,
-        location: t("smartBuilding.childCustodyLocation"),
-        cameraLabel: t("smartBuilding.childCustodyCamera"),
-        liveTitle: t("smartBuilding.liveChildCustodyView"),
-        liveDescription: t("smartBuilding.childCustodyMonitoringDescription"),
+        location: t("smartCommunity.childCustodyLocation"),
+        cameraLabel: t("smartCommunity.childCustodyCamera"),
+        liveTitle: t("smartCommunity.liveChildCustodyView"),
+        liveDescription: t("smartCommunity.childCustodyMonitoringDescription"),
       };
     case "cam_elder_bedroom":
       return {
         id: sourceId,
-        location: t("smartBuilding.elderlyCareLocation"),
-        cameraLabel: t("smartBuilding.elderlyCareCamera"),
-        liveTitle: t("smartBuilding.liveElderlyCareView"),
-        liveDescription: t("smartBuilding.elderlyCareMonitoringDescription"),
+        location: t("smartCommunity.elderlyCareLocation"),
+        cameraLabel: t("smartCommunity.elderlyCareCamera"),
+        liveTitle: t("smartCommunity.liveElderlyCareView"),
+        liveDescription: t("smartCommunity.elderlyCareMonitoringDescription"),
       };
     case "cam_elder_bedroom_2":
       return {
         id: sourceId,
-        location: t("smartBuilding.elderlyCareLocation"),
-        cameraLabel: t("smartBuilding.elderlyCareCamera"),
-        liveTitle: t("smartBuilding.liveElderlyCareView"),
-        liveDescription: t("smartBuilding.elderlyCareMonitoringDescription"),
+        location: t("smartCommunity.elderlyCareLocation"),
+        cameraLabel: t("smartCommunity.elderlyCareCamera"),
+        liveTitle: t("smartCommunity.liveElderlyCareView"),
+        liveDescription: t("smartCommunity.elderlyCareMonitoringDescription"),
       };
     default:
       return buildDefaultMeta(sourceId, t);

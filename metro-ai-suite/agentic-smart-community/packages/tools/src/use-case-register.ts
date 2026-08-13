@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "
 import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 import { parseDocument, isMap, Scalar } from "yaml";
-import { SchemaManager, type SchemaExtension } from "@smartbuilding-video/db";
+import { SchemaManager, type SchemaExtension } from "@smart-community-video/db";
 import type { UseCaseValidateResult } from "./use-case-validate.js";
 import { useCaseValidate } from "./use-case-validate.js";
 
@@ -43,7 +43,7 @@ export interface UseCaseRegisterDeps {
    * Root directory that holds `use-cases/<use_case>/{prompt.md,evaluate_rules.py}`.
    * When `prompt_text` / `evaluate_rules_path` are omitted, register auto-picks
    * these conventional files. The MCP server passes `config.dataDir` here
-   * (`~/.mcp-smartbuilding` or `$SMARTBUILDING_DATA_DIR`); defaults to
+   * (`~/.mcp-smart-community` or `$SMART_COMMUNITY_DATA_DIR`); defaults to
    * `process.cwd()` when unset.
    */
   baseDir?: string;
@@ -533,7 +533,7 @@ export async function useCaseRegister(
   // prompt_text resolution — convention over configuration. When the caller
   // doesn't pass prompt_text explicitly, auto-read the conventional prompt file
   // use-cases/<use_case>/prompt.md so agents only need to drop the file (via the
-  // smartbuilding-use-case-manager skill) rather than re-cat it into the call.
+  // smart-community-use-case-manager skill) rather than re-cat it into the call.
   //
   // Resolved up-front, BEFORE any side effect (ALTER / VLM POST / config write),
   // so both the "no prompt" and the "schema↔prompt mismatch" gates below can

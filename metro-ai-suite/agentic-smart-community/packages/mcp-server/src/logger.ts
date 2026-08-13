@@ -28,7 +28,7 @@ export const logger = {
 // ─────────────────────────────────────────────────────────────
 // Per-monitor file logger
 // ─────────────────────────────────────────────────────────────
-// Writes to $SMARTBUILDING_DATA_DIR/logs/monitors/<monitor_id>/<YYYY-MM-DD>.log
+// Writes to $SMART_COMMUNITY_DATA_DIR/logs/monitors/<monitor_id>/<YYYY-MM-DD>.log
 // Rotates by day; refuses to grow a single day's file past maxFileMb.
 
 export interface MonitorLogger {

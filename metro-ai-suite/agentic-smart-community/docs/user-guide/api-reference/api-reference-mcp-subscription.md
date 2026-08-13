@@ -11,10 +11,10 @@ Use MCP resource subscriptions to receive alert-update notifications from a moni
 
 | Purpose                              | URI                                                            |
 | ------------------------------------ | -------------------------------------------------------------- |
-| Subscribe or perform an initial read | `smartbuilding://monitor/<monitor_id>/alerts`                  |
-| Read alerts after a cursor           | `smartbuilding://monitor/<monitor_id>/alerts?since=<latestId>` |
+| Subscribe or perform an initial read | `smart-community://monitor/<monitor_id>/alerts`                  |
+| Read alerts after a cursor           | `smart-community://monitor/<monitor_id>/alerts?since=<latestId>` |
 
-Only delivered alerts are returned. Use `smartbuilding_alert_query` when you need the full audit trail, including cooled-down alerts.
+Only delivered alerts are returned. Use `smart_community_alert_query` when you need the full audit trail, including cooled-down alerts.
 
 ## Subscription API Reference
 
@@ -36,7 +36,7 @@ The MCP endpoint is `http://<mcp-host>:3100/mcp`. Use `POST /mcp` for JSON-RPC r
   "id": 2,
   "method": "resources/subscribe",
   "params": {
-    "uri": "smartbuilding://monitor/<monitor_id>/alerts"
+    "uri": "smart-community://monitor/<monitor_id>/alerts"
   }
 }
 ```
@@ -53,7 +53,7 @@ Use the bare URI for an initial read:
   "id": 3,
   "method": "resources/read",
   "params": {
-    "uri": "smartbuilding://monitor/<monitor_id>/alerts"
+    "uri": "smart-community://monitor/<monitor_id>/alerts"
   }
 }
 ```
@@ -66,7 +66,7 @@ For incremental reads, use the previously returned `latestId`:
   "id": 4,
   "method": "resources/read",
   "params": {
-    "uri": "smartbuilding://monitor/<monitor_id>/alerts?since=<latestId>"
+    "uri": "smart-community://monitor/<monitor_id>/alerts?since=<latestId>"
   }
 }
 ```
@@ -96,7 +96,7 @@ The server sends this JSON-RPC notification through the SSE stream after an aler
   "jsonrpc": "2.0",
   "method": "notifications/resources/updated",
   "params": {
-    "uri": "smartbuilding://monitor/<monitor_id>/alerts"
+    "uri": "smart-community://monitor/<monitor_id>/alerts"
   }
 }
 ```
@@ -145,7 +145,7 @@ curl -fsS -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "mcp-session-id: $SID" \
-  -d "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"resources/subscribe\",\"params\":{\"uri\":\"smartbuilding://monitor/$MONITOR_ID/alerts\"}}"
+  -d "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"resources/subscribe\",\"params\":{\"uri\":\"smart-community://monitor/$MONITOR_ID/alerts\"}}"
 ```
 
 Perform an initial read. Save `latestId` from the JSON in `result.contents[0].text`; it is the cursor for the next read.
@@ -155,7 +155,7 @@ curl -fsS -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "mcp-session-id: $SID" \
-  -d "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"resources/read\",\"params\":{\"uri\":\"smartbuilding://monitor/$MONITOR_ID/alerts\"}}"
+  -d "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"resources/read\",\"params\":{\"uri\":\"smart-community://monitor/$MONITOR_ID/alerts\"}}"
 ```
 
 In another terminal, copy the session ID printed above, set it as `SID`, then open the SSE stream and keep it open:
@@ -174,7 +174,7 @@ When an alert is created, the stream receives a notification like this:
 
 ```text
 event: message
-data: {"jsonrpc":"2.0","method":"notifications/resources/updated","params":{"uri":"smartbuilding://monitor/cam_child/alerts"}}
+data: {"jsonrpc":"2.0","method":"notifications/resources/updated","params":{"uri":"smart-community://monitor/cam_child/alerts"}}
 ```
 
 Read the incremental alerts with the saved cursor, replace `<latestId>`, and then save the new `latestId` from the response:
@@ -184,7 +184,7 @@ curl -fsS -X POST "$MCP_URL" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -H "mcp-session-id: $SID" \
-  -d "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"resources/read\",\"params\":{\"uri\":\"smartbuilding://monitor/$MONITOR_ID/alerts?since=<latestId>\"}}"
+  -d "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"resources/read\",\"params\":{\"uri\":\"smart-community://monitor/$MONITOR_ID/alerts?since=<latestId>\"}}"
 ```
 
 For an automated client, persist the cursor only after the alerts have been processed successfully. Reconnect with a new MCP session after a transport interruption, resubscribe, and continue from the persisted cursor.

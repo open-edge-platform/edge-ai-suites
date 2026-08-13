@@ -56,7 +56,7 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.1.0-ubuntu24 \
+  intel/dlstreamer:2026.2.0-ubuntu24-rc1 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
@@ -105,7 +105,7 @@ while true; do
         --env no_proxy=$no_proxy \
         --user root \
         -w /workspace \
-        intel/dlstreamer:2026.1.0-ubuntu24  \
+        intel/dlstreamer:2026.2.0-ubuntu24-rc1  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \
@@ -209,7 +209,7 @@ ViPPET (Visual Pipeline and Platform Evaluation Tool) is an interactive web-base
 
 To learn more and get started with ViPPET, visit the official documentation:
 
-**[ViPPET Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
+**[ViPPET Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
 
 The documentation includes:
 

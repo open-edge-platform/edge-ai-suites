@@ -1,7 +1,7 @@
 {
-  "name": "@smartbuilding-video/framework-adapter-sdk",
+  "name": "@smart-community-video/framework-adapter-sdk",
   "version": "0.1.0",
-  "description": "Generic MCP client SDK for framework adapters — subscribes to SmartBuilding alert resources and delivers them to a framework-specific AlertSink",
+  "description": "Generic MCP client SDK for framework adapters — subscribes to Smart Community alert resources and delivers them to a framework-specific AlertSink",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@smartbuilding-video/db": "*"
+    "@smart-community-video/db": "*"
   },
   "devDependencies": {
     "typescript": "^5.8.0",

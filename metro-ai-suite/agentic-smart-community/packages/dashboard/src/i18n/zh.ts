@@ -117,7 +117,7 @@ export default {
     moreChatFeatures: "更多完整的聊天功能请查看",
     openClawControlUi: "OpenClaw 原生 Control UI (:18789)",
   },
-  smartBuilding: {
+  smartCommunity: {
     offlineCameras: "离线摄像头",
     applianceLocation: "位置",
     cameraSectionLabel: "设备列表",

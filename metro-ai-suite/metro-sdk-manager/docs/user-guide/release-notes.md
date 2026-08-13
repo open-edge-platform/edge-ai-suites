@@ -1,8 +1,29 @@
 # Release Notes
 
-## Intel® OEP SDK Manager Latest Component Refresh
+## Intel® OEP SDK Manager 2026.2.0 RC1 Release
 
 ### New
+
+- **Latest Available Components**
+    - Updated Docker images to the 2026.2.0 RC1 tags on Docker Hub where available.
+    - Git repositories moved to the latest available release branch: release-2026.2.0.
+- **Component Version Updates**
+    - DL Streamer and DL Streamer Pipeline Server updated to 2026.2.0 Ubuntu 24 RC1 tags.
+    - OpenVINO Model Server on 2026.3 and OpenVINO development image on 2026.3.0.
+    - Scenescape components updated to 2026.2.0-rc1.
+- **Gen AI SDK Enhancements**
+    - Audio Analyzer updated to 2026.2.0-rc2.
+    - Multimodal Embedding Serving and Model Download updated to 2026.2.0-rc1.
+    - Document Ingestion and Chat Q&A UI updated to 2026.2.0-rc1.
+    - Chat Q&A is deprecated; the Gen AI SDK now uses Chat Q&A Core (2026.2.0-rc1).
+    - Replaced Visual Data Preparation For Retrieval (VDMS) with Multimodal Data Preparation (2026.2.0-rc1).
+    - Removed the VLM OpenVINO Serving microservice.
+- **Visual AI Demo Kit**
+    - Grafana updated to 13.1.3.
+- **Updated Documentation**
+    - Tutorials updated with the 2026.2.0 Ubuntu 24 RC1 container image references.
+
+## Intel® OEP SDK Manager 2026.1.0 Release
 
 - **Latest Available Components**
     - Updated Docker images to the latest available tags on Docker Hub across all SDKs.

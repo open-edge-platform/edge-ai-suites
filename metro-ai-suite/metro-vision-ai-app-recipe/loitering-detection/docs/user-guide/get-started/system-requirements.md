@@ -31,7 +31,7 @@ and run the application efficiently.
 **Validated on Intel® Arc™ dGPU models:** A770, B580, B60, and B50.
 
 > **Note:** Users can also create apps tailored to their use case using models supported by DL Streamer.
-Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
+Check [the list of supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
 ## Software Requirements
 

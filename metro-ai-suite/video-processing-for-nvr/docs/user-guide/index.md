@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/video-processing-for-nvr">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/video-processing-for-nvr">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/README.md">
      Readme
   </a>
 </div>
@@ -29,7 +29,7 @@ cases:
   the Video Processing Platform SDK APIs to construct Video Analytic and Transcoding workflows (for example, decode +
   post-processing + YOLO/ResNet inference, and decode + post-processing + encode).
 - **Smart Video Evaluation Tool 2 (SVET2)** (legacy solution) — a configuration-driven reference application for
-  the NVR scenario. For the detailed workflow and configuration reference, see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md).
+  the NVR scenario. For the detailed workflow and configuration reference, see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md).
 
 - **Programming Language:** C/C++
 
