@@ -222,7 +222,7 @@ Ask the agent what capabilities and bundled use cases are available:
    Follow the agent's guidance and answer the required questions to complete the monitor registration and bring it online.
    When no monitor ID is specified, the MCP server assigns `cam_child_safety`. Here we provide a monitor ID explicitly as `cam_test`. As shown below:
 
-   ![Example for monitor using bundled use case](<_assets/example for monitor using bundled use case.png>)
+   ![Example for monitor using bundled use case](_assets/example-for-monitor-using-bundled-use-case.png)
 
 **C. Generate a report**:
 
