@@ -85,7 +85,8 @@ pytz==2026.3.post1
 six==1.17.0
 ----------------------------------------------------------------------
 
-License-Identifier: MIT-0
+License-Identifier: MIT-0
+
 cffi==2.1.1
 ----------------------------------------------------------------------
 
@@ -114,13 +115,8 @@ License-Identifier: MIT OR LicenseRef-Proprietary
 pip==26.2.1
 ----------------------------------------------------------------------
 
-<<<<<<< HEAD
 License-Identifier: BSD License or Apache License 2.0
 cryptography==50.0.0
-=======
-License-Identifier: Apache-2.0 OR BSD-3-Clause
-cryptography==49.0.0
->>>>>>> c4b7fe639784180e93caec9cb2749e52a2868cf8
 ---------------------------------------------------------------------------------------------------------------------------
 
 ia-mqtt-publisher microservice:
