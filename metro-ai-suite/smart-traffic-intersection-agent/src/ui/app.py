@@ -611,15 +611,20 @@ def create_dashboard_interface():
         )
         
         # Running data fetcher in main event loop
-        interface.load(fn=fetch_intersection_data, inputs=[debug_mode], outputs=[
-            header_component,
-            camera_gallery,
-            traffic_component, 
-            environmental_component,
-            alerts_component,
-            system_info_component,
-            debug_panel_component
-        ])
+        interface.load(
+            fn=fetch_intersection_data,
+            inputs=[debug_mode],
+            outputs=[
+                header_component,
+                camera_gallery,
+                traffic_component,
+                environmental_component,
+                alerts_component,
+                system_info_component,
+                debug_panel_component,
+            ],
+            show_progress="hidden",
+        )
 
         # Live clock: refresh the system-info panel every second so
         # "Current Time" keeps advancing independent of MQTT/WebSocket data
@@ -676,7 +681,8 @@ def main():
         # Create and launch the interface
         interface = create_dashboard_interface()
         
-        # Enable request queuing for scaling
+        # NOTE:- This one line fix to increase concurrency limit, solves the issue with UI refresh or multiple connections to UI taking longer time.
+        # However, this is not a satisfactory fix. Keeping this along with the actual fix done in websocket server and client connection modules.
         interface.queue(max_size=40, default_concurrency_limit=20)
 
         # Launch without blocking so we can mount the metrics proxy on the
