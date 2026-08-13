@@ -52,6 +52,10 @@ configured Kubernetes cluster.
 
   # Step 9: Install the Intel NPU device plugin
   kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+  
+  # Step 10: Configure Intel GPU device plugin for container runtime compatibility
+  kubectl patch ds intel-gpu-plugin -n intel-device-plugins --type='json' \
+    -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "-bypath=none"}]'
   ```
 
   Verify the Intel Device Plugin pods are running:
