@@ -24,7 +24,7 @@ monitors:
     pipeline_config:
       motion: { enabled: true, diff_threshold: 25, area_ratio: 0.015, stable_frames: 30 }
       prefilter: { enabled: false }
-      recording: { enabled: true, interval_seconds: 60, retention_days: 5 }
+      recording: { enabled: true, interval_seconds: 60 }
       segment: { max_duration: 10 }
 
   cam_child:
