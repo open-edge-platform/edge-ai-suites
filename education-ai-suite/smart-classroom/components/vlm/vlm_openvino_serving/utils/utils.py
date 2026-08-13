@@ -26,8 +26,6 @@ _PRECONVERTED_OV_MODELS = {
     ("Qwen/Qwen3-VL-8B-Instruct", "int8"): "OpenVINO/Qwen3-VL-8B-Instruct-int8-ov",
     ("Qwen/Qwen3.5-9B", "int4"): "OpenVINO/Qwen3.5-9B-int4-ov",
     ("Qwen/Qwen3.5-9B", "int8"): "OpenVINO/Qwen3.5-9B-int8-ov",
-    # Only int4 is published for the 35B MoE; there is no -int8-ov repo, so an
-    # int8 run of this model still falls through to a local export.
     ("Qwen/Qwen3.6-35B-A3B", "int4"): "OpenVINO/Qwen3.6-35B-A3B-int4-ov",
 }
 

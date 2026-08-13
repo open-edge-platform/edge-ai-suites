@@ -166,14 +166,10 @@ class VLMTextGen:
         Qwen3 thinking for this request only; ``None`` keeps the model default.
         ``json_schema`` (a JSON-schema string) constrains decoding to output
         matching that schema.
-
-        ``pre_templated=True`` means ``prompt`` is already a fully rendered chat
-        template (the caller applied ``tokenizer.apply_chat_template``), so the
-        pipeline must not apply the template again. Without it ``VLMPipeline``
-        double-wraps the prompt and re-enables thinking, which shows up as
-        reasoning preambles and greedy repetition loops on the Qwen3.5/3.6 MoE
-        models. HTTP callers (``/v1/chat/completions``) pass raw prompts and
-        leave this False.
+        ``pre_templated=True`` means the caller already ran
+        ``apply_chat_template``; applying it again double-wraps the prompt and
+        re-enables thinking (reasoning preambles and repetition loops on Qwen3
+        MoE). HTTP callers pass raw prompts and leave this False.
         """
         if self._pipe is None:
             raise RuntimeError("VLM pipeline is not loaded")

@@ -18,16 +18,10 @@ _QWEN3_MOE_VLM_MARKERS = ("qwen3.5", "qwen3.6")
 
 
 def is_qwen3_moe_vlm(model_name) -> bool:
-    """Whether ``model_name`` is a Qwen3.5 / Qwen3.6 MoE vision-language model.
-
-    These are multimodal even when used text-only, and must be exported with the
-    image-text-to-text task and run through ``VLMPipeline``.
-    """
     name = str(model_name).lower()
     return any(marker in name for marker in _QWEN3_MOE_VLM_MARKERS)
 
 
 def is_qwen3_dense(model_name) -> bool:
-    """Whether ``model_name`` is a Qwen3 dense model (``/no_think`` applies)."""
     name = str(model_name).lower()
     return "qwen3" in name and not is_qwen3_moe_vlm(name)

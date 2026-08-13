@@ -238,9 +238,6 @@ class ContentSegmentationComponent(PipelineComponent):
         raise ValueError("INVALID_TOPICS_FORMAT")
 
     def _generate(self, prompt: str) -> str:
-        # ``prompt`` is already chat-templated by the caller, so
-        # pre_templated=True keeps the pipeline from templating it a second time
-        # (which re-enables thinking and triggers repetition loops).
         try:
             return self.model.generate(
                 prompt,
