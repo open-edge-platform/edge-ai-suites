@@ -14,7 +14,7 @@ The application runs locally on Intel hardware using OpenVINO-backed services.
 - A FastAPI orchestrator (`kiosk-core`) in [voice-enabled-interactions/smart-kiosk-assistant/main.py](voice-enabled-interactions/smart-kiosk-assistant/main.py).
 - A RAG microservice in [voice-enabled-interactions/smart-kiosk-assistant/rag-service](voice-enabled-interactions/smart-kiosk-assistant/rag-service).
 - Upstream ASR and TTS services from the `edge-ai-libraries` submodule.
-- Windows setup/start/stop scripts in [setup_windows.ps1](setup_windows.ps1), [start_kiosk.ps1](start_kiosk.ps1), and [stop_kiosk.ps1](stop_kiosk.ps1).
+- Windows setup/start/stop scripts in [setup_windows.ps1](setup_windows.ps1), [start_ata.ps1](start_ata.ps1), and [stop_ata.ps1](stop_ata.ps1).
 
 ## Runtime Topology
 
@@ -39,7 +39,7 @@ cd edge-ai-suites
 git sparse-checkout set education-ai-suite/ai-teaching-assistant
 cd education-ai-suite/ai-teaching-assistant
 .\setup_windows.ps1
-.\start_kiosk.ps1
+.\start_ata.ps1
 ```
 
 Open `http://127.0.0.1:7860`.

@@ -1,7 +1,7 @@
 # Run Services Manually on Windows
 
 Use this guide when you want to run services individually for debugging or
-custom development. For normal usage, prefer `start_kiosk.ps1`.
+custom development. For normal usage, prefer `start_ata.ps1`.
 
 ## Scope
 
@@ -124,11 +124,11 @@ Press `Ctrl+C` in each terminal.
 Or use:
 
 ```powershell
-.\stop_kiosk.ps1
+.\stop_ata.ps1
 ```
 
 ## Notes
 
-- The launcher flow (`start_kiosk.ps1`) is the supported default.
+- The launcher flow (`start_ata.ps1`) is the supported default.
 - Manual mode is primarily for debugging service-level behavior.
 - Response audio clips are written under `generated_audio/` in the kiosk-core area.

@@ -14,7 +14,7 @@ File:
 - [.env](../../../.env)
 
 Loaded by:
-- [start_kiosk.ps1](../../../start_kiosk.ps1)
+- [start_ata.ps1](../../../start_ata.ps1)
 
 Typical variables:
 

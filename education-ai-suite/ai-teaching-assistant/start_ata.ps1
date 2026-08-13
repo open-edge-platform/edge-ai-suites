@@ -1,5 +1,5 @@
 # =============================================================================
-# start_kiosk.ps1
+# start_ata.ps1
 # Smart Kiosk Assistant - Windows 11 Service Launcher
 #
 # Features:
@@ -10,7 +10,7 @@
 # - Graceful shutdown (Ctrl+C)
 # - Auto-opens browser to Gradio UI
 #
-# Usage: powershell -ExecutionPolicy Bypass -File start_kiosk.ps1
+# Usage: powershell -ExecutionPolicy Bypass -File start_ata.ps1
 # =============================================================================
 
 param(
@@ -217,7 +217,7 @@ function Start-Service {
             }
 
             Write-Error-Custom "Port $($Service.Port) already in use for $($Service.Name) (PID $ExistingPid), but health check is failing"
-            Write-Error-Custom "  Stop the existing process or run stop_kiosk.ps1 -Force, then retry"
+            Write-Error-Custom "  Stop the existing process or run stop_ata.ps1 -Force, then retry"
             return $false
         }
     }
