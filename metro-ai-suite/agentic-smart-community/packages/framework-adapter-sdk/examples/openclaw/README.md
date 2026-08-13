@@ -31,6 +31,28 @@ sequenceDiagram
 - The target OpenClaw agent and session already exist.
 - Node.js and npm are available.
 
+## Install with the script
+
+`scripts/install_as_openclaw_plugin.sh` performs the whole plugin-only install: it builds the SDK, installs the plugin dependencies, registers a minimal `plugins.entries.smart-community-alerts` entry if none exists, links the plugin into `~/.openclaw/extensions/`, validates the configuration, and restarts the gateway. It installs nothing else — no agents, personas, skills, monitor routes, models, or scheduled jobs.
+
+```bash
+bash packages/framework-adapter-sdk/examples/openclaw/scripts/install_as_openclaw_plugin.sh
+```
+
+Useful overrides: `--mcp-url URL`, `--openclaw-home DIR`, `--skip-build`, `--skip-restart`.
+
+The script registers an empty `monitors` map, which routes nothing. If you want to write your own routes (or agents and skills) as part of the same install, run the two halves and do your own configuration work in between, while the plugin is still unlinked and `openclaw.json` is therefore patchable:
+
+```bash
+bash scripts/install_as_openclaw_plugin.sh prepare
+# write plugins.entries.smart-community-alerts.config, agents, skills ...
+bash scripts/install_as_openclaw_plugin.sh finalize
+```
+
+`demo/openclaw-adapter/install.sh` in this repository is exactly that pattern: it delegates both halves to this script and only adds its own demo runtime in the middle.
+
+The remaining sections describe the same steps manually.
+
 ## Build the plugin
 
 From the `agentic-smart-community` component root, build the SDK and install the plugin dependencies:

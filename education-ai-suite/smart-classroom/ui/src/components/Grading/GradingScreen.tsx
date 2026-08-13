@@ -5,6 +5,7 @@ import NewTaskForm from './NewTaskForm';
 import TaskList from './TaskList';
 import ResultsView from './ResultsView';
 import GradingRightPanel from './GradingRightPanel';
+import { usePanelDividerX } from '../../hooks/usePanelDividerX';
 import { gradingHealth } from '../../services/api';
 import type { GradingHealth } from '../../services/api';
 
@@ -17,6 +18,10 @@ const GradingScreen: React.FC = () => {
   const [resultTaskId, setResultTaskId] = useState<string | null>(null);
   const [rightCollapsed, setRightCollapsed] = useState<boolean>(false);
   const [health, setHealth] = useState<GradingHealth | null>(null);
+  const { containerRef, panelRef, arrowLeft, arrowTransition } = usePanelDividerX(
+    rightCollapsed,
+    view
+  );
 
   useEffect(() => {
     const poll = async () => {
@@ -37,7 +42,7 @@ const GradingScreen: React.FC = () => {
   };
 
   return (
-    <div className="grading-container">
+    <div className="grading-container" ref={containerRef}>
       <div className="grading-screen">
         <div className="grading-tabs">
           <button
@@ -79,16 +84,18 @@ const GradingScreen: React.FC = () => {
         </div>
       </div>
 
-      <div className="grading-right" style={{ flex: rightCollapsed ? 0 : 1 }}>
+      <div className="grading-right" ref={panelRef} style={{ flex: rightCollapsed ? 0 : 1 }}>
         <GradingRightPanel />
       </div>
 
       <div
         className={`arrow${rightCollapsed ? ' collapsed' : ''}`}
         style={{
-          left: rightCollapsed ? 'calc(100% - 38px)' : 'calc(50% - 14px)',
+          // Collapsed: let `.arrow.collapsed` park it inside the right edge.
+          left: rightCollapsed ? undefined : arrowLeft,
           top: '50%',
           transform: 'translateY(-50%)',
+          transition: arrowTransition,
         }}
         onClick={() => setRightCollapsed((c) => !c)}
       >

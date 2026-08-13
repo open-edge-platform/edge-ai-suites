@@ -175,7 +175,7 @@ Register and persist a source:
 
 ```bash
 mcp_tool_call smart_community_monitor_ctl \
-  '{"action":"register_source","monitor_id":"cam_child","name":"Child Safety Camera","source_url":"rtsp://localhost:8555/live","use_case":"child_safety","persist":true}'
+  '{"action":"register_source","monitor_id":"cam_child","name":"Child Safety Camera","source_url":"rtsp://localhost:8555/live/test","use_case":"child_safety","persist":true}'
 ```
 
 ### `smart_community_monitors_compose`
