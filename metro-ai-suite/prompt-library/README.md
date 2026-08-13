@@ -60,16 +60,3 @@ framework, precision, or device to use. The orchestrator infers all of that for
 you.
 
 ---
-
-## Example prompts
-
-Ready-to-use, business-objective prompts you can copy and paste directly into
-Copilot or your AI agent tool. Each tile is loaded from a prompt file in the
-`prompts/` directory — click one to view the full prompt, then copy it.
-
-<link rel="stylesheet" href="../../_static/prompt-library-files/prompt-catalog.css">
-<div id="prompt-catalog" class="prompt-catalog" data-prompts-path="../../_static/prompt-library-files/prompts/" data-prompts="smart-city-object-detection,crowd-safety-monitoring,traffic-flow-monitoring,unauthorized-access-detection,worker-safety-compliance">
-  <p class="prompt-catalog-loading">Loading prompts…</p>
-</div>
-<script src="../../_static/prompt-library-files/prompt-catalog.js"></script>
-
