@@ -385,7 +385,19 @@ restler-package: ## Assemble RESTler evidence ZIP for submission (run after rest
 
 
 models-download:
-	@echo "Downloading all supported models (this may take a while)..."; \
+	echo "Downloading all supported models (this may take a while)..."; \
+	for i in $$(seq 1 $(MODELS_RETRIES)); do \
+		CODE=$$(curl -s -o /dev/null -w '%{http_code}' \
+			'http://localhost:8000/api/v1/health' \
+			-H 'Content-Type: application/json') || true; \
+		case "$$CODE" in \
+			2[0-9][0-9]) break;; \
+			*)           echo "  [$$i/$(MODELS_RETRIES)] HTTP $$CODE — waiting for model-download...";; \
+		esac; \
+		[ $$i -eq $(MODELS_RETRIES) ] && break; \
+		sleep 5; \
+    done; \
+	echo "model-download is running"; \
 	MODELS=$$(cat $(MODELS_SUPPORTED_FILE)|yq --compact-output '[.[].name]'); \
 	for i in $$(seq 1 $(MODELS_RETRIES)); do \
 		CODE=$$(curl -s -o /dev/null -w '%{http_code}' \
