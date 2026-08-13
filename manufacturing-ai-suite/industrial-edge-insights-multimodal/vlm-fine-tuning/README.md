@@ -74,8 +74,9 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
 
 ## Prerequisites
 
-- Python 3.10+
+- Python 3.11+
 - ~16 GB+ RAM for data preparation (image + CSV processing)
+- Install the Intel Compute Runtime drivers - https://github.com/intel/compute-runtime/releases
 - A GPU/XPU is strongly recommended for fine-tuning and inference:
   - Intel GPU (Arc / integrated) via Intel XPU PyTorch build, or
   - CPU (functional but slow; useful only for smoke-testing the pipeline)
@@ -84,19 +85,28 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
 ## Setup
 
 ```bash
+# python 3.12.X
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 
-# 1. Install PyTorch for your target device first (pick ONE):
-#    Intel XPU:
-pip install torch --index-url https://download.pytorch.org/whl/xpu
-#    CPU only:
-# pip install torch
+# Latest unsloth
+git clone https://github.com/unslothai/unsloth.git
+cd unsloth
+pip install .[intel-gpu-torch2110]
 
-# 2. Install the rest of the pipeline dependencies
-pip install -r requirements.txt
 ```
+
+To validate if XPU setup is done correctly.
+```python
+
+import torch
+print(f"PyTorch version: {torch.__version__}")
+print(f"XPU available: {torch.xpu.is_available()}")
+print(f"XPU device count: {torch.xpu.device_count()}")
+print(f"XPU device name: {torch.xpu.get_device_name(0)}")
+```
+
 
 Unsloth auto-detects the installed PyTorch backend (XPU/CUDA/CPU) at import
 time, and `common.detect_device()` selects `xpu` > `cpu` for
