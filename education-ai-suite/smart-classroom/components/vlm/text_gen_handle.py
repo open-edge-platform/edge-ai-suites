@@ -40,25 +40,27 @@ class TextGenHandler:
 
     def generate(
         self,
-        prompt: str,
+        prompt: Optional[str] = None,
         *,
+        messages: Optional[list] = None,
         images: Optional[list] = None,
         stream: bool = True,
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         enable_thinking: Optional[bool] = None,
         json_schema: Optional[str] = None,
-        pre_templated: bool = False,
     ) -> Union[Iterator[str], str]:
+        """Generate from ``messages`` (a chat history) or ``prompt`` (one user
+        turn). Templating happens inside the VLM, so callers pass raw text."""
         return self._get_runner().submit(
             prompt,
+            messages=messages,
             images=images,
             stream=stream,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             enable_thinking=enable_thinking,
             json_schema=json_schema,
-            pre_templated=pre_templated,
         )
 
     def load(self) -> None:
