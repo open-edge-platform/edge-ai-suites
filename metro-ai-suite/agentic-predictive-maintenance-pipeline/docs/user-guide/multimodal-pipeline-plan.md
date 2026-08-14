@@ -142,6 +142,56 @@ flowchart LR
     detection_svc --> output
 ```
 
+## Implementation Status
+
+Reused as much as possible from the upstream reference implementation
+([intel/predictive-maintenance-pipeline](https://github.com/intel/predictive-maintenance-pipeline),
+`src/inference/handlers/sensor_flat.py` and `openvino_classify.py`), ported
+into standalone modules under `services/detection-service/src/utility/` so
+they plug into our microservice architecture instead of the upstream
+monolithic `pace/` CLI structure:
+
+- **`fusion.py`** — generic n-way late-fusion utility (weighted average +
+  renormalize + argmax), ported from `SensorFlatHandler.fuse()`. Unit-tested
+  in `tests/test_fusion.py` (mirrors upstream's `test_nway_fusion.py`, plus
+  extra coverage for missing-sample and unweighted-branch edge cases).
+- **`sensor_classifier.py`** — `SensorMLPClassifier`: loads a flat-feature
+  CSV, z-score normalizes against dataset stats, runs an OpenVINO MLP model,
+  with per-sample fallback to a uniform distribution when a row is missing.
+  Ported from `SensorFlatHandler.load()`/`infer()`. Unit-tested in
+  `tests/test_sensor_classifier.py` (OpenVINO calls mocked so tests run
+  without a real model file).
+- **`image_classifier.py`** — `ImageClassifier`: direct OpenVINO inference
+  over a folder of images (bypasses DL Streamer). Ported from
+  `OpenVINOClassifyHandler`.
+- Added `numpy`, `opencv-python-headless`, and `openvino` to
+  `detection-service/requirements.txt` (previously detection-service only
+  called out to the DL Streamer container over REST and had no ML runtime
+  of its own).
+
+**Not yet done (blocked or deferred):**
+
+- **Dataset**: the public gas-detection dataset (Mendeley,
+  `https://data.mendeley.com/public-api/zip/zkwgkjkjn9/download/2`, ~1 GB
+  zip) could not be downloaded intact in this environment — two attempts
+  were truncated/corrupted by the network proxy (different byte counts each
+  time, both failed zip validation). Needs a retry from a network path
+  without that proxy, or a chunked/resumable download.
+- **Models**: the upstream repo does not ship pretrained weights for this
+  use case — the YOLOv8 image classifier and the sensor MLP must be trained
+  from the dataset (see `docs/training_recipe.md` upstream). Not attempted
+  here — real model training is out of scope until the dataset is in hand.
+- **Wiring into `detection-service/src/main.py`**: the new modules are
+  currently standalone/testable but not yet invoked from a `/detection/run`
+  code path. Still needed: a config-driven "modality" switch (`image` /
+  `sensor` / `multi`) analogous to the upstream `config_builder.py`, a new
+  use-case directory (e.g. `apps/gas-detection-multimodal/`) with configs
+  pointing at the dataset/sensor CSV/models, and `storage-service` schema
+  additions (`image_confidence`, `sensor_confidence`, `sensor_raw_json`
+  columns — additive, non-breaking) so results remain queryable/auditable.
+- **UI**: no changes made to `ui-service` to surface per-modality confidences
+  yet.
+
 ## Notes / Open Questions for Implementation
 
 - **Fusion weights** (0.6 image / 0.4 sensor) are a starting point from the reference doc; should be
