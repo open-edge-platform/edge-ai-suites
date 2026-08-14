@@ -37,7 +37,7 @@ flowchart TB
         ROUTER["mavlink-router\n:14550 → :14541"]
         BROKER["Mosquitto\nMQTT :1883"]
         DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
-        MM["Metrics Manager"]
+        MM["Metrics Manager\n(:9090)"]
 
         PX4 -->|"MAVLink"| ROUTER
         ROUTER -->|"UDP :14541"| DLSPS
@@ -111,28 +111,64 @@ The application supports two telemetry strategies, selected by the compose file 
 | Device | `gvadetect` flag | Notes |
 |---|---|---|
 | CPU | `device=CPU` | Works on any x86 host |
-| Intel GPU | `device=GPU` | Requires i915 / render group access |
-| Intel NPU | `device=NPU` | Requires `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` |
+| Intel GPU | `device=GPU` | Requires i915 / render group access (`/dev/dri/renderD128`) |
+| Intel NPU | `device=NPU` | Requires `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` and `/dev/accel/accel0` |
 
 ### RTSP output
 
-Both compose files expose RTSP on port `8555`. The DL Streamer built-in RTSP server encodes frames from `appsink` to H264 using `vah264lpenc` (VA-API hardware encoder). WebRTC is not used in the current deployment.
+Both compose files expose RTSP on port `8555`. The DL Streamer built-in RTSP server encodes frames from `appsink` to H264 using `vah264lpenc` (VA-API hardware encoder).
 
 ---
 
 ## Prerequisites
 
-- **Host OS:** Ubuntu 24 (Blueprint OS validated)
-- **Hardware:** Intel Panther Lake platform, minimum 16 GB RAM
+### System requirements
+
+- **Host OS:** Ubuntu 22.04 or 24.04 (Blueprint OS validated)
+- **Hardware:** Intel Panther Lake platform recommended; minimum 16 GB RAM
 - **Software:** Docker Engine, Docker Compose v2
-- **Model:** YOLOv8n-VisDrone exported to OpenVINO FP16 (see [export_model.md](export_model.md))
-- **GPU/NPU access:** device group IDs (`44`, `109`, `110`, `990`–`996`) must exist on the host
+
+### Required packages
+
+Install the following on the host before running any `make` target:
+
+```bash
+sudo apt update
+sudo apt install -y \
+  python3.12-venv \    # needed by make model (virtual environment)
+  ffmpeg               # needed to view RTSP streams (ffplay) and record video
+```
+
+> **Why `python3.12-venv`?** The `make model` target creates a Python virtual environment via `python3 -m venv`. On Ubuntu 22/24 the venv support is a separate package not installed by default. Without it you will see:
+> ```
+> The virtual environment was not created successfully because ensurepip is not available.
+> make: *** [Makefile:28: model] Error 1
+> ```
+
+> **Why `ffmpeg`?** The `ffplay` command (part of `ffmpeg`) is used to view the annotated RTSP output stream. Without it you will see:
+> ```
+> ffplay rtsp://... Command 'ffplay' not found
+> ```
+
+### Model
+
+YOLOv8n-VisDrone exported to OpenVINO FP16 (see [export_model.md](export_model.md)). Run `make model` after installing `python3.12-venv`.
+
+### GPU/NPU access (optional)
+
+Device group IDs (`44`, `109`, `110`, `990`–`996`) must exist on the host for GPU and NPU pipelines.
 
 ---
 
 ## Deployment — Standalone (pymavlink)
 
-### Step 1: Clone and configure
+### Step 1: Install prerequisites
+
+```bash
+sudo apt install -y python3.12-venv ffmpeg
+```
+
+### Step 2: Clone and configure
 
 ```bash
 git clone <repo-url>
@@ -143,19 +179,19 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-HOST_IP=192.168.1.100              # your host IP
+HOST_IP=192.168.1.100              # your host IP address
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-20260728-weekly-ubuntu24
 ```
 
-### Step 2: Prepare the model
+### Step 3: Prepare the model
 
 ```bash
 make model
 ```
 
-This creates a virtualenv, installs dependencies, downloads the checkpoint, and exports to OpenVINO FP16. See [export_model.md](export_model.md) for manual steps.
+This creates a virtualenv, installs dependencies, downloads the checkpoint from Hugging Face, and exports to OpenVINO FP16. See [export_model.md](export_model.md) for manual steps or if `make model` fails.
 
-### Step 3: Start the stack
+### Step 4: Start the stack
 
 ```bash
 make pymav-up
@@ -169,16 +205,15 @@ docker compose -f docker-compose-pymavlink.yml ps
 
 Expected services: `broker`, `mavlink-router`, `px4`, `dlstreamer-pipeline-server`, `metrics-manager`.
 
-### Step 4: Start pipelines
+### Step 5: Start pipelines
 
-Use `make start-rtsp` to launch the `mavlink_pipeline_manager.py` inside the container, which monitors the UAV's armed state via MAVLink and starts/stops pipelines automatically:
+Use `make start-rtsp` to launch the `mavlink_pipeline_manager.py` inside the container, which monitors the drone's armed state via MAVLink and starts/stops pipelines automatically:
 
 ```bash
 make start-rtsp
 ```
 
-Or start a pipeline manually via the REST API. The response body is the `instance_id`
-(an integer) needed for status checks and deletion:
+Or start a pipeline manually via the REST API:
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
@@ -193,7 +228,7 @@ INSTANCE_ID=$(curl -s -X POST \
       },
       "frame": {
         "type": "rtsp",
-        "path": "uav-cpu"
+        "path": "uav-mavlink-cpu"
       }
     },
     "parameters": {
@@ -206,9 +241,9 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Started instance: $INSTANCE_ID"
 ```
 
-The annotated RTSP stream is available at `rtsp://<host-ip>:8555/uav-cpu`.
+The annotated RTSP stream is available at `rtsp://<host-ip>:8555/uav-mavlink-cpu`.
 
-To stop it later:
+To stop it:
 
 ```bash
 curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
@@ -240,8 +275,6 @@ make mavsdk-up
 
 ### Step 3: Start the pipeline manager
 
-The `mavsdk_pipeline_manager.py` (mounted into the container as `pipeline_manager.py`) subscribes to MQTT armed state and automatically starts/stops the three camera pipelines:
-
 ```bash
 make start-rtsp
 ```
@@ -270,7 +303,7 @@ Pipeline definitions live in `configs/config-pymavlink.json` and `configs/config
 
 ### Switching inference device
 
-Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). Device is encoded in the pipeline name and GStreamer string.
+Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). The device is encoded in both the pipeline name and the GStreamer launch string.
 
 ---
 
@@ -278,7 +311,7 @@ Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). De
 
 | Variable | Default | Description |
 |---|---|---|
-| `HOST_IP` | *(required)* | Host machine IP address |
+| `HOST_IP` | *(required)* | Host machine IP address (used for RTSP stream address) |
 | `DLSTREAMER_PIPELINE_SERVER_IMAGE` | `intel/dlstreamer-pipeline-server:2026.2.0-...` | Docker image for DL Streamer |
 | `UAV_ID` | `uav-1` | UAV identifier for MQTT topic subscription (MAVSDK mode) |
 | `http_proxy` / `https_proxy` / `no_proxy` | *(optional)* | Proxy settings forwarded into containers |
@@ -288,18 +321,15 @@ Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). De
 
 ## REST API Reference
 
-The DL Streamer Pipeline Server REST API is available at `http://localhost:8081` (both modes).
-
-Pipelines defined with `"source": "gstreamer"` in `config.json` are registered under the
-`/pipelines/user_defined_pipelines/` namespace. A POST returns the integer `instance_id`
-for the running instance; use that ID for status queries and deletion.
+The DL Streamer Pipeline Server REST API is available at `http://localhost:8081`.
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/pipelines` | List all registered pipeline definitions |
-| `POST` | `/pipelines/user_defined_pipelines/{name}` | Start a pipeline instance; returns `instance_id` |
-| `GET` | `/pipelines/{instance_id}/status` | Get FPS, state, and elapsed time for a running instance |
-| `DELETE` | `/pipelines/{instance_id}` | Stop and remove a running instance |
+| `GET` | `/pipelines/status` | Get status of all running pipeline instances |
+| `POST` | `/pipelines/user_defined_pipelines/{name}` | Start a pipeline instance; returns UUID |
+| `GET` | `/pipelines/{id}/status` | Get FPS, state, elapsed time for a specific instance |
+| `DELETE` | `/pipelines/{id}` | Stop and remove a running instance |
 | `GET` | `/models` | List loaded models |
 
 **Example — list registered pipelines:**
@@ -308,7 +338,7 @@ for the running instance; use that ID for status queries and deletion.
 curl http://localhost:8081/pipelines
 ```
 
-**Example — start a pipeline and capture its instance ID:**
+**Example — start a pipeline:**
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
@@ -317,7 +347,7 @@ INSTANCE_ID=$(curl -s -X POST \
   -d '{
     "destination": {
       "metadata": {"type": "file", "path": "/tmp/results.jsonl", "format": "json-lines"},
-      "frame": {"type": "rtsp", "path": "uav-cpu"}
+      "frame": {"type": "rtsp", "path": "uav-mavlink-cpu"}
     },
     "parameters": {
       "detection-properties": {
@@ -332,7 +362,7 @@ echo "Instance ID: $INSTANCE_ID"
 **Example — check pipeline status:**
 
 ```bash
-curl http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
+curl http://localhost:8081/pipelines/status | python3 -m json.tool
 ```
 
 **Example — stop a running instance:**
@@ -341,27 +371,26 @@ curl http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.too
 curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ```
 
-> **Note:** The `instance_id` is the integer returned by the POST response body (e.g. `1`).
-> The pipeline name is not part of the DELETE or status URL.
-
 ---
 
 ## Verifying the Output Stream
 
-### RTSP
+### View with ffplay
 
 ```bash
-# Install ffplay if needed: sudo apt install ffmpeg
-ffplay rtsp://localhost:8555/uav-cpu
-```
+# Install if needed
+sudo apt install ffmpeg
 
-Or in QGroundControl: **Application Settings → Video** → set the RTSP URL.
+# View the stream
+ffplay rtsp://<host-ip>:8555/drone-mavlink-cpu
+```
 
 ### Record a clip
 
 ```bash
-ffmpeg -rtsp_transport tcp -i "rtsp://localhost:8555/uav-cpu" \
-  -c copy -map 0 output.mkv
+ffmpeg -rtsp_transport tcp \
+  -i "rtsp://<host-ip>:8555/uav-mavlink-cpu" \
+  -c copy -t 30 output.mkv
 ```
 
 ---
@@ -384,10 +413,14 @@ Both targets pass `-v` to also remove named Docker volumes (pipeline cache).
 
 See [troubleshooting.md](troubleshooting.md) for a complete list of known issues and resolutions, including:
 
+- `make model` fails with `python3-venv` not available
+- `make pymav-up` fails with pip network error (proxy issue)
 - DL Streamer container keeps restarting
 - No telemetry overlay on stream (all zeros)
 - Pipelines not starting in MAVSDK mode
+- `ffplay: command not found`
 - NPU inference fails / GPU pipeline falls back to CPU
 - QGroundControl network warnings
 - PX4 SITL image issues
 - UDP sink pipeline not working
+- Benchmark: `jq`/`gawk` not found

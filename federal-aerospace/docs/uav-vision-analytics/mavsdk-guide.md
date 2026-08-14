@@ -1,6 +1,21 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # UAV Vision Analytics — MAVSDK Flow
 
 End-to-end walkthrough: starting the SDK, launching the pipeline manager, running a simple mission, and capturing the video streams.
+
+---
+
+## Prerequisites
+
+Install `ffmpeg` to use `ffplay`, `ffprobe`, and `ffmpeg` for stream validation and recording:
+
+```bash
+sudo apt install ffmpeg
+```
 
 ---
 
@@ -45,9 +60,20 @@ curl -X POST http://localhost:8080/action/land
 
 ---
 
-## 4. Capture the video streams
+## 4. Verify the streams are live
 
-Once the pipeline manager has started the pipeline, record all three streams to disk with `ffmpeg`:
+Once the pipeline manager has started the pipelines, check that the RTSP streams are available:
+
+```bash
+# Quick stream probe (no GUI required)
+ffprobe -v quiet -show_streams rtsp://localhost:8555/nadir
+```
+
+---
+
+## 5. Capture the video streams
+
+Record all three streams to disk with `ffmpeg`:
 
 ```bash
 ffmpeg \
@@ -57,4 +83,12 @@ ffmpeg \
   -map 0:v -c:v copy nadir.mkv \
   -map 1:v -c:v copy forward.mkv \
   -map 2:v -c:v copy rear.mkv
+```
+
+Or view them live in separate windows:
+
+```bash
+ffplay rtsp://localhost:8555/nadir &
+ffplay rtsp://localhost:8555/forward &
+ffplay rtsp://localhost:8555/rear &
 ```

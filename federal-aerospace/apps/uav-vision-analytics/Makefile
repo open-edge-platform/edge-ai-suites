@@ -10,9 +10,10 @@ COMPOSE_PYMAV  := docker-compose-pymavlink.yml
 COMPOSE_MAVSDK := docker-compose-mavsdk.yml
 DLSPS          := dlstreamer-pipeline-server
 MODEL_DIR      := resources/models/yolov8n-visdrone
+MODEL_XML      := $(MODEL_DIR)/best_openvino_model/best.xml
 VENV           := resources/venv
 
-.PHONY: help build model \
+.PHONY: help init build model _check_model \
         pymav-up pymav-down \
         mavsdk-up mavsdk-down \
         start-rtsp start-udpsink
@@ -20,6 +21,36 @@ VENV           := resources/venv
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / \
 	  {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+# ── Init ────────────────────────────────────────────────────────────────────
+
+init: ## Create .env from template and auto-detect GPU device paths
+	@if test -f .env; then \
+		echo ".env already exists — skipping (delete it to re-run init)"; \
+	else \
+		cp .env.example .env; \
+		echo ".env created from .env.example"; \
+		GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); \
+		GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
+		if [ -n "$$GPU_CARD" ] && [ -n "$$GPU_RENDER" ]; then \
+			echo "✅ GPU detected:"; \
+			echo "   GPU_DEVICE=$$GPU_CARD"; \
+			echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
+			sed -i "s|^GPU_DEVICE=.*|GPU_DEVICE=$$GPU_CARD|" .env; \
+			sed -i "s|^GPU_RENDER_DEVICE=.*|GPU_RENDER_DEVICE=$$GPU_RENDER|" .env; \
+		else \
+			echo "⚠  No Intel GPU found at /dev/dri/ — set GPU_DEVICE and GPU_RENDER_DEVICE in .env manually."; \
+		fi; \
+	fi
+
+# ── Pre-flight check ────────────────────────────────────────────────────────
+
+_check_model:
+	@if [ ! -f "$(MODEL_XML)" ]; then \
+		echo "❌ Model not found: $(MODEL_XML)"; \
+		echo "   Run 'make model' first to download and export the YOLOv8n-VisDrone model."; \
+		exit 1; \
+	fi
 
 # ── Model ────────────────────────────────────────────────────────────────────
 
@@ -43,7 +74,7 @@ model: ## Download YOLOv8n-VisDrone and export to OpenVINO FP16
 
 # ── pymavlink stack ───────────────────────────────────────────────────────────
 
-pymav-up: ## Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + mediamtx)
+pymav-up: _check_model ## Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + mediamtx)
 	docker compose -f $(COMPOSE_PYMAV) up -d
 
 pymav-down: ## Stop and remove pymavlink stack (includes volumes)
