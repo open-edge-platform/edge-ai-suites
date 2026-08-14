@@ -75,9 +75,9 @@ fi
 
 # Base configuration
 HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
-export HOST_IP
 # Fallback to localhost if HOST_IP is empty
-[[ -z "$HOST_IP" ]] && export HOST_IP="127.0.0.1"
+[[ -z "$HOST_IP" ]] && HOST_IP="127.0.0.1"
+export HOST_IP
 
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
