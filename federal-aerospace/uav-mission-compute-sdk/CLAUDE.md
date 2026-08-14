@@ -78,7 +78,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 - `/capture-camera` — Grab frames for debug
 
 ## Startup Order
-1. `make up` — Core infra (PX4 sim → bridges → MQTT/RTSP → observability)
+1. `make up-sim-camera` — Core infra (PX4 sim → bridges → MQTT/RTSP → observability)
 2. `make apps` — AI helper (vision-processor) + edge-ai-showcase dashboard
 
 ## Running Missions

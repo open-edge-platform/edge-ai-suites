@@ -175,6 +175,7 @@ def health():
 import requests
 
 COMPANION_BRIDGE_URL = os.getenv("COMPANION_BRIDGE_URL", "http://px4-gazebo:8080")
+POST_MISSION_REBOOT = os.getenv("POST_MISSION_REBOOT", "true").lower() == "true"
 
 mission_status_data = {"running": False, "step": "Idle", "progress": 0}
 mission_lock = threading.Lock()
@@ -224,6 +225,95 @@ def _wait_for_disarm(timeout: float, step: str, progress: int) -> bool:
     return False
 
 
+def _wait_for_arm(timeout: float, step: str, progress: int) -> bool:
+    """Wait until the uav is armed."""
+    with mission_lock:
+        mission_status_data.update(running=True, step=step, progress=progress)
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if state["telemetry"].get("status", {}).get("armed", False):
+            return True
+        time.sleep(0.5)
+    return False
+
+
+def _wait_for_connected(timeout: float, step: str, progress: int) -> bool:
+    """Wait until telemetry reports a live connection to PX4."""
+    with mission_lock:
+        mission_status_data.update(running=True, step=step, progress=progress)
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        status = state["telemetry"].get("status", {})
+        if status.get("connected", False) and not status.get("stale", True):
+            return True
+        time.sleep(1)
+    return False
+
+
+def _reset_dashboard_state() -> None:
+    """Clear per-mission camera and inference counters for a fresh next run."""
+    for cam in CAMERA_IDS:
+        state["frames"][cam] = None
+        state["detections"][cam] = []
+        state["stats"]["fps"][cam] = 0.0
+        state["stats"]["frame_counts"][cam] = 0
+        detection_counts[cam] = 0
+        frame_times[cam].clear()
+        last_detection_time[cam] = 0.0
+    state["stats"]["total_detections"] = 0
+    state["anomalies"] = []
+
+
+def _arm_with_retries(max_attempts: int = 6) -> tuple[bool, str]:
+    """Arm with short backoff to tolerate transient post-landing denial windows."""
+    last_error = "arm failed"
+    for attempt in range(1, max_attempts + 1):
+        with mission_lock:
+            mission_status_data.update(
+                running=True,
+                step=f"Arming (attempt {attempt}/{max_attempts})",
+                progress=5,
+            )
+        ok, msg = _send_command("arm", timeout=20)
+        if ok and _wait_for_arm(timeout=6, step="Confirming arm", progress=8):
+            return True, "ok"
+        last_error = msg
+        time.sleep(2)
+    return False, last_error
+
+
+def _recover_from_arm_denied() -> bool:
+    """Reboot FCU and wait for reconnect when arm is persistently denied."""
+    with mission_lock:
+        mission_status_data.update(
+            running=True,
+            step="Recovering FCU (reboot)",
+            progress=6,
+        )
+    ok, _ = _send_command("reboot", timeout=10)
+    if not ok:
+        return False
+    return _wait_for_connected(timeout=60, step="Waiting for reconnect", progress=7)
+
+
+def _post_mission_reset() -> None:
+    """Return system to a clean ready state after a completed mission."""
+    with mission_lock:
+        mission_status_data.update(running=True, step="Resetting dashboard", progress=98)
+
+    _reset_dashboard_state()
+
+    if POST_MISSION_REBOOT:
+        ok, _ = _send_command("reboot", timeout=10)
+        if ok:
+            _wait_for_connected(timeout=60, step="Reconnecting after reset", progress=99)
+        else:
+            log.warning("Post-mission reboot request failed")
+
+    with mission_lock:
+        mission_status_data.update(running=False, step="Ready", progress=0)
+
+
 # Survey waypoints over Baylands objects (north, east in meters from home)
 _SURVEY_WAYPOINTS = [
     (8, 0),        # Hatchback (north)
@@ -250,8 +340,14 @@ def _demo_mission():
             raise RuntimeError(f"{action} failed: {msg}")
 
     try:
-        # Arm
-        _cmd("arm", "Arming", 5)
+        # Arm (retry-friendly to handle transient commander cooldowns after land)
+        armed_ok, arm_msg = _arm_with_retries(max_attempts=6)
+        if not armed_ok and "COMMAND_DENIED" in arm_msg:
+            recovered = _recover_from_arm_denied()
+            if recovered:
+                armed_ok, arm_msg = _arm_with_retries(max_attempts=8)
+        if not armed_ok:
+            raise RuntimeError(f"arm failed: {arm_msg}")
         time.sleep(2)
 
         # Takeoff to cruise altitude
@@ -285,14 +381,17 @@ def _demo_mission():
             _send_command("disarm", timeout=5)
 
         with mission_lock:
-            mission_status_data.update(running=False, step="Mission Complete", progress=100)
+            mission_status_data.update(running=True, step="Mission Complete", progress=100)
         log.info("Mission complete")
+        _post_mission_reset()
 
     except Exception as e:
         log.error(f"Mission failed: {e}")
-        _send_command("land", timeout=10)
-        if not _wait_for_disarm(timeout=30, step="Emergency landing", progress=0):
-            _send_command("disarm", timeout=5)
+        # Only trigger emergency landing if the uav is actually armed.
+        if state["telemetry"].get("status", {}).get("armed", False):
+            _send_command("land", timeout=10)
+            if not _wait_for_disarm(timeout=30, step="Emergency landing", progress=0):
+                _send_command("disarm", timeout=5)
         with mission_lock:
             mission_status_data.update(running=False, step=f"Error: {e}", progress=0)
 

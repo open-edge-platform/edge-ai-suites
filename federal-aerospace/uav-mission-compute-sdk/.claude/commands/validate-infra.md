@@ -100,7 +100,7 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 
 | Symptom | Fix |
 |---------|-----|
-| px4 unhealthy | `docker compose restart px4` then wait 60s |
+| px4 unhealthy | `docker compose restart px4` (sim) or `docker compose restart px4-sih` (usb), then recheck `docker compose ps` |
 | mediamtx unhealthy | `docker compose restart mediamtx` |
 | companion-bridge "Connection refused" or "heartbeats timed out" | `docker compose restart companion-bridge` |
 | camera-bridge no RTSP streams | Check logs: `docker logs camera-bridge` (sim profile - look for "RTSP pipeline started") |
@@ -108,13 +108,12 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 | camera-bridge GStreamer errors | Verify MediaMTX is healthy, check RTSP_HOST/RTSP_PORT env vars |
 | vision-processor no detections | Check RTSP consumption: `docker logs vision-processor-multicam` (look for "RTSP DL Streamer pipeline started") |
 | vision-processor "Could not connect to RTSP" | Verify MediaMTX has streams: `docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list` |
-| All services stale after PX4 restart | Restart in order: `px4` → wait healthy → `mediamtx` → `camera-bridge` |
+| All services stale after PX4 restart | Restart in order: `px4`/`px4-sih` → `mediamtx` → `camera-bridge`/`usb-camera-bridge` |
 | Want to revert to MQTT mode | Set `USE_RTSP=false` in docker-compose.yml, restart camera-bridge |
 
 ## Restart Order (full stack)
 ```bash
 make down
 make up-sim-camera
-# Wait ~60s for PX4 healthcheck to pass, then bridges auto-connect
 make apps   # if you need AI helpers
 ```
