@@ -8,4 +8,4 @@ requests==2.34.2
 # (src/utility/fusion.py, sensor_classifier.py, image_classifier.py).
 numpy==2.2.6
 opencv-python-headless==4.11.0.86
-openvino==2026.2.0
+openvino==2026.3.0

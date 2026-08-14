@@ -169,18 +169,43 @@ monolithic `pace/` CLI structure:
   called out to the DL Streamer container over REST and had no ML runtime
   of its own).
 
-**Not yet done (blocked or deferred):**
+**Dataset and models (now available):**
 
-- **Dataset**: the public gas-detection dataset (Mendeley,
-  `https://data.mendeley.com/public-api/zip/zkwgkjkjn9/download/2`, ~1 GB
-  zip) could not be downloaded intact in this environment — two attempts
-  were truncated/corrupted by the network proxy (different byte counts each
-  time, both failed zip validation). Needs a retry from a network path
-  without that proxy, or a chunked/resumable download.
-- **Models**: the upstream repo does not ship pretrained weights for this
-  use case — the YOLOv8 image classifier and the sensor MLP must be trained
-  from the dataset (see `docs/training_recipe.md` upstream). Not attempted
-  here — real model training is out of scope until the dataset is in hand.
+- **Dataset**: the public gas-detection dataset (Mendeley) was downloaded and
+  prepped successfully using `scripts/download_and_prep_data.py --use-case
+  gas-detection`. Result: `datasets/gas_detection/images/train/{Mixture,
+  NoGas,Perfume,Smoke}/` (90 images each, 360 total), `images/val/` (40
+  images), and `sensor_data/Gas_Sensors_Measurements.csv` (6400 rows). The
+  dataset directory is gitignored (data, not code) — regenerate it locally
+  with the script above.
+- **Sensor MLP**: trained per upstream's `training_recipe.md` recipe (flat
+  z-score-normalized features → small MLP), exported to ONNX then converted
+  to OpenVINO IR. **96.6% validation accuracy** during training.
+  Model: `models/ov_models/gas_detection/sensor_mlp/sensor_mlp.xml`/`.bin`.
+- **Image classifier**: trained via `yolo classify train` (YOLOv8s-cls,
+  imgsz=640, 50 epochs, CPU), exported directly to OpenVINO IR via
+  Ultralytics' `model.export(format='openvino')`. **98.6% validation
+  accuracy** during training.
+  Model: `models/ov_models/gas_detection/image/best.xml`/`.bin` (`.bin`
+  tracked via Git LFS, ~20 MB).
+- **Joint validation**: ran `ImageClassifier` + `SensorMLPClassifier` +
+  `fusion.late_fusion()` together over the 40 held-out validation images
+  (weights: image 0.6 / sensor 0.4, per upstream's reference config). Fusion
+  outperforms either branch alone:
+
+  | Branch | Accuracy (40 samples) |
+  |---|---|
+  | Image-only | 92.5% (37/40) |
+  | Sensor-only | 95.0% (38/40) |
+  | **Fused** | **97.5% (39/40)** |
+
+- **OpenVINO API note**: OpenVINO 2026.3 removed the `openvino.runtime`
+  submodule alias used by older code/docs; modules now use
+  `import openvino as ov; ov.Core()` directly. `requirements.txt` pinned to
+  `openvino==2026.3.0` to match.
+
+**Not yet done (deferred):**
+
 - **Wiring into `detection-service/src/main.py`**: the new modules are
   currently standalone/testable but not yet invoked from a `/detection/run`
   code path. Still needed: a config-driven "modality" switch (`image` /

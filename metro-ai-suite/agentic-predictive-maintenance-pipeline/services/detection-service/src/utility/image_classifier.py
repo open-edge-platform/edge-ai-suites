@@ -25,9 +25,9 @@ class ImageClassifier:
         self._output_layer = None
 
     def load(self) -> None:
-        from openvino.runtime import Core
+        import openvino as ov
 
-        core = Core()
+        core = ov.Core()
         model = core.read_model(str(self.model_path))
         self._compiled = core.compile_model(model, self.device)
         self._input_layer = self._compiled.input(0)

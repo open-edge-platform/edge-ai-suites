@@ -75,9 +75,9 @@ class SensorMLPClassifier:
     def _ensure_model_loaded(self) -> None:
         if self._compiled is not None:
             return
-        from openvino.runtime import Core
+        import openvino as ov
 
-        core = Core()
+        core = ov.Core()
         model = core.read_model(self.model_path)
         self._compiled = core.compile_model(model, self.device)
         self._output_layer = self._compiled.output(0)
