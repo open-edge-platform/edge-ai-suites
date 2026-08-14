@@ -41,6 +41,18 @@ CREATE INDEX IF NOT EXISTS idx_label      ON detections(label);
 CREATE INDEX IF NOT EXISTS idx_confidence ON detections(confidence);
 """
 
+# Additive columns for multimodal (image + sensor fusion) results. Nullable so
+# single-modality video defect-detection rows (frame_id/x/y/width/height only)
+# remain valid and unaffected. Applied via ALTER TABLE (not part of SCHEMA
+# above) so existing databases are migrated in place rather than requiring a
+# drop/recreate.
+MULTIMODAL_COLUMNS = {
+    "source": "TEXT",              # e.g. "gas_detection_multimodal"; NULL for plain video detections
+    "image_confidence": "REAL",    # per-branch confidence at the fused label, image modality
+    "sensor_confidence": "REAL",   # per-branch confidence at the fused label, sensor modality
+    "sensor_raw_json": "TEXT",     # raw sensor reading(s) used for this sample, JSON-encoded
+}
+
 FIELD_SQL = {
     "id": "id",
     "frame_id": "frame_id",
@@ -51,6 +63,10 @@ FIELD_SQL = {
     "width": "width",
     "height": "height",
     "timestamp": "timestamp",
+    "source": "source",
+    "image_confidence": "image_confidence",
+    "sensor_confidence": "sensor_confidence",
+    "sensor_raw_json": "sensor_raw_json",
 }
 FRAME_FIELD_SQL = {
     "frame_id": "frame_id",
@@ -94,22 +110,54 @@ class SQLiteClient:
     def _init_db(self):
         with self._get_conn() as conn:
             conn.executescript(SCHEMA)
+            self._migrate_multimodal_columns(conn)
         logger.info("Database initialised at %s", self.db_path)
 
+    def _migrate_multimodal_columns(self, conn: sqlite3.Connection) -> None:
+        """Add multimodal columns to pre-existing databases that predate them.
+
+        SQLite's ``CREATE TABLE IF NOT EXISTS`` never alters an existing
+        table, so a database created before these columns existed needs an
+        explicit ``ALTER TABLE ... ADD COLUMN`` per missing column.
+        """
+        existing = {row["name"] for row in conn.execute("PRAGMA table_info(detections)")}
+        for column, sql_type in MULTIMODAL_COLUMNS.items():
+            if column not in existing:
+                conn.execute(f"ALTER TABLE detections ADD COLUMN {column} {sql_type}")
+
     def insert_detection(self, frame_id: int, label: str, confidence: float,
-                         x: float, y: float, width: float, height: float) -> int:
-        sql = """INSERT INTO detections (frame_id, label, confidence, x, y, width, height)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)"""
+                         x: float, y: float, width: float, height: float,
+                         source: Optional[str] = None,
+                         image_confidence: Optional[float] = None,
+                         sensor_confidence: Optional[float] = None,
+                         sensor_raw_json: Optional[str] = None) -> int:
+        sql = """INSERT INTO detections
+                    (frame_id, label, confidence, x, y, width, height,
+                     source, image_confidence, sensor_confidence, sensor_raw_json)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         with self._get_conn() as conn:
-            cursor = conn.execute(sql, (frame_id, label, confidence, x, y, width, height))
+            cursor = conn.execute(sql, (
+                frame_id, label, confidence, x, y, width, height,
+                source, image_confidence, sensor_confidence, sensor_raw_json,
+            ))
             return cursor.lastrowid
 
     def insert_many(self, records: list[dict]) -> int:
-        """Bulk insert detections. Each dict must have frame_id, label, confidence, x, y, width, height."""
-        sql = """INSERT INTO detections (frame_id, label, confidence, x, y, width, height)
-                 VALUES (:frame_id, :label, :confidence, :x, :y, :width, :height)"""
+        """Bulk insert detections.
+
+        Each dict must have frame_id, label, confidence, x, y, width, height.
+        The multimodal fields (source, image_confidence, sensor_confidence,
+        sensor_raw_json) are optional and default to NULL when absent.
+        """
+        sql = """INSERT INTO detections
+                    (frame_id, label, confidence, x, y, width, height,
+                     source, image_confidence, sensor_confidence, sensor_raw_json)
+                 VALUES (:frame_id, :label, :confidence, :x, :y, :width, :height,
+                         :source, :image_confidence, :sensor_confidence, :sensor_raw_json)"""
+        multimodal_defaults = dict.fromkeys(MULTIMODAL_COLUMNS, None)
+        normalized = [{**multimodal_defaults, **record} for record in records]
         with self._get_conn() as conn:
-            conn.executemany(sql, records)
+            conn.executemany(sql, normalized)
             return len(records)
 
     def get_detections(self, label: Optional[str] = None,

@@ -133,3 +133,83 @@ def test_trigger_run_rejects_concurrent_run(monkeypatch):
     assert second.json()["detail"]["run_id"] == first_run_id
 
     _reset_run_state()
+
+
+def test_execute_multimodal_run_success_publishes_batch_complete(monkeypatch):
+    """The multimodal path shares the same "batch-complete" handoff contract
+    as the DL Streamer path — the agent-service reacts identically regardless
+    of which detection path produced the batch."""
+    _reset_run_state()
+
+    max_ids = iter([{"max_id": 10}, {"max_id": 12}])
+    monkeypatch.setattr(main_mod.storage_client, "get_max_id", lambda: next(max_ids))
+    monkeypatch.setattr(main_mod, "load_config", lambda path: {"source_tag": "gas_detection_multimodal"})
+    monkeypatch.setattr(
+        main_mod, "run_multimodal_classification",
+        lambda config, device: [{"source": "a.jpg", "label": "Smoke", "confidence": 0.9}] * 2,
+    )
+    monkeypatch.setattr(main_mod, "persist_results", lambda results, tag, post_fn: len(results))
+
+    published = {}
+    monkeypatch.setattr(main_mod, "publish_batch_complete", lambda event: published.update(event))
+
+    run_id = "run-mm-1"
+    main_mod._runs[run_id] = {"status": "running", "phase": "classifying", "result": None}
+    main_mod._run_lock.acquire()
+    main_mod._active_run_id = run_id
+
+    main_mod._execute_multimodal_run(run_id, "CPU", "/fake/config.json")
+
+    assert main_mod._runs[run_id]["status"] == "completed"
+    assert main_mod._runs[run_id]["result"]["samples"] == 2
+    assert main_mod._runs[run_id]["result"]["inserted"] == 2
+    assert published["status"] == "completed"
+    assert published["samples"] == 2
+    assert main_mod._active_run_id is None
+    assert not main_mod._run_lock.locked()
+
+
+def test_execute_multimodal_run_failure_publishes_error_event(monkeypatch):
+    _reset_run_state()
+
+    monkeypatch.setattr(main_mod.storage_client, "get_max_id", lambda: {"max_id": 0})
+
+    def failing_load_config(path):
+        raise main_mod.MultimodalRunError(f"Multimodal config not found: {path}")
+
+    monkeypatch.setattr(main_mod, "load_config", failing_load_config)
+
+    published = {}
+    monkeypatch.setattr(main_mod, "publish_batch_complete", lambda event: published.update(event))
+
+    run_id = "run-mm-2"
+    main_mod._runs[run_id] = {"status": "running", "phase": "classifying", "result": None}
+    main_mod._run_lock.acquire()
+    main_mod._active_run_id = run_id
+
+    main_mod._execute_multimodal_run(run_id, "CPU", "/missing/config.json")
+
+    assert main_mod._runs[run_id]["status"] == "error"
+    assert published["status"] == "error"
+    assert "not found" in published["error"]
+    assert main_mod._active_run_id is None
+    assert not main_mod._run_lock.locked()
+
+
+def test_trigger_multimodal_run_rejects_concurrent_run(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    _reset_run_state()
+    monkeypatch.setattr(main_mod, "_execute_multimodal_run", lambda *a, **k: None)
+
+    client = TestClient(main_mod.app)
+
+    first = client.post("/detection/run-multimodal", json={"config_path": "/fake/config.json"})
+    assert first.status_code == 202
+    first_run_id = first.json()["run_id"]
+
+    second = client.post("/detection/run-multimodal", json={"config_path": "/fake/config.json"})
+    assert second.status_code == 409
+    assert second.json()["detail"]["run_id"] == first_run_id
+
+    _reset_run_state()

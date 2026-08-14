@@ -20,6 +20,7 @@ import os
 import logging
 import time
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import PlainTextResponse
@@ -80,6 +81,13 @@ class Detection(BaseModel):
     y: float = Field(..., description="Bounding box center Y")
     width: float = Field(..., description="Bounding box width")
     height: float = Field(..., description="Bounding box height")
+    # Additive multimodal fields — optional/NULL for plain video defect
+    # detections. Populated for fused image+sensor classification results
+    # (e.g. the gas-detection use case), which have no bounding box.
+    source: Optional[str] = Field(None, description="Result origin, e.g. 'gas_detection_multimodal'")
+    image_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Image-branch confidence at the fused label")
+    sensor_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="Sensor-branch confidence at the fused label")
+    sensor_raw_json: Optional[str] = Field(None, description="Raw sensor reading(s) for this sample, JSON-encoded")
 
 
 class DetectionBatch(BaseModel):
@@ -110,6 +118,10 @@ def insert_detection(detection: Detection, _auth: None = Depends(require_api_key
     row_id = db.insert_detection(
         detection.frame_id, detection.label, detection.confidence,
         detection.x, detection.y, detection.width, detection.height,
+        source=detection.source,
+        image_confidence=detection.image_confidence,
+        sensor_confidence=detection.sensor_confidence,
+        sensor_raw_json=detection.sensor_raw_json,
     )
     return {"inserted": 1}
 

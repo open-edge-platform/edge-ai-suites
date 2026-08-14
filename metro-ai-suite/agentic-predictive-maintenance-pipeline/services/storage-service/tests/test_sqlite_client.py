@@ -48,6 +48,53 @@ def test_insert_many(db):
     assert db.count() == 5
 
 
+def test_insert_detection_with_multimodal_fields(db):
+    """Multimodal (image + sensor fusion) results carry no bounding box but
+    do carry per-branch confidences and a raw sensor reading."""
+    db.insert_detection(
+        1, "Smoke", 0.97, 0.0, 0.0, 0.0, 0.0,
+        source="gas_detection_multimodal",
+        image_confidence=0.95,
+        sensor_confidence=0.99,
+        sensor_raw_json='{"MQ2": 1.2, "MQ3": 0.8}',
+    )
+    results = db.get_detections()
+    assert len(results) == 1
+    row = results[0]
+    assert row["source"] == "gas_detection_multimodal"
+    assert row["image_confidence"] == pytest.approx(0.95)
+    assert row["sensor_confidence"] == pytest.approx(0.99)
+    assert row["sensor_raw_json"] == '{"MQ2": 1.2, "MQ3": 0.8}'
+
+
+def test_insert_detection_multimodal_fields_default_to_null(db):
+    """Plain video defect detections (no multimodal args passed) leave the
+    additive columns NULL rather than erroring or requiring a value."""
+    db.insert_detection(1, "Rupture", 0.9, 10, 20, 50, 40)
+    row = db.get_detections()[0]
+    assert row["source"] is None
+    assert row["image_confidence"] is None
+    assert row["sensor_confidence"] is None
+    assert row["sensor_raw_json"] is None
+
+
+def test_insert_many_mixed_multimodal_and_plain_records(db):
+    """insert_many accepts a mix of records with and without multimodal keys."""
+    records = [
+        {"frame_id": 1, "label": "Rupture", "confidence": 0.9,
+         "x": 1, "y": 1, "width": 10, "height": 10},
+        {"frame_id": 2, "label": "Smoke", "confidence": 0.97,
+         "x": 0, "y": 0, "width": 0, "height": 0,
+         "source": "gas_detection_multimodal", "image_confidence": 0.95,
+         "sensor_confidence": 0.99, "sensor_raw_json": "{}"},
+    ]
+    count = db.insert_many(records)
+    assert count == 2
+    rows = {r["frame_id"]: r for r in db.get_detections()}
+    assert rows[1]["source"] is None
+    assert rows[2]["source"] == "gas_detection_multimodal"
+
+
 def test_filter_by_label(db):
     db.insert_detection(1, "Rupture",    0.9,  10, 10, 50, 50)
     db.insert_detection(2, "Disconnect", 0.85, 20, 20, 60, 60)

@@ -30,6 +30,12 @@ from .utility.dlstreamer_client import (
     list_available_videos,
     PipelineRunError,
 )
+from .utility.multimodal_runner import (
+    load_config,
+    persist_results,
+    run_multimodal_classification,
+    MultimodalRunError,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -95,6 +101,11 @@ class DetectionRunResponse(BaseModel):
     status: str
 
 
+class MultimodalRunRequest(BaseModel):
+    device: Optional[str] = "CPU"
+    config_path: str
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.post("/detection/run", response_model=DetectionRunResponse, status_code=202)
@@ -142,6 +153,36 @@ def list_runs():
 def get_available_videos():
     """List video filenames available under the shared resources/videos directory."""
     return {"videos": list_available_videos()}
+
+
+@app.post("/detection/run-multimodal", response_model=DetectionRunResponse, status_code=202)
+async def trigger_multimodal_run(req: MultimodalRunRequest, background_tasks: BackgroundTasks):
+    """Start one bounded fused image+sensor classification run in the background.
+
+    Unlike ``/detection/run`` (a live DL Streamer video pipeline), this
+    classifies a static image directory + paired sensor CSV described by
+    ``req.config_path`` (e.g. ``apps/gas-detection-multimodal/configs/
+    gas_detection.json``), fuses the two modalities per sample via
+    ``fusion.late_fusion``, and persists each fused result to storage-service.
+    Shares the same single-run-at-a-time lock/registry as ``/detection/run``.
+    """
+    global _active_run_id
+    if not _run_lock.acquire(blocking=False):
+        raise HTTPException(
+            status_code=409,
+            detail={"message": "A detection run is already in progress", "run_id": _active_run_id},
+        )
+
+    device = (req.device or "CPU").upper()
+    if device not in {"CPU", "GPU", "NPU"}:
+        _run_lock.release()
+        raise HTTPException(status_code=422, detail=f"Unsupported device: {req.device!r}")
+
+    run_id = str(uuid.uuid4())
+    _active_run_id = run_id
+    _runs[run_id] = {"status": "running", "phase": "classifying", "result": None}
+    background_tasks.add_task(_execute_multimodal_run, run_id, device, req.config_path)
+    return DetectionRunResponse(run_id=run_id, status="running")
 
 
 @app.get("/health")
@@ -196,6 +237,70 @@ def _drain_pending_detections(known_max_id: int) -> int:
             break
         last_seen = current
     return last_seen
+
+
+def _execute_multimodal_run(run_id: str, device: str, config_path: str):
+    """Run one bounded fused image+sensor classification run for ``run_id``.
+
+    1. Load the use-case config (model/dataset paths, class names, fusion
+       weights) and bookmark the current max detection id (start_id).
+    2. Classify every image + its paired sensor row, fuse per sample.
+    3. Persist each fused result to storage-service, bookmark max id (end_id).
+    4. Publish a "batch-complete" MQTT event — same handoff contract as the
+       DL Streamer path, so the agent-service reacts identically regardless
+       of which detection path produced the batch.
+    """
+    global _active_run_id
+    try:
+        try:
+            start_id = storage_client.get_max_id().get("max_id", 0)
+        except Exception as exc:
+            log.warning("Could not resolve starting detection watermark, defaulting to 0: %s", exc)
+            start_id = 0
+
+        log.info("Run %s: starting multimodal classification (device=%s, config=%s)...",
+                  run_id, device, config_path)
+        config = load_config(config_path)
+        results = run_multimodal_classification(config, device=device)
+        source_tag = config.get("source_tag", "multimodal")
+        inserted = persist_results(results, source_tag, storage_client.post_detection)
+        log.info("Run %s: classified and persisted %d/%d samples", run_id, inserted, len(results))
+
+        try:
+            end_id = storage_client.get_max_id().get("max_id", start_id)
+            end_id = _drain_pending_detections(end_id)
+        except Exception as exc:
+            log.warning("Could not resolve ending detection watermark, defaulting to no upper bound: %s", exc)
+            end_id = None
+
+        result = {"samples": len(results), "inserted": inserted, "start_id": start_id, "end_id": end_id}
+        _runs[run_id] = {"status": "completed", "phase": "completed", "result": result}
+        publish_batch_complete({
+            "run_id": run_id, "status": "completed", "device": device,
+            "config_path": config_path, "start_id": start_id, "end_id": end_id,
+            "samples": len(results), "inserted": inserted,
+        })
+        log.info("Run %s: multimodal classification completed", run_id)
+
+    except MultimodalRunError as exc:
+        log.error("Run %s failed during multimodal classification: %s", run_id, exc)
+        _runs[run_id] = {"status": "error", "phase": "error", "result": {"error": str(exc)}}
+        publish_batch_complete({
+            "run_id": run_id, "status": "error", "device": device,
+            "config_path": config_path, "start_id": None, "end_id": None,
+            "error": str(exc),
+        })
+    except Exception as exc:
+        log.error("Run %s failed: %s", run_id, exc)
+        _runs[run_id] = {"status": "error", "phase": "error", "result": {"error": str(exc)}}
+        publish_batch_complete({
+            "run_id": run_id, "status": "error", "device": device,
+            "config_path": config_path, "start_id": None, "end_id": None,
+            "error": str(exc),
+        })
+    finally:
+        _active_run_id = None
+        _run_lock.release()
 
 
 def _execute_detection_run(run_id: str, device: str, video_filename: str | None):
