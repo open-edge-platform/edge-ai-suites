@@ -32,28 +32,16 @@ This document explains how to measure the performance of the UAV Vision Analytic
 
 ## Prerequisites
 
-Before running the benchmark:
+Before running the benchmark, ensure the application stack is configured and running. See [user-guide.md](user-guide.md) for full setup instructions.
 
-### 1. Export the YOLOv8n-VisDrone model
+### 1. Model must be exported
 
-The model must exist at the path referenced in `benchmark/benchmark_app_payload.json`. Run:
-
-```bash
-make model
-```
-
-> If **`make model` fails with `python3-venv` not available.**
-> Install the package first:
-> ```bash
-> sudo apt install python3.12-venv
-> make model
-> ```
-> See [export_model.md](export_model.md) for full manual export instructions.
-
-The model is exported to:
+The model must exist at:
 ```
 resources/models/yolov8n-visdrone/best_openvino_model/best.xml
 ```
+
+Run `make model` if it is missing (Deployment will fail with a error if the model is absent).
 
 ### 2. Start the application stack
 

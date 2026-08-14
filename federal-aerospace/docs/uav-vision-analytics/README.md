@@ -5,9 +5,9 @@ SPDX-License-Identifier: Apache-2.0
 
 # UAV Vision Analytics Application
 
-AI-powered drone object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
+AI-powered UAV object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
 
-This application processes video from a drone-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference to detect objects in ten classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP on port `8555`, consumable by any RTSP-capable client.
+This application processes video from a UAV-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference to detect objects in ten classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP on port `8555`, consumable by any RTSP-capable client.
 
 ---
 
@@ -30,9 +30,15 @@ sudo apt install -y python3.12-venv ffmpeg
 ### 1. Configure environment
 
 ```bash
-cp .env.example .env
-# Set HOST_IP to the host machine's IP address
-nano .env
+make init
+```
+
+`make init` creates `.env` from the template and **auto-detects your Intel GPU** device paths (`GPU_DEVICE`, `GPU_RENDER_DEVICE`). It skips silently if `.env` already exists.
+
+Then set your host IP address in `.env`:
+
+```bash
+nano .env   # set HOST_IP=<your-machine-IP>
 ```
 
 ### 2. Prepare the model
@@ -75,37 +81,21 @@ Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's A
 make start-rtsp
 ```
 
-**RTSP output streams** (same paths for both pymavlink and MAVSDK modes):
+**pymavlink mode** — output streams:
+```
+rtsp://<HOST_IP>:8555/uav-mavlink-cpu    (CPU pipeline)
+rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
+rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline)
+```
+
+**MAVSDK mode** — output streams (available after drone arms):
 ```
 rtsp://<HOST_IP>:8555/nadir      (nadir camera, CPU)
 rtsp://<HOST_IP>:8555/forward    (forward camera, GPU)
 rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 ```
 
-**MAVSDK mode** — full terminal output when the drone arms:
-```
-Vehicle Status: ARMED -> starting pipelines
-[rtsp-check] Probing rtsp://host.docker.internal:8554/uav-1/nadir (attempt 1/3)...
-[rtsp-check] rtsp://host.docker.internal:8554/uav-1/nadir is available.
-[pipeline] Start 'nadir_camera_rtsp_cpu' status: 200
-
-[rtsp-check] Probing rtsp://host.docker.internal:8554/uav-1/forward (attempt 1/3)...
-[rtsp-check] rtsp://host.docker.internal:8554/uav-1/forward is available.
-[pipeline] Start 'forward_camera_rtsp_gpu' status: 200
-
-[rtsp-check] Probing rtsp://host.docker.internal:8554/uav-1/rear (attempt 1/3)...
-[rtsp-check] rtsp://host.docker.internal:8554/uav-1/rear is available.
-[pipeline] Start 'rear_camera_rtsp_npu' status: 200
-
-RTSP streams available at:
-  CPU: rtsp://localhost:8555/nadir
-  GPU: rtsp://localhost:8555/forward
-  NPU: rtsp://localhost:8555/rear
-```
-
-> `uav-1` is the default value of the `UAV_ID` environment variable in `.env`. The SDK's
-> MediaMTX RTSP server publishes streams under `rtsp://…:8554/{UAV_ID}/{camera}`.
-> Change `UAV_ID` in `.env` if your SDK project uses a different vehicle identifier.
+**File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
 
 #### Option B — Managed UDP output
 
@@ -120,13 +110,6 @@ make start-udpsink
 | CPU | CPU | `5600` |
 | GPU | GPU | `5601` |
 | NPU | NPU | `5602` |
-
-Receive a stream with GStreamer:
-```bash
-gst-launch-1.0 udpsrc port=5600 \
-  caps="application/x-rtp,media=video,encoding-name=H264" \
-  ! rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! autovideosink
-```
 
 #### Option C — Manual REST API
 
@@ -146,7 +129,7 @@ INSTANCE_ID=$(curl -s -X POST \
       },
       "frame": {
         "type": "rtsp",
-        "path": "uav-cpu"
+        "path": "uav-mavlink-cpu"
       }
     },
     "parameters": {
@@ -159,19 +142,7 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 ```
 
-For GPU or NPU, change the pipeline name and `device` value:
-
-```bash
-# GPU
-curl -s -X POST http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_gpu \
-  -H "Content-Type: application/json" \
-  -d '{"parameters": {"detection-properties": {"model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml", "device": "GPU"}}, "destination": {"frame": {"type": "rtsp", "path": "uav-gpu"}}}'
-
-# NPU
-curl -s -X POST http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_npu \
-  -H "Content-Type: application/json" \
-  -d '{"parameters": {"detection-properties": {"model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml", "device": "NPU"}}, "destination": {"frame": {"type": "rtsp", "path": "drone-npu"}}}'
-```
+For GPU or NPU, change the pipeline name and `device` value.
 
 Stop a pipeline:
 ```bash
@@ -182,12 +153,9 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
-ffplay rtsp://<HOST_IP>:8555/nadir      # nadir camera (CPU)
-ffplay rtsp://<HOST_IP>:8555/forward    # forward camera (GPU)
-ffplay rtsp://<HOST_IP>:8555/rear       # rear camera (NPU)
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # pymavlink, REST/managed
+ffplay rtsp://<HOST_IP>:8555/nadir               # MAVSDK, nadir camera
 ```
-
-Or open the URL in QGroundControl: **Application Settings → Video**.
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
 
@@ -205,9 +173,6 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 | `uav_realsense_cpu` | CPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_gpu` | GPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_npu` | NPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
-| `nadir_camera_rtsp_cpu` | CPU | `rtsp://…:8554/{UAV_ID}/nadir` | `rtsp://<HOST_IP>:8555/nadir` |
-| `forward_camera_rtsp_gpu` | GPU | `rtsp://…:8554/{UAV_ID}/forward` | `rtsp://<HOST_IP>:8555/forward` |
-| `rear_camera_rtsp_npu` | NPU | `rtsp://…:8554/{UAV_ID}/rear` | `rtsp://<HOST_IP>:8555/rear` |
 | `uav_udpsink_cpu` | CPU | Looped video file (`gazebo.avi`) | UDP `:5600` |
 | `uav_udpsink_gpu` | GPU | Looped video file (`gazebo.avi`) | UDP `:5601` |
 | `uav_udpsink_npu` | NPU | Looped video file (`gazebo.avi`) | UDP `:5602` |

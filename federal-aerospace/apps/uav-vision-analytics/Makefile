@@ -82,7 +82,7 @@ pymav-down: ## Stop and remove pymavlink stack (includes volumes)
 
 # ── MAVSDK stack ──────────────────────────────────────────────────────────────
 
-mavsdk-up: ## Start MAVSDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
+mavsdk-up: _check_model ## Start MAVSDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
 	docker compose -f $(COMPOSE_MAVSDK) up -d
 
 mavsdk-down: ## Stop and remove MAVSDK stack (includes volumes)

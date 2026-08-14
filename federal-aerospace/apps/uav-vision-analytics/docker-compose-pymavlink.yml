@@ -48,17 +48,8 @@ services:
   dlstreamer-pipeline-server:
     build:
       context: .
-      args:
-        http_proxy:  ${http_proxy:-}
-        https_proxy: ${https_proxy:-}
-        no_proxy:    ${no_proxy:-localhost,127.0.0.0/8}
-        NO_PROXY:    ${NO_PROXY:-localhost,127.0.0.0/8}
       dockerfile_inline: |
         FROM ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
-        ARG http_proxy
-        ARG https_proxy
-        ARG no_proxy
-        ARG NO_PROXY
         RUN pip install --no-cache-dir pymavlink
     image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}-pymavlink
     container_name: dlstreamer-pipeline-server

@@ -103,14 +103,6 @@ Executes `mavlink_pipeline_manager.py` inside the running `dlstreamer-pipeline-s
 
 Requires the DLSPS container to already be running (`make pymav-up` or `make mavsdk-up` first).
 
-View the output streams:
-```bash
-# Install ffmpeg if needed: sudo apt install ffmpeg
-ffplay rtsp://<HOST_IP>:8555/nadir      # nadir camera (CPU)
-ffplay rtsp://<HOST_IP>:8555/forward    # forward camera (GPU)
-ffplay rtsp://<HOST_IP>:8555/rear       # rear camera (NPU)
-```
-
 ---
 
 ### `make start-udpsink`
@@ -127,16 +119,15 @@ Convenience alias for `make pymav-up`. Starts the default standalone stack.
 
 ## Common Workflows
 
-### First-time setup on a new machine
+### First-time setup
 
 ```bash
 # 0. Install system prerequisites
 sudo apt install python3.12-venv ffmpeg
 
-# 1. Configure environment
-cp .env.example .env
-# Set HOST_IP to the host machine's IP address
-nano .env
+# 1. Create .env and auto-detect GPU
+make init
+nano .env   # set HOST_IP=<your-machine-IP>
 
 # 2. Download and export the model
 make model

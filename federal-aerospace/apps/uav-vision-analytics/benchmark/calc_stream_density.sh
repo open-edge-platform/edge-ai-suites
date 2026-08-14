@@ -80,7 +80,6 @@ awk_utils='
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HW Metrics Configuration
 #  Override via environment variables or the -m / -M CLI flags.
-#  NO need to pass -m or -M if metrics-manager runs on localhost:9090.
 # ═══════════════════════════════════════════════════════════════════════════════
 METRICS_URL="${METRICS_URL:-http://localhost:9090}"
 METRICS_INTERVAL="${METRICS_INTERVAL:-2}"   # seconds between polls
@@ -102,8 +101,7 @@ trap _cleanup_hw_monitor EXIT INT TERM
 
 # ───────────────────────────────────────────────────────────────────────────────
 #  _check_metrics_manager
-#  Returns 0 if metrics-manager is reachable at METRICS_URL, 1 otherwise.
-#  Tries SSE first (primary), REST second (fallback) — mirrors hw_monitor.py.
+#  Tries SSE first (primary), REST second (fallback).
 # ───────────────────────────────────────────────────────────────────────────────
 function _check_metrics_manager() {
   local resp
@@ -126,12 +124,6 @@ function _check_metrics_manager() {
 #
 #  Starts a Python3 SSE streamer that writes snapshots continuously to
 #  <outdir>/hw_samples.log.
-#
-#  IMPORTANT: Call this AFTER all pipelines reach RUNNING state so that GPU
-#  warmup / JIT compilation time is excluded from HW metrics — this matches
-#  the on_running=self._monitor.start() hook in orchestrator.py.
-#
-#  Sets globals: HW_POLL_PID, HW_SAMPLE_FILE
 # ───────────────────────────────────────────────────────────────────────────────
 function start_hw_monitor() {
   local outdir=$1
@@ -144,7 +136,7 @@ function start_hw_monitor() {
   fi
 
   if ! _check_metrics_manager; then
-    echo ">>>>> [HW Monitor] ⚠  metrics-manager not reachable at ${METRICS_URL} — HW metrics disabled." >&2
+    echo ">>>>> [HW Monitor] metrics-manager not reachable at ${METRICS_URL}." >&2
     HW_MONITOR_ENABLED=false
     return 1
   fi
@@ -222,7 +214,7 @@ PYEOF
 # ───────────────────────────────────────────────────────────────────────────────
 #  stop_hw_monitor
 #  Stops the background poller. Call after the measurement window ends,
-#  before stopping pipelines (mirrors hw_monitor.py HardwareMonitor.stop()).
+#  before stopping pipelines.
 # ───────────────────────────────────────────────────────────────────────────────
 function stop_hw_monitor() {
   if [ -n "$HW_POLL_PID" ] && kill -0 "$HW_POLL_PID" 2>/dev/null; then
@@ -238,17 +230,7 @@ function stop_hw_monitor() {
 #  Reads <sample_file> (key=value lines separated by "---" per snapshot) and
 #  prints aggregated avg/min/max for every HW metric to stdout.
 #
-#  Output format (appended to kpi.txt after FPS metrics):
-#    hw_sample_count: N
-#    hw_cpu_util_pct avg: 45.23
-#    hw_cpu_util_pct min: 30.10
-#    hw_cpu_util_pct max: 68.45
-#    hw_gpu_compute_util_pct avg: 78.50   ← CCS: OpenVINO AI inference engine
-#    hw_gpu_video_util_pct avg: 22.10     ← VCS: H.264 hardware decode
-#    hw_gpu_util_combined avg: 78.50      ← max(CCS,VCS) per sample then averaged
-#    ...
-#
-#  Metrics reported (matches reporters.py _CSV_COLS):
+#  Metrics reported:
 #    CPU    : cpu_util_pct, cpu_usage_user, cpu_usage_system,
 #             cpu_freq_mhz, mem_used_percent, cpu_temperature
 #    GPU    : gpu_compute_util_pct (CCS — OpenVINO AI inference)
@@ -261,8 +243,8 @@ function stop_hw_monitor() {
 #             rapl_pkg_w   (SoC: CPU + iGPU)
 #             rapl_core_w  (CPU cores only)
 #             rapl_uncore_w
-#             gpu_power_w  (qmassa gpu_cur_power — cross-reference)
-#             pkg_power_w  (qmassa pkg_cur_power — cross-reference)
+#             gpu_power_w  (qmassa gpu_cur_power)
+#             pkg_power_w  (qmassa pkg_cur_power)
 #    NPU    : npu_utilization, npu_frequency, npu_power,
 #             npu_temperature, npu_memory_mb, npu_bandwidth
 # ───────────────────────────────────────────────────────────────────────────────
@@ -457,7 +439,7 @@ function check_and_loop_video() {
   return 0
 }
 
-# Global array to track pipeline IDs created in the current run
+# Keep track of pipeline IDs created in the current run
 # Used to filter get_pipeline_status so old history is ignored
 CURRENT_RUN_IDS=()
 
@@ -477,6 +459,73 @@ function get_current_pipeline_status() {
   echo "$full_status" | jq --argjson ids "$id_filter" '[.[] | select(.id as $i | $ids | index($i) != null)]' 2>/dev/null || echo "$full_status"
 }
 
+# Generate all per-stream payloads in one jq process.
+# This avoids launching jq repeatedly inside the stream POST loop.
+function generate_stream_payloads() {
+        # Make RTSP path, metadata file, topic, and peer-id unique per stream.
+        # DLSPS errors if two pipelines share the same RTSP frame path.
+  local payload_data=$1
+  local pipeline_name=$2
+  local count=$3
+  local run_ts=$4
+  local mode=${5:-density}
+
+  jq -c \
+    --arg pipeline "$pipeline_name" \
+    --arg run_ts "$run_ts" \
+    --arg mode "$mode" \
+    --argjson count "$count" ' 
+      range(1; $count + 1) as $x
+      | .
+      | if .destination then
+          if $mode == "density" then
+            .destination.metadata.topic = ("object_detection_" + $pipeline + "_" + ($x|tostring))
+            | .destination.metadata.path = ("/tmp/bm_" + $pipeline + "_" + $run_ts + "_" + ($x|tostring) + ".jsonl")
+            | .destination.frame."peer-id" = ("object_detection_" + $pipeline + "_" + ($x|tostring))
+            | .destination.frame.path = ("bm-" + $run_ts + "-s" + ($x|tostring))
+          else
+            .destination.metadata.topic = ($pipeline + "_" + $run_ts + "_" + ($x|tostring))
+            | .destination.frame."peer-id" = ($pipeline + "_" + $run_ts + "_" + ($x|tostring))
+            | .destination.frame.path = ("bm-" + $run_ts + "-" + ($pipeline[0:3]) + "-s" + ($x|tostring))
+          end
+        else . end
+      | .parameters["detection-properties"]["model-instance-id"] =
+          (if $mode == "density"
+           then "inst_benchmark_" + $pipeline + "_stream_" + ($x|tostring)
+           else "inst_bm_" + $pipeline + "_" + $run_ts + "_" + ($x|tostring)
+           end)
+    ' <<< "$payload_data"
+}
+
+# Post one already-generated payload and track its returned pipeline ID.
+function post_pipeline() {
+    # Capture the returned pipeline ID (response is a bare UUID string)
+  # Capture the returned pipeline ID (response is a bare UUID string)
+  local pipeline_name=$1
+  local current_payload=$2
+  local label=$3
+  local response http_code response_body pid
+
+  response=$(curl -k -s -w "\nHTTP_CODE:%{http_code}" \
+    "${DLSPS_BASE_URL}/pipelines/user_defined_pipelines/${pipeline_name}" \
+    -X POST -H "Content-Type: application/json" -d "$current_payload")
+
+  http_code=${response##*$'\n'HTTP_CODE:}
+  response_body=${response%$'\n'HTTP_CODE:*}
+
+  if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
+    echo "Error: Pipeline $label creation failed with HTTP $http_code" >&2
+    echo "Response: $response_body" >&2
+    return 1
+  fi
+
+  pid=$(tr -d '"[:space:]' <<< "$response_body")
+  if [ -n "$pid" ]; then
+    CURRENT_RUN_IDS+=("$pid")
+    echo "  Started pipeline $label → ID: $pid" >&2
+  fi
+}
+
 function run_pipelines() {
   local num_pipelines=$1
   local payload_data=$2
@@ -492,54 +541,25 @@ function run_pipelines() {
   echo >&2
   echo ">>>>> Initialization: Starting $num_pipelines pipeline(s) of type '$pipeline_name'..." >&2
 
-  for (( x=1; x<=num_pipelines; x++ )); do
-    local current_payload=$payload_data
+  # Generate all stream payloads once; only the POST loop remains per-stream.
+  local current_payload x=0
+  while IFS= read -r current_payload; do
+    x=$((x + 1))
 
-    if echo "$payload_data" | jq -e '.destination' > /dev/null 2>&1; then
-        # Make RTSP path, metadata file, topic, and peer-id unique per stream.
-        # DLSPS errors if two pipelines share the same RTSP frame path.
-        current_payload=$(echo "$payload_data" | jq \
-            --arg topic "object_detection_${pipeline_name}_$x" \
-            --arg peer_id "object_detection_${pipeline_name}_$x" \
-            --arg rtsp_path "bm-${RUN_TS}-s${x}" \
-            --arg meta_path "/tmp/bm_${pipeline_name}_${RUN_TS}_${x}.jsonl" \
-            '.destination.metadata.topic = $topic |
-            .destination.metadata.path  = $meta_path |
-            .destination.frame."peer-id" = $peer_id |
-            .destination.frame.path     = $rtsp_path')
-    fi
-
+    # Make RTSP path, metadata file, topic, and peer-id unique per stream.
+    # DLSPS errors if two pipelines share the same RTSP frame path.
     # ── Unique model-instance-id per stream ────────────────────────────────
     # The pipeline template uses a shared model-instance-id (instcpu0/instgpu0/instnpu0).
     # Running N concurrent streams all with the same ID causes stream 2+ to ERROR.
     # Override via detection-properties so each stream gets its own model instance.
-    current_payload=$(echo "$current_payload" | jq \
-        --arg mid "inst_benchmark_${pipeline_name}_stream_${x}" \
-        '.parameters["detection-properties"]["model-instance-id"] = $mid' 2>/dev/null || echo "$current_payload")
-
-    local response http_code response_body
-    response=$(curl -s -w "\nHTTP_CODE:%{http_code}" \
-      "${DLSPS_BASE_URL}/pipelines/user_defined_pipelines/${pipeline_name}" \
-      -X POST -H "Content-Type: application/json" -d "$current_payload")
-
-    http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-    response_body=$(echo "$response" | sed '/HTTP_CODE:/d')
-
-    if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
-      echo "Error: Pipeline $x creation failed with HTTP $http_code" >&2
-      echo "Response: $response_body" >&2
-      return 1
-    fi
-
-    # Capture the returned pipeline ID (response is a bare UUID string)
-    local pid
-    pid=$(echo "$response_body" | tr -d '"' | tr -d '\n' | tr -d ' ')
-    if [ -n "$pid" ]; then
-      CURRENT_RUN_IDS+=("$pid")
-      echo "  Started pipeline $x → ID: $pid" >&2
-    fi
+    post_pipeline "$pipeline_name" "$current_payload" "$x" || return 1
     sleep 0.5
-  done
+  done < <(generate_stream_payloads "$payload_data" "$pipeline_name" "$num_pipelines" "$RUN_TS" density)
+
+  [ "$x" -eq "$num_pipelines" ] || {
+    echo "Error: Failed to generate all $num_pipelines stream payloads." >&2
+    return 1
+  }
 
   echo -n ">>>>> Waiting for pipelines to initialize..." >&2
   local running_count=0
@@ -614,7 +634,7 @@ function stop_all_pipelines() {
 #
 #  HW metrics integration:
 #    1. start_hw_monitor called after run_pipelines returns (all streams
-#       RUNNING — GPU warmup excluded, same as orchestrator.py on_running= hook)
+#       RUNNING)
 #    2. stop_hw_monitor called after FPS window, before pipeline teardown
 #    3. get_hw_metrics_summary appended to kpi.txt after FPS stats
 # ───────────────────────────────────────────────────────────────────────────────
@@ -645,8 +665,7 @@ function run_and_analyze_workload() {
       return 1
     fi
 
-    # ── HW METRICS: Start monitor (pipelines RUNNING — warmup excluded) ────
-    # Mirrors orchestrator.py: on_running=self._monitor.start
+    # ── HW METRICS: Start monitor (pipelines RUNNING) ────
     start_hw_monitor "benchmark-$num_streams"
 
     echo ">>>>> Monitoring FPS for $MAX_DURATION seconds..." >&2
@@ -659,8 +678,7 @@ function run_and_analyze_workload() {
     done
     echo -ne "\n" >&2
 
-    # ── HW METRICS: Stop monitor before pipeline teardown ──────────────────
-    # Mirrors orchestrator.py: hw = self._monitor.stop()
+    # ── HW METRICS: Stop monitor before pipeline teardown ───────
     stop_hw_monitor
 
     stop_all_pipelines
@@ -746,7 +764,6 @@ function run_workload_with_retries() {
 #  run_concurrent_workload <pipelines_csv> <nstreams_csv> <payload_file>
 #
 #  Runs multiple pipeline types simultaneously (nstreams mode).
-#  HW monitor starts after ALL pipelines across ALL types reach RUNNING state.
 # ───────────────────────────────────────────────────────────────────────────────
 function run_concurrent_workload() {
   local pipelines_csv=$1
@@ -787,41 +804,17 @@ function run_concurrent_workload() {
 
     echo >&2
     echo -n ">>>>> Starting $nstreams stream(s) for pipeline '$pname'..." >&2
-    for (( x=1; x<=nstreams; x++ )); do
-      local current_payload="$payload_body"
-      if echo "$payload_body" | jq -e '.destination' > /dev/null; then
-        current_payload=$(echo "$payload_body" | jq \
-          --arg topic "${pname}_${RUN_TS}_${x}" \
-          --arg peer_id "${pname}_${RUN_TS}_${x}" \
-          --arg rtsp_path "bm-${RUN_TS}-${pname:0:3}-s${x}" \
-          '.destination.metadata.topic = $topic |
-           .destination.frame."peer-id" = $peer_id |
-           .destination.frame.path = $rtsp_path')
-      fi
-      current_payload=$(echo "$current_payload" | jq \
-        --arg mid "inst_bm_${pname}_${RUN_TS}_${x}" \
-        '.parameters["detection-properties"]["model-instance-id"] = $mid' 2>/dev/null || echo "$current_payload")
-
-      local response
-      response=$(curl -k -s -w "\nHTTP_CODE:%{http_code}" \
-        "${DLSPS_BASE_URL}/pipelines/user_defined_pipelines/${pname}" \
-        -X POST -H "Content-Type: application/json" -d "$current_payload")
-
-      local http_code
-      http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
-      local response_body
-      response_body=$(echo "$response" | sed '/HTTP_CODE:/d')
-
-      if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
-        echo >&2
-        echo "Error: Failed to start '$pname' stream $x (HTTP $http_code): $response_body" >&2
-        return 1
-      fi
-      local _pid
-      _pid=$(echo "$response_body" | tr -d '"' | tr -d '\n' | tr -d ' ')
-      [ -n "$_pid" ] && CURRENT_RUN_IDS+=("$_pid")
+    local current_payload x=0
+    while IFS= read -r current_payload; do
+      x=$((x + 1))
+      post_pipeline "$pname" "$current_payload" "$x" || return 1
       sleep 0.5
-    done
+    done < <(generate_stream_payloads "$payload_body" "$pname" "$nstreams" "$RUN_TS" nstreams)
+
+    [ "$x" -eq "$nstreams" ] || {
+      echo "Error: Failed to generate all $nstreams stream payloads for '$pname'." >&2
+      return 1
+    }
     echo " done." >&2
   done
 
@@ -844,7 +837,7 @@ function run_concurrent_workload() {
   fi
   [ "$_ne" -gt 0 ] && echo " $_nr/$total_streams pipeline(s) running ($_ne in ERROR — hardware capacity exceeded)." >&2 || echo " All $total_streams pipeline(s) running." >&2
 
-  # ── HW METRICS: Start monitor (all streams RUNNING) ────────────────────
+  # ── HW METRICS: Start monitor ─────
   start_hw_monitor "$outdir"
 
   echo ">>>>> Monitoring all $total_streams nstreams-mode stream(s) for $MAX_DURATION seconds..." >&2
@@ -857,7 +850,7 @@ function run_concurrent_workload() {
   done
   echo -ne "\n" >&2
 
-  # ── HW METRICS: Stop monitor before pipeline teardown ──────────────────
+  # ── HW METRICS: Stop monitor before pipeline teardown ────
   stop_hw_monitor
 
   stop_all_pipelines
@@ -887,7 +880,7 @@ function run_concurrent_workload() {
   }
   ' "$outdir/sample.logs" > "$outdir/kpi.txt"
 
-  # ── HW METRICS: Append hw metrics summary to kpi.txt ───────────────────
+  # ── HW METRICS: Append hw metrics summary to kpi.txt ────
   if $HW_MONITOR_ENABLED && [ -f "$outdir/hw_samples.log" ]; then
     echo "---hw-metrics---" >> "$outdir/kpi.txt"
     get_hw_metrics_summary "$outdir/hw_samples.log" >> "$outdir/kpi.txt"
@@ -898,11 +891,11 @@ function run_concurrent_workload() {
 #  _density_search_expbisect <pipeline_name> <payload_file>
 #
 #  Automatic exponential + bisect stream-density search.
-#  No need to supply -l / -u bounds — the search self-calibrates.
 #
-#  Algorithm (mirrors orchestrator.py _find_capacity_exp_bisect()):
+#  Algorithm:
 #    Phase 1 — Exponential doubling:
 #      Test N = 1, 2, 4, 8, 16, ... until FPS drops below floor OR N >= maxn.
+#      If -l is supplied, the exponential phase starts from that lower bound.
 #    Phase 2 — Bisect:
 #      Binary-search between last-passing N (lo) and first-failing N (hi)
 #      until hi - lo <= 1 → lo is the max sustainable stream count.
@@ -935,7 +928,7 @@ function _density_search_expbisect() {
   echo ">>>>> Density search (exp+bisect): $pipeline_name" >&2
   echo "      floor=${floor} fps   max=${maxn} streams   window=${MAX_DURATION}s" >&2
 
-  local n=1 lo=0 hi=-1 best_n=0 best_fps=0 exp=true
+  local n=${lower_bound:-1} lo=$(( ${lower_bound:-1} - 1 )) hi=-1 best_n=0 best_fps=0 exp=true
 
   while true; do
     # Clamp to upper bound
@@ -945,7 +938,6 @@ function _density_search_expbisect() {
     local fps
     fps=$(run_workload_with_retries "$n" "$pipeline_name" "$payload_file")
 
-    # Determine pass/fail against floor
     local passed=false
     if echo "${fps:-0} ${floor}" | gawk '{exit($1>=$2?0:1)}'; then
       passed=true
@@ -962,22 +954,22 @@ function _density_search_expbisect() {
     fi
 
     if $exp; then
-      # ── Exponential phase ────────────────────────────────────────────────
+      # ── Exponential phase ─────────
       if $passed; then
         if [ $n -ge $maxn ]; then
           break   # hit upper bound and still passing → done
         fi
         n=$((n * 2))   # double
       else
-        if [ $n -eq 1 ]; then
-          break   # N=1 fails → nothing sustainable
+        if [ $n -eq "$lower_bound" ]; then
+          break   # Starting N fails → nothing sustainable at the requested lower bound.
         fi
         # Switch to bisect phase: lo = last passing, hi = first failing
         exp=false
         n=$(( (lo + hi + 1) / 2 ))
       fi
     else
-      # ── Bisect phase ─────────────────────────────────────────────────────
+      # ── Bisect phase ───────
       [ $lo -ge $((hi - 1)) ] && break   # converged
       n=$(( (lo + hi + 1) / 2 ))
     fi
@@ -1033,7 +1025,7 @@ function usage() {
     echo "Arguments:"
     echo "  -p <name(s)>         Pipeline name(s) from benchmark_app_payload.json."
     echo "  -u <max_streams>     Upper bound for exp+bisect search (default: 24)."
-    echo "  -l <lower_bound>     Ignored (exp+bisect starts from N=1 automatically)."
+    echo "  -l <lower_bound>     Starting stream count for exp+bisect search (default: 1)."
     echo "  -t <target_fps>      FPS floor for stream-density (default: 14.95)."
     echo "  -i <window_sec>      FPS monitoring window in seconds (default: 60)."
     echo "  -c <percentile>      Throughput percentile for KPI (default: 0.9 = p90)."
@@ -1052,7 +1044,7 @@ function usage() {
     exit 1
 }
 
-# ── nstreams mode — detect early ──────────────────────────────────────────────
+# ── nstreams mode ───────────────────
 if [[ " $* " == *" -nstreams "* ]]; then
   _multi_pipelines=()
   _multi_nstreams=()
@@ -1160,7 +1152,7 @@ _density_pipelines=()
 target_fps="14.95"
 MAX_DURATION=60
 THROUGHPUT_PERCENTILE="0.9"
-lower_bound=1          # kept for legacy compatibility; exp+bisect ignores it
+lower_bound=1
 upper_bound=24
 ALL_DEVICES_MODE=false
 
@@ -1186,6 +1178,12 @@ while (( _idx <= $# )); do
     *)   _idx=$((_idx + 1)) ;;
   esac
 done
+
+if ! [[ "$lower_bound" =~ ^[0-9]+$ && "$upper_bound" =~ ^[0-9]+$ ]] ||
+   [ "$lower_bound" -lt 1 ] || [ "$lower_bound" -gt "$upper_bound" ]; then
+  echo "Error: Invalid stream bounds: -l=$lower_bound -u=$upper_bound (require 1 <= -l <= -u)." >&2
+  usage
+fi
 
 if [ ${#_density_pipelines[@]} -eq 0 ]; then
   echo "Error: At least one -p <pipeline_name> is required." >&2
@@ -1239,7 +1237,7 @@ if $ALL_DEVICES_MODE; then
     sleep 10
   done
 
-  # ── Print unified summary table ─────────────────────────────────────────
+  # ── Print unified summary table ────────────
   echo >&2
   echo "================================================================" >&2
   echo "  UAV VISION ANALYTICS — SUSTAINED STREAM DENSITY RESULTS" >&2
@@ -1272,7 +1270,7 @@ if $ALL_DEVICES_MODE; then
   exit 0
 fi
 
-# ── Single-pipeline stream-density mode (exp+bisect) ──────────────────────────
+# ── Single-pipeline stream-density mode ────────
 pipeline_name_arg="${_density_pipelines[0]}"
 
 echo ">>>>> Single-pipeline density search: $pipeline_name_arg" >&2

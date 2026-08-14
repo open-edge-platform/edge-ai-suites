@@ -134,7 +134,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 **Symptom:**
 
 ```
-ffplay rtsp://172.22.35.0:8555/nadir
+ffplay rtsp://172.22.35.0:8555/uav-mavlink-cpu
 Command 'ffplay' not found, but can be installed with:
 sudo apt install ffmpeg
 ```
@@ -145,50 +145,16 @@ sudo apt install ffmpeg
 sudo apt install ffmpeg
 
 # Then verify RTSP stream
-ffplay rtsp://<host-ip>:8555/nadir
+ffplay rtsp://<host-ip>:8555/uav-mavlink-cpu
 ```
 
 To view the output stream without `ffplay` (e.g., on a headless server), record it instead:
 
 ```bash
 ffmpeg -rtsp_transport tcp \
-  -i "rtsp://<host-ip>:8555/nadir" \
-  -c copy -t 30 nadir.mkv
+  -i "rtsp://<host-ip>:8555/uav-mavlink-cpu" \
+  -c copy -t 30 output.mkv
 ```
-
----
-
-## QGroundControl — "Network Not Available" warnings
-
-**Symptom:**
-
-```
-16.701 Warning: 1 "Network Not Available" - QtLocationPlugin.QGeoTiledMapReplyQGC
-```
-
-**Cause:** NetworkManager's connectivity check reports the network as `limited` or `none` even when the host has a valid local connection.
-
-**Resolution:**
-
-1. Confirm the connectivity state:
-    ```bash
-    nmcli networking connectivity check   # expected: "limited" or "none"
-    ```
-
-2. Disable the NetworkManager connectivity check:
-    ```bash
-    sudo mkdir -p /etc/NetworkManager/conf.d
-    sudo tee /etc/NetworkManager/conf.d/20-connectivity.conf <<'EOF'
-    [connectivity]
-    enabled=false
-    EOF
-    sudo systemctl restart NetworkManager
-    ```
-
-3. Verify the state is now full:
-    ```bash
-    nmcli networking connectivity check   # expected: "full"
-    ```
 
 ---
 
@@ -205,13 +171,6 @@ ffmpeg -rtsp_transport tcp \
 
 ---
 
-## QGroundControl — outdated version
-
-If QGroundControl behaves unexpectedly, ensure you are running the latest stable release:
-<https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu>
-
----
-
 ## UDP sink pipeline not working
 
 **Symptom:** The UDP sink pipeline fails to send or receive data.
@@ -225,7 +184,7 @@ If QGroundControl behaves unexpectedly, ensure you are running the latest stable
 
 ---
 
-## Benchmark: `jq: command not found` (line ~581)
+## Benchmark: `jq: command not found`
 
 `jq` is not installed on the benchmark host. Two options:
 

@@ -173,14 +173,13 @@ sudo apt install -y python3.12-venv ffmpeg
 ```bash
 git clone <repo-url>
 cd apps/uav-vision-analytics
-cp .env.example .env
+make init
 ```
 
-Edit `.env`:
+`make init` creates `.env` from the template and auto-detects Intel GPU paths. Then set your host IP:
 
-```env
-HOST_IP=192.168.1.100              # your host IP address
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-20260728-weekly-ubuntu24
+```bash
+nano .env   # set HOST_IP=<your-machine-IP>
 ```
 
 ### Step 3: Prepare the model
@@ -266,9 +265,8 @@ docker compose ps px4
 
 ```bash
 cd apps/uav-vision-analytics
-cp .env.example .env
-# Set HOST_IP and UAV_ID (default: uav-1)
-nano .env
+make init
+nano .env   # set HOST_IP=<your-machine-IP> and UAV_ID (default: uav-1)
 
 make mavsdk-up
 ```
@@ -382,7 +380,7 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 sudo apt install ffmpeg
 
 # View the stream
-ffplay rtsp://<host-ip>:8555/drone-mavlink-cpu
+ffplay rtsp://<host-ip>:8555/uav-mavlink-cpu
 ```
 
 ### Record a clip
