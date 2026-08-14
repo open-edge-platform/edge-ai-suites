@@ -25,6 +25,12 @@ class SegmentConfig(BaseModel):
 
     `max_duration` — hard ceiling on segment length in seconds; when a running
     segment reaches this, it is closed and a new one starts.
+
+    `min_duration` — cut-frequency guard, NOT a delete filter: forced cuts
+    (ROI early-split) are rejected while the running segment is younger than
+    this, and prefilter motion-exit is held open until it. Finished segments
+    are always emitted regardless of length — short motion-end tails still
+    reach the VLM.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -51,6 +57,8 @@ class RecordingConfig(BaseModel):
 
     `interval_seconds` is the canonical field MCP sends. `interval` is kept as
     a legacy alias accepted on input but written as `interval_seconds`.
+    Recordings on disk are pruned by the MCP server (storage.retention_days);
+    VSA does not do its own retention cleanup.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -58,7 +66,6 @@ class RecordingConfig(BaseModel):
     enabled: bool = True
     interval_seconds: int = Field(default=60, alias="interval")
     fps: int = 15
-    retention_days: int = 5
 
 
 class RoiConfig(BaseModel):
