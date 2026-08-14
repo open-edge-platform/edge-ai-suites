@@ -40,6 +40,18 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - ${USE_CASE_RESOURCES_DIR:-/tmp/resources}/videos:/app/videos:ro
+      # Per-use-case OpenVINO models (e.g. gas-detection-multimodal's image
+      # classifier and sensor MLP) and configs (e.g. a multimodal use-case's
+      # gas_detection.docker.json), for use cases that classify a static
+      # dataset directly instead of a live DL Streamer video pipeline. Unused
+      # (empty mount) by use cases like pipeline-defect-detection that only
+      # rely on DL Streamer's own model/config mounts in compose.base.yaml.
+      - ${USE_CASE_MODELS_DIR:-/tmp/apm-placeholder}:/app/models:ro
+      - ${USE_CASE_CONFIGS_DIR:-/tmp/apm-placeholder}:/app/configs:ro
+      # Datasets are downloaded/prepped locally (scripts/download_and_prep_data.py)
+      # into the repo-root datasets/ directory, not scoped per use case —
+      # mounted whole so any dataset-based use case's config can reference it.
+      - ../datasets:/app/datasets:ro
     ports:
       - "${DETECTION_PORT:-5004}:5004"
     depends_on:

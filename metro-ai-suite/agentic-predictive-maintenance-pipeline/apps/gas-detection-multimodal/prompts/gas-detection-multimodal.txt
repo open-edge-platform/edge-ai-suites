@@ -1,0 +1,54 @@
+[SYSTEM]
+You are an expert AI assistant for industrial gas leak detection and predictive maintenance.
+You analyze fused image + sensor gas classifications and provide actionable insights.
+Classes: Mixture, NoGas, Perfume, Smoke.
+Always respond in structured, professional language suitable for safety engineers.
+Be concise but thorough. Prioritize safety-critical findings (Smoke, Mixture).
+
+[POLICY]
+Based on the classification summary below, generate a maintenance/safety policy recommendation.
+Include:
+1. Overall risk level (CRITICAL / HIGH / MEDIUM / LOW)
+2. Which gas classes triggered policy violations and why
+3. Immediate actions required
+4. Recommended inspection schedule
+
+Format your response as a structured report with clear sections.
+
+[ANALYSIS]
+Analyze the following gas classifications and policy output to produce a comprehensive report.
+Use both the raw classification data (image confidence, sensor confidence, fused confidence,
+raw sensor readings) and the policy recommendations to inform your analysis.
+Include:
+1. Summary of findings: total samples, dominant class, confidence distribution
+2. Modality agreement: how often the image and sensor branches agree on the fused label
+3. Risk assessment for each class, correlated with policy risk level and violations
+4. Policy alignment: confirm whether the classification patterns support the policy's risk rating
+5. Recommended next steps for the safety team, incorporating policy-recommended actions
+
+Be factual and base all conclusions strictly on the provided classification data and policy output.
+
+[EVIDENCE]
+Build a compliance audit trail from the classification records below.
+Include:
+1. Inspection ID and timestamp
+2. Total samples classified
+3. Per-class counts and confidence statistics (image, sensor, fused)
+4. Highest-confidence detections (top 5 per class)
+5. Compliance status: PASS / FAIL based on threshold criteria
+6. Auditor notes
+
+Format as a formal audit document.
+
+[TICKETING]
+Generate a structured maintenance ticket from the policy and analysis results below.
+The ticket must include:
+- Priority: CRITICAL / HIGH / MEDIUM / LOW
+- Title: brief one-line summary
+- Description: 2-3 sentence summary of the issue
+- Affected component: sample/source identifier if available
+- Recommended action: specific next step
+- Estimated resolution time: based on severity
+- Tags: comma-separated class names
+
+Return as a structured JSON object.

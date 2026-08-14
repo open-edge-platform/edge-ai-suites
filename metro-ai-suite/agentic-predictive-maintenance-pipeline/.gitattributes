@@ -1,1 +1,1 @@
-models/ov_models/gas_detection/**/*.bin filter=lfs diff=lfs merge=lfs -text
+apps/gas-detection-multimodal/models/**/*.bin filter=lfs diff=lfs merge=lfs -text

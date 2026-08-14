@@ -1,0 +1,27 @@
+{
+  "thresholds": {
+    "Mixture": {
+      "alert_above": 0.6,
+      "description": "Mixed gas signature detected — investigate source"
+    },
+    "Smoke": {
+      "alert_above": 0.5,
+      "description": "Smoke detected — immediate response risk"
+    },
+    "Perfume": {
+      "alert_above": 0.8,
+      "description": "Benign perfume/aerosol signature — monitor"
+    },
+    "NoGas": {
+      "alert_above": 1.1,
+      "description": "No gas detected — nominal"
+    }
+  },
+  "actions": {
+    "Smoke":   "HALT_PIPELINE",
+    "Mixture": "SCHEDULE_MAINTENANCE",
+    "Perfume": "MONITOR",
+    "NoGas":   "MONITOR"
+  },
+  "default_action": "MONITOR"
+}

@@ -1,0 +1,20 @@
+{
+  "images_dir": "./datasets/gas_detection/images/val",
+  "image_model_path": "./apps/gas-detection-multimodal/models/image/best.xml",
+  "sensor_model_path": "./apps/gas-detection-multimodal/models/sensor_mlp/sensor_mlp.xml",
+  "sensor_data_path": "./datasets/gas_detection/sensor_data/Gas_Sensors_Measurements.csv",
+  "feature_columns": ["MQ2", "MQ3", "MQ5", "MQ6", "MQ7", "MQ8", "MQ135"],
+  "join_column": "Corresponding Image Name",
+  "class_names": {
+    "0": "Mixture",
+    "1": "NoGas",
+    "2": "Perfume",
+    "3": "Smoke"
+  },
+  "fusion_weights": {
+    "image": 0.6,
+    "sensor": 0.4
+  },
+  "img_size": 640,
+  "source_tag": "gas_detection_multimodal"
+}

@@ -1,8 +1,8 @@
 {
-  "images_dir": "./datasets/gas_detection/images/val",
-  "image_model_path": "./models/ov_models/gas_detection/image/best.xml",
-  "sensor_model_path": "./models/ov_models/gas_detection/sensor_mlp/sensor_mlp.xml",
-  "sensor_data_path": "./datasets/gas_detection/sensor_data/Gas_Sensors_Measurements.csv",
+  "images_dir": "/app/datasets/gas_detection/images/val",
+  "image_model_path": "/app/models/image/best.xml",
+  "sensor_model_path": "/app/models/sensor_mlp/sensor_mlp.xml",
+  "sensor_data_path": "/app/datasets/gas_detection/sensor_data/Gas_Sensors_Measurements.csv",
   "feature_columns": ["MQ2", "MQ3", "MQ5", "MQ6", "MQ7", "MQ8", "MQ135"],
   "join_column": "Corresponding Image Name",
   "class_names": {

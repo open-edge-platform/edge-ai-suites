@@ -122,7 +122,7 @@ flowchart LR
 
         subgraph volumes["Mounted Data / Artifacts"]
             dataset["datasets/gas_detection"]
-            models["models/ov_models/gas_detection"]
+            models["apps/gas-detection-multimodal/models"]
             output["out/gas_detection"]
         end
     end
@@ -181,12 +181,12 @@ monolithic `pace/` CLI structure:
 - **Sensor MLP**: trained per upstream's `training_recipe.md` recipe (flat
   z-score-normalized features → small MLP), exported to ONNX then converted
   to OpenVINO IR. **96.6% validation accuracy** during training.
-  Model: `models/ov_models/gas_detection/sensor_mlp/sensor_mlp.xml`/`.bin`.
+  Model: `apps/gas-detection-multimodal/models/sensor_mlp/sensor_mlp.xml`/`.bin`.
 - **Image classifier**: trained via `yolo classify train` (YOLOv8s-cls,
   imgsz=640, 50 epochs, CPU), exported directly to OpenVINO IR via
   Ultralytics' `model.export(format='openvino')`. **98.6% validation
   accuracy** during training.
-  Model: `models/ov_models/gas_detection/image/best.xml`/`.bin` (`.bin`
+  Model: `apps/gas-detection-multimodal/models/image/best.xml`/`.bin` (`.bin`
   tracked via Git LFS, ~20 MB).
 - **Joint validation**: ran `ImageClassifier` + `SensorMLPClassifier` +
   `fusion.late_fusion()` together over the 40 held-out validation images
@@ -204,18 +204,36 @@ monolithic `pace/` CLI structure:
   `import openvino as ov; ov.Core()` directly. `requirements.txt` pinned to
   `openvino==2026.3.0` to match.
 
+**Wired and deployed:**
+
+- **Storage schema**: additive, nullable columns (`source`, `image_confidence`,
+  `sensor_confidence`, `sensor_raw_json`) added to storage-service via an
+  in-place `ALTER TABLE` migration — existing databases and plain video
+  defect detections are unaffected.
+- **`multimodal_runner.py`**: config-driven orchestrator tying
+  `ImageClassifier` + `SensorMLPClassifier` + `fusion.late_fusion()` together
+  for a static image/sensor dataset, persisting each fused result to
+  storage-service.
+- **`POST /detection/run-multimodal`**: new detection-service endpoint,
+  sharing the same single-run-lock and "batch-complete" MQTT handoff
+  contract as the existing video path — the agent-service reacts identically
+  regardless of which path produced a batch.
+- **`apps/gas-detection-multimodal/`**: full use-case directory (configs,
+  prompts, trained models, `.env` file) — deployable via
+  `source setup.sh --use-case gas-detection-multimodal`.
+- **End-to-end validation**: brought up the full stack (nginx, storage,
+  detection, agent, ui, mqtt, dlstreamer, model-download, metrics — all
+  healthy) via Docker Compose, triggered a real classification run through
+  the deployed API, confirmed all 40 samples were classified, fused, and
+  persisted with real `image_confidence`/`sensor_confidence`/`sensor_raw_json`
+  values, and confirmed the agent-service correctly reacted to the
+  "batch-complete" event.
+
 **Not yet done (deferred):**
 
-- **Wiring into `detection-service/src/main.py`**: the new modules are
-  currently standalone/testable but not yet invoked from a `/detection/run`
-  code path. Still needed: a config-driven "modality" switch (`image` /
-  `sensor` / `multi`) analogous to the upstream `config_builder.py`, a new
-  use-case directory (e.g. `apps/gas-detection-multimodal/`) with configs
-  pointing at the dataset/sensor CSV/models, and `storage-service` schema
-  additions (`image_confidence`, `sensor_confidence`, `sensor_raw_json`
-  columns — additive, non-breaking) so results remain queryable/auditable.
 - **UI**: no changes made to `ui-service` to surface per-modality confidences
-  yet.
+  or trigger `/detection/run-multimodal` from the dashboard yet — trigger via
+  `curl` in the meantime (see `apps/gas-detection-multimodal/README.md`).
 
 ## Notes / Open Questions for Implementation
 

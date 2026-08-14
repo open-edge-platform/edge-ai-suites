@@ -1,0 +1,28 @@
+use_case_id: gas-detection-multimodal
+
+# Agent configuration for the gas-detection multimodal (image + sensor
+# fusion) use case. Unlike pipeline-defect-detection, this classifies a
+# static image/sensor dataset via POST /detection/run-multimodal rather than
+# a live DL Streamer video pipeline.
+analysis:
+  min_confidence: 0.5
+  max_detections_per_run: 500
+
+policy:
+  # Labels emitted by the fused image+sensor classifier
+  defect_classes:
+    - Mixture
+    - Smoke
+  alert_threshold: 0.6     # confidence above which a detection is a violation
+  critical_classes:         # these always trigger HIGH priority ticket
+    - Smoke
+
+evidence:
+  retention_frames: 1000    # keep evidence for last N samples
+
+ticketing:
+  # Ticket priority rules (fallback mode)
+  priority_rules:
+    high:   ["Smoke"]
+    medium: ["Mixture"]
+    low:    ["Perfume"]

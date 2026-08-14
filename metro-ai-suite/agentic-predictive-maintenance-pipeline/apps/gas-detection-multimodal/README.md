@@ -5,7 +5,7 @@ reusing logic ported from the upstream reference implementation
 ([intel/predictive-maintenance-pipeline](https://github.com/intel/predictive-maintenance-pipeline))
 and plugged into this repo's detection-service.
 
-## Status: application logic wired, deployment packaging not yet done
+## Status: deployable via `setup.sh`, validated end-to-end
 
 **What works today** (see `docs/user-guide/multimodal-pipeline-plan.md` for
 full history):
@@ -13,32 +13,65 @@ full history):
 - `services/detection-service/src/utility/{image_classifier,sensor_classifier,fusion}.py`
   — ported, unit-tested inference/fusion logic.
 - `services/detection-service/src/utility/multimodal_runner.py` — config-driven
-  orchestrator: loads this directory's `configs/gas_detection.json`, classifies
-  every val image + its paired sensor row, fuses per sample, and persists
-  results to storage-service via the additive `image_confidence`,
-  `sensor_confidence`, `sensor_raw_json`, `source` columns.
+  orchestrator: classifies every image + its paired sensor row, fuses per
+  sample, and persists results to storage-service via the additive
+  `image_confidence`, `sensor_confidence`, `sensor_raw_json`, `source` columns.
 - `POST /detection/run-multimodal` on detection-service — same
   single-run-lock / "batch-complete" MQTT handoff contract as the existing
   `POST /detection/run` (video) path, so the agent-service reacts identically
   regardless of which path produced a batch.
-- Trained models: `models/ov_models/gas_detection/{image,sensor_mlp}/` (98.6%
-  and 96.6% individual validation accuracy; 97.5% fused).
+- Trained models: `models/{image,sensor_mlp}/` (98.6% and 96.6% individual
+  validation accuracy; 97.5% fused).
+- Full stack deployable via `setup.sh --use-case gas-detection-multimodal`:
+  storage-service, detection-service (with the multimodal endpoint),
+  agent-service (rule-based fallback reasoning), ui-service, nginx — all
+  verified healthy, with a real end-to-end run (40/40 samples classified,
+  fused, and persisted; agent-service reacted to both completed batches).
 
-**Not yet done** — this use case is not yet a deployable `--use-case` target
-for `setup.sh`:
+**Not yet done**:
 
-- No `docker/compose.gas-detection-multimodal.yaml` — the existing compose
-  files assume a live DL Streamer video pipeline; this use case classifies a
-  static image/sensor dataset instead, so the compose wiring (volume mounts
-  for `datasets/gas_detection/` and `models/ov_models/gas_detection/` into
-  the detection-service container, since the dataset is gitignored and not
-  shipped in the image) needs its own design pass.
-- No `.env_gas-detection-multimodal` file.
-- `configs/gas_detection.json` paths are relative to the repo root for local/
-  direct testing (e.g. via `multimodal_runner.run_multimodal_classification`
-  imported directly, or a future CLI/script) — they are **not** yet
-  container-path-mapped for a Docker deployment.
-- UI (`ui-service`) has no surface for per-modality confidence yet.
+- UI (`ui-service`) has no dedicated surface for per-modality confidence or a
+  "Run Pipeline" button wired to `/detection/run-multimodal` yet — trigger it
+  via `curl` (see below) until that's built.
+- `dlstreamer-pipeline-server` still starts (it's part of the always-on base
+  stack) with an empty pipeline list (`configs/pipeline-server-config.json`)
+  since this use case has no live video source — cosmetic only, does not
+  affect classification.
+
+## Deploying
+
+```bash
+source setup.sh --use-case gas-detection-multimodal
+```
+
+Then trigger a classification run (classifies every image in the mounted
+dataset + its paired sensor row, fuses both modalities, and persists results):
+
+```bash
+curl -X POST http://localhost:8080/api/detection/run-multimodal \
+     -H "Content-Type: application/json" \
+     -d '{"device":"CPU","config_path":"/app/configs/gas_detection.docker.json"}'
+```
+
+Check status and results:
+
+```bash
+curl http://localhost:8080/api/detection/status/<run_id>
+curl "http://localhost:8080/api/storage/detections?limit=10"
+```
+
+**Note**: after any code change to `detection-service` or `storage-service`,
+rebuild before `up` — `setup.sh` does not pass `--build` automatically:
+
+```bash
+docker compose -f docker/compose.base.yaml -f docker/compose.telemetry.yaml \
+  -f docker/compose.detection.yaml -f docker/compose.agents.yaml \
+  -f docker/compose.ui.yaml build apm-detection apm-storage
+```
+
+(Run this in the same shell right after `source setup.sh ...` — the
+`USE_CASE_MODELS_DIR`/`USE_CASE_CONFIGS_DIR`/`REGISTRY` env vars it exports do
+not persist across separate shells/processes.)
 
 ## Regenerating the dataset
 
@@ -48,12 +81,15 @@ python scripts/download_and_prep_data.py --use-case gas-detection
 
 ## Trying it locally (outside Docker)
 
-```python
-from services.detection_service.src.utility.multimodal_runner import (
-    load_config, run_multimodal_classification, persist_results,
-)
+Uses `configs/gas_detection.local.json` (repo-root-relative paths) instead of
+`configs/gas_detection.docker.json` (container paths, used above):
 
-config = load_config("apps/gas-detection-multimodal/configs/gas_detection.json")
+```python
+import sys
+sys.path.insert(0, "services/detection-service")
+from src.utility.multimodal_runner import load_config, run_multimodal_classification
+
+config = load_config("apps/gas-detection-multimodal/configs/gas_detection.local.json")
 results = run_multimodal_classification(config, device="CPU")
 for r in results:
     print(r["source"], r["label"], r["confidence"])
