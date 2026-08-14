@@ -74,18 +74,33 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.12
 - ~16 GB+ RAM for data preparation (image + CSV processing)
 - Install the Intel Compute Runtime drivers - https://github.com/intel/compute-runtime/releases
 - A GPU/XPU is strongly recommended for fine-tuning and inference:
   - Intel GPU (Arc / integrated) via Intel XPU PyTorch build, or
   - CPU (functional but slow; useful only for smoke-testing the pipeline)
+- Ensure your user can access the GPU's DRM render nodes. The `render` group
+  provides GPU rendering access without granting broader display-management
+  permissions. Check the render-node group and your current group memberships:
+
+  ```bash
+  stat -c "%G" /dev/dri/render*
+  groups ${USER}
+  ```
+
+  If you are not a member of the group used by the DRM render nodes, add your
+  user to the `render` group, then update the current shell's group:
+
+  ```bash
+  sudo gpasswd -a ${USER} render
+  newgrp render
+  ```
 - Access to a fused weld dataset — see [Step 1](#step-1-input-data)
 
 ## Setup
 
 ```bash
-# python 3.12.X
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
