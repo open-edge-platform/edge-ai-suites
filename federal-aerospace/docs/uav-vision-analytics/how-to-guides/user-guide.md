@@ -11,17 +11,16 @@ This guide covers deployment, configuration, architecture, and design of the UAV
 
 ## Table of Contents
 
-1. [Architecture](#architecture)
-2. [Design](#design)
-3. [Prerequisites](#prerequisites)
-4. [Deployment — Standalone (pymavlink)](#deployment--standalone-pymavlink)
-5. [Deployment — uav-mission-compute-sdk mode](#deployment--uav-mission-compute-sdk-mode)
-6. [Pipeline Configuration](#pipeline-configuration)
-7. [Environment Variables Reference](#environment-variables-reference)
-8. [REST API Reference](#rest-api-reference)
-9. [Verifying the Output Stream](#verifying-the-output-stream)
-10. [Stopping the Application](#stopping-the-application)
-11. [Troubleshooting](#troubleshooting)
+1. [Design](#design)
+2. [Prerequisites](#prerequisites)
+3. [Deployment — Standalone (pymavlink)](#deployment--standalone-pymavlink)
+4. [Deployment — UAV Mission Compute SDK Mode](#deployment--uav-mission-compute-sdk-mode)
+5. [Pipeline Configuration](#pipeline-configuration)
+6. [Environment Variables Reference](#environment-variables-reference)
+7. [REST API Reference](#rest-api-reference)
+8. [Verifying the Output Stream](#verifying-the-output-stream)
+9. [Stopping the Application](#stopping-the-application)
+10. [Troubleshooting](#troubleshooting)
 
 ---
 
