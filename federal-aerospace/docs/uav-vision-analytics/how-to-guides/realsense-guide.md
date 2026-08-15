@@ -7,11 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Prerequisites
 
-Install `ffmpeg` to use `ffplay` and `ffprobe` for stream testing:
-
-```bash
-sudo apt install ffmpeg
-```
+See [System Requirements](./system-requirements.md) for the full list of software and hardware prerequisites.
 
 ---
 
