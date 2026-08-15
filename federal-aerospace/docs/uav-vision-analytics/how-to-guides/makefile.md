@@ -15,7 +15,7 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 
 | Target | Description |
 |---|---|
-| `make init` | Create `.env` from template and auto-detect Intel GPU device paths |
+| `make init` | Create `.env` from template and auto-detect Intel GPU and NPU device paths |
 | `make model` | Download YOLOv8n-VisDrone checkpoint and export to OpenVINO FP16 |
 | `make pymav-up` | Start the standalone pymavlink stack (requires model — errors if missing) |
 | `make pymav-down` | Stop and remove the pymavlink stack (includes volumes) |
@@ -31,7 +31,10 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 
 ### `make init`
 
-Creates `.env` from `.env.example` (skipped if `.env` already exists) and auto-detects the Intel GPU device paths by scanning `/dev/dri/`. The detected paths are written into `.env` so `docker compose` picks them up automatically.
+Creates `.env` from `.env.example` (skipped if `.env` already exists) and auto-detects Intel GPU and NPU device paths, writing them into `.env` so `docker compose` picks them up automatically.
+
+- **GPU:** scans `/dev/dri/` for `card*` and `renderD*` entries → sets `GPU_DEVICE` and `GPU_RENDER_DEVICE`
+- **NPU:** scans `/dev/accel/` for `accel*` entries → sets `NPU_DEVICE` (defaults to `/dev/null` if not found, disabling NPU pipelines)
 
 ```bash
 make init
@@ -39,6 +42,8 @@ make init
 # ✅ GPU detected:
 #    GPU_DEVICE=/dev/dri/card1
 #    GPU_RENDER_DEVICE=/dev/dri/renderD128
+# ✅ NPU detected:
+#    NPU_DEVICE=/dev/accel/accel0
 ```
 
 Run this once before the first `make pymav-up`. On machines where the Intel iGPU is assigned `card1` instead of `card0` (common on multi-GPU desktops), this avoids the manual `.env` edit.
@@ -99,7 +104,7 @@ make uavsdk-up
 
 ### `make start-rtsp`
 
-Executes `mavlink_pipeline_manager.py` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output** on port `8555`.
+Executes `pipeline_manager.py --sink rtsp` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output** on port `8555`.
 
 Requires the DLSPS container to already be running (`make pymav-up` or `make uavsdk-up` first).
 
@@ -107,7 +112,9 @@ Requires the DLSPS container to already be running (`make pymav-up` or `make uav
 
 ### `make start-udpsink`
 
-Same as `start-rtsp` but uses `mavlink_pipeline_manager_udpsink.py`, which routes annotated frames to a **UDP sink** instead of RTSP. Useful for low-latency local consumption or integration with custom receivers.
+Executes `pipeline_manager.py --sink udp` inside the running container, routing annotated frames to a **UDP sink** instead of RTSP. Useful for low-latency local consumption or integration with custom receivers.
+
+> **Note:** UDP sink is only supported in pymavlink mode. If using uav-mission-compute-sdk mode, only RTSP output is available.
 
 ---
 

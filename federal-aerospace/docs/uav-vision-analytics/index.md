@@ -44,7 +44,6 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 
 - [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
-- [UAV Mission Compute SDK Flow](./how-to-guides/uavsdk-guide.md) — End-to-end walkthrough: start the SDK, launch the pipeline manager, run a mission, and capture streams
 - [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source
 - [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and fixes for deployment, inference, and streaming problems
 

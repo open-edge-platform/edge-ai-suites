@@ -238,7 +238,6 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |

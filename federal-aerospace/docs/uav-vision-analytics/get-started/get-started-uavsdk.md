@@ -86,20 +86,41 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
+### 3. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
 
-### 3. UAV Mission Compute SDK mode (depends on uav-mission-compute-sdk)
+Follow the setup instructions in the [README](../../../uav-mission-compute-sdk/README.md) before proceeding.
+
+```bash
+cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+# In uav-mission-compute-sdk directory — starts PX4, MQTT, RTSP server
+make up-sim-camera
+```
+
+### 4. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
 
 Start the SDK project first, then start this application:
 
 ```bash
-# In uav-mission-compute-sdk directory — starts PX4, MQTT, RTSP server
-make up-sim-camera
-
-# In this directory
+cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
 make uavsdk-up
 ```
 
-### 4. Start inference pipelines
+### 5. Run a simple mission
+
+> **Note:** Video streams are not available until the UAV is armed and actively on a mission.
+
+The following sequence arms the UAV, commands a takeoff to 10 m, holds for 30 seconds, then lands:
+
+```bash
+curl -X POST http://localhost:8080/action/arm
+curl -sf -X POST http://localhost:8080/action/takeoff \
+  -H "Content-Type: application/json" \
+  -d '{"altitude": 10}'
+sleep 30
+curl -X POST http://localhost:8080/action/land
+```
+
+### 6. Start inference pipelines
 
 Three options are available depending on your use case:
 
@@ -125,7 +146,7 @@ rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 Start a single pipeline directly without the pipeline manager. Useful for testing individual pipelines or custom configurations.
 
 ```bash
-# Start CPU pipeline (pymavlink mode)
+# Start CPU pipeline (uav-mission-compute-sdk mode)
 INSTANCE_ID=$(curl -s -X POST \
   http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
@@ -138,7 +159,7 @@ INSTANCE_ID=$(curl -s -X POST \
       },
       "frame": {
         "type": "rtsp",
-        "path": "uav-mavlink-cpu"
+        "path": "uav-uavsdk-cpu"
       }
     },
     "parameters": {
@@ -158,7 +179,7 @@ Stop a pipeline:
 curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ```
 
-### 5. View the output stream
+### 6. View the output stream
 
 #### View with ffplay
 
@@ -167,12 +188,17 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ffplay rtsp://<HOST_IP>:8555/nadir               # uav-mission-compute-sdk mode, nadir camera
 ```
 
-#### Record a clip
+#### Capture all the video streams
+Record all three streams to disk with `ffmpeg`:
 
 ```bash
-ffmpeg -rtsp_transport tcp \
-  -i "rtsp://<HOST_IP>:8555/nadir" \
-  -c copy -t 30 output.mkv
+ffmpeg \
+  -rtsp_transport tcp -i rtsp://localhost:8555/nadir \
+  -rtsp_transport tcp -i rtsp://localhost:8555/forward \
+  -rtsp_transport tcp -i rtsp://localhost:8555/rear \
+  -map 0:v -c:v copy nadir.mkv \
+  -map 1:v -c:v copy forward.mkv \
+  -map 2:v -c:v copy rear.mkv
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -230,7 +256,6 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
