@@ -31,13 +31,16 @@ v4l2-ctl --list-devices
 ffplay -f v4l2 -input_format yuyv422 -video_size 1280x720 /dev/video4
 ```
 
+> **Note:** The device file may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file.
+
 ### View the depth stream
 
 ```bash
 ffplay -f v4l2 -input_format Z16 -video_size 848x480 /dev/video0
 ```
 
-> **Note:** The `Z16` format is a 16-bit depth value per pixel. `ffplay` will render it as a greyscale image.
+> **Note:** The device file may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file.
+> The `Z16` format is a 16-bit depth value per pixel. `ffplay` will render it as a greyscale image.
 
 ---
 
@@ -52,6 +55,10 @@ Three inference pipelines are available. Only one can be active at a time becaus
 | `uav_realsense_npu` | NPU | `NPU` |
 
 ### Starting a pipeline
+
+> **Note:** Currently the realsense pipelines are only available in standalone mode (pymavlink). The UAV Mission Compute SDK mode does not support the RealSense camera. Adding support should be straightforward by copying the existing pipelines from `config-pymavlink.json` into `config-uavsdk.json`.
+
+> **Note:** The device file `/dev/video4` may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file and update `config-pymavlink.json` accordingly for the above pipelines before proceeding the following steps.
 
 Use the Pipeline Server REST API to start a pipeline. The POST response body is the UUID of the running instance — save it to stop the pipeline later.
 

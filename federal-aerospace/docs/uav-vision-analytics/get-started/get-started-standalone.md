@@ -233,12 +233,15 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 ---
 
+## RealSense Camera Support
+
+Intel RealSense camera setup and pipelines details are provided in the [RealSense guide](../how-to-guides/realsense-guide.md).
+
 ## Documentation
 
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
