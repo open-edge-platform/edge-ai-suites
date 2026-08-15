@@ -84,7 +84,6 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
-> See [export_model.md](../how-to-guides/export_model.md) for full manual instructions and troubleshooting.
 
 ### 3. Standalone mode (pymavlink)
 
@@ -104,13 +103,16 @@ Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's A
 make start-rtsp
 ```
 
-Open QGroundControl (QGC) to connect and press takeoff which arm the drone (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff which arm the drone (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
+>
+> Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
+
 
 **pymavlink mode** — output streams:
 ```
 rtsp://<HOST_IP>:8555/uav-mavlink-cpu    (CPU pipeline)
 rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
-rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline)
+rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline) # If NPU Device is available
 ```
 
 **File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
@@ -123,11 +125,15 @@ Same pipeline manager as Option A, but routes annotated frames to UDP sink inste
 make start-udpsink
 ```
 
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff which arm the drone (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated UDP streams.
+>
+> Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#udp-sink) for instructions on connecting to the UDP stream.
+
 | Pipeline | Device | UDP Port |
 |---|---|---|
 | CPU | CPU | `5600` |
 | GPU | GPU | `5601` |
-| NPU | NPU | `5602` |
+| NPU (if available) | NPU | `5602` | 
 
 #### Option C — Manual REST API
 
@@ -232,7 +238,6 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
 | [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |

@@ -61,7 +61,7 @@ resources/
         └── best_openvino_model/   ← exported IR (best.xml + best.bin)
 ```
 
-> **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without re-verifying GPU/NPU compatibility — newer versions use a `CumSum`-based detection head that fails to compile on Intel GPU and NPU OpenVINO plugins. See [export_model.md](export_model.md) for details.
+> **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without re-verifying GPU/NPU compatibility — newer versions use a `CumSum`-based detection head that fails to compile on Intel GPU and NPU OpenVINO plugins.
 
 ---
 

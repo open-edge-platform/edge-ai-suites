@@ -91,7 +91,7 @@ sudo apt install -y \
 
 ### Model
 
-YOLOv8n-VisDrone exported to OpenVINO FP16 (see [export_model.md](export_model.md)). Run `make model` after installing `python3.12-venv`.
+YOLOv8n-VisDrone exported to OpenVINO FP16. Run `make model` after installing `python3.12-venv`.
 
 ### GPU/NPU access (optional)
 
@@ -127,7 +127,7 @@ nano .env   # set HOST_IP=<your-machine-IP>
 make model
 ```
 
-This creates a virtualenv, installs dependencies, downloads the checkpoint from Hugging Face, and exports to OpenVINO FP16. See [export_model.md](export_model.md) for manual steps or if `make model` fails.
+This creates a virtualenv, installs dependencies, downloads the checkpoint from Hugging Face, and exports to OpenVINO FP16.
 
 ### Step 4: Start the stack
 

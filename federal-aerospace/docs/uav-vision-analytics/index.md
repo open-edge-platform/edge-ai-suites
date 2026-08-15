@@ -43,7 +43,6 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 # How-to Guides
 
 - [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
-- [Export YOLOv8n-VisDrone to OpenVINO](./how-to-guides/export_model.md) — Download the model checkpoint and export to OpenVINO FP16 IR format
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
 - [UAV Mission Compute SDK Flow](./how-to-guides/uavsdk-guide.md) — End-to-end walkthrough: start the SDK, launch the pipeline manager, run a mission, and capture streams
 - [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source

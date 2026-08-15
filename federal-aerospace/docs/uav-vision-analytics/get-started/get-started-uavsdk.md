@@ -86,7 +86,6 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
-> See [export_model.md](../how-to-guides/export_model.md) for full manual instructions and troubleshooting.
 
 ### 3. UAV Mission Compute SDK mode (depends on uav-mission-compute-sdk)
 
@@ -220,7 +219,6 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
 | [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
