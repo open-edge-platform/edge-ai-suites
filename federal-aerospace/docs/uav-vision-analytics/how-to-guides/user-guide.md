@@ -36,10 +36,10 @@ The application supports two telemetry strategies, selected by the compose file 
 - Thread-safe access via a `threading.Lock` protecting the shared `latest_data` dict.
 
 **uav-mission-compute-sdk / MQTT**
-- `sdk_pipeline_manager.py` subscribes to `uav/{id}/telemetry/status` on the SDK project's MQTT broker (`:1884`).
+- `uavsdk_pipeline_manager.py` subscribes to `uav/{id}/telemetry/status` on the SDK project's MQTT broker (`:1884`).
 - On ARMED: probes each RTSP source with `ffprobe`, then POSTs the three camera pipelines to the REST API.
 - On DISARMED: DELETEs all running pipeline instances.
-- The DL Streamer `gvapython` overlay (`telemetry-overlay-sdk.py`) also reads telemetry via MQTT.
+- The DL Streamer `gvapython` overlay (`telemetry-overlay-uavsdk.py`) also reads telemetry via MQTT.
 
 ### Overlay rendering
 
@@ -207,7 +207,7 @@ cd apps/uav-vision-analytics
 make init
 nano .env   # set HOST_IP=<your-machine-IP> and UAV_ID (default: uav-1)
 
-make sdk-up
+make uavsdk-up
 ```
 
 ### Step 3: Start the pipeline manager
@@ -227,7 +227,7 @@ Annotated streams available at `rtsp://<host-ip>:8555/nadir`, `/forward`, `/rear
 
 ## Pipeline Configuration
 
-Pipeline definitions live in `configs/config-pymavlink.json` and `configs/config-sdk.json`. Each entry specifies:
+Pipeline definitions live in `configs/config-pymavlink.json` and `configs/config-uavsdk.json`. Each entry specifies:
 
 | Field | Description |
 |---|---|
@@ -339,7 +339,7 @@ ffmpeg -rtsp_transport tcp \
 make pymav-down
 
 # uav-mission-compute-sdk mode
-make sdk-down
+make uavsdk-down
 ```
 
 Both targets pass `-v` to also remove named Docker volumes (pipeline cache).

@@ -27,9 +27,9 @@ services:
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./resources:/home/pipeline-server/resources"
-      - "./configs/config-sdk.json:/home/pipeline-server/config.json"
-      - "./gvapython/telemetry-overlay-sdk.py:/home/pipeline-server/gvapython/telemetry-overlay-sdk.py"
-      - "./scripts/sdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+      - "./configs/config-uavsdk.json:/home/pipeline-server/config.json"
+      - "./gvapython/telemetry-overlay-uavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py"
+      - "./scripts/uavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
       - "/run/udev:/run/udev:ro"
       - "/tmp:/tmp"
     group_add:

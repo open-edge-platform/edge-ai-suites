@@ -7,7 +7,7 @@ ifneq (,$(wildcard .env))
 endif
 
 COMPOSE_PYMAV  := docker-compose-pymavlink.yml
-COMPOSE_SDK := docker-compose-sdk.yml
+COMPOSE_SDK := docker-compose-uavsdk.yml
 DLSPS          := dlstreamer-pipeline-server
 MODEL_DIR      := resources/models/yolov8n-visdrone
 MODEL_XML      := $(MODEL_DIR)/best_openvino_model/best.xml
@@ -15,7 +15,7 @@ VENV           := resources/venv
 
 .PHONY: help init build model _check_model \
         pymav-up pymav-down \
-        sdk-up sdk-down \
+        uavsdk-up uavsdk-down \
         start-rtsp start-udpsink
 
 help: ## Show available targets
@@ -82,10 +82,10 @@ pymav-down: ## Stop and remove pymavlink stack (includes volumes)
 
 # ── UAV Mission Compute SDK stack ──────────────────────────────────────────────────────────────
 
-sdk-up: _check_model ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
+uavsdk-up: _check_model ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
 	docker compose -f $(COMPOSE_SDK) up -d
 
-sdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)
+uavsdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)
 	docker compose -f $(COMPOSE_SDK) down -v
 
 # ── Pipeline management ───────────────────────────────────────────────────────

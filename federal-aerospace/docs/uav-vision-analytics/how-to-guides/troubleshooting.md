@@ -101,7 +101,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ## Pipelines not starting in uav-mission-compute-sdk mode
 
-- Confirm `sdk_pipeline_manager.py` is running inside the container:
+- Confirm `uavsdk_pipeline_manager.py` is running inside the container:
   ```bash
   docker exec dlstreamer-pipeline-server ps aux | grep pipeline
   ```

@@ -35,7 +35,7 @@ From the `uav-vision-analytics` directory, bring up the DL Streamer container an
 
 ```bash
 cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
-make sdk-up
+make uavsdk-up
 make start-rtsp
 ```
 

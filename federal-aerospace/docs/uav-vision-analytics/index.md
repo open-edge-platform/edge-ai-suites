@@ -28,12 +28,12 @@ Self-contained mode using PX4 SITL simulation and pymavlink for MAVLink communic
 
 Integration mode that connects to a running instance of the UAV Mission Compute SDK, enabling full mission control and multi-camera pipeline management.
 
-[Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-sdk.md)
+[Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md)
 
 # Documentation
 
 - [Get Started — Standalone Mode](./get-started/get-started-standalone.md)
-- [Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-sdk.md)
+- [Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md)
 - [Release Notes](./release-notes.md)
 
 # How-to Guides
@@ -41,7 +41,7 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 - [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
 - [Export YOLOv8n-VisDrone to OpenVINO](./how-to-guides/export_model.md) — Download the model checkpoint and export to OpenVINO FP16 IR format
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
-- [UAV Mission Compute SDK Flow](./how-to-guides/sdk-guide.md) — End-to-end walkthrough: start the SDK, launch the pipeline manager, run a mission, and capture streams
+- [UAV Mission Compute SDK Flow](./how-to-guides/uavsdk-guide.md) — End-to-end walkthrough: start the SDK, launch the pipeline manager, run a mission, and capture streams
 - [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source
 - [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and fixes for deployment, inference, and streaming problems
 

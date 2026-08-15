@@ -43,4 +43,4 @@ Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev
 
 - Ensure all dependencies are installed and configured before proceeding to
   [Get Started Standalone](./get-started-standalone.md)
-  [Get Started SDK](./get-started-sdk.md)
+  [Get Started SDK](./get-started-uavsdk.md)

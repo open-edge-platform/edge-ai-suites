@@ -26,7 +26,7 @@ flowchart LR
         PX4E -->|"camera frames"| MEDIAMTX
     end
 
-    subgraph Stack["docker-compose-sdk.yml"]
+    subgraph Stack["docker-compose-uavsdk.yml"]
         DLSPS2["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
     end
 
@@ -113,7 +113,7 @@ Start the SDK project first, then start this application:
 make up-sim-camera
 
 # In this directory
-make sdk-up
+make uavsdk-up
 ```
 
 ### 4. Start inference pipelines
@@ -188,7 +188,7 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 
 ## Pipelines
 
-### uav-mission-compute-sdk mode (`config-sdk.json`)
+### uav-mission-compute-sdk mode (`config-uavsdk.json`)
 
 | Pipeline | Device | Source (inside Docker) | Output RTSP (host) |
 |---|---|---|---|
@@ -238,7 +238,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [index.md](../index.md) | Architecture overview and component block diagrams |
 | [index.md](../index.md) | Full deployment, configuration, architecture, and design guide |
 | [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
-| [sdk-guide.md](../how-to-guides/sdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
+| [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |

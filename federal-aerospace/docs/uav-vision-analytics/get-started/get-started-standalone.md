@@ -245,7 +245,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [index.md](../index.md) | Architecture overview and component block diagrams |
 | [index.md](../index.md) | Full deployment, configuration, architecture, and design guide |
 | [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
-| [sdk-guide.md](../how-to-guides/sdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
+| [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
