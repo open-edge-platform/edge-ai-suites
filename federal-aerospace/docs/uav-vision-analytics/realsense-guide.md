@@ -1,4 +1,19 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Intel RealSense — UAV Vision Analytics
+
+## Prerequisites
+
+Install `ffmpeg` to use `ffplay` and `ffprobe` for stream testing:
+
+```bash
+sudo apt install ffmpeg
+```
+
+---
 
 ## Testing the camera streams
 
@@ -12,6 +27,7 @@ v4l2-ctl --list-devices
 ### View the RGB video stream
 
 ```bash
+# ffplay is part of the ffmpeg package
 ffplay -f v4l2 -input_format yuyv422 -video_size 1280x720 /dev/video4
 ```
 
@@ -37,12 +53,9 @@ Three inference pipelines are available. Only one can be active at a time becaus
 
 ### Starting a pipeline
 
-Use the Pipeline Server REST API to start a pipeline. The POST response body is the integer
-`instance_id` for the running instance — save it to stop the pipeline later.
+Use the Pipeline Server REST API to start a pipeline. The POST response body is the UUID of the running instance — save it to stop the pipeline later.
 
-Replace `<pipeline-name>` with one of the pipeline names from the table above,
-`<rtsp-stream-name>` with the desired RTSP path (e.g. `realsense`), and `device` to
-the matching value for that pipeline.
+Replace `<pipeline-name>` with one of the pipeline names from the table above, `<rtsp-stream-name>` with the desired RTSP path (e.g. `realsense`), and `device` with the matching value.
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
@@ -96,6 +109,12 @@ INSTANCE_ID=$(curl -s -X POST \
     }
   }' | tr -d '"')
 echo "Instance ID: $INSTANCE_ID"
+```
+
+View the annotated stream:
+
+```bash
+ffplay rtsp://localhost:8555/realsense
 ```
 
 To stop the pipeline:

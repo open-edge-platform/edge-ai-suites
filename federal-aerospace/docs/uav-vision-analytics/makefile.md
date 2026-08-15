@@ -15,8 +15,9 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 
 | Target | Description |
 |---|---|
+| `make init` | Create `.env` from template and auto-detect Intel GPU device paths |
 | `make model` | Download YOLOv8n-VisDrone checkpoint and export to OpenVINO FP16 |
-| `make pymav-up` | Start the standalone pymavlink stack |
+| `make pymav-up` | Start the standalone pymavlink stack (requires model — errors if missing) |
 | `make pymav-down` | Stop and remove the pymavlink stack (includes volumes) |
 | `make mavsdk-up` | Start the MAVSDK stack |
 | `make mavsdk-down` | Stop and remove the MAVSDK stack (includes volumes) |
@@ -28,9 +29,27 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 
 ## Target Details
 
+### `make init`
+
+Creates `.env` from `.env.example` (skipped if `.env` already exists) and auto-detects the Intel GPU device paths by scanning `/dev/dri/`. The detected paths are written into `.env` so `docker compose` picks them up automatically.
+
+```bash
+make init
+# .env created from .env.example
+# ✅ GPU detected:
+#    GPU_DEVICE=/dev/dri/card1
+#    GPU_RENDER_DEVICE=/dev/dri/renderD128
+```
+
+Run this once before the first `make pymav-up`. On machines where the Intel iGPU is assigned `card1` instead of `card0` (common on multi-GPU desktops), this avoids the manual `.env` edit.
+
+---
+
 ### `make model`
 
 Creates a Python virtual environment under `resources/venv/`, installs dependencies from `resources/requirements.txt`, downloads the `best.pt` checkpoint from HuggingFace, and exports it to OpenVINO FP16 IR format.
+
+> **`make pymav-up` checks for the model** before starting containers. If `resources/models/yolov8n-visdrone/best_openvino_model/best.xml` is missing it prints an error and exits — run `make model` first.
 
 ```
 resources/
@@ -42,7 +61,7 @@ resources/
         └── best_openvino_model/   ← exported IR (best.xml + best.bin)
 ```
 
-> **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without re-verifying GPU/NPU compatibility of the exported IR — newer versions use a CumSum-based detection head that fails to compile on GPU and NPU OpenVINO plugins.
+> **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without re-verifying GPU/NPU compatibility — newer versions use a `CumSum`-based detection head that fails to compile on Intel GPU and NPU OpenVINO plugins. See [export_model.md](export_model.md) for details.
 
 ---
 
@@ -54,7 +73,7 @@ Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), whi
 - `broker` — Eclipse Mosquitto MQTT broker (:1883)
 - `px4` — PX4 SITL flight controller simulator
 - `mavlink-router` — MAVLink routing sidecar (receives on :14550, broadcasts to :14541)
-- `metrics-manager` — system metrics dashboard
+- `metrics-manager` — system metrics endpoint (:9090)
 
 `down` passes `-v` to also remove named volumes (pipeline cache).
 
@@ -80,7 +99,7 @@ make mavsdk-up
 
 ### `make start-rtsp`
 
-Executes `mavlink_pipeline_manager.py` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output**.
+Executes `mavlink_pipeline_manager.py` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output** on port `8555`.
 
 Requires the DLSPS container to already be running (`make pymav-up` or `make mavsdk-up` first).
 
@@ -103,10 +122,21 @@ Convenience alias for `make pymav-up`. Starts the default standalone stack.
 ### First-time setup
 
 ```bash
-cp .env.example .env    # set HOST_IP
-make model              # download + export model
-make pymav-up           # start the stack
-make start-rtsp         # start pipelines
+# 0. Install system prerequisites
+sudo apt install python3.12-venv ffmpeg
+
+# 1. Create .env and auto-detect GPU
+make init
+nano .env   # set HOST_IP=<your-machine-IP>
+
+# 2. Download and export the model
+make model
+
+# 3. Start the stack
+make pymav-up
+
+# 4. Start inference pipelines
+make start-rtsp
 ```
 
 ### Stop everything and clean up
