@@ -160,9 +160,19 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ### 5. View the output stream
 
+#### View with ffplay
+
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
 ffplay rtsp://<HOST_IP>:8555/nadir               # uav-mission-compute-sdk mode, nadir camera
+```
+
+#### Record a clip
+
+```bash
+ffmpeg -rtsp_transport tcp \
+  -i "rtsp://<HOST_IP>:8555/nadir" \
+  -c copy -t 30 output.mkv
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -171,7 +181,7 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 
 ## Pipelines
 
-### uav-mission-compute-sdk mode (`config-uavsdk.json`)
+### UAV Mission Compute SDK Mode (`config-uavsdk.json`)
 
 | Pipeline | Device | Source (inside Docker) | Output RTSP (host) |
 |---|---|---|---|
@@ -181,8 +191,9 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 
 > `uav-1` in the source URL is the value of the `UAV_ID` environment variable (default: `uav-1`).
 > Set a different value in `.env` if your SDK project uses a different vehicle ID.
+> Also update the RTSP input URLs in `config-uavsdk.json` if you change the UAV ID.
 
-All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp` / `make start-udpsink`) or the REST API directly.
+All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp`) or the REST API directly.
 
 REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{name}`
 
