@@ -7,7 +7,7 @@ ifneq (,$(wildcard .env))
 endif
 
 COMPOSE_PYMAV  := docker-compose-pymavlink.yml
-COMPOSE_MAVSDK := docker-compose-mavsdk.yml
+COMPOSE_SDK := docker-compose-sdk.yml
 DLSPS          := dlstreamer-pipeline-server
 MODEL_DIR      := resources/models/yolov8n-visdrone
 MODEL_XML      := $(MODEL_DIR)/best_openvino_model/best.xml
@@ -15,7 +15,7 @@ VENV           := resources/venv
 
 .PHONY: help init build model _check_model \
         pymav-up pymav-down \
-        mavsdk-up mavsdk-down \
+        sdk-up sdk-down \
         start-rtsp start-udpsink
 
 help: ## Show available targets
@@ -80,13 +80,13 @@ pymav-up: _check_model ## Start standalone pymavlink stack (PX4 SITL + broker + 
 pymav-down: ## Stop and remove pymavlink stack (includes volumes)
 	docker compose -f $(COMPOSE_PYMAV) down -v
 
-# ── MAVSDK stack ──────────────────────────────────────────────────────────────
+# ── UAV Mission Compute SDK stack ──────────────────────────────────────────────────────────────
 
-mavsdk-up: _check_model ## Start MAVSDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
-	docker compose -f $(COMPOSE_MAVSDK) up -d
+sdk-up: _check_model ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
+	docker compose -f $(COMPOSE_SDK) up -d
 
-mavsdk-down: ## Stop and remove MAVSDK stack (includes volumes)
-	docker compose -f $(COMPOSE_MAVSDK) down -v
+sdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)
+	docker compose -f $(COMPOSE_SDK) down -v
 
 # ── Pipeline management ───────────────────────────────────────────────────────
 

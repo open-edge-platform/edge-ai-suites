@@ -15,73 +15,13 @@ This guide covers deployment, configuration, architecture, and design of the UAV
 2. [Design](#design)
 3. [Prerequisites](#prerequisites)
 4. [Deployment — Standalone (pymavlink)](#deployment--standalone-pymavlink)
-5. [Deployment — MAVSDK mode](#deployment--mavsdk-mode)
+5. [Deployment — uav-mission-compute-sdk mode](#deployment--uav-mission-compute-sdk-mode)
 6. [Pipeline Configuration](#pipeline-configuration)
 7. [Environment Variables Reference](#environment-variables-reference)
 8. [REST API Reference](#rest-api-reference)
 9. [Verifying the Output Stream](#verifying-the-output-stream)
 10. [Stopping the Application](#stopping-the-application)
 11. [Troubleshooting](#troubleshooting)
-
----
-
-## Architecture
-
-### Component interaction
-
-```mermaid
-flowchart TB
-    subgraph PyMav["Standalone Stack (docker-compose-pymavlink.yml)"]
-        direction LR
-        PX4["PX4 SITL"]
-        ROUTER["mavlink-router\n:14550 → :14541"]
-        BROKER["Mosquitto\nMQTT :1883"]
-        DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
-        MM["Metrics Manager\n(:9090)"]
-
-        PX4 -->|"MAVLink"| ROUTER
-        ROUTER -->|"UDP :14541"| DLSPS
-        DLSPS -.->|"metrics"| BROKER
-        MM -.->|"system metrics"| BROKER
-    end
-
-    subgraph SDKStack["MAVSDK Stack (docker-compose-mavsdk.yml)"]
-        direction LR
-        DLSPS2["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
-    end
-
-    subgraph SDK["uav-mission-compute-sdk (separate project)"]
-        PX4E["PX4 + Gazebo"]
-        BRIDGE["companion-bridge"]
-        MQTTE["MQTT Broker :1884"]
-        MEDIAMTX["MediaMTX\nRTSP :8554"]
-        PX4E --> BRIDGE --> MQTTE
-        PX4E --> MEDIAMTX
-    end
-
-    MQTTE -->|"uav/{id}/telemetry/status"| DLSPS2
-    MEDIAMTX -->|"RTSP nadir/forward/rear"| DLSPS2
-
-    VIDEO["Video Source\n(Camera / file)"] --> DLSPS
-    CLIENT["QGC / ffplay"] -->|"RTSP :8555"| DLSPS
-    CLIENT -->|"RTSP :8555"| DLSPS2
-```
-
-### GStreamer inference pipeline
-
-```mermaid
-flowchart LR
-    SRC["rtspsrc / multifilesrc"]
-    DEC["h264parse\ndecodebin3"]
-    CONV["videoconvert\nNV12 416×416"]
-    DET["gvadetect\nOpenVINO YOLOv8n-VisDrone\n640×640 FP16"]
-    GVAP["gvapython\nDrawDynamicText\ntelemetry overlay"]
-    METACONVERT["gvametaconvert\nadd-empty-results=true"]
-    METAPUBLISH["gvametapublish → MQTT"]
-    APPSINK["appsink → RTSP :8555"]
-
-    SRC --> DEC --> CONV --> DET --> GVAP --> METACONVERT --> METAPUBLISH --> APPSINK
-```
 
 ---
 
@@ -96,11 +36,11 @@ The application supports two telemetry strategies, selected by the compose file 
 - A background `MavlinkReceiver` thread inside the DL Streamer container connects to `udpin:0.0.0.0:14541` and reads `GLOBAL_POSITION_INT`, `VFR_HUD`, and `GPS_RAW_INT` messages.
 - Thread-safe access via a `threading.Lock` protecting the shared `latest_data` dict.
 
-**MAVSDK / MQTT**
-- `mavsdk_pipeline_manager.py` subscribes to `uav/{id}/telemetry/status` on the SDK project's MQTT broker (`:1884`).
+**uav-mission-compute-sdk / MQTT**
+- `sdk_pipeline_manager.py` subscribes to `uav/{id}/telemetry/status` on the SDK project's MQTT broker (`:1884`).
 - On ARMED: probes each RTSP source with `ffprobe`, then POSTs the three camera pipelines to the REST API.
 - On DISARMED: DELETEs all running pipeline instances.
-- The DL Streamer `gvapython` overlay (`telemetry-overlay-mavsdk.py`) also reads telemetry via MQTT.
+- The DL Streamer `gvapython` overlay (`telemetry-overlay-sdk.py`) also reads telemetry via MQTT.
 
 ### Overlay rendering
 
@@ -250,7 +190,7 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ---
 
-## Deployment — MAVSDK mode
+## Deployment — uav-mission-compute-sdk mode
 
 ### Step 1: Start uav-mission-compute-sdk
 
@@ -268,7 +208,7 @@ cd apps/uav-vision-analytics
 make init
 nano .env   # set HOST_IP=<your-machine-IP> and UAV_ID (default: uav-1)
 
-make mavsdk-up
+make sdk-up
 ```
 
 ### Step 3: Start the pipeline manager
@@ -288,7 +228,7 @@ Annotated streams available at `rtsp://<host-ip>:8555/nadir`, `/forward`, `/rear
 
 ## Pipeline Configuration
 
-Pipeline definitions live in `configs/config-pymavlink.json` and `configs/config-mavsdk.json`. Each entry specifies:
+Pipeline definitions live in `configs/config-pymavlink.json` and `configs/config-sdk.json`. Each entry specifies:
 
 | Field | Description |
 |---|---|
@@ -311,7 +251,7 @@ Choose the pipeline name matching the desired device (`cpu` / `gpu` / `npu`). Th
 |---|---|---|
 | `HOST_IP` | *(required)* | Host machine IP address (used for RTSP stream address) |
 | `DLSTREAMER_PIPELINE_SERVER_IMAGE` | `intel/dlstreamer-pipeline-server:2026.2.0-...` | Docker image for DL Streamer |
-| `UAV_ID` | `uav-1` | UAV identifier for MQTT topic subscription (MAVSDK mode) |
+| `UAV_ID` | `uav-1` | UAV identifier for MQTT topic subscription (uav-mission-compute-sdk mode) |
 | `http_proxy` / `https_proxy` / `no_proxy` | *(optional)* | Proxy settings forwarded into containers |
 | `ZE_ENABLE_ALT_DRIVERS` | `libze_intel_npu.so` | Enables Intel NPU plugin in OpenVINO (set inside compose) |
 
@@ -399,8 +339,8 @@ ffmpeg -rtsp_transport tcp \
 # Standalone mode
 make pymav-down
 
-# MAVSDK mode
-make mavsdk-down
+# uav-mission-compute-sdk mode
+make sdk-down
 ```
 
 Both targets pass `-v` to also remove named Docker volumes (pipeline cache).
@@ -415,7 +355,7 @@ See [troubleshooting.md](troubleshooting.md) for a complete list of known issues
 - `make pymav-up` fails with pip network error (proxy issue)
 - DL Streamer container keeps restarting
 - No telemetry overlay on stream (all zeros)
-- Pipelines not starting in MAVSDK mode
+- Pipelines not starting in uav-mission-compute-sdk mode
 - `ffplay: command not found`
 - NPU inference fails / GPU pipeline falls back to CPU
 - QGroundControl network warnings

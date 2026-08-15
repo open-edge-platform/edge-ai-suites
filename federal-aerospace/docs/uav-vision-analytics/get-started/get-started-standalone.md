@@ -3,15 +3,15 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# UAV Vision Analytics Application
 
-AI-powered UAV object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
+# Get Started (Standalone Mode)
 
-This application processes video from a UAV-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference to detect objects in ten classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as RTSP on port `8555`, consumable by any RTSP-capable client.
+This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application to configure the standalone mode (pymavlink) and run the demo with a simulated UAV camera feed/Realsense cameras.
 
----
+## How It Works
 
-## Quick Start
+
+## Steps to Test the Application
 
 ### Prerequisites
 
@@ -57,7 +57,7 @@ make model
 make pymav-up
 ```
 
-### 3b. MAVSDK mode (depends on uav-mission-compute-sdk)
+### 3b. uav-mission-compute-sdk mode (depends on uav-mission-compute-sdk)
 
 Start the SDK project first, then start this application:
 
@@ -66,7 +66,7 @@ Start the SDK project first, then start this application:
 make up-sim-camera
 
 # In this directory
-make mavsdk-up
+make sdk-up
 ```
 
 ### 4. Start inference pipelines
@@ -88,7 +88,7 @@ rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
 rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline)
 ```
 
-**MAVSDK mode** — output streams (available after drone arms):
+**uav-mission-compute-sdk mode** — output streams (available after drone arms):
 ```
 rtsp://<HOST_IP>:8555/nadir      (nadir camera, CPU)
 rtsp://<HOST_IP>:8555/forward    (forward camera, GPU)
@@ -154,7 +154,7 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # pymavlink, REST/managed
-ffplay rtsp://<HOST_IP>:8555/nadir               # MAVSDK, nadir camera
+ffplay rtsp://<HOST_IP>:8555/nadir               # uav-mission-compute-sdk mode, nadir camera
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -177,7 +177,7 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 | `uav_udpsink_gpu` | GPU | Looped video file (`gazebo.avi`) | UDP `:5601` |
 | `uav_udpsink_npu` | NPU | Looped video file (`gazebo.avi`) | UDP `:5602` |
 
-### MAVSDK mode (`config-mavsdk.json`)
+### uav-mission-compute-sdk mode (`config-sdk.json`)
 
 | Pipeline | Device | Source (inside Docker) | Output RTSP (host) |
 |---|---|---|---|
@@ -223,9 +223,9 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | `5600` | UDP | CPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
 | `5601` | UDP | GPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
 | `5602` | UDP | NPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
-| `8554` | RTSP | SDK camera source streams | MAVSDK mode |
-| `8889` | HTTP/WebRTC | MediaMTX WebRTC signaling | MAVSDK only |
-| `3478` | UDP | coturn TURN/STUN relay | MAVSDK only |
+| `8554` | RTSP | SDK camera source streams | uav-mission-compute-sdk mode |
+| `8889` | HTTP/WebRTC | MediaMTX WebRTC signaling | uav-mission-compute-sdk mode only |
+| `3478` | UDP | coturn TURN/STUN relay | uav-mission-compute-sdk mode only |
 
 ---
 
@@ -236,7 +236,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [overview.md](overview.md) | Architecture overview and component block diagrams |
 | [user-guide.md](user-guide.md) | Full deployment, configuration, architecture, and design guide |
 | [export_model.md](export_model.md) | Model download and OpenVINO export instructions |
-| [mavsdk-guide.md](mavsdk-guide.md) | End-to-end MAVSDK mode walkthrough |
+| [sdk-guide.md](sdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](makefile.md) | Makefile target reference |

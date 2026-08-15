@@ -78,7 +78,7 @@ class MqttReceiver(threading.Thread):
 
 class DrawDynamicText:
 
-    def __init__(self, name="MAVSDK Telemetry Overlay"):
+    def __init__(self, name="SDK Telemetry Overlay"):
         self.frame_number = 0
         self.receiver = MqttReceiver()
         self.receiver.start()

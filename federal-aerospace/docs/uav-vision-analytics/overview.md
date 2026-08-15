@@ -64,51 +64,7 @@ sequenceDiagram
 
 ---
 
-### Mode 1b — Standalone / pymavlink + WebRTC (`docker-compose-pymavlink-mediamtx.yml`)
-
-Extends Mode 1 with a **WebRTC streaming path** alongside RTSP. MediaMTX acts as the WebRTC signaling server and coturn provides a TURN relay for NAT traversal. Clients can view the annotated video in a browser without a dedicated RTSP player.
-
-```mermaid
-flowchart LR
-    subgraph Stack["docker-compose-pymavlink-mediamtx.yml"]
-        direction TB
-        PX4["PX4 SITL\npx4io/px4-sitl"]
-        ROUTER["mavlink-router\n(:14550 server\n→ :14541 broadcast)"]
-        BROKER["Eclipse Mosquitto\nMQTT :1883"]
-        DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555 · WebRTC)"]
-        MTX["MediaMTX\nWebRTC signaling :8889"]
-        COTURN["coturn\nTURN/STUN :3478/udp"]
-        MM["Metrics Manager\n(REST :9090)"]
-
-        PX4 -->|"MAVLink"| ROUTER
-        ROUTER -->|"UDP :14541"| DLSPS
-        DLSPS -->|"WebRTC signaling"| MTX
-        MTX -->|"ICE/TURN"| COTURN
-        DLSPS -.->|"inference metrics"| BROKER
-    end
-
-    VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
-    DLSPS -->|"RTSP :8555"| CLIENT_RTSP["QGC / ffplay"]
-    MTX -->|"WebRTC via :8889"| CLIENT_WEB["Browser"]
-```
-
-**WebRTC path:** DLSPS publishes the annotated video to MediaMTX over the WebRTC signaling endpoint (`http://mediamtx-server:8889`). Browsers connect to MediaMTX at `:8889`; coturn handles ICE relay for clients behind NAT using credentials set via `MTX_WEBRTCICESERVERS2_0_USERNAME` / `MTX_WEBRTCICESERVERS2_0_PASSWORD`.
-
-**Services:**
-
-| Service | Image | Ports | Role |
-|---|---|---|---|
-| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP + WebRTC output |
-| `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker |
-| `px4` | `px4io/px4-sitl` | — | Flight controller simulator |
-| `mavlink-router` | custom build | — | MAVLink UDP routing (:14550 → :14541) |
-| `mediamtx` | `bluenviron/mediamtx:1.11.3` | `8889` | WebRTC signaling server |
-| `coturn` | `coturn/coturn:4.12.0` | `3478/udp` | TURN/STUN relay for WebRTC NAT traversal |
-| `metrics-manager` | `intel/metrics-manager` | — | CPU/GPU/NPU/power metrics |
-
----
-
-### Mode 2 — MAVSDK / external SDK (`docker-compose-mavsdk.yml`)
+### Mode 2 — UAV Mission Compute SDK (external SDK) (`docker-compose-sdk.yml`)
 
 A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
@@ -126,7 +82,7 @@ flowchart LR
         PX4E -->|"camera frames"| MEDIAMTX
     end
 
-    subgraph Stack["docker-compose-mavsdk.yml"]
+    subgraph Stack["docker-compose-sdk.yml"]
         DLSPS2["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
     end
 
@@ -141,7 +97,7 @@ flowchart LR
 sequenceDiagram
     participant SDK as uav-mission-compute-sdk
     participant BROKER as MQTT Broker (:1884)
-    participant PM as mavsdk_pipeline_manager
+    participant PM as sdk_pipeline_manager
     participant DLSPS as DL Streamer REST API
 
     SDK->>BROKER: uav/uav-1/telemetry/status {armed: true}
@@ -168,19 +124,6 @@ sequenceDiagram
 
 All pipelines follow the same element chain (device and source vary per pipeline):
 
-```mermaid
-flowchart LR
-    SRC["rtspsrc / multifilesrc"]
-    DEC["h264parse\ndecodebin3"]
-    CONV["videoconvert\nNV12 416×416"]
-    DET["gvadetect\nOpenVINO device=CPU|GPU|NPU\nmodel-instance-id per device"]
-    OVL["gvapython\nDrawDynamicText\ntelemetry overlay"]
-    META["gvametaconvert\ngvametapublish → MQTT"]
-    SINK["appsink → RTSP :8555"]
-
-    SRC --> DEC --> CONV --> DET --> OVL --> META --> SINK
-```
-
 ### pymavlink pipelines (`config-pymavlink.json`)
 
 | Pipeline | Device | Source |
@@ -195,7 +138,7 @@ flowchart LR
 | `uav_udpsink_gpu` | GPU | `multifilesrc` → UDP sink |
 | `uav_udpsink_npu` | NPU | `multifilesrc` → UDP sink |
 
-### MAVSDK pipelines (`config-mavsdk.json`)
+### uav-mission-compute-sdk pipelines (`config-sdk.json`)
 
 | Pipeline | Device | Source RTSP |
 |---|---|---|
@@ -240,7 +183,7 @@ See [export_model.md](export_model.md) for download and export instructions.
 | [README.md](README.md) | Quick-start guide |
 | [user-guide.md](user-guide.md) | Deployment, configuration, architecture, and design |
 | [export_model.md](export_model.md) | Downloading and exporting the YOLOv8n-VisDrone model |
-| [mavsdk-guide.md](mavsdk-guide.md) | End-to-end MAVSDK mode walkthrough |
+| [sdk-guide.md](sdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](benchmark.md) | Performance benchmarking guide |
 | [makefile.md](makefile.md) | Makefile target reference |

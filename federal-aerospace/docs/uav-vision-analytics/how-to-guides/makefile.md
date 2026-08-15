@@ -19,8 +19,8 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 | `make model` | Download YOLOv8n-VisDrone checkpoint and export to OpenVINO FP16 |
 | `make pymav-up` | Start the standalone pymavlink stack (requires model — errors if missing) |
 | `make pymav-down` | Stop and remove the pymavlink stack (includes volumes) |
-| `make mavsdk-up` | Start the MAVSDK stack |
-| `make mavsdk-down` | Stop and remove the MAVSDK stack (includes volumes) |
+| `make sdk-up` | Start the uav-mission-compute-sdk stack |
+| `make sdk-down` | Stop and remove the uav-mission-compute-sdk stack (includes volumes) |
 | `make start-rtsp` | Start inference pipelines with RTSP output |
 | `make start-udpsink` | Start inference pipelines with UDP sink output |
 | `make build` | Alias for `pymav-up` |
@@ -79,9 +79,9 @@ Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), whi
 
 ---
 
-### `make mavsdk-up` / `make mavsdk-down`
+### `make sdk-up` / `make sdk-down`
 
-Manages the **MAVSDK stack** (`docker-compose-mavsdk.yml`), which requires the `edge-ai-suites/federal-aerospace/uav-mission-compute-sdk` project to already be running.
+Manages the **uav-mission-compute-sdk stack** (`docker-compose-sdk.yml`), which requires the `edge-ai-suites/federal-aerospace/uav-mission-compute-sdk` project to already be running.
 
 Start order:
 
@@ -90,7 +90,7 @@ Start order:
 cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk && make up-sim-camera
 
 # 2. Start this application
-make mavsdk-up
+make sdk-up
 ```
 
 `down` passes `-v` to also remove named volumes.
@@ -101,7 +101,7 @@ make mavsdk-up
 
 Executes `mavlink_pipeline_manager.py` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output** on port `8555`.
 
-Requires the DLSPS container to already be running (`make pymav-up` or `make mavsdk-up` first).
+Requires the DLSPS container to already be running (`make pymav-up` or `make sdk-up` first).
 
 ---
 
@@ -145,11 +145,11 @@ make start-rtsp
 make pymav-down
 ```
 
-### Switch to MAVSDK mode
+### Switch to uav-mission-compute-sdk mode
 
 ```bash
 make pymav-down                       # stop standalone stack if running
 cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk && make up-sim-camera   # start SDK project
-cd .. && make mavsdk-up               # start MAVSDK stack
+cd .. && make sdk-up               # start uav-mission-compute-sdk stack
 make start-rtsp
 ```

@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# UAV Vision Analytics — MAVSDK Flow
+# UAV Vision Analytics — UAV Mission Compute SDK flow
 
 End-to-end walkthrough: starting the SDK, launching the pipeline manager, running a simple mission, and capturing the video streams.
 
@@ -35,7 +35,7 @@ From the `uav-vision-analytics` directory, bring up the DL Streamer container an
 
 ```bash
 cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
-make mavsdk-up
+make sdk-up
 make start-rtsp
 ```
 

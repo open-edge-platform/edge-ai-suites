@@ -41,7 +41,7 @@ services:
     container_name: mavlink-router
     restart: unless-stopped
     volumes:
-      - ./mavlink-router/main.conf:/etc/mavlink-router/main.conf
+      - ./configs/mavlink-router/main.conf:/etc/mavlink-router/main.conf
     networks:
       - app_network
 

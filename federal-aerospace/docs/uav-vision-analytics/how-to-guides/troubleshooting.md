@@ -91,7 +91,7 @@ docker logs mavlink-router
 docker logs px4 | grep -i mavlink
 ```
 
-**MAVSDK mode:** Confirm the SDK MQTT broker is reachable and publishing telemetry:
+**uav-mission-compute-sdk mode:** Confirm the SDK MQTT broker is reachable and publishing telemetry:
 
 ```bash
 mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
@@ -99,9 +99,9 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ---
 
-## Pipelines not starting in MAVSDK mode
+## Pipelines not starting in uav-mission-compute-sdk mode
 
-- Confirm `mavsdk_pipeline_manager.py` is running inside the container:
+- Confirm `sdk_pipeline_manager.py` is running inside the container:
   ```bash
   docker exec dlstreamer-pipeline-server ps aux | grep pipeline
   ```

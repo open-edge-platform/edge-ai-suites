@@ -22,14 +22,14 @@ services:
       - ENABLE_OPEN_TELEMETRY=false
       # NPU related environment variables
       - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
-      # MAVSDK related environment variables
+      # UAV Mission Compute SDK related environment variables
       - UAV_ID=${UAV_ID:-uav-1}
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./resources:/home/pipeline-server/resources"
-      - "./configs/config-mavsdk.json:/home/pipeline-server/config.json"
-      - "./gvapython/telemetry-overlay-mavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-mavsdk.py"
-      - "./scripts/mavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+      - "./configs/config-sdk.json:/home/pipeline-server/config.json"
+      - "./gvapython/telemetry-overlay-sdk.py:/home/pipeline-server/gvapython/telemetry-overlay-sdk.py"
+      - "./scripts/sdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
       - "/run/udev:/run/udev:ro"
       - "/tmp:/tmp"
     group_add:
