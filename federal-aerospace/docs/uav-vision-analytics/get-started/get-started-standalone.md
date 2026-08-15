@@ -18,13 +18,11 @@ flowchart LR
         direction TB
         PX4["PX4 SITL\npx4io/px4-sitl"]
         ROUTER["mavlink-router\n(:14550 server\n→ :14541 broadcast)"]
-        BROKER["Eclipse Mosquitto\nMQTT :1883"]
         DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
         MM["Metrics Manager\n(REST :9090)"]
 
         PX4 -->|"MAVLink"| ROUTER
         ROUTER -->|"UDP :14541"| DLSPS
-        DLSPS -.->|"inference metrics"| BROKER
     end
 
     VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
@@ -52,7 +50,6 @@ sequenceDiagram
 | Service | Image | Ports | Role |
 |---|---|---|---|
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP output |
-| `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker |
 | `px4` | `px4io/px4-sitl` | — | Flight controller simulator |
 | `mavlink-router` | custom build | — | MAVLink UDP routing (:14550 → :14541) |
 | `metrics-manager` | `intel/metrics-manager` | — | CPU/GPU/NPU/power metrics |
@@ -213,7 +210,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 | Field | Source MAVLink message | Description |
 |---|---|---|
-| `Protocol` | — | `pymavlink` or `MQTT` |
+| `Name` | — | Name passed as argument to the gvapython |
 | `Frame` | — | Running frame counter |
 | `ALT` | `GLOBAL_POSITION_INT.relative_alt` | Relative altitude (m) |
 | `SPD` | `VFR_HUD.groundspeed` | Ground speed (m/s) |
@@ -242,8 +239,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 | Document | Description |
 |---|---|
-| [index.md](../index.md) | Architecture overview and component block diagrams |
-| [index.md](../index.md) | Full deployment, configuration, architecture, and design guide |
+| [index.md](../index.md) | Application overview and component block diagrams |
 | [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
 | [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |

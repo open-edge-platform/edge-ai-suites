@@ -15,23 +15,14 @@ A minimal single-container stack. Telemetry is received via MQTT from the `uav-m
 ```mermaid
 flowchart LR
     subgraph SDK["uav-mission-compute-sdk (started separately)"]
-        direction TB
-        PX4E["PX4 + Gazebo"]
-        BRIDGE["companion-bridge\nMAVLink → MQTT"]
-        BROKER_E["MQTT Broker :1884"]
-        MEDIAMTX["MediaMTX\nRTSP :8554"]
-
-        PX4E -->|"MAVLink"| BRIDGE
-        BRIDGE -->|"uav/uav-1/telemetry/status\nuav/uav-1/camera/*/detections"| BROKER_E
-        PX4E -->|"camera frames"| MEDIAMTX
     end
 
     subgraph Stack["docker-compose-uavsdk.yml"]
         DLSPS2["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
     end
 
-    BROKER_E -->|"MQTT armed state"| DLSPS2
-    MEDIAMTX -->|"RTSP nadir/forward/rear"| DLSPS2
+    SDK -->|"UAV mavlink telemetry over MQTT "| DLSPS2
+    SDK -->|"RTSP nadir/forward/rear"| DLSPS2
     DLSPS2 -->|"RTSP :8555"| CLIENT2["QGC / ffplay"]
 ```
 
@@ -40,20 +31,13 @@ flowchart LR
 ```mermaid
 sequenceDiagram
     participant SDK as uav-mission-compute-sdk
-    participant BROKER as MQTT Broker (:1884)
-    participant PM as sdk_pipeline_manager
-    participant DLSPS as DL Streamer REST API
+    participant OVL as gvapython (MavlinkReceiver)
+    participant Frame as Video Frame
 
-    SDK->>BROKER: uav/uav-1/telemetry/status {armed: true}
-    BROKER->>PM: on_message callback
-    PM->>PM: wait_for_rtsp_stream() probe nadir/forward/rear
-    PM->>DLSPS: POST /pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu
-    PM->>DLSPS: POST /pipelines/user_defined_pipelines/forward_camera_rtsp_gpu
-    PM->>DLSPS: POST /pipelines/user_defined_pipelines/rear_camera_rtsp_npu
-    Note over DLSPS: Inference running,<br/>annotated RTSP at :8555
-    SDK->>BROKER: uav/uav-1/telemetry/status {armed: false}
-    BROKER->>PM: on_message callback
-    PM->>DLSPS: DELETE /pipelines/{instance_id} × 3
+    SDK->>OVL: broadcast MQTT Telemetry :1883
+    Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
+    Frame->>OVL: process_frame() per frame
+    OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
 ```
 
 **Services:**
@@ -211,7 +195,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 | Field | Source MAVLink message | Description |
 |---|---|---|
-| `Protocol` | — | `pymavlink` or `MQTT` |
+| `Name` | — | Name passed as argument to the gvapython |
 | `Frame` | — | Running frame counter |
 | `ALT` | `GLOBAL_POSITION_INT.relative_alt` | Relative altitude (m) |
 | `SPD` | `VFR_HUD.groundspeed` | Ground speed (m/s) |
@@ -235,8 +219,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 | Document | Description |
 |---|---|
-| [index.md](../index.md) | Architecture overview and component block diagrams |
-| [index.md](../index.md) | Full deployment, configuration, architecture, and design guide |
+| [index.md](../index.md) | Application overview and component block diagrams |
 | [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
 | [uavsdk-guide.md](../how-to-guides/uavsdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
@@ -244,12 +227,3 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
 
----
-
-## Notices and Disclaimers
-
-**Notice for GStreamer:**
-GStreamer is an open source framework licensed under LGPL. See https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html. You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.
-
-**Notice for FFmpeg:**
-FFmpeg is an open source project licensed under LGPL and GPL. See https://www.ffmpeg.org/legal.html. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
