@@ -32,7 +32,7 @@ This document explains how to measure the performance of the UAV Vision Analytic
 
 ## Prerequisites
 
-Before running the benchmark, ensure the application stack is configured and running. See [user-guide.md](user-guide.md) for full setup instructions.
+Before running the benchmark, ensure the application stack is configured and running. See [index.md](../index.md) for full setup instructions.
 
 ### 1. Model must be exported
 

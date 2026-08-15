@@ -25,7 +25,7 @@ sudo apt install ffmpeg
 cd federal-aerospace/uav-mission-compute-sdk
 ```
 
-Follow the setup instructions in the [README](../../uav-mission-compute-sdk/README.md) before proceeding.
+Follow the setup instructions in the [README](../../../uav-mission-compute-sdk/README.md) before proceeding.
 
 ---
 

@@ -102,7 +102,7 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
-> See [export_model.md](./how-to-guides/export_model.md) for full manual instructions and troubleshooting.
+> See [export_model.md](../how-to-guides/export_model.md) for full manual instructions and troubleshooting.
 
 ### 3. UAV Mission Compute SDK mode (depends on uav-mission-compute-sdk)
 
@@ -235,14 +235,14 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 | Document | Description |
 |---|---|
-| [overview.md](overview.md) | Architecture overview and component block diagrams |
-| [user-guide.md](user-guide.md) | Full deployment, configuration, architecture, and design guide |
-| [export_model.md](export_model.md) | Model download and OpenVINO export instructions |
-| [sdk-guide.md](sdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
-| [realsense-guide.md](realsense-guide.md) | Intel RealSense camera setup and pipelines |
-| [benchmark.md](benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
-| [makefile.md](makefile.md) | Makefile target reference |
-| [troubleshooting.md](troubleshooting.md) | Known issues and resolutions |
+| [index.md](../index.md) | Architecture overview and component block diagrams |
+| [index.md](../index.md) | Full deployment, configuration, architecture, and design guide |
+| [export_model.md](../how-to-guides/export_model.md) | Model download and OpenVINO export instructions |
+| [sdk-guide.md](../how-to-guides/sdk-guide.md) | End-to-end uav-mission-compute-sdk mode walkthrough |
+| [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
+| [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
+| [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
 
 ---
 

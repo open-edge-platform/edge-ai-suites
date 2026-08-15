@@ -8,7 +8,7 @@ This application processes video from a UAV-mounted camera (or simulated video f
 
 This application demonstrates AI-based object detection integrated with UAV flight controller telemetry on a companion compute platform. Telemetry data (GPS, altitude, speed, heading) is correlated with AI inference results and rendered as an on-screen overlay in near real-time, producing a watermarked RTSP video stream consumable by ground control software such as QGroundControl (QGC).
 
-## Standalone Mode (pymavlink)
+## Standalone Mode (using pymavlink)
 
 [Get Started — Standalone Mode](./get-started/get-started-standalone.md)
 
