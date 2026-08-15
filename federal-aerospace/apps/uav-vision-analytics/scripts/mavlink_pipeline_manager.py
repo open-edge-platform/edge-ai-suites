@@ -34,11 +34,13 @@ MODEL_PATH          = (
 RTSP_PIPELINES = [
     {"name": "uav_object_detection_cpu", "frame_path": "uav-mavlink-cpu", "device": "CPU"},
     {"name": "uav_object_detection_gpu", "frame_path": "uav-mavlink-gpu", "device": "GPU"},
+    {"name": "uav_object_detection_npu", "frame_path": "uav-mavlink-npu", "device": "NPU"},
 ]
 
 UDP_PIPELINES = [
     {"name": "uav_udpsink_cpu", "frame_path": "uav-mavlink-cpu", "device": "CPU", "port": 5600},
     {"name": "uav_udpsink_gpu", "frame_path": "uav-mavlink-gpu", "device": "GPU", "port": 5601},
+    {"name": "uav_udpsink_npu", "frame_path": "uav-mavlink-npu", "device": "NPU", "port": 5602},
 ]
 
 # ── Payload builders ──────────────────────────────────────────────────────────
@@ -92,7 +94,12 @@ def start_pipelines(pipelines: list[dict], build_payload) -> None:
     global running_instance_ids
     running_instance_ids = []
 
+    npu_device = os.getenv("NPU_DEVICE", "/dev/null")
     for pipeline in pipelines:
+        if pipeline["device"] == "NPU" and npu_device == "/dev/null":
+            print(f"[pipeline] Skipping '{pipeline['name']}': NPU_DEVICE not available.")
+            continue
+
         url     = f"{PIPELINE_BASE_URL}/{pipeline['name']}"
         payload = build_payload(pipeline)
         try:
@@ -116,11 +123,13 @@ def start_pipelines(pipelines: list[dict], build_payload) -> None:
 
 def _print_stream_urls(pipelines: list[dict], sink: str) -> None:
     host_ip = os.getenv("HOST_IP", "127.0.0.1")
+    npu_device = os.getenv("NPU_DEVICE", "/dev/null")
+    active = [p for p in pipelines if p["device"] != "NPU" or npu_device != "/dev/null"]
     if sink == "rtsp":
-        urls = "\n".join(f"  rtsp://{host_ip}:8555/{p['frame_path']}" for p in pipelines)
+        urls = "\n".join(f"  rtsp://{host_ip}:8555/{p['frame_path']}" for p in active)
         print(f"RTSP streams available at:\n{urls}")
     else:
-        urls = "\n".join(f"  {p['device']}: udp://0.0.0.0:{p['port']}" for p in pipelines)
+        urls = "\n".join(f"  {p['device']}: udp://0.0.0.0:{p['port']}" for p in active)
         print(f"UDP streams available at:\n{urls}")
 
 

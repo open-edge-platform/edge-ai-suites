@@ -24,7 +24,7 @@ help: ## Show available targets
 
 # ── Init ────────────────────────────────────────────────────────────────────
 
-init: ## Create .env from template and auto-detect GPU device paths
+init: ## Create .env from template and auto-detect GPU/NPU device paths
 	@if test -f .env; then \
 		echo ".env already exists — skipping (delete it to re-run init)"; \
 	else \
@@ -40,6 +40,15 @@ init: ## Create .env from template and auto-detect GPU device paths
 			sed -i "s|^GPU_RENDER_DEVICE=.*|GPU_RENDER_DEVICE=$$GPU_RENDER|" .env; \
 		else \
 			echo "⚠  No Intel GPU found at /dev/dri/ — set GPU_DEVICE and GPU_RENDER_DEVICE in .env manually."; \
+		fi; \
+		NPU_DEV=$$(ls -1 /dev/accel/accel* 2>/dev/null | head -1); \
+		if [ -n "$$NPU_DEV" ]; then \
+			echo "✅ NPU detected:"; \
+			echo "   NPU_DEVICE=$$NPU_DEV"; \
+			sed -i "s|^NPU_DEVICE=.*|NPU_DEVICE=$$NPU_DEV|" .env; \
+		else \
+			echo "⚠  No Intel NPU found at /dev/accel/ — defaulting NPU_DEVICE=/dev/null (NPU pipelines will not work)."; \
+			sed -i "s|^NPU_DEVICE=.*|NPU_DEVICE=/dev/null|" .env; \
 		fi; \
 	fi
 

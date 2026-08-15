@@ -128,7 +128,12 @@ def start_pipelines():
     global running_instance_ids
     running_instance_ids = []
 
+    npu_device = os.getenv("NPU_DEVICE", "/dev/null")
     for pipeline in PIPELINES:
+        if pipeline["device"] == "NPU" and npu_device == "/dev/null":
+            print(f"[pipeline] Skipping '{pipeline['name']}': NPU_DEVICE not available.")
+            continue
+
         if not wait_for_rtsp_stream(pipeline["rtsp_url"]):
             print(f"[pipeline] Skipping '{pipeline['name']}': RTSP source {pipeline['rtsp_url']} unavailable.")
             continue
@@ -153,11 +158,12 @@ def start_pipelines():
         except requests.RequestException as exc:
             print(f"[pipeline] Failed to start '{pipeline['name']}': {exc}")
 
-    stream_urls = "\n".join(f"{p['device']}: {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in PIPELINES)
+    active = [p for p in PIPELINES if p["device"] != "NPU" or npu_device != "/dev/null"]
+    stream_urls = "\n".join(f"{p['device']}: {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in active)
     print(f"RTSP streams available at:\n{stream_urls}")
 
-    inputs = " \\\n".join(f"  -rtsp_transport tcp -i {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in PIPELINES)
-    outputs = " \\\n".join(f"  -map {i}:v -c:v copy {p['frame_path']}.mkv" for i, p in enumerate(PIPELINES))
+    inputs = " \\\n".join(f"  -rtsp_transport tcp -i {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in active)
+    outputs = " \\\n".join(f"  -map {i}:v -c:v copy {p['frame_path']}.mkv" for i, p in enumerate(active))
     print(f"\nTo save all streams to disk, run:\nffmpeg \\\n{inputs} \\\n{outputs}")
 
 

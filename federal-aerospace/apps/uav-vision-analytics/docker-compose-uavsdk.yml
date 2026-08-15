@@ -24,6 +24,7 @@ services:
       - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
       # UAV Mission Compute SDK related environment variables
       - UAV_ID=${UAV_ID:-uav-1}
+      - NPU_DEVICE=${NPU_DEVICE:-/dev/null}
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./resources:/home/pipeline-server/resources"
@@ -48,7 +49,7 @@ services:
     devices:
       - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
       - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
-      - ${NPU_DEVICE:-/dev/accel/accel0}:${NPU_DEVICE:-/dev/accel/accel0}
+      - ${NPU_DEVICE:-/dev/null}:${NPU_DEVICE:-/dev/null}
     ports:
       - '8081:8081'
       - "8555:8555"
