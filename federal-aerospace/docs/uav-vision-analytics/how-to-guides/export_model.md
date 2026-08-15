@@ -19,11 +19,8 @@ The `make model` target automates all steps below. Run the steps manually only i
 `make model` creates a virtual environment via `python3 -m venv`. On Ubuntu 24 the venv support package must be installed separately:
 
 ```bash
-# Ubuntu 22.04 / 24.04
+# Ubuntu 24.04
 sudo apt install python3.12-venv
-
-# If on Ubuntu 22.04 with Python 3.10:
-sudo apt install python3.10-venv python3-venv
 ```
 
 > **Error you'll see without this:**

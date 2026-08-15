@@ -63,7 +63,7 @@ Both compose files expose RTSP on port `8555`. The DL Streamer built-in RTSP ser
 
 ### System requirements
 
-- **Host OS:** Ubuntu 22.04 or 24.04 (Blueprint OS validated)
+- **Host OS:** 24.04 (Blueprint OS validated)
 - **Hardware:** Intel Panther Lake platform recommended; minimum 16 GB RAM
 - **Software:** Docker Engine, Docker Compose v2
 

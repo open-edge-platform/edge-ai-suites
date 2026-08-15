@@ -6,11 +6,11 @@ SPDX-License-Identifier: Apache-2.0
 
 # Get Started (Standalone Mode / pymavlink)
 
-This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application to configure the standalone mode (pymavlink) and run the demo with a simulated UAV camera feed/Realsense cameras.
+This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in standalone mode (pymavlink) and run the demo with a simulated UAV camera feed/Realsense cameras.
 
 ## How It Works
 
-A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manager are all started together. Telemetry flows from PX4 SITL through `mavlink-router` to the DL Streamer container, where `pymavlink` reads it directly over UDP.
+A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manager are all started together (`docker-compose-pymavlink.yml`). Telemetry flows from PX4 SITL through `mavlink-router` to the DL Streamer container, where `pymavlink` reads it directly over UDP.
 
 ```mermaid
 flowchart LR
@@ -50,27 +50,17 @@ sequenceDiagram
 | Service | Image | Ports | Role |
 |---|---|---|---|
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP output |
-| `px4` | `px4io/px4-sitl` | — | Flight controller simulator |
-| `mavlink-router` | custom build | — | MAVLink UDP routing (:14550 → :14541) |
-| `metrics-manager` | `intel/metrics-manager` | — | CPU/GPU/NPU/power metrics |
+| `px4` | `px4io/px4-sitl` | `14550`  | Flight controller simulator |
+| `mavlink-router` | custom build | `14551` | MAVLink UDP routing (:14550 → :14541) |
+| `metrics-manager` | `intel/metrics-manager` | `9090` | CPU/GPU/NPU/power metrics |
 
 ---
 
 ## Steps to Test the Application
 
-### Prerequisites
+### System Requirements
 
-- Docker and Docker Compose v2
-- Intel platform with at least 16 GB RAM (Panther Lake recommended)
-- Network access to pull Docker images (configure proxy if behind a corporate firewall)
-- The following system packages:
-
-```bash
-sudo apt install -y python3.12-venv ffmpeg
-```
-
-> `python3.12-venv` is required by `make model` to create a Python virtual environment.  
-> `ffmpeg` provides `ffplay` for viewing the RTSP output stream and `ffmpeg` for recording.
+See [System Requirements](./system-requirements.md) for the full list of software and hardware prerequisites.
 
 ### 1. Configure environment
 
@@ -113,6 +103,8 @@ Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's A
 ```bash
 make start-rtsp
 ```
+
+Open QGroundControl (QGC) to connect and press takeoff which arm the drone (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
 
 **pymavlink mode** — output streams:
 ```

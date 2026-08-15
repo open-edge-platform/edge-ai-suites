@@ -18,13 +18,17 @@ UAV Vision Analytics integrates AI-based object detection with UAV flight contro
 | RTSP/UDP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP or UDP |
 
 
-## Standalone Mode (pymavlink)
+## Deployment Modes
+
+The application supports two deployment modes.
+
+### 1. Standalone Mode (pymavlink)
 
 Self-contained mode using PX4 SITL simulation and pymavlink for MAVLink communication. No external dependencies required.
 
 [Get Started — Standalone Mode](./get-started/get-started-standalone.md)
 
-## UAV Mission Compute SDK Mode
+### 2. UAV Mission Compute SDK Mode
 
 Integration mode that connects to a running instance of the UAV Mission Compute SDK, enabling full mission control and multi-camera pipeline management.
 

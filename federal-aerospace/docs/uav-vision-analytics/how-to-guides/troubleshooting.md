@@ -26,12 +26,6 @@ sudo apt install python3.12-venv
 make model
 ```
 
-If you are on Ubuntu 22.04 (Python 3.10):
-```bash
-sudo apt install python3.10-venv
-make model
-```
-
 ---
 
 ## `make pymav-up` fails — pip install cannot reach PyPI
@@ -279,3 +273,52 @@ Possible causes:
   docker exec dlstreamer-pipeline-server ls \
     /home/pipeline-server/resources/videos/
   ```
+
+---
+
+## Pipeline fails with `gst_parse_error: no element "vah264enc"`
+
+Replace `vah264enc` with `vah264lpenc`
+
+```bash
+{"levelname": "ERROR", "asctime": "2026-08-15 11:53:30,507", "message": "Error on Pipeline ef2c39be989f11f189d8c9d3068f2a21: gst_parse_error: no element \"vah264enc\" (1)", "module": "gstreamer_pipeline"}
+```
+
+---
+
+## QGroundControl — "Network Not Available" warnings
+
+See [QGroundControl](./qgroundcontrol.md) for installation and video stream configuration.
+
+**Symptom:** The following warnings appear in the QGroundControl logs:
+
+```
+16.701 Warning: 1 "Network Not Available" - QtLocationPlugin.QGeoTiledMapReplyQGC - (unknown:0)
+```
+
+**Cause:** NetworkManager's connectivity check is failing, which causes it to report the network as `limited` or `none` even when the host has a valid local connection.
+
+**Resolution:**
+
+1. Confirm the connectivity state:
+
+    ```bash
+    nmcli networking connectivity check   # expected: "limited" or "none"
+    ```
+
+2. Disable the NetworkManager connectivity check:
+
+    ```bash
+    sudo mkdir -p /etc/NetworkManager/conf.d
+    sudo tee /etc/NetworkManager/conf.d/20-connectivity.conf <<'EOF'
+    [connectivity]
+    enabled=false
+    EOF
+    sudo systemctl restart NetworkManager
+    ```
+
+3. Verify the state is now reported as full:
+
+    ```bash
+    nmcli networking connectivity check   # expected: "full"
+    ```
