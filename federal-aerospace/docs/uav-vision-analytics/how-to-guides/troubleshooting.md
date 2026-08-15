@@ -304,6 +304,53 @@ Possible causes:
 
 ---
 
+### `HW Monitor: metrics-manager not reachable at http://localhost:9090`
+
+The `metrics-manager` container is not running. It is included in `docker-compose-pymavlink.yml` — ensure the full stack is up:
+
+```bash
+make pymav-up
+docker ps | grep metrics-manager
+```
+
+The benchmark continues with FPS-only results when metrics-manager is unavailable.
+
+---
+
+### `Pipeline not found in benchmark_app_payload.json`
+
+The `-p` name does not match any entry. List available pipeline names:
+
+```bash
+jq -r '.[].pipeline' benchmark/benchmark_app_payload.json
+```
+
+---
+
+### GPU or NPU shows `N/A` in the summary table
+
+The system does not have an accessible Intel GPU or NPU. Verify hardware availability:
+
+```bash
+docker exec dlstreamer-pipeline-server python3 -c \
+  "from openvino.runtime import Core; print(Core().available_devices)"
+```
+
+- GPU requires `/dev/dri/renderD128` accessible inside the container (Intel iGPU or dGPU).
+- NPU requires `/dev/accel/accel0` (Intel NPU, Meteor Lake / Lunar Lake / Panther Lake).
+
+---
+
+### Power reads all zeros or `N/A`
+
+RAPL counters may not be accessible in the container on this hardware. The `metrics-manager` must have access to `/sys/class/powercap/` or Intel qmassa sensors. Check `metrics-manager` logs:
+
+```bash
+docker logs metrics-manager 2>&1 | grep -iE "power|rapl|error"
+```
+
+---
+
 ## QGroundControl
 
 ### "Network Not Available" warnings
