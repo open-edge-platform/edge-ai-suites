@@ -69,7 +69,7 @@ services:
     /home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/
   ```
 - Confirm `HOST_IP` is set correctly in `.env`.
-- If the model is missing, run `make model` and then restart the stack:
+- If the model is missing, run `make model`, then restart the stack:
   ```bash
   make pymav-down && make pymav-up
   ```

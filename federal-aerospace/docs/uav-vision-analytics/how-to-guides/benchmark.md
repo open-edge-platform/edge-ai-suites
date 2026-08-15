@@ -41,7 +41,7 @@ The model must exist at:
 resources/models/yolov8n-visdrone/best_openvino_model/best.xml
 ```
 
-Run `make model` if it is missing (Deployment will fail with a error if the model is absent).
+Run `make model` if it is missing (Deployment will fail with an error if the model is absent).
 
 ### 2. Start the application stack
 
@@ -70,7 +70,7 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 | `jq` | JSON parsing of DLSPS status responses | `sudo apt-get install -y jq` |
 | `ffmpeg` | Creating looped video files (optional) | `sudo apt-get install -y ffmpeg` |
 
-> If **`jq` not available without root** Create a zero-dependency `docker exec` wrapper:
+> If **`jq` is not available without root**, create a zero-dependency `docker exec` wrapper:
 >
 > ```bash
 > mkdir -p ~/.local/bin
@@ -146,7 +146,7 @@ During each N-stream test, DLSPS reports the `avg_fps` for every running pipelin
 | `throughput cumulative` | Sum of all per-stream p90 values (total system FPS) |
 | `throughput min` | Lowest per-stream p90 — used to decide **pass/fail** vs `-t` floor |
 
-The **p90 (90th percentile)** is used instead of the raw average to discards outlier frames caused by pipeline startup spikes or scheduling jitter. A run passes if `throughput min >= target_fps` (`-t`).
+The **p90 (90th percentile)** is used instead of the raw average to discard outlier frames caused by pipeline startup spikes or scheduling jitter. A run passes if `throughput min >= target_fps` (`-t`).
 
 ### HW Metrics Integration
 

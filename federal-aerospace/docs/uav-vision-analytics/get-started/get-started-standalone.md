@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Get Started (Standalone Mode / pymavlink)
 
-This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in standalone mode (pymavlink) and run the demo with a simulated UAV camera feed/Realsense cameras.
+This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in standalone mode (pymavlink) and running the demo with a simulated UAV camera feed/RealSense cameras.
 
 ## How It Works
 
@@ -103,7 +103,7 @@ Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's A
 make start-rtsp
 ```
 
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff which arm the drone (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
 >
 > Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
 
@@ -125,7 +125,7 @@ Same pipeline manager as Option A, but routes annotated frames to UDP sink inste
 make start-udpsink
 ```
 
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff which arm the drone (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated UDP streams.
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated UDP streams.
 >
 > Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#udp-sink) for instructions on connecting to the UDP stream.
 

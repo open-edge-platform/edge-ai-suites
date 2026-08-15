@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Get Started (UAV Mission Compute SDK Mode)
 
-This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application to configure the UAV Mission Compute SDK mode and run the demo with a simulated UAV camera feed/Realsense cameras.
+This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in UAV Mission Compute SDK mode and running the demo with a simulated UAV camera feed/RealSense cameras.
 
 ## How It Works
 

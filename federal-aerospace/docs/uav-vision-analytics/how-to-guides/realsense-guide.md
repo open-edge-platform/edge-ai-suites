@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Prerequisites
 
-See [System Requirements](./system-requirements.md) for the full list of software and hardware prerequisites.
+See [System Requirements](../get-started/system-requirements.md) for the full list of software and hardware prerequisites.
 
 ---
 
@@ -54,7 +54,7 @@ Three inference pipelines are available. Only one can be active at a time becaus
 
 > **Note:** Currently the realsense pipelines are only available in standalone mode (pymavlink). The UAV Mission Compute SDK mode does not support the RealSense camera. Adding support should be straightforward by copying the existing pipelines from `config-pymavlink.json` into `config-uavsdk.json`.
 
-> **Note:** The device file `/dev/video4` may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file and update `config-pymavlink.json` accordingly for the above pipelines before proceeding the following steps.
+> **Note:** The device file `/dev/video4` may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file and update `config-pymavlink.json` accordingly for the above pipelines before proceeding with the following steps.
 
 Use the Pipeline Server REST API to start a pipeline. The POST response body is the UUID of the running instance — save it to stop the pipeline later.
 
