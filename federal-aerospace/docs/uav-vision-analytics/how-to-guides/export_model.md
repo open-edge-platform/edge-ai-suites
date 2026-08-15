@@ -35,6 +35,19 @@ sudo apt install python3.10-venv python3-venv
 
 ---
 
+## AI Model
+
+| Property | Value |
+|---|---|
+| Model | YOLOv8n-VisDrone |
+| Source | [mshamrai/yolov8n-visdrone](https://huggingface.co/mshamrai/yolov8n-visdrone) |
+| Precision | FP16 (OpenVINO IR) |
+| Input resolution | 640 × 640 |
+| Detection classes | pedestrian, people, bicycle, car, van, truck, tricycle, awning-tricycle, bus, motor |
+| Ultralytics version | 8.4.67 (pinned — see `resources/requirements.txt`) |
+
+---
+
 ## Quick start — automated (`make model`)
 
 From the app root directory:

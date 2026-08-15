@@ -4,12 +4,60 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 
-# Get Started (Standalone Mode)
+# Get Started (Standalone Mode / pymavlink)
 
 This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application to configure the standalone mode (pymavlink) and run the demo with a simulated UAV camera feed/Realsense cameras.
 
 ## How It Works
 
+A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manager are all started together. Telemetry flows from PX4 SITL through `mavlink-router` to the DL Streamer container, where `pymavlink` reads it directly over UDP.
+
+```mermaid
+flowchart LR
+    subgraph Stack["docker-compose-pymavlink.yml"]
+        direction TB
+        PX4["PX4 SITL\npx4io/px4-sitl"]
+        ROUTER["mavlink-router\n(:14550 server\n→ :14541 broadcast)"]
+        BROKER["Eclipse Mosquitto\nMQTT :1883"]
+        DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
+        MM["Metrics Manager\n(REST :9090)"]
+
+        PX4 -->|"MAVLink"| ROUTER
+        ROUTER -->|"UDP :14541"| DLSPS
+        DLSPS -.->|"inference metrics"| BROKER
+    end
+
+    VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
+    DLSPS -->|"RTSP :8555"| CLIENT["QGC / ffplay"]
+```
+
+**Telemetry flow:**
+
+```mermaid
+sequenceDiagram
+    participant PX4 as PX4 SITL
+    participant RTR as mavlink-router
+    participant OVL as gvapython (MavlinkReceiver)
+    participant Frame as Video Frame
+
+    PX4->>RTR: MAVLink stream (UDP :14550)
+    RTR->>OVL: broadcast UDP :14541
+    Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
+    Frame->>OVL: process_frame() per frame
+    OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
+```
+
+**Services:**
+
+| Service | Image | Ports | Role |
+|---|---|---|---|
+| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP output |
+| `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker |
+| `px4` | `px4io/px4-sitl` | — | Flight controller simulator |
+| `mavlink-router` | custom build | — | MAVLink UDP routing (:14550 → :14541) |
+| `metrics-manager` | `intel/metrics-manager` | — | CPU/GPU/NPU/power metrics |
+
+---
 
 ## Steps to Test the Application
 
@@ -49,24 +97,12 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
-> See [export_model.md](export_model.md) for full manual instructions and troubleshooting.
+> See [export_model.md](./how-to-guides/export_model.md) for full manual instructions and troubleshooting.
 
-### 3a. Standalone mode (pymavlink)
+### 3. Standalone mode (pymavlink)
 
 ```bash
 make pymav-up
-```
-
-### 3b. uav-mission-compute-sdk mode (depends on uav-mission-compute-sdk)
-
-Start the SDK project first, then start this application:
-
-```bash
-# In uav-mission-compute-sdk directory — starts PX4, MQTT, RTSP server
-make up-sim-camera
-
-# In this directory
-make sdk-up
 ```
 
 ### 4. Start inference pipelines
@@ -86,13 +122,6 @@ make start-rtsp
 rtsp://<HOST_IP>:8555/uav-mavlink-cpu    (CPU pipeline)
 rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
 rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline)
-```
-
-**uav-mission-compute-sdk mode** — output streams (available after drone arms):
-```
-rtsp://<HOST_IP>:8555/nadir      (nadir camera, CPU)
-rtsp://<HOST_IP>:8555/forward    (forward camera, GPU)
-rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 ```
 
 **File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
@@ -154,7 +183,6 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # pymavlink, REST/managed
-ffplay rtsp://<HOST_IP>:8555/nadir               # uav-mission-compute-sdk mode, nadir camera
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -176,21 +204,6 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 | `uav_udpsink_cpu` | CPU | Looped video file (`gazebo.avi`) | UDP `:5600` |
 | `uav_udpsink_gpu` | GPU | Looped video file (`gazebo.avi`) | UDP `:5601` |
 | `uav_udpsink_npu` | NPU | Looped video file (`gazebo.avi`) | UDP `:5602` |
-
-### uav-mission-compute-sdk mode (`config-sdk.json`)
-
-| Pipeline | Device | Source (inside Docker) | Output RTSP (host) |
-|---|---|---|---|
-| `nadir_camera_rtsp_cpu` | CPU | `rtsp://host.docker.internal:8554/uav-1/nadir` | `rtsp://<HOST_IP>:8555/nadir` |
-| `forward_camera_rtsp_gpu` | GPU | `rtsp://host.docker.internal:8554/uav-1/forward` | `rtsp://<HOST_IP>:8555/forward` |
-| `rear_camera_rtsp_npu` | NPU | `rtsp://host.docker.internal:8554/uav-1/rear` | `rtsp://<HOST_IP>:8555/rear` |
-
-> `uav-1` in the source URL is the value of the `UAV_ID` environment variable (default: `uav-1`).
-> Set a different value in `.env` if your SDK project uses a different vehicle ID.
-
-All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp` / `make start-udpsink`) or the REST API directly.
-
-REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{name}`
 
 ---
 
@@ -217,15 +230,11 @@ Each output frame carries these overlaid fields in the upper-left corner:
 |---|---|---|---|
 | `8081` | HTTP | DL Streamer REST API | All modes |
 | `8555` | RTSP | Annotated video output | All modes |
-| `1883` | TCP | Mosquitto MQTT broker | pymavlink modes |
 | `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes |
 | `9090` | HTTP | metrics-manager (HW metrics) | pymavlink modes |
 | `5600` | UDP | CPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
 | `5601` | UDP | GPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
 | `5602` | UDP | NPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
-| `8554` | RTSP | SDK camera source streams | uav-mission-compute-sdk mode |
-| `8889` | HTTP/WebRTC | MediaMTX WebRTC signaling | uav-mission-compute-sdk mode only |
-| `3478` | UDP | coturn TURN/STUN relay | uav-mission-compute-sdk mode only |
 
 ---
 
@@ -241,13 +250,3 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | [benchmark.md](benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
 | [makefile.md](makefile.md) | Makefile target reference |
 | [troubleshooting.md](troubleshooting.md) | Known issues and resolutions |
-
----
-
-## Notices and Disclaimers
-
-**Notice for GStreamer:**
-GStreamer is an open source framework licensed under LGPL. See https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html. You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.
-
-**Notice for FFmpeg:**
-FFmpeg is an open source project licensed under LGPL and GPL. See https://www.ffmpeg.org/legal.html. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
