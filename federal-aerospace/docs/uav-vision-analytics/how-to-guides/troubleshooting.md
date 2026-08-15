@@ -7,7 +7,19 @@ SPDX-License-Identifier: Apache-2.0
 
 ---
 
-## `make model` fails — `python3-venv` not available
+## Table of Contents
+
+- [Setup & Installation](#setup--installation)
+- [Stack & Containers](#stack--containers)
+- [Pipelines](#pipelines)
+- [Benchmark](#benchmark)
+- [QGroundControl](#qgroundcontrol)
+
+---
+
+## Setup & Installation
+
+### `make model` fails — `python3-venv` not available
 
 **Symptom:**
 
@@ -28,7 +40,7 @@ make model
 
 ---
 
-## `make pymav-up` fails — pip install cannot reach PyPI
+### `make pymav-up` fails — pip install cannot reach PyPI
 
 **Symptom:**
 
@@ -60,7 +72,63 @@ services:
 
 ---
 
-## DL Streamer container keeps restarting
+### `make pymav-up` fails — `/dev/dri/card0: no such file or directory`
+
+On some machines the Intel iGPU is assigned `card1` instead of `card0` (e.g., when another GPU or firmware device claims `card0` first). Run `init` to auto-detect the correct paths:
+
+```bash
+make init          # detects /dev/dri/card* and /dev/dri/renderD* and writes them to .env
+make pymav-up
+```
+
+To verify the detected device belongs to the Intel iGPU:
+
+```bash
+ls -la /sys/class/drm/ | grep card
+# card1 -> .../0000:00:02.0/drm/card1  ← Intel iGPU at PCI 00:02.0
+```
+
+If `make init` already ran (`.env` exists), edit `.env` manually:
+
+```bash
+GPU_DEVICE=/dev/dri/card1
+GPU_RENDER_DEVICE=/dev/dri/renderD128
+```
+
+---
+
+### `ffplay: command not found`
+
+**Symptom:**
+
+```
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu
+Command 'ffplay' not found, but can be installed with:
+sudo apt install ffmpeg
+```
+
+**Resolution:** `ffplay` is part of the `ffmpeg` package:
+
+```bash
+sudo apt install ffmpeg
+
+# Then verify RTSP stream
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu
+```
+
+To view the output stream without `ffplay` (e.g., on a headless server), record it instead:
+
+```bash
+ffmpeg -rtsp_transport tcp \
+  -i "rtsp://<HOST_IP>:8555/uav-mavlink-cpu" \
+  -c copy -t 30 output.mkv
+```
+
+---
+
+## Stack & Containers
+
+### DL Streamer container keeps restarting
 
 - Check logs: `docker logs dlstreamer-pipeline-server`
 - Verify the model files exist:
@@ -76,7 +144,22 @@ services:
 
 ---
 
-## No telemetry overlay on stream (all zeros)
+### PX4 SITL — image pull or runtime issues
+
+**Symptom:** The `px4` service fails to start or behaves unexpectedly with the `latest` tag.
+
+**Resolution:** Pin the PX4 SITL image to a known-good digest in `docker-compose-pymavlink.yml`:
+
+```diff
+-image: px4io/px4-sitl:latest
++image: px4io/px4-sitl@sha256:01866d912ac22ca6119a996b830cf628a6d47dfb60fdccc41cd9f44b62935a44
+```
+
+---
+
+## Pipelines
+
+### No telemetry overlay on stream (all zeros)
 
 **pymavlink mode:** Confirm `mavlink-router` is running and forwarding MAVLink from PX4:
 
@@ -93,9 +176,9 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ---
 
-## Pipelines not starting in uav-mission-compute-sdk mode
+### Pipelines not starting in uav-mission-compute-sdk mode
 
-- Confirm `uavsdk_pipeline_manager.py` is running inside the container:
+- Confirm `pipeline_manager.py` is running inside the container:
   ```bash
   docker exec dlstreamer-pipeline-server ps aux | grep pipeline
   ```
@@ -103,11 +186,11 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
   ```bash
   ffprobe rtsp://localhost:8554/uav-1/nadir
   ```
-- Verify the drone is armed — pipelines only start on ARMED state.
+- Verify the UAV is armed — pipelines only start on ARMED state.
 
 ---
 
-## NPU inference fails
+### NPU inference fails
 
 - Confirm `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` is set (it is by default in the compose files).
 - Check that the NPU device node is available: `ls /dev/accel*`
@@ -115,7 +198,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ---
 
-## GPU pipeline falls back to CPU
+### GPU pipeline falls back to CPU
 
 - Confirm device group IDs are present: `getent group | grep -E '^(video|render)'`
 - The compose files add groups `44`, `109`, `110` for video/render device access.
@@ -123,49 +206,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ---
 
-## `ffplay: command not found`
-
-**Symptom:**
-
-```
-ffplay rtsp://172.22.35.0:8555/uav-mavlink-cpu
-Command 'ffplay' not found, but can be installed with:
-sudo apt install ffmpeg
-```
-
-**Resolution:** `ffplay` is part of the `ffmpeg` package:
-
-```bash
-sudo apt install ffmpeg
-
-# Then verify RTSP stream
-ffplay rtsp://<host-ip>:8555/uav-mavlink-cpu
-```
-
-To view the output stream without `ffplay` (e.g., on a headless server), record it instead:
-
-```bash
-ffmpeg -rtsp_transport tcp \
-  -i "rtsp://<host-ip>:8555/uav-mavlink-cpu" \
-  -c copy -t 30 output.mkv
-```
-
----
-
-## PX4 SITL — image pull or runtime issues
-
-**Symptom:** The `px4` service fails to start or behaves unexpectedly with the `latest` tag.
-
-**Resolution:** Pin the PX4 SITL image to a known-good digest in `docker-compose-pymavlink.yml`:
-
-```diff
--image: px4io/px4-sitl:latest
-+image: px4io/px4-sitl@sha256:01866d912ac22ca6119a996b830cf628a6d47dfb60fdccc41cd9f44b62935a44
-```
-
----
-
-## UDP sink pipeline not working
+### UDP sink pipeline not working
 
 **Symptom:** The UDP sink pipeline fails to send or receive data.
 
@@ -178,7 +219,19 @@ ffmpeg -rtsp_transport tcp \
 
 ---
 
-## Benchmark: `jq: command not found`
+### Pipeline fails with `gst_parse_error: no element "vah264enc"`
+
+Replace `vah264enc` with `vah264lpenc`
+
+```bash
+{"levelname": "ERROR", "asctime": "2026-08-15 11:53:30,507", "message": "Error on Pipeline ef2c39be989f11f189d8c9d3068f2a21: gst_parse_error: no element \"vah264enc\" (1)", "module": "gstreamer_pipeline"}
+```
+
+---
+
+## Benchmark
+
+### `jq: command not found`
 
 `jq` is not installed on the benchmark host. Two options:
 
@@ -210,7 +263,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 
 ---
 
-## Benchmark: `gawk: command not found`
+### `gawk: command not found`
 
 ```bash
 sudo apt-get install -y gawk
@@ -218,32 +271,7 @@ sudo apt-get install -y gawk
 
 ---
 
-## `make pymav-up` fails — `/dev/dri/card0: no such file or directory`
-
-On some machines the Intel iGPU is assigned `card1` instead of `card0` (e.g., when another GPU or firmware device claims `card0` first). Run `init` to auto-detect the correct paths:
-
-```bash
-make init          # detects /dev/dri/card* and /dev/dri/renderD* and writes them to .env
-make pymav-up
-```
-
-To verify the detected device belongs to the Intel iGPU:
-
-```bash
-ls -la /sys/class/drm/ | grep card
-# card1 -> .../0000:00:02.0/drm/card1  ← Intel iGPU at PCI 00:02.0
-```
-
-If `make init` already ran (`.env` exists), edit `.env` manually:
-
-```bash
-GPU_DEVICE=/dev/dri/card1
-GPU_RENDER_DEVICE=/dev/dri/renderD128
-```
-
----
-
-## Benchmark: `Error: DLSPS not reachable at http://localhost:8081`
+### `Error: DLSPS not reachable at http://localhost:8081`
 
 The `dlstreamer-pipeline-server` container is not running. Start the full stack:
 
@@ -259,7 +287,7 @@ DLSPS_PORT=8080 ./benchmark/calc_stream_density.sh ...
 
 ---
 
-## Benchmark: `fps=0` / `throughput min: 0` after a run
+### `fps=0` / `throughput min: 0` after a run
 
 Possible causes:
 
@@ -276,17 +304,9 @@ Possible causes:
 
 ---
 
-## Pipeline fails with `gst_parse_error: no element "vah264enc"`
+## QGroundControl
 
-Replace `vah264enc` with `vah264lpenc`
-
-```bash
-{"levelname": "ERROR", "asctime": "2026-08-15 11:53:30,507", "message": "Error on Pipeline ef2c39be989f11f189d8c9d3068f2a21: gst_parse_error: no element \"vah264enc\" (1)", "module": "gstreamer_pipeline"}
-```
-
----
-
-## QGroundControl — "Network Not Available" warnings
+### "Network Not Available" warnings
 
 See [QGroundControl](./qgroundcontrol.md) for installation and video stream configuration.
 
@@ -322,3 +342,21 @@ See [QGroundControl](./qgroundcontrol.md) for installation and video stream conf
     ```bash
     nmcli networking connectivity check   # expected: "full"
     ```
+
+**Symptom:**
+
+```
+The virtual environment was not created successfully because ensurepip is not available.
+On Debian/Ubuntu systems, you need to install the python3-venv package using the following command.
+    apt install python3.12-venv
+Failing command: .../resources/venv/bin/python3
+make: *** [Makefile:28: model] Error 1
+```
+
+**Resolution:** Install the `python3-venv` package and re-run:
+
+```bash
+sudo apt install python3.12-venv
+make model
+```
+
