@@ -45,5 +45,18 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 - [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
 - [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source
+- [QGroundControl](./how-to-guides/qgroundcontrol.md) — Configure QGroundControl to receive the UAV Vision Analytics video stream
 - [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and fixes for deployment, inference, and streaming problems
 
+
+# Intended and Responsible Use
+
+## Intended Use
+
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only, and is not intended to be deployed as-is or for alternate use cases or applications.
+
+## Responsible Use
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
+
+If you or anyone on your team becomes aware of instances of potentially inappropriate use, regardless of severity, notify [responsible-ai@intel.com](mailto:responsible-ai@intel.com) or use the [Ethics Reporting Portal](https://www.intel.com/content/www/us/en/corporate-responsibility/ethics-and-compliance.html) immediately.
