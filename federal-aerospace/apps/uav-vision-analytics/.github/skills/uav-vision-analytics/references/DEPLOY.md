@@ -217,10 +217,19 @@ PX4 SITL ──MAVLink──▶ mavlink-router (:14550 server → :14541 broadca
                            DLSPS ◀─UDP :14541─┘
                              │
                         ┌────┤
-                        │    ├──▶ RTSP :8555 → QGC / ffplay
-                        │    └──▶ UDP :5600-5602 (udpsink mode)
+                        │    ├──▶ RTSP :8555 → QGC / ffplay rtsp://...
+                        │    └──▶ RTP/UDP :5600-5602 (udpsink mode)
+                        │              └──▶ ffplay via SDP file
                         │
                     MQTT :1883 ──▶ Mosquitto broker
+```
+
+**View UDP output streams** (requires SDP file):
+```bash
+echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
+echo -e 'v=0\nm=video 5601 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-gpu.sdp
+ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
+ffplay -protocol_whitelist file,udp,rtp -i stream-gpu.sdp -fflags nobuffer -flags low_delay -framedrop
 ```
 
 ### MAVSDK
