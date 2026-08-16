@@ -36,16 +36,17 @@ Quick reference for all supported skills. Each link opens the full example promp
 
 | I want to… | Skill # | Prompt file |
 |-----------|---------|------------|
-| Start pipelines automatically when UAV arms | 1 | [01-run-pipeline.md](supported_prompts/01-run-pipeline.md) |
-| Manually start a CPU/GPU/NPU pipeline | 1 | [01-run-pipeline.md](supported_prompts/01-run-pipeline.md) |
-| Measure FPS and find max concurrent streams | 2 | [02-benchmarking.md](supported_prompts/02-benchmarking.md) |
-| Fix pipelines not starting on ARM | 3 | [03-troubleshooting.md](supported_prompts/03-troubleshooting.md) |
-| Fix GPU/NPU pipeline errors | 3 | [03-troubleshooting.md](supported_prompts/03-troubleshooting.md) |
-| Add battery voltage to the video overlay | 4 | [04-telemetry-fields.md](supported_prompts/04-telemetry-fields.md) |
-| Remove GPS coordinates from the overlay | 4 | [04-telemetry-fields.md](supported_prompts/04-telemetry-fields.md) |
-| See all MAVLink messages my flight controller sends | 5 | [05-mavlink-listener.md](supported_prompts/05-mavlink-listener.md) |
-| Use a RealSense camera as video input | 6/10 | [06-realsense.md](supported_prompts/06-realsense.md) |
-| Build a new pymavlink-based stack | 7 | [07-create-pymavlink-app.md](supported_prompts/07-create-pymavlink-app.md) |
-| Build a new UAVSDK-based stack | 8 | [08-create-mavsdk-app.md](supported_prompts/08-create-mavsdk-app.md) |
-| Use a looped video file as source | 9 | [09-file-pipeline.md](supported_prompts/09-file-pipeline.md) |
-| Use an IP camera or external RTSP stream | 11 | [10-rtsp-pipeline.md](supported_prompts/10-rtsp-pipeline.md) |
+| Start pipelines automatically when UAV arms | 1 | [01-run-pipeline.md](supported_prompts/01-run-pipeline.md#automated-pipeline-manager) |
+| Manually start a CPU/GPU/NPU pipeline | 1 | [01-run-pipeline.md](supported_prompts/01-run-pipeline.md#manual--start-a-single-cpu-pipeline) |
+| Measure FPS and find max concurrent streams | 2 | [02-benchmarking.md](supported_prompts/02-benchmarking.md#stream-density-test) |
+| Fix pipelines not starting on ARM | 3 | [03-troubleshooting.md](supported_prompts/03-troubleshooting.md#pipelines-not-starting-on-arm) |
+| Fix GPU/NPU pipeline errors | 3 | [03-troubleshooting.md](supported_prompts/03-troubleshooting.md#gpu-pipeline-fails-to-start) |
+| Add battery voltage to the video overlay | 4 | [04-telemetry-fields.md](supported_prompts/04-telemetry-fields.md#add-battery-voltage-to-the-overlay) |
+| Remove GPS coordinates from the overlay | 4 | [04-telemetry-fields.md](supported_prompts/04-telemetry-fields.md#remove-gps-coordinates-for-privacy) |
+| See all MAVLink messages my flight controller sends | 5 | [05-mavlink-listener.md](supported_prompts/05-mavlink-listener.md#list-all-messages-from-px4-sitl) |
+| Use a RealSense camera as video input | 6 | [06-realsense.md](supported_prompts/06-realsense.md#start-a-realsense-cpu-pipeline) |
+| Build a new pymavlink-based stack | 7 | [07-create-pymavlink-app.md](supported_prompts/07-create-pymavlink-app.md#self-contained-simulation-stack-all-devices) |
+| Build a new UAVSDK-based stack | 8 | [08-create-mavsdk-app.md](supported_prompts/08-create-mavsdk-app.md#three-camera-integration-nadir--forward--rear) |
+| Use a looped video file as source | 9 | [09-file-pipeline.md](supported_prompts/09-file-pipeline.md#use-looped-gazeboavi-as-video-source) |
+| Configure a RealSense / UVC camera pipeline | 10 | [06-realsense.md](supported_prompts/06-realsense.md#start-a-realsense-gpu-pipeline) |
+| Use an IP camera or external RTSP stream | 11 | [10-rtsp-pipeline.md](supported_prompts/10-rtsp-pipeline.md#start-pipeline-consuming-an-external-rtsp-camera) |
