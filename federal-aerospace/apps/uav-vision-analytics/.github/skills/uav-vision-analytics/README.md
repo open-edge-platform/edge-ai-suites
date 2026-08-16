@@ -9,6 +9,20 @@ Quick reference for all supported skills. Each link opens the full example promp
 
 ---
 
+## Prerequisites
+
+To use these skills you need a coding agent that can read skill files and execute terminal commands. Any of the following work:
+
+| Agent | How to get it |
+|-------|--------------|
+| **GitHub Copilot CLI** | Install the [GitHub CLI](https://cli.github.com/) and run `gh extension install github/gh-copilot` |
+| **GitHub Copilot in VS Code** | Install the [GitHub Copilot extension](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) in VS Code |
+| **Any OpenAI-compatible agent** | Any coding agent that supports reading `.md` skill files and running shell commands |
+
+Once your agent is set up, copy a prompt from the table below (or from the linked prompt file) and paste it into the agent's chat interface.
+
+---
+
 ## Operational Skills
 
 | # | Skill | Description | Prompts |
