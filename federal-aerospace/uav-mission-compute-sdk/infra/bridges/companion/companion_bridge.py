@@ -236,6 +236,10 @@ async def _run_action(action: str, **kwargs):
     """Execute a uav action on the asyncio loop. Returns (ok, message)."""
     if action == "arm":
         await uav.action.arm()
+    elif action == "hold":
+        await uav.action.hold()
+    elif action == "reboot":
+        await uav.action.reboot()
     elif action == "disarm":
         await uav.action.disarm()
     elif action == "kill":

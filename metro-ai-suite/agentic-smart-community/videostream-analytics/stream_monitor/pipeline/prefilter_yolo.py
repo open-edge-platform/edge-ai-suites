@@ -3,8 +3,6 @@
 Uses OpenVINO for inference. When enabled, each motion segment is evaluated
 per-frame during recording; clips without sufficient target class detections
 are discarded instead of being sent to webhook.
-
-Adapted from openclaw-smarthome-demo/stream_monitor/pipeline/prefilter_yolo.py.
 """
 
 from __future__ import annotations

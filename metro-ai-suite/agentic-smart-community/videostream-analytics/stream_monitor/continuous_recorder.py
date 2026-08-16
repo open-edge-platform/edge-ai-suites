@@ -2,7 +2,7 @@
 
 Runs in its own thread with its own VideoCapture, parallel to the motion pipeline.
 Produces time-based segments (default 60s) and optionally emits recording events via sink.
-Old segments are cleaned up based on retention_days.
+Old segments are pruned by the MCP server (storage.retention_days).
 """
 
 from __future__ import annotations
@@ -10,9 +10,7 @@ from __future__ import annotations
 import logging
 import os
 import threading
-import time
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 
 import cv2
 
@@ -21,6 +19,7 @@ from typing import Any
 from shared.config import RecordingConfig, SourceConfig
 from sinks import EventSink
 from stream_monitor.base_monitor import BaseMonitor
+from stream_monitor.h264_writer import H264SegmentWriter
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +48,12 @@ class ContinuousRecorder(BaseMonitor):
         self._running = False
         self._paused = threading.Event()
         self._paused.set()
+        # stop_event makes every sleep in the run loops interruptible, so
+        # stop() actually joins instead of leaving a parked thread behind.
+        self._stop_event = threading.Event()
+        # Bumped by start(); a stale thread from a previous start observes the
+        # mismatch at its next loop check and exits instead of resurrecting.
+        self._generation = 0
         self._status = "stopped"
 
     @property
@@ -62,18 +67,31 @@ class ContinuousRecorder(BaseMonitor):
     def start(self) -> None:
         if self._running:
             return
+        if self._thread and self._thread.is_alive():
+            # Previous thread is parked in a blocking call (cap.read). Safe to
+            # proceed: the generation guard makes it exit when it wakes.
+            logger.warning("[%s] Previous recorder thread still alive; superseding it", self.source_id)
+        self._stop_event.clear()
+        self._generation += 1
         self._running = True
         self._thread = threading.Thread(
-            target=self._run, name=f"recorder-{self.source_id}", daemon=True
+            target=self._run, args=(self._generation,),
+            name=f"recorder-{self.source_id}", daemon=True,
         )
         self._thread.start()
         logger.info("[%s] Continuous recorder started", self.source_id)
 
     def stop(self) -> None:
         self._running = False
+        self._stop_event.set()
         self._paused.set()
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=10)
+            if self._thread.is_alive():
+                # Parked in a blocking cap.read() — it cannot be interrupted,
+                # but the generation guard prevents it from resurrecting on the
+                # next start().
+                logger.warning("[%s] Recorder thread did not exit within 10s", self.source_id)
         self._status = "stopped"
         logger.info("[%s] Continuous recorder stopped", self.source_id)
 
@@ -91,9 +109,9 @@ class ContinuousRecorder(BaseMonitor):
         self._status = "recording"
         logger.info("[%s] Continuous recorder resumed", self.source_id)
 
-    def _run(self):
+    def _run(self, generation: int):
         """Main loop: connect, record segments, reconnect on failure."""
-        while self._running:
+        while self._running and self._generation == generation:
             cap = None
             try:
                 cap = cv2.VideoCapture(self.rtsp_url, cv2.CAP_FFMPEG)
@@ -106,7 +124,7 @@ class ContinuousRecorder(BaseMonitor):
 
                 self._status = "recording"
                 logger.info("[%s] Recording: %dx%d @ %.1f fps", self.source_id, w, h, fps)
-                self._record_loop(cap, fps, w, h)
+                self._record_loop(cap, fps, w, h, generation)
 
             except Exception as e:
                 logger.error("[%s] Recorder error: %s", self.source_id, e)
@@ -115,18 +133,19 @@ class ContinuousRecorder(BaseMonitor):
                 if cap:
                     cap.release()
 
-            if self._running:
+            if self._running and self._generation == generation:
                 self._status = "reconnecting"
                 logger.info("[%s] Recorder reconnecting in 10s...", self.source_id)
-                time.sleep(10)
+                if self._stop_event.wait(10):
+                    break
 
-    def _record_loop(self, cap: cv2.VideoCapture, fps: float, w: int, h: int):
+    def _record_loop(self, cap: cv2.VideoCapture, fps: float, w: int, h: int, generation: int):
         """Record frames in fixed-interval segments."""
-        while self._running:
+        while self._running and self._generation == generation:
             if not self._paused.is_set():
                 if not self._paused.wait(timeout=1.0):
                     continue
-                if not self._running:
+                if not self._running or self._generation != generation:
                     break
 
             segment_path, writer = self._start_segment(fps, w, h)
@@ -137,7 +156,7 @@ class ContinuousRecorder(BaseMonitor):
             frame_count = 0
             target_frames = int(self._cfg.interval_seconds * fps)
 
-            while self._running and frame_count < target_frames:
+            while self._running and self._generation == generation and frame_count < target_frames:
                 if not self._paused.is_set():
                     break
 
@@ -173,43 +192,22 @@ class ContinuousRecorder(BaseMonitor):
                     os.remove(segment_path)
                 break
 
-        self._cleanup_old_segments()
-
-    def _start_segment(self, fps: float, w: int, h: int) -> tuple[str, cv2.VideoWriter | None]:
-        """Create a new segment file and VideoWriter."""
+    def _start_segment(self, fps: float, w: int, h: int) -> tuple[str, H264SegmentWriter | None]:
+        """Create a new segment file and writer."""
         now = datetime.now()
         date_dir = os.path.join(self._output_dir, now.strftime("%Y-%m-%d"))
         os.makedirs(date_dir, exist_ok=True)
 
-        filename = f"{self.source_id}_{now.strftime('%H%M%S')}.mp4"
+        # Millisecond suffix: a rapid read-fail/restart cycle must not reuse the
+        # name of the segment just emitted (1s-resolution names can collide).
+        filename = f"{self.source_id}_{now.strftime('%H%M%S')}_{now.microsecond // 1000:03d}.mp4"
         path = os.path.join(date_dir, filename)
 
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        writer = cv2.VideoWriter(path, fourcc, fps, (w, h))
+        # H.264, not cv2.VideoWriter's mp4v — the dashboard replays these in a
+        # browser, and no browser decodes MPEG-4 Part 2.
+        writer = H264SegmentWriter(path, fps, w, h)
         if not writer.isOpened():
             logger.error("[%s] Cannot create writer: %s", self.source_id, path)
             return path, None
 
         return path, writer
-
-    def _cleanup_old_segments(self):
-        """Remove recording segments older than retention_days."""
-        if self._cfg.retention_days <= 0:
-            return
-
-        cutoff = datetime.now() - timedelta(days=self._cfg.retention_days)
-        try:
-            for date_dir in Path(self._output_dir).iterdir():
-                if not date_dir.is_dir():
-                    continue
-                try:
-                    dir_date = datetime.strptime(date_dir.name, "%Y-%m-%d")
-                except ValueError:
-                    continue
-                if dir_date < cutoff:
-                    for f in date_dir.iterdir():
-                        f.unlink(missing_ok=True)
-                    date_dir.rmdir()
-                    logger.info("[%s] Cleaned up old recordings: %s", self.source_id, date_dir.name)
-        except Exception as e:
-            logger.warning("[%s] Cleanup error: %s", self.source_id, e)

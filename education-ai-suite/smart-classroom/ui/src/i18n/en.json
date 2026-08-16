@@ -95,7 +95,23 @@
     "selectFrontCameraFile": "Select a front camera file",
     "selectBackCameraFile": "Select a back camera file",
     "selectBoardCameraFile": "Select a board camera file",
-    "chooseFile": "Choose File"
+    "chooseFile": "Choose File",
+    "audioFeaturesDisabled": "Audio processing features are disabled. Audio uploads are not available.",
+    "videoAnalyticsDisabled": "Video analytics feature is disabled. Only audio files can be uploaded.",
+    "invalidFileType": "Please select only {{types}} files.",
+    "fileRequired": "At least one file (audio or video) is required.",
+    "baseDirectoryRequired": "Base directory is required when video files are selected.",
+    "startingProcessing": "Starting processing...",
+    "creatingSession": "Creating session...",
+    "transcriptionAndVideoStarted": "Transcription and video analytics started successfully.",
+    "transcriptionStartedVideoFailed": "Transcription started successfully. Video analytics failed to start.",
+    "transcriptionStarted": "Transcription started successfully.",
+    "videoAnalyticsStarted": "Video analytics started successfully.",
+    "videoAnalyticsFailed": "Failed to start video analytics.",
+    "noProcessingStarted": "No valid processing started.",
+    "processingFailed": "Failed during processing. Please try again.",
+    "processingFailedDetail": "Failed during processing: {{detail}}",
+    "backendUnavailable": "The backend server is currently unreachable. Please ensure it is running."
   },
     "menu": {
       "settings": "Settings",
@@ -185,7 +201,18 @@
     "resumeAriaLabel": "Resume resource metric polling",
     "resumeButton": "Resume"
   },
+  "mindmap": {
+    "invalidFormatTitle": "Error: Invalid Format",
+    "invalidFormatDetail": "Failed to parse mind map data"
+  },
+  "cameras": {
+    "front": "Front camera",
+    "back": "Back camera",
+    "board": "Board camera"
+  },
   "errors": {
+      "videoPipelineFailed": "Video analytics could not start:\n{{details}}",
+      "videoPipelineStopFailed": "Video analytics could not stop:\n{{details}}",
       "projectNameRequired": "Project name is required",
       "failedToStartRecording": "Failed to start recording",
       "failedToStopRecording": "Failed to stop recording",
@@ -285,6 +312,7 @@
       "vlmGroup": "VLM Parameters",
       "pacingGroup": "Grading Pace",
       "detectionGroup": "Layout Detection",
+      "columnSplitRatio": "Column Split Ratio",
       "contrastFactor": "Contrast Factor",
       "contrastEnhance": "Contrast Enhance",
       "forceSplit": "Force Split",
@@ -504,7 +532,13 @@
     "removing": "Removing...",
     "filesExistMessage": "Files already exist. To view, navigate to \"View Files\" in \"Upload\" section.",
     "dismiss": "Dismiss",
-    "enabledAfterSegmentation": "Enabled only after content segmentation"
+    "enabledAfterSegmentation": "Enabled only after content segmentation",
+    "ofTotal": "(of {{total}})",
+    "loadFailed": "Failed to load files.",
+    "deleteFailed": "Failed to delete file.",
+    "cannotDeleteNoTask": "\"{{fileName}}\" cannot be removed: no task is associated with it.",
+    "ocrLoadFailed": "Failed to load OCR text.",
+    "ocrLoadFailedDetail": "Failed to load OCR text: {{detail}}"
   },
   "reportFields": {
     "groups": {
