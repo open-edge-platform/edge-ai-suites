@@ -15,7 +15,7 @@ differentiator is correct wiring of:
 - `gvapython` telemetry overlay (MAVLink thread → frame labels → `gvawatermark`)
 - Correct DLSPS REST API paths (`/pipelines/user_defined_pipelines/{name}`, integer `instance_id` for DELETE)
 - pymavlink armed/disarmed pipeline lifecycle
-- MAVSDK MQTT-triggered lifecycle with `ffprobe` RTSP pre-flight check
+- UAVSDK MQTT-triggered lifecycle with `ffprobe` RTSP pre-flight check
 - OpenVINO device variants (CPU/GPU/NPU) with correct GStreamer elements
 - `ultralytics==8.4.67` pin (CumSum detection head issue on GPU/NPU)
 - Docker Compose device access (`group_add`, `device_cgroup_rules`, tmpfs pipeline root)
@@ -25,7 +25,7 @@ differentiator is correct wiring of:
 | ID | Case | Should trigger | Focus |
 |----|------|---------------|-------|
 | 1 | PX4 SITL sim, looped video, all devices (CPU+GPU+NPU) | Yes | Core pymavlink stack, all three device variants, telemetry overlay |
-| 2 | MAVSDK three-camera (nadir/forward/rear) | Yes | MAVSDK mode, ffprobe probe, MQTT trigger, three pipelines |
+| 2 | UAVSDK three-camera (nadir/forward/rear) | Yes | UAVSDK mode, ffprobe probe, MQTT trigger, three pipelines |
 | 3 | RealSense GPU, RTSP output, pymavlink | Yes | v4l2src, GPU pipeline, device group_add |
 | 4 | Cloud-only Prometheus metrics dashboard (no MAVLink) | No | DO NOT USE FOR boundary — no telemetry, no MAVLink |
 
@@ -46,7 +46,7 @@ Without the skill, a baseline agent commonly:
 - Uses `multifilesrc loop=true` without `h264parse` (decoding fails on some files)
 - Omits `device_cgroup_rules` and `group_add` (GPU/NPU inaccessible in container)
 - Hardcodes `version` in `config.json` (collapses all pipelines to one REST path)
-- Missing `ffprobe` RTSP probe in MAVSDK mode (pipelines fail on unavailable streams)
+- Missing `ffprobe` RTSP probe in UAVSDK mode (pipelines fail on unavailable streams)
 
 ## How to Re-run Evals
 
@@ -70,7 +70,7 @@ python3 run_multi_cli_eval.py \
 | Eval | Case | With skill | Baseline |
 |------|------|-----------|---------|
 | 1 | pymavlink all-device stack | 5/5 (100%) | 1/5 (20%) |
-| 2 | MAVSDK three-camera | 4/5 (80%) | 1/5 (20%) |
+| 2 | UAVSDK three-camera | 4/5 (80%) | 1/5 (20%) |
 | 3 | RealSense + GPU | 4/5 (80%) | 1/5 (20%) |
 | 4 | Cloud-only (should NOT trigger) | 3/3 (100%) | 3/3 (100%) |
 

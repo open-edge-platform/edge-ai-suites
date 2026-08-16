@@ -8,14 +8,14 @@ description: >-
   telemetry (GPS, altitude, speed, heading) on the annotated RTSP stream, and
   support autonomous pipeline start/stop triggered by the drone armed/disarmed
   state. Supports two deployment modes: pymavlink (self-contained with PX4 SITL)
-  and MAVSDK (integrates with uav-mission-compute-sdk). DO NOT USE FOR:
+  and UAVSDK (integrates with uav-mission-compute-sdk). DO NOT USE FOR:
   ground-based camera analytics without MAVLink telemetry, cloud-only
   deployments, or model training.
 license: Apache-2.0
 compatibility: >-
   Requires Docker + Docker Compose v2, Intel CPU (optionally GPU/NPU with
   video/render groups). For pymavlink mode: PX4 SITL runs in simulation.
-  For MAVSDK mode: uav-mission-compute-sdk must be running first.
+  For UAVSDK mode: uav-mission-compute-sdk must be running first.
   Ports 8081 (REST), 8555 (RTSP), 1883 (MQTT), 14541/udp (MAVLink) must be
   free. Tested with intel/dlstreamer-pipeline-server:2026.1.0 image.
 ---
@@ -55,7 +55,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | Mode | Compose file | Telemetry source | When to use |
 |------|-------------|-----------------|-------------|
 | **pymavlink** | `docker-compose-pymavlink.yml` | MAVLink UDP :14541 via mavlink-router from PX4 SITL | Self-contained simulation |
-| **MAVSDK** | `docker-compose-mavsdk.yml` | MQTT `uav/{id}/telemetry/status` from SDK | Integration with uav-mission-compute-sdk |
+| **uavsdk** | `docker-compose-uavsdk.yml` | MQTT `uav/{id}/telemetry/status` from SDK | Integration with uav-mission-compute-sdk |
 
 ## How to Use This Skill
 
@@ -71,7 +71,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | File | Load when authoring |
 |------|-------------------|
 | [`references/PIPELINE.md`](references/PIPELINE.md) | DL Streamer config.json, pipeline variants, REST launcher, payload format |
-| [`references/TELEMETRY.md`](references/TELEMETRY.md) | MAVLink/MAVSDK telemetry overlay (gvapython), pipeline manager scripts |
+| [`references/TELEMETRY.md`](references/TELEMETRY.md) | MAVLink/UAVSDK telemetry overlay (gvapython), pipeline manager scripts |
 | [`references/DEPLOY.md`](references/DEPLOY.md) | Docker Compose services, env vars, Makefile targets, volumes, device access |
 | [`references/MODEL.md`](references/MODEL.md) | YOLOv8n-VisDrone download + OpenVINO export, custom model substitution |
 | [`references/TESTS.md`](references/TESTS.md) | pytest structure, REST API tests, RTSP stream validation, MQTT checks |
@@ -80,30 +80,30 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 
 | Param | Purpose |
 |-------|---------|
-| `{{DEPLOYMENT_MODE}}` | `pymavlink` \| `mavsdk` |
+| `{{DEPLOYMENT_MODE}}` | `pymavlink` \| `uavsdk` |
 | `{{VIDEO_SOURCE}}` | `file` (gazebo.avi loop) \| `realsense` (v4l2src) \| `rtsp` (rtspsrc) \| `gazebo-rtsp` (RTSP from SDK sim) |
 | `{{DEVICE}}` | `CPU` \| `GPU` \| `NPU` \| `all` (generates CPU+GPU+NPU variants) |
 | `{{MODEL}}` | `yolov8n-visdrone` (default) \| path to custom OpenVINO IR `.xml` |
 | `{{PIPELINE_PREFIX}}` | prefix for pipeline names, e.g. `uav_object_detection` |
 | `{{RTSP_PATHS}}` | RTSP stream path(s) published by DLSPS, e.g. `uav-cpu`, `uav-gpu` |
-| `{{UAV_ID}}` | UAV identifier for MAVSDK MQTT topic, e.g. `uav-1` |
+| `{{UAV_ID}}` | UAV identifier for UAVSDK MQTT topic, e.g. `uav-1` |
 | `{{STACK_DIR}}` | output directory for the new application stack |
 | `{{OVERLAY_NAME}}` | label shown in the telemetry overlay, e.g. `MyUAV-CPU` |
 
 ## Questions (single batched prompt)
 
-1. Deployment mode [`pymavlink`] (`pymavlink` or `mavsdk`)
+1. Deployment mode [`pymavlink`] (`pymavlink` or `uavsdk`)
 2. Video source [`file`] (`file` for gazebo.avi loop, `realsense` for Intel RealSense, `rtsp` for external RTSP, `gazebo-rtsp` for SDK simulation streams)
 3. Inference device [`CPU`] (`GPU`, `NPU`, or `all` to generate all three variants)
 4. Model [`yolov8n-visdrone`] (or path to a custom OpenVINO IR `.xml` file)
 5. Output directory [`./uav-stack`]
-6. UAV ID (MAVSDK mode only) [`uav-1`]
+6. UAV ID (UAVSDK mode only) [`uav-1`]
 
 ## Parameter Validation (enforce BEFORE file generation)
 
 | Param | Rule | Failure |
 |-------|------|---------|
-| `DEPLOYMENT_MODE` | `pymavlink`\|`mavsdk` | wrong compose file selected |
+| `DEPLOYMENT_MODE` | `pymavlink`\|`uavsdk` | wrong compose file selected |
 | `VIDEO_SOURCE` | `file`\|`realsense`\|`rtsp`\|`gazebo-rtsp` | pipeline GStreamer string invalid |
 | `DEVICE` | `CPU`\|`GPU`\|`NPU`\|`all` | unknown device in gvadetect |
 | `MODEL` | ends in `.xml`, file exists (if custom) | DLSPS fails to load model |
@@ -117,14 +117,14 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | PX4 SITL sim, looped video, CPU inference | `pymavlink` | `file` | `CPU` |
 | PX4 SITL sim, looped video, all devices | `pymavlink` | `file` | `all` |
 | Intel RealSense camera, GPU | `pymavlink` | `realsense` | `GPU` |
-| SDK integration, 3-camera (nadir/forward/rear) | `mavsdk` | `gazebo-rtsp` | `all` |
+| SDK integration, 3-camera (nadir/forward/rear) | `uavsdk` | `gazebo-rtsp` | `all` |
 | Custom model, custom RTSP feed | `pymavlink` | `rtsp` | `CPU` |
 
 ## Execution Guardrails
 
 - Before generating files: verify all parameters pass validation.
-- Before `make pymav-up` or `make mavsdk-up`: check ports 8081, 8555, 1883 are free.
-- For MAVSDK mode: confirm `uav-mission-compute-sdk` stack is running first.
+- Before `make pymav-up` or `make uavsdk-up`: check ports 8081, 8555, 1883 are free.
+- For UAVSDK mode: confirm `uav-mission-compute-sdk` stack is running first.
 - Never hardcode secrets — use `.env` variables for `HOST_IP`, device GIDs, credentials.
 - Use `make model` to download and export the model before starting the stack.
 - Always quote shell variables: `"$HOST_IP"`, `"$MODEL_PATH"`.
@@ -139,9 +139,10 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 
 ```
 {{STACK_DIR}}/
-├── docker-compose-pymavlink.yml     # or docker-compose-mavsdk.yml
+├── docker-compose-pymavlink.yml     # or docker-compose-uavsdk.yml
 ├── .env                             # HOST_IP, image tags
-├── Makefile                         # model, stack up/down, pipeline start/stop
+├── .env.example                     # template copied by make init
+├── Makefile                         # init, model, stack up/down, pipeline start/stop
 ├── configs/
 │   └── config-{{PIPELINE_PREFIX}}.json   # DLSPS pipeline definitions
 ├── gvapython/
@@ -170,14 +171,15 @@ or scripts is a syntax error.
 
 ## Completion Criteria (all must pass)
 
-1. `make model` succeeds: OpenVINO IR model present at
+1. `make init` succeeds: `.env` created with auto-detected GPU/NPU device paths.
+2. `make model` succeeds: OpenVINO IR model present at
    `resources/models/yolov8n-visdrone/best_openvino_model/best.xml`.
-2. `make pymav-up` (or `make mavsdk-up`) → all containers `running`.
-3. `curl http://localhost:8081/pipelines` returns the registered pipeline definitions.
-4. Pipeline manager starts with `make start-rtsp` and connects to MAVLink/MQTT.
-5. On ARMED signal: pipelines start; RTSP streams appear at `:8555`.
-6. `ffplay rtsp://localhost:8555/{{RTSP_PATH}}` shows annotated video with telemetry overlay.
-7. On DISARMED signal: all pipeline instances are deleted.
-8. On MAVSDK mode: pipelines start only after RTSP probe confirms streams are live.
-9. `make pymav-down` (or `make mavsdk-down`) cleanly stops all containers.
-10. `pytest -q tests/` passes all tests.
+3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`.
+4. `curl http://localhost:8081/pipelines` returns the registered pipeline definitions.
+5. Pipeline manager starts with `make start-rtsp` and connects to MAVLink/MQTT.
+6. On ARMED signal: pipelines start; RTSP streams appear at `:8555`.
+7. `ffplay rtsp://localhost:8555/{{RTSP_PATH}}` shows annotated video with telemetry overlay.
+8. On DISARMED signal: all pipeline instances are deleted.
+9. On UAVSDK mode: pipelines start only after RTSP probe confirms streams are live.
+10. `make pymav-down` (or `make uavsdk-down`) cleanly stops all containers.
+11. `pytest -q tests/` passes all tests.

@@ -16,7 +16,7 @@ Two overlay implementations exist — one per deployment mode:
 | File | Mode | Telemetry source |
 |------|------|-----------------|
 | `gvapython/telemetry-overlay-pymavlink.py` | pymavlink | MAVLink UDP :14541 (via mavlink-router) |
-| `gvapython/telemetry-overlay-mavsdk.py` | MAVSDK | MQTT `uav/{id}/telemetry/status` |
+| `gvapython/telemetry-overlay-uavsdk.py` | UAVSDK | MQTT `uav/{id}/telemetry/status` |
 
 ---
 
@@ -94,9 +94,9 @@ volumes:
 
 ---
 
-## MAVSDK Telemetry Overlay
+## UAVSDK Telemetry Overlay
 
-The MAVSDK overlay reads telemetry from MQTT rather than MAVLink directly.
+The UAVSDK overlay reads telemetry from MQTT rather than MAVLink directly.
 It subscribes to `uav/{id}/telemetry` topics published by the `uav-mission-compute-sdk`
 companion bridge.
 
@@ -104,8 +104,8 @@ companion bridge.
 
 ```yaml
 volumes:
-  - "./gvapython/telemetry-overlay-mavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-mavsdk.py"
-  - "./scripts/mavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+  - "./gvapython/telemetry-overlay-uavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py"
+  - "./scripts/uavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
 ```
 
 ---
@@ -149,9 +149,9 @@ make start-rtsp      # docker exec -it dlstreamer-pipeline-server bash -c "pytho
 make start-udpsink   # same with --sink udp
 ```
 
-### mavsdk_pipeline_manager.py (MAVSDK mode)
+### uavsdk_pipeline_manager.py (uavsdk mode)
 
-Subscribes to MQTT broker at `host.docker.internal:1884` on topic
+Subscribes to MQTT broker at `host.docker.internal:1883` on topic
 `uav/{{UAV_ID}}/telemetry/status`. Parses `armed` boolean from JSON payload.
 
 **On ARMED:** calls `wait_for_rtsp_stream()` with `ffprobe` for each camera RTSP URL
@@ -169,7 +169,7 @@ PIPELINES = [
 ]
 ```
 
-**Only RTSP sink is supported** in MAVSDK mode. If `--sink udp` is passed, a
+**Only RTSP sink is supported** in UAVSDK mode. If `--sink udp` is passed, a
 warning is printed and the manager continues with RTSP.
 
 ---

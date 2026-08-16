@@ -136,7 +136,7 @@ Replace the `appsink` tail with:
 ```
 
 For RealSense pipelines, use `{{PIPELINE_PREFIX}}_realsense_cpu` etc.
-For MAVSDK nadir/forward/rear, use `nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`,
+For UAVSDK nadir/forward/rear, use `nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`,
 `rear_camera_rtsp_npu`.
 
 ---
@@ -210,7 +210,7 @@ Annotated streams are served by DLSPS on port `8555`. The path is the
 `frame.path` value from the REST POST body:
 - `rtsp://<host-ip>:8555/{{RTSP_PATH}}`
 
-For MAVSDK three-camera setup:
+For UAVSDK three-camera setup:
 - `rtsp://<host-ip>:8555/nadir`
 - `rtsp://<host-ip>:8555/forward`
 - `rtsp://<host-ip>:8555/rear`

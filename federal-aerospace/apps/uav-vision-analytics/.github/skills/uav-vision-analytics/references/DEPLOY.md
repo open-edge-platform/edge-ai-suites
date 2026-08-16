@@ -15,7 +15,7 @@
 | `mavlink-router` | custom build | — | Routes MAVLink :14550 → :14541 |
 | `metrics-manager` | `intel/metrics-manager:2026.1.0-*` | — | CPU/GPU/NPU/power metrics collection |
 
-### MAVSDK mode (`docker-compose-mavsdk.yml`)
+### UAVSDK mode (`docker-compose-uavsdk.yml`)
 
 | Service | Image | Ports | Role |
 |---------|-------|-------|------|
@@ -162,10 +162,10 @@ dlstreamer-pipeline-server:
     - "host.docker.internal:host-gateway"
 ```
 
-**For MAVSDK mode** mount the MAVSDK overlay and manager instead:
+**For UAVSDK mode** mount the UAVSDK overlay and manager instead:
 ```yaml
-    - "./gvapython/telemetry-overlay-mavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-mavsdk.py"
-    - "./scripts/mavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+    - "./gvapython/telemetry-overlay-uavsdk.py:/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py"
+    - "./scripts/uavsdk_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
 ```
 And set `UAV_ID` env var (default `uav-1`).
 
@@ -191,13 +191,14 @@ no_proxy=localhost,127.0.0.0/8
 ## Makefile Targets
 
 ```makefile
-.PHONY: model pymav-up pymav-down mavsdk-up mavsdk-down start-rtsp start-udpsink
+.PHONY: init model pymav-up pymav-down uavsdk-up uavsdk-down start-rtsp start-udpsink
 
+init:        ## Create .env from .env.example and auto-detect GPU/NPU device paths
 model:       ## Download and export YOLOv8n-VisDrone to OpenVINO FP16
 pymav-up:    ## Start pymavlink stack (docker-compose-pymavlink.yml)
 pymav-down:  ## Stop pymavlink stack
-mavsdk-up:   ## Start MAVSDK stack (requires uav-mission-compute-sdk running first)
-mavsdk-down: ## Stop MAVSDK stack
+uavsdk-up:   ## Start UAVSDK stack (requires uav-mission-compute-sdk running first)
+uavsdk-down: ## Stop UAVSDK stack
 start-rtsp:  ## Launch pipeline_manager.py --sink rtsp inside container
 start-udpsink: ## Launch pipeline_manager.py --sink udp inside container
 ```

@@ -252,9 +252,9 @@ Integrates with the `uav-mission-compute-sdk`. The DL Streamer container
 subscribes to an MQTT broker for armed/disarmed state and consumes RTSP camera
 streams from the SDK's simulation environment.
 
-- **Compose file:** `docker-compose-mavsdk.yml` (single container)
+- **Compose file:** `docker-compose-uavsdk.yml` (single container)
 - **Telemetry source:** MQTT `uav/{id}/telemetry/status`
-- **Pipeline manager:** `scripts/mavsdk_pipeline_manager.py`
+- **Pipeline manager:** `scripts/uavsdk_pipeline_manager.py`
 - **Pre-flight check:** `ffprobe` probes each RTSP source before starting pipelines
 - **Cameras:** nadir (CPU), forward (GPU), rear (NPU) — each a separate pipeline
 - **Prerequisite:** `uav-mission-compute-sdk` must be running first
@@ -331,7 +331,7 @@ Pipelines: `nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`, `rear_camera_rtsp
 | Goal | How |
 |------|-----|
 | Create a new pymavlink stack | Load skill, answer questions, choose `pymavlink` |
-| Create a new MAVSDK stack | Load skill, answer questions, choose `mavsdk` |
+| Create a new UAVSDK stack | Load skill, answer questions, choose `uavsdk` |
 | Start inference (automated) | `make start-rtsp` after `make pymav-up` |
 | Start inference (manual) | `curl -X POST http://localhost:8081/pipelines/user_defined_pipelines/{name}` |
 | Stop a pipeline instance | `curl -X DELETE http://localhost:8081/pipelines/{instance_id}` |
