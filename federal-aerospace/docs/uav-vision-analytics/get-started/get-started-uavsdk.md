@@ -139,40 +139,38 @@ rtsp://<HOST_IP>:8555/forward    (forward camera, GPU)
 rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 ```
 
-**File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
-
 #### Option B — Manual REST API
 
-Start a single pipeline directly without the pipeline manager. Useful for testing individual pipelines or custom configurations.
+Start a single camera pipeline directly. The UAVSDK mode loads `config-uavsdk.json` which defines the three camera-source pipelines (`nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`, `rear_camera_rtsp_npu`).
+
+> **Prerequisite:** The `uav-mission-compute-sdk` must be running and its MediaMTX RTSP server must be publishing camera streams at `rtsp://host.docker.internal:8554/uav-1/{nadir,forward,rear}`. The pipeline will immediately go to **ERROR** state if the RTSP source is not available (the drone does not need to be armed — the Gazebo simulation publishes streams continuously).
+
+Verify the RTSP source is live before starting the pipeline:
+
+```bash
+ffprobe -v quiet -show_streams rtsp://localhost:8554/uav-1/nadir 2>&1 | grep codec_name
+# Expected: codec_name=h264
+# If command hangs or returns nothing, the SDK MediaMTX is not running.
+```
+
+Once the source is confirmed live, start the pipeline:
 
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
+  http://localhost:8081/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
   -H "Content-Type: application/json" \
-  -d '{
-    "destination": {
-      "metadata": {
-        "type": "file",
-        "path": "/tmp/results.jsonl",
-        "format": "json-lines"
-      },
-      "frame": {
-        "type": "rtsp",
-        "path": "uav-uavsdk-cpu"
-      }
-    },
-    "parameters": {
-      "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
-        "device": "CPU"
-      }
-    }
-  }' | tr -d '"')
+  -d '{}' | tr -d '"')
 echo "Instance ID: $INSTANCE_ID"
+
+# Verify it reached RUNNING state (not ERROR)
+curl -s http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
 ```
 
-For GPU or NPU, change the pipeline name and `device` value.
+If `state` is `ERROR`, check the container logs:
+```bash
+docker logs dlstreamer-pipeline-server 2>&1 | tail -20
+```
 
 Stop a pipeline:
 ```bash
