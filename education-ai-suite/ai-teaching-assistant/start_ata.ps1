@@ -148,7 +148,7 @@ $Services = @(
         Port = 7860
         Path = "$ScriptDir"
         VenvDir = "$KioskDir"
-        MainFile = "kiosk_ui_server.py"
+        MainFile = "ata_ui_server.py"
         HealthUrl = "http://127.0.0.1:7860/healthz"
         Description = "React Web UI"
     }

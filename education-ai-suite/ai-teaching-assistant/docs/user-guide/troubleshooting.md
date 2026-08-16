@@ -72,7 +72,7 @@ curl http://127.0.0.1:7860/healthz
 ```
 
 If health fails:
-- Verify `kiosk_ui_server.py` is running.
+- Verify `ata_ui_server.py` is running.
 - Ensure React build assets exist under `assistant-react-ui/dist`.
 
 Rebuild UI assets if needed:

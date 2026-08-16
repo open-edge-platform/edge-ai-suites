@@ -6,7 +6,7 @@ Initial AI Teaching Assistant documentation baseline aligned to the current
 Windows-native runtime architecture.
 
 Highlights:
-- React-based browser UI served by `kiosk_ui_server.py`
+- React-based browser UI served by `ata_ui_server.py`
 - `kiosk-core` streaming session orchestration API
 - Local ASR (`audio-analyzer`), RAG (`rag-service`), and TTS (`text-to-speech`)
 - Multi-file knowledge-base ingestion support (`.txt`, `.md`, `.docx`, `.pdf`)

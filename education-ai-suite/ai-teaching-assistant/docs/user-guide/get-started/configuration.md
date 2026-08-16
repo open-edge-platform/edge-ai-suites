@@ -74,7 +74,7 @@ Defaults are defined in:
 ## UI Proxy Configuration
 
 The `ai-teaching-assistant ui` reverse-proxy routes are configured in:
-- [kiosk_ui_server.py](../../../kiosk_ui_server.py)
+- [ata_ui_server.py](../../../ata_ui_server.py)
 
 Proxy env vars:
 - `KIOSK_UI_KIOSK_CORE_URL`

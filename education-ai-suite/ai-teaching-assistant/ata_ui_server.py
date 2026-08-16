@@ -11,7 +11,7 @@ This lightweight FastAPI app replaces the previous Gradio UI. It:
    - ``/api/tts/*``      -> text-to-speech   (default http://127.0.0.1:8011)
    - ``/api/analyzer/*`` -> audio-analyzer   (default http://127.0.0.1:8010)
 
-Run: python kiosk_ui_server.py   (listens on 0.0.0.0:7860)
+Run: python ata_ui_server.py   (listens on 0.0.0.0:7860)
 """
 from __future__ import annotations
 
@@ -128,4 +128,4 @@ else:  # pragma: no cover - only hit before the first build
 if __name__ == "__main__":
     host = os.getenv("KIOSK_UI_HOST", "0.0.0.0")
     port = int(os.getenv("KIOSK_UI_PORT", "7860"))
-    uvicorn.run("kiosk_ui_server:app", host=host, port=port, reload=False)
+    uvicorn.run("ata_ui_server:app", host=host, port=port, reload=False)
