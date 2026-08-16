@@ -175,9 +175,22 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ### 5. View the output stream
 
+#### RTSP
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # pymavlink, REST/managed
+```
+
+#### UDP
+```bash
+# View annotated UDP output (install ffmpeg first if not present)
+echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
+echo -e 'v=0\nm=video 5601 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-gpu.sdp
+
+# View CPU inference UDP stream
+ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
+# View GPU inference UDP stream
+ffplay -protocol_whitelist file,udp,rtp -i stream-gpu.sdp -fflags nobuffer -flags low_delay -framedrop
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
