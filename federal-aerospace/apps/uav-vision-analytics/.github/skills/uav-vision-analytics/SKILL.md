@@ -128,6 +128,12 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 - Never hardcode secrets — use `.env` variables for `HOST_IP`, device GIDs, credentials.
 - Use `make model` to download and export the model before starting the stack.
 - Always quote shell variables: `"$HOST_IP"`, `"$MODEL_PATH"`.
+- For pymavlink mode: the `mavlink-router` build `context` MUST point to
+  `./mavlink-router` inside `{{STACK_DIR}}` — copy `Dockerfile` + `main.conf`
+  into the stack; never reference a sibling repo (e.g.
+  `uav-mission-compute-sdk`) as the build context, or `docker compose up`
+  fails with "unable to prepare context: path ... not found" on any machine
+  that hasn't checked out that sibling repo.
 
 ## Generated File Layout
 
@@ -143,7 +149,8 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 ├── scripts/
 │   └── pipeline_manager.py               # armed/disarmed pipeline lifecycle
 ├── mavlink-router/
-│   └── main.conf                         # mavlink-router config (pymavlink only)
+│   ├── Dockerfile                         # self-contained build (pymavlink only — never reference an external path)
+│   └── main.conf                          # mavlink-router config (pymavlink only)
 ├── resources/
 │   ├── models/yolov8n-visdrone/          # exported OpenVINO model
 │   └── videos/gazebo.avi                 # sample video (file source)

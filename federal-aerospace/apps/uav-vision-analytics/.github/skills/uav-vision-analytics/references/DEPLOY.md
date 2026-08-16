@@ -25,6 +25,81 @@
 
 ---
 
+## mavlink-router Self-Containment (pymavlink mode)
+
+The pymavlink stack MUST be fully self-contained and buildable without any
+sibling repository being checked out. Never set the `mavlink-router` service's
+build `context` to a path outside `{{STACK_DIR}}` (for example, do NOT
+reference `../../uav-mission-compute-sdk/infra/px4-sim/mavlink-router`) —
+that path will not exist for a standalone `{{STACK_DIR}}` and `docker compose
+up` fails with `unable to prepare context: path ... not found`.
+
+Always copy both files into the generated stack and build from the local
+directory:
+
+```
+{{STACK_DIR}}/mavlink-router/
+├── Dockerfile     # builds mavlink-router from source (ubuntu:24.04 base)
+└── main.conf      # routing config (may be stack-specific, see TELEMETRY.md)
+```
+
+```yaml
+mavlink-router:
+  build:
+    context: ./mavlink-router
+    dockerfile: Dockerfile
+    args:
+      http_proxy:  ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy:    ${no_proxy:-localhost,127.0.0.0/8}
+      NO_PROXY:    ${NO_PROXY:-localhost,127.0.0.0/8}
+  container_name: mavlink-router
+  restart: unless-stopped
+  volumes:
+    - ./mavlink-router/main.conf:/etc/mavlink-router/main.conf
+  networks:
+    - app_network
+```
+
+The `Dockerfile` source (clones and builds `mavlink-router` from GitHub) can
+be copied from any existing pymavlink stack's `mavlink-router/Dockerfile` in
+this repo, or reused as-is:
+
+```dockerfile
+FROM ubuntu:24.04
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG http_proxy
+ARG https_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy} https_proxy=${https_proxy} no_proxy=${no_proxy}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git ca-certificates build-essential pkg-config \
+    libssl-dev meson ninja-build python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 https://github.com/mavlink-router/mavlink-router.git /src \
+    && cd /src \
+    && git submodule update --init --recursive \
+    && meson setup build . -Dsystemdsystemunitdir=/usr/lib/systemd/system \
+    && ninja -C build \
+    && ninja -C build install \
+    && rm -rf /src
+
+ENV http_proxy= https_proxy= no_proxy=
+
+COPY main.conf /etc/mavlink-router/main.conf
+
+CMD ["mavlink-routerd", "-c", "/etc/mavlink-router/main.conf"]
+```
+
+The `main.conf` bind-mounted at runtime overrides the one baked in at build
+time, so stack-specific routing (e.g. broadcast vs. point-to-point UDP
+endpoints, see `references/TELEMETRY.md`) always takes effect.
+
+---
+
 ## DLSPS Docker Compose Fragment
 
 ```yaml
