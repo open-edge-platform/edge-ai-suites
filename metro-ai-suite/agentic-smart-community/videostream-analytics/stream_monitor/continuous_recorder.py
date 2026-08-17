@@ -15,6 +15,7 @@ Two backends (RecordingConfig.backend):
 from __future__ import annotations
 
 import glob
+import itertools
 import logging
 import os
 import shutil
@@ -70,6 +71,10 @@ class ContinuousRecorder(BaseMonitor):
         # mismatch at its next loop check and exits instead of resurrecting.
         self._generation = 0
         self._status = "stopped"
+        # Copy backend: one token per ffmpeg session, embedded in the segment
+        # names it writes. `itertools.count.__next__` is atomic, so a superseded
+        # generation's thread racing a fresh one still gets a distinct value.
+        self._session_seq = itertools.count(1)
 
     @property
     def status(self) -> str:
@@ -186,12 +191,22 @@ class ContinuousRecorder(BaseMonitor):
             raise ConnectionError("ffmpeg not found on PATH; cannot record (copy backend)")
 
         self._ensure_date_dirs()
+        # Per-session token. ffmpeg's -strftime has no sub-second specifier and
+        # -y overwrites silently, so two segments named in the same wall-clock
+        # second would destroy each other's file AND collapse into one event
+        # (_drain_segment_list dedupes by name). Within one session that cannot
+        # happen (segments are >=1s apart), but across sessions it can — a
+        # sub-second pause/resume flap, or a reconnect landing on the same
+        # second. The token makes cross-session names disjoint; the pid keeps it
+        # true across process restarts. Starts with a letter so
+        # _segment_start_from_path can never mistake it for HHMMSS.
+        session_tag = f"s{os.getpid():x}x{next(self._session_seq):x}"
         list_path = os.path.join(
-            self._output_dir, f".segments_{os.getpid()}_{generation}.csv"
+            self._output_dir, f".segments_{os.getpid()}_{generation}_{session_tag}.csv"
         )
         self._cleanup_stale_lists(keep=os.path.basename(list_path))
         pattern = os.path.join(
-            self._output_dir, "%Y-%m-%d", f"{self.source_id}_%H%M%S.mp4"
+            self._output_dir, "%Y-%m-%d", f"{self.source_id}_%H%M%S_{session_tag}.mp4"
         )
 
         args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y"]
@@ -359,14 +374,24 @@ class ContinuousRecorder(BaseMonitor):
         logger.debug("[%s] Segment: %.1fs, %s", self.source_id, duration, path)
 
     def _segment_start_from_path(self, path: str) -> datetime | None:
-        """Recover segment wall-clock start from `<date>/<source_id>_<HHMMSS>.mp4`."""
-        try:
-            date_dir = os.path.basename(os.path.dirname(path))
-            stem = os.path.splitext(os.path.basename(path))[0]
-            hms = stem.rsplit("_", 1)[1]
-            return datetime.strptime(f"{date_dir} {hms}", "%Y-%m-%d %H%M%S")
-        except (ValueError, IndexError):
-            return None
+        """Recover segment wall-clock start from `<date>/<source_id>_<HHMMSS>[_<suffix>].mp4`.
+
+        The HHMMSS field is found by scanning underscore-separated fields from
+        the right for the first all-digit 6-char one, so this handles the copy
+        backend's `_<session_tag>` suffix (never all digits — it starts with
+        "s") and the x264 backend's `_<ms>` suffix (3 digits) without needing to
+        know which wrote the file. A `source_id` that itself ends in 6 digits is
+        safe for the same reason: the scan stops at the rightmost match.
+        """
+        date_dir = os.path.basename(os.path.dirname(path))
+        stem = os.path.splitext(os.path.basename(path))[0]
+        for field in reversed(stem.split("_")):
+            if len(field) == 6 and field.isdigit():
+                try:
+                    return datetime.strptime(f"{date_dir} {field}", "%Y-%m-%d %H%M%S")
+                except ValueError:
+                    return None
+        return None
 
     def _ensure_date_dirs(self) -> None:
         """Pre-create today + tomorrow date dirs (ffmpeg won't mkdir at rollover)."""
