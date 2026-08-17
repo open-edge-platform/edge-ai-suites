@@ -30,6 +30,7 @@
 | `POST /sessions/process` | 提交一个处理任务(自动创建 session,后台异步执行) |
 | `GET /sessions/{session_id}/status` | 查询任务状态和进度 |
 | `GET /sessions` | (可选)列出所有任务记录 |
+| `GET /health` | 检查服务是否可用 |
 
 ---
 
@@ -214,6 +215,38 @@
         }
     ]
 }
+```
+
+---
+
+### 4. 健康检查
+
+**`GET /health`**
+
+提交任务前先确认服务可用(示例客户端就是这么做的)。
+
+**返回:**
+```json
+{
+  "status": "ok",
+  "hub": {
+    "ocr": { "state": "ready", "loaded": true, "provider": "openvino", "device": "CPU", "max_concurrency": 2, "memory": { "process_rss_mb": 5311.6 } },
+    "asr": { "state": "ready", "loaded": true, "provider": "funasr", "device": "CPU", "max_concurrency": 1, "memory": { "process_rss_mb": 5311.58, "process_vms_mb": 17648.15 } },
+    "text_gen": { "state": "ready", "loaded": true, "provider": "vlm", "device": "GPU.1", "max_concurrency": 1, "memory": { "process_rss_mb": 5311.6 } }
+  }
+}
+```
+
+**字段说明:**
+
+| 字段 | 含义 |
+|---|---|
+| `status` | 接口能响应即为 `ok` |
+| `hub` | 按能力划分的模型状态——`ocr` / `asr` / `text_gen`,每个含 `state`(`ready` / `loading` / `unloaded`)、`loaded`、`provider`、`device`、`max_concurrency`。模型已加载时才带 `memory` |
+
+**示例:**
+```bash
+curl http://<host>:8000/health
 ```
 
 ---

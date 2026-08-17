@@ -35,6 +35,7 @@ Step 3  Get the results          →  read files from output_dir
 | `POST /sessions/process` | Submit a processing task (auto-creates session, runs async in background) |
 | `GET /sessions/{session_id}/status` | Query a task's state and progress |
 | `GET /sessions` | (Optional) List all task records |
+| `GET /health` | Check that the service is up |
 
 ---
 
@@ -223,6 +224,39 @@ Returns all task records for management / overview:
     }
   ]
 }
+```
+
+---
+
+### 4. Health Check
+
+**`GET /health`**
+
+Verify the service is reachable before submitting a task (the example client
+checks this first).
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "hub": {
+    "ocr": { "state": "ready", "loaded": true, "provider": "openvino", "device": "CPU", "max_concurrency": 2, "memory": { "process_rss_mb": 5311.6 } },
+    "asr": { "state": "ready", "loaded": true, "provider": "funasr", "device": "CPU", "max_concurrency": 1, "memory": { "process_rss_mb": 5311.58, "process_vms_mb": 17648.15 } },
+    "text_gen": { "state": "ready", "loaded": true, "provider": "vlm", "device": "GPU.1", "max_concurrency": 1, "memory": { "process_rss_mb": 5311.6 } }
+  }
+}
+```
+
+**Key Fields:**
+
+| Field | Description |
+|---|---|
+| `status` | Always `ok` when the endpoint responds |
+| `hub` | Per-capability model state for `ocr` / `asr` / `text_gen`; each has `state` (`ready` / `loading` / `unloaded`), `loaded`, `provider`, `device`, `max_concurrency`. `memory` is present only when the model is loaded |
+
+**Example:**
+```bash
+curl http://<host>:8000/health
 ```
 
 ---
