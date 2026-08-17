@@ -6,9 +6,10 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   width: 100%;
-  overflow-x: hidden; 
+  overflow-x: hidden;
 }
 
 .app {
@@ -16,22 +17,23 @@ html, body {
   flex-direction: column;
   min-height: 100vh;
   width: 100%;
-  max-width: 100%; 
+  max-width: 100%;
   background: #f5f7fa;
-  overflow-x: hidden; 
+  overflow-x: hidden;
 }
 
 .main-content {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
-  flex-wrap: nowrap; 
-  overflow-y: auto;  
-  overflow-x: hidden; 
+  flex-wrap: nowrap;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 0;
   position: relative;
   z-index: var(--z-index-main-content);
 }
+
 /* App loading state - when checking backend health */
 .app-loading {
   display: flex;
@@ -43,9 +45,12 @@ html, body {
   font-family: Arial, sans-serif;
   text-align: center;
 }
+
 .container.fullscreen .main-content {
-  z-index: 1000; /* Ensure it stays below the full-screen video stream */
+  z-index: 1000;
+  /* Ensure it stays below the full-screen video stream */
 }
+
 /* App error state - when backend is unavailable */
 .app-error {
   display: flex;
@@ -58,7 +63,8 @@ html, body {
   text-align: center;
 }
 
-.loading-content, .error-content {
+.loading-content,
+.error-content {
   padding: 2rem;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.1);
@@ -67,13 +73,15 @@ html, body {
   max-width: 500px;
 }
 
-.loading-content h2, .error-content h1 {
+.loading-content h2,
+.error-content h1 {
   font-size: 28px;
   margin-bottom: 12px;
   font-weight: 300;
 }
 
-.loading-content p, .error-content p {
+.loading-content p,
+.error-content p {
   font-size: 16px;
   opacity: 0.9;
   margin-bottom: 8px;
@@ -186,37 +194,18 @@ html, body {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
-.main-content > * {
+.main-content>* {
   max-width: 100%;
-  flex-shrink: 1; 
-}
-.arrow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  cursor: pointer;
-  z-index: 100;
-  color: #0071c5;
-  background: #fff;
-  border-radius: 50%;
-  border: 1px solid #e6e7e8;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  transition: left 0.3s ease;
+  flex-shrink: 1;
 }
 
 @media (max-width: 900px) {
   .main-content {
-    flex-direction: column; 
+    flex-direction: column;
     flex-wrap: nowrap;
   }
 
-  .main-content > * {
-    width: 100%; 
+  .main-content>* {
+    width: 100%;
   }
 }

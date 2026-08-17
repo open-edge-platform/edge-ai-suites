@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
+import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import type { Logger } from "@smartbuilding-video/framework-adapter-sdk";
+import type { Logger } from "@smart-community-video/framework-adapter-sdk";
 import type { AppendResult, InjectParams, SessionAppender } from "./inject-types.js";
 
 function openclawHome(): string {
@@ -16,6 +17,13 @@ function openclawHome(): string {
 function canonicalSessionFile(agentId: string, sessionId: string): string {
   return path.join(openclawHome(), "agents", agentId, "sessions", `${sessionId}.jsonl`);
 }
+
+// Live alert transcript rotates to a fresh sessionId past this size (old file kept as archive;
+// full history stays in the MCP DB). Override via SB_ALERTS_MAX_TRANSCRIPT_BYTES; default 1024 KiB.
+const ALERTS_MAX_TRANSCRIPT_BYTES = ((): number => {
+  const raw = Number(process.env.SB_ALERTS_MAX_TRANSCRIPT_BYTES);
+  return Number.isFinite(raw) && raw > 0 ? raw : 1024 * 1024;
+})();
 
 /**
  * Session append via OpenClaw's first-class transcript API. The SDK owns header creation,
@@ -35,7 +43,9 @@ export async function createTranscriptInjector(deps: {
   let transcriptRt: any;
   let storeRt: any;
   try {
+    // @ts-expect-error openclaw is provided by the gateway at load time, not a repo dependency
     transcriptRt = await import("openclaw/plugin-sdk/session-transcript-runtime");
+    // @ts-expect-error openclaw is provided by the gateway at load time, not a repo dependency
     storeRt = await import("openclaw/plugin-sdk/session-store-runtime");
   } catch (err) {
     deps.logger.info(
@@ -62,8 +72,23 @@ export async function createTranscriptInjector(deps: {
     } catch (err) {
       return { ok: false, sessionKey, reason: `getSessionEntry failed: ${err}` };
     }
-    const sessionId = entry?.sessionId ?? randomUUID();
-    const sessionFile = canonicalSessionFile(agentId, sessionId);
+    let sessionId = entry?.sessionId ?? randomUUID();
+    let sessionFile = canonicalSessionFile(agentId, sessionId);
+
+    // Rotate to a fresh sessionId once the live transcript crosses the size cap.
+    if (entry?.sessionId) {
+      let size = 0;
+      try {
+        size = fs.statSync(sessionFile).size;
+      } catch {
+        size = 0;
+      }
+      if (size >= ALERTS_MAX_TRANSCRIPT_BYTES) {
+        sessionId = randomUUID();
+        sessionFile = canonicalSessionFile(agentId, sessionId);
+        logger.info(`[sb-alerts] rotated ${sessionKey} (${size}B) → new sid ${sessionId}`);
+      }
+    }
 
     if (!entry || entry.sessionId !== sessionId || entry.sessionFile !== sessionFile) {
       try {
@@ -101,7 +126,7 @@ export async function createTranscriptInjector(deps: {
       content: [{ type: "text", text: assistantText }],
       api: "openai-completions",
       provider: "router",
-      model: model ?? "smartbuilding-alerts-adapter",
+      model: model ?? "smart-community-alerts-adapter",
       timestamp: nowMs,
       ...(idempotencyKey ? { idempotencyKey: `${idempotencyKey}:body` } : {}),
     };
@@ -119,6 +144,24 @@ export async function createTranscriptInjector(deps: {
     } catch (err) {
       return { ok: false, sessionKey, sessionId, reason: `transcript append failed: ${err}` };
     }
+
+    // Bump `updatedAt` so this session sorts as most-recently-active (the dashboard
+    // and ControlUI order sessions by it). The transcript API's publishUpdate does
+    // not touch the store entry's `updatedAt`, so without this the session that
+    // actually receives alerts stays frozen at its last settings change while an
+    // idle `:main` outranks it. Mirrors the FS-append fallback. Non-fatal.
+    try {
+      await patchSessionEntry({
+        agentId,
+        sessionKey,
+        env,
+        update: () => ({ updatedAt: nowMs }),
+        fallbackEntry: { sessionId, sessionFile, systemSent: true, updatedAt: nowMs },
+      });
+    } catch (err) {
+      logger.warn(`[sb-alerts] updatedAt bump failed for ${sessionKey}: ${err}`);
+    }
+
     return { ok: true, sessionKey, sessionId };
   };
 

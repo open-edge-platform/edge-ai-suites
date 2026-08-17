@@ -58,19 +58,19 @@ The on-device stack is defined in [docker/compose.yaml](https://github.com/open-
 | `vllm-ipex-serving`              | `:41091`                   | On-device model serving for VLM and LLM requests                                  |
 | `multilevel-video-understanding` | `:8192`                    | Video-summary microservice                                                        |
 | `videostream-analytics`          | `:8999`                    | Video capture and optional detector-as-prefilter; posts events to the MCP webhook |
-| `smartbuilding-mcp-server`       | `:3100` (+`:3101` webhook) | MCP server: Streamable-HTTP + Web UI, and the events webhook                      |
+| `smart-community-mcp-server`       | `:3100` (+`:3101` webhook) | MCP server: Streamable-HTTP + Web UI, and the events webhook                      |
 
 First, create the runtime data directory and copy the configuration templates into it. The MCP server reads these at startup (if you skip this, it auto-seeds the same templates on first start):
 
 ```bash
-export SMARTBUILDING_DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
-mkdir -p "$SMARTBUILDING_DATA_DIR"
-cp config.yaml.example "$SMARTBUILDING_DATA_DIR/config.yaml"
+export SMART_COMMUNITY_DATA_DIR="${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}"
+mkdir -p "$SMART_COMMUNITY_DATA_DIR"
+cp config.yaml.example "$SMART_COMMUNITY_DATA_DIR/config.yaml"
 # Starts with an empty monitors.yaml; add monitors at runtime by chatting with the agent.
-cp monitors.yaml.example "$SMARTBUILDING_DATA_DIR/monitors.yaml"
+cp monitors.yaml.example "$SMART_COMMUNITY_DATA_DIR/monitors.yaml"
 ```
 
-Customize `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` as needed, then build and start the stack:
+Customize `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DATA_DIR/monitors.yaml` as needed, then build and start the stack:
 
 ```bash
 source docker/set_env.sh
@@ -84,7 +84,7 @@ bash setup_docker.sh
 
 > **Note:**
 >
-> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smartbuilding-mcp-server`.
+> - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smart-community-mcp-server`.
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
 > - If the YOLO11s OpenVINO™ IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
 
@@ -98,19 +98,19 @@ curl -fsS http://localhost:8999/health
 
 ### Step 2 - Verify the MCP server
 
-The MCP server starts as part of the stack in Step 1 (the `smartbuilding-mcp-server` container). It uses host networking, so it exposes the same endpoints as before:
+The MCP server starts as part of the stack in Step 1 (the `smart-community-mcp-server` container). It uses host networking, so it exposes the same endpoints as before:
 
 ```text
 UI:     http://localhost:3100/
 MCP:    http://localhost:3100/mcp
 Events: http://localhost:3101/events
-Logs:   docker logs -f smartbuilding-mcp-server
+Logs:   docker logs -f smart-community-mcp-server
 ```
 
-It always uses `$SMARTBUILDING_DATA_DIR/config.yaml` and `$SMARTBUILDING_DATA_DIR/monitors.yaml` (bind-mounted at the same absolute path inside the container). For later configuration changes, update these two files and reload the server:
+It always uses `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DATA_DIR/monitors.yaml` (bind-mounted at the same absolute path inside the container). For later configuration changes, update these two files and reload the server:
 
 ```bash
-docker compose -f docker/compose.yaml up -d --force-recreate smartbuilding-mcp-server
+docker compose -f docker/compose.yaml up -d --force-recreate smart-community-mcp-server
 ```
 
 Verify that the MCP endpoint, events webhook, and data root are available:
@@ -121,15 +121,15 @@ curl -fsS -X POST http://localhost:3100/mcp \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"startup-check","version":"1.0"}}}'
 curl -fsS http://localhost:3101/health
-ls ~/.mcp-smartbuilding/smartbuilding.db
-ls ~/.mcp-smartbuilding/config.yaml ~/.mcp-smartbuilding/monitors.yaml
+ls ~/.mcp-smart-community/smart-community.db
+ls ~/.mcp-smart-community/config.yaml ~/.mcp-smart-community/monitors.yaml
 ```
 
 > **Note:** Use `bash setup_docker.sh --light-down` to stop the MCP server (and the rest of the app tier) while keeping the model serving warm, or `bash setup_docker.sh --down` for a full teardown.
 
 ### Step 3 - Connect an agent host
 
-The MCP server is framework-agnostic. Once configured, a compatible MCP client can access the full `smartbuilding_*` tool set through Streamable HTTP at `http://localhost:3100/mcp`.
+The MCP server is framework-agnostic. Once configured, a compatible MCP client can access the full `smart_community_*` tool set through Streamable HTTP at `http://localhost:3100/mcp`.
 
 **Agentic Smart Community Dashboard**
 Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It provides live camera views, activity timelines, alert records, and report generation for registered monitors. The chat panel can also connect to a supported agent framework.
@@ -153,7 +153,7 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
    {
      "mcp": {
        "servers": {
-         "smartbuilding": {
+         "smart-community": {
            "transport": "streamable-http",
            "url": "http://localhost:3100/mcp"
          }
@@ -182,52 +182,54 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
    > - If there is no GUI on your host, run: `ssh -N -L 18789:127.0.0.1:18789 username@your-host-ip`
    > - Find the gateway token from `~/.openclaw/openclaw.json`
 
-Agents can now use the MCP tools when you ask them to create a use case, analyze a monitor, or generate a report. Try the following examples in the OpenClaw Control UI (`http://localhost:18789`).
+Agents can now use the MCP tools when you ask them to create a use case, analyze a monitor, or generate a report. Try the following examples in the OpenClaw Control UI (`http://localhost:18789`) or Agentic Smart Community Web UI(`http://localhost:3100/`).
 
 To use OpenClaw from the Agentic Smart Community Web UI, open `http://localhost:3100/`, select **OpenClaw** in the chat panel (as the figure shows below), and enter the gateway URL and token. After connecting, select an OpenClaw session to chat alongside the live video and activity views. Alternatively, you can use the standalone OpenClaw Control UI at `http://localhost:18789/`.
 
 ![Configure the Agent Chat Session from Dashboard](_assets/configure-openclaw-session-from-webui.png)
 **Figure: Configure the Agent Chat Session from Dashboard**
 
-**A. Inspect the Smart Building tools**:
+**A. Inspect the Smart Community tools**:
 
 Ask the agent what capabilities and bundled use cases are available:
 
 ```text
-"List the available Smart Building tools."
+"List the available Smart Community tools."
 ```
 
 ```text
-"List the current Smart Building use cases."
+"List the current Smart Community use cases."
 ```
 
-**B. Register a camera-source monitor**:
+**B. Register a camera-source monitor upon use case: child_safety**:
 
 1. Prepare a valid RTSP video stream as a camera monitor source
 
    You can publish a local video as a looping RTSP stream. Keep this command running while the monitor is in use:
 
    ```bash
-   bash scripts/helpers/local_video_to_rtsp.sh /path/to/your-video.mp4
+   bash scripts/helpers/local_video_to_rtsp.sh /path/to/your-video.mp4 rtsp://localhost:8555/live/test
    ```
 
-   The stream is available at `rtsp://localhost:8555/live`.
+   The stream is available at `rtsp://localhost:8555/live/test`.
 
 2. Ask the agent to register the stream with a bundled use case:
 
    ```text
-   "Register a camera source at rtsp://localhost:8555/live using the child_safety use case."
+   "Register a camera source at rtsp://localhost:8555/live/test using the child_safety use case, name it: cam_test"
    ```
 
    Follow the agent's guidance and answer the required questions to complete the monitor registration and bring it online.
-   When no monitor ID is specified, the MCP server assigns `cam_child_safety`. You can also provide a monitor ID explicitly.
+   When no monitor ID is specified, the MCP server assigns `cam_child_safety`. Here we provide a monitor ID explicitly as `cam_test`. As shown below:
+
+   ![Example for monitor using bundled use case](_assets/example-for-monitor-using-bundled-use-case.png)
 
 **C. Generate a report**:
 
-Leave the monitor online long enough to process video and store events in `~/.mcp-smartbuilding/smartbuilding.db`. Then ask the agent:
+Leave the monitor online long enough to process video and store events in `~/.mcp-smart-community/smart-community.db`. Then ask the agent:
 
 ```text
-"Generate today's report for the cam_child_safety monitor."
+"Generate today's report for the cam_test monitor."
 ```
 
 **D. Delete a monitor**:
@@ -235,10 +237,23 @@ Leave the monitor online long enough to process video and store events in `~/.mc
 Ask the agent to delete the monitor registered in the previous step:
 
 ```text
-"Delete the cam_child_safety monitor."
+"Delete the cam_test monitor."
 ```
+> Note: Only do this if you don't need this monitor any more
 
-**MCP resource subscriptions** deliver alert-update notifications directly to the connected client; see [MCP Subscription Reference](./api-reference/api-reference-mcp-subscription.md). This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
+##### **Real-Time Alert Notifications**
+MCP Server subscriptions can deliver alert updates directly to connected clients. To enable real-time notifications through the OpenClaw adapter:
+- First, install the adapter as the `smart-community-alerts` OpenClaw plugin:
+  ```bash
+  cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
+  bash packages/framework-adapter-sdk/examples/openclaw/scripts/install_as_openclaw_plugin.sh
+  ```
+- Then, ask the agent to configure real-time alert notifications:
+  ```text
+  Configure the system to push alerts from cam_test to this agent in real time.
+  ```
+
+This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
 #### Other MCP clients
 
@@ -258,23 +273,23 @@ The MCP server includes these bundled use cases:
 
 To use a bundled use case, ask the connected agent to register a monitor with its monitor ID, RTSP URL, and use-case key: `fridge`, `child_safety`, or `elder_wakeup`.
 
-Now, you can simply describe your requirements to an agent to create a customized use case without restarting the core services. See [Register a New Use Case](./how-to-guides/register-new-use-case.md) for the complete registration workflow.
+Furthermore, you can simply describe your requirements to an agent to create a customized use case without restarting the core services. See [Register a New Use Case](./how-to-guides/register-new-use-case.md) for the complete registration workflow.
 
 ## Data directory
 
 All runtime data lives under one root controlled by an environment variable:
 
 ```bash
-export SMARTBUILDING_DATA_DIR=/path/to/data   # default: ~/.mcp-smartbuilding
+export SMART_COMMUNITY_DATA_DIR=/path/to/data   # default: ~/.mcp-smart-community
 ```
 
 ```text
-$SMARTBUILDING_DATA_DIR/
+$SMART_COMMUNITY_DATA_DIR/
 |- config.yaml
 |- config.yaml.<YYYYMMDD-HHMMSS>.bak
 |- monitors.yaml
 |- monitors.yaml.<YYYYMMDD-HHMMSS>.bak
-|- smartbuilding.db
+|- smart-community.db
 |- segments/
 |  `- <monitor_id>/
 |     |- latest.jpg
@@ -288,7 +303,7 @@ $SMARTBUILDING_DATA_DIR/
 
 The timestamped backup entries are present only after the launcher replaces a different active configuration. `config.yaml` and `monitors.yaml` are not removed by automatic data cleanup.
 
-Automatic cleanup runs on server start and then daily at approximately 00:05 local time. It removes `.log` files older than `logging.retention_days` (default: 14 days in `config.yaml.example`) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (default: 2 days in `config.yaml.example`). It leaves `latest.jpg`, `smartbuilding.db`, and non-date directory names untouched.
+Automatic cleanup runs on server start and then daily at approximately 00:05 local time. It removes `.log` files older than `logging.retention_days` (default: 14 days in `config.yaml.example`) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (default: 2 days in `config.yaml.example`). It leaves `latest.jpg`, `smart-community.db`, and non-date directory names untouched.
 
 ## Supporting resources
 

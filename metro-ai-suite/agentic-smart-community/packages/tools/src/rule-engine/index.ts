@@ -98,11 +98,25 @@ function alertOutcomeToRuleResult(useCase: string, outcome: AlertOutcome | null 
 }
 
 /**
+ * Parse an override script's stdout as the AlertOutcome JSON.
+ *
+ * Contract: the JSON is the LAST non-empty stdout line. Earlier lines are
+ * free for human debugging (logging/prints) — a stray print() must not fail
+ * the whole task. Exported for the registration smoke test, which enforces
+ * the same contract.
+ */
+export function parseOverrideStdout(stdout: string): unknown {
+  const lines = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const text = lines.at(-1) ?? "";
+  return text ? JSON.parse(text) : null;
+}
+
+/**
  * Run a Python rule override at the given path, falling back to defaultRuleEvaluator
  * only when overridePath is null.
  *
  * The override script receives parsed fields as JSON on argv[1]. It prints an
- * AlertOutcome JSON object or null.
+ * AlertOutcome JSON object or null as its last stdout line.
  *
  * Path is supplied by the caller (typically derived from config.useCaseDict[useCase].evaluate_rules_path)
  * rather than hard-coded — use case adapters live anywhere on disk.
@@ -125,8 +139,7 @@ export async function evaluateWithOverride(
       overridePath,
       JSON.stringify(context.payload?.fields ?? {}),
     ], { timeout: 10_000 });
-    const text = stdout.trim();
-    const result = text ? JSON.parse(text) : null;
+    const result = parseOverrideStdout(stdout) as AlertOutcome | null;
     return alertOutcomeToRuleResult(context.useCase, result);
   } catch (err: any) {
     throw new Error(`[rule-engine] Python override failed for ${context.useCase}: ${err.message}`);

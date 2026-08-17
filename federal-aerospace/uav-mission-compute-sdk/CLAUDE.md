@@ -78,7 +78,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 - `/capture-camera` — Grab frames for debug
 
 ## Startup Order
-1. `make up` — Core infra (PX4 sim → bridges → MQTT/RTSP → observability)
+1. `make up-sim-camera` — Core infra (PX4 sim → bridges → MQTT/RTSP → observability)
 2. `make apps` — AI helper (vision-processor) + edge-ai-showcase dashboard
 
 ## Running Missions
@@ -96,5 +96,5 @@ REST_API_HOST=localhost REST_API_PORT=8080 \
 3. PX4 auto-disarms ~20s after landing — don't call `disarm()` manually
 4. Apps use `uav-mission-compute-sdk_default` network to reach infra containers
 5. RTSP mode: Set `USE_RTSP=false` in docker-compose to revert to MQTT frame-by-frame
-6. MediaMTX health: `curl http://localhost:9997/v3/paths/list`
+6. MediaMTX health: `docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list`
 7. Pipeline lifecycle: camera-bridge and vision-processor tear down pipelines on disarm and rebuild on re-arm (no manual restart needed)

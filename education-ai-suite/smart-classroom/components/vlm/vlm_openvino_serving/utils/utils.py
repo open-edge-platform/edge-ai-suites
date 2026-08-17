@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import base64
-import multiprocessing
 import os
 import random
+import subprocess
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -47,62 +47,7 @@ def _download_preconverted_ov_model(repo_id: str, cache_dir: str):
     logger.info("Pre-converted OpenVINO IR download complete.")
 
 
-def _convert_model_worker(
-    model_id: str, cache_dir: str, model_type: str, weight_format: str
-):
-    """
-    Worker function that runs in a subprocess to perform the actual model conversion.
-    When the subprocess exits, all memory used during conversion is fully reclaimed by the OS.
-    """
-    from openvino_tokenizers import convert_tokenizer
-    from optimum.exporters.openvino.utils import save_preprocessors
-    from optimum.intel import (
-        OVModelForCausalLM,
-        OVModelForFeatureExtraction,
-        OVModelForSequenceClassification,
-        OVModelForVisualCausalLM,
-    )
-    from optimum.utils.save_utils import maybe_load_preprocessors
-    from transformers import AutoTokenizer
-
-    hf_tokenizer = AutoTokenizer.from_pretrained(model_id)
-    hf_tokenizer.save_pretrained(cache_dir)
-    add_special_tokens = model_type in ("embedding", "reranker")
-    needs_detokenizer = model_type in ("llm", "vlm")
-    if needs_detokenizer:
-        ov_tokenizer, ov_detokenizer = convert_tokenizer(
-            hf_tokenizer, add_special_tokens=add_special_tokens, with_detokenizer=True
-        )
-        ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
-        ov.save_model(ov_detokenizer, f"{cache_dir}/openvino_detokenizer.xml")
-    else:
-        ov_tokenizer = convert_tokenizer(hf_tokenizer, add_special_tokens=add_special_tokens)
-        ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
-
-    if model_type == "embedding":
-        embedding_model = OVModelForFeatureExtraction.from_pretrained(
-            model_id, export=True
-        )
-        embedding_model.save_pretrained(cache_dir)
-    elif model_type == "reranker":
-        reranker_model = OVModelForSequenceClassification.from_pretrained(
-            model_id, export=True
-        )
-        reranker_model.save_pretrained(cache_dir)
-    elif model_type == "llm":
-        llm_model = OVModelForCausalLM.from_pretrained(
-            model_id, export=True, weight_format=weight_format
-        )
-        llm_model.save_pretrained(cache_dir)
-    elif model_type == "vlm":
-        vlm_model = OVModelForVisualCausalLM.from_pretrained(
-            model_id, export=True, weight_format=weight_format
-        )
-        vlm_model.save_pretrained(cache_dir)
-        preprocessors = maybe_load_preprocessors(model_id)
-        save_preprocessors(preprocessors, vlm_model.config, cache_dir, True)
-    else:
-        raise ValueError(f"Unsupported model type: {model_type}")
+_CONVERT_WORKER = Path(__file__).resolve().parent / "convert_worker.py"
 
 
 def convert_model(
@@ -136,23 +81,26 @@ def convert_model(
             _download_preconverted_ov_model(preconverted_repo, cache_dir)
         else:
             logger.info(f"Converting {model_id} model to OpenVINO format in subprocess...")
-            _orig_pythonpath = os.environ.get("PYTHONPATH")
-            os.environ["PYTHONPATH"] = os.pathsep.join(p for p in sys.path if p)
-            try:
-                process = multiprocessing.Process(
-                    target=_convert_model_worker,
-                    args=(model_id, cache_dir, model_type, weight_format),
-                )
-                process.start()
-                process.join()
-            finally:
-                if _orig_pythonpath is None:
-                    os.environ.pop("PYTHONPATH", None)
-                else:
-                    os.environ["PYTHONPATH"] = _orig_pythonpath
-            if process.exitcode != 0:
+            # Run a standalone script rather than multiprocessing.Process: on
+            # Windows the spawn start method re-executes the parent's __main__
+            # (main.py) in the child, which needlessly re-imports the whole app
+            # and breaks on top-level package-name collisions in sys.path.
+            env = os.environ.copy()
+            env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(p for p in sys.path if p))
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(_CONVERT_WORKER),
+                    "--model-id", model_id,
+                    "--cache-dir", cache_dir,
+                    "--model-type", model_type,
+                    "--weight-format", weight_format,
+                ],
+                env=env,
+            )
+            if completed.returncode != 0:
                 raise RuntimeError(
-                    f"Model conversion subprocess failed with exit code {process.exitcode}"
+                    f"Model conversion subprocess failed with exit code {completed.returncode}"
                 )
             logger.info(f"Model conversion completed. Subprocess memory released.")
     except Exception as e:

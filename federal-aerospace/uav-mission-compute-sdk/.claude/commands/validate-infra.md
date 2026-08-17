@@ -18,7 +18,7 @@ Validate the UAV infrastructure (PX4 + Gazebo stack) is healthy and streaming.
 - AI helpers (vision-processor): `sample-apps/docker-compose.yml`
 - MQTT broker exposed on host port 1884 (telemetry + detections only)
 - MediaMTX RTSP server on host port 8554 (camera streams)
-- Companion REST API at px4-gazebo:8080 (container network)
+- Companion REST API at px4-gazebo:8080 (sim) / px4-sitl:8080 (usb) on container network; host: localhost:8080
 - PX4 MAVLink on host UDP ports 14540/14580
 
 ## Validation Steps
@@ -43,7 +43,8 @@ Expected: Number >= 2 (bridge, companion)
 
 ### 3. Verify PX4 SITL is running
 ```bash
-docker exec px4-gazebo pgrep -x px4
+docker exec px4-gazebo pgrep -x px4   # sim-camera mode
+docker exec px4-sitl pgrep -x px4     # usb-camera mode
 ```
 Expected: PID returned (not empty)
 
@@ -55,10 +56,10 @@ Expected: "Connected to PX4" and "Telemetry → MQTT publishing started"
 
 ### 5. Verify MediaMTX RTSP server is healthy
 ```bash
-curl -sf http://localhost:9997/v3/config | jq -r '.api' && echo "MediaMTX API OK"
-curl -sf http://localhost:9997/v3/paths/list | jq -r '.items[] | select(.name | startswith("uav-1")) | .name'
+docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/config/global/get | python3 -c "import sys,json; print('API OK:', json.load(sys.stdin).get('api'))"
+docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list | python3 -c "import sys,json; [print(i['name']) for i in json.load(sys.stdin)['items']]"
 ```
-Expected: Shows "MediaMTX API OK" and lists uav-1 camera paths
+Expected: Shows "API OK: True" and lists uav-1 camera paths
 
 ### 6. Verify RTSP camera streams are available
 Arm first (required for stream publication):
@@ -90,7 +91,8 @@ Expected: JSON with lat_deg, lng_deg, relative_altitude_m
 
 ### 9. Test companion bridge REST API
 ```bash
-docker exec px4-gazebo curl -sf http://127.0.0.1:8080/health
+docker exec px4-gazebo curl -sf http://127.0.0.1:8080/health   # sim-camera mode
+docker exec px4-sitl curl -sf http://127.0.0.1:8080/health     # usb-camera mode
 ```
 Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 
@@ -98,21 +100,20 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 
 | Symptom | Fix |
 |---------|-----|
-| px4 unhealthy | `docker compose restart px4` then wait 60s |
+| px4 unhealthy | `docker compose restart px4` (sim) or `docker compose restart px4-sih` (usb), then recheck `docker compose ps` |
 | mediamtx unhealthy | `docker compose restart mediamtx` |
 | companion-bridge "Connection refused" or "heartbeats timed out" | `docker compose restart companion-bridge` |
 | camera-bridge no RTSP streams | Check logs: `docker logs camera-bridge` (sim profile - look for "RTSP pipeline started") |
 | usb-camera-bridge no RTSP streams | Check logs: `docker logs usb-camera-bridge` and verify `USB_VIDEO_DEVICE` |
 | camera-bridge GStreamer errors | Verify MediaMTX is healthy, check RTSP_HOST/RTSP_PORT env vars |
 | vision-processor no detections | Check RTSP consumption: `docker logs vision-processor-multicam` (look for "RTSP DL Streamer pipeline started") |
-| vision-processor "Could not connect to RTSP" | Verify MediaMTX has streams: `curl http://localhost:9997/v3/paths/list` |
-| All services stale after PX4 restart | Restart in order: `px4` → wait healthy → `mediamtx` → `camera-bridge` |
+| vision-processor "Could not connect to RTSP" | Verify MediaMTX has streams: `docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list` |
+| All services stale after PX4 restart | Restart in order: `px4`/`px4-sih` → `mediamtx` → `camera-bridge`/`usb-camera-bridge` |
 | Want to revert to MQTT mode | Set `USE_RTSP=false` in docker-compose.yml, restart camera-bridge |
 
 ## Restart Order (full stack)
 ```bash
 make down
 make up-sim-camera
-# Wait ~60s for PX4 healthcheck to pass, then bridges auto-connect
 make apps   # if you need AI helpers
 ```

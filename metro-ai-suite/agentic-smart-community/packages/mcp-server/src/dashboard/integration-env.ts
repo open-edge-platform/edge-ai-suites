@@ -19,8 +19,8 @@ function readHttpUrl(name: string): URL | undefined {
 
 export function loadDashboardIntegrationConfig(): DashboardIntegrationConfig {
   return {
-    routerUrl: readHttpUrl("SMARTBUILDING_ROUTER_URL"),
-    openClawGatewayUrl: readHttpUrl("SMARTBUILDING_OPENCLAW_GATEWAY_URL"),
-    openClawGatewayToken: process.env.SMARTBUILDING_OPENCLAW_GATEWAY_TOKEN?.trim() || undefined,
+    routerUrl: readHttpUrl("SMART_COMMUNITY_ROUTER_URL"),
+    openClawGatewayUrl: readHttpUrl("SMART_COMMUNITY_OPENCLAW_GATEWAY_URL"),
+    openClawGatewayToken: process.env.SMART_COMMUNITY_OPENCLAW_GATEWAY_TOKEN?.trim() || undefined,
   };
 }

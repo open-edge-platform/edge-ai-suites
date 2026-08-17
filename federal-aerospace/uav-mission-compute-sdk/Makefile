@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-sweep bench-bridge-sweep help
+.PHONY: init up-sim-camera up-sim-camera-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -23,11 +23,14 @@ init:
 		if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
 			GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
 			if [ -n "$$GPU_RENDER" ]; then \
+				GPU_RENDER_GID=$$(stat -c "%g" "$$GPU_RENDER" 2>/dev/null); \
 				echo "✅ GPU devices detected. Adding to .env:"; \
 				echo "   GPU_DEVICE=$$GPU_CARD"; \
 				echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
+				echo "   GPU_RENDER_GID=$$GPU_RENDER_GID"; \
 				echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
 				echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
+				echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
 			fi; \
 		fi; \
 	fi
@@ -36,11 +39,31 @@ init:
 # Camera mode is controlled via .env (multi-cam default, single-cam by switching vars)
 up-sim-camera:
 	@# Help: Start core infra with PX4 Gazebo sim cameras (sim-camera profile)
-	$(COMPOSE_LOCAL) --profile sim-camera up -d --build
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
+	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera --profile observability up -d --build
+
+up-sim-camera-lean:
+	@# Help: Start sim-camera without observability stack (saves ~300 MB RAM)
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
+	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera up -d --build
 
 up-usb-camera:
 	@# Help: Start core infra with real USB camera + lightweight PX4 SIH + companion telemetry services
-	PX4_NETWORK_SERVICE=px4-sih PX4_ADDRESS=udpin://0.0.0.0:14550 $(COMPOSE_LOCAL) --profile usb-camera up -d --build
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile usb-camera --profile observability up -d --build
+
+up-usb-camera-lean:
+	@# Help: Start usb-camera without observability stack (saves ~300 MB RAM)
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env \
+		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile usb-camera up -d --build
 
 build:
 	@# Help: Build all images (core infra + apps), using Docker layer cache
@@ -54,7 +77,7 @@ build-nc:
 
 down:
 	@# Help: Stop core infra (works for both sim-camera and usb-camera profiles)
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down
 
 logs:
 	@# Help: Tail logs for core infra
@@ -102,12 +125,12 @@ deploy-remote:
 # ── Misc ──────────────────────────────────────────────────────────────────
 clean:
 	@# Help: Remove stopped containers and dangling images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
 	docker image prune -f
 
 clean-all:
 	@# Help: Remove containers, compose volumes, and all unused images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera down --remove-orphans --volumes
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans --volumes
 	docker image prune -a -f
 
 help:
@@ -154,12 +177,8 @@ $(VENV)/.installed: $(REQ)
 bench:  ## Run the MAVLink->MQTT telemetry benchmark (stack must be running); pass args with ARGS="--duration 30 --clients 4"
 	$(PY) benchmarks/benchmark_mavlink_mqtt.py $(ARGS)
 
-# SWEEP_RATES: comma-separated Hz tiers to stress-test (default covers a wide range)
-SWEEP_RATES    ?= 10,25,50,100,200,500
 # SWEEP_DURATION: measurement window per tier in seconds
 SWEEP_DURATION ?= 10
-bench-sweep:  ## Broker-only stress: synthetic publisher at increasing Hz measures drop/latency; tune with SWEEP_RATES="10,25,50,100,200,500" SWEEP_DURATION=10
-	$(PY) benchmarks/benchmark_mavlink_mqtt.py --sweep --sweep-rates $(SWEEP_RATES) --sweep-duration $(SWEEP_DURATION) $(ARGS)
 
 # BRIDGE_SWEEP_RATES: caps applied to attitude/velocity/position on each tier
 BRIDGE_SWEEP_RATES ?= 20,50,100,200

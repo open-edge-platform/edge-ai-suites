@@ -79,6 +79,8 @@ README.md          @xwu2intel
 /metro-ai-suite/live-video-analysis/**/README.md                 @bharagha @yogeshmpandey  @hteeyeoh  @open-edge-platform/open-edge-platform-docs-write
 
 # /metro-ai-suite/metro-sdk-manager/                             no codeowners, the top codeowners apply
+/metro-ai-suite/metro-sdk-manager/docs/user-guide/                         @vagheshp @rranjan3 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-sdk-manager/docs/oep-sdk-manager-files/config.js     @vagheshp @rranjan3 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 # inside vision ai recipe
 /metro-ai-suite/metro-vision-ai-app-recipe/docs/                           @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
@@ -132,9 +134,9 @@ README.md          @xwu2intel
 /metro-ai-suite/agentic-smart-community/docs/       @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/agentic-smart-community/README.md   @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @xwu2intel
-/metro-ai-suite/enterprise-data-intelligence/docs/       @Yongbozzz @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/enterprise-data-intelligence/README.md   @Yongbozzz @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @llin60 @xwu2intel 
+/metro-ai-suite/enterprise-data-intelligence/docs/       @Yongbozzz @myqi @llin60 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/enterprise-data-intelligence/README.md   @Yongbozzz @myqi @llin60 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 /metro-ai-suite/vms-adapter-plugin/                              @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard
 /metro-ai-suite/vms-adapter-plugin/docs/                         @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write

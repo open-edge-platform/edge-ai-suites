@@ -1,3 +1,8 @@
+<!--
+  Copyright (C) 2026 Intel Corporation
+  SPDX-License-Identifier: Apache-2.0
+-->
+
 <template>
   <div class="menu-tree">
     <div v-for="node in nodes" :key="node.idx" class="tree-node">

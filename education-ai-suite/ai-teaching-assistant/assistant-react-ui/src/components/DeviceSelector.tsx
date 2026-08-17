@@ -35,7 +35,7 @@ export default function DeviceSelector({ value, onChange, disabled }: Props) {
 
   return (
     <div>
-      <label className="mb-1 block text-xs font-medium text-black">
+      <label className="mb-1 block text-sm font-semibold text-black">
         Microphone
       </label>
       <div className="flex gap-2">

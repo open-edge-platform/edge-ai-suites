@@ -1,7 +1,11 @@
-from marshmallow import Schema, fields, ValidationError
+from marshmallow import Schema, fields, ValidationError, EXCLUDE
 
 # Define a schema for validation
 class TensorSchema(Schema):
+    class Meta:
+        # Ignore any additional fields emitted by newer DL Streamer versions
+        unknown = EXCLUDE
+
     data = fields.List(fields.Float(), required=False)
     layer_name = fields.Str(required=False)
     dims = fields.List(fields.Int(), required=False)
@@ -11,9 +15,17 @@ class TensorSchema(Schema):
     layout = fields.Str(required=False)
     label_id = fields.Int(required=False)
     confidence = fields.Float(required=False)
-    
+    tensor_name = fields.Str(required=False)
+    dims_order = fields.Str(required=False)
+    type = fields.Str(required=False)
+    semantic_tag = fields.Str(required=False)
+
 
 class MetadataSchema(Schema):
+    class Meta:
+        # Ignore any additional fields emitted by newer DL Streamer versions
+        unknown = EXCLUDE
+
     time = fields.Int(required=True)
     objects = fields.List(fields.Dict(), required=False)
     caps = fields.Str(required=False)
@@ -32,5 +44,9 @@ class MetadataSchema(Schema):
     timestamp = fields.Int(required=False)
 
 class PayloadSchema(Schema):
+    class Meta:
+        # Ignore any additional fields emitted by newer DL Streamer versions
+        unknown = EXCLUDE
+
     metadata = fields.Nested(MetadataSchema, required=True)
     blob = fields.Raw(required=False)

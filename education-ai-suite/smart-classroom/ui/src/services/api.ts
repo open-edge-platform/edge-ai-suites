@@ -1,28 +1,28 @@
 import type { StreamEvent, StreamOptions } from './streamSimulator';
 import { store } from "../redux/store";
-import { 
+import {
   setVideoStatus,
   setVideoAnalyticsActive,
   setVideoPlaybackMode
 } from "../redux/slices/uiSlice";
 import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
 
-export type ProjectConfig = { 
-  name: string; 
-  location: string; 
-  microphone: string; 
-  frontCamera?: string; 
-  backCamera?: string; 
-  boardCamera?: string 
+export type ProjectConfig = {
+  name: string;
+  location: string;
+  microphone: string;
+  frontCamera?: string;
+  backCamera?: string;
+  boardCamera?: string
 };
 
-export type Settings = { 
-  projectName: string; 
-  projectLocation: string; 
-  microphone: string; 
-  frontCamera?: string; 
-  backCamera?: string; 
-  boardCamera?: string 
+export type Settings = {
+  projectName: string;
+  projectLocation: string;
+  microphone: string;
+  frontCamera?: string;
+  backCamera?: string;
+  boardCamera?: string
 };
 
 export type SessionMode = 'record' | 'upload';
@@ -48,6 +48,8 @@ const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
 const GRADING_API_URL: string = env.VITE_GRADING_API_URL || '/grading-api';
 const HEALTH_TIMEOUT_MS = 5000;
+// Content Search wraps every reply in {code, data, message}; only this code means success.
+const CS_SUCCESS_CODE = 20000;
 
 // ============================================================================
 // FEATURE CONFIGURATION API
@@ -59,6 +61,7 @@ export interface FeatureDescriptor {
   requires: string[];
   endpoints?: Record<string, string>;
   mode?: string;
+  chunking?: boolean;
 }
 
 /**
@@ -93,11 +96,25 @@ export function getFeatureEndpoint(
  * e.g. "local://content-search/runs/.../image.jpg" → "/api/v1/object/download?file_key=runs%2F...%2Fimage.jpg&inline=true"
  */
 export function getContentSearchFileUrl(filePath: string): string {
+  return csDownloadUrl(extractFileKey(filePath), true);
+}
+
+/**
+ * Strip the `local://<bucket>/` prefix from a search result's file_path, yielding the
+ * storage file_key. Paths that are already keys are returned unchanged.
+ */
+export function extractFileKey(filePath: string): string {
   const LOCAL_PREFIX = 'local://content-search/';
-  const fileKey = filePath.startsWith(LOCAL_PREFIX)
-    ? filePath.slice(LOCAL_PREFIX.length)
-    : filePath;
-  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
+  return filePath.startsWith(LOCAL_PREFIX) ? filePath.slice(LOCAL_PREFIX.length) : filePath;
+}
+
+/**
+ * Build the backend /download URL for a storage file_key.
+ * `inline` renders in the browser (preview); otherwise it downloads as an attachment.
+ */
+export function csDownloadUrl(fileKey: string, inline = false): string {
+  const base = `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+  return inline ? `${base}&inline=true` : base;
 }
 
 /**
@@ -172,19 +189,42 @@ export async function pingBackend(): Promise<boolean> {
   }
 }
 
+// Sentinel message thrown when the backend cannot be reached at all, so callers
+// can recognise it and show a localized message instead of this English text.
+export const BACKEND_UNAVAILABLE_MESSAGE = 'Backend server is unavailable. Please ensure the backend is running.';
+
 export async function safeApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
   try {
     return await apiCall();
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Backend server is unavailable. Please ensure the backend is running.');
+      throw new Error(BACKEND_UNAVAILABLE_MESSAGE);
     }
     throw error;
   }
 }
 
+/**
+ * Pull the human-readable reason out of an error response body. FastAPI raises
+ * surface it as `detail`; handlers that return a JSONResponse use `message`.
+ * Falls back to the raw body text, then to the caller's generic message.
+ */
+async function errorDetail(res: Response, fallback: string): Promise<string> {
+  const text = await res.text().catch(() => '');
+  if (!text) return fallback;
+  try {
+    const json = JSON.parse(text);
+    const detail = json.detail ?? json.message ?? json.error;
+    if (typeof detail === 'string' && detail.trim()) return detail;
+  } catch {
+    // Not JSON — the raw body is the best description we have.
+    return text;
+  }
+  return fallback;
+}
+
 export async function getSettings(): Promise<Settings> {
-  return safeApiCall(async() => {
+  return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/project`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Failed to fetch project config: ${res.status}`);
     const cfg = (await res.json()) as ProjectConfig;
@@ -192,15 +232,15 @@ export async function getSettings(): Promise<Settings> {
       projectName: cfg.name ?? '',
       projectLocation: cfg.location ?? '',
       microphone: cfg.microphone ?? '',
-      frontCamera: cfg.frontCamera || '', 
-      backCamera: cfg.backCamera || '',   
-      boardCamera: cfg.boardCamera || ''  
+      frontCamera: cfg.frontCamera || '',
+      backCamera: cfg.backCamera || '',
+      boardCamera: cfg.boardCamera || ''
     };
   });
 }
 
 export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
-  return safeApiCall(async () =>{
+  return safeApiCall(async () => {
     const payload: ProjectConfig = {
       name: settings.projectName,
       location: settings.projectLocation,
@@ -236,33 +276,33 @@ export async function updateProjectConfig(config: ProjectConfig): Promise<Projec
 
 export async function startSession(req: StartSessionRequest): Promise<StartSessionResponse> {
   return safeApiCall(async () => {
-  const res = await fetch(`${BASE_URL}/session/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
+    const res = await fetch(`${BASE_URL}/session/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
+    });
+    if (!res.ok) throw new Error('Failed to start session');
+    return (await res.json()) as StartSessionResponse;
   });
-  if (!res.ok) throw new Error('Failed to start session');
-  return (await res.json()) as StartSessionResponse;});
 }
 
 export async function uploadAudio(file: File): Promise<{ filename: string; message: string; path: string }> {
   return safeApiCall(async () => {
-  const form = new FormData();
-  form.append('file', file);
-  const res = await fetch(`${BASE_URL}/upload-audio`, { method: 'POST', body: form });
-  if (!res.ok) {
-    const json = await res.json();
-    throw new Error(json.message || `Upload failed (${res.status})`);
-}
-return res.json();
-});
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${BASE_URL}/upload-audio`, { method: 'POST', body: form });
+    if (!res.ok) {
+      throw new Error(await errorDetail(res, `Upload failed (${res.status})`));
+    }
+    return res.json();
+  });
 }
 
 export async function storeAudioDuration(sessionId: string, audioFile: File): Promise<{ status: string; message: string }> {
   return safeApiCall(async () => {
     console.log(`🔊 Extracting audio duration from ${audioFile.name}...`);
     const duration = await getAudioDuration(audioFile);
-    
+
     if (!duration) {
       throw new Error('Could not extract audio duration from file');
     }
@@ -297,7 +337,7 @@ export function getAudioDuration(file: File): Promise<number | null> {
     try {
       const audio = document.createElement('audio');
       const url = URL.createObjectURL(file);
-      
+
       // Set a timeout in case metadata never loads
       const timeout = setTimeout(() => {
         URL.revokeObjectURL(url);
@@ -461,8 +501,7 @@ export async function fetchMindmap(sessionId: string): Promise<string> {
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(errText || `HTTP ${response.status}`);
+    throw new Error(await errorDetail(response, `Mind map request failed (${response.status})`));
   }
 
   const data: { mindmap?: string; error?: string } = await response.json();
@@ -501,12 +540,12 @@ export async function getResourceMetrics(sessionId: string): Promise<any> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/metrics`, {
       method: 'GET',
-      headers: { 
-        'x-session-id': sessionId, 
-        'Accept': 'application/json' 
+      headers: {
+        'x-session-id': sessionId,
+        'Accept': 'application/json'
       }
     });
-    
+
     if (!res.ok) {
       console.warn(`Metrics endpoint returned ${res.status}`);
       return {
@@ -517,7 +556,7 @@ export async function getResourceMetrics(sessionId: string): Promise<any> {
         power: []
       };
     }
-    
+
     const text = await res.text();
     return text ? JSON.parse(text) : {
       cpu_utilization: [],
@@ -534,7 +573,7 @@ export async function getConfigurationMetrics(sessionId: string): Promise<any> {
     const res = await fetch(`${BASE_URL}/performance-metrics`, {
       method: "GET",
       headers: {
-        "session_id": sessionId, 
+        "session_id": sessionId,
         "Accept": "application/json",
       },
     });
@@ -570,8 +609,7 @@ export const startVideoAnalytics = async (
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || `Failed to start video analytics: ${response.status}`);
+      throw new Error(await errorDetail(response, `Failed to start video analytics (${response.status})`));
     }
 
     return response.json();
@@ -667,17 +705,17 @@ export async function getClassStatistics(
       try {
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) {
             break;
           }
 
           buffer += decoder.decode(value, { stream: true });
-          
+
           // Process complete JSON objects
           const lines = buffer.split('\n');
           buffer = lines.pop() || ''; // Keep incomplete line in buffer
-          
+
           for (const line of lines) {
             if (line.trim()) {
               try {
@@ -746,10 +784,10 @@ export async function* monitorVideoAnalyticsPipelines(
     for (const line of lines) {
       if (!line.trim()) continue;
       const parsed = JSON.parse(line);
-    yield parsed;
-        }
-      }
+      yield parsed;
     }
+  }
+}
 
 export async function getPlatformInfo(): Promise<any> {
   return safeApiCall(async () => {
@@ -767,7 +805,7 @@ export async function getPlatformInfo(): Promise<any> {
 
     const text = await res.text();
     return text ? JSON.parse(text) : {};
-  } );
+  });
 }
 
 export async function getAudioDevices(): Promise<string[]> {
@@ -951,9 +989,19 @@ export async function csCleanupTask(
       `${CONTENT_SEARCH_API_URL}/api/v1/object/cleanup-task/${encodeURIComponent(taskId)}`,
       { method: 'DELETE' }
     );
+    if (!res.ok) {
+      throw new Error(await errorDetail(res, `Delete failed (${res.status})`));
+    }
     const data = await res.json().catch(() => ({}));
+    // Content Search reports refusals ("Task is still processing", "Task ID does
+    // not exist or has expired") as HTTP 200 with a non-success `code`. Treating
+    // those as success would drop the file from the list while it is still on
+    // the server, so they have to be raised explicitly.
+    if (data.code !== undefined && data.code !== CS_SUCCESS_CODE) {
+      throw new Error(data.message || `Delete failed (code ${data.code})`);
+    }
     return {
-      code: data.code ?? 20000,
+      code: data.code ?? CS_SUCCESS_CODE,
       task_id: data.data?.task_id ?? taskId,
       status: data.data?.status ?? 'COMPLETED',
       message: data.message ?? '',
@@ -995,7 +1043,7 @@ export async function csDownloadText(fileKey: string): Promise<string> {
       `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`
     );
     if (!res.ok) {
-      throw new Error(`Download failed (${res.status})`);
+      throw new Error(await errorDetail(res, `Download failed (${res.status})`));
     }
     return await res.text();
   });
@@ -1007,17 +1055,17 @@ export async function createSession(): Promise<{ sessionId: string }> {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
- 
+
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error('❌ Failed to create session:', errorText);
-      throw new Error(`Failed to create session: ${res.status}`);
+      const detail = await errorDetail(res, `Failed to create session (${res.status})`);
+      console.error('❌ Failed to create session:', detail);
+      throw new Error(detail);
     }
- 
+
     const data = await res.json();
     const sessionId = data['session-id'];
     console.log('🟢 Session ID created:', sessionId);
- 
+
     return { sessionId };
   });
 }
@@ -1027,7 +1075,7 @@ export async function startMonitoring(sessionId: string): Promise<{ status: stri
     console.log('📊 Starting monitoring for session:', sessionId);
     const res = await fetch(`${BASE_URL}/start-monitoring`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'x-session-id': sessionId  // Pass session ID in header like transcription
       },
@@ -1045,7 +1093,7 @@ export async function stopMonitoring(): Promise<{ status: string; message: strin
     console.log('🛑 Stopping monitoring');
     const res = await fetch(`${BASE_URL}/stop-monitoring`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json'
       },
     });
@@ -1081,7 +1129,7 @@ export async function uploadVideoMetadata(sessionId: string, videoFile: File): P
     console.log(`📹 Extracting video duration from ${videoFile.name}...`);
     // Extract duration from video file using HTML5 Video API
     const duration = await getVideoDuration(videoFile);
-    
+
     if (!duration) {
       throw new Error('Could not extract video duration from file');
     }
@@ -1117,7 +1165,7 @@ export function getVideoDuration(file: File): Promise<number | null> {
     try {
       const video = document.createElement('video');
       const url = URL.createObjectURL(file);
-      
+
       // Set a timeout in case metadata never loads
       const timeout = setTimeout(() => {
         URL.revokeObjectURL(url);
@@ -1343,8 +1391,7 @@ export async function csGetFilesList(): Promise<{
       { method: 'GET' }
     );
     if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      throw new Error(json.message || `Files list failed (${res.status})`);
+      throw new Error(await errorDetail(res, `Files list failed (${res.status})`));
     }
     return await res.json();
   });
@@ -1573,6 +1620,8 @@ export interface GradingConfig {
   dpi: number | null;
   page_columns: number | null;
   column_split_ratio: number | null;
+  force_split: boolean | null;
+  force_split_pairs: number[][] | null;
   contrast_enhance: boolean | null;
   contrast_factor: number | null;
   max_tokens: number | null;
@@ -1596,7 +1645,7 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
 }
 
 export type GradingConfigUpdate = Partial<Pick<GradingConfig,
-  'dpi' | 'page_columns' | 'column_split_ratio' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'dpi' | 'page_columns' | 'column_split_ratio' | 'force_split' | 'force_split_pairs' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
   'poll_interval' | 'stable_checks' | 'idle_timeout' |
   'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
 

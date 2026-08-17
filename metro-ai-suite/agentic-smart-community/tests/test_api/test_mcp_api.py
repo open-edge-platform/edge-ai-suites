@@ -11,16 +11,16 @@ from conftest import McpApiClient
 
 
 DOCUMENTED_TOOLS = {
-    "smartbuilding_alert_query",
-    "smartbuilding_plan_ctl",
-    "smartbuilding_scene_query",
-    "smartbuilding_generate_report",
-    "smartbuilding_monitor_ctl",
-    "smartbuilding_monitors_compose",
-    "smartbuilding_video_db",
-    "smartbuilding_use_case_validate",
-    "smartbuilding_use_case_register",
-    "smartbuilding_rule_eval",
+    "smart_community_alert_query",
+    "smart_community_plan_ctl",
+    "smart_community_scene_query",
+    "smart_community_generate_report",
+    "smart_community_monitor_ctl",
+    "smart_community_monitors_compose",
+    "smart_community_video_db",
+    "smart_community_use_case_validate",
+    "smart_community_use_case_register",
+    "smart_community_rule_eval",
 }
 
 
@@ -46,7 +46,7 @@ def test_initialize_returns_session_and_server_capabilities(mcp_api: McpApiClien
     response = client.initialize()
 
     assert client.session_id
-    assert response["result"]["serverInfo"]["name"] == "smartbuilding-video"
+    assert response["result"]["serverInfo"]["name"] == "smart-community-video"
     assert response["result"]["capabilities"]["resources"]["subscribe"] is True
 
 
@@ -58,11 +58,11 @@ def test_discovery_lists_documented_tools_and_resources(mcp_api: McpApiClient):
     templates = client.request("resources/templates/list")["result"]["resourceTemplates"]
 
     assert {tool["name"] for tool in tools} == DOCUMENTED_TOOLS
-    assert {resource["uri"] for resource in resources} == {"smartbuilding://monitors"}
+    assert {resource["uri"] for resource in resources} == {"smart-community://monitors"}
     template_uris = {template["uriTemplate"] for template in templates}
-    assert "smartbuilding://monitor/{id}/stats" in template_uris
-    assert "smartbuilding://monitor/{id}/alerts" in template_uris
-    assert "smartbuilding://monitor/{id}/alerts{?since}" in template_uris
+    assert "smart-community://monitor/{id}/stats" in template_uris
+    assert "smart-community://monitor/{id}/alerts" in template_uris
+    assert "smart-community://monitor/{id}/alerts{?since}" in template_uris
 
 
 def test_documented_local_tool_calls_return_json(mcp_api: McpApiClient):
@@ -70,17 +70,17 @@ def test_documented_local_tool_calls_return_json(mcp_api: McpApiClient):
 
     alert_result, alerts = _tool_result(
         client,
-        "smartbuilding_alert_query",
+        "smart_community_alert_query",
         {"monitor_id": "cam_child", "action": "latest", "limit": 20},
     )
     monitor_result, monitors = _tool_result(
         client,
-        "smartbuilding_monitor_ctl",
+        "smart_community_monitor_ctl",
         {"action": "list"},
     )
     db_result, rows = _tool_result(
         client,
-        "smartbuilding_video_db",
+        "smart_community_video_db",
         {"query": "SELECT id, status, use_case FROM monitors WHERE id = ?", "params": ["cam_child"]},
     )
 
@@ -102,10 +102,10 @@ def test_plan_tool_round_trip(mcp_api: McpApiClient):
         "plan": {"expected_wakeup": "07:30"},
     }
 
-    upsert_result, upserted = _tool_result(client, "smartbuilding_plan_ctl", arguments)
+    upsert_result, upserted = _tool_result(client, "smart_community_plan_ctl", arguments)
     list_result, plans = _tool_result(
         client,
-        "smartbuilding_plan_ctl",
+        "smart_community_plan_ctl",
         {"monitor_id": "cam_elder_bedroom", "action": "list", "active_only": True},
     )
 
@@ -118,10 +118,10 @@ def test_plan_tool_round_trip(mcp_api: McpApiClient):
 def test_resource_reads_match_documented_shapes(mcp_api: McpApiClient):
     client = _initialized_client(mcp_api)
 
-    monitors = client.read_resource("smartbuilding://monitors")
-    stats = client.read_resource("smartbuilding://monitor/cam_child/stats")
-    alerts = client.read_resource("smartbuilding://monitor/cam_child/alerts")
-    incremental = client.read_resource("smartbuilding://monitor/cam_child/alerts?since=42")
+    monitors = client.read_resource("smart-community://monitors")
+    stats = client.read_resource("smart-community://monitor/cam_child/stats")
+    alerts = client.read_resource("smart-community://monitor/cam_child/alerts")
+    incremental = client.read_resource("smart-community://monitor/cam_child/alerts?since=42")
 
     assert monitors == {"monitors": []}
     assert stats["monitorId"] == "cam_child"
@@ -137,7 +137,7 @@ def test_video_db_rejects_state_changing_sql(mcp_api: McpApiClient):
     response = client.request(
         "tools/call",
         {
-            "name": "smartbuilding_video_db",
+            "name": "smart_community_video_db",
             "arguments": {"query": "DELETE FROM monitors"},
         },
     )
@@ -151,7 +151,7 @@ def test_negative_alert_cursor_returns_mcp_error(mcp_api: McpApiClient):
 
     response = client.request(
         "resources/read",
-        {"uri": "smartbuilding://monitor/cam_child/alerts?since=-1"},
+        {"uri": "smart-community://monitor/cam_child/alerts?since=-1"},
     )
 
     assert "error" in response

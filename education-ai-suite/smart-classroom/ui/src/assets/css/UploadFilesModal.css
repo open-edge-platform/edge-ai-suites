@@ -12,7 +12,7 @@
 }
 
 .modal-input-group {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .modal-input-group label {
@@ -20,8 +20,8 @@
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 8px;
-  margin-top: 1rem;
-  gap:4px;
+  margin-top: 8px;
+  gap: 4px;
 }
 
 .file-input-wrapper {
@@ -63,6 +63,7 @@
 .modal-actions .apply-button:hover {
   background-color: #0056b3;
 }
+
 .apply-button {
   background-color: #007bff;
   color: #fff;
@@ -80,13 +81,16 @@
 .error-message {
   color: #c00;
   font-size: 12px;
+  /* One reason per line, and long file paths wrap instead of overflowing. */
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
-.modal-body{
+.modal-body {
   display: flex;
   flex-direction: column;
   font-family: "IntelOne Text", system-ui, sans-serif;
-  padding: clamp(12px, 4vw, 18px);
+  padding: 12px;
   color: #2B2C30;
   align-items: stretch;
   z-index: var(--z-index-modal);

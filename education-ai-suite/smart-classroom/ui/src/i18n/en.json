@@ -95,7 +95,23 @@
     "selectFrontCameraFile": "Select a front camera file",
     "selectBackCameraFile": "Select a back camera file",
     "selectBoardCameraFile": "Select a board camera file",
-    "chooseFile": "Choose File"
+    "chooseFile": "Choose File",
+    "audioFeaturesDisabled": "Audio processing features are disabled. Audio uploads are not available.",
+    "videoAnalyticsDisabled": "Video analytics feature is disabled. Only audio files can be uploaded.",
+    "invalidFileType": "Please select only {{types}} files.",
+    "fileRequired": "At least one file (audio or video) is required.",
+    "baseDirectoryRequired": "Base directory is required when video files are selected.",
+    "startingProcessing": "Starting processing...",
+    "creatingSession": "Creating session...",
+    "transcriptionAndVideoStarted": "Transcription and video analytics started successfully.",
+    "transcriptionStartedVideoFailed": "Transcription started successfully. Video analytics failed to start.",
+    "transcriptionStarted": "Transcription started successfully.",
+    "videoAnalyticsStarted": "Video analytics started successfully.",
+    "videoAnalyticsFailed": "Failed to start video analytics.",
+    "noProcessingStarted": "No valid processing started.",
+    "processingFailed": "Failed during processing. Please try again.",
+    "processingFailedDetail": "Failed during processing: {{detail}}",
+    "backendUnavailable": "The backend server is currently unreachable. Please ensure it is running."
   },
     "menu": {
       "settings": "Settings",
@@ -112,6 +128,10 @@
       "transcripts": "Transcripts",
       "summary": "AI Summary",
       "mindmap":"Mind Map"
+    },
+
+    "transcript": {
+      "processingWholeFile": "Transcribing the whole recording in a single pass — the transcript appears once processing finishes. Please wait…"
     },
   
   "accordion": {
@@ -181,7 +201,18 @@
     "resumeAriaLabel": "Resume resource metric polling",
     "resumeButton": "Resume"
   },
+  "mindmap": {
+    "invalidFormatTitle": "Error: Invalid Format",
+    "invalidFormatDetail": "Failed to parse mind map data"
+  },
+  "cameras": {
+    "front": "Front camera",
+    "back": "Back camera",
+    "board": "Board camera"
+  },
   "errors": {
+      "videoPipelineFailed": "Video analytics could not start:\n{{details}}",
+      "videoPipelineStopFailed": "Video analytics could not stop:\n{{details}}",
       "projectNameRequired": "Project name is required",
       "failedToStartRecording": "Failed to start recording",
       "failedToStopRecording": "Failed to stop recording",
@@ -224,7 +255,20 @@
     "videoAnalytics": "Video Analytics",
     "audioAnalytics": "Audio Analytics",
     "lastUpdated": "Last updated",
-    "noData": "No data available"
+    "noData": "No data available",
+    "live": "Live",
+    "waitingForData": "Waiting for data",
+    "playback": "Playback",
+    "finalResults": "Final results",
+    "students": "Students",
+    "stands": "Stands",
+    "hands": "Hands",
+    "participation": "{{percent}}% engaged",
+    "participationDetail": "{{active}} of {{total}} students participated",
+    "mostActive": "Most active students",
+    "showAll": "Show all {{count}} students",
+    "showTop": "Show top {{count}} students",
+    "errorLabel": "Error"
   },
   "search": {
     "preparingContent": "Content Generating...",
@@ -268,8 +312,12 @@
       "vlmGroup": "VLM Parameters",
       "pacingGroup": "Grading Pace",
       "detectionGroup": "Layout Detection",
+      "columnSplitRatio": "Column Split Ratio",
       "contrastFactor": "Contrast Factor",
       "contrastEnhance": "Contrast Enhance",
+      "forceSplit": "Force Split",
+      "forceSplitPairs": "Split After Pages",
+      "forceSplitAdd": "+ Add page",
       "maxTokens": "Max Tokens",
       "maxImagePixels": "Max Image Pixels",
       "sortBoxes": "Sort Boxes",
@@ -279,6 +327,7 @@
       "iouThreshold": "IoU Threshold",
       "invalidMinScore": "Min score must be between 0 and 1",
       "invalidIou": "IoU threshold must be between 0 and 1",
+      "pageColumns": "Page Columns",
       "dpi": "Render DPI",
       "vlmModel": "VLM Model",
       "ocrModel": "OCR Model",
@@ -288,6 +337,9 @@
       "saving": "Saving…",
       "saved": "Saved. Takes effect on next task.",
       "invalidDpi": "DPI must be a positive integer",
+      "invalidPageColumns": "Page columns must be 1 or 2",
+      "invalidColumnSplitRatio": "Column split ratio must be between 0 and 1",
+      "invalidForceSplitPairs": "Split pages must be positive integers.",
       "invalidTemp": "Temperature must be between 0 and 2",
       "pollInterval": "Poll Interval (s)",
       "stableChecks": "Stable Checks",
@@ -480,7 +532,13 @@
     "removing": "Removing...",
     "filesExistMessage": "Files already exist. To view, navigate to \"View Files\" in \"Upload\" section.",
     "dismiss": "Dismiss",
-    "enabledAfterSegmentation": "Enabled only after content segmentation"
+    "enabledAfterSegmentation": "Enabled only after content segmentation",
+    "ofTotal": "(of {{total}})",
+    "loadFailed": "Failed to load files.",
+    "deleteFailed": "Failed to delete file.",
+    "cannotDeleteNoTask": "\"{{fileName}}\" cannot be removed: no task is associated with it.",
+    "ocrLoadFailed": "Failed to load OCR text.",
+    "ocrLoadFailedDetail": "Failed to load OCR text: {{detail}}"
   },
   "reportFields": {
     "groups": {
@@ -576,7 +634,14 @@
     "score": "Score",
     "summarization": "Summarization",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "minScore": "Min score",
+    "scoreFormat": "Format",
+    "page": "Page",
+    "previewUnavailable": "Preview not available",
+    "previewUnavailableType": "Preview not available for this file type.",
+    "download": "Download {{name}}",
+    "closePreview": "Close preview"
   }
 }
  
