@@ -200,6 +200,33 @@ class TestCopyBackend:
         payload = events[0]["payload"]
         assert 2.0 <= payload["duration_seconds"] <= 8.0
 
+    def test_every_segment_keeps_its_own_file(self, test_video_path, tmp_path, mock_sink):
+        """One emitted event per segment file, every file still on disk.
+
+        Guards the -y overwrite trap: ffmpeg's -strftime has no sub-second
+        specifier, so if two segments ever resolve to the same name the second
+        one destroys the first and only one event survives the name-keyed dedupe.
+        """
+        recorder = make_recorder(
+            tmp_path, mock_sink, interval=2,
+            source_id="test_unique", source_url=test_video_path,
+        )
+        recorder.start()
+        time.sleep(9)
+        recorder.stop()
+
+        events = recording_events(mock_sink)
+        assert len(events) >= 3, f"expected several segments, got {len(events)}"
+        paths = [e["payload"]["recording_path"] for e in events]
+        assert len(set(paths)) == len(paths), f"duplicate segment names: {paths}"
+        for path in paths:
+            assert os.path.exists(path), f"segment overwritten/removed: {path}"
+        # Every name carries the per-session tag, and start recovery still works.
+        for path in paths:
+            stem = os.path.splitext(os.path.basename(path))[0]
+            assert stem.rsplit("_", 1)[1].startswith("s"), stem
+            assert recorder._segment_start_from_path(path) is not None, path
+
     def test_no_list_files_left_behind(self, test_video_path, tmp_path, mock_sink):
         recorder = make_recorder(
             tmp_path, mock_sink, interval=2,
@@ -215,17 +242,44 @@ class TestCopyBackend:
         ]
         assert leftovers == []
 
-    def test_segment_start_from_path(self, tmp_path, mock_sink):
+    @pytest.mark.parametrize("name", [
+        "cam1_132045.mp4",                # legacy copy naming (no suffix)
+        "cam1_132045_s3f9x2.mp4",         # copy backend session tag
+        "cam1_132045_007.mp4",            # x264 backend millisecond suffix
+        "cam_2_132045_s1x1.mp4",          # underscore inside source_id
+        "cam999999_132045_s1x1.mp4",      # source_id ending in 6 digits
+        "cam_999999_132045_s1x1.mp4",     # ...as its own trailing field
+    ])
+    def test_segment_start_from_path(self, tmp_path, mock_sink, name):
         recorder = make_recorder(tmp_path, mock_sink)
-        path = "/data/recordings/2026-08-17/cam1_132045.mp4"
-        dt = recorder._segment_start_from_path(path)
-        assert dt is not None
+        dt = recorder._segment_start_from_path(f"/data/recordings/2026-08-17/{name}")
+        assert dt is not None, name
         assert (dt.year, dt.month, dt.day) == (2026, 8, 17)
         assert (dt.hour, dt.minute, dt.second) == (13, 20, 45)
 
-    def test_segment_start_from_path_bad_input(self, tmp_path, mock_sink):
+    @pytest.mark.parametrize("name", [
+        "cam1.mp4",                       # no time field at all
+        "cam1_9999.mp4",                  # wrong width
+        "cam1_995099_s1x1.mp4",           # 6 digits but not a valid time
+    ])
+    def test_segment_start_from_path_bad_input(self, tmp_path, mock_sink, name):
         recorder = make_recorder(tmp_path, mock_sink)
-        assert recorder._segment_start_from_path("/data/recordings/cam1.mp4") is None
+        assert recorder._segment_start_from_path(
+            f"/data/recordings/2026-08-17/{name}"
+        ) is None
+
+    def test_session_tag_makes_segment_names_disjoint(self, tmp_path, mock_sink):
+        """Two sessions of the same recorder must never pick the same segment
+        name: -y would silently overwrite the file and _drain_segment_list would
+        dedupe the second event away."""
+        recorder = make_recorder(tmp_path, mock_sink)
+        tags = {
+            f"s{os.getpid():x}x{next(recorder._session_seq):x}" for _ in range(5)
+        }
+        assert len(tags) == 5
+        # A tag must never parse as HHMMSS (that would break start recovery).
+        for tag in tags:
+            assert not (len(tag) == 6 and tag.isdigit())
 
     def test_drain_skips_malformed_lines(self, tmp_path, mock_sink):
         recorder = make_recorder(tmp_path, mock_sink)
