@@ -24,6 +24,10 @@ export HF_HOME
 # Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
 mkdir -p "${HF_HOME}"
 
+# Change to https://hf-mirror.com if you are in China and want to use the mirror site for Hugging Face.
+# export HF_ENDPOINT=https://hf-mirror.com
+export HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
+
 # llm-scaler image
 export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2
 

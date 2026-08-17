@@ -73,6 +73,9 @@ cp monitors.yaml.example "$SMART_COMMUNITY_DATA_DIR/monitors.yaml"
 Customize `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DATA_DIR/monitors.yaml` as needed, then build and start the stack:
 
 ```bash
+# Change to mirror endpoint if you are in China and want to use the mirror site for Hugging Face.
+export HF_ENDPOINT=https://hf-mirror.com
+
 source docker/set_env.sh
 
 # First time only: build the local images (multilevel + videostream-analytics + MCP server).
