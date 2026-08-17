@@ -454,7 +454,7 @@ clone_repositories() {
 # Starts the local simulation stack from the cloned Federal Aerospace package
 #######################################
 bring_up_uav_sdk() {
-  local sdk_dir="$HOME/oep/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk"
+  local sdk_dir="$HOME/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk"
 
   if [[ ! -d "${sdk_dir}" ]]; then
     err "UAV Mission Compute SDK directory not found at ${sdk_dir}"
