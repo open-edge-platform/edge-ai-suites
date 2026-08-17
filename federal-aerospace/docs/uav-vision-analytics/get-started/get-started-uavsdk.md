@@ -109,14 +109,14 @@ make uavsdk-up
 
 > **Note:** Video streams are not available until the UAV is armed and actively on a mission.
 
-The following sequence arms the UAV, commands a takeoff to 10 m, holds for 30 seconds, then lands:
+The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
 curl -sf -X POST http://localhost:8080/action/takeoff \
   -H "Content-Type: application/json" \
   -d '{"altitude": 10}'
-sleep 30
+sleep 120
 curl -X POST http://localhost:8080/action/land
 ```
 
@@ -139,13 +139,13 @@ rtsp://<HOST_IP>:8555/forward    (forward camera, GPU)
 rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 ```
 
-**File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
-
 #### Option B — Manual REST API
 
-Start a single pipeline directly without the pipeline manager. Useful for testing individual pipelines or custom configurations.
-
 > **Note:** RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
+
+Start a single camera pipeline directly. The UAVSDK mode loads `config-uavsdk.json` which defines the three camera-source pipelines (`nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`, `rear_camera_rtsp_npu`).
+
+Once the source is confirmed live, start the pipeline:
 
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
@@ -172,9 +172,15 @@ INSTANCE_ID=$(curl -s -X POST \
     }
   }' | tr -d '"')
 echo "Instance ID: $INSTANCE_ID"
+
+# Verify it reached RUNNING state (not ERROR)
+curl -s http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
 ```
 
-For GPU or NPU, change the pipeline name and `device` value.
+If `state` is `ERROR`, check the container logs:
+```bash
+docker logs dlstreamer-pipeline-server 2>&1 | tail -20
+```
 
 Stop a pipeline:
 ```bash

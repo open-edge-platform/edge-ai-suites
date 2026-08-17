@@ -45,10 +45,18 @@ init: ## Create .env from template and auto-detect GPU/NPU device paths
 		if [ -n "$$NPU_DEV" ]; then \
 			echo "✅ NPU detected:"; \
 			echo "   NPU_DEVICE=$$NPU_DEV"; \
-			sed -i "s|^NPU_DEVICE=.*|NPU_DEVICE=$$NPU_DEV|" .env; \
+			if grep -q "^NPU_DEVICE=" .env; then \
+				sed -i "s|^NPU_DEVICE=.*|NPU_DEVICE=$$NPU_DEV|" .env; \
+			else \
+				echo "NPU_DEVICE=$$NPU_DEV" >> .env; \
+			fi; \
 		else \
 			echo "⚠  No Intel NPU found at /dev/accel/ — defaulting NPU_DEVICE=/dev/null (NPU pipelines will not work)."; \
-			sed -i "s|^NPU_DEVICE=.*|NPU_DEVICE=/dev/null|" .env; \
+			if grep -q "^NPU_DEVICE=" .env; then \
+				sed -i "s|^NPU_DEVICE=.*|NPU_DEVICE=/dev/null|" .env; \
+			else \
+				echo "NPU_DEVICE=/dev/null" >> .env; \
+			fi; \
 		fi; \
 	fi
 

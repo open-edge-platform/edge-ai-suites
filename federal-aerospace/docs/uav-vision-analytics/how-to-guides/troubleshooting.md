@@ -192,6 +192,38 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ### NPU inference fails
 
+**Symptom A — pipeline skipped at startup:**
+```
+[pipeline] Skipping 'uav_object_detection_npu': NPU_DEVICE not available.
+```
+
+**Cause:** `NPU_DEVICE` is not set in `.env` (or set to `/dev/null`). This happens when `.env.example` lacked a `NPU_DEVICE=` placeholder and `make init` could not write the detected value.
+
+**Resolution:**
+```bash
+# Check if NPU device exists on the host
+ls /dev/accel/
+# If it does, add it to .env:
+echo "NPU_DEVICE=/dev/accel/accel0" >> .env
+# Then restart the stack so the container gets the updated device:
+make pymav-down && make pymav-up
+```
+
+**Symptom B — pipeline returns error about `model-instance-id`:**
+```
+Cannot start pipeline. gvadetect element uses model-instance-id: instnpu0
+that errored out on a prior run due to incorrect parameters.
+```
+
+**Cause:** A previous NPU pipeline attempt failed (e.g. device not mounted, wrong driver), and DLPS keeps the model instance in a poisoned state until the container is restarted.
+
+**Resolution:** Restart the DLPS container to clear the poisoned instance:
+```bash
+docker restart dlstreamer-pipeline-server
+# Wait ~15 s for container to become healthy, then retry
+```
+
+**Other checks:**
 - Confirm `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` is set (it is by default in the compose files).
 - Check that the NPU device node is available: `ls /dev/accel*`
 - Verify driver version: `dmesg | grep -i npu`
