@@ -1,10 +1,10 @@
 # =============================================================================
-# stop_kiosk.ps1
+# stop_ata.ps1
 # Smart Kiosk Assistant - Service Shutdown Script
 #
 # Gracefully stops all running services
 #
-# Usage: powershell -ExecutionPolicy Bypass -File stop_kiosk.ps1
+# Usage: powershell -ExecutionPolicy Bypass -File stop_ata.ps1
 # =============================================================================
 
 param(
@@ -116,6 +116,6 @@ Write-Header "SHUTDOWN COMPLETE"
 Write-Success "Stopped $StoppedCount service(s)"
 
 Write-Info "All services are now stopped."
-Write-Host "`nTo start again, run: powershell -ExecutionPolicy Bypass -File start_kiosk.ps1`n" -ForegroundColor Green
+Write-Host "`nTo start again, run: powershell -ExecutionPolicy Bypass -File start_ata.ps1`n" -ForegroundColor Green
 
 Start-Sleep -Milliseconds 500

@@ -42,7 +42,7 @@ cd edge-ai-suites;
 git sparse-checkout set education-ai-suite/ai-teaching-assistant;
 cd education-ai-suite/ai-teaching-assistant;
 .\setup_windows.ps1;
-.\start_kiosk.ps1
+.\start_ata.ps1
 ```
 
 Open `http://127.0.0.1:7860` in your browser.

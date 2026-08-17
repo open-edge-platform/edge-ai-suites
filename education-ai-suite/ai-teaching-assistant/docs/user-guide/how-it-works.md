@@ -6,7 +6,7 @@ flow of the AI Teaching Assistant.
 ## System Architecture
 
 AI Teaching Assistant runs as Windows-native Python services launched by
-`start_kiosk.ps1`. The browser talks to one local origin
+`start_ata.ps1`. The browser talks to one local origin
 (`ai-teaching-assistant ui` on port 7860), and that UI server proxies
 requests to backend services.
 
@@ -161,7 +161,7 @@ Times vary by: CPU speed, answer length, chunk count, model precision.
 
 ## Deployment Model
 
-- Windows-native launcher flow (`setup_windows.ps1`, `start_kiosk.ps1`)
+- Windows-native launcher flow (`setup_windows.ps1`, `start_ata.ps1`)
 - No container runtime required
 - Submodule-based dependency layout (`edge-ai-libraries`, `voice-enabled-interactions`)
 
