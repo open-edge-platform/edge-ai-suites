@@ -61,7 +61,7 @@ sequenceDiagram
 sudo apt install -y python3.12-venv ffmpeg
 ```
 
-> `python3.12-venv` is required by `make model` to create a Python virtual environment.  
+> `python3.12-venv` is required by `make model` to create a Python virtual environment.
 > `ffmpeg` provides `ffplay` for viewing the RTSP output stream and `ffmpeg` for recording.
 
 ### 1. Configure environment
