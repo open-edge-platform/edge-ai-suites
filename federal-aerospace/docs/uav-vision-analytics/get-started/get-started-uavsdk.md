@@ -141,21 +141,11 @@ rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 
 #### Option B — Manual REST API
 
+> **Note:** RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
+
 Start a single camera pipeline directly. The UAVSDK mode loads `config-uavsdk.json` which defines the three camera-source pipelines (`nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`, `rear_camera_rtsp_npu`).
 
-> **Prerequisite:** The `uav-mission-compute-sdk` must be running and its MediaMTX RTSP server must be publishing camera streams at `rtsp://host.docker.internal:8554/uav-1/{nadir,forward,rear}`. The pipeline will immediately go to **ERROR** state if the RTSP source is not available (the drone does not need to be armed — the Gazebo simulation publishes streams continuously).
-
-Verify the RTSP source is live before starting the pipeline:
-
-```bash
-ffprobe -v quiet -show_streams rtsp://localhost:8554/uav-1/nadir 2>&1 | grep codec_name
-# Expected: codec_name=h264
-# If command hangs or returns nothing, the SDK MediaMTX is not running.
-```
-
 Once the source is confirmed live, start the pipeline:
-
-> **Note:** RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
 
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
