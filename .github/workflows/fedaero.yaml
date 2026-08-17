@@ -141,11 +141,11 @@ jobs:
         with:
           filters: |
             handheld-multi-modal:
-              - 'federal-aerospace/apps/handheld-multi-modal/**'
+              - 'federal-aerospace/handheld-multi-modal/**'
               - 'federal-aerospace/Makefile'
               - '.github/workflows/fedaero.yaml'
             deterministic-threat-detection:
-              - 'federal-aerospace/apps/deterministic-threat-detection/**'
+              - 'federal-aerospace/deterministic-threat-detection/**'
               - 'federal-aerospace/Makefile'
               - '.github/workflows/fedaero.yaml'
 

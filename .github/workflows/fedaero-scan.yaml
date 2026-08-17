@@ -10,7 +10,7 @@
 #                  for the federal-aerospace/ directory using Trivy.
 #   shellcheck   - Scans all shell scripts (.sh) under federal-aerospace/ for
 #                  syntax and style issues using ShellCheck.
-#   bandit-scan  - Runs static analysis on Python code under federal-aerospace/apps
+#   bandit-scan  - Runs static analysis on Python code under federal-aerospace/
 #                  using Bandit to detect common security issues.
 #
 # All job reports are uploaded as GitHub Actions artifacts.
@@ -116,7 +116,7 @@ jobs:
           scan-scope: "all"
           output-format: "txt"
           fail-on-findings: "false"
-          paths: "federal-aerospace/apps"
+          paths: "federal-aerospace"
           report_suffix: "-bandit-federal-aerospace"
 
       - name: Upload Report
