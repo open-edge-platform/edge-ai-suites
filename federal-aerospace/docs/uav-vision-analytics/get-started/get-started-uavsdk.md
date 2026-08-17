@@ -155,12 +155,32 @@ ffprobe -v quiet -show_streams rtsp://localhost:8554/uav-1/nadir 2>&1 | grep cod
 
 Once the source is confirmed live, start the pipeline:
 
+> **Note:** RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
+
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
 INSTANCE_ID=$(curl -s -X POST \
   http://localhost:8081/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
   -H "Content-Type: application/json" \
-  -d '{}' | tr -d '"')
+  -d '{
+    "destination": {
+      "metadata": {
+        "type": "file",
+        "path": "/tmp/results.jsonl",
+        "format": "json-lines"
+      },
+      "frame": {
+        "type": "rtsp",
+        "path": "nadir"
+      }
+    },
+    "parameters": {
+      "detection-properties": {
+        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "device": "CPU"
+      }
+    }
+  }' | tr -d '"')
 echo "Instance ID: $INSTANCE_ID"
 
 # Verify it reached RUNNING state (not ERROR)
