@@ -26,7 +26,7 @@ It runs the YOLOv8n-VisDrone, a model designed to recognize imagery typical for 
 
 The application supports two deployment modes depending on whether an external SDK is available.
 
-![UAV Vision Analytics Application Architecture](./_assets/uav-vision-analytics-architecture.svg)
+![  uav vision analytics application architecture](./_assets/FedAero-uav-vision-architecture.drawio.svg)
 
 | Component                                      | Role                                                                                                    |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
