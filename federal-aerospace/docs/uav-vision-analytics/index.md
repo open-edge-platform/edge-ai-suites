@@ -60,7 +60,6 @@ Skills are organised into two categories:
 
 See the [Skills README](../../apps/uav-vision-analytics/.github/skills/uav-vision-analytics/README.md) for the full skill index and example prompts, or [SKILLS_OVERVIEW.md](../../apps/uav-vision-analytics/.github/skills/uav-vision-analytics/SKILLS_OVERVIEW.md) for detailed descriptions of each skill.
 
-
 # Intended and Responsible Use
 
 ## Intended Use
