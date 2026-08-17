@@ -190,9 +190,6 @@ These use `gazebo.avi` as a looping file source — ideal for repeatable, contro
 | `uav_object_detection_cpu` | CPU | `gazebo.avi` (loop) |
 | `uav_object_detection_gpu` | GPU | `gazebo.avi` (loop) |
 | `uav_object_detection_npu` | NPU | `gazebo.avi` (loop) |
-| `uav_udpsink_cpu` | CPU | `gazebo.avi` (loop) → UDP sink |
-| `uav_udpsink_gpu` | GPU | `gazebo.avi` (loop) → UDP sink |
-| `uav_udpsink_npu` | NPU | `gazebo.avi` (loop) → UDP sink |
 
 ### RealSense camera pipelines
 

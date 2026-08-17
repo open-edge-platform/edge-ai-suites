@@ -22,7 +22,6 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 | `make uavsdk-up` | Start the uav-mission-compute-sdk stack |
 | `make uavsdk-down` | Stop and remove the uav-mission-compute-sdk stack (includes volumes) |
 | `make start-rtsp` | Start inference pipelines with RTSP output |
-| `make start-udpsink` | Start inference pipelines with UDP sink output |
 | `make build` | Alias for `pymav-up` |
 
 ---
@@ -107,14 +106,6 @@ make uavsdk-up
 Executes `pipeline_manager.py --sink rtsp` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output** on port `8555`.
 
 Requires the DLSPS container to already be running (`make pymav-up` or `make uavsdk-up` first).
-
----
-
-### `make start-udpsink`
-
-Executes `pipeline_manager.py --sink udp` inside the running container, routing annotated frames to a **UDP sink** instead of RTSP. Useful for low-latency local consumption or integration with custom receivers.
-
-> **Note:** UDP sink is only supported in pymavlink mode. If using uav-mission-compute-sdk mode, only RTSP output is available.
 
 ---
 

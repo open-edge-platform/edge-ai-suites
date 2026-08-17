@@ -117,25 +117,7 @@ rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline) # If NPU Device is avail
 
 **File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
 
-#### Option B — Managed UDP output
-
-Same pipeline manager as Option A, but routes annotated frames to UDP sink instead of RTSP. Useful for low-latency local consumption or integration with custom GStreamer receivers.
-
-```bash
-make start-udpsink
-```
-
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated UDP streams.
->
-> Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#udp-sink) for instructions on connecting to the UDP stream.
-
-| Pipeline | Device | UDP Port |
-|---|---|---|
-| CPU | CPU | `5600` |
-| GPU | GPU | `5601` |
-| NPU (if available) | NPU | `5602` | 
-
-#### Option C — Manual REST API
+#### Option B — Manual REST API
 
 Start a single pipeline directly without the pipeline manager. Useful for testing individual pipelines or custom configurations.
 
@@ -175,22 +157,9 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ### 5. View the output stream
 
-#### RTSP
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # pymavlink, REST/managed
-```
-
-#### UDP
-```bash
-# View annotated UDP output (install ffmpeg first if not present)
-echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
-echo -e 'v=0\nm=video 5601 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-gpu.sdp
-
-# View CPU inference UDP stream
-ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
-# View GPU inference UDP stream
-ffplay -protocol_whitelist file,udp,rtp -i stream-gpu.sdp -fflags nobuffer -flags low_delay -framedrop
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -209,9 +178,6 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 | `uav_realsense_cpu` | CPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_gpu` | GPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_npu` | NPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
-| `uav_udpsink_cpu` | CPU | Looped video file (`gazebo.avi`) | UDP `:5600` |
-| `uav_udpsink_gpu` | GPU | Looped video file (`gazebo.avi`) | UDP `:5601` |
-| `uav_udpsink_npu` | NPU | Looped video file (`gazebo.avi`) | UDP `:5602` |
 
 ---
 
@@ -240,9 +206,6 @@ Each output frame carries these overlaid fields in the upper-left corner:
 | `8555` | RTSP | Annotated video output | All modes |
 | `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes |
 | `9090` | HTTP | metrics-manager (HW metrics) | pymavlink modes |
-| `5600` | UDP | CPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
-| `5601` | UDP | GPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
-| `5602` | UDP | NPU pipeline UDP sink output | pymavlink (`make start-udpsink`) |
 
 ---
 
