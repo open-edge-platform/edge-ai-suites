@@ -17,8 +17,8 @@ BUILD_DIR ?= build
 ROOT      := $(abspath .)
 
 # Source directories for each packaged component.
-HANDHELD_SRC := apps/handheld-multi-modal
-DTD_SRC      := apps/deterministic-threat-detection
+HANDHELD_SRC := handheld-multi-modal
+DTD_SRC      := deterministic-threat-detection
 
 # Output archives.
 HANDHELD_ZIP := $(DIST_DIR)/handheld-multi-modal.zip
@@ -96,7 +96,7 @@ $(SOLUTION_ZIP): $(HANDHELD_STAMP) \
 		--exclude='handheld-multi-modal/VIPPET_REF' \
 		--exclude='handheld-multi-modal/.work' \
 		./ "$(SOLUTION_STAGE)/federal-and-aerospace-ai-suite/"
-	cp -a "$(HANDHELD_STAGE)/vippet-fedaero" "$(SOLUTION_STAGE)/federal-and-aerospace-ai-suite/apps/handheld-multi-modal/"
+	cp -a "$(HANDHELD_STAGE)/vippet-fedaero" "$(SOLUTION_STAGE)/federal-and-aerospace-ai-suite/handheld-multi-modal/"
 	@mkdir -p "$(DIST_DIR)"
 	@rm -f "$@"
 	cd "$(SOLUTION_STAGE)" && zip -rq "$(abspath $@)" federal-and-aerospace-ai-suite
