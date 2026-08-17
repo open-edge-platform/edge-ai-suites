@@ -172,9 +172,9 @@ The annotated stream includes bounding boxes for detected objects (person, car, 
 
 | Pipeline | Device | Source | Output |
 |---|---|---|---|
-| `uav_object_detection_cpu` | CPU | Looped video file (`gazebo.avi`) | RTSP `:8555` |
-| `uav_object_detection_gpu` | GPU | Looped video file (`gazebo.avi`) | RTSP `:8555` |
-| `uav_object_detection_npu` | NPU | Looped video file (`gazebo.avi`) | RTSP `:8555` |
+| `uav_object_detection_cpu` | CPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
+| `uav_object_detection_gpu` | GPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
+| `uav_object_detection_npu` | NPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
 | `uav_realsense_cpu` | CPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_gpu` | GPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_npu` | NPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |

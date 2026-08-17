@@ -183,13 +183,13 @@ Pipeline names are defined in `benchmark/benchmark_app_payload.json`. Each entry
 
 ### File-source pipelines (recommended for benchmarking)
 
-These use `gazebo.avi` as a looping file source — ideal for repeatable, controlled benchmarks with deterministic input:
+These use `uav_sample.avi` as a looping file source — ideal for repeatable, controlled benchmarks with deterministic input:
 
 | Pipeline name | Device | Source |
 |---|---|---|
-| `uav_object_detection_cpu` | CPU | `gazebo.avi` (loop) |
-| `uav_object_detection_gpu` | GPU | `gazebo.avi` (loop) |
-| `uav_object_detection_npu` | NPU | `gazebo.avi` (loop) |
+| `uav_object_detection_cpu` | CPU | `uav_sample.avi` (loop) |
+| `uav_object_detection_gpu` | GPU | `uav_sample.avi` (loop) |
+| `uav_object_detection_npu` | NPU | `uav_sample.avi` (loop) |
 
 ### RealSense camera pipelines
 
