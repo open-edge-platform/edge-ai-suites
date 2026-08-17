@@ -84,6 +84,8 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
+> See the [AI Model guide](../how-to-guides/model.md) for model details.
+
 
 ### 3. Standalone mode (pymavlink)
 

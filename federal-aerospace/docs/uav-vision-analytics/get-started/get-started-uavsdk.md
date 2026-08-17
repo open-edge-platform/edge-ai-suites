@@ -86,6 +86,8 @@ Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 make model
 ```
 
+> See the [AI Model guide](../how-to-guides/model.md) for model details.
+
 ### 3. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
 
 Follow the setup instructions in the [README](../../../uav-mission-compute-sdk/README.md) before proceeding.

@@ -42,6 +42,7 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 
 # How-to Guides
 
+- [AI Model](./how-to-guides/model.md) — YOLOv8n-VisDrone model details, `make model` usage
 - [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
 - [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source
