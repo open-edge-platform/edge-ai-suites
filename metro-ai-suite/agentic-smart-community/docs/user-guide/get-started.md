@@ -38,7 +38,7 @@ This guide assumes basic familiarity with Docker commands and terminal usage. Fo
 `Qwen/Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-intensive on a shared-RAM host. The default configuration targets a **64 GB system**:
 
 - Provide at least **32 GB of swap** so weight loading and the KV cache can spill under peak pressure without triggering the OOM killer. See how to [Add Swap Space](./how-to-guides/add-swap.md).
-- The **first startup takes 3-20 minutes** while weights download and compile. The serving is ready when `http://<host>:41091/v1/models` responds.
+The **first startup takes about 30 minutes** while the weights are downloaded and compiled. The serving becomes healthy once it answers on `http://<host>:41091/v1/models`.
 
 ## Step-by-step installation
 
