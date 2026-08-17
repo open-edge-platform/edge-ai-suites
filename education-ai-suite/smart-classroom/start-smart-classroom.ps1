@@ -310,12 +310,11 @@ function Remove-VirtualEnvironments {
     
     $parentDir = Split-Path $ScriptDir -Parent
     $backendVenv = Join-Path $parentDir "smartclassroom"
-    $contentSearchVenv = Join-Path $ScriptDir "content_search\venv_content_search"
-    
+
     Write-Host "    Terminating Python processes that may be using venvs..." -ForegroundColor Gray
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
-        if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
+        if ($procPath -and $procPath -like "*smartclassroom*") {
             Write-Host "      Killing Python process $($_.Id): $procPath" -ForegroundColor Gray
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
@@ -337,25 +336,6 @@ function Remove-VirtualEnvironments {
         }
     } else {
         Write-Host "    Backend venv not found (will be created fresh)" -ForegroundColor Gray
-    }
-    
-    if (-not $contentSearchEnabled) {
-        Write-Host "    Content Search disabled - skipping Content Search venv cleanup." -ForegroundColor Gray
-    } elseif (Test-Path $contentSearchVenv) {
-        Write-Host "    Removing Content Search venv: $contentSearchVenv" -ForegroundColor Gray
-        for ($i = 1; $i -le 3; $i++) {
-            Remove-Item -Path $contentSearchVenv -Recurse -Force -ErrorAction SilentlyContinue
-            if (-not (Test-Path $contentSearchVenv)) { break }
-            Write-Host "      Retry $i - waiting for file handles to release..." -ForegroundColor DarkYellow
-            Start-Sleep -Seconds 2
-        }
-        if (Test-Path $contentSearchVenv) {
-            Write-Host "    WARNING: Could not fully remove Content Search venv. Some files may be locked." -ForegroundColor Yellow
-        } else {
-            Write-Host "    Content Search venv removed." -ForegroundColor Gray
-        }
-    } else {
-        Write-Host "    Content Search venv not found (will be created fresh)" -ForegroundColor Gray
     }
     
     Write-Host "  Virtual environments cleaned." -ForegroundColor Green
@@ -563,7 +543,7 @@ if ($Restart) {
     
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
-        if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
+        if ($procPath -and $procPath -like "*smartclassroom*") {
             Write-Host "    Killing orphaned Python: $($_.Id)" -ForegroundColor Gray
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }

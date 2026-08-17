@@ -117,7 +117,7 @@ export default {
     moreChatFeatures: "更多完整的聊天功能请查看",
     openClawControlUi: "OpenClaw 原生 Control UI (:18789)",
   },
-  smartBuilding: {
+  smartCommunity: {
     offlineCameras: "离线摄像头",
     applianceLocation: "位置",
     cameraSectionLabel: "设备列表",
@@ -140,7 +140,12 @@ export default {
     timelineStaticEvent: "静态巡检",
     loadPreview: "点击加载视频",
     autoLoadPreviewHint: "滚动到此处会自动加载",
-    timelineZoomTip: "滚轮缩放，拖动查看时间段",
+    timelineZoomTip: "滚轮缩放，拖动查看时间段，点击录像条回放",
+    recordingPlayback: "录像回放",
+    recordingSeekTip: "点击跳转到该时刻回放",
+    noRecordingAtTime: "该时段没有录像",
+    recordingReachedEnd: "已播放到最后一段录像",
+    recordingLoadFailed: "录像文件不可用，可能已被清理",
     viewReport: "在线查看报告",
     reportEmptyHint: "暂无报告 —— 可以让你的 agent 生成一份试试。",
     exportReport: "导出报告",

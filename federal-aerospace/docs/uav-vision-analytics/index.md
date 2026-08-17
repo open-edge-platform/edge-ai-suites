@@ -2,7 +2,7 @@
 
 AI-powered UAV object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
 
-This application processes video from a UAV-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference to detect objects across ten object classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as an RTSP/UDP stream, consumable by any capable client such as QGroundControl (QGC) or VLC or ffplay.
+This application processes video from a UAV-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference to detect objects across ten object classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as an RTSP stream, consumable by any capable client such as QGroundControl (QGC) or VLC or ffplay.
 
 # Overview
 
@@ -15,7 +15,7 @@ UAV Vision Analytics integrates AI-based object detection with UAV flight contro
 | RTSP / Video File / Live Camera Streams            | Input video source — UAV camera feed, a recorded video file, or a simulated RTSP stream                 |
 | MAVLink UAV Telemetry                              | Telemetry input — GPS, altitude, speed, and heading received from the flight controller over UDP         |
 | DL Streamer Pipeline Server (CPU / GPU / NPU)      | Core inference engine — runs YOLOv8n-VisDrone object detection and renders the telemetry overlay on each frame |
-| RTSP/UDP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP or UDP |
+| RTSP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP |
 
 
 ## Deployment Modes
@@ -42,6 +42,7 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 
 # How-to Guides
 
+- [AI Model](./how-to-guides/model.md) — YOLOv8n-VisDrone model details, `make model` usage
 - [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
 - [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source

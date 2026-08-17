@@ -19,9 +19,8 @@ the output.**
 ## What Gets Set Up
 
 1. **Flutter dependencies** (via `flutter pub get`)
-2. **Main backend venv** (`smartclassroom/`) — includes VLM service dependencies
-3. **Content Search venv** (`venv_content_search/`) — RAG pipeline dependencies
-4. **Flutter-specific configuration** — `utils/flutter/config.yaml` with only `content_search` and `qa` enabled
+2. **Main backend venv** (`smartclassroom/`) — includes VLM service and Content Search / RAG pipeline dependencies
+3. **Flutter-specific configuration** — `utils/flutter/config.yaml` with only `content_search` and `qa` enabled
 
 **Configuration approach:** Full config.yaml copy in `utils/flutter/` with all features disabled except `content_search` and `qa`. This prevents loading ASR, OCR, summarizer, and VA models.
 

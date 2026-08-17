@@ -33,7 +33,7 @@ import paho.mqtt.client as mqtt
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-PX4_ADDRESS           = os.getenv("PX4_ADDRESS",        "udp://127.0.0.1:14580")
+PX4_ADDRESS           = os.getenv("PX4_ADDRESS",        "udpin://0.0.0.0:14540")
 MQTT_BROKER_HOST      = os.getenv("MQTT_BROKER_HOST",   "localhost")
 MQTT_BROKER_PORT      = int(os.getenv("MQTT_BROKER_PORT", "1883"))
 UAV_ID              = os.getenv("UAV_ID",            "uav-1")
@@ -236,6 +236,10 @@ async def _run_action(action: str, **kwargs):
     """Execute a uav action on the asyncio loop. Returns (ok, message)."""
     if action == "arm":
         await uav.action.arm()
+    elif action == "hold":
+        await uav.action.hold()
+    elif action == "reboot":
+        await uav.action.reboot()
     elif action == "disarm":
         await uav.action.disarm()
     elif action == "kill":

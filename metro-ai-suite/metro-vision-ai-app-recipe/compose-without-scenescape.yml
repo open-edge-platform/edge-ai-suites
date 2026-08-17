@@ -190,7 +190,7 @@ services:
       - app_network
 
   metrics-manager:
-    image: intel/metrics-manager:2026.2.0-20260804-weekly
+    image: intel/metrics-manager:2026.2.0-rc1
     container_name: metrics-manager
     privileged: true
     volumes:

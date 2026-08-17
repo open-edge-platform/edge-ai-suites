@@ -36,6 +36,14 @@ export interface ActivityRecord {
   alertLabel: string;
 }
 
+export interface RecordingSegment {
+  id: number;
+  startMs: number;
+  endMs: number;
+  durationSeconds: number;
+  fileSizeBytes: number;
+}
+
 export interface CameraTaskRecord {
   id: number;
   source_id: string;

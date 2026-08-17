@@ -8,9 +8,9 @@ The platform is built around MCP, letting AI agents (OpenClaw, Hermes, etc.) orc
 
 It uses a layered design with clearly separated, decoupled responsibilities — top to bottom: the **Agent Workspace** (personas + skills), the **MCP Server** (tool surface, rule engine, alert resources), the dependent **video services** (stream analytics, video understanding, VLM), and the underlying **client** that feeds and consumes the stream.
 
-![Smart Building Overall Architecture](./_assets/smartbuilding-arch-2026.2.png)
+![Smart Community Overall Architecture](./_assets/smart-community-arch-2026.2.png)
 
-**Figure: Smart Building Video Analytics — Overall Architecture**
+**Figure: Smart Community Video Analytics — Overall Architecture**
 
 ## How It Works Details
 
@@ -48,40 +48,17 @@ The MCP server sits between AI agents and the dependent external services:
 
 Per monitor: the video pipeline drives events into the server, the worker summarizes clips, the rule engine decides alerts, and any subscribed MCP client is delivered those alerts through the **standard MCP resource-subscription protocol** — no framework-specific coupling.
 
-A client (OpenClaw, Hermes, Claude Desktop, …) subscribes to `smartbuilding://monitor/<id>/alerts`; the push carries only the URI, and the client pulls new alerts with a `?since=<cursor>` incremental read (at-least-once, cursor-deduped).
+![Smart Community Runtime Data Flow](_assets/smart-community-runtime-data-flow.png)
+**Figure: Smart Community Runtime Data Flow**
 
-```mermaid
----
-config: {"theme": "dark"}
----
-sequenceDiagram
-    autonumber
-    participant Analytics as videostream-analytics<br/>(:8999)
-    participant Server as MCP Server<br/>(worker + rule engine)
-    participant DB as SQLite<br/>(per monitor)
-    participant Summary as multilevel-video-understanding<br/>(:8192)
-    participant Client as MCP Client<br/>(any agent framework)
-
-    Client->>Server: resources/subscribe  smartbuilding://monitor/<id>/alerts
-
-    Analytics->>Server: POST event (:3101)
-    Server->>DB: write event + pending task
-    Server->>DB: poll pending task
-    Server->>Summary: summarize clip
-    Summary-->>Server: summary text
-    Server->>DB: write summary
-    Note over Server: rule engine → alert
-    Server->>DB: write alert
-    Server-->>Client: notifications/resources/updated { uri }  (no payload)
-    Client->>Server: resources/read  ...?since=<cursor>
-    Server->>DB: query alerts since cursor
-    DB-->>Server: alerts[] + latestId
-    Server-->>Client: alerts[] + latestId  (advance cursor)
-```
+- Video analytics sends events to the MCP server, which creates video-summary tasks for the affected monitor.
+- The video-summary service analyzes clips, and the rule engine evaluates each resulting summary to create alerts when needed.
+- The server stores alerts and generates scheduled reports from the collected monitor data.
+- An MCP client (OpenClaw, Hermes, Claude Desktop, …) subscribes to `smart-community://monitor/<id>/alerts` and receives alert notifications.
 
 ### MCP Tools
 
-The server exposes a standardized, use-case-agnostic tool surface (every id prefixed `smartbuilding_`). Agents drive the whole platform through these — no custom code per use case. All tools are keyed on `monitor_id`.
+The server exposes a standardized, use-case-agnostic tool surface (every id prefixed `smart_community_`). Agents drive the whole platform through these — no custom code per use case. All tools are keyed on `monitor_id`.
 
 | Group | Tools | What it does |
 | ----- | ----- | ------------ |
@@ -98,7 +75,7 @@ Skills are portable Markdown guides (framework-agnostic; usable by any MCP clien
 
 | Skill | Purpose | Anchored on |
 | ----- | ------- | ----------- |
-| **[`smartbuilding-toolkit`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-toolkit/SKILL.md)** | Operate the platform: the full `smartbuilding_*` tool catalog, the SQLite data model, how to discover which monitor to act on, how reports are generated, how pushed alerts reach a session, and which actions are destructive (two-phase confirm). | the MCP tools + resources |
-| **[`smartbuilding-use-case-manager`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smartbuilding-use-case-manager/SKILL.md)** | Create a new use case conversationally — just chat with the agent to describe it, and the skill infers the events/schema, drafts the prompt, and registers the task for you. | multilevel-video-understanding task registration |
+| **[`smart-community-toolkit`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smart-community-toolkit/SKILL.md)** | Operate the platform: the full `smart_community_*` tool catalog, the SQLite data model, how to discover which monitor to act on, how reports are generated, how pushed alerts reach a session, and which actions are destructive (two-phase confirm). | the MCP tools + resources |
+| **[`smart-community-use-case-manager`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/skills/smart-community-use-case-manager/SKILL.md)** | Create a new use case conversationally — just chat with the agent to describe it, and the skill infers the events/schema, drafts the prompt, and registers the task for you. | multilevel-video-understanding task registration |
 
-Together they close the loop: `smartbuilding-use-case-manager` **creates** a use case, then `smartbuilding-toolkit` **runs** it — no core-component changes in between.
+Together they close the loop: `smart-community-use-case-manager` **creates** a use case, then `smart-community-toolkit` **runs** it — no core-component changes in between.

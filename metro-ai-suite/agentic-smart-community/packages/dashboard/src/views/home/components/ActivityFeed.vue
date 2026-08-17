@@ -6,7 +6,7 @@
       <div class="timeline-header-left flex-left">
         <div class="timeline-title-row flex-left">
           <div class="section-title">
-            {{ $t("smartBuilding.todayActivity") }}
+            {{ $t("smartCommunity.todayActivity") }}
           </div>
         </div>
       </div>
@@ -35,11 +35,11 @@
           </label>
         </div>
         <div class="timeline-title-tip">
-          {{ $t("smartBuilding.timelineZoomTip") }}
+          {{ $t("smartCommunity.timelineZoomTip") }}
         </div>
       </div>
     </div>
-    <template v-if="visibleRecords.length">
+    <template v-if="visibleRecords.length || coverageBlocks.length">
       <div
         ref="timelineScrollRef"
         class="timeline-scroll"
@@ -53,7 +53,25 @@
           class="timeline-track"
           :style="{ width: `${timelineScale * 100}%` }"
         >
-          <div class="timeline-segment recording"></div>
+          <div class="timeline-segment recording-track"></div>
+          <div
+            v-for="block in coverageBlocks"
+            :key="block.key"
+            class="timeline-segment recording"
+            :title="$t('smartCommunity.recordingSeekTip')"
+            :style="{
+              left: `${getTimelinePosition(toDayMinutes(block.startMs))}%`,
+              width: `${getTimelineWidth(
+                toDayMinutes(block.endMs) - toDayMinutes(block.startMs),
+              )}%`,
+            }"
+            @click="handleCoverageClick"
+          ></div>
+          <div
+            v-if="playbackProgressPercent !== null"
+            class="timeline-playback-line"
+            :style="{ left: `${playbackProgressPercent}%` }"
+          ></div>
           <div
             v-if="timelineProgressPercent !== null"
             class="timeline-progress-line"
@@ -70,18 +88,18 @@
                   {{ tooltipRecordForEntry(entry).title }}
                 </div>
                 <div class="timeline-tooltip-row">
-                  <span>{{ $t("smartBuilding.tooltipStatus") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipStatus") }}</span>
                   <span>{{ tooltipRecordForEntry(entry).statusLabel }}</span>
                 </div>
                 <div class="timeline-tooltip-row">
-                  <span>{{ $t("smartBuilding.tooltipTime") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipTime") }}</span>
                   <span>{{ tooltipRecordForEntry(entry).timestampLabel }}</span>
                 </div>
                 <div
                   v-if="tooltipRecordForEntry(entry).recordKind === 'motion'"
                   class="timeline-tooltip-row"
                 >
-                  <span>{{ $t("smartBuilding.tooltipDuration") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipDuration") }}</span>
                   <span>{{
                     tooltipRecordForEntry(entry).durationSecondsLabel
                   }}</span>
@@ -133,7 +151,7 @@
       </div>
     </template>
     <div v-else class="timeline-empty-state vertical-center">
-      <a-empty :description="$t('smartBuilding.noActivityRecords')" />
+      <a-empty :description="$t('smartCommunity.noActivityRecords')" />
     </div>
     <div v-if="showAlertFilter" class="timeline-legend">
       <div
@@ -152,17 +170,17 @@
 
   <div class="history-section section-card">
     <div class="section-head">
-      <div class="section-title">{{ $t("smartBuilding.recordTimeline") }}</div>
+      <div class="section-title">{{ $t("smartCommunity.recordTimeline") }}</div>
     </div>
     <div v-if="loading" class="history-loading-state vertical-center">
       <div class="activity-loading-indicator">
         <i class="iconfont icon-loading activity-loading-icon"></i>
         <div class="activity-loading-copy">
           <div class="activity-loading-title">
-            {{ $t("smartBuilding.activityLoadingTitle") }}
+            {{ $t("smartCommunity.activityLoadingTitle") }}
           </div>
           <div class="activity-loading-tip">
-            {{ $t("smartBuilding.activityLoadingTip") }}
+            {{ $t("smartCommunity.activityLoadingTip") }}
           </div>
         </div>
       </div>
@@ -233,8 +251,8 @@
             >
               {{
                 isDescriptionExpanded(record.id)
-                  ? $t("smartBuilding.collapseDescription")
-                  : $t("smartBuilding.expandDescription")
+                  ? $t("smartCommunity.collapseDescription")
+                  : $t("smartCommunity.expandDescription")
               }}
             </button>
           </div>
@@ -261,7 +279,7 @@
                 <span class="history-preview-placeholder-play-icon"></span>
               </span>
               <span class="history-preview-placeholder-title">
-                {{ $t("smartBuilding.loadPreview") }}
+                {{ $t("smartCommunity.loadPreview") }}
               </span>
               <span class="history-preview-placeholder-time">
                 {{ record.time }}
@@ -272,7 +290,7 @@
       </div>
     </div>
     <div v-else class="history-inline-empty vertical-center">
-      <a-empty :description="$t('smartBuilding.noActivityRecords')" />
+      <a-empty :description="$t('smartCommunity.noActivityRecords')" />
     </div>
   </div>
 </template>
@@ -286,8 +304,9 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { videoPlay as VideoPlayer } from "vue3-video-play/dist/index.mjs";
 import CustomRenderer from "@/utils/customRenderer";
-import type { ActivityRecord, CameraTaskRecord } from "../type";
-import { getSmartBuildingSourceMeta } from "../deviceMeta";
+import type { ActivityRecord, CameraTaskRecord, RecordingSegment } from "../type";
+import { getSmartCommunitySourceMeta } from "../deviceMeta";
+import { mergeCoverage } from "../recordings";
 
 type AlertFilterValue = "motion" | "alert";
 
@@ -330,12 +349,15 @@ const INITIAL_PREVIEW_LOAD_COUNT = 3;
 const props = defineProps<{
   loading: boolean;
   tasks: CameraTaskRecord[];
+  recordings: RecordingSegment[];
+  playbackTimeMs: number | null;
   selectedDate: string;
   selectedSourceId: string;
 }>();
 
 const emit = defineEmits<{
   select: [record: ActivityRecord];
+  "seek-recording": [timeMs: number];
 }>();
 
 const historyListRef = ref<HTMLElement | null>(null);
@@ -365,7 +387,7 @@ const KNOWN_ALERT_CONFIG: Record<
   { label: () => string; tokens: AlertVisualTokens; order: number }
 > = {
   alert: {
-    label: () => t("smartBuilding.timelineAlert"),
+    label: () => t("smartCommunity.timelineAlert"),
     order: 0,
     tokens: {
       color:
@@ -377,7 +399,7 @@ const KNOWN_ALERT_CONFIG: Record<
     },
   },
   motion: {
-    label: () => t("smartBuilding.timelineMotionEvent"),
+    label: () => t("smartCommunity.timelineMotionEvent"),
     order: 1,
     tokens: {
       color:
@@ -437,13 +459,13 @@ const buildRecordStatus = (status: string) => {
     return "";
   }
 
-  return status === "completed" ? t("smartBuilding.recordStatusCompleted") : status;
+  return status === "completed" ? t("smartCommunity.recordStatusCompleted") : status;
 };
 
 const buildRecordTitle = (eventType: unknown) => {
   return eventType === "motion"
-    ? t("smartBuilding.recordTypeUsage")
-    : t("smartBuilding.recordTypeMonitoring");
+    ? t("smartCommunity.recordTypeUsage")
+    : t("smartCommunity.recordTypeMonitoring");
 };
 
 const normalizeAlertType = (alertType: CameraTaskRecord["alert"]) => {
@@ -613,7 +635,7 @@ const buildDurationLabel = (duration: number) => {
   const seconds =
     duration >= 10 ? Math.round(duration) : Number(duration.toFixed(1));
 
-  return `${t("smartBuilding.recordDurationPrefix")} ${seconds} ${t("smartBuilding.recordDurationSeconds")}`;
+  return `${t("smartCommunity.recordDurationPrefix")} ${seconds} ${t("smartCommunity.recordDurationSeconds")}`;
 };
 
 const buildDurationSecondsLabel = (duration: number) => {
@@ -633,7 +655,7 @@ const mapTaskToRecord = (task: CameraTaskRecord): ActivityRecord => {
     minutes: timestamp.hour() * 60 + timestamp.minute(),
     sortValue: timestamp.valueOf(),
     title: buildRecordTitle(task.event_type),
-    camera: getSmartBuildingSourceMeta(task.source_id, t).cameraLabel,
+    camera: getSmartCommunitySourceMeta(task.source_id, t).cameraLabel,
     description: task.summary_text,
     videoSrc,
     poster: "",
@@ -685,6 +707,47 @@ const timelineProgressPercent = computed(() => {
 
   return Math.min(100, Math.max(0, (minutes / DAY_MINUTES) * 100));
 });
+
+const selectedDayStartMs = computed(() => {
+  return dayjs(props.selectedDate).startOf("day").valueOf();
+});
+
+const toDayMinutes = (timeMs: number) => {
+  return (timeMs - selectedDayStartMs.value) / 60000;
+};
+
+const coverageBlocks = computed(() => mergeCoverage(props.recordings));
+
+const playbackProgressPercent = computed(() => {
+  if (props.playbackTimeMs === null) {
+    return null;
+  }
+
+  const minutes = toDayMinutes(props.playbackTimeMs);
+  if (minutes < 0 || minutes > DAY_MINUTES) {
+    return null;
+  }
+
+  return (minutes / DAY_MINUTES) * 100;
+});
+
+// The coverage bar spans a whole recording run, so the clicked instant has to
+// come from the pointer position on the track, not from the block itself.
+const handleCoverageClick = (event: MouseEvent) => {
+  if (timelineSuppressClick.value) {
+    timelineSuppressClick.value = false;
+    return;
+  }
+
+  const trackElement = timelineTrackRef.value;
+  if (!trackElement) {
+    return;
+  }
+
+  const rect = trackElement.getBoundingClientRect();
+  const ratio = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
+  emit("seek-recording", selectedDayStartMs.value + ratio * DAY_MINUTES * 60000);
+};
 
 const getRecordStartMinutes = (record: ActivityRecord) => {
   const timestamp = dayjs(record.timestampLabel);
@@ -1533,7 +1596,7 @@ const playRecord = (record: ActivityRecord) => {
   opacity: 1;
 }
 
-.timeline-segment.recording {
+.timeline-segment.recording-track {
   top: 4px;
   left: 0;
   width: 100%;
@@ -1542,6 +1605,42 @@ const playRecord = (record: ActivityRecord) => {
   background: var(--color-primaryBg);
   border: 1px solid var(--border-primary);
   cursor: default;
+}
+
+.timeline-segment.recording {
+  top: 4px;
+  height: 20px;
+  min-width: 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-primary) 34%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 46%, transparent);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 48%, transparent);
+    border-color: var(--color-primary);
+  }
+}
+
+.timeline-playback-line {
+  position: absolute;
+  top: 0;
+  height: 28px;
+  width: 2px;
+  background: var(--color-primary);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.timeline-playback-line::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
 
 .timeline-segment.motion {

@@ -16,7 +16,7 @@ VENV           := resources/venv
 .PHONY: help init build model _check_model \
         pymav-up pymav-down \
         uavsdk-up uavsdk-down \
-        start-rtsp start-udpsink
+        start-rtsp
 
 help: ## Show available targets
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / \
@@ -110,10 +110,6 @@ uavsdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)
 start-rtsp: ## Start pipelines with RTSP output (exec into running DLSPS container)
 	docker exec -it -e HOST_IP=$(HOST_IP) $(DLSPS) bash -c \
 	  "python3 /home/pipeline-server/scripts/pipeline_manager.py --sink rtsp"
-
-start-udpsink: ## Start pipelines with UDP sink output (exec into running DLSPS container)
-	docker exec -it -e HOST_IP=$(HOST_IP) $(DLSPS) bash -c \
-	  "python3 /home/pipeline-server/scripts/pipeline_manager.py --sink udp"
 
 # ── Convenience alias ─────────────────────────────────────────────────────────
 

@@ -238,19 +238,6 @@ docker restart dlstreamer-pipeline-server
 
 ---
 
-### UDP sink pipeline not working
-
-**Symptom:** The UDP sink pipeline fails to send or receive data.
-
-**Resolution:** Replace `127.0.0.1` with `0.0.0.0` in the sink address so it binds to all interfaces:
-
-```diff
--udpsink host=127.0.0.1 port=5600
-+udpsink host=0.0.0.0 port=5600
-```
-
----
-
 ### Pipeline fails with `gst_parse_error: no element "vah264enc"`
 
 Replace `vah264enc` with `vah264lpenc`

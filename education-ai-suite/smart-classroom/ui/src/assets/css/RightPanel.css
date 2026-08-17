@@ -7,11 +7,11 @@
   flex-direction: column;
   min-width: 0;
   overflow-x: hidden;
-  padding: 12px 8px; 
 }
+
 .container.fullscreen .right-panel {
-  margin-top: 70vh; 
-  z-index: 1000; 
+  margin-top: 70vh;
+  z-index: 1000;
 }
 
 .platform-configuration,
@@ -50,12 +50,13 @@
   word-break: break-word;
   margin-top: 4px;
 }
+
 .accordion-content {
   font-weight: bold;
   color: #333;
 }
 
-.accordion-content p{
+.accordion-content p {
   font-weight: normal;
   color: #333;
 }
@@ -68,30 +69,6 @@ h3 {
 .dropdown {
   width: 100%;
   padding: 5px;
-}
-
-.arrow {
-  position: absolute;
-  top: 50%;
-  left: calc(50% - 10px); 
-  transform: translateY(-50%);
-  cursor: pointer;
-  z-index: 100;
-  color: #0071c5;
-  background: #fff;
-  border-radius: 50%;
-  border: 1px solid #e6e7e8;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  transition: left 0.3s ease;
-}
-
-.arrow.collapsed {
-  left: calc(100% - 38px); 
 }
 
 
@@ -111,7 +88,7 @@ h3 {
   flex: 1;
   min-height: 250px;
   position: relative;
-  min-width: 0; 
+  min-width: 0;
 }
 
 .chart-title {
@@ -183,7 +160,7 @@ h3 {
   font-size: 1rem;
   font-weight: 600;
   margin-bottom: 0.6rem;
-  color: #2d3748; 
+  color: #2d3748;
 }
 
 
@@ -204,11 +181,11 @@ h3 {
 
 
 .software-performance h3 {
-  margin-top: 1.2rem; 
+  margin-top: 1.2rem;
 }
 
 .software-performance h3:first-of-type {
-  margin-top: 0; 
+  margin-top: 0;
 }
 
 .configuration-metrics p {
@@ -219,25 +196,27 @@ h3 {
 }
 
 .configuration-metrics p strong {
-  font-weight: 600;   
-  color: #2d3748;     
+  font-weight: 600;
+  color: #2d3748;
   margin-right: 0.3rem;
 }
+
 @media (max-width: 768px) {
   .configuration-metrics {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
 }
+
 @media (max-width: 768px) {
   .chart-row {
     flex-direction: column;
   }
-  
+
   .chart-container-half {
     min-height: 230px;
   }
-  
+
   .chart-wrapper {
     height: 180px;
   }
@@ -248,30 +227,30 @@ h3 {
   .chart-container-half {
     min-height: 200px;
   }
-  
+
   .chart-wrapper {
     height: 150px;
   }
-  
+
   .gpu-metrics-checkboxes {
     font-size: 9px;
     gap: 5px;
   }
-  
+
   .gpu-metric-checkbox {
     font-size: 9px;
     gap: 2px;
   }
-  
+
   .checkbox-input {
     width: 10px;
     height: 10px;
   }
-  
+
   .chart-row {
     gap: 10px;
   }
-  
+
   .charts-grid {
     gap: 15px;
   }

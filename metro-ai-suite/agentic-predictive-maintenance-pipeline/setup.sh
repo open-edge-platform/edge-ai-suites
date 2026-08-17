@@ -59,8 +59,27 @@ stop_containers() {
 
 remove_volumes() {
     echo -e "${YELLOW}Removing Docker volumes...${NC}"
-    docker volume rm apm_sqlite_data apm_model_cache 2>/dev/null
-    echo -e "${GREEN}Volumes removed.${NC}"
+    # docker compose prefixes named volumes with the compose project name
+    # (here "docker", from the directory of the first -f file), so the
+    # actual volume names are e.g. "docker_apm_sqlite_data", not the bare
+    # "apm_sqlite_data". Match on suffix so this works regardless of the
+    # project name in effect.
+    local volume_names=(apm_sqlite_data apm_model_cache apm_agent_output)
+    local found=0
+    for name in "${volume_names[@]}"; do
+        local matches
+        matches=$(docker volume ls -q --filter "name=${name}$")
+        if [ -n "${matches}" ]; then
+            while IFS= read -r vol; do
+                docker volume rm "${vol}" >/dev/null 2>&1 && echo -e "  ${GREEN}✓${NC} ${vol}" && found=1
+            done <<< "${matches}"
+        fi
+    done
+    if [ "${found}" -eq 0 ]; then
+        echo -e "${YELLOW}No APM volumes found.${NC}"
+    else
+        echo -e "${GREEN}Volumes removed.${NC}"
+    fi
 }
 
 validate_env() {

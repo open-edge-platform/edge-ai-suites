@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ask &amp; Analyze — {{ use_case_id }}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <span class="logo">&#9632; Intel</span>
+      <h1>Agentic Predictive Maintenance</h1>
+      <span class="use-case-badge">{{ use_case_id }}</span>
+    </div>
+  </header>
+
+  <nav aria-label="Primary navigation">
+    <a href="/">Dashboard</a>
+    <a href="/detections">Detections</a>
+    <a href="/chat" class="active" aria-current="page">Ask &amp; Analyze</a>
+  </nav>
+
+  <main class="chat-page">
+    <section class="chat-intro" aria-labelledby="chat-heading">
+      <p class="chat-eyebrow">Operational assistant</p>
+      <h2 id="chat-heading">Ask &amp; Analyze</h2>
+      <p>Explore maintenance analysis, detection evidence, or both. Answers are generated from available pipeline data.</p>
+    </section>
+
+    <section class="chat-shell" aria-label="Chat workspace">
+      <div class="chat-controls">
+        <fieldset>
+          <legend>Answer mode</legend>
+          <div class="mode-options">
+            <label><input type="radio" name="chat-mode" value="analysis" checked> Analysis</label>
+            <label><input type="radio" name="chat-mode" value="detections"> Detections</label>
+            <label><input type="radio" name="chat-mode" value="combined"> Combined</label>
+          </div>
+        </fieldset>
+        <label class="run-id-field" for="chat-run-id">
+          Run scope <span>(optional)</span>
+          <select id="chat-run-id">
+            <option value="" id="chat-default-run-option">Latest completed run</option>
+            {% for run in completed_runs %}
+            <option value="{{ run.run_id }}" {{ 'selected' if run.run_id == requested_run_id else '' }}>{{ run.run_id }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </div>
+
+      <div class="prompt-suggestions" aria-labelledby="suggestions-heading">
+        <div class="prompt-suggestions-heading">
+          <h3 id="suggestions-heading">Try asking</h3>
+          <button type="button" id="chat-clear" class="btn-secondary btn-small">Clear chat</button>
+        </div>
+        <div class="prompt-list">
+          <button type="button" class="prompt-chip" data-prompt="Summarize the most important maintenance findings.">Summarize findings</button>
+          <button type="button" class="prompt-chip" data-prompt="Which detections need immediate attention, and why?">Prioritize detections</button>
+          <button type="button" class="prompt-chip" data-prompt="Compare the evidence and recommended maintenance actions.">Compare evidence</button>
+        </div>
+      </div>
+
+      <div id="chat-transcript" class="chat-transcript" role="log" aria-live="polite" aria-relevant="additions text" tabindex="0">
+        <div class="chat-empty" id="chat-empty">
+          <strong>Start a conversation</strong>
+          <span>Choose a mode, then ask about your pipeline results.</span>
+        </div>
+        <div id="chat-thinking" class="chat-thinking" role="status" aria-label="Generating response" hidden>
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div id="chat-error" class="chat-error" role="alert" hidden>
+        <span id="chat-error-text"></span>
+        <button type="button" id="chat-retry" class="btn-secondary">Retry</button>
+      </div>
+
+      <form id="chat-form" class="chat-composer">
+        <label for="chat-message">Your question</label>
+        <div class="chat-compose-row">
+          <textarea id="chat-message" name="message" rows="2" maxlength="4000" required
+                    placeholder="Ask about maintenance risks, detections, or evidence…"></textarea>
+          <button type="submit" id="chat-submit" class="btn-primary">Send</button>
+        </div>
+        <p class="chat-hint">Press Enter to send. Use Shift+Enter for a new line.</p>
+        <p id="chat-status" class="sr-only" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&#169; Intel Corporation — Agentic Predictive Maintenance Blueprint</p>
+  </footer>
+  <script src="/static/js/chat.js" defer></script>
+</body>
+</html>

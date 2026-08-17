@@ -14,7 +14,7 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
+DATA_DIR="${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}"
 
 command -v md5sum >/dev/null || { echo "md5sum not found in PATH" >&2; exit 1; }
 
@@ -95,7 +95,7 @@ trap - EXIT
 # shellcheck disable=SC1091
 source "$REPO_DIR/docker/set_env.sh"
 if [ -n "$(docker compose -f "$REPO_DIR/docker/compose.yaml" ps -q \
-    smartbuilding-mcp-server multilevel-video-understanding videostream-analytics 2>/dev/null)" ]; then
+    smart-community-mcp-server multilevel-video-understanding videostream-analytics 2>/dev/null)" ]; then
   echo "app tier already running — bouncing it (--light-down) to reload the demo config…"
   bash "$REPO_DIR/setup_docker.sh" --light-down
 fi
