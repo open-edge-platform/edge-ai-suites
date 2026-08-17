@@ -24,7 +24,7 @@ Produce:
 - `gvapython/telemetry-overlay-pymavlink.py` overlay script
 - `scripts/mavlink_pipeline_manager.py` pipeline manager
 - `mavlink-router/main.conf` routing config
-- `Makefile` with model, up/down, start-rtsp, start-udpsink targets
+- `Makefile` with model, up/down, start-rtsp targets
 - `.env` template
 - `tests/` pytest suite
 

@@ -19,19 +19,13 @@ maintenance of a running UAV vision analytics stack.
 Start, stop, and monitor DL Streamer inference pipelines using the REST API
 or the automated pipeline manager.
 
-- **Automated (recommended):** Run `make start-rtsp` or `make start-udpsink`
+- **Automated (recommended):** Run `make start-rtsp`
   inside the container. The pipeline manager monitors the UAV armed/disarmed
   state and starts/stops pipelines automatically.
 - **Manual REST API:** POST to start a named pipeline; capture the returned
   `instance_id`; DELETE to stop.
 - **Verify:** `curl http://localhost:8081/pipelines/{instance_id}/status`
-- **Watch output (RTSP):** `ffplay rtsp://localhost:8555/<stream-path>`
-- **Watch output (UDP):**
-  ```bash
-  # Create SDP file for the desired port, then play
-  echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
-  ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
-  ```
+- **Watch output:** `ffplay rtsp://localhost:8555/<stream-path>`
 
 See [`references/PIPELINE.md`](references/PIPELINE.md) for payload formats,
 REST paths, and common pipeline variants.
@@ -276,7 +270,7 @@ directly over UDP using pymavlink.
 - **Compose file:** `docker-compose-pymavlink.yml`
 - **Telemetry source:** MAVLink UDP :14541 (routed from PX4 via mavlink-router)
 - **Pipeline manager:** `scripts/mavlink_pipeline_manager.py`
-- **Supports:** RTSP sink (`--sink rtsp`) and UDP sink (`--sink udp`)
+- **Supports:** RTSP sink (`--sink rtsp`)
 
 See [example prompt](example-prompts/01-pymavlink-sim-all-devices.md).
 

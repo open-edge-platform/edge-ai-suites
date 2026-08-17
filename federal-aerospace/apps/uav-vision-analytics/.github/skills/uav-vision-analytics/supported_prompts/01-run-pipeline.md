@@ -37,19 +37,3 @@ Show me how to list all registered pipelines, check the status of a running
 pipeline instance, and list all currently running instances on the
 dlstreamer-pipeline-server REST API at http://localhost:8081.
 ```
-
-## Start UDP sink pipeline and view the stream
-
-```
-Start the uav_udpsink_cpu pipeline on the running dlstreamer-pipeline-server
-at http://localhost:8081. The UDP sink pipeline streams annotated H.264 video
-over RTP to host.docker.internal:5600 — do NOT include a "frame" destination
-in the REST payload, only "metadata" and "parameters".
-
-After starting, show me how to view the UDP stream using an SDP file:
-  echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
-  ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
-
-Also show the GPU (port 5601) and NPU (port 5602) equivalents.
-Capture the instance_id and provide the stop command.
-```

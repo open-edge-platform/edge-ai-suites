@@ -9,7 +9,7 @@
 
 | Service | Image | Ports | Role |
 |---------|-------|-------|------|
-| `dlstreamer-pipeline-server` | `${DLSTREAMER_PIPELINE_SERVER_IMAGE}`-pymavlink (built inline with `pip install pymavlink`) | `8081`, `8555`, `5600-5602` | AI inference + RTSP/UDP output |
+| `dlstreamer-pipeline-server` | `${DLSTREAMER_PIPELINE_SERVER_IMAGE}`-pymavlink (built inline with `pip install pymavlink`) | `8081`, `8555` | AI inference + RTSP output |
 | `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker for detection metadata |
 | `px4` | `px4io/px4-sitl:latest` | — | PX4 SITL flight controller simulator |
 | `mavlink-router` | custom build | — | Routes MAVLink :14550 → :14541 |
@@ -153,9 +153,6 @@ dlstreamer-pipeline-server:
   ports:
     - '8081:8081'
     - "8555:8555"
-    - "5600:5600"   # UDP sink output (pymavlink mode)
-    - "5601:5601"
-    - "5602:5602"
   networks:
     - app_network
   extra_hosts:
@@ -191,7 +188,7 @@ no_proxy=localhost,127.0.0.0/8
 ## Makefile Targets
 
 ```makefile
-.PHONY: init model pymav-up pymav-down uavsdk-up uavsdk-down start-rtsp start-udpsink
+.PHONY: init model pymav-up pymav-down uavsdk-up uavsdk-down start-rtsp
 
 init:        ## Create .env from .env.example and auto-detect GPU/NPU device paths
 model:       ## Download and export YOLOv8n-VisDrone to OpenVINO FP16
@@ -200,7 +197,6 @@ pymav-down:  ## Stop pymavlink stack
 uavsdk-up:   ## Start UAVSDK stack (requires uav-mission-compute-sdk running first)
 uavsdk-down: ## Stop UAVSDK stack
 start-rtsp:  ## Launch pipeline_manager.py --sink rtsp inside container
-start-udpsink: ## Launch pipeline_manager.py --sink udp inside container
 ```
 
 Full Makefile is in `apps/uav-vision-analytics/Makefile`.
@@ -217,19 +213,9 @@ PX4 SITL ──MAVLink──▶ mavlink-router (:14550 server → :14541 broadca
                            DLSPS ◀─UDP :14541─┘
                              │
                         ┌────┤
-                        │    ├──▶ RTSP :8555 → QGC / ffplay rtsp://...
-                        │    └──▶ RTP/UDP :5600-5602 (udpsink mode)
-                        │              └──▶ ffplay via SDP file
+                        │    └──▶ RTSP :8555 → QGC / ffplay rtsp://...
                         │
                     MQTT :1883 ──▶ Mosquitto broker
-```
-
-**View UDP output streams** (requires SDP file):
-```bash
-echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
-echo -e 'v=0\nm=video 5601 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-gpu.sdp
-ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
-ffplay -protocol_whitelist file,udp,rtp -i stream-gpu.sdp -fflags nobuffer -flags low_delay -framedrop
 ```
 
 ### MAVSDK

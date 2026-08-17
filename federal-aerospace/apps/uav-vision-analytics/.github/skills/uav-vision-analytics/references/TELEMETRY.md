@@ -115,18 +115,13 @@ volumes:
 ### mavlink_pipeline_manager.py (pymavlink mode)
 
 Monitors the MAVLink HEARTBEAT `base_mode` flag for `MAV_MODE_FLAG_SAFETY_ARMED`.
-Supports `--sink rtsp` (default) and `--sink udp`.
+Only RTSP sink output is supported (`--sink rtsp`).
 
 **RTSP pipelines defined:**
 ```python
 RTSP_PIPELINES = [
     {"name": "uav_object_detection_cpu", "frame_path": "uav-mavlink-cpu", "device": "CPU"},
     {"name": "uav_object_detection_gpu", "frame_path": "uav-mavlink-gpu", "device": "GPU"},
-]
-
-UDP_PIPELINES = [
-    {"name": "uav_udpsink_cpu", "frame_path": "uav-mavlink-cpu", "device": "CPU", "port": 5600},
-    {"name": "uav_udpsink_gpu", "frame_path": "uav-mavlink-gpu", "device": "GPU", "port": 5601},
 ]
 ```
 
@@ -140,13 +135,11 @@ PIPELINE_DELETE_URL = "http://localhost:8081/pipelines/{instance_id}"
 **Invocation inside container:**
 ```bash
 python3 /home/pipeline-server/scripts/pipeline_manager.py --sink rtsp
-python3 /home/pipeline-server/scripts/pipeline_manager.py --sink udp
 ```
 
-**Makefile targets:**
+**Makefile target:**
 ```bash
 make start-rtsp      # docker exec -it dlstreamer-pipeline-server bash -c "python3 ..."
-make start-udpsink   # same with --sink udp
 ```
 
 ### uavsdk_pipeline_manager.py (uavsdk mode)
@@ -169,8 +162,7 @@ PIPELINES = [
 ]
 ```
 
-**Only RTSP sink is supported** in UAVSDK mode. If `--sink udp` is passed, a
-warning is printed and the manager continues with RTSP.
+**Only RTSP sink is supported** in UAVSDK mode.
 
 ---
 

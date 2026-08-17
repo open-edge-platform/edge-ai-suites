@@ -19,9 +19,9 @@ Generate:
 - docker-compose-pymavlink.yml with all services (DLSPS, broker, px4, mavlink-router, metrics-manager)
 - configs/config-pymavlink.json with uav_object_detection_cpu/gpu/npu pipelines
 - gvapython/telemetry-overlay-pymavlink.py overlay script
-- scripts/mavlink_pipeline_manager.py (--sink rtsp and --sink udp support)
+- scripts/mavlink_pipeline_manager.py (--sink rtsp)
 - mavlink-router/main.conf
-- Makefile with model, pymav-up/down, start-rtsp, start-udpsink targets
+- Makefile with model, pymav-up/down, start-rtsp targets
 - .env template
 - tests/ pytest suite
 

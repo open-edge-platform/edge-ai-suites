@@ -86,16 +86,6 @@ rtspsrc location={{RTSP_INPUT_URL}} latency=100
 ! rtph264depay ! h264parse ! decodebin3
 ```
 
-### UDP sink variant
-
-Replace the `appsink` tail with:
-```
-! gvawatermark
-! vah264lpenc
-! rtph264pay
-! udpsink host=host.docker.internal port={{UDP_PORT}}
-```
-
 ---
 
 ## config.json Structure
@@ -162,27 +152,6 @@ INSTANCE_ID=$(curl -s -X POST \
     }
   }' | tr -d '"')
 echo "Instance ID: $INSTANCE_ID"
-```
-
-### UDP sink variant
-
-Omit the `"frame"` key from `"destination"`. The UDP sink is baked into the
-GStreamer pipeline string — the REST payload only needs `"metadata"` and `"parameters"`.
-
-**View the UDP output stream** using an SDP file:
-
-```bash
-# CPU pipeline → port 5600
-echo -e 'v=0\nm=video 5600 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-cpu.sdp
-ffplay -protocol_whitelist file,udp,rtp -i stream-cpu.sdp -fflags nobuffer -flags low_delay -framedrop
-
-# GPU pipeline → port 5601
-echo -e 'v=0\nm=video 5601 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-gpu.sdp
-ffplay -protocol_whitelist file,udp,rtp -i stream-gpu.sdp -fflags nobuffer -flags low_delay -framedrop
-
-# NPU pipeline → port 5602
-echo -e 'v=0\nm=video 5602 RTP/AVP 96\na=rtpmap:96 H264/90000\nc=IN IP4 0.0.0.0' > stream-npu.sdp
-ffplay -protocol_whitelist file,udp,rtp -i stream-npu.sdp -fflags nobuffer -flags low_delay -framedrop
 ```
 
 ### Stopping a pipeline
