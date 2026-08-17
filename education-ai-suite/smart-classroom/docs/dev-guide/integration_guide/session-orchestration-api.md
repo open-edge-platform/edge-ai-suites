@@ -16,7 +16,9 @@ features yourself.
 
 ---
 
-## Workflow (3 steps)
+## Chapter 1: Session APIs
+
+### Workflow (3 steps)
 
 ```
 Step 1  Submit a task            →  get session_id
@@ -26,7 +28,7 @@ Step 3  Get the results          →  read files from output_dir
 
 ---
 
-## Endpoints Overview
+### Endpoints Overview
 
 | Endpoint | Purpose |
 |---|---|
@@ -36,7 +38,7 @@ Step 3  Get the results          →  read files from output_dir
 
 ---
 
-## 1. Submit a Task
+### 1. Submit a Task
 
 **`POST /sessions/process`**
 
@@ -116,7 +118,7 @@ Notes:
 
 ---
 
-## 2. Query Task Status
+### 2. Query Task Status
 
 **`GET /sessions/{session_id}/status`**
 
@@ -167,7 +169,7 @@ Poll this endpoint until:
 
 ---
 
-## 3. List All Tasks (Optional)
+### 3. List All Tasks (Optional)
 
 **`GET /sessions`**
 
@@ -197,6 +199,27 @@ Returns all task records for management / overview:
       },
       "started_at": "2026-08-07T06:08:06+00:00",
       "updated_at": "2026-08-07T06:16:40+00:00"
+    },
+    {
+      "session_id": "20260807-142413-93cd",
+      "state": "completed",
+      "current_stage": "segmentation",
+      "stages": {
+        "transcribe": "done",
+        "summarize": "done",
+        "mindmap": "done",
+        "va": "done",
+        "segmentation": "done"
+      },
+      "sources": {
+        "audio": "input_part_5min.wav",
+        "video": {
+          "front": "qian5.mp4",
+          "back": "hou5.mp4"
+        }
+      },
+      "started_at": "2026-08-07T06:24:13+00:00",
+      "updated_at": "2026-08-07T06:31:44+00:00"
     }
   ]
 }
@@ -204,7 +227,7 @@ Returns all task records for management / overview:
 
 ---
 
-## Where the Results Are
+### Where the Results Are
 
 When processing completes, read files under `output_dir`. The directory is
 organized into three areas:
@@ -219,7 +242,7 @@ Read the file you need by name.
 
 ---
 
-## Notes
+### Notes
 
 - **Files must be local**: `audio_path` / `video_sources` are **local paths on the
   machine running Smart Classroom**. These endpoints do not support RTSP streams.
@@ -232,7 +255,7 @@ Read the file you need by name.
 
 ---
 
-## Full Example
+### Full Example
 
 ```bash
 # 1. Submit a task
@@ -253,11 +276,126 @@ curl http://<host>:8000/sessions
 
 ---
 
-## Appendix: LLM / VLM Service (Standalone Endpoint)
+## Chapter 2: Legacy Audio Endpoints (`/upload-audio` / `/transcribe`)
 
-Smart Classroom also exposes a **directly callable LLM/VLM endpoint**. Clients can
-use it as a standalone model service, without going through the full classroom
-processing flow.
+> ⚠️ **Prefer `/sessions/process`**
+>
+> These two endpoints were exposed by earlier versions as standalone audio
+> interfaces. They still work and remain available — but because they are already
+> in the wild, they cannot be removed. **For all new integrations, use the
+> session-orchestration flow in the main part of this guide
+> (`POST /sessions/process` + `GET /sessions/{session_id}/status`)**. This appendix
+> exists only for compatibility with existing callers.
+>
+> Differences vs. the session interface:
+> - `/upload-audio` + `/transcribe` require uploading the file first, then
+>   consuming the transcription chunk-by-chunk over a stream, and managing the
+>   session / concurrency lock yourself (429).
+> - `/sessions/process` takes `audio_path` + `stages` in a single call; the backend
+>   runs the full flow (including transcription) and returns an `output_dir` to
+>   read results from.
+
+### 1. `POST /upload-audio`
+
+**Purpose**: Upload an audio file for later use by `/transcribe`.
+
+**Request:**
+
+| Type | Parameter | Required | Format | Description |
+|------|-----------|----------|--------|-------------|
+| Body | `file` | Yes | multipart/form-data | Audio file (field name **must be exactly `file`**) |
+
+**Constraints:**
+- Extension must be `.wav` / `.mp3` / `.m4a`
+- Max file size 300 MB
+- If a previous session is still processing (`audio_pipeline_lock` held), returns **429** `"Session Active, Try Later"`
+
+**Response:**
+```json
+{
+  "filename": "input_part_5min.wav",
+  "message": "File uploaded successfully",
+  "path": "storage/smart-classroom/audio/input_part_5min.wav"
+}
+```
+
+> **Note**: `path` is a **relative path**, resolved against the server process's
+> working directory. Pass it verbatim as `audio_filename` in the next step.
+
+**Example:**
+```bash
+curl -X POST http://<host>:8000/upload-audio \
+  -F "file=@input_part_5min.wav"
+```
+
+---
+
+### 2. `POST /transcribe`
+
+**Purpose**: Transcribe an uploaded audio file with ASR, streaming text and
+timestamps back chunk by chunk.
+
+**Request:**
+
+| Type | Parameter | Required | Format | Description |
+|------|-----------|----------|--------|-------------|
+| Header | `x-session-id` | No | string | Session ID (optional) |
+| Body | `audio_filename` | Yes | string | The `path` returned by `/upload-audio` (**full path**, not the bare filename) |
+| Body | `source_type` | No | string | `audio_file` (default) or `microphone` |
+
+**Request Body:**
+```json
+{
+  "audio_filename": "storage/smart-classroom/audio/input_part_5min.wav",
+  "source_type": "audio_file"
+}
+```
+
+**Response (streaming, one JSON object per line — one per chunk):**
+
+```json
+{
+  "chunk_path": "chunks/chunk_0_7f2288.wav",
+  "start_time": 0.0,
+  "end_time": 15.0,
+  "chunk_index": 0,
+  "text": "好，\n小朋友们，\n上课前呢田老师想先跟小朋友们讲解一下我们今天这节课的课堂评价。\n",
+  "segments": [
+    { "speaker": "教师", "text": "好，", "start": 7.54, "end": 7.78 }
+  ]
+}
+```
+
+Final event:
+```json
+{
+  "event": "final",
+  "teacher_speaker": "教师",
+  "speaker_text_stats": { "教师": 5234 }
+}
+```
+
+**Notes:**
+- The response header carries `x-session-id`, usable for later lookups.
+- After a transcription finishes, wait for the lock to be released before starting
+  the next one (otherwise **429**).
+- `audio_filename` also works with forward slashes
+  (`storage/smart-classroom/audio/...`); no need to escape backslashes on Windows.
+
+**Example:**
+```bash
+curl -X POST http://<host>:8000/transcribe \
+  -H "Content-Type: application/json" \
+  -d '{"audio_filename": "storage/smart-classroom/audio/input_part_5min.wav", "source_type": "audio_file"}'
+```
+
+---
+
+## Chapter 3: VLM / LLM Service (Standalone Endpoint)
+
+External customers integrating Smart Classroom can also call the endpoint below
+**directly** to use the VLM / LLM capability, without going through the full
+classroom processing flow.
 
 ### Endpoint
 
@@ -279,7 +417,7 @@ The server currently supports the following models (OpenVINO quantized):
 |---|---|
 | `Qwen/Qwen3-VL-8B-Instruct` | int4, int8 |
 | `Qwen/Qwen3.5-9B` | int4, int8 |
-| `Qwen/Qwen3.6-35B-A3B` | int4 (no int8) |
+| `Qwen/Qwen3.6-35B-A3B` | int4, int8 |
 
 Notes:
 

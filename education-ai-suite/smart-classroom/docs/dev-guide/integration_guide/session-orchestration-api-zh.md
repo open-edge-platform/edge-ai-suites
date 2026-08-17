@@ -11,7 +11,9 @@
 
 ---
 
-## 使用流程(3 步)
+## 第一节:Session 相关 API
+
+### 使用流程(3 步)
 
 ```
 第 1 步  提交任务  →  拿到 session_id
@@ -21,7 +23,7 @@
 
 ---
 
-## 接口一览
+### 接口一览
 
 | 接口 | 作用 |
 |---|---|
@@ -31,7 +33,7 @@
 
 ---
 
-## 1. 提交任务
+### 1. 提交任务
 
 **`POST /sessions/process`**
 
@@ -107,7 +109,7 @@
 
 ---
 
-## 2. 查询任务状态
+### 2. 查询任务状态
 
 **`GET /sessions/{session_id}/status`**
 
@@ -158,7 +160,7 @@
 
 ---
 
-## 3. 列出所有任务(可选)
+### 3. 列出所有任务(可选)
 
 **`GET /sessions`**
 
@@ -216,7 +218,7 @@
 
 ---
 
-## 产物在哪里
+### 产物在哪里
 
 处理完成后,到 `output_dir` 目录读文件。目录按三类组织:
 
@@ -230,7 +232,7 @@
 
 ---
 
-## 注意事项
+### 注意事项
 
 - **文件必须在本机**:`audio_path` / `video_sources` 填的是运行 Smart Classroom 的那台机器上的**本地路径**。本接口不支持 RTSP 流。
 - **轮询节奏**:没有回调,请间隔数秒轮询 `status`(建议 5~10 秒一次)直到完成。
@@ -239,7 +241,7 @@
 
 ---
 
-## 完整调用示例
+### 完整调用示例
 
 ```bash
 # 1. 提交任务
@@ -260,9 +262,112 @@ curl http://<host>:8000/sessions
 
 ---
 
-## 附:LLM / VLM 服务用法(独立接口)
+## 第二节:Legacy 音频接口(`/upload-audio` / `/transcribe`)
 
-Smart Classroom 还提供一个**可直接单独调用的大模型接口**,客户可以把它当作一个 LLM / VLM 服务使用(不需要走完整的课堂处理流程)。
+> ⚠️ **建议优先使用 `/sessions/process`**
+>
+> 这两个接口是早期版本暴露的**独立音频接口**,目前仍在服务、可正常使用,但由于已经对外,暂时无法移除。
+> **后续新集成请统一走本文档主流程的 `POST /sessions/process` + `GET /sessions/{session_id}/status`**,本附录仅用于兼容已有调用方。
+>
+> 与 session 接口的区别:
+> - `/upload-audio` + `/transcribe` 需要先传文件、再逐个 chunk 流式拿转写,还要自己管理会话与并发锁(429)。
+> - `/sessions/process` 一次提交 `audio_path` + `stages`,后端自动完成转写等全流程,返回 `output_dir` 后直接读结果文件。
+
+### 1. `POST /upload-audio`
+
+**用途**:上传音频文件,为后续 `/transcribe` 做准备。
+
+**请求:**
+
+| 类型 | 参数 | 必填 | 格式 | 说明 |
+|---|---|---|---|---|
+| Body | `file` | 是 | multipart/form-data | 音频文件(字段名**固定为 `file`**,不能改名) |
+
+**约束:**
+- 扩展名必须是 `.wav` / `.mp3` / `.m4a`
+- 单文件 ≤ 300 MB
+- 若上一次会话仍在处理(`audio_pipeline_lock` 未释放),返回 **429** `"Session Active, Try Later"`
+
+**返回:**
+```json
+{
+  "filename": "input_part_5min.wav",
+  "message": "File uploaded successfully",
+  "path": "storage/smart-classroom/audio/input_part_5min.wav"
+}
+```
+
+> **注意**:`path` 是**相对路径**,基准是服务端进程的工作目录。下一步 `/transcribe` 需要把返回的 `path` 原样填进 `audio_filename`。
+
+**示例:**
+```bash
+curl -X POST http://<host>:8000/upload-audio \
+  -F "file=@input_part_5min.wav"
+```
+
+---
+
+### 2. `POST /transcribe`
+
+**用途**:对已上传的音频做语音转写(ASR),流式按 chunk 返回文本和时间戳。
+
+**请求:**
+
+| 类型 | 参数 | 必填 | 格式 | 说明 |
+|---|---|---|---|---|
+| Header | `x-session-id` | 否 | string | 会话 ID(可选) |
+| Body | `audio_filename` | 是 | string | `/upload-audio` 返回的 `path`(**完整路径**,不是裸文件名) |
+| Body | `source_type` | 否 | string | `audio_file`(默认)或 `microphone` |
+
+**请求体:**
+```json
+{
+  "audio_filename": "storage/smart-classroom/audio/input_part_5min.wav",
+  "source_type": "audio_file"
+}
+```
+
+**返回(流式,JSON 行,每行一个 chunk):**
+
+```json
+{
+  "chunk_path": "chunks/chunk_0_7f2288.wav",
+  "start_time": 0.0,
+  "end_time": 15.0,
+  "chunk_index": 0,
+  "text": "好，\n小朋友们，\n上课前呢田老师想先跟小朋友们讲解一下我们今天这节课的课堂评价。\n",
+  "segments": [
+    { "speaker": "教师", "text": "好，", "start": 7.54, "end": 7.78 }
+  ]
+}
+```
+
+结束事件:
+```json
+{
+  "event": "final",
+  "teacher_speaker": "教师",
+  "speaker_text_stats": { "教师": 5234 }
+}
+```
+
+**注意:**
+- 响应头会带 `x-session-id`,可用于后续查询。
+- 每次转写结束后需等锁释放才能发起下一次(否则 **429**)。
+- `audio_filename` 用正斜杠(`storage/smart-classroom/audio/...`)也可以,Windows 下无需特意转义反斜杠。
+
+**示例:**
+```bash
+curl -X POST http://<host>:8000/transcribe \
+  -H "Content-Type: application/json" \
+  -d '{"audio_filename": "storage/smart-classroom/audio/input_part_5min.wav", "source_type": "audio_file"}'
+```
+
+---
+
+## 第三节:VLM / LLM 接口(独立服务)
+
+外部客户在集成 Smart Classroom 时,也可以**直接调用下面这个大模型接口**来使用 VLM / LLM 能力,不需要走完整的课堂处理流程。
 
 ### 接口
 
@@ -284,11 +389,12 @@ POST http://<host>:8000/v1/chat/completions
 |---|---|
 | `Qwen/Qwen3-VL-8B-Instruct` | int4、int8 |
 | `Qwen/Qwen3.5-9B` | int4、int8 |
-| `Qwen/Qwen3.6-35B-A3B` | int4(无 int8) |
+| `Qwen/Qwen3.6-35B-A3B` | int4、int8 |
 
 说明:
 
 - **当前默认**为 `Qwen/Qwen3-VL-8B-Instruct`(config 里 `vlm_name`),多模态。
+- `Qwen/Qwen3.5-9B` 和 `Qwen/Qwen3.6-35B-A3B` 仅在 `device: GPU` + `weight_format: int8` 下验证过。
 - **切换模型**需改服务端 `config.yaml` 的 `text_gen.vlm_name`(以及 `weight_format`、`device`),重启服务生效。
 - 接口的 `model` 参数会被忽略——**以服务端配置的模型为准**,客户传入 `model` 名不会切换模型。
 - 具体可用模型和量化由服务端部署决定;若需在部署上新增模型,请与服务提供方确认。
