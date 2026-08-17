@@ -47,7 +47,7 @@ The script will:
 ## Step 4: Start the Application
 
 ```powershell
-.\start_kiosk.ps1
+.\start_ata.ps1
 ```
 
 Services will start in sequence:
@@ -99,7 +99,7 @@ You should see the AI Teaching Assistant interface.
 ## Stopping the Application
 
 ```powershell
-.\stop_kiosk.ps1
+.\stop_ata.ps1
 ```
 
 To stop individual services, use `Ctrl+C` in their respective terminal windows.

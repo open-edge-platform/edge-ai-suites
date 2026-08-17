@@ -10,17 +10,17 @@ The application runs locally on Intel hardware using OpenVINO-backed services.
 ## What This Project Contains
 
 - A React browser UI in [assistant-react-ui](assistant-react-ui).
-- A FastAPI UI server/proxy in [kiosk_ui_server.py](kiosk_ui_server.py).
+- A FastAPI UI server/proxy in [ata_ui_server.py](ata_ui_server.py).
 - A FastAPI orchestrator (`kiosk-core`) in [voice-enabled-interactions/smart-kiosk-assistant/main.py](voice-enabled-interactions/smart-kiosk-assistant/main.py).
 - A RAG microservice in [voice-enabled-interactions/smart-kiosk-assistant/rag-service](voice-enabled-interactions/smart-kiosk-assistant/rag-service).
 - Upstream ASR and TTS services from the `edge-ai-libraries` submodule.
-- Windows setup/start/stop scripts in [setup_windows.ps1](setup_windows.ps1), [start_kiosk.ps1](start_kiosk.ps1), and [stop_kiosk.ps1](stop_kiosk.ps1).
+- Windows setup/start/stop scripts in [setup_windows.ps1](setup_windows.ps1), [start_ata.ps1](start_ata.ps1), and [stop_ata.ps1](stop_ata.ps1).
 
 ## Runtime Topology
 
 | Service | Port | Role | Entry Point |
 |---|---|---|---|
-| `ai-teaching-assistant ui` | `7860` | Serves React app and proxies API calls | [kiosk_ui_server.py](kiosk_ui_server.py) |
+| `ai-teaching-assistant ui` | `7860` | Serves React app and proxies API calls | [ata_ui_server.py](ata_ui_server.py) |
 | `kiosk-core` | `8012` | Session orchestration (audio flow, polling state, response audio) | [voice-enabled-interactions/smart-kiosk-assistant/main.py](voice-enabled-interactions/smart-kiosk-assistant/main.py) |
 | `audio-analyzer` | `8010` | Speech-to-text (Whisper) | [edge-ai-libraries/microservices/audio-analyzer/main.py](edge-ai-libraries/microservices/audio-analyzer/main.py) |
 | `text-to-speech` | `8011` | Speech synthesis | [edge-ai-libraries/microservices/text-to-speech/main.py](edge-ai-libraries/microservices/text-to-speech/main.py) |
@@ -39,7 +39,7 @@ cd edge-ai-suites
 git sparse-checkout set education-ai-suite/ai-teaching-assistant
 cd education-ai-suite/ai-teaching-assistant
 .\setup_windows.ps1
-.\start_kiosk.ps1
+.\start_ata.ps1
 ```
 
 Open `http://127.0.0.1:7860`.
