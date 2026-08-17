@@ -109,14 +109,14 @@ make uavsdk-up
 
 > **Note:** Video streams are not available until the UAV is armed and actively on a mission.
 
-The following sequence arms the UAV, commands a takeoff to 10 m, holds for 30 seconds, then lands:
+The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
 curl -sf -X POST http://localhost:8080/action/takeoff \
   -H "Content-Type: application/json" \
   -d '{"altitude": 10}'
-sleep 30
+sleep 120
 curl -X POST http://localhost:8080/action/land
 ```
 
