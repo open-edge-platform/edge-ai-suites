@@ -174,22 +174,7 @@ make build-nc   # rebuilds core infra + apps images with --no-cache
 make up-sim-camera         # or make up-usb-camera
 ```
 
-### Step 3 — Wait for PX4 to be healthy
-
-Both modes require PX4 to be ready before starting applications:
-
-```bash
-docker compose ps px4 px4-sih
-```
-
-Wait until the active PX4 service for your mode shows `(healthy)` — takes ~60–90 seconds on first boot.
-
-**What's starting in the background**:
-- **PX4 autopilot** initializes flight controller state
-- **Camera bridge** (sim or USB) connects and starts streaming
-- **Gazebo simulator** (sim mode only) loads world and vehicle physics
-
-### Step 4 — Start AI helpers + sample apps
+### Step 3 — Start AI helpers + sample apps
 
 Vision processing and the web dashboard depend on PX4 being healthy:
 

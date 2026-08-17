@@ -1,12 +1,13 @@
 # Surgical Instrument Sample App
 
-Real-time polyp detection on endoscopic video using Intel hardware acceleration (CPU / Intel Arc iGPU / Intel NPU) via DL Streamer.
+> ⚠️ This application is for **reference and evaluation purposes**. It is
+  **not intended for direct use in clinical or diagnostic environments** and is not
+  validated for such a purpose.
 
-> **⚠️ Not for clinical use.** This is a developer reference implementation for evaluating Intel inference performance on edge hardware. It is **not** a medical device and must not be used for diagnosis, treatment, or any patient-care decision.
+Real-time polyp detection in endoscopic video using Intel hardware acceleration
+(CPU / Intel Arc iGPU / Intel NPU) via DL Streamer.
 
-## At a glance
-
-| | |
+|   |   |
 |---|---|
 | **Model** | YOLO11n (FP16 OpenVINO IR) — trained in-container on CVC-ColonDB (mAP@50 ≈ 0.98 on val) |
 | **Inference** | Ultralytics (train/export) + OpenVINO 2026.2 (serve) on Intel Arc iGPU via torch+xpu |
@@ -15,20 +16,11 @@ Real-time polyp detection on endoscopic video using Intel hardware acceleration 
 | **Target latency** | < 30 ms end-to-end at 1080p (validated: ~23 ms mean, ~28 ms p99 on Arc iGPU) |
 | **First-boot time** | 20–35 min while YOLO11n trains on the iGPU (subsequent boots: seconds — IR is cached) |
 
-## What the UI shows
-
-Open http://localhost:8080 (or the LAN URL printed by `make up`/`make run`). After clicking **Start** in the left configuration panel, the right column exposes the KPIs a reviewer typically asks for:
-
-- **Config panel (left accordion)** — source selection (`file` or `basler`), source argument (video path / camera serial), device choice, and Start/Stop/Reset controls.
-- **Pipeline Performance table** — `Workload | Model | Device | FPS | Mean | P50 | P90 | P95 | P99 | Status`. Percentiles are computed from the pipeline latency tracer rolling window.
-- **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset, video source resolution, model input tensor size, target device (`GPU` / `CPU` / `NPU`).
-- **Platform accordion** — CPU / GPU / NPU utilization from `intel-npu-info` + `nvidia-smi`-style samplers.
-
-All of the above is driven by a single Server-Sent Events stream at `/api/events` (~1 Hz snapshot). The rendered video appears in a native popup sink launched by the pipeline container when display mode is enabled.
 
 ## Topology
 
-Three services on a private Docker bridge. Only the UI (:8080) is published to the host — backend and pipeline are internal.
+Three services on a private Docker bridge. Only the UI (:8080) is published to the
+host — backend and pipeline are internal.
 
 ```
 HOST :8080 ─→ surgical-ui        (nginx + React SPA + /api reverse-proxy)
@@ -41,11 +33,35 @@ HOST :8080 ─→ surgical-ui        (nginx + React SPA + /api reverse-proxy)
                     · latency:   GST latency tracer (/latency)
 ```
 
-The UI does **not** unblock until `surgical-backend` reports `/api/readiness → ready`. On first boot this includes the full train pipeline; the browser tab simply won't answer until the model is trained and served. This is the "gate UI on BE ready" contract — no user-visible bootstrap UX.
+The UI does **not** unblock until `surgical-backend` reports `/api/readiness → ready`.
+On the first boot this includes the full train pipeline; the browser tab simply will not answer
+until the model is trained and served. This is the "gate UI on BE ready" contract —
+no user-visible bootstrap UX.
+
+
+## User Interface
+
+Open http://localhost:8080 (or the LAN URL printed by `make up`/`make run`) and click
+**Start** in the left configuration panel. The right column exposes typical KPIs:
+
+- **Config panel (left accordion)** — source selection (`file` or `basler`), source argument (video path / camera serial), device choice, and Start/Stop/Reset controls.
+- **Pipeline Performance table** — `Workload | Model | Device | FPS | Mean | P50 | P90 | P95 | P99 | Status`. Percentiles are computed from the pipeline latency tracer rolling window.
+- **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset, video source resolution, model input tensor size, target device (`GPU` / `CPU` / `NPU`).
+- **Platform accordion** — CPU / GPU / NPU utilization from `intel-npu-info` + `nvidia-smi`-style samplers.
+
+For more details, see the [User Interface document](./docs/user-guide/user-interface.md).
+
+
+
+
+
+
 
 ## Quickstart (Docker)
 
-The repo does not ship the medical dataset, trained model binaries, or demo videos. Prepare them locally first, then start the stack. This keeps the demo reproducible without any dependency on a private PTL/Bangalore machine.
+The repo does not ship the medical dataset, trained model binaries, or demo videos.
+Prepare them locally first, then start the stack. This keeps the demo reproducible without
+any dependency on a private PTL/Bangalore machine.
 
 > **Behind a corporate proxy?** Read [0. Corporate proxy setup](#0-corporate-proxy-setup) first. Both the image build and the runtime `yolo11n.pt` download need proxy settings, otherwise `make up` will fail with a curl timeout during bootstrap.
 
@@ -208,19 +224,20 @@ When the backend is ready, open:
 http://localhost:8080
 ```
 
-For later runs, use the fast path:
+For subsequent runs:
 
 ```bash
 make run
 ```
 
-`make run` requires the cached IR and `.trained_ok` marker. If they are missing, it stops and tells the user to prepare or seed the model first.
+`make run` requires the cached IR and `.trained_ok` marker. If they are missing, it stops and
+tells the user to prepare or seed the model first.
 
 `make up` and `make run` both **auto-detect** any `/dev/video*` devices on
 the host and layer in a compose override that makes them available to the
 pipeline container. The UI's Settings modal is the primary runtime picker for
-choosing between the recorded video and any attached camera — see [Runtime
-configuration](#runtime-configuration) below.
+choosing between the recorded video and any attached camera — see
+[docs/user-guide/runtime-configuration.md](docs/user-guide/runtime-configuration.md).
 
 ### 5. Pipeline cases (configurable via `make up`)
 
@@ -229,83 +246,16 @@ environment variables (`SOURCE_KIND`, `DETECT`, `WATERMARK`, `MINIMAL`,
 `SCHEDULING_POLICY`, `BATCH_SIZE`, `AUTOVIDEOSINK`). Three canonical shapes
 cover the surface — file preview, minimal live camera, and tuned live
 inference. Exact commands, generated `gst-launch-1.0` strings, verified
-latency numbers, and troubleshooting live in:
+latency numbers, and troubleshooting can be found in the:
+[Pipeline Cases document](docs/user-guide/pipeline-cases.md).
 
-[docs/user-guide/pipeline-cases.md](docs/user-guide/pipeline-cases.md)
+
 
 ## Runtime configuration
 
-Everything reconfigurable at runtime lives in the **Settings** modal —
-opened via the `⚙ Settings` button in the top action bar, next to Start/Stop.
+See the [Runtime Configuration guide](docs/user-guide/runtime-configuration.md) to see how to
+adjust the application Runtime UI controls, API endpoints, and the `make doctor`behavior.
 
-**First launch.** The app opens with a one-time **research-use disclaimer**
-that must be acknowledged before the main UI is interactive. The ack is
-stored in `localStorage` under `surgical_disclaimer_ack_v1` and does not
-survive a browser-profile wipe.
-
-### Input Source tab
-
-Pick where frames come from without editing config files or restarting
-compose. Three source kinds are supported; kinds with no detected devices
-are visible but disabled so it's obvious what the app supports.
-
-| Kind | Argument | Populated by |
-|---|---|---|
-| **Video file** | basename under `./videos/` | `GET /api/videos` — lists everything with `.mp4 .mkv .avi .mov .ts` |
-| **USB / v4l2 camera** | `/dev/videoN` | `GET /api/devices/cameras` — reads `/sys/class/video4linux` |
-| **Basler camera** | serial number | `GET /api/devices/cameras` — pypylon enumeration (ships in Slice E) |
-
-- **Upload** a new video with the "Choose file…" button (max 500 MB, extension whitelist enforced server-side). New uploads land in the same `./videos/` volume and appear in the dropdown immediately.
-- **Apply** persists the selection client-side. It takes effect on the **next** Start — the pipeline rejects source changes mid-stream. If a pipeline is running, the modal shows a banner and blocks changes until you Stop.
-- **Cameras** are compose-time devices. Hot-plugging after `make up` requires
-  `make run` (or the equivalent `docker compose up -d`) so the container can
-  see the new node — the UI's picker only surfaces what's already mounted.
-
-### Devices tab
-
-Single-row table (`Workload · Model · Device`) with a dropdown for the
-polyp-detection accelerator: `CPU`, `GPU` (Intel Arc iGPU — recommended),
-`NPU` (Intel AI Boost). Save applies the change on the next Start; Reset
-session clears the last inference session's aggregates without stopping the
-backend process.
-
-### Backend contract (for scripting / smoke tests)
-
-The UI is a thin wrapper over these endpoints, so any of them can be driven
-from `curl` for automation.
-
-| Endpoint | Purpose |
-|---|---|
-| `GET /api/videos` | List `{name, size_bytes, mtime}` under `VIDEOS_DIR` (default `/videos`) |
-| `POST /api/videos` | Multipart upload (`file` field). `415` for wrong ext, `409` for duplicate, `413` for oversize |
-| `GET /api/devices/cameras` | `{v4l2:[…], basler:[…], basler_note?}` |
-| `GET /api/config` | Reflects live source: `{video_file, default_video, source:{kind,arg}, devices:{detect}}` |
-| `POST /api/start` | Optional body: `{device?, source?:{kind,arg}}` — persisted to `ServerState` for subsequent Starts |
-| `POST /api/stop` · `POST /api/reset` | Lifecycle |
-| `POST /api/device` | Set active accelerator for the polyp-detection workload |
-
-### Pre-flight: `make doctor`
-
-Read-only diagnostic that checks the host before you run `make up`. Reports
-each item as `[ OK ]`, `[WARN]`, or `[FAIL]`; exits non-zero only on genuine
-fatals (missing Docker, no video assets, port collision with a foreign
-process). Own-stack aware — if `surgical-ui` is already running on
-`UI_HOST_PORT`, that's reported as OK, not as a conflict.
-
-Sections: host prerequisites · accelerator visibility · cameras · assets ·
-port availability · compose config. Sample output:
-
-```
-[doctor] --- accelerator visibility ---
-  [ OK ] /dev/dri present (renderD* count: 1)
-  [ OK ] /dev/accel/accel0 present (NPU visible)
-[doctor] --- assets ---
-  [ OK ] cached IR : models/yolo11n_polyp/best_openvino_model (5.4M)
-  [ OK ] 2 demo video(s) under ./videos/
-[doctor] --- port availability ---
-  [ OK ] port 8080 free
-[doctor] all critical checks passed — 'make up' should succeed.
-```
 
 ## Repo layout (short)
 

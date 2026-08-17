@@ -248,7 +248,9 @@ export async function generateReport(
 ): Promise<unknown> {
   const type = params.type ?? reportConfig.defaultType;
   const { periodStart, periodEnd } = calcPeriod(type, params.period_start, params.period_end);
-  const filter = reportConfig.filter ?? {};
+  const filter = reportConfig.filter && typeof reportConfig.filter === "object" && !Array.isArray(reportConfig.filter)
+    ? reportConfig.filter
+    : {};
   const dataSource = reportConfig.dataSource;
 
   const monitor = db.getMonitor(params.monitor_id);

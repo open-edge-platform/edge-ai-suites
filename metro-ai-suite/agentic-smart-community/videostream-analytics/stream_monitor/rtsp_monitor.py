@@ -92,6 +92,12 @@ class StreamPipeline(BaseMonitor):
         self._running = False
         self._paused = threading.Event()  # set = not paused (normal running)
         self._paused.set()
+        # stop_event makes every sleep in the run loops interruptible, so
+        # stop() actually joins instead of leaving a parked thread behind.
+        self._stop_event = threading.Event()
+        # Bumped by start(); a stale thread from a previous start observes the
+        # mismatch at its next loop check and exits instead of resurrecting.
+        self._generation = 0
         self._status = "stopped"
         self._cap: cv2.VideoCapture | None = None
         self._frame_count = 0
@@ -114,18 +120,31 @@ class StreamPipeline(BaseMonitor):
     def start(self):
         if self._running:
             return
+        if self._thread and self._thread.is_alive():
+            # Previous thread is parked in a blocking call (cap.read/transcode).
+            # Safe to proceed: the generation guard makes it exit when it wakes.
+            logger.warning("[%s] Previous pipeline thread still alive; superseding it", self.source_id)
+        self._stop_event.clear()
+        self._generation += 1
         self._running = True
         self._thread = threading.Thread(
-            target=self._run, name=f"pipeline-{self.source_id}", daemon=True
+            target=self._run, args=(self._generation,),
+            name=f"pipeline-{self.source_id}", daemon=True,
         )
         self._thread.start()
         logger.info("[%s] Pipeline started", self.source_id)
 
     def stop(self):
         self._running = False
+        self._stop_event.set()
         self._paused.set()  # unblock if paused, so thread can exit
         if self._thread and self._thread.is_alive():
             self._thread.join(timeout=10)
+            if self._thread.is_alive():
+                # Parked in a blocking cap.read() or ffmpeg transcode — cannot
+                # be interrupted, but the generation guard prevents it from
+                # resurrecting on the next start().
+                logger.warning("[%s] Pipeline thread did not exit within 10s", self.source_id)
         self._status = "stopped"
         logger.info("[%s] Pipeline stopped", self.source_id)
 
@@ -209,8 +228,11 @@ class StreamPipeline(BaseMonitor):
         delay = self._health_cfg.backoff_base * (2 ** min(self._reconnect_count, 10))
         return min(delay, self._health_cfg.backoff_max)
 
-    def _handle_unhealthy(self):
+    def _handle_unhealthy(self, generation: int):
         """Execute recovery strategy when max_failures threshold is reached."""
+        if self._generation != generation:
+            # Stale thread — must not mutate shared state (a newer thread owns it).
+            return
         strategy = self._health_cfg.recovery_strategy
 
         self._status = "unhealthy"
@@ -222,7 +244,7 @@ class StreamPipeline(BaseMonitor):
             self._status = "paused"
             self._emit_status("paused")
             self._paused.wait()
-            if not self._running:
+            if not self._running or self._generation != generation:
                 return
             self._failure_count = 0
             self._reconnect_count = 0
@@ -234,13 +256,13 @@ class StreamPipeline(BaseMonitor):
         else:  # "retry"
             delay = self._health_cfg.backoff_max
             logger.info("[%s] Unhealthy, retrying in %.1fs...", self.source_id, delay)
-            time.sleep(delay)
+            self._stop_event.wait(delay)
 
-    def _run(self):
+    def _run(self, generation: int):
         """Main pipeline loop with health-aware reconnection."""
         self._start_time = datetime.now().isoformat(timespec="seconds")
 
-        while self._running:
+        while self._running and self._generation == generation:
             try:
                 self._connect()
                 if self._cap and self._cap.isOpened():
@@ -254,7 +276,7 @@ class StreamPipeline(BaseMonitor):
                         self._status = "paused"
                     self._failure_count = 0
                     self._reconnect_count = 0
-                    self._process_loop()
+                    self._process_loop(generation)
             except Exception as e:
                 logger.error("[%s] Pipeline error: %s", self.source_id, e)
                 self._status = "error"
@@ -265,11 +287,11 @@ class StreamPipeline(BaseMonitor):
                 self._cap.release()
                 self._cap = None
 
-            if self._running:
+            if self._running and self._generation == generation:
                 self._reconnect_count += 1
                 if self._failure_count >= self._health_cfg.max_failures:
-                    self._handle_unhealthy()
-                    if not self._running:
+                    self._handle_unhealthy(generation)
+                    if not self._running or self._generation != generation:
                         break
                 else:
                     # Same rule as above: keep the pause label visible while
@@ -280,7 +302,8 @@ class StreamPipeline(BaseMonitor):
                     delay = self._calculate_backoff()
                     logger.info("[%s] Reconnecting in %.1fs (attempt %d)...",
                                self.source_id, delay, self._reconnect_count)
-                    time.sleep(delay)
+                    if self._stop_event.wait(delay):
+                        break
 
         self._emit_status("stopped")
 
@@ -321,7 +344,7 @@ class StreamPipeline(BaseMonitor):
                       or motion_frames / self._fps >= self._segment_cfg.min_duration)
         return detector.is_static and min_dur_ok and self._prefilter.is_decided
 
-    def _process_loop(self):
+    def _process_loop(self, generation: int):
         """Read frames, detect motion, extract segments with fixed interval."""
         detector = MotionDetector(self._motion_cfg)
         if not self._motion_cfg.enabled:
@@ -353,124 +376,138 @@ class StreamPipeline(BaseMonitor):
         static_start_wall: float | None = None
         static_start_iso: str | None = None
 
-        while self._running:
-            ret, frame = self._cap.read()  # type: ignore
-            if not ret:
-                consecutive_failures += 1
-                if consecutive_failures >= self._health_cfg.max_failures:
-                    # Count one connection-level failure; outer loop owns the
-                    # retry/unhealthy decision (counting per-frame failures
-                    # would skip retries entirely on a single bad reconnect).
-                    self._failure_count += 1
-                    self._last_failure_time = datetime.now().isoformat(timespec="seconds")
-                    logger.warning(
-                        "[%s] %d consecutive read failures, reconnecting",
-                        self.source_id,
-                        consecutive_failures,
-                    )
-                    break
-                time.sleep(0.01)
-                continue
-
-            consecutive_failures = 0
-            self._frame_count += 1
-            self._maybe_write_snapshot(frame)
-
-            if not self._paused.is_set():
-                # Paused: keep reading frames (maintain RTSP connection) but skip processing
-                if not self._paused.wait(timeout=0.1):
+        try:
+            while self._running and self._generation == generation:
+                ret, frame = self._cap.read()  # type: ignore
+                if not ret:
+                    consecutive_failures += 1
+                    if consecutive_failures >= self._health_cfg.max_failures:
+                        # Count one connection-level failure; outer loop owns the
+                        # retry/unhealthy decision (counting per-frame failures
+                        # would skip retries entirely on a single bad reconnect).
+                        self._failure_count += 1
+                        self._last_failure_time = datetime.now().isoformat(timespec="seconds")
+                        logger.warning(
+                            "[%s] %d consecutive read failures, reconnecting",
+                            self.source_id,
+                            consecutive_failures,
+                        )
+                        break
+                    if self._stop_event.wait(0.01):
+                        break
                     continue
-                if not self._running:
-                    break
-                # Just resumed: if we were mid quiet-period, drop the span that
-                # elapsed across the pause — the paused wall-clock is not real
-                # idle time. Keep `None` as `None` (no open period to reset).
-                if static_start_wall is not None:
-                    static_start_wall = time.time()
-                    static_start_iso = now_local_str()
 
-            # Motion detection. When the gate is disabled (motion.enabled=false)
-            # every frame counts as motion — the prefilter (or, without one, the
-            # max_duration segment interval) becomes the only emit gate, and the
-            # frame-diff detector is skipped entirely to save CPU.
-            motion_detected = True if not self._motion_cfg.enabled else detector.detect(frame)
+                consecutive_failures = 0
+                self._frame_count += 1
+                self._maybe_write_snapshot(frame)
 
-            # State: enter motion
-            if motion_detected and not in_motion:
-                # Close out the preceding quiet period (if any) before the new
-                # motion. `static_start_*` is None on the very first motion
-                # (nothing to close out) — correct, we never fabricate a
-                # leading static.
-                if static_start_wall is not None:
-                    self._maybe_emit_static(static_start_wall, static_start_iso)
-                    static_start_wall = None
-                    static_start_iso = None
-                in_motion = True
-                motion_frames = 0
-                extractor.start_segment()
-                if self._prefilter:
-                    self._prefilter.reset()
-                logger.info("[%s] Motion started", self.source_id)
+                if not self._paused.is_set():
+                    # Paused: keep reading frames (maintain RTSP connection) but skip processing
+                    if not self._paused.wait(timeout=0.1):
+                        continue
+                    if not self._running or self._generation != generation:
+                        break
+                    # Just resumed: if we were mid quiet-period, drop the span that
+                    # elapsed across the pause — the paused wall-clock is not real
+                    # idle time. Keep `None` as `None` (no open period to reset).
+                    if static_start_wall is not None:
+                        static_start_wall = time.time()
+                        static_start_iso = now_local_str()
 
-            # State: in motion — record frames
-            if in_motion:
-                motion_frames += 1
-                if self._prefilter:
-                    self._prefilter.accumulate(frame, self._fps)
+                # Motion detection. When the gate is disabled (motion.enabled=false)
+                # every frame counts as motion — the prefilter (or, without one, the
+                # max_duration segment interval) becomes the only emit gate, and the
+                # frame-diff detector is skipped entirely to save CPU.
+                motion_detected = True if not self._motion_cfg.enabled else detector.detect(frame)
 
-                result = extractor.add_frame(frame)
-                if result:
-                    # Interval reached — emit segment, start next one
-                    self._maybe_emit(result)
+                # State: enter motion
+                if motion_detected and not in_motion:
+                    # Close out the preceding quiet period (if any) before the new
+                    # motion. `static_start_*` is None on the very first motion
+                    # (nothing to close out) — correct, we never fabricate a
+                    # leading static.
+                    if static_start_wall is not None:
+                        self._maybe_emit_static(static_start_wall, static_start_iso)
+                        static_start_wall = None
+                        static_start_iso = None
+                    in_motion = True
+                    motion_frames = 0
                     extractor.start_segment()
                     if self._prefilter:
+                        self._prefilter.reset()
+                    logger.info("[%s] Motion started", self.source_id)
+
+                # State: in motion — record frames
+                if in_motion:
+                    motion_frames += 1
+                    if self._prefilter:
+                        self._prefilter.accumulate(frame, self._fps)
+
+                    result = extractor.add_frame(frame)
+                    if result:
+                        # Interval reached — emit segment, start next one
+                        self._maybe_emit(result)
+                        extractor.start_segment()
+                        if self._prefilter:
+                            self._prefilter.reset_for_next_segment()
+                    elif self._prefilter and self._should_split_segment(extractor.current_duration):
+                        # Trajectory union grew past auto_split_area;
+                        # finish current segment early so the ROI crop stays tight.
+                        early = extractor.finish()
+                        if early:
+                            self._maybe_emit(early)
+                        extractor.start_segment()
                         self._prefilter.reset_for_next_segment()
-                elif self._prefilter and self._should_split_segment():
-                    # Trajectory union grew past auto_split_area;
-                    # finish current segment early so the ROI crop stays tight.
-                    early = extractor.finish()
-                    if early:
-                        self._maybe_emit(early)
-                    extractor.start_segment()
-                    self._prefilter.reset_for_next_segment()
-                    logger.debug(
-                        "[%s] Segment early-split by trajectory union",
-                        self.source_id,
-                    )
+                        logger.debug(
+                            "[%s] Segment early-split by trajectory union",
+                            self.source_id,
+                        )
 
-                # Cascaded exit check
-                if self._should_exit_motion(detector, motion_frames):
-                    tail = extractor.finish()
-                    if tail:
-                        self._maybe_emit(tail)
-                    in_motion = False
-                    # A real motion just ended → the quiet period begins now.
-                    # This is the ONLY place static_start is armed (close-out
-                    # model: static is always bracketed by two motions).
-                    static_start_wall = time.time()
-                    static_start_iso = now_local_str()
-                    logger.info("[%s] Motion ended", self.source_id)
+                    # Cascaded exit check
+                    if self._should_exit_motion(detector, motion_frames):
+                        tail = extractor.finish()
+                        if tail:
+                            self._maybe_emit(tail)
+                        in_motion = False
+                        # A real motion just ended → the quiet period begins now.
+                        # This is the ONLY place static_start is armed (close-out
+                        # model: static is always bracketed by two motions).
+                        static_start_wall = time.time()
+                        static_start_iso = now_local_str()
+                        logger.info("[%s] Motion ended", self.source_id)
 
-        # Drain remaining segment on shutdown
-        if in_motion:
-            result = extractor.finish()
-            if result:
-                self._maybe_emit(result)
-        elif static_start_wall is not None:
-            # Shut down while inside a quiet period (a motion had ended and no
-            # new motion arrived): emit the final static so state_query still
-            # sees the trailing idle span. If motion never happened at all,
-            # static_start_wall is None here and we (correctly) emit nothing.
-            self._maybe_emit_static(static_start_wall, static_start_iso)
-        extractor.close()
+        finally:
+            # Drain on shutdown AND on error exit (hence the try/finally): an
+            # exception mid-motion must not orphan the in-flight segment —
+            # finish() yields it regardless of length (only 0-frame files are
+            # removed). Guarded so a drain failure never masks the original
+            # exception.
+            try:
+                if in_motion:
+                    result = extractor.finish()
+                    if result:
+                        self._maybe_emit(result)
+                elif static_start_wall is not None:
+                    # Exiting inside a quiet period (a motion had ended and no
+                    # new motion arrived): emit the final static so state_query
+                    # still sees the trailing idle span. If motion never
+                    # happened at all, static_start_wall is None — emit nothing.
+                    self._maybe_emit_static(static_start_wall, static_start_iso)
+            except Exception as e:
+                logger.warning("[%s] Segment drain failed on exit: %s", self.source_id, e)
+            extractor.close()
 
-    def _should_split_segment(self) -> bool:
+    def _should_split_segment(self, current_duration: float) -> bool:
         """Return True when the active prefilter wants an early segment cut.
 
         Honors `pipeline.roi.auto_split_area`. With value <=0 or roi disabled,
-        never splits.
+        never splits. `min_duration` is the cut-frequency guard: a segment
+        younger than that is never split, so forced cuts can't produce short
+        fragments (motion-end tails are natural boundaries, always kept).
         """
         if self._prefilter is None:
+            return False
+        if current_duration < self._segment_cfg.min_duration:
             return False
         roi_cfg = self._roi_cfg
         if not roi_cfg.enabled or roi_cfg.auto_split_area <= 0:

@@ -53,6 +53,11 @@ import {
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 import type { FeatureGuard } from '../../utils/featureGuards';
+import { collectPipelineErrors, isNotRunning } from '../../utils/pipelineErrors';
+
+// How long a non-fatal error stays in the notification bar before the regular
+// audio/video status takes the space back.
+const TRANSIENT_ERROR_MS = 15000;
 
 interface HeaderBarProps {
   projectName: string;
@@ -83,6 +88,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const backCamera = useAppSelector((s) => s.ui.backCamera);
   const boardCamera = useAppSelector((s) => s.ui.boardCamera);
   const videoAnalyticsActive = useAppSelector((s) => s.ui.videoAnalyticsActive);
+  const frontCameraStream = useAppSelector((s) => s.ui.frontCameraStream);
+  const backCameraStream = useAppSelector((s) => s.ui.backCameraStream);
+  const boardCameraStream = useAppSelector((s) => s.ui.boardCameraStream);
   const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const videoStatus = useAppSelector((s) => s.ui.videoStatus);
   const reportStatus = useAppSelector((s) => s.ui.reportStatus);
@@ -167,6 +175,20 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   };
 
   const clearForNewOp = () => setErrorMsg(null);
+
+  /**
+   * Report a failure that does not stop the session — a single camera pipeline,
+   * say, while transcription keeps running. The banner hides the audio/video
+   * status while it shows, so it steps aside again instead of sticking until the
+   * next start/stop. A newer message is never cleared by an older timer.
+   */
+  const showTransientError = (message: string) => {
+    setErrorMsg(message);
+    window.setTimeout(
+      () => setErrorMsg((current) => (current === message ? null : current)),
+      TRANSIENT_ERROR_MS
+    );
+  };
   
   const handleCopy = async () => {
     try {
@@ -483,7 +505,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
             console.warn(`⚠️ ${result.pipeline_name} failed:`, result.error);
           }
         });
-        
+
+        // Per-camera failures come back with HTTP 200, so nothing throws.
+        // Show the reasons, including when only some cameras are down.
+        const pipelineErrors = collectPipelineErrors(
+          videoResult.results,
+          t,
+          t('notifications.videoAnalyticsFailed')
+        );
+        if (pipelineErrors.length > 0) {
+          showTransientError(t('errors.videoPipelineFailed', { details: pipelineErrors.join('\n') }));
+        }
+
         if (hasSuccessfulStreams) {
           dispatch(setVideoPlaybackMode(false));
           dispatch(setVideoAnalyticsActive(true));
@@ -621,7 +654,17 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
             dispatch(setVideoAnalyticsStopping(true));
             console.log('🎥 Stopping video analytics...');
             
-            const videoRequests = [
+            // Ask only for the cameras that are actually streaming; the backend
+            // answers "is not running" for the rest, which reads as a failure.
+            // Fall back to all three if no stream URL is known, so a pipeline is
+            // never left running because of stale state.
+            const streaming = [
+              frontCameraStream && { pipeline_name: 'front' },
+              backCameraStream && { pipeline_name: 'back' },
+              boardCameraStream && { pipeline_name: 'content' },
+            ].filter(Boolean) as Array<{ pipeline_name: string }>;
+
+            const videoRequests = streaming.length > 0 ? streaming : [
               { pipeline_name: 'front' },
               { pipeline_name: 'back' },
               { pipeline_name: 'content' },
@@ -630,6 +673,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
             console.log('🛑 Stopping video analytics with shared session:', sessionId);
             const videoResult = await stopVideoAnalytics(videoRequests, sessionId);
             console.log('🛑 Video analytics stopped:', videoResult);
+
+            // Like the start endpoint, failures to stop come back with HTTP 200.
+            // "Not running" is expected housekeeping, so only report the rest.
+            const stopErrors = collectPipelineErrors(
+              videoResult?.results,
+              t,
+              t('errors.failedToStopRecording'),
+              isNotRunning
+            );
+            if (stopErrors.length > 0) {
+              showTransientError(t('errors.videoPipelineStopFailed', { details: stopErrors.join('\n') }));
+            }
 
             // Check for recorded videos and trigger playback mode if available
             let hasRecordedVideo = false;

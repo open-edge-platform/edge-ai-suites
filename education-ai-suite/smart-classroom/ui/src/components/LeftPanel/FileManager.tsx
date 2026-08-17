@@ -89,7 +89,9 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
       setRemovingHash(null);
     },
     onError: (err) => {
-      setError(err?.message ?? "Failed to delete file");
+      // The backend explains refusals ("Task is still processing", "Task ID does
+      // not exist or has expired") in the message; prefer it over the generic text.
+      setError(err?.message?.trim() || t("fileManager.deleteFailed"));
       setRemovingHash(null);
     },
   });
@@ -132,11 +134,11 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
         dispatch(setCsUploadsComplete(false));
       }
     } catch (err: any) {
-      setError(err?.message ?? "Failed to load files");
+      setError(err?.message?.trim() || t("fileManager.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [dispatch]);
+  }, [dispatch, t]);
 
   useEffect(() => {
     fetchFiles();
@@ -148,9 +150,19 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
       const content = await csDownloadText(ocrTextKey);
       setOcrPreview({ isOpen: true, filename, content, loading: false, ocrTextKey });
     } catch (err) {
-      setOcrPreview({ isOpen: true, filename, content: "Failed to load OCR text.", loading: false, ocrTextKey });
+      console.error("Failed to load OCR text:", err);
+      const detail = err instanceof Error ? err.message.trim() : "";
+      setOcrPreview({
+        isOpen: true,
+        filename,
+        content: detail
+          ? t("fileManager.ocrLoadFailedDetail", { detail })
+          : t("fileManager.ocrLoadFailed"),
+        loading: false,
+        ocrTextKey,
+      });
     }
-  }, []);
+  }, [t]);
 
   const closeOcrPreview = useCallback(() => {
     setOcrPreview({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
@@ -168,12 +180,12 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
 
   const handleRemoveClick = useCallback((file: FileEntry) => {
     if (!file.task_id) {
-      setError("Cannot delete: file has no task_id");
+      setError(t("fileManager.cannotDeleteNoTask", { fileName: file.file_name }));
       return;
     }
     setRemovingHash(file.file_hash);
     fileRemoval.requestRemoval(file.task_id, file.file_name);
-  }, [fileRemoval]);
+  }, [fileRemoval, t]);
 
   // Get unique file types for filter dropdown
   const uniqueTypes = useMemo(() => {
@@ -260,7 +272,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
           </button>
           <span className="fm-title">
             {t("fileManager.totalFiles")} {filteredAndSortedFiles.length}
-            {typeFilters.size > 0 && ` (of ${files.length})`}
+            {typeFilters.size > 0 && ` ${t("fileManager.ofTotal", { total: files.length })}`}
           </span>
           <button className="fm-refresh-btn" onClick={fetchFiles} disabled={loading}>
             {t("fileManager.refresh")}
@@ -277,7 +289,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
         {error && (
           <div className="fm-error">
             <span>{error}</span>
-            <button onClick={fetchFiles}>Retry</button>
+            <button onClick={fetchFiles}>{t("fileManager.retry")}</button>
           </div>
         )}
 

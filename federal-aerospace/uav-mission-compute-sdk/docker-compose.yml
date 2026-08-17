@@ -23,7 +23,7 @@
 #   influxdb           — time-series storage for flight + platform metrics
 #   grafana            — dashboards (Flight Telemetry + Platform Health) at :3000
 #   topic-extractor    — MQTT → InfluxDB bridge for flight telemetry
-#   metrics-manager    — host platform metrics (CPU/mem/power/GPU/NPU) → InfluxDB + Prometheus :9273
+#   metrics-manager    — host platform metrics (CPU/mem/power/GPU/NPU) → InfluxDB + Prometheus :9273 (container-internal)
 #
 # AI helper (vision-processor) and edge-ai-showcase app are in:
 #   sample-apps/docker-compose.yml
@@ -53,9 +53,9 @@ services:
       - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
       - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
     ports:
-      - "14540:14540/udp"
-      - "14580:14580/udp"
-      - "8080:8080"
+      - "127.0.0.1:14540:14540/udp"
+      - "127.0.0.1:14580:14580/udp"
+      - "127.0.0.1:8080:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -80,8 +80,8 @@ services:
 
   px4-sih:
     image: px4io/px4-sitl:latest
-    container_name: px4-gazebo
-    hostname: px4-gazebo
+    container_name: px4-sitl
+    hostname: px4-sitl
     profiles: ["usb-camera"]
     ipc: shareable
     environment:
@@ -90,11 +90,9 @@ services:
       - https_proxy=${HTTPS_PROXY:-}
       - no_proxy=${NO_PROXY:-localhost,127.0.0.0/8}
     ports:
-      - "14550:14550/udp"
-      - "14580:14580/udp"
-      - "8080:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "127.0.0.1:14550:14550/udp"
+      - "127.0.0.1:14580:14580/udp"
+      - "127.0.0.1:8080:8080"
     depends_on:
       mosquitto:
         condition: service_healthy
@@ -120,6 +118,7 @@ services:
         - HTTP_PROXY=${HTTP_PROXY:-}
         - HTTPS_PROXY=${HTTPS_PROXY:-}
     container_name: companion-bridge
+    profiles: ["sim-camera", "usb-camera"]
     network_mode: service:${PX4_NETWORK_SERVICE:-px4}
     environment:
       - MQTT_BROKER_HOST=mosquitto
@@ -230,11 +229,9 @@ services:
     container_name: mediamtx
     hostname: mediamtx
     ports:
-      - "8554:8554"  # RTSP
-      - "8888:8888"  # HLS
-      - "8889:8889"  # WebRTC
-      - "9997:9997"  # API
-      - "9998:9998"  # Metrics
+      - "127.0.0.1:8554:8554"  # RTSP
+      - "127.0.0.1:8888:8888"  # HLS
+      - "127.0.0.1:8889:8889"  # WebRTC
     volumes:
       - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
     restart: unless-stopped
@@ -249,7 +246,7 @@ services:
     container_name: mqtt-broker
     hostname: mosquitto
     ports:
-      - "1884:1883"
+      - "127.0.0.1:1884:1883"
     volumes:
       - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: unless-stopped
@@ -269,9 +266,10 @@ services:
   influxdb:
     image: influxdb:2.9.1
     container_name: influxdb
+    profiles: ["observability"]
     restart: unless-stopped
     ports:
-      - "8086:8086"
+      - "127.0.0.1:8086:8086"
     environment:
       DOCKER_INFLUXDB_INIT_MODE:        setup
       DOCKER_INFLUXDB_INIT_USERNAME:    admin
@@ -291,14 +289,17 @@ services:
   grafana:
     image: grafana/grafana:11.4.0
     container_name: grafana
+    profiles: ["observability"]
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER:     admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-change-me}
       INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:-change-me-token}
       INFLUXDB_ORG:               ${INFLUXDB_ORG:-uav-sdk}
+      no_proxy:                   localhost,127.0.0.1,influxdb
+      NO_PROXY:                   localhost,127.0.0.1,influxdb
     volumes:
       - grafana-data:/var/lib/grafana
       - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -316,6 +317,7 @@ services:
         https_proxy: ${HTTPS_PROXY:-}
         no_proxy:    ${NO_PROXY:-localhost,127.0.0.0/8}
     container_name: topic-extractor
+    profiles: ["observability"]
     restart: unless-stopped
     environment:
       MQTT_BROKER_HOST: mosquitto
@@ -335,12 +337,10 @@ services:
   metrics-manager:
     image: intel/metrics-manager:2026.1.0
     container_name: metrics-manager
+    profiles: ["observability"]
     restart: unless-stopped
     privileged: true
     pid: host
-    ports:
-      - "9090:9090"
-      - "9273:9273"
     environment:
       METRICS_PORT:               9090
       LOG_LEVEL:                  INFO
@@ -350,6 +350,8 @@ services:
       INFLUXDB_ORG:               ${INFLUXDB_ORG:-uav-sdk}
       INFLUXDB_BUCKET:            telemetry
       METRICS_MANAGER_HOSTNAME:   uav-sdk-host
+      no_proxy:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
+      NO_PROXY:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
     devices:
       - /dev/dri             # Intel GPU — required for qmassa
     volumes:
