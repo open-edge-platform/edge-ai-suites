@@ -145,10 +145,12 @@ rtsp://<HOST_IP>:8555/rear       (rear camera, NPU)
 
 Start a single pipeline directly without the pipeline manager. Useful for testing individual pipelines or custom configurations.
 
+> **Note:** RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
+
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
+  http://localhost:8081/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -159,7 +161,7 @@ INSTANCE_ID=$(curl -s -X POST \
       },
       "frame": {
         "type": "rtsp",
-        "path": "uav-uavsdk-cpu"
+        "path": "nadir"
       }
     },
     "parameters": {
