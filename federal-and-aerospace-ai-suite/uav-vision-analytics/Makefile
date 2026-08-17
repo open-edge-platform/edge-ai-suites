@@ -99,7 +99,7 @@ pymav-down: ## Stop and remove pymavlink stack (includes volumes)
 
 # ── UAV Mission Compute SDK stack ──────────────────────────────────────────────────────────────
 
-uavsdk-up: _check_model ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-aerospace/uav-mission-compute-sdk running first)
+uavsdk-up: _check_model ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk running first)
 	docker compose -f $(COMPOSE_SDK) up -d
 
 uavsdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)

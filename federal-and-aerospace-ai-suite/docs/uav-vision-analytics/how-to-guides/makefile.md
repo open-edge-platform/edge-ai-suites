@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Makefile Reference
 
-The `Makefile` at the root of `apps/uav-vision-analytics/` provides shorthand targets for the most common development and deployment tasks.
+The `Makefile` at the root of `uav-vision-analytics/` provides shorthand targets for the most common development and deployment tasks.
 
 Run `make help` (or just `make`) to list all targets with descriptions.
 
@@ -85,13 +85,13 @@ Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), whi
 
 ### `make uavsdk-up` / `make uavsdk-down`
 
-Manages the **uav-mission-compute-sdk stack** (`docker-compose-uavsdk.yml`), which requires the `edge-ai-suites/federal-aerospace/uav-mission-compute-sdk` project to already be running.
+Manages the **uav-mission-compute-sdk stack** (`docker-compose-uavsdk.yml`), which requires the `edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk` project to already be running.
 
 Start order:
 
 ```bash
 # 1. Start the SDK project (provides PX4, MQTT telemetry)
-cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk && make up-sim-camera
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk && make up-sim-camera
 
 # 2. Start this application
 make uavsdk-up
@@ -147,7 +147,7 @@ make pymav-down
 
 ```bash
 make pymav-down                       # stop standalone stack if running
-cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk && make up-sim-camera   # start SDK project
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk && make up-sim-camera   # start SDK project
 cd .. && make uavsdk-up               # start uav-mission-compute-sdk stack
 make start-rtsp
 ```

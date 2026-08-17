@@ -59,7 +59,7 @@ Run `make setup` after cloning to auto-detect the `render` group GID and write t
 > `make deploy` handles everything — it fetches Visual Pipeline and Platform Evaluation Tool, starts it, waits for the network, then brings up this stack.
 
 ```bash
-cd apps/handheld-multi-modal
+cd handheld-multi-modal
 make deploy        # standard GPU
 make deploy-cdi    # CDI / SR-IOV environments
 ```

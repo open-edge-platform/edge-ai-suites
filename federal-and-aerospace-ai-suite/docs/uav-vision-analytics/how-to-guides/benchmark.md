@@ -48,7 +48,7 @@ Run `make model` if it is missing (Deployment will fail with an error if the mod
 The DL Streamer Pipeline Server (`dlstreamer-pipeline-server`) and `metrics-manager` must be running. Use the pymavlink stack:
 
 ```bash
-cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 make pymav-up
 ```
 
@@ -215,7 +215,7 @@ jq -r '.[].pipeline' benchmark/benchmark_app_payload.json
 All examples assume you run from the app root directory:
 
 ```bash
-cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 ```
 
 ---

@@ -93,7 +93,7 @@ make model
 Follow the setup instructions in the [README](../../../uav-mission-compute-sdk/README.md) before proceeding.
 
 ```bash
-cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 # In uav-mission-compute-sdk directory — starts PX4, MQTT, RTSP server
 make up-sim-camera
 ```
@@ -103,7 +103,7 @@ make up-sim-camera
 Start the SDK project first, then start this application:
 
 ```bash
-cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 make uavsdk-up
 ```
 

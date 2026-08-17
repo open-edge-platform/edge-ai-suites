@@ -91,7 +91,7 @@ VISION_CAMERA_IDS=nadir,forward,rear
 ### Startup
 
 ```bash
-cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                    # Set passwords in .env
 make up-sim-camera                      # Start PX4 + Gazebo + camera-bridge
 make apps                    # Start vision processor + dashboard
@@ -218,7 +218,7 @@ ffmpeg -f rawvideo -pix_fmt bgr24 -s {width}x{height} -r {fps}
 ### Startup
 
 ```bash
-cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 
 # 1. Enumerate USB devices
 v4l2-ctl --list-devices
@@ -263,7 +263,7 @@ services:
 ### From Sim to USB
 
 ```bash
-cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 
 # 1. Enumerate USB device
 v4l2-ctl --list-devices
@@ -284,7 +284,7 @@ make apps
 ### From USB to Sim
 
 ```bash
-cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 
 # 1. Stop all containers
 make down
