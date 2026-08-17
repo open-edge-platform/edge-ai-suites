@@ -7,7 +7,7 @@ networks:
 
 services:
   route-planner-agent:
-    image: ${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}
+    image: intel/smart-route-planning-agent:${TAG:-latest}
     ports:
       - "${AI_ROUTE_PLANNER_PORT:-7864}:7860"
     environment:

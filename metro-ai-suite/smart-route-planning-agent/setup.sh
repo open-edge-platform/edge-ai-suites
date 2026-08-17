@@ -10,9 +10,11 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Setting variables for directories used as volume mounts
-DOCKER_DIR="src"
+# Setting variables for directories required during running/building the application
+SOURCE_DIR="src"
+DOCKER_DIR=${SOURCE_DIR}
 COMPOSE_MAIN="${DOCKER_DIR}/compose.yaml"
+PROJECT_NAME="srpa"
 
 # Function to show help
 show_help() {
@@ -21,9 +23,9 @@ show_help() {
     echo -e "-----------------------------------------------------------------"
     echo ""
     echo -e "${BLUE}Available Commands:${NC}"
-    echo -e "  ${GREEN}--setup${NC}       Build and start the Smart-Route-Planning-Agent container"
-    echo -e "  ${GREEN}--build${NC}       Build the Smart-Route-Planning-Agent Docker container"
     echo -e "  ${GREEN}--run${NC}         Start the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}--build${NC}       Build the Smart-Route-Planning-Agent Docker container"
+    echo -e "  ${GREEN}--setup${NC}       Build and start the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}--stop${NC}        Stop the running container"
     echo -e "  ${GREEN}--restart${NC}     Restart the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}--clean${NC}       Remove containers, volumes, and networks"
@@ -72,7 +74,6 @@ if [ "$#" -eq 2 ]; then
     fi
 fi
 
-
 # Base configuration
 HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
 # Fallback to localhost if HOST_IP is empty
@@ -81,13 +82,6 @@ export HOST_IP
 
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
-
-export TAG=${TAG:-latest}
-# Construct registry path properly to avoid double slashes
-if [[ -n "$REGISTRY" ]]; then
-    export REGISTRY="${REGISTRY%/}/"
-fi
-PROJECT_NAME="srpa"
 
 # Traffic Analysis Configuration
 export TRAFFIC_BUFFER_DURATION=${TRAFFIC_BUFFER_DURATION:-60}
@@ -105,18 +99,17 @@ else
     unset COMPOSE_PROFILES
 fi
 
+TAG=${TAG:-latest}
 echo -e "${GREEN}Environment variables set:${NC}"
 echo -e "  HOST_IP: ${YELLOW}$HOST_IP${NC}"
-echo -e "  TAG: ${YELLOW}$TAG${NC}"
-echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
-
+echo -e "  Using TAG: ${YELLOW}$TAG${NC}"
 
 # Function to build Docker images
 build_images() {
     echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
 
-    if docker build -t "${REGISTRY}smart-route-planning-agent:${TAG}" -f ./src/Dockerfile ./src/; then
-        echo -e "${GREEN}Docker image ${YELLOW}${REGISTRY}smart-route-planning-agent:${TAG}${GREEN} built successfully!${NC}"
+    if docker build -t "intel/smart-route-planning-agent:${TAG}" -f "$DOCKER_DIR/Dockerfile" "$SOURCE_DIR/"; then
+        echo -e "${GREEN}Docker image ${YELLOW}intel/smart-route-planning-agent:${TAG}${GREEN} built successfully!${NC}"
         return 0
     else
         echo -e "${RED}Failed to build Docker container!${NC}"
@@ -209,7 +202,7 @@ case "$1" in
         # Remove project-related images only with --all
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing container image for Smart Route Planning Agent ...${NC}"
-            docker rmi -f "${REGISTRY}smart-route-planning-agent:${TAG}" 2>/dev/null || true
+            docker rmi -f "intel/smart-route-planning-agent:${TAG}" 2>/dev/null || true
             echo -e "${GREEN}Images removed.${NC}"
         fi
 
