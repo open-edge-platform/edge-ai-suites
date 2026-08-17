@@ -4,7 +4,8 @@
 
 Follow the instructions in the QGroundControl documentation to install QGroundControl on your host machine where you are running the application.
 
-[Download and Install QGroundControl (Ubuntu)](https://docs.qgroundcontrol.com/Stable_V5.1/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
+- Latest daily build: [Download and Install QGroundControl (Ubuntu)](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
+- Stable v5.1: [Download and Install QGroundControl (Ubuntu)](https://docs.qgroundcontrol.com/Stable_V5.1/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
 
 
 ## Enabling video stream in QGroundControl
@@ -17,6 +18,8 @@ The following video shows how to configure QGroundControl to receive the UDP sin
 ![QGroundControl UDP sink stream](../_assets/QGC-udpsink.gif)
 
 > **Note:** Make sure `make start-udpsink` is running in the DLSPS container before attempting to connect QGroundControl to the UDP sink stream.
+>
+> **Note:** The video above was recorded using QGroundControl stable v5.1. The UI may differ on newer versions.
 
 ### RTSP Stream
 
