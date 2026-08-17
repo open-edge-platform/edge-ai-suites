@@ -305,10 +305,10 @@ by setting `"auto_start"` accordingly:
     - Set `"auto_start": true` for `intersection-cam1-npu`, `intersection-cam2-npu`,
     `intersection-cam3-npu`, and `intersection-cam4-npu`.
 
-4. Restart the stack for the change to take effect:
+4. Deploy the stack for the change to take effect:
 
     ```bash
-    docker compose up -d
+    source setup.sh --setup
     ```
 
 For further details, refer to [Smart Intersection - How to Use NPU for Inference](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/how-to-use-npu-for-inference.html).
