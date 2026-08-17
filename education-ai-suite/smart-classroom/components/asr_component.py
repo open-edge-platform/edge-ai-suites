@@ -1,6 +1,7 @@
 from components.base_component import PipelineComponent
 import os
 import time
+import json
 import torch
 import unicodedata
 
@@ -278,11 +279,17 @@ class ASRComponent(PipelineComponent):
                 if os.path.exists(chunk_path) and DELETE_CHUNK_AFTER_USE:
                     os.remove(chunk_path)
 
-                yield {
+                chunk_result = {
                     **chunk_data,
                     "text": transcribed_text,
                     "segments": ui_segments
                 }
+                StorageManager.save(
+                    get_artifact_path(self.session_id, "transcription_chunks.jsonl"),
+                    json.dumps(chunk_result, ensure_ascii=False) + "\n",
+                    append=True,
+                )
+                yield chunk_result
 
             # ===== FINAL FLUSH =====
             if self.pending_segments and self.last_known_speaker:
