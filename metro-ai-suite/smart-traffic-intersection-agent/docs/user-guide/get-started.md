@@ -286,32 +286,11 @@ The video used by this sample application is determined by the configuration in 
 ### Enabling NPU for Object Detection
 
 Object detection for the Smart Traffic Intersection Agent is performed by the Smart
-Intersection application's DL Streamer Pipeline Server. By default, it runs the detection
-pipelines on CPU. If your machine has an NPU available, you can switch object detection to
-run on the NPU instead.
-
-1. Ensure your machine has an NPU available and the required drivers installed. See
-[Smart Intersection - System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/get-started/system-requirements.html)
-for details.
-
-2. Open the DL Streamer Pipeline Server configuration file at
-`deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json`.
-
-3. For each camera pipeline, disable the default CPU pipeline and enable its NPU counterpart
-by setting `"auto_start"` accordingly:
-
-    - Set `"auto_start": false` for `intersection-cam1`, `intersection-cam2`,
-    `intersection-cam3`, and `intersection-cam4`.
-    - Set `"auto_start": true` for `intersection-cam1-npu`, `intersection-cam2-npu`,
-    `intersection-cam3-npu`, and `intersection-cam4-npu`.
-
-4. Deploy the stack for the change to take effect:
-
-    ```bash
-    source setup.sh --setup
-    ```
-
-For further details, refer to [Smart Intersection - How to Use NPU for Inference](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/how-to-use-npu-for-inference.html).
+Intersection application's DL Streamer Pipeline Server, which can be configured to run on
+NPU. The relevant configuration lives in the vendored Smart Intersection sources at
+`deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/`. Refer to
+[Smart Intersection - How to Use NPU for Inference](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/how-to-use-npu-for-inference.html)
+for prerequisites and configuration steps.
 
 ## Accessing the Services
 

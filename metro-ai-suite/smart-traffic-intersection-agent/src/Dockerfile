@@ -6,8 +6,10 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and apply available security patches
+# (e.g. CVE-2026-53615 affecting util-linux/login packages)
 RUN apt-get update && \
+    apt-get upgrade -y && \
     apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
@@ -54,6 +56,19 @@ RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
         done; \
         apt-get remove --purge -y gcc build-essential libffi-dev python3-dev; \
     fi
+
+# Remove the base image's system-wide pip/setuptools installation. The
+# application runs entirely from the uv-managed virtual environment at
+# /app/.venv (which has its own patched setuptools/msgpack), and pip is only
+# needed above to bootstrap uv. Keeping the system pip around leaves its
+# vendored (and outdated) copies of setuptools/msgpack in the image, which
+# trigger known CVEs even though they are not used by the running app.
+RUN python -m pip uninstall -y pip setuptools wheel 2>/dev/null; \
+    rm -rf /usr/local/lib/python3.13/site-packages/pip* \
+           /usr/local/lib/python3.13/site-packages/setuptools* \
+           /usr/local/lib/python3.13/site-packages/pkg_resources* \
+           /usr/local/lib/python3.13/site-packages/wheel* \
+           /usr/local/bin/pip* /usr/local/bin/pip3*
 
 # Create non-root user and adjust permissions
 RUN useradd -m -u 1000 traffic && \
