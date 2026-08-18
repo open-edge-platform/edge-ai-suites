@@ -35,7 +35,7 @@ RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.s
         tzdata \
     && mkdir -p /copyleft_sources/deb \
     && cd /copyleft_sources/deb \
-    && apt-get source -q ca-certificates ffmpeg
+    && apt-get source -q ca-certificates ffmpeg dpkg-dev
 
 # Default timezone. compose overrides this with the host's TZ (see set_env.sh); this
 # ENV is the fallback when the image is run without one so timestamps are not UTC.
