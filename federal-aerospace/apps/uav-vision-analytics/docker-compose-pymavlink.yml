@@ -80,6 +80,7 @@ services:
       - "./scripts/mavlink_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
       - "/run/udev:/run/udev:ro"
       - "/tmp:/tmp"
+      - "${REALSENSE_DEVICE:-/dev/null}:/dev/video4"
     group_add:
       - "44"
       - "109"
