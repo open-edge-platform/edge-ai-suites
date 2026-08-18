@@ -13,7 +13,7 @@ import argparse
 import sys
 sys.path.insert(0, 'src')  # noqa: E402
 
-from visualize_resources import parse_pidstat_log, aggregate_core_utilization, plot_core_heatmap  # noqa: E402
+from visualize_resources import parse_resource_log, aggregate_core_utilization, plot_core_heatmap  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 
 
@@ -25,7 +25,7 @@ def parse_args():
         "session_dir",
         metavar="SESSION_DIR",
         nargs="?",
-        help="Path to a monitoring session directory containing resource_usage.log. "
+        help="Path to a monitoring session directory containing resource_usage.json. "
              "Defaults to the most recent session under monitoring_sessions/.",
     )
     return parser.parse_args()
@@ -35,8 +35,8 @@ def find_latest_session():
     import os  # noqa: E402
     import glob  # noqa: E402
     candidates = sorted(
-        glob.glob("monitoring_sessions/[0-9]*/resource_usage.log")
-        + glob.glob("monitoring_sessions/*/[0-9]*/resource_usage.log"),
+        glob.glob("monitoring_sessions/[0-9]*/resource_usage.json")
+        + glob.glob("monitoring_sessions/*/[0-9]*/resource_usage.json"),
         key=os.path.getmtime,
         reverse=True,
     )
@@ -54,14 +54,14 @@ if session_dir is None:
         print("Error: no monitoring sessions found. Run monitor_stack.py first or pass SESSION_DIR.")
         sys.exit(1)
 
-log_file = f"{session_dir}/resource_usage.log"
+log_file = f"{session_dir}/resource_usage.json"
 
 print("=" * 80)
 print("INTERACTIVE CORE HEATMAP DEMO")
 print("=" * 80)
 print()
 print("Loading monitoring data...")
-data, sessions = parse_pidstat_log(log_file)
+data, sessions = parse_resource_log(log_file)
 core_data = aggregate_core_utilization(data)
 
 print(f"✓ Loaded {len(data['threads'])} threads across {len(core_data)} cores")
