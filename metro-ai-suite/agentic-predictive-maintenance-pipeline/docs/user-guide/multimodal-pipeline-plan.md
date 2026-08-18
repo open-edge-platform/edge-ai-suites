@@ -250,3 +250,93 @@ monolithic `pace/` CLI structure:
 - This is a **new use case**, not a modification of the existing single-modality reference
   pipelines — implementation should follow the same "new use case directory" convention as other
   APM use cases.
+
+## Future Architecture Options (for the next iteration)
+
+The current implementation intentionally favors fast validation with a static, pre-collected
+dataset (paired image + sensor samples, batch-triggered via `POST /detection/run-multimodal`).
+It reused the plain-OpenVINO reference implementation from
+`intel/predictive-maintenance-pipeline` as-is. Two follow-up architectures are documented here
+for whoever picks up the next iteration — see also the tracked todo
+`multimodal-dlstreamer-migration`.
+
+### Option A — Pragmatic: align with existing single-modality use cases (reuse-first)
+
+Keep the ported reference code (`fusion.py`, `sensor_classifier.py`, `image_classifier.py`) but
+change how they're invoked so the use case matches the platform's normal live/continuous
+pattern instead of a static batch job:
+
+```
+Video/Camera Source ─▶ dlstreamer-pipeline-server (GVA image classification,
+                        same pattern as pipeline-defect-detection, model =
+                        apps/gas-detection-multimodal/models/image/best.xml)
+                                │  (GVA metadata + frame timestamp)
+Sensor stream ─▶ sensor-ingest subscriber (wraps existing sensor_classifier.py,
+                  publishes {timestamp, sensor_class, sensor_confidence} to MQTT)
+                                │  (sensor prediction + timestamp)
+                                ▼
+                fusion step, added as an MQTT-driven background task inside
+                detection-service (not a new microservice) — correlates the two
+                streams by nearest timestamp and calls the existing, reusable
+                fusion.late_fusion() per matched pair
+                                ▼
+                storage-service (existing schema: source / image_confidence /
+                sensor_confidence / sensor_raw_json — no changes needed)
+                                ▼
+                agent-service (existing MQTT batch-complete contract, existing
+                agents.yaml / policy_fallback.json — no changes needed)
+```
+
+**What's reused as-is:** `fusion.late_fusion()` (already modality-agnostic — takes two
+confidence dicts, needs no changes), `sensor_classifier.py`, storage schema, agent/policy config.
+**What's genuinely new:** DL Streamer pipeline config for the image model (replacing the current
+empty `pipeline-server-config.json` placeholder), a timestamp-correlation window (replacing the
+current static 1:1 index pairing), and a live/replayed sensor data source (no live sensor
+hardware exists today). Trigger model shifts from on-demand batch POST to continuous/event-driven,
+consistent with every other APM use case.
+
+### Option B — Ideal target-state (reuse set aside): a general multimodal fusion platform
+
+If not constrained to the current reference code, the recommended production-grade design is:
+
+```
+Camera/Video (RTSP/USB)          Sensor Hardware (MQTT/OPC-UA/Modbus)
+        │                                   │
+        ▼                                   ▼
+dlstreamer-pipeline-server           sensor-service (ingest, normalize,
+(GVA image model, HW-accel)          timestamp, publish to message bus)
+        │  metadata + ts                     │ readings + ts
+        └──────────────┬────────────────────┘
+                        ▼
+        Message Bus (MQTT/Kafka): topics image.inference, sensor.inference
+                        ▼
+        fusion-engine (stateless, horizontally scalable):
+          - windowed stream join by timestamp (tumbling/sliding window,
+            not static index pairing)
+          - pluggable fusion strategy (late / early-feature-level / hybrid /
+            learned meta-classifier) behind a common interface, not a single
+            hardcoded function
+          - confidence calibration + fusion-policy versioning (track which
+            weights/thresholds produced a given verdict, for later tuning)
+          - graceful degradation: if one modality is missing/delayed, still
+            emit a valid, lower-confidence, explicitly-flagged result rather
+            than failing the batch
+                        ▼
+        storage-service: separate, linkable records for raw per-modality
+        results and the fused result (not just extra nullable columns bolted
+        onto one row) — enables auditing which modality drove a decision
+                        ▼
+        agent/reasoning-service: modality-agnostic — only ever consumes the
+        fused output + metadata, unaware of how many modalities contributed
+```
+
+**Core principles:** decouple modalities completely via a message bus (no direct service-to-service
+calls between image and sensor inference); treat fusion as a pluggable strategy, not a hardcoded
+function; use proper timestamp-windowed stream joins instead of index-based pairing; separate raw
+per-modality storage from the fused result for auditability; support graceful degradation when a
+modality is unavailable; keep reasoning fully downstream and modality-agnostic.
+
+**Trade-off:** Option A is a smaller, incremental change reusing the current codebase and matching
+existing deployment conventions. Option B is a larger rebuild (new fusion-engine component, message
+bus topics, schema redesign) better suited if/when this pipeline needs to scale to multiple
+cameras/sensor types or support pluggable fusion strategies in production.
