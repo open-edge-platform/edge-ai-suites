@@ -3,7 +3,7 @@
     "pipeline": "uav_object_detection_cpu",
     "payload": {
       "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/gazebo.avi",
+        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
         "type": "uri",
         "loop": true
       },
@@ -30,7 +30,7 @@
     "pipeline": "uav_object_detection_gpu",
     "payload": {
       "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/gazebo.avi",
+        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
         "type": "uri",
         "loop": true
       },
@@ -57,7 +57,7 @@
     "pipeline": "uav_object_detection_npu",
     "payload": {
       "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/gazebo.avi",
+        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
         "type": "uri",
         "loop": true
       },
