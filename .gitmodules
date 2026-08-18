@@ -83,3 +83,6 @@
 [submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
 	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl"]
+	path = robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl
+	url = https://github.com/NVlabs/GR00T-WholeBodyControl.git

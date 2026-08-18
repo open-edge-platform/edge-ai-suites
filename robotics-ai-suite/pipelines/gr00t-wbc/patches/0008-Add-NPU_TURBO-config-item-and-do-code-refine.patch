@@ -1,0 +1,323 @@
+From 38e865d17cceb4f2c519c2ba97f10d0f8763bc1a Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Mon, 13 Jul 2026 13:24:33 +0800
+Subject: [PATCH 08/13] Add NPU_TURBO config item and do code refine  - Add
+ NPU_TURBO configuration to trade inference latency and power  consumption  -
+ Reuse 'o/O' key for emergency exit and remove deploy ctr-c handling
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../policy/release/observation_config.yaml    |  6 ++--
+ .../release/observation_config_vla.yaml       |  8 ++++--
+ .../src/OVInference/OVInferenceEngine.cpp     | 18 +++++++-----
+ .../src/OVInference/OVInferenceEngine.h       |  4 ++-
+ .../include/control_policy.hpp                |  5 ++--
+ .../g1/g1_deploy_onnx_ref/include/encoder.hpp |  5 ++--
+ .../include/localmotion_kplanner.hpp          |  1 +
+ .../include/localmotion_kplanner_tensorrt.hpp |  2 +-
+ .../include/observation_config.hpp            |  6 ++++
+ .../src/g1_deploy_onnx_ref.cpp                | 28 ++++++-------------
+ 10 files changed, 46 insertions(+), 37 deletions(-)
+
+diff --git a/gear_sonic_deploy/policy/release/observation_config.yaml b/gear_sonic_deploy/policy/release/observation_config.yaml
+index 48b1002..4984190 100644
+--- a/gear_sonic_deploy/policy/release/observation_config.yaml
++++ b/gear_sonic_deploy/policy/release/observation_config.yaml
+@@ -95,11 +95,13 @@ inference:
+   encoder_priority: "HIGH"
+   policy_priority: "HIGH"
+   planner_priority: "NORMAL"
++  # NPU_TURBO for all NPU models: prioritize inference latency over power
++  # efficiency (mapped to ov::hint NPU_TURBO=YES). Recommended ON for real-time
++  # control. NPU-only hint; ignored on CPU/GPU. Set false to save power/thermal.
++  npu_turbo: true
+   # Pin the inference/control thread to a specific CPU core to reduce latency jitter.
+   # Set to -1 to disable pinning (default), or a core number (e.g., 10) to pin.
+   # Here 10 is one of isolated core, dedicated for inference.
+-  # use 'echo 10 | sudo tee /proc/irq/189/smp_affinity_list' to set vpu interrupt affitiy
+-  # to reduce jitter in case NPU sync inference.
+   cpu_affinity: 10
+   # Emit a periodic "[Planner] Inference #N | latency | NaN/Inf check | mode/vel/dir"
+   # summary line (every 10th planner inference, ~1 Hz on the 10 Hz planner thread).
+diff --git a/gear_sonic_deploy/policy/release/observation_config_vla.yaml b/gear_sonic_deploy/policy/release/observation_config_vla.yaml
+index f693320..90acb7f 100644
+--- a/gear_sonic_deploy/policy/release/observation_config_vla.yaml
++++ b/gear_sonic_deploy/policy/release/observation_config_vla.yaml
+@@ -92,18 +92,20 @@ inference:
+   # Planner runs in a separate thread — can use more tiles for throughput.
+   encoder_npu_tiles: 3
+   policy_npu_tiles: 3
+-  planner_npu_tiles: 0
++  planner_npu_tiles: 3
+   # OpenVINO model priority: HIGH, NORMAL, or LOW. Controls how the OV scheduler
+   # arbitrates models that share the same device (e.g. policy/encoder/planner on
+   # one NPU). Mapped to ov::hint::model_priority. Default: NORMAL.
+   encoder_priority: "HIGH"
+   policy_priority: "HIGH"
+   planner_priority: "NORMAL"
++  # NPU_TURBO for all NPU models: prioritize inference latency over power
++  # efficiency (mapped to ov::hint NPU_TURBO=YES). Recommended ON for real-time
++  # control. NPU-only hint; ignored on CPU/GPU. Set false to save power/thermal.
++  npu_turbo: true
+   # Pin the inference/control thread to a specific CPU core to reduce latency jitter.
+   # Set to -1 to disable pinning (default), or a core number (e.g., 10) to pin.
+   # Here 10 is one of isolated core, dedicated for inference.
+-  # use 'echo 10 | sudo tee /proc/irq/189/smp_affinity_list' to set vpu interrupt affitiy
+-  # to reduce jitter in case NPU sync inference.
+   cpu_affinity: 10
+   # Emit a periodic "[Planner] Inference #N | latency | NaN/Inf check | mode/vel/dir"
+   # summary line (every 10th planner inference, ~1 Hz on the 10 Hz planner thread).
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+index a11730e..9ad550f 100644
+--- a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+@@ -114,7 +114,7 @@ static ov::hint::Priority StringToOVPriority(const std::string& s) {
+ // ============================================================================
+ bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::string& device,
+                                    Precision precision, int npu_tiles,
+-                                   const std::string& model_priority) {
++                                   const std::string& model_priority, bool turbo) {
+     try {
+         std::cout << "[OVInference] Loading model: " << modelPath << std::endl;
+         std::cout << "[OVInference] Requested device: " << device << std::endl;
+@@ -178,13 +178,17 @@ bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::stri
+ 
+         if (is_npu) {
+             // NPU-specific optimizations:
+-            // - TURBO mode: prioritize latency over power efficiency
++            // - TURBO mode: prioritize latency over power efficiency (config-driven)
+             // - Single compute pipeline for deterministic timing
+-            try {
+-                config["NPU_TURBO"] = "YES";
+-                std::cout << "[OVInference] NPU TURBO mode enabled" << std::endl;
+-            } catch (...) {
+-                // NPU_TURBO may not be available on all NPU drivers
++            if (turbo) {
++                try {
++                    config["NPU_TURBO"] = "YES";
++                    std::cout << "[OVInference] NPU TURBO mode enabled" << std::endl;
++                } catch (...) {
++                    // NPU_TURBO may not be available on all NPU drivers
++                }
++            } else {
++                std::cout << "[OVInference] NPU TURBO mode disabled (config)" << std::endl;
+             }
+             config["NPU_COMPILER_TYPE"] = "PLUGIN";   
+             // Force higher precision on numerically sensitive layers (ReduceSum, Multiply)
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+index 0f59c55..7f3e71e 100644
+--- a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+@@ -122,11 +122,13 @@ public:
+      * @param npu_tiles Number of NPU tiles to use (0 = auto/default, 1-N = specific count)
+      * @param model_priority OpenVINO model priority hint ("HIGH", "NORMAL", "LOW").
+      *                       Maps to ov::hint::model_priority in compile_model config.
++     * @param turbo Enable NPU_TURBO (latency over power efficiency). NPU-only; ignored
++     *              on non-NPU devices. Default true (matches prior hardcoded behavior).
+      * @return true on success
+      */
+     bool Initialize(const std::string& modelPath, const std::string& device,
+                     Precision precision = Precision::FP32, int npu_tiles = 0,
+-                    const std::string& model_priority = "NORMAL");
++                    const std::string& model_priority = "NORMAL", bool turbo = true);
+ 
+     bool InitInputs(const AxisSizes& axisSizes = {});
+     void Destroy();
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+index 50ae85f..8141d15 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+@@ -53,11 +53,12 @@ public:
+    * @param device OpenVINO device string ("GPU", "CPU", "NPU", "AUTO:GPU,CPU")
+    * @param npu_tiles Number of NPU tiles to use (0 = auto, 1-N = specific count)
+    * @param model_priority OpenVINO model priority ("HIGH", "NORMAL", "LOW")
++   * @param turbo Enable NPU_TURBO (latency over power efficiency; NPU-only)
+    * @return true if initialization successful, false otherwise
+    */
+   bool Initialize(const std::string& model_path, bool use_fp16 = false,
+                   const std::string& device = "NPU", int npu_tiles = 0,
+-                  const std::string& model_priority = "NORMAL") {
++                  const std::string& model_priority = "NORMAL", bool turbo = true) {
+     if (model_path.empty()) {
+       std::cerr << "✗ PolicyEngine::Initialize - Empty model path" << std::endl;
+       return false;
+@@ -92,7 +93,7 @@ public:
+       // Initialize with device selection and tile configuration
+       auto init_start = std::chrono::steady_clock::now();
+       if (!inference_engine_->Initialize(model_file, device,
+-              use_fp16 ? Precision::FP16 : Precision::FP32, npu_tiles, model_priority)) {
++              use_fp16 ? Precision::FP16 : Precision::FP32, npu_tiles, model_priority, turbo)) {
+         std::cerr << "✗ Failed to initialize policy on " << device << ": " << model_file << std::endl;
+         inference_engine_.reset();
+         return false;
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+index eadcd3e..5f280ec 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+@@ -59,11 +59,12 @@ public:
+    * @param device OpenVINO device string ("GPU", "CPU", "NPU", "AUTO:GPU,CPU")
+    * @param npu_tiles Number of NPU tiles to use (0 = auto, 1-N = specific count)
+    * @param model_priority OpenVINO model priority ("HIGH", "NORMAL", "LOW")
++   * @param turbo Enable NPU_TURBO (latency over power efficiency; NPU-only)
+    * @return true if initialization successful, false otherwise
+    */
+   bool Initialize(const std::string& model_path, bool use_fp16 = false,
+                   const std::string& device = "NPU", int npu_tiles = 0,
+-                  const std::string& model_priority = "NORMAL") {
++                  const std::string& model_priority = "NORMAL", bool turbo = true) {
+     if (model_path.empty()) {
+       std::cerr << "✗ EncoderEngine::Initialize - Empty model path" << std::endl;
+       return false;
+@@ -95,7 +96,7 @@ public:
+       // Initialize with device selection and tile configuration
+       auto init_start = std::chrono::steady_clock::now();
+       if (!inference_engine_->Initialize(model_file, device,
+-              use_fp16 ? Precision::FP16 : Precision::FP32, npu_tiles, model_priority)) {
++              use_fp16 ? Precision::FP16 : Precision::FP32, npu_tiles, model_priority, turbo)) {
+         std::cerr << "✗ Failed to initialize encoder on " << device << ": " << model_file << std::endl;
+         inference_engine_.reset();
+         return false;
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp
+index a5b157c..91987e3 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp
+@@ -214,6 +214,7 @@ struct PlannerConfig {
+     std::string device = "CPU";            // OpenVINO device ("CPU", "NPU", "GPU")
+     int npu_tiles = 3;                     // NPU tiles for planner (0 = auto, 1-N = specific count)
+     std::string model_priority = "NORMAL"; // OV model priority ("HIGH", "NORMAL", "LOW")
++    bool turbo = true;                     // NPU_TURBO (latency over power efficiency; NPU-only)
+     int version = 0;
+     int motion_look_ahead_steps = 2;      // 50Hz: 0.02s * 2 = 0.04s
+     double default_height = 0.788740;      // Default robot height
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
+index 61093f5..37840a1 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
+@@ -176,7 +176,7 @@ private:
+ 
+         auto init_start = std::chrono::steady_clock::now();
+         if (!inference_engine_->Initialize(model_file, config_.device, planner_precision,
+-                                           config_.npu_tiles, config_.model_priority)) {
++                                           config_.npu_tiles, config_.model_priority, config_.turbo)) {
+             std::cout << "✗ Failed to initialize planner on " << config_.device << ": " << model_file << std::endl;
+             return false;
+         }
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp
+index e0aa19f..739ae13 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp
+@@ -106,6 +106,7 @@ struct EncoderConfig {
+  *   encoder_priority: "NORMAL" # OpenVINO model priority (HIGH, NORMAL, LOW)
+  *   policy_priority: "NORMAL"  # OpenVINO model priority (HIGH, NORMAL, LOW)
+  *   planner_priority: "NORMAL" # OpenVINO model priority (HIGH, NORMAL, LOW)
++ *   npu_turbo: true          # NPU_TURBO for all NPU models (latency over power; NPU-only)
+  *   cpu_affinity: 2          # Pin inference/control thread to this CPU core (-1 = no pinning)
+  *   planner_log_summary: false # Periodic [Planner] inference summary (latency, NaN/Inf check, mode)
+  * ```
+@@ -120,6 +121,7 @@ struct InferenceConfig {
+   std::string encoder_priority = "NORMAL"; ///< OV model priority for encoder ("HIGH", "NORMAL", "LOW")
+   std::string policy_priority = "NORMAL";  ///< OV model priority for policy ("HIGH", "NORMAL", "LOW")
+   std::string planner_priority = "NORMAL"; ///< OV model priority for planner ("HIGH", "NORMAL", "LOW")
++  bool npu_turbo = true;                ///< NPU_TURBO for all NPU models (latency over power; NPU-only)
+   int cpu_affinity = -1;                ///< CPU core to pin inference thread to (-1 = no pinning)
+   bool planner_log_summary = false;     ///< Enable periodic [Planner] inference summary log (NaN/Inf check + latency)
+ };
+@@ -276,6 +278,10 @@ public:
+               NormalizePriority(ExtractValue(line, "planner_priority:"));
+           std::cout << "  Inference planner_priority: " << full_config.inference.planner_priority << std::endl;
+         }
++        else if (line.find("npu_turbo:") != std::string::npos) {
++          full_config.inference.npu_turbo = ExtractBoolValue(line, "npu_turbo:");
++          std::cout << "  Inference npu_turbo: " << (full_config.inference.npu_turbo ? "true" : "false") << std::endl;
++        }
+         else if (line.find("cpu_affinity:") != std::string::npos) {
+           std::string affinity_str = ExtractValue(line, "cpu_affinity:");
+           try {
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+index 5fb4d9b..021dad0 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+@@ -51,7 +51,6 @@
+ #include <shared_mutex>
+ #include <pthread.h>
+ #include <sched.h>
+-#include <signal.h>
+ #include <atomic>
+ #include <array>
+ #include <vector>
+@@ -2397,7 +2396,8 @@ class G1Deploy {
+ 
+       if (!policy_engine_->Initialize(model_path, policy_fp16, inference_config.policy_device,
+                                       inference_config.policy_npu_tiles,
+-                                      inference_config.policy_priority)) {
++                                      inference_config.policy_priority,
++                                      inference_config.npu_turbo)) {
+         throw std::runtime_error("Failed to initialize control policy from: " + model_path);
+       }
+ 
+@@ -2425,7 +2425,8 @@ class G1Deploy {
+         if (!encoder_engine_->Initialize(encoder_file_path, encoder_config_.use_fp16,
+                                          inference_config.encoder_device,
+                                          inference_config.encoder_npu_tiles,
+-                                         inference_config.encoder_priority)) {
++                                         inference_config.encoder_priority,
++                                         inference_config.npu_turbo)) {
+           throw std::runtime_error("Failed to initialize encoder engine from: " + encoder_file_path);
+         }
+         
+@@ -2491,6 +2492,7 @@ class G1Deploy {
+         planner_config.device = inference_config.planner_device;
+         planner_config.npu_tiles = inference_config.planner_npu_tiles;
+         planner_config.model_priority = inference_config.planner_priority;
++        planner_config.turbo = inference_config.npu_turbo;
+         planner_config.log_summary = inference_config.planner_log_summary;
+         planner_ = std::make_unique<LocalMotionPlannerTensorRT>(planner_fp16, 0, planner_config);
+       }
+@@ -4278,19 +4280,7 @@ class G1Deploy {
+  * The main loop sleeps until the operator issues a stop signal or ROS2 shuts down.
+  */
+ 
+-// Global flag for signal handler → main loop communication
+-static std::atomic<bool> g_signal_received{false};
+-
+-static void SignalHandler(int signum) {
+-  std::cout << "\n[INFO] Signal " << signum << " received, shutting down gracefully..." << std::endl;
+-  g_signal_received.store(true);
+-}
+-
+ int main(int argc, char const* argv[]) {
+-  // Install signal handlers for graceful shutdown
+-  signal(SIGINT, SignalHandler);
+-  signal(SIGTERM, SignalHandler);
+-
+   std::cout << "[DEBUG] Program starting..." << std::endl;
+   if (argc < 4) {
+     std::cout << "Usage: " << argv[0] << " <network_interface> <policy_file> <motion_data_path> [OPTIONS]"
+@@ -4642,20 +4632,20 @@ int main(int argc, char const* argv[]) {
+   );
+   std::cout << "[DEBUG] G1Deploy object created successfully!" << std::endl;
+   
+-  // Main application loop - check stop flag and signal
++  // Main application loop - check stop flag
+ #if HAS_ROS2
+   if (inputType == "ros2") {
+-    while (!custom.operator_state.stop && !g_signal_received.load() && rclcpp::ok()) {
++    while (!custom.operator_state.stop && rclcpp::ok()) {
+       usleep(20000);
+     }
+     if (!rclcpp::ok()) {
+       std::cout << "[INFO] ROS2 shutdown detected (Ctrl+C)" << std::endl;
+     }
+   } else {
+-    while (!custom.operator_state.stop && !g_signal_received.load()) { usleep(20000); }
++    while (!custom.operator_state.stop) { usleep(20000); }
+   }
+ #else
+-  while (!custom.operator_state.stop && !g_signal_received.load()) { usleep(20000); }
++  while (!custom.operator_state.stop) { usleep(20000); }
+ #endif
+   
+   std::cout << "[DEBUG] Stopping G1Deploy..." << std::endl;
+-- 
+2.43.0
+
