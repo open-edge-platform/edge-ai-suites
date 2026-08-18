@@ -49,6 +49,16 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 - [QGroundControl](./how-to-guides/qgroundcontrol.md) — Configure QGroundControl to receive the UAV Vision Analytics video stream
 - [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and fixes for deployment, inference, and streaming problems
 
+# AI Agent Skills
+
+This application ships with a set of AI agent skills that let GitHub Copilot (or any compatible agent) help you operate, configure, and extend the stack using natural language prompts.
+
+Skills are organised into two categories:
+
+- **Operational** — run pipelines, benchmark, troubleshoot, add/remove telemetry fields, discover MAVLink messages, use RealSense cameras
+- **Application** — create a new full stack (pymavlink or UAVSDK mode) with any video source (file, RealSense, RTSP)
+
+See the [Skills README](../../apps/uav-vision-analytics/.github/skills/uav-vision-analytics/README.md) for the full skill index and example prompts, or [SKILLS_OVERVIEW.md](../../apps/uav-vision-analytics/.github/skills/uav-vision-analytics/SKILLS_OVERVIEW.md) for detailed descriptions of each skill.
 
 # Intended and Responsible Use
 
