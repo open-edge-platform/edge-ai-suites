@@ -19,7 +19,7 @@ RUN apt-get update && \
 RUN pip install --no-cache-dir "uv>=0.9.22,<1.0.0"
 COPY . .
 # Create virtual environment and install dependencies using uv
-RUN uv sync && uv pip install -r ui/requirements.txt
+RUN uv sync --frozen --no-install-project --no-dev && uv pip install -r ui/requirements.txt
 
 # Copy license file
 COPY third_party_programs.txt /licenses/third_party_programs.txt
