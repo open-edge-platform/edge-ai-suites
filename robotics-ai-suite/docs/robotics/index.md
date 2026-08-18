@@ -31,7 +31,7 @@ The reference `Wandering` application ties these together end-to-end. Sensors fe
 
 ![AMR reference application: Wandering plus Nav2](../images/architecture/AMR-Reference-Application.svg)
 
-For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-robotics.html).
 
 Click each icon to learn more.
 
