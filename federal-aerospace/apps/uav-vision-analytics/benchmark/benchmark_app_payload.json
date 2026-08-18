@@ -84,6 +84,17 @@
   {
     "pipeline": "uav_realsense_cpu",
     "payload": {
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "realsense"
+        }
+      },
       "parameters": {
         "detection-properties": {
           "device": "CPU",
@@ -95,6 +106,17 @@
   {
     "pipeline": "uav_realsense_gpu",
     "payload": {
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "realsense"
+        }
+      },
       "parameters": {
         "detection-properties": {
           "device": "GPU",
@@ -106,54 +128,16 @@
   {
     "pipeline": "uav_realsense_npu",
     "payload": {
-      "parameters": {
-        "detection-properties": {
-          "device": "NPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
-          "nireq": 4
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "realsense"
         }
-      }
-    }
-  },
-  {
-    "pipeline": "uav_udpsink_cpu",
-    "payload": {
-      "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
-        "type": "uri",
-        "loop": true
-      },
-      "parameters": {
-        "detection-properties": {
-          "device": "CPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
-        }
-      }
-    }
-  },
-  {
-    "pipeline": "uav_udpsink_gpu",
-    "payload": {
-      "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
-        "type": "uri",
-        "loop": true
-      },
-      "parameters": {
-        "detection-properties": {
-          "device": "GPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
-        }
-      }
-    }
-  },
-  {
-    "pipeline": "uav_udpsink_npu",
-    "payload": {
-      "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
-        "type": "uri",
-        "loop": true
       },
       "parameters": {
         "detection-properties": {
