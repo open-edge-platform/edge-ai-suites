@@ -105,7 +105,7 @@ def test_detections_page(client):
 
 
 @respx.mock
-def test_index_hides_multimodal_button_when_disabled(client):
+def test_index_run_form_posts_to_video_run_when_disabled(client):
     app_module._MULTIMODAL_CONFIG_PATH = ""
     respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
     respx.get("http://mock-detection/detection/runs").mock(return_value=httpx.Response(200, json=[]))
@@ -113,11 +113,13 @@ def test_index_hides_multimodal_button_when_disabled(client):
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     r = client.get("/")
     assert r.status_code == 200
-    assert "Run Multimodal Detection" not in r.text
+    assert 'action="/run"' in r.text
+    assert "run-multimodal" not in r.text
+    assert 'name="video_filename"' in r.text
 
 
 @respx.mock
-def test_index_shows_multimodal_button_when_enabled(client):
+def test_index_run_form_posts_to_multimodal_run_when_enabled(client):
     app_module._MULTIMODAL_CONFIG_PATH = "/app/configs/gas_detection.docker.json"
     respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
     respx.get("http://mock-detection/detection/runs").mock(return_value=httpx.Response(200, json=[]))
@@ -125,7 +127,8 @@ def test_index_shows_multimodal_button_when_enabled(client):
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     r = client.get("/")
     assert r.status_code == 200
-    assert "Run Multimodal Detection" in r.text
+    assert 'action="/run-multimodal"' in r.text
+    assert 'name="video_filename"' not in r.text
     app_module._MULTIMODAL_CONFIG_PATH = ""
 
 

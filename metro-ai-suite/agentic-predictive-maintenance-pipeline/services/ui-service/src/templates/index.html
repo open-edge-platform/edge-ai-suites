@@ -84,6 +84,39 @@
       </table>
       {% endif %}
 
+      {% if multimodal_enabled %}
+      <form method="POST" action="/run-multimodal" class="run-now-form">
+        <fieldset class="pipeline-config" id="pipeline-config-fieldset" {{ 'disabled' if active_run else '' }}>
+          <legend>&#9881; Pipeline Configuration</legend>
+          <div class="config-grid">
+            <label class="config-field">
+              <span>Use Case</span>
+              <select name="use_case" disabled>
+                <option selected>{{ use_case_id }}</option>
+              </select>
+            </label>
+            <label class="config-field">
+              <span>Device</span>
+              <select name="device">
+                {% for d in devices %}
+                <option value="{{ d }}" {{ 'selected' if d == 'CPU' else '' }}>{{ d }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+        <button type="submit" class="btn-primary" id="run-pipeline-btn" {{ 'disabled' if active_run else '' }}>
+          &#9654; {{ 'Running…' if active_run else 'Run Inspection' }}
+        </button>
+        <span class="status-note" id="run-phase-hint">
+          {% if active_run %}
+            {% if active_run.phase == "detecting" %}Running image + sensor classification and fusion…
+            {% elif active_run.phase == "reasoning" %}Detection complete — agents are analyzing the results…
+            {% else %}Run in progress…{% endif %}
+          {% else %}Ready — click to classify the dataset (image + sensor fusion) and run agent analysis.{% endif %}
+        </span>
+      </form>
+      {% else %}
       <form method="POST" action="/run" class="run-now-form">
         <fieldset class="pipeline-config" id="pipeline-config-fieldset" {{ 'disabled' if active_run else '' }}>
           <legend>&#9881; Pipeline Configuration</legend>
@@ -127,35 +160,8 @@
           {% else %}Ready — click to run inference + agent analysis.{% endif %}
         </span>
       </form>
+      {% endif %}
     </section>
-
-    {% if multimodal_enabled %}
-    <section class="card">
-      <h2>Run Multimodal Detection (Image + Sensor Fusion)</h2>
-      <p class="status-note">
-        Classifies every image + paired sensor reading in the mounted dataset, fuses both
-        modalities per sample, and persists the fused result — no live video required.
-      </p>
-      <form method="POST" action="/run-multimodal" class="run-now-form">
-        <fieldset class="pipeline-config" {{ 'disabled' if active_run else '' }}>
-          <legend>&#9881; Multimodal Run Configuration</legend>
-          <div class="config-grid">
-            <label class="config-field">
-              <span>Device</span>
-              <select name="device">
-                {% for d in devices %}
-                <option value="{{ d }}" {{ 'selected' if d == 'CPU' else '' }}>{{ d }}</option>
-                {% endfor %}
-              </select>
-            </label>
-          </div>
-        </fieldset>
-        <button type="submit" class="btn-primary" id="run-multimodal-btn" {{ 'disabled' if active_run else '' }}>
-          &#9654; {{ 'Running…' if active_run else 'Run Multimodal Detection' }}
-        </button>
-      </form>
-    </section>
-    {% endif %}
 
     <section class="card">
       <h2>Recent Agent Runs</h2>
