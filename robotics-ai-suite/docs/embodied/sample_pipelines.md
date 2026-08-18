@@ -19,6 +19,7 @@ sample_pipelines/pi05_with_rtc
 sample_pipelines/openclaw_agenticros_demo
 sample_pipelines/fast_livo2_demo
 sample_pipelines/fast_lio2_demo
+sample_pipelines/gr00t_n1d7_ov.md
 
 :::
 hide_directive-->
