@@ -46,7 +46,7 @@ keepalive:
   check_interval_seconds: 10 # VSA watchdog poll interval (register payload)
 
 poll_interval_ms: 5000
-video_summary_max_concurrent: 2
+video_summary_max_concurrent: 4
 
 # Per-monitor log rotation (write target: logs/monitors/<monitor_id>/<YYYY-MM-DD>.log)
 logging:
