@@ -4,6 +4,9 @@ Set up the AI Teaching Assistant on Windows and ingest your first course materia
 
 Confirm your machine meets the [System Requirements](./get-started/system-requirements.md) before starting.
 
+> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
+
 ## Step 1: Prerequisites
 
 - **Git for Windows** — [Download here](https://git-scm.com/download/win)
@@ -100,6 +103,42 @@ You should see the AI Teaching Assistant interface.
 ```
 
 To stop individual services, use `Ctrl+C` in their respective terminal windows.
+
+## Uninstall
+
+The application has no installer — all files live inside the cloned repository. To uninstall, stop the services and delete the Python virtual environments (`venv`) along with the downloaded models, storage, and cache folders.
+
+> **Warning:** Deleting the `storage/` folders permanently removes user data, including the RAG vector database of your ingested course materials (`rag-service/storage/vector_db`). Back up anything you want to keep first.
+
+1. Stop all services:
+
+   ```powershell
+   .\stop_ata.ps1
+   ```
+
+2. Run the uninstall script from the `ai-teaching-assistant` directory:
+
+   ```powershell
+   .\uninstall_ata.ps1
+   ```
+
+   The script lists the folders it will delete and asks for confirmation before removing the `venv`, `models`, `storage`, and `.cache` folders for every service.
+
+   Options:
+
+   ```powershell
+   # Skip the confirmation prompt
+   .\uninstall_ata.ps1 -Yes
+
+   # Also delete the Hugging Face cache in your user profile
+   .\uninstall_ata.ps1 -Yes -RemoveHfCache
+   ```
+
+3. (Optional) To remove the entire application, delete the cloned repository folder.
+
+To reinstall later, re-run `.\setup_windows.ps1` — it will recreate the virtual environments and re-download the models. Ingested course materials will need to be uploaded again.
+
+> **Note:** If you deleted the cloned repository folder in step 3, re-run [Step 2: Clone The Repository](#step-2-clone-the-repository) first — `setup_windows.ps1` lives inside the repo, so running it alone is not enough.
 
 ## Next Steps
 

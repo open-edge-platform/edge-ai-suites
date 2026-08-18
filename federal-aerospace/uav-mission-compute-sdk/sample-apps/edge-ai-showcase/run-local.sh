@@ -5,7 +5,7 @@
 
 # Run Edge AI Showcase locally without Docker (alternative if build fails)
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 echo "🚀 Starting Edge AI Showcase Dashboard (local mode)"
 
@@ -22,7 +22,8 @@ if [ ! -d "venv" ]; then
 fi
 
 # Activate venv
-source venv/bin/activate
+# shellcheck disable=SC1091
+source "$(dirname "$0")/venv/bin/activate"
 
 # Install dependencies
 echo "📦 Installing dependencies..."
