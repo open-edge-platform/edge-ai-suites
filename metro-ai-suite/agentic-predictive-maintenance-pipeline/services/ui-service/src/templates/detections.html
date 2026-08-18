@@ -44,7 +44,11 @@
       </h2>
       {% if detections %}
       <table>
-        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th><th>BBox (x,y,w,h)</th><th>Timestamp</th></tr></thead>
+        <thead><tr>
+          <th>#</th><th>Frame</th><th>Label</th><th>Confidence</th>
+          {% if multimodal_enabled %}<th>Source</th><th>Image Conf.</th><th>Sensor Conf.</th>{% endif %}
+          <th>BBox (x,y,w,h)</th><th>Timestamp</th>
+        </tr></thead>
         <tbody>
           {% for d in detections %}
           <tr>
@@ -57,6 +61,11 @@
               </span>
               {{ "%.3f"|format(d.confidence) }}
             </td>
+            {% if multimodal_enabled %}
+            <td>{{ d.source or "—" }}</td>
+            <td>{{ "%.3f"|format(d.image_confidence) if d.image_confidence is not none else "—" }}</td>
+            <td>{{ "%.3f"|format(d.sensor_confidence) if d.sensor_confidence is not none else "—" }}</td>
+            {% endif %}
             <td>({{ d.x }}, {{ d.y }}, {{ d.width }}, {{ d.height }})</td>
             <td class="timestamp">{{ d.timestamp or "—" }}</td>
           </tr>

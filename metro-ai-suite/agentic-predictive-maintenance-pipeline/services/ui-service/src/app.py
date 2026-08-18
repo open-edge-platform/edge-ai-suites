@@ -41,6 +41,11 @@ _STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://apm-storage:500
 _LLM_BASE_URL  = os.environ.get("LLM_BASE_URL",          "")
 _LLM_MODEL     = os.environ.get("LLM_MODEL_NAME",        "")
 _USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
+# Dataset+sensor (no live video) use cases, e.g. gas-detection-multimodal, set this to the
+# container-mounted config path (apps/<use-case>/configs/*.docker.json) to enable the
+# "Run Multimodal Detection" trigger in the UI. Left unset, the UI behaves exactly as before
+# (single "Run Inspection" video-pipeline trigger only).
+_MULTIMODAL_CONFIG_PATH = os.environ.get("MULTIMODAL_CONFIG_PATH", "")
 _API_KEY       = os.environ.get("APM_API_KEY",           "")
 _STORAGE_MUTATION_HEADERS = {"X-API-Key": _API_KEY} if _API_KEY else {}
 _AVAILABLE_DEVICES = [
@@ -844,6 +849,7 @@ async def index(request: Request):
             "active_run": active_run,
             "videos": videos,
             "devices": _AVAILABLE_DEVICES,
+            "multimodal_enabled": bool(_MULTIMODAL_CONFIG_PATH),
         },
     )
 
@@ -983,6 +989,7 @@ async def detections_page(
             "filter_confidence": parsed_confidence if parsed_confidence is not None else "",
             "filter_limit": limit,
             "total_count": total_count,
+            "multimodal_enabled": bool(_MULTIMODAL_CONFIG_PATH),
         },
     )
 
@@ -1022,6 +1029,7 @@ async def results_page(request: Request, run_id: str):
         context={
             "use_case_id": _USE_CASE_ID, "run_id": run_id,
             "result": view["result"], "phase": view["phase"],
+            "multimodal_enabled": bool(_MULTIMODAL_CONFIG_PATH),
         },
     )
 
@@ -1046,6 +1054,32 @@ async def trigger_run(
 
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         r = await client.post(f"{_DETECTION_URL}/detection/run", json=payload)
+        if r.status_code == 409:
+            active_run_id = (r.json().get("detail") or {}).get("run_id")
+            if active_run_id:
+                return RedirectResponse(url=f"/results/{active_run_id}", status_code=303)
+            return RedirectResponse(url="/", status_code=303)
+        r.raise_for_status()
+        data = r.json()
+    return RedirectResponse(url=f"/results/{data['run_id']}", status_code=303)
+
+
+@app.post("/run-multimodal")
+async def trigger_multimodal_run(device: str = Form("CPU")):
+    """Trigger a dataset+sensor multimodal detection run (image + sensor fusion).
+
+    Only available/shown when ``MULTIMODAL_CONFIG_PATH`` is configured for this
+    use case (e.g. gas-detection-multimodal) — posts to the detection-service's
+    ``/detection/run-multimodal`` endpoint instead of the video-pipeline
+    ``/detection/run`` endpoint. Reasoning is picked up by the agent-service
+    the same way as the video path, via the shared "batch-complete" MQTT event.
+    """
+    if not _MULTIMODAL_CONFIG_PATH:
+        raise HTTPException(status_code=404, detail="Multimodal detection is not enabled for this use case")
+
+    payload = {"device": device, "config_path": _MULTIMODAL_CONFIG_PATH}
+    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+        r = await client.post(f"{_DETECTION_URL}/detection/run-multimodal", json=payload)
         if r.status_code == 409:
             active_run_id = (r.json().get("detail") or {}).get("run_id")
             if active_run_id:

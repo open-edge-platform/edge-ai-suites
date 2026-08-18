@@ -122,7 +122,7 @@
     <p>
       <a href="/">&larr; Back to Dashboard</a>
       &nbsp;
-      <form method="POST" action="/run" style="display:inline;">
+      <form method="POST" action="{{ '/run-multimodal' if multimodal_enabled else '/run' }}" style="display:inline;">
         <button type="submit" class="btn-primary">&#9654; Run Again</button>
       </form>
     </p>

@@ -26,6 +26,9 @@ services:
       LLM_MODEL_NAME: ${LLM_MODEL_NAME:-}
       USE_CASE_ID: ${USE_CASE}
       AVAILABLE_DEVICES: ${AVAILABLE_DEVICES:-CPU}
+      # Set (in .env_<use-case>) for dataset+sensor use cases with no live video pipeline
+      # (e.g. gas-detection-multimodal) to enable the "Run Multimodal Detection" button.
+      MULTIMODAL_CONFIG_PATH: ${MULTIMODAL_CONFIG_PATH:-}
       HOST: 0.0.0.0
       PORT: 5003
       LOG_LEVEL: ${LOG_LEVEL:-INFO}

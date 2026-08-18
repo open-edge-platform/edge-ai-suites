@@ -105,6 +105,76 @@ def test_detections_page(client):
 
 
 @respx.mock
+def test_index_hides_multimodal_button_when_disabled(client):
+    app_module._MULTIMODAL_CONFIG_PATH = ""
+    respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
+    respx.get("http://mock-detection/detection/runs").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "Run Multimodal Detection" not in r.text
+
+
+@respx.mock
+def test_index_shows_multimodal_button_when_enabled(client):
+    app_module._MULTIMODAL_CONFIG_PATH = "/app/configs/gas_detection.docker.json"
+    respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
+    respx.get("http://mock-detection/detection/runs").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "Run Multimodal Detection" in r.text
+    app_module._MULTIMODAL_CONFIG_PATH = ""
+
+
+@respx.mock
+def test_detections_page_shows_modality_columns_when_enabled(client):
+    app_module._MULTIMODAL_CONFIG_PATH = "/app/configs/gas_detection.docker.json"
+    detections = [
+        {
+            "frame_id": 1, "label": "Smoke", "confidence": 0.95, "x": 0, "y": 0, "width": 0, "height": 0,
+            "timestamp": "2026-01-01T00:00:00", "source": "gas_detection_multimodal",
+            "image_confidence": 0.9, "sensor_confidence": 0.97, "sensor_raw_json": "{}",
+        }
+    ]
+    respx.get("http://mock-storage/detections").mock(return_value=httpx.Response(200, json=detections))
+    r = client.get("/detections")
+    assert r.status_code == 200
+    assert "gas_detection_multimodal" in r.text
+    assert "0.900" in r.text
+    assert "0.970" in r.text
+    app_module._MULTIMODAL_CONFIG_PATH = ""
+
+
+@respx.mock
+def test_trigger_multimodal_run_disabled_returns_404(client):
+    app_module._MULTIMODAL_CONFIG_PATH = ""
+    r = client.post("/run-multimodal", data={"device": "CPU"}, follow_redirects=False)
+    assert r.status_code == 404
+
+
+@respx.mock
+def test_trigger_multimodal_run_posts_config_path(client):
+    app_module._MULTIMODAL_CONFIG_PATH = "/app/configs/gas_detection.docker.json"
+    route = respx.post("http://mock-detection/detection/run-multimodal").mock(
+        return_value=httpx.Response(202, json={"run_id": "abc123"})
+    )
+
+    r = client.post("/run-multimodal", data={"device": "CPU"}, follow_redirects=False)
+
+    assert r.status_code == 303
+    assert r.headers["location"] == "/results/abc123"
+    assert route.called
+    sent = respx.calls.last.request
+    import json as _json
+    body = _json.loads(sent.content)
+    assert body == {"device": "CPU", "config_path": "/app/configs/gas_detection.docker.json"}
+    app_module._MULTIMODAL_CONFIG_PATH = ""
+
+
+@respx.mock
 def test_clear_detections_sends_api_key(client):
     route = respx.delete("http://mock-storage/detections").mock(return_value=httpx.Response(204))
 
