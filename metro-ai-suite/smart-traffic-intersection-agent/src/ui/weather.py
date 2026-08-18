@@ -4,10 +4,17 @@ import requests
 import re
 from datetime import datetime
 
+# Timeout (in seconds) for outbound HTTP requests to the weather API
+REQUEST_TIMEOUT_SECONDS = 10
+
 def get_weather(lat, lon):
     # Step 1: Get the gridpoint endpoint for the given lat/long
     points_url = f"https://api.weather.gov/points/{lat},{lon}"
-    points_resp = requests.get(points_url, headers={"User-Agent": "weather-app (your_email@example.com)"})
+    points_resp = requests.get(
+        points_url,
+        headers={"User-Agent": "weather-app (your_email@example.com)"},
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
     print("\n")
     points_resp.raise_for_status()
     points_data = points_resp.json()
@@ -17,7 +24,11 @@ def get_weather(lat, lon):
     forecast_url = points_data["properties"]["forecast"]
 
     # Step 3: Fetch forecast data
-    forecast_resp = requests.get(forecast_url, headers={"User-Agent": "weather-app (your_email@example.com)"})
+    forecast_resp = requests.get(
+        forecast_url,
+        headers={"User-Agent": "weather-app (your_email@example.com)"},
+        timeout=REQUEST_TIMEOUT_SECONDS,
+    )
     forecast_resp.raise_for_status()
     forecast_data = forecast_resp.json()
 

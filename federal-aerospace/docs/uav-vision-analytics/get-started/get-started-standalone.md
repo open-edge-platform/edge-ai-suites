@@ -12,22 +12,7 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manager are all started together (`docker-compose-pymavlink.yml`). Telemetry flows from PX4 SITL through `mavlink-router` to the DL Streamer container, where `pymavlink` reads it directly over UDP.
 
-```mermaid
-flowchart LR
-    subgraph Stack["docker-compose-pymavlink.yml"]
-        direction TB
-        PX4["PX4 SITL\npx4io/px4-sitl"]
-        ROUTER["mavlink-router\n(:14550 server\n→ :14541 broadcast)"]
-        DLSPS["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
-        MM["Metrics Manager\n(REST :9090)"]
-
-        PX4 -->|"MAVLink"| ROUTER
-        ROUTER -->|"UDP :14541"| DLSPS
-    end
-
-    VIDEO["Video Source\n(Camera / file)"] -->|"video"| DLSPS
-    DLSPS -->|"RTSP :8555"| CLIENT["QGC / ffplay"]
-```
+![uav vision analytics standalone](../_assets/FedAero-uav-vision-pymavlink.drawio.svg)
 
 **Telemetry flow:**
 
