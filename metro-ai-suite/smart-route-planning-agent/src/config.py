@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import os
 from enum import Enum
 from pathlib import Path
 
@@ -115,6 +116,34 @@ class PlannerNode(Enum):
     DIRECT = "direct_route_planner"
     OPTIMAL = "optimal_route_planner"
     REALTIME = "realtime_route_planner"
+    REASONING = "reasoning_route_planner"
+
+
+REASONING_MODEL_NAME: str = os.getenv("REASONING_MODEL_NAME", "")
+REASONING_ENABLED: bool = bool(REASONING_MODEL_NAME)
+
+OVMS_BASE_URL: str = "http://ovms:8000/v3"
+
+REASONING_TIMEOUT_SEC: float = 8.0
+REASONING_MAX_TOKENS: int = 512
+REASONING_TEMPERATURE: float = 0.0
+MAX_REASONING_SUMMARY_LENGTH: int = 900
+
+# Incidents severe enough to disqualify a route. Stated to the model in the prompt.
+SEVERE_INCIDENTS: list[IncidentStatus] = [
+    IncidentStatus.ACCIDENT,
+    IncidentStatus.ROADBLOCK,
+]
+
+# Weather bad enough to disqualify a route. Stated to the model in the prompt and used to
+# derive is_sub_optimal in code, so the two can never disagree.
+HAZARDOUS_WEATHER: list[WeatherStatus] = [
+    WeatherStatus.FOG,
+    WeatherStatus.SNOWY,
+    WeatherStatus.STORMY,
+    WeatherStatus.FIRE,
+    WeatherStatus.FLOOD,
+]
 
 
 # Map styling

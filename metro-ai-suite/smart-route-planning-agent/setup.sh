@@ -10,9 +10,11 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Setting variables for directories used as volume mounts
-DOCKER_DIR="src"
+# Setting variables for directories required during running/building the application
+SOURCE_DIR="src"
+DOCKER_DIR=${SOURCE_DIR}
 COMPOSE_MAIN="${DOCKER_DIR}/compose.yaml"
+PROJECT_NAME="srpa"
 
 # Function to show help
 show_help() {
@@ -21,9 +23,9 @@ show_help() {
     echo -e "-----------------------------------------------------------------"
     echo ""
     echo -e "${BLUE}Available Commands:${NC}"
-    echo -e "  ${GREEN}--setup${NC}       Build and start the Smart-Route-Planning-Agent container"
-    echo -e "  ${GREEN}--build${NC}       Build the Smart-Route-Planning-Agent Docker container"
     echo -e "  ${GREEN}--run${NC}         Start the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}--build${NC}       Build the Smart-Route-Planning-Agent Docker container"
+    echo -e "  ${GREEN}--setup${NC}       Build and start the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}--stop${NC}        Stop the running container"
     echo -e "  ${GREEN}--restart${NC}     Restart the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}--clean${NC}       Remove containers, volumes, and networks"
@@ -72,28 +74,14 @@ if [ "$#" -eq 2 ]; then
     fi
 fi
 
-
 # Base configuration
 HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
-
 # Fallback to localhost if HOST_IP is empty
-if [[ -z "$HOST_IP" ]]; then
-    HOST_IP="127.0.0.1"
-    echo -e "${YELLOW}Warning: Could not detect host IP, using fallback: ${HOST_IP}${NC}"
-fi
-
+[[ -z "$HOST_IP" ]] && HOST_IP="127.0.0.1"
 export HOST_IP
+
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
-
-export TAG=${TAG:-latest}
-# Construct registry path properly to avoid double slashes
-if [[ -n "$REGISTRY" ]]; then
-    export REGISTRY="${REGISTRY%/}/"
-fi
-PROJECT_NAME="routeplanner"
-
-echo -e "${GREEN}Using registry: ${YELLOW}$REGISTRY ${NC}"
 
 # Traffic Analysis Configuration
 export TRAFFIC_BUFFER_DURATION=${TRAFFIC_BUFFER_DURATION:-60}
@@ -103,17 +91,26 @@ export DATA_RETENTION_HOURS=${DATA_RETENTION_HOURS:-24}
 # AI Route Planner Configuration
 export AI_ROUTE_PLANNER_PORT=${AI_ROUTE_PLANNER_PORT:-7864}
 
+# Reasoning Model Configuration (optional)
+export REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}
+if [[ -n "$REASONING_MODEL_NAME" ]]; then
+    export COMPOSE_PROFILES="reasoning"
+else
+    unset COMPOSE_PROFILES
+fi
+
+TAG=${TAG:-latest}
 echo -e "${GREEN}Environment variables set:${NC}"
 echo -e "  HOST_IP: ${YELLOW}$HOST_IP${NC}"
-echo -e "  TAG: ${YELLOW}$TAG${NC}"
-echo -e "  REGISTRY: ${YELLOW}$REGISTRY${NC}"
+echo -e "  Using TAG: ${YELLOW}$TAG${NC}"
 
 # Function to build Docker images
 build_images() {
     echo -e "${BLUE}==> Building Smart-Route-Planning-Agent Docker container...${NC}"
 
-    if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" build; then
-        echo -e "${GREEN}Docker container built successfully!${NC}"
+    if docker build -t "intel/smart-route-planning-agent:${TAG}" -f "$DOCKER_DIR/Dockerfile" "$SOURCE_DIR/"; then
+        echo -e "${GREEN}Docker image ${YELLOW}intel/smart-route-planning-agent:${TAG}${GREEN} built successfully!${NC}"
+        return 0
     else
         echo -e "${RED}Failed to build Docker container!${NC}"
         return 1
@@ -123,6 +120,15 @@ build_images() {
 # Function to start the service
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Route-Planning-Agent container...${NC}"
+
+    if [[ -n "$REASONING_MODEL_NAME" ]]; then
+        echo -e "  Route planning mode: ${YELLOW}AI reasoning${NC}"
+        echo -e "  REASONING_MODEL_NAME: ${YELLOW}$REASONING_MODEL_NAME${NC}"
+        echo -e "${YELLOW}Note: Model is downloaded if not already present/cached and can take several minutes.${NC}"
+    else
+        echo -e "  Route planning mode: ${YELLOW}rule based${NC}"
+        echo -e "${BLUE}Tip: export REASONING_MODEL_NAME=<hf-org/model> before sourcing this script to enable AI reasoning.${NC}"
+    fi
 
     if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d; then
         echo -e "${GREEN}Smart-Route-Planning-Agent container started successfully!${NC}"
@@ -143,7 +149,6 @@ fi
 case "$1" in
     "--setup")
         echo -e "${BLUE}==> Running full setup (build and start)...${NC}"
-        build_images
         if build_images; then
             start_service
         else
@@ -159,7 +164,7 @@ case "$1" in
         ;;
     "--stop")
         echo -e "${YELLOW}Stopping Smart-Route-Planning-Agent container...${NC}"
-        if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
+        if COMPOSE_PROFILES="reasoning" docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
             echo -e "${GREEN}Smart-Route-Planning-Agent container stopped successfully.${NC}"
         else
             echo -e "${RED}Failed to stop container${NC}"
@@ -168,7 +173,7 @@ case "$1" in
         ;;
     "--restart")
         echo -e "${BLUE}==> Restarting Smart-Route-Planning-Agent container...${NC}"
-        if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
+        if COMPOSE_PROFILES="reasoning" docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down; then
             echo -e "${GREEN}Container stopped successfully${NC}"
             start_service
         else
@@ -179,9 +184,9 @@ case "$1" in
     "--clean")
         echo -e "${YELLOW}Cleaning up Smart-Route-Planning-Agent resources...${NC}"
 
-        # Stop and remove containers
+        # Stop and remove containers.
         echo -e "${YELLOW}Stopping and removing containers...${NC}"
-        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down 2>/dev/null || true
+        COMPOSE_PROFILES="reasoning" docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down 2>/dev/null || true
         echo -e "${GREEN}Containers stopped and removed.${NC}"
 
         # Remove project volumes
@@ -196,8 +201,8 @@ case "$1" in
 
         # Remove project-related images only with --all
         if [ "$2" = "--all" ]; then
-            echo -e "${YELLOW}Removing container images...${NC}"
-            docker rmi -f "${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}" 2>/dev/null || true
+            echo -e "${YELLOW}Removing container image for Smart Route Planning Agent ...${NC}"
+            docker rmi -f "intel/smart-route-planning-agent:${TAG}" 2>/dev/null || true
             echo -e "${GREEN}Images removed.${NC}"
         fi
 

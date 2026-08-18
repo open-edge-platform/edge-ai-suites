@@ -64,3 +64,9 @@ class RoutePlannerState(TypedDict, total=False):
     all_routes_data: List[
         LiveTrafficData
     ]  # Complete list of LiveTrafficData for all Routes
+    reasoning_summary: (
+        str  # Justification produced by the reasoning model for its route choice
+    )
+    reasoning_fallback: (
+        bool  # True when the reasoning path failed and rule based logic was used
+    )
