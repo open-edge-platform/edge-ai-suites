@@ -19,12 +19,16 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.1.0|edge-ai-libraries"
-  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.1.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-suites|main|edge-ai-suites"
 )
 
-# Placeholder for Docker images to pull; currently empty
+# Placeholder for Docker images to pull;
 images=(
+  "influxdb:2.9.1"
+  "grafana/grafana:11.4.0"
+  "intel/metrics-manager:2026.1.0"
+  "bluenviron/mediamtx:1.19.2"
+  "eclipse-mosquitto:2.0.22"
 )
 
 NAME="UAV Mission Compute SDK"
@@ -446,6 +450,30 @@ clone_repositories() {
 }
 
 #######################################
+# Bring up the UAV Mission Compute SDK stack
+# Starts the local simulation stack from the cloned Federal Aerospace package
+#######################################
+bring_up_uav_sdk() {
+  local sdk_dir="$HOME/oep/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk"
+
+  if [[ ! -d "${sdk_dir}" ]]; then
+    err "UAV Mission Compute SDK directory not found at ${sdk_dir}"
+  fi
+
+  if ! command_exists "make"; then
+    err "make is required to bring up the UAV Mission Compute SDK"
+  fi
+
+  info "Preparing UAV Mission Compute SDK in ${sdk_dir}..."
+  (cd "${sdk_dir}" && make init) || err "Failed to initialize the UAV Mission Compute SDK environment"
+
+  info "Bringing up the UAV Mission Compute SDK stack..."
+  (cd "${sdk_dir}" && make up-sim-camera) || err "Failed to bring up the UAV Mission Compute SDK stack"
+
+  success "UAV Mission Compute SDK stack is up"
+}
+
+#######################################
 # Verify Git Repositories
 # Lists the cloned repositories for verification
 #######################################
@@ -597,6 +625,13 @@ main() {
   else
     info "Skipping git repository cloning"
   fi
+
+  echo -e "${BOLD}${CYAN}UAV Mission Compute SDK Bring-Up${NC}"
+  echo -e "${BOLD}${BLUE}==================================================${NC}"
+
+  bring_up_uav_sdk
+
+  echo -e "${BOLD}${BLUE}==================================================${NC}"
 
   # Container Image Setup
   if [[ "${skip_images}" != "true" ]]; then

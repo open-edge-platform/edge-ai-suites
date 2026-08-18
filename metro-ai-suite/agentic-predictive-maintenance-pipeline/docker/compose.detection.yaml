@@ -10,7 +10,7 @@
 
 services:
   apm-detection:
-    image: ${REGISTRY-intel/}apm-detection-service:${TAG:-1.0.0}
+    image: ${REGISTRY-intel/}apm-detection-service:${TAG:-latest}
     container_name: apm-detection
     hostname: apm-detection
     build:
@@ -26,6 +26,9 @@ services:
       DLSTREAMER_PIPELINE_NAME: ${DLSTREAMER_PIPELINE_NAME:-pipeline_defect_detection}
       # Storage service
       STORAGE_SERVICE_URL: http://apm-storage:5001
+      # Run IDs are process-local, so remove detections that cannot be tied to
+      # the new application session before accepting MQTT events.
+      CLEAR_DETECTIONS_ON_STARTUP: "true"
       # MQTT — raw detections (from dlstreamer-pipeline-server) and the
       # generic "batch-complete" event this service publishes when a run ends
       MQTT_HOST: mqtt-broker

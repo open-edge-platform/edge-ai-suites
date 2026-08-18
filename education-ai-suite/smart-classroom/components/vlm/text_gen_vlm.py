@@ -152,6 +152,7 @@ class VLMTextGen:
         max_new_tokens: Optional[int] = None,
         temperature: Optional[float] = None,
         enable_thinking: Optional[bool] = None,
+        json_schema: Optional[str] = None,
     ) -> Union[Iterator[str], str]:
         """Generate from ``prompt`` (optionally multimodal) using the warm pipeline.
 
@@ -161,13 +162,15 @@ class VLMTextGen:
         multimodal path used by content-search video summarization; when
         omitted the call is text-only. ``enable_thinking=False`` suppresses
         Qwen3 thinking for this request only; ``None`` keeps the model default.
+        ``json_schema`` (a JSON-schema string) constrains decoding to output
+        matching that schema.
         """
         if self._pipe is None:
             raise RuntimeError("VLM pipeline is not loaded")
         if not prompt or not prompt.strip():
             raise ValueError("Invalid prompt provided.")
 
-        config = self._generation_config(max_new_tokens, temperature)
+        config = self._generation_config(max_new_tokens, temperature, json_schema)
         if enable_thinking is False:
             prompt = self._apply_no_think_template(prompt, config, bool(images))
         if stream:
@@ -194,7 +197,10 @@ class VLMTextGen:
             return prompt
 
     def _generation_config(
-        self, max_new_tokens: Optional[int], temperature: Optional[float]
+        self,
+        max_new_tokens: Optional[int],
+        temperature: Optional[float],
+        json_schema: Optional[str] = None,
     ) -> "ov_genai.GenerationConfig":
         max_tokens = (
             int(max_new_tokens) if max_new_tokens is not None else self._max_new_tokens
@@ -203,7 +209,17 @@ class VLMTextGen:
         if temperature is not None:
             kwargs["temperature"] = float(temperature)
             kwargs["do_sample"] = float(temperature) > 0.0
-        return ov_genai.GenerationConfig(**kwargs)
+        config = ov_genai.GenerationConfig(**kwargs)
+        if json_schema:
+            try:
+                config.structured_output_config = ov_genai.StructuredOutputConfig(
+                    json_schema=json_schema
+                )
+            except Exception as exc:  # noqa: BLE001 - runtime without a grammar backend
+                logger.warning(
+                    "Structured output unavailable (%s); generating unconstrained.", exc
+                )
+        return config
 
     def _generate_stream(
         self,

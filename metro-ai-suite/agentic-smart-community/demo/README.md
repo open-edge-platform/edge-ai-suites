@@ -6,7 +6,7 @@ This bundle provides reference configurations for three Agentic Smart Community 
 
 | Item | Value |
 |---|---|
-| Purpose | Multi-camera, local-first smart-home video-understanding reference implementation |
+| Purpose | Multi-camera, local-first smart-community video-understanding reference implementation |
 | Compute platform | Intel Core Ultra (XPU runs the VLM, NPU runs YOLO pre-filtering) |
 | Inference path | Fully local — no cloud dependency |
 | Implemented use cases | Fridge Manager / Child Safety / Elder Get-Up |
@@ -20,11 +20,14 @@ Two configuration files drive the bundle:
 - [config.demo.yaml](config.demo.yaml) — service endpoints plus the `use_case_dict` (each use case declares its Video Summary task, DB schema extensions, summarize tuning, and report policy).
 - [monitors.demo.yaml](monitors.demo.yaml) — the per-camera monitors that reference those use cases, with their RTSP source and pipeline config (motion / prefilter / ROI / recording).
 
-Start and stop everything with the bundled scripts:
+Start and stop the demo with the bundled scripts (the MCP server itself now runs
+as a container in [docker/compose.yaml](../docker/compose.yaml); `start-demo.sh`
+pushes the RTSP streams, writes the demo config/monitors, then brings the stack up
+via `setup_docker.sh --light`):
 
 ```bash
-demo/scripts/start-demo.sh   # push RTSP streams + start MCP server with the demo bundle
-demo/scripts/stop-demo.sh    # stop both
+demo/scripts/start-demo.sh   # push RTSP streams + write demo config, then start the stack
+demo/scripts/stop-demo.sh    # stop streams + app tier (vllm stays warm)
 ```
 
 For video-path variables, automatic stream skipping, and the full installation sequence, see [Ready-to-Run Demo](../docs/user-guide/get-started/ready-to-run-demo.md).
@@ -78,7 +81,7 @@ An end-of-week report summarizes get-up times and on-time vs. late days.
 
 **Pipeline.**
 Motion detection plus an NPU YOLO pre-filter (person class) feed the Video Summary service, which reports whether the elder is up and at what time.
-This is a time-based use case: a custom rule adapter (`use-cases/elder_wakeup/evaluate_rules.py`) judges by `event` + `wakeup_time` rather than a severity threshold, and reports are weekly, filtered to `event: wakeup` (`elder_wakeup` use case in [config.demo.yaml](config.demo.yaml)).
+This is a time-based use case: a custom rule adapter (`demo/prompts/elder_wakeup_evaluate_rules.py`) judges by `event` + `wakeup_time` rather than a severity threshold, and reports are weekly, filtered to `event: wakeup` (`elder_wakeup` use case in [config.demo.yaml](config.demo.yaml)).
 
 **Two-camera design (optional second channel).**
 A second monitor, `cam_elder_bedroom_2` (disabled by default in [monitors.demo.yaml](monitors.demo.yaml)), reuses the same use case on a separate RTSP path, SQLite scope, and notification channel.
@@ -97,7 +100,7 @@ Videos are user-provided and excluded from release artifacts. [videos/streams.ya
 
 | Use case | Stream path | Environment variable |
 |---|---|---|
-| Fridge Manager | `live/fridge` | `SMARTBUILDING_DEMO_FRIDGE_VIDEO` |
-| Child Safety | `live/child` | `SMARTBUILDING_DEMO_CHILD_VIDEO` |
-| Elder Get-Up | `live/elder` | `SMARTBUILDING_DEMO_ELDER_VIDEO` |
-| Elder Get-Up (second input) | `live/elder2` | `SMARTBUILDING_DEMO_ELDER_2_VIDEO` |
+| Fridge Manager | `live/fridge` | `SMART_COMMUNITY_DEMO_FRIDGE_VIDEO` |
+| Child Safety | `live/child` | `SMART_COMMUNITY_DEMO_CHILD_VIDEO` |
+| Elder Get-Up | `live/elder` | `SMART_COMMUNITY_DEMO_ELDER_VIDEO` |
+| Elder Get-Up (second input) | `live/elder2` | `SMART_COMMUNITY_DEMO_ELDER_2_VIDEO` |

@@ -70,8 +70,15 @@ def pump_stream(
 ) -> None:
     next_summary_at = time.monotonic() + summary_interval_s
     for line in stream:
-        collector.consume_line(line)
-        if passthrough is not None:
+        consumed = collector.consume_line(line)
+        # Echo everything EXCEPT the high-frequency GST_TRACER latency records
+        # to the passthrough log. At the live capture rate these fire ~120x/sec;
+        # writing+flushing each one to the container log backpressures this read
+        # loop, fills the gst-launch stderr pipe, and stalls the pipeline
+        # (bursts of frames followed by ~2s freezes -> ~16 fps). We already fold
+        # them into the rolling metrics, so they don't belong in the log stream.
+        is_tracer_latency = consumed or "element-latency" in line
+        if passthrough is not None and not is_tracer_latency:
             passthrough.write(line)
             passthrough.flush()
         if log is not None and time.monotonic() >= next_summary_at:

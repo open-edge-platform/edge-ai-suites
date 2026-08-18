@@ -1,6 +1,9 @@
-# Enterprise Data Intelligence
+<!--
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
 
-For the Chinese version, see [get-started-CN.md](get-started-CN.md).
+# Enterprise Data Intelligence
 
 Demo setup steps, including OpenClaw service, EC-RAG service, Router service, compressor service, and UI service.
 
@@ -15,6 +18,7 @@ Demo setup steps, including OpenClaw service, EC-RAG service, Router service, co
   - [3.4 Enable the Skill in OpenClaw Configuration](#34-enable-the-skill-in-openclaw-configuration)
 - [4. Setup UI](#4-setup-ui)
 - [5. Test the Configuration](#5-test-the-configuration)
+- [6. How to use knowledgebase skill](#6-how-to-use-knowledgebase-skill)
 
 ## 1. Setup Router and Compressor services
 
@@ -22,7 +26,7 @@ The Router and compressor services are set up separately. See the [`inference-ro
 
 ## 2. Setup EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`agentic-rag`](../../../agentic-rag) directory.
+To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`agentic-rag`](https://github.com/opea-project/GenAIExamples/tree/f56422671c8bdf46f59dd758c8c9e38ca41d6555/EdgeCraftRAG) directory.
 
 
 ## 3. Setup OpenClaw
@@ -404,4 +408,23 @@ After completing the setup steps above, verify the configuration as follows:
 
 ```text
 Generate a competitive analysis report for Unitree Robotics G1 Basic and comparable products on the market.
+```
+
+## 6. How to use knowledgebase skill
+
+If the LLM model is not strong enough to use knowledgebase skill automaticly , you can add below instruction in OpenClaw's AGENTS.md:
+
+```text
+For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
+Do not answer questions by searching for files!
+```
+
+please insert above text into Tools chapter in $HOME/.openclaw/workspace/AGENTS.md, e.g. :
+```md
+## Tools
+
+Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
+
+For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
+Do not answer questions by searching for files!
 ```

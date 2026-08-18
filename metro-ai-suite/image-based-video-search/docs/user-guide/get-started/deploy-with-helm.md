@@ -28,13 +28,13 @@ Before You Begin, ensure the following:
 - Download helm chart with the following command
 
     ```bash
-    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.3.0
+    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.4.0-rc1
     ```
 
 - unzip the package using the following command
 
     ```bash
-    tar -xvf image-based-video-search-1.3.0.tgz
+    tar -xvf image-based-video-search-1.4.0-rc1.tgz
     ```
 
 - Get into the helm directory
@@ -72,7 +72,7 @@ Before You Begin, ensure the following:
      helm install ibvs . --create-namespace -n ibvs \
          --set httpProxy="http://proxy.example.com:8080" \
          --set httpsProxy="http://proxy.example.com:8080" \
-         --set noProxy="localhost\,127.0.0.1"
+         --set noProxy="localhost\,127.0.0.1\,.local\,.cluster.local"
      ```
 
 3. **Open IBVS UI**:

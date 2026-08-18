@@ -79,7 +79,7 @@ Create and run the model download script to install all required AI models:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/home/dlstreamer/metro-suite" \
-  intel/dlstreamer:2025.0.1.3-ubuntu24 bash -c "$(cat <<EOF
+  intel/dlstreamer:2026.2.0-ubuntu24-rc1 bash -c "$(cat <<EOF
 
 cd /home/dlstreamer/metro-suite/
 
@@ -289,7 +289,11 @@ curl -k -s https://localhost/api/pipelines/user_defined_pipelines/car_plate_reco
         },
         "frame": {
             "type": "webrtc",
-            "peer-id": "object_detection_1"
+            "peer-id": "object_detection_1",
+            "overlay-properties": {
+                "font-scale": 1.0,
+                "draw-txt-bg": false
+            }
         }
     },
     "parameters": {

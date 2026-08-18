@@ -7,13 +7,14 @@ set -e
 
 # Smart-Community on-device Docker setup.
 #
-# Orchestrates the full three-service stack defined in docker/compose.yaml:
+# Orchestrates the full four-service stack defined in docker/compose.yaml:
 #   1. vllm-ipex-serving          (:41091) — on-device model serving (VLM+LLM)
 #   2. multilevel-video-understanding (:8192) — video summary microservice
 #   3. videostream-analytics      (host net) — RTSP capture + NPU YOLO prefilter,
 #                                              POSTs events to the MCP webhook :3101
-# The third service is pulled in via `include:` in docker/compose.yaml, so a plain
-# `docker compose` here manages all three as one project.
+#   4. smart-community-mcp-server   (host net) — MCP server (:3100 MCP+UI, :3101 events)
+# videostream-analytics is pulled in via `include:` in docker/compose.yaml, so a
+# plain `docker compose` here manages all four as one project.
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -22,7 +23,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DOCKER_DIR="${SCRIPT_DIR}/docker"
 
-# Load deployment env (group ids, model, ports, SMARTBUILDING_DATA_DIR, MODEL_DIR,
+# Load deployment env (group ids, model, ports, SMART_COMMUNITY_DATA_DIR, MODEL_DIR,
 # WEBHOOK_URL, ...). Sourcing here makes the script self-contained.
 if [ -f "${DOCKER_DIR}/set_env.sh" ]; then
   # shellcheck disable=SC1091
@@ -37,6 +38,7 @@ BUILD_IMAGE=false
 UP_CONTAINERS=true
 DOWN_CONTAINERS=false
 LIGHT_MODE=false
+LIGHT_DOWN=false
 FETCH_ONLY=false
 
 # Decide whether we manage the bundled on-device serving or the user has pointed
@@ -102,9 +104,12 @@ Options:
   --light                Reuse an already-healthy serving at VLM_BASE_URL/LLM_BASE_URL;
                          start multilevel-video-understanding + videostream-analytics only
   --fetch                Only clone/refresh edge-ai-libraries (multilevel build context), no build/start
-  --build                Build the local images (multilevel + videostream-analytics), no start
-  --build-prod           Build, then start all three services
+  --build                Build the local images (multilevel + videostream-analytics
+                         + smart-community-mcp-server), no start
+  --build-prod           Build, then start all four services
   --down                 Stop and remove all containers, networks, volumes
+  --light-down           Stop multilevel + videostream-analytics + smart-community-mcp-server,
+                         but leave vllm-ipex-serving running (avoids its 3-20 min recompile)
   -h, --help             Show this help
 
 Examples:
@@ -124,6 +129,7 @@ while [[ $# -gt 0 ]]; do
     --light)      BUILD_IMAGE=false; UP_CONTAINERS=true;  DOWN_CONTAINERS=false; LIGHT_MODE=true; shift ;;
     --fetch)      BUILD_IMAGE=false; UP_CONTAINERS=false; DOWN_CONTAINERS=false; FETCH_ONLY=true; shift ;;
     --down)       BUILD_IMAGE=false; UP_CONTAINERS=false; DOWN_CONTAINERS=true;  shift ;;
+    --light-down) BUILD_IMAGE=false; UP_CONTAINERS=false; DOWN_CONTAINERS=false; LIGHT_DOWN=true; shift ;;
     -h|--help)    show_help; exit 0 ;;
     *) echo -e "${RED}Unknown option: $1${NC}"; show_help; exit 1 ;;
   esac
@@ -138,7 +144,8 @@ echo "==== Smart-Community Docker Setup ===="
 export REGISTRY="${REGISTRY_URL}${PROJECT_NAME}"
 
 MULTILEVEL_IMAGE="${REGISTRY:-}multilevel-video-understanding:${TAG:-latest}"
-VSA_IMAGE="videostream-analytics:latest"
+VSA_IMAGE="${REGISTRY:-}videostream-analytics:${TAG:-latest}"
+MCP_IMAGE="${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}"
 DEFAULT_PREFILTER_MODEL="${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml"
 MODEL_DIR="${MODEL_DIR:-${HOME}/models}"
 export MODEL_DIR
@@ -220,8 +227,8 @@ fi
 
 # --- build --------------------------------------------------------------------
 if [ "$BUILD_IMAGE" = true ]; then
-  echo "Building local images (multilevel-video-understanding + videostream-analytics)..."
-  $DOCKER_CMD build --no-cache multilevel-video-understanding videostream-analytics
+  echo "Building local images (multilevel-video-understanding + videostream-analytics + smart-community-mcp-server)..."
+  $DOCKER_CMD build --no-cache multilevel-video-understanding videostream-analytics smart-community-mcp-server
   echo "==== Build complete! ===="
 fi
 
@@ -229,9 +236,9 @@ fi
 if [ "$UP_CONTAINERS" = true ]; then
   prepare_videostream_config
 
-  # Both locally-built images must exist before we start.
+  # All locally-built images must exist before we start.
   missing=false
-  for img in "$MULTILEVEL_IMAGE" "$VSA_IMAGE"; do
+  for img in "$MULTILEVEL_IMAGE" "$VSA_IMAGE" "$MCP_IMAGE"; do
     if ! docker image inspect "$img" >/dev/null 2>&1; then
       echo -e "${RED}Error: image '$img' not found.${NC}"
       missing=true
@@ -245,15 +252,15 @@ if [ "$UP_CONTAINERS" = true ]; then
   if [ "$LIGHT_MODE" = true ]; then
     # Reuse an already-warm serving; start only the app + analytics.
     if is_vllm_healthy; then
-      echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics only."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics
+      echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smart-community-mcp-server only."
+      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
     elif [ "$USE_LOCAL_VLLM" = true ]; then
       echo "Local vllm-ipex-serving not healthy yet — starting the full stack instead."
       echo "(first run pulls/compiles the model — this can take 3-20+ min)"
       $DOCKER_CMD up -d
     else
-      echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics anyway (they retry at runtime)."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics
+      echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smart-community-mcp-server anyway (they retry at runtime)."
+      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
     fi
   else
     # End-to-end: bring up serving + app + analytics together.
@@ -265,7 +272,8 @@ if [ "$UP_CONTAINERS" = true ]; then
   echo -e "${GREEN}==== Setup complete! ====${NC}"
   echo "  multilevel-video-understanding : http://localhost:${SERVICE_PORT}/v1  (docs: /docs)"
   echo "  videostream-analytics          : host network, POSTs to ${WEBHOOK_URL:-http://localhost:3101/events}"
-  echo "To stop: $0 --down"
+  echo "  smart-community-mcp-server       : UI http://localhost:3100/  MCP http://localhost:3100/mcp  events http://localhost:3101/events"
+  echo "To stop: $0 --light-down   (keep vllm warm)   |   $0 --down   (full teardown)"
 fi
 
 # --- down ---------------------------------------------------------------------
@@ -273,4 +281,13 @@ if [ "$DOWN_CONTAINERS" = true ]; then
   echo "Stopping and removing all containers..."
   $DOCKER_CMD down
   echo "==== Containers stopped and removed! ===="
+fi
+
+# --- light-down ---------------------------------------------------------------
+# Stop the app tier but keep vllm-ipex-serving running so its multi-minute FP8
+# recompile is not paid again on the next start. Mirror of --light on the up side.
+if [ "$LIGHT_DOWN" = true ]; then
+  echo "Stopping smart-community-mcp-server + videostream-analytics + multilevel-video-understanding (leaving vllm-ipex-serving running)..."
+  $DOCKER_CMD rm -sf smart-community-mcp-server videostream-analytics multilevel-video-understanding
+  echo "==== App tier stopped; vllm-ipex-serving left running. ===="
 fi

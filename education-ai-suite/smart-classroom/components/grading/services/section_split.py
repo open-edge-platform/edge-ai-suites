@@ -10,6 +10,51 @@ from PIL import Image
 OcrRegionFn = Callable[[Any, list], str]  # (page_image_path, bbox) -> text
 
 
+def _normalize_force_split_pairs(raw_pairs: Any) -> set[tuple[int, int]]:
+    pairs: set[tuple[int, int]] = set()
+    if not isinstance(raw_pairs, list):
+        return pairs
+
+    for item in raw_pairs:
+        if not isinstance(item, (list, tuple)) or len(item) != 2:
+            continue
+        try:
+            left = int(item[0])
+            right = int(item[1])
+        except (TypeError, ValueError):
+            continue
+        if left > 0 and right > 0 and right == left + 1:
+            pairs.add((left, right))
+    return pairs
+
+
+def _split_strips_by_forced_boundaries(
+    strips: list[tuple[int, float, float]],
+    force_pairs: set[tuple[int, int]],
+) -> list[list[tuple[int, float, float]]]:
+    if not strips:
+        return []
+    if not force_pairs:
+        return [strips]
+
+    chunks: list[list[tuple[int, float, float]]] = []
+    current: list[tuple[int, float, float]] = [strips[0]]
+
+    for cur in strips[1:]:
+        prev = current[-1]
+        prev_page_num = int(prev[0]) + 1
+        cur_page_num = int(cur[0]) + 1
+        if (prev_page_num, cur_page_num) in force_pairs:
+            chunks.append(current)
+            current = [cur]
+        else:
+            current.append(cur)
+
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 def _select_by_language(value: Any, language: str) -> list:
     if isinstance(value, dict):
         return list(value.get(language) or []) + list(value.get("common") or [])
@@ -61,7 +106,8 @@ def _find_section_starts(
             if not bbox:
                 continue
             text = (ocr_region(png, bbox) or "").strip()
-            matched = any(p.match(text) for p in patterns)
+            lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+            matched = any(p.match(ln) for ln in lines for p in patterns)
 
             if debug_dir is not None:
                 crop_index += 1
@@ -297,6 +343,8 @@ def split_sections(
     gap_threshold = int(cfg.get("gap_threshold", 120))
     keep_margin = int(cfg.get("keep_margin", 50))
     content_pad = int(cfg.get("content_pad", 20))
+    force_split_enabled = bool(cfg.get("force_split", False))
+    force_pairs = _normalize_force_split_pairs(cfg.get("force_split_pairs"))
     save_ocr_debug = debug_mode
 
     step2_dir.mkdir(parents=True, exist_ok=True)
@@ -329,6 +377,21 @@ def split_sections(
             "is_cross_page": len({pi for pi, _, _ in strips}) > 1,
         }
 
+        sub_sections: list[dict[str, Any]] = []
+        strip_chunks = _split_strips_by_forced_boundaries(strips, force_pairs) if force_split_enabled else [strips]
+        for sub_idx, sub_strips in enumerate(strip_chunks, 1):
+            sub_sections.append({
+                "parent_section_index": i + 1,
+                "sub_section_index": sub_idx,
+                "forced_split": force_split_enabled,
+                "pages": sorted({page_images[pi].stem for pi, _, _ in sub_strips}),
+                "page_indices": [pi for pi, _, _ in sub_strips],
+                "strips": [[pi, y_top, y_bottom] for pi, y_top, y_bottom in sub_strips],
+                "is_cross_page": len({pi for pi, _, _ in sub_strips}) > 1,
+            })
+
+        section_entry["sub_sections"] = sub_sections
+
         if debug_mode:
             img = None
             if compress:
@@ -342,6 +405,23 @@ def split_sections(
             img.save(img_path)
             section_entry["image_path"] = str(img_path)
 
+            if len(sub_sections) > 1:
+                for sub in sub_sections:
+                    sub_raw = [(int(pi), float(yt), float(yb)) for pi, yt, yb in sub["strips"]]
+                    sub_img = None
+                    if compress:
+                        sub_img = _stitch_compressed(
+                            sub_raw, step1_dir, page_images,
+                            gap_threshold, keep_margin, content_pad,
+                        )
+                    if sub_img is None:
+                        sub_img = _stitch(sub_raw, page_images, direction)
+                    sub_path = step2_dir / f"section_{i + 1}_{sub['sub_section_index']}.png"
+                    sub_img.save(sub_path)
+                    sub["image_path"] = str(sub_path)
+            elif sub_sections:
+                sub_sections[0]["image_path"] = section_entry["image_path"]
+
         sections.append(section_entry)
 
     summary = {
@@ -353,6 +433,8 @@ def split_sections(
             "gap_threshold": gap_threshold,
             "keep_margin": keep_margin,
             "content_pad": content_pad,
+            "force_split": force_split_enabled,
+            "force_split_pairs": sorted([list(p) for p in force_pairs]),
         },
     }
     (step2_dir / "sections.json").write_text(

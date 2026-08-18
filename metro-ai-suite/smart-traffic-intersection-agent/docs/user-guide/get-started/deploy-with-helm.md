@@ -273,7 +273,6 @@ helm uninstall stia -n <your-namespace>
 | `intersection.latitude` | Intersection latitude | `37.51358` |
 | `intersection.longitude` | Intersection longitude | `-122.25591` |
 | `env.logLevel` | Application log level | `INFO` |
-| `env.refreshInterval` | Dashboard refresh interval (seconds) | `15` |
 | `env.weatherMock` | Use mock weather data (`true`/`false`) | `false` |
 | `env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `1800` |
 | `mqtt.host` | MQTT broker hostname. If set, takes precedence over the constructed FQDN. | `""` |
@@ -338,11 +337,12 @@ Keys are nested under `metricsManager` (camelCase — no hyphen).
 | `metricsManager.service.telegrafHttpPort` | Telegraf HTTP listener port for custom metrics | `8186` |
 | `metricsManager.hardware.gpu.enabled` | Enable Intel GPU telemetry through `/dev/dri` | `true` |
 | `metricsManager.pod.hostPID` | Enable host process namespace access for host telemetry | `true` |
-| `metricsManager.securityContext.privileged` | Enable privileged access for NPU telemetry on trusted nodes | `false` |
+| `metricsManager.securityContext.privileged` | Enable privileged access for GPU/NPU host telemetry on trusted nodes | `true` |
 
 > **Security/runtime note:** Host telemetry may require the Metrics Manager pod to run with
-> `hostPID` and hostPath mounts such as `/sys`, `/run`, and `/dev/dri`. Intel NPU telemetry
-> may additionally require `metricsManager.securityContext.privileged=true`. Enable elevated
+> `hostPID`, hostPath mounts such as `/sys`, `/run`, and `/dev/dri`, and
+> `metricsManager.securityContext.privileged=true` so qmassa can enumerate Intel GPU render
+> nodes and NPU sysfs telemetry. Enable elevated
 > deployment-time permissions only on trusted nodes and in accordance with your cluster security
 > policy.
 

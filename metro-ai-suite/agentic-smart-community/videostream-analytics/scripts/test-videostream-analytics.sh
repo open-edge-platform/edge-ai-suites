@@ -1,31 +1,31 @@
 #!/usr/bin/env bash
 # =============================================================================
-# videostream-analytics 完整测试脚本
+# videostream-analytics full test script
 #
-# 支持三种测试模式:
-#   1. Unit Tests       — 纯 Python, 使用测试时生成的视频 fixture
-#   2. Integration Tests — Docker 容器 + MediaMTX + RTSP 推流 + mock webhook
-#   3. Multi-Video Tests — 逐个测试 4 个视频场景, 验证各 use case clip 产出
+# Supports three test modes:
+#   1. Unit Tests        — pure Python, using video fixtures generated at test time
+#   2. Integration Tests — Docker container + MediaMTX + RTSP push + mock webhook
+#   3. Multi-Video Tests — runs the 4 video scenarios one by one, verifying clip output
 #
-# 用法:
-#   bash scripts/test-videostream-analytics.sh              # 运行全部测试
-#   bash scripts/test-videostream-analytics.sh --unit-only  # 仅单元测试
-#   bash scripts/test-videostream-analytics.sh --integration-only  # 仅集成测试
-#   bash scripts/test-videostream-analytics.sh --multi-video       # 多视频场景测试
-#   bash scripts/test-videostream-analytics.sh --local             # 本地 (无 Docker) 集成测试
-#   bash scripts/test-videostream-analytics.sh -v           # 详细输出
+# Usage:
+#   bash scripts/test-videostream-analytics.sh              # run all tests
+#   bash scripts/test-videostream-analytics.sh --unit-only  # unit tests only
+#   bash scripts/test-videostream-analytics.sh --integration-only  # integration tests only
+#   bash scripts/test-videostream-analytics.sh --multi-video       # multi-video scenario tests
+#   bash scripts/test-videostream-analytics.sh --local             # local (no Docker) integration tests
+#   bash scripts/test-videostream-analytics.sh -v           # verbose output
 #
-# 环境变量:
-#   HTTP_PROXY / HTTPS_PROXY  — Docker build 代理
-#   MODEL_DIR                 — YOLO 模型目录 (默认 ~/models)
-#   DATA_DIR                  — clip 输出目录 (默认 /tmp/smartbuilding-clips)
-#   VSA_TEST_CHILD_VIDEO      — child 场景集成测试视频
-#   VSA_TEST_FRIDGE_VIDEO     — fridge 多视频测试视频
-#   VSA_TEST_ELDER_VIDEO      — elder 多视频测试视频
-#   VSA_TEST_ELDER_2_VIDEO    — second elder 多视频测试视频
-#   MEDIAMTX_BIN              — MediaMTX 可执行文件 (默认 ~/.local/bin/mediamtx)
-#   MEDIAMTX_CONFIG           — MediaMTX 配置 (默认 tools/mediamtx.yml)
-#   DOCKER_IMAGE              — VSA 容器镜像名 (默认 videostream-analytics:latest)
+# Environment variables:
+#   HTTP_PROXY / HTTPS_PROXY  — Docker build proxy
+#   MODEL_DIR                 — YOLO model directory (default ~/models)
+#   DATA_DIR                  — clip output directory (default /tmp/smart-community-clips)
+#   VSA_TEST_CHILD_VIDEO      — child scenario integration test video
+#   VSA_TEST_FRIDGE_VIDEO     — fridge multi-video test video
+#   VSA_TEST_ELDER_VIDEO      — elder multi-video test video
+#   VSA_TEST_ELDER_2_VIDEO    — second elder multi-video test video
+#   MEDIAMTX_BIN              — MediaMTX executable (default ~/.local/bin/mediamtx)
+#   MEDIAMTX_CONFIG           — MediaMTX config (default tools/mediamtx.yml)
+#   DOCKER_IMAGE              — VSA container image name (default videostream-analytics:latest)
 # =============================================================================
 set -euo pipefail
 
@@ -47,7 +47,7 @@ DOCKER_IMAGE="${DOCKER_IMAGE:-videostream-analytics:latest}"
 RTSP_PORT=8554
 WEBHOOK_PORT=9999
 ANALYTICS_PORT=8999
-DATA_DIR="${DATA_DIR:-/tmp/smartbuilding-clips}"
+DATA_DIR="${DATA_DIR:-/tmp/smart-community-clips}"
 MODEL_DIR="${MODEL_DIR:-$HOME/models}"
 
 # --- User-provided integration and evaluation videos ---
@@ -207,7 +207,7 @@ start_analytics_docker() {
         -e https_proxy="" \
         -v "$MODEL_DIR:/models:ro" \
         -v "/tmp:/tmp" \
-        -v "$DATA_DIR:/root/.mcp-smartbuilding/segments" \
+        -v "$DATA_DIR:/root/.mcp-smart-community/segments" \
         "$DOCKER_IMAGE"
     sleep 3
     wait_for_analytics
@@ -254,12 +254,12 @@ test_video_scenario() {
     # Clear previous events
     curl -sf -X DELETE "http://localhost:$WEBHOOK_PORT/recorded_events" >/dev/null
 
-    # Register source
+    # Register source (nested-pipeline schema: source_url + pipeline.* blocks)
     local body
     if [[ "$prefilter_enabled" == "false" ]]; then
-        body="{\"source_id\":\"$source_id\",\"rtsp_url\":\"rtsp://localhost:$RTSP_PORT/$rtsp_path\",\"use_case\":\"$use_case\",\"prefilter\":{\"enabled\":false}}"
+        body="{\"source_id\":\"$source_id\",\"source_url\":\"rtsp://localhost:$RTSP_PORT/$rtsp_path\",\"pipeline\":{\"prefilter\":{\"enabled\":false}}}"
     else
-        body="{\"source_id\":\"$source_id\",\"rtsp_url\":\"rtsp://localhost:$RTSP_PORT/$rtsp_path\",\"use_case\":\"$use_case\"}"
+        body="{\"source_id\":\"$source_id\",\"source_url\":\"rtsp://localhost:$RTSP_PORT/$rtsp_path\"}"
     fi
 
     local resp
@@ -327,7 +327,7 @@ if $RUN_UNIT; then
         "${PROJECT_DIR}/.venv/bin/pip" install -e ".[dev]" --quiet --trusted-host pypi.org --trusted-host files.pythonhosted.org 2>/dev/null
     fi
 
-    info "Running unit tests (97 tests)..."
+    info "Running unit tests..."
     $PYTHON -m pytest tests/unit/ $PYTEST_ARGS --tb=short -q --timeout=60
     UNIT_EXIT=$?
 

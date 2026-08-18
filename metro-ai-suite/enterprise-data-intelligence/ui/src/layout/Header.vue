@@ -1,3 +1,8 @@
+<!--
+  Copyright (C) 2026 Intel Corporation
+  SPDX-License-Identifier: Apache-2.0
+-->
+
 <template>
   <div class="header-wrap">
     <h1>Enterprise Al Automation</h1>

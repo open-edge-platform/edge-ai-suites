@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseDocument, isMap, Scalar } from "yaml";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 
 /** Wrap a string so yaml emits it double-quoted (matches the hand-written monitors.yaml style). */
 function quoted(value: string): Scalar {
@@ -16,7 +16,7 @@ export interface IWorkerService {
 }
 
 export interface MonitorCtlParams {
-  action: "start" | "stop" | "register_source" | "unregister" | "status" | "list";
+  action: "start" | "stop" | "register_source" | "unregister" | "status" | "list" | "prefilter_options";
   monitor_id?: string;
   source_url?: string;
   name?: string;
@@ -165,6 +165,24 @@ async function analyticsSourceExists(analyticsUrl: string, monitorId: string): P
   }
 }
 
+/**
+ * Fetch the prefilter model's capabilities (selectable `target_classes`) from
+ * videostream-analytics. Returns the raw JSON: `{ enabled, model_path,
+ * class_names, labels_source, available_devices }`. `labels_source` is
+ * `embedded | fallback_coco | unavailable` — only `embedded` names are
+ * authoritative; otherwise the list is a COCO guess the caller must confirm.
+ */
+async function analyticsPrefilterOptions(analyticsUrl: string): Promise<unknown> {
+  const resp = await fetch(`${analyticsUrl}/capabilities/prefilter`, {
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => "");
+    throw new Error(`analytics GET /capabilities/prefilter failed HTTP ${resp.status}: ${t.slice(0, 200)}`);
+  }
+  return resp.json();
+}
+
 async function analyticsDelete(analyticsUrl: string, monitorId: string): Promise<void> {
   const resp = await fetch(`${analyticsUrl}/sources/${monitorId}`, {
     method: "DELETE",
@@ -229,7 +247,7 @@ async function analyticsRegister(
  * Manage monitor lifecycle as an atomic operation across DB, videostream-analytics, and video-worker.
  */
 export async function monitorCtl(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: MonitorCtlParams
@@ -272,7 +290,7 @@ export async function monitorCtl(
           `Use the cam_<use_case> convention (e.g. cam_${params.use_case ?? "<use_case>"}).`,
         );
       }
-      if (!params.webhook_url) throw new Error("webhook_url is required for register_source");
+      if (!params.webhook_url) throw new Error("webhook_url missing for register_source — it must be derived from config eventsWebhook.port by the caller (not supplied by the agent)");
       const webhookUrl = params.webhook_url;
       const dataDir = params.data_dir;
 
@@ -420,6 +438,12 @@ export async function monitorCtl(
     }
 
     // -----------------------------------------------------------------------
+    case "prefilter_options": {
+      // Read-only capability query — no monitor_id / DB / worker involvement.
+      return await analyticsPrefilterOptions(analyticsUrl);
+    }
+
+    // -----------------------------------------------------------------------
     default:
       throw new Error(`Unknown action: ${(params as any).action}`);
   }
@@ -434,7 +458,7 @@ export async function monitorCtl(
  * db.deleteMonitor, so it won't trip FK constraints or destroy history.
  */
 export async function detachMonitor(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: { monitor_id: string; monitors_path?: string; persist?: boolean },

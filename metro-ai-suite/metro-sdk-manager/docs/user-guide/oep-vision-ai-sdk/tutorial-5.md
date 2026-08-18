@@ -56,14 +56,14 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.1.0-ubuntu24 \
+  intel/dlstreamer:2026.2.0-ubuntu24-rc1 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
 cat > oep_vision_pipeline.sh << 'EOF'
 #!/bin/bash
 
-# OEP Vision AI DLStreamer Pipeline for Performance Testing using Docker
+# OEP Vision AI DL Streamer Pipeline for Performance Testing using Docker
 CURRENT_DIR=$(pwd)
 MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.xml"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
@@ -71,7 +71,7 @@ DEVICE=GPU
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
-echo "Starting OEP Vision AI Pipeline with Docker DLStreamer..."
+echo "Starting OEP Vision AI Pipeline with Docker DL Streamer..."
 echo "Model: $MODEL_PATH"
 echo "Video: $VIDEO_PATH"
 echo "Device: $DEVICE"
@@ -92,7 +92,7 @@ fi
 while true; do
     echo "$(date): Starting pipeline iteration..."
 
-    # Run DLStreamer pipeline in Docker container with object detection
+    # Run DL Streamer pipeline in Docker container with object detection
     docker run --rm \
         --device /dev/dri:/dev/dri \
         --group-add $RENDER_GROUP_ID \
@@ -105,7 +105,7 @@ while true; do
         --env no_proxy=$no_proxy \
         --user root \
         -w /workspace \
-        intel/dlstreamer:2026.1.0-ubuntu24  \
+        intel/dlstreamer:2026.2.0-ubuntu24-rc1  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \

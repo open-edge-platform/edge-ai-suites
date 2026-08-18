@@ -1,5 +1,11 @@
 # Release Notes: Win Vision AI
 
+## Version 2026.2.0
+
+**New**
+
+- Allow camera pipelines to use defaults of width/height when not provided and update WHIP URL guidance.
+
 ## Version 2026.1.0
 
 Win Vision AI is a new Windows-only component introduced in this release: a

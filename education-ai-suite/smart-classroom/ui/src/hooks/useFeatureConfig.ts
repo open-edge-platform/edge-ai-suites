@@ -53,11 +53,3 @@ export function useFeatureEndpoint(featureId: string, endpointKey: string): stri
   const { guard, loaded } = useFeatureConfig();
   return loaded ? guard.getEndpoint(featureId, endpointKey) : null;
 }
-
-/**
- * Hook to get camera configuration
- */
-export function useCameraConfig() {
-  const { guard, loaded } = useFeatureConfig();
-  return loaded ? guard.getCameraConfig() : { front: false, back: false, board: false };
-}

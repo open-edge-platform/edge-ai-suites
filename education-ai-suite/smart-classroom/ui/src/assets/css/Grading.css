@@ -4,8 +4,7 @@
   align-self: stretch;
   min-height: 0;
   position: relative;
-  gap: 12px;
-  height: calc(100vh - var(--top-panel-height) - var(--header-bar-height) - var(--footer-height));
+  height: calc(100vh - var(--top-panel-height) - var(--footer-height));
 }
 
 .grading-screen {
@@ -33,6 +32,8 @@
 .grading-right .right-panel {
   flex: 1;
   height: auto;
+  border-left: none;
+  background: transparent;
 }
 
 .grading-tabs {
@@ -74,8 +75,13 @@
   flex-shrink: 0;
 }
 
-.grading-service-dot.ok   { background: #4caf50; }
-.grading-service-dot.fail { background: #d9534f; }
+.grading-service-dot.ok {
+  background: #4caf50;
+}
+
+.grading-service-dot.fail {
+  background: #d9534f;
+}
 
 .grading-tab.active {
   color: #0071c5;
@@ -115,8 +121,7 @@
   background: #fafafa;
 }
 
-.grading-form-row,
-.grading-form-actions {
+.grading-form-row {
   display: grid;
   grid-template-columns: 96px 1fr 152px;
   align-items: center;
@@ -269,7 +274,9 @@
 }
 
 @keyframes grading-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .grading-filter-chip {
@@ -323,12 +330,14 @@
     transform: translateY(-8px);
     background: #d4edda;
   }
+
   25% {
     opacity: 1;
     max-height: 200px;
     transform: translateY(0);
     background: #d4edda;
   }
+
   100% {
     max-height: 200px;
     background: transparent;
@@ -356,14 +365,34 @@
   background: #bbb;
 }
 
-.grading-dot.status-RUNNING { background: #0071c5; }
-.grading-dot.status-COMPLETED { background: #4caf50; }
-.grading-dot.status-FAILED { background: #d9534f; }
-.grading-dot.status-CANCELLED { background: #999; }
+.grading-dot.status-RUNNING {
+  background: #0071c5;
+}
+
+.grading-dot.status-COMPLETED {
+  background: #4caf50;
+}
+
+.grading-dot.status-FAILED {
+  background: #d9534f;
+}
+
+.grading-dot.status-CANCELLED {
+  background: #999;
+}
+
 .grading-dot.status-PAUSED,
-.grading-dot.status-PAUSING { background: #f0ad4e; }
-.grading-dot.status-CANCELLING { background: #d9534f; }
-.grading-dot.status-PENDING { background: #bbb; }
+.grading-dot.status-PAUSING {
+  background: #f0ad4e;
+}
+
+.grading-dot.status-CANCELLING {
+  background: #d9534f;
+}
+
+.grading-dot.status-PENDING {
+  background: #bbb;
+}
 
 .grading-row-status {
   width: 72px;
@@ -801,10 +830,6 @@
   min-width: 0;
 }
 
-.grading-config-cell-full {
-  grid-column: 1 / -1;
-}
-
 .grading-config-checkbox {
   display: flex;
   flex-direction: row;
@@ -837,6 +862,42 @@
   font-size: 12px;
   color: #4caf50;
   margin: 0;
+}
+
+.grading-config-pair-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grading-config-pair-row .grading-config-input {
+  flex: 1;
+}
+
+.grading-config-row-remove {
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 4px;
+}
+
+.grading-config-row-remove:hover:not(:disabled) {
+  color: #d9534f;
+}
+
+.grading-config-row-remove:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.grading-config-row-add {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 3px 10px;
+  font-size: 12px;
 }
 
 .grading-config-save {
@@ -913,11 +974,6 @@
 .grading-results-subject {
   color: #777;
   font-weight: 400;
-}
-
-.grading-results-actions {
-  display: flex;
-  gap: 8px;
 }
 
 .grading-results-back {

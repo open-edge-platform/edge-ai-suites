@@ -51,6 +51,12 @@ spec:
               value: "{{ .Values.env.MQTT_BROKER }}"   
             - name: MQTT_PORT
               value: "{{ .Values.env.MQTT_PORT }}"     
+            - name: WATCH_BATCH_SIZE
+              value: "{{ .Values.env.WATCH_BATCH_SIZE }}"
+            - name: BATCH_JOB_POLL_INTERVAL_SECONDS
+              value: "{{ .Values.env.BATCH_JOB_POLL_INTERVAL_SECONDS }}"
+            - name: BATCH_JOB_TIMEOUT_SECONDS
+              value: "{{ .Values.env.BATCH_JOB_TIMEOUT_SECONDS }}"
 
           {{- if .Values.probes.readiness.enabled }}
           readinessProbe:

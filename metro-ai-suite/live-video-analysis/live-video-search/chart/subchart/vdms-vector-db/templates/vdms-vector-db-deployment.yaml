@@ -11,6 +11,8 @@ spec:
       app: vdms-vector-db
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/vdms-vector-db-configmap.yaml") . | sha256sum }}
       labels:
         app: vdms-vector-db
         {{- include "lvs.vdmsdb.selectorLabels" . | nindent 8 }}

@@ -2,7 +2,7 @@
 
 # Download artifacts for a specific sample application
 #   by calling respective app's setup.sh script
-SCRIPT_DIR=$(dirname $(readlink -f "$0"))
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 MODEL_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip"
 VIDEO_URL="https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/warehouse.avi"
 
@@ -49,7 +49,7 @@ download_artifacts() {
         # echo "Model XML: $MODEL_XML_URL"
         echo "Model URL: $MODEL_URL"
         # Download model XML and BIN files
-        if curl -L "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
+        if curl -kL "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
             echo "Model zip for $app_name downloaded successfully."
             # Unzip the downloaded model file
             if unzip_compressed_file "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)" "$LOCAL_MODEL_DIR"; then
@@ -74,7 +74,7 @@ download_artifacts() {
             return 1
         fi
         echo "Downloading video artifacts for $app_name..."
-        if ! curl -L "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
+        if ! curl -kL "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
             err "Failed to download video for $app_name."
             return 1
         fi
@@ -89,8 +89,8 @@ download_artifacts() {
 download_artifacts "pallet-defect-detection"
 
 
-mkdir -p $SCRIPT_DIR/configs/nginx/ssl
-cd $SCRIPT_DIR/configs/nginx/ssl
+mkdir -p "$SCRIPT_DIR/configs/nginx/ssl"
+cd "$SCRIPT_DIR/configs/nginx/ssl" || exit
 if [ ! -f server.key ] || [ ! -f server.crt ]; then
     echo "Generate self-signed certificate..."
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"

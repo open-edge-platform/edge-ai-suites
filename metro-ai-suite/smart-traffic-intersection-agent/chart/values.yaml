@@ -31,7 +31,6 @@ intersection:
 # Application settings
 env:
   logLevel: "INFO"
-  refreshInterval: "15"
   weatherMock: "false"
   vlmTimeoutSeconds: "1800"
 
@@ -146,4 +145,4 @@ metricsManager:
     metricsPort: 9090
 
   securityContext:
-    privileged: false
+    privileged: true

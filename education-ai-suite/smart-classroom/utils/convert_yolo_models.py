@@ -26,8 +26,8 @@ _SUPPORTED_FAMILIES = ("v8", "11", "26")
 
 _MODEL_TYPE_MAP = {
     "v8": "yolo_v8_pose",
-    "11": "yolo_v11_pose",  # DLStreamer model type has an extra 'v'
-    "26": "yolo_v26_pose",  # DLStreamer model type has an extra 'v'
+    "11": "yolo_v11_pose",  # DL Streamer model type has an extra 'v'
+    "26": "yolo_v26_pose",  # DL Streamer model type has an extra 'v'
 }
 
 def _detect_model_family(model_name: str) -> str:

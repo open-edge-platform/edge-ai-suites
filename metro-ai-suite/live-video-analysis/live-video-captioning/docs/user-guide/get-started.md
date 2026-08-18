@@ -1,6 +1,6 @@
 # Get Started
 
-Live Video Captioning processes RTSP streams or USB camera (including webcam) feeds through a DLStreamer pipeline and uses a Vision-Language Model (VLM) to generate real-time captions. It also reports throughput and latency metrics.
+Live Video Captioning processes RTSP streams or USB camera (including webcam) feeds through a DL Streamer pipeline and uses a Vision-Language Model (VLM) to generate real-time captions. It also reports throughput and latency metrics.
 
 This section shows how to:
 

@@ -1,7 +1,8 @@
 from components.base_component import PipelineComponent
-from components.board_ocr.board_ocr_service import read_board_ocr_text_only
+from components.board_ocr.board_ocr_service import read_board_ocr_with_status
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
+from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import StreamThinkFilter
 from model_manager import ModelManager
@@ -18,6 +19,7 @@ class SummarizerComponent(PipelineComponent):
         self.session_id = session_id
         self.mode = mode.lower()
         self.temperature = temperature
+        self.board_ocr_partial = False
         
         text_gen = config.models.text_gen
         SummarizerComponent._model = ModelManager.instance().text_gen()
@@ -31,17 +33,11 @@ class SummarizerComponent(PipelineComponent):
 
     def _get_system_prompt(self, has_board=False):
         lang = config.app.language
-        prompts = vars(config.models.summarizer.system_prompt)[lang]
-
-        if self.mode == "teacher":
-            prompt = prompts.Teacher
-        elif self.mode == "hybrid":
-            prompt = prompts.Hybrid
-        else:
-            prompt = prompts.Dialog
+        mode_name = self.mode if self.mode in ("teacher", "hybrid") else "dialog"
+        prompt = load_prompt("summarizer", lang, mode_name)
 
         if has_board:
-            addendum = vars(config.models.summarizer.board_ocr_prompt)[lang]
+            addendum = load_prompt("summarizer", lang, "board_ocr_addendum")
             prompt = f"{prompt}\n\n{addendum}"
 
         return prompt
@@ -65,10 +61,17 @@ class SummarizerComponent(PipelineComponent):
 
     def _load_board_ocr_text(self):
         try:
-            return read_board_ocr_text_only(self.session_id)
+            text, status = read_board_ocr_with_status(self.session_id)
         except Exception as e:
             logger.warning(f"Could not load board OCR text: {e}")
             return ""
+        self.board_ocr_partial = bool(text) and status not in ("done", "not_started")
+        if self.board_ocr_partial:
+            logger.warning(
+                f"Board OCR still {status} for session {self.session_id}; the summary's "
+                f"board content may be incomplete."
+            )
+        return text
 
     # ---------------- MESSAGE BUILDER ----------------
 

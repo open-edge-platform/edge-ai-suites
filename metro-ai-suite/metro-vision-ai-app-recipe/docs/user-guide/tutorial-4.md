@@ -76,7 +76,7 @@ The sample video contains:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/home/dlstreamer/metro-suite" \
-  intel/dlstreamer:2025.1.2-ubuntu24 bash -c "$(cat <<EOF
+  intel/dlstreamer:2026.2.0-ubuntu24-rc1 bash -c "$(cat <<EOF
 
 cd /home/dlstreamer/metro-suite/
 
@@ -945,7 +945,11 @@ Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
              },
              "frame": {
                  "type": "webrtc",
-                 "peer-id": "object_detection_1"
+                 "peer-id": "object_detection_1",
+                 "overlay-properties": {
+                     "font-scale": 1.0,
+                     "draw-txt-bg": false
+                 }
              }
          },
          "parameters": {
@@ -1010,7 +1014,11 @@ Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
              },
              "frame": {
                  "type": "webrtc",
-                 "peer-id": "object_detection_1"
+                 "peer-id": "object_detection_1",
+                 "overlay-properties": {
+                     "font-scale": 1.0,
+                     "draw-txt-bg": false
+                 }
              }
          },
          "parameters": {
