@@ -250,7 +250,7 @@ content_search:
     max_context: 5          # Top chunks for RAG
     max_tokens: 1024        # Max answer length
     max_history_turns: 3    # Conversation history
-    retrieval_score_threshold: 85 # minimum relevance score (0-100)
+    retrieval_score_threshold: 60 # minimum relevance score (0-100)
 ```
 
 **When to Modify**:
