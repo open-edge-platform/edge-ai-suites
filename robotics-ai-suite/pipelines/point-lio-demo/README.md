@@ -29,6 +29,8 @@ applies to.
 | Patch | Change |
 | ----- | ------ |
 | [0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch) | Full ROS1/catkin → ROS2/ament_cmake port (rclcpp, `livox_ros_driver2`, a ROS2 launch file); new `avia_ros2.yaml`/`mid360_ros2.yaml`/`velodyne_urbanloco.yaml` configs — the last one is the UrbanLoco `ulhk_4` config used for validation below; opt-in latency-profiling CSV (below); `MP_PROC_NUM_CPUSET` CMake option to pin OpenMP thread count to the algorithm's cpuset; a segfault fix for point clouds without a `time` field; and alignment of Avia point filtering with FAST-LIO2 for fair benchmarking. |
+| [0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch) | Reformats `laserMapping.cpp` and `preprocess.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch) | Drops a stray `break` in the first-frame IMU-init block (both `kf_input`/`kf_output` paths) that silently skipped queued IMU messages; fixes a `disA`/`disB` typo in `Preprocess`'s constructor; guards `plane_judge` against a zero-area divide and an out-of-bounds distance-array read; checks `mkdir()`'s return value; wraps `main()` in a try/catch. |
 
 **Profiling**: built behind the `ENABLE_PROFILING` CMake option (off by
 default, matching upstream). When enabled, a lock-free ring buffer plus a
@@ -47,7 +49,7 @@ cd robotics-ai-suite/pipelines/point-lio-demo/scripts
 # 2. One-time host dependencies (needs sudo; safe to re-run)
 ./install_deps.sh
 
-# 3. Apply the Intel patch from the table above
+# 3. Apply the Intel patches from the table above
 ./apply_patches.sh
 
 # 4. Build point_lio with colcon
@@ -250,11 +252,13 @@ cmake --build /tmp/livox-sdk2/build -j"$(nproc)"
 sudo cmake --install /tmp/livox-sdk2/build
 ```
 
-### 2. Apply the Intel patch
+### 2. Apply the Intel patches
 
 ```bash
 cd Point-LIO
 git am --keep-cr ../patches/0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch
+git am --keep-cr ../patches/0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch
+git am --keep-cr ../patches/0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch
 cd ..
 ```
 
