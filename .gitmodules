@@ -86,6 +86,10 @@
 [submodule "robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl"]
 	path = robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl
 	url = https://github.com/NVlabs/GR00T-WholeBodyControl.git
+[submodule "robotics-ai-suite/pipelines/point-lio-demo/Point-LIO"]
+	path = robotics-ai-suite/pipelines/point-lio-demo/Point-LIO
+	url = https://github.com/hku-mars/Point-LIO.git
+	branch = point-lio-with-grid-map
 [submodule "robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2"]
 	path = robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2
 	url = https://github.com/hku-mars/FAST-LIVO2.git
