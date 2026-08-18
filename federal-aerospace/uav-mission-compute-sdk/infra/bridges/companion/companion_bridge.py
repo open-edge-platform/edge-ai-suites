@@ -282,9 +282,11 @@ def _dispatch(action: str, **kwargs) -> tuple[bool, str]:
         future.result(timeout=15)
         return True, "ok"
     except asyncio.TimeoutError:
+        log.warning("REST command '%s' timed out", action)
         return False, "Command timed out"
-    except Exception as e:
-        return False, str(e)
+    except Exception:
+        log.exception("REST command '%s' failed", action)
+        return False, "Command failed"
 
 
 @rest_app.route("/health")
@@ -416,8 +418,7 @@ async def _position_loop():
             _state["home_lat"] = pos.latitude_deg
             _state["home_lon"] = pos.longitude_deg
             _state["home_alt_msl"] = pos.absolute_altitude_m
-            log.info("Home position set: %.6f, %.6f, %.1fm MSL",
-                     pos.latitude_deg, pos.longitude_deg, pos.absolute_altitude_m)
+            log.info("Home position initialized")
         _latest["position"] = {
             "reader_ts_ns":          time.time_ns(),
             "latitude_deg":          pos.latitude_deg,

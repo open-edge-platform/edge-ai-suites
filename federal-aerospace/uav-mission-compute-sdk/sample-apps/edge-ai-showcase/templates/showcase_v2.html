@@ -730,6 +730,14 @@ SPDX-License-Identifier: Apache-2.0
             }
         }
 
+        function refreshCameraStreams() {
+            document.querySelectorAll('.camera-video').forEach((img) => {
+                const url = new URL(img.src, window.location.origin);
+                url.searchParams.set('_', Date.now().toString());
+                img.src = url.toString();
+            });
+        }
+
         // Demo mission with status updates
         async function startDemoMission(event) {
             const btn = event.target.closest('.mission-btn');
@@ -739,6 +747,10 @@ SPDX-License-Identifier: Apache-2.0
             btn.style.transform = 'scale(0.95)';
             btn.disabled = true;
             btnText.textContent = 'Starting Mission...';
+
+            // Always reconnect the MJPEG streams when mission starts so they do
+            // not remain frozen on the first run or on subsequent runs.
+            refreshCameraStreams();
 
             try {
                 // Start the full survey mission

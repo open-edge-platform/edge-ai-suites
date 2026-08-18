@@ -87,6 +87,11 @@ $SubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"
 # declared in .gitmodules rather than any hardcoded fork.
 $SubmoduleUrl = "https://github.com/open-edge-platform/edge-ai-libraries.git"
 
+# Pinned commit for reproducible builds. The setup always checks out this exact
+# commit instead of the moving branch tip, so upstream changes can't break the
+# app. Bump this SHA deliberately after validating a newer upstream commit.
+$SubmodulePinnedCommit = "3e24bd03c439e1707f5105f09ba7db4c699589c6"
+
 # Locate the enclosing git repository (the edge-ai-suites fork).
 $RepoRoot = $null
 try {
@@ -143,10 +148,13 @@ else {
         if ((Test-Path $SubmoduleAbs) -and -not (Get-ChildItem -Force $SubmoduleAbs -ErrorAction SilentlyContinue)) {
             Remove-Item -Force $SubmoduleAbs -ErrorAction SilentlyContinue
         }
-        Write-Info "Cloning submodule (shallow + partial + sparse)..."
-        git clone --quiet --depth 1 --filter=blob:none --sparse $SubmoduleUrl $SubmoduleAbs 2>&1 | Out-Null
+        Write-Info "Cloning submodule (shallow + partial + sparse) pinned at $SubmodulePinnedCommit..."
+        git clone --quiet --depth 1 --filter=blob:none --sparse --no-checkout $SubmoduleUrl $SubmoduleAbs 2>&1 | Out-Null
         if (Test-Path $SubmoduleGit) {
+            # Fetch only the pinned commit (GitHub allows fetch-by-SHA) and check it out.
+            git -C $SubmoduleAbs fetch --quiet --depth 1 --filter=blob:none origin $SubmodulePinnedCommit 2>&1 | Out-Null
             git -C $SubmoduleAbs sparse-checkout set @SparsePaths 2>&1 | Out-Null
+            git -C $SubmoduleAbs checkout --quiet --force $SubmodulePinnedCommit 2>&1 | Out-Null
         }
     }
 
@@ -154,6 +162,14 @@ else {
         # Ensure the sparse paths are applied (idempotent for pre-existing clones).
         Write-Info "Applying sparse-checkout paths: $($SparsePaths -join ', ')"
         git -C $SubmoduleAbs sparse-checkout set @SparsePaths 2>&1 | Out-Null
+
+        # Ensure the working tree is pinned to $SubmodulePinnedCommit (idempotent).
+        $EdgeCurrentCommit = (git -C $SubmoduleAbs rev-parse HEAD 2>$null | Out-String).Trim()
+        if ($EdgeCurrentCommit -ne $SubmodulePinnedCommit) {
+            Write-Info "Pinning edge-ai-libraries to $SubmodulePinnedCommit..."
+            git -C $SubmoduleAbs fetch --quiet --depth 1 --filter=blob:none origin $SubmodulePinnedCommit 2>&1 | Out-Null
+            git -C $SubmoduleAbs checkout --quiet --force $SubmodulePinnedCommit 2>&1 | Out-Null
+        }
 
         # Promote the standalone sparse clone to a real submodule of the
         # superproject. `--force` reuses the clone already on disk instead of
@@ -207,6 +223,9 @@ $VeiSubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/voice-enabled-i
 # (see below) so new users always clone the source declared in .gitmodules.
 $VeiSubmoduleUrl = "https://github.com/intel-retail/voice-enabled-interactions.git"
 
+# Pinned commit for reproducible builds (see edge-ai-libraries note above).
+$VeiPinnedCommit = "cc9b25d2b28717a74380d853c762c68072e82e8b"
+
 $VeiRepoRoot = $null
 try { $VeiRepoRoot = (git -C $ScriptDir rev-parse --show-toplevel 2>$null) } catch {}
 
@@ -239,16 +258,27 @@ else {
         if ((Test-Path $VeiAbs) -and -not (Get-ChildItem -Force $VeiAbs -ErrorAction SilentlyContinue)) {
             Remove-Item -Force $VeiAbs -ErrorAction SilentlyContinue
         }
-        Write-Info "Cloning voice-enabled-interactions submodule (shallow + partial + sparse)..."
-        git clone --quiet --depth 1 --filter=blob:none --sparse $VeiSubmoduleUrl $VeiAbs 2>&1 | Out-Null
+        Write-Info "Cloning voice-enabled-interactions submodule (shallow + partial + sparse) pinned at $VeiPinnedCommit..."
+        git clone --quiet --depth 1 --filter=blob:none --sparse --no-checkout $VeiSubmoduleUrl $VeiAbs 2>&1 | Out-Null
         if (Test-Path $VeiGit) {
+            # Fetch only the pinned commit (GitHub allows fetch-by-SHA) and check it out.
+            git -C $VeiAbs fetch --quiet --depth 1 --filter=blob:none origin $VeiPinnedCommit 2>&1 | Out-Null
             git -C $VeiAbs sparse-checkout set --no-cone @VeiSparsePaths 2>&1 | Out-Null
+            git -C $VeiAbs checkout --quiet --force $VeiPinnedCommit 2>&1 | Out-Null
         }
     }
 
     if (Test-Path $VeiGit) {
         Write-Info "Applying sparse-checkout paths: $($VeiSparsePaths -join ', ')"
         git -C $VeiAbs sparse-checkout set --no-cone @VeiSparsePaths 2>&1 | Out-Null
+
+        # Ensure the working tree is pinned to $VeiPinnedCommit (idempotent).
+        $VeiCurrentCommit = (git -C $VeiAbs rev-parse HEAD 2>$null | Out-String).Trim()
+        if ($VeiCurrentCommit -ne $VeiPinnedCommit) {
+            Write-Info "Pinning voice-enabled-interactions to $VeiPinnedCommit..."
+            git -C $VeiAbs fetch --quiet --depth 1 --filter=blob:none origin $VeiPinnedCommit 2>&1 | Out-Null
+            git -C $VeiAbs checkout --quiet --force $VeiPinnedCommit 2>&1 | Out-Null
+        }
 
         $null = git -C $VeiRepoRoot config --file .gitmodules --get "submodule.$VeiSubmoduleRelPath.url" 2>&1
         if ($LASTEXITCODE -ne 0) {
@@ -813,10 +843,10 @@ else {
 # OpenVINO IR on first startup (inside the FastAPI lifespan, BEFORE the
 # /health endpoint becomes available). On a fresh machine this first-run
 # export can take many minutes and exceeds the health-check window used by
-# start_kiosk.ps1, making services look like they "never come up".
+# start_ata.ps1, making services look like they "never come up".
 #
 # We do that heavy one-time work here, during setup, where there is no
-# health-check timeout. After this completes, start_kiosk.ps1 finds the
+# health-check timeout. After this completes, start_ata.ps1 finds the
 # exported models already on disk and every service becomes healthy quickly.
 # =============================================================================
 
@@ -915,8 +945,8 @@ foreach ($Service in $Services) {
 
 Write-Header "SETUP COMPLETE"
 Write-Success "All components installed successfully!"
-Write-Info "Next step: Run start_kiosk.ps1 to start all services"
+Write-Info "Next step: Run start_ata.ps1 to start all services"
 Write-Info ""
 Write-Info "Usage:"
-Write-Info "  powershell -ExecutionPolicy Bypass -File start_kiosk.ps1"
+Write-Info "  powershell -ExecutionPolicy Bypass -File start_ata.ps1"
 Write-Info ""
