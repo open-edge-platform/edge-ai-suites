@@ -51,14 +51,7 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 
 # AI Agent Skills
 
-This application ships with a set of AI agent skills that let GitHub Copilot (or any compatible agent) help you operate, configure, and extend the stack using natural language prompts.
-
-Skills are organised into two categories:
-
-- **Operational** — run pipelines, benchmark, troubleshoot, add/remove telemetry fields, discover MAVLink messages, use RealSense cameras
-- **Application** — create a new full stack (pymavlink or UAVSDK mode) with any video source (file, RealSense, RTSP)
-
-See the [Skills README](../../apps/uav-vision-analytics/.github/skills/uav-vision-analytics/README.md) for the full skill index and example prompts, or [SKILLS_OVERVIEW.md](../../apps/uav-vision-analytics/.github/skills/uav-vision-analytics/SKILLS_OVERVIEW.md) for detailed descriptions of each skill.
+This application supports AI agent skills for GitHub Copilot and compatible coding agents. Skills cover operational tasks (running pipelines, benchmarking, troubleshooting) and application creation (scaffolding new pymavlink or UAVSDK stacks).
 
 # Intended and Responsible Use
 
