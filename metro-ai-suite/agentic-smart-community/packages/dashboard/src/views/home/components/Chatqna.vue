@@ -517,7 +517,7 @@ import {
   configureAgentFramework,
   getDashboardConfig,
   type AgentFrameworkOption,
-} from "@/api/smartBuilding";
+} from "@/api/smartCommunity";
 
 const emit = defineEmits<{
   collapse: [];
@@ -840,22 +840,42 @@ const buildSessionDropdownLabel = (session: ChatSessionSummary) => {
     : label;
 };
 
+// Pick the most recently active session from a list by `updatedAt` (bumped on
+// every appended turn, including proactive alert notifications). Ties keep the
+// first in the given order, so a group already sorted newest-first is preserved
+// and an unsorted fallback group degrades to its first entry.
+const pickLatestActiveSessionKey = (
+  groupSessions: ChatSessionSummary[],
+): string => {
+  let latest: ChatSessionSummary | undefined;
+  for (const session of groupSessions) {
+    if (!session?.key) {
+      continue;
+    }
+    if (!latest || session.updatedAt > latest.updatedAt) {
+      latest = session;
+    }
+  }
+
+  return latest?.key || "";
+};
+
 // Fuzzy-match the selected camera to an agent session group by shared word tokens
 // (e.g. cam_child ↔ child-safety-agent via "child"). No hardcoded agent names — the
-// tokens come from whatever agent id / label the backend supplies. If nothing overlaps,
-// degrade to the default (first) session.
+// tokens come from whatever agent id / label the backend supplies. Once the agent
+// is located, surface its most recently active session (not the default/first one);
+// if nothing overlaps, degrade to the latest active session overall.
 const resolvePreferredSessionKeyForSource = () => {
-  const fallbackKey = sessions.value[0]?.key || "";
+  const fallbackKey = pickLatestActiveSessionKey(sessions.value);
   const sourceTokens = tokenizeForSessionMatch(routeSourceId.value);
   if (!sourceTokens.size) {
     return fallbackKey;
   }
 
-  let bestKey = "";
+  let bestGroup: ChatSessionGroup | undefined;
   let bestScore = 0;
   for (const group of displaySessionGroups.value) {
-    const groupKey = group.sessions[0]?.key;
-    if (!groupKey) {
+    if (!group.sessions.length) {
       continue;
     }
     const groupTokens = new Set([
@@ -870,11 +890,14 @@ const resolvePreferredSessionKeyForSource = () => {
     }
     if (score > bestScore) {
       bestScore = score;
-      bestKey = groupKey;
+      bestGroup = group;
     }
   }
 
-  return bestKey || fallbackKey;
+  // Agent located → show its latest active session rather than the default one.
+  return (
+    (bestGroup && pickLatestActiveSessionKey(bestGroup.sessions)) || fallbackKey
+  );
 };
 
 const updateRouteSession = async (sessionKey: string) => {

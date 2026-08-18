@@ -113,8 +113,9 @@ class TestSegmentExtractorWithRealVideo:
         assert result is not None
         assert 4.5 <= result.duration_s <= 5.5
 
-    def test_finish_below_min_duration_returns_none(self, tmp_path, video_frames):
-        """Segment shorter than min_duration should be discarded."""
+    def test_finish_short_segment_is_kept(self, tmp_path, video_frames):
+        """min_duration is a cut-frequency guard, not a delete filter: a short
+        segment (e.g. a motion-end tail) is still returned for emission."""
         config = SegmentConfig(max_duration=60.0, min_duration=2.0)
         extractor = SegmentExtractor(
             config=config,
@@ -127,6 +128,22 @@ class TestSegmentExtractorWithRealVideo:
         # Write only 10 frames (0.33s < 2.0s min_duration)
         for frame in video_frames[:10]:
             extractor.add_frame(frame)
+        result = extractor.finish()
+        assert result is not None
+        assert os.path.exists(result.path)
+        assert 0.2 <= result.duration_s <= 0.5
+
+    def test_finish_with_zero_frames_returns_none(self, tmp_path):
+        """An empty segment (0 frames written) is removed, not emitted."""
+        config = SegmentConfig(max_duration=60.0, min_duration=2.0)
+        extractor = SegmentExtractor(
+            config=config,
+            output_dir=str(tmp_path / "motion_events"),
+            source_id="test_cam",
+            fps=30.0,
+            frame_size=(1280, 720),
+        )
+        extractor.start_segment()
         result = extractor.finish()
         assert result is None
 

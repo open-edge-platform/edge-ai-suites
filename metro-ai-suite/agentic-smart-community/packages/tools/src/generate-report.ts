@@ -1,4 +1,4 @@
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { VideoSummaryClient } from "./clients/video-summary-client.js";
 
 export interface GenerateReportParams {
@@ -175,7 +175,7 @@ function planLevels(
 // ---------------------------------------------------------------------------
 
 function queryData(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   dataSource: "events" | "alerts" | "video_summary_tasks",
   monitorId: string,
   periodStart: string,
@@ -242,13 +242,15 @@ function queryData(
  * generated report text.
  */
 export async function generateReport(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   reportConfig: ReportConfig,
   params: GenerateReportParams
 ): Promise<unknown> {
   const type = params.type ?? reportConfig.defaultType;
   const { periodStart, periodEnd } = calcPeriod(type, params.period_start, params.period_end);
-  const filter = reportConfig.filter ?? {};
+  const filter = reportConfig.filter && typeof reportConfig.filter === "object" && !Array.isArray(reportConfig.filter)
+    ? reportConfig.filter
+    : {};
   const dataSource = reportConfig.dataSource;
 
   const monitor = db.getMonitor(params.monitor_id);

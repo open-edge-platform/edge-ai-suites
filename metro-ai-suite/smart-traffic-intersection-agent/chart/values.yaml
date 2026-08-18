@@ -31,7 +31,6 @@ intersection:
 # Application settings
 env:
   logLevel: "INFO"
-  refreshInterval: "15"
   weatherMock: "false"
   vlmTimeoutSeconds: "1800"
 

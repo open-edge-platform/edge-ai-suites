@@ -75,7 +75,6 @@ def _metrics_panel_html():
     </div>
     """
 
-
 def _metrics_js():
     """Return JavaScript code for Chart.js + Metrics Manager SSE metrics.
 
@@ -449,10 +448,7 @@ def _device_security_panel_html():
     </div>
     """
 
-
-def create_dashboard_interface():
-    """Create the main dashboard interface"""
-    
+def _get_widget_stylesheet():
     # Custom CSS for better styling - theme-aware
     is_light_theme = Config.get_ui_theme() == "light"
     
@@ -463,98 +459,100 @@ def create_dashboard_interface():
     text_primary = "#1f2937" if is_light_theme else "#f3f4f6"
     
     css = f"""
-    .gradio-container {{
-        max-width: 1400px !important;
-        margin: auto !important;
-        padding: 10px !important;
-        background: {bg_primary} !important;
-        font-family: Arial, sans-serif !important;
-    }}
-    
-    .block {{
-        border-radius: 12px !important;
-        border: 1px solid {border_color} !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-        background: {bg_secondary} !important;
-    }}
-    
-    .alert-urgent {{
-        background: linear-gradient(135deg, #ff4444, #cc0000) !important;
-        color: white !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
-        margin: 4px !important;
-        border-left: 4px solid #ff0000 !important;
-    }}
-    
-    .alert-advisory {{
-        background: linear-gradient(135deg, #ff8800, #cc6600) !important;
-        color: white !important;
-        border-radius: 8px !important;
-        padding: 12px !important;
-        margin: 4px !important;
-        border-left: 4px solid #ff6600 !important;
-    }}
-    
-    .status-good {{
-        color: #10b981 !important;
-        font-weight: bold !important;
-    }}
-    
-    .status-warning {{
-        color: #f59e0b !important;
-        font-weight: bold !important;
-    }}
-    
-    .status-critical {{
-        color: #ef4444 !important;
-        font-weight: bold !important;
-    }}
-    
-    .metric-card {{
-        background: {bg_secondary} !important;
-        border-radius: 12px !important;
-        padding: 16px !important;
-        margin: 8px !important;
-        border: 1px solid {border_color} !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
-    }}
-    
-    .metric-value {{
-        font-size: 2em !important;
-        font-weight: bold !important;
-        margin: 8px 0 !important;
-        color: {text_primary} !important;
-    }}
+		.gradio-container {{
+			max-width: 1400px !important;
+			margin: auto !important;
+			padding: 10px !important;
+			background: {bg_primary} !important;
+			font-family: Arial, sans-serif !important;
+		}}
+		
+		.block {{
+			border-radius: 12px !important;
+			border: 1px solid {border_color} !important;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+			background: {bg_secondary} !important;
+		}}
+		
+		.alert-urgent {{
+			background: linear-gradient(135deg, #ff4444, #cc0000) !important;
+			color: white !important;
+			border-radius: 8px !important;
+			padding: 12px !important;
+			margin: 4px !important;
+			border-left: 4px solid #ff0000 !important;
+		}}
+		
+		.alert-advisory {{
+			background: linear-gradient(135deg, #ff8800, #cc6600) !important;
+			color: white !important;
+			border-radius: 8px !important;
+			padding: 12px !important;
+			margin: 4px !important;
+			border-left: 4px solid #ff6600 !important;
+		}}
+		
+		.status-good {{
+			color: #10b981 !important;
+			font-weight: bold !important;
+		}}
+		
+		.status-warning {{
+			color: #f59e0b !important;
+			font-weight: bold !important;
+		}}
+		
+		.status-critical {{
+			color: #ef4444 !important;
+			font-weight: bold !important;
+		}}
+		
+		.metric-card {{
+			background: {bg_secondary} !important;
+			border-radius: 12px !important;
+			padding: 16px !important;
+			margin: 8px !important;
+			border: 1px solid {border_color} !important;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.2) !important;
+		}}
+		
+		.metric-value {{
+			font-size: 2em !important;
+			font-weight: bold !important;
+			margin: 8px 0 !important;
+			color: {text_primary} !important;
+		}}
 
-    .debug {{
-        padding: 5px;
-        background: #4b5563;
-        border-radius: 4px;
-        margin-top: 5px;
-        text-align: center;
-    }}
-       
-    /* Gallery styling */
-    .gallery {{
-        border-radius: 12px !important;
-        overflow: hidden !important;
-    }}
-    
-    /* Button styling */
-    .primary {{
-        background: linear-gradient(135deg, #3b82f6, #1e40af) !important;
-        border: none !important;
-        border-radius: 8px !important;
-        font-weight: 600 !important;
-        padding: 10px 20px !important;
-    }}
-    """
+		.debug {{
+			padding: 5px;
+			background: #4b5563;
+			border-radius: 4px;
+			margin-top: 5px;
+			text-align: center;
+		}}
+		
+		/* Gallery styling */
+		.gallery {{
+			border-radius: 12px !important;
+			overflow: hidden !important;
+		}}
+		
+		/* Button styling */
+		.primary {{
+			background: linear-gradient(135deg, #3b82f6, #1e40af) !important;
+			border: none !important;
+			border-radius: 8px !important;
+			font-weight: 600 !important;
+			padding: 10px 20px !important;
+		}}
+		"""
+    return css
+
+def create_dashboard_interface():
+    """Create the main dashboard interface"""
     
     with gr.Blocks(
-        css=css,
         title=Config.get_app_title(),
-        theme=gr.themes.Base() if Config.get_ui_theme() == "light" else gr.themes.Monochrome(),
     ) as interface:
 
         # Header component (full width)
@@ -605,26 +603,27 @@ def create_dashboard_interface():
                 with gr.Row():
                     debug_panel_component = gr.HTML(visible=False)
 
-        # Running data fetcher and UI updater concurrently, runs in main event loop
-        interface.load(fn=fetch_intersection_data, outputs=[])
-        interface.load(
-            fn=update_components,
-            inputs=[debug_mode],
-            outputs=[
-                header_component,
-                camera_gallery,
-                traffic_component, 
-                environmental_component,
-                alerts_component,
-                system_info_component,
-                debug_panel_component
-            ]
-        )
         # Show/hide debug panel
         debug_mode.change(
             fn=lambda x: gr.update(visible=x),
             inputs=debug_mode,
             outputs=debug_panel_component
+        )
+        
+        # Running data fetcher in main event loop
+        interface.load(
+            fn=fetch_intersection_data,
+            inputs=[debug_mode],
+            outputs=[
+                header_component,
+                camera_gallery,
+                traffic_component,
+                environmental_component,
+                alerts_component,
+                system_info_component,
+                debug_panel_component,
+            ],
+            show_progress="hidden",
         )
 
         # Live clock: refresh the system-info panel every second so
@@ -675,7 +674,6 @@ def main():
     """Main application entry point"""
     logger.info("Starting Smart Traffic Intersection Agent Dashboard...")
     logger.info(f"API URL: {Config.get_api_url()}")
-    logger.info(f"Refresh interval: {Config.get_refresh_interval()} seconds")
     logger.info(f"Server: {Config.get_app_host()}:{Config.get_app_port()}")
     logger.info("Configured to use API endpoint for data")
     
@@ -683,12 +681,13 @@ def main():
         # Create and launch the interface
         interface = create_dashboard_interface()
         
-        # Enable request queuing for scaling
-        interface.queue(default_concurrency_limit=5, max_size=20)
+        # NOTE:- This one line fix to increase concurrency limit, solves the issue with UI refresh or multiple connections to UI taking longer time.
+        # However, this is not a satisfactory fix. Keeping this along with the actual fix done in websocket server and client connection modules.
+        interface.queue(max_size=40, default_concurrency_limit=20)
 
         # Launch without blocking so we can mount the metrics proxy on the
         # final FastAPI app that launch() creates (launch replaces self.app).
-        _, local_url, _ = interface.launch(
+        interface.launch(
             server_name=Config.get_app_host(),
             server_port=Config.get_app_port(),
             share=False,
@@ -696,10 +695,11 @@ def main():
             quiet=False,
             js=_metrics_js(),
             prevent_thread_lock=True,
+            css=_get_widget_stylesheet(),
+            theme=gr.themes.Base() if Config.get_ui_theme() == "light" else gr.themes.Monochrome(),
         )
-
-        # Mount the metrics stream proxy *after* launch() so we attach to the
-        # actual FastAPI app instance that uvicorn is serving.
+        
+        # Mount the metrics stream proxy *after* launch().
         _mount_metrics_stream_proxy(interface.server_app)
         logger.info("Metrics Manager stream proxy mounted at /metrics/stream")
 

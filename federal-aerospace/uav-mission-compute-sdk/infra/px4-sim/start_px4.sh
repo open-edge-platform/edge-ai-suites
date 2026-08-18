@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-cd /px4
+cd /px4 || exit 1
 
 # Remove persisted params so defaults take effect on every boot
 rm -f build/px4_sitl_default/rootfs/parameters.bson

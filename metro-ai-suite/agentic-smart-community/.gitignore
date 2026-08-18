@@ -60,11 +60,6 @@ tests/videos/
 *.mp4
 
 # dev docs
-docs/*
-!docs/user-guide/
-!docs/user-guide/**
-!docs/user-guide/get-started/
-!docs/user-guide/get-started/**
 **/backup/
 config.yaml
 
@@ -77,3 +72,7 @@ plan*.md
 
 # External source cloned on demand by setup_docker.sh (edge-ai-libraries, etc.)
 .external/
+*.xlsx
+*.pptx
+*.pptx.*
+**/results/

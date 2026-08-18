@@ -1,4 +1,5 @@
-
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
 
 type ServiceMap = {
   antNotification: (type: "success" | "warning" | "error" | "info", message: string, description?: string) => void;

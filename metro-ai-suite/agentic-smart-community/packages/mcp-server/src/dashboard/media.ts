@@ -37,10 +37,17 @@ export function sendSnapshot(res: Response, segmentsDir: string, monitorId: stri
   createReadStream(file).pipe(res);
 }
 
-export function sendMp4(res: Response, segmentsDir: string, monitorId: string, clipPath: string, range?: string): void {
+/** Resolve an mp4 under this monitor's segment dir, or undefined if it escapes. */
+export function resolveMonitorMp4(segmentsDir: string, monitorId: string, clipPath: string): string | undefined {
   const root = resolve(segmentsDir, monitorId);
   const candidate = resolveContainedFile(root, isAbsolute(clipPath) ? clipPath : resolve(root, clipPath));
-  if (!candidate || !candidate.toLowerCase().endsWith(".mp4")) {
+  if (!candidate || !candidate.toLowerCase().endsWith(".mp4")) return undefined;
+  return candidate;
+}
+
+export function sendMp4(res: Response, segmentsDir: string, monitorId: string, clipPath: string, range?: string): void {
+  const candidate = resolveMonitorMp4(segmentsDir, monitorId, clipPath);
+  if (!candidate) {
     res.status(404).json({ error: "Clip not found" });
     return;
   }

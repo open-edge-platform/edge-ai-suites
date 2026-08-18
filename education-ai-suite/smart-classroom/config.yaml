@@ -40,9 +40,11 @@ models:
     max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
   
   diarization: #Only applicable when diarization is set to True for ASR
+    backend: pyannote  # pyannote, or campplus for funasr/paraformer-zh
     provider: "huggingface"
     name: "pyannote/speaker-diarization-community-1"
     models_base_path: "models"
+    global_speaker_similarity_threshold: 0.65
 
   summarizer:
     provider: openvino 
@@ -91,7 +93,8 @@ mindmap:
   min_token: 20
 
 audio_preprocessing:
-  chunk_duration_sec: 15
+  chunking: true # false: transcribe and diarize the whole recording in one pass, funasr/paraformer-zh only
+  chunk_duration_sec: 30
   silence_threshold: -35  # in dB
   silence_duration: 0.3   # minimum silence length in seconds
   search_window_sec: 1    # how far to look for silence if no silence exactly at chunk boundary
@@ -154,23 +157,18 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
-    model_name: "Qwen/Qwen3-VL-8B-Instruct"
     host_addr: "127.0.0.1"
     port: 8000  # warm VLM now hosted by main app (:8000); standalone :9900 retired
-    device: "GPU"
-    weight_format: "int8"
-    ingest_enabled: true
-    stream: false  
 
   video_preprocess:
     host_addr: "127.0.0.1"
     port: 8001
-    vlm_timeout_seconds: 300
+    vlm_timeout_seconds: 600
+    max_completion_tokens: 500
     chunk_duration_s: 30
     chunk_overlap_s: 4
     max_num_frames: 8
-    frame_width: 0
-    frame_height: 0
+    max_image_pixels: 1048576  # downscale frames above this area (px) before sending to VLM
 
   file_ingest:
     host_addr: "127.0.0.1"

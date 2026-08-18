@@ -104,8 +104,9 @@ def on_message(client, userdata, message):
                     # Validate tensor schema
                     validated_tensor = TensorSchema().load(tensor)
 
-                    # Process only tensors with layer_name == "prob"
-                    if validated_tensor["layer_name"] == "prob":
+                    # Process only the embedding tensor named "prob".
+                    layer = validated_tensor.get("tensor_name") or validated_tensor.get("layer_name")
+                    if layer == "prob":
                         tensor_data = validated_tensor["data"]
 
                         if confidence > CONFIDENCE_THRESHOLD:
@@ -258,7 +259,9 @@ async def search(
             for obj in objects:
                 tensors = obj.get("tensors", [])
                 for tensor in tensors:
-                    if tensor.get("layer_name") == "prob":  # Filter by layer_name
+                    # Filter by the embedding layer name "prob". Newer DL Streamer
+                    # emits it in "tensor_name"; older versions used "layer_name".
+                    if (tensor.get("tensor_name") or tensor.get("layer_name")) == "prob":
                         tensor_data = tensor.get("data", [])
                         if tensor_data:
                             tensor_data_list.append(tensor_data)

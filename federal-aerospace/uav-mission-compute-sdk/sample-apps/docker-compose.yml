@@ -39,7 +39,7 @@ services:
       - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
       - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
     group_add:
-      - "992"
+      - "${GPU_RENDER_GID:-994}"
     volumes:
       - ./helpers/vision-processor/detector_multicam_rtsp.py:/app/detector_multicam_rtsp.py:ro
     networks:
@@ -62,12 +62,12 @@ services:
         - no_proxy=${NO_PROXY:-}
     container_name: edge-ai-showcase
     ports:
-      - "5002:5002"
+      - "127.0.0.1:5002:5002"
     environment:
       - MQTT_BROKER_HOST=mosquitto
       - MQTT_BROKER_PORT=1883
       - UAV_ID=${UAV_ID:-uav-1}
-      - COMPANION_BRIDGE_URL=http://px4-gazebo:8080
+      - COMPANION_BRIDGE_URL=${COMPANION_BRIDGE_URL:-http://px4-gazebo:8080}
       - http_proxy=
       - https_proxy=
       - no_proxy=

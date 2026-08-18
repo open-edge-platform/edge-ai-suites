@@ -18,7 +18,7 @@
 # Environment variables:
 #   HTTP_PROXY / HTTPS_PROXY  — Docker build proxy
 #   MODEL_DIR                 — YOLO model directory (default ~/models)
-#   DATA_DIR                  — clip output directory (default /tmp/smartbuilding-clips)
+#   DATA_DIR                  — clip output directory (default /tmp/smart-community-clips)
 #   VSA_TEST_CHILD_VIDEO      — child scenario integration test video
 #   VSA_TEST_FRIDGE_VIDEO     — fridge multi-video test video
 #   VSA_TEST_ELDER_VIDEO      — elder multi-video test video
@@ -47,7 +47,7 @@ DOCKER_IMAGE="${DOCKER_IMAGE:-videostream-analytics:latest}"
 RTSP_PORT=8554
 WEBHOOK_PORT=9999
 ANALYTICS_PORT=8999
-DATA_DIR="${DATA_DIR:-/tmp/smartbuilding-clips}"
+DATA_DIR="${DATA_DIR:-/tmp/smart-community-clips}"
 MODEL_DIR="${MODEL_DIR:-$HOME/models}"
 
 # --- User-provided integration and evaluation videos ---
@@ -207,7 +207,7 @@ start_analytics_docker() {
         -e https_proxy="" \
         -v "$MODEL_DIR:/models:ro" \
         -v "/tmp:/tmp" \
-        -v "$DATA_DIR:/root/.mcp-smartbuilding/segments" \
+        -v "$DATA_DIR:/root/.mcp-smart-community/segments" \
         "$DOCKER_IMAGE"
     sleep 3
     wait_for_analytics
