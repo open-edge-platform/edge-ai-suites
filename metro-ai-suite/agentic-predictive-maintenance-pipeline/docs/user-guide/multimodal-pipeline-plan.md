@@ -340,3 +340,30 @@ modality is unavailable; keep reasoning fully downstream and modality-agnostic.
 existing deployment conventions. Option B is a larger rebuild (new fusion-engine component, message
 bus topics, schema redesign) better suited if/when this pipeline needs to scale to multiple
 cameras/sensor types or support pluggable fusion strategies in production.
+
+### Vision-only compatibility: how existing single-modality use cases are unaffected
+
+Both options above are designed so that **fusion is opt-in per use case, not a universal
+requirement** — a vision-only use case (e.g. `pipeline-defect-detection`) requires zero changes
+and never executes any sensor/fusion code path:
+
+- **Option A**: the sensor-ingest subscriber is an optional component, gated the same way the
+  existing GPU/NPU/LLM compose overlays are — a use case's `.env_<use-case>` simply omits/disables
+  it (e.g. `ENABLE_SENSOR_FUSION=false`), so its compose file never starts that service. The
+  MQTT-driven fusion task inside `detection-service` checks whether any `sensor.inference`
+  messages exist for the correlation window; if none arrive (no sensor source configured, or a
+  disabled flag), it short-circuits and passes the image-only classification straight to storage
+  with `source="image_only"`, leaving `sensor_confidence`/`sensor_raw_json` `NULL` — fields the
+  existing schema already supports as nullable. DL Streamer → storage is otherwise identical to
+  the current `pipeline-defect-detection` flow.
+- **Option B**: the fusion-engine subscribes to whatever topics a use case's config registers, not
+  a hardcoded two-source join — if only `image.inference` exists, there's nothing to correlate
+  against. For a vision-only use case the configured fusion strategy is simply `"passthrough"`
+  (`modalities_used: ["image"]`, `fused_confidence == image_confidence`) — the same fallback code
+  path used when a sensor briefly goes offline mid-run, just applied permanently. `agent-service`
+  is unaffected either way since it only ever reads the fused record + `modalities_used` metadata,
+  never how many modalities produced it.
+
+In short: single-modality use cases simply never register a sensor source or a real fusion
+strategy, reusing the identical degradation path designed for "sensor temporarily unavailable" —
+no separate vision-only code path is needed.
