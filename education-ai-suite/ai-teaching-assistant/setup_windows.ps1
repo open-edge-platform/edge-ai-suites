@@ -813,10 +813,10 @@ else {
 # OpenVINO IR on first startup (inside the FastAPI lifespan, BEFORE the
 # /health endpoint becomes available). On a fresh machine this first-run
 # export can take many minutes and exceeds the health-check window used by
-# start_kiosk.ps1, making services look like they "never come up".
+# start_ata.ps1, making services look like they "never come up".
 #
 # We do that heavy one-time work here, during setup, where there is no
-# health-check timeout. After this completes, start_kiosk.ps1 finds the
+# health-check timeout. After this completes, start_ata.ps1 finds the
 # exported models already on disk and every service becomes healthy quickly.
 # =============================================================================
 
@@ -915,8 +915,8 @@ foreach ($Service in $Services) {
 
 Write-Header "SETUP COMPLETE"
 Write-Success "All components installed successfully!"
-Write-Info "Next step: Run start_kiosk.ps1 to start all services"
+Write-Info "Next step: Run start_ata.ps1 to start all services"
 Write-Info ""
 Write-Info "Usage:"
-Write-Info "  powershell -ExecutionPolicy Bypass -File start_kiosk.ps1"
+Write-Info "  powershell -ExecutionPolicy Bypass -File start_ata.ps1"
 Write-Info ""

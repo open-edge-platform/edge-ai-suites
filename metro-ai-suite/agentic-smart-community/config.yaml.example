@@ -59,6 +59,13 @@ keepalive:
 poll_interval_ms: 5000
 video_summary_max_concurrent: 2
 
+# Alert notification cooldown. A new alert for a monitor+use_case that already
+# produced a *notified* alert within this window is still written to the alerts
+# table (full audit) but with notified=false and no subscriber broadcast —
+# a persistent warn/critical scene does not spam subscribers. 0 disables.
+alerts:
+  cooldown_seconds: 60
+
 # Per-monitor log rotation (write target: logs/monitors/<monitor_id>/<YYYY-MM-DD>.log)
 logging:
   retention_days: 14 # keep this many calendar days of .log files (today + 13 previous); older deleted
