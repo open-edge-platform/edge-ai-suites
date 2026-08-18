@@ -12,19 +12,8 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
-```mermaid
-flowchart LR
-    subgraph SDK["uav-mission-compute-sdk (started separately)"]
-    end
+![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.drawio.svg)
 
-    subgraph Stack["docker-compose-uavsdk.yml"]
-        DLSPS2["DL Streamer\nPipeline Server\n(REST :8081 · RTSP :8555)"]
-    end
-
-    SDK -->|"UAV mavlink telemetry over MQTT "| DLSPS2
-    SDK -->|"RTSP nadir/forward/rear"| DLSPS2
-    DLSPS2 -->|"RTSP :8555"| CLIENT2["QGC / ffplay"]
-```
 
 **Telemetry / pipeline lifecycle flow:**
 
@@ -61,7 +50,7 @@ sequenceDiagram
 sudo apt install -y python3.12-venv ffmpeg
 ```
 
-> `python3.12-venv` is required by `make model` to create a Python virtual environment.  
+> `python3.12-venv` is required by `make model` to create a Python virtual environment.
 > `ffmpeg` provides `ffplay` for viewing the RTSP output stream and `ffmpeg` for recording.
 
 ### 1. Configure environment
