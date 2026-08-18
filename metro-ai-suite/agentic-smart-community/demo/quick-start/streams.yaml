@@ -1,4 +1,4 @@
-# Demo RTSP push configuration.
+# Demo RTSP push configuration (part of the quick-start resource set).
 #
 # start-streams.sh launches a bundled mediamtx RTSP server (using the
 # `mediamtx:` block below as its inline config) and then pushes each

@@ -9,11 +9,12 @@
 # it alongside multilevel-video-understanding + videostream-analytics. The bundled
 # use cases are registered by the MCP container entrypoint once it is healthy.
 #
-#   demo/scripts/start-demo.sh          # streams + demo config, then start the stack
-#   demo/scripts/stop-demo.sh           # stop streams + app tier (vllm stays warm)
+#   demo/quick-start/start-demo.sh      # streams + demo config, then start the stack
+#   demo/quick-start/stop-demo.sh       # stop streams + app tier (vllm stays warm)
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DATA_DIR="${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}"
 
 command -v md5sum >/dev/null || { echo "md5sum not found in PATH" >&2; exit 1; }
@@ -28,7 +29,7 @@ FILTERED_MONITORS="$(mktemp)"
 trap 'rm -f "$FILTERED_MONITORS"' EXIT
 
 "$REPO_DIR/demo/videos/.venv/bin/python" - \
-  "$REPO_DIR/demo/monitors.demo.yaml" \
+  "$SCRIPT_DIR/monitors.demo.yaml" \
   "$ACTIVE_STREAMS_FILE" \
   "$FILTERED_MONITORS" <<'PY'
 import sys
@@ -82,7 +83,7 @@ persist_demo_config() {
   echo "updated $target from $source"
 }
 
-persist_demo_config "$REPO_DIR/demo/config.demo.yaml" "$ACTIVE_CONFIG"
+persist_demo_config "$SCRIPT_DIR/config.demo.yaml" "$ACTIVE_CONFIG"
 persist_demo_config "$FILTERED_MONITORS" "$ACTIVE_MONITORS"
 rm -f "$FILTERED_MONITORS"
 trap - EXIT

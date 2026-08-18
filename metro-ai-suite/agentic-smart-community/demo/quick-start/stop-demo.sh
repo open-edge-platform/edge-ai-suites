@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# Stop the demo started by demo/scripts/start-demo.sh: stop the demo RTSP
+# Stop the demo started by demo/quick-start/start-demo.sh: stop the demo RTSP
 # streams, then stop the app tier (MCP server + analytics + multilevel) while
 # leaving vllm-ipex-serving running so its multi-minute recompile is not repaid.
 set -euo pipefail
