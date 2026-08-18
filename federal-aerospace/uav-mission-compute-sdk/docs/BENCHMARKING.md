@@ -228,13 +228,19 @@ change-triggered and has no `RATE_STATUS_HZ` env var.
 
 ## Running the benchmarks
 
-See **[Invocation](#invocation)** for the full command reference.  A one-line
+Run the dependency setup once before any benchmark command:
+
+```bash
+make deps
+```
+
+See **[Invocation](#invocation)** for the full command reference. A one-line
 summary:
 
 | Mode | Command | Requires |
 |---|---|---|
-| Passive telemetry observation | `make bench` | Stack running |
-| End-to-end bridge stress sweep | `make bench-bridge-sweep` | Stack running + UAV armed + `docker compose` |
+| Passive telemetry observation | `make deps && make bench` | Stack running |
+| End-to-end bridge stress sweep | `make deps && make bench-bridge-sweep` | Stack running + UAV armed + `docker compose` |
 
 ---
 
