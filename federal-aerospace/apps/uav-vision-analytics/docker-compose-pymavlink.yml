@@ -52,6 +52,7 @@ services:
         FROM ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
         RUN pip install --no-cache-dir pymavlink
     image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}-pymavlink
+    pull_policy: build
     container_name: dlstreamer-pipeline-server
     environment:
       - http_proxy=${http_proxy}

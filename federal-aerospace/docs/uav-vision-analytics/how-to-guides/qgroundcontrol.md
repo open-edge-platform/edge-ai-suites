@@ -13,7 +13,15 @@ Steps to enable QGroundControl to connect to the UAV Vision Analytics applicatio
 
 ### RTSP Stream
 
-In QGroundControl, `Click on Left top Q icon` → `Settings` → `Video` → `Source` → `select "RTSP Video Stream"` in the dropdown. Then in RTSP URL enter the URL for the desired pipeline (e.g., `rtsp://<HOST_IP>:8555/uav-mavlink-cpu`).
+In QGroundControl, `Click on Left top Q icon` → `Settings` → `Video` → `Source` → `select "RTSP Video Stream"` in the dropdown. Then in RTSP URL enter the URL for the desired pipeline.
+
+URL for all three device pipelines (CPU/GPU/NPU):
+
+```
+rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # CPU
+rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
+rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
+```
 
 ![QGroundControl RTSP stream](../_assets/QGC-rtsp.gif)
 
