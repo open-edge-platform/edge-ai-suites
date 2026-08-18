@@ -259,24 +259,7 @@ jobs:
                   image_prefix=$(echo "$image_prefix" | cut -d':' -f1)
                   IMAGE_MAP_TS["$image"]="$image_prefix"
               done
-
-              IMAGE_SUFFIX=$(grep -m1 '^IMAGE_SUFFIX=' .env | cut -d'=' -f2- | tr -d '"\r' | xargs)
-              WORKBENCH_INSIGHTS_IMAGE=$(grep -m1 '^WORKBENCH_INSIGHTS_IMAGE=' .env | cut -d'=' -f2- | tr -d '"\r' | xargs)
-              APM_UI_IMAGE=$(grep -m1 '^APM_UI_IMAGE=' .env | cut -d'=' -f2- | tr -d '"\r' | xargs)
-              if [[ -n "$IMAGE_SUFFIX" && -n "$WORKBENCH_INSIGHTS_IMAGE" && -n "$APM_UI_IMAGE" ]]; then
-                manual_images=("${WORKBENCH_INSIGHTS_IMAGE}:${IMAGE_SUFFIX}" "${APM_UI_IMAGE}:${IMAGE_SUFFIX}")
-                for image in "${manual_images[@]}"; do
-                  if docker image inspect "$image" >/dev/null 2>&1; then
-                    image_prefix=$(echo "$image" | sed 's|/|-|g' | cut -d':' -f1)
-                    IMAGE_MAP_TS["$image"]="$image_prefix"
-                  else
-                    echo "Skipping manual image not found locally: $image"
-                  fi
-                done
-              else
-                echo "IMAGE_SUFFIX, WORKBENCH_INSIGHTS_IMAGE, or APM_UI_IMAGE missing in .env; skipping manual image additions"
-              fi
-              
+                            
               # Loop through images and perform Trivy scans
               for IMAGE in "${!IMAGE_MAP_TS[@]}"; do
                   PREFIX="${IMAGE_MAP_TS[$IMAGE]}"
