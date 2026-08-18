@@ -367,3 +367,46 @@ and never executes any sensor/fusion code path:
 In short: single-modality use cases simply never register a sensor source or a real fusion
 strategy, reusing the identical degradation path designed for "sensor temporarily unavailable" —
 no separate vision-only code path is needed.
+
+### Why can't the same running containers serve multiple use cases at once (today)?
+
+The current architecture is **single-tenant, config-at-startup**: one Docker Compose stack runs
+exactly one use case, and switching use cases means tearing down/recreating containers with a
+different `.env_<use-case>` — it is not possible to have `pipeline-defect-detection` and
+`gas-detection-multimodal` served concurrently by the same containers. Root causes:
+
+- **Fixed container names, one instance each.** Every service uses a hardcoded `container_name`
+  (`apm-detection`, `apm-agent`, `apm-storage`, ...) instead of Compose's per-project namespacing.
+  Starting a second use case's stack recreates the same containers rather than running alongside
+  the first.
+- **Bind mounts are resolved once, at container start.** `detection-service`'s models/configs are
+  mounted from `${USE_CASE_MODELS_DIR}` / `${USE_CASE_CONFIGS_DIR}` (see `docker/compose.detection.yaml`)
+  — one fixed host path baked in for the container's whole lifetime. There is no per-request
+  "which use case's model do I load" logic; the code just assumes whatever is mounted is *the*
+  model.
+- **Env vars are single-valued, not per-request.** `DLSTREAMER_PIPELINE_NAME`, `MQTT_TOPIC`,
+  `LLM_MODEL_NAME`, etc. are one value per container/process — no `use_case_id` is threaded through
+  API requests that a service could use to route to a different model/config dynamically.
+- **Shared, unpartitioned storage.** `apm-storage`'s schema has no `use_case_id` column; two use
+  cases writing concurrently would mix detections/results/tickets in the same table.
+- **Agent policies loaded once.** `agents.yaml` / `policy_fallback.json` are read at
+  `agent-service` startup — reasoning behavior can't switch per request.
+- **Fixed host ports.** `APP_HOST_PORT`, `MQTT_PORT`, `LLM_PORT`, etc. bind the same host ports
+  regardless of which use case is loaded, so two stacks can't even coexist on one host without
+  manual port overrides (a recurring pain point already hit with `MQTT_PORT` conflicts).
+
+**What true multi-use-case serving would require:**
+
+1. A `use_case_id` threaded through the API/request path and the storage schema (partition or tag
+   every row).
+2. Per-use-case model/config resolution *inside* each service (e.g. a small in-process registry
+   keyed by `use_case_id` that lazily loads/caches OpenVINO models), replacing static
+   bind-mount-at-startup config.
+3. Either `COMPOSE_PROJECT_NAME` + no fixed `container_name`s (separate stacks, still one use case
+   per stack but able to run side by side on distinct ports), or a single always-on service that
+   internally multiplexes use cases — the latter is the only path to literally "the same
+   containers serving multiple use cases."
+4. Per-use-case agent policy selection at request time instead of one `agents.yaml` per process.
+
+This is a genuine architecture change (multi-tenant serving), not a config tweak — captured here
+for future reference, not scheduled for this iteration.
