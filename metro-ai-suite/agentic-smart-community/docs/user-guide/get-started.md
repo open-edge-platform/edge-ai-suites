@@ -45,7 +45,7 @@ The **first startup takes about 30 minutes** while the weights are downloaded an
 Clone the repository and change to `agentic-smart-community`:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b release-2026.2.0
 cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
 ```
 
