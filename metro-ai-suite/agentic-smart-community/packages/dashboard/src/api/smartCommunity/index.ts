@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
+import dayjs from "dayjs";
 import request from "../request";
 
 interface MonitorResponse {
@@ -13,6 +14,14 @@ interface ActivityResponse {
   task: Record<string, any>;
   event?: Record<string, any>;
   alert?: Record<string, any>;
+}
+
+interface RecordingResponse {
+  id: number;
+  startTime: string;
+  endTime: string;
+  durationSeconds?: number;
+  fileSizeBytes?: number;
 }
 
 interface ReportResponse {
@@ -95,6 +104,31 @@ export const getCameraActivityList = async (params: Record<string, unknown>) => 
         : null,
     })),
   };
+};
+
+export const getCameraRecordings = async (params: Record<string, unknown>) => {
+  const recordings = await request<unknown, RecordingResponse[]>({
+    url: "/api/recordings",
+    method: "get",
+    params: {
+      monitor_id: params.source_id,
+      date: params.date,
+    },
+  });
+
+  return {
+    recordings: recordings.map((recording) => ({
+      id: recording.id,
+      startMs: dayjs(recording.startTime).valueOf(),
+      endMs: dayjs(recording.endTime).valueOf(),
+      durationSeconds: recording.durationSeconds ?? 0,
+      fileSizeBytes: recording.fileSizeBytes ?? 0,
+    })),
+  };
+};
+
+export const buildRecordingStreamUrl = (recordingId: number, sourceId: string) => {
+  return `/api/recordings/${recordingId}/stream?monitor_id=${encodeURIComponent(sourceId)}`;
 };
 
 export const getCamReport = async (params: Record<string, unknown>) => {

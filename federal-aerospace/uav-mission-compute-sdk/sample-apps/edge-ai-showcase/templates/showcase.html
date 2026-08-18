@@ -1,0 +1,383 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intel Edge AI Showcase - Multi-Camera UAV</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0D1117;
+            color: #F0F6FC;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-feature-settings: 'tnum';
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 300;
+        }
+
+        .header .logo {
+            font-weight: 700;
+            color: #00c7fd;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+
+        .cameras-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: auto auto;
+            gap: 15px;
+        }
+
+        .camera-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .camera-panel.main {
+            grid-column: 1 / -1;
+        }
+
+        .camera-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .camera-title {
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .camera-badge {
+            background: #00c7fd;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .camera-video {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            background: #000;
+        }
+
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-section {
+            margin-bottom: 25px;
+        }
+
+        .stats-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            color: #00c7fd;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-label {
+            font-size: 13px;
+            opacity: 0.8;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #00ff88;
+        }
+
+        .metric-value.warning {
+            color: #ffaa00;
+        }
+
+        .performance-bars {
+            margin-top: 15px;
+        }
+
+        .performance-item {
+            margin-bottom: 12px;
+        }
+
+        .performance-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .performance-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .performance-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00c7fd, #00ff88);
+            transition: width 0.3s;
+        }
+
+        .tech-stack {
+            background: rgba(0, 199, 253, 0.1);
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 3px solid #00c7fd;
+        }
+
+        .tech-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 15px;
+            margin: 5px 5px 5px 0;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .detection-count {
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            color: #00ff88;
+            margin: 20px 0;
+        }
+
+        .live-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-good { color: #00ff88; }
+        .status-warning { color: #ffaa00; }
+        .status-error { color: #ff4444; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span class="logo">Intel®</span> Edge AI Showcase</h1>
+        <div>
+            <span class="live-indicator"></span>
+            <span>LIVE</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="cameras-grid">
+            <div class="camera-panel main">
+                <div class="camera-header">
+                    <div class="camera-title">📹 Nadir Camera (Downward)</div>
+                    <div class="camera-badge">GPU • FP16</div>
+                </div>
+                <img src="/video/nadir" class="camera-video" alt="Nadir Camera">
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                    FPS: <span id="fps-nadir">--</span> | Detections: <span id="det-nadir">0</span>
+                </div>
+            </div>
+
+            <div class="camera-panel">
+                <div class="camera-header">
+                    <div class="camera-title">📹 Forward Camera</div>
+                    <div class="camera-badge">CPU • FP32</div>
+                </div>
+                <img src="/video/forward" class="camera-video" alt="Forward Camera">
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                    FPS: <span id="fps-forward">--</span> | Detections: <span id="det-forward">0</span>
+                </div>
+            </div>
+
+            <div class="camera-panel">
+                <div class="camera-header">
+                    <div class="camera-title">📹 Rear Camera</div>
+                    <div class="camera-badge">GPU • INT8</div>
+                </div>
+                <img src="/video/rear" class="camera-video" alt="Rear Camera">
+                <div style="margin-top: 10px; font-size: 12px; opacity: 0.7;">
+                    FPS: <span id="fps-rear">--</span> | Detections: <span id="det-rear">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stats-section">
+                <div class="stats-title">🎯 Detection Analytics</div>
+                <div class="detection-count" id="total-detections">0</div>
+                <div style="text-align: center; font-size: 12px; opacity: 0.7; margin-top: -10px;">
+                    Total Objects Detected
+                </div>
+
+                <div class="metric">
+                    <span class="metric-label">Coverage Area</span>
+                    <span class="metric-value">450m²</span>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">⚡ Performance Metrics</div>
+                <div class="performance-bars">
+                    <div class="performance-item">
+                        <div class="performance-label">
+                            <span>GPU Inference (Nadir)</span>
+                            <span id="gpu-fps">-- FPS</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" id="gpu-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="performance-item">
+                        <div class="performance-label">
+                            <span>CPU Inference (Forward)</span>
+                            <span id="cpu-fps">-- FPS</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" id="cpu-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="performance-item">
+                        <div class="performance-label">
+                            <span>GPU INT8 (Rear)</span>
+                            <span id="npu-fps">-- FPS</span>
+                        </div>
+                        <div class="performance-bar">
+                            <div class="performance-fill" id="npu-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">🚁 UAV Telemetry</div>
+                <div class="metric">
+                    <span class="metric-label">Altitude</span>
+                    <span class="metric-value" id="altitude">-- m</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Position</span>
+                    <span class="metric-value" id="position" style="font-size: 11px;">--</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Battery</span>
+                    <span class="metric-value" id="battery">--%</span>
+                </div>
+            </div>
+
+            <div class="stats-section">
+                <div class="stats-title">🔧 Technology Stack</div>
+                <div class="tech-stack">
+                    <div class="tech-badge">🎬 DL Streamer 2026.1</div>
+                    <div class="tech-badge">🧠 OpenVINO 2026.1</div>
+                    <div class="tech-badge">🎯 YOLOv8n Detection</div>
+                    <div class="tech-badge">⚡ GPU Acceleration</div>
+                    <div class="tech-badge">🔀 Multi-Camera</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update stats every second
+        setInterval(async () => {
+            try {
+                const response = await fetch('/api/stats');
+                const data = await response.json();
+
+                // Update detection counts
+                document.getElementById('total-detections').textContent = data.detection_count || 0;
+
+                // Update per-camera stats
+                ['nadir', 'forward', 'rear'].forEach(cam => {
+                    const fps = data.fps[cam] || 0;
+                    const count = data.detections_per_camera[cam] || 0;
+                    document.getElementById(`fps-${cam}`).textContent = fps.toFixed(1);
+                    document.getElementById(`det-${cam}`).textContent = count;
+                });
+
+                // Update performance bars
+                const maxFps = 60;
+                document.getElementById('gpu-fps').textContent = (data.fps.nadir || 0).toFixed(1) + ' FPS';
+                document.getElementById('cpu-fps').textContent = (data.fps.forward || 0).toFixed(1) + ' FPS';
+                document.getElementById('npu-fps').textContent = (data.fps.rear || 0).toFixed(1) + ' FPS';
+
+                document.getElementById('gpu-bar').style.width = ((data.fps.nadir || 0) / maxFps * 100) + '%';
+                document.getElementById('cpu-bar').style.width = ((data.fps.forward || 0) / maxFps * 100) + '%';
+                document.getElementById('npu-bar').style.width = ((data.fps.rear || 0) / maxFps * 100) + '%';
+
+                // Update telemetry
+                if (data.telemetry.position) {
+                    const pos = data.telemetry.position;
+                    document.getElementById('altitude').textContent = (pos.relative_altitude_m || 0).toFixed(1) + ' m';
+                    document.getElementById('position').textContent =
+                        `${(pos.latitude_deg || 0).toFixed(5)}°, ${(pos.longitude_deg || 0).toFixed(5)}°`;
+                }
+
+                if (data.telemetry.battery) {
+                    document.getElementById('battery').textContent =
+                        (data.telemetry.battery.remaining_percent || 0).toFixed(0) + '%';
+                }
+
+            } catch (error) {
+                console.error('Error updating stats:', error);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

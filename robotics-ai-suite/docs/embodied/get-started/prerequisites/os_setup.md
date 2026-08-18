@@ -80,7 +80,7 @@ Do the following to prepare the target system:
 
 You can automate the software setup flow on this page with:
 
-[os_setup_install.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/get-started/prerequisites/os_setup_install.sh)
+[os_setup_install.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/docs/embodied/get-started/prerequisites/os_setup_install.sh)
 
 Default OS setup automation (locale + APT repositories):
 

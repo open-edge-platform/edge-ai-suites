@@ -1,10 +1,12 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import asyncio
 from typing import Annotated, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
+from starlette.websockets import WebSocketState
 import structlog
 
 from services.data_aggregator import DataAggregatorService
@@ -13,6 +15,34 @@ from services.weather_service import WeatherService
 
 logger = structlog.get_logger(__name__)
 router = APIRouter()
+
+async def _should_wait_for_update(
+    websocket: WebSocket,
+    event: asyncio.Event,
+) -> bool:
+    """Return whether the client is still connected when waiting finishes."""
+
+    update_task = asyncio.create_task(event.wait())
+
+    # We generally dont want the client to send messages, but we need to listen for disconnects.
+    receive_task = asyncio.create_task(websocket.receive())
+
+    try:
+        done, _ = await asyncio.wait({update_task, receive_task}, return_when=asyncio.FIRST_COMPLETED)
+
+        # Close connection if client says a word. Server dominates and will never listen to client.
+        # (Though, we do care about disconnect messages from client)
+        if receive_task in done:
+            return False
+        return True
+    finally:
+        # Cleaning up. Next iteration, if any, will create new tasks and wait for them as usual.
+        update_task.cancel()
+        receive_task.cancel()
+
+        # Wait non-blockingly till the cancellation of tasks is complete.
+        await asyncio.gather(update_task, receive_task, return_exceptions=True)
+
 
 def get_data_aggregator(request):
     """Dependency to get data aggregator service from app state."""
@@ -160,9 +190,11 @@ async def ws_current_traffic_intelligence(
                     "message": "VLM analysis not yet available."
                 })
 
-            event = data_aggregator.new_data_event
-            logger.debug("WebSocket waiting for new data event")
-            await event.wait()
+            event: asyncio.Event = data_aggregator.new_data_event
+            logger.debug("WebSocket waiting for new data update event")
+            if not await _should_wait_for_update(websocket, event):
+                logger.info("WebSocket client disconnected")
+                return
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
     except Exception as e:
@@ -171,3 +203,10 @@ async def ws_current_traffic_intelligence(
             await websocket.close(code=1011, reason="Internal server error")
         except Exception as e:
             logger.error("Failed to close WebSocket after error", error=str(e))
+    finally:
+        logger.info("WebSocket connection closed")
+        if (
+            websocket.client_state == WebSocketState.CONNECTED
+            and websocket.application_state == WebSocketState.CONNECTED
+        ):
+            await websocket.close()

@@ -26,7 +26,7 @@ services:
   grafana:
     image: grafana/grafana:13.1.0-25893932881
     container_name: grafana
-    restart: on-failure:5
+    restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
@@ -34,7 +34,7 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_SECURITY_ALLOW_EMBEDDING: "true"
-      GF_LIVE_ALLOWED_ORIGINS: "*"
+      GF_LIVE_ALLOWED_ORIGINS: "http://localhost:*,https://localhost:*"
       GF_LIVE_MAX_MESSAGE_SIZE: "128000"
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -99,8 +99,6 @@ services:
       - WHISPER_MODEL=base
       - WHISPER_COMPUTE_TYPE=float32
       - WEBUI_AUTH=False
-      - WEBUI_SECRET_KEY=dummy
-      - ENABLE_RAG_LOCAL_WEB_FETCH=true
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
@@ -143,9 +141,10 @@ services:
   # HTTPS reverse proxy for Open WebUI and Whisper STT
   # Enables microphone access in the browser (requires secure context)
   nginx-https:
-    image: nginx:alpine
+    image: nginxinc/nginx-unprivileged:alpine
     container_name: nginx-https
     restart: unless-stopped
+    user: "101"
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -163,14 +162,12 @@ services:
     volumes:
       - ./apps/nginx/single-pane.html:/usr/share/nginx/html/single-pane.html:ro
       - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./data/nginx-certs:/etc/nginx/certs
+    secrets:
+      - source: key.pem
+      - source: cert.pem
     # Generate a self-signed cert on first start if not present, then start nginx
     command: >-
       sh -c "
-        if [ ! -f /etc/nginx/certs/cert.pem ]; then
-          apk add --no-cache openssl &&
-          openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout /etc/nginx/certs/key.pem -out /etc/nginx/certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1';
-        fi &&
         nginx -g 'daemon off;'
       "
     depends_on:
@@ -187,3 +184,9 @@ networks:
   fedaero:
     external: true
     name: visual-pipeline-and-platform-evaluation-tool_default
+
+secrets:
+  key.pem:
+    file: ./data/nginx-certs/key.pem
+  cert.pem:
+    file: ./data/nginx-certs/cert.pem

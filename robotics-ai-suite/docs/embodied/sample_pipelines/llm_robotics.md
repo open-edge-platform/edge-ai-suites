@@ -14,12 +14,12 @@ using an LLM. The picture below shows the architecture of the demo:
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
 
 ## Prerequisites
 
 Make sure you have all the prerequisites and installation in
-[Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html)
+[Installation & Setup](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/embodied/get_started.html)
 and also ensure you have the following prerequisites:
 
 | Specification | Recommended                          |
