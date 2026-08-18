@@ -13,8 +13,13 @@ fail() { echo "[FAIL] $*"; FAIL=$((FAIL + 1)); }
 
 check() {
   local label="$1" path="$2" want="${3:-200}"
-  local code; code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE$path")
-  [[ "$code" == "$want" ]] && pass "$label (HTTP $code)" || fail "$label (HTTP $code, expected $want)"
+  local code
+  code=$(curl -s -o /dev/null -w "%{http_code}" "$BASE$path")
+  if [[ "$code" == "$want" ]]; then
+    pass "$label (HTTP $code)"
+  else
+    fail "$label (HTTP $code, expected $want)"
+  fi
 }
 
 echo "=== PX4 MAVLink Bridge — API smoke test ==="

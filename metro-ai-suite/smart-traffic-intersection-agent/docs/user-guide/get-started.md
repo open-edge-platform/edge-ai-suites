@@ -283,6 +283,15 @@ the Traffic Intersection Agent container. Docker Compose uses the published
 
 The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
 
+### Enabling NPU for Object Detection
+
+Object detection for the Smart Traffic Intersection Agent is performed by the Smart
+Intersection application's DL Streamer Pipeline Server, which can be configured to run on
+NPU. The relevant configuration lives in the vendored Smart Intersection sources at
+`deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/`. Refer to
+[Smart Intersection - How to Use NPU for Inference](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/how-to-use-npu-for-inference.html)
+for prerequisites and configuration steps.
+
 ## Accessing the Services
 
 After the setup process completes, the URLs for all services are displayed on the terminal.
