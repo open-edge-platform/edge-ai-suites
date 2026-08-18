@@ -5,9 +5,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Troubleshooting
 
----
+If you face a problem while working with UAV Vision Analytics, you can reach out to its
+maintainers in the [Discussions section](https://github.com/open-edge-platform/edge-ai-suites/discussions), but first, see if the following list of tips answers your questions. They are
+grouped into the following categories:
 
-## Table of Contents
 
 - [Setup & Installation](#setup--installation)
 - [Stack & Containers](#stack--containers)

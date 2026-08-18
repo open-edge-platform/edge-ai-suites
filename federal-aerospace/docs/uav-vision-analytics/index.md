@@ -56,9 +56,11 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 To learn more about the application and how to use it, see the
 [User Guides](./how-to-guides.md).
 
-# AI Agent Skills
+## AI Agent Skills
 
-This application supports AI agent skills for GitHub Copilot and compatible coding agents. Skills cover operational tasks (running pipelines, benchmarking, troubleshooting) and application creation (scaffolding new pymavlink or UAVSDK stacks).
+This application supports AI agent skills for GitHub Copilot and compatible coding agents.
+Skills cover operational tasks (running pipelines, benchmarking, troubleshooting) and
+application creation (scaffolding new pymavlink or UAVSDK stacks).
 
 ## Intended and Responsible Use
 
@@ -70,17 +72,27 @@ only, and is not intended to be deployed as-is or for alternate use cases or app
 
 ### Responsible Use
 
-Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses.
+See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html).
+Intel's products and software are intended only to be used in applications that do not cause
+or contribute to a violation of an internationally recognized human right.
 
-If you or anyone on your team becomes aware of instances of potentially inappropriate use, regardless of severity, notify [responsible-ai@intel.com](mailto:responsible-ai@intel.com) or use the [Ethics Reporting Portal](https://www.intel.com/content/www/us/en/corporate-responsibility/ethics-and-compliance.html) immediately.
+If you or anyone on your team becomes aware of instances of potentially inappropriate use,
+regardless of severity, notify
+[responsible-ai@intel.com](mailto:responsible-ai@intel.com) or use the
+[Ethics Reporting Portal](https://www.intel.com/content/www/us/en/corporate-responsibility/ethics-and-compliance.html)
+immediately.
 
 
 
+<!--hide_directive
 :::{toctree}
 :hidden:
-Get Started - Standalone <./get-started-standalone.md>
-Get Started - SDK <./get-started-uavsdk.md>
+
+Get Started - Standalone <./get-started/get-started-standalone.md>
+Get Started - SDK <./get-started/get-started-uavsdk.md>
 User Guides <./how-to-guides.md>
-System Requirements <./system-requirements.md>
+System Requirements <./get-started/system-requirements.md>
 Release Notes <./release-notes.md>
 :::
+hide_directive-->
