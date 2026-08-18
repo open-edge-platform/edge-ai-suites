@@ -14,10 +14,9 @@ class SummarizerComponent(PipelineComponent):
     _model = None
     _config = None
 
-    def __init__(self, session_id, provider, model_name, device, temperature=0.7, mode="dialog"):
+    def __init__(self, session_id, mode="dialog"):
         self.session_id = session_id
         self.mode = mode.lower()
-        self.temperature = temperature
         self.board_ocr_partial = False
         
         text_gen = config.models.text_gen

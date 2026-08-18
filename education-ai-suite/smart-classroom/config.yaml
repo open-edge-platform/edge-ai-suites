@@ -1,7 +1,6 @@
 ﻿app:
   name: Smart Classroom
   cleanup_on_exit: true
-  use_ov_genai: True # True or False, applicable for provider: openvino
   language: en # en or zh
 
 features:
@@ -47,14 +46,6 @@ models:
     global_speaker_similarity_threshold: 0.65
 
   summarizer:
-    provider: openvino 
-    name: Qwen/Qwen3-8B 
-    device: GPU # GPU or CPU
-    weight_format: int4 # supports fp16, int4, int8 (Recommended)
-    max_new_tokens: 5120
-    temperature: 0.0 # 0.5 default
-    use_cache: True
-    models_base_path: "models"
     mode: dialog   # dialog | teacher | hybrid
 
   model_hub: huggingface # huggingface or modelscope
