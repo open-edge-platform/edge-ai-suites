@@ -6,7 +6,6 @@
   position: relative;
   height: 100%;
   background: #f5f7fa;
-  gap: 12px;
   z-index: 1000;
 }
 
@@ -24,12 +23,18 @@
   overflow-y: auto;
   height: calc(100vh - var(--top-panel-height) - var(--header-bar-height) - var(--footer-height));
   box-sizing: border-box;
-  padding: 12px 8px;
+  padding: 12px 12px 12px 18px;
 }
 
 .left-panel {
   flex: 1;
   background-color: #f8f8f8;
+}
+
+.right-panel-slot {
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* When video is fullscreen, push panels below it */
@@ -59,7 +64,8 @@
 
 .video-wrapper.fullscreen {
   position: fixed;
-  top: calc(var(--top-panel-height) + var(--header-bar-height)); /* Header + top bar */
+  top: calc(var(--top-panel-height) + var(--header-bar-height));
+  /* Header + top bar */
   left: 0;
   right: 0;
   height: 70vh;
@@ -79,7 +85,9 @@
   left: calc(50% - 14px);
   transform: translateY(-50%);
   cursor: pointer;
-  z-index: 20;
+  /* Must beat `.left-panel`'s z-index: 1000 (it is positioned, so it would
+     otherwise paint over the toggle) while staying below modals (10001+). */
+  z-index: 1100;
   color: #0071c5;
   background: #fff;
   border-radius: 50%;
@@ -89,7 +97,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   transition: left 0.3s ease;
 }
 

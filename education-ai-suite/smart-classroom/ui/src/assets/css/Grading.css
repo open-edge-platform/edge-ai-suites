@@ -4,8 +4,7 @@
   align-self: stretch;
   min-height: 0;
   position: relative;
-  gap: 12px;
-  height: calc(100vh - var(--top-panel-height) - var(--header-bar-height) - var(--footer-height));
+  height: calc(100vh - var(--top-panel-height) - var(--footer-height));
 }
 
 .grading-screen {
@@ -33,6 +32,8 @@
 .grading-right .right-panel {
   flex: 1;
   height: auto;
+  border-left: none;
+  background: transparent;
 }
 
 .grading-tabs {
@@ -74,8 +75,13 @@
   flex-shrink: 0;
 }
 
-.grading-service-dot.ok   { background: #4caf50; }
-.grading-service-dot.fail { background: #d9534f; }
+.grading-service-dot.ok {
+  background: #4caf50;
+}
+
+.grading-service-dot.fail {
+  background: #d9534f;
+}
 
 .grading-tab.active {
   color: #0071c5;
@@ -268,7 +274,9 @@
 }
 
 @keyframes grading-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .grading-filter-chip {
@@ -322,12 +330,14 @@
     transform: translateY(-8px);
     background: #d4edda;
   }
+
   25% {
     opacity: 1;
     max-height: 200px;
     transform: translateY(0);
     background: #d4edda;
   }
+
   100% {
     max-height: 200px;
     background: transparent;
@@ -355,14 +365,34 @@
   background: #bbb;
 }
 
-.grading-dot.status-RUNNING { background: #0071c5; }
-.grading-dot.status-COMPLETED { background: #4caf50; }
-.grading-dot.status-FAILED { background: #d9534f; }
-.grading-dot.status-CANCELLED { background: #999; }
+.grading-dot.status-RUNNING {
+  background: #0071c5;
+}
+
+.grading-dot.status-COMPLETED {
+  background: #4caf50;
+}
+
+.grading-dot.status-FAILED {
+  background: #d9534f;
+}
+
+.grading-dot.status-CANCELLED {
+  background: #999;
+}
+
 .grading-dot.status-PAUSED,
-.grading-dot.status-PAUSING { background: #f0ad4e; }
-.grading-dot.status-CANCELLING { background: #d9534f; }
-.grading-dot.status-PENDING { background: #bbb; }
+.grading-dot.status-PAUSING {
+  background: #f0ad4e;
+}
+
+.grading-dot.status-CANCELLING {
+  background: #d9534f;
+}
+
+.grading-dot.status-PENDING {
+  background: #bbb;
+}
 
 .grading-row-status {
   width: 72px;

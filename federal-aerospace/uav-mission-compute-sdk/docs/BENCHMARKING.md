@@ -267,7 +267,7 @@ make bench ARGS="--duration 60 --clients 4"    # 60 s, fan-out to 4 subscribers
 
 ### Bridge stress sweep (`--bridge-sweep`)
 
-Requires the full stack (`make up`), the UAV providing telemetry (armed or
+Requires the full stack (`make up-sim-camera`), the UAV providing telemetry (armed or
 producing at least one telemetry message), and `docker compose` on `PATH`.
 
 ```bash

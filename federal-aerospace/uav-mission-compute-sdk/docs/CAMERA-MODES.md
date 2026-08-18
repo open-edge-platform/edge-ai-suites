@@ -94,7 +94,6 @@ VISION_CAMERA_IDS=nadir,forward,rear
 cd ~/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
 make init                    # Set passwords in .env
 make up-sim-camera                      # Start PX4 + Gazebo + camera-bridge
-docker compose ps            # Wait for px4 (healthy) ~90s
 make apps                    # Start vision processor + dashboard
 ```
 
@@ -230,10 +229,7 @@ nano .env
 # 3. Start core infrastructure with USB camera profile
 make up-usb-camera
 
-# 4. Wait for PX4 + usb-camera-bridge healthy
-docker compose ps
-
-# 5. Start vision processor + dashboard (1 camera)
+# 4. Start vision processor + dashboard (1 camera)
 make apps
 ```
 
@@ -524,10 +520,11 @@ Start here: Which camera source?
       v4l2-ctl --list-devices
    2. Update .env:       2. make up-sim-camera
       USB_VIDEO_DEVICE
-      USB_CAMERA_ID=nadir  3. Wait px4 (healthy)
+      USB_CAMERA_ID=nadir
       VISION_CAMERA_IDS=nadir
    3. make up-usb-camera
-   4. make apps          4. make apps
+   4. make apps          3. make up-sim-camera
+                         4. make apps
 
 Dashboard: http://localhost:5002
 ```

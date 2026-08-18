@@ -30,7 +30,7 @@ services:
   grafana:
     image: grafana/grafana:13.1.0-25893932881
     container_name: grafana
-    restart: on-failure:5
+    restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
@@ -214,7 +214,7 @@ services:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       no_proxy: ${no_proxy},grafana,fedaero.intel.com
-    restart: on-failure:5
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
       interval: 10s

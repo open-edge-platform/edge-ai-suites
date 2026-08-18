@@ -1,0 +1,60 @@
+{
+  "skill": "uav-vision-analytics",
+  "version": "1.0.0",
+  "cases": [
+    {
+      "id": 1,
+      "name": "pymavlink-all-devices",
+      "description": "PX4 SITL simulation, looped gazebo.avi, CPU+GPU+NPU variants, MAVLink telemetry overlay",
+      "prompt_file": "example-prompts/01-pymavlink-sim-all-devices.md",
+      "should_trigger": true,
+      "expectations": [
+        "docker-compose-pymavlink.yml with px4, mavlink-router, broker, dlstreamer-pipeline-server, metrics-manager services",
+        "config.json with three pipeline variants: uav_object_detection_cpu, uav_object_detection_gpu, uav_object_detection_npu",
+        "gvapython telemetry overlay with MavlinkReceiver thread parsing GLOBAL_POSITION_INT, VFR_HUD, GPS_RAW_INT",
+        "mavlink_pipeline_manager.py monitors HEARTBEAT MAV_MODE_FLAG_SAFETY_ARMED and calls REST API on state transition",
+        "DELETE uses /pipelines/{instance_id} (integer from POST response), NOT /pipelines/{name}/{id}",
+        "ultralytics==8.4.67 pinned in requirements.txt for model export"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "mavsdk-three-camera",
+      "description": "MAVSDK integration with nadir/forward/rear RTSP cameras, MQTT-triggered lifecycle",
+      "prompt_file": "example-prompts/02-mavsdk-three-camera.md",
+      "should_trigger": true,
+      "expectations": [
+        "docker-compose-uavsdk.yml with single DLSPS container, no broker/px4 services",
+        "config-uavsdk.json with nadir_camera_rtsp_cpu, forward_camera_rtsp_gpu, rear_camera_rtsp_npu pipelines using rtspsrc",
+        "uavsdk_pipeline_manager.py subscribes to MQTT uav/{id}/telemetry/status and parses armed boolean",
+        "ffprobe RTSP probe before starting each pipeline (wait_for_rtsp_stream with retries)",
+        "prerequisite note: uav-mission-compute-sdk must be running first",
+        "RTSP source URLs pointing to host.docker.internal:8554/uav-1/nadir, /forward, /rear"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "realsense-gpu",
+      "description": "Intel RealSense GPU pipeline, RTSP output, pymavlink mode",
+      "prompt_file": "example-prompts/03-realsense-gpu.md",
+      "should_trigger": true,
+      "expectations": [
+        "docker-compose-pymavlink.yml includes all pymavlink stack services",
+        "Pipeline GStreamer string uses v4l2src device=/dev/video0 for RealSense input",
+        "gvadetect uses device=GPU with model-instance-id=instgpu0 and ie-config GPU_THROUGHPUT_STREAMS=1",
+        "gvapython telemetry overlay mounted from gvapython/telemetry-overlay-pymavlink.py",
+        "RTSP output at rtsp://<host-ip>:8555/<rtsp-path>"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "cloud-only-negative",
+      "description": "Cloud-only Prometheus metrics dashboard without MAVLink — should NOT trigger this skill",
+      "prompt": "Set up a Prometheus and Grafana metrics dashboard for cloud server monitoring. No cameras, no MAVLink, no drone.",
+      "should_trigger": false,
+      "expectations": [
+        "Skill does not trigger — this is outside the UAV vision analytics scope"
+      ]
+    }
+  ]
+}

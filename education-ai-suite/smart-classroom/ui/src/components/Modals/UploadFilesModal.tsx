@@ -9,7 +9,8 @@ import {
   createSession,
   startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring
+  startPipelineMonitoring,
+  BACKEND_UNAVAILABLE_MESSAGE
 } from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
@@ -39,6 +40,7 @@ import { resetMediaValidation } from '../../redux/slices/mediaValidationSlice';
 import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
 import type { FeatureGuard } from '../../utils/featureGuards';
+import { collectPipelineErrors } from '../../utils/pipelineErrors';
 
 interface UploadFilesModalProps {
   isOpen: boolean;
@@ -63,16 +65,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
-  
+
   // Check if video_analytics feature is enabled
   const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
-  
+
   // Check if any audio-related features are enabled
-  const hasAudioFeatures = featureGuard.hasFeature('asr') || 
-                           featureGuard.hasFeature('summary') || 
-                           featureGuard.hasFeature('mindmap') || 
-                           featureGuard.hasFeature('topic_segmentation') || 
-                           featureGuard.hasFeature('report');
+  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
+    featureGuard.hasFeature('summary') ||
+    featureGuard.hasFeature('mindmap') ||
+    featureGuard.hasFeature('topic_segmentation') ||
+    featureGuard.hasFeature('report');
 
   const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 
@@ -132,7 +134,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
           setter(null);
           pathSetter?.('');
           const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
-          setError(`Please select only ${expectedTypes} files.`);
+          setError(t('uploadFiles.invalidFileType', { types: expectedTypes }));
         }
       } else {
         setter(null);
@@ -143,14 +145,43 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
     input.click();
   };
 
-  const startVideoAnalyticsWithSession = async (sessionId: string, pipelines: any[]) => {
+  /**
+   * The reason behind a thrown error, as shown to the user. The backend reports
+   * it in the response body (`detail` / `message`), which the API layer re-throws
+   * as the Error message. Returns '' when there is nothing usable to show.
+   */
+  const errorReason = (err: unknown): string => {
+    const detail = err instanceof Error ? err.message.trim() : typeof err === 'string' ? err.trim() : '';
+    return detail === BACKEND_UNAVAILABLE_MESSAGE ? t('uploadFiles.backendUnavailable') : detail;
+  };
+
+  // Failure of the whole upload flow: the backend reason if there is one,
+  // otherwise the generic retry prompt.
+  const describeError = (err: unknown): string => {
+    const reason = errorReason(err);
+    return reason
+      ? t('uploadFiles.processingFailedDetail', { detail: reason })
+      : t('uploadFiles.processingFailed');
+  };
+
+  /**
+   * Start the video pipelines, reporting both whether anything streams and why
+   * the rest did not — the endpoint reports per-pipeline failures with HTTP 200,
+   * so they have to be read out of the body (see utils/pipelineErrors).
+   */
+  const startVideoAnalyticsWithSession = async (
+    sessionId: string,
+    pipelines: any[]
+  ): Promise<{ started: boolean; errors: string[] }> => {
     if (pipelines.length === 0) {
       console.log('📹 No valid video pipelines found, skipping video analytics');
       dispatch(setVideoAnalyticsLoading(false));
       dispatch(setVideoAnalyticsActive(false));
       dispatch(setVideoStatus('no-config'));
-      return false;
+      return { started: false, errors: [] };
     }
+
+    const errors: string[] = [];
 
     try {
       console.log('🎬 Starting video analytics with session ID:', sessionId);
@@ -183,6 +214,8 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
         }
       });
 
+      errors.push(...collectPipelineErrors(videoResponse.results, t, t('uploadFiles.videoAnalyticsFailed')));
+
       if (hasSuccessfulStreams) {
         dispatch(setActiveStream('all'));
         dispatch(setVideoAnalyticsActive(true));
@@ -192,14 +225,15 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       }
 
       dispatch(setVideoAnalyticsLoading(false));
-      return hasSuccessfulStreams;
+      return { started: hasSuccessfulStreams, errors };
 
     } catch (videoError) {
       console.error('❌ Failed to start video analytics:', videoError);
       dispatch(setVideoAnalyticsLoading(false));
       dispatch(setVideoAnalyticsActive(false));
       dispatch(setVideoStatus('failed'));
-      return false;
+      errors.push(errorReason(videoError) || t('uploadFiles.videoAnalyticsFailed'));
+      return { started: false, errors };
     }
   };
 
@@ -208,17 +242,17 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
     const videoSuccess = hasVideo && videoStarted;
 
     if (audioSuccess && videoSuccess) {
-      return 'Transcription and video analytics started successfully.';
+      return t('uploadFiles.transcriptionAndVideoStarted');
     } else if (audioSuccess && !videoSuccess && hasVideo) {
-      return 'Transcription started successfully. Video analytics failed to start.';
+      return t('uploadFiles.transcriptionStartedVideoFailed');
     } else if (audioSuccess && !hasVideo) {
-      return 'Transcription started successfully.';
+      return t('uploadFiles.transcriptionStarted');
     } else if (!audioSuccess && videoSuccess) {
-      return 'Video analytics started successfully.';
+      return t('uploadFiles.videoAnalyticsStarted');
     } else if (!audioSuccess && !videoSuccess && hasVideo) {
-      return 'Failed to start video analytics.';
+      return t('uploadFiles.videoAnalyticsFailed');
     } else {
-      return 'No valid processing started.';
+      return t('uploadFiles.noProcessingStarted');
     }
   };
 
@@ -227,7 +261,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
     const hasVideoFiles = frontCameraPath !== null || rearCameraPath !== null || boardCameraPath !== null;
 
     if (!hasAudioFile && !hasVideoFiles) {
-      setError('At least one file (audio or video) is required.');
+      setError(t('uploadFiles.fileRequired'));
       return;
     }
 
@@ -235,7 +269,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
     // on the web it is reconstructed from the base directory, so require that only
     // for any selected video whose absolute path wasn't resolved.
     if (hasVideoFiles && videoMissingFullPath && !baseDirectory.trim()) {
-      setError('Base directory is required when video files are selected.');
+      setError(t('uploadFiles.baseDirectoryRequired'));
       return;
     }
 
@@ -243,7 +277,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       sessionStorage.setItem('baseDirectory', baseDirectory);
     }
 
-    setNotification('Starting processing...');
+    setNotification(t('uploadFiles.startingProcessing'));
     dispatch(resetFlow());  // Reset flow FIRST
     dispatch(resetTranscript());
     dispatch(resetSummary());
@@ -276,7 +310,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
     setError(null);
 
     try {
-      setNotification('Creating session...');
+      setNotification(t('uploadFiles.creatingSession'));
       const sessionResponse = await createSession();
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
@@ -356,7 +390,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
 
       const hasValidVideo = validPipelines.length > 0;
       console.log('🎯 Has valid video files:', hasValidVideo);
-      
+
       // Only process videos if video_analytics feature is enabled
       if (!hasVideoAnalyticsFeature && hasValidVideo) {
         console.warn('⚠️ Video files selected but video_analytics feature is disabled. Skipping video processing.');
@@ -395,8 +429,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       }
 
       let videoAnalyticsStarted = false;
+      let videoErrors: string[] = [];
       if (hasValidVideo && hasVideoAnalyticsFeature) {
-        videoAnalyticsStarted = await startVideoAnalyticsWithSession(sessionId, validPipelines);
+        ({ started: videoAnalyticsStarted, errors: videoErrors } =
+          await startVideoAnalyticsWithSession(sessionId, validPipelines));
         if (videoAnalyticsStarted) {
           console.log('✅ Video analytics started successfully');
         } else {
@@ -422,10 +458,18 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       });
 
       setLoading(false);
+
+      // Show the reasons and keep the modal open. Whatever did start
+      // (transcription, other pipelines) keeps running in the background.
+      if (videoErrors.length > 0) {
+        setError(t('errors.videoPipelineFailed', { details: videoErrors.join('\n') }));
+        return;
+      }
+
       onClose();
     } catch (err) {
       console.error('❌ Failed during processing:', err);
-      setError('Failed during processing. Please try again.');
+      setError(describeError(err));
       setNotification('');
       dispatch(processingFailed());
       setLoading(false);
@@ -451,7 +495,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
               />
             </div>
           )}
-          
+
           {/* Audio upload section - only show if audio features are enabled */}
           {hasAudioFeatures ? (
             <div className="modal-input-group modal-title fw-semibold">
@@ -473,10 +517,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
             </div>
           ) : (
             <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
-              {t('uploadFiles.audioFeaturesDisabled', 'Audio processing features are disabled. Audio uploads are not available.')}
+              {t('uploadFiles.audioFeaturesDisabled')}
             </div>
           )}
-          
+
           {/* Video upload sections - only show if video_analytics is enabled */}
           {hasVideoAnalyticsFeature ? (
             <>
@@ -539,7 +583,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
             </>
           ) : (
             <div className="modal-info-message" style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
-              {t('uploadFiles.videoAnalyticsDisabled', 'Video analytics feature is disabled. Only audio files can be uploaded.')}
+              {t('uploadFiles.videoAnalyticsDisabled')}
             </div>
           )}
           {error && <div className="error-message">{error}</div>}
