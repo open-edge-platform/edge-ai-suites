@@ -58,7 +58,28 @@ init: ## Create .env from template and auto-detect GPU/NPU device paths
 				echo "NPU_DEVICE=/dev/null" >> .env; \
 			fi; \
 		fi; \
-	fi
+		        RS_DEV=$$(v4l2-ctl --list-devices 2>/dev/null | \
+                        awk '/\(usb-/{usb=1;next} usb && /\/dev\/video/{print $$1} /^[^[:space:]]/{usb=0}' | \
+                        while IFS= read -r dev; do \
+                            v4l2-ctl -d "$$dev" --list-formats 2>/dev/null | grep -qiE 'MJPG|YUYV' \
+                                && echo "$$dev" && break; \
+                        done); \
+                if [ -n "$$RS_DEV" ]; then \
+                        echo "✅ USB camera detected: $$RS_DEV → /dev/video4"; \
+                        if grep -q "^REALSENSE_DEVICE=" .env; then \
+                                sed -i "s|^REALSENSE_DEVICE=.*|REALSENSE_DEVICE=$$RS_DEV|" .env; \
+                        else \
+                                echo "REALSENSE_DEVICE=$$RS_DEV" >> .env; \
+                        fi; \
+                else \
+                        echo "⚠  No USB camera found — REALSENSE_DEVICE=/dev/null (RealSense/camera pipelines disabled)."; \
+                        if grep -q "^REALSENSE_DEVICE=" .env; then \
+                                sed -i "s|^REALSENSE_DEVICE=.*|REALSENSE_DEVICE=/dev/null|" .env; \
+                        else \
+                                echo "REALSENSE_DEVICE=/dev/null" >> .env; \
+                        fi; \
+                fi; \
+        fi
 
 # ── Pre-flight check ────────────────────────────────────────────────────────
 
