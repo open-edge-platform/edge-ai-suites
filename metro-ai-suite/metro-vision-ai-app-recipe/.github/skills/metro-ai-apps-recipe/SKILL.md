@@ -1,19 +1,12 @@
 ---
 name: metro-ai-apps-recipe
 description: >-
-  Build a complete computer-vision analytics stack on Intel hardware with a
-  single Docker Compose deployment: DL Streamer Pipeline Server, live WebRTC
-  video (MediaMTX + Coturn), MQTT (Mosquitto), Node-RED, Grafana, and Nginx.
-  Detections flow DLSPS -> MQTT -> Node-RED -> Grafana while annotated video
-  streams over WebRTC. Use this skill when a user wants to stand up an
-  object-detection, classification, counting, or zone-alerting pipeline for any
-  vertical — smart city/ITS, retail, industrial, logistics, healthcare, or a
-  custom OpenVINO/ONNX model — where only the model, class filter, alert rule,
-  and dashboard change, plus an optional SceneScape multi-camera spatial-analysis
-  path. It also builds a lightweight demo/PoC single app (a DL Streamer pipeline
-  or a minimal OpenVINO inference script) when no full stack is needed. Not for
-  non-Intel or cloud-only deployments, Prometheus/OpenTelemetry metrics stacks,
-  or training and exporting models.
+  Stand up a complete, ready-to-run computer-vision analytics stack on Intel
+  hardware with one Docker Compose command — point it at your video sources and
+  an OpenVINO/ONNX model to get live annotated WebRTC video plus real-time
+  detection dashboards and alerts (object detection, classification, counting,
+  or zone/line-crossing) for any vertical, with no glue code. See "When to use
+  this skill" for the full component list, trigger conditions, and boundaries.
 license: Apache-2.0
 compatibility: >-
   Requires Docker + Docker Compose v2, host with Intel CPU (and optionally
@@ -29,18 +22,30 @@ compatibility: >-
 # Metro AI Apps Recipe — DLSPS + WebRTC + Mosquitto + Node-RED + Grafana + Nginx
 
 Build an end-to-end `{{OBJECT}}`-analytics stack on Intel hardware in
-`./{{STACK_DIR}}/` with Docker Compose. The **architecture is
-vertical-agnostic** — the same seven-container topology serves any
-DL Streamer / OpenVINO CV pipeline; only the invoking prompt's model,
-class filter, alert rule, dashboard, and topic names differ. It follows the
+`./{{STACK_DIR}}/` with Docker Compose. **Vertical-agnostic:** the same
+seven-container topology (Nginx, DLSPS, Mosquitto, Node-RED, Grafana, MediaMTX,
+Coturn) serves any DL Streamer / OpenVINO CV pipeline — only the model, class
+filter, alert rule, dashboard, and topic names differ. Follows the
 open-edge-platform
 [Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe)
-**MediaMTX + Coturn + WebRTC** path but streamlined (**no Prometheus, no
-OTel**). SceneScape is **off by default** — an **opt-in multi-camera
-spatial-analysis path** ([`references/SCENESCAPE.md`](references/SCENESCAPE.md)).
-Detection metadata flows DLSPS→MQTT→Node-RED→Grafana; video is decoupled (DLSPS
-overlays via `gvawatermark` and pushes each source to MediaMTX over WHIP,
-`ENABLE_WEBRTC=true`, per-source `peer-id`) — see architecture below.
+**MediaMTX + Coturn + WebRTC** path, streamlined (**no Prometheus/OTel**).
+SceneScape is **off by default** — opt-in multi-camera spatial analysis
+([`references/SCENESCAPE.md`](references/SCENESCAPE.md)). Detection metadata
+flows DLSPS→MQTT→Node-RED→Grafana; video is decoupled (DLSPS overlays via
+`gvawatermark`, pushes each source to MediaMTX over WHIP, `ENABLE_WEBRTC=true`,
+per-source `peer-id`) — see architecture below.
+
+## When to use this skill
+
+**Use when** building or deploying an object-detection, classification,
+object-counting, or zone/line-crossing alerting pipeline for any vertical —
+smart city/ITS, retail, industrial, logistics, healthcare, or a custom
+OpenVINO/ONNX model. Optionally adds a SceneScape multi-camera
+spatial-analysis path, or a lightweight demo/PoC single app (one DL Streamer
+pipeline or a minimal OpenVINO inference script) when no full stack is needed.
+
+**Not for:** non-Intel or cloud-only deployments, Prometheus/OpenTelemetry
+metrics stacks, or training/exporting models.
 
 ## Supported verticals & use-cases
 
@@ -62,14 +67,14 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 2. Ask **Question 0 (mode)** first. If **Demo/PoC**, branch to
    [Demo/PoC mode](#demopoc-mode) + load
    [`references/DEMO_POC.md`](references/DEMO_POC.md) — skip questions 1–7.
-   Otherwise (**Full-stack production**, the default) continue below.
+   Else (**Full-stack production**, default) continue.
 3. Ask the 7 questions in ONE batched message (defaults in brackets); accept
    `go`/`defaults`/empty. Question 7 selects the **SceneScape** path.
-4. Run parameter validation (see below). Refuse to proceed on any failure.
-5. Load reference file(s) on demand per component — **do not load all up
-   front**. Load [`references/SCENESCAPE.md`](references/SCENESCAPE.md) only
-   when `{{SCENESCAPE}}=yes`.
-6. Verify against the completion criteria before declaring success; record
+4. Run parameter validation (below); refuse to proceed on any failure.
+5. Load reference file(s) on demand per component — **not all up front**. Load
+   [`references/SCENESCAPE.md`](references/SCENESCAPE.md) only when
+   `{{SCENESCAPE}}=yes`.
+6. Verify against completion criteria before declaring success; record
    throughput/latency against the `benchmark.md` baselines.
 
 ## Reference files (load on demand)
@@ -147,15 +152,15 @@ Data: DLSPS→MQTT→Mosquitto→Node-RED→Grafana (mqtt datasource); DLSPS→W
 
 When Question 0 selects `demo`, **do not build the full stack** (no Compose
 topology, no MediaMTX/Coturn/Node-RED/Grafana/Nginx, no SceneScape). Produce a
-single lightweight app that proves a model runs on Intel hardware. Two
-sub-paths (ask which):
+single lightweight app proving a model runs on Intel hardware. Two sub-paths
+(ask which):
 
 - **DL Streamer app** — a simple DL Streamer / GStreamer pipeline; delegate to
   the `dlstreamer-coding-agent` skill.
 - **OpenVINO app** — a minimal Python script (load → `compile_model` → infer →
   post-process); no dedicated skill, follow the OpenVINO 2026 docs.
 
-Full guidance and the lightweight completion criteria live in
+Full guidance and lightweight completion criteria are in
 [`references/DEMO_POC.md`](references/DEMO_POC.md) — load only on this branch;
 production criteria (1–11) do **not** apply in demo mode.
 
