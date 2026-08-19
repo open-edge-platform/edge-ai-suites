@@ -144,6 +144,13 @@ For `X in 1..{{NUM_SOURCES}}` POST to
   }
 }
 ```
+- **`host`/`port` in `destination.metadata` are REQUIRED (verified 2026.1.0).**
+  The per-request MQTT publisher does NOT read the container's `MQTT_HOST`/
+  `MQTT_PORT` env — with them omitted it silently defaults to `localhost:1883`
+  inside the DLSPS container, so detections never reach the `broker` service and
+  every downstream MQTT check times out with zero errors in the logs. Always put
+  `"host":"broker","port":1883` in the launch body (and in the watchdog respawn
+  body). The `MQTT_HOST=broker` env still matters for other paths — set both.
 - The `frame` block makes DLSPS WHIP-publish the annotated stream to
   MediaMTX under path `= peer-id`. Grafana's iframe reads it back from
   `/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_X/` (WHEP). Keep `peer-id`
@@ -152,8 +159,12 @@ For `X in 1..{{NUM_SOURCES}}` POST to
   variant per device flag.
 - Use `curl -k --noproxy '*'`. Poll `GET /api/pipelines/status` until no
   instance is `QUEUED`.
-- With `APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true`, MQTT topic becomes
-  `{{DETECTIONS_TOPIC_PREFIX}}_X/{{PIPELINE_NAME}}` (or `_gpu`/`_npu`).
+- With `APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true`, MQTT topic *usually*
+  becomes `{{DETECTIONS_TOPIC_PREFIX}}_X/{{PIPELINE_NAME}}` (or `_gpu`/`_npu`),
+  but the suffix is NOT reliably applied — bare `{{DETECTIONS_TOPIC_PREFIX}}_X`
+  (no `/variant`) has been observed for the same build. Consumers/tests MUST
+  subscribe to `{{DETECTIONS_TOPIC_PREFIX}}_X/#` (the multi-level wildcard also
+  matches the bare parent level) rather than assuming the exact suffix.
 
 ## File-source watchdog (required when `source.uri` is `file://`)
 
@@ -180,23 +191,24 @@ Ship `sample_watchdog.sh`: started at end of `sample_start.sh` (nohup, PID
 ```sh
 #!/bin/bash
 set -euo pipefail
-cd "$(dirname "$0")"; source .env
+cd "$(dirname "$0")"; ENVF=.env; . "./$ENVF"
 HOST="${HOST_IP:-localhost}"; DEVICE="${1:-cpu}"
 case "$DEVICE" in cpu) PIPE="{{PIPELINE_NAME}}";; gpu) PIPE="{{PIPELINE_NAME}}_gpu";; npu) PIPE="{{PIPELINE_NAME}}_npu";; *) exit 1;; esac
 BASE="https://${HOST}/api/pipelines/user_defined_pipelines/${PIPE}"
 declare -A HANDLED
 trap 'exit 0' TERM INT
+CACERT=src/nginx/ssl/server.crt
 while :; do
-  status=$(curl --noproxy '*' -sk "https://${HOST}/api/pipelines/status" || echo '[]')
-  finished=$(echo "$status" | python3 -c 'import json,sys;[print(p["id"]) for p in json.load(sys.stdin) if p.get("state") in ("COMPLETED","ABORTED","ERROR")]')
+  status=$(curl --noproxy '*' -s --cacert "$CACERT" "https://${HOST}/api/pipelines/status" || echo '[]')
+  finished=$(python3 <<<"$status" -c 'import json,sys;[print(p["id"]) for p in json.load(sys.stdin) if p.get("state") in ("COMPLETED","ABORTED","ERROR")]')
   for id in $finished; do
     [ -n "${HANDLED[$id]:-}" ] && continue
     HANDLED[$id]=1
-    detail=$(curl --noproxy '*' -sk "https://${HOST}/api/pipelines/${id}")
-    idx=$(echo "$detail" | python3 -c 'import json,sys,re; d=json.load(sys.stdin); req=(d.get("params") or {}).get("request") or {}; t=(((req.get("destination") or {}).get("metadata") or {})).get("topic",""); m=re.match(r"{{DETECTIONS_TOPIC_PREFIX}}_(\d+)",t); print(m.group(1)) if m else None')
+    detail=$(curl --noproxy '*' -s --cacert "$CACERT" "https://${HOST}/api/pipelines/${id}")
+    idx=$(python3 <<<"$detail" -c 'import json,sys,re; d=json.load(sys.stdin); req=(d.get("params") or {}).get("request") or {}; t=(((req.get("destination") or {}).get("metadata") or {})).get("topic",""); m=re.match(r"{{DETECTIONS_TOPIC_PREFIX}}_(\d+)",t); print(m.group(1)) if m else None')
     [ -z "$idx" ] && continue
-    curl --noproxy '*' -sk -X DELETE "https://${HOST}/api/pipelines/${id}" >/dev/null || true
-    curl --noproxy '*' -sk -X POST -H 'Content-Type: application/json' \
+    curl --noproxy '*' -s --cacert "$CACERT" -X DELETE "https://${HOST}/api/pipelines/${id}" >/dev/null || true
+    curl --noproxy '*' -s --cacert "$CACERT" -X POST -H 'Content-Type: application/json' \
       -d '{"source":{"uri":"file:///home/pipeline-server/videos/new_video_'"$idx"'.mp4","type":"uri"},"destination":{"metadata":{"type":"mqtt","topic":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'","publish_frame":false},"frame":{"type":"webrtc","peer-id":"{{DETECTIONS_TOPIC_PREFIX}}_'"$idx"'"}}}' \
       "$BASE" >/dev/null || true
   done

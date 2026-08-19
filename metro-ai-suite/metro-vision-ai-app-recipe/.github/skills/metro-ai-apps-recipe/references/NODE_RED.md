@@ -27,18 +27,39 @@ if (!m) return null;                        // drops own stats/alerts echoes
 const sourceId = m[1];
 ```
 
+Set the `mqtt in` node's **`datatype: "auto"`** (not `json`): the same
+node also receives the scalar `stats/*` echoes, and a `json` datatype
+throws a parse error on those plain numbers and drops the flow. `auto`
+delivers a Buffer/string that the function coerces (step 0 below).
+
 ## Flow shape (`count>N in Ts`)
 
 Implemented as function node for portability.
 
-1. Parse payload. **DLSPS 2026.1.0 nests detections at
-   `msg.payload.metadata.gva_meta[]`**, not `.objects[]`. Probe:
+0. **Coerce the payload first.** The `mqtt in` node uses `datatype: "auto"`
+   (required — see the wildcard note above), which delivers the detection
+   payload as a **Buffer or string**, NOT a parsed object. Without this
+   step `msg.payload.metadata` is `undefined` and every count is 0:
    ```js
-   const meta = msg.payload.metadata || {};
-   const dets = meta.gva_meta || meta.objects || msg.payload.objects || [];
+   let p = msg.payload;
+   if (Buffer.isBuffer(p)) p = p.toString();
+   if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) { return null; } }
    ```
-2. Filter by `label_id ∈ {{CLASS_FILTER_IDS}}` (or labelless — see
-   `{{LABEL_RULE_NOTE}}`).
+1. Parse payload. **DLSPS 2026.1.0 nests detections at
+   `p.metadata.gva_meta[]`**, not `.objects[]`. Probe:
+   ```js
+   const meta = p.metadata || {};
+   const dets = meta.gva_meta || meta.objects || p.objects || [];
+   ```
+2. **Per-detection, the class lives at `det.tensor[0].label_id` /
+   `det.tensor[0].label`** — NOT `det.label_id` or `det.detection.label_id`
+   (those are always `undefined`, so filtering silently drops everything).
+   Filter by `tensor[0].label_id ∈ {{CLASS_FILTER_IDS}}` OR
+   `tensor[0].label === '{{OBJECT}}'` (labelless — see `{{LABEL_RULE_NOTE}}`):
+   ```js
+   const t = (det.tensor && det.tensor[0]) || {};
+   if (t.label === '{{OBJECT}}' || {{CLASS_FILTER_IDS}}.indexOf(t.label_id) !== -1) count++;
+   ```
 3. `sourceId = msg.topic.split('_')[1].split('/')[0]`.
 4. Sliding window per source in `flow.context()`; drop entries older than T.
 5. `windowMax = max(count over window)` per source.
