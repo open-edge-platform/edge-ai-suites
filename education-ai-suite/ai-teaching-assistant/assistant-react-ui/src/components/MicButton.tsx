@@ -13,7 +13,7 @@ export default function MicButton({ recording, inputLevel = 0, disabled, onStart
       type="button"
       disabled={disabled}
       onClick={recording ? onStop : onStart}
-      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-md transition disabled:opacity-40 ${
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-md transition disabled:opacity-40 ${
         recording
           ? "animate-pulse bg-black hover:bg-black/90"
           : "bg-intel-blue hover:bg-intel-dark"

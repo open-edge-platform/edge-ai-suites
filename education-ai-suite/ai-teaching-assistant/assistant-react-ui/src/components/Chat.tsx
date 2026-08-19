@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import type { ChatMessage } from "../types";
 
 interface Props {
@@ -6,9 +6,10 @@ interface Props {
   partialUser?: string;
   partialAssistant?: string;
   fileName?: string;
+  footer?: ReactNode;
 }
 
-export default function Chat({ messages, partialUser, partialAssistant, fileName }: Props) {
+export default function Chat({ messages, partialUser, partialAssistant, fileName, footer }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,21 +20,24 @@ export default function Chat({ messages, partialUser, partialAssistant, fileName
   const readyLabel = fileName ? `"${fileName}"` : "the uploaded file";
 
   return (
-    <div className="flex h-full flex-col gap-3 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-md">
-      {isEmpty && (
-        <div className="m-auto text-sm italic text-black/60">
-          {fileName
-            ? `Tap the mic and ask a question about ${readyLabel}.`
-            : "Upload a file to start asking questions about it."}
-        </div>
-      )}
+    <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-md">
+      <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
+        {isEmpty && (
+          <div className="m-auto text-sm italic text-black/60">
+            {fileName
+              ? `Tap the mic and ask a question about ${readyLabel}.`
+              : "Upload a file to start asking questions about it."}
+          </div>
+        )}
 
-      {messages.map((m, i) => (
-        <Bubble key={i} role={m.role} text={m.text} />
-      ))}
-      {partialUser && <Bubble role="user" text={partialUser} partial />}
-      {partialAssistant && <Bubble role="assistant" text={partialAssistant} partial />}
-      <div ref={endRef} />
+        {messages.map((m, i) => (
+          <Bubble key={i} role={m.role} text={m.text} />
+        ))}
+        {partialUser && <Bubble role="user" text={partialUser} partial />}
+        {partialAssistant && <Bubble role="assistant" text={partialAssistant} partial />}
+        <div ref={endRef} />
+      </div>
+      {footer && <div className="mt-3">{footer}</div>}
     </div>
   );
 }

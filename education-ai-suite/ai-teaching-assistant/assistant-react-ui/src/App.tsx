@@ -153,6 +153,17 @@ export default function App() {
                 partialUser={partialUser}
                 partialAssistant={partialAssistant}
                 fileName={files[0]?.name ?? (ingestedName || undefined)}
+                footer={
+                  <DualVisualizer
+                    userAnalyser={micAnalyser}
+                    userActive={recording}
+                    assistantAnalyser={responseAnalyser}
+                    assistantActive={responseActive}
+                    userColor="#0068B5"
+                    assistantColor="#16A34A"
+                    compact
+                  />
+                }
               />
             </div>
           </div>
@@ -175,18 +186,6 @@ export default function App() {
                     disabled={recording || wakewordListening || (wakewordEnabled && !recording)}
                   />
                 }
-              />
-            </div>
-
-            <div className="mt-2">
-              <DualVisualizer
-                userAnalyser={micAnalyser}
-                userActive={recording}
-                assistantAnalyser={responseAnalyser}
-                assistantActive={responseActive}
-                userColor="#0068B5"
-                assistantColor="#16A34A"
-                compact
               />
             </div>
           </div>
