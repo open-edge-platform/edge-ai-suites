@@ -68,14 +68,14 @@ retarget a different workspace/sequence; nothing else needs to change.
 ## Validate without hardware: NTU VIRAL dataset replay
 
 No robot or sensor is required to verify the build and measure accuracy: the
-Ouster OS1 + camera + IMU `eee_03` sequence from the public
+Ouster OS1 + camera + IMU `eee_01` sequence from the public
 [NTU VIRAL dataset](https://ntu-aris.github.io/ntu_viral_dataset/)
 (Nguyen et al., *NTU VIRAL: A Visual-Inertial-Ranging-Lidar Dataset, From an
 Aerial Vehicle Viewpoint*, IJRR 2022) is replayed through the same
 `fast_livo2` binary and compared against surveyed ground truth.
 
 ```bash
-./fetch_ntu_viral.sh          # download eee_03 bag + convert to ROS2 (auto; manual fallback for unlisted sequences)
+./fetch_ntu_viral.sh          # download eee_01 bag + convert to ROS2 (auto; manual fallback for unlisted sequences)
 ./run_ntu_viral.sh            # launch fast_livo2 + play back the bag, records the trajectory
 ./evaluate_rmse.sh            # evo_ape RMSE vs. ground truth, printed next to the documented baseline
 
@@ -87,7 +87,7 @@ Aerial Vehicle Viewpoint*, IJRR 2022) is replayed through the same
 comparison already checked into
 [FAST-LIVO2/Log/result/ntu_viral/](https://github.com/hku-mars/FAST-LIVO2/tree/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral), whose
 `README.md` documents reference RMSE for all nine sequences from prior runs.
-For `eee_03`, the documented baseline is **2.61 cm**; the script passes when
+For `eee_01`, the documented baseline is **2.71 cm**; the script passes when
 the freshly measured RMSE does not exceed that baseline by more than
 `RMSE_TOLERANCE_PCT` (20% by default, see
 [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)) — not a specific
@@ -269,19 +269,19 @@ point `UNDERLAY_SETUP` in [scripts/env.sh](https://github.com/open-edge-platform
 install space, or let `scripts/build.sh` build them from scratch instead of
 doing so by hand here.
 
-### 4. Fetch and convert the NTU VIRAL sequence (`eee_03`)
+### 4. Fetch and convert the NTU VIRAL sequence (`eee_01`)
 
 The ROS1 `.bag` is served straight from NTU's Dataverse REST API (file id
-`68132` for `eee_03`), no login required; ground truth comes from the
+`68133` for `eee_01`), no login required; ground truth comes from the
 `viral_eval` GitHub repo:
 
 ```bash
 mkdir -p ~/ntu_viral_dataset && cd ~/ntu_viral_dataset
-curl -fL -o eee_03.zip https://researchdata.ntu.edu.sg/api/access/datafile/68132
-unzip -p eee_03.zip "$(unzip -Z1 eee_03.zip | grep -E '\.bag$' | head -1)" > eee_03.bag
-rm -f eee_03.zip
-curl -fL -o leica_pose_eee_03.csv \
-  https://raw.githubusercontent.com/ntu-aris/viral_eval/master/result_eee_03/leica_pose.csv
+curl -fL -o eee_01.zip https://researchdata.ntu.edu.sg/api/access/datafile/68133
+unzip -p eee_01.zip "$(unzip -Z1 eee_01.zip | grep -E '\.bag$' | head -1)" > eee_01.bag
+rm -f eee_01.zip
+curl -fL -o leica_pose_eee_01.csv \
+  https://raw.githubusercontent.com/ntu-aris/viral_eval/master/result_eee_01/leica_pose.csv
 cd -
 ```
 
@@ -291,9 +291,9 @@ pip if missing):
 ```bash
 python3 -c "import rosbags" 2>/dev/null || pip install --user --break-system-packages rosbags
 PATH="${HOME}/.local/bin:${PATH}" rosbags-convert \
-  --src ~/ntu_viral_dataset/eee_03.bag --dst ~/ntu_viral_dataset/eee_03
+  --src ~/ntu_viral_dataset/eee_01.bag --dst ~/ntu_viral_dataset/eee_01
 sed -i 's#type: livox_ros_driver/msg/CustomMsg#type: livox_ros_driver2/msg/CustomMsg#' \
-  ~/ntu_viral_dataset/eee_03/metadata.yaml
+  ~/ntu_viral_dataset/eee_01/metadata.yaml
 ```
 
 (Other sequences' Dataverse file ids are listed in
@@ -302,14 +302,10 @@ sed -i 's#type: livox_ros_driver/msg/CustomMsg#type: livox_ros_driver2/msg/Custo
 
 ### 5. Run `fast_livo2` against the bag
 
-`NTU_VIRAL.yaml` defaults its `evo/seq_name` param (which controls the
-output trajectory filename, `Log/result/<seq_name>.txt`) to `eee_01`; point
-it at `eee_03` via a scratch copy instead of editing the tracked file:
-
-```bash
-sed 's/seq_name: "eee_01"/seq_name: "eee_03"/' \
-  FAST-LIVO2/config/NTU_VIRAL.yaml > /tmp/ntu_viral_eee_03.yaml
-```
+`NTU_VIRAL.yaml`'s tracked `evo/seq_name` param (which controls the output
+trajectory filename, `Log/result/<seq_name>.txt`) already defaults to
+`eee_01`, so no scratch-copy/`sed` step is needed — run directly against the
+checked-in config.
 
 Two terminals. **Terminal A — the algorithm:**
 
@@ -321,7 +317,7 @@ export ROS_DOMAIN_ID=199
 
 ros2 launch fast_livo2 mapping_ouster_ntu.launch.py \
   use_rviz:=false \
-  avia_params_file:=/tmp/ntu_viral_eee_03.yaml
+  avia_params_file:=FAST-LIVO2/config/NTU_VIRAL.yaml
 ```
 
 **Terminal B — bag playback** (start once Terminal A is up and printing):
@@ -331,12 +327,12 @@ source /opt/ros/jazzy/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 export ROS_DOMAIN_ID=199
 
-ros2 bag play ~/ntu_viral_dataset/eee_03
+ros2 bag play ~/ntu_viral_dataset/eee_01
 ```
 
 Once playback finishes, stop `fast_livo2` (`Ctrl-C` in Terminal A — a clean
 SIGTERM, not `kill -9`, so it flushes the trajectory file) and check
-`FAST-LIVO2/Log/result/eee_03.txt` was written. The core-pinning/SCHED_FIFO
+`FAST-LIVO2/Log/result/eee_01.txt` was written. The core-pinning/SCHED_FIFO
 wrapping `run_ntu_viral.sh` applies on PTL (taskset/chrt) is an optional
 performance extra, not required for a correctness repro — see "Reference:
 running on Intel PTL" above if you want that too.
@@ -424,7 +420,7 @@ launching it). When done: stop `fast_livo2`/`ros2 bag play`, then
 
 ### 6. Evaluate RMSE
 
-The estimated trajectory (`FAST-LIVO2/Log/result/eee_03.txt`) needs
+The estimated trajectory (`FAST-LIVO2/Log/result/eee_01.txt`) needs
 converting to the surveyed PRISM reflector frame before comparing against
 ground truth — [evaluate_viral.py](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral/evaluate_viral.py),
 already checked into the repo, provides both conversions:
@@ -434,20 +430,20 @@ python3 - <<'PY'
 import sys
 sys.path.insert(0, "FAST-LIVO2/Log/result/ntu_viral")
 from evaluate_viral import convert_slam_to_prism, convert_leica_to_tum
-convert_slam_to_prism("FAST-LIVO2/Log/result/eee_03.txt",
-                       "FAST-LIVO2/Log/result/ntu_viral/eee_03_prism_repro.txt")
-convert_leica_to_tum("$HOME/ntu_viral_dataset/leica_pose_eee_03.csv",
-                      "FAST-LIVO2/Log/result/ntu_viral/eee_03_gt_repro.txt")
+convert_slam_to_prism("FAST-LIVO2/Log/result/eee_01.txt",
+                       "FAST-LIVO2/Log/result/ntu_viral/eee_01_prism_repro.txt")
+convert_leica_to_tum("$HOME/ntu_viral_dataset/leica_pose_eee_01.csv",
+                      "FAST-LIVO2/Log/result/ntu_viral/eee_01_gt_repro.txt")
 PY
 
 pip install --user --break-system-packages evo   # if not already installed
 PATH="${HOME}/.local/bin:${PATH}" evo_ape tum \
-  FAST-LIVO2/Log/result/ntu_viral/eee_03_gt_repro.txt \
-  FAST-LIVO2/Log/result/ntu_viral/eee_03_prism_repro.txt -a
+  FAST-LIVO2/Log/result/ntu_viral/eee_01_gt_repro.txt \
+  FAST-LIVO2/Log/result/ntu_viral/eee_01_prism_repro.txt -a
 ```
 
 `evo_ape`'s summary table reports RMSE in meters; multiply by 100 to compare
-against the documented `eee_03` baseline of **2.61 cm**
+against the documented `eee_01` baseline of **2.71 cm**
 ([FAST-LIVO2/Log/result/ntu_viral/README.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral/README.md)).
 A fresh measurement that does not exceed the baseline by more than
 `RMSE_TOLERANCE_PCT` (20% by default,
