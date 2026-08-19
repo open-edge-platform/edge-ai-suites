@@ -88,7 +88,7 @@ Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -129,7 +129,7 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-> **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. 
+> **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding.
 For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
 
 ### Step 3: Configure External IP and Proxy Settings

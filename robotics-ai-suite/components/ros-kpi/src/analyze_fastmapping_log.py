@@ -32,6 +32,10 @@ import sys
 from pathlib import Path
 from statistics import mean, pstdev
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ── Log parsing patterns ───────────────────────────────────────────────────────
 
@@ -252,13 +256,10 @@ def _create_kpi(kpi_path: Path, session_dir: Path) -> None:
     kpi = {
         'schema_version': 'level1_v1',
         'throughput_hz': None, 'mean_latency_ms': None,
+        'min_latency_ms': None, 'max_latency_ms': None,
         'max_jitter_ms': None, 'min_jitter_ms': None,
         'mean_jitter_ms': None, 'jitter_stdev_ms': None,
         'cpu_mean_pct': None, 'cpu_max_pct': None,
-        'thermal': {
-            'cpu_temp_c': None, 'gpu_temp_c': None, 'npu_temp_c': None,
-            'cpu_throttled': None, 'gpu_throttled': None, 'npu_throttled': None,
-        },
         'per_node': {}, 'pairs': [],
         'metadata': {
             'name': session_dir.name,
@@ -273,7 +274,7 @@ def _create_kpi(kpi_path: Path, session_dir: Path) -> None:
         },
     }
     kpi_path.write_text(json.dumps(kpi, indent=2))
-    print(f'  kpi.json created   → {kpi_path}')
+    logger.info(f'  kpi.json created   → {kpi_path}')
 
 
 def _patch_kpi(kpi_path: Path, parsed: dict, kpis: dict,
@@ -335,7 +336,7 @@ def _patch_kpi(kpi_path: Path, parsed: dict, kpis: dict,
     kpi['pairs'].append(pair)
 
     kpi_path.write_text(json.dumps(kpi, indent=2))
-    print(f'  kpi.json patched   → {kpi_path}')
+    logger.info(f'  kpi.json patched   → {kpi_path}')
 
 
 def _write_procedures(session_dir: Path, parsed: dict, kpis: dict) -> None:
@@ -368,35 +369,33 @@ def _write_procedures(session_dir: Path, parsed: dict, kpis: dict) -> None:
     }
     out_path = session_dir / 'fastmapping_procedures.json'
     out_path.write_text(json.dumps(out, indent=2))
-    print(f'  procedures written → {out_path}')
+    logger.info(f'  procedures written → {out_path}')
 
 
 def _print_summary(parsed: dict, kpis: dict) -> None:
     """Print a human-readable summary to stdout."""
-    print('')
-    print('  ┌─ fast_mapping_node Performance ─────────────────────┐')
-    print(f'  │  Frames processed : {kpis["num_samples"]:>5}  '
+    logger.info('\n  ┌─ fast_mapping_node Performance ─────────────────────┐')
+    logger.info(f'  │  Frames processed : {kpis["num_samples"]:>5}  '
           f'({kpis["throughput_hz"]:.1f} Hz overall)')
-    print(f'  │  Elapsed          : {parsed["elapsed_s"]:.2f} s')
-    print('  ├─ Per-procedure (avg / frame) ────────────────────────┤')
+    logger.info(f'  │  Elapsed          : {parsed["elapsed_s"]:.2f} s')
+    logger.info('  ├─ Per-procedure (avg / frame) ────────────────────────┤')
     if parsed['has_proc_table']:
         for p in parsed['procedures']:
             if p['avg_ms'] >= 0.01:
-                print(f'  │  {p["name"]:<24} {p["avg_ms"]:>8.2f} ms  ({p["pct"]:.1f}%)')
+                logger.info(f'  │  {p["name"]:<24} {p["avg_ms"]:>8.2f} ms  ({p["pct"]:.1f}%)')
             else:
-                print(f'  │  {p["name"]:<24} {p["avg_ms"]*1000:>8.2f} µs  ({p["pct"]:.2f}%)')
+                logger.info(f'  │  {p["name"]:<24} {p["avg_ms"]*1000:>8.2f} µs  ({p["pct"]:.2f}%)')
         total = parsed['total_proc_ms']
-        print(f'  │  {"Total":<24} {total:>8.2f} ms')
+        logger.info(f'  │  {"Total":<24} {total:>8.2f} ms')
     else:
-        print('  │  (procedure table not available — window-based fallback)')
-    print('  ├─ Derived KPIs ────────────────────────────────────────┤')
-    print(f'  │  Compute latency  : {kpis["compute_latency_ms"]:>7.2f} ms'
+        logger.info('  │  (procedure table not available — window-based fallback)')
+    logger.info('  ├─ Derived KPIs ────────────────────────────────────────┤')
+    logger.info(f'  │  Compute latency  : {kpis["compute_latency_ms"]:>7.2f} ms'
           f'  (excl. wait-for-frame)')
-    print(f'  │  Mean jitter      : {kpis["mean_jitter_ms"]:>7.2f} ms'
+    logger.info(f'  │  Mean jitter      : {kpis["mean_jitter_ms"]:>7.2f} ms'
           f'  (window-to-window)')
-    print(f'  │  Max jitter       : {kpis["max_jitter_ms"]:>7.2f} ms')
-    print('  └──────────────────────────────────────────────────────┘')
-    print('')
+    logger.info(f'  │  Max jitter       : {kpis["max_jitter_ms"]:>7.2f} ms')
+    logger.info('  └──────────────────────────────────────────────────────┘\n')
 
 
 def main() -> int:
@@ -474,19 +473,18 @@ def main() -> int:
         return 1
 
     if not log_path.exists():
-        print(f'ERROR: log file not found: {log_path}', file=sys.stderr)
+        logger.error(f'log file not found: {log_path}')
         return 1
 
     parsed = parse_log(log_path)
 
     if not parsed['windows']:
-        print('ERROR: No frame windows found in log — did the node receive any data?',
-              file=sys.stderr)
+        logger.error('No frame windows found in log — did the node receive any data?')
         return 1
 
     if not parsed['has_proc_table']:
-        print('  ⚠ Procedure table not captured (node was not shut down gracefully).')
-        print('    KPIs derived from window stats only — compute latency is window-average.')
+        logger.info('  ⚠ Procedure table not captured (node was not shut down gracefully).')
+        logger.info('    KPIs derived from window stats only — compute latency is window-average.')
 
     kpis = _derive_kpis(parsed)
     _print_summary(parsed, kpis)

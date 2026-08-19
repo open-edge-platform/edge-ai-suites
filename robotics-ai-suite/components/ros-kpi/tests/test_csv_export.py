@@ -18,10 +18,10 @@ import sys
 import tempfile
 from pathlib import Path
 
+from fixtures import LEVEL1_KPI
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC  = ROOT / 'src'
-
-from fixtures import LEVEL1_KPI
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  Helpers

@@ -45,7 +45,7 @@ The **first startup takes about 30 minutes** while the weights are downloaded an
 Clone the repository and change to `agentic-smart-community`:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b release-2026.2.0
 cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
 ```
 
@@ -256,7 +256,7 @@ MCP Server subscriptions can deliver alert updates directly to connected clients
   Configure the system to push alerts from cam_test to this agent in real time.
   ```
 
-This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
+This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
 #### Other MCP clients
 

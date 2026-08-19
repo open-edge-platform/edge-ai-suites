@@ -1,21 +1,39 @@
 # UAV Vision Analytics Application
 
-AI-powered UAV object detection with live telemetry overlay, built on Intel DL Streamer Pipeline Server.
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/uav-vision-aalytics">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/uav-vision-aalytics/README.md">
+     Readme
+  </a>
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/uav-vision-analytics.zip">
+     Download Package
+  </a>
+</div>
+hide_directive-->
 
-This application processes video from a UAV-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference to detect objects across ten object classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) directly on the video stream. The annotated output is served as an RTSP stream, consumable by any capable client such as QGroundControl (QGC) or VLC or ffplay.
+UAV Vision Analytics demonstrats how AI-based object detection can be integrated with UAV
+flight controller telemetry on a companion compute platform.
 
-# Overview
+Based on DL Streamer Pipeline Server, the application processes video from a UAV-mounted
+camera or a simulated video file, detects objects across ten object classes, and outputs an
+RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). The stream is
+consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
+It runs the YOLOv8n-VisDrone, a model designed to recognize imagery typical for drone video.
 
-UAV Vision Analytics integrates AI-based object detection with UAV flight controller telemetry on a companion compute platform. Inference results and telemetry are correlated in near real-time and rendered as an on-screen overlay, producing an annotated RTSP stream. The application supports two deployment modes depending on whether an external SDK is available.
 
-![UAV Vision Analytics Application Architecture](./_assets/uav-vision-analytics-architecture.svg)
+The application supports two deployment modes depending on whether an external SDK is available.
 
-| Component                                          | Role                                                                                                    |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| RTSP / Video File / Live Camera Streams            | Input video source — UAV camera feed, a recorded video file, or a simulated RTSP stream                 |
-| MAVLink UAV Telemetry                              | Telemetry input — GPS, altitude, speed, and heading received from the flight controller over UDP         |
-| DL Streamer Pipeline Server (CPU / GPU / NPU)      | Core inference engine — runs YOLOv8n-VisDrone object detection and renders the telemetry overlay on each frame |
-| RTSP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP |
+![  uav vision analytics application architecture](./_assets/FedAero-uav-vision-architecture.drawio.svg)
+
+| Component                                      | Role                                                                                                    |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| RTSP / Video File / Live Camera Streams        | Input video source — UAV camera feed, a recorded video file, or a simulated RTSP stream                 |
+| MAVLink UAV Telemetry                          | Telemetry input — GPS, altitude, speed, and heading received from the flight controller over UDP        |
+| DL Streamer Pipeline Server (CPU / GPU / NPU)  | Core inference engine — runs YOLOv8n-VisDrone object detection and renders the telemetry overlay on each frame |
+| RTSP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP   |
 
 
 ## Deployment Modes
@@ -34,33 +52,47 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 
 [Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md)
 
-# Documentation
 
-- [Get Started — Standalone Mode](./get-started/get-started-standalone.md)
-- [Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md)
-- [Release Notes](./release-notes.md)
+To learn more about the application and how to use it, see the
+[User Guides](./how-to-guides.md).
 
-# How-to Guides
+## AI Agent Skills
 
-- [AI Model](./how-to-guides/model.md) — YOLOv8n-VisDrone model details, `make model` usage
-- [Benchmark](./how-to-guides/benchmark.md) — Measure stream density and hardware utilization using `calc_stream_density.sh`
-- [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for model setup, stack management, and pipeline control
-- [Intel RealSense](./how-to-guides/realsense-guide.md) — Connect and stream from an Intel RealSense depth camera as the video source
-- [QGroundControl](./how-to-guides/qgroundcontrol.md) — Configure QGroundControl to receive the UAV Vision Analytics video stream
-- [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and fixes for deployment, inference, and streaming problems
+This application supports AI agent skills for GitHub Copilot and compatible coding agents.
+Skills cover operational tasks (running pipelines, benchmarking, troubleshooting) and
+application creation (scaffolding new pymavlink or UAVSDK stacks).
 
-# AI Agent Skills
+## Intended and Responsible Use
 
-This application supports AI agent skills for GitHub Copilot and compatible coding agents. Skills cover operational tasks (running pipelines, benchmarking, troubleshooting) and application creation (scaffolding new pymavlink or UAVSDK stacks).
+### Intended Use
 
-# Intended and Responsible Use
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object
+detection and live telemetry overlay. It is provided for reference and demonstration purposes
+only, and is not intended to be deployed as-is or for alternate use cases or applications.
 
-## Intended Use
+### Responsible Use
 
-This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only, and is not intended to be deployed as-is or for alternate use cases or applications.
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses.
+See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html).
+Intel's products and software are intended only to be used in applications that do not cause
+or contribute to a violation of an internationally recognized human right.
 
-## Responsible Use
+If you or anyone on your team becomes aware of instances of potentially inappropriate use,
+regardless of severity, notify
+[responsible-ai@intel.com](mailto:responsible-ai@intel.com) or use the
+[Ethics Reporting Portal](https://www.intel.com/content/www/us/en/corporate-responsibility/ethics-and-compliance.html)
+immediately.
 
-Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See [Intel's Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
 
-If you or anyone on your team becomes aware of instances of potentially inappropriate use, regardless of severity, notify [responsible-ai@intel.com](mailto:responsible-ai@intel.com) or use the [Ethics Reporting Portal](https://www.intel.com/content/www/us/en/corporate-responsibility/ethics-and-compliance.html) immediately.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Get Started - Standalone <./get-started/get-started-standalone.md>
+Get Started - SDK <./get-started/get-started-uavsdk.md>
+User Guides <./how-to-guides.md>
+System Requirements <./get-started/system-requirements.md>
+Release Notes <./release-notes.md>
+:::
+hide_directive-->

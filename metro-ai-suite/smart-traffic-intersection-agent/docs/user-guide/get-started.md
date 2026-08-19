@@ -36,7 +36,7 @@ Traffic Intersection Agent.
 ### 1. Clone the Suite
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
+If you want to clone a specific release branch, replace `release-2026.2.0` with the desired tag.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash

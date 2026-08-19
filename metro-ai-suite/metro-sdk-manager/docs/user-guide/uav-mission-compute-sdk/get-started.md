@@ -18,7 +18,7 @@ Upon completion of this guide, you will be able to:
 
 Verify that your development environment meets the following specifications:
 
-- Operating System: Ubuntu 24.04 LTS (provisioned using [Edge-Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html))
+- Operating System: Ubuntu 24.04 LTS (provisioned using [Edge-Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html))
 - Memory: Minimum 16GB RAM (32GB recommended)
 - Storage: 100GB available disk space
 - Network: Active internet connection for package downloads
@@ -131,7 +131,7 @@ The UAV Mission Compute SDK integrates multiple technologies:
 After installation completes:
 
 1. Navigate to `$HOME/oep/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk/` to explore the SDK
-2. Review [GETTING_STARTED.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/uav-mission-compute-sdk/GETTING_STARTED.md) for USB camera setup and advanced configuration
+2. Review [GETTING_STARTED.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-aerospace/uav-mission-compute-sdk/GETTING_STARTED.md) for USB camera setup and advanced configuration
 3. Access Grafana dashboards at **http://localhost:3000** (admin/admin)
 4. Explore the REST API at **http://localhost:8080** for flight control commands
 
@@ -141,9 +141,9 @@ After installation completes:
 
 - [OpenVINO](https://docs.openvino.ai/2026/get-started.html)
   \- Intel's cross-platform inference optimization toolkit
-- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
+- [Edge AI Libraries](https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html)
   \- Comprehensive development toolkit documentation and API references
-- [Edge AI Suites](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+- [Edge AI Suites](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html)
   \- Complete application suite documentation with implementation examples
 
 ### Support Channels

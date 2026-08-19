@@ -24,6 +24,7 @@ import {
 
 import { fetchMindmap, uploadMindmapImage } from "../../services/api";
 import { useTranslation } from "react-i18next";
+import { useFeatureConfig } from "../../hooks/useFeatureConfig";
 
 declare global {
   interface Window {
@@ -176,6 +177,7 @@ const cleanJsMindContent = (content: string): any => {
 const MindMapTab: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
+  const { guard: featureGuard } = useFeatureConfig();
 
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
@@ -282,13 +284,14 @@ const MindMapTab: React.FC = () => {
               "version": "1.0"
             },
             "format": "node_tree",
+            // Rendered in place of the mind map, so both topics are translated.
             "data": {
               "id": "root",
-              "topic": "Error: Invalid Format",
+              "topic": t("mindmap.invalidFormatTitle"),
               "children": [
                 {
                   "id": "error_msg",
-                  "topic": "Failed to parse mindmap data"
+                  "topic": t("mindmap.invalidFormatDetail")
                 }
               ]
             }
@@ -332,19 +335,13 @@ const MindMapTab: React.FC = () => {
       if (isInvalidFormat) {
         dispatch(setError("MindMap generation failed due to invalid format"));
         dispatch(uiMindmapFailed());
-        window.dispatchEvent(
-          new CustomEvent("global-notification", {
-            detail: {
-              message: t("notifications.mindmapError") || "MindMap generation failed due to invalid format.",
-              type: "error",
-            },
-          })
-        );
-      } else {
+      } else if (featureGuard?.hasFeature('report')) {
         // The report embeds the mind map as an image captured here (html2canvas)
         // from the live jsMind view — the backend never re-renders it. Best-effort
         // and fire-and-forget: a failure just omits the image from the report.
         captureAndUploadMindmap();
+      } else {
+        dispatch(uiMindmapImageDone());
       }
 
     } catch (error: any) {
