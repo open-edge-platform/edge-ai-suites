@@ -199,7 +199,7 @@ uavsdk-down: ## Stop UAVSDK stack
 start-rtsp:  ## Launch pipeline_manager.py --sink rtsp inside container
 ```
 
-Full Makefile is in `apps/uav-vision-analytics/Makefile`.
+Full Makefile is in `uav-vision-analytics/Makefile`.
 
 ---
 
