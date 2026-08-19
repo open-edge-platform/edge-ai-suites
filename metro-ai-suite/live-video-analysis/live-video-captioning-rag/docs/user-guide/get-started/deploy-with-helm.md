@@ -123,10 +123,8 @@ To set up the integrated deployment, obtain the chart and install it with your e
 1. Clone the repository.
 
 	 ```bash
-	 # Clone latest mainline
+	 # Clone the release branch
 	 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.2.0
-	 # Or clone a specific release branch
-	 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
 	 ```
 
 2. Navigate to the chart directory.
