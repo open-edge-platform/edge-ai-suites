@@ -461,7 +461,7 @@ To uninstall the application, follow these steps:
 
 1. **Delete the Python virtual environment folder:** \
    Navigate to the directory and remove \
-  For base environment : *education-ai-suite/smartclassroom*. \
+  *education-ai-suite/smartclassroom*. \
   For grading model conversion environment (if created): *education-ai-suite/smart-classroom/components/grading/providers/layout_detection_service/venv_convert*.
 2. **Remove the models directory:**
   Remove the models folder located under *education-ai-suite/smart-classroom*.
