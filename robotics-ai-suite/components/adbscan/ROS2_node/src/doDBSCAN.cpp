@@ -109,7 +109,7 @@ int filter_LiDAR_data(
  *---------------------------------------------------------------------------------------*/
 ADBSCAN_Result_t adaptive_parameters(
   LiDAR_data_3D_t * p_d, FPDS_t * p_k, FPDS_t * p_k_floor, FPDS_t * p_esp, FPDS_t * p_esp_cont,
-  Adaptive_params_t * p_ap, INT32_t num_points)
+  Adaptive_params_t * p_ap, INT32_t num_points, float epsilon_scale_factor, float min_3d_epsilon)
 {
   ADBSCAN_Result_t result = ADBSCAN_SUCCESS;
   FPDS_t in;
@@ -195,9 +195,9 @@ ADBSCAN_Result_t adaptive_parameters(
 
     } else {
       // 3D lidar
-      p_esp[i] *= CONFIG_PARAMS.scale_factor;  // 0.7;
-      if (p_esp[i] < 0.9) {
-        p_esp[i] = 0.9;
+      p_esp[i] *= epsilon_scale_factor;
+      if (p_esp[i] < min_3d_epsilon) {
+        p_esp[i] = min_3d_epsilon;
       }
     }
   }
@@ -248,7 +248,8 @@ double diff(timespec start, timespec end)
 }
 
 vector<Obstacle> doDBSCAN(
-  void * p_Data, int LiDAR_data_size, int dimension, std::vector<double> * benchmarking_time)
+  void * p_Data, int LiDAR_data_size, int dimension, std::vector<double> * benchmarking_time,
+  float epsilon_scale_factor, float min_3d_epsilon)
 {
   ADBSCAN_Result_t result;
   ADBSCAN_params_t adbscan_params;
@@ -385,7 +386,9 @@ vector<Obstacle> doDBSCAN(
 
       // Calculate the k and esp arrays
       result =
-        adaptive_parameters(xyz_n, p_k, p_k_floor, p_esp, p_esp_cont, &adaptive_params, num_points);
+        adaptive_parameters(
+        xyz_n, p_k, p_k_floor, p_esp, p_esp_cont, &adaptive_params, num_points,
+        epsilon_scale_factor, min_3d_epsilon);
       clock_gettime(clk_id, &t2);  // CLOCK_PROCESS_CPUTIME_ID
       (*benchmarking_time)[1] = diff(t1, t2);
       cout << "test CPU: ADBScan param generation time: " << diff(t1, t2) << " [s]" << endl;
