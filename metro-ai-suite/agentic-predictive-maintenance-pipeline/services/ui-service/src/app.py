@@ -40,6 +40,7 @@ _DETECTION_URL = os.environ.get("DETECTION_SERVICE_URL", "http://apm-detection:5
 _STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://apm-storage:5001")
 _LLM_BASE_URL  = os.environ.get("LLM_BASE_URL",          "")
 _LLM_MODEL     = os.environ.get("LLM_MODEL_NAME",        "")
+_LLM_MODE      = os.environ.get("LLM_MODE",              "llm").lower()
 _USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
 _API_KEY       = os.environ.get("APM_API_KEY",           "")
 _STORAGE_MUTATION_HEADERS = {"X-API-Key": _API_KEY} if _API_KEY else {}
@@ -387,8 +388,15 @@ async def _call_llm(
     max_tokens: int,
     response_format: dict[str, Any] | None = None,
 ) -> str:
-    if not _LLM_BASE_URL or not _LLM_MODEL:
-        raise HTTPException(status_code=503, detail="Chat is unavailable because the LLM is not configured.")
+    if not _LLM_BASE_URL or not _LLM_MODEL or _LLM_MODE == "fallback":
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Ask & Analyze is unavailable in fallback mode because no LLM "
+                "service is configured. Redeploy with LLM_MODE=llm and a valid "
+                "LLM_MODEL_NAME to enable this feature."
+            ),
+        )
     request_body: dict[str, Any] = {
         "model": _LLM_MODEL,
         "messages": messages,
@@ -874,6 +882,15 @@ async def api_status():
     }
 
 
+_chat_available = bool(_LLM_BASE_URL and _LLM_MODEL and _LLM_MODE != "fallback")
+
+
+@app.get("/api/chat/available")
+async def api_chat_available():
+    """Return whether Ask & Analyze is available (LLM configured)."""
+    return {"available": _chat_available}
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def api_chat(request: ChatRequest):
     """Answer a bounded question using completed analysis and/or detection data."""
@@ -1008,6 +1025,7 @@ async def chat_page(request: Request):
             "use_case_id": _USE_CASE_ID,
             "completed_runs": completed_runs,
             "requested_run_id": requested_run_id,
+            "chat_available": _chat_available,
         },
     )
 

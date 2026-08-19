@@ -228,6 +228,9 @@ workflow, and rule-based agent pipeline remain available, but chat cannot genera
 the deployment omits `apm-llm`. The UI intentionally has no hard Compose dependency on that service,
 which allows fallback deployments to start normally.
 
+> **Note — Fallback mode**: If you deployed with `LLM_MODE=fallback`, the **Ask & Analyze** page
+> displays a banner explaining that conversational analysis is disabled. The chat form is locked.
+
 ## Stop and Clean Up
 
 Stop all running containers:
