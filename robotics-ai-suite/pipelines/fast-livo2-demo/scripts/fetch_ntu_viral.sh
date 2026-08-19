@@ -41,7 +41,12 @@ human_size() {
 # meter while the transfer runs; removes a partial file on failure.
 download_with_progress() {
   local url="$1" dest="$2" size_bytes
-  size_bytes="$(curl -sIL "${url}" | grep -i '^content-length:' | tail -1 | tr -d '\r' | awk '{print $2}')"
+  # `|| true`: NTU's Dataverse doesn't always send a Content-Length header
+  # (e.g. eee_01's redirect chain doesn't) - grep then finds no match and
+  # exits 1, which combined with pipefail would otherwise abort the whole
+  # script here under `set -e` before the real download below ever runs.
+  # human_size() already prints "unknown size" for an empty size_bytes.
+  size_bytes="$(curl -sIL "${url}" | grep -i '^content-length:' | tail -1 | tr -d '\r' | awk '{print $2}')" || true
   echo "==> Downloading $(basename "${dest}") ($(human_size "${size_bytes}")) from ${url}"
   curl -fL -o "${dest}" "${url}" || { rm -f "${dest}"; return 1; }
 }

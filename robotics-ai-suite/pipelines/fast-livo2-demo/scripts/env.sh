@@ -66,7 +66,7 @@ ENABLE_PERFRAME_TIMING="${ENABLE_PERFRAME_TIMING:-OFF}"
 
 # NTU VIRAL sequence used for the no-hardware validation flow.
 # https://ntu-aris.github.io/ntu_viral_dataset/
-NTU_VIRAL_SEQUENCE="${NTU_VIRAL_SEQUENCE:-eee_03}"
+NTU_VIRAL_SEQUENCE="${NTU_VIRAL_SEQUENCE:-eee_01}"
 
 # Launch rviz2 alongside fast_livo2 in run_ntu_viral.sh. Off by default
 # so the flow stays headless over SSH; set to "true" only when running
