@@ -378,6 +378,8 @@ class ClientStats:
     last_msg:  dict = field(default_factory=dict)
     latencies: dict = field(default_factory=lambda: defaultdict(list))
     intervals: dict = field(default_factory=lambda: defaultdict(list))
+    measure_start_s: float = 0.0
+    measure_end_s: float = float("inf")
     lock:      threading.Lock = field(default_factory=threading.Lock)
 
 
@@ -389,6 +391,8 @@ def _make_on_message(stats: ClientStats):
         leaf = parts[-1] if parts else msg.topic
 
         with stats.lock:
+            if not (stats.measure_start_s <= now < stats.measure_end_s):
+                return
             stats.counts[leaf] += 1
             if leaf not in stats.first_msg:
                 stats.first_msg[leaf] = now
@@ -633,6 +637,41 @@ class _ClientSweepTier:
     resources:         dict
 
 
+def _wait_for_first_messages(all_stats: list[ClientStats], timeout_s: float) -> None:
+    """Wait until each client has received at least one message or timeout."""
+    deadline = time.monotonic() + max(0.0, timeout_s)
+    while time.monotonic() < deadline:
+        ready = 0
+        for s in all_stats:
+            with s.lock:
+                if s.counts:
+                    ready += 1
+        if ready >= len(all_stats):
+            return
+        time.sleep(0.05)
+
+
+def _reset_client_stats(all_stats: list[ClientStats]) -> None:
+    """Clear startup samples before timed measurement begins."""
+    for s in all_stats:
+        with s.lock:
+            s.counts.clear()
+            s.first_msg.clear()
+            s.last_msg.clear()
+            s.latencies.clear()
+            s.intervals.clear()
+
+
+def _set_measurement_window(
+    all_stats: list[ClientStats], start_s: float, end_s: float,
+) -> None:
+    """Set the inclusive/exclusive receive window for each client."""
+    for s in all_stats:
+        with s.lock:
+            s.measure_start_s = start_s
+            s.measure_end_s = end_s
+
+
 def _run_client_sweep_tier(
     host: str, port: int, uav_id: str, n: int, duration_s: float,
 ) -> _ClientSweepTier:
@@ -649,10 +688,22 @@ def _run_client_sweep_tier(
             c.subscribe(f"uav/{uav_id}/telemetry/#", qos=0)
             c.loop_start()
             clients.append(c)
+
+        # Ensure the first tier does not include subscription warm-up time.
+        warmup_s = max(2.0, min(10.0, duration_s))
+        _wait_for_first_messages(all_stats, timeout_s=warmup_s)
+        _reset_client_stats(all_stats)
+
         def _measure_window() -> float:
             start = time.monotonic()
-            time.sleep(duration_s)
-            return time.monotonic() - start
+            end = start + duration_s
+            _set_measurement_window(all_stats, start, end)
+            remaining = end - time.monotonic()
+            if remaining > 0:
+                time.sleep(remaining)
+            # Stop counting immediately when the timed window ends.
+            _set_measurement_window(all_stats, float("inf"), float("inf"))
+            return end - start
 
         elapsed, resources = _measure_with_resources(duration_s, _measure_window)
     finally:
@@ -815,10 +866,11 @@ def main():
         print(f"\n{'─'*80}")
         print(f"  Client scaling sweep: {len(counts)} tier(s) "
               f"× {args.sweep_duration:.0f}s each")
+        print("  Inter-tier gap: 2s")
         print(f"  Counts: {counts}")
         print(f"{'─'*80}")
         client_tiers: list[_ClientSweepTier] = []
-        for n in counts:
+        for i, n in enumerate(counts):
             print(f"  → N={n} …", end="", flush=True)
             try:
                 t = _run_client_sweep_tier(
@@ -830,6 +882,8 @@ def main():
                       f"per-client≈{total/n if n else 0:.1f} msgs")
             except Exception as exc:
                 print(f" FAILED: {exc}", file=sys.stderr)
+            if i < len(counts) - 1:
+                time.sleep(2.0)
         if client_tiers:
             _print_client_sweep_table(client_tiers)
             report_client_scaling = _client_scaling_report_dict(client_tiers)
