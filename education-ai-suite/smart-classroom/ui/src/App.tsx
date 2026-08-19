@@ -100,7 +100,7 @@ const App: React.FC = () => {
     return (
       <div className="app-loading">
         <div className="loading-content">
-          <div className="spinner" />
+          <div className="app-spinner" />
           <h2>{t('app.checkingBackendTitle')}</h2>
           <p>{t('app.checkingBackendMessage')}</p>
         </div>
@@ -126,7 +126,7 @@ const App: React.FC = () => {
     return (
       <div className="app-loading">
         <div className="loading-content">
-          <div className="spinner" />
+          <div className="app-spinner" />
           <h2>{t('app.loadingConfigTitle')}</h2>
           <p>{t('app.loadingConfigMessage')}</p>
         </div>

@@ -206,16 +206,19 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
               />
             ) : (
               <div className="no-devices-message">
-                No devices available
+                {t('settings.noDevicesAvailable')}
               </div>
             )}
             <div className="debug-info">
-              Selected: {selectedMicrophone || 'None'} | Available: {availableDevices.length}
+              {t('settings.deviceSelectionInfo', {
+                selected: selectedMicrophone || t('settings.noneSelected'),
+                count: availableDevices.length,
+              })}
             </div>
           </div>
         ) : (
           <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
-            {t('settings.audioFeaturesDisabled', 'Audio processing features are disabled. Microphone settings are not required.')}
+            {t('settings.audioFeaturesDisabled')}
           </div>
         )}
         
@@ -260,7 +263,7 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
           </>
         ) : (
           <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
-            {t('settings.videoAnalyticsDisabled', 'Video analytics feature is disabled. Camera settings are not required.')}
+            {t('settings.videoAnalyticsDisabled')}
           </div>
         )}
       </div>
