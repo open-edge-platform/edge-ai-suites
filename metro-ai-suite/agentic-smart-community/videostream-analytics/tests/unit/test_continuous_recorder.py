@@ -2,9 +2,7 @@
 
 import os
 import time
-from unittest.mock import MagicMock, patch
-from datetime import datetime, timedelta
-from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -26,7 +24,7 @@ class TestContinuousRecorderLifecycle:
         source = SourceConfig(
             source_id="test_recorder", source_url="rtsp://localhost:8554/live/test"
         )
-        cfg = RecordingConfig(interval=5, fps=15, retention_days=3)
+        cfg = RecordingConfig(interval=5, fps=15)
         return ContinuousRecorder(
             source=source,
             recording_cfg=cfg,
@@ -81,59 +79,6 @@ class TestContinuousRecorderLifecycle:
         assert os.path.isdir(expected)
 
 
-class TestContinuousRecorderCleanup:
-    @pytest.fixture
-    def mock_sink(self):
-        sink = MagicMock(spec=EventSink)
-        sink.emit.return_value = True
-        return sink
-
-    @pytest.fixture
-    def recorder(self, tmp_path, mock_sink):
-        source = SourceConfig(
-            source_id="test_cleanup", source_url="rtsp://localhost:8554/live/test"
-        )
-        cfg = RecordingConfig(interval=60, fps=15, retention_days=2)
-        r = ContinuousRecorder(
-            source=source,
-            recording_cfg=cfg,
-            data_dir=str(tmp_path),
-            sink=mock_sink,
-        )
-        return r
-
-    def test_cleanup_removes_old_directories(self, recorder):
-        base = Path(recorder._output_dir)
-
-        # Create old dir (4 days ago)
-        old_date = (datetime.now() - timedelta(days=4)).strftime("%Y-%m-%d")
-        old_dir = base / old_date
-        old_dir.mkdir(parents=True)
-        (old_dir / "segment.mp4").touch()
-
-        # Create recent dir (today)
-        today = datetime.now().strftime("%Y-%m-%d")
-        today_dir = base / today
-        today_dir.mkdir(parents=True)
-        (today_dir / "segment.mp4").touch()
-
-        recorder._cleanup_old_segments()
-
-        assert not old_dir.exists()
-        assert today_dir.exists()
-        assert (today_dir / "segment.mp4").exists()
-
-    def test_cleanup_ignores_non_date_dirs(self, recorder):
-        base = Path(recorder._output_dir)
-        misc_dir = base / "misc_data"
-        misc_dir.mkdir(parents=True)
-        (misc_dir / "file.txt").touch()
-
-        recorder._cleanup_old_segments()
-
-        assert misc_dir.exists()
-
-
 class TestContinuousRecorderWithVideo:
     @pytest.fixture
     def mock_sink(self):
@@ -147,7 +92,7 @@ class TestContinuousRecorderWithVideo:
             source_id="test_recording",
             source_url=test_video_path,
         )
-        cfg = RecordingConfig(interval=3, fps=30, retention_days=5)
+        cfg = RecordingConfig(interval=3, fps=30)
         return ContinuousRecorder(
             source=source,
             recording_cfg=cfg,

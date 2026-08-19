@@ -121,6 +121,7 @@ class ASRFeature:
         return {
             "id": self.id,
             "chunking": bool(config.audio_preprocessing.chunking),
+            "diarization": bool(config.models.asr.diarization),
             "endpoints": {
                 "upload_audio": "/upload-audio",
                 "transcribe": "/transcribe",

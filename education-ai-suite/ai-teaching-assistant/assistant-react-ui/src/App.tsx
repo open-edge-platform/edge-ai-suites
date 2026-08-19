@@ -37,7 +37,9 @@ export default function App() {
     reset,
   } = useVoiceSession(deviceId);
   const micLevel = useAudioLevel(micAnalyser, recording);
-  const perfMetrics = usePerformanceMetrics();
+  // Pause metrics polling while the assistant response audio is being delivered
+  // and played, so it doesn't compete with TTS segment delivery to the UI.
+  const perfMetrics = usePerformanceMetrics(responseActive);
 
   const labelFor = (list: File[]) =>
     list.length === 1 ? list[0].name : list.length > 1 ? `${list.length} files` : "";

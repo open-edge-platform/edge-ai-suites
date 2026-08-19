@@ -12,6 +12,7 @@ export interface FeatureDescriptor {
   endpoints?: Record<string, string>;
   mode?: string;
   chunking?: boolean;
+  diarization?: boolean;
 }
 
 interface FeatureConfigState {

@@ -23,7 +23,7 @@ const ProjectLocationInput: React.FC<ProjectLocationInputProps> = ({
  
   useEffect(() => {
     if (prefixRef.current) {
-      setPaddingLeft(prefixRef.current.offsetWidth + 10); 
+      setPaddingLeft(prefixRef.current.offsetWidth + 12);
     }
   }, []);
 

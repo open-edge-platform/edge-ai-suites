@@ -273,7 +273,6 @@ helm uninstall stia -n <your-namespace>
 | `intersection.latitude` | Intersection latitude | `37.51358` |
 | `intersection.longitude` | Intersection longitude | `-122.25591` |
 | `env.logLevel` | Application log level | `INFO` |
-| `env.refreshInterval` | Dashboard refresh interval (seconds) | `15` |
 | `env.weatherMock` | Use mock weather data (`true`/`false`) | `false` |
 | `env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `1800` |
 | `mqtt.host` | MQTT broker hostname. If set, takes precedence over the constructed FQDN. | `""` |

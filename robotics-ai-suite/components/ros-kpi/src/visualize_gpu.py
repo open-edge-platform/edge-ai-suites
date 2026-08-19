@@ -45,6 +45,10 @@ from _accel import np  # Intel dpnp/numpy shim
 
 from gpu_engine_defs import ENGINE_CLASSES as _ENGINE_CLASSES, ENG_COLORS as _ENG_COLORS
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Engine-class mapping imported from gpu_engine_defs
 # ──────────────────────────────────────────────────────────────────────────────
@@ -81,7 +85,7 @@ def load_gpu_log(path: str) -> List[dict]:
                 except json.JSONDecodeError:
                     pass
     except FileNotFoundError:
-        print(f'[Error] File not found: {path}', file=sys.stderr)
+        logger.error(f'File not found: {path}')
     return records
 
 
@@ -130,23 +134,23 @@ def print_summary(records: List[dict]):  # pylint: disable=too-many-locals
     pwr_g = [r.get('power_gpu_w', 0) for r in records]
     pwr_p = [r.get('power_pkg_w', 0) for r in records]
 
-    print(f'\n{"═"*60}')
-    print(f'  Intel GPU Summary  ({source})  –  {n} samples')
-    print(f'{"═"*60}')
-    print(f'  Busy %   : avg={sum(busy)/n:.1f}  max={max(busy):.1f}  min={min(busy):.1f}')
-    print(f'  Freq MHz : avg={sum(freq)/n:.0f}  max={max(freq)}  min={min(freq)}')
+    logger.info(f'\n{"═"*60}')
+    logger.info(f'  Intel GPU Summary  ({source})  –  {n} samples')
+    logger.info(f'{"═"*60}')
+    logger.info(f'  Busy %   : avg={sum(busy)/n:.1f}  max={max(busy):.1f}  min={min(busy):.1f}')
+    logger.info(f'  Freq MHz : avg={sum(freq)/n:.0f}  max={max(freq)}  min={min(freq)}')
     if temps:
-        print(f'  Temp °C  : avg={sum(temps)/len(temps):.1f}  max={max(temps):.1f}  min={min(temps):.1f}')
+        logger.info(f'  Temp °C  : avg={sum(temps)/len(temps):.1f}  max={max(temps):.1f}  min={min(temps):.1f}')
     if any(p > 0 for p in pwr_g):
-        print(f'  GPU W    : avg={sum(pwr_g)/n:.2f}  max={max(pwr_g):.2f}')
+        logger.info(f'  GPU W    : avg={sum(pwr_g)/n:.2f}  max={max(pwr_g):.2f}')
     if any(p > 0 for p in pwr_p):
-        print(f'  Pkg W    : avg={sum(pwr_p)/n:.2f}  max={max(pwr_p):.2f}')
+        logger.info(f'  Pkg W    : avg={sum(pwr_p)/n:.2f}  max={max(pwr_p):.2f}')
 
     if any(r.get('engines') for r in records):
-        print('\n  Engine-class averages:')
+        logger.info('\n  Engine-class averages:')
         for cls in _ENGINE_CLASSES:
             vals = [_canonical_engines(r)[cls]['busy'] for r in records]
-            print(f'    {cls:<12}: avg={sum(vals)/n:.1f}%  max={max(vals):.1f}%')
+            logger.info(f'    {cls:<12}: avg={sum(vals)/n:.1f}%  max={max(vals):.1f}%')
 
     # Per-PID summary
     pid_totals: Dict[int, list] = defaultdict(list)
@@ -159,10 +163,9 @@ def print_summary(records: List[dict]):  # pylint: disable=too-many-locals
         top = sorted(pid_totals.items(),
                      key=lambda kv: sum(kv[1]) / len(kv[1]),
                      reverse=True)[:10]
-        print('\n  Top PIDs by avg GPU %:')
+        logger.info('\n  Top PIDs by avg GPU %:')
         for pid, vals in top:
-            print(f'    PID {pid:<7} {pid_names[pid]:<28}  avg={sum(vals)/len(vals):.1f}%  max={max(vals):.1f}%')
-    print()
+            logger.info(f'    PID {pid:<7} {pid_names[pid]:<28}  avg={sum(vals)/len(vals):.1f}%  max={max(vals):.1f}%')
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -571,7 +574,7 @@ def plot_pid_engine_breakdown(  # pylint: disable=too-many-locals
 
     if output_file:
         plt.savefig(output_file, dpi=150, bbox_inches='tight')
-        print(f'  Saved: {output_file}')
+        logger.info(f'  Saved: {output_file}')
         if not show:
             plt.close()
     if show:
@@ -600,7 +603,7 @@ def plot_gpu_full(  # pylint: disable=too-many-locals,too-many-statements
       5  Per-PID GPU % over time (if clients present)
     """
     if not records:
-        print('  No GPU records to plot.')
+        logger.warning('  No GPU records to plot.')
         return
 
     source = records[0].get('source', 'sysfs')
@@ -677,11 +680,11 @@ def plot_gpu_full(  # pylint: disable=too-many-locals,too-many-statements
 
     if output_file:
         plt.savefig(output_file, dpi=150, bbox_inches='tight')
-        print(f'  Saved: {output_file}')
+        logger.info(f'  Saved: {output_file}')
         if not show:
             plt.close(fig)
     if show:
-        print('  Showing GPU dashboard – close window to continue.')
+        logger.info('  Showing GPU dashboard – close window to continue.')
         plt.show()
         plt.close(fig)
 
@@ -753,16 +756,16 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
             'Run:  uv run python src/monitor_stack.py --gpu  or  uv run python src/monitor_stack.py --remote-ip <ip> --gpu\n'
             'Then: uv run python src/visualize_gpu.py <session>'
         )
-        print(f'[Error] {errmsg}', file=sys.stderr)
+        logger.error(f'{errmsg}')
         sys.exit(1)
 
-    print(f'Loading: {log_path}')
+    logger.info(f'Loading: {log_path}')
     records = load_gpu_log(str(log_path))
     if not records:
-        print('[Error] No GPU data records found in the log.', file=sys.stderr)
+        logger.error('No GPU data records found in the log.')
         sys.exit(1)
 
-    print(f'  {len(records)} data records  '
+    logger.info(f'  {len(records)} data records  '
           f'(source: {records[0].get("source", "unknown")})')
 
     # ── Summary ─────────────────────────────────────────────────────────────
@@ -787,7 +790,7 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
 
     # ── Main dashboard ──────────────────────────────────────────────────────
     main_out = str(out_dir / 'gpu_dashboard.png') if out_dir else None
-    print('Generating GPU dashboard...')
+    logger.info('Generating GPU dashboard...')
     plot_gpu_full(records,
                   output_file=main_out,
                   show=show,
@@ -797,7 +800,7 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
     # ── Per-PID bar chart (optional) ─────────────────────────────────────────
     if args.pid_bar and any(r.get('clients') for r in records):
         bar_out = str(out_dir / 'gpu_pid_engine_breakdown.png') if out_dir else None
-        print('Generating per-PID engine-class bar chart...')
+        logger.info('Generating per-PID engine-class bar chart...')
         plot_pid_engine_breakdown(records,
                                   top_n=args.top,
                                   output_file=bar_out,
@@ -805,10 +808,10 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
 
     if not show and not out_dir:
         # No output requested – open window anyway so user sees something
-        print('No --output-dir or --show specified; opening interactive window.')
+        logger.info('No --output-dir or --show specified; opening interactive window.')
         plt.show()
 
-    print('Done.')
+    logger.info('Done.')
 
 
 if __name__ == '__main__':

@@ -40,6 +40,9 @@ To manually disable a stream even when its variable is available, set that strea
 From the component root (`metro-ai-suite/agentic-smart-community`), run:
 
 ```bash
+# Change to mirror endpoint if you are in China and want to use the mirror site for Hugging Face.
+export HF_ENDPOINT=https://hf-mirror.com
+
 bash demo/scripts/start-demo.sh
 ```
 

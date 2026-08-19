@@ -121,7 +121,7 @@
   margin-right: 10px;
 }
 
-.speaker-label {
+.timeline-container .speaker-label {
   font-size: 13px;
   font-weight: 600;
 }
@@ -174,7 +174,7 @@
     margin-right: 8px;
   }
   
-  .speaker-label {
+  .timeline-container .speaker-label {
     font-size: 11px;
   }
   

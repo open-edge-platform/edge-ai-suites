@@ -1,7 +1,6 @@
 .search-box-container {
   width: 100%;
   padding: 20px 14px;
-  background: var(--background-color, #ffffff);
   border-bottom: 1px solid var(--border-color, #e6e7e9);
   transition: all 0.2s ease;
 }
@@ -113,7 +112,7 @@
   background: var(--warning-color-light, #fef3c7);
 }
 
-.spinner {
+.search-status-spinner {
   width: 12px;
   height: 12px;
   border: 2px solid transparent;
@@ -122,15 +121,9 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .search-box-container {
-    background: var(--dark-background, #1f2937);
     border-bottom-color: var(--dark-border, #374151);
   }
   
@@ -155,6 +148,6 @@
   
   .search-input {
     padding: 8px 10px;
-    font-size: 16px; 
+    font-size: 16px;
   }
 }
