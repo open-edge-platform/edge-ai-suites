@@ -27,7 +27,6 @@ const ProjectNameInput: React.FC<ProjectNameInputProps> = ({
       placeholder={effectivePlaceholder}
       maxLength={maxLength}
       autoFocus={autoFocus}
-      style={{ background: "#f8f8f8" }}
     />
   );
 };

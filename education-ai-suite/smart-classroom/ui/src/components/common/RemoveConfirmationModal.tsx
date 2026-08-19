@@ -1,4 +1,5 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/RemoveConfirmationModal.css";
 
@@ -23,7 +24,7 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="rcm-modal-overlay">
       <div className="rcm-modal">
         <p>{t("fileManager.removeConfirm", { fileName })}</p>
@@ -45,7 +46,8 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

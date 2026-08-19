@@ -146,8 +146,10 @@ async function resolveStartUrl() {
 
 async function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
+    width: 1280,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 600,
     show: false,
     title: 'Smart Classroom',
     titleBarStyle: 'hidden',
@@ -186,7 +188,6 @@ async function createWindow() {
   });
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.maximize();
     mainWindow.show();
   });
   mainWindow.on('closed', () => {
