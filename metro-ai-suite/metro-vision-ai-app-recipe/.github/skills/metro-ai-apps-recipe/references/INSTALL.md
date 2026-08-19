@@ -1,5 +1,30 @@
 # Install + Compose reference
 
+## Layout (flat)
+
+```
+{{STACK_DIR}}/
+├── README.md
+├── docker-compose.yml
+├── `.env`                  # HOST_IP, GIDs, TURN creds
+├── validate_env.sh
+├── install.sh              # HOST_IP, GIDs, model dl+INT8, videos, cert
+├── sample_start.sh         # POST N pipelines + start watchdog
+├── sample_stop.sh          # kill watchdog + DELETE pipelines
+├── sample_status.sh        # GET /api/pipelines/status
+├── sample_watchdog.sh      # respawn COMPLETED file-source pipelines
+├── update_dashboard.sh     # rewrite WEBRTC_URL → https://<HOST>/mediamtx/
+├── src/
+│   ├── dlstreamer-pipeline-server/{config.json, models/, videos/}
+│   ├── mosquitto/config/mosquitto.conf
+│   ├── node-red/{flows.json, install_package.sh, public/}
+│   ├── grafana/{dashboards.yml, datasources.yml, dashboards/{{DASHBOARD_SLUG}}.json}
+│   └── nginx/{nginx.conf, ssl/{server.crt, server.key}}
+└── tests/   # conftest.py + 8 test_*.py: stack_up, pipeline_running,
+    #           mqtt_detections, webrtc_stream, nodered_alert,
+    #           grafana_mqtt_data, grafana_dashboard_content
+```
+
 ## `.env`
 
 ```
@@ -22,7 +47,7 @@ MTX_WEBRTCICESERVERS2_0_PASSWORD={{TURN_PASS}}
 #!/bin/bash
 set -e
 err() { echo "ERROR: $*" >&2; exit 1; }
-[ -f .env ] && . ./.env
+ENVF="$PWD/.env"; [ -f "$ENVF" ] && . "$ENVF"
 [[ "$HOST_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || err "HOST_IP invalid: '$HOST_IP'"
 [[ "$HOST_IP" != "0.0.0.0" && "$HOST_IP" != "127.0.0.1" ]] || err "HOST_IP must be LAN"
 : "${NUM_SOURCES:=4}"
@@ -38,6 +63,29 @@ ss -lun 2>/dev/null | awk '{print $4}' | grep -Eq ':3478$'     && err "port 3478
 echo "validate_env: OK (device=$DEV, sources=$NUM_SOURCES, webrtc=on)"
 ```
 
+### Validation rules (enforce BEFORE `install.sh` runs)
+
+`validate_env.sh` runs as step 0 of `install.sh` and rejects on any failure:
+
+| Param | Rule |
+|---|---|
+| `MODE` | `demo`\|`production` |
+| `HOST_IP` | `^([0-9]{1,3}\.){3}[0-9]{1,3}$`, not `0.0.0.0`/`127.0.0.1` |
+| `NUM_SOURCES` | int, 1–16 |
+| `DEVICE` | `cpu`\|`gpu`\|`npu`\|`auto` |
+| `PIPELINE_NAME` | `^[a-z0-9_]+$` (uppercase/hyphen breaks REST + topic) |
+| `CLASS_FILTER_IDS` | JSON int array, `[]` allowed |
+| `RULE_SCOPE` | `per-source`\|`aggregate` |
+| `DEFAULT_RULE` | `^count[<>]=?\d+\s+in\s+\d+s$` |
+| `*_TOPIC*` | `^[A-Za-z0-9_/-]+$`, no `#`/`+`, no leading `/` |
+| `VIDEO_GID`, `RENDER_GID` | int ≥ 0 |
+| `TURN_USER`, `TURN_PASS` | non-empty, no space/comma |
+| `CLASSIFIER` | `none` OR (URL + XML both set) |
+| Inputs | `rtsp://…`, `file:///…mp4` (exists), or `/dev/video[0-9]+` (exists) |
+| `SCENESCAPE` | `yes`\|`no` |
+| `SCENE_NAME` | (if `SCENESCAPE=yes`) non-empty |
+| `CAMERA_IDS` | (if `SCENESCAPE=yes`) count == input streams, unique, no `/` |
+
 ## `install.sh`
 
 ```sh
@@ -47,19 +95,19 @@ HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
 # 0. Preflight
 ./validate_env.sh "${2:-cpu}"
 
-# 1. .env: HOST_IP + GIDs
-touch .env
-grep -q '^HOST_IP=' .env || echo "HOST_IP=$HOST_IP" >> .env
-sed -i "s|^HOST_IP=.*|HOST_IP=$HOST_IP|" .env
+# 1. env-file: HOST_IP + GIDs
+ENVF="$PWD/.env"; touch "$ENVF"
+setkv() { if grep -q "^$1=" "$ENVF"; then sed -i "s|^$1=.*|$1=$2|" "$ENVF"; else printf '%s=%s\n' "$1" "$2" >> "$ENVF"; fi; }
+addkv() { grep -q "^$1=" "$ENVF" || printf '%s=%s\n' "$1" "$2" >> "$ENVF"; }
+setkv HOST_IP "$HOST_IP"
 VIDEO_GID=$(getent group video  | cut -d: -f3 || echo 44)
 RENDER_GID=$(getent group render | cut -d: -f3 || echo 109)
-grep -q '^VIDEO_GID='  .env || echo "VIDEO_GID=$VIDEO_GID"   >> .env
-grep -q '^RENDER_GID=' .env || echo "RENDER_GID=$RENDER_GID" >> .env
+addkv VIDEO_GID "$VIDEO_GID"
+addkv RENDER_GID "$RENDER_GID"
 
 # 1b. WebRTC ICE credentials (MediaMTX <-> Coturn)
-grep -q '^MTX_WEBRTCICESERVERS2_0_USERNAME=' .env || echo "MTX_WEBRTCICESERVERS2_0_USERNAME={{TURN_USER}}" >> .env
-grep -q '^MTX_WEBRTCICESERVERS2_0_PASSWORD=' .env || \
-  echo "MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 16)" >> .env
+addkv MTX_WEBRTCICESERVERS2_0_USERNAME "{{TURN_USER}}"
+addkv MTX_WEBRTCICESERVERS2_0_PASSWORD "$(openssl rand -hex 16)"
 
 # 2. Model dl + INT8 (+ optional classifier)
 docker run --rm --user root -e http_proxy -e https_proxy -e no_proxy \
@@ -86,7 +134,7 @@ mkdir -p src/dlstreamer-pipeline-server/videos
 VIDEO_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-resources/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4"
 for i in $(seq 1 {{NUM_SOURCES}}); do
   f=src/dlstreamer-pipeline-server/videos/new_video_$i.mp4
-  [ -f "$f" ] || curl -kL -o "$f" "$VIDEO_URL"
+  [ -f "$f" ] || curl -L -o "$f" "$VIDEO_URL"
 done
 
 # 4. TLS cert with SAN
@@ -141,6 +189,10 @@ No `frames` volume — video leaves DLSPS over WebRTC.
       - MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}
       - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
       - MTX_WEBRTCLOCALTCPADDRESS=:8189
+      - MTX_WEBRTCADDITIONALHOSTS=${HOST_IP}
+    ports:
+      - "8189:8189/tcp"
+      - "8189:8189/udp"
     networks: [app_network]
 
   coturn:
@@ -159,10 +211,34 @@ DLSPS env adds `ENABLE_WEBRTC=true`,
 `WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`, and
 `mediamtx-server` in `no_proxy`.
 
+### WebRTC ICE reachability — REQUIRED or the video panels stay black
+
+Two settings on the `mediamtx` service are mandatory for a browser on a
+different host (the normal case) to actually receive video. Without them
+the WHEP player connects, then the reader session dies with
+`closed: deadline exceeded while waiting connection` and the panel stays
+black — MediaMTX *looks* healthy and the stream publishes fine, so this is
+easy to misdiagnose as "MediaMTX not working":
+
+- **`MTX_WEBRTCADDITIONALHOSTS=${HOST_IP}`** — otherwise MediaMTX only
+  advertises `127.0.0.1` as its ICE host candidate (`local candidate:
+  host/udp/127.0.0.1/8189`), which a remote browser can never reach. This
+  makes it also advertise the LAN `HOST_IP`.
+- **Publish `8189/tcp` and `8189/udp`** on the service. The advertised
+  `HOST_IP:8189` candidate must be reachable from outside the container;
+  with no published port the browser's ICE checks time out. Coturn
+  (`3478/udp`) is a fallback relay, but direct `8189` is what makes ICE
+  complete reliably. Success shows in the logs as
+  `is reading from path '{{DETECTIONS_TOPIC_PREFIX}}_1', 1 track (H264)`.
+
+Old browser tabs opened before this fix hold a dead WebRTC session and
+must be hard-refreshed; recreate with
+`docker compose up -d --force-recreate mediamtx`.
+
 ## Container healthchecks vs. injected proxy (busybox `wget` gotcha)
 
-The Docker daemon injects `HTTP_PROXY`/`http_proxy` (from
-`~/.docker/config.json` or `/etc/systemd/system/docker.service.d/`) into
+The Docker daemon injects `HTTP_PROXY`/`http_proxy` (from the Docker
+client/daemon proxy settings) into
 **every** container on corporate hosts. The busybox `wget` in Alpine
 images (Grafana, Nginx) does **not** honor a `no_proxy` CIDR like
 `127.0.0.0/8`, so a `localhost` healthcheck gets routed through the

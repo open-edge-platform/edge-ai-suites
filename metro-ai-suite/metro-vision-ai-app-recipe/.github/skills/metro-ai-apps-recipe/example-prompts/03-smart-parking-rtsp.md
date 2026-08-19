@@ -7,4 +7,4 @@ dashboard slug `smart-parking`. Publish detections to `object_detection_N/<pipel
 alerts to `alerts/vehicle`, count to `stats/vehicle_count`. Stream the annotated
 video over WebRTC (DLSPS WHIP → MediaMTX, Coturn ICE/TURN) and embed the WHEP
 player as Grafana `<iframe>` panels at `/mediamtx/<peer-id>/`, ensure the
-self-signed cert includes a SAN, and every `curl` uses `--noproxy '*' -k`.
+self-signed cert includes a SAN, and every `curl` uses `--noproxy '*'` and `--cacert` to trust the self-signed cert.

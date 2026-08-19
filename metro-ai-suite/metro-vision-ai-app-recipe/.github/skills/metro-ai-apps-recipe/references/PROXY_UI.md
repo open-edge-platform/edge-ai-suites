@@ -116,7 +116,7 @@ player via an iframe; `${WEBRTC_URL}` is a dashboard variable resolving to
   ```
   Datasource provisioning is applied only at Grafana startup, so
   `docker compose restart grafana` after editing. Verify with
-  `curl -k --noproxy '*' -s -u admin:admin
+  `curl --cacert src/nginx/ssl/server.crt --noproxy '*' -s -u admin:admin
   https://localhost/grafana/api/datasources/uid/mqtt_ds/health` → expect
   `"status":"OK","message":"MQTT Connected"`.
 - **grafana-mqtt-datasource v1.3.3 caveat:** panel target must be an
