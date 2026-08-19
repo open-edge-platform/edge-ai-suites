@@ -239,13 +239,13 @@ The Flutter application uses a **dedicated configuration file** at `utils/flutte
 content_search:
   host_addr: "127.0.0.1"
   port: 9011
-  
+
   vlm:
     model_name: "Qwen/Qwen3-VL-8B-Instruct"
     host_addr: "127.0.0.1"
     port: 8000  # Main backend VLM service
     device: "GPU"
-    
+
   qa:
     max_context: 5          # Top chunks for RAG
     max_tokens: 1024        # Max answer length
@@ -272,7 +272,7 @@ content_search:
 
 ```powershell
 # 1. Clone the repository (if not already done)
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 cd edge-ai-suites/education-ai-suite
 
 # 2. Run setup (one-time)
