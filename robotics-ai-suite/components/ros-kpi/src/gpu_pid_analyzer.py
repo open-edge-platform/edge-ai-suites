@@ -18,7 +18,6 @@ Reported metrics
     • GPU and package power (W)  [when RAPL is accessible]
     • GPU temperature (°C)       [from hwmon sysfs]
     • VRAM and shared memory usage (MB)
-    • Throttle status
 
   Per-PID (from qmassa clis_stats via DRM fdinfo)
     • Total GPU busy %
@@ -49,6 +48,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from gpu_engine_defs import ENG_COLS as _ENG_COLS  # noqa: E402
 from monitor_resources import _find_local_qmassa, _try_qmassa_local  # noqa: E402,I201
+
+from log_config import configure_logging, get_logger  # noqa: E402
+
+logger = get_logger(__name__)
 # ──────────────────────────────────────────────────────────────────────────────
 # Display
 # ──────────────────────────────────────────────────────────────────────────────
@@ -64,8 +67,8 @@ def print_snapshot(snap: dict):  # pylint: disable=too-many-locals,too-many-stat
     ts = snap.get('ts', '')[:19].replace('T', ' ')
 
     if not snap.get('ok'):
-        print(f'\n[{ts}]  qmassa unavailable (no DRM device or qmassa not installed)')
-        print('  ▶  make install-qmassa')
+        logger.info(f'\n[{ts}]  qmassa unavailable (no DRM device or qmassa not installed)')
+        logger.info('  ▶  make install-qmassa')
         return
 
     freq_a = snap.get('act_freq_mhz', 0)
@@ -74,7 +77,6 @@ def print_snapshot(snap: dict):  # pylint: disable=too-many-locals,too-many-stat
     temp = snap.get('temp_c')
     period = snap.get('period_ms', 0)
     drv = snap.get('drv_name', 'xe')
-    throttle_str = '  ⚠ THROTTLE' if snap.get('throttled') else ''
     vram = snap.get('vram_used_mb', 0.0)
     smem = snap.get('smem_used_mb', 0.0)
 
@@ -83,32 +85,32 @@ def print_snapshot(snap: dict):  # pylint: disable=too-many-locals,too-many-stat
                if pwr_g else '  Power: RAPL unavailable')
     mem_str = f'  VRAM: {vram:.0f} MB   Shared: {smem:.0f} MB' if (vram or smem) else ''
 
-    print(f'\n╔══ Intel GPU [{drv}]  [{ts}]  period={period:.0f} ms{throttle_str}')
-    print('║')
-    print(f'║  Frequency : {freq_a:>5} MHz actual')
-    print(f'║  Power     :{pwr_str}')
-    print(f'║  Temp      :{temp_str}')
+    logger.info(f'\n╔══ Intel GPU [{drv}]  [{ts}]  period={period:.0f} ms')
+    logger.info('║')
+    logger.info(f'║  Frequency : {freq_a:>5} MHz actual')
+    logger.info(f'║  Power     :{pwr_str}')
+    logger.info(f'║  Temp      :{temp_str}')
     if mem_str:
-        print(f'║  Memory    :{mem_str}')
-    print('║')
-    print('║  ── Engine Utilization ──────────────────────────────────────────')
-    print(f'║   {"Engine":<12}  {"Busy":>6}  {"Bar":^14}')
-    print(f'║   {"─"*12}  {"─"*6}  {"─"*14}')
+        logger.info(f'║  Memory    :{mem_str}')
+    logger.info('║')
+    logger.info('║  ── Engine Utilization ──────────────────────────────────────────')
+    logger.info(f'║   {"Engine":<12}  {"Busy":>6}  {"Bar":^14}')
+    logger.info(f'║   {"─"*12}  {"─"*6}  {"─"*14}')
 
     eng = snap.get('engines', {})
     for cls in _ENG_COLS:
         v = eng.get(cls, {})
         busy = v.get('busy', 0.0) if isinstance(v, dict) else float(v)
         busy_bar = _bar(busy)
-        print(f'║   {cls:<12}  {busy:>5.1f}%  [{busy_bar}]')
+        logger.info(f'║   {cls:<12}  {busy:>5.1f}%  [{busy_bar}]')
 
     clients = snap.get('clients', [])
     if clients:
-        print('║')
-        print('║  ── Per-PID GPU Usage ───────────────────────────────────────────')
+        logger.info('║')
+        logger.info('║  ── Per-PID GPU Usage ───────────────────────────────────────────')
         hdr_eng = '  '.join(f'{c:<9}' for c in _ENG_COLS)
-        print(f'║   {"PID":>7}  {"Process":<28}  {"Total":>6}  {hdr_eng}')
-        print(f'║   {"─"*7}  {"─"*28}  {"─"*6}  {"─"*(9*len(_ENG_COLS)+2*(len(_ENG_COLS)-1))}')
+        logger.info(f'║   {"PID":>7}  {"Process":<28}  {"Total":>6}  {hdr_eng}')
+        logger.info(f'║   {"─"*7}  {"─"*28}  {"─"*6}  {"─"*(9*len(_ENG_COLS)+2*(len(_ENG_COLS)-1))}')
         shown = 0
         for c in clients:
             if c['total'] < 0.05 and shown > 0:
@@ -116,10 +118,10 @@ def print_snapshot(snap: dict):  # pylint: disable=too-many-locals,too-many-stat
             eng_vals = '  '.join(
                 f'{c["engines"].get(cls, 0.0):>8.1f}%' for cls in _ENG_COLS
             )
-            print(f'║   {c["pid"]:>7}  {c["name"]:<28}  {c["total"]:>5.1f}%  {eng_vals}')
+            logger.info(f'║   {c["pid"]:>7}  {c["name"]:<28}  {c["total"]:>5.1f}%  {eng_vals}')
             shown += 1
 
-    print(f'╚{"═" * 68}')
+    logger.info(f'╚{"═" * 68}')
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -129,7 +131,7 @@ def print_snapshot(snap: dict):  # pylint: disable=too-many-locals,too-many-stat
 def _csv_header() -> str:
     eng_hdrs = ','.join(f'{c}_busy_pct' for c in _ENG_COLS)
     return (f'timestamp,act_freq_mhz,power_gpu_w,power_pkg_w,temp_c,'
-            f'vram_used_mb,smem_used_mb,throttled,{eng_hdrs},'
+            f'vram_used_mb,smem_used_mb,{eng_hdrs},'
             f'top_pid,top_pid_name,top_pid_total_pct,'
             + ','.join(f'top_pid_{c}_pct' for c in _ENG_COLS))
 
@@ -137,7 +139,7 @@ def _csv_header() -> str:
 def _snap_to_csv(snap: dict) -> str:
     if not snap.get('ok'):
         empty = ','.join([''] * (len(_ENG_COLS) + 3 + len(_ENG_COLS)))
-        return f'{snap.get("ts", "")[:19]},,,,,,,{empty}'
+        return f'{snap.get("ts", "")[:19]},,,,,,{empty}'
 
     eng = snap.get('engines', {})
     eng_vals = ','.join(
@@ -156,7 +158,6 @@ def _snap_to_csv(snap: dict) -> str:
         f'{snap.get("power_gpu_w", 0)},{snap.get("power_pkg_w", 0)},'
         f'{temp if temp is not None else ""},'
         f'{snap.get("vram_used_mb", "")},{snap.get("smem_used_mb", "")},'
-        f'{int(snap.get("throttled", False))},'
         f'{eng_vals},'
         f'{top.get("pid", "")},{top.get("name", "")},{top.get("total", "")},'
         f'{top_eng}'
@@ -172,7 +173,7 @@ def collect_snapshot(interval: float = 2.0) -> dict:
 
     Returns a normalised dict with keys:
         ts, ok, source, act_freq_mhz, power_gpu_w, power_pkg_w, temp_c,
-        engines, clients, throttled, vram_used_mb, smem_used_mb, period_ms
+        engines, clients, vram_used_mb, smem_used_mb, period_ms
     """
     snap = _try_qmassa_local(interval=interval)
     if not snap:
@@ -209,9 +210,14 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
     parser.add_argument('--json-log', type=str, default=None,
                         metavar='FILE',
                         help='Append raw JSON-lines to a file')
-    parser.add_argument('--quiet', '-q', action='store_true',
-                        help='Suppress console output (useful with --csv)')
+    parser.add_argument('--log-level', default=None,
+                        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+                        help='Logging verbosity. Defaults to the LOG_LEVEL env var '
+                             '(or .env file), falling back to INFO. Use WARNING to '
+                             'suppress per-snapshot console output (useful with --csv).')
     args = parser.parse_args()
+
+    configure_logging(args.log_level)
 
     # ── Open output files ──
     csv_fp = json_fp = None
@@ -233,25 +239,24 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
         else float('inf')
     )
 
-    print(f'Intel GPU PID Analyzer (qmassa)  \u2013  interval={args.interval}s')
+    logger.info(f'Intel GPU PID Analyzer (qmassa)  \u2013  interval={args.interval}s')
     qmassa_bin = _find_local_qmassa()
     if qmassa_bin:
-        print(f'  qmassa  : {qmassa_bin}')
+        logger.info(f'  qmassa  : {qmassa_bin}')
     else:
-        print('  qmassa  : NOT FOUND')
-        print('    Install:  make install-qmassa')
+        logger.info('  qmassa  : NOT FOUND')
+        logger.info('    Install:  make install-qmassa')
     if not loop:
-        print('  (one snapshot \u2014 use --watch or --duration N to loop)\n')
+        logger.info('  (one snapshot \u2014 use --watch or --duration N to loop)\n')
     else:
-        print('  Press Ctrl-C to stop.\n')
+        logger.info('  Press Ctrl-C to stop.\n')
 
     # ── Sampling loop ──
     try:
         while True:
             snap = collect_snapshot(interval=args.interval)
 
-            if not args.quiet:
-                print_snapshot(snap)
+            print_snapshot(snap)
 
             if csv_fp:
                 csv_fp.write(_snap_to_csv(snap) + '\n')
@@ -264,7 +269,7 @@ def main():  # pylint: disable=too-many-branches,too-many-statements
                 break
 
     except KeyboardInterrupt:
-        print('\nStopped.')
+        logger.info('\nStopped.')
     finally:
         if csv_fp:
             csv_fp.close()

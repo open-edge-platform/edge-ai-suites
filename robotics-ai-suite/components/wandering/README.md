@@ -197,6 +197,25 @@ rviz2 -d rviz/config.rviz
 
 ![Screenshot](rviz/Rviz_config.jpg)
 
+## Agent Workflow
+
+The Wandering Sample has a dedicated VS Code Copilot skill that enforces a review-first workflow before any edits are applied.
+
+**Direct invocation** — mention the skill by name in the chat to activate it explicitly:
+
+```
+@wandering-sample <describe your change and target mode: simulation, real robot, or both>
+```
+
+**Auto-detection** — VS Code will automatically apply this skill when your request mentions keywords matched by the skill description (e.g., Wandering launch files, Nav2 wiring, RTAB-Map, RealSense, robot bring-up paths, or editing files under `components/wandering`). No explicit mention is required in those cases.
+
+The skill enforces:
+1. Repository review before any edit.
+2. A proposed plan and diff shown for approval before changes are applied.
+3. Changes scoped to the Wandering Sample unless you ask otherwise.
+
+The full skill definition, including the expected ASCII pipeline diagram and simulation/real-robot guidance, lives at [`.github/skills/wandering-sample/SKILL.md`](.github/skills/wandering-sample/SKILL.md).
+
 ## License
 
 ``wandering`` is licensed under [Apache 2.0 License](./LICENSES/Apache-2.0.txt).

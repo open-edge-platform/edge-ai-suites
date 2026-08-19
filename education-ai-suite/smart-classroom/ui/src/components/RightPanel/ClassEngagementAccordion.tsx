@@ -225,7 +225,7 @@ const ClassStatisticsAccordion: React.FC<ClassStatisticsAccordionProps> = ({ fea
           )}
         </div>
 
-        {featureGuard.hasFeature('asr') && (
+        {featureGuard.hasFeature('asr') && featureGuard.isDiarizationEnabled() && (
           <div className="analytics-section audio-analytics">
             <Timeline />
           </div>

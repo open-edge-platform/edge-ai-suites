@@ -18,13 +18,14 @@ Package: ros-jazzy-pyrealsense2-ai-demo
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}, 
-    ${python3:Depends}, 
-    ros-jazzy-librealsense2 (>= 2.55.0), 
-    intel-oneapi-runtime-compilers, 
-    intel-oneapi-runtime-dpcpp-cpp, 
-    intel-oneapi-runtime-mkl, 
-    libze1 | level-zero, 
-    intel-opencl-icd (>=23.43.27642.40), 
+    ${python3:Depends},
+    python3-dev,
+    ros-jazzy-librealsense2 (>= 2.55.0),
+    intel-oneapi-runtime-compilers,
+    intel-oneapi-runtime-dpcpp-cpp,
+    intel-oneapi-runtime-mkl,
+    libze1 | level-zero,
+    intel-opencl-icd (>=23.43.27642.40),
     libze-intel-gpu1 (>=23.43.27642.40)
 Recommends: ros-jazzy-robotics-sdk-license
 Description: Intel RealSense d4xx multi-camera streams Objects/Peoples detection demo of Intel OpenVINO optimized inferences in GPU using SSD-Mobilenet/Yolov8 models
