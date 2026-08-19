@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#17324d" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L11,5.5 L0,11 Z" fill="#526579"/>
+    </marker>
+    <style>
+      .title { font: 700 40px 'DejaVu Sans', sans-serif; fill: #172b3a; }
+      .subtitle { font: 400 19px 'DejaVu Sans', sans-serif; fill: #66788a; }
+      .eyebrow { font: 700 14px 'DejaVu Sans', sans-serif; fill: #226b68; letter-spacing: 2px; }
+      .layer-title { font: 700 20px 'DejaVu Sans', sans-serif; fill: #ffffff; }
+      .layer-number { font: 700 13px 'DejaVu Sans', sans-serif; fill: #ffffff; opacity: 0.72; letter-spacing: 1px; }
+      .card-title { font: 700 21px 'DejaVu Sans', sans-serif; fill: #193044; }
+      .card-subtitle { font: 400 15px 'DejaVu Sans', sans-serif; fill: #617487; }
+      .card-title-light { font: 700 22px 'DejaVu Sans', sans-serif; fill: #ffffff; }
+      .card-subtitle-light { font: 400 15px 'DejaVu Sans', sans-serif; fill: #dce7ed; }
+      .flow-label { font: 600 14px 'DejaVu Sans', sans-serif; fill: #526579; }
+      .connector { fill: none; stroke: #526579; stroke-width: 3; marker-end: url(#arrow); }
+      .connector-soft { fill: none; stroke: #8798a9; stroke-width: 2.5; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#f4f7fa"/>
+  <path d="M0 0 H1920 V88 H0 Z" fill="#ffffff"/>
+  <rect x="70" y="49" width="5" height="40" rx="2.5" fill="#1d7a76"/>
+
+  <!-- EDITABLE TEXT: page heading -->
+  <text x="96" y="68" class="title">Enterprise Data Intelligence</text>
+  <text x="97" y="98" class="subtitle">Software Architecture</text>
+  <rect x="1582" y="47" width="268" height="42" rx="6" fill="#e2f1ef"/>
+  <text x="1716" y="73" class="eyebrow" text-anchor="middle">LAYERED VIEW</text>
+
+  <!-- Layer backgrounds -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="130" width="1780" height="126" rx="8" fill="#ffffff"/>
+    <rect x="70" y="274" width="1780" height="126" rx="8" fill="#ffffff"/>
+    <rect x="70" y="418" width="1780" height="158" rx="8" fill="#ffffff"/>
+    <rect x="70" y="594" width="1780" height="158" rx="8" fill="#ffffff"/>
+    <rect x="70" y="770" width="1780" height="222" rx="8" fill="#ffffff"/>
+  </g>
+
+  <!-- EDITABLE TEXT: layer names -->
+  <path d="M78 130 H302 V256 H78 Q70 256 70 248 V138 Q70 130 78 130 Z" fill="#397a87"/>
+  <text x="100" y="168" class="layer-number">01</text>
+  <text x="100" y="205" class="layer-title">Presentation</text>
+  <text x="100" y="230" class="layer-title">Layer</text>
+
+  <path d="M78 274 H302 V400 H78 Q70 400 70 392 V282 Q70 274 78 274 Z" fill="#254a65"/>
+  <text x="100" y="312" class="layer-number">02</text>
+  <text x="100" y="349" class="layer-title">Agent Runtime</text>
+  <text x="100" y="374" class="layer-title">Layer</text>
+
+  <path d="M78 418 H302 V576 H78 Q70 576 70 568 V426 Q70 418 78 418 Z" fill="#b7791f"/>
+  <text x="100" y="456" class="layer-number">03</text>
+  <text x="100" y="493" class="layer-title">Skills</text>
+  <text x="100" y="518" class="layer-title">Layer</text>
+
+  <path d="M78 594 H302 V752 H78 Q70 752 70 744 V602 Q70 594 78 594 Z" fill="#35745f"/>
+  <text x="100" y="632" class="layer-number">04</text>
+  <text x="100" y="669" class="layer-title">AI Services</text>
+  <text x="100" y="694" class="layer-title">Layer</text>
+
+  <path d="M78 770 H302 V992 H78 Q70 992 70 984 V778 Q70 770 78 770 Z" fill="#526273"/>
+  <text x="100" y="808" class="layer-number">05</text>
+  <text x="100" y="845" class="layer-title">Model &amp; Data</text>
+  <text x="100" y="870" class="layer-title">Layer</text>
+
+  <!-- Connectors -->
+  <path d="M855 193 H1080" class="connector"/>
+  <text x="968" y="181" class="flow-label" text-anchor="middle">submits tasks</text>
+  <path d="M1300 193 V337 H1268" class="connector"/>
+  <path d="M1005 372 V445 H690" class="connector"/>
+  <path d="M1005 372 V420 H1315 V445" class="connector"/>
+  <text x="1005" y="416" class="flow-label" text-anchor="middle">loads &amp; executes</text>
+  <path d="M690 535 V621" class="connector"/>
+  <path d="M1315 535 V562 H780 V621" class="connector"/>
+  <text x="941" y="583" class="flow-label" text-anchor="middle">grounded knowledge queries</text>
+  <path d="M1268 337 H1735 V621 H1580" class="connector"/>
+  <rect x="1662" y="446" width="122" height="32" rx="5" fill="#ffffff" stroke="#d8e0e7"/>
+  <text x="1723" y="467" class="flow-label" text-anchor="middle">model calls</text>
+  <path d="M690 711 V797 H570" class="connector-soft"/>
+  <path d="M690 711 V778 H1050 V797" class="connector-soft"/>
+  <path d="M1315 711 V778 H1050 V797" class="connector-soft"/>
+  <path d="M1315 711 V797 H1570" class="connector-soft"/>
+
+  <!-- EDITABLE TEXT: Presentation Layer -->
+  <g filter="url(#shadow)">
+    <rect x="535" y="157" width="320" height="72" rx="7" fill="#e8f5f4" stroke="#8ac4c0" stroke-width="2"/>
+    <rect x="1080" y="157" width="440" height="72" rx="7" fill="#1d7a76"/>
+  </g>
+  <circle cx="585" cy="185" r="10" fill="#397a87"/>
+  <path d="M568 215 C570 197 600 197 602 215" fill="#397a87"/>
+  <text x="625" y="189" class="card-title">User</text>
+  <text x="625" y="212" class="card-subtitle">Business task owner</text>
+  <text x="1132" y="188" class="card-title-light">Web UI</text>
+  <text x="1132" y="212" class="card-subtitle-light">Task submission and result delivery</text>
+
+  <!-- EDITABLE TEXT: Agent Runtime Layer -->
+  <g filter="url(#shadow)">
+    <rect x="742" y="301" width="526" height="72" rx="7" fill="#254a65"/>
+  </g>
+  <rect x="780" y="322" width="34" height="30" rx="5" fill="#ffffff" opacity="0.18"/>
+  <circle cx="791" cy="337" r="4" fill="#ffffff"/>
+  <circle cx="803" cy="337" r="4" fill="#ffffff"/>
+  <text x="840" y="332" class="card-title-light">OpenClaw Agent Runtime</text>
+  <text x="840" y="355" class="card-subtitle-light">Orchestration, tool execution and model access</text>
+
+  <!-- EDITABLE TEXT: Skills Layer -->
+  <g filter="url(#shadow)">
+    <rect x="425" y="445" width="530" height="90" rx="7" fill="#fff7e7" stroke="#e7bd6b" stroke-width="2"/>
+    <rect x="1050" y="445" width="530" height="90" rx="7" fill="#fff7e7" stroke="#e7bd6b" stroke-width="2"/>
+  </g>
+  <rect x="458" y="469" width="42" height="42" rx="6" fill="#c78520"/>
+  <text x="479" y="497" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">A</text>
+  <text x="522" y="481" class="card-title">Competitive Analysis</text>
+  <text x="522" y="507" class="card-subtitle">PDF report generator</text>
+  <rect x="1083" y="469" width="42" height="42" rx="6" fill="#c78520"/>
+  <text x="1104" y="497" font-family="DejaVu Sans, sans-serif" font-size="22" font-weight="700" fill="#ffffff" text-anchor="middle">K</text>
+  <text x="1147" y="481" class="card-title">Knowledge Base Query</text>
+  <text x="1147" y="507" class="card-subtitle">Reusable RAG retrieval skill</text>
+
+  <!-- EDITABLE TEXT: AI Services Layer -->
+  <g filter="url(#shadow)">
+    <rect x="425" y="621" width="530" height="90" rx="7" fill="#eaf6f0" stroke="#7fbaa5" stroke-width="2"/>
+    <rect x="1050" y="621" width="530" height="90" rx="7" fill="#eaf1f7" stroke="#88a9c0" stroke-width="2"/>
+  </g>
+  <rect x="458" y="645" width="42" height="42" rx="6" fill="#35745f"/>
+  <path d="M470 658 H488 M470 666 H488 M470 674 H483" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <text x="522" y="657" class="card-title">EC-RAG</text>
+  <text x="522" y="683" class="card-subtitle">Retrieval and grounded answer generation</text>
+  <rect x="1083" y="645" width="42" height="42" rx="6" fill="#397a87"/>
+  <path d="M1094 657 H1114 M1094 666 H1108 M1094 675 H1118" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <text x="1147" y="657" class="card-title">LLM Router + Compressor</text>
+  <text x="1147" y="683" class="card-subtitle">Prompt compression and model dispatch</text>
+
+  <!-- EDITABLE TEXT: Model and Data Layer -->
+  <g filter="url(#shadow)">
+    <rect x="390" y="797" width="360" height="130" rx="7" fill="#ffffff" stroke="#b9c4ce" stroke-width="2"/>
+    <rect x="835" y="797" width="430" height="130" rx="7" fill="#ffffff" stroke="#b9c4ce" stroke-width="2"/>
+    <rect x="1390" y="797" width="360" height="130" rx="7" fill="#ffffff" stroke="#b9c4ce" stroke-width="2"/>
+  </g>
+  <ellipse cx="570" cy="832" rx="27" ry="10" fill="#526273"/>
+  <path d="M543 832 V864 C543 870 555 875 570 875 C585 875 597 870 597 864 V832" fill="#526273"/>
+  <ellipse cx="570" cy="848" rx="27" ry="10" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.75"/>
+  <text x="570" y="902" class="card-title" text-anchor="middle">Milvus Vector Store</text>
+  <rect x="1025" y="821" width="50" height="44" rx="6" fill="#526273"/>
+  <path d="M1037 833 H1063 M1037 843 H1063 M1037 853 H1056" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <text x="1050" y="902" class="card-title" text-anchor="middle">Local vLLM Models</text>
+  <path d="M1540 862 C1538 846 1550 837 1564 839 C1571 821 1598 819 1607 839 C1626 837 1635 849 1632 862 Z" fill="#526273"/>
+  <text x="1570" y="902" class="card-title" text-anchor="middle">Cloud Models</text>
+
+  <text x="960" y="1036" class="subtitle" text-anchor="middle">Reusable skills connect agent orchestration with grounded enterprise knowledge and model services.</text>
+</svg>
