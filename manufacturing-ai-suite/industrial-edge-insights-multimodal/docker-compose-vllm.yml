@@ -86,7 +86,7 @@ services:
   ia-insights-workbench:
     container_name: ia-insights-workbench
     hostname: ia-insights-workbench
-    image: ${DOCKER_REGISTRY}intel/ia-insights-workbench:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    image: ${DOCKER_REGISTRY}${WORKBENCH_INSIGHTS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     build:
       context: $PWD/insights-workbench
       dockerfile: $PWD/insights-workbench/Dockerfile

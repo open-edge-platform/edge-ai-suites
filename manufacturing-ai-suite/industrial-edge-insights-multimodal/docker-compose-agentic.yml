@@ -201,7 +201,7 @@ services:
       - '--web.enable-lifecycle'
 
   multimodal-agentic-ui:
-    image: ${DOCKER_REGISTRY}${APM_UI_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    image: ${DOCKER_REGISTRY}${MULTIMODAL_AGENTIC_UI_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     container_name: multimodal-agentic-ui
     hostname: multimodal-agentic-ui
     build:
