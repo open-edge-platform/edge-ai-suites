@@ -374,7 +374,7 @@ def build_image_index(images_root: Path) -> Tuple[Dict[str, str], Dict[str, List
 def load_csv(csv_path: Path) -> pd.DataFrame:
     df = pd.read_csv(csv_path, low_memory=False, skipinitialspace=True)
     df.columns = df.columns.str.strip()
-    for col in df.select_dtypes(include=["object", "str"]).columns:
+    for col in df.select_dtypes(include=["object", "string"]).columns:
         df[col] = df[col].str.strip()
     return df
 
