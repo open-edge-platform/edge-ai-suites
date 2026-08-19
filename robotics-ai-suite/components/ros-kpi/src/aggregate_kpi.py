@@ -39,6 +39,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from log_config import configure_logging, get_logger
+
+logger = get_logger(__name__)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  Health colour (same thresholds as analyze_trigger_latency.py)
@@ -105,9 +109,9 @@ def load_bench(bench_dir: Path) -> tuple[int, dict]:
     """
     json_files = sorted(bench_dir.glob('*/kpi.json'))
     if not json_files:
-        print(f"ERROR: No kpi.json files found under {bench_dir}", file=sys.stderr)
-        print("       Run 'bash src/wandering_run.sh --record' or check that --record was used.",
-              file=sys.stderr)
+        logger.error("No kpi.json files found under %s", bench_dir)
+        logger.error("Re-run the scenario's *_run.sh script with --record, or check that "
+                     "--record was used for this benchmark.")
         sys.exit(1)
 
     per_pair: Dict[tuple, List[dict]] = defaultdict(list)
@@ -117,7 +121,7 @@ def load_bench(bench_dir: Path) -> tuple[int, dict]:
             with open(jf) as f:
                 data = json.load(f)
         except (json.JSONDecodeError, OSError) as e:
-            print(f"  WARNING: skipping {jf}: {e}", file=sys.stderr)
+            logger.warning("skipping %s: %s", jf, e)
             continue
         for pair in data.get('pairs', []):
             key = (pair['node'], pair['input'], pair['output'])
@@ -203,23 +207,22 @@ _CAT_LABELS = {
 
 def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
     if not results:
-        print("No pairs met the minimum-runs threshold.")
+        logger.warning("No pairs met the minimum-runs threshold.")
         return
 
-    print()
-    print('━' * W)
-    print(f"  Benchmark: {bench_dir.name}  |  {total_runs} runs × 120 s")
-    print("  Columns: Hz = avg throughput  mean = avg(mean_ms across runs)  ±stdev  cv% = consistency")
-    print("           p90 = avg(p90_ms)  worst_p90 = max across all runs")
-    print("  Legend (health): ✅<10ms  🟡<50ms  🟠<200ms  🔴≥200ms")
-    print("  Legend (consistency ◆<10%cv  ◇<25%  △<50%  ✗≥50% — RTF-sensitive)")
-    print("  Pipeline stages (in order): Sensor → Perception → Planning → Control → Other")
-    print('━' * W)
+    logger.debug("\n" + '━' * W)
+    logger.debug("  Benchmark: %s  |  %s runs x 120 s", bench_dir.name, total_runs)
+    logger.debug("  Columns: Hz = avg throughput  mean = avg(mean_ms across runs)  ±stdev  cv%s = consistency", "%")
+    logger.debug("           p90 = avg(p90_ms)  worst_p90 = max across all runs")
+    logger.debug("  Legend (health): ✅<10ms  🟡<50ms  🟠<200ms  🔴≥200ms")
+    logger.debug("  Legend (consistency ◆<10%scv  ◇<25%s  △<50%s  ✗≥50%s — RTF-sensitive)", "%", "%", "%", "%")
+    logger.debug("  Pipeline stages (in order): Sensor → Perception → Planning → Control → Other")
+    logger.debug('━' * W)
     _pm = '±'
-    print(f"  {'#':>3}  {'Stage':<10} {'Node':<22} {'Input':<30} {'Output':<26} "
-          f"{'Hz':>8} {'mean':>8} {_pm:>1} {'stdev':>6} {'cv%':>5} "
-          f"{'p90':>8} {'worst_p90':>9} {'runs':>6}")
-    print('━' * W)
+    logger.debug("  %3s  %-10s %-22s %-30s %-26s %8s %8s %1s %6s %5s %8s %9s %6s",
+                '#', 'Stage', 'Node', 'Input', 'Output',
+                'Hz', 'mean', _pm, 'stdev', 'cv%', 'p90', 'worst_p90', 'runs')
+    logger.debug('━' * W)
 
     visible = results[:40]
     current_cat = None
@@ -229,7 +232,7 @@ def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
             current_cat = cat
             banner = f" {cat.upper()} "
             side = (W - len(banner) - 2) // 2
-            print(f"  {'─' * side}{banner}{'─' * (W - 2 - side - len(banner))}")
+            logger.debug("  %s%s%s", '─' * side, banner, '─' * (W - 2 - side - len(banner)))
         h   = _health(r['mean_ms'])
         c   = _consistency(r['cv_pct'])
         cat_label = _CAT_LABELS.get(cat, 'Other   ')
@@ -239,44 +242,39 @@ def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
         run_frac = f"{r['runs_seen']:>2}/{r['total_runs']}"
         fps = r.get('mean_fps')
         fps_s = f'{fps:.1f}' if fps is not None else '—'
-        print(f"  {i:>3}  {h}{c} {cat_label} {nd:<20} {inp:<30} {out:<26} "
-              f"{fps_s:>8} "
-              f"{r['mean_ms']:>7.1f}ms "
-              f"{r['stdev_runs']:>5.1f} "
-              f"{r['cv_pct']:>5.1f}% "
-              f"{r['mean_p90_ms']:>7.1f}ms "
-              f"{r['worst_p90_ms']:>8.1f}ms "
-              f"{run_frac:>6}")
+        logger.debug("  %3d  %s%s %s %-20s %-30s %-26s %8s %7.1fms %5.1f %5.1f%% %7.1fms %8.1fms %6s",
+                    i, h, c, cat_label, nd, inp, out,
+                    fps_s, r['mean_ms'], r['stdev_runs'], r['cv_pct'],
+                    r['mean_p90_ms'], r['worst_p90_ms'], run_frac)
 
-    print('━' * W)
+    logger.debug('━' * W)
     if len(results) > 40:
-        print(f"  … {len(results) - 40} more pairs not shown (use --node to filter)")
-    print()
+        logger.debug("  … %d more pairs not shown (use --node to filter)", len(results) - 40)
+    logger.debug("")
 
     # Bottleneck summary
     red_pairs = [r for r in results if r['mean_ms'] >= 200 and r['cv_pct'] < 30]
     if red_pairs:
-        print("  🔴 CONSISTENT BOTTLENECKS (mean ≥200ms, cv<30% — reliably slow every run):")
+        logger.debug("  🔴 CONSISTENT BOTTLENECKS (mean ≥200ms, cv<30%s — reliably slow every run):", "%")
         for r in red_pairs[:8]:
             nd  = r['node'].split('/')[-1]
             inp = r['input'].split('/')[-1]
             out = r['output'].split('/')[-1]
-            print(f"     {nd}  {inp} → {out}   "
-                  f"{r['mean_ms']:.0f}ms ± {r['stdev_runs']:.0f}ms  "
-                  f"(worst p90: {r['worst_p90_ms']:.0f}ms, {r['runs_seen']}/{r['total_runs']} runs)")
-        print()
+            logger.debug("     %s  %s → %s   %.0fms ± %.0fms  (worst p90: %.0fms, %d/%d runs)",
+                        nd, inp, out, r['mean_ms'], r['stdev_runs'],
+                        r['worst_p90_ms'], r['runs_seen'], r['total_runs'])
+        logger.debug("")
 
     unstable = [r for r in results if r['cv_pct'] >= 50 and r['mean_ms'] >= 50]
     if unstable:
-        print("  ✗ RTF-SENSITIVE PAIRS (cv≥50% — highly variable, likely sim-speed limited):")
+        logger.debug("  ✗ RTF-SENSITIVE PAIRS (cv≥50%s — highly variable, likely sim-speed limited):", "%")
         for r in unstable[:5]:
             nd  = r['node'].split('/')[-1]
             inp = r['input'].split('/')[-1]
             out = r['output'].split('/')[-1]
-            print(f"     {nd}  {inp} → {out}   "
-                  f"range [{r['min_mean_ms']:.0f}–{r['max_mean_ms']:.0f}]ms  "
-                  f"cv={r['cv_pct']:.0f}%")
-        print()
+            logger.debug("     %s  %s → %s   range [%.0f–%.0f]ms  cv=%.0f%%",
+                        nd, inp, out, r['min_mean_ms'], r['max_mean_ms'], r['cv_pct'])
+        logger.debug("")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -317,20 +315,21 @@ def print_aggregate_summary(results: List[dict], bench_dir: Path, total_runs: in
     )
 
     W = 108
-    print()
-    print('━' * W)
-    print(f"  Aggregate Summary  |  {bench_dir.name}  |  {total_runs} runs")
-    print('━' * W)
-    print(f"  {'Component':<28} {'Output':<26} {'Throughput':>12}  {'Mean Latency':>14}  {'Worst p90':>10}")
-    print('━' * W)
+    logger.debug("\n" + '━' * W)
+    logger.debug("  Aggregate Summary  |  %s  |  %s runs", bench_dir.name, total_runs)
+    logger.debug('━' * W)
+    logger.debug("  %-28s %-26s %12s  %14s  %10s",
+                'Component', 'Output', 'Throughput', 'Mean Latency', 'Worst p90')
+    logger.debug('━' * W)
     for r in ranked:
         nd    = r['node'].split('/')[-1][:26]
         out   = r['output'][-25:] if len(r['output']) > 25 else r['output']
         fps   = r.get('mean_fps')
         fps_s = f'{fps:.1f} Hz' if fps is not None else '—'
         h     = _health(r['mean_ms'])
-        print(f"  {h} {nd:<26} {out:<26} {fps_s:>12}  {r['mean_ms']:>12.1f} ms  {r['worst_p90_ms']:>8.1f} ms")
-    print('━' * W)
+        logger.debug("  %s %-26s %-26s %12s  %12.1f ms  %8.1f ms",
+                    h, nd, out, fps_s, r['mean_ms'], r['worst_p90_ms'])
+    logger.debug('━' * W)
 
 
 def write_csv(results: List[dict], path: Path) -> None:
@@ -338,7 +337,7 @@ def write_csv(results: List[dict], path: Path) -> None:
         w = csv.DictWriter(f, fieldnames=_CSV_FIELDS, extrasaction='ignore')
         w.writeheader()
         w.writerows(results)
-    print(f"  CSV written → {path}")
+    logger.info("  CSV written → %s", path)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -379,20 +378,29 @@ def main() -> None:
         metavar='FILE',
         help='Write aggregated results to a JSON file.',
     )
+    parser.add_argument(
+        '--log-level',
+        default=None,
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+        help='Logging verbosity. Defaults to the LOG_LEVEL env var (or .env file), '
+             'falling back to INFO.',
+    )
     args = parser.parse_args()
+
+    configure_logging(args.log_level)
 
     bench_dir = Path(args.bench_dir).resolve()
     if not bench_dir.is_dir():
-        print(f"ERROR: {bench_dir} is not a directory", file=sys.stderr)
+        logger.error("%s is not a directory", bench_dir)
         sys.exit(1)
 
     total_runs, per_pair = load_bench(bench_dir)
-    print(f"  Loaded {total_runs} run(s) from {bench_dir.name}")
-    print(f"  Found {len(per_pair)} unique (node, input, output) pairs across all runs")
+    logger.info("  Loaded %d run(s) from %s", total_runs, bench_dir.name)
+    logger.info("  Found %d unique (node, input, output) pairs across all runs", len(per_pair))
 
     # Default min_runs: half of total runs, at least 3
     min_runs = args.min_runs if args.min_runs > 0 else max(3, total_runs // 2)
-    print(f"  Minimum runs threshold: {min_runs}")
+    logger.info("  Minimum runs threshold: %d", min_runs)
 
     results = aggregate(per_pair, total_runs, min_runs, node_filter=args.node)
 
@@ -408,7 +416,7 @@ def main() -> None:
         with open(out_path, 'w') as f:
             json.dump({'bench_dir': str(bench_dir), 'total_runs': total_runs,
                        'results': results}, f, indent=2)
-        print(f"  JSON written → {out_path}")
+        logger.info("  JSON written → %s", out_path)
 
 
 if __name__ == '__main__':

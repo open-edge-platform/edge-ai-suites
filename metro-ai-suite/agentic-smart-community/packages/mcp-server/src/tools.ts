@@ -455,7 +455,8 @@ export function registerTools(
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
       ),
       schema_extensions: z.array(z.object({
-        name: z.string(),
+        // Names land verbatim in ALTER/CREATE TABLE DDL — plain identifiers only.
+        name: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "must be a plain SQL identifier ([a-zA-Z_][a-zA-Z0-9_]*)"),
         type: z.enum(["text", "integer", "real"]),
         required: z.boolean(),
       })).optional().describe(
@@ -590,6 +591,7 @@ export function registerTools(
         db,
         {
           useCaseDict: config.useCaseDict,
+          alertCooldownSeconds: config.alerts.cooldownSeconds,
         },
         params as any,
       );

@@ -166,11 +166,12 @@ class TestHandleUnhealthy:
         pipeline._failure_count = 30
         pipeline._running = True
 
-        with patch("stream_monitor.rtsp_monitor.time.sleep") as mock_sleep:
-            pipeline._handle_unhealthy()
+        # Retry backoff waits on the interruptible stop event, not time.sleep.
+        with patch.object(pipeline._stop_event, "wait") as mock_wait:
+            pipeline._handle_unhealthy(pipeline._generation)
 
         assert pipeline._status == "unhealthy"
-        mock_sleep.assert_called_once_with(5.0)
+        mock_wait.assert_called_once_with(5.0)
 
     def test_remove_strategy_stops_and_calls_callback(self):
         callback = MagicMock()
@@ -181,7 +182,7 @@ class TestHandleUnhealthy:
         pipeline._failure_count = 30
         pipeline._running = True
 
-        pipeline._handle_unhealthy()
+        pipeline._handle_unhealthy(pipeline._generation)
 
         assert pipeline._running is False
         assert pipeline._status == "removed"
@@ -192,7 +193,7 @@ class TestHandleUnhealthy:
         pipeline._failure_count = 30
         pipeline._running = True
 
-        pipeline._handle_unhealthy()
+        pipeline._handle_unhealthy(pipeline._generation)
 
         assert pipeline._running is False
         assert pipeline._status == "removed"
@@ -208,7 +209,7 @@ class TestHandleUnhealthy:
             pipeline._paused.set()
 
         threading.Thread(target=resume_after_pause, daemon=True).start()
-        pipeline._handle_unhealthy()
+        pipeline._handle_unhealthy(pipeline._generation)
 
         assert pipeline._failure_count == 0
         assert pipeline._reconnect_count == 0
@@ -232,7 +233,7 @@ class TestHandleUnhealthy:
         pipeline._running = True
 
         with patch("stream_monitor.rtsp_monitor.time.sleep"):
-            pipeline._handle_unhealthy()
+            pipeline._handle_unhealthy(pipeline._generation)
 
         # Unhealthy (RTSP health) is not pushed to the /events webhook.
         # Internal status is set instead — MCP reads it via GET /sources/{id}/status.
@@ -253,14 +254,14 @@ class TestRunReconnectionLogic:
             pipeline._cap = MagicMock()
             pipeline._cap.isOpened.return_value = True
 
-        def fake_process_loop():
+        def fake_process_loop(_generation):
             call_count[0] += 1
             pipeline._running = False
 
         with patch.object(pipeline, "_connect", side_effect=fake_connect), \
              patch.object(pipeline, "_process_loop", side_effect=fake_process_loop), \
              patch.object(pipeline, "_emit_status"):
-            pipeline._run()
+            pipeline._run(pipeline._generation)
 
         assert pipeline._failure_count == 0
         assert pipeline._reconnect_count == 0
@@ -280,7 +281,7 @@ class TestRunReconnectionLogic:
         with patch.object(pipeline, "_connect", side_effect=fake_connect), \
              patch.object(pipeline, "_emit_status"), \
              patch("stream_monitor.rtsp_monitor.time.sleep"):
-            pipeline._run()
+            pipeline._run(pipeline._generation)
 
         assert pipeline._failure_count == 3
         assert pipeline._reconnect_count >= 2

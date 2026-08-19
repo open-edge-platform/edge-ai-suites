@@ -66,6 +66,10 @@ from typing import List
 
 import yaml
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 _DEFAULT_SWEEP = (
     "ros2 |gz sim|gz_server|gz server"
     "|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|rviz2"
@@ -332,7 +336,7 @@ def main(argv: list[str] | None = None) -> None:
     try:
         cfg = RunConfig.load(args.config)
     except (FileNotFoundError, ValueError) as exc:
-        print(f"ERROR: {exc}", file=sys.stderr)
+        logger.error(f"{exc}")
         sys.exit(1)
 
     if args.export_bash:

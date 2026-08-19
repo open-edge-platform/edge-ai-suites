@@ -42,7 +42,7 @@ const CONFIG = {
           // Limit which options in other categories are compatible with this SDK.
           // Buttons for values not listed here will be greyed out when this SDK is selected.
           supports: {
-            VERSION: ["latest"]
+            VERSION: ["latest", "2026.2"]
           }
         }
       ]
@@ -284,9 +284,32 @@ const CONFIG = {
           when: {
             SDK: "UAV_MISSION_COMPUTE",
             OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          components: [
+            "OpenVINO",
+            "PX4",
+            "Gazebo",
+            "MediaMTX",
+            "MQTT Broker",
+            "Grafana",
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           components: [
+            "OpenVINO",
+            "PX4",
+            "Gazebo",
+            "MediaMTX",
+            "MQTT Broker",
+            "Grafana",
             "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo"
           ]
@@ -401,6 +424,14 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash`
         },
         {
           when: {
@@ -525,6 +556,15 @@ const CONFIG = {
           },
           text: `Get Started`,
           link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/visual-ai-demo-kit/get-started.html`
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/oep-sdk-manager/uav-mission-compute-sdk/get-started.html`
         },
         {
           when: {
@@ -731,9 +771,22 @@ const CONFIG = {
           when: {
             SDK: "UAV_MISSION_COMPUTE",
             OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.2"
+          },
+          links: [
+            { text: "OpenVINO", url: "https://docs.openvino.ai/2026/get-started.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "UAV_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           links: [
+            { text: "OpenVINO", url: "https://docs.openvino.ai/2026/get-started.html" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]

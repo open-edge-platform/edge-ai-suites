@@ -1,10 +1,11 @@
 # Release Notes: Federal And Aerospace Suite
 
-<!--## Version 2026.2.0-->
+## Version 2026.2.0
 
-<!--date TBD-->
+07 Sep. 2026
 
-## Version 2026.1.1
+
+## Version 2026.1.2
 
 Initial release (preview) version of the application and the Infrastructure blueprint.
 The application is optimized for AI inference on portable devices, focusing on SWaP-C
@@ -29,3 +30,5 @@ The application introduces the following features:
 - After long conversation in OpenWeb UI, `OpenVINO/Phi-3.5-mini-instruct-int4-ov` model can start responding in gibberish output instead of logical language. To fix issue, start a new session in OpenWeb UI.
 - It is not possible to select historical metrics in Grafana despite having a timepicker. Dashboards only show live metrics that are stored in buffer, which can contains metrics from last ~5 minutes.
 - Grafana metric for Whisper only appear after whole file is processed instead of appearing in realtime. Whisper itself is working as expected and performs speech-to-text in realtime, which is visible on Whisper's page.
+- [FIXED] Incorrect power readings may occur on The Infrastructure Blueprint images built with
+  6.18-intel kernel, resulting in spurious analytic data.

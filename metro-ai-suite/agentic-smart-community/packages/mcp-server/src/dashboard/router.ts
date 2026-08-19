@@ -8,7 +8,8 @@ import { generateReport, type VideoSummaryClient } from "@smart-community-video/
 import type { ServerConfig } from "../config.js";
 import { loadDashboardIntegrationConfig } from "./integration-env.js";
 import { LiveStreamManager } from "./live-stream.js";
-import { sendMp4, sendSnapshot } from "./media.js";
+import { resolveMonitorMp4, sendMp4, sendSnapshot } from "./media.js";
+import { sendRecording } from "./recording-stream.js";
 import type { ChatCredentialStore } from "./chat-credentials.js";
 
 const monitorIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,128}$/);
@@ -30,6 +31,15 @@ function dateRange(date: string): { start: string; end: string } {
   if (Number.isNaN(next.getTime())) throw new Error("Invalid date");
   next.setUTCDate(next.getUTCDate() + 1);
   return { start: `${date} 00:00:00`, end: `${next.toISOString().slice(0, 10)} 00:00:00` };
+}
+
+// `recordings.start_time` is written as local ISO ("2026-08-12T11:11:31"), not the
+// space-separated form the events/tasks tables use, so it needs its own range.
+function isoDateRange(date: string): { start: string; end: string } {
+  const next = new Date(`${date}T00:00:00Z`);
+  if (Number.isNaN(next.getTime())) throw new Error("Invalid date");
+  next.setUTCDate(next.getUTCDate() + 1);
+  return { start: `${date}T00:00:00`, end: `${next.toISOString().slice(0, 10)}T00:00:00` };
 }
 
 function parseOrReply<T>(schema: z.ZodType<T>, value: unknown, res: Response): T | undefined {
@@ -178,6 +188,43 @@ export function createDashboardRouter(
       return;
     }
     sendMp4(res, config.segmentsDir, monitorId, clipPath, req.headers.range);
+  });
+
+  // Continuous-recording segments for one day, oldest first — the dashboard
+  // timeline uses these both to draw recording coverage and to resolve a clicked
+  // instant to the segment that covers it. file_path stays server-side, same as
+  // /monitors withholds sourceUrl.
+  router.get("/recordings", (req, res) => {
+    const query = parseOrReply(taskQuerySchema.pick({ monitor_id: true, date: true }), req.query, res);
+    if (!query) return;
+    const { start, end } = isoDateRange(query.date);
+    const recordings = db.listRecordings(query.monitor_id, { since: start, until: end, order: "asc" });
+    res.json(recordings.map(({ id, startTime, endTime, durationSeconds, fileSizeBytes }) => ({
+      id, startTime, endTime, durationSeconds, fileSizeBytes,
+    })));
+  });
+
+  router.get("/recordings/:id/stream", (req, res) => {
+    const recordingId = z.coerce.number().int().positive().safeParse(req.params.id);
+    const monitorId = parseOrReply(monitorIdSchema, req.query.monitor_id, res);
+    if (!recordingId.success || !monitorId) {
+      if (!recordingId.success && !res.headersSent) res.status(400).json({ error: "Invalid recording id" });
+      return;
+    }
+    const recording = db.getRecording(recordingId.data);
+    if (!recording || recording.monitorId !== monitorId) {
+      res.status(404).json({ error: "Recording not found" });
+      return;
+    }
+    const file = resolveMonitorMp4(config.segmentsDir, monitorId, recording.filePath);
+    if (!file) {
+      res.status(404).json({ error: "Recording not found" });
+      return;
+    }
+    void sendRecording(res, config.segmentsDir, monitorId, file, req.headers.range).catch((error) => {
+      console.error(`[dashboard] recording stream failed: ${error}`);
+      if (!res.headersSent) res.status(500).json({ error: "Recording playback failed" });
+    });
   });
 
   return router;

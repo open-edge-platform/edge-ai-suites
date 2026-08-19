@@ -89,7 +89,7 @@ Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-ov
 
 PackageName: open-webui
 SPDXID: SPDXRef-Package-open-webui
-PackageVersion: v0.9.6-slim
+PackageVersion: v0.11.0-slim
 PackageSupplier: Organization: Open WebUI Contributors
 PackageDownloadLocation: https://ghcr.io/open-webui/open-webui
 PackageHomePage: https://github.com/open-webui/open-webui
@@ -97,7 +97,7 @@ PackageLicenseConcluded: BSD-3-Clause
 PackageLicenseDeclared: BSD-3-Clause
 PackageCopyrightText: <text>Copyright Open WebUI contributors</text>
 PackageSummary: <text>Browser-based chat UI for LLMs; configured here to talk to OVMS via the OpenAI-compatible endpoint and to invoke the local Whisper STT service for voice input.</text>
-ExternalRef: PACKAGE-MANAGER purl pkg:docker/open-webui/open-webui@v0.9.6-slim?repository_url=ghcr.io
+ExternalRef: PACKAGE-MANAGER purl pkg:docker/open-webui/open-webui@v0.11.0-slim?repository_url=ghcr.io
 FilesAnalyzed: false
 
 Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-open-webui

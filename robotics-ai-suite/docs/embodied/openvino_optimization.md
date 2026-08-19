@@ -24,7 +24,7 @@ This tutorial covers:
 
 ## Source Code
 
-The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/vla-pi0.5-openvino)
+The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/pipelines/vla-pi0.5-openvino)
 
 ## Environment and Model Setup
 
@@ -98,7 +98,7 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
 
    ```bash
    cd ..
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
    cd edge-ai-suites/robotics-ai-suite/pipelines/vla-pi0.5-openvino
    python convert_pytorch_onnx.py
    ```

@@ -211,7 +211,6 @@ class TestSourceManagerUpdate:
             enabled=True,
             interval_seconds=60,
             fps=15,
-            retention_days=5,
         )
 
         manager.update_pipeline_config(
@@ -224,7 +223,6 @@ class TestSourceManagerUpdate:
         assert updated.fps == 25
         assert updated.enabled is True
         assert updated.interval_seconds == 60
-        assert updated.retention_days == 5
 
 
 class TestSourceManagerRemoveCallback:

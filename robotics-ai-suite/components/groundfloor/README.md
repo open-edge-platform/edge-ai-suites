@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation.html).
 
 ## Overview
 
@@ -35,7 +35,7 @@ This application supports the following ROS2 distributions:
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -120,7 +120,7 @@ Target               Description
 ------               -----------
 build                Build debian package
 clean                Clean build artifacts
-help                 
+help
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
 lint                 Run all sub-linters using super-linter (using linters defined for this repo only)
 lint-all             Run super-linter over entire repository (auto-detects code to lint)
