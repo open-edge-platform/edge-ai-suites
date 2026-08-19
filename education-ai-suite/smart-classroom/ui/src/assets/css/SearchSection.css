@@ -8,7 +8,6 @@
   padding: 16px;
   margin-top: 16px;
   color: #2B2C30;
-  font-family: 'IntelOne Text', sans-serif;
 }
 
 /* ───────── Section-level tab bar: Search | Q&A ───────── */
@@ -24,7 +23,6 @@
   padding: 10px 0;
   background: none;
   border: none;
-  font-family: 'IntelOne Text', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #6A6D75;

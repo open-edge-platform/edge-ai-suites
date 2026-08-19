@@ -1,5 +1,5 @@
 #! /usr/bin/python3
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
 # ASREQ-1085 Visualization
@@ -42,11 +42,12 @@ class AtfTest(AMRTest):
 
         self.configure_local_apt_repo(self.testing_targets[0].term1)
         self.testing_targets[0].run_cmd(
-            "apt update; apt install -y /tmp/debs/ros-${ROS_DISTRO}-adbscan-ros2_*; echo 'finish'",
+            'set -ex; deb=$(ls /tmp/debs/ros-*-adbscan-ros2_*.deb | head -n1); '
+            'echo "$deb"; ls -l /tmp/debs; dpkg -I "$deb"; '
+            'apt-get update; apt-get install -y "$deb"',
             self.testing_targets[0].term1,
-            check_code=False,
+            check_code=True,
             timeout=300,
-            check_output="finish",
         )
 
         self.testing_targets[0].run_cmd(
@@ -65,7 +66,7 @@ class AtfTest(AMRTest):
             " -p 'scale_factor:=0.9' &",
             self.testing_targets[0].term1,
             check_code=False,
-            sleep=10,
+            sleep=20,
         )
         # check topic list
         self.testing_targets[0].run_cmd(

@@ -26,14 +26,14 @@
   transform: scale(1.05);
 }
 
-.hamburger-icon {
+.left-sidebar-menu .hamburger-icon {
   display: flex;
   flex-direction: column;
   gap: 4px;
   width: 20px;
 }
 
-.hamburger-icon span {
+.left-sidebar-menu .hamburger-icon span {
   display: block;
   width: 100%;
   height: 2px;
@@ -109,7 +109,7 @@
   filter: brightness(0.8);
 }
 
-.menu-icon {
+.left-sidebar-menu .menu-icon {
   font-size: 1.25rem;
   width: 24px;
   text-align: center;
@@ -126,7 +126,7 @@
     height: 40px;
   }
 
-  .hamburger-icon {
+  .left-sidebar-menu .hamburger-icon {
     width: 18px;
     gap: 3px;
   }

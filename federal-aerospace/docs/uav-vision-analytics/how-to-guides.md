@@ -11,12 +11,15 @@ Learn more about:
 - [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and fixes for deployment, inference, and streaming problems
 
 
-
+<!--hide_directive
 :::{toctree}
 :hidden:
-Get Started - Standalone <./get-started-standalone.md>
-Get Started - SDK <./get-started-uavsdk.md>
-User Guides <./how-to-guides.md>
-System Requirements <./system-requirements.md>
-Release Notes <./release-notes.md>
+
+YOLOv8n-VisDrone AI Model <./how-to-guides/model.md>
+Benchmarking <./how-to-guides/benchmark.md>
+Makefile Reference <./how-to-guides/makefile.md>
+RealSense Camera <./how-to-guides/realsense-guide.md>
+QGroundControl <./how-to-guides/qgroundcontrol.md>
+Troubleshooting <./how-to-guides/troubleshooting.md>
 :::
+hide_directive-->

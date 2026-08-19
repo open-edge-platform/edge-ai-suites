@@ -26,6 +26,10 @@ from pathlib import Path
 from statistics import mean
 from typing import Optional
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 _TS_RE = re.compile(r'^\d{8}_\d{6}$')
 _W = 76  # total display width
 
@@ -66,8 +70,8 @@ def _session_duration(sess: Path) -> Optional[float]:
         return None
     start_s = start_dt.timestamp()
     mtimes = []
-    for pattern in ('graph_timing.csv', 'resource_usage.log', 'gpu_usage.log',
-                    'cpu_power.log', '*.log'):
+    for pattern in ('graph_timing.csv', 'resource_usage.json', 'gpu_usage.log',
+                    '*.log'):
         for p in sess.glob(pattern):
             try:
                 mtimes.append(p.stat().st_mtime)
@@ -107,9 +111,6 @@ def _load_session(sess: Path) -> dict:
         'goals':              _count_goals(sess),
         'goal_calc_mean':     None,
         'goal_response_mean': None,
-        'throttled':          False,
-        'cpu_thr':        False,
-        'gpu_thr':        False,
         'pipeline':       None,
         'host':           None,
         'has_l2':         False,
@@ -120,11 +121,6 @@ def _load_session(sess: Path) -> dict:
         row['thr_hz'] = kpi1.get('throughput_hz')
         meta = kpi1.get('metadata') or {}
         row['host'] = meta.get('host')
-        thermal = kpi1.get('thermal') or {}
-        if thermal.get('cpu_throttled') or thermal.get('gpu_throttled'):
-            row['throttled'] = True
-            row['cpu_thr'] = bool(thermal.get('cpu_throttled'))
-            row['gpu_thr'] = bool(thermal.get('gpu_throttled'))
         _gcl = (kpi1.get('wandering') or {}).get('goal_calc_latency_ms') or {}
         row['goal_calc_mean'] = _gcl.get('mean_ms')
         _grl = (kpi1.get('wandering') or {}).get('goal_response_latency_ms') or {}
@@ -212,14 +208,7 @@ def build_table(bench_dir: Path, rows: list[dict]) -> str:
     # ── per-run rows ──
     for r in rows:
         flag = ''
-        if r['throttled']:
-            parts = []
-            if r['cpu_thr']:
-                parts.append('CPU')
-            if r['gpu_thr']:
-                parts.append('GPU')
-            flag = '⚠ ' + '+'.join(parts) if parts else '⚠ THR'
-        elif not r['has_l2']:
+        if not r['has_l2']:
             flag = 'no L2'
         elif r['e2e_mean'] is not None and r['e2e_mean'] > 60:
             flag = 'slow'
@@ -270,7 +259,7 @@ def build_table(bench_dir: Path, rows: list[dict]) -> str:
 
 def summarize(bench_dir: Path) -> int:
     if not bench_dir.is_dir():
-        print(f'[Error] not a directory: {bench_dir}', file=sys.stderr)
+        logger.error(f'Not a directory: {bench_dir}')
         return 1
 
     session_dirs = sorted(
@@ -278,22 +267,22 @@ def summarize(bench_dir: Path) -> int:
         key=lambda p: p.name,
     )
     if not session_dirs:
-        print(f'[Error] no session sub-directories found in {bench_dir}', file=sys.stderr)
+        logger.error(f'No session sub-directories found in {bench_dir}')
         return 1
 
     rows = [_load_session(s) for s in session_dirs]
     table = build_table(bench_dir, rows)
 
-    print(table)
+    logger.info(table)
 
     out_path = bench_dir / 'summary.txt'
     try:
         out_path.write_text(table + '\n')
-        print(f'  Summary written → {out_path}')
+        logger.info(f'  Summary written → {out_path}')
     except OSError as exc:
-        print(f'  [warn] could not write summary: {exc}', file=sys.stderr)
+        logger.warning(f'  Could not write summary: {exc}')
 
-    print(_bar())
+    logger.info(_bar())
     return 0
 
 

@@ -141,7 +141,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ featureGuard }) => {
 
               {contentSegmentationStatus === "loading" && (
                 <div className="search-status loading">
-                  <span className="spinner"></span>
+                  <span className="search-status-spinner"></span>
                   {t('search.preparingContent', 'Content Generating...')}
                 </div>
               )}
@@ -154,7 +154,7 @@ const LeftPanel: React.FC<LeftPanelProps> = ({ featureGuard }) => {
 
               {searchLoading && (
                 <div className="search-status loading">
-                  <span className="spinner"></span>
+                  <span className="search-status-spinner"></span>
                   {t('search.searching', 'Searching...')}
                 </div>
               )}
