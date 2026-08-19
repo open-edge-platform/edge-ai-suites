@@ -197,4 +197,4 @@ serve as a resource for anyone interested in robotic simulations.
 
 ## Troubleshooting
 
-For general robot issues, go to: [Troubleshooting for Robotics AI Dev Kit Tutorials](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/robot-tutorials-troubleshooting.html)
+For general robot issues, refer to [Troubleshooting for Robotics AI Dev Kit Tutorials](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/robot-tutorials-troubleshooting.html)
