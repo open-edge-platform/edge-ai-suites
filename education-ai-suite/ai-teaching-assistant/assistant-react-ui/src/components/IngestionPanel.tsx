@@ -115,15 +115,29 @@ export default function IngestionPanel({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className="flex-1 rounded-lg bg-intel-blue px-3 py-2 text-sm font-medium text-white hover:bg-intel-dark disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-intel-blue px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-intel-dark disabled:opacity-50"
         >
-          📄 Upload & ingest
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Upload &amp; Ingest
         </button>
         <button
           type="button"
           onClick={runIngest}
           disabled={busy || files.length === 0}
-          className="flex-1 rounded-lg border border-intel-blue px-3 py-2 text-sm font-medium text-intel-blue hover:bg-intel-light disabled:opacity-50"
+          className="flex-1 rounded-lg border border-intel-blue px-3 py-2 text-sm font-medium text-intel-blue shadow-sm hover:bg-intel-light disabled:opacity-50"
           title={files.length > 0 ? `Re-ingest ${files.length} file(s)` : "Select files first"}
         >
           {state === "ingesting" ? "Ingesting…" : "♻ Re-ingest"}
