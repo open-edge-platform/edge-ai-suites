@@ -19,6 +19,7 @@ export default function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [deviceId, setDeviceId] = useState<string>();
   const [ingestedName, setIngestedName] = useState<string>("");
+  const [ingesting, setIngesting] = useState(false);
 
   const {
     recording,
@@ -114,7 +115,8 @@ export default function App() {
             <IngestionPanel
               files={files}
               onFilesSelected={setFiles}
-              onIngested={() => setIngestedName(labelFor(files))}
+              onIngested={(topic) => setIngestedName(topic ?? labelFor(files))}
+              onBusyChange={setIngesting}
               disabled={recording}
             />
           </section>
@@ -152,7 +154,8 @@ export default function App() {
                 messages={messages}
                 partialUser={partialUser}
                 partialAssistant={partialAssistant}
-                fileName={files[0]?.name ?? (ingestedName || undefined)}
+                fileName={ingestedName || undefined}
+                ingesting={ingesting}
                 footer={
                   <DualVisualizer
                     userAnalyser={micAnalyser}

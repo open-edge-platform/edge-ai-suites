@@ -12,7 +12,8 @@ export interface IngestStatus {
 interface Props {
   files: File[];
   onFilesSelected: (files: File[]) => void;
-  onIngested: () => void;
+  onIngested: (topic?: string) => void;
+  onBusyChange?: (busy: boolean) => void;
   disabled?: boolean;
 }
 
@@ -24,6 +25,7 @@ export default function IngestionPanel({
   files,
   onFilesSelected,
   onIngested,
+  onBusyChange,
   disabled,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +48,7 @@ export default function IngestionPanel({
   const ingestAll = async (batch: File[]) => {
     setState("ingesting");
     setMessage("");
+    onBusyChange?.(true);
     try {
       await clearContext();
       const result = await ingestFiles(batch);
@@ -64,10 +67,13 @@ export default function IngestionPanel({
           `${result.files_succeeded} file(s) ingested \u00b7 ${result.total_chunks_added} chunks`
         );
       }
-      onIngested();
+      const topic = result.results.find((r) => r.status === "ok" && r.topic)?.topic ?? undefined;
+      onIngested(topic ?? undefined);
     } catch (err) {
       setState("error");
       setMessage(`Ingestion failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      onBusyChange?.(false);
     }
   };
 

@@ -6,10 +6,11 @@ interface Props {
   partialUser?: string;
   partialAssistant?: string;
   fileName?: string;
+  ingesting?: boolean;
   footer?: ReactNode;
 }
 
-export default function Chat({ messages, partialUser, partialAssistant, fileName, footer }: Props) {
+export default function Chat({ messages, partialUser, partialAssistant, fileName, ingesting, footer }: Props) {
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,10 +24,26 @@ export default function Chat({ messages, partialUser, partialAssistant, fileName
     <div className="flex h-full flex-col rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-md">
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
         {isEmpty && (
-          <div className="m-auto text-sm italic text-black/60">
-            {fileName
-              ? `Tap the mic and ask a question about ${readyLabel}.`
-              : "Upload a file to start asking questions about it."}
+          <div className="m-auto flex max-w-sm flex-col items-center gap-3 px-4 text-center">
+            <span className="flex h-16 w-16 items-center justify-center rounded-full bg-intel-blue text-2xl font-bold text-white shadow-lg">
+              J
+            </span>
+            <h3 className="text-lg font-semibold text-black">
+              Hi, I'm Jarvis — your AI teaching assistant
+            </h3>
+            <p className="text-sm text-black/60">
+              {ingesting ? (
+                "Ingesting your document\u2026"
+              ) : fileName ? (
+                <>
+                  Ask me anything about {readyLabel}.
+                  <br />
+                  Speak with the mic or type your question below.
+                </>
+              ) : (
+                "Upload your course material, then ask me anything about it — by voice or text."
+              )}
+            </p>
           </div>
         )}
 
