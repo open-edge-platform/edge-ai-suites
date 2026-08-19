@@ -1,0 +1,207 @@
+# ROS2/rviz2 config for point-lio-demo. Point-LIO's own submodule config
+# (Point-LIO/rviz_cfg/loam_livox.rviz) is rviz1-format ("rviz/PointCloud2"
+# etc.), which rviz2 refuses to load - every display silently dropped,
+# leaving an empty window subscribed to nothing. Kept outside the submodule
+# so apply_patches.sh's "submodule tree must be clean" check never sees it.
+#
+# Layout follows /work/misc/0052_point_lio_fast_lio2/scripts/rviz/
+# lio_benchmark.rviz (Bing's own live dual-algorithm benchmark harness,
+# validated rendering point clouds on PTL/Orin) rather than a class-by-class
+# port of the rviz1 file, minus that harness's second Odometry display for
+# fast_lio2's /Odometry topic - nothing publishes that here, this pipeline
+# only ever runs Point-LIO.
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Name: Tool Properties
+  - Class: rviz_common/Views
+    Name: Views
+  - Class: rviz_common/Time
+    Name: Time
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Value: true
+      Cell Size: 5
+      Color: 160; 160; 164
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
+      Plane Cell Count: 20
+      Reference Frame: <Fixed Frame>
+
+    - Class: rviz_default_plugins/PointCloud2
+      Name: surround
+      Enabled: true
+      Value: true
+      Topic:
+        Value: /cloud_registered
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Color Transformer: Intensity
+      Channel Name: intensity
+      Color: 238; 238; 236
+      Size (Pixels): 3
+      Size (m): 0.05
+      Style: Points
+      Decay Time: 0
+      Max Color: 255; 255; 255
+      Min Color: 238; 238; 236
+      Use Fixed Frame: true
+      Use rainbow: true
+      Invert Rainbow: false
+      Alpha: 1
+
+    - Class: rviz_default_plugins/PointCloud2
+      Name: currPoints
+      Enabled: true
+      Value: true
+      Topic:
+        Value: /cloud_registered
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Color Transformer: Intensity
+      Channel Name: intensity
+      Color: 255; 255; 255
+      Size (Pixels): 1
+      Size (m): 0.01
+      Style: Points
+      Decay Time: 1000
+      Max Color: 255; 255; 255
+      Min Color: 0; 0; 0
+      Use Fixed Frame: true
+      Use rainbow: true
+      Invert Rainbow: true
+      Alpha: 0.1
+
+    - Class: rviz_default_plugins/Axes
+      Name: Axes
+      Enabled: true
+      Value: true
+      Length: 0.7
+      Radius: 0.06
+      Reference Frame: body
+
+    - Class: rviz_default_plugins/Odometry
+      Name: Odom_PointLIO
+      Enabled: true
+      Value: true
+      Topic:
+        Value: /aft_mapped_to_init
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Angle Tolerance: 0.1
+      Position Tolerance: 0.1
+      Keep: 200
+      Shape:
+        Alpha: 1
+        Axes Length: 0.3
+        Axes Radius: 0.03
+        Color: 255; 85; 0
+        Head Length: 0.07
+        Head Radius: 0.03
+        Shaft Length: 0.15
+        Shaft Radius: 0.02
+        Value: Arrow
+      Covariance:
+        Value: false
+
+    - Class: rviz_default_plugins/Path
+      Name: Path
+      Enabled: true
+      Value: true
+      Topic:
+        Value: /path
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Color: 25; 255; 255
+      Alpha: 1
+      Buffer Length: 1
+      Line Style: Lines
+      Line Width: 0.03
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Style: None
+
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: camera_init
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+    - Class: rviz_default_plugins/PublishPoint
+      Single click: true
+      Topic:
+        Value: /clicked_point
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 30
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.5
+      Target Frame: <Fixed Frame>
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 0.5
+Window Geometry:
+  Displays:
+    collapsed: false
+  Height: 1080
+  Width: 1920
+  X: 0
+  Y: 0

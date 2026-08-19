@@ -1,11 +1,7 @@
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
-
-# Smart Classroom Flutter + RAG Integration
+## Smart Classroom Flutter + RAG Integration
 
 A cross-platform Flutter application demonstrating **Retrieval Augmented Generation (RAG)** integration with the Smart Classroom Content Search backend. This application showcases how educational platforms can leverage **OpenVINO-accelerated AI** for intelligent content search, multi-turn Q&A, and document management.
+
 ---
 
 ## Table of Contents
@@ -155,6 +151,9 @@ The Flutter app acts as a REST API client to the Content Search backend, which d
 
 **For end users who prefer graphical interfaces:**
 
+> **Important — PowerShell required**
+> All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
+
 1. **Setup** (one-time):
    ```powershell
    .\utils\flutter\setup.ps1
@@ -215,11 +214,9 @@ Agent: [Reads sc-files skill, calls files endpoint, displays table]
 - **VS Code** (recommended for agentic mode)
 - **Coding Companion** (optional): GitHub Copilot, Continue, Cursor, Claude Code, etc.
 
-### Python Dependencies (Optimized)
+### Python Dependencies
 
-**For the Flutter integration, you only need minimal VLM dependencies:**
-
-The setup script installs from [`smart-classroom/components/vlm/vlm_openvino_serving/requirements.txt`](../../smart-classroom/components/vlm/vlm_openvino_serving/requirements.txt)
+The setup script installs from [`smart-classroom/requirements.txt`](../../smart-classroom/requirements.txt)
 
 ### Network
 - **Internet access** for first-time model downloads
@@ -253,6 +250,7 @@ content_search:
     max_context: 5          # Top chunks for RAG
     max_tokens: 1024        # Max answer length
     max_history_turns: 3    # Conversation history
+    retrieval_score_threshold: 60 # minimum relevance score (0-100)
 ```
 
 **When to Modify**:
@@ -266,6 +264,9 @@ content_search:
 ---
 
 ## Quick Start
+
+> **Important — PowerShell required**
+> All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
 
 ### Traditional UI Mode
 

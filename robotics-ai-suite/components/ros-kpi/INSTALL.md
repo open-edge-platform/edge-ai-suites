@@ -29,7 +29,7 @@ make install
 ```
 
 This will:
-- Install system packages (`sysstat`, `python3-tk`, `curl`, `build-essential`)
+- Install system packages (`python3-tk`, `curl`, `build-essential`)
 - Download and install **uv** (Astral) automatically via `curl` if not already present
 - Verify Docker and ROS 2 availability
 
@@ -78,9 +78,6 @@ uv run python -c "import matplotlib, numpy, psutil; print('✅ Python modules OK
 # Check ROS2 (after sourcing)
 source /opt/ros/humble/setup.bash
 uv run python -c "import rclpy; print('✅ ROS2 (rclpy) OK')"
-
-# Check system tools
-which iostat && echo "✅ sysstat OK"
 ```
 
 ## Intel Acceleration (Recommended on Intel iGPU Systems)
@@ -201,7 +198,8 @@ This section covers the complete setup for monitoring ROS2 systems running on re
 - ROS2 system running
 - SSH server enabled (`sudo apt install openssh-server`)
 - User account with permissions to run ROS2 commands
-- `pidstat` installed (`sudo apt install sysstat`)
+- Python 3 with `psutil` installed, and `_psutil_probe.py` deployed to the path passed via
+  `--remote-probe-path` (default `~/ros-kpi/src/_psutil_probe.py`), e.g. via `scp`
 
 ### Network Configuration
 
@@ -476,11 +474,13 @@ This means SSH is working but DDS discovery is not. See "Cannot see remote ROS2 
 
 #### Graph monitoring works but no resource data
 
-**Check: pidstat available on remote**
+**Check: psutil probe available on remote**
 ```bash
-ssh username@remote-ip "which pidstat"
-# If not found:
-ssh username@remote-ip "sudo apt install -y sysstat"
+ssh username@remote-ip "python3 -c 'import psutil' && ls ~/ros-kpi/src/_psutil_probe.py"
+# If psutil is missing:
+ssh username@remote-ip "pip3 install --user psutil"
+# If _psutil_probe.py is missing, deploy it:
+scp src/_psutil_probe.py username@remote-ip:~/ros-kpi/src/_psutil_probe.py
 ```
 
 ## Using the Setup Script
