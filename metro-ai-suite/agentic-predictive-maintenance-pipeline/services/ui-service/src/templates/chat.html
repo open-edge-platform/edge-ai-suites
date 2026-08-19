@@ -29,6 +29,13 @@
     </section>
 
     <section class="chat-shell" aria-label="Chat workspace">
+      {% if not chat_available %}
+      <div class="chat-unavailable-banner" role="alert">
+        <strong>Ask &amp; Analyze is unavailable in fallback mode.</strong>
+        <p>The LLM service is not deployed, so conversational analysis is disabled.
+        Redeploy with <code>LLM_MODE=llm</code> to enable this feature.</p>
+      </div>
+      {% endif %}
       <div class="chat-controls">
         <fieldset>
           <legend>Answer mode</legend>
@@ -76,12 +83,13 @@
         <button type="button" id="chat-retry" class="btn-secondary">Retry</button>
       </div>
 
-      <form id="chat-form" class="chat-composer">
+      <form id="chat-form" class="chat-composer" {% if not chat_available %}aria-disabled="true"{% endif %}>
         <label for="chat-message">Your question</label>
         <div class="chat-compose-row">
           <textarea id="chat-message" name="message" rows="2" maxlength="4000" required
-                    placeholder="Ask about maintenance risks, detections, or evidence…"></textarea>
-          <button type="submit" id="chat-submit" class="btn-primary">Send</button>
+                    placeholder="Ask about maintenance risks, detections, or evidence…"
+                    {% if not chat_available %}disabled{% endif %}></textarea>
+          <button type="submit" id="chat-submit" class="btn-primary" {% if not chat_available %}disabled{% endif %}>Send</button>
         </div>
         <p class="chat-hint">Press Enter to send. Use Shift+Enter for a new line.</p>
         <p id="chat-status" class="sr-only" role="status" aria-live="polite"></p>
