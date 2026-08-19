@@ -9,11 +9,6 @@
   overflow-x: hidden;
 }
 
-.container.fullscreen .right-panel {
-  margin-top: 70vh;
-  z-index: 1000;
-}
-
 .platform-configuration,
 .software-performance {
   flex: 1;
@@ -51,22 +46,17 @@
   margin-top: 4px;
 }
 
-.accordion-content {
+.right-panel .accordion-content {
   font-weight: bold;
   color: #333;
 }
 
-.accordion-content p {
+.right-panel .accordion-content p {
   font-weight: normal;
   color: #333;
 }
 
-h3 {
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
-.dropdown {
+.right-panel .dropdown {
   width: 100%;
   padding: 5px;
 }
@@ -172,7 +162,7 @@ h3 {
 }
 
 
-.accordion-subtitle {
+.right-panel .accordion-subtitle {
   font-size: 0.85rem;
   color: #718096;
   margin-bottom: 1rem;

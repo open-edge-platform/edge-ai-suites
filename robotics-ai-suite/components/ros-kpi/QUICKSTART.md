@@ -89,7 +89,7 @@ All results are saved in timestamped folders:
 monitoring_sessions/
 └── YYYYMMDD_HHMMSS/
     ├── graph_timing.csv         # Topic timing data
-    ├── resource_usage.log        # CPU/memory usage
+    ├── resource_usage.json        # CPU/memory usage
     ├── session_info.txt          # Test configuration
     └── visualizations/           # Auto-generated plots
 ```

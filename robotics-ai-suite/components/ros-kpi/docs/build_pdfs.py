@@ -9,7 +9,6 @@ Build PDFs from markdown docs and README.
 Generates individual PDFs for each file plus a combined PDF.
 """
 
-import os
 import sys
 import re
 import base64
@@ -224,6 +223,7 @@ def preprocess_mermaid(text: str) -> str:
 def cleanup_tmp():
     pass  # No temp files when using data URIs
 
+
 # Emoji Unicode ranges to strip (xhtml2pdf cannot render them)
 _EMOJI_RE = re.compile(
     "["
@@ -342,7 +342,7 @@ def main():
     print("\n📄 Building PDFs...\n")
 
     ok_all = True
-    for src, label in sources:
+    for src, _ in sources:
         if not src.exists():
             print(f"  ⚠️   {src.name} not found, skipping")
             continue
