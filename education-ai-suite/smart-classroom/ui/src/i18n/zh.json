@@ -95,7 +95,23 @@
     "selectFrontCameraFile": "选择前置摄像头文件",
     "selectBackCameraFile": "选择后置摄像头文件",
     "selectBoardCameraFile": "选择黑板摄像头文件",
-    "chooseFile": "选择文件"
+    "chooseFile": "选择文件",
+    "audioFeaturesDisabled": "音频处理功能已禁用，无法上传音频文件。",
+    "videoAnalyticsDisabled": "视频分析功能已禁用，仅可上传音频文件。",
+    "invalidFileType": "请仅选择 {{types}} 格式的文件。",
+    "fileRequired": "请至少选择一个文件（音频或视频）。",
+    "baseDirectoryRequired": "选择视频文件时必须填写基础目录。",
+    "startingProcessing": "正在开始处理…",
+    "creatingSession": "正在创建会话…",
+    "transcriptionAndVideoStarted": "转录和视频分析已成功启动。",
+    "transcriptionStartedVideoFailed": "转录已成功启动，但视频分析启动失败。",
+    "transcriptionStarted": "转录已成功启动。",
+    "videoAnalyticsStarted": "视频分析已成功启动。",
+    "videoAnalyticsFailed": "视频分析启动失败。",
+    "noProcessingStarted": "未启动任何有效处理。",
+    "processingFailed": "处理失败，请重试。",
+    "processingFailedDetail": "处理失败：{{detail}}",
+    "backendUnavailable": "当前无法连接到后端服务器，请确保服务正在运行。"
   },
   "menu": {
     "settings": "设置",
@@ -185,7 +201,18 @@
     "resumeAriaLabel": "恢复资源指标轮询",
     "resumeButton": "恢复"
   },
+  "mindmap": {
+    "invalidFormatTitle": "错误：格式无效",
+    "invalidFormatDetail": "无法解析思维导图数据"
+  },
+  "cameras": {
+    "front": "前置摄像头",
+    "back": "后置摄像头",
+    "board": "黑板摄像头"
+  },
   "errors": {
+    "videoPipelineFailed": "视频分析无法启动：\n{{details}}",
+    "videoPipelineStopFailed": "视频分析无法停止：\n{{details}}",
     "projectNameRequired": "项目名称为必填项",
     "failedToStartRecording": "开始录音失败",
     "failedToStopRecording": "停止录音失败",
@@ -250,7 +277,6 @@
     "searching": "正在搜索...",
     "clearResults": "清除结果",
     "submitSearch": "搜索",
-    "resultsTitle": "搜索结果",
     "query": "查询",
     "resultsFound": "结果找到",
     "noResults": "未找到结果",
@@ -506,7 +532,13 @@
     "removing": "删除中...",
     "filesExistMessage": "文件已存在。如需查看，请在\"上传\"部分点击\"查看文件\"。",
     "dismiss": "关闭",
-    "enabledAfterSegmentation": "仅在内容分段完成后启用"
+    "enabledAfterSegmentation": "仅在内容分段完成后启用",
+    "ofTotal": "（共 {{total}}）",
+    "loadFailed": "加载文件列表失败。",
+    "deleteFailed": "删除文件失败。",
+    "cannotDeleteNoTask": "无法删除“{{fileName}}”：没有关联的任务。",
+    "ocrLoadFailed": "加载 OCR 文本失败。",
+    "ocrLoadFailedDetail": "加载 OCR 文本失败：{{detail}}"
   },
   "reportFields": {
     "groups": {

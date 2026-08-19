@@ -1,0 +1,151 @@
+[
+  {
+    "pipeline": "uav_object_detection_cpu",
+    "payload": {
+      "source": {
+        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
+        "type": "uri",
+        "loop": true
+      },
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "uav-mavlink-cpu"
+        }
+      },
+      "parameters": {
+        "detection-properties": {
+          "device": "CPU",
+          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+        }
+      }
+    }
+  },
+  {
+    "pipeline": "uav_object_detection_gpu",
+    "payload": {
+      "source": {
+        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
+        "type": "uri",
+        "loop": true
+      },
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "uav-mavlink-gpu"
+        }
+      },
+      "parameters": {
+        "detection-properties": {
+          "device": "GPU",
+          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+        }
+      }
+    }
+  },
+  {
+    "pipeline": "uav_object_detection_npu",
+    "payload": {
+      "source": {
+        "uri": "file:///home/pipeline-server/resources/videos/uav_sample.avi",
+        "type": "uri",
+        "loop": true
+      },
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "uav-mavlink-npu"
+        }
+      },
+      "parameters": {
+        "detection-properties": {
+          "device": "NPU",
+          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+          "nireq": 4
+        }
+      }
+    }
+  },
+  {
+    "pipeline": "uav_realsense_cpu",
+    "payload": {
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "realsense"
+        }
+      },
+      "parameters": {
+        "detection-properties": {
+          "device": "CPU",
+          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+        }
+      }
+    }
+  },
+  {
+    "pipeline": "uav_realsense_gpu",
+    "payload": {
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "realsense"
+        }
+      },
+      "parameters": {
+        "detection-properties": {
+          "device": "GPU",
+          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+        }
+      }
+    }
+  },
+  {
+    "pipeline": "uav_realsense_npu",
+    "payload": {
+      "destination": {
+        "metadata": {
+          "type": "file",
+          "path": "/tmp/results.jsonl",
+          "format": "json-lines"
+        },
+        "frame": {
+          "type": "rtsp",
+          "path": "realsense"
+        }
+      },
+      "parameters": {
+        "detection-properties": {
+          "device": "NPU",
+          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+          "nireq": 4
+        }
+      }
+    }
+  }
+]

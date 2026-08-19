@@ -8,7 +8,7 @@
 #
 # Stage layout — build-only tooling (curl, compilers, pip caches) never reaches
 # the shipped image, which keeps trivy findings on the final stage minimal:
-#   python-base    common base: proxy env, shared ARGs
+#   python-base    common base shared by all stages
 #   builder-base   python venv with the app + openvino[npu]; also downloads the
 #                  NPU driver debs (linux-npu-driver release), the libze1 deb
 #                  (kobuk PPA snapshot, direct deb URL) and the iGPU compute
@@ -25,16 +25,7 @@
 # Firmware (NPU) is loaded by the host kernel, so intel-fw-npu is intentionally
 # NOT installed here.
 
-# Global build args (proxy) — redeclared inside each stage that needs them.
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-
 FROM python:3.13-slim AS python-base
-ARG HTTP_PROXY
-ARG HTTPS_PROXY
-ARG NO_PROXY
-ENV http_proxy=${HTTP_PROXY} https_proxy=${HTTPS_PROXY} no_proxy=${NO_PROXY}
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ---------------------------------------------------------------------------

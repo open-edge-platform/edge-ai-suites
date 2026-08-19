@@ -7,10 +7,14 @@ used by the aggregator‑service (and indirectly by the web UI).
 Main responsibilities:
 
 - Start the underlying collectors from the `intel/retail-benchmark` image
-	(CPU, memory, NPU, PCM power, GPU/SPU where available).
+	(CPU, memory, NPU, PCM power, GPU/SPU where available), using a
+	bounded-cycle GPU collector override (`collect_gpu.sh`) that recycles
+	qmassa's JSON output periodically instead of letting it grow unbounded.
 - Read the log/CSV files written under `/tmp/results`.
 - Provide a JSON `/metrics` endpoint with time‑series data.
-- Provide `/platform-info` and `/memory` helper endpoints.
+- Provide `/platform-info`, `/memory`, `/device-config`, and `/health`
+	helper endpoints.
+- Served via FastAPI + uvicorn (see `app.py` / `api/endpoints.py`).
 
 ---
 
@@ -58,6 +62,10 @@ Environment variables:
 - `NPU_LOG` (optional)
 	- Path to the NPU CSV file if it differs from the default
 		`${METRICS_DIR}/npu_usage.csv`.
+- `METRICS_HTTP_PORT` (default: `9000`)
+	- Port the FastAPI/uvicorn server listens on.
+- `DEVICE_ENV_PATH` (default: `/configs/device.env`)
+	- Path to the per-workload device config file consumed by `/device-config`.
 
 Expected files (relative to `METRICS_DIR`):
 
@@ -143,3 +151,31 @@ Convenience endpoint exposing the most recent memory sample.
 ```
 
 If no memory data is available, this endpoint returns HTTP 404.
+
+### `GET /device-config` — per-workload device configuration
+
+Summarizes which OpenVINO device (CPU/GPU/NPU/AUTO) each suite workload is
+configured to use, resolved to a human-readable platform detail string.
+Consumed by `patient-monitoring-aggregator`'s `GET /device-config`.
+
+- Method: `GET`
+- URL: `/device-config`
+- Response (shape):
+
+```json
+{
+	"workloads": {
+		"rppg":    {"env_key": "RPPG_DEVICE",    "configured_device": "GPU", "resolved_detail": "Intel Arc Graphics"},
+		"ai_ecg":  {"env_key": "ECG_DEVICE",     "configured_device": "CPU", "resolved_detail": "Intel(R) Core(TM) Ultra 7 155H"},
+		"mdpnp":   {"env_key": "MDPNP_DEVICE",   "configured_device": "AUTO", "resolved_detail": "AUTO (platform decides: CPU/GPU/NPU)"},
+		"pose_3d": {"env_key": "POSE_3D_DEVICE", "configured_device": "NPU", "resolved_detail": "Intel AI Boost"}
+	}
+}
+```
+
+Reads `DEVICE_ENV_PATH` (default `/configs/device.env`); if the file is
+missing, `configured_device` is `null` and `resolved_detail` is `"Unknown"`.
+
+### `GET /health` — liveness probe
+
+Returns `{"status": "ok"}` with HTTP 200 when the FastAPI app is up.

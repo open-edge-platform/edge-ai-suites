@@ -282,13 +282,14 @@ const MindMapTab: React.FC = () => {
               "version": "1.0"
             },
             "format": "node_tree",
+            // Rendered in place of the mind map, so both topics are translated.
             "data": {
               "id": "root",
-              "topic": "Error: Invalid Format",
+              "topic": t("mindmap.invalidFormatTitle"),
               "children": [
                 {
                   "id": "error_msg",
-                  "topic": "Failed to parse mindmap data"
+                  "topic": t("mindmap.invalidFormatDetail")
                 }
               ]
             }
@@ -332,14 +333,6 @@ const MindMapTab: React.FC = () => {
       if (isInvalidFormat) {
         dispatch(setError("MindMap generation failed due to invalid format"));
         dispatch(uiMindmapFailed());
-        window.dispatchEvent(
-          new CustomEvent("global-notification", {
-            detail: {
-              message: t("notifications.mindmapError") || "MindMap generation failed due to invalid format.",
-              type: "error",
-            },
-          })
-        );
       } else {
         // The report embeds the mind map as an image captured here (html2canvas)
         // from the live jsMind view — the backend never re-renders it. Best-effort

@@ -17,6 +17,8 @@ LEVEL1_KPI = {
     'schema_version': 'level1_v1',
     'throughput_hz': 20.0,
     'mean_latency_ms': 50.0,
+    'min_latency_ms': 45.0,
+    'max_latency_ms': 82.0,
     'max_jitter_ms': 5.0,
     'min_jitter_ms': 0.5,
     'mean_jitter_ms': 2.0,
@@ -27,6 +29,8 @@ LEVEL1_KPI = {
         '/camera_node': {
             'throughput_hz': 20.0,
             'mean_latency_ms': 10.0,
+            'min_latency_ms': 7.0,
+            'max_latency_ms': 16.0,
             'mean_jitter_ms': 1.0,
             'max_jitter_ms': 3.0,
             'num_samples': 200,
@@ -37,6 +41,8 @@ LEVEL1_KPI = {
         '/detector_node': {
             'throughput_hz': 18.0,
             'mean_latency_ms': 40.0,
+            'min_latency_ms': 30.0,
+            'max_latency_ms': 58.0,
             'mean_jitter_ms': 3.0,
             'max_jitter_ms': 8.0,
             'num_samples': 180,
@@ -47,6 +53,8 @@ LEVEL1_KPI = {
         '/planner_node': {
             'throughput_hz': 15.0,
             'mean_latency_ms': 60.0,
+            'min_latency_ms': 45.0,
+            'max_latency_ms': 82.0,
             'mean_jitter_ms': 4.0,
             'max_jitter_ms': 12.0,
             'num_samples': 150,

@@ -26,9 +26,8 @@ uv run python src/monitor_stack.py --node /my_node --duration 120 Custom duratio
 uv run python src/monitor_stack.py --duration 30                  Quick 30s check
 uv run python src/monitor_stack.py --duration 300                 Extended 5-minute session
 
-uv run python src/monitor_resources.py --power                    Intel RAPL CPU package power
-uv run python src/monitor_resources.py --memory --npu --power     CPU + NPU + power
-uv run python src/monitor_resources.py --check-hw                 Probe GPU / NPU / RAPL
+uv run python src/monitor_resources.py --memory --npu             CPU + NPU
+uv run python src/monitor_resources.py --check-hw                 Probe GPU / NPU availability
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🤖 SIMULATIONS
@@ -103,7 +102,7 @@ Interactive graph (click nodes for topic detail):
 
 Results saved in: monitoring_sessions/YYYYMMDD_HHMMSS/
   ├── graph_timing.csv         (topic timing data)
-  ├── resource_usage.log        (CPU/memory)
+  ├── resource_usage.json        (CPU/memory)
   └── visualizations/           (auto-generated plots)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

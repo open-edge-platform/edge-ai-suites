@@ -26,11 +26,13 @@ read -rp "Run scp + ssh now? [y/N] " ans
 
 echo ""
 echo "[1/2] Copying infra/px4-sim/ to ${REMOTE_IP}:${REMOTE_DIR} ..."
+# shellcheck disable=SC2029
 ssh "${REMOTE_USER}@${REMOTE_IP}" "mkdir -p ${REMOTE_DIR}"
 scp -r "${LOCAL_DIR}/." "${REMOTE_USER}@${REMOTE_IP}:${REMOTE_DIR}/"
 
 echo "[2/2] Building and starting on remote..."
 # Auto-detect the GPU card (card0 / card1 / etc.) on the remote machine
+# shellcheck disable=SC2029
 ssh "${REMOTE_USER}@${REMOTE_IP}" "
   set -euo pipefail
   cd '${REMOTE_DIR}'

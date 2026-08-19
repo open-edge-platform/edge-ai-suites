@@ -3,11 +3,11 @@
 The Metro AI Suite **Prompt Library** is a collection of reusable,
 business-objective prompts that turn a plain-language goal (for example,
 "I want to detect people in my camera feeds") into a running Intel® Edge AI
-application. Each prompt states **only a business outcome** — no framework, model,
-precision, or device — and hands off to the `metro-ai-apps-builder` orchestrator
+application. Each prompt states **only a business outcome**; no framework, model,
+precision, or device and hands off to the `metro-ai-apps-builder` orchestrator
 skill, which asks a few business questions, discovers the right
 [open-edge-platform](https://github.com/open-edge-platform/skills) skill,
-proposes a plan, and — after you confirm — builds the deliverable on Intel
+proposes a plan, and after you confirm builds the deliverable on Intel
 hardware.
 
 ---
@@ -23,9 +23,8 @@ technical decision to the orchestrator skill.
    violations"), or simply describe your goal in your own words.
 2. **The orchestrator takes over.** The
    [`metro-ai-apps-builder`](https://github.com/open-edge-platform/skills)
-   skill runs a short **business** Q&A — what you want to achieve, your inputs,
-   where it runs, and your hardware — never asking you to choose a framework,
-   model, or device.
+   skill runs a short **business** Q&A, what you want to achieve, your inputs,
+   where it runs, and your hardware.
 3. **Skill discovery.** From your answers the orchestrator discovers the relevant
    open-edge-platform skill(s) — vision analytics, multi-camera scene analysis,
    conversational Q&A/RAG, video search and summarization, multimodal embeddings,
@@ -49,15 +48,10 @@ your own, and run it:
 ```text
 I want to <state the business outcome in one or two sentences>.
 
-Use the metro-ai-apps-builder skill to guide this process. Install and
-invoke it:
+Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
 
 npx skills add open-edge-platform/skills --skill metro-ai-apps-builder
 ```
-
-Keep it **business-only** — describe what you want to achieve, not which model,
-framework, precision, or device to use. The orchestrator infers all of that for
-you.
 
 ---
 
