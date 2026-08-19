@@ -38,8 +38,7 @@ MTX_WEBRTCICESERVERS2_0_USERNAME={{TURN_USER}}
 MTX_WEBRTCICESERVERS2_0_PASSWORD={{TURN_PASS}}
 ```
 
-**Quote every value containing space/comma.** `sample_start.sh` does
-`source .env`; `KEY=val with x` becomes `KEY=val` plus command `with`.
+**Quote values with spaces/commas.** `sample_start.sh` runs `source .env`; `KEY=val with x` becomes `KEY=val` plus command `with`.
 
 ## `validate_env.sh` (step 0 of install.sh)
 
@@ -47,6 +46,10 @@ MTX_WEBRTCICESERVERS2_0_PASSWORD={{TURN_PASS}}
 #!/bin/bash
 set -e
 err() { echo "ERROR: $*" >&2; exit 1; }
+# `.env` holds local, non-committed deployment config (HOST_IP, GIDs, MQTT
+# topics, and deploy-time-generated TURN credentials). It MUST be listed in
+# .gitignore and never committed. Sourcing it here loads local config only —
+# no external credential files (SSH keys, cloud creds) are read.
 ENVF="$PWD/.env"; [ -f "$ENVF" ] && . "$ENVF"
 [[ "$HOST_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || err "HOST_IP invalid: '$HOST_IP'"
 [[ "$HOST_IP" != "0.0.0.0" && "$HOST_IP" != "127.0.0.1" ]] || err "HOST_IP must be LAN"
@@ -65,7 +68,7 @@ echo "validate_env: OK (device=$DEV, sources=$NUM_SOURCES, webrtc=on)"
 
 ### Validation rules (enforce BEFORE `install.sh` runs)
 
-`validate_env.sh` runs as step 0 of `install.sh` and rejects on any failure:
+`validate_env.sh` is step 0 of `install.sh`; any failure rejects:
 
 | Param | Rule |
 |---|---|
@@ -95,7 +98,8 @@ HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
 # 0. Preflight
 ./validate_env.sh "${2:-cpu}"
 
-# 1. env-file: HOST_IP + GIDs
+# 1. env-file: HOST_IP + GIDs  (local, gitignored config — no secrets from
+#    external credential stores are read or written here)
 ENVF="$PWD/.env"; touch "$ENVF"
 setkv() { if grep -q "^$1=" "$ENVF"; then sed -i "s|^$1=.*|$1=$2|" "$ENVF"; else printf '%s=%s\n' "$1" "$2" >> "$ENVF"; fi; }
 addkv() { grep -q "^$1=" "$ENVF" || printf '%s=%s\n' "$1" "$2" >> "$ENVF"; }
@@ -149,9 +153,7 @@ fi
 
 ## `update_dashboard.sh`
 
-WebRTC iframe panels point at `https://<HOST>/mediamtx/…` (absolute
-origin, since the browser must reach MediaMTX through Nginx). Rewrite the
-`WEBRTC_URL` placeholder in the dashboard to the real host:
+WebRTC iframes use absolute `https://<HOST>/mediamtx/…`; rewrite `WEBRTC_URL` to the real host:
 ```sh
 #!/bin/bash -e
 HOST_IP="${1:?Usage: update_dashboard.sh <HOST_IP>}"
@@ -159,8 +161,7 @@ DASH=src/grafana/dashboards/{{DASHBOARD_SLUG}}.json
 [ -f "$DASH" ] || { echo "Dashboard $DASH not found"; exit 1; }
 sed -i "s|HOST_IP_PLACEHOLDER|$HOST_IP|g" "$DASH"
 ```
-Call it at the end of `install.sh` with the detected `HOST_IP` so the
-`WEBRTC_URL` dashboard variable resolves to `https://$HOST_IP/mediamtx/`.
+Call at `install.sh` end with detected `HOST_IP` so `WEBRTC_URL` becomes `https://$HOST_IP/mediamtx/`.
 
 ## `docker-compose.yml` — volumes
 
@@ -204,48 +205,22 @@ No `frames` volume — video leaves DLSPS over WebRTC.
     networks: [app_network]
 ```
 
-Services: `nginx`, `dlstreamer-pipeline-server`, `broker` (mosquitto),
-`node-red`, `grafana`, `mediamtx`, `coturn`. No Prometheus, no OTel, no
-metrics-manager, no SceneScape. `nginx` should `depends_on: [mediamtx]`.
-DLSPS env adds `ENABLE_WEBRTC=true`,
-`WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`, and
-`mediamtx-server` in `no_proxy`.
+Services: `nginx`, `dlstreamer-pipeline-server`, `broker` (mosquitto), `node-red`, `grafana`, `mediamtx`, `coturn`. No Prometheus, OTel, metrics-manager, or SceneScape. `nginx` should `depends_on: [mediamtx]`. DLSPS env adds `ENABLE_WEBRTC=true`, `WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`, and `mediamtx-server` in `no_proxy`.
 
 ### WebRTC ICE reachability — REQUIRED or the video panels stay black
 
-Two settings on the `mediamtx` service are mandatory for a browser on a
-different host (the normal case) to actually receive video. Without them
-the WHEP player connects, then the reader session dies with
-`closed: deadline exceeded while waiting connection` and the panel stays
-black — MediaMTX *looks* healthy and the stream publishes fine, so this is
-easy to misdiagnose as "MediaMTX not working":
+For remote browsers, both `mediamtx` settings below are mandatory. Without them WHEP connects, then dies with `closed: deadline exceeded while waiting connection`; MediaMTX still appears healthy and publishes streams, causing misdiagnosis:
 
-- **`MTX_WEBRTCADDITIONALHOSTS=${HOST_IP}`** — otherwise MediaMTX only
-  advertises `127.0.0.1` as its ICE host candidate (`local candidate:
-  host/udp/127.0.0.1/8189`), which a remote browser can never reach. This
-  makes it also advertise the LAN `HOST_IP`.
-- **Publish `8189/tcp` and `8189/udp`** on the service. The advertised
-  `HOST_IP:8189` candidate must be reachable from outside the container;
-  with no published port the browser's ICE checks time out. Coturn
-  (`3478/udp`) is a fallback relay, but direct `8189` is what makes ICE
-  complete reliably. Success shows in the logs as
-  `is reading from path '{{DETECTIONS_TOPIC_PREFIX}}_1', 1 track (H264)`.
+- **`MTX_WEBRTCADDITIONALHOSTS=${HOST_IP}`** — otherwise MediaMTX advertises only unreachable `127.0.0.1` (`local candidate: host/udp/127.0.0.1/8189`); this also advertises LAN `HOST_IP`.
+- **Publish `8189/tcp` and `8189/udp`**. Advertised `HOST_IP:8189` must be externally reachable or ICE checks time out. Coturn (`3478/udp`) is fallback; direct `8189` is reliable. Success log: `is reading from path '{{DETECTIONS_TOPIC_PREFIX}}_1', 1 track (H264)`.
 
-Old browser tabs opened before this fix hold a dead WebRTC session and
-must be hard-refreshed; recreate with
-`docker compose up -d --force-recreate mediamtx`.
+Old tabs keep dead sessions; hard-refresh and recreate with `docker compose up -d --force-recreate mediamtx`.
 
 ## Container healthchecks vs. injected proxy (busybox `wget` gotcha)
 
-The Docker daemon injects `HTTP_PROXY`/`http_proxy` (from the Docker
-client/daemon proxy settings) into
-**every** container on corporate hosts. The busybox `wget` in Alpine
-images (Grafana, Nginx) does **not** honor a `no_proxy` CIDR like
-`127.0.0.0/8`, so a `localhost` healthcheck gets routed through the
-unreachable proxy and returns **403** → the container is stuck
-`unhealthy` forever even though the service is fine.
+Corporate Docker proxy settings inject `HTTP_PROXY`/`http_proxy` into **every** container. Alpine busybox `wget` (Grafana, Nginx) ignores `no_proxy` CIDR like `127.0.0.0/8`, so `localhost` healthchecks route through unreachable proxy and return **403**, leaving containers `unhealthy` while services work.
 
-- **Grafana healthcheck** MUST bypass the proxy with `wget -Y off`:
+- **Grafana healthcheck** MUST bypass proxy with `wget -Y off`:
   ```yaml
   healthcheck:
     test: ["CMD", "wget", "-Y", "off", "-q", "-O", "/dev/null", "http://localhost:3000/api/health"]
@@ -253,10 +228,6 @@ unreachable proxy and returns **403** → the container is stuck
     timeout: 5s
     retries: 12
   ```
-  (`-Y off` disables proxy for that call; `--no-proxy` is not supported by
-  busybox wget.)
-- **DLSPS healthcheck** uses `curl -fsS http://localhost:8080/pipelines`
-  (its REST base path has NO `/api` prefix internally — `/api/...` 404s
-  inside the container; Nginx strips `/api/` on the host side).
-- Also blank the proxy env inside the DLSPS service (`http_proxy=` etc.)
-  so its own WHIP signalling to `mediamtx-server` doesn't hit the proxy.
+  (`-Y off` disables proxy for that call; busybox wget lacks `--no-proxy`.)
+- **DLSPS healthcheck** uses `curl -fsS http://localhost:8080/pipelines` (internal REST base has NO `/api`; `/api/...` 404s in-container; Nginx strips `/api/` host-side).
+- Blank DLSPS proxy env (`http_proxy=` etc.) so WHIP to `mediamtx-server` avoids proxy.

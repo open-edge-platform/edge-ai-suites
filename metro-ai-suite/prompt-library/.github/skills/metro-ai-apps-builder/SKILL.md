@@ -2,19 +2,10 @@
 name: metro-ai-apps-builder
 description: >-
   Conversational orchestrator that turns a plain business objective into a
-  working Intel Edge AI application. It OWNS the conversation: it asks only
-  business questions (what outcome you want, your inputs, where it runs, your
-  hardware) — never which framework, model, or device — then DISCOVERS the
-  relevant skills from the open-edge-platform/skills catalog, proposes a plan,
-  and only after you confirm builds the deliverable by DELEGATING to the right
-  skill(s). USE FOR any "I want to <business outcome> on Intel edge" request:
-  detect/count/track objects in camera feeds, spatial multi-camera analytics,
-  video search & summarization, conversational Q&A / RAG over documents,
-  multimodal embeddings, downloading/converting models, training a
-  computer-vision model, or deploying a robot policy — when you do NOT already
-  know which specific skill to run. DO NOT USE when the user already named a
-  concrete skill (invoke that skill directly) or asks a pure code question with
-  no deployable outcome.
+  working Intel Edge AI application by asking only business questions — never
+  which framework, model, or device — then discovering the relevant
+  open-edge-platform/skills, proposing a plan, and building the deliverable by
+  DELEGATING to the right skill(s) after you confirm.
 license: Apache-2.0
 compatibility: >-
   Requires: Node.js 20+ and the `npx skills` CLI (from open-edge-platform/skills)
@@ -53,12 +44,23 @@ technology**. You:
 
 ## When to use this skill
 
+Use this skill for any *"I want to `<business outcome>` on Intel edge"* request —
+asking only business questions (what outcome you want, your inputs, where it
+runs, your hardware) — when you do **not** already know which specific skill to
+run. Specifically:
+
 - The user describes a **desired outcome** on Intel edge but has **not** named a
   concrete skill (this is the default entry point for the prompt library).
 - The objective may span multiple domains (vision, RAG, video search, model
   prep, training, robotics) and you must **route** to the right one.
 - The user asks *"what can I build?"* or *"how do I do X on Intel?"* and needs a
   guided path.
+
+Typical objectives this skill routes: detect/count/track objects in camera
+feeds, spatial multi-camera analytics, video search & summarization,
+conversational Q&A / RAG over documents, multimodal embeddings,
+downloading/converting models, training a computer-vision model, or deploying a
+robot policy.
 
 **Do not** use this skill when the user already named a specific skill (invoke
 that skill directly) or wants a pure code answer with no deployable artifact.
