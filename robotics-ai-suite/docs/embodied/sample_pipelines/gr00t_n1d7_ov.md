@@ -1,10 +1,8 @@
 # gr00t-n1.7
 Isaac-GR00T is NVIDIA's embodied AI foundation-model stack for robot manipulation and generalist control. It is designed for workflows involving perception, reasoning, and action generation in robotics applications.
 
-<p align="center">
-  <img src="README.assets/gr00t-n1d7-model-architecture.png" alt="GR00T n1.7 Model Architecture"><br>
-  <em>Figure source: <a href="https://github.com/NVIDIA/Isaac-GR00T">Isaac-GR00T</a></em>
-</p>
+![GR00T n1.7 Model Architecture](assets/images/gr00t-n1d7-model-architecture.png)
+*(Figure source: [Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T))*
 
 This project demonstrates an implementation the gr00t n1.7 using the OpenVINO toolkit, specifically accelerating inference on Intel platforms. It provides a comprehensive end-to-end pipeline.
 
