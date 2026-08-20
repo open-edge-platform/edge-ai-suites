@@ -117,7 +117,7 @@ basic skeleton such as `gateway`, `tools.profile`, and `agents.list[main]`, so *
 - `plugins`: add the `tavily` configuration
 - `gateway`: configure `controlUi`
 
-```jsonc
+```json
 {
   "agents": {
     "defaults": {
