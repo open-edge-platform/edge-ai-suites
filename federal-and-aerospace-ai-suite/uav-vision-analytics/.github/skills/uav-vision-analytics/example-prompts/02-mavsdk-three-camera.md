@@ -3,7 +3,7 @@
 
 # Example: UAVSDK Integration — Three-Camera Nadir/Forward/Rear Detection
 
-Build an end-to-end UAV vision analytics stack in `./uav-mavsdk-stack/` using
+Build an end-to-end UAV vision analytics stack in `./uav-uavsdk-stack/` using
 the uav-vision-analytics skill.
 
 **Scenario:** Integrate with the `uav-mission-compute-sdk` project which is
@@ -18,7 +18,7 @@ annotated stream. Automatically start all three pipelines when the UAV arms
 - Video source: `gazebo-rtsp` (RTSP from SDK: `rtsp://host.docker.internal:8554/uav-1/nadir`, `/forward`, `/rear`)
 - Inference device: `all` (nadir=CPU, forward=GPU, rear=NPU)
 - Model: `yolov8n-visdrone`
-- Output directory: `./uav-mavsdk-stack/`
+- Output directory: `./uav-uavsdk-stack/`
 - UAV ID: `uav-1`
 
 Produce:

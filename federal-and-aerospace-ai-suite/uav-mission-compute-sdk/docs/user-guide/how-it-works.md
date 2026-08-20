@@ -14,7 +14,7 @@ This system supports **two mutually exclusive camera input modes**:
 | **Sim** | `sim-camera` | `make up-sim-camera` | Gazebo world (3 cameras) | `/uav-1/{nadir,forward,rear}` | Development, testing, no hardware |
 | **USB** | `usb-camera` | `make up-usb-camera` | Real V4L2 device (1 camera) | `/uav-1/nadir` | Real hardware field deployment |
 
-**See [CAMERA-MODES.md](CAMERA-MODES.md)** for detailed configuration, switching procedures, and troubleshooting.
+**See [camera-modes.md](camera-modes.md)** for detailed configuration, switching procedures, and troubleshooting.
 
 ---
 
@@ -442,5 +442,5 @@ docker logs vision-processor-multicam | grep -i error
 
 ## See Also
 
-- [CLAUDE.md](../CLAUDE.md) - Quick reference guide
-- [PORTS.md](./PORTS.md) - Port mappings
+- [CLAUDE.md](../../CLAUDE.md) - Quick reference guide
+- [ports.md](./ports.md) - Port mappings
