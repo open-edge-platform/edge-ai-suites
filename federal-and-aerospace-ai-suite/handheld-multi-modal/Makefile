@@ -89,8 +89,20 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	fi; \
 	if [ ! -d data/nginx-certs/ ]; then \
 		sudo mkdir -p data/nginx-certs/; \
-		sudo openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout data/nginx-certs/key.pem -out data/nginx-certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'; \
-		sudo chmod 644 ./data/nginx-certs/key.pem; \
+		sudo openssl genrsa -out data/nginx-certs/ca-key.pem 3072; \
+		sudo openssl req -x509 -new -nodes -key data/nginx-certs/ca-key.pem -days 3650 \
+			-out data/nginx-certs/ca-cert.pem -subj '/CN=Handheld Multi-Modal Local CA'; \
+		sudo openssl genrsa -out data/nginx-certs/key.pem 3072; \
+		sudo openssl req -new -key data/nginx-certs/key.pem \
+			-out data/nginx-certs/server.csr -subj '/CN=localhost'; \
+		printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\n' > data/nginx-certs/server.ext; \
+		sudo openssl x509 -req -in data/nginx-certs/server.csr \
+			-CA data/nginx-certs/ca-cert.pem -CAkey data/nginx-certs/ca-key.pem -CAcreateserial \
+			-out data/nginx-certs/cert.pem -days 365 \
+			-extfile data/nginx-certs/server.ext; \
+		sudo chown 101:101 ./data/nginx-certs/key.pem ./data/nginx-certs/cert.pem; \
+		sudo cp ./data/nginx-certs/ca-cert.pem /usr/local/share/ca-certificates/handheld.crt; \
+		sudo update-ca-certificates; \
 		echo "Created self-signed TLS cert for localhost"; \
 	fi; \
 	echo "✓ .env updated  (RENDER_GID=$$RENDER_GID)"
@@ -156,7 +168,7 @@ vippet-up: vippet-configure ## Start vippet (builds images, installs all models,
 	else \
 		echo 'METRICS_MANAGER_HOSTNAME=ptl' >> .env; \
 	fi && \
-	$(MAKE) build-onvif-discovery run && \
+	$(MAKE) build build-onvif-discovery run && \
 	echo "✓ vippet running"
 	# fedaero makefile
 	@$(MAKE) models-license models-download models-status 
@@ -456,7 +468,7 @@ install-deps:
 		echo "✓ yq already present"; \
 	else \
 		echo "yq not found — installing via apt..."; \
-		sudo apt update && sudo apt install -y yq && echo "✓ yq installed via apt"; \
+		sudo apt update && sudo apt install --fix-broken -y yq && echo "✓ yq installed via apt"; \
     fi; \
 	if yq --help 2>&1 | grep -q 'github.com/kislyuk/yq'; then \
 		echo "✓ yq is the kislyuk/yq (Python) implementation"; \

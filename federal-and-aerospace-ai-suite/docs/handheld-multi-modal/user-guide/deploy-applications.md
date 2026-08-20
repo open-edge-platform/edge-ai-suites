@@ -126,11 +126,13 @@ or authorization.
   Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
   TLS transport on the `localhost` bound addresses.
 
+To add certificate to trust pool, open Browser of your choice, navigate to `Settings->Certificates->Manage certificates` page, select `Authorities` tab and click `Import`. In file explorer navigate to folder that contains Handheld Multi-Modal Application and select `data/nginx-certs/ca-cert.pem` file. Select `Trust this CA to identify websites` checkbox and click `ok`.
 
 
 | Service | URL | Notes |
 |---------|-----|-------|
-| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443 | via NGINX reverse proxy |
+| Single pane page | https://localhost:443 | via NGINX reverse proxy |
+| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:1443 | via NGINX reverse proxy |
 | Open WebUI | https://localhost:8443 | Conversational Agent backed by LLM — browser microphone enabled (via NGINX reverse proxy) |
 | Whisper speech-to-text service | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
 | Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
