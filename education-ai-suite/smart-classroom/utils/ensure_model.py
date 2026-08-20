@@ -169,9 +169,6 @@ def ensure_model():
         convert_classification_models(output_dir)
 
 
-def get_model_path() -> str:
-    return os.path.join(config.models.summarizer.models_base_path, config.models.summarizer.provider, f"{config.models.summarizer.name.replace('/', '_')}_{config.models.summarizer.weight_format}")
-
 def get_asr_model_path() -> str:
     return os.path.join(config.models.asr.models_base_path, config.models.asr.provider, f"{config.models.asr.name.replace('/', '_')}")
 

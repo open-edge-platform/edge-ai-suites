@@ -523,8 +523,7 @@ Start here: Which camera source?
       USB_CAMERA_ID=nadir
       VISION_CAMERA_IDS=nadir
    3. make up-usb-camera
-   4. make apps          3. make up-sim-camera
-                         4. make apps
+   4. make apps          3. make apps
 
 Dashboard: http://localhost:5002
 ```
@@ -535,7 +534,7 @@ Dashboard: http://localhost:5002
 
 ### Add a New Camera (Sim Mode)
 
-1. **Add to Gazebo world** (`px4-sim/worlds/baylands_multicam.sdf`):
+1. **Add to Gazebo world** ([infra/px4-sim/worlds/baylands_multicam.sdf](../../infra/px4-sim/worlds/baylands_multicam.sdf)):
    ```xml
    <model name="left">
      <pose>0 0.5 0.3 0 45 0</pose>
@@ -556,17 +555,12 @@ Dashboard: http://localhost:5002
    </model>
    ```
 
-2. **Update camera-bridge** (`infra/bridges/camera-bridge/camera_bridge.py`):
-   ```python
-   CAMERAS = ["nadir", "forward", "rear", "left"]  # Add "left"
-   ```
-
-3. **Update vision processor** (`.env`):
+2. **Update camera IDs for both camera-bridge and vision processor** (`.env`):
    ```env
    VISION_CAMERA_IDS=nadir,forward,rear,left
    ```
 
-4. **Restart**:
+3. **Restart**:
    ```bash
    make down && make up-sim-camera && make apps
    ```
@@ -689,7 +683,7 @@ aravis-tool -l
 
 ### Docker Image Extension
 
-To use industrial cameras in the `usb-camera-bridge` container, extend [infra/bridges/usb-camera/Dockerfile](infra/bridges/usb-camera/Dockerfile):
+To use industrial cameras in the `usb-camera-bridge` container, extend [../../infra/bridges/usb-camera/Dockerfile](../../infra/bridges/usb-camera/Dockerfile):
 
 ```dockerfile
 # Add to existing Dockerfile

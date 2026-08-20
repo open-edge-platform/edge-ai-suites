@@ -84,7 +84,7 @@ UAV_ID=uav-1
 
 Choose **one camera bridge mode** before starting. Both cannot run simultaneously.
 
-**See [docs/CAMERA-MODES.md](docs/CAMERA-MODES.md)** for detailed guide on each mode, configuration, and troubleshooting.
+**See [camera-modes.md](camera-modes.md)** for detailed guide on each mode, configuration, and troubleshooting.
 
 #### Option A: Simulated Cameras (Gazebo) — Default
 
@@ -271,7 +271,7 @@ make logs-apps     # Applications
 ```
 
 **Switching camera modes**:
-See [docs/CAMERA-MODES.md](docs/CAMERA-MODES.md) → "Switching Between Modes" for step-by-step procedures.
+See [camera-modes.md](camera-modes.md) → "Switching Between Modes" for step-by-step procedures.
 
 ## Ports
 
@@ -330,12 +330,12 @@ docker compose ps            # Check container status
 
 | Path | Purpose |
 |------|---------|
-| [docs/CAMERA-MODES.md](docs/CAMERA-MODES.md) | Complete camera modes guide (sim vs USB) |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flows, component details |
-| [Makefile](Makefile) | Build targets and task automation |
-| [docker-compose.yml](docker-compose.yml) | Infrastructure services, profiles, networking |
-| [sample-apps/docker-compose.yml](sample-apps/docker-compose.yml) | Vision processor + dashboard services |
-| [.env.example](.env.example) | All configurable environment variables |
-| [infra/bridges/camera-bridge/](infra/bridges/camera-bridge/) | Gazebo camera source code (sim mode) |
-| [infra/bridges/usb-camera/](infra/bridges/usb-camera/) | USB camera source code (real hardware) |
-| [mcp-server/](mcp-server/) | Model Context Protocol server for integrations |
+| [camera-modes.md](camera-modes.md) | Complete camera modes guide (sim vs USB) |
+| [how-it-works.md](how-it-works.md) | System design, data flows, component details |
+| [../../Makefile](../../Makefile) | Build targets and task automation |
+| [../../docker-compose.yml](../../docker-compose.yml) | Infrastructure services, profiles, networking |
+| [../../sample-apps/docker-compose.yml](../../sample-apps/docker-compose.yml) | Vision processor + dashboard services |
+| [../../.env.example](../../.env.example) | All configurable environment variables |
+| [../../infra/bridges/camera/](../../infra/bridges/camera/) | Gazebo camera source code (sim mode) |
+| [../../infra/bridges/usb-camera/](../../infra/bridges/usb-camera/) | USB camera source code (real hardware) |
+| [../../mcp-server/](../../mcp-server/) | Model Context Protocol server for integrations |

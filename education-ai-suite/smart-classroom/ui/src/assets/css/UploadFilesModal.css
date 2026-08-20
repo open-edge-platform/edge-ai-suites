@@ -105,6 +105,7 @@
 .upload-files-modal .error-message {
   color: #c00;
   font-size: 12px;
+  margin-top: 4px;
   /* One reason per line, and long file paths wrap instead of overflowing. */
   white-space: pre-line;
   overflow-wrap: anywhere;

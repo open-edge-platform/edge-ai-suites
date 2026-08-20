@@ -38,7 +38,7 @@ const NotificationsDisplay: React.FC<NotificationsDisplayProps> = ({
             <>
               <div className="notification-container audio">
                 <span className="notification-label">{t('notifications.audio')}:</span>
-                <span className="notification-text">{audioNotification}</span>
+                <span className="notification-text" title={audioNotification}>{audioNotification}</span>
               </div>
               {hasVideo && <div className="notification-separator">|</div>}
             </>
@@ -46,7 +46,7 @@ const NotificationsDisplay: React.FC<NotificationsDisplayProps> = ({
           {hasVideo && (
             <div className="notification-container video">
               <span className="notification-label">{t('notifications.video')}:</span>
-              <span className="notification-text">{videoNotification}</span>
+              <span className="notification-text" title={videoNotification}>{videoNotification}</span>
             </div>
           )}
         </div>

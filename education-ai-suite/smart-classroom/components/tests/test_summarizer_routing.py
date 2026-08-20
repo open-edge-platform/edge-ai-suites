@@ -19,10 +19,6 @@ def _make_component(handler):
         mock_mm.instance.return_value.text_gen.return_value = handler
         component = SummarizerComponent(
             session_id="test-session",
-            provider="openvino",
-            model_name="Qwen/Qwen3-8B",
-            device="GPU",
-            temperature=0.0,
             mode="dialog",
         )
     return component, mock_mm
@@ -49,7 +45,7 @@ def test_summarizer_shares_singleton_handler():
 
     with patch("components.summarizer_component.ModelManager") as mock_mm:
         mock_mm.instance.return_value.text_gen.return_value = handler
-        first = SummarizerComponent("s1", "openvino", "m", "GPU", mode="dialog")
-        second = SummarizerComponent("s2", "openvino", "m", "GPU", mode="teacher")
+        first = SummarizerComponent("s1", mode="dialog")
+        second = SummarizerComponent("s2", mode="teacher")
 
     assert first.summarizer is second.summarizer is handler
