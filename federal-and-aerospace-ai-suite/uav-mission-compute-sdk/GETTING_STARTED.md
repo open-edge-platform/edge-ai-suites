@@ -63,21 +63,22 @@ make init
 cp .env.example .env
 ```
 
-Then edit `.env`:
+Then edit `.env` and fill in the required values before starting:
 
 ```env
 # InfluxDB admin password and API token
 INFLUXDB_PASSWORD=your-strong-password
 INFLUXDB_TOKEN=your-long-random-token
+INFLUXDB_ORG=your-org-name
 
 # Grafana admin password
 GRAFANA_PASSWORD=your-strong-password
 
-# UAV identifier used in MQTT topics (optional, default: uav-1)
+# UAV identifier used in MQTT topics
 UAV_ID=uav-1
 ```
 
-> **Note** — `.env` is gitignored and never committed. If you skip this step, Docker Compose falls back to the placeholder defaults (`change-me`) which work for local development but should not be used in any shared or networked environment.
+> **Note** — `.env` is gitignored and never committed. Leave these values empty until you have set them in your local copy; the stack now requires a real value instead of silently using any placeholder defaults.
 
 ### Step 1 — Choose camera source (sim or USB)
 

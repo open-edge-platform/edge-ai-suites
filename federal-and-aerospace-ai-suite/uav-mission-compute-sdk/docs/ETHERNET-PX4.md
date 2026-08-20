@@ -36,6 +36,14 @@ FC Machine (<FC_IP>)                         Companion Machine (<COMPANION_IP>)
 > **Network requirement**: both machines must be on the **same L2 subnet**
 > (e.g. `192.168.1.0/24`). Cross-subnet UDP is blocked by corporate ACL policy.
 
+> **Security recommendation**: the MAVLink UDP link (port `14541`) and the
+> MQTT broker are unauthenticated and unencrypted by default. Since traffic
+> now crosses a physical network between two machines instead of staying
+> inside a single Docker host, it is recommended to enable authentication
+> and encryption (e.g. a VPN/IPsec tunnel or link-layer encryption between
+> the FC and companion machines, plus MQTT TLS + credentials) before using
+> this setup outside of a fully trusted, isolated lab network.
+
 ---
 
 ## Prerequisites
@@ -118,11 +126,12 @@ The main `docker-compose.yml` is extended by `docker-compose.ethernet.yml` which
 ```bash
 export FC_IP=192.168.1.100   # IP of FC machine running mavlink-router
 
-# Option A — Makefile shortcut
+# Option A — Makefile shortcut (also brings up InfluxDB/Grafana)
 make up-ethernet FC_IP=$FC_IP
 
 # Option B — Docker Compose directly
-docker compose -f docker-compose.yml -f docker-compose.ethernet.yml up -d --build
+# --profile ethernet activates companion-bridge; add --profile observability for Grafana/InfluxDB
+docker compose -f docker-compose.yml -f docker-compose.ethernet.yml --profile ethernet --profile observability up -d --build
 docker logs companion-bridge -f
 ```
 
@@ -163,14 +172,17 @@ curl -s http://localhost:8080/telemetry | python3 -m json.tool
 {
     "connected": true,
     "armed": false,
-    "flight_mode": "HOLD",
-    "position": { "lat": 47.397743, "lon": 8.545594, "alt_m": 489.4, "rel_alt_m": -0.01 },
-    "velocity": { "n": -0.01, "e": 0.01, "d": 0.0 },
-    "attitude": { "roll": 0.009, "pitch": 0.005, "yaw": 0.95 },
-    "battery": { "voltage_v": 16.2, "remaining_pct": 100.0 },
-    "gps": { "satellites": 10, "fix": "FIX_3D" }
+    "mode": "HOLD",
+    "stale": false,
+    "flight_time_s": 0.0,
+    "timestamp": "2026-08-19T11:03:01.765218+00:00",
+    "home_lat": 37.4121731,
+    "home_lon": -121.9988787,
+    "home_alt_msl": 38.196
 }
 ```
+Position, velocity, attitude, battery, and GPS data are published to MQTT
+(`uav/<id>/telemetry/*`), not to this REST endpoint.
 
 ---
 

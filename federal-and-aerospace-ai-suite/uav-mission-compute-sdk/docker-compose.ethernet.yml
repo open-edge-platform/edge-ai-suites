@@ -8,7 +8,7 @@
 #
 # Usage:
 #   export FC_IP=192.168.1.100        # IP of the FC machine running mavlink-router
-#   docker compose -f docker-compose.yml -f docker-compose.ethernet.yml up
+#   docker compose -f docker-compose.yml -f docker-compose.ethernet.yml --profile ethernet up
 #
 # Or via Makefile:
 #   make up-ethernet FC_IP=192.168.1.100
@@ -25,10 +25,10 @@ services:
   # ── Override companion-bridge for ethernet ─────────────────────────────────
   # Uses host networking so it can reach the remote FC over the physical NIC.
   # PX4_ADDRESS switches from udpin (listen) to udpout (connect to remote).
-  # profiles: [] clears the sim/usb-camera profile restriction from the base file.
+  # profiles: ["ethernet"] replaces the sim/usb-camera profiles — start with --profile ethernet.
   # depends_on overridden: px4 is excluded in ethernet mode.
   companion-bridge:
-    profiles: []
+    profiles: ["ethernet"]
     network_mode: host
     environment:
       - PX4_ADDRESS=udpout://${FC_IP:?FC_IP must be set — IP of FC machine running mavlink-router}:14541
