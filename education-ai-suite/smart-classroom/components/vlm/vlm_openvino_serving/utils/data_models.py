@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -91,6 +91,8 @@ class ChatRequest(BaseModel):
         None,
         json_schema_extra={"example": False, "description": "Set False to suppress Qwen3 thinking; None keeps model default"},
     )
+    tools: Optional[List[Dict[str, Any]]] = None
+    tool_choice: Optional[Union[str, Dict[str, Any]]] = None
 
 
 class ChatCompletionDelta(BaseModel):
@@ -104,6 +106,7 @@ class ChatCompletionDelta(BaseModel):
 
     role: Optional[str] = None
     content: Optional[str] = None
+    tool_calls: Optional[List[Dict[str, Any]]] = None
 
 
 class ChatUsageStats(BaseModel):

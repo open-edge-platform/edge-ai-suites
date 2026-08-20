@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sys
 import time
 import uuid
@@ -18,6 +19,7 @@ from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from model_manager import ModelManager
+from utils.markdown_cleaner import strip_think_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +28,15 @@ router = APIRouter()
 # smart-classroom root: api/vlm_chat.py -> parents[1]
 _SC_ROOT = Path(__file__).resolve().parents[1]
 _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
+
+_TOOL_CALL_RE = re.compile(
+    r"<tool_call>\s*<function=([^>\n]+)>\s*(.*?)</function>\s*</tool_call>",
+    re.DOTALL | re.IGNORECASE,
+)
+_TOOL_PARAMETER_RE = re.compile(
+    r"<parameter=([^>\n]+)>\s*(.*?)\s*</parameter>",
+    re.DOTALL | re.IGNORECASE,
+)
 
 
 def _import_vlm_serving() -> SimpleNamespace:
@@ -85,6 +96,61 @@ def _model_name(requested: Optional[str]) -> str:
     except Exception:  
         pass
     return requested or "text_gen"
+
+
+def _selected_tools(chat_req) -> Optional[List[dict]]:
+    tools = chat_req.tools
+    choice = chat_req.tool_choice
+    if not tools or choice == "none":
+        return None
+    if not isinstance(choice, dict):
+        return tools
+
+    function = choice.get("function") or {}
+    name = function.get("name")
+    if not name:
+        return tools
+    selected = [
+        tool for tool in tools
+        if (tool.get("function") or {}).get("name") == name
+    ]
+    if not selected:
+        raise ValueError(f"tool_choice references unknown function: {name}")
+    return selected
+
+
+def _render_chat_prompt(chat_req, handler, tools: List[dict]) -> str:
+    messages = [message.model_dump(exclude_none=True) for message in chat_req.messages]
+    return handler.tokenizer.apply_chat_template(
+        messages,
+        tokenize=False,
+        add_generation_prompt=True,
+        enable_thinking=False,
+        tools=tools,
+    )
+
+
+def _parse_tool_response(output: str) -> tuple[Optional[str], List[dict]]:
+    if "</think>" in output and "<think>" not in output:
+        output = output.split("</think>", 1)[1]
+    cleaned = strip_think_tokens(output)
+    tool_calls = []
+    for match in _TOOL_CALL_RE.finditer(cleaned):
+        arguments = {
+            parameter.group(1).strip(): parameter.group(2).strip()
+            for parameter in _TOOL_PARAMETER_RE.finditer(match.group(2))
+        }
+        tool_calls.append({
+            "id": f"call_{uuid.uuid4().hex}",
+            "type": "function",
+            "function": {
+                "name": match.group(1).strip(),
+                "arguments": json.dumps(arguments, ensure_ascii=False),
+            },
+        })
+
+    content = _TOOL_CALL_RE.sub("", cleaned).strip() or None
+    return content, tool_calls
 
 
 def _sse_stream(token_iter: Iterator[str], model_name: str) -> Iterator[str]:
@@ -153,15 +219,42 @@ async def chat_completions(request: Request):
             media_type="text/event-stream",
         )
 
+    generation_prompt = prompt
+    generation_kwargs = {
+        "images": image_tensors,
+        "stream": False,
+        "max_new_tokens": chat_req.max_completion_tokens,
+        "temperature": chat_req.temperature,
+    }
+    try:
+        tools = _selected_tools(chat_req)
+        if tools:
+            generation_prompt = _render_chat_prompt(chat_req, handler, tools)
+    except Exception as exc:  # noqa: BLE001 - tokenizer template validation
+        return JSONResponse(
+            status_code=400, content={"error": f"Invalid tools: {exc}"}
+        )
+
+    if tools:
+        generation_kwargs["pre_templated"] = True
+    else:
+        generation_kwargs["enable_thinking"] = chat_req.enable_thinking
+
     output = await run_in_threadpool(
         handler.generate,
-        prompt,
-        images=image_tensors,
-        stream=False,
-        max_new_tokens=chat_req.max_completion_tokens,
-        temperature=chat_req.temperature,
-        enable_thinking=chat_req.enable_thinking,
+        generation_prompt,
+        **generation_kwargs,
     )
+    content, tool_calls = (
+        _parse_tool_response(str(output))
+        if tools
+        else (str(output), [])
+    )
+    finish_reason = "tool_calls" if tool_calls else "stop"
+    message = mods.ChatCompletionDelta(
+        role="assistant", content=content, tool_calls=tool_calls or None
+    )
+
     response = mods.ChatCompletionResponse(
         id=str(uuid.uuid4()),
         object="chat.completion",
@@ -170,8 +263,8 @@ async def chat_completions(request: Request):
         choices=[
             mods.ChatCompletionChoice(
                 index=0,
-                message=mods.ChatCompletionDelta(role="assistant", content=str(output)),
-                finish_reason="stop",
+                message=message,
+                finish_reason=finish_reason,
             )
         ],
     )
