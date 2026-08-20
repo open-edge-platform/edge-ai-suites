@@ -240,7 +240,7 @@ Finds the maximum number of concurrent streams for a **single pipeline** while s
 
 **Example terminal output:**
 
-```
+```text
 >>>>> Performing pre-flight checks...
 DLSPS is reachable.
 HW metrics: http://localhost:9090
@@ -298,7 +298,7 @@ Runs the density search **sequentially** for multiple pipelines (typically CPU, 
 
 **Example terminal output:**
 
-```
+```text
 ================================================================
   UAV VISION ANALYTICS — SUSTAINED STREAM DENSITY RESULTS
   FPS floor : 20   Window: 60s   Percentile: p90
@@ -359,7 +359,7 @@ Runs a **fixed, pre-specified number of streams** per pipeline simultaneously (n
 
 **Terminal summary table (nstreams mode):**
 
-```
+```text
 ================================================================
   NSTREAMS RESULTS  (p90 window=60s)
 ================================================================
@@ -377,7 +377,7 @@ Runs a **fixed, pre-specified number of streams** per pipeline simultaneously (n
 
 ## CLI Reference
 
-```
+```text
 Usage (stream-density — single pipeline):
   ./benchmark/calc_stream_density.sh -p <pipeline_name> [options]
 
@@ -460,7 +460,7 @@ Each mode prints a formatted summary to the terminal after all runs complete:
 
 Each pipeline run writes a `kpi.txt` with two sections — FPS statistics (always written) and HW metrics (written when metrics-manager is reachable):
 
-```
+```text
 # ── FPS section ──────────────────────────────────────────────────────
 throughput #1: 23.983        ← p90 FPS for stream 1
 throughput #2: 23.911        ← p90 FPS for stream 2
@@ -507,7 +507,7 @@ hw_npu_power avg: 0.000
 
 All output is created **relative to the directory where you run the command** (app root recommended):
 
-```
+```text
 uav-vision-analytics/
 │
 ├── benchmark-density-uav_object_detection_cpu/   ← best run for CPU pipeline

@@ -49,11 +49,18 @@ See [System Requirements](./system-requirements.md) for the full list of softwar
 
 ### 1. Configure environment
 
+Clone the repo and Get into the directory:
+
+```bash
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
+```
+
 ```bash
 make init
 ```
 
-`make init` creates `.env` from the template and **auto-detects your Intel GPU** device paths (`GPU_DEVICE`, `GPU_RENDER_DEVICE`). It skips silently if `.env` already exists.
+`make init` creates `.env` from the template and **auto-detects your Intel GPU device paths** (`GPU_DEVICE`, `GPU_RENDER_DEVICE`), **Intel NPU** (`NPU_DEVICE`), and **Intel RealSense / USB camera** (`REALSENSE_DEVICE`). It skips if `.env` already exists.
 
 Then set your host IP address in `.env`:
 
@@ -80,22 +87,29 @@ make pymav-up
 
 ### 4. Start inference pipelines
 
-Three options are available depending on your use case:
+Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
 Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
+`make start-rtsp` starts **one device pipeline at a time** (default: GPU). Pass `DEVICE=cpu|gpu|npu|all` to choose:
+
 ```bash
-make start-rtsp
+make start-rtsp                # GPU only (default)
+make start-rtsp DEVICE=cpu     # CPU only
+make start-rtsp DEVICE=npu     # NPU only
+make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 ```
 
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the selected pipeline and serve annotated RTSP streams.
+>
+> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 >
 > Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
 
 
-**pymavlink mode** — output streams:
+**pymavlink mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`):
 ```
 rtsp://<HOST_IP>:8555/uav-mavlink-cpu    (CPU pipeline)
 rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
@@ -109,7 +123,7 @@ rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline) # If NPU Device is avail
 Start a single pipeline directly without the pipeline manager. Useful for testing individual pipelines or custom configurations.
 
 ```bash
-# Start CPU pipeline (pymavlink mode)
+# CPU pipeline
 INSTANCE_ID=$(curl -s -X POST \
   http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
@@ -135,7 +149,16 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 ```
 
-For GPU or NPU, change the pipeline name and `device` value.
+Change following **three values** to switch between CPU / GPU / NPU:
+1. **Pipeline name** in the URL path (`uav_object_detection_cpu` → `_gpu` / `_npu`)
+2. **RTSP path** in the request body (`uav-mavlink-cpu` → `uav-mavlink-gpu` / `uav-mavlink-npu`)
+3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+
+View the annotated stream immediately after posting:
+
+```bash
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # or uav-mavlink-gpu / uav-mavlink-npu
+```
 
 Stop a pipeline:
 ```bash
@@ -145,11 +168,21 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 ### 5. View the output stream
 
 ```bash
-# View annotated RTSP output (install ffmpeg first if not present)
-ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # pymavlink, REST/managed
+# Install ffmpeg if not present, then view any device stream
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # CPU
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
+ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
+
+### 6. Stop all services
+
+Stop and remove the standalone pymavlink stack (also removes named volumes):
+
+```bash
+make pymav-down
+```
 
 ---
 
