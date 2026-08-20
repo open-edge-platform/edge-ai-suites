@@ -19,7 +19,7 @@ See [`handheld-multi-modal/`](handheld-multi-modal/README.md).
 
 [UAV Vision Analytics](uav-vision-analytics) : An AI-powered UAV object detection application with live telemetry overlay, built on Intel DL Streamer Pipeline Server. It processes video from a UAV-mounted camera (or simulated video file), runs YOLOv8n-VisDrone inference across ten object classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) on the output RTSP stream. Supports standalone (pymavlink + PX4 SITL) and UAV Mission Compute SDK deployment modes.
 
-See [`docs/uav-vision-analytics/`](docs/uav-vision-analytics/index.md).
+See [`/uav-vision-analytics/docs/user-guide`](./uav-vision-analytics/docs/user-guide/index.md).
 
 
 ## Components

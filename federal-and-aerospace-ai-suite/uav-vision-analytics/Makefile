@@ -12,6 +12,7 @@ DLSPS          := dlstreamer-pipeline-server
 MODEL_DIR      := resources/models/yolov8n-visdrone
 MODEL_XML      := $(MODEL_DIR)/best_openvino_model/best.xml
 VENV           := resources/venv
+DEVICE         ?= gpu
 
 .PHONY: help init build model _check_model \
         pymav-up pymav-down \
@@ -128,8 +129,11 @@ uavsdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)
 
 # ── Pipeline management ───────────────────────────────────────────────────────
 
-start-rtsp: ## Start pipelines with RTSP output (exec into running DLSPS container)
-	docker exec -it -e HOST_IP=$(HOST_IP) $(DLSPS) bash -c \
+start-rtsp: ## Start RTSP pipelines. DEVICE=cpu|gpu|npu|all (default: gpu)
+	-docker exec -it \
+	  -e HOST_IP=$(HOST_IP) \
+	  -e PIPELINE_DEVICE=$(DEVICE) \
+	  $(DLSPS) bash -c \
 	  "python3 /home/pipeline-server/scripts/pipeline_manager.py --sink rtsp"
 
 # ── Convenience alias ─────────────────────────────────────────────────────────

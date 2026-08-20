@@ -6,7 +6,6 @@ import re
 import json_repair
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from utils.config_loader import config
-from utils.markdown_cleaner import strip_think_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -237,10 +236,13 @@ class ContentSegmentationComponent(PipelineComponent):
         logger.error("_clean_topics_output: all strategies failed. Preview: %s", raw[:200])
         raise ValueError("INVALID_TOPICS_FORMAT")
 
-    def _generate(self, prompt: str) -> str:
+    def _generate(self, messages: list) -> str:
         try:
             return self.model.generate(
-                prompt, stream=False, json_schema=_topics_json_schema()
+                messages=messages,
+                stream=False,
+                enable_thinking=False,
+                json_schema=_topics_json_schema(),
             )
         except TypeError:
             logger.info("Backend does not accept json_schema; generating unconstrained.")
@@ -248,20 +250,17 @@ class ContentSegmentationComponent(PipelineComponent):
             logger.warning(
                 "Constrained generation failed (%s); retrying unconstrained.", exc
             )
-        return self.model.generate(prompt, stream=False)
+        return self.model.generate(
+            messages=messages, stream=False, enable_thinking=False
+        )
 
     def generate_topics(self, transcript_text, language=None):
         try:
             logger.info("Generating topic segmentation...")
 
-            prompt = self.model.tokenizer.apply_chat_template(
-                self._build_messages(transcript_text, language=language),
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False
+            full_output = self._generate(
+                self._build_messages(transcript_text, language=language)
             )
-
-            full_output = strip_think_tokens(self._generate(prompt))
             clean_output = self._clean_topics_output(full_output)
             logger.info("Topic segmentation completed.")
             return clean_output

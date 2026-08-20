@@ -18,12 +18,12 @@ Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO visio
 | I want to… | Go here |
 |---|---|
 | Run the demo end-to-end | [Quick Start](#quick-start) below |
-| Understand the full architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| Configure cameras, switch USB/sim | [docs/CAMERA-MODES.md](docs/CAMERA-MODES.md) |
-| See all ports and services | [docs/PORTS.md](docs/PORTS.md) |
-| Connect a real PX4 over Ethernet | [docs/ETHERNET-PX4.md](docs/ETHERNET-PX4.md) |
+| Understand the full architecture | [docs/user-guide/how-it-works.md](docs/user-guide/how-it-works.md) |
+| Configure cameras, switch USB/sim | [docs/user-guide/camera-modes.md](docs/user-guide/camera-modes.md) |
+| See all ports and services | [docs/user-guide/ports.md](docs/user-guide/ports.md) |
+| Connect a real PX4 over Ethernet | [docs/user-guide/ethernet-px4.md](docs/user-guide/ethernet-px4.md) |
 | Review security config/recommendations | [docs/security-considerations.md](docs/security-considerations.md) |
-| Troubleshoot a broken stack | [GETTING_STARTED.md](GETTING_STARTED.md) |
+| Troubleshoot a broken stack | [docs/user-guide/get-started.md](docs/user-guide/get-started.md) |
 
 ---
 
@@ -57,7 +57,7 @@ make apps
 
 Open **http://localhost:5002**
 
-See [GETTING_STARTED.md](GETTING_STARTED.md) for full setup, troubleshooting, and ports.
+See [docs/user-guide/get-started.md](docs/user-guide/get-started.md) for full setup, troubleshooting, and ports.
 
 ---
 

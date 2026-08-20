@@ -11,9 +11,41 @@
 |---------|-------|-------|------|
 | `dlstreamer-pipeline-server` | `${DLSTREAMER_PIPELINE_SERVER_IMAGE}`-pymavlink (built inline with `pip install pymavlink`) | `8081`, `8555` | AI inference + RTSP output |
 | `broker` | `eclipse-mosquitto:2.0.22` | `1883` | MQTT broker for detection metadata |
-| `px4` | `px4io/px4-sitl:latest` | — | PX4 SITL flight controller simulator |
+| `px4` | `px4io/px4-sitl:latest` | — | PX4 SITL flight controller simulator (requires `10040_sihsim_quadx.post` volume mount) |
 | `mavlink-router` | custom build | — | Routes MAVLink :14550 → :14541 |
 | `metrics-manager` | `intel/metrics-manager:2026.1.0-*` | — | CPU/GPU/NPU/power metrics collection |
+
+### px4 Service (pymavlink mode)
+
+The `px4` service MUST mount the airframe configuration file that tells PX4 which
+MAVLink target to use. Without this mount PX4 SITL sends to its default
+endpoint (within the container) and mavlink-router never receives packets,
+causing the pipeline manager to block forever on `Waiting for heartbeat`.
+
+```
+{{STACK_DIR}}/10040_sihsim_quadx.post:
+mavlink start -u 14541 -t $(getent hosts mavlink-router | awk '{print $1}')
+```
+
+Docker Compose fragment:
+```yaml
+  px4:
+    image: px4io/px4-sitl:latest
+    hostname: px4-sitl
+    container_name: px4
+    volumes:
+      - ./10040_sihsim_quadx.post:/opt/px4/etc/init.d-posix/airframes/10040_sihsim_quadx.post
+    stdin_open: true
+    tty: true
+    networks:
+      - app_network
+    depends_on:
+      - mavlink-router
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+```
+
+---
 
 ### UAVSDK mode (`docker-compose-uavsdk.yml`)
 
@@ -177,10 +209,10 @@ HOST_IP=192.168.1.x           # LAN IP — NOT 127.0.0.1; used for RTSP URLs
 # DL Streamer image
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
 
-# Proxy (leave blank if not behind corporate proxy)
-http_proxy=
-https_proxy=
-no_proxy=localhost,127.0.0.0/8
+# Proxy
+# http_proxy=
+# https_proxy=
+# no_proxy=localhost,127.0.0.0/8
 ```
 
 ---
@@ -218,7 +250,7 @@ PX4 SITL ──MAVLink──▶ mavlink-router (:14550 server → :14541 broadca
                     MQTT :1883 ──▶ Mosquitto broker
 ```
 
-### MAVSDK
+### UAVSDK
 
 ```
 uav-mission-compute-sdk:
