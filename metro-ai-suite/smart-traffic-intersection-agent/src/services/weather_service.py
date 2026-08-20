@@ -24,7 +24,10 @@ class WeatherService:
     Fetches weather data from National Weather Service API with caching
     and provides weather analysis for traffic correlation.
     """
-    
+
+    # Timeout (in seconds) for outbound HTTP requests to the weather API
+    REQUEST_TIMEOUT_SECONDS = 10
+
     def __init__(self, config_service: ConfigService):
         """Initialize weather service with configuration."""
         self.config_service = config_service
@@ -184,7 +187,7 @@ class WeatherService:
                     "Feature-Flags": f"forecast_wind_speed_{self._cache_timestamp or ''}",
                     "Accept-Language": "en-US,en;q=0.9"
                 }
-                points_resp = requests.get(points_url, headers=headers)
+                points_resp = requests.get(points_url, headers=headers, timeout=self.REQUEST_TIMEOUT_SECONDS)
                 points_resp.raise_for_status()
                 points_data = points_resp.json()
                 
@@ -195,7 +198,7 @@ class WeatherService:
                 logger.debug("Making request to hourly forecast API", url=forecast_url)
 
                 # Step 3: Fetch forecast data
-                forecast_resp = requests.get(forecast_url, headers=headers)
+                forecast_resp = requests.get(forecast_url, headers=headers, timeout=self.REQUEST_TIMEOUT_SECONDS)
                 forecast_resp.raise_for_status()
                 forecast_data = forecast_resp.json()
                 

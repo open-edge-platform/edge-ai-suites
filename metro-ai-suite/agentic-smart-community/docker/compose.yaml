@@ -29,6 +29,10 @@ services:
     extends:
       file: ../.external/edge-ai-libraries/microservices/multilevel-video-understanding/docker/compose.yaml
       service: vllm-ipex-serving
+    healthcheck:
+      # First launch downloads + compiles the model (about 30 mins); give it room.
+      start_period: 7200s
+      start_interval: 10s
 
   # Inherit upstream's video-summary microservice, then add ONLY the Smart Community
   # deltas. No `user:` override: the image runs as its baked appuser (uid 1000) and
@@ -41,6 +45,9 @@ services:
     depends_on:
       vllm-ipex-serving:
         condition: service_healthy
+    healthcheck:
+      start_period: 7200s
+      start_interval: 10s
     volumes:
       # Identity bind mount (host X -> container X, read-only): multilevel sees the
       # data root at the SAME absolute path as the host, so the clip paths the MCP

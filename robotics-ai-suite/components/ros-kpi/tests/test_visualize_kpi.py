@@ -289,43 +289,14 @@ class TestSkuComparison:
 
 @pytest.fixture()
 def resource_kpi():
-    """KPI with fully populated CPU and thermal resource data."""
+    """KPI with fully populated CPU resource data."""
     return {
         "schema_version": "level1_v1",
         "cpu_mean_pct": 42.5,
         "cpu_max_pct": 78.0,
-        "thermal": {
-            "cpu_temp_c": 65.0,
-            "gpu_temp_c": 71.0,
-            "npu_temp_c": 55.0,
-            "cpu_throttled": False,
-            "gpu_throttled": False,
-            "npu_throttled": False,
-        },
         "per_node": {},
         "pairs": [],
         "metadata": {"name": "hw_session"},
-    }
-
-
-@pytest.fixture()
-def throttled_kpi():
-    """KPI where CPU is throttled."""
-    return {
-        "schema_version": "level1_v1",
-        "cpu_mean_pct": 95.0,
-        "cpu_max_pct": 100.0,
-        "thermal": {
-            "cpu_temp_c": 99.0,
-            "gpu_temp_c": None,
-            "npu_temp_c": None,
-            "cpu_throttled": True,
-            "gpu_throttled": False,
-            "npu_throttled": False,
-        },
-        "per_node": {},
-        "pairs": [],
-        "metadata": {"name": "throttle_session"},
     }
 
 
@@ -335,7 +306,6 @@ class TestResourceUtilization:
         kpi = {
             "cpu_mean_pct": None,
             "cpu_max_pct": None,
-            "thermal": {"cpu_temp_c": None, "gpu_temp_c": None, "npu_temp_c": None},
             "per_node": {},
             "pairs": [],
         }
@@ -357,17 +327,11 @@ class TestResourceUtilization:
         kpi = {
             "cpu_mean_pct": 30.0,
             "cpu_max_pct": None,
-            "thermal": {"cpu_temp_c": None, "gpu_temp_c": None, "npu_temp_c": None},
             "per_node": {},
             "pairs": [],
             "metadata": {"name": "partial"},
         }
         result = resource_utilization(kpi, tmp_path)
-        assert result is not None
-        assert result.exists()
-
-    def test_throttled_kpi_renders(self, throttled_kpi, tmp_path):
-        result = resource_utilization(throttled_kpi, tmp_path)
         assert result is not None
         assert result.exists()
 

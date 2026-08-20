@@ -105,6 +105,15 @@ export interface ServerConfig {
   };
   pollIntervalMs: number;
   videoSummaryMaxConcurrent: number;
+  /**
+   * Alert notification cooldown. When a new alert fires for a monitor+use_case
+   * that already produced a *notified* alert within this window, the row is
+   * still written (full audit) but with notified=false and no subscriber
+   * broadcast. 0 disables cooldown — every alert notifies.
+   */
+  alerts: {
+    cooldownSeconds: number;
+  };
   mcp?: {
     port?: number;
     /** Evict an MCP session after this long with no open SSE stream AND no HTTP request. Default 30min. */
@@ -188,6 +197,9 @@ export function loadConfig(configPath?: string): ServerConfig {
     },
     pollIntervalMs: parsed?.poll_interval_ms ?? 5000,
     videoSummaryMaxConcurrent: parsed?.video_summary_max_concurrent ?? 2,
+    alerts: {
+      cooldownSeconds: parsed?.alerts?.cooldown_seconds ?? 60,
+    },
     mcp: {
       port: parsed?.mcp?.port ?? 3100,
       sessionIdleTimeoutMs: parsed?.mcp?.session_idle_timeout_ms ?? 30 * 60 * 1000,

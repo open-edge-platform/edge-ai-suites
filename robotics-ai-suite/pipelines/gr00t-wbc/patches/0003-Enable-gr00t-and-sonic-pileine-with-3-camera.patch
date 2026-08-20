@@ -1,0 +1,873 @@
+From 321d2e8be35c24470b43619684e3198573bdba08 Mon Sep 17 00:00:00 2001
+From: nacui <na.cui@intel.com>
+Date: Fri, 31 Jul 2026 10:28:17 +0800
+Subject: [PATCH 03/13] Enable gr00t and sonic pileine with 3 camera  - Enable
+ gr00t n1.7 + sonic pipeline on OpenVINO  - Support 3-camera for sonic G1 sim
+
+Author:    nacui <na.cui@intel.com>
+Co-authored-by: He Yue <yue.he@intel.com>
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ docs/source/tutorials/data_collection.md      |   4 +
+ docs/source/tutorials/vla_inference.md        | 117 +++++++++++++++++-
+ docs/source/tutorials/vla_workflow.md         |  10 ++
+ .../model_data/g1/g1_29dof_with_hand.xml      |   2 +
+ gear_sonic/pyproject.toml                     |  14 +++
+ gear_sonic/scripts/run_sim_loop.py            |  15 ++-
+ gear_sonic/scripts/run_vla_inference.py       |   9 +-
+ gear_sonic/utils/mujoco_sim/base_sim.py       |  16 +++
+ gear_sonic/utils/mujoco_sim/configs.py        |   4 +
+ .../utils/mujoco_sim/simulator_factory.py     |   1 +
+ gear_sonic_deploy/deploy.sh                   |  14 +++
+ .../policy/release/observation_config.yaml    |   2 +-
+ .../release/observation_config_vla.yaml       |  95 ++++++++++++++
+ install_scripts/install_data_collection.sh    |  45 +++++--
+ install_scripts/install_inference.sh          | 110 +++++++++++++---
+ install_scripts/install_mujoco_sim.sh         |  36 +++++-
+ 16 files changed, 457 insertions(+), 37 deletions(-)
+ create mode 100644 gear_sonic_deploy/policy/release/observation_config_vla.yaml
+
+diff --git a/docs/source/tutorials/data_collection.md b/docs/source/tutorials/data_collection.md
+index 0b62c4c..63a5f5a 100644
+--- a/docs/source/tutorials/data_collection.md
++++ b/docs/source/tutorials/data_collection.md
+@@ -27,10 +27,14 @@ On your **workstation** (where you run the C++ deployment, teleop, and data expo
+ 
+ ```sh
+ bash install_scripts/install_data_collection.sh
++# or, on Intel-only boxes (skips ~3 GB of nvidia-cuda-* / cudnn pulled in by torch):
++bash install_scripts/install_data_collection.sh --ov
+ ```
+ 
+ This creates `.venv_data_collection` using Python 3.10 via `uv`. It installs `gear_sonic[data_collection]` which includes `lerobot`, `av`, `opencv-python`, and other required packages. It also installs `espeak` (system package) for voice feedback during recording.
+ 
++With `--ov`, CPU-only PyTorch is pre-installed from the PyTorch CPU index before the LeRobot resolve, so the CUDA wheels (and their NVIDIA library deps) are skipped — useful when this venv co-exists with `.venv_inference` built via `install_inference.sh --ov`.
++
+ ```{tip}
+ This environment is separate from `.venv_teleop` and `.venv_sim` — the data exporter has heavier ML dependencies that are not needed for teleop or simulation.
+ ```
+diff --git a/docs/source/tutorials/vla_inference.md b/docs/source/tutorials/vla_inference.md
+index 7bc7e4d..4767696 100644
+--- a/docs/source/tutorials/vla_inference.md
++++ b/docs/source/tutorials/vla_inference.md
+@@ -40,8 +40,11 @@ The inference pipeline consists of:
+ 
+ ### 1. Isaac-GR00T PolicyServer
+ 
+-The PolicyServer runs on a machine with a GPU. It loads your finetuned VLA model
+-and serves inference over ZMQ.
++The PolicyServer loads your finetuned VLA model and serves inference over ZMQ.
++It can run on an NVIDIA GPU machine (default PyTorch path) or, with the
++OpenVINO fork, on an Intel CPU / iGPU / NPU.
++
++#### Option A — PyTorch on CUDA (default)
+ 
+ Install [Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T) and start the server:
+ 
+@@ -54,6 +57,60 @@ uv run python gr00t/eval/run_gr00t_server.py \
+     --port 5550
+ ```
+ 
++#### Option B — OpenVINO on Intel CPU / iGPU / NPU
++
++Use the OpenVINO-enabled Isaac-GR00T fork. The server still loads the
++PyTorch shell briefly on CPU/FP32, then swaps the VLA model for compiled OpenVINO IR
++models that run on `--ov-device`.
++
++`bash install_scripts/install_inference.sh --ov` (covered in the
++[Inference Environment](#2-inference-environment) section below) clones
++the fork's `ov-n1.7` branch automatically. To do it manually:
++
++```bash
++git clone -b ov-n1.7 \
++    https://github.com/intel-sandbox/frameworks.industrial.motion-control.isaac-gr00t.git
++```
++
++The fork ships pre-exported OpenVINO IR files for the released SONIC
++checkpoint under `/path/to/ov_model`. If you don't have your own finetuned
++PyTorch checkpoint yet, point `--model-path` at the public Hugging Face
++release, e.g. `poisonousID/GR00T-N1.7-UNITREE-G1-SONIC-10000` — `gr00t` will
++download it on first run via the `huggingface_hub` cache.
++
++```bash
++# From the OpenVINO-enabled Isaac-GR00T fork
++uv run python gr00t/eval/run_gr00t_server.py \
++    --model-path /path/to/finetuned_model \
++    --embodiment-tag UNITREE_G1_SONIC \
++    --enable-ov \
++    --ov-model-dir /path/to/ov_model \
++    --ov-device GPU \
++    --use-fused-dit \
++    --port 5550
++```
++
++`--ov-model-dir` must point to a directory of OpenVINO IR files. FP16, FP16-INT8, and
++FP16-INT4 precisions are auto-detected from the filename suffix. The
++fork's bundled `/path/to/ov_model` directory matches the
++`/path/to/finetuned_model` checkpoint.
++
++OpenVINO server flags:
++
++| Flag | Default | Description |
++|------|---------|-------------|
++| `--enable-ov` | `false` | Enable the OpenVINO inference path |
++| `--ov-model-dir` | — | Directory with OpenVINO IR files (required with `--enable-ov`) |
++| `--ov-device` | `GPU` | OpenVINO device: `CPU`, `GPU`, `NPU`, or `AUTO` |
++| `--full-ov` / `--no-full-ov` | `true` | Full OV path vs. ViT-only acceleration (rest stays in PyTorch) |
++| `--use-fused-dit` | `false` | Use the fused DiT IR (`dit_fused_*.xml`) when available |
++| `--force-fp32` | `false` | Force FP32 on the full OV GPU path (workaround for Intel iGPU NaN) |
++
++When `--enable-ov` is set, `--device` is ignored — the PyTorch shell
++always loads on CPU because (a) the OV setup deletes the heavy PyTorch
++submodules right after, and (b) OV inputs are numpy arrays so a CUDA
++shell would only add device-transfer overhead on every call.
++
+ ### 2. Inference Environment
+ 
+ On the inference machine (can be the same as the PolicyServer or a separate PC):
+@@ -65,6 +122,17 @@ bash install_scripts/install_inference.sh
+ This creates `.venv_inference` with the Isaac-GR00T PolicyClient and all
+ inference dependencies.
+ 
++When using the OpenVINO fork (Option B above), pass `--ov` — the script
++clones the fork's `ov-n1.7` branch (if not already present), syncs the
++fork's `enable-ov` dependency group (skips flash-attn / deepspeed /
++tensorrt, adds `openvino`), and layers `gear_sonic[inference-ov]` on top:
++
++```bash
++bash install_scripts/install_inference.sh --ov
++# or, if the fork already lives somewhere else:
++GR00T_REPO=/abs/path/to/Isaac-GR00T-fork bash install_scripts/install_inference.sh --ov
++```
++
+ ### 3. Camera Server
+ 
+ The camera server should be running as a systemd service on the robot.
+@@ -143,7 +211,9 @@ Type these keys in the **Keyboard Publisher** pane (pane 1):
+ 
+ If you prefer to run each component in separate terminals:
+ 
+-### Terminal 1 — Isaac-GR00T PolicyServer (GPU machine)
++### Terminal 1 — Isaac-GR00T PolicyServer
++
++CUDA path:
+ 
+ ```bash
+ # From the Isaac-GR00T repo
+@@ -154,6 +224,20 @@ uv run python gr00t/eval/run_gr00t_server.py \
+     --port 5550
+ ```
+ 
++OpenVINO path (Intel CPU / iGPU / NPU):
++
++```bash
++# From the OpenVINO-enabled Isaac-GR00T fork (ov-n1.7 branch)
++uv run python gr00t/eval/run_gr00t_server.py \
++    --model-path poisonousID/GR00T-N1.7-UNITREE-G1-SONIC-10000 \
++    --embodiment-tag UNITREE_G1_SONIC \
++    --enable-ov \
++    --ov-model-dir ./ov_model \
++    --ov-device GPU \
++    --use-fused-dit \
++    --port 5550
++```
++
+ ### Terminal 2 — C++ Deploy
+ 
+ ```bash
+@@ -219,6 +303,33 @@ python gear_sonic/scripts/launch_inference.py \
+ 
+ Make sure port 5550 (or your chosen port) is accessible between the two machines.
+ 
++## Co-Located Server (single Intel box)
++
++The PolicyServer and SONIC stack can run on the same machine — handy when
++prototyping with the OpenVINO fork on a single Intel host:
++
++```bash
++# Terminal A — OV PolicyServer (ov-n1.7 branch of the fork)
++cd /path/to/frameworks.industrial.motion-control.isaac-gr00t
++uv run python gr00t/eval/run_gr00t_server.py \
++    --model-path poisonousID/GR00T-N1.7-UNITREE-G1-SONIC-10000 \
++    --embodiment-tag UNITREE_G1_SONIC \
++    --enable-ov --ov-model-dir /path/to/ov_model --ov-device GPU \
++    --use-fused-dit --port 5550
++
++# Terminal B — SONIC (sim) + VLA client + camera + keyboard
++cd /path/to/GR00T-WholeBodyControl
++python gear_sonic/scripts/launch_inference.py \
++    --sim --no-data-exporter \
++    --policy-host localhost --policy-port 5550 \
++    --prompt "pick up the apple"
++```
++
++`--no-data-exporter` skips the recording pane (and the `.venv_data_collection`
++prerequisite). On a modest box, watch the C++ deploy pane for control-loop
++timing warnings — VLA inference, OV kernels, and the WBC controller all share
++the same host.
++
+ ## Latency Compensation
+ 
+ The inference loop automatically compensates for network and compute latency.
+diff --git a/docs/source/tutorials/vla_workflow.md b/docs/source/tutorials/vla_workflow.md
+index 1747036..03c18bb 100644
+--- a/docs/source/tutorials/vla_workflow.md
++++ b/docs/source/tutorials/vla_workflow.md
+@@ -170,6 +170,16 @@ uv run python gr00t/eval/run_gr00t_server.py \
+     --port 5550
+ ```
+ 
++Deploying on Intel hardware (CPU / iGPU / NPU) instead.
++Clone the
++[OpenVINO-enabled Isaac-GR00T fork](https://github.com/intel-sandbox/frameworks.industrial.motion-control.isaac-gr00t/tree/ov-n1.7)
++(`ov-n1.7` branch, ships pre-exported IR under `/path/to/ov_model`) and run the server with
++`--enable-ov --ov-model-dir /path/to/ov_model`. If you don't have your own finetuned
++checkpoint, point `--model-path` at the public release, e.g. 
++`poisonousID/GR00T-N1.7-UNITREE-G1-SONIC-10000`. See the
++[OpenVINO option in the inference tutorial](vla_inference.md#option-b-openvino-on-intel-cpu-igpu-npu)
++for the full command.
++
+ ### Run Inference
+ 
+ On the inference machine (from the GR00T-WholeBodyControl repository):
+diff --git a/gear_sonic/data/robot_model/model_data/g1/g1_29dof_with_hand.xml b/gear_sonic/data/robot_model/model_data/g1/g1_29dof_with_hand.xml
+index 76110b5..054cb50 100644
+--- a/gear_sonic/data/robot_model/model_data/g1/g1_29dof_with_hand.xml
++++ b/gear_sonic/data/robot_model/model_data/g1/g1_29dof_with_hand.xml
+@@ -306,6 +306,7 @@
+                             diaginertia="0.00105989 0.000895419 0.000323842" />
+                           <joint name="left_wrist_yaw_joint" pos="0 0 0" axis="0 0 1"
+                             range="-1.61443 1.61443" actuatorfrcrange="-5 5" class="wrist_motor" />
++                          <camera name="left_wrist_camera" pos="-0.02 0 0.05" euler="0 1.0 0"/>
+                           <geom type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                             rgba="0.7 0.7 0.7 1" mesh="left_wrist_yaw_link" />
+                           <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="left_wrist_yaw_link" />
+@@ -457,6 +458,7 @@
+                             diaginertia="0.0010598 0.000895373 0.0003238" />
+                           <joint name="right_wrist_yaw_joint" pos="0 0 0" axis="0 0 1"
+                             range="-1.61443 1.61443" actuatorfrcrange="-5 5" class="wrist_motor" />
++                          <camera name="right_wrist_camera" pos="-0.02 0 0.05" euler="0 1.0 0"/>
+                           <geom type="mesh" contype="0" conaffinity="0" group="1" density="0"
+                             rgba="0.7 0.7 0.7 1" mesh="right_wrist_yaw_link" />
+                           <geom type="mesh" rgba="0.7 0.7 0.7 1" mesh="right_wrist_yaw_link" />
+diff --git a/gear_sonic/pyproject.toml b/gear_sonic/pyproject.toml
+index fc62921..9fe42f8 100644
+--- a/gear_sonic/pyproject.toml
++++ b/gear_sonic/pyproject.toml
+@@ -89,6 +89,20 @@ inference = [
+     "scipy",
+     "Isaac-GR00T @ git+https://github.com/NVIDIA/Isaac-GR00T.git",
+ ]
++# Inference (OpenVINO): same client deps as `inference`, but without the
++# upstream Isaac-GR00T pin — gr00t is installed separately from the local
++# OpenVINO-enabled fork via `install_inference.sh --ov`, which uses the fork's
++# `enable-ov` dependency group instead of `cuda`.
++# Usage: pip install -e "gear_sonic[inference-ov]"
++inference-ov = [
++    "pyzmq",
++    "msgpack",
++    "msgpack-numpy",
++    "pin",
++    "tyro",
++    "opencv-python",
++    "scipy",
++]
+ # Training: full RL training stack (Isaac Lab must be installed separately)
+ # Usage: pip install -e "gear_sonic[training]"
+ training = [
+diff --git a/gear_sonic/scripts/run_sim_loop.py b/gear_sonic/scripts/run_sim_loop.py
+index 1312fb5..5df1798 100644
+--- a/gear_sonic/scripts/run_sim_loop.py
++++ b/gear_sonic/scripts/run_sim_loop.py
+@@ -19,7 +19,7 @@ from typing import Dict
+ 
+ import tyro
+ 
+-from gear_sonic.utils.mujoco_sim.simulator_factory import SimulatorFactory, init_channel
++from gear_sonic.utils.mujoco_sim.simulator_factory import SimulatorFactory
+ from gear_sonic.utils.mujoco_sim.configs import SimLoopConfig
+ from gear_sonic.data.robot_model.instantiation.g1 import (
+     instantiate_g1_robot_model,
+@@ -34,8 +34,6 @@ class SimWrapper:
+         self.robot_model = robot_model
+         self.config = config
+ 
+-        init_channel(config=self.config)
+-
+         # Create simulator using factory
+         self.sim = SimulatorFactory.create_simulator(
+             config=self.config,
+@@ -54,15 +52,22 @@ def main(config: ArgsConfig):
+             config.enable_offscreen
+         ), "enable_offscreen must be True when enable_image_publish is True"
+ 
++    onscreen = wbc_config.get("ENABLE_ONSCREEN", True)
++    offscreen = wbc_config.get("ENABLE_OFFSCREEN", False)
++    if offscreen:
++        onscreen = False
++        wbc_config["ENABLE_ONSCREEN"] = False
++
+     robot_model = instantiate_g1_robot_model()
+ 
+     sim_wrapper = SimWrapper(
+         robot_model=robot_model,
+         env_name=config.env_name,
+         config=wbc_config,
+-        onscreen=wbc_config.get("ENABLE_ONSCREEN", True),
+-        offscreen=wbc_config.get("ENABLE_OFFSCREEN", False),
++        onscreen=onscreen,
++        offscreen=offscreen,
+         enable_image_publish=config.enable_image_publish,
++        enable_wrist_cameras=config.enable_wrist_cameras,
+     )
+     # Start simulator as independent process
+     SimulatorFactory.start_simulator(
+diff --git a/gear_sonic/scripts/run_vla_inference.py b/gear_sonic/scripts/run_vla_inference.py
+index 27833e2..927c40f 100644
+--- a/gear_sonic/scripts/run_vla_inference.py
++++ b/gear_sonic/scripts/run_vla_inference.py
+@@ -242,8 +242,15 @@ def prepare_observation_from_sensors(
+     video = {"ego_view": cam_img[np.newaxis, np.newaxis]}
+     if "left_wrist" in camera_msg["images"]:
+         video["left_wrist"] = camera_msg["images"]["left_wrist"][np.newaxis, np.newaxis]
++    else:
++        # Use ego_view as fallback if left_wrist camera is not available
++        video["left_wrist"] = cam_img[np.newaxis, np.newaxis]
++
+     if "right_wrist" in camera_msg["images"]:
+-        video["wrist_view"] = camera_msg["images"]["right_wrist"][np.newaxis, np.newaxis]
++        video["right_wrist"] = camera_msg["images"]["right_wrist"][np.newaxis, np.newaxis]
++    else:
++        # Use ego_view as fallback if right_wrist camera is not available
++        video["right_wrist"] = cam_img[np.newaxis, np.newaxis]
+ 
+     observation = {
+         "video": video,
+diff --git a/gear_sonic/utils/mujoco_sim/base_sim.py b/gear_sonic/utils/mujoco_sim/base_sim.py
+index fe8f4a0..9d974e8 100644
+--- a/gear_sonic/utils/mujoco_sim/base_sim.py
++++ b/gear_sonic/utils/mujoco_sim/base_sim.py
+@@ -40,6 +40,7 @@ class DefaultEnv:
+         onscreen: bool = False,
+         offscreen: bool = False,
+         enable_image_publish: bool = False,
++        enable_wrist_cameras: bool = False,
+     ):
+         self.config = config
+         self.env_name = env_name
+@@ -56,6 +57,13 @@ class DefaultEnv:
+             self.camera_configs = {
+                 "ego_view": {"height": 480, "width": 640, "mjcf_name": "head_camera"},
+             }
++            if enable_wrist_cameras:
++                self.camera_configs["left_wrist"] = {
++                    "height": 480, "width": 640, "mjcf_name": "left_wrist_camera",
++                }
++                self.camera_configs["right_wrist"] = {
++                    "height": 480, "width": 640, "mjcf_name": "right_wrist_camera",
++                }
+ 
+         self.reward_lock = Lock()
+         self.unitree_bridge = None
+@@ -150,6 +158,14 @@ class DefaultEnv:
+         self.mj_model = mujoco.MjModel.from_xml_path(xml_path)
+         self.mj_data = mujoco.MjData(self.mj_model)
+         self.mj_model.opt.timestep = self.sim_dt
++
++        # Opt-in mocap subscriber: gated on GRAIL_OBJECT_ZMQ_PORT env var.
++        # NOTE: Commented out because grail_mocap_subscriber module does not exist yet
++        # from gear_sonic.utils.mujoco_sim import grail_mocap_subscriber
++        # self._grail_mocap_thread = grail_mocap_subscriber.maybe_start(
++        #     self.mj_model, self.mj_data
++        # )
++        self._grail_mocap_thread = None
+         self.torso_index = mujoco.mj_name2id(self.mj_model, mujoco.mjtObj.mjOBJ_BODY, "torso_link")
+         self.root_body = "pelvis"
+         self.root_body_id = self.mj_model.body(self.root_body).id
+diff --git a/gear_sonic/utils/mujoco_sim/configs.py b/gear_sonic/utils/mujoco_sim/configs.py
+index 5ec03fa..196cfd1 100644
+--- a/gear_sonic/utils/mujoco_sim/configs.py
++++ b/gear_sonic/utils/mujoco_sim/configs.py
+@@ -339,6 +339,10 @@ class SimLoopConfig(BaseConfig):
+     enable_image_publish: bool = False
+     """Enable image publishing in simulation"""
+ 
++    enable_wrist_cameras: bool = True
++    """Also render and publish left_wrist_camera and right_wrist_camera (in addition
++    to head_camera). Only effective when --enable-image-publish is set."""
++
+     camera_port: int = 5555
+     """Camera port for image publishing"""
+ 
+diff --git a/gear_sonic/utils/mujoco_sim/simulator_factory.py b/gear_sonic/utils/mujoco_sim/simulator_factory.py
+index 008ae87..cff6275 100644
+--- a/gear_sonic/utils/mujoco_sim/simulator_factory.py
++++ b/gear_sonic/utils/mujoco_sim/simulator_factory.py
+@@ -51,6 +51,7 @@ class SimulatorFactory:
+             onscreen=kwargs.pop("onscreen", True),
+             offscreen=kwargs.pop("offscreen", False),
+             enable_image_publish=kwargs.get("enable_image_publish", False),
++            enable_wrist_cameras=kwargs.get("enable_wrist_cameras", False),
+             config=config,
+             env_name=env_name,
+             redis_client=kwargs.get("redis_client", None),
+diff --git a/gear_sonic_deploy/deploy.sh b/gear_sonic_deploy/deploy.sh
+index 871944a..a8dfe36 100755
+--- a/gear_sonic_deploy/deploy.sh
++++ b/gear_sonic_deploy/deploy.sh
+@@ -246,6 +246,7 @@ ZMQ_HOST_DEFAULT="localhost"
+ # Initialize with defaults (will be set after parsing)
+ CHECKPOINT="$CHECKPOINT_DEFAULT"
+ OBS_CONFIG="$OBS_CONFIG_DEFAULT"
++OBS_CONFIG_USER_SET=0  # tracks whether the user passed --obs-config explicitly
+ PLANNER="$PLANNER_DEFAULT"
+ MOTION_DATA="$MOTION_DATA_DEFAULT"
+ INPUT_TYPE="$INPUT_TYPE_DEFAULT"
+@@ -273,6 +274,7 @@ while [[ $# -gt 0 ]]; do
+                 exit 1
+             fi
+             OBS_CONFIG="$2"
++            OBS_CONFIG_USER_SET=1
+             shift 2
+             ;;
+         --planner)
+@@ -350,6 +352,18 @@ echo -e "Resolved interface: ${GREEN}$TARGET${NC}"
+ echo -e "Environment type:   ${GREEN}$ENV_TYPE${NC}"
+ echo ""
+ 
++# VLA + sonic (zmq_manager) auto-selects the CPU-planner obs-config, because
++# the V2 planner ONNX currently fails to compile on NPU (vpux-compiler error).
++# Skip if the user explicitly passed --obs-config.
++if [[ "$INPUT_TYPE" == "zmq_manager" && "$OBS_CONFIG_USER_SET" -eq 0 ]]; then
++    OBS_CONFIG_VLA="policy/release/observation_config_vla.yaml"
++    if [[ -f "$OBS_CONFIG_VLA" ]]; then
++        OBS_CONFIG="$OBS_CONFIG_VLA"
++        echo -e "${YELLOW}📋 zmq_manager input: using $OBS_CONFIG (planner pinned to CPU)${NC}"
++        echo ""
++    fi
++fi
++
+ # ============================================================================
+ # Configuration
+ # ============================================================================
+diff --git a/gear_sonic_deploy/policy/release/observation_config.yaml b/gear_sonic_deploy/policy/release/observation_config.yaml
+index b426b39..2c892bc 100644
+--- a/gear_sonic_deploy/policy/release/observation_config.yaml
++++ b/gear_sonic_deploy/policy/release/observation_config.yaml
+@@ -82,7 +82,7 @@ encoder:
+ inference:
+   encoder_device: "NPU"
+   policy_device: "NPU"
+-  planner_device: "NPU"
++  planner_device: "CPU"
+   # Pin the inference/control thread to a specific CPU core to reduce latency jitter.
+   # Set to -1 to disable pinning (default), or a core number (e.g., 10) to pin.
+   # Here 10 is one of isolated core, dedicated for inference.
+diff --git a/gear_sonic_deploy/policy/release/observation_config_vla.yaml b/gear_sonic_deploy/policy/release/observation_config_vla.yaml
+new file mode 100644
+index 0000000..498e0a8
+--- /dev/null
++++ b/gear_sonic_deploy/policy/release/observation_config_vla.yaml
+@@ -0,0 +1,95 @@
++# G1 Deploy - Observation Configuration (VLA + Sonic variant)
++# ===========================================================
++# Same as observation_config.yaml, except planner runs on CPU.
++# The planner ONNX (planner/target_vel/V2/planner_sonic.onnx) currently
++# fails to legalize on the OpenVINO NPU compiler (vpux-compiler error on
++# /Mul_300 broadcast 1x1x1x1 -> 1x4x1x1). Encoder and policy still run
++# on NPU.
++
++observations:
++
++  - name: "token_state"
++    enabled: true
++
++  - name: "his_base_angular_velocity_10frame_step1"
++    enabled: true
++
++  - name: "his_body_joint_positions_10frame_step1"
++    enabled: true
++
++  - name: "his_body_joint_velocities_10frame_step1"
++    enabled: true
++
++  - name: "his_last_actions_10frame_step1"
++    enabled: true
++
++  - name: "his_gravity_dir_10frame_step1"
++    enabled: true
++
++encoder:
++  dimension: 64
++  use_fp16: false
++  encoder_observations:
++    - name: "encoder_mode_4"
++      enabled: true
++    - name: "motion_joint_positions_10frame_step5"
++      enabled: true
++    - name: "motion_joint_velocities_10frame_step5"
++      enabled: true
++    - name: "motion_root_z_position_10frame_step5"
++      enabled: true
++    - name: "motion_root_z_position"
++      enabled: true
++    - name: "motion_anchor_orientation"
++      enabled: true
++    - name: "motion_anchor_orientation_10frame_step5"
++      enabled: true
++    - name: "motion_joint_positions_lowerbody_10frame_step5"
++      enabled: true
++    - name: "motion_joint_velocities_lowerbody_10frame_step5"
++      enabled: true
++    - name: "vr_3point_local_target"
++      enabled: true
++    - name: "vr_3point_local_orn_target"
++      enabled: true
++    - name: "smpl_joints_10frame_step1"
++      enabled: true
++    - name: "smpl_anchor_orientation_10frame_step1"
++      enabled: true
++    - name: "motion_joint_positions_wrists_10frame_step1"
++      enabled: true
++  encoder_modes:
++    - name: "g1"
++      mode_id: 0
++      required_observations:
++        - encoder_mode_4
++        - motion_joint_positions_10frame_step5
++        - motion_joint_velocities_10frame_step5
++        - motion_anchor_orientation_10frame_step5
++    - name: "teleop"
++      mode_id: 1
++      required_observations:
++        - encoder_mode_4
++        - motion_joint_positions_lowerbody_10frame_step5
++        - motion_joint_velocities_lowerbody_10frame_step5
++        - vr_3point_local_target
++        - vr_3point_local_orn_target
++        - motion_anchor_orientation
++    - name: "smpl"
++      mode_id: 2
++      required_observations:
++        - encoder_mode_4
++        - smpl_joints_10frame_step1
++        - smpl_anchor_orientation_10frame_step1
++        - motion_joint_positions_wrists_10frame_step1
++
++inference:
++  encoder_device: "NPU"
++  policy_device: "NPU"
++  # Planner runs on CPU here: the V2 planner ONNX fails NPU compilation
++  # (vpux-compiler legalization error). VLA + sonic uses this config.
++  planner_device: "CPU"
++  cpu_affinity: 10
++  dump_planner_input: false
++  max_input_dump_cnt: 200
++  dump_csv_path: "planner_input_dump.csv"
+\ No newline at end of file
+diff --git a/install_scripts/install_data_collection.sh b/install_scripts/install_data_collection.sh
+index f23f7ac..d5c8ccd 100755
+--- a/install_scripts/install_data_collection.sh
++++ b/install_scripts/install_data_collection.sh
+@@ -6,14 +6,34 @@
+ # Installs gear_sonic[data_collection] which pulls in LeRobot, PyAV, OpenCV,
+ # and the other dependencies needed by run_data_exporter.py.
+ #
+-# Usage:  bash install_scripts/install_data_collection.sh   (run from repo root)
++# Usage:
++#   bash install_scripts/install_data_collection.sh         # default: CUDA torch
++#   bash install_scripts/install_data_collection.sh --ov    # CPU-only torch
++#                                                           # (skips nvidia-cuda-* / cudnn)
+ 
+ set -euo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ 
+-# ── 0. System dependencies ────────────────────────────────────────────────────
++# ── 0. Parse args ────────────────────────────────────────────────────────────
++USE_OV=0
++for arg in "$@"; do
++    case "$arg" in
++        --ov) USE_OV=1 ;;
++        -h|--help)
++            sed -n '2,12p' "$0"
++            exit 0
++            ;;
++        *)
++            echo "[ERROR] Unknown argument: $arg"
++            echo "        Usage: bash $0 [--ov]"
++            exit 1
++            ;;
++    esac
++done
++
++# ── 1. System dependencies ────────────────────────────────────────────────────
+ ARCH="$(uname -m)"
+ echo "[OK] Architecture: $ARCH"
+ 
+@@ -22,7 +42,7 @@ if command -v apt-get &>/dev/null; then
+     sudo apt-get install -y espeak >/dev/null 2>&1 || echo "[WARN] Could not install espeak — voice feedback will be disabled"
+ fi
+ 
+-# ── 1. Ensure uv is installed and available ──────────────────────────────────
++# ── 2. Ensure uv is installed and available ──────────────────────────────────
+ if ! command -v uv &>/dev/null; then
+     echo "[INFO] uv not found – installing via official installer …"
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+@@ -46,25 +66,36 @@ if ! command -v uv &>/dev/null; then
+ fi
+ echo "[OK] uv $(uv --version)"
+ 
+-# ── 2. Install a uv-managed Python 3.10 (includes dev headers / Python.h) ────
++# ── 3. Install a uv-managed Python 3.10 (includes dev headers / Python.h) ────
+ echo "[INFO] Installing uv-managed Python 3.10 (includes development headers) …"
+ uv python install 3.10
+ MANAGED_PY="$(uv python find --no-project 3.10)"
+ echo "[OK] Using Python: $MANAGED_PY"
+ 
+-# ── 3. Clean previous venv (if any) ──────────────────────────────────────────
++# ── 4. Clean previous venv (if any) ──────────────────────────────────────────
+ cd "$REPO_ROOT"
+ echo "[INFO] Removing old .venv_data_collection (if present) …"
+ rm -rf .venv_data_collection
+ 
+-# ── 4. Create venv & install data_collection extra ───────────────────────────
++# ── 5. Create venv & install data_collection extra ───────────────────────────
+ echo "[INFO] Creating .venv_data_collection with uv-managed Python 3.10 …"
+ uv venv .venv_data_collection --python "$MANAGED_PY" --prompt gear_sonic_data_collection
+ # shellcheck disable=SC1091
+ source .venv_data_collection/bin/activate
+-echo "[INFO] Installing gear_sonic[data_collection] (this may take a few minutes) …"
++
+ # LeRobot's git repo contains LFS test artifacts that aren't needed at runtime.
+ # Skip them to avoid download failures and save bandwidth.
++if [ "$USE_OV" = "1" ]; then
++    # Pre-install CPU-only torch from PyTorch's CPU index so the subsequent
++    # gear_sonic[data_collection] resolve sees torch already satisfied and
++    # doesn't drag in nvidia-cuda-* / cudnn / cublas (~3+ GB unused on Intel).
++    # Version range tracks the LeRobot pin (torch>=2.2.1,<2.7).
++    echo "[INFO] --ov: pre-installing CPU-only PyTorch (skips nvidia-cuda-* / cudnn) …"
++    uv pip install --index-url https://download.pytorch.org/whl/cpu \
++        "torch>=2.2.1,<2.7" "torchvision>=0.21.0"
++fi
++
++echo "[INFO] Installing gear_sonic[data_collection] (this may take a few minutes) …"
+ GIT_LFS_SKIP_SMUDGE=1 uv pip install -e "gear_sonic[data_collection]"
+ 
+ echo ""
+diff --git a/install_scripts/install_inference.sh b/install_scripts/install_inference.sh
+index 0f98903..4350d1f 100755
+--- a/install_scripts/install_inference.sh
++++ b/install_scripts/install_inference.sh
+@@ -3,21 +3,50 @@
+ # Sets up the .venv_inference venv for running VLA inference with
+ # Isaac-GR00T PolicyClient against a remote or local policy server.
+ #
+-# Installs gear_sonic[inference] which pulls in the Isaac-GR00T library,
+-# PyZMQ, msgpack, Pinocchio, and other inference dependencies.
++# Default mode installs gear_sonic[inference] which pulls in the upstream
++# Isaac-GR00T library, PyZMQ, msgpack, Pinocchio, and other inference deps.
+ #
+-# Usage:  bash install_scripts/install_inference.sh   (run from repo root)
++# --ov mode targets Intel CPU / iGPU / NPU (no CUDA): clones the
++# OpenVINO-enabled Isaac-GR00T fork's ov-n1.7 branch (if not already
++# present at $GR00T_REPO), syncs the fork's `enable-ov` dependency group
++# (skips flash-attn / deepspeed / tensorrt, adds openvino), and layers
++# gear_sonic[inference-ov] on top.
++#
++# Usage:
++#   bash install_scripts/install_inference.sh                              # CUDA / upstream Isaac-GR00T
++#   bash install_scripts/install_inference.sh --ov                         # OpenVINO fork (auto-clone)
++#   GR00T_REPO=/abs/path/to/fork bash install_scripts/install_inference.sh --ov
+ 
+ set -euo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ 
+-# ── 0. System dependencies ────────────────────────────────────────────────────
++GR00T_FORK_URL="https://github.com/intel-sandbox/frameworks.industrial.motion-control.isaac-gr00t.git"
++GR00T_FORK_BRANCH="ov-n1.7"
++
++# ── 0. Parse args ────────────────────────────────────────────────────────────
++USE_OV=0
++for arg in "$@"; do
++    case "$arg" in
++        --ov) USE_OV=1 ;;
++        -h|--help)
++            sed -n '2,18p' "$0"
++            exit 0
++            ;;
++        *)
++            echo "[ERROR] Unknown argument: $arg"
++            echo "        Usage: bash $0 [--ov]"
++            exit 1
++            ;;
++    esac
++done
++
++# ── 1. System dependencies ────────────────────────────────────────────────────
+ ARCH="$(uname -m)"
+ echo "[OK] Architecture: $ARCH"
+ 
+-# ── 1. Ensure uv is installed and available ──────────────────────────────────
++# ── 2. Ensure uv is installed and available ──────────────────────────────────
+ if ! command -v uv &>/dev/null; then
+     echo "[INFO] uv not found – installing via official installer …"
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+@@ -40,33 +69,78 @@ if ! command -v uv &>/dev/null; then
+ fi
+ echo "[OK] uv $(uv --version)"
+ 
+-# ── 2. Install a uv-managed Python 3.10 (includes dev headers / Python.h) ────
++# ── 3. Install a uv-managed Python 3.10 (includes dev headers / Python.h) ────
+ echo "[INFO] Installing uv-managed Python 3.10 (includes development headers) …"
+ uv python install 3.10
+ MANAGED_PY="$(uv python find --no-project 3.10)"
+ echo "[OK] Using Python: $MANAGED_PY"
+ 
+-# ── 3. Clean previous venv (if any) ──────────────────────────────────────────
++# ── 4. (--ov only) Locate or clone the OpenVINO Isaac-GR00T fork ─────────────
++if [ "$USE_OV" = "1" ]; then
++    GR00T_REPO="${GR00T_REPO:-$REPO_ROOT/../frameworks.industrial.motion-control.isaac-gr00t}"
++    if [ ! -f "$GR00T_REPO/pyproject.toml" ]; then
++        echo "[INFO] Cloning Isaac-GR00T fork ($GR00T_FORK_BRANCH branch) into $GR00T_REPO …"
++        if ! command -v git &>/dev/null; then
++            echo "[ERROR] git not found. Install git or set GR00T_REPO to an existing checkout."
++            exit 1
++        fi
++        git clone -b "$GR00T_FORK_BRANCH" "$GR00T_FORK_URL" "$GR00T_REPO"
++    else
++        echo "[OK] Using existing Isaac-GR00T fork at: $GR00T_REPO"
++        echo "     (skipping clone; checkout's branch is whatever you have)"
++    fi
++fi
++
++# ── 5. Clean previous venv (if any) ──────────────────────────────────────────
+ cd "$REPO_ROOT"
+ echo "[INFO] Removing old .venv_inference (if present) …"
+ rm -rf .venv_inference
+ 
+-# ── 4. Create venv & install inference extra ─────────────────────────────────
++# ── 6. Create venv & install inference deps ──────────────────────────────────
+ echo "[INFO] Creating .venv_inference with uv-managed Python 3.10 …"
+ uv venv .venv_inference --python "$MANAGED_PY" --prompt gear_sonic_inference
+ # shellcheck disable=SC1091
+ source .venv_inference/bin/activate
+-echo "[INFO] Installing gear_sonic[inference] (this may take a few minutes) …"
+-uv pip install -e "gear_sonic[inference]"
++
++if [ "$USE_OV" = "1" ]; then
++    # uv sync makes the env match the fork's lockfile; --active is required
++    # so it targets the activated .venv_inference instead of creating a
++    # project-local .venv inside $GR00T_REPO. Must run BEFORE we layer
++    # gear_sonic on top — uv pip install is additive, but uv sync would
++    # evict gear_sonic.
++    echo "[INFO] Syncing gr00t (OpenVINO group) from $GR00T_REPO …"
++    ( cd "$GR00T_REPO" && uv sync --active )
++    echo "[INFO] Installing gear_sonic[inference-ov] on top (this may take a few minutes) …"
++    uv pip install -e "gear_sonic[inference-ov]"
++else
++    echo "[INFO] Installing gear_sonic[inference] (this may take a few minutes) …"
++    uv pip install -e "gear_sonic[inference]"
++fi
+ 
+ echo ""
+ echo "══════════════════════════════════════════════════════════════"
+-echo "  Setup complete!  Activate the venv with:"
+-echo ""
+-echo "    source .venv_inference/bin/activate"
+-echo ""
+-echo "  You should see (gear_sonic_inference) in your prompt."
+-echo ""
+-echo "  Then run VLA inference with:"
+-echo "    python gear_sonic/scripts/run_vla_inference.py --help"
++if [ "$USE_OV" = "1" ]; then
++    echo "  OpenVINO inference setup complete!"
++    echo ""
++    echo "    source .venv_inference/bin/activate"
++    echo ""
++    echo "  You should see (gear_sonic_inference) in your prompt."
++    echo ""
++    echo "  Then start the OV PolicyServer (from the gr00t fork):"
++    echo "    cd $GR00T_REPO"
++    echo "    uv run python gr00t/eval/run_gr00t_server.py \\"
++    echo "        --model-path poisonousID/GR00T-N1.7-UNITREE-G1-SONIC-10000 \\"
++    echo "        --embodiment-tag UNITREE_G1_SONIC \\"
++    echo "        --enable-ov --ov-model-dir ./ov_model --ov-device GPU \\"
++    echo "        --use-fused-dit --port 5550"
++else
++    echo "  Setup complete!  Activate the venv with:"
++    echo ""
++    echo "    source .venv_inference/bin/activate"
++    echo ""
++    echo "  You should see (gear_sonic_inference) in your prompt."
++    echo ""
++    echo "  Then run VLA inference with:"
++    echo "    python gear_sonic/scripts/run_vla_inference.py --help"
++fi
+ echo "══════════════════════════════════════════════════════════════"
+diff --git a/install_scripts/install_mujoco_sim.sh b/install_scripts/install_mujoco_sim.sh
+index 71f6d37..f6f5c53 100755
+--- a/install_scripts/install_mujoco_sim.sh
++++ b/install_scripts/install_mujoco_sim.sh
+@@ -4,14 +4,34 @@
+ # Skips XRoboToolkit SDK and teleop dependencies that are NOT needed for sim.
+ # Based on install_pico.sh — see that script for the full teleop setup.
+ #
+-# Usage:  bash install_scripts/install_mujoco_sim.sh   (run from repo root)
++# Usage:
++#   bash install_scripts/install_mujoco_sim.sh         # default: CUDA torch
++#   bash install_scripts/install_mujoco_sim.sh --ov    # CPU-only torch
++#                                                      # (skips nvidia-cuda-* / cudnn)
+ 
+ set -euo pipefail
+ 
+ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ 
+-# ── 0. Print detected architecture ───────────────────────────────────────────
++# ── 0. Parse args ────────────────────────────────────────────────────────────
++USE_OV=0
++for arg in "$@"; do
++    case "$arg" in
++        --ov) USE_OV=1 ;;
++        -h|--help)
++            sed -n '2,11p' "$0"
++            exit 0
++            ;;
++        *)
++            echo "[ERROR] Unknown argument: $arg"
++            echo "        Usage: bash $0 [--ov]"
++            exit 1
++            ;;
++    esac
++done
++
++# ── 1. Print detected architecture ───────────────────────────────────────────
+ ARCH="$(uname -m)"
+ echo "[OK] Architecture: $ARCH"
+ 
+@@ -56,6 +76,18 @@ echo "[INFO] Creating .venv_sim with uv-managed Python 3.10 …"
+ uv venv .venv_sim --python "$MANAGED_PY" --prompt gear_sonic_sim
+ # shellcheck disable=SC1091
+ source .venv_sim/bin/activate
++
++if [ "$USE_OV" = "1" ]; then
++    # Pre-install CPU-only torch from PyTorch's CPU index so the subsequent
++    # gear_sonic[sim] resolve sees torch already satisfied and doesn't drag
++    # in nvidia-cuda-* / cudnn / cublas (~3+ GB unused on Intel).
++    # run_sim_loop.py itself doesn't import torch — torch comes from the
++    # base gear_sonic deps (torch>=2.4.0).
++    echo "[INFO] --ov: pre-installing CPU-only PyTorch (skips nvidia-cuda-* / cudnn) …"
++    uv pip install --index-url https://download.pytorch.org/whl/cpu \
++        "torch>=2.4.0"
++fi
++
+ echo "[INFO] Installing gear_sonic[sim] …"
+ uv pip install -e "gear_sonic[sim]"
+ 
+-- 
+2.43.0
+

@@ -21,7 +21,7 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 - The `edge-ai-suites` repository cloned (sparse or full):
 
   ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set metro-ai-suite manufacturing-ai-suite
   ```
@@ -374,9 +374,20 @@ to manually edit `vms_shim/nxwitness/nx_integration.json`.
 
 ### 4.1 Build and Start VAP
 
+Go to app directory
 ```bash
 cd metro-ai-suite/vms-adapter-plugin
-docker compose up -d --build
+```
+
+#### 4.1.1 Build from source (Optional):
+```bash
+docker compose build
+```
+> **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+
+#### 4.1.2 Start VAP
+```bash
+docker compose up -d
 ```
 
 Check that all VAP services are healthy:

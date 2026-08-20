@@ -94,10 +94,11 @@ class TestFullPipeline:
                 frame_count += 1
             cap.release()
             assert frame_count > 0, f"Clip has no frames: {clip_path}"
-            assert frame_count > 20, f"Clip too short ({frame_count} frames): {clip_path}"
+            # No minimum-length assertion: short motion-end/shutdown tails are
+            # kept by design (min_duration gates cut frequency, not content).
 
     def test_clip_duration_reasonable(self, pipeline, data_dir, mock_sink):
-        """Clip duration should be within min_duration to interval range."""
+        """Clip duration is bounded above by max_duration; short tails are kept."""
         pipeline.start()
         time.sleep(20)
         pipeline.stop()
@@ -120,8 +121,10 @@ class TestFullPipeline:
                 frame_count += 1
             cap.release()
             duration = frame_count / fps
-            # Fixed interval: duration should be around interval (10s) or shorter for tail segments
-            assert 1.0 <= duration <= 11.0, f"Clip duration {duration:.1f}s out of range"
+            # Cuts happen at max_duration; motion-end/shutdown tails may be any
+            # length — kept by design (min_duration is a cut-frequency guard,
+            # not a drop filter). Ceiling: max_duration + 1s tolerance.
+            assert 0 < duration <= 11.0, f"Clip duration {duration:.1f}s out of range"
 
     def test_sink_receives_no_status_events(self, pipeline, mock_sink):
         """RTSP connection status is not pushed to the sink/webhook.
