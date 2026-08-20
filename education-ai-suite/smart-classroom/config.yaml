@@ -82,7 +82,7 @@ models:
     provider: vlm
     vlm_name: Qwen/Qwen3-VL-8B-Instruct
     device: GPU # GPU or CPU
-    weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
+    weight_format: int4 # supports int4, int8
     max_new_tokens: 5120
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
