@@ -26,7 +26,7 @@ The Router and compressor services are set up separately. See the [`inference-ro
 
 ## 2. Setup EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`OPEA EC-RAG`](https://github.com/opea-project/GenAIExamples/tree/main/EdgeCraftRAG) directory.
+To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md).
 
 For latest model support, you can modify the EC-RAG vllm backend image version and config like this:
 
