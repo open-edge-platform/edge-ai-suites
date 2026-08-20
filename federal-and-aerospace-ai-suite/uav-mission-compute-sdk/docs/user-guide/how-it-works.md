@@ -14,7 +14,7 @@ This system supports **two mutually exclusive camera input modes**:
 | **Sim** | `sim-camera` | `make up-sim-camera` | Gazebo world (3 cameras) | `/uav-1/{nadir,forward,rear}` | Development, testing, no hardware |
 | **USB** | `usb-camera` | `make up-usb-camera` | Real V4L2 device (1 camera) | `/uav-1/nadir` | Real hardware field deployment |
 
-**See [CAMERA-MODES.md](CAMERA-MODES.md)** for detailed configuration, switching procedures, and troubleshooting.
+**See [camera-modes.md](camera-modes.md)** for detailed configuration, switching procedures, and troubleshooting.
 
 ---
 
@@ -323,7 +323,7 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 - Writes 6 InfluxDB measurements: `flight_position`, `flight_attitude`, `flight_velocity`, `flight_battery`, `flight_gps`, `flight_status`
 
 **Metrics Manager** (`infra/metrics-manager`, image: `intel/metrics-manager:2026.1.0`)
-- Reused from [`edge-ai-libraries/microservices/metrics-manager`](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/metrics-manager) — published image, no code changes
+- Reused from [`edge-ai-libraries/microservices/metrics-manager`](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/metrics-manager) — published image, no code changes
 - Custom `telegraf.conf` mounted at runtime adds: `[[outputs.influxdb_v2]]`, RAPL power script, `inputs.disk/diskio/net`
 - Telegraf-based host platform metrics collected every 1 s
 - **CPU**: `usage_user/system/idle` via `inputs.cpu`; average frequency via `read_cpu_freq.sh`; package temperature via `inputs.temp`
@@ -442,5 +442,5 @@ docker logs vision-processor-multicam | grep -i error
 
 ## See Also
 
-- [CLAUDE.md](../CLAUDE.md) - Quick reference guide
-- [PORTS.md](./PORTS.md) - Port mappings
+- [CLAUDE.md](../../CLAUDE.md) - Quick reference guide
+- [ports.md](./ports.md) - Port mappings
