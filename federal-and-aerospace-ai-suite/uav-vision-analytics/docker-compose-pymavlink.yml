@@ -31,7 +31,7 @@ services:
 
   mavlink-router:
     build:
-      context: ../../uav-mission-compute-sdk/infra/px4-sim/mavlink-router
+      context: ../uav-mission-compute-sdk/infra/px4-sim/mavlink-router
       dockerfile: Dockerfile
       args:
         http_proxy:  ${http_proxy:-}
