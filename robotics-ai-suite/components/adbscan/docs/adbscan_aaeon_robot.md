@@ -97,8 +97,8 @@ around.
     - **i**: Move forward
     - **k**: Stop
     - **,**: Move backward
-    - **j**: Turn right
-    - **l**: Turn left
+    - **j**: Turn left
+    - **l**: Turn right
     - **q/z**: Increase/decrease max speeds by 10%
     - **w/x**: Increase/decrease only linear speed by 10%
     - **e/c**: Increase/decrease only angular speed by 10%
