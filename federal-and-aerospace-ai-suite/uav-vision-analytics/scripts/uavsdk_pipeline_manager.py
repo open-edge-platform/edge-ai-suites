@@ -17,7 +17,7 @@ import requests
 
 BROKER = "host.docker.internal"
 PORT = 1884
-TOPIC = f"uav/{os.getenv('UAV_ID', 'uav-1')}/telemetry/status"
+TOPIC = "uav/uav-1/telemetry/status"
 
 PIPELINE_BASE_URL = "http://localhost:8081/pipelines/user_defined_pipelines"
 PIPELINE_DELETE_URL_TMPL = "http://localhost:8081/pipelines/{instance_id}"
@@ -30,8 +30,8 @@ RTSP_OUTPUT_BASE_URL = f"rtsp://localhost:8555/"
 # How long to wait (seconds) for ffprobe to confirm a stream is up, and how
 # many times / how long to retry before giving up on a given pipeline.
 RTSP_PROBE_TIMEOUT = 5
-RTSP_PROBE_RETRIES = int(os.getenv("RTSP_PROBE_RETRIES", "10"))
-RTSP_PROBE_RETRY_DELAY = int(os.getenv("RTSP_PROBE_RETRY_DELAY", "3"))
+RTSP_PROBE_RETRIES = 3
+RTSP_PROBE_RETRY_DELAY = 2
 
 # Passed via make start-rtsp DEVICE=cpu|gpu|npu|all; default is gpu.
 PIPELINE_DEVICE = os.getenv("PIPELINE_DEVICE", "gpu").lower()
@@ -179,7 +179,7 @@ def start_pipelines():
         print("[pipeline] Warning: no pipelines started (all RTSP sources unavailable or skipped).")
         return
 
-    active = [p for p in PIPELINES if p["device"] != "NPU" or npu_device != "/dev/null"]
+    active = [p for p in active_pipelines if p["device"] != "NPU" or npu_device != "/dev/null"]
     stream_urls = "\n".join(f"{p['device']}: {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in active)
     print(f"RTSP streams available at:\n{stream_urls}")
 
