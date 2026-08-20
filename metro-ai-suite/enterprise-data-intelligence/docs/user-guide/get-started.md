@@ -1,34 +1,35 @@
-<!--
-Copyright (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
+# Get Started
 
-# Enterprise Data Intelligence
-
-Demo setup steps, including OpenClaw service, EC-RAG service, Router service, compressor service, and UI service.
+This guide provides the demo setup steps for the OpenClaw service, EC-RAG service, Router
+service, Compressor service, and the UI service.
 
 ## Table of Contents
 
-- [1. Setup Router and Compressor services](#1-setup-router-and-compressor-services)
-- [2. Setup EC-RAG](#2-setup-ec-rag)
-- [3. Setup OpenClaw](#3-setup-openclaw)
-  - [3.1 Setup OpenClaw](#31-setup-openclaw)
-  - [3.2 Configure openclaw.json](#32-configure-openclawjson)
-  - [3.3 Install Repository Skills into OpenClaw Agent Directory](#33-install-repository-skills-into-openclaw-agent-directory)
+- [1. Set Up Router and Compressor Services](#1-set-up-router-and-compressor-services)
+- [2. Set Up EC-RAG](#2-set-up-ec-rag)
+- [3. Set Up OpenClaw](#3-set-up-openclaw)
+  - [3.1 Install and Onboard OpenClaw](#31-install-and-onboard-openclaw)
+  - [3.2 Configure `openclaw.json`](#32-configure-openclawjson)
+  - [3.3 Install Repository Skills into the OpenClaw Agent Directory](#33-install-repository-skills-into-the-openclaw-agent-directory)
   - [3.4 Enable the Skill in OpenClaw Configuration](#34-enable-the-skill-in-openclaw-configuration)
-- [4. Setup UI](#4-setup-ui)
+- [4. Set Up the UI](#4-set-up-the-ui)
 - [5. Test the Configuration](#5-test-the-configuration)
-- [6. How to use knowledgebase skill](#6-how-to-use-knowledgebase-skill)
+- [6. Use the Knowledgebase Skill](#6-use-the-knowledgebase-skill)
 
-## 1. Setup Router and Compressor services
+## 1. Set Up Router and Compressor Services
 
-The Router and compressor services are set up separately. See the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/inference-router) microservice for the full instructions on generating the config and starting both services.
+The Router and Compressor services are set up separately. See the
+[Inference Router](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/inference-router/index.html)
+microservice for the full instructions on generating the configuration and starting both
+services.
 
-## 2. Setup EC-RAG
+## 2. Set Up EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md).
+To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow
+the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md).
 
-For latest model support, you can modify the EC-RAG vllm backend image version and config like this:
+For the latest model support, you can modify the EC-RAG vLLM backend image version and
+configuration like this:
 
 ```bash
 # clone OPEA EC-RAG repo
@@ -44,7 +45,7 @@ sed -i \
   docker_compose/intel/gpu/arc/compose.yaml
 ```
 
-below is a reference pipeline config:
+Below is a reference pipeline configuration:
 
 ```bash
 - `HOST_IP`: `<your_host_ip>`
@@ -57,17 +58,19 @@ below is a reference pipeline config:
 - `GPU_MEMORY_UTIL`: `0.65`
 ```
 
-## 3. Setup OpenClaw
+## 3. Set Up OpenClaw
 
-### 3.1 Setup OpenClaw
+### 3.1 Install and Onboard OpenClaw
 
-If you do not have OpenClaw yet, install it from the official repository: https://github.com/openclaw/openclaw, please install openclaw@2026.5.6:
+If you do not have OpenClaw yet, install it from the official repository at
+<https://github.com/openclaw/openclaw>. Install `openclaw@2026.5.6`:
 
 ```bash
 npm install -g openclaw@2026.5.6
 ```
 
-Use the following choices in the onboarding wizard. Skip all online provider/channel/skill configuration for now and configure them manually in the following sections:
+Use the following choices in the onboarding wizard. Skip all online provider/channel/skill
+configuration for now and configure them manually in the following sections:
 
 ```bash
 openclaw onboard --install-daemon
@@ -84,13 +87,14 @@ openclaw onboard --install-daemon
 | Enable hooks | **Skip for now** |
 | How do you want to hatch your bot? | **Do this later** |
 
-If you are using an internally packaged version or a preinstalled environment, make sure you can access the following:
+If you are using an internally packaged version or a preinstalled environment, make sure you
+can access the following:
 
 - OpenClaw executable
-- `openclaw.json` config file
+- `openclaw.json` configuration file
 - A usable agent workspace, for example `~/.openclaw/workspace`
 
-### 3.2 Configure openclaw.json
+### 3.2 Configure `openclaw.json`
 
 Before editing the configuration, stop the `openclaw gateway` service:
 
@@ -100,7 +104,8 @@ openclaw gateway stop
 
 Edit `~/.openclaw/openclaw.json`.
 
-The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already includes the basic skeleton such as `gateway`, `tools.profile`, and `agents.list[main]`, so **you do not need to replace the entire file**. Merge the following sections into it:
+The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already includes the
+basic skeleton such as `gateway`, `tools.profile`, and `agents.list[main]`, so **you do not need to replace the entire file**. Merge the following sections into it:
 
 - `models.providers`: add the `minimax`, `vllm`, and `proxy-101` providers
 - `tools`: append web search using `tavily`
@@ -112,7 +117,7 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
 - `plugins`: add the `tavily` configuration
 - `gateway`: configure `controlUi`
 
-```jsonc
+```json
 {
   "agents": {
     "defaults": {
@@ -345,11 +350,13 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
 }
 ```
 
-Please remember to put `MINIMAX_API_KEY` into `${HOME}/.openclaw/.env`. Do not use `~/` in `openclaw.json`, because it is not allowed.
+Remember to put `MINIMAX_API_KEY` into `${HOME}/.openclaw/.env`. Do not use `~/` in `openclaw.json`,
+because it is not allowed.
 
-### 3.3 Install Repository Skills into OpenClaw Agent Directory
+### 3.3 Install Repository Skills into the OpenClaw Agent Directory
 
-Skill files in this repository cannot stay only in the current repo. They must be copied into the workspace of the corresponding OpenClaw agent so OpenClaw can actually load them.
+Skill files in this repository cannot remain only in the repository. They must be copied into
+the workspace of the corresponding OpenClaw agent so that OpenClaw can load them.
 
 The most common target directory is:
 
@@ -400,7 +407,7 @@ openclaw tui
 "Can you use competitive_analysis_PDF_generator?"
 ```
 
-## 4. Setup UI
+## 4. Set Up the UI
 
 Use Docker Compose to build and start the UI container:
 
@@ -442,16 +449,21 @@ After completing the setup steps above, verify the configuration as follows:
 Generate a competitive analysis report for Unitree Robotics G1 Basic and comparable products on the market.
 ```
 
-## 6. How to use knowledgebase skill
+Expected result: The UI should display a professional HTML/PDF report comparing the Unitree
+Robotics G1 Basic with other products, generated using the `competitive_analysis_PDF_generator` skill.
 
-If the LLM model is not strong enough to use knowledgebase skill automaticly , you can add below instruction in OpenClaw's AGENTS.md:
+## 6. Use the Knowledgebase Skill
+
+If the Large Language Model (LLM) is not strong enough to use the knowledgebase skill
+automatically, add the following instruction to OpenClaw's `AGENTS.md`:
 
 ```text
 For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
 Do not answer questions by searching for files!
 ```
 
-please insert above text into Tools chapter in $HOME/.openclaw/workspace/AGENTS.md, e.g. :
+Insert the text into the "Tools" chapter in `$HOME/.openclaw/workspace/AGENTS.md`, for example:
+
 ```md
 ## Tools
 
