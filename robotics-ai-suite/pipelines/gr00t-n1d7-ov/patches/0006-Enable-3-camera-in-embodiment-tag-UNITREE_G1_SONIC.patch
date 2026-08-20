@@ -1,0 +1,202 @@
+From 964fc0e097d2ad7ed628c66824d661633d7648ec Mon Sep 17 00:00:00 2001
+From: nacui-intel <na.cui@intel.com>
+Date: Thu, 23 Jul 2026 14:16:28 +0800
+Subject: [PATCH 6/7] Enable 3-camera in embodiment tag UNITREE_G1_SONIC
+
+Add doc to explain vla finetuning
+
+Signed-off-by: nacui <na.cui@intel.com>
+---
+ .../finetune_vs_default_and_sonic.md          | 166 ++++++++++++++++++
+ gr00t/configs/data/embodiment_configs.py      |   2 +-
+ 2 files changed, 167 insertions(+), 1 deletion(-)
+ create mode 100644 getting_started/finetune_vs_default_and_sonic.md
+
+diff --git a/getting_started/finetune_vs_default_and_sonic.md b/getting_started/finetune_vs_default_and_sonic.md
+new file mode 100644
+index 000000000000..5ed0eae4b896
+--- /dev/null
++++ b/getting_started/finetune_vs_default_and_sonic.md
+@@ -0,0 +1,166 @@
++# Fine-tuned vs. Default GR00T N1.7, and Why SONIC Needs Fine-tuning
++
++This note summarizes, at the level of model structure / inputs / outputs, how a
++fine-tuned GR00T N1.7 differs from the default (pretrained base) model, and why
++driving the Unitree G1 through the **GEAR-SONIC** whole-body controller (WBC)
++requires fine-tuning rather than the default checkpoint.
++
++All statements are grounded in the code:
++
++- Model: [`gr00t/model/gr00t_n1d7/gr00t_n1d7.py`](../gr00t/model/gr00t_n1d7/gr00t_n1d7.py)
++- Config: [`gr00t/configs/model/gr00t_n1d7.py`](../gr00t/configs/model/gr00t_n1d7.py)
++- Per-embodiment head: [`gr00t/model/modules/embodiment_conditioned_mlp.py`](../gr00t/model/modules/embodiment_conditioned_mlp.py)
++- Embodiment modalities: [`gr00t/configs/data/embodiment_configs.py`](../gr00t/configs/data/embodiment_configs.py)
++- Embodiment IDs: [`gr00t/model/gr00t_n1d7/processing_gr00t_n1d7.py`](../gr00t/model/gr00t_n1d7/processing_gr00t_n1d7.py) (`EMBODIMENT_TAG_TO_PROJECTOR_INDEX`)
++- Fine-tune config: [`gr00t/configs/finetune_config.py`](../gr00t/configs/finetune_config.py)
++
++---
++
++## 1. The architecture is identical — fine-tuning does not change structure
++
++GR00T N1.7 is a single end-to-end VLA. There is **no separate "token → whole-body
++decoder"** stage inside this repo:
++
++```
++video + language ─►  VLM backbone (Qwen3-VL) ─┐
++                                                ├─► action head ─► action vector
++state + noised_action + embodiment_id ────────┘   (flow-matching DiT)
++```
++
++The action head is a flow-matching diffusion transformer (`AlternateVLDiT`) plus
++three thin **per-embodiment** MLPs: `state_encoder`, `action_encoder`,
++`action_decoder`.
++
++Fine-tuning loads the **same** `Gr00tN1d7Config` from the base checkpoint and only
++flips a few `tune_*` switches — **no layer is added or removed**. So the structural
++difference between "default" and "fine-tuned" is: **none**. What actually changes is
++described below.
++
++---
++
++## 2. What fine-tuning actually changes
++
++### (A) Trainable parameter set
++
++Controlled by `set_trainable_parameters` ([gr00t_n1d7.py:107](../gr00t/model/gr00t_n1d7/gr00t_n1d7.py#L107)).
++Fine-tune defaults ([finetune_config.py](../gr00t/configs/finetune_config.py)):
++
++| Module | Default fine-tune | Meaning |
++|---|---|---|
++| `tune_llm` / `tune_visual` | **False** | VLM backbone frozen |
++| `tune_projector` | **True** | state/action encoders + action decoder train |
++| `tune_diffusion_model` | **True** | shared DiT trunk trains |
++| `tune_vlln` | True | VL layernorm + VL self-attention |
++
++I.e. freeze the vision-language "brain", train the action side.
++
++### (B) The per-embodiment head slice
++
++The only per-embodiment weights are `state_encoder`, `action_encoder`,
++`action_decoder`. Each is a `CategorySpecificLinear` indexed by `embodiment_id`
++(`W[cat_id]`), with a leading `num_categories = max_num_embodiments = 32` dimension.
++The **DiT trunk and the backbone are shared across all embodiments** — only these
++thin MLP slices are private.
++
++Fine-tuning on a robot trains **that robot's slice** (plus the shared DiT), writing
++its state/action semantics into one `W[cat_id]`.
++
++### (C) Input/output semantics (defined by the modality config, not by layer shapes)
++
++Every embodiment pads to `max_state_dim = max_action_dim = 132`. Which of those 132
++dims are real, and what they mean, comes entirely from the embodiment's
++`ModalityConfig` + dataset `modality.json`. Padding dims are zeroed and excluded from
++the loss via `action_mask` ([gr00t_n1d7.py:262](../gr00t/model/gr00t_n1d7/gr00t_n1d7.py#L262)).
++
++### Default vs. fine-tuned at a glance
++
++| | Default (pretrained base) | Fine-tuned |
++|---|---|---|
++| Architecture / backbone / DiT | same | same |
++| Trainable params | — | projector + DiT + vlln (LLM/visual frozen) |
++| Embodiment coverage | broad multi-embodiment mix baked in | one target `embodiment_id` slice specialized |
++| Action semantics | whatever the pretrain modalities were | the target dataset's action modality |
++| Data | large mixed corpus | your demonstrations |
++
++---
++
++## 3. Concrete tensor contract
++
++Input to the action head ([gr00t_n1d7.py:168-180](../gr00t/model/gr00t_n1d7/gr00t_n1d7.py#L168-L180)):
++
++- `state`: `[B, state_history_length, 132]` (real dims left-aligned, rest zero-padded)
++- `action` (training target): `[B, action_horizon, 132]`
++- `action_mask`: 1 on real dims only → loss only on real action dims
++- `embodiment_id`: `[B]`
++
++Output:
++
++- Training: flow-matching velocity MSE loss (`velocity = action − noise`)
++- Inference `get_action`: 4-step Euler denoising → `action_pred [B, action_horizon, action_dim]`
++  ([gr00t_n1d7.py:383-429](../gr00t/model/gr00t_n1d7/gr00t_n1d7.py#L383-L429)). This
++  vector **is** the robot action for that embodiment (for SONIC: the latent + finger joints).
++
++Note: state is heavily regularized out during training (`state_dropout_prob` default
++0.8, plus an `exclude_state` ablation, [config:117-118](../gr00t/configs/model/gr00t_n1d7.py#L117-L118)).
++So lower-body / gravity information is learned primarily as an **action supervision
++target**, not as a hard encoder input requirement.
++
++---
++
++## 4. Example: `libero_sim` vs. `unitree_g1_sonic` head slices
++
++| | `libero_sim` (id = 2) | `unitree_g1_sonic` (id = 11) |
++|---|---|---|
++| state keys | x, y, z, roll, pitch, yaw, gripper | left_leg, right_leg, waist, left_arm, right_arm, left_hand, right_hand, **projected_gravity** |
++| state real dims | **8** → padded to 132 | full-body joints + gravity (≫ 8) → padded to 132 |
++| action keys | x, y, z, roll, pitch, yaw, gripper | **motion_token**, left_hand_joints, right_hand_joints |
++| action real dims | **7** → padded to 132 | SONIC whole-body latent + finger joints → padded to 132 |
++| action semantics | single-arm EEF delta + gripper | **whole-body WBC latent (SONIC)** + fingers |
++| horizon (`delta_indices`) | `range(16)` | `range(40)` |
++| cameras | image + wrist_image (2) | ego_view + left_wrist + right_wrist (3) |
++
++The two slices have **identical tensor shape** but **independent weights** and
++**different physical meaning**. They share the DiT trunk and backbone; specialization
++lives in the thin MLP slice + the data.
++
++---
++
++## 5. Why interfacing with SONIC requires fine-tuning
++
++GEAR-SONIC is a whole-body controller whose command interface is a **latent action**
++(`motion_token`) — a compact code that encodes coordinated legs + waist + arms + root
++locomotion, which SONIC then expands into low-level joint commands. The
++`unitree_g1_sonic` embodiment is defined exactly this way: *"VLA action space is SONIC
++latents"* ([embodiment_tags.py:107](../gr00t/data/embodiment_tags.py#L107)).
++
++The default base checkpoint cannot drive SONIC, for three concrete reasons:
++
++1. **The output channel does not exist.** Default manipulation embodiments emit
++   arm-EEF / gripper vectors (e.g. libero's 7 dims). None of their action modalities
++   contain a `motion_token` output. It is not that lower-body signal is "zeroed out" —
++   there is simply **no latent-action output dimension** for SONIC to consume. Hard-
++   aligning dimensions would only produce zero/garbage in the SONIC latent slots, i.e.
++   a degenerate, under-specified command.
++
++2. **No trained head slice for that embodiment.** `motion_token` decoding lives in the
++   `unitree_g1_sonic` slice (`W[11]`) of the action encoder/decoder. In the base model
++   that slice is untrained / out-of-distribution, so even with the right modality wired
++   up it would not produce a valid latent.
++
++3. **Task-level whole-body intent must be learned.** A latent that means "step / turn /
++   shift the center of mass to support the arm motion" only exists if the model was
++   trained on whole-body demonstrations. That coordination has to be written into the
++   64-dim-style latent output; the shared DiT + the `unitree_g1_sonic` slice learn it
++   during fine-tuning.
++
++**Therefore:** to talk to SONIC you fine-tune GR00T N1.7 on the `unitree_g1_sonic`
++embodiment with whole-body demonstration data whose action labels are the SONIC
++latents. This (a) selects the action modality that includes `motion_token`,
++(b) trains that embodiment's head slice + the shared DiT to map VL features into the
++SONIC latent space, and (c) leaves the architecture, backbone, and inference pipeline
++unchanged. The VLA then emits the whole-body latent directly, and SONIC executes it —
++closing the gap that the upper-body-only default model cannot.
++
++**In one line:** the default model has no SONIC-latent output channel and no trained
++slice for it; fine-tuning gives the VLA that output channel and teaches whole-body /
++locomotion coordination inside the latent, without changing the model structure.
+diff --git a/gr00t/configs/data/embodiment_configs.py b/gr00t/configs/data/embodiment_configs.py
+index 8700f7d981b4..c699b49cc369 100644
+--- a/gr00t/configs/data/embodiment_configs.py
++++ b/gr00t/configs/data/embodiment_configs.py
+@@ -67,7 +67,7 @@ MODALITY_CONFIGS = {
+     "unitree_g1_sonic": {
+         "video": ModalityConfig(
+             delta_indices=[0],
+-            modality_keys=["ego_view"],
++            modality_keys=["ego_view", "left_wrist", "right_wrist"],
+         ),
+         "state": ModalityConfig(
+             delta_indices=[0],
+-- 
+2.43.0
+

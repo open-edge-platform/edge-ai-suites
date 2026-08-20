@@ -38,14 +38,14 @@ This guide assumes basic familiarity with Docker commands and terminal usage. Fo
 `Qwen/Qwen3.6-35B-A3B` in FP8 with a 60k context window is memory-intensive on a shared-RAM host. The default configuration targets a **64 GB system**:
 
 - Provide at least **32 GB of swap** so weight loading and the KV cache can spill under peak pressure without triggering the OOM killer. See how to [Add Swap Space](./how-to-guides/add-swap.md).
-- The **first startup takes 3-20 minutes** while weights download and compile. The serving is ready when `http://<host>:41091/v1/models` responds.
+The **first startup takes about 30 minutes** while the weights are downloaded and compiled. The serving becomes healthy once it answers on `http://<host>:41091/v1/models`.
 
 ## Step-by-step installation
 
 Clone the repository and change to `agentic-smart-community`:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites ~/edge-ai-suites -b release-2026.2.0
 cd ~/edge-ai-suites/metro-ai-suite/agentic-smart-community
 ```
 
@@ -73,6 +73,9 @@ cp monitors.yaml.example "$SMART_COMMUNITY_DATA_DIR/monitors.yaml"
 Customize `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DATA_DIR/monitors.yaml` as needed, then build and start the stack:
 
 ```bash
+# Change to mirror endpoint if you are in China and want to use the mirror site for Hugging Face.
+export HF_ENDPOINT=https://hf-mirror.com
+
 source docker/set_env.sh
 
 # First time only: build the local images (multilevel + videostream-analytics + MCP server).
@@ -253,7 +256,7 @@ MCP Server subscriptions can deliver alert updates directly to connected clients
   Configure the system to push alerts from cam_test to this agent in real time.
   ```
 
-This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
+This OpenClaw adapter is built with the [Framework Adapter SDK](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/README.md). For details about building the plugin and configuring alert routes, see the [OpenClaw adapter guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/packages/framework-adapter-sdk/examples/openclaw/README.md).
 
 #### Other MCP clients
 

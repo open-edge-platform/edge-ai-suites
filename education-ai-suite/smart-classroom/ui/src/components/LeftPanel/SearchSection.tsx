@@ -9,6 +9,7 @@ import infoIcon from "../../assets/images/info-icon.svg";
 import cameraIcon from "../../assets/images/camera-icon.svg";
 import noSearchIcon from "../../assets/images/no-search-icon.svg";
 import { useAppSelector } from "../../redux/hooks";
+import { useFeatureConfig } from "../../hooks/useFeatureConfig";
 
 type SectionTab = "search" | "qa";
 type SearchTab = "text" | "image";
@@ -43,6 +44,8 @@ interface SearchSectionProps {
 
 const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
   const { t } = useTranslation();
+  const { guard: featureGuard } = useFeatureConfig();
+  const hasQA = featureGuard?.hasFeature('qa') ?? false;
   const csUploadsComplete = useAppSelector((s) => s.ui.csUploadsComplete);
   const csHasUploads = useAppSelector((s) => s.ui.csHasUploads);
   const csProcessing = useAppSelector((s) => s.ui.csProcessing);
@@ -288,12 +291,14 @@ const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
           >
             {t("searchSection.title")}
           </button>
-          <button
-            className={`cs-search-section-tab ${sectionTab === "qa" ? "cs-search-section-tab--active" : ""}`}
-            onClick={() => setSectionTab("qa")}
-          >
-            {t("qaSection.title", "Q&A")}
-          </button>
+          {hasQA && (
+            <button
+              className={`cs-search-section-tab ${sectionTab === "qa" ? "cs-search-section-tab--active" : ""}`}
+              onClick={() => setSectionTab("qa")}
+            >
+              {t("qaSection.title", "Q&A")}
+            </button>
+          )}
         </div>
 
         {/* ── Q&A panel: always mounted to preserve chat history ── */}

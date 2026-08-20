@@ -16,7 +16,7 @@ At the end of this tutorial, you will have:
 - The `edge-ai-suites` repository cloned:
 
   ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set metro-ai-suite
   ```
@@ -247,15 +247,24 @@ In the Nx Witness desktop client:
 
 ![Accept API Integrations registration requests setting in Nx Witness](../_assets/nx-enable_api_integration.png "accept api integrations registration requests in nx witness")
 
-## Part 4 — Build and Start VAP
+## Part 4 — Start VAP and verify LVC schema
 
-### 4.1 Start the Stack
+### 4.1 Build and Start VAP
 
-Navigate to the VAP directory and start all services:
-
+Go to app directory
 ```bash
 cd metro-ai-suite/vms-adapter-plugin
-docker compose up -d --build
+```
+
+#### 4.1.1 Build from source (Optional):
+```bash
+docker compose build
+```
+> **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+
+#### 4.1.2 Start VAP
+```bash
+docker compose up -d
 ```
 
 Check that all VAP services are healthy:

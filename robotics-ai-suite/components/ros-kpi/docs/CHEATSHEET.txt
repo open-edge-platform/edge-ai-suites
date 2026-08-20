@@ -63,7 +63,7 @@ Intel-operated generative artificial intelligence solutions.
   monitoring_sessions/<timestamp>/
       ├── session_info.txt          # What you monitored
       ├── graph_timing.csv          # Message timing data
-      ├── resource_usage.log        # CPU/memory data
+      ├── resource_usage.json        # CPU/memory data
       └── visualizations/           # Auto-generated plots ⭐
           ├── timing_delays.png
           ├── message_frequencies.png
@@ -108,7 +108,7 @@ Intel-operated generative artificial intelligence solutions.
     → Make sure ROS2 nodes are running: ros2 node list
 
   CPU shows "563%" or similar?
-    → Normal — pidstat reports 100% = 1 core. See Avg Cores column in summary.
+    → Normal — 100% = 1 core (standard CPU% convention). See Avg Cores column in summary.
 
   grafana-export port error?
     → fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/<name>

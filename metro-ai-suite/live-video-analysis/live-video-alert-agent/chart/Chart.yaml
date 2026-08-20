@@ -26,5 +26,5 @@ dependencies:
     version: 1.0.0
     repository: "file://subchart/alert-agent-service"
   - name: metrics-manager
-    version: "2026.1.0-helm"
+    version: "2026.2.0-helm"
     repository: "file://subchart/metrics-manager"

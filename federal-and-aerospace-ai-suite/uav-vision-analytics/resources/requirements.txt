@@ -1,0 +1,13 @@
+# Core CLI + export dependencies
+huggingface_hub[cli]>=0.34
+# IMPORTANT: pinned to 8.4.67 — ultralytics>=8.4.115 changed the detection
+# head's box-decoding implementation to use a CumSum op instead of Range.
+# CumSum-based OpenVINO IR only runs on CPU; it fails to load/compile on
+# GPU and NPU plugins. 8.4.67 produces a Range-based graph that is verified
+# to run correctly on CPU, GPU, and NPU. Do not upgrade without re-verifying
+# GPU/NPU compatibility of the exported IR.
+ultralytics==8.4.67
+openvino>=2026.0
+
+# Only needed for INT8 quantized export (yolo export ... int8=True)
+nncf>=3.0

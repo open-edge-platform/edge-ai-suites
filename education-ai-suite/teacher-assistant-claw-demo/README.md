@@ -44,7 +44,7 @@ The following tools must be available on the system:
 
 Perform the following steps to setup OpenClaw agent for the Teacher Assistant demo.
 
-> **Tip:** Copy and run each command block as a whole.  
+> **Tip:** Copy and run each command block as a whole.
 > Commands use `&&`, so the next command runs only if the previous one succeeds.
 
 ---
@@ -54,7 +54,7 @@ Perform the following steps to setup OpenClaw agent for the Teacher Assistant de
 Clone the repository and navigate to the Teacher Assistant demo directory. All subsequent commands assume you are in this directory.
 
 ``` bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git &&
+git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git &&
 cd edge-ai-suites &&
 git sparse-checkout set education-ai-suite/teacher-assistant-claw-demo &&
 cd education-ai-suite/teacher-assistant-claw-demo
