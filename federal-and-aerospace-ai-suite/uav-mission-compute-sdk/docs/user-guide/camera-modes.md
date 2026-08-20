@@ -117,6 +117,23 @@ make apps                    # Start vision processor + dashboard
 | vision-processor | 40-70% | 40% | 750 MB | 3 GStreamer pipelines |
 | **Total** | **~300%** | **~80%** | **~4.6 GB** | Requires 16 GB RAM |
 
+### System Constraints? Use Mono Camera Instead
+
+If your host doesn't comfortably meet the 3-camera footprint above (limited
+CPU cores, RAM, or GPU), switch to the single-camera (nadir-only) variant of
+the sim instead of the default 3-camera world:
+
+```bash
+make up-sim-camera-mono          # with observability stack
+make up-sim-camera-mono-lean     # without observability stack (saves ~300 MB RAM)
+```
+
+This runs Gazebo with 1 camera instead of 3, reducing camera-bridge and
+vision-processor load (fewer ffmpeg/GStreamer pipelines) while keeping full
+PX4 flight telemetry and control. Set `VISION_CAMERA_IDS=nadir` (done
+automatically by these targets). Switch back at any time with
+`make up-sim-camera` / `make up-sim-camera-lean`.
+
 ---
 
 ## 2. USB Camera
@@ -298,13 +315,14 @@ make apps
 
 ### Environment Variable Checklist
 
-| Variable | Sim Mode | USB Mode | Set by |
-|----------|----------|----------|--------|
-| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | auto (`make up-*`) |
-| `GZ_WORLD` | `baylands_multicam` | `baylands_multicam` | `.env` |
-| `USB_VIDEO_DEVICE` | — | `/dev/video32` (your device) | `.env` manually |
-| `USB_CAMERA_ID` | — | `nadir` | `.env` |
-| `USB_CAPTURE_FORMAT` | — | `mjpeg` or `raw` | `.env` |
+| Variable | Sim Mode | Sim Mode (mono) | USB Mode | Set by |
+|----------|----------|-----------------|----------|--------|
+| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | `nadir` | auto (`make up-*`) |
+| `GZ_WORLD` | `baylands_multicam` | `baylands_detection` | `baylands_multicam` | auto (`make up-*`) |
+| `PX4_MODEL_DIR` | `multi_cam` | `mono_cam` | `multi_cam` | auto (`make up-*`) |
+| `USB_VIDEO_DEVICE` | — | — | `/dev/video32` (your device) | `.env` manually |
+| `USB_CAMERA_ID` | — | — | `nadir` | `.env` |
+| `USB_CAPTURE_FORMAT` | — | — | `mjpeg` or `raw` | `.env` |
 
 ---
 
@@ -376,7 +394,8 @@ docker compose --profile usb-camera up -d
 docker compose --profile sim-camera --profile usb-camera down
 
 # Helper targets
-make up-sim-camera              # sim-camera
+make up-sim-camera              # sim-camera (3x nadir, forward, rear)
+make up-sim-camera-mono         # sim-camera (1x nadir — use if system is resource-constrained)
 make up-usb-camera   # usb-camera
 make down            # both
 ```
