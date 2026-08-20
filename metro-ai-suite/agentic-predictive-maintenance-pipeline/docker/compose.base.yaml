@@ -143,6 +143,8 @@ services:
       MODEL_PATH: /opt/models
     volumes:
       - ${USE_CASE_MODELS_DIR:-/models}:/opt/models
+    ports:
+      - "${MODEL_DOWNLOAD_PORT:-8200}:8000"
     networks:
       - apm_network
     group_add:
