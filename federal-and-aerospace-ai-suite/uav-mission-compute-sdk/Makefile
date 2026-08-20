@@ -169,7 +169,6 @@ $(VENV)/.installed: $(REQ)
 		echo "Fix with ONE of:"; \
 		echo "  sudo apt install python3-venv           # then re-run 'make deps'"; \
 		echo "  curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv, then re-run"; \
-		echo "  make deps-break                         # last resort: system-wide install"; \
 		exit 1; \
 	fi
 	@touch $@

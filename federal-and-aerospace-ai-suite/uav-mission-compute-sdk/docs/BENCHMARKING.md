@@ -99,34 +99,6 @@ flowchart LR
     BROKER -->|subscription fan-out| SUB
 ```
 
-### Where the ceiling lives
-
-Empirically (measured by instrumenting reader-loop counters during a sweep),
-the pipeline saturates on the **reader side** long before the broker or the
-network:
-
-| Stage | Observed behaviour | Notes |
-|---|---|---|
-| PX4 → MAVLink UDP | Effectively unbounded on loopback | Firmware honours `SET_MESSAGE_INTERVAL` up to its native ceiling |
-| **`mavsdk_server` → Python gRPC** | **Per-stream ceiling ≈ 110–120 Hz** when 3+ streams active | Single shared channel; Python's `grpc.aio` is single-threaded and divides capacity roughly evenly across concurrent server-streams. When the reader can't keep `_latest` fresh at the timer's cadence, the `is`-check drops that tick and the observed publish rate falls below the cap. |
-| asyncio event loop | Amber above ~800 wakeups/sec | Reader coroutines + `_publish_timer` tasks + REST all share one thread; jitter grows at very high caps |
-| `_publish_timer` | Absolute-deadline scheduler; no drift accumulation | Guarantees ≤ cap; skips ticks where `_latest` was not refreshed since last publish |
-| `publish()` | No rate gate — just adds `bridge_ts_ns`, `orjson.dumps`, paho publish | Timer owns the rate |
-| paho publish → network thread | Non-blocking enqueue | Rarely the limit on loopback |
-| mosquitto broker | Sustains many kHz on loopback | Never the binding constraint at the caps this sweep reaches |
-| subscriber fan-out | Bounded by subscriber's paho thread | Watch the **rate CV** metric for uneven delivery |
-
-The distinctive signature of the gRPC ceiling in `--bridge-sweep` output is
-that `attitude`, `velocity`, and `position` all report the **same observed
-Hz** at high caps (they share the channel), even though their native
-ceilings and publish caps differ.  GPS is unaffected — its 10 Hz publish
-cap sits well below the per-stream limit.  If you hit the gRPC ceiling and
-want to trade freshness for lower gRPC pressure, lower `READER_RATE_HZ`
-(e.g. `READER_RATE_HZ=300`); PX4 will still stream fast enough to keep
-`_latest` ahead of any publish cap ≤ 200 Hz.
-
----
-
 ## MAVLink → MQTT Benchmark (`benchmark_mavlink_mqtt.py`)
 
 ### What it measures
@@ -228,13 +200,19 @@ change-triggered and has no `RATE_STATUS_HZ` env var.
 
 ## Running the benchmarks
 
-See **[Invocation](#invocation)** for the full command reference.  A one-line
+Run the dependency setup once before any benchmark command:
+
+```bash
+make deps
+```
+
+See **[Invocation](#invocation)** for the full command reference. A one-line
 summary:
 
 | Mode | Command | Requires |
 |---|---|---|
-| Passive telemetry observation | `make bench` | Stack running |
-| End-to-end bridge stress sweep | `make bench-bridge-sweep` | Stack running + UAV armed + `docker compose` |
+| Passive telemetry observation | `make deps && make bench` | Stack running |
+| End-to-end bridge stress sweep | `make deps && make bench-bridge-sweep` | Stack running + UAV armed + `docker compose` |
 
 ---
 

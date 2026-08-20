@@ -210,6 +210,7 @@ def _render_client_scaling(cs: dict) -> str:
         f'<h2>Client scaling</h2>'
         f'<p>Passive observation at escalating subscriber counts · '
         f'duration per tier: <code>{cs.get("duration_s", 0):.1f}s</code></p>'
+        f'{_pipeline_coverage("client-scaling")}'
         f'{chart_html}{table}{_render_resource_utilization(cs, chart_prefix="client-scaling", x_label="Subscribers (N)", x_field="n_clients")}'
         f'</section>'
     )
@@ -336,6 +337,7 @@ def _render_bridge(b: dict) -> str:
         f'<p>Recreates <code>companion-bridge</code> at each cap tier · '
         f'duration per tier: <code>{b.get("duration_s", 0):.1f}s</code> · '
         f'latency = recv − reader_ts_ns (full path)</p>'
+        f'{_pipeline_coverage("bridge")}'
         f'{chart_html}{table}{_render_resource_utilization(b, chart_prefix="bridge", x_label="Cap (Hz)", x_field="hz")}'
         f'</section>'
     )
@@ -401,6 +403,7 @@ def _render_resource_utilization(section: dict, *, chart_prefix: str, x_label: s
         '<div class="resource-block">'
         '<h3>Container resource utilization</h3>'
         '<p>Average CPU and average memory usage captured from Docker stats over each measurement window.</p>'
+        f'{_pipeline_coverage("resources")}'
         f'{_resource_metric_chart(chart_id=f"{chart_prefix}-resources", title="Container utilization", x_values=x_values, x_label=x_label, metrics=metrics)}'
         '<table class="tbl resource-tbl"><thead>'
         f'<tr><th rowspan="2">{html.escape(x_label)}</th>{header_groups}</tr>'
@@ -408,6 +411,24 @@ def _render_resource_utilization(section: dict, *, chart_prefix: str, x_label: s
         '</thead><tbody>' + "".join(rows) + '</tbody></table>'
         '</div>'
     )
+
+
+def _pipeline_coverage(kind: str) -> str:
+    """Render plain pipeline coverage text for each result type."""
+    if kind == "client-scaling":
+        pipeline = (
+            'PX4 emit → MAVSDK read → companion-bridge publish → '
+            '<strong>MQTT broker → subscriber receive</strong>'
+        )
+    elif kind == "bridge":
+        pipeline = (
+            '<strong>PX4 emit → MAVSDK read → companion-bridge publish → '
+            'MQTT broker → subscriber receive</strong>'
+        )
+    else:
+        return ""
+
+    return f'<p>{pipeline}</p>'
 
 
 def _resource_metric_chart(
