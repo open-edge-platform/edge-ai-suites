@@ -1,45 +1,29 @@
 # SceneScape spatial-analysis path (optional, opt-in)
 
-Load this file **only when `{{SCENESCAPE}}=yes`**. It replaces the
-MediaMTX/WebRTC + Node-RED-alert + Grafana-MQTT *video/analytics tail* of
-the default recipe with an Intel® **SceneScape** multi-camera
-**scene-fusion** stack, modeled on the open-edge-platform
-[smart-intersection](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection)
-reference application.
+Load **only when `{{SCENESCAPE}}=yes`**. Replaces default MediaMTX/WebRTC + Node-RED-alert + Grafana-MQTT *video/analytics tail* with Intel® **SceneScape** multi-camera **scene-fusion**, based on [smart-intersection](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection).
 
-**Do not reproduce the SceneScape orchestration by hand.** SceneScape ships a
-self-contained deployer skill that gathers streams/camera-ids/scene-name and
-runs bootstrap → calibrate → scene → tracking verification. Delegate to it:
+**Do not reproduce SceneScape orchestration by hand.** Delegate to its deployer skill; it gathers streams/camera-ids/scene-name and runs bootstrap → calibrate → scene → tracking verification:
 
 > External skill:
 > `https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup`
 > (`SKILL.md` — orchestrator `scripts/deploy_scenescape.sh`).
 
-If that skill is available in the session, **invoke it** and pass the
-SceneScape parameters below. If it is not reachable, fall back to authoring the
-compose from the smart-intersection service shapes documented here.
+If available, **invoke it** with parameters below; otherwise use smart-intersection service shapes here.
 
 ## When to choose this path
 
-Choose SceneScape when the use-case needs **spatial** analytics that a single
-per-camera pipeline cannot give:
+Choose SceneScape for **spatial** analytics unavailable per camera:
 
-- Multi-camera **multi-object tracking** — one object identity fused across
-  overlapping camera views.
-- **Scene-based regions of interest** defined once on a map/floorplan (not
-  per-camera), e.g. crosswalks, lanes, zones.
-- 3-D motion analytics — speed/heading, dwell time, object interactions.
+- Multi-camera **multi-object tracking** — one identity fused across overlapping views.
+- **Scene-based regions of interest** defined once on a map/floorplan (not per-camera), e.g. crosswalks, lanes, zones.
+- 3-D motion analytics — speed/heading, dwell time, interactions.
 - Mixed sensors (camera + lidar/radar) feeding one scene.
 
-If the use-case is single-camera count/alert only, keep `{{SCENESCAPE}}=no`
-(the default) and use the standard MediaMTX/WebRTC + Node-RED path.
+For single-camera count/alert, keep `{{SCENESCAPE}}=no` (default) and standard MediaMTX/WebRTC + Node-RED.
 
 ## Architecture (SceneScape branch)
 
-Detection metadata still flows out of DLSPS over MQTT, but a **Scene
-Controller** fuses it into scene tracks, and aggregate ROI analytics land in
-**InfluxDB** for **Grafana Flux** dashboards. Live fused tracks are viewed in
-the **Scene Management UI**, not in Grafana WebRTC iframes.
+DLSPS still publishes detections over MQTT. **Scene Controller** fuses tracks; ROI analytics go to **InfluxDB** for **Grafana Flux**; live fused tracks appear in **Scene Management UI**, not Grafana WebRTC iframes.
 
 ```
 Cameras (N, unique camera_ids) ─RTSP─▶ DLSPS ─MQTT─▶ broker (mosquitto, TLS)
@@ -55,8 +39,7 @@ Cameras (N, unique camera_ids) ─RTSP─▶ DLSPS ─MQTT─▶ broker (mosquit
                               └▶ /nodered/      → Node-RED
 ```
 
-The `web` (SceneScape manager) service serves the Scene Management UI + REST
-scene API and owns scene calibration, camera poses, and regions of interest.
+`web` (SceneScape manager) serves UI + REST scene API and owns calibration, camera poses, and ROIs.
 
 ## Pinned images (from the smart-intersection reference)
 
@@ -71,11 +54,11 @@ scene API and owns scene calibration, camera poses, and regions of interest.
 - `nginx:1.31.3-alpine` — TLS reverse proxy (80/443)
 - `${DLSTREAMER_PIPELINE_SERVER_IMAGE}` — DLSPS object detection → MQTT
 
-No MediaMTX, Coturn, or WebRTC in this branch; no Prometheus/OpenTelemetry.
+No MediaMTX, Coturn, WebRTC, Prometheus, or OpenTelemetry.
 
 ## Parameters (SceneScape branch)
 
-Supplied by the invoking prompt when `{{SCENESCAPE}}=yes`:
+When `{{SCENESCAPE}}=yes`:
 
 | Param | Purpose |
 |---|---|
@@ -84,9 +67,7 @@ Supplied by the invoking prompt when `{{SCENESCAPE}}=yes`:
 | `{{CAMERA_IDS}}` | Unique IDs (no `/`), one per input stream, same order as inputs |
 | `{{NUM_SOURCES}}` | number of cameras/streams feeding the scene (≥1; ≥2 for cross-camera fusion) |
 
-`{{OBJECT}}`, `{{DEFAULT_MODEL}}`, `{{PIPELINE_NAME}}`, `{{DEVICE}}`, and the
-input streams carry over from the standard parameter set — the DLSPS detection
-pipeline is the same; only the downstream fusion/analytics/UI differ.
+`{{OBJECT}}`, `{{DEFAULT_MODEL}}`, `{{PIPELINE_NAME}}`, `{{DEVICE}}`, and input streams carry over; only downstream fusion/analytics/UI differ.
 
 ## Parameter validation (enforce when `{{SCENESCAPE}}=yes`)
 
@@ -97,11 +78,11 @@ pipeline is the same; only the downstream fusion/analytics/UI differ.
 | `NUM_SOURCES` | int ≥ 1 (≥ 2 recommended for cross-camera tracking) | no fusion benefit with a single view |
 | Inputs | one RTSP/RTSPS URL (or local video file) per `camera_id`, same order | camera↔stream mismatch |
 
-The external `scenescape-setup` skill re-validates these; still assert them
-before handing off, and state that `camera_ids` uniqueness was checked.
+`scenescape-setup` re-validates; still assert before handoff and state `camera_ids` uniqueness was checked.
 
 ## How to run (delegate first)
 
+<<<<<<< HEAD
 1. Confirm `{{SCENESCAPE}}=yes`, and that `{{SCENE_NAME}}`, `{{CAMERA_IDS}}`,
    and the per-camera input streams are known.
 2. **Preferred:** invoke the external `scenescape-setup` skill with
@@ -119,18 +100,17 @@ before handing off, and state that `camera_ids` uniqueness was checked.
    [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src)
    (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`,
    `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
+=======
+1. Confirm `{{SCENESCAPE}}=yes`, and that `{{SCENE_NAME}}`, `{{CAMERA_IDS}}`, and per-camera input streams are known.
+2. **Preferred:** invoke external `scenescape-setup` with `deploy_dir=./{{STACK_DIR}}`, `scene_name={{SCENE_NAME}}`, `camera_ids={{CAMERA_IDS}}`, and `streams=<inputs>`. It runs bootstrap → calibrate → scene, launches services async, captures one calibration frame per `camera_id`, reconstructs scene, and verifies tracking. Do not re-implement.
+3. **Fallback (skill unavailable):** author `docker-compose.yml` from smart-intersection service shapes above (services `ntpserver`, `broker`, `node-red`, `influxdb2`, `grafana`, `dlstreamer-pipeline-server`, `pgserver`, `web`, `scene`, `nginx` on one `scenescape` network, with TLS secrets and `tracker-config.json`), pulling files from [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src) (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`, `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
+>>>>>>> 5c95c419 (Updated Skill for metro-vision-ai-app-recipe)
 
 ## Completion criteria (SceneScape branch — all must pass)
 
-1. All services `running`/`healthy`, including `scene`, `web`, `pgserver`,
-   `influxdb2`, `ntpserver`.
-2. Scene Management UI reachable at `https://localhost/` and the scene
-   `{{SCENE_NAME}}` exists with the calibrated cameras `{{CAMERA_IDS}}`.
-3. DLSPS publishes detections to the secured broker; the Scene Controller
-   publishes **fused tracks** and ROI events back to MQTT.
-4. Tracking verification: at least one tracked object is associated with **more
-   than one `camera_id`** (for `{{NUM_SOURCES}} ≥ 2`).
-5. ROI/aggregate analytics land in InfluxDB and render in the Grafana dashboard
-   at `https://localhost/grafana/` (InfluxDB datasource, Flux queries).
-6. When delegated to the external skill, it reports `DEPLOY COMPLETE` with a
-   `scene_uid`.
+1. All services `running`/`healthy`, including `scene`, `web`, `pgserver`, `influxdb2`, `ntpserver`.
+2. Scene Management UI reachable at `https://localhost/`; scene `{{SCENE_NAME}}` exists with calibrated cameras `{{CAMERA_IDS}}`.
+3. DLSPS publishes detections to secured broker; Scene Controller publishes **fused tracks** and ROI events back to MQTT.
+4. Tracking verification: at least one tracked object is associated with **more than one `camera_id`** (for `{{NUM_SOURCES}} ≥ 2`).
+5. ROI/aggregate analytics land in InfluxDB and render in Grafana at `https://localhost/grafana/` (InfluxDB datasource, Flux).
+6. When delegated, external skill reports `DEPLOY COMPLETE` with `scene_uid`.

@@ -62,6 +62,7 @@ tests/videos/
 # dev docs
 **/backup/
 config.yaml
+monitors.yaml
 
 # Claude Code generated files
 CLAUDE.md
