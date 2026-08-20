@@ -53,13 +53,30 @@ sudo apt install -y python3.12-venv ffmpeg
 > `python3.12-venv` is required by `make model` to create a Python virtual environment.
 > `ffmpeg` provides `ffplay` for viewing the RTSP output stream and `ffmpeg` for recording.
 
-### 1. Configure environment
+### 1. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
+
+Clone the repo and Follow the setup instructions in the [README](../../../uav-mission-compute-sdk/README.md) before proceeding.
+
+```bash
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/federal-aerospace/uav-mission-compute-sdk
+# In uav-mission-compute-sdk directory — starts PX4, MQTT, RTSP server
+make up-sim-camera
+```
+
+### 2. Configure environment
+
+Get into the directory:
+
+```bash
+cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
+```
 
 ```bash
 make init
 ```
 
-`make init` creates `.env` from the template and **auto-detects your Intel GPU** device paths (`GPU_DEVICE`, `GPU_RENDER_DEVICE`). It skips silently if `.env` already exists.
+`make init` creates `.env` from the template and **auto-detects your Intel GPU device paths** (`GPU_DEVICE`, `GPU_RENDER_DEVICE`), **Intel NPU** (`NPU_DEVICE`), and **Intel RealSense / USB camera** (`REALSENSE_DEVICE`). It skips if `.env` already exists.
 
 Then set your host IP address in `.env`:
 
@@ -67,7 +84,7 @@ Then set your host IP address in `.env`:
 nano .env   # set HOST_IP=<your-machine-IP>
 ```
 
-### 2. Prepare the model
+### 3. Prepare the model
 
 Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
 
@@ -76,16 +93,6 @@ make model
 ```
 
 > See the [AI Model guide](../how-to-guides/model.md) for model details.
-
-### 3. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
-
-Follow the setup instructions in the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md) before proceeding.
-
-```bash
-cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
-# In uav-mission-compute-sdk directory — starts PX4, MQTT, RTSP server
-make up-sim-camera
-```
 
 ### 4. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
 
@@ -113,7 +120,7 @@ curl -X POST http://localhost:8080/action/land
 
 ### 6. Start inference pipelines
 
-Three options are available depending on your use case:
+Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
@@ -172,6 +179,10 @@ If `state` is `ERROR`, check the container logs:
 ```bash
 docker logs dlstreamer-pipeline-server 2>&1 | tail -20
 ```
+Change following **three values** to switch between CPU / GPU / NPU:
+1. **Pipeline name** in the URL path (`nadir_camera_rtsp_cpu` → `forward_camera_rtsp_gpu` / `rear_camera_rtsp_npu`)
+2. **RTSP path** in the request body (`nadir` → `forward` / `rear`)
+3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
 
 Stop a pipeline:
 ```bash
@@ -184,7 +195,9 @@ curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
 
 ```bash
 # View annotated RTSP output (install ffmpeg first if not present)
-ffplay rtsp://<HOST_IP>:8555/nadir               # uav-mission-compute-sdk mode, nadir camera
+ffplay rtsp://<HOST_IP>:8555/nadir               # nadir camera
+ffplay rtsp://<HOST_IP>:8555/forward               # forward camera
+ffplay rtsp://<HOST_IP>:8555/rear               # rearcamera
 ```
 
 #### Capture all the video streams
