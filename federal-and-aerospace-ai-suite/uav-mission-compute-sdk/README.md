@@ -6,6 +6,8 @@ SPDX-License-Identifier: Apache-2.0
 # Edge AI UAV (Uncrewed Aerial Vehicle) Platform
 
 > This SDK is intended as a development kit and reference solution for evaluating Intel Edge AI capabilities on UAV platforms.
+>
+> This deployment is for a single-user system. It is designed for local and single-user development.
 
 Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO vision processing.
 

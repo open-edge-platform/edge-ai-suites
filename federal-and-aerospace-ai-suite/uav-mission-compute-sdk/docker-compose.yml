@@ -273,10 +273,10 @@ services:
     environment:
       DOCKER_INFLUXDB_INIT_MODE:        setup
       DOCKER_INFLUXDB_INIT_USERNAME:    admin
-      DOCKER_INFLUXDB_INIT_PASSWORD:    ${INFLUXDB_PASSWORD:-change-me}
-      DOCKER_INFLUXDB_INIT_ORG:         ${INFLUXDB_ORG:-uav-sdk}
+      DOCKER_INFLUXDB_INIT_PASSWORD:    ${INFLUXDB_PASSWORD:?Set INFLUXDB_PASSWORD in .env before starting}
+      DOCKER_INFLUXDB_INIT_ORG:         ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
       DOCKER_INFLUXDB_INIT_BUCKET:      telemetry
-      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:-change-me-token}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
     volumes:
       - influxdb-data:/var/lib/influxdb2
     healthcheck:
@@ -295,9 +295,9 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER:     admin
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-change-me}
-      INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:-change-me-token}
-      INFLUXDB_ORG:               ${INFLUXDB_ORG:-uav-sdk}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Set GRAFANA_PASSWORD in .env before starting}
+      INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+      INFLUXDB_ORG:               ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
       no_proxy:                   localhost,127.0.0.1,influxdb
       NO_PROXY:                   localhost,127.0.0.1,influxdb
     volumes:
@@ -322,10 +322,10 @@ services:
     environment:
       MQTT_BROKER_HOST: mosquitto
       MQTT_BROKER_PORT: 1883
-      UAV_ID:         ${UAV_ID:-uav-1}
+      UAV_ID:         ${UAV_ID:?Set UAV_ID in .env before starting}
       INFLUXDB_URL:     http://influxdb:8086
-      INFLUXDB_TOKEN:   ${INFLUXDB_TOKEN:-change-me-token}
-      INFLUXDB_ORG:     ${INFLUXDB_ORG:-uav-sdk}
+      INFLUXDB_TOKEN:   ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+      INFLUXDB_ORG:     ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
       INFLUXDB_BUCKET:  telemetry
       LOG_LEVEL:        INFO
     depends_on:
@@ -346,8 +346,8 @@ services:
       LOG_LEVEL:                  INFO
       CORS_ORIGINS:               "*"
       INFLUXDB_URL:               http://influxdb:8086
-      INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:-change-me-token}
-      INFLUXDB_ORG:               ${INFLUXDB_ORG:-uav-sdk}
+      INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+      INFLUXDB_ORG:               ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
       INFLUXDB_BUCKET:            telemetry
       METRICS_MANAGER_HOSTNAME:   uav-sdk-host
       no_proxy:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
