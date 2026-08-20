@@ -470,7 +470,7 @@ install-deps:
 		echo "✓ yq already present"; \
 	else \
 		echo "yq not found — installing via apt..."; \
-		sudo apt update && sudo apt install --fix-broken -y yq && echo "✓ yq installed via apt"; \
+		sudo apt update && sudo apt  --fix-broken install -y && sudo apt install -y yq && echo "✓ yq installed via apt"; \
     fi; \
 	if yq --help 2>&1 | grep -q 'github.com/kislyuk/yq'; then \
 		echo "✓ yq is the kislyuk/yq (Python) implementation"; \
