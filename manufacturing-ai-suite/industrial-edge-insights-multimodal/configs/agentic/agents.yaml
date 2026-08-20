@@ -3,53 +3,69 @@ use_case_id: weld-quality-monitoring
 analysis:
   min_confidence: 0.5
   max_detections_per_run: 1000
-  # NEW: fused event mode — each "detection" is a fusion_result record, not a bbox
-  detection_schema: fusion_result   # "bbox_detection" (APM default) | "fusion_result"
-  multimodal: false
+  detection_schema: fusion_result   # "bbox_detection" (legacy) | "fusion_result" (current)
+  multimodal: true  # Enable fusion processing
 
 policy:
+  # Consolidated class definitions
   defect_classes:
     - Burnthrough
     - Crater Cracks
     - Excessive Convexity
     - Excessive Penetration
     - Lack of Fusion
-    - No Label
-    - No Weld
     - Overlap
     - Porosity
     - Porosity with Excessive Penetration
     - Spatter
     - Undercut
     - Warping
+  
+  # Non-actionable classes (logged but don't trigger tickets)
+  non_actionable_classes:
     - Good Weld
+    - No Weld
+    - No Label
+  
   alert_threshold: 0.75
+  
+  # Fusion strategy: both modalities must agree for high-confidence detection
   critical_classes:
     - Burnthrough
     - Lack of Fusion
     - Crater Cracks
-  # NEW: fusion policy — require both modalities to agree for HIGH priority
-  fusion_mode: OR   # "AND" | "OR" — mirrors IEI-MM FUSION_MODE
+  
+  fusion_policy:
+    mode: OR  # "AND" (both modalities agree) | "OR" (either detects)
+    confidence_boost_when_both_agree: 0.90  # Multiplier when vision + timeseries both positive
+    confidence_penalty_single_modality: 0.75  # Multiplier when only one modality detects
 
 evidence:
   source_measurement: fusion_result
   evidence_schema: fusion_result_v1
+  
+  # Organized by data source
   evidence_fields:
+    # Fusion results (primary decision point)
     - time
     - fused_decision
     - fusion_classification
     - fusion_confidence
     - mode
+    
+    # Time-series modality (renamed: removed duplicate ts_anomaly)
     - timeseries_anomaly
     - timeseries_classification
     - timeseries_confidence
     - timeseries_timestamp
-    - ts_anomaly
+    
+    # Vision modality
     - vision_anomaly
     - vision_classification
     - vision_confidence
-    - vision_rtsp_ts_diff_ms
     - vision_timestamp
+    - vision_rtsp_ts_diff_ms
+  
   evidence_sort: time_desc
   min_fusion_confidence: 0.6
   max_records_per_evidence: 100
@@ -59,12 +75,27 @@ evidence:
   max_images_per_evidence: 0
 
 ticketing:
+  # Priority rules: matched against policy.critical_classes
   priority_rules:
-    high:   ["Burnthrough", "Lack of Fusion", "Crater Cracks", "Excessive Penetration"]
-    medium: ["Porosity", "Porosity with Excessive Penetration", "Undercut", "Spatter", "Warping", "Overlap", "Excessive Convexity"]
-    low:    ["No Weld", "Good Weld", "No Label"]
-  # NEW: auto-create tickets in external system via MCP
+    high:
+      classes: ["Burnthrough", "Lack of Fusion", "Crater Cracks", "Excessive Penetration"]
+      confidence_threshold: 0.80
+    
+    medium:
+      classes: ["Porosity", "Porosity with Excessive Penetration", "Undercut", "Spatter", "Warping", "Overlap", "Excessive Convexity"]
+      confidence_threshold: 0.70
+    
+    low:
+      classes: ["No Weld", "Good Weld", "No Label"]
+      confidence_threshold: 0.60
+  
+  # Ticketing backend configuration
   auto_create: true
-  backend: jira   # "jira" | "servicenow" | "none"
+  backend: jira  # "jira" | "servicenow" | "none"
   notify_slack: true
   slack_channel: "#weld-quality-alerts"
+  
+  # Fusion-aware ticket creation
+  escalate_when:
+    both_modalities_agree: true  # HIGH → CRITICAL if both vision & timeseries detect same defect
+    fusion_confidence_above: 0.85

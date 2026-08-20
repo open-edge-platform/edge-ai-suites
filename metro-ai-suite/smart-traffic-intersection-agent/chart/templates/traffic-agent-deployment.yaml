@@ -48,9 +48,6 @@ spec:
               value: {{ .Values.env.logLevel | quote }}
             - name: USE_API
               value: "true"
-            - name: REFRESH_INTERVAL
-              value: {{ .Values.env.refreshInterval | quote }}
-            # Proxy settings
             - name: http_proxy
               value: {{ .Values.global.httpProxy | quote }}
             - name: HTTP_PROXY

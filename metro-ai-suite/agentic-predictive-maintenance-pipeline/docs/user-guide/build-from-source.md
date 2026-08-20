@@ -17,7 +17,7 @@ images from source code.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b release-2026.2.0
 cd edge-ai-libraries/sample-applications/agentic-predictive-maintenance
 ```
 
@@ -27,7 +27,7 @@ Set the registry URL and tag for the images you want to build. If you leave `REG
 
 ```bash
 export REGISTRY=            # e.g. "docker.io/myusername/" — leave empty for local builds
-export TAG=latest
+export TAG=2026.2.0-rc1
 ```
 
 ### 3. Build the Images

@@ -38,7 +38,7 @@ Note: The underlying application architecture remains the same.
 
 Now let us get started with building a new 'AI Crowd Analytics' application that automatically detects vehicles and identifies whether they form a "crowd" (closely grouped vehicles) or are scattered individually. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams and analyze vehicle clustering patterns in real-time.
 
-We will use the [Smart Parking](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-parking/index.html) application as the existing Metro Vision AI App Recipe-powered application and turn it into an 'AI Crowd Analytics' application.
+We will use the [Smart Parking](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-parking/index.html) application as the existing Metro Vision AI App Recipe-powered application and turn it into an 'AI Crowd Analytics' application.
 
 ### 1. **Create the Crowd Analytics Application Directory**
 
@@ -1097,8 +1097,8 @@ As per the business logic mentioned in previous steps, you will see that when a 
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-- [Metro AI Solutions](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/index.html)
+- [Metro AI Solutions](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html)
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [Euclidean Distance Algorithms](https://en.wikipedia.org/wiki/Euclidean_distance)

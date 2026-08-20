@@ -1,4 +1,4 @@
-export { SmartBuildingAdapter } from "./adapter.js";
+export { SmartCommunityAdapter } from "./adapter.js";
 export { MemoryCursorStore, FileCursorStore } from "./cursor.js";
 export type {
   AlertSink,

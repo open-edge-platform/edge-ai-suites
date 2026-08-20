@@ -8,7 +8,7 @@
 #
 # What this workflow does, in plain terms:
 #
-#   It builds two zip artifacts from the `federal-aerospace/` directory:
+#   It builds two zip artifacts from the `federal-and-aerospace-ai-suite/` directory:
 #     - handheld-multi-modal.zip         (one app)
 #     - deterministic-threat-detection.zip (the other app)
 #
@@ -71,13 +71,13 @@ on:
     branches:
       - main
     paths:
-      - 'federal-aerospace/**'
+      - 'federal-and-aerospace-ai-suite/**'
       - '.github/workflows/fedaero.yaml'
   pull_request:
     branches:
       - main
     paths:
-      - 'federal-aerospace/**'
+      - 'federal-and-aerospace-ai-suite/**'
       - '.github/workflows/fedaero.yaml'
   workflow_dispatch:
     inputs:
@@ -141,12 +141,12 @@ jobs:
         with:
           filters: |
             handheld-multi-modal:
-              - 'federal-aerospace/apps/handheld-multi-modal/**'
-              - 'federal-aerospace/Makefile'
+              - 'federal-and-aerospace-ai-suite/handheld-multi-modal/**'
+              - 'federal-and-aerospace-ai-suite/Makefile'
               - '.github/workflows/fedaero.yaml'
             deterministic-threat-detection:
-              - 'federal-aerospace/apps/deterministic-threat-detection/**'
-              - 'federal-aerospace/Makefile'
+              - 'federal-and-aerospace-ai-suite/deterministic-threat-detection/**'
+              - 'federal-and-aerospace-ai-suite/Makefile'
               - '.github/workflows/fedaero.yaml'
 
   handheld-multi-modal:
@@ -165,15 +165,15 @@ jobs:
           VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
         run: |
           if [[ -n "$VIPPET_REF" ]]; then
-            make -C federal-aerospace handheld-multi-modal VIPPET_REF="$VIPPET_REF"
+            make -C federal-and-aerospace-ai-suite handheld-multi-modal VIPPET_REF="$VIPPET_REF"
           else
             unset VIPPET_REF
-            make -C federal-aerospace handheld-multi-modal
+            make -C federal-and-aerospace-ai-suite handheld-multi-modal
           fi
       - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: handheld-multi-modal
-          path: federal-aerospace/dist/handheld-multi-modal.zip
+          path: federal-and-aerospace-ai-suite/dist/handheld-multi-modal.zip
           if-no-files-found: error
 
   deterministic-threat-detection:
@@ -187,11 +187,11 @@ jobs:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
           persist-credentials: false
-      - run: make -C federal-aerospace deterministic-threat-detection
+      - run: make -C federal-and-aerospace-ai-suite deterministic-threat-detection
       - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
           name: deterministic-threat-detection
-          path: federal-aerospace/dist/deterministic-threat-detection.zip
+          path: federal-and-aerospace-ai-suite/dist/deterministic-threat-detection.zip
           if-no-files-found: error
 
   release:

@@ -204,10 +204,32 @@ def run_vlm_grading_pipeline(
     sections = section_summary.get("sections", [])
     stitch_cfg = section_summary.get("stitch_config", {})
     if sections:
-        units = [
-            (f"section_{s['index']}", s["strips"], s.get("title", ""))
-            for s in sections
-        ]
+        units = []
+        force_split_enabled = bool(stitch_cfg.get("force_split", False))
+        for s in sections:
+            section_index = s.get("index")
+            section_title = s.get("title", "")
+            section_strips = s.get("strips", [])
+            sub_sections = s.get("sub_sections") if isinstance(s.get("sub_sections"), list) else []
+
+            if force_split_enabled and sub_sections:
+                if len(sub_sections) == 1:
+                    sub = sub_sections[0]
+                    units.append((
+                        f"section_{section_index}",
+                        sub.get("strips", section_strips),
+                        section_title,
+                    ))
+                else:
+                    for sub in sub_sections:
+                        sub_index = sub.get("sub_section_index")
+                        units.append((
+                            f"section_{section_index}_{sub_index}",
+                            sub.get("strips", section_strips),
+                            section_title,
+                        ))
+            else:
+                units.append((f"section_{section_index}", section_strips, section_title))
         unit_kind = "section"
     else:
         _log("no sections found; falling back to per-page grading")

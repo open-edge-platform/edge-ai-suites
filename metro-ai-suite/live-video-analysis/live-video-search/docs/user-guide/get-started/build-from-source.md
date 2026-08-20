@@ -7,12 +7,12 @@ The VSS dependency build must include `multimodal-dataprep`, `multimodal-embeddi
 ## Build VSS Images
 
 - VSS build guide:
- [How to Build from Source](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/build-from-source.html)
+ [How to Build from Source](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/build-from-source.html)
 
 ## Build Smart NVR Images
 
 - Smart NVR build guide:
- [How to Build from Source](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started/build-from-source.html)
+ [How to Build from Source](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-nvr/get-started/build-from-source.html)
 
 ## Match Image Tags
 

@@ -61,7 +61,7 @@ agentic-predictive-maintenance/
 ## Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 cd edge-ai-suites/metro-ai-suite/agentic-predictive-maintenance
 ```
 
@@ -82,6 +82,10 @@ The most important variables are:
 | `LLM_DEVICE` | `CPU` | Inference device: `CPU`, `GPU`, or `NPU` |
 | `LLM_WEIGHT_FORMAT` | `int4` | Model quantization format: `fp32`, `fp16`, `int8`, or `int4` |
 | `DL_DEVICE` | `CPU` | Default DL Streamer mode. The UI device list is hardware-detected: `CPU` is always available, `GPU` appears when `/dev/dri/render*` exists, and `NPU` appears when `/dev/accel` exists. |
+
+The agent service and the UI's **Ask & Analyze** feature share these settings and the same
+`apm-llm` container. The UI connects to OVMS internally at
+`http://apm-llm:8000/v3`; no additional model configuration or download is required.
 
 If you are using a gated Hugging Face model, set your API token:
 
@@ -129,7 +133,7 @@ This script:
 
 `setup.sh` mounts a local, OpenVINO™ model server-formatted copy of the LLM into the
 `apm-llm` service — it does not download or convert the model for you. Use the
-[model-download microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)
+[model-download microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/model-download)
 (already defined as `apm-model-download` in `docker/compose.base.yaml`) to fetch and convert the
 model configured via `LLM_MODEL_NAME`/`LLM_DEVICE`/`LLM_WEIGHT_FORMAT`:
 
@@ -194,6 +198,35 @@ Navigate to `http://localhost:8080` in your browser. The dashboard displays:
 - Live phase status ("Detecting…" / "Analyzing…") while a run is in progress.
 - A log of all agent runs with status indicators.
 - Generated maintenance tickets with priority, description, and recommended action.
+- An **Ask & Analyze** page for questions grounded in completed analysis, stored detections, or
+  both.
+
+### Use Ask & Analyze
+
+Open **Ask & Analyze** in the dashboard navigation, select an answer mode, optionally enter a
+completed run ID, and ask a question.
+
+| Mode | Grounding used |
+|------|----------------|
+| **Analysis** | Completed analysis output; a run ID narrows the answer to that run |
+| **Detections** | Current stored detection records and aggregates; a run ID scopes records to that completed run |
+| **Combined** | Both completed analysis and stored detection evidence |
+
+Example questions:
+
+- `Summarize the most important maintenance findings.`
+- `Which detections need immediate attention, and why?`
+- `Compare the evidence and recommended maintenance actions.`
+- `How many Rupture detections were above 0.7 confidence?`
+
+Answers can include the structured detection query and supporting data used to ground the response.
+Treat generated prose as decision support: verify important conclusions against the displayed
+supporting data and run results.
+
+Ask & Analyze is available in `LLM_MODE=llm`. In `LLM_MODE=fallback`, the dashboard, detection
+workflow, and rule-based agent pipeline remain available, but chat cannot generate answers because
+the deployment omits `apm-llm`. The UI intentionally has no hard Compose dependency on that service,
+which allows fallback deployments to start normally.
 
 ## Stop and Clean Up
 

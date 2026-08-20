@@ -1,9 +1,9 @@
 # MCP Tools Guide
 
-This document lists every tool exposed by the `smart-community` (`smartbuilding-video`) MCP
+This document lists every tool exposed by the `smart-community-video` MCP
 server — its purpose, `action` enum, parameters, and return shape.
 
-Every tool id is prefixed `smartbuilding_`. Every tool is keyed on **`monitor_id`** (the camera
+Every tool id is prefixed `smart_community_`. Every tool is keyed on **`monitor_id`** (the camera
 id, e.g., `cam_child`); ids are per-monitor and are never assumed unique across use cases. Times
 are ISO-8601 internally — present `HH:MM` / `HH:MM:SS` to users.
 
@@ -18,7 +18,7 @@ The tools fall into four groups:
 
 ---
 
-## 1. `smartbuilding_alert_query`
+## 1. `smart_community_alert_query`
 
 Query or acknowledge alerts. Switch mode via `action`.
 
@@ -50,14 +50,14 @@ linked task and are returned via a `task_id` JOIN into `video_summary_tasks`.
 
 ---
 
-## 2. `smartbuilding_scene_query`
+## 2. `smart_community_scene_query`
 
 One-shot VLM look at the live frame. Reads the monitor's `latest.jpg` and asks
 **vllm-serving-ipex** (`:41091`, by default) to describe it now.
 
 | Param | Type | Required | Description |
 |---|---|---|---|
-| `monitor_id` | string | ✅ | Frame path is `$SMARTBUILDING_DATA_DIR/segments/<monitor_id>/latest.jpg` |
+| `monitor_id` | string | ✅ | Frame path is `$SMART_COMMUNITY_DATA_DIR/segments/<monitor_id>/latest.jpg` |
 | `prompt` | string | — | Override prompt (default: describe the scene in 1–2 sentences) |
 | `vlm_url` | string | — | VLM base URL (default `config.vlmService.url`) |
 | `model` | string | — | VLM model id (default `config.vlmService.model`) |
@@ -70,7 +70,7 @@ under `segments/<monitor_id>/queries/<date>/`.
 
 ---
 
-## 3. `smartbuilding_generate_report`
+## 3. `smart_community_generate_report`
 
 Build a period report from the DB: query a data source, build an SRT timeline, call
 **multilevel-video-understanding** (`:8192`) in caption-only mode, and write a row to `reports`.
@@ -97,7 +97,7 @@ then decides whether and how to push it (rewrite in the user's voice, lead with 
 
 ---
 
-## 4. `smartbuilding_video_db`
+## 4. `smart_community_video_db`
 
 Low-level read-only SQL escape hatch against the SQLite DB. **`SELECT` only** — any
 `INSERT`/`UPDATE`/`DELETE` is rejected. Use it for anything the typed tools don't cover
@@ -112,13 +112,13 @@ Low-level read-only SQL escape hatch against the SQLite DB. **`SELECT` only** �
 
 ---
 
-## 5. `smartbuilding_monitor_ctl`
+## 5. `smart_community_monitor_ctl`
 
 Single-monitor lifecycle, coordinating all three layers (DB + videostream-analytics +
 video-worker) atomically in one call.
 
 For `register_source`, `use_case` must be a key in `config.yaml`'s `use_case_dict`; the tool runs
-`smartbuilding_use_case_validate` as a pre-check and **rejects** registration if it fails (no DB
+`smart_community_use_case_validate` as a pre-check and **rejects** registration if it fails (no DB
 write, no analytics call, no worker start). `video_summary_task` is derived from the use case, not
 passed here.
 
@@ -146,7 +146,7 @@ passed here.
 
 ---
 
-## 6. `smartbuilding_monitors_compose`
+## 6. `smart_community_monitors_compose`
 
 Docker-compose-style batch management of the monitors declared in a `monitors.yaml` file. The
 tool **reads the file from disk every time** (independent of the `config.monitors` loaded at
@@ -173,7 +173,7 @@ server start), so it can act on a yaml at any path.
 
 ---
 
-## 7. `smartbuilding_use_case_validate`
+## 7. `smart_community_use_case_validate`
 
 Validate a use case end-to-end. Also runs inline as the `monitor_ctl register_source` pre-check;
 callable standalone for a dry run.
@@ -195,14 +195,14 @@ to help locate the fix.
 
 ---
 
-## 8. `smartbuilding_use_case_register`
+## 8. `smart_community_use_case_register`
 
 Manage a use case's lifecycle at runtime, **without restarting the server**.
 
 - `action: generate_task` — step 1 of the recommended two-step flow: run the schema↔prompt
   consistency check, `POST /v1/tasks` to multilevel-video-understanding (auto-`PATCH` on 409),
-  and on success write `$SMARTBUILDING_DATA_DIR/use-cases/<use_case>/prompt.md` to disk
-  (`~/.mcp-smartbuilding` is the default data directory). On the custom rule path,
+  and on success write `$SMART_COMMUNITY_DATA_DIR/use-cases/<use_case>/prompt.md` to disk
+  (`~/.mcp-smart-community` is the default data directory). On the custom rule path,
   pass `evaluate_rules_path`; the tool reads that file for the consistency check, stages it to
   the same use-case directory as `evaluate_rules.py`, and smoke-tests the staged file. Does not touch the DB
   schema, `use_case_dict`, or `config.yaml`. `prompt_text` is **required** here.
@@ -232,7 +232,7 @@ Manage a use case's lifecycle at runtime, **without restarting the server**.
   successful register/unregister to report the system's current use cases.
 
 Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with the
-`smartbuilding-use-case-manager` skill, then pass it via `prompt_text` (or let register auto-read
+`smart-community-use-case-manager` skill, then pass it via `prompt_text` (or let register auto-read
 `<data_dir>/use-cases/<use_case>/prompt.md`).
 
 | Param | Type | Required | Description |
@@ -251,7 +251,7 @@ Prompt authoring is **out of scope** here — draft the `## LOCAL_PROMPT` with t
 
 ---
 
-## 9. `smartbuilding_plan_ctl`
+## 9. `smart_community_plan_ctl`
 
 Per-monitor plans: arbitrary JSON records keyed by name. The rule engine can read today's plan
 before deciding whether to fire. Plan shape is user-defined; the tool doesn't interpret it.
@@ -270,7 +270,7 @@ first.
 
 ---
 
-## 10. `smartbuilding_rule_eval`
+## 10. `smart_community_rule_eval`
 
 Manually re-run the rule evaluator against a completed task (defaults to the monitor's latest
 completed task). Rebuilds the same `RuleContext` the task-poller uses. Dry by default.
@@ -306,7 +306,7 @@ completed task). Rebuilds the same `RuleContext` the task-poller uses. Dry by de
 
 ## Data model (SQLite)
 
-`smartbuilding_video_db` reads these tables (SELECT only):
+`smart_community_video_db` reads these tables (SELECT only):
 
 - **monitors** — registered cameras: `id` (= monitor_id), `name`, `source_url`, `use_case`,
   `video_summary_task`, `status`.

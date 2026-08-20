@@ -45,7 +45,7 @@ Refer to release notes for details on the latest version to use.
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-<version-no>.tgz
+tar -xvf smart-traffic-intersection-agent-2026.2.0-rc1-helm.tgz
 ```
 
 Navigate to the extracted directory:
@@ -67,10 +67,8 @@ Edit the `values.yaml` file to set the necessary environment variables. Refer to
 Clone the repository containing the Helm chart:
 
 ```bash
-# Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
-# Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
+# Clone the release branch
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 ```
 
 #### Step 2: Change to the Chart Directory
@@ -111,7 +109,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [Scenescape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
-Follow the [Smart Intersection Helm Deployment Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/get-started/deploy-with-helm.html) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
+Follow the [Smart Intersection Helm Deployment Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-intersection/get-started/deploy-with-helm.html) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
 ### Step 6: Configure GPU Support (Optional)
 
@@ -265,7 +263,7 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
-| `image.tag` | Image tag | `latest` |
+| `image.tag` | Image tag | `2026.2.0-rc1` |
 | `service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `service.backendPort` | Backend API port | `8081` |
 | `service.uiPort` | Gradio UI port | `7860` |
@@ -273,7 +271,6 @@ helm uninstall stia -n <your-namespace>
 | `intersection.latitude` | Intersection latitude | `37.51358` |
 | `intersection.longitude` | Intersection longitude | `-122.25591` |
 | `env.logLevel` | Application log level | `INFO` |
-| `env.refreshInterval` | Dashboard refresh interval (seconds) | `15` |
 | `env.weatherMock` | Use mock weather data (`true`/`false`) | `false` |
 | `env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `1800` |
 | `mqtt.host` | MQTT broker hostname. If set, takes precedence over the constructed FQDN. | `""` |

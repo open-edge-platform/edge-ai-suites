@@ -120,9 +120,9 @@ data:
       [ -z "$url" ] && continue
       download_file "$url" "$out" "$checksum" || failed=$((failed+1))
     done <<'EOF'
-    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/main/metro-ai-suite/smart-nvr/resources/videos/backyard.mp4 /videos/backyard.mp4
-    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/main/metro-ai-suite/smart-nvr/resources/videos/garage.mp4 /videos/garage.mp4
-    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/main/metro-ai-suite/smart-nvr/resources/videos/livingroom.mp4 /videos/livingroom.mp4
+    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/release-2026.2.0/metro-ai-suite/smart-nvr/resources/videos/backyard.mp4 /videos/backyard.mp4
+    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/release-2026.2.0/metro-ai-suite/smart-nvr/resources/videos/garage.mp4 /videos/garage.mp4
+    https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/release-2026.2.0/metro-ai-suite/smart-nvr/resources/videos/livingroom.mp4 /videos/livingroom.mp4
     EOF
 
     if [ "$failed" -gt 0 ]; then

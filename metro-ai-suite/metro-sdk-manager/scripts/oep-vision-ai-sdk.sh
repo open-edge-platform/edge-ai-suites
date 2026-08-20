@@ -18,19 +18,19 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.1.0|edge-ai-libraries"
-  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.1.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.2.0|edge-ai-libraries"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.2.0|edge-ai-suites"
   "https://github.com/open-edge-platform/scenescape|main|scenescape"
 )
 
 images=(
-  "openvino/model_server:2026.2"
-  "openvino/ubuntu24_dev:2026.2.1"
-  "intel/dlstreamer:2026.1.0-ubuntu24"
-  "intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24"
-  "intel/scenescape-manager:2026.1.0"
-  "intel/scenescape-controller:2026.1.0"
-  "intel/scenescape-autocalibration:2026.1.0"
+  "openvino/model_server:2026.3"
+  "openvino/ubuntu24_dev:2026.3.0"
+  "intel/dlstreamer:2026.2.0-ubuntu24-rc1"
+  "intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1"
+  "intel/scenescape-manager:2026.2.0-rc1"
+  "intel/scenescape-controller:2026.2.0-rc1"
+  "intel/scenescape-autocalibration:2026.2.0-rc1"
 )
 
 NAME="OEP Vision AI SDK"

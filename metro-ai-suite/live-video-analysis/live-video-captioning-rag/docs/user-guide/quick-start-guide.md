@@ -7,7 +7,7 @@ Live Video Captioning RAG works with Live Video Captioning to generate live capt
 > **Note:**
 >
 > 1. Setup and first run time depends on network speed because Docker images and models are downloaded.
-> 2. If you do not have a camera stream, configure a simulated RTSP stream by following [these instructions](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/simulated-rtsp-stream-guide.html).
+> 2. If you do not have a camera stream, configure a simulated RTSP stream by following [these instructions](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/live-video-captioning/get-started/simulated-rtsp-stream-guide.html).
 
 ---
 
@@ -39,7 +39,7 @@ sudo usermod -aG docker $USER
 Open a terminal and run:
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning-rag

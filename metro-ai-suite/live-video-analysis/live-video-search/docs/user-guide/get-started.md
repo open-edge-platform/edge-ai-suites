@@ -37,10 +37,10 @@ Before running the application, you need to set several environment variables:
 
     ```bash
     export REGISTRY_URL=intel
-    export TAG=latest
+    export TAG=2026.2.0-rc1
     ```
 
-    In most cases, `TAG=latest` works out of the box. Set a specific tag only when you need to pin to a particular release/version.
+    Use `TAG=2026.2.0-rc1` for this release workflow.
 
     **Override tags per stack (recommended for mixed release cycles):**
 
@@ -51,9 +51,9 @@ Before running the application, you need to set several environment variables:
     Use stack-specific tag overrides when you need different image versions for each stack:
 
      ```bash
-     export TAG=latest
-     export VSS_STACK_TAG=latest
-     export SMART_NVR_STACK_TAG=latest
+     export TAG=2026.2.0-rc1
+     export VSS_STACK_TAG=2026.2.0-rc1
+     export SMART_NVR_STACK_TAG=2026.2.0-rc1
      ```
 
     Why this is needed: a single shared `TAG` forces both stacks to use the same version, which does not match independent VSS and Smart NVR release cycles.
@@ -335,12 +335,12 @@ For RTSP test mode, start again with:
 
 ### Accuracy of search results
 
-The accuracy of search results vary based on multiple factors as listed in the [VSS troubleshooting guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/troubleshooting.html#accuracy-of-search-results). The same considerations hold true for Live Video Search, as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised not to use the RTSP test mode to check the accuracy of the search results; live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search is used exclusively to note the performance on a given hardware platform.
+The accuracy of search results vary based on multiple factors as listed in the [VSS troubleshooting guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/troubleshooting.html#accuracy-of-search-results). The same considerations hold true for Live Video Search, as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised not to use the RTSP test mode to check the accuracy of the search results; live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search is used exclusively to note the performance on a given hardware platform.
 
 ## References
 
-- [Smart NVR docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started.html)
-- [VSS API](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/api-reference.html)
+- [Smart NVR docs](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-nvr/get-started.html)
+- [VSS API](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/api-reference.html)
 
 <!--hide_directive
 :::{toctree}

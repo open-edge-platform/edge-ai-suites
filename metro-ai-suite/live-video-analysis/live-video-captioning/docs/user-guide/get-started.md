@@ -20,10 +20,10 @@ This section shows how to:
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning
@@ -51,7 +51,7 @@ This script sets these important values:
 |----------|---------|--------|
 | `HOST_IP` | *(auto-detected)* | Host address reachable by the browser for WebRTC signaling. |
 | `REGISTRY` | `intel/` | Image registry prefix. |
-| `TAG` | `latest` | Docker image tag. |
+| `TAG` | `2026.2.0-rc1` | Docker image tag. |
 | `DASHBOARD_PORT` | `4173` | Port for the web dashboard. |
 | `EVAM_HOST_PORT` | `8040` | Port for the pipeline management REST API. |
 | `WHIP_SERVER_PORT` | `8889` | Port for WebRTC/WHIP signaling (mediamtx). |

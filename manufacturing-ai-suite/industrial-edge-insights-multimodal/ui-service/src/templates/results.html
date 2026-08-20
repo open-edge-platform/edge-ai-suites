@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Results — {{ run_id[:8] }} — {{ use_case_id }}</title>
+  <title>Results — {{ run_id[:8] }}</title>
   {% set root = request.scope.get("root_path", "") %}
   <link rel="stylesheet" href="{{ root }}/static/css/style.css">
   {% if result.get("status") == "running" %}
@@ -14,7 +14,6 @@
     <div class="header-inner">
       <span class="logo">&#9632; Intel</span>
       <h1>Agentic Weld Quality Analysis</h1>
-      <span class="use-case-badge">{{ use_case_id }}</span>
     </div>
   </header>
   <nav>
@@ -53,23 +52,6 @@
           </tbody>
         </table>
       {% else %}
-
-        {% if result.get("ticket") %}
-        <div class="result-section">
-          <h3>&#127882; Maintenance Ticket</h3>
-          {% set t = result.ticket %}
-          {% if t.get("mode") == "fallback" %}
-          <table>
-            <tr><th>Ticket ID</th><td><code>{{ t.ticket_id }}</code></td></tr>
-            <tr><th>Priority</th><td><span class="priority-badge priority-{{ t.priority|lower }}">{{ t.priority }}</span></td></tr>
-            <tr><th>Summary</th><td>{{ t.summary }}</td></tr>
-            <tr><th>Recommendation</th><td>{{ t.recommended_action }}</td></tr>
-          </table>
-          {% else %}
-          <pre class="llm-output">{{ t.ticket }}</pre>
-          {% endif %}
-        </div>
-        {% endif %}
 
         {% if result.get("policy") %}
         <div class="result-section">
@@ -112,6 +94,23 @@
           <p>Records: {{ e.record_count }} | Labels: {{ e.unique_labels|join(", ") }}</p>
           {% else %}
           <pre class="llm-output">{{ e.evidence }}</pre>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if result.get("ticket") %}
+        <div class="result-section">
+          <h3>&#127882; Maintenance Ticket</h3>
+          {% set t = result.ticket %}
+          {% if t.get("mode") == "fallback" %}
+          <table>
+            <tr><th>Ticket ID</th><td><code>{{ t.ticket_id }}</code></td></tr>
+            <tr><th>Priority</th><td><span class="priority-badge priority-{{ t.priority|lower }}">{{ t.priority }}</span></td></tr>
+            <tr><th>Summary</th><td>{{ t.summary }}</td></tr>
+            <tr><th>Recommendation</th><td>{{ t.recommended_action }}</td></tr>
+          </table>
+          {% else %}
+          <pre class="llm-output">{{ t.ticket }}</pre>
           {% endif %}
         </div>
         {% endif %}

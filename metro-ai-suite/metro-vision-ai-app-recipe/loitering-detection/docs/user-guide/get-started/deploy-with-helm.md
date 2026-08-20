@@ -90,7 +90,7 @@ Before you can deploy with Helm, you must clone the repository and download the 
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -131,6 +131,7 @@ cd ..
     HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
+    no_proxy: # example: no_proxy: localhost,127.0.0.1,.local,.cluster.local
     webrtcturnserver:
         username: # example: username: myuser
         password: # example: password: mypassword

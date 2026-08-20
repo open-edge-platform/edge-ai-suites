@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [System Requirements](../../../docs/user-guide/pallet-defect-detection/get-started/system-requirements.md)
+- [System Requirements](../../../docs/user-guide/get-started/vision-system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04 and/or Ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -215,4 +215,4 @@
 
 ## Troubleshooting
 
-- [Troubleshooting](../../../../industrial-edge-insights-vision/docs/user-guide/pallet-defect-detection/troubleshooting.md)
+- [Troubleshooting](../../../docs/user-guide/troubleshooting.md)

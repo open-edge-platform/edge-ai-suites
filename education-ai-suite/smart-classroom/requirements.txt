@@ -47,7 +47,6 @@ speechbrain>=1.0.4
 pyannote.audio==4.0.4
 
 # Vector search
-faiss-cpu==1.11.0
 chromadb==1.5.5
 
 # Content search: RAG / multimodal embedding

@@ -10,7 +10,7 @@ Two execution modes share this single task name:
        for the rule engine. Do not switch to JSON — parser is regex-based
        on these exact labels.
 
-  2. **Daily-report aggregation** (smartbuilding-video plugin daily_report tool
+  2. **Daily-report aggregation** (smart-community-video plugin daily_report tool
      → /v1/summary in caption-only mode with SRT containing the day's
      danger alerts).
      - LOCAL is skipped (caption-only feeds pre-built SRT).

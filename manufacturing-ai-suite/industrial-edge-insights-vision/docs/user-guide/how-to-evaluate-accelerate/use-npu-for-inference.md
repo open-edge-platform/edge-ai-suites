@@ -13,7 +13,7 @@ Before running inference on an NPU, ensure that:
 - The host system includes a supported NPU device
 - The required NPU drivers are installed and properly configured
 
-For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
+For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
 
  For containerized applications, the following additional changes are required.
 
@@ -44,11 +44,11 @@ GStreamer has a variety of hardware specific encoders and decoders elements such
 
 Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® NPUs.
 
-Read DL Streamer [documentation on GPU device selection](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
+Read DL Streamer [documentation on GPU device selection](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
 
 ### NPU specific element properties
 
-DL Streamer inference elements also provides property such as `device=NPU` and `pre-process-backend=va` which should be used in pipelines with NPU memory. It performs mapping to the system memory and uses VA pre-processor. Read DL Streamer [documentation on model preparation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
+DL Streamer inference elements also provides property such as `device=NPU` and `pre-process-backend=va` which should be used in pipelines with NPU memory. It performs mapping to the system memory and uses VA pre-processor. Read DL Streamer [documentation on model preparation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
 
 ## Tutorial on how to use NPU specific pipelines
 

@@ -24,7 +24,7 @@ an introduction.
 
   ```bash
   export REGISTRY="intel"
-  export TAG="latest"
+  export TAG="2026.2.0-rc1"
   ```
 
 ## Quick Start with Setup Script
@@ -36,11 +36,11 @@ Traffic Intersection Agent.
 ### 1. Clone the Suite
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+If you want to clone a specific release branch, replace `release-2026.2.0` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/smart-traffic-intersection-agent/
@@ -276,12 +276,21 @@ export METRICS_MANAGER_PRIVILEGED=True       # Required for GPU/NPU host telemet
 The **System Telemetry** panel in the UI is backed by Metrics Manager. If you override the
 Metrics Manager endpoint, keep `METRICS_MANAGER_URL` and `METRICS_STREAM_URL` reachable from
 the Traffic Intersection Agent container. Docker Compose uses the published
-`intel/metrics-manager:2026.2.0-20260715-weekly` image by default; set `METRICS_MANAGER_IMAGE` and
+`intel/metrics-manager:2026.2.0-rc1` image by default; set `METRICS_MANAGER_IMAGE` and
 `METRICS_MANAGER_TAG` only when deploying a custom Metrics Manager build.
 
 ### Customizing the video used by sample application
 
-The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
+The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
+
+### Enabling NPU for Object Detection
+
+Object detection for the Smart Traffic Intersection Agent is performed by the Smart
+Intersection application's DL Streamer Pipeline Server, which can be configured to run on
+NPU. The relevant configuration lives in the vendored Smart Intersection sources at
+`deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/`. Refer to
+[Smart Intersection - How to Use NPU for Inference](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/smart-intersection/how-to-use-npu-for-inference.html)
+for prerequisites and configuration steps.
 
 ## Accessing the Services
 

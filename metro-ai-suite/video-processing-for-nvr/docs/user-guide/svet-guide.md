@@ -27,7 +27,7 @@ workloads from configuration files. For the workload model and the high-level ar
 the input video file path, codec, a display channel's position on the video layer, the video
 layer's resolution, and the composition fps. The `svet2/sample_config` folder contains sample
 configuration files. For descriptions of each configuration file and the configuration options,
-refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
+refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
 ## Prerequisites
 
@@ -178,7 +178,7 @@ Run the command below:
 ```
 
 It will start to decode the 1080p.h264 and show the video on the 1st display.
-The following is the content of the `1dec1disp.txt` configuration file. Each line starts with a subcommand. For all the supported sub-commands and their options, refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
+The following is the content of the `1dec1disp.txt` configuration file. Each line starts with a subcommand. For all the supported sub-commands and their options, refer to [svet2/sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
 ```
 newvl -I 0 -W 1920 -H 1080 –refresh=60 –fps=30 --format=nv12 --dispid=0
@@ -266,4 +266,4 @@ ctrl --cmd=stop  --time=0
 
 ## Run the svet_app Sample Application in Docker
 
-Build Docker image and Run in Docker container, for information see the [Docker README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docker/README.md).
+Build Docker image and Run in Docker container, for information see the [Docker README](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/docker/README.md).

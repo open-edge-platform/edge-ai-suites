@@ -1,0 +1,17 @@
+name: unauthorized-access-detection
+description: >-
+  Get real-time alerts when someone enters a restricted, perimeter, or
+  after-hours zone they shouldn't.
+tags:
+  - unauthorized-access
+  - intrusion-detection
+  - zone-alerting
+  - computer-vision
+  - metro-ai-apps-builder
+  - intel
+prompt: |
+  I want to be alerted in real time when someone enters a restricted or after-hours area they shouldn't, so my team can respond quickly.
+
+  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
+
+  npx skills add open-edge-platform/skills --skill metro-ai-apps-builder

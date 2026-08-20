@@ -21,7 +21,7 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 - The `edge-ai-suites` repository cloned (sparse or full):
 
   ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set metro-ai-suite manufacturing-ai-suite
   ```
@@ -69,7 +69,7 @@ VMS Adapter Plugin (VAP)                                                │
 
 Clone the `edge-ai-suites` repository as instructed in the setup document, and install Loitering
 Detection according to the Loitering Detection
-[Get Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
+[Get Started Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/loitering-detection/get-started.html#set-up-and-first-use).
 
 Do not bring up the application yet.
 
@@ -374,9 +374,20 @@ to manually edit `vms_shim/nxwitness/nx_integration.json`.
 
 ### 4.1 Build and Start VAP
 
+Go to app directory
 ```bash
 cd metro-ai-suite/vms-adapter-plugin
-docker compose up -d --build
+```
+
+#### 4.1.1 Build from source (Optional):
+```bash
+docker compose build
+```
+> **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+
+#### 4.1.2 Start VAP
+```bash
+docker compose up -d
 ```
 
 Check that all VAP services are healthy:
@@ -454,12 +465,13 @@ with `{"isEnabled": true}`), but you can also enable it manually in advance.
 
 ### 5.1 Enable via the Nx Witness Desktop Client
 
-1. In the Nx Witness desktop client, right-click the camera in the resource tree.
-2. Select **Camera Settings**.
-3. Go to the **Integrations** tab.
-4. Find **VAP Analytics Integration** in the list.
-5. Toggle the switch to **Enable**.
-6. Click **Apply** or **OK**.
+1. In the Nx Witness desktop client, close any open camera visualizer window.
+2. Navigate to the left panel, and under the server, find the camera you wish to run analytics on and right-click to open context menu.
+3. Select **Camera Settings**.
+4. Go to the **Integrations** tab.
+5. Find **VAP Analytics Integration** in the list.
+6. Toggle the switch to **Enable**.
+7. Click **Apply** or **OK**.
 
 Repeat for each camera you plan to use with `dls_vision`.
 

@@ -1,4 +1,7 @@
 #!/bin/bash
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 # RAG知识库查询脚本
 # 用法: ./query_rag.sh "your question here" [top_n] [max_tokens]
 HOST_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for (i = 1; i <= NF; ++i) if ($i == "src") {print $(i + 1); exit}}')

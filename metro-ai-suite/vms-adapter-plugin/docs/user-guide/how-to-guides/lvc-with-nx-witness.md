@@ -16,7 +16,7 @@ At the end of this tutorial, you will have:
 - The `edge-ai-suites` repository cloned:
 
   ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set metro-ai-suite
   ```
@@ -70,7 +70,7 @@ the dynamic analytics form.
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started.html) to download models and configure its `.env`, then start the stack:
+Follow the [LVC Get Started guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/live-video-captioning/get-started.html) to download models and configure its `.env`, then start the stack:
 
 ```bash
 docker compose up -d
@@ -247,15 +247,24 @@ In the Nx Witness desktop client:
 
 ![Accept API Integrations registration requests setting in Nx Witness](../_assets/nx-enable_api_integration.png "accept api integrations registration requests in nx witness")
 
-## Part 4 — Build and Start VAP
+## Part 4 — Start VAP and verify LVC schema
 
-### 4.1 Start the Stack
+### 4.1 Build and Start VAP
 
-Navigate to the VAP directory and start all services:
-
+Go to app directory
 ```bash
 cd metro-ai-suite/vms-adapter-plugin
-docker compose up -d --build
+```
+
+#### 4.1.1 Build from source (Optional):
+```bash
+docker compose build
+```
+> **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+
+#### 4.1.2 Start VAP
+```bash
+docker compose up -d
 ```
 
 Check that all VAP services are healthy:
@@ -299,10 +308,11 @@ settings changes automatically.
 
 #### 5.1.1 Open Camera Settings
 
-1. In the Nx Witness desktop client, right-click the camera in the resource tree.
-2. Select **Camera Settings**.
-3. Go to the **Integrations** tab.
-4. Click **VAP Analytics Integration** to expand the per-camera settings.
+1. In the Nx Witness desktop client, close any open camera visualizer window.
+2. Navigate to the left panel, and under the server, find the camera you wish to run analytics on and right-click to open context menu.
+3. Select **Camera Settings**.
+4. Go to the **Integrations** tab.
+5. Click **VAP Analytics Integration** to expand the per-camera settings.
 
 You will see a **Live Video Captioning** group with the following fields:
 

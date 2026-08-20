@@ -7,13 +7,13 @@
         <div class="timeline-header-left flex-left">
           <div class="timeline-title-row flex-left">
             <div class="section-title">
-              {{ $t("smartBuilding.todayActivity") }}
+              {{ $t("smartCommunity.todayActivity") }}
             </div>
           </div>
         </div>
         <div class="timeline-header-right flex-left">
           <div class="timeline-title-tip">
-            {{ $t("smartBuilding.timelineZoomTip") }}
+            {{ $t("smartCommunity.timelineZoomTip") }}
           </div>
         </div>
       </div>
@@ -47,18 +47,18 @@
                   {{ tooltipRecordForEntry(entry).title }}
                 </div>
                 <div class="timeline-tooltip-row">
-                  <span>{{ $t("smartBuilding.tooltipStatus") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipStatus") }}</span>
                   <span>{{ tooltipRecordForEntry(entry).statusLabel }}</span>
                 </div>
                 <div class="timeline-tooltip-row">
-                  <span>{{ $t("smartBuilding.tooltipTime") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipTime") }}</span>
                   <span>{{ tooltipRecordForEntry(entry).timestampLabel }}</span>
                 </div>
                 <div
                   v-if="tooltipRecordForEntry(entry).recordKind === 'motion'"
                   class="timeline-tooltip-row"
                 >
-                  <span>{{ $t("smartBuilding.tooltipDuration") }}</span>
+                  <span>{{ $t("smartCommunity.tooltipDuration") }}</span>
                   <span>{{
                     tooltipRecordForEntry(entry).durationSecondsLabel
                   }}</span>
@@ -108,14 +108,14 @@
       <div class="timeline-legend">
         <div class="legend-item flex-left">
           <div class="legend-dot mot"></div>
-          <span>{{ $t("smartBuilding.timelineMotionEvent") }}</span>
+          <span>{{ $t("smartCommunity.timelineMotionEvent") }}</span>
         </div>
       </div>
     </div>
 
     <div class="history-section section-card">
       <div class="section-head">
-        <div class="section-title">{{ $t("smartBuilding.recordTimeline") }}</div>
+        <div class="section-title">{{ $t("smartCommunity.recordTimeline") }}</div>
       </div>
       <div ref="historyListRef" class="history-list">
         <div
@@ -171,8 +171,8 @@
               >
                 {{
                   isDescriptionExpanded(record.id)
-                    ? $t("smartBuilding.collapseDescription")
-                    : $t("smartBuilding.expandDescription")
+                    ? $t("smartCommunity.collapseDescription")
+                    : $t("smartCommunity.expandDescription")
                 }}
               </button>
             </div>
@@ -204,15 +204,15 @@
                 <span class="history-preview-placeholder-badge">
                   {{
                     record.recordKind === "motion"
-                      ? $t("smartBuilding.timelineMotionEvent")
-                      : $t("smartBuilding.timelineStaticEvent")
+                      ? $t("smartCommunity.timelineMotionEvent")
+                      : $t("smartCommunity.timelineStaticEvent")
                   }}
                 </span>
                 <span class="history-preview-placeholder-title">
-                  {{ $t("smartBuilding.loadPreview") }}
+                  {{ $t("smartCommunity.loadPreview") }}
                 </span>
                 <span class="history-preview-placeholder-subtitle">
-                  {{ $t("smartBuilding.autoLoadPreviewHint") }}
+                  {{ $t("smartCommunity.autoLoadPreviewHint") }}
                 </span>
                 <span class="history-preview-placeholder-time">
                   {{ record.time }}
@@ -226,7 +226,7 @@
   </template>
 
   <div v-else class="history-empty-card vertical-center">
-    <a-empty :description="$t('smartBuilding.noActivityRecords')" />
+    <a-empty :description="$t('smartCommunity.noActivityRecords')" />
   </div>
 </template>
 
@@ -240,7 +240,7 @@ import { useI18n } from "vue-i18n";
 import { videoPlay as VideoPlayer } from "vue3-video-play/dist/index.mjs";
 import CustomRenderer from "@/utils/customRenderer";
 import type { ActivityRecord, CameraTaskRecord } from "../type";
-import { getSmartBuildingSourceMeta } from "../deviceMeta";
+import { getSmartCommunitySourceMeta } from "../deviceMeta";
 
 interface TimelineEntry {
   id: string;
@@ -307,13 +307,13 @@ const buildRecordStatus = (status: string) => {
     return "";
   }
 
-  return status === "completed" ? t("smartBuilding.recordStatusCompleted") : status;
+  return status === "completed" ? t("smartCommunity.recordStatusCompleted") : status;
 };
 
 const buildRecordTitle = (eventType: unknown) => {
   return eventType === "motion"
-    ? t("smartBuilding.recordTypeUsage")
-    : t("smartBuilding.recordTypeMonitoring");
+    ? t("smartCommunity.recordTypeUsage")
+    : t("smartCommunity.recordTypeMonitoring");
 };
 
 const buildDurationLabel = (duration: number) => {
@@ -324,7 +324,7 @@ const buildDurationLabel = (duration: number) => {
   const seconds =
     duration >= 10 ? Math.round(duration) : Number(duration.toFixed(1));
 
-  return `${t("smartBuilding.recordDurationPrefix")} ${seconds} ${t("smartBuilding.recordDurationSeconds")}`;
+  return `${t("smartCommunity.recordDurationPrefix")} ${seconds} ${t("smartCommunity.recordDurationSeconds")}`;
 };
 
 const buildDurationSecondsLabel = (duration: number) => {
@@ -343,7 +343,7 @@ const mapTaskToRecord = (task: CameraTaskRecord): ActivityRecord => {
     minutes: timestamp.hour() * 60 + timestamp.minute(),
     sortValue: timestamp.valueOf(),
     title: buildRecordTitle(task.event_type),
-    camera: getSmartBuildingSourceMeta(task.source_id, t).cameraLabel,
+    camera: getSmartCommunitySourceMeta(task.source_id, t).cameraLabel,
     description: task.summary_text,
     videoSrc,
     poster: "",

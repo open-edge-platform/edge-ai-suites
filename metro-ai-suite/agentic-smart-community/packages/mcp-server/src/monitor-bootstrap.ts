@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
-import { monitorCtl } from "@smartbuilding-video/tools";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import { monitorCtl } from "@smart-community-video/tools";
 import { loadMonitorsConfig, type MonitorConfig, type ServerConfig } from "./config.js";
 import { logger, monitorLogger } from "./logger.js";
 import type { WorkerService } from "./video-worker/index.js";
@@ -24,7 +24,7 @@ export interface ApplyResult {
  * <monitorsLogsDir>/<monitor_id>/<YYYY-MM-DD>.log via monitorLogger.
  */
 export async function applyMonitorConfig(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   config: ServerConfig,
   workerService: WorkerService,
   monitors: Record<string, MonitorConfig>,
@@ -97,10 +97,10 @@ export async function applyMonitorConfig(
  * full per-monitor traces go to logs/monitors/<monitor_id>/<date>.log.
  *
  * videostream-analytics (:8999) unreachable → warn for each affected monitor,
- * server continues running. User can run smartbuilding_monitors_compose up later.
+ * server continues running. User can run smart_community_monitors_compose up later.
  */
 export async function autoRegisterMonitors(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   config: ServerConfig,
   workerService: WorkerService,
 ): Promise<void> {
@@ -121,7 +121,7 @@ export async function autoRegisterMonitors(
 }
 
 async function isAlreadyRunning(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsUrl: string,
   workerService: WorkerService,
   monitorId: string,
@@ -156,7 +156,7 @@ const reRegisterInFlight = new Set<string>();
  * is still coming up.
  */
 export async function reregisterUnknownMonitor(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   config: ServerConfig,
   workerService: WorkerService,
   monitorId: string,

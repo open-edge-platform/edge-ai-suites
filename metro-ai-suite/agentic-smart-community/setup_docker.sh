@@ -12,7 +12,7 @@ set -e
 #   2. multilevel-video-understanding (:8192) — video summary microservice
 #   3. videostream-analytics      (host net) — RTSP capture + NPU YOLO prefilter,
 #                                              POSTs events to the MCP webhook :3101
-#   4. smartbuilding-mcp-server   (host net) — MCP server (:3100 MCP+UI, :3101 events)
+#   4. smart-community-mcp-server   (host net) — MCP server (:3100 MCP+UI, :3101 events)
 # videostream-analytics is pulled in via `include:` in docker/compose.yaml, so a
 # plain `docker compose` here manages all four as one project.
 
@@ -23,7 +23,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DOCKER_DIR="${SCRIPT_DIR}/docker"
 
-# Load deployment env (group ids, model, ports, SMARTBUILDING_DATA_DIR, MODEL_DIR,
+# Load deployment env (group ids, model, ports, SMART_COMMUNITY_DATA_DIR, MODEL_DIR,
 # WEBHOOK_URL, ...). Sourcing here makes the script self-contained.
 if [ -f "${DOCKER_DIR}/set_env.sh" ]; then
   # shellcheck disable=SC1091
@@ -73,8 +73,20 @@ EDGE_AI_LIBRARIES_REF="main"
 MULTILEVEL_SUBPATH="microservices/multilevel-video-understanding"
 
 ensure_edge_ai_libraries() {
-  if [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
-    echo "edge-ai-libraries present: ${EDGE_AI_LIBRARIES_DIR}"
+  local refresh="${1:-true}"
+
+  if git -C "${EDGE_AI_LIBRARIES_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      && [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
+    if [ "$refresh" = true ]; then
+      echo "Updating edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) in ${EDGE_AI_LIBRARIES_DIR}"
+      GIT_LFS_SKIP_SMUDGE=1 git -C "${EDGE_AI_LIBRARIES_DIR}" fetch \
+        --depth 1 origin "${EDGE_AI_LIBRARIES_REF}"
+      git -C "${EDGE_AI_LIBRARIES_DIR}" reset --hard FETCH_HEAD
+      git -C "${EDGE_AI_LIBRARIES_DIR}" sparse-checkout set "${MULTILEVEL_SUBPATH}"
+      echo -e "${GREEN}edge-ai-libraries updated.${NC}"
+    else
+      echo "Using existing edge-ai-libraries for teardown: ${EDGE_AI_LIBRARIES_DIR}"
+    fi
     return 0
   fi
   echo "Fetching edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) from ${EDGE_AI_LIBRARIES_REPO}"
@@ -105,10 +117,10 @@ Options:
                          start multilevel-video-understanding + videostream-analytics only
   --fetch                Only clone/refresh edge-ai-libraries (multilevel build context), no build/start
   --build                Build the local images (multilevel + videostream-analytics
-                         + smartbuilding-mcp-server), no start
+                         + smart-community-mcp-server), no start
   --build-prod           Build, then start all four services
   --down                 Stop and remove all containers, networks, volumes
-  --light-down           Stop multilevel + videostream-analytics + smartbuilding-mcp-server,
+  --light-down           Stop multilevel + videostream-analytics + smart-community-mcp-server,
                          but leave vllm-ipex-serving running (avoids its 3-20 min recompile)
   -h, --help             Show this help
 
@@ -145,7 +157,7 @@ export REGISTRY="${REGISTRY_URL}${PROJECT_NAME}"
 
 MULTILEVEL_IMAGE="${REGISTRY:-}multilevel-video-understanding:${TAG:-latest}"
 VSA_IMAGE="${REGISTRY:-}videostream-analytics:${TAG:-latest}"
-MCP_IMAGE="${REGISTRY:-}smartbuilding-mcp-server:${TAG:-latest}"
+MCP_IMAGE="${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}"
 DEFAULT_PREFILTER_MODEL="${HOME}/models/openvino/yolo11s/FP16/yolo11s.xml"
 MODEL_DIR="${MODEL_DIR:-${HOME}/models}"
 export MODEL_DIR
@@ -218,7 +230,11 @@ DOCKER_CMD="docker compose -f compose.yaml"
 
 # compose.yaml `extends` the upstream service defs from .external/edge-ai-libraries,
 # so it must exist before ANY compose command below can even parse the file.
-ensure_edge_ai_libraries
+if [ "$DOWN_CONTAINERS" = true ] || [ "$LIGHT_DOWN" = true ]; then
+  ensure_edge_ai_libraries false
+else
+  ensure_edge_ai_libraries true
+fi
 
 # --- fetch-only ---------------------------------------------------------------
 if [ "$FETCH_ONLY" = true ]; then
@@ -227,8 +243,8 @@ fi
 
 # --- build --------------------------------------------------------------------
 if [ "$BUILD_IMAGE" = true ]; then
-  echo "Building local images (multilevel-video-understanding + videostream-analytics + smartbuilding-mcp-server)..."
-  $DOCKER_CMD build --no-cache multilevel-video-understanding videostream-analytics smartbuilding-mcp-server
+  echo "Building local images (multilevel-video-understanding + videostream-analytics + smart-community-mcp-server)..."
+  $DOCKER_CMD build --no-cache multilevel-video-understanding videostream-analytics smart-community-mcp-server
   echo "==== Build complete! ===="
 fi
 
@@ -252,42 +268,42 @@ if [ "$UP_CONTAINERS" = true ]; then
   if [ "$LIGHT_MODE" = true ]; then
     # Reuse an already-warm serving; start only the app + analytics.
     if is_vllm_healthy; then
-      echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smartbuilding-mcp-server only."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smartbuilding-mcp-server
+      echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smart-community-mcp-server only."
+      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
     elif [ "$USE_LOCAL_VLLM" = true ]; then
       echo "Local vllm-ipex-serving not healthy yet — starting the full stack instead."
-      echo "(first run pulls/compiles the model — this can take 3-20+ min)"
+      echo "(first run pulls/compiles the model — this can take about 30 mins)"
       $DOCKER_CMD up -d
     else
-      echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smartbuilding-mcp-server anyway (they retry at runtime)."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smartbuilding-mcp-server
+      echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smart-community-mcp-server anyway (they retry at runtime)."
+      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
     fi
   else
     # End-to-end: bring up serving + app + analytics together.
     echo "Starting all three services..."
-    echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take 3-20+ min)"
+    echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take about 30 mins)"
     $DOCKER_CMD up -d
   fi
 
   echo -e "${GREEN}==== Setup complete! ====${NC}"
   echo "  multilevel-video-understanding : http://localhost:${SERVICE_PORT}/v1  (docs: /docs)"
   echo "  videostream-analytics          : host network, POSTs to ${WEBHOOK_URL:-http://localhost:3101/events}"
-  echo "  smartbuilding-mcp-server       : UI http://localhost:3100/  MCP http://localhost:3100/mcp  events http://localhost:3101/events"
+  echo "  smart-community-mcp-server       : UI http://localhost:3100/  MCP http://localhost:3100/mcp  events http://localhost:3101/events"
   echo "To stop: $0 --light-down   (keep vllm warm)   |   $0 --down   (full teardown)"
 fi
 
 # --- down ---------------------------------------------------------------------
 if [ "$DOWN_CONTAINERS" = true ]; then
-  echo "Stopping and removing all containers..."
-  $DOCKER_CMD down
-  echo "==== Containers stopped and removed! ===="
+  echo "Stopping and removing all containers, networks, and named volumes..."
+  $DOCKER_CMD down --volumes --remove-orphans
+  echo "==== Full stack stopped and removed! ===="
 fi
 
 # --- light-down ---------------------------------------------------------------
 # Stop the app tier but keep vllm-ipex-serving running so its multi-minute FP8
 # recompile is not paid again on the next start. Mirror of --light on the up side.
 if [ "$LIGHT_DOWN" = true ]; then
-  echo "Stopping smartbuilding-mcp-server + videostream-analytics + multilevel-video-understanding (leaving vllm-ipex-serving running)..."
-  $DOCKER_CMD rm -sf smartbuilding-mcp-server videostream-analytics multilevel-video-understanding
+  echo "Stopping smart-community-mcp-server + videostream-analytics + multilevel-video-understanding (leaving vllm-ipex-serving running)..."
+  $DOCKER_CMD rm -sf smart-community-mcp-server videostream-analytics multilevel-video-understanding
   echo "==== App tier stopped; vllm-ipex-serving left running. ===="
 fi
