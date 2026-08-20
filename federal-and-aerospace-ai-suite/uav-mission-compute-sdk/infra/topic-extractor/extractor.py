@@ -39,11 +39,11 @@ WRITE_PRECISION = "ns"
 # ── Config ────────────────────────────────────────────────────────────────────
 MQTT_HOST     = os.getenv("MQTT_BROKER_HOST", "localhost")
 MQTT_PORT     = int(os.getenv("MQTT_BROKER_PORT", "1883"))
-UAV_ID      = os.getenv("UAV_ID", "uav-1")
-INFLUX_URL    = os.getenv("INFLUXDB_URL", "http://localhost:8086")
-INFLUX_TOKEN  = os.getenv("INFLUXDB_TOKEN", "uav-sdk-token")
-INFLUX_ORG    = os.getenv("INFLUXDB_ORG", "uav-sdk")
-INFLUX_BUCKET = os.getenv("INFLUXDB_BUCKET", "telemetry")
+UAV_ID        = os.environ["UAV_ID"]
+INFLUX_URL    = os.environ["INFLUXDB_URL"]
+INFLUX_TOKEN  = os.environ["INFLUXDB_TOKEN"]
+INFLUX_ORG    = os.environ["INFLUXDB_ORG"]
+INFLUX_BUCKET = os.environ["INFLUXDB_BUCKET"]
 LOG_LEVEL     = os.getenv("LOG_LEVEL", "INFO")
 
 TELEMETRY_TOPIC = f"uav/{UAV_ID}/telemetry/#"
