@@ -53,9 +53,9 @@ services:
       - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
       - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
     ports:
-      - "127.0.0.1:14540:14540/udp"
-      - "127.0.0.1:14580:14580/udp"
-      - "127.0.0.1:8080:8080"
+      - "${HOST_IP:-127.0.0.1}:14540:14540/udp"
+      - "${HOST_IP:-127.0.0.1}:14580:14580/udp"
+      - "${HOST_IP:-127.0.0.1}:8080:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
@@ -90,9 +90,9 @@ services:
       - https_proxy=${HTTPS_PROXY:-}
       - no_proxy=${NO_PROXY:-localhost,127.0.0.0/8}
     ports:
-      - "127.0.0.1:14550:14550/udp"
-      - "127.0.0.1:14580:14580/udp"
-      - "127.0.0.1:8080:8080"
+      - "${HOST_IP:-127.0.0.1}:14550:14550/udp"
+      - "${HOST_IP:-127.0.0.1}:14580:14580/udp"
+      - "${HOST_IP:-127.0.0.1}:8080:8080"
     depends_on:
       mosquitto:
         condition: service_healthy
@@ -229,9 +229,9 @@ services:
     container_name: mediamtx
     hostname: mediamtx
     ports:
-      - "127.0.0.1:8554:8554"  # RTSP
-      - "127.0.0.1:8888:8888"  # HLS
-      - "127.0.0.1:8889:8889"  # WebRTC
+      - "${HOST_IP:-127.0.0.1}:8554:8554"  # RTSP
+      - "${HOST_IP:-127.0.0.1}:8888:8888"  # HLS
+      - "${HOST_IP:-127.0.0.1}:8889:8889"  # WebRTC
     volumes:
       - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
     restart: unless-stopped
@@ -246,7 +246,7 @@ services:
     container_name: mqtt-broker
     hostname: mosquitto
     ports:
-      - "127.0.0.1:1884:1883"
+      - "${HOST_IP:-127.0.0.1}:1884:1883"
     volumes:
       - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     restart: unless-stopped
@@ -269,7 +269,7 @@ services:
     profiles: ["observability"]
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8086:8086"
+      - "${HOST_IP:-127.0.0.1}:8086:8086"
     environment:
       DOCKER_INFLUXDB_INIT_MODE:        setup
       DOCKER_INFLUXDB_INIT_USERNAME:    admin
@@ -292,7 +292,7 @@ services:
     profiles: ["observability"]
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3000:3000"
+      - "${HOST_IP:-127.0.0.1}:3000:3000"
     environment:
       GF_SECURITY_ADMIN_USER:     admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Set GRAFANA_PASSWORD in .env before starting}
