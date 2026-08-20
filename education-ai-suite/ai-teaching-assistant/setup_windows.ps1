@@ -90,7 +90,8 @@ $SubmoduleUrl = "https://github.com/open-edge-platform/edge-ai-libraries.git"
 # Pinned commit for reproducible builds. The setup always checks out this exact
 # commit instead of the moving branch tip, so upstream changes can't break the
 # app. Bump this SHA deliberately after validating a newer upstream commit.
-$SubmodulePinnedCommit = "3e24bd03c439e1707f5105f09ba7db4c699589c6"
+# $SubmodulePinnedCommit = "3e24bd03c439e1707f5105f09ba7db4c699589c6" Last Stable commit SHA (Edge-AI-Libraries)
+$SubmodulePinnedCommit = "152442976009c8825b3646362f0ed7c619d385b9"
 
 # Locate the enclosing git repository (the edge-ai-suites fork).
 $RepoRoot = $null
@@ -224,7 +225,8 @@ $VeiSubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/voice-enabled-i
 $VeiSubmoduleUrl = "https://github.com/intel-retail/voice-enabled-interactions.git"
 
 # Pinned commit for reproducible builds (see edge-ai-libraries note above).
-$VeiPinnedCommit = "cc9b25d2b28717a74380d853c762c68072e82e8b"
+# $VeiPinnedCommit = "cc9b25d2b28717a74380d853c762c68072e82e8b" Last Stable commit SHA (Voice Enabled Interactions)
+$VeiPinnedCommit = "771132c3a784fdea1f5617a5b349fc30bd1640a7"
 
 $VeiRepoRoot = $null
 try { $VeiRepoRoot = (git -C $ScriptDir rev-parse --show-toplevel 2>$null) } catch {}
