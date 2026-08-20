@@ -21,11 +21,11 @@ COPY extractor.py .
 
 ENV MQTT_BROKER_HOST=localhost \
     MQTT_BROKER_PORT=1883 \
-    UAV_ID=uav-1 \
-    INFLUXDB_URL=http://localhost:8086 \
-    INFLUXDB_TOKEN=uav-sdk-token \
-    INFLUXDB_ORG=uav-sdk \
-    INFLUXDB_BUCKET=telemetry \
+    UAV_ID= \
+    INFLUXDB_URL= \
+    INFLUXDB_TOKEN= \
+    INFLUXDB_ORG= \
+    INFLUXDB_BUCKET= \
     LOG_LEVEL=INFO
 
 CMD ["python", "extractor.py"]

@@ -476,9 +476,9 @@ ffplay rtsp://localhost:8554/uav-1/nadir
 | Var | Default | Purpose |
 |-----|---------|---------|
 | `MQTT_BROKER_HOST` | `mosquitto` | MQTT broker hostname |
-| `INFLUXDB_PASSWORD` | `change-me` | InfluxDB admin password |
-| `GRAFANA_PASSWORD` | `change-me` | Grafana admin password |
-| `GPU_DEVICE` | `/dev/dri/card1` | Intel GPU device path |
+| `INFLUXDB_PASSWORD` | user-set required | InfluxDB admin password |
+| `GRAFANA_PASSWORD` | user-set required | Grafana admin password |
+| `GPU_DEVICE` | user-set if needed | Intel GPU device path |
 
 ---
 
