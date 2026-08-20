@@ -130,8 +130,8 @@ The UAV Mission Compute SDK integrates multiple technologies:
 
 After installation completes:
 
-1. Navigate to `$HOME/oep/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk/` to explore the SDK
-2. Review [GETTING_STARTED.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/GETTING_STARTED.md) for USB camera setup and advanced configuration
+1. Navigate to `$HOME/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/` to explore the SDK
+2. Review [get-started.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) for USB camera setup and advanced configuration
 3. Access Grafana dashboards at **http://localhost:3000** (admin/admin)
 4. Explore the REST API at **http://localhost:8080** for flight control commands
 

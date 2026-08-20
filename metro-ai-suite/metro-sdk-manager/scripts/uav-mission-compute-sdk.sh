@@ -19,7 +19,7 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-suites|main|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.2.0|edge-ai-suites"
 )
 
 # Placeholder for Docker images to pull;
@@ -649,9 +649,9 @@ main() {
   
   echo ""
   info "Next steps:"
-  info "1. Navigate to ${HOME}/oep/ to explore the cloned repositories"
-  info "2. Check repository documentation for usage instructions"
-  info "3. Start developing with ${NAME}!"
+  info "1. Navigate to ${HOME}/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk to explore the SDK"
+  info "2. Run 'make apps' to start the AI vision processor and Edge AI dashboard"
+  info "3. Open http://localhost:5002 to access the Edge AI dashboard"
 
 }
 
