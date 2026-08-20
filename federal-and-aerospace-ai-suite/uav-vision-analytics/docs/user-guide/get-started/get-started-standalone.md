@@ -53,7 +53,7 @@ Clone the repo and Get into the directory:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/federal-aerospace/apps/uav-vision-analytics
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 ```
 
 ```bash
@@ -93,18 +93,23 @@ Two options are available depending on your use case:
 
 Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
+`make start-rtsp` starts **one device pipeline at a time** (default: GPU). Pass `DEVICE=cpu|gpu|npu|all` to choose:
+
 ```bash
-make start-rtsp
+make start-rtsp                # GPU only (default)
+make start-rtsp DEVICE=cpu     # CPU only
+make start-rtsp DEVICE=npu     # NPU only
+make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 ```
 
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the inference pipelines and serve annotated RTSP streams.
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the selected pipeline and serve annotated RTSP streams.
 >
-> `make start-rtsp` starts **all three device pipelines (CPU, GPU, NPU) simultaneously**. The NPU pipeline is skipped automatically if `NPU_DEVICE` was not detected during `make init`.
+> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 >
 > Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
 
 
-**pymavlink mode** — output streams:
+**pymavlink mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`):
 ```
 rtsp://<HOST_IP>:8555/uav-mavlink-cpu    (CPU pipeline)
 rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
@@ -170,6 +175,14 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ```
 
 The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
+
+### 6. Stop all services
+
+Stop and remove the standalone pymavlink stack (also removes named volumes):
+
+```bash
+make pymav-down
+```
 
 ---
 

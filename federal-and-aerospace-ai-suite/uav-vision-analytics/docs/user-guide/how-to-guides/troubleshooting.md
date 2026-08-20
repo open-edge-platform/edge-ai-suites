@@ -160,6 +160,33 @@ ffmpeg -rtsp_transport tcp \
 
 ## Pipelines
 
+### `make start-rtsp` fails in uav-mission-compute-sdk mode — `ConnectionRefusedError` / RTSP `404 Not Found`
+
+**Symptom:**
+
+```
+paho.mqtt... ConnectionRefusedError: [Errno 111] Connection refused
+```
+or
+```
+[rtsp @ ...] method DESCRIBE failed: 404 Not Found
+Error opening input file rtsp://localhost:8555/nadir.
+```
+
+**Cause:** The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT (port `1884`), MediaMTX RTSP (port `8554`), and all other published ports to loopback only. `uav-vision-analytics` runs in a separate Docker container and cannot reach loopback-bound ports on the host.
+
+**Resolution:** In the `uav-mission-compute-sdk` directory, set `HOST_IP=0.0.0.0` in `.env` **before** starting the stack:
+
+```bash
+cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+sed -i 's|^HOST_IP=.*|HOST_IP=0.0.0.0|' .env
+make down && make up-sim-camera
+```
+
+See [Get Started (UAV Mission Compute SDK Mode) — Step 1](../get-started/get-started-uavsdk.md#1-start-the-uav-mission-compute-sdk).
+
+---
+
 ### No telemetry overlay on stream (all zeros)
 
 **pymavlink mode:** Confirm `mavlink-router` is running and forwarding MAVLink from PX4:
@@ -372,6 +399,18 @@ docker logs metrics-manager 2>&1 | grep -iE "power|rapl|error"
 ---
 
 ## QGroundControl
+
+### QGroundControl stable release fails to connect
+
+See [QGroundControl](./qgroundcontrol.md) for the primary installation instructions (Stable v5.1).
+
+**Symptom:** QGroundControl (Stable v5.1) fails to connect to the vehicle, or the RTSP video stream does not render, even though the RTSP URL and pipeline configuration are correct.
+
+**Resolution:** Install the QGroundControl **latest daily build** as a fallback — it contains newer fixes not yet in the stable release:
+
+- [Download and Install QGroundControl — Latest daily build (Ubuntu)](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
+
+> The daily build is pre-release software and may be less stable overall. Only use it if the Stable v5.1 release does not work for your setup.
 
 ### "Network Not Available" warnings
 

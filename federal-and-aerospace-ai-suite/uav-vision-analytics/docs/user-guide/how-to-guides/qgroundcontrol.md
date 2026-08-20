@@ -4,8 +4,9 @@
 
 Follow the instructions in the QGroundControl documentation to install QGroundControl on your host machine where you are running the application.
 
-- Latest daily build: [Download and Install QGroundControl (Ubuntu)](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
 - Stable v5.1: [Download and Install QGroundControl (Ubuntu)](https://docs.qgroundcontrol.com/Stable_V5.1/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
+
+> If you run into connection or video-stream issues with the stable release, see [Troubleshooting: QGroundControl stable release fails to connect](./troubleshooting.md#qgroundcontrol-stable-release-fails-to-connect) for a fallback install option.
 
 
 ## Enabling video stream in QGroundControl
