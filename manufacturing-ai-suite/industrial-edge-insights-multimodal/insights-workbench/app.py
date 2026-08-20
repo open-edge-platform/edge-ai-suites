@@ -122,12 +122,13 @@ def fetch_rows(
     # page/offset are ints (validated via int()/min()/max() by the caller), not user-controlled strings.
     query = (
         f'SELECT time, timeseries_classification, vision_classification, fused_decision FROM fusion_result '
+        f"WHERE vision_classification !~ /^(No_Weld|No Weld|No_Label|No Label|No label)$/ "
+        f"AND timeseries_classification !~ /^(No_Weld|No Weld|No_Label|No Label|No label)$/ "
         f"ORDER BY time DESC LIMIT {page_size + 1} OFFSET {offset}"
-    )  # nosec B608
+    )   # nosec B608
 
     result = client.query(query)
     points = list(result.get_points())
-
     has_more = len(points) > page_size
     rows = points[:page_size]
 
