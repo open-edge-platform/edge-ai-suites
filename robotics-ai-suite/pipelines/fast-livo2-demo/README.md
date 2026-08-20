@@ -35,6 +35,8 @@ apply to.
 | [0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch) | Removes a LiDAR-buffer precondition that gated every VIO update even though the VIO step never reads the LiDAR queue. Measured: ~30 ms of gate wait removed per VIO update at 10 Hz LiDAR input ([src/LIVMapper.cpp](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/src/LIVMapper.cpp)). |
 | [0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch) | Ports the codebase and launch files from ROS1/catkin to ROS2/ament (validated on Humble and Jazzy, see [FAST-LIVO2/README_ROS2.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/README_ROS2.md)); adds a Livox Mid-360 + RealSense D415 sensor profile; adds an optional per-frame LIO/VIO timing CSV export gated behind `-DENABLE_PERFRAME_TIMING=ON` (off by default) for latency analysis; fixes a DDS parameter-discovery race and an inverted Mid-360 mount orientation. |
 | [0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch) | Sizes the LIO/VIO OMP thread count from the process's actual CPU affinity at startup (`sched_getaffinity`) instead of the build-time total host core count, so pinning `fast_livo2` to a smaller cpu set via `taskset -c` (`CPUSET_ALGO` in `scripts/env.sh`) no longer oversubscribes the pinned cores with more OMP threads than they can run. Falls back to the original `ProcessorCount`-based build-time default when the process isn't affinity-restricted. |
+| [0004-Reformat-sources-to-the-real-clang-format-style.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0004-Reformat-sources-to-the-real-clang-format-style.patch) | Reformats `IMU_Processing.cpp`, `LIVMapper.cpp`, `main.cpp`, `preprocess.cpp`, and `vio.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch) | Wraps `main()` in a try/catch so a startup exception logs via `RCLCPP_FATAL` instead of taking the node down unhandled; reorders null-pointer checks to test-before-dereference and repositions two mutex locks so the shared state they guard is actually covered; guards three VIO score/residual computations and `plane_judge` against division by zero; frees a leaked scratch patch buffer in `updateVisualMapPoints`; replaces an internal lab IP address in a camera-intrinsics config comment with a generic rig description (a BDBA information-leakage finding); lists the ROS2-port maintainer in `package.xml`. |
 
 ## Environment setup (Ubuntu 24.04 / ROS 2 Jazzy, Intel Core Ultra / PTL)
 
@@ -66,14 +68,14 @@ retarget a different workspace/sequence; nothing else needs to change.
 ## Validate without hardware: NTU VIRAL dataset replay
 
 No robot or sensor is required to verify the build and measure accuracy: the
-Ouster OS1 + camera + IMU `eee_03` sequence from the public
+Ouster OS1 + camera + IMU `eee_01` sequence from the public
 [NTU VIRAL dataset](https://ntu-aris.github.io/ntu_viral_dataset/)
 (Nguyen et al., *NTU VIRAL: A Visual-Inertial-Ranging-Lidar Dataset, From an
 Aerial Vehicle Viewpoint*, IJRR 2022) is replayed through the same
 `fast_livo2` binary and compared against surveyed ground truth.
 
 ```bash
-./fetch_ntu_viral.sh          # download eee_03 bag + convert to ROS2 (auto; manual fallback for unlisted sequences)
+./fetch_ntu_viral.sh          # download eee_01 bag + convert to ROS2 (auto; manual fallback for unlisted sequences)
 ./run_ntu_viral.sh            # launch fast_livo2 + play back the bag, records the trajectory
 ./evaluate_rmse.sh            # evo_ape RMSE vs. ground truth, printed next to the documented baseline
 
@@ -85,7 +87,7 @@ Aerial Vehicle Viewpoint*, IJRR 2022) is replayed through the same
 comparison already checked into
 [FAST-LIVO2/Log/result/ntu_viral/](https://github.com/hku-mars/FAST-LIVO2/tree/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral), whose
 `README.md` documents reference RMSE for all nine sequences from prior runs.
-For `eee_03`, the documented baseline is **2.61 cm**; the script passes when
+For `eee_01`, the documented baseline is **2.71 cm**; the script passes when
 the freshly measured RMSE does not exceed that baseline by more than
 `RMSE_TOLERANCE_PCT` (20% by default, see
 [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)) — not a specific
@@ -240,6 +242,8 @@ cd FAST-LIVO2
 git am --keep-cr ../patches/0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch
 git am --keep-cr ../patches/0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch
 git am --keep-cr ../patches/0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch
+git am --keep-cr ../patches/0004-Reformat-sources-to-the-real-clang-format-style.patch
+git am --keep-cr ../patches/0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch
 cd ..
 ```
 
@@ -265,19 +269,19 @@ point `UNDERLAY_SETUP` in [scripts/env.sh](https://github.com/open-edge-platform
 install space, or let `scripts/build.sh` build them from scratch instead of
 doing so by hand here.
 
-### 4. Fetch and convert the NTU VIRAL sequence (`eee_03`)
+### 4. Fetch and convert the NTU VIRAL sequence (`eee_01`)
 
 The ROS1 `.bag` is served straight from NTU's Dataverse REST API (file id
-`68132` for `eee_03`), no login required; ground truth comes from the
+`68133` for `eee_01`), no login required; ground truth comes from the
 `viral_eval` GitHub repo:
 
 ```bash
 mkdir -p ~/ntu_viral_dataset && cd ~/ntu_viral_dataset
-curl -fL -o eee_03.zip https://researchdata.ntu.edu.sg/api/access/datafile/68132
-unzip -p eee_03.zip "$(unzip -Z1 eee_03.zip | grep -E '\.bag$' | head -1)" > eee_03.bag
-rm -f eee_03.zip
-curl -fL -o leica_pose_eee_03.csv \
-  https://raw.githubusercontent.com/ntu-aris/viral_eval/master/result_eee_03/leica_pose.csv
+curl -fL -o eee_01.zip https://researchdata.ntu.edu.sg/api/access/datafile/68133
+unzip -p eee_01.zip "$(unzip -Z1 eee_01.zip | grep -E '\.bag$' | head -1)" > eee_01.bag
+rm -f eee_01.zip
+curl -fL -o leica_pose_eee_01.csv \
+  https://raw.githubusercontent.com/ntu-aris/viral_eval/master/result_eee_01/leica_pose.csv
 cd -
 ```
 
@@ -287,9 +291,9 @@ pip if missing):
 ```bash
 python3 -c "import rosbags" 2>/dev/null || pip install --user --break-system-packages rosbags
 PATH="${HOME}/.local/bin:${PATH}" rosbags-convert \
-  --src ~/ntu_viral_dataset/eee_03.bag --dst ~/ntu_viral_dataset/eee_03
+  --src ~/ntu_viral_dataset/eee_01.bag --dst ~/ntu_viral_dataset/eee_01
 sed -i 's#type: livox_ros_driver/msg/CustomMsg#type: livox_ros_driver2/msg/CustomMsg#' \
-  ~/ntu_viral_dataset/eee_03/metadata.yaml
+  ~/ntu_viral_dataset/eee_01/metadata.yaml
 ```
 
 (Other sequences' Dataverse file ids are listed in
@@ -298,14 +302,10 @@ sed -i 's#type: livox_ros_driver/msg/CustomMsg#type: livox_ros_driver2/msg/Custo
 
 ### 5. Run `fast_livo2` against the bag
 
-`NTU_VIRAL.yaml` defaults its `evo/seq_name` param (which controls the
-output trajectory filename, `Log/result/<seq_name>.txt`) to `eee_01`; point
-it at `eee_03` via a scratch copy instead of editing the tracked file:
-
-```bash
-sed 's/seq_name: "eee_01"/seq_name: "eee_03"/' \
-  FAST-LIVO2/config/NTU_VIRAL.yaml > /tmp/ntu_viral_eee_03.yaml
-```
+`NTU_VIRAL.yaml`'s tracked `evo/seq_name` param (which controls the output
+trajectory filename, `Log/result/<seq_name>.txt`) already defaults to
+`eee_01`, so no scratch-copy/`sed` step is needed — run directly against the
+checked-in config.
 
 Two terminals. **Terminal A — the algorithm:**
 
@@ -317,7 +317,7 @@ export ROS_DOMAIN_ID=199
 
 ros2 launch fast_livo2 mapping_ouster_ntu.launch.py \
   use_rviz:=false \
-  avia_params_file:=/tmp/ntu_viral_eee_03.yaml
+  avia_params_file:=FAST-LIVO2/config/NTU_VIRAL.yaml
 ```
 
 **Terminal B — bag playback** (start once Terminal A is up and printing):
@@ -327,12 +327,12 @@ source /opt/ros/jazzy/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 export ROS_DOMAIN_ID=199
 
-ros2 bag play ~/ntu_viral_dataset/eee_03
+ros2 bag play ~/ntu_viral_dataset/eee_01
 ```
 
 Once playback finishes, stop `fast_livo2` (`Ctrl-C` in Terminal A — a clean
 SIGTERM, not `kill -9`, so it flushes the trajectory file) and check
-`FAST-LIVO2/Log/result/eee_03.txt` was written. The core-pinning/SCHED_FIFO
+`FAST-LIVO2/Log/result/eee_01.txt` was written. The core-pinning/SCHED_FIFO
 wrapping `run_ntu_viral.sh` applies on PTL (taskset/chrt) is an optional
 performance extra, not required for a correctness repro — see "Reference:
 running on Intel PTL" above if you want that too.
@@ -420,7 +420,7 @@ launching it). When done: stop `fast_livo2`/`ros2 bag play`, then
 
 ### 6. Evaluate RMSE
 
-The estimated trajectory (`FAST-LIVO2/Log/result/eee_03.txt`) needs
+The estimated trajectory (`FAST-LIVO2/Log/result/eee_01.txt`) needs
 converting to the surveyed PRISM reflector frame before comparing against
 ground truth — [evaluate_viral.py](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral/evaluate_viral.py),
 already checked into the repo, provides both conversions:
@@ -430,20 +430,20 @@ python3 - <<'PY'
 import sys
 sys.path.insert(0, "FAST-LIVO2/Log/result/ntu_viral")
 from evaluate_viral import convert_slam_to_prism, convert_leica_to_tum
-convert_slam_to_prism("FAST-LIVO2/Log/result/eee_03.txt",
-                       "FAST-LIVO2/Log/result/ntu_viral/eee_03_prism_repro.txt")
-convert_leica_to_tum("$HOME/ntu_viral_dataset/leica_pose_eee_03.csv",
-                      "FAST-LIVO2/Log/result/ntu_viral/eee_03_gt_repro.txt")
+convert_slam_to_prism("FAST-LIVO2/Log/result/eee_01.txt",
+                       "FAST-LIVO2/Log/result/ntu_viral/eee_01_prism_repro.txt")
+convert_leica_to_tum("$HOME/ntu_viral_dataset/leica_pose_eee_01.csv",
+                      "FAST-LIVO2/Log/result/ntu_viral/eee_01_gt_repro.txt")
 PY
 
 pip install --user --break-system-packages evo   # if not already installed
 PATH="${HOME}/.local/bin:${PATH}" evo_ape tum \
-  FAST-LIVO2/Log/result/ntu_viral/eee_03_gt_repro.txt \
-  FAST-LIVO2/Log/result/ntu_viral/eee_03_prism_repro.txt -a
+  FAST-LIVO2/Log/result/ntu_viral/eee_01_gt_repro.txt \
+  FAST-LIVO2/Log/result/ntu_viral/eee_01_prism_repro.txt -a
 ```
 
 `evo_ape`'s summary table reports RMSE in meters; multiply by 100 to compare
-against the documented `eee_03` baseline of **2.61 cm**
+against the documented `eee_01` baseline of **2.71 cm**
 ([FAST-LIVO2/Log/result/ntu_viral/README.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral/README.md)).
 A fresh measurement that does not exceed the baseline by more than
 `RMSE_TOLERANCE_PCT` (20% by default,

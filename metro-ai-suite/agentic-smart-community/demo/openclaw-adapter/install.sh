@@ -55,9 +55,17 @@ AGENT_MODEL="${AGENT_MODEL:-}"
 PERSONA_AGENTS=(fridge-agent child-safety-agent elder-wakeup-agent)
 
 command -v openclaw >/dev/null 2>&1 || { echo "ERROR: 'openclaw' CLI not found on PATH." >&2; exit 1; }
+command -v npm      >/dev/null 2>&1 || { echo "ERROR: 'npm' not found on PATH."      >&2; exit 1; }
 command -v jq       >/dev/null 2>&1 || { echo "ERROR: 'jq' not found on PATH."       >&2; exit 1; }
 [[ -f "$PLUGIN_INSTALL_SH" ]] || { echo "ERROR: plugin install script not found: $PLUGIN_INSTALL_SH" >&2; exit 1; }
 [[ -d "$PERSONA_DIR" ]] || { echo "ERROR: demo agent personas not found: $PERSONA_DIR" >&2; exit 1; }
+
+# The MCP server runs in containers, so users normally do not install the root
+# npm workspace. The plugin SDK still needs its TypeScript dev dependency once.
+if [[ ! -x "$SDK_DIR/node_modules/.bin/tsc" && ! -x "$REPO_ROOT/node_modules/.bin/tsc" ]]; then
+  echo "==> SDK build dependencies not found; installing workspace dev dependencies"
+  npm --prefix "$REPO_ROOT" ci --include=dev
+fi
 
 
 if [[ -z "$AGENT_MODEL" ]]; then

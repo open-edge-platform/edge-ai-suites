@@ -18,7 +18,7 @@ Confirm your machine meets the [System Requirements](./get-started/system-requir
 Open PowerShell and run:
 
 ```powershell
-git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git `
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git -b main `
 ; cd edge-ai-suites `
 ; git sparse-checkout set education-ai-suite/ai-teaching-assistant `
 ; cd education-ai-suite/ai-teaching-assistant
