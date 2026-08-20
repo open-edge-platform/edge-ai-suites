@@ -213,11 +213,11 @@ build-whisper: ## Build whisper-stt image if not already present
 	fi
 
 up: build-whisper ## Start all services (standard)
-	@echo "Starting handheld-multi-modal stack (standard)..."
+	@echo "Starting handheld-multi-modal stack (standard)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE) up -d
 
 up-cdi: build-whisper ## Start all services (CDI / SR-IOV)
-	@echo "Starting handheld-multi-modal stack (CDI)..."
+	@echo "Starting handheld-multi-modal stack (CDI)...OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_CDI) up -d
 
 down: vippet-down ## Stop all services (standard) and vippet
@@ -227,7 +227,7 @@ down-cdi: vippet-down ## Stop all services (CDI) and vippet
 	$(COMPOSE_CDI) down
 
 up-standalone: build-whisper ## Start all services (standalone — no VIPPET required, dev/testing only)
-	@echo "Starting handheld-multi-modal stack (standalone)..."
+	@echo "Starting handheld-multi-modal stack (standalone)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_STANDALONE) up -d
 
 down-standalone: ## Stop all services (standalone)
