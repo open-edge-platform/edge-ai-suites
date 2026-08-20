@@ -21,7 +21,7 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 | `make pymav-down` | Stop and remove the pymavlink stack (includes volumes) |
 | `make uavsdk-up` | Start the uav-mission-compute-sdk stack |
 | `make uavsdk-down` | Stop and remove the uav-mission-compute-sdk stack (includes volumes) |
-| `make start-rtsp` | Start inference pipelines with RTSP output |
+| `make start-rtsp` | Start inference pipeline(s) with RTSP output. `DEVICE=cpu\|gpu\|npu\|all` (default: `gpu`) |
 | `make build` | Alias for `pymav-up` |
 
 ---
@@ -103,7 +103,18 @@ make uavsdk-up
 
 ### `make start-rtsp`
 
-Executes `pipeline_manager.py --sink rtsp` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipelines with **RTSP frame output** on port `8555`.
+Executes `pipeline_manager.py --sink rtsp` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipeline(s) with **RTSP frame output** on port `8555`.
+
+By default, only the **GPU** pipeline starts. Pass `DEVICE=cpu|gpu|npu|all` to choose:
+
+```bash
+make start-rtsp                # GPU only (default)
+make start-rtsp DEVICE=cpu     # CPU only
+make start-rtsp DEVICE=npu     # NPU only
+make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
+```
+
+`DEVICE=npu` falls back to GPU if `NPU_DEVICE` was not detected during `make init`.
 
 Requires the DLSPS container to already be running (`make pymav-up` or `make uavsdk-up` first).
 
