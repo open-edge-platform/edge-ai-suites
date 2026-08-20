@@ -248,9 +248,10 @@ rebuild: ## Rebuild images without touching volumes
 clean: ## Remove staging scratch (.work). Add CONFIRM=yes to also stop containers and wipe data dirs
 	rm -rf "$(WORK_DIR)"
 	@if [ "$(CONFIRM)" = "yes" ]; then \
-		$(COMPOSE) down -v; \
+		$(MAKE) down; \
 		docker run --rm -v "$(SELF_DIR)/data:/data" alpine \
 			sh -c "rm -rf /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs"; \
+		rm -rf $(VIPPET_DIR); \
 		echo "✓ Containers stopped and data directories removed"; \
 	else \
 		echo "  Tip: run  make clean CONFIRM=yes  to also stop containers and remove data dirs"; \
