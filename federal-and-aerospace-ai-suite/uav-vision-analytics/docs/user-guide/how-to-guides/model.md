@@ -67,7 +67,7 @@ make model
 
 After export, the model files are at:
 
-```
+```text
 resources/
 └── models/
     └── yolov8n-visdrone/
@@ -79,6 +79,6 @@ resources/
 
 The inference pipelines reference the model at the container-internal path:
 
-```
+```text
 /home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml
 ```
