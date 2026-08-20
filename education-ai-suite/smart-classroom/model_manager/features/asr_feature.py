@@ -120,7 +120,6 @@ class ASRFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
-            "chunking": bool(config.audio_preprocessing.chunking),
             "diarization": bool(config.models.asr.diarization),
             "endpoints": {
                 "upload_audio": "/upload-audio",
