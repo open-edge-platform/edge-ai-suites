@@ -523,8 +523,7 @@ Start here: Which camera source?
       USB_CAMERA_ID=nadir
       VISION_CAMERA_IDS=nadir
    3. make up-usb-camera
-   4. make apps          3. make up-sim-camera
-                         4. make apps
+   4. make apps          3. make apps
 
 Dashboard: http://localhost:5002
 ```
@@ -689,7 +688,7 @@ aravis-tool -l
 
 ### Docker Image Extension
 
-To use industrial cameras in the `usb-camera-bridge` container, extend [infra/bridges/usb-camera/Dockerfile](infra/bridges/usb-camera/Dockerfile):
+To use industrial cameras in the `usb-camera-bridge` container, extend [../../infra/bridges/usb-camera/Dockerfile](../../infra/bridges/usb-camera/Dockerfile):
 
 ```dockerfile
 # Add to existing Dockerfile

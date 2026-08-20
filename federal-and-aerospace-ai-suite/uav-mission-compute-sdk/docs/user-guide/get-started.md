@@ -336,6 +336,6 @@ docker compose ps            # Check container status
 | [../../docker-compose.yml](../../docker-compose.yml) | Infrastructure services, profiles, networking |
 | [../../sample-apps/docker-compose.yml](../../sample-apps/docker-compose.yml) | Vision processor + dashboard services |
 | [../../.env.example](../../.env.example) | All configurable environment variables |
-| [../../infra/bridges/camera-bridge/](../../infra/bridges/camera-bridge/) | Gazebo camera source code (sim mode) |
+| [../../infra/bridges/camera/](../../infra/bridges/camera/) | Gazebo camera source code (sim mode) |
 | [../../infra/bridges/usb-camera/](../../infra/bridges/usb-camera/) | USB camera source code (real hardware) |
 | [../../mcp-server/](../../mcp-server/) | Model Context Protocol server for integrations |
