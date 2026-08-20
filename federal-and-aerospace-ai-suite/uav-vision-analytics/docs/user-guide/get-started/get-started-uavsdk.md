@@ -79,7 +79,7 @@ make model
 
 ### 3. Start the UAV Mission Compute SDK (depends on uav-mission-compute-sdk)
 
-Follow the setup instructions in the [README](../../../uav-mission-compute-sdk/README.md) before proceeding.
+Follow the setup instructions in the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md) before proceeding.
 
 ```bash
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk

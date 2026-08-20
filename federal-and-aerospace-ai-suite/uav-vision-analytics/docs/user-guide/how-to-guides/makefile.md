@@ -55,7 +55,7 @@ Creates a Python virtual environment under `resources/venv/`, installs dependenc
 
 > **`make pymav-up` checks for the model** before starting containers. If `resources/models/yolov8n-visdrone/best_openvino_model/best.xml` is missing it prints an error and exits — run `make model` first.
 
-```
+```text
 resources/
 ├── requirements.txt
 ├── venv/                          ← created by this target

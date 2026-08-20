@@ -24,7 +24,7 @@ grouped into the following categories:
 
 **Symptom:**
 
-```
+```text
 The virtual environment was not created successfully because ensurepip is not available.
 On Debian/Ubuntu systems, you need to install the python3-venv package using the following command.
     apt install python3.12-venv
@@ -45,7 +45,7 @@ make model
 
 **Symptom:**
 
-```
+```text
 WARNING: Retrying after connection broken by 'NewConnectionError([Errno 101] Network is unreachable)': /simple/pymavlink/
 ERROR: Could not find a version that satisfies the requirement pymavlink
 ```
@@ -102,7 +102,7 @@ GPU_RENDER_DEVICE=/dev/dri/renderD128
 
 **Symptom:**
 
-```
+```text
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu
 Command 'ffplay' not found, but can be installed with:
 sudo apt install ffmpeg
@@ -211,7 +211,7 @@ make pymav-down && make pymav-up
 ```
 
 **Symptom B — pipeline returns error about `model-instance-id`:**
-```
+```text
 Cannot start pipeline. gvadetect element uses model-instance-id: instnpu0
 that errored out on a prior run due to incorrect parameters.
 ```
@@ -379,7 +379,7 @@ See [QGroundControl](./qgroundcontrol.md) for installation and video stream conf
 
 **Symptom:** The following warnings appear in the QGroundControl logs:
 
-```
+```text
 16.701 Warning: 1 "Network Not Available" - QtLocationPlugin.QGeoTiledMapReplyQGC - (unknown:0)
 ```
 
@@ -412,7 +412,7 @@ See [QGroundControl](./qgroundcontrol.md) for installation and video stream conf
 
 **Symptom:**
 
-```
+```text
 The virtual environment was not created successfully because ensurepip is not available.
 On Debian/Ubuntu systems, you need to install the python3-venv package using the following command.
     apt install python3.12-venv
