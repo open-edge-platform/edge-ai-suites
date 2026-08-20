@@ -14,7 +14,7 @@
 </div>
 hide_directive-->
 
-UAV Vision Analytics demonstrats how AI-based object detection can be integrated with UAV
+UAV Vision Analytics demonstrates how AI-based object detection can be integrated with UAV
 flight controller telemetry on a companion compute platform.
 
 Based on DL Streamer Pipeline Server, the application processes video from a UAV-mounted

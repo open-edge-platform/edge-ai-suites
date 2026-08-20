@@ -31,7 +31,7 @@ services:
 
   mavlink-router:
     build:
-      context: ../../uav-mission-compute-sdk/infra/px4-sim/mavlink-router
+      context: ../uav-mission-compute-sdk/infra/px4-sim/mavlink-router
       dockerfile: Dockerfile
       args:
         http_proxy:  ${http_proxy:-}
@@ -52,6 +52,7 @@ services:
         FROM ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
         RUN pip install --no-cache-dir pymavlink
     image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}-pymavlink
+    pull_policy: build
     container_name: dlstreamer-pipeline-server
     environment:
       - http_proxy=${http_proxy}

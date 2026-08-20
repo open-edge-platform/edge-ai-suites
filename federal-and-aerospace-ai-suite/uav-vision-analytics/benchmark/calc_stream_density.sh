@@ -87,6 +87,9 @@ HW_MONITOR_ENABLED=true                     # set false to skip entirely
 HW_POLL_PID=""                              # PID of background poller subshell
 HW_SAMPLE_FILE=""                           # path to current hw_samples.log
 _HW_STREAM_PY="/tmp/hw_stream_$$.py"       # temp Python3 SSE streamer script
+_HW_RAPL_PY="/tmp/hw_rapl_$$.py"          # temp Python3 RAPL sysfs reader
+_HW_RAPL_PID=""                            # PID of direct RAPL sysfs poller
+_RAPL_ENERGY_PATH="/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj"
 
 # Ensure the background poller is killed if the script exits for any reason
 function _cleanup_hw_monitor() {
@@ -95,7 +98,12 @@ function _cleanup_hw_monitor() {
     wait "$HW_POLL_PID" 2>/dev/null
   fi
   HW_POLL_PID=""
-  rm -f "$_HW_STREAM_PY"
+  if [ -n "$_HW_RAPL_PID" ] && kill -0 "$_HW_RAPL_PID" 2>/dev/null; then
+    kill "$_HW_RAPL_PID" 2>/dev/null
+    wait "$_HW_RAPL_PID" 2>/dev/null
+  fi
+  _HW_RAPL_PID=""
+  rm -f "$_HW_STREAM_PY" "$_HW_RAPL_PY"
 }
 trap _cleanup_hw_monitor EXIT INT TERM
 
@@ -208,6 +216,59 @@ with open(outfile, "a") as f:
 PYEOF
   python3 -u "$_HW_STREAM_PY" "$HW_SAMPLE_FILE" "$METRICS_URL" "$METRICS_INTERVAL" &
   HW_POLL_PID=$!
+
+  # RAPL sysfs fallback: writes rapl_power_w__pkg=<watts> when metrics-manager
+  # doesn't report platform power. No "---" separator — snapshot counting unaffected.
+  # energy_uj is root-only on modern kernels; docker exec metrics-manager is the fallback.
+  _HW_RAPL_PID=""
+  if [ -e "$_RAPL_ENERGY_PATH" ]; then
+    cat > "$_HW_RAPL_PY" << 'RAPLEOF'
+import sys, time, subprocess
+outfile, energy_file, interval = sys.argv[1], sys.argv[2], float(sys.argv[3])
+
+def _read(f):
+    try:
+        return int(open(f).read().strip())
+    except PermissionError:
+        pass
+    try:
+        r = subprocess.run(["docker", "exec", "metrics-manager", "cat", f],
+                           capture_output=True, text=True, timeout=5)
+        if r.returncode == 0:
+            return int(r.stdout.strip())
+    except Exception:
+        pass
+    return None
+
+max_uj = _read(energy_file.replace("energy_uj", "max_energy_range_uj")) or 262143000000
+prev_uj = _read(energy_file)
+if prev_uj is None:
+    sys.exit(0)
+prev_ts = time.monotonic()
+while True:
+    time.sleep(interval)
+    curr_uj = _read(energy_file)
+    if curr_uj is None:
+        break
+    curr_ts = time.monotonic()
+    dt = curr_ts - prev_ts
+    if dt > 0:
+        delta = curr_uj - prev_uj if curr_uj >= prev_uj else max_uj - prev_uj + curr_uj
+        with open(outfile, "a") as f:
+            f.write("rapl_power_w__pkg={:.3f}\n".format(delta / 1e6 / dt))
+            f.flush()
+    prev_uj, prev_ts = curr_uj, curr_ts
+RAPLEOF
+    python3 -u "$_HW_RAPL_PY" "$HW_SAMPLE_FILE" "$_RAPL_ENERGY_PATH" "$METRICS_INTERVAL" &
+    _HW_RAPL_PID=$!
+    if [ -r "$_RAPL_ENERGY_PATH" ]; then
+      echo ">>>>> [HW Monitor] RAPL sysfs fallback active (direct read)." >&2
+    else
+      echo ">>>>> [HW Monitor] RAPL sysfs fallback active (via docker exec metrics-manager — root-only file)." >&2
+    fi
+  else
+    echo ">>>>> [HW Monitor] RAPL not found at $_RAPL_ENERGY_PATH — PkgPwr will be N/A." >&2
+  fi
   return 0
 }
 
@@ -222,6 +283,11 @@ function stop_hw_monitor() {
     wait "$HW_POLL_PID" 2>/dev/null
   fi
   HW_POLL_PID=""
+  if [ -n "$_HW_RAPL_PID" ] && kill -0 "$_HW_RAPL_PID" 2>/dev/null; then
+    kill "$_HW_RAPL_PID" 2>/dev/null
+    wait "$_HW_RAPL_PID" 2>/dev/null
+  fi
+  _HW_RAPL_PID=""
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
@@ -903,10 +969,11 @@ function run_concurrent_workload() {
 #  Sets globals (used by --all-devices summary table):
 #    DENSITY_RESULT_N      — max sustainable stream count found
 #    DENSITY_RESULT_FPS    — fps/stream at DENSITY_RESULT_N
-#    DENSITY_RESULT_CPU    — avg cpu_util_pct at DENSITY_RESULT_N (or N/A)
-#    DENSITY_RESULT_GPU    — avg gpu_util_combined at DENSITY_RESULT_N (or N/A)
-#    DENSITY_RESULT_NPU    — avg npu_utilization at DENSITY_RESULT_N (or N/A)
-#    DENSITY_RESULT_PKG    — avg pkg_power_w at DENSITY_RESULT_N (or N/A)
+#    DENSITY_RESULT_CPU       — avg cpu_util_pct at DENSITY_RESULT_N (or N/A)
+#    DENSITY_RESULT_GPU       — avg gpu_util_combined at DENSITY_RESULT_N (or N/A)
+#    DENSITY_RESULT_NPU       — avg npu_utilization at DENSITY_RESULT_N (or N/A)
+#    DENSITY_RESULT_PKG       — avg pkg/rapl power at DENSITY_RESULT_N (or N/A)
+#    DENSITY_RESULT_TOTAL_FPS — throughput cumulative at DENSITY_RESULT_N (or N/A)
 #
 #  Best result is also copied to: benchmark-density-<pipeline_name>/
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -923,6 +990,7 @@ function _density_search_expbisect() {
   DENSITY_RESULT_GPU="N/A"
   DENSITY_RESULT_NPU="N/A"
   DENSITY_RESULT_PKG="N/A"
+  DENSITY_RESULT_TOTAL_FPS="N/A"
 
   echo >&2
   echo ">>>>> Density search (exp+bisect): $pipeline_name" >&2
@@ -984,14 +1052,19 @@ function _density_search_expbisect() {
   # Extract utilization metrics from best run's kpi.txt
   if [ $best_n -gt 0 ] && [ -f "benchmark-${best_n}/kpi.txt" ]; then
     local cu gu nu
+    local cu gu nu pw tf
     cu=$(grep -m1 'hw_cpu_util_pct avg:' "benchmark-${best_n}/kpi.txt" 2>/dev/null | awk '{print $NF}')
     gu=$(grep -m1 'hw_gpu_util_combined avg:' "benchmark-${best_n}/kpi.txt" 2>/dev/null | awk '{print $NF}')
     nu=$(grep -m1 'hw_npu_utilization avg:' "benchmark-${best_n}/kpi.txt" 2>/dev/null | awk '{print $NF}')
     pw=$(grep -m1 'hw_pkg_power_w avg:' "benchmark-${best_n}/kpi.txt" 2>/dev/null | awk '{print $NF}')
+    # Fall back to RAPL package power when qmassa GPU power is unavailable
+    [ -z "$pw" ] && pw=$(grep -m1 'hw_rapl_pkg_w avg:' "benchmark-${best_n}/kpi.txt" 2>/dev/null | awk '{print $NF}')
+    tf=$(grep -m1 'throughput cumulative:' "benchmark-${best_n}/kpi.txt" 2>/dev/null | awk '{print $NF}')
     [ -n "$cu" ] && DENSITY_RESULT_CPU="$cu"
     [ -n "$gu" ] && DENSITY_RESULT_GPU="$gu"
     [ -n "$nu" ] && DENSITY_RESULT_NPU="$nu"
     [ -n "$pw" ] && DENSITY_RESULT_PKG="$pw"
+    [ -n "$tf" ] && DENSITY_RESULT_TOTAL_FPS="$tf"
 
     # Copy best result to a named output directory; clean intermediate numbered dirs
     local outdir="benchmark-density-${pipeline_name}"
@@ -1211,6 +1284,7 @@ if $ALL_DEVICES_MODE; then
   _ad_names=()
   _ad_streams=()
   _ad_fps=()
+  _ad_total_fps=()
   _ad_cpu=()
   _ad_gpu=()
   _ad_npu=()
@@ -1227,6 +1301,7 @@ if $ALL_DEVICES_MODE; then
     _ad_names+=("$_pl")
     _ad_streams+=("$DENSITY_RESULT_N")
     _ad_fps+=("$DENSITY_RESULT_FPS")
+    _ad_total_fps+=("$DENSITY_RESULT_TOTAL_FPS")
     _ad_cpu+=("$DENSITY_RESULT_CPU")
     _ad_gpu+=("$DENSITY_RESULT_GPU")
     _ad_npu+=("$DENSITY_RESULT_NPU")
@@ -1244,15 +1319,16 @@ if $ALL_DEVICES_MODE; then
   printf "  FPS floor : %s   Window: %ss   Percentile: p%s\n" \
     "$target_fps" "$MAX_DURATION" "$(echo "$THROUGHPUT_PERCENTILE * 100" | bc | cut -d. -f1)" >&2
   echo "================================================================" >&2
-  printf "%-45s  %7s  %7s  %8s  %8s  %8s  %10s\n" \
-    "Pipeline" "Streams" "FPS@N" "CPU%" "GPU%" "NPU%" "PkgPwr(W)" >&2
-  echo "------------------------------------------------------------------------" >&2
+  printf "%-45s  %7s  %9s  %9s  %8s  %8s  %8s  %10s\n" \
+    "Pipeline" "Streams" "FPS@N" "TotalFPS" "CPU%" "GPU%" "NPU%" "PkgPwr(W)" >&2
+  echo "------------------------------------------------------------------------------------" >&2
 
   for _i in "${!_ad_names[@]}"; do
-    printf "%-45s  %7s  %7s  %8s  %8s  %8s  %10s\n" \
+    printf "%-45s  %7s  %9s  %9s  %8s  %8s  %8s  %10s\n" \
       "${_ad_names[$_i]}" \
       "${_ad_streams[$_i]}" \
       "${_ad_fps[$_i]}" \
+      "${_ad_total_fps[$_i]}" \
       "${_ad_cpu[$_i]}" \
       "${_ad_gpu[$_i]}" \
       "${_ad_npu[$_i]}" \
