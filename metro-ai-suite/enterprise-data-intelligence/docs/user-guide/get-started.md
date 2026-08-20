@@ -26,8 +26,36 @@ The Router and compressor services are set up separately. See the [`inference-ro
 
 ## 2. Setup EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`agentic-rag`](https://github.com/opea-project/GenAIExamples/tree/f56422671c8bdf46f59dd758c8c9e38ca41d6555/EdgeCraftRAG) directory.
+To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`OPEA EC-RAG`](https://github.com/opea-project/GenAIExamples/tree/main/EdgeCraftRAG) directory.
 
+For latest model support, you can modify the EC-RAG vllm backend image version and config like this:
+
+```bash
+# clone OPEA EC-RAG repo
+git clone https://github.com/opea-project/GenAIExamples.git
+cd GenAIExamples/EdgeCraftRAG
+
+# change the vllm image version and related config:
+sed -i \
+  -e '/--disable-log-requests/d' \
+  -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
+  -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
+  -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
+  docker_compose/intel/gpu/arc/compose.yaml
+```
+
+below is a reference pipeline config:
+
+```bash
+- `HOST_IP`: `<your_host_ip>`
+- `DOC_PATH`: `${PWD}/workspace`
+- `TMPFILE_PATH`: `${PWD}/workspace`
+- `LLM_MODEL`: `Qwen/Qwen3.5-35B-A3B`
+- `MODEL_PATH`: `<the directory you put Qwen/Qwen3.5-35B-A3B>`
+- `MAX_MODEL_LEN`: `60000`
+- `QUANTIZATION`: `fp8`
+- `GPU_MEMORY_UTIL`: `0.65`
+```
 
 ## 3. Setup OpenClaw
 
