@@ -1,7 +1,6 @@
 # Node-RED reference
 
-- `./src/node-red:/data`, run as `user: root` (writes flows.json).
-  Entrypoint chain: `/data/install_package.sh && /usr/src/node-red/entrypoint.sh`.
+- `./src/node-red:/data`, run as `user: root` (writes flows.json). Entrypoint chain: `/data/install_package.sh && /usr/src/node-red/entrypoint.sh`.
 - `install_package.sh`:
   ```sh
   #!/bin/sh
@@ -16,29 +15,35 @@
 
 ## MQTT wildcard constraint
 
-`+` matches ONE FULL level (`/`-delimited) — it cannot swallow characters
-past `_`. Since DLSPS publishes to
-`{{DETECTIONS_TOPIC_PREFIX}}_<N>/<pipeline>`, `<prefix>_+` is rejected
-outright and `<prefix>_+/#` never matches. **Subscribe to `#` and filter
-in the function node:**
+`+` matches ONE FULL `/`-delimited level; it cannot swallow past `_`. DLSPS publishes `{{DETECTIONS_TOPIC_PREFIX}}_<N>/<pipeline>`; `<prefix>_+` is rejected and `<prefix>_+/#` never matches. **Subscribe to `#` and filter in the function node:**
 ```js
 const m = (msg.topic || '').match(/^{{DETECTIONS_TOPIC_PREFIX}}_(\d+)/);
 if (!m) return null;                        // drops own stats/alerts echoes
 const sourceId = m[1];
 ```
 
+Set `mqtt in` **`datatype: "auto"`** (not `json`): it also receives scalar `stats/*`; `json` parse-errors on numbers and drops flow. `auto` yields Buffer/string.
+
 ## Flow shape (`count>N in Ts`)
 
-Implemented as function node for portability.
+Portable function node.
 
-1. Parse payload. **DLSPS 2026.1.0 nests detections at
-   `msg.payload.metadata.gva_meta[]`**, not `.objects[]`. Probe:
+0. **Coerce payload first.** `datatype: "auto"` means detection payload is **Buffer or string**, NOT parsed; otherwise `msg.payload.metadata` is `undefined` and counts stay 0:
    ```js
-   const meta = msg.payload.metadata || {};
-   const dets = meta.gva_meta || meta.objects || msg.payload.objects || [];
+   let p = msg.payload;
+   if (Buffer.isBuffer(p)) p = p.toString();
+   if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) { return null; } }
    ```
-2. Filter by `label_id ∈ {{CLASS_FILTER_IDS}}` (or labelless — see
-   `{{LABEL_RULE_NOTE}}`).
+1. Parse payload. **DLSPS 2026.1.0 nests detections at `p.metadata.gva_meta[]`**, not `.objects[]`. Probe:
+   ```js
+   const meta = p.metadata || {};
+   const dets = meta.gva_meta || meta.objects || p.objects || [];
+   ```
+2. **Per-detection class is `det.tensor[0].label_id` / `det.tensor[0].label`** — NOT `det.label_id` or `det.detection.label_id` (always `undefined`, dropping filters). Filter by `tensor[0].label_id ∈ {{CLASS_FILTER_IDS}}` OR `tensor[0].label === '{{OBJECT}}'` (labelless — see `{{LABEL_RULE_NOTE}}`):
+   ```js
+   const t = (det.tensor && det.tensor[0]) || {};
+   if (t.label === '{{OBJECT}}' || {{CLASS_FILTER_IDS}}.indexOf(t.label_id) !== -1) count++;
+   ```
 3. `sourceId = msg.topic.split('_')[1].split('/')[0]`.
 4. Sliding window per source in `flow.context()`; drop entries older than T.
 5. `windowMax = max(count over window)` per source.
@@ -48,8 +53,7 @@ Implemented as function node for portability.
 
 ## Published topics (scalars where noted)
 
-Grafana MQTT datasource plots scalars only — JSON here silently produces
-empty time-series.
+Grafana MQTT plots only scalars — JSON yields empty time-series.
 
 - `{{COUNT_TOPIC}}` — scalar total across sources
 - `{{COUNT_TOPIC}}/<sourceId>` — scalar per source

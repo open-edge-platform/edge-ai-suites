@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/FileManager.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
@@ -102,18 +103,54 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
   const [sortColumn, setSortColumn] = useState<"size" | "created" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const filterRef = useRef<HTMLDivElement>(null);
+  const filterBtnRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Viewport coordinates for the portalled dropdown, taken from the button.
+  const [filterPos, setFilterPos] = useState<{ top: number; left: number } | null>(null);
 
-  // Close filter dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
-        setShowTypeFilter(false);
-      }
-    };
+  // Nominal width used only to keep the menu inside the window; the real width
+  // comes from .fm-filter-dropdown's min-width.
+  const FILTER_MENU_WIDTH = 170;
+
+  const toggleTypeFilterMenu = () => {
     if (showTypeFilter) {
-      document.addEventListener("mousedown", handleClickOutside);
+      setShowTypeFilter(false);
+      return;
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    const rect = filterBtnRef.current?.getBoundingClientRect();
+    if (rect) {
+      setFilterPos({
+        top: rect.bottom + 4,
+        left: Math.max(8, Math.min(rect.left, window.innerWidth - FILTER_MENU_WIDTH - 8)),
+      });
+    }
+    setShowTypeFilter(true);
+  };
+
+  // Close the filter dropdown on an outside click, or when the page moves under
+  // it — it is positioned once on open, so scrolling would otherwise leave it
+  // hanging away from its button.
+  useEffect(() => {
+    if (!showTypeFilter) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const insideTrigger = filterRef.current?.contains(target);
+      // The menu is portalled out of `filterRef`, so it needs its own check or
+      // ticking a checkbox would count as an outside click.
+      const insideMenu = dropdownRef.current?.contains(target);
+      if (!insideTrigger && !insideMenu) setShowTypeFilter(false);
+    };
+    const close = () => setShowTypeFilter(false);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("resize", close);
+    document.addEventListener("scroll", close, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("resize", close);
+      document.removeEventListener("scroll", close, true);
+    };
   }, [showTypeFilter]);
 
   const fetchFiles = useCallback(async () => {
@@ -254,14 +291,11 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
     }
   };
 
-  // Build tags array including summarization_enabled if vs_enabled
-  const getFileTags = (file: FileEntry): string[] => {
-    const tags: string[] = [...(file.meta?.tags || [])];
-    if (file.meta?.vs_enabled) {
-      tags.push("summarization_enabled");
-    }
-    return tags;
-  };
+  // Only the tags the backend actually stored. Video summarization used to be
+  // folded in here as a synthetic "summarization_enabled" tag, which put a raw,
+  // untranslated identifier in front of the user; it is rendered as its own
+  // badge below instead.
+  const getFileTags = (file: FileEntry): string[] => [...(file.meta?.tags || [])];
 
   return (
     <>
@@ -305,23 +339,28 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
               <thead>
                 <tr>
                   <th>{t("fileManager.fileName")}</th>
-                  <th>
+                  <th className="fm-col-type">
                     <div className="fm-th-filter" ref={filterRef}>
                       <span>{t("fileManager.type")}</span>
                       <button
+                        ref={filterBtnRef}
                         className={`fm-filter-icon-btn${typeFilters.size > 0 ? " active" : ""}`}
-                        onClick={() => setShowTypeFilter(!showTypeFilter)}
+                        onClick={toggleTypeFilterMenu}
                         title={t("fileManager.filterByType")}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
+                          <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z" />
                         </svg>
                         {typeFilters.size > 0 && (
                           <span className="fm-filter-badge">{typeFilters.size}</span>
                         )}
                       </button>
-                      {showTypeFilter && (
-                        <div className="fm-filter-dropdown">
+                      {showTypeFilter && filterPos && createPortal(
+                        <div
+                          className="fm-filter-dropdown"
+                          ref={dropdownRef}
+                          style={{ top: filterPos.top, left: filterPos.left }}
+                        >
                           <div className="fm-filter-dropdown-header">
                             <span>{t("fileManager.filterByType")}</span>
                             {typeFilters.size > 0 && (
@@ -340,17 +379,18 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                               <span>{type}</span>
                             </label>
                           ))}
-                        </div>
+                        </div>,
+                        document.body
                       )}
                     </div>
                   </th>
-                  <th className="fm-th-sortable" onClick={() => handleSort("size")}>
+                  <th className="fm-th-sortable fm-col-size" onClick={() => handleSort("size")}>
                     {t("fileManager.size")} {sortColumn === "size" && (sortDirection === "asc" ? "↑" : "↓")}
                   </th>
-                  <th className="fm-th-sortable" onClick={() => handleSort("created")}>
+                  <th className="fm-th-sortable fm-col-created" onClick={() => handleSort("created")}>
                     {t("fileManager.createdAt")} {sortColumn === "created" && (sortDirection === "asc" ? "↑" : "↓")}
                   </th>
-                  <th></th>
+                  <th className="fm-col-remove"></th>
                 </tr>
               </thead>
               <tbody>
@@ -361,7 +401,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                       <td>
                         <div className="fm-file-info">
                           <span className="fm-file-name" title={file.file_name}>
-                            {file.file_name}
+                            <span className="fm-file-name-text">{file.file_name}</span>
                             {file.ocr_text_key && (
                               <img
                                 src={handwrittenIcon}
@@ -375,13 +415,18 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                               />
                             )}
                           </span>
-                          {tags.length > 0 && (
+                          {(file.meta?.vs_enabled || tags.length > 0) && (
                             <div className="fm-tags">
-                              {tags.map((tag) => (
+                              {file.meta?.vs_enabled && (
                                 <span
-                                  key={tag}
-                                  className={`fm-tag ${tag === "summarization_enabled" ? "fm-tag--vs" : ""}`}
+                                  className="fm-vs-badge fm-vs-badge--enabled"
+                                  title={t("fileManager.videoSummarizationHint")}
                                 >
+                                  {t("fileManager.videoSummarization")}
+                                </span>
+                              )}
+                              {tags.map((tag) => (
+                                <span key={tag} className="fm-tag" title={tag}>
                                   {tag}
                                 </span>
                               ))}

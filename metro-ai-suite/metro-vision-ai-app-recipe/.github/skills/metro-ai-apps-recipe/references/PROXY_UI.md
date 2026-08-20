@@ -3,33 +3,23 @@
 ## Nginx (single TLS entrypoint)
 
 - HTTP :80 → 301 to HTTPS :443.
-- Self-signed cert MUST include SAN
-  `IP:127.0.0.1,IP:${HOST_IP},DNS:localhost` — modern browsers reject
-  certs without SAN.
-- Upstreams: `dlstreamer-pipeline-server:8080`, `grafana:3000`,
-  `node-red:1880`, `mediamtx-server:8889` (WHEP/WHIP + player),
-  `mediamtx-server:8189` (WebRTC ICE local TCP).
+- Self-signed cert MUST include SAN `IP:127.0.0.1,IP:${HOST_IP},DNS:localhost` — browsers reject certs without SAN.
+- Upstreams: `dlstreamer-pipeline-server:8080`, `grafana:3000`, `node-red:1880`, `mediamtx-server:8889` (WHEP/WHIP + player), `mediamtx-server:8189` (WebRTC ICE local TCP).
 - Locations:
   - `/api/` → DLSPS
-  - `/grafana/` → Grafana (headers `X-Frame-Options ALLOWALL`,
-    `Content-Security-Policy "frame-ancestors *"`, WS upgrade)
+  - `/grafana/` → Grafana (headers `X-Frame-Options ALLOWALL`, `Content-Security-Policy "frame-ancestors *"`, WS upgrade)
   - `/grafana/api/live/ws` → Grafana WS
   - `/nodered/` → Node-RED (WS upgrade)
   - `/mediamtx/` → MediaMTX `:8889` (WHEP player page for iframes)
   - `/webrtc/` → MediaMTX `:8189` (WebRTC ICE over TCP)
-  - `~ ^/({{DETECTIONS_TOPIC_PREFIX}}_[^/]+)/(whep|whip)(/.*)?$` →
-    MediaMTX `:8889` WHEP/WHIP signalling (with CORS + OPTIONS preflight)
-- Grafana env: `GF_SERVER_ROOT_URL=https://localhost/grafana/`,
-  `GF_SERVER_SERVE_FROM_SUB_PATH=true`, and **`GF_SECURITY_ALLOW_EMBEDDING=true`**
-  (WebRTC panels are iframes → without this Grafana refuses to embed them).
-- **With `SERVE_FROM_SUB_PATH=true`, `proxy_pass` for `/grafana/` MUST NOT
-  end in `/`.** Trailing slash strips the prefix Grafana expects → 301
-  loop → blank spinner. Correct:
+  - `~ ^/({{DETECTIONS_TOPIC_PREFIX}}_[^/]+)/(whep|whip)(/.*)?$` → MediaMTX `:8889` WHEP/WHIP signalling (with CORS + OPTIONS preflight)
+- Grafana env: `GF_SERVER_ROOT_URL=https://localhost/grafana/`, `GF_SERVER_SERVE_FROM_SUB_PATH=true`, **`GF_SECURITY_ALLOW_EMBEDDING=true`** (WebRTC iframes).
+- **With `SERVE_FROM_SUB_PATH=true`, `/grafana/` `proxy_pass` MUST NOT end in `/`.** Trailing slash strips Grafana prefix → 301 loop → blank spinner. Correct:
   ```nginx
   location /grafana/ { proxy_pass http://grafana:3000; ... }   # NO trailing slash
   ```
 
-WebRTC blocks (WS upgrade on all three; CORS on the WHEP/WHIP regex):
+WebRTC blocks (WS upgrade on all three; CORS on WHEP/WHIP regex):
 ```nginx
 upstream mediamtx        { server mediamtx-server:8889; }
 upstream mediamtx-webrtc { server mediamtx-server:8189; }
@@ -73,9 +63,7 @@ location ~ ^/({{DETECTIONS_TOPIC_PREFIX}}_[^/]+)/(whep|whip)(/.*)?$ {
 
 ## Grafana video panels (WebRTC iframe)
 
-Text panel, HTML mode, one per source. Embed MediaMTX's built-in WHEP
-player via an iframe; `${WEBRTC_URL}` is a dashboard variable resolving to
-`https://<HOST>/mediamtx/` (set by `update_dashboard.sh`):
+Text panel, HTML mode, one per source. Embed MediaMTX WHEP player; `${WEBRTC_URL}` resolves to `https://<HOST>/mediamtx/` (set by `update_dashboard.sh`):
 ```html
 <iframe
   src="${WEBRTC_URL}{{DETECTIONS_TOPIC_PREFIX}}_1/"
@@ -83,25 +71,16 @@ player via an iframe; `${WEBRTC_URL}` is a dashboard variable resolving to
   allow="autoplay; encrypted-media">
 </iframe>
 ```
-- Requires `GF_PANELS_DISABLE_SANITIZE_HTML=true` (HTML panel) AND
-  `GF_SECURITY_ALLOW_EMBEDDING=true` (iframe embedding).
-- The trailing slash on `.../{{DETECTIONS_TOPIC_PREFIX}}_1/` is required —
-  MediaMTX serves the reader page at the path root.
-- The stream only appears after `sample_start.sh` launches the pipelines
-  (DLSPS is the WHIP publisher); before that the player shows "waiting".
+- Requires `GF_PANELS_DISABLE_SANITIZE_HTML=true` (HTML panel) AND `GF_SECURITY_ALLOW_EMBEDDING=true` (iframe embedding).
+- Trailing slash on `.../{{DETECTIONS_TOPIC_PREFIX}}_1/` is required; MediaMTX serves reader page at path root.
+- Stream appears only after `sample_start.sh` launches pipelines (DLSPS is WHIP publisher); before then: "waiting".
 
 ## Grafana provisioning
 
 - `src/grafana/datasources.yml`:
-  - `grafana-mqtt-datasource` → broker URI in **`jsonData.uri`** (default
-    `tcp://broker:1883`)
+  - `grafana-mqtt-datasource` → broker URI in **`jsonData.uri`** (default `tcp://broker:1883`)
   - `yesoreyeram-infinity-datasource` (arbitrary REST/JSON panels)
-- **CRITICAL — MQTT datasource address goes in `jsonData.uri` ONLY**
-  (verified plugin v1.3.3, backend reads `Options.URI` from json key
-  `uri`). The top-level `url:` field and `jsonData.host`/`jsonData.port`
-  are IGNORED by this plugin. Getting this wrong yields a green-looking
-  provision but **"Error connecting to MQTT broker. Network error dial
-  tcp: missing address"** and every MQTT panel stays empty. Correct block:
+- **CRITICAL — MQTT datasource address goes in `jsonData.uri` ONLY** (plugin v1.3.3 reads `Options.URI` from json key `uri`). Top-level `url:` and `jsonData.host`/`jsonData.port` are IGNORED. Wrong key provisions green but health says **"Error connecting to MQTT broker. Network error dial tcp: missing address"**; panels stay empty. Correct:
   ```yaml
   apiVersion: 1
   datasources:
@@ -114,25 +93,12 @@ player via an iframe; `${WEBRTC_URL}` is a dashboard variable resolving to
         uri: tcp://broker:1883
       editable: true
   ```
-  Datasource provisioning is applied only at Grafana startup, so
-  `docker compose restart grafana` after editing. Verify with
-  `curl -k --noproxy '*' -s -u admin:admin
-  https://localhost/grafana/api/datasources/uid/mqtt_ds/health` → expect
-  `"status":"OK","message":"MQTT Connected"`.
-- **grafana-mqtt-datasource v1.3.3 caveat:** panel target must be an
-  exact scalar topic; wildcards silently drop. So Node-RED MUST publish
-  `{{COUNT_TOPIC}}`, `{{COUNT_TOPIC}}/<sourceId>`, `stats/alert_active`,
-  `stats/alert_total` as plain numbers (NOT JSON). Older versions broken
-  — do NOT downgrade.
-- `src/grafana/dashboards.yml` → `/var/lib/grafana/dashboards`; write
-  `{{DASHBOARD_SLUG}}.json` there. Dashboard rows:
+  Provisioning applies only at startup; `docker compose restart grafana` after edits. Verify with `curl --cacert src/nginx/ssl/server.crt --noproxy '*' -s -u admin:admin https://localhost/grafana/api/datasources/uid/mqtt_ds/health` → `"status":"OK","message":"MQTT Connected"`.
+- **grafana-mqtt-datasource v1.3.3 caveat:** target must be exact scalar topic; wildcards silently drop. Node-RED MUST publish `{{COUNT_TOPIC}}`, `{{COUNT_TOPIC}}/<sourceId>`, `stats/alert_active`, `stats/alert_total` as plain numbers (NOT JSON). Older versions broken — do NOT downgrade.
+- `src/grafana/dashboards.yml` → `/var/lib/grafana/dashboards`; write `{{DASHBOARD_SLUG}}.json`. Rows:
   1. Numeric MQTT panels: `{{COUNT_TOPIC}}`, `stats/alert_active`, `stats/alert_total`.
   2. Alert log (MQTT topic `{{ALERT_TOPIC}}`, JSON payload → table panel).
-  3. {{NUM_SOURCES}} Text/HTML panels, each an `<iframe>` WebRTC player
-     `${WEBRTC_URL}{{DETECTIONS_TOPIC_PREFIX}}_X/`. Define a dashboard
-     `templating` variable `WEBRTC_URL` (constant, hidden) with a
-     `HOST_IP_PLACEHOLDER`-based default that `update_dashboard.sh`
-     rewrites to `https://<HOST>/mediamtx/`.
+  3. {{NUM_SOURCES}} Text/HTML panels, each `<iframe>` WebRTC player `${WEBRTC_URL}{{DETECTIONS_TOPIC_PREFIX}}_X/`. Define hidden constant `WEBRTC_URL` with `HOST_IP_PLACEHOLDER`; `update_dashboard.sh` rewrites to `https://<HOST>/mediamtx/`.
 - Grafana `environment:` MUST include:
   ```yaml
   GF_INSTALL_PLUGINS: "grafana-mqtt-datasource 1.3.3,yesoreyeram-infinity-datasource 3.11.1"
@@ -149,4 +115,4 @@ player via an iframe; `${WEBRTC_URL}` is a dashboard variable resolving to
 allow_anonymous true
 listener 1883
 ```
-Only reachable on `app_network`; NOT published to the host.
+Only reachable on `app_network`; NOT published to host.

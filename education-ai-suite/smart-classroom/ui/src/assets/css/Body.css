@@ -4,16 +4,7 @@
   flex: 1 1 auto;
   min-height: 0;
   position: relative;
-  height: 100%;
   background: #f5f7fa;
-  z-index: 1000;
-}
-
-/* Fullscreen state (video floated over panels) */
-.container.fullscreen {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
   z-index: 1000;
 }
 
@@ -21,7 +12,7 @@
 .left-panel,
 .right-panel {
   overflow-y: auto;
-  height: calc(100vh - var(--top-panel-height) - var(--header-bar-height) - var(--footer-height));
+  min-height: 0;
   box-sizing: border-box;
   padding: 12px 12px 12px 18px;
 }
@@ -37,46 +28,6 @@
   overflow: hidden;
 }
 
-/* When video is fullscreen, push panels below it */
-.container.fullscreen .left-panel,
-.container.fullscreen .right-panel {
-  margin-top: calc(70vh - var(--top-panel-height) - var(--header-bar-height));
-  position: relative;
-  /* //z-index: 10000; */
-}
-
-/* Wrapper holding panels */
-.panels-wrapper {
-  display: flex;
-  flex: 1;
-  width: 100%;
-}
-
-.container.fullscreen .panels-wrapper {
-  margin-top: calc(70vh - var(--top-panel-height) - var(--header-bar-height));
-  align-items: stretch;
-}
-
-/* Video */
-.video-wrapper {
-  width: 100%;
-}
-
-.video-wrapper.fullscreen {
-  position: fixed;
-  top: calc(var(--top-panel-height) + var(--header-bar-height));
-  /* Header + top bar */
-  left: 0;
-  right: 0;
-  height: 70vh;
-  /* z-index: 100; */
-  background: #000;
-}
-
-/* Divider (hidden by design) */
-.divider {
-  display: none;
-}
 
 /* Collapse arrow */
 .arrow {

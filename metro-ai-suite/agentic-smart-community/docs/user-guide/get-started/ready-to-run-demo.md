@@ -22,7 +22,7 @@ Prepare any subset of compatible local MP4 files. The RTSP pusher copies the sou
 
 ## Step 1 - Provide video paths
 
-Video files are not included in release artifacts. All four entries in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml) default to `enabled: true`, but a stream will be automatically skipped with a warning when its environment variable is unset, empty, or points to an unreadable file.
+Video files are not included in release artifacts. All four entries in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/quick-start/streams.yaml) default to `enabled: true`, but a stream will be automatically skipped with a warning when its environment variable is unset, empty, or points to an unreadable file.
 
 Export an absolute path for every stream you want to run. Omit variables for streams you do not have; no YAML edits are required.
 
@@ -33,7 +33,7 @@ export SMART_COMMUNITY_DEMO_ELDER_VIDEO=/absolute/path/elder-wakeup.mp4
 export SMART_COMMUNITY_DEMO_ELDER_2_VIDEO=/absolute/path/elder-wakeup-2.mp4
 ```
 
-To manually disable a stream even when its variable is available, set that stream's `enabled: false` in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/videos/streams.yaml).
+To manually disable a stream even when its variable is available, set that stream's `enabled: false` in [streams.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/quick-start/streams.yaml).
 
 ## Step 2 - Start the demo
 
@@ -43,12 +43,12 @@ From the component root (`metro-ai-suite/agentic-smart-community`), run:
 # Change to mirror endpoint if you are in China and want to use the mirror site for Hugging Face.
 export HF_ENDPOINT=https://hf-mirror.com
 
-bash demo/scripts/start-demo.sh
+bash demo/quick-start/start-demo.sh
 ```
 
 This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMART_COMMUNITY_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smart-community-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
-The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/config.demo.yaml) to `$SMART_COMMUNITY_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/monitors.demo.yaml) to the active streams and writes the result to `$SMART_COMMUNITY_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/quick-start/config.demo.yaml) to `$SMART_COMMUNITY_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/quick-start/monitors.demo.yaml) to the active streams and writes the result to `$SMART_COMMUNITY_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
 If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMART_COMMUNITY_DATA_DIR`; the files under `demo/` remain unchanged.
 
@@ -59,7 +59,7 @@ cat demo/videos/.run/active-streams.txt
 cat "${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}/monitors.yaml"
 ffprobe -rtsp_transport tcp rtsp://localhost:8554/live/child
 curl -fsS http://localhost:3101/health
-docker logs -f smart-community-mcp-server
+docker logs -f <smart-community-mcp-server-container>
 ```
 
 Replace `child` with the selected path: `fridge`, `child`, `elder`, or `elder2`. Press `Ctrl-C` to stop following the log. Open `http://localhost:3100/` to verify that active monitors appear automatically and that selecting one starts its RTSP live preview. Multiple browser windows viewing the same monitor share one ffmpeg process. The MCP endpoint is `http://localhost:3100/mcp` and the event webhook is `http://localhost:3101/events`.
@@ -175,7 +175,7 @@ These are conversation starters, not a required script. Try your own wording, co
 Stop the demo RTSP pushers and the app tier (MCP server + analytics + video-summary) together, leaving `vllm-ipex-serving` running so its multi-minute recompile is not repaid on the next start:
 
 ```bash
-bash demo/scripts/stop-demo.sh
+bash demo/quick-start/stop-demo.sh
 ```
 
 To tear the whole stack down, including `vllm-ipex-serving`, run `bash setup_docker.sh --down`.

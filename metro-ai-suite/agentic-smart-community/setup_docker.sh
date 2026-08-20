@@ -73,8 +73,20 @@ EDGE_AI_LIBRARIES_REF="main"
 MULTILEVEL_SUBPATH="microservices/multilevel-video-understanding"
 
 ensure_edge_ai_libraries() {
-  if [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
-    echo "edge-ai-libraries present: ${EDGE_AI_LIBRARIES_DIR}"
+  local refresh="${1:-true}"
+
+  if git -C "${EDGE_AI_LIBRARIES_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      && [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
+    if [ "$refresh" = true ]; then
+      echo "Updating edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) in ${EDGE_AI_LIBRARIES_DIR}"
+      GIT_LFS_SKIP_SMUDGE=1 git -C "${EDGE_AI_LIBRARIES_DIR}" fetch \
+        --depth 1 origin "${EDGE_AI_LIBRARIES_REF}"
+      git -C "${EDGE_AI_LIBRARIES_DIR}" reset --hard FETCH_HEAD
+      git -C "${EDGE_AI_LIBRARIES_DIR}" sparse-checkout set "${MULTILEVEL_SUBPATH}"
+      echo -e "${GREEN}edge-ai-libraries updated.${NC}"
+    else
+      echo "Using existing edge-ai-libraries for teardown: ${EDGE_AI_LIBRARIES_DIR}"
+    fi
     return 0
   fi
   echo "Fetching edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) from ${EDGE_AI_LIBRARIES_REPO}"
@@ -218,7 +230,11 @@ DOCKER_CMD="docker compose -f compose.yaml"
 
 # compose.yaml `extends` the upstream service defs from .external/edge-ai-libraries,
 # so it must exist before ANY compose command below can even parse the file.
-ensure_edge_ai_libraries
+if [ "$DOWN_CONTAINERS" = true ] || [ "$LIGHT_DOWN" = true ]; then
+  ensure_edge_ai_libraries false
+else
+  ensure_edge_ai_libraries true
+fi
 
 # --- fetch-only ---------------------------------------------------------------
 if [ "$FETCH_ONLY" = true ]; then
@@ -256,7 +272,7 @@ if [ "$UP_CONTAINERS" = true ]; then
       $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
     elif [ "$USE_LOCAL_VLLM" = true ]; then
       echo "Local vllm-ipex-serving not healthy yet — starting the full stack instead."
-      echo "(first run pulls/compiles the model — this can take 3-20+ min)"
+      echo "(first run pulls/compiles the model — this can take about 30 mins)"
       $DOCKER_CMD up -d
     else
       echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smart-community-mcp-server anyway (they retry at runtime)."
@@ -265,7 +281,7 @@ if [ "$UP_CONTAINERS" = true ]; then
   else
     # End-to-end: bring up serving + app + analytics together.
     echo "Starting all three services..."
-    echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take 3-20+ min)"
+    echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take about 30 mins)"
     $DOCKER_CMD up -d
   fi
 
@@ -278,9 +294,9 @@ fi
 
 # --- down ---------------------------------------------------------------------
 if [ "$DOWN_CONTAINERS" = true ]; then
-  echo "Stopping and removing all containers..."
-  $DOCKER_CMD down
-  echo "==== Containers stopped and removed! ===="
+  echo "Stopping and removing all containers, networks, and named volumes..."
+  $DOCKER_CMD down --volumes --remove-orphans
+  echo "==== Full stack stopped and removed! ===="
 fi
 
 # --- light-down ---------------------------------------------------------------

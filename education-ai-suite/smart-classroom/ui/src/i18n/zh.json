@@ -77,7 +77,15 @@
     "enterFrontCameraPath": "输入前置摄像头路径",
     "enterBackCameraPath": "输入后置摄像头路径",
     "enterBoardCameraPath": "输入黑板摄像头路径",
-    "selectFolder": "选择文件夹"
+    "selectFolder": "选择文件夹",
+    "noDevicesAvailable": "无可用设备",
+    "deviceSelectionInfo": "已选择：{{selected}} | 可用：{{count}}",
+    "noneSelected": "无",
+    "loadingDevices": "加载中…",
+    "noMicrophonesFound": "未找到麦克风",
+    "selectMicrophone": "请选择麦克风…",
+    "audioFeaturesDisabled": "音频处理功能已禁用，无需设置麦克风。",
+    "videoAnalyticsDisabled": "视频分析功能已禁用，无需设置摄像头。"
   },
   "uploadFiles": {
     "title": "上传文件",
@@ -537,6 +545,8 @@
     "loadFailed": "加载文件列表失败。",
     "deleteFailed": "删除文件失败。",
     "cannotDeleteNoTask": "无法删除“{{fileName}}”：没有关联的任务。",
+    "videoSummarization": "视频摘要",
+    "videoSummarizationHint": "此文件已启用视频摘要",
     "ocrLoadFailed": "加载 OCR 文本失败。",
     "ocrLoadFailedDetail": "加载 OCR 文本失败：{{detail}}"
   },

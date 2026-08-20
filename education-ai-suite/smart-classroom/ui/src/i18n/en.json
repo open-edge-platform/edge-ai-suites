@@ -77,7 +77,15 @@
       "enterFrontCameraPath": "Enter front camera path",
       "enterBackCameraPath": "Enter rear camera path",
       "enterBoardCameraPath": "Enter board camera path",
-      "selectFolder": "Select Folder"
+      "selectFolder": "Select Folder",
+      "noDevicesAvailable": "No devices available",
+      "deviceSelectionInfo": "Selected: {{selected}} | Available: {{count}}",
+      "noneSelected": "None",
+      "loadingDevices": "Loading...",
+      "noMicrophonesFound": "No microphones found",
+      "selectMicrophone": "Select a microphone...",
+      "audioFeaturesDisabled": "Audio processing features are disabled. Microphone settings are not required.",
+      "videoAnalyticsDisabled": "Video analytics feature is disabled. Camera settings are not required."
     },
     "uploadFiles": {
     "title": "Upload Files",
@@ -537,6 +545,8 @@
     "loadFailed": "Failed to load files.",
     "deleteFailed": "Failed to delete file.",
     "cannotDeleteNoTask": "\"{{fileName}}\" cannot be removed: no task is associated with it.",
+    "videoSummarization": "Video Summarization",
+    "videoSummarizationHint": "Video summarization is enabled for this file",
     "ocrLoadFailed": "Failed to load OCR text.",
     "ocrLoadFailedDetail": "Failed to load OCR text: {{detail}}"
   },
