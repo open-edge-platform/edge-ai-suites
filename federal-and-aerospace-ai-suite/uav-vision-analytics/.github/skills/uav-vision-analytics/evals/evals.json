@@ -20,7 +20,7 @@
     {
       "id": 2,
       "name": "mavsdk-three-camera",
-      "description": "MAVSDK integration with nadir/forward/rear RTSP cameras, MQTT-triggered lifecycle",
+      "description": "UAVSDK integration with nadir/forward/rear RTSP cameras, MQTT-triggered lifecycle",
       "prompt_file": "example-prompts/02-mavsdk-three-camera.md",
       "should_trigger": true,
       "expectations": [
@@ -49,11 +49,11 @@
     {
       "id": 4,
       "name": "cloud-only-negative",
-      "description": "Cloud-only Prometheus metrics dashboard without MAVLink — should NOT trigger this skill",
+      "description": "Cloud-only Prometheus metrics dashboard without MAVLink \u2014 should NOT trigger this skill",
       "prompt": "Set up a Prometheus and Grafana metrics dashboard for cloud server monitoring. No cameras, no MAVLink, no drone.",
       "should_trigger": false,
       "expectations": [
-        "Skill does not trigger — this is outside the UAV vision analytics scope"
+        "Skill does not trigger \u2014 this is outside the UAV vision analytics scope"
       ]
     }
   ]

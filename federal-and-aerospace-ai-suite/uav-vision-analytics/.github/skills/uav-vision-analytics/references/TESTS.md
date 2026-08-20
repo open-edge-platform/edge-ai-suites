@@ -73,16 +73,16 @@ def test_dlstreamer_container_running():
 def test_broker_container_running():
     """Only present in pymavlink mode."""
     containers = _running_containers()
-    # Skip if broker not expected (MAVSDK mode)
+    # Skip if broker not expected (UAVSDK mode)
     if "broker" not in containers:
-        pytest.skip("broker not present (MAVSDK mode)")
+        pytest.skip("broker not present (UAVSDK mode)")
     assert "broker" in containers
 
 
 def test_px4_container_running():
     containers = _running_containers()
     if "px4" not in containers:
-        pytest.skip("px4 not present (MAVSDK mode)")
+        pytest.skip("px4 not present (UAVSDK mode)")
     assert "px4" in containers
 ```
 

@@ -134,12 +134,24 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
   `uav-mission-compute-sdk`) as the build context, or `docker compose up`
   fails with "unable to prepare context: path ... not found" on any machine
   that hasn't checked out that sibling repo.
+- For pymavlink mode: always generate `10040_sihsim_quadx.post` in `{{STACK_DIR}}`
+  with content `mavlink start -u 14541 -t $(getent hosts mavlink-router | awk '{print $1}')`
+  and mount it into the `px4` service at
+  `/opt/px4/etc/init.d-posix/airframes/10040_sihsim_quadx.post`.
+  Without it PX4 SITL never routes MAVLink to mavlink-router and the pipeline
+  manager blocks forever waiting for a heartbeat.
+- Never include active (non-commented) proxy vars in `.env.example`. `make`
+  exports every variable from `.env`; an empty `http_proxy=` overrides the
+  system proxy from `/etc/environment` and silently breaks `make model`
+  (pip and huggingface-cli lose the corporate proxy). Use commented examples
+  instead: `# http_proxy=`.
 
 ## Generated File Layout
 
 ```
 {{STACK_DIR}}/
 ├── docker-compose-pymavlink.yml     # or docker-compose-uavsdk.yml
+├── 10040_sihsim_quadx.post          # PX4 airframe MAVLink routing (pymavlink only)
 ├── .env                             # HOST_IP, image tags
 ├── .env.example                     # template copied by make init
 ├── Makefile                         # init, model, stack up/down, pipeline start/stop
