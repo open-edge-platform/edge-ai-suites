@@ -22,6 +22,7 @@ Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO visio
 | Configure cameras, switch USB/sim | [docs/CAMERA-MODES.md](docs/CAMERA-MODES.md) |
 | See all ports and services | [docs/PORTS.md](docs/PORTS.md) |
 | Connect a real PX4 over Ethernet | [docs/ETHERNET-PX4.md](docs/ETHERNET-PX4.md) |
+| Review security config/recommendations | [docs/security-considerations.md](docs/security-considerations.md) |
 | Troubleshoot a broken stack | [GETTING_STARTED.md](GETTING_STARTED.md) |
 
 ---
@@ -111,7 +112,7 @@ make up-usb-camera         # Start USB camera stack
 make up-usb-camera-lean    # Start USB camera stack without observability
 make apps                  # Start vision processor + dashboard
 make apps-down             # Stop apps only
-make down                  # Stop all containers
+make down                  # Stop all containers (core infra + apps)
 make logs                  # Tail core infra logs
 make apps-logs             # Tail app logs
 ```

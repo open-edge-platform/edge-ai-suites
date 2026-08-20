@@ -76,8 +76,9 @@ build-nc:
 	$(COMPOSE_APPS) build --no-cache
 
 down:
-	@# Help: Stop core infra (works for both sim-camera and usb-camera profiles)
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down
+	@# Help: Stop all containers — core infra (sim-camera/usb-camera) + apps
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
+	$(COMPOSE_APPS) down --remove-orphans
 
 logs:
 	@# Help: Tail logs for core infra
