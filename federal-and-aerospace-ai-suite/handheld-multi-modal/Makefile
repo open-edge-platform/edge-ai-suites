@@ -89,14 +89,15 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	fi; \
 	if [ ! -d data/nginx-certs/ ]; then \
 		sudo mkdir -p data/nginx-certs/; \
-		sudo openssl genrsa -out data/nginx-certs/ca-key.pem 3072; \
-		sudo openssl req -x509 -new -nodes -key data/nginx-certs/ca-key.pem -days 3650 \
+		sudo chown 1000:1000 -R data/nginx-certs/; \
+		openssl genrsa -out data/nginx-certs/ca-key.pem 3072; \
+		openssl req -x509 -new -nodes -key data/nginx-certs/ca-key.pem -days 3650 \
 			-out data/nginx-certs/ca-cert.pem -subj '/CN=Handheld Multi-Modal Local CA'; \
-		sudo openssl genrsa -out data/nginx-certs/key.pem 3072; \
-		sudo openssl req -new -key data/nginx-certs/key.pem \
+		openssl genrsa -out data/nginx-certs/key.pem 3072; \
+		openssl req -new -key data/nginx-certs/key.pem \
 			-out data/nginx-certs/server.csr -subj '/CN=localhost'; \
 		printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\n' > data/nginx-certs/server.ext; \
-		sudo openssl x509 -req -in data/nginx-certs/server.csr \
+		openssl x509 -req -in data/nginx-certs/server.csr \
 			-CA data/nginx-certs/ca-cert.pem -CAkey data/nginx-certs/ca-key.pem -CAcreateserial \
 			-out data/nginx-certs/cert.pem -days 365 \
 			-extfile data/nginx-certs/server.ext; \
