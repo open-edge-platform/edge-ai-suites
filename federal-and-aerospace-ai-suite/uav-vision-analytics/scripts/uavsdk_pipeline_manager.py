@@ -17,7 +17,7 @@ import requests
 
 BROKER = "host.docker.internal"
 PORT = 1884
-TOPIC = "uav/uav-1/telemetry/status"
+TOPIC = f"uav/{os.getenv('UAV_ID', 'uav-1')}/telemetry/status"
 
 PIPELINE_BASE_URL = "http://localhost:8081/pipelines/user_defined_pipelines"
 PIPELINE_DELETE_URL_TMPL = "http://localhost:8081/pipelines/{instance_id}"
@@ -30,8 +30,11 @@ RTSP_OUTPUT_BASE_URL = f"rtsp://localhost:8555/"
 # How long to wait (seconds) for ffprobe to confirm a stream is up, and how
 # many times / how long to retry before giving up on a given pipeline.
 RTSP_PROBE_TIMEOUT = 5
-RTSP_PROBE_RETRIES = 3
-RTSP_PROBE_RETRY_DELAY = 2
+RTSP_PROBE_RETRIES = int(os.getenv("RTSP_PROBE_RETRIES", "10"))
+RTSP_PROBE_RETRY_DELAY = int(os.getenv("RTSP_PROBE_RETRY_DELAY", "3"))
+
+# Passed via make start-rtsp DEVICE=cpu|gpu|npu|all; default is gpu.
+PIPELINE_DEVICE = os.getenv("PIPELINE_DEVICE", "gpu").lower()
 
 # Matches the three curl calls in start_pipelines.sh
 PIPELINES = [
@@ -101,6 +104,17 @@ def wait_for_rtsp_stream(rtsp_url, retries=RTSP_PROBE_RETRIES, delay=RTSP_PROBE_
     return False
 
 
+def _filter_by_device(pipelines: list, device: str) -> list:
+    """Return pipelines matching device; 'all' returns the full list."""
+    if device == "all":
+        return pipelines
+    filtered = [p for p in pipelines if p["device"].lower() == device]
+    if not filtered:
+        print(f"[config] Warning: no pipeline for device='{device}' — defaulting to GPU.")
+        return [p for p in pipelines if p["device"] == "GPU"]
+    return filtered
+
+
 def build_payload(frame_path, device):
     return {
         "destination": {
@@ -124,12 +138,15 @@ def build_payload(frame_path, device):
 
 
 def start_pipelines():
-    """POST all three pipelines and collect their instance_ids."""
+    """POST configured pipelines and collect their instance_ids."""
     global running_instance_ids
     running_instance_ids = []
 
+    active_pipelines = _filter_by_device(PIPELINES, PIPELINE_DEVICE)
+    print(f"[config] Device    : {PIPELINE_DEVICE.upper()}")
+    print(f"[config] Pipelines : {[p['name'] for p in active_pipelines]}")
     npu_device = os.getenv("NPU_DEVICE", "/dev/null")
-    for pipeline in PIPELINES:
+    for pipeline in active_pipelines:
         if pipeline["device"] == "NPU" and npu_device == "/dev/null":
             print(f"[pipeline] Skipping '{pipeline['name']}': NPU_DEVICE not available.")
             continue
@@ -157,6 +174,10 @@ def start_pipelines():
                     running_instance_ids.append(instance_id)
         except requests.RequestException as exc:
             print(f"[pipeline] Failed to start '{pipeline['name']}': {exc}")
+
+    if not running_instance_ids:
+        print("[pipeline] Warning: no pipelines started (all RTSP sources unavailable or skipped).")
+        return
 
     active = [p for p in PIPELINES if p["device"] != "NPU" or npu_device != "/dev/null"]
     stream_urls = "\n".join(f"{p['device']}: {RTSP_OUTPUT_BASE_URL}{p['frame_path']}" for p in active)

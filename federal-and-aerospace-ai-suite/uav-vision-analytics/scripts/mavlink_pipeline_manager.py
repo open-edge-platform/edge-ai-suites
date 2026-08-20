@@ -28,6 +28,8 @@ MODEL_PATH          = (
     "/home/pipeline-server/resources/models/"
     "yolov8n-visdrone/best_openvino_model/best.xml"
 )
+# Passed via make start-rtsp DEVICE=cpu|gpu|npu|all; default is gpu.
+PIPELINE_DEVICE = os.getenv("PIPELINE_DEVICE", "gpu").lower()
 
 # ── Pipeline definitions ──────────────────────────────────────────────────────
 
@@ -85,6 +87,17 @@ def _build_udp_payload(pipeline: dict) -> dict:
     }
 
 # ── Pipeline lifecycle ────────────────────────────────────────────────────────
+
+def _filter_by_device(pipelines: list[dict], device: str) -> list[dict]:
+    """Return pipelines matching device; 'all' returns the full list."""
+    if device == "all":
+        return pipelines
+    filtered = [p for p in pipelines if p["device"].lower() == device]
+    if not filtered:
+        print(f"[config] Warning: no pipeline for device='{device}' — defaulting to GPU.")
+        return [p for p in pipelines if p["device"] == "GPU"]
+    return filtered
+
 
 running_instance_ids: list[str] = []
 
@@ -154,9 +167,11 @@ def stop_pipelines() -> None:
 
 def monitor_and_control(sink: str) -> None:
     pipelines     = RTSP_PIPELINES if sink == "rtsp" else UDP_PIPELINES
+    pipelines     = _filter_by_device(pipelines, PIPELINE_DEVICE)
     build_payload = _build_rtsp_payload if sink == "rtsp" else _build_udp_payload
 
     print(f"[config] Sink mode : {sink.upper()}")
+    print(f"[config] Device    : {PIPELINE_DEVICE.upper()}")
     print(f"[config] Pipelines : {[p['name'] for p in pipelines]}")
     print(f"Connecting to {CONNECTION_STRING}...")
 
