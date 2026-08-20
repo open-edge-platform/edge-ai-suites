@@ -169,7 +169,7 @@ vippet-up: vippet-configure ## Start vippet (builds images, installs all models,
 	else \
 		echo 'METRICS_MANAGER_HOSTNAME=ptl' >> .env; \
 	fi && \
-	$(MAKE) build build-onvif-discovery run && \
+	$(MAKE) build run && \
 	echo "✓ vippet running"
 	# fedaero makefile
 	@$(MAKE) models-license models-download models-status 
