@@ -107,11 +107,11 @@ up-ethernet:
 		echo "Error: FC_IP is required.  Usage: make up-ethernet FC_IP=192.168.1.100"; \
 		exit 1; \
 	fi
-	FC_IP=$(FC_IP) $(COMPOSE_ETH) up -d --build
+	FC_IP=$(FC_IP) $(COMPOSE_ETH) --profile ethernet --profile observability up -d --build
 
 down-ethernet:
-	@# Help: Stop ethernet stack
-	FC_IP=$(FC_IP) $(COMPOSE_ETH) down
+	@# Help: Stop ethernet stack (FC_IP not required — value is irrelevant for teardown)
+	FC_IP=$(if $(FC_IP),$(FC_IP),0.0.0.0) $(COMPOSE_ETH) --profile ethernet --profile observability down
 
 # ── Deploy FC machine (remote PX4 SITL + mavlink-router) ──────────────────
 deploy-remote:
@@ -169,7 +169,6 @@ $(VENV)/.installed: $(REQ)
 		echo "Fix with ONE of:"; \
 		echo "  sudo apt install python3-venv           # then re-run 'make deps'"; \
 		echo "  curl -LsSf https://astral.sh/uv/install.sh | sh   # install uv, then re-run"; \
-		echo "  make deps-break                         # last resort: system-wide install"; \
 		exit 1; \
 	fi
 	@touch $@
