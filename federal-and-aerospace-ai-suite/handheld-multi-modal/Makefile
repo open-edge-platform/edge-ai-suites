@@ -217,7 +217,7 @@ up: build-whisper ## Start all services (standard)
 	$(COMPOSE) up -d
 
 up-cdi: build-whisper ## Start all services (CDI / SR-IOV)
-	@echo "Starting handheld-multi-modal stack (CDI)...OVMS will download model(s) at startup, which may take a few minutes."
+	@echo "Starting handheld-multi-modal stack (CDI)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_CDI) up -d
 
 down: vippet-down ## Stop all services (standard) and vippet
