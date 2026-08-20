@@ -29,7 +29,9 @@ commit the patch below applies to.
 
 | Patch | Change |
 | ----- | ------ |
-| [0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch) | New Avia configs; `config/velodyne_generic.yaml` — a Velodyne HDL-32E parameter set for NCLT validation below, with the LiDAR-IMU extrinsic derived from the NCLT dataset paper's own Table 4 sensor calibration (not the UrbanLoco/Point-LIO placeholder it started from — see the comment above `extrinsic_T`/`extrinsic_R` in that file); C++17 + configurable OMP thread count in the build; a preprocess crash fix for Velodyne scans missing a `time` field; and a latency-profiling CSV (below). |
+| [0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch) | New Avia configs; `config/velodyne_generic.yaml` — a Velodyne HDL-32E parameter set originally tuned for NCLT, with the LiDAR-IMU extrinsic derived from the NCLT dataset paper's own Table 4 sensor calibration (kept for reference/extension — the validation flow below uses the pristine upstream `config/velodyne.yaml` instead, unmodified, since it already fits UrbanLoco's own Velodyne+IMU rig); C++17 + configurable OMP thread count in the build; a preprocess crash fix for Velodyne scans missing a `time` field; and a latency-profiling CSV (below). |
+| [0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch) | Reformats `laserMapping.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch) | Widens the `imu_cbk`/`sync_packages` mutex lock to cover the shared buffer's full read/write window; fixes `res_last` never reaching its `-1000` sentinel (`memset` truncated the float fill argument) via `std::fill`, dropping a leftover duplicate reset; checks `mkdir()`'s return value for the log directory; wraps `main()` in a try/catch. |
 
 **Profiling**: built behind the `ENABLE_PROFILING` CMake option (off by
 default, matching upstream). When enabled, a lock-free ring buffer plus a
@@ -253,6 +255,8 @@ sudo cmake --install /tmp/livox-sdk2/build
 ```bash
 cd FAST_LIO
 git am --keep-cr ../patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch
+git am --keep-cr ../patches/0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch
+git am --keep-cr ../patches/0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch
 cd ..
 ```
 
