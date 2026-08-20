@@ -159,7 +159,7 @@ services:
       - UAV_ID=${UAV_ID:-uav-1}
       - GZ_WORLD=${GZ_WORLD:-baylands_multicam}
       - GZ_MODEL=x500_mono_cam_down_0
-      - CAMERA_IDS=${CAMERA_IDS:-nadir,forward,rear}
+      - CAMERA_IDS=${VISION_CAMERA_IDS:-nadir,forward,rear}
       - SENSOR_FPS=30
       - USE_RTSP=true
       - RTSP_HOST=mediamtx
