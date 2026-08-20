@@ -131,6 +131,7 @@ cd ..
     HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
     http_proxy: # example: http_proxy: http://proxy.example.com:891
     https_proxy: # example: http_proxy: http://proxy.example.com:891
+    no_proxy: # example: no_proxy: localhost,127.0.0.1,.local,.cluster.local
     webrtcturnserver:
         username: # example: username: myuser
         password: # example: password: mypassword
