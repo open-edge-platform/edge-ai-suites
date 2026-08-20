@@ -21,10 +21,10 @@ for model in "\${OMZ_MODELS[@]}"; do
   if [ ! -e "src/dlstreamer-pipeline-server/models/intel/\$model/\$model.json" ]; then
     echo "Download \$model..." && \
     mkdir -p src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/ && \
-    curl -kL -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.xml?raw=true" && \
-    curl -kL -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.bin?raw=true" && \
+    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.xml?raw=true" && \
+    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.bin?raw=true" && \
     echo "Download \$model proc file..." && \
-    curl -kL -o "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
+    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
 
   fi
 done
@@ -42,7 +42,7 @@ declare -A video_urls=(
 for video_name in "\${!video_urls[@]}"; do
     if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
         echo "Download \${video_name}..."
-        curl -kL -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
+        curl -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
 
