@@ -11,11 +11,12 @@ This lightweight FastAPI app replaces the previous Gradio UI. It:
    - ``/api/tts/*``      -> text-to-speech   (default http://127.0.0.1:8011)
    - ``/api/analyzer/*`` -> audio-analyzer   (default http://127.0.0.1:8010)
 
-Run: python kiosk_ui_server.py   (listens on 0.0.0.0:7860)
+Run: python ata_ui_server.py   (listens on 0.0.0.0:7860)
 """
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import httpx
@@ -37,7 +38,24 @@ UPSTREAMS = {
 # Long timeout: RAG generation + TTS synthesis can take a while.
 _PROXY_TIMEOUT = float(os.getenv("KIOSK_UI_PROXY_TIMEOUT_SECONDS", "600"))
 
-app = FastAPI(title="kiosk-ui-server")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # One pooled client shared by every proxied request. Creating a client per
+    # request rebuilds the connection pool each call and collapses throughput
+    # under the browser's concurrent polling; a shared pool keeps it fast.
+    app.state.client = httpx.AsyncClient(
+        timeout=_PROXY_TIMEOUT,
+        trust_env=False,
+        limits=httpx.Limits(max_connections=100, max_keepalive_connections=50),
+    )
+    try:
+        yield
+    finally:
+        await app.state.client.aclose()
+
+
+app = FastAPI(title="kiosk-ui-server", lifespan=lifespan)
 
 # Hop-by-hop headers must not be forwarded.
 _HOP_BY_HOP = {
@@ -64,17 +82,17 @@ async def proxy(service: str, path: str, request: Request) -> Response:
     target_url = f"{upstream}/{path}"
     body = await request.body()
 
-    async with httpx.AsyncClient(timeout=_PROXY_TIMEOUT, trust_env=False) as client:
-        try:
-            upstream_response = await client.request(
-                request.method,
-                target_url,
-                params=request.query_params,
-                headers=_filter_headers(request.headers),
-                content=body,
-            )
-        except httpx.RequestError as exc:
-            return Response(content=f"Upstream error: {exc}", status_code=502)
+    client: httpx.AsyncClient = request.app.state.client
+    try:
+        upstream_response = await client.request(
+            request.method,
+            target_url,
+            params=request.query_params,
+            headers=_filter_headers(request.headers),
+            content=body,
+        )
+    except httpx.RequestError as exc:
+        return Response(content=f"Upstream error: {exc}", status_code=502)
 
     return Response(
         content=upstream_response.content,
@@ -110,4 +128,4 @@ else:  # pragma: no cover - only hit before the first build
 if __name__ == "__main__":
     host = os.getenv("KIOSK_UI_HOST", "0.0.0.0")
     port = int(os.getenv("KIOSK_UI_PORT", "7860"))
-    uvicorn.run("kiosk_ui_server:app", host=host, port=port, reload=False)
+    uvicorn.run("ata_ui_server:app", host=host, port=port, reload=False)

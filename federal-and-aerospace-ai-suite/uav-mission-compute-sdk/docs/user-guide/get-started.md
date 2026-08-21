@@ -132,7 +132,7 @@ USB_CAPTURE_HEIGHT=720
 USB_SENSOR_FPS=30
 USB_CAPTURE_FORMAT=mjpeg       # Most USB cameras support MJPEG
 
-# Vision processor: only processes this one camera
+# Only processes this one camera
 VISION_CAMERA_IDS=nadir
 ```
 
@@ -175,26 +175,9 @@ make build-nc   # rebuilds core infra + apps images with --no-cache
 make up-sim-camera         # or make up-usb-camera
 ```
 
-### Step 3 — Start AI helpers + sample apps
-
-Vision processing and the web dashboard depend on PX4 being healthy:
-
-```bash
-make apps
-```
-
-Open **http://localhost:5002**
-
-**Dashboard displays**:
-- **Sim mode (make up-sim-camera)**: 3 camera tiles (nadir, forward, rear) with live vehicle detections
-- **USB mode (make up-usb-camera)**: 1 camera tile (nadir) with detections
-- Real-time telemetry panel: position, altitude, battery, velocity
-- ARM/DISARM button to activate camera inference
-- Demo mission button for pre-programmed waypoint sequences
-
 ## Arm the UAV (activate cameras)
 
-Cameras only stream when the UAV is armed. Arm it from the dashboard or:
+Cameras only stream when the UAV is armed:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
@@ -202,27 +185,18 @@ curl -X POST http://localhost:8080/action/arm
 
 ## Troubleshooting
 
-**App keeps restarting** — infra stack isn't up yet. Complete Step 2 first, wait for healthy in Step 3, then run Step 4.
-
 **USB camera not found** — verify your device path and update `.env`:
 ```bash
 v4l2-ctl --list-devices
 # Find your camera, update USB_VIDEO_DEVICE in .env, then restart
 ```
 
-**No camera frames on dashboard**:
-- **Verify `VISION_CAMERA_IDS` matches available cameras**:
-  ```bash
-  docker logs vision-processor-multicam 2>&1 | grep "Cameras:"
-  ```
-  - Sim mode should show: `Cameras: ['nadir', 'forward', 'rear']`
-  - USB mode should show: `Cameras: ['nadir']`
-
-- **If mismatched**, update `.env` and restart apps:
+**No camera frames**:
+- **If `VISION_CAMERA_IDS` doesn't match available cameras**, update `.env` and restart:
   ```bash
   nano .env                          # Fix VISION_CAMERA_IDS
-  docker compose -f sample-apps/docker-compose.yml down
-  make apps
+  make down
+  make up-sim-camera                 # or make up-usb-camera
   ```
 
 **Cameras switching between modes fails**:
@@ -235,12 +209,8 @@ v4l2-ctl --list-devices
   ```bash
   docker logs mediamtx | grep -E "rtsp.*announce|connected"
   ```
-- Check vision processor is consuming them:
-  ```bash
-  docker logs vision-processor-multicam 2>&1 | tail -20
-  ```
 
-**No camera frames / RTSP 404** — UAV is not armed. Camera bridges only push RTSP streams while armed — streams disappear from MediaMTX when disarmed. Use the arm button in the dashboard or:
+**No camera frames / RTSP 404** — UAV is not armed. Camera bridges only push RTSP streams while armed — streams disappear from MediaMTX when disarmed:
 ```bash
 curl -X POST http://localhost:8080/action/arm
 ```
@@ -261,13 +231,8 @@ docker logs px4-gazebo --tail 50
 docker logs camera-bridge --tail 30          # Sim mode
 docker logs usb-camera-bridge --tail 30      # USB mode
 
-# Applications
-docker logs edge-ai-showcase --tail 30
-docker logs vision-processor-multicam --tail 30
-
 # Or follow all logs in real-time
 make logs-infra    # Infrastructure
-make logs-apps     # Applications
 ```
 
 **Switching camera modes**:
@@ -277,7 +242,6 @@ See [camera-modes.md](camera-modes.md) → "Switching Between Modes" for step-by
 
 | Service | URL | Purpose |
 |---|---|---|
-| Edge AI Showcase | http://localhost:5002 | Dashboard with camera feeds + detections |
 | REST API (arm/takeoff/land) | http://localhost:8080 | Command interface for UAV control |
 | MQTT broker | localhost:1884 | Publish/subscribe for telemetry + detections |
 | Grafana dashboards | http://localhost:3000 | System metrics + performance monitoring |
@@ -293,8 +257,6 @@ See [camera-modes.md](camera-modes.md) → "Switching Between Modes" for step-by
 cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init           # Detect GPU, create .env
 make up-sim-camera             # Start with simulated cameras
-make apps           # Start dashboard
-# Open http://localhost:5002
 ```
 
 **Switch to USB camera**:
@@ -302,14 +264,12 @@ make apps           # Start dashboard
 v4l2-ctl --list-devices              # Find your camera
 nano .env                            # Update USB_VIDEO_DEVICE, VISION_CAMERA_IDS=nadir
 make down && make up-usb-camera
-make apps
 ```
 
 **Switch back to sim**:
 ```bash
 nano .env                            # Update VISION_CAMERA_IDS=nadir,forward,rear
 make down && make up-sim-camera
-make apps
 ```
 
 **View RTSP streams directly**:
@@ -322,7 +282,6 @@ ffplay rtsp://localhost:8554/uav-1/nadir/processed # Annotated with detections
 **Monitor system in real-time**:
 ```bash
 make logs-infra              # Infrastructure (PX4, bridges, MQTT, etc)
-make logs-apps               # Applications (vision, dashboard)
 docker compose ps            # Check container status
 ```
 
@@ -334,7 +293,7 @@ docker compose ps            # Check container status
 | [how-it-works.md](how-it-works.md) | System design, data flows, component details |
 | [../../Makefile](../../Makefile) | Build targets and task automation |
 | [../../docker-compose.yml](../../docker-compose.yml) | Infrastructure services, profiles, networking |
-| [../../sample-apps/docker-compose.yml](../../sample-apps/docker-compose.yml) | Vision processor + dashboard services |
+| [../../sample-apps/docker-compose.yml](../../sample-apps/docker-compose.yml) | AI helper + dashboard services |
 | [../../.env.example](../../.env.example) | All configurable environment variables |
 | [../../infra/bridges/camera/](../../infra/bridges/camera/) | Gazebo camera source code (sim mode) |
 | [../../infra/bridges/usb-camera/](../../infra/bridges/usb-camera/) | USB camera source code (real hardware) |

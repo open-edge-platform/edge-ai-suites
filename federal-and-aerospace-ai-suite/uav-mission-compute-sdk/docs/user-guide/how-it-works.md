@@ -422,12 +422,8 @@ ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 frame.jpg
 # Camera bridge logs (should show "GStreamer RTSP pipeline started")
 docker logs camera-bridge | grep -i "rtsp\|gstreamer"
 
-# Vision processor logs (should show "RTSP DL Streamer pipeline started")
-docker logs vision-processor-multicam | grep -i "rtsp\|mode"
-
 # Check for GStreamer errors
 docker logs camera-bridge | grep -i error
-docker logs vision-processor-multicam | grep -i error
 ```
 
 ### Common Issues
