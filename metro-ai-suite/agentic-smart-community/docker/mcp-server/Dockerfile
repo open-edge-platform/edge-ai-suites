@@ -23,6 +23,7 @@ FROM node:22-trixie-slim
 #                     writing event timestamps 8h off (see docker-compose.yaml TZ).
 # dpkg-dev unpacks the FFmpeg and ca-certificates source packages for license
 # compliance and is removed after npm ci.
+
 RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -32,10 +33,7 @@ RUN sed -Ei "s/Types: deb/Types: deb deb-src/g" /etc/apt/sources.list.d/debian.s
         ffmpeg \
         jq \
         python3 \
-        tzdata \
-    && mkdir -p /copyleft_sources/deb \
-    && cd /copyleft_sources/deb \
-    && apt-get source -q ca-certificates ffmpeg dpkg-dev
+        tzdata
 
 # Default timezone. compose overrides this with the host's TZ (see set_env.sh); this
 # ENV is the fallback when the image is run without one so timestamps are not UTC.
@@ -48,7 +46,24 @@ WORKDIR /app
 # node_modules.
 COPY package.json package-lock.json tsconfig.json ./
 COPY packages ./packages
-RUN npm ci \
+RUN npm ci
+
+# Retain exact source packages for every copyleft Debian component distributed
+# by the final image, with a binary-to-source version mapping for auditability.
+RUN mkdir -p /copyleft_sources/deb \
+    && dpkg-query -W -f='${binary:Package}\t${Version}\t${source:Package}\t${source:Version}\n' \
+        | while IFS="$(printf '\t')" read -r binary_package binary_version source_package source_version; do \
+            package_name="${binary_package%%:*}"; \
+            if [ "$package_name" != "dpkg-dev" ] \
+                && grep -Eqi 'GPL|LGPL|MPL|EPL|CDDL' "/usr/share/doc/$package_name/copyright" 2>/dev/null; then \
+                printf '%s\t%s\t%s\t%s\n' "$binary_package" "$binary_version" "$source_package" "$source_version"; \
+            fi; \
+        done | sort -u > /copyleft_sources/deb/package-source-map.tsv \
+    && cut -f3,4 /copyleft_sources/deb/package-source-map.tsv | sort -u \
+        | awk -F '\t' '{print $1 "=" $2}' > /tmp/copyleft-source-requests.txt \
+    && cd /copyleft_sources/deb \
+    && xargs -r -n 32 apt-get source -q --download-only < /tmp/copyleft-source-requests.txt \
+    && rm -f /tmp/copyleft-source-requests.txt \
     && apt-get purge -y --auto-remove dpkg-dev \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*

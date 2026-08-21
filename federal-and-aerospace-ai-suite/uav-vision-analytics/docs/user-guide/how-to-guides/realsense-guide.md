@@ -7,9 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Prerequisites
 
-See [System Requirements](../get-started/system-requirements.md) for the full list of software and hardware prerequisites.
-
----
+See [System Requirements](../get-started/system-requirements.md) for the full
+list of software and hardware prerequisites.
 
 ## Testing the camera streams
 
@@ -27,7 +26,8 @@ v4l2-ctl --list-devices
 ffplay -f v4l2 -input_format yuyv422 -video_size 1280x720 /dev/video4
 ```
 
-> **Note:** The device file may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file.
+> **Note:** The device file may vary depending on your system. Use
+> `v4l2-ctl --list-devices` to find the correct device file.
 
 ### View the depth stream
 
@@ -35,30 +35,41 @@ ffplay -f v4l2 -input_format yuyv422 -video_size 1280x720 /dev/video4
 ffplay -f v4l2 -input_format Z16 -video_size 848x480 /dev/video0
 ```
 
-> **Note:** The device file may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file.
-> The `Z16` format is a 16-bit depth value per pixel. `ffplay` will render it as a greyscale image.
-
----
+> **Note:** The device file may vary depending on your system. Use
+> `v4l2-ctl --list-devices` to find the correct device file. The `Z16` format
+> is a 16-bit depth value per pixel. `ffplay` will render it as a greyscale image.
 
 ## DLStreamer pipelines
 
-Three inference pipelines are available. Only one can be active at a time because they each access the video device directly:
+Three inference pipelines are available. Only one can be active at a time because
+they each access the video device directly:
 
 | Pipeline | Inference device | `device` value |
-|---|---|---|
+| --- | --- | --- |
 | `uav_realsense_cpu` | CPU | `CPU` |
 | `uav_realsense_gpu` | GPU | `GPU` |
 | `uav_realsense_npu` | NPU | `NPU` |
 
 ### Starting a pipeline
 
-> **Note:** Currently the realsense pipelines are only available in standalone mode (pymavlink). The UAV Mission Compute SDK mode does not support the RealSense camera. Adding support should be straightforward by copying the existing pipelines from `config-pymavlink.json` into `config-uavsdk.json`.
+> **Note:**
+>
+> - Currently the realsense pipelines are only available in standalone
+>   mode (pymavlink). The UAV Mission Compute SDK mode does not support the
+>   RealSense camera. Adding support should be straightforward by copying the
+>   existing pipelines from `config-pymavlink.json` into `config-uavsdk.json`.
+>
+> - The device file `/dev/video4` may vary depending on your system. Use
+>   `v4l2-ctl --list-devices` to find the correct device file and update
+>   `config-pymavlink.json` accordingly for the above pipelines before
+>   proceeding with the following steps.
 
-> **Note:** The device file `/dev/video4` may vary depending on your system. Use `v4l2-ctl --list-devices` to find the correct device file and update `config-pymavlink.json` accordingly for the above pipelines before proceeding with the following steps.
+Use the Pipeline Server REST API to start a pipeline. The POST response body is
+the UUID of the running instance — save it to stop the pipeline later.
 
-Use the Pipeline Server REST API to start a pipeline. The POST response body is the UUID of the running instance — save it to stop the pipeline later.
-
-Replace `<pipeline-name>` with one of the pipeline names from the table above, `<rtsp-stream-name>` with the desired RTSP path (e.g. `realsense`), and `device` with the matching value.
+Replace `<pipeline-name>` with one of the pipeline names from the table above,
+`<rtsp-stream-name>` with the desired RTSP path (e.g. `realsense`), and
+`device` with the matching value.
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
