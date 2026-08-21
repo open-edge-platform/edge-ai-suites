@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.39.2-alpine
+    image: telegraf:1.39.3-alpine
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -256,7 +256,7 @@ services:
     - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
-    image: nginx:1.31.3
+    image: nginx:1.31.4
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
