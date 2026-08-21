@@ -293,9 +293,9 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
   > **Note:** The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
 
-### 6. **`dlstreamer` pod shows `CreateContainerError`**
+### 6. **`dlstreamer-pipeline-server` pod shows `CreateContainerError`**
 
-  - **Issue**: The `dlstreamer` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
+  - **Issue**: The `dlstreamer-pipeline-server` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
   - **Check Container Runtime**: Run the following command to check which container runtime is being used:
 
     ```bash
