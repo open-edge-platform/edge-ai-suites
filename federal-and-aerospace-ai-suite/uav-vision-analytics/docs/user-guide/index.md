@@ -87,6 +87,6 @@ Get Started - Standalone <./get-started/get-started-standalone.md>
 Get Started - SDK <./get-started/get-started-uavsdk.md>
 User Guides <./how-to-guides.md>
 System Requirements <./get-started/system-requirements.md>
-Release Notes <./release-notes.md>
+
 :::
 hide_directive-->
