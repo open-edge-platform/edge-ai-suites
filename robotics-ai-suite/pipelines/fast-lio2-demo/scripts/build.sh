@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Build fast_lio with colcon, building its livox_ros_driver2 dependency into
 # the workspace on first run (fast_lio's CMakeLists.txt/package.xml depend
-# on it unconditionally, even for the Velodyne-only NCLT flow this pipeline
-# validates - see README.md).
+# on it unconditionally, even for the Velodyne-only UrbanLoco flow this
+# pipeline validates - see README.md).
 #
 # Usage: ./build.sh
 set -euo pipefail

@@ -37,7 +37,6 @@ import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { resetMediaValidation } from '../../redux/slices/mediaValidationSlice';
-import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
 import type { FeatureGuard } from '../../utils/featureGuards';
 import { collectPipelineErrors } from '../../utils/pipelineErrors';
@@ -61,7 +60,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   const [baseDirectory, setBaseDirectory] = useState(() => sessionStorage.getItem('baseDirectory') || "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState(constants.START_NOTIFICATION);
+  const [notification, setNotification] = useState('');
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);

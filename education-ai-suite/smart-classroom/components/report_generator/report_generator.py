@@ -95,8 +95,8 @@ class ReportGenerator:
                 self.collected_data.append(f"[{source_name}] {result}")
                 self.collected_by_source[source_name] = result
 
-    def _build_generated_fill_prompt(self, template_structure: dict, gen_codes: list, raw_values: dict) -> str:
-        """Build the split-fill prompt asking the LLM for ONLY the generated fields.
+    def _build_generated_fill_messages(self, template_structure: dict, gen_codes: list, raw_values: dict) -> list:
+        """Build the split-fill chat history asking the LLM for ONLY the generated fields.
 
         Measured raw values are passed as Known Facts for grounding but are not
         requested back from the model.
@@ -130,13 +130,10 @@ class ReportGenerator:
                 field_definitions=field_definitions,
             )
 
-        messages = [
+        return [
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_content},
         ]
-        return self.model.tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-        )
 
     def generate_report(self):
         """
@@ -231,11 +228,13 @@ class ReportGenerator:
         # resolved and stay intact, so the teacher keeps a usable report.
         na_placeholder = "无数据" if self.language == "zh" else "N/A"
         if gen_codes:
-            gen_prompt = self._build_generated_fill_prompt(structure, gen_codes, raw_values)
+            gen_messages = self._build_generated_fill_messages(structure, gen_codes, raw_values)
             llm_failed = False
             json_response = None
             try:
-                json_response = self.model.generate(gen_prompt, stream=False)
+                json_response = self.model.generate(
+                    messages=gen_messages, stream=False, enable_thinking=False
+                )
                 if isinstance(json_response, str) and json_response.startswith("[ERROR]:"):
                     raise RuntimeError(json_response)
             except RuntimeError as e:
