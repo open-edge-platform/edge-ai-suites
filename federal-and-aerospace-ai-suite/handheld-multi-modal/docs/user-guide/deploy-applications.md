@@ -138,7 +138,34 @@ To add certificate to trust pool, open Browser of your choice, navigate to `Sett
 | Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
 
 
-
 <!--
 Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md#endpoints)
 -->
+
+### ViPPET
+
+After opening main page of ViPPET, user can select one of several options available in ViPPET:
+1) Pipelines - to check and run one of predefined pipelines and understand how it works. Predefined pipelines will show video output will output video stream that shows how model works as well as small subset of system metrics during execution of pipeline. It also exposes option to add new custom pipeline for advanced users, but it might require additional input from other options. 
+2) Benchmarks - allows to compare performance of pipeline on diffrent combinations of supported hardware (CPU/NPU/GPU/NPU+GPU) to find out best device for specific pipeline.
+3) Models - exposes list of available models that could be used in pipeline as well as import functionality for models
+4) Video/Images/Cameras - allows to configure source of data that could be used in pipeline.
+
+### Open WebUI
+
+Main page exposes chat with default AI model, where user can ask questions. If initial response isn't sufficent, chat with AI model can be continued in the same window, which will keep context. If question is related to attachment(s), such as file, web-page or other chat, it could be added by clicking on `+` sign and selecting corresponding option.
+If user wants to change topic, it is recommended to open `New Chat` windows and start new chat to keep AI model context clean, as it improves results.
+
+### Whisper
+
+After entering main page of Whisper, there are 2 options to upload audio for transcription:
+1) By uploading audio file in one of supported audio format ("flac", "m4a", "mp3", "mp4", "ogg", "wav", "webm") by clicking on corresponding section in UI and selecting file in file explorer or by drag-and-dropping file into that section.
+2) By recording audio from microphone. Click on round `record` button, allow Whisper access to microphone and start talking into microphone.
+In both cases, transcription text will appear on lower part of the page in real-time in parts, as soon as Whisper will complete transcription of part of recording. Once whole recording is transcribed, additional section that show duration and ratio of transcription will appear.
+
+### Grafana
+
+By-default, main page shows generic metrics from system, such as CPU/NPU and power consumption. To switch to more detailed, per-application, view navigate to `Dashboards->Panther Lake Live Dashboard` dashboard. On this dashboard, most of metrics will be either empty or will not display any value, since metrics are gathered in real-time and other applications must execute workload to generate metrics. Metrics map to other handheld applcications as follows:
+1) `Frame Rate Over Time` and `Latest Pipeline Frame Rate Average` are from ViPPET.
+2) `LLM Number of Responses Generated` and `LLM Number of Responses Generated` are from Open WebUI.
+3) `Speech to text Processing Ratio Last` and `Speech To Text Processing Ratio` are from Whisper.
+Metrics are not persisted in any database, so refresh of page will reset ALL gathered metrics.
