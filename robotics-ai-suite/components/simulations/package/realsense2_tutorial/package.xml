@@ -14,7 +14,7 @@ SPDX-License-Identifier: Apache-2.0
   <maintainer email="eci.maintainer@intel.com">ECI Maintainer</maintainer>
   <license>Apache-2.0</license>
 
-  <depend>rclpy</depend>
+  <exec_depend>v4l-utils</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
