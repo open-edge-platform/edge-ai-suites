@@ -4,6 +4,9 @@ Set up the AI Teaching Assistant on Windows and ingest your first course materia
 
 Confirm your machine meets the [System Requirements](./get-started/system-requirements.md) before starting.
 
+> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
+
 ## Step 1: Prerequisites
 
 - **Git for Windows** — [Download here](https://git-scm.com/download/win)
