@@ -51,7 +51,7 @@ SPDX-License-Identifier: Apache-2.0
           <emissive>0 0 0 1</emissive>
         </material>
       </visual>
-      <sensor name="imager" type="camera">
+      <sensor name="imager_nadir" type="camera">
         <gz_frame_id>camera_link</gz_frame_id>
         <pose>0 0 0 0 0 0</pose>
         <camera>

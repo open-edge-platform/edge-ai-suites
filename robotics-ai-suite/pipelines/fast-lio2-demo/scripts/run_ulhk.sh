@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
-# Launch fastlio_mapping on the configured NCLT sequence and replay it via
-# `ros2 bag play` against the bag scripts/convert_nclt_to_bag.sh produced
-# (NCLT has no plug-and-play rosbag of its own - that one-time conversion
-# step parses NCLT's raw binary/CSV files instead).
+# Launch fastlio_mapping on the configured UrbanLoco sequence and replay it
+# via `ros2 bag play` against the bag scripts/convert_ulhk_to_bag.sh
+# produced.
 # Produces an estimated trajectory at ${RESULTS_DIR}/<sequence>_est_tum.txt
 # (via record_odometry_tum.py, consumed by evaluate_rmse.sh).
 #
-# Usage: ./run_nclt.sh
+# Usage: ./run_ulhk.sh
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/env.sh"
 
-SEQ="${NCLT_SEQUENCE}"
+SEQ="${ULHK_SEQUENCE}"
 
-if [[ ! -d "${DATASET_DIR}" ]] || [[ -z "$(find "${DATASET_DIR}" -name velodyne_hits.bin 2>/dev/null)" ]]; then
-  echo "NCLT dataset not found at ${DATASET_DIR}. Run ./fetch_nclt.sh first." >&2
-  exit 1
-fi
 if [[ ! -d "${BAG_DIR}" ]]; then
-  echo "No converted bag at ${BAG_DIR}. Run ./convert_nclt_to_bag.sh first." >&2
+  echo "No converted bag at ${BAG_DIR}. Run ./convert_ulhk_to_bag.sh first." >&2
   exit 1
 fi
 
@@ -47,21 +42,17 @@ set -u
 # <cpuset> via taskset (skipped if <cpuset> is empty), and - only when <rt>
 # is 1 - best-effort reprioritized to SCHED_FIFO 85 via `sudo -n chrt -f -a
 # -p 85 <pid>` AFTER it's already running. This launch-then-reprioritize
-# order (rather than chaining `chrt -f 85 taskset ... exec <cmd>` as one
-# root-owned command line, as an earlier version of this script did) is
-# deliberate: a root-owned fastlio_mapping process cannot register with an
-# iceoryx RouDi daemon started by the invoking (non-root) user - RouDi's
-# Unix-domain registration socket creation is rejected across that UID
-# boundary ("permission to create unix domain socket denied" in RouDi's own
-# log, confirmed on the PTL board 2026-07-27), which iceoryx surfaces as a
-# fatal "Timeout registering at RouDi. Is RouDi running?" and aborts the
-# process. Keeping <cmd...> running as the invoking user the whole time
-# avoids that boundary entirely, and - as a bonus - it inherits this
-# script's exported environment (ROS_DOMAIN_ID/RMW_IMPLEMENTATION/
-# CYCLONEDDS_URI included) exactly as-is, with no re-export/re-source dance
-# needed. `-a`/`--all-tasks` applies the priority to every thread of the
-# target pid, not just its main thread - required since ROS 2 executors are
-# multi-threaded.
+# order is deliberate: a root-owned fastlio_mapping process cannot register
+# with an iceoryx RouDi daemon started by the invoking (non-root) user -
+# RouDi's Unix-domain registration socket creation is rejected across that
+# UID boundary, which iceoryx surfaces as a fatal "Timeout registering at
+# RouDi. Is RouDi running?" and aborts the process. Keeping <cmd...> running
+# as the invoking user the whole time avoids that boundary entirely, and -
+# as a bonus - it inherits this script's exported environment
+# (ROS_DOMAIN_ID/RMW_IMPLEMENTATION/CYCLONEDDS_URI included) exactly as-is,
+# with no re-export/re-source dance needed. `-a`/`--all-tasks` applies the
+# priority to every thread of the target pid, not just its main thread -
+# required since ROS 2 executors are multi-threaded.
 # Sets PTL_LAST_PID (a `pid=$(ptl_wrap ...)` return would lose the
 # background job to a subshell, since command substitution runs in one).
 ptl_wrap() {
@@ -73,9 +64,24 @@ ptl_wrap() {
   fi
   PTL_LAST_PID=$!
   if [[ "${rt}" == "1" ]]; then
-    if ! sudo -n chrt -f -a -p 85 "${PTL_LAST_PID}" 2>/dev/null; then
-      echo "WARN: 'sudo -n chrt -a -p' unavailable (no NOPASSWD sudoers entry for chrt) - running pinned to cpu ${cpuset} without realtime priority" >&2
-    fi
+    # Some wrapper CLIs (e.g. `ros2 run`) subprocess.Popen() the real binary
+    # as a SEPARATE child rather than exec()'ing into it, so chrt on
+    # PTL_LAST_PID alone would only ever reprioritize the idle Python
+    # wrapper - never the actual workload - leaving it at plain CFS
+    # priority for the whole run. Give it a moment to actually fork, then
+    # walk the whole descendant tree (ptl_pid_tree, defined below -
+    # available by the time this runs) and reprioritize every PID in it,
+    # not just the top one.
+    local tries=0
+    while [[ -z "$(pgrep -P "${PTL_LAST_PID}" 2>/dev/null)" && "${tries}" -lt 20 ]]; do
+      sleep 0.05
+      (( ++tries ))
+    done
+    local pid all_ok=true
+    for pid in $(ptl_pid_tree "${PTL_LAST_PID}"); do
+      sudo -n chrt -f -a -p 85 "${pid}" 2>/dev/null || all_ok=false
+    done
+    "${all_ok}" || echo "WARN: 'sudo -n chrt -a -p' unavailable (no NOPASSWD sudoers entry for chrt) - running pinned to cpu ${cpuset} without realtime priority" >&2
   fi
 }
 
@@ -83,12 +89,9 @@ ptl_wrap() {
 # via `pgrep -P`), one per line. Some launched tools (e.g. `ros2 run`) spawn
 # the real binary as a SEPARATE child via subprocess rather than exec - a
 # signal to the top PID alone never reaches that grandchild, which is then
-# orphaned (reparented to pid 1) and keeps running, holding this script's
-# stdout/stderr pipe open forever (observed in practice: a leaked
-# fastlio_mapping process kept `tee reproduce_all.log` from ever seeing
-# EOF, hanging the whole pipeline indefinitely after everything else had
-# already finished). Walk the whole tree so cleanup actually terminates
-# every process a wrapped command started, not just its wrapper.
+# orphaned (reparented to pid 1) and keeps running. Walk the whole tree so
+# cleanup actually terminates every process a wrapped command started, not
+# just its wrapper.
 ptl_pid_tree() {
   local pid="$1" child
   echo "${pid}"
@@ -144,12 +147,32 @@ ptl_stop() {
   fi
 }
 
+# A prior run of this script can leave fastlio_mapping/ros2 bag play/the
+# recorder running as orphans if it was killed hard enough that its own
+# `cleanup` trap below never got to run (e.g. the controlling SSH/pty
+# session dropped mid-run). Clear out anything matching this pipeline's own
+# process signatures before launching a fresh run, rather than starting
+# alongside a leftover one.
+echo "==> Cleaning up any leftover processes from a previous run"
+pkill -f "ros2 run fast_lio fastlio_mapping" 2>/dev/null || true
+pkill -f "ros2 bag play ${BAG_DIR}" 2>/dev/null || true
+pkill -f "record_odometry_tum.py --topic /Odometry" 2>/dev/null || true
+sleep 1
+
 mkdir -p "${RESULTS_DIR}"
 RESULT_FILE="${RESULTS_DIR}/${SEQ}_est_tum.txt"
 rm -f "${RESULT_FILE}"
 
 CONFIG_PATH="${WS_DIR}/install/fast_lio/share/fast_lio/config"
-CONFIG_FILE="velodyne_generic.yaml"
+# The pristine upstream velodyne.yaml already has the right LiDAR/IMU
+# parameters for UrbanLoco's Velodyne HDL-32E + external IMU rig (scan_line
+# 32, scan_rate 10, timestamp_unit 2, blind 2.0, extrinsic_T [0,0,0.28],
+# identity extrinsic_R - the same values point-lio's own
+# velodyne_urbanloco.yaml uses for the same physical rig) - no Intel patch
+# or new config file needed for this dataset. Only the topic names and
+# pcd_save_en differ from its defaults, overridden below at the `ros2 run`
+# level via `-p` instead.
+CONFIG_FILE="velodyne.yaml"
 
 echo "==> Launching fastlio_mapping for sequence ${SEQ}"
 # rviz2 is always launched (if at all) as its own process below, so it never
@@ -158,8 +181,8 @@ echo "==> Launching fastlio_mapping for sequence ${SEQ}"
 ptl_wrap "${CPUSET_ALGO}" 1 \
   ros2 run fast_lio fastlio_mapping --ros-args \
   --params-file "${CONFIG_PATH}/${CONFIG_FILE}" \
-  -p "common.lid_topic:=/velodyne_points" \
-  -p "common.imu_topic:=/imu/data" \
+  -p "common.lid_topic:=${ULHK_LIDAR_TOPIC}" \
+  -p "common.imu_topic:=${ULHK_IMU_TOPIC}" \
   -p "pcd_save.pcd_save_en:=false" \
   -p "use_sim_time:=false"
 ALGO_PID="${PTL_LAST_PID}"
@@ -194,12 +217,14 @@ if [[ "${USE_RVIZ}" == "true" ]]; then
 fi
 
 sleep 5
-echo "==> Playing back NCLT ${SEQ} bag from ${BAG_DIR}"
+echo "==> Playing back UrbanLoco ${SEQ} bag from ${BAG_DIR}"
+echo "==> NOTE: fastlio_mapping will repeat \"Failed to find match for field 'time'.\" once per"
+echo "    scan for the whole run below - expected/harmless (UrbanLoco's velodyne points have no"
+echo "    per-point timestamp; see README.md \"Validate without hardware\"), not a sign of a problem."
 # `ros2 bag play` replays at ~1x recorded speed and this script blocks on
 # it until playback finishes, so print the bag's own recorded duration up
-# front - otherwise a multi-minute NCLT sequence produces no further log
-# output until playback ends, which looks stuck rather than just replaying
-# in real time.
+# front - otherwise this produces no further log output until playback
+# ends, which looks stuck rather than just replaying in real time.
 BAG_DURATION="$(ros2 bag info "${BAG_DIR}" 2>/dev/null | sed -n 's/^ *Duration: *//p')"
 PLAY_ARGS=()
 if [[ -n "${PLAY_START_OFFSET_S}" ]]; then
