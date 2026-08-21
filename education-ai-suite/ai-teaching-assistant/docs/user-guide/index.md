@@ -37,12 +37,12 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 High-level flow:
 
 ```powershell
-git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git;
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git -b main;
 cd edge-ai-suites;
 git sparse-checkout set education-ai-suite/ai-teaching-assistant;
 cd education-ai-suite/ai-teaching-assistant;
 .\setup_windows.ps1;
-.\start_kiosk.ps1
+.\start_ata.ps1
 ```
 
 Open `http://127.0.0.1:7860` in your browser.

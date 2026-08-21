@@ -46,7 +46,7 @@ following changes to avoid clashes:
    docker compose up -d
    ```
 
-5. In the Nx Witness client, open **Camera Settings → Integrations → VAP Analytics
+5. In the Nx Witness desktop client, close any open camera visualizer window. Navigate to the left panel, and under the server, find the camera you wish to run analytics on and right-click to open context menu. open **Camera Settings → Integrations → VAP Analytics
    Integration**. There are two checkboxes: **Live Video Captioning** and **Loitering
    Detection**. Enable the checkboxes for both.
 

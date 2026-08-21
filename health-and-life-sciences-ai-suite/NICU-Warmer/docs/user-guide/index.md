@@ -22,10 +22,10 @@
 </div>
 hide_directive-->
 
-> Note!
-> This application is for **reference and evaluation purposes**. It is
+> Note:
+> This application is for **reference and evaluation purposes only**. It is
   **not intended for direct use in clinical or diagnostic environments** and is not
-  validated as such.
+  validated for such a purpose.
 ::::
 
 The NICU Warmer application is a reference solution that demonstrates how multiple AI models

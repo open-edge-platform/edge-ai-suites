@@ -78,10 +78,8 @@ Edit the `values.yaml` file to set the necessary environment variables. Refer to
 Clone the repository containing the Helm chart:
 
 ```bash
-# Clone the latest on mainline
+# Clone the mainline branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
-# Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
 ```
 
 #### Step 2: Change to the Chart Directory

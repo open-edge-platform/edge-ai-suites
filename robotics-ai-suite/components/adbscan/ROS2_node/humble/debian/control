@@ -34,12 +34,10 @@ Package: ros-humble-adbscan-ros2
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends},
-    ros-humble-bagfile-laser-pointcloud,
     ros-humble-builtin-interfaces,
     ros-humble-geometry-msgs,
     ros-humble-nav2-dynamic-msgs,
     ros-humble-rclcpp,
-    ros-humble-rviz2,
     ros-humble-sensor-msgs,
     ros-humble-visualization-msgs,
 Description: Standard Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2
@@ -56,7 +54,6 @@ Depends: ${misc:Depends}, ${shlibs:Depends},
     ros-humble-nav2-dynamic-msgs,
     ros-humble-pcl-conversions,
     ros-humble-rclcpp,
-    ros-humble-rviz2,
     ros-humble-sensor-msgs,
     ros-humble-visualization-msgs,
 Description: Intel OneAPI optimized Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2

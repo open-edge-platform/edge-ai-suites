@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseDocument, isMap, Scalar } from "yaml";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 
 /** Wrap a string so yaml emits it double-quoted (matches the hand-written monitors.yaml style). */
 function quoted(value: string): Scalar {
@@ -247,7 +247,7 @@ async function analyticsRegister(
  * Manage monitor lifecycle as an atomic operation across DB, videostream-analytics, and video-worker.
  */
 export async function monitorCtl(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: MonitorCtlParams
@@ -458,7 +458,7 @@ export async function monitorCtl(
  * db.deleteMonitor, so it won't trip FK constraints or destroy history.
  */
 export async function detachMonitor(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: { monitor_id: string; monitors_path?: string; persist?: boolean },

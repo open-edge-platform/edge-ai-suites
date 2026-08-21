@@ -2,17 +2,17 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# Container entrypoint for the SmartBuilding MCP server. The container IS the
+# Container entrypoint for the Smart Community MCP server. The container IS the
 # process (no nohup / pidfile / port-poll scaffolding): we exec node in the
 # foreground and let Docker manage its lifecycle.
 #
-#   1. Initialise $SMARTBUILDING_DATA_DIR/{config,monitors}.yaml from the bundled
+#   1. Initialise $SMART_COMMUNITY_DATA_DIR/{config,monitors}.yaml from the bundled
 #      templates when missing (the bind-mounted data dir usually already has them).
 #   2. Register the bundled video-summary use cases with multilevel-video-understanding.
 #   3. exec the MCP server in the foreground.
 set -euo pipefail
 
-DATA_DIR="${SMARTBUILDING_DATA_DIR:-$HOME/.mcp-smartbuilding}"
+DATA_DIR="${SMART_COMMUNITY_DATA_DIR:-$HOME/.mcp-smart-community}"
 mkdir -p "$DATA_DIR"
 DATA_DIR="$(cd "$DATA_DIR" && pwd)"
 CONFIG="$DATA_DIR/config.yaml"
@@ -31,9 +31,7 @@ if [[ ! -f "$MONITORS" ]]; then
 fi
 
 # 2. Register bundled use cases with multilevel-video-understanding before the MCP
-#    server loads their declarations from config.yaml. Unlike start.sh (which hard
-#    `exit 1`s), tolerate transient unreadiness: compose `depends_on` waits for the
-#    service to be healthy, but retry as a backstop and never block startup on it.
+#    server loads their declarations from config.yaml.
 SUMMARY_URL="$(node --input-type=module -e '
   import { readFileSync } from "node:fs";
   import { parse } from "yaml";

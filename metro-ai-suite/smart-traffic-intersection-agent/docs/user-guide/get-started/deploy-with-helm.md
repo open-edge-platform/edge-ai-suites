@@ -67,10 +67,8 @@ Edit the `values.yaml` file to set the necessary environment variables. Refer to
 Clone the repository containing the Helm chart:
 
 ```bash
-# Clone the latest on mainline
+# Clone the mainline branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
-# Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
 ```
 
 #### Step 2: Change to the Chart Directory
@@ -273,7 +271,6 @@ helm uninstall stia -n <your-namespace>
 | `intersection.latitude` | Intersection latitude | `37.51358` |
 | `intersection.longitude` | Intersection longitude | `-122.25591` |
 | `env.logLevel` | Application log level | `INFO` |
-| `env.refreshInterval` | Dashboard refresh interval (seconds) | `15` |
 | `env.weatherMock` | Use mock weather data (`true`/`false`) | `false` |
 | `env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `1800` |
 | `mqtt.host` | MQTT broker hostname. If set, takes precedence over the constructed FQDN. | `""` |

@@ -5,6 +5,7 @@ from utils.config_loader import config
 from utils.cli_utils import run_cli
 from utils.convert_classification_models import convert_classification_models
 from utils.convert_yolo_models import convert_yolo_models
+from model_manager.feature_bootstrap import resolve_effective_features
 
 logger = logging.getLogger(__name__)
 from huggingface_hub import snapshot_download
@@ -157,16 +158,16 @@ def ensure_model():
     # - AsrHandler: calls _ensure_openvino_asr_model() from _build_processor()
     # - OcrHandler: calls _ensure_openvino_models() from _build_processor()
     # No pre-download is needed here; models are prepared on-demand.
-    
-    # Video Analytics models (YOLO, classification) are still prepared eagerly
-    # since they don't use the handler pattern yet.
-    output_dir = get_va_model_path()
-    convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
-    convert_classification_models(output_dir)
 
+    # Video Analytics models are only needed when video_analytics is in the
+    # effective feature set. resolve_effective_features() handles transitive
+    # dependencies (e.g. board_ocr and report both depend on video_analytics).
+    eff = resolve_effective_features()
+    if eff.is_enabled("video_analytics"):
+        output_dir = get_va_model_path()
+        convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
+        convert_classification_models(output_dir)
 
-def get_model_path() -> str:
-    return os.path.join(config.models.summarizer.models_base_path, config.models.summarizer.provider, f"{config.models.summarizer.name.replace('/', '_')}_{config.models.summarizer.weight_format}")
 
 def get_asr_model_path() -> str:
     return os.path.join(config.models.asr.models_base_path, config.models.asr.provider, f"{config.models.asr.name.replace('/', '_')}")

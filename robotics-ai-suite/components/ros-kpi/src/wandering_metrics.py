@@ -46,6 +46,10 @@ import re
 import statistics
 import time
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ── sample-rtf ────────────────────────────────────────────────────────────────
 
@@ -104,7 +108,7 @@ def cmd_watch_rtf(rtf_log: str) -> None:
             if val < 0.5:
                 below += 1
                 if below >= 2:
-                    print(
+                    logger.warning(
                         f"  \u26a0 THROTTLE WARNING: RTF={val:.4f}"
                         " (sim running slower than real-time)",
                         flush=True,
@@ -197,21 +201,20 @@ def cmd_compare(  # pylint: disable=too-many-locals
 
     total_w = label_w + (col_w + 2) * n + 2
 
-    print()
-    print("\u2554" + "\u2550" * total_w + "\u2557")
+    logger.info("\n\u2554" + "\u2550" * total_w + "\u2557")
     title = f"  COMPARISON RESULTS ({n} runs)"
-    print("\u2551" + title.ljust(total_w) + "\u2551")
-    print("\u255a" + "\u2550" * total_w + "\u255d")
+    logger.info("\u2551" + title.ljust(total_w) + "\u2551")
+    logger.info("\u255a" + "\u2550" * total_w + "\u255d")
 
     # Header row
     fmt_parts = [f"{{:<{label_w}}}"] + [f"{{:<{col_w}}}"] * n
     fmt = "  " + "  ".join(fmt_parts)
-    print(fmt.format("Metric", *labels))
-    print(fmt.format("─" * label_w, *["─" * col_w] * n))
+    logger.info(fmt.format("Metric", *labels))
+    logger.info(fmt.format("─" * label_w, *["─" * col_w] * n))
 
     for row_label, values in row_defs:
-        print(fmt.format(row_label, *values))
-    print()
+        logger.info(fmt.format(row_label, *values))
+    logger.info("")
 
     if out_dir:
         os.makedirs(out_dir, exist_ok=True)
@@ -220,10 +223,9 @@ def cmd_compare(  # pylint: disable=too-many-locals
             f.write("metric," + ",".join(labels) + "\n")
             for row_label, values in row_defs:
                 f.write(row_label + "," + ",".join(values) + "\n")
-        print(f"  Summary CSV saved to: {csv_path}")
+        logger.info(f"  Summary CSV saved to: {csv_path}")
 
-    print(f"  Full run logs: {out_dir or os.path.dirname(labeled_logs[0][1])}")
-    print()
+    logger.info(f"  Full run logs: {out_dir or os.path.dirname(labeled_logs[0][1])}\n")
 
 
 # ── goal-calc latency ────────────────────────────────────────────────────────
@@ -389,20 +391,20 @@ def extract_goal_response_latency(log_text: str, bag_dir):
 def main() -> None:
     """Parse command-line arguments and dispatch to the appropriate subcommand."""
     if len(sys.argv) < 2:
-        print(__doc__)
+        logger.info(__doc__)
         sys.exit(1)
 
     cmd = sys.argv[1]
 
     if cmd == "sample-rtf":
         if len(sys.argv) < 3:
-            print("Usage: sample-rtf <rtf_log>", file=sys.stderr)
+            logger.error("Usage: sample-rtf <rtf_log>")
             sys.exit(1)
         cmd_sample_rtf(sys.argv[2])
 
     elif cmd == "watch-rtf":
         if len(sys.argv) < 3:
-            print("Usage: watch-rtf <rtf_log>", file=sys.stderr)
+            logger.error("Usage: watch-rtf <rtf_log>")
             sys.exit(1)
         cmd_watch_rtf(sys.argv[2])
 
@@ -410,8 +412,7 @@ def main() -> None:
         # Args: one or more "label:path" strings, optional trailing out_dir (no colon)
         rest = sys.argv[2:]
         if not rest:
-            print("Usage: compare <label:log_path> [<label:log_path> ...] [out_dir]",
-                  file=sys.stderr)
+            logger.error("Usage: compare <label:log_path> [<label:log_path> ...] [out_dir]")
             sys.exit(1)
 
         # Determine if the last arg is an out_dir (no colon) or another label:path
@@ -421,13 +422,13 @@ def main() -> None:
             rest = rest[:-1]
 
         if not rest:
-            print("Error: no label:path arguments provided", file=sys.stderr)
+            logger.error("No label:path arguments provided")
             sys.exit(1)
 
         labeled_logs: list[tuple[str, str]] = []
         for arg in rest:
             if ":" not in arg:
-                print(f"Error: expected 'label:path' but got: {arg!r}", file=sys.stderr)
+                logger.error(f"Expected 'label:path' but got: {arg!r}")
                 sys.exit(1)
             label, _, path = arg.partition(":")
             labeled_logs.append((label, path))
@@ -435,7 +436,7 @@ def main() -> None:
         cmd_compare(labeled_logs, out_dir)
 
     else:
-        print(f"Unknown subcommand: {cmd}", file=sys.stderr)
+        logger.error(f"Unknown subcommand: {cmd}")
         sys.exit(1)
 
 

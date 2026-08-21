@@ -4,7 +4,6 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
-from utils.markdown_cleaner import StreamThinkFilter
 from model_manager import ModelManager
 import logging, os
 import time
@@ -15,10 +14,9 @@ class SummarizerComponent(PipelineComponent):
     _model = None
     _config = None
 
-    def __init__(self, session_id, provider, model_name, device, temperature=0.7, mode="dialog"):
+    def __init__(self, session_id, mode="dialog"):
         self.session_id = session_id
         self.mode = mode.lower()
-        self.temperature = temperature
         self.board_ocr_partial = False
         
         text_gen = config.models.text_gen
@@ -90,13 +88,9 @@ class SummarizerComponent(PipelineComponent):
         else:
             body = input_text
 
-        user_content = body
-        if "qwen3" in str(self.model_name).lower() and not body.lstrip().startswith("/no_think"):
-            user_content = "/no_think\n" + body
-
         return [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content}
+            {"role": "user", "content": body}
         ]
 
     # ---------------- MAIN PROCESS ----------------
@@ -118,32 +112,23 @@ class SummarizerComponent(PipelineComponent):
         summary_path = os.path.join(project_path, "summary.md")
         StorageManager.save(summary_path, "", append=False)
 
-        prompt = self.summarizer.tokenizer.apply_chat_template(
-            self._get_message(input_text, board_text),
-            tokenize=False,
-            add_generation_prompt=True,
-            enable_thinking=False
-        )
-
         start = time.perf_counter()
         first_token_time = None
         raw_tokens = []
-        think_filter = StreamThinkFilter()
 
         try:
-            streamer = self.summarizer.generate(prompt)
+            # Reasoning is already filtered out of the stream by generate().
+            streamer = self.summarizer.generate(
+                messages=self._get_message(input_text, board_text),
+                enable_thinking=False,
+            )
             for token in streamer:
                 if first_token_time is None:
                     first_token_time = time.perf_counter()
 
                 raw_tokens.append(token)
-
-                clean_token = think_filter.filter(token)
-                if not clean_token:
-                    continue
-
-                StorageManager.save_async(summary_path, clean_token, append=True)
-                yield clean_token
+                StorageManager.save_async(summary_path, token, append=True)
+                yield token
 
         finally:
             end = time.perf_counter()

@@ -41,27 +41,26 @@ export class FeatureGuard {
   }
 
   /**
-   * Get camera configuration from video_analytics feature
-   */
-  getCameraConfig() {
-    const va = this.featureMap.get('video_analytics');
-    return va?.cameras || { front: false, back: false, board: false };
-  }
-
-  /**
-   * Check if a specific camera is enabled
-   */
-  isCameraEnabled(camera: 'front' | 'back' | 'board'): boolean {
-    const config = this.getCameraConfig();
-    return config[camera] || false;
-  }
-
-  /**
    * Get summary mode (dialog, teacher, hybrid)
    */
   getSummaryMode(): string {
     const summary = this.featureMap.get('summary');
     return summary?.mode || 'dialog';
+  }
+
+  /**
+   * Whether ASR streams partial transcripts. When false, an uploaded file is
+   * transcribed in a single pass and nothing shows up until it completes.
+   */
+  isAsrChunkingEnabled(): boolean {
+    return this.featureMap.get('asr')?.chunking !== false;
+  }
+
+  /**
+   * Whether speaker diarization is enabled in the ASR model config.
+   */
+  isDiarizationEnabled(): boolean {
+    return this.featureMap.get('asr')?.diarization === true;
   }
 
   /**

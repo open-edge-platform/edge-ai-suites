@@ -3,14 +3,14 @@
 ## Startup Fails
 
 ### Symptom
-`start_kiosk.ps1` exits early or one or more services never become ready.
+`start_ata.ps1` exits early or one or more services never become ready.
 
 ### Checks
 
 ```powershell
 # Verify required files exist
 Test-Path .\setup_windows.ps1
-Test-Path .\start_kiosk.ps1
+Test-Path .\start_ata.ps1
 
 # Verify submodule paths
 Test-Path .\edge-ai-libraries\microservices\audio-analyzer\main.py
@@ -44,7 +44,7 @@ netstat -ano | findstr :9000
 Stop conflicting PIDs or run:
 
 ```powershell
-.\stop_kiosk.ps1 -Force
+.\stop_ata.ps1 -Force
 ```
 
 ## Models Download Slowly or First Run Is Long
@@ -58,7 +58,7 @@ Useful checks:
 ping huggingface.co
 ```
 
-If interrupted, rerun `start_kiosk.ps1` after connectivity is stable.
+If interrupted, rerun `start_ata.ps1` after connectivity is stable.
 
 ## UI Not Loading on 7860
 
@@ -72,7 +72,7 @@ curl http://127.0.0.1:7860/healthz
 ```
 
 If health fails:
-- Verify `kiosk_ui_server.py` is running.
+- Verify `ata_ui_server.py` is running.
 - Ensure React build assets exist under `assistant-react-ui/dist`.
 
 Rebuild UI assets if needed:

@@ -11,6 +11,7 @@ from components.ffmpeg import audio_preprocessing
 from dto.transcription_dto import TranscriptionRequest
 from pipeline import Pipeline
 from utils.audio_util import save_audio_file
+from utils.config_loader import config
 from utils.locks import audio_pipeline_lock
 
 logger = logging.getLogger(__name__)
@@ -119,6 +120,8 @@ class ASRFeature:
     def ui_descriptor(self) -> Dict:
         return {
             "id": self.id,
+            "chunking": bool(config.audio_preprocessing.chunking),
+            "diarization": bool(config.models.asr.diarization),
             "endpoints": {
                 "upload_audio": "/upload-audio",
                 "transcribe": "/transcribe",

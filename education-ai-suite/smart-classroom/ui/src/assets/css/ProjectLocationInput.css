@@ -15,7 +15,7 @@
 
 .storage-prefix {
   position: absolute;
-  left: 10px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: #888;
