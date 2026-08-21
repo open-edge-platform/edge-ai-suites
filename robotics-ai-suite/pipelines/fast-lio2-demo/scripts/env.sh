@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Central configuration for the FAST-LIO2 demo scripts.
 #
-# Edit the variables below to retarget paths, the ROS distro, or the NCLT
-# sequence under test. Every other script in this directory sources this
-# file and only this file - there is nothing else to edit to reproduce
-# results on a different machine or with a different NCLT sequence.
+# Edit the variables below to retarget paths, the ROS distro, or the
+# UrbanLoco sequence under test. Every other script in this directory
+# sources this file and only this file - there is nothing else to edit to
+# reproduce results on a different machine or with a different sequence.
 
 # Directory this file lives in, and the demo pipeline root (one level up).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,12 +14,12 @@ DEMO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 # primary/only validated target for this pipeline.
 ROS_DISTRO="${ROS_DISTRO:-jazzy}"
 
-# DDS network isolation. fastlio_mapping, our NCLT publisher, and rviz2 only
-# see each other's topics if they agree on both of these - unlike every
-# other variable in this file, they must be actually exported (not just set)
-# since ROS 2 reads them from each process's own environment at init, and
-# forked children (rviz2 via taskset, the algorithm/publisher via
-# run_nclt.sh's ptl_wrap()) only inherit exported vars. Tracked here rather
+# DDS network isolation. fastlio_mapping, the UrbanLoco bag publisher, and
+# rviz2 only see each other's topics if they agree on both of these - unlike
+# every other variable in this file, they must be actually exported (not
+# just set) since ROS 2 reads them from each process's own environment at
+# init, and forked children (rviz2 via taskset, the algorithm/publisher via
+# run_ulhk.sh's ptl_wrap()) only inherit exported vars. Tracked here rather
 # than left to a personal ~/.bashrc so a fresh checkout on a new machine
 # isolates from other ROS 2 traffic on the same LAN by default (domain 0 is
 # the default everyone else uses too) instead of silently picking up - or
@@ -33,7 +33,7 @@ export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}"
 # reproduce_all.sh exercises the same DDS path as Bing's own benchmark
 # scripts; set to "false" to run on plain CycloneDDS with no SHM (still
 # works, just without zero-copy same-host transport). Not exported: only
-# run_nclt.sh acts on it, and CYCLONEDDS_URI itself is set there (not here),
+# run_ulhk.sh acts on it, and CYCLONEDDS_URI itself is set there (not here),
 # since it must only point at the generated xml once setup_dds_shm.sh has
 # actually created it.
 USE_DDS_SHM="${USE_DDS_SHM:-true}"
@@ -64,43 +64,58 @@ LIVOX_DRIVER_TAG="${LIVOX_DRIVER_TAG:-1.2.6}"
 # ENABLE_PROFILING option). Off by default, matching upstream's own default.
 ENABLE_PROFILING="${ENABLE_PROFILING:-OFF}"
 
-# NCLT (North Campus Long-Term) sequence used for the no-hardware
-# validation flow. http://robots.engin.umich.edu/nclt/
-# Sequence names follow the FAST-LIO2 paper's own internal benchmark naming
-# (arXiv 2107.06829, Appendix Table VIII) - only nclt_4 is fully wired up
-# below (confirmed date + documented baseline); nclt_5..nclt_10 are left as
-# an extension point, not populated with unconfirmed guesses.
-NCLT_SEQUENCE="${NCLT_SEQUENCE:-nclt_4}"
+# UrbanLoco sequence used for the no-hardware validation flow. Sequence name
+# follows the FAST-LIO2/Point-LIO papers' own internal benchmark naming
+# (FAST-LIO2: Xu et al. 2022, IEEE T-RO, arXiv 2107.06829, Table II/IV;
+# Point-LIO: He et al. 2023, Advanced Intelligent Systems, Table 5) - only
+# ulhk_4 is fully wired up below (confirmed date + documented baseline);
+# ulhk_5/ulhk_6 are left as an extension point, not populated with
+# unconfirmed guesses.
+ULHK_SEQUENCE="${ULHK_SEQUENCE:-ulhk_4}"
 
-# NCLT session date (the dataset's own on-disk naming) for each sequence.
-nclt_session_date() {
+# UrbanLoco session name (the dataset's own on-disk naming) for each
+# sequence - see README.md "Validate without hardware", official source:
+# github.com/weisongwen/UrbanLoco, section "2. Hong Kong Dataset".
+ulhk_session_name() {
   case "$1" in
-    nclt_4) echo "2012-01-15" ;;
+    ulhk_4) echo "HK-Data20190117" ;;
     *) echo "" ;;
   esac
 }
 
-# Launch rviz2 alongside fast_lio in run_nclt.sh. Off by default so the flow
+# Launch rviz2 alongside fast_lio in run_ulhk.sh. Off by default so the flow
 # stays headless over SSH; set to "true" only when running directly on a
 # machine with a display (rviz2's point-cloud rendering over X11 forwarding
 # is impractical).
 USE_RVIZ="${USE_RVIZ:-false}"
 
-# Where the downloaded NCLT files and generated results live. Deliberately
-# repo-relative and .gitignore'd (not $HOME) so placing a downloaded dataset
-# here is a single obvious step for anyone cloning this repo; override to
-# point at a shared/pre-populated location instead.
-DATASET_DIR="${DATASET_DIR:-${DEMO_DIR}/datasets/${NCLT_SEQUENCE}}"
+# Where the downloaded UrbanLoco file and generated results live.
+# Deliberately repo-relative and .gitignore'd (not $HOME) so placing a
+# downloaded dataset here is a single obvious step for anyone cloning this
+# repo; override to point at a shared/pre-populated location instead.
+DATASET_DIR="${DATASET_DIR:-${DEMO_DIR}/datasets/${ULHK_SEQUENCE}}"
 RESULTS_DIR="${RESULTS_DIR:-${DATASET_DIR}/results}"
 
-# Standard ROS 2 bag produced once by convert_nclt_to_bag.sh (raw NCLT
-# Velodyne/IMU files -> rosbag2) and replayed on every run_nclt.sh run via
-# `ros2 bag play`, instead of re-parsing the raw files each time. sqlite3 is
-# the storage plugin ROS 2's own rosbag2 package always ships with (no extra
-# apt package needed); override BAG_STORAGE_ID to "mcap" if that plugin is
-# installed and preferred.
-BAG_DIR="${BAG_DIR:-${DATASET_DIR}/nclt_bag}"
+# Raw file placed by hand per fetch_ulhk.sh's instructions (may be a ROS1
+# bag or already a ROS2 bag - convert_ulhk_to_bag.sh inspects it and
+# converts only if needed) and the ROS 2 bag directory run_ulhk.sh replays.
+# sqlite3 is the storage plugin ROS 2's own rosbag2 package always ships
+# with (no extra apt package needed); override BAG_STORAGE_ID to "mcap" if
+# that plugin is installed and preferred.
+ULHK_RAW_FILE="${ULHK_RAW_FILE:-${DATASET_DIR}/$(ulhk_session_name "${ULHK_SEQUENCE}").bag}"
+BAG_DIR="${BAG_DIR:-${DATASET_DIR}/ulhk_bag}"
 BAG_STORAGE_ID="${BAG_STORAGE_ID:-sqlite3}"
+
+# Topics inside the converted bag - the pristine upstream config/velodyne.yaml
+# defaults to "/velodyne_points"/pcd_save_en:true, so run_ulhk.sh overrides
+# both of these (plus pcd_save_en) at the `ros2 run` level via `-p` instead.
+# No FAST_LIO source/config change is needed for this dataset.
+ULHK_LIDAR_TOPIC="${ULHK_LIDAR_TOPIC:-/velodyne_points_0}"
+ULHK_IMU_TOPIC="${ULHK_IMU_TOPIC:-/imu/data}"
+# NovAtel SPAN-CPT INSPVAX ground-truth messages (geodetic lat/lon/hgt),
+# read directly out of the bag's .db3 by extract_ulhk_gt.py - see that
+# script for the CDR field-offset parsing and geodetic->ENU conversion.
+ULHK_GT_TOPIC="${ULHK_GT_TOPIC:-/novatel_data/inspvax}"
 
 # How far a freshly measured RMSE may drift from the documented baseline
 # (as a percentage of the baseline) and still count as a pass in
@@ -110,29 +125,33 @@ BAG_STORAGE_ID="${BAG_STORAGE_ID:-sqlite3}"
 RMSE_TOLERANCE_PCT="${RMSE_TOLERANCE_PCT:-20}"
 
 # Optional: replay only a slice of the bag instead of the full sequence, for
-# fast iteration (the full nclt_4 bag is ~112 minutes and `ros2 bag play`
-# replays it in real time, with no fast-forward). Both blank by default
-# (full playback, unchanged behavior). Set PLAY_START_OFFSET_S to start
-# partway into the bag (passed straight to `ros2 bag play --start-offset`)
-# and/or PLAY_DURATION_S to stop playback after that many (real, wall-clock)
+# fast iteration (the full ulhk_4 bag is already short, ~5:21, but this is
+# still useful for a quick smoke test). Both blank by default (full
+# playback, unchanged behavior). Set PLAY_START_OFFSET_S to start partway
+# into the bag (passed straight to `ros2 bag play --start-offset`) and/or
+# PLAY_DURATION_S to stop playback after that many (real, wall-clock)
 # seconds instead of waiting for EOF. scripts/evaluate_rmse.sh skips the
 # baseline PASS/FAIL check whenever either is set, since the documented
 # baseline below is for the full sequence only.
 PLAY_START_OFFSET_S="${PLAY_START_OFFSET_S:-}"
 PLAY_DURATION_S="${PLAY_DURATION_S:-}"
 
-# Expected RMSE (meters), per sequence, as reported in the FAST-LIO2 paper
-# (arXiv 2107.06829), Table IV, "Absolute Translational Errors (RMSE,
-# meters) in Sequences with Good Quality Ground Truth". nclt_4 = 8.5-8.72 m
-# across all tested map sizes there; 8.6 is used as a representative single
-# value. Point-LIO's own benchmark table does not cover any NCLT sequence
-# (confirmed), so this is a single-paper (FAST-LIO2) citation, not a
-# dual-paper one - stated plainly in README.md rather than implied.
-# scripts/evaluate_rmse.sh compares the freshly measured RMSE against this
-# baseline within +/-RMSE_TOLERANCE_PCT%.
+# Expected RMSE (meters), per sequence. Primary citation for ulhk_4 (this is
+# the FAST-LIO2 repo): FAST-LIO2 paper (Xu et al. 2022, IEEE T-RO, arXiv
+# 2107.06829), Table IV, "Absolute Translational Errors (RMSE, meters) in
+# Sequences with Good Quality Ground Truth" - 2.57 m, constant across all
+# four non-feature map sizes tested there (2000/1000/800/600m; the
+# feature-based variant gets 2.29 m). Point-LIO's own paper (He et al. 2023,
+# Advanced Intelligent Systems, DOI 10.1002/aisy.202200459, Table 5) reports
+# 2.17 m on the same sequence - printed alongside for context only, not
+# compared against. Intel's own reproduce_all.sh run on the PTL board has
+# separately measured 1.327 m on this exact sequence, comfortably inside the
+# tolerance band below. scripts/evaluate_rmse.sh compares the freshly
+# measured RMSE against the FAST-LIO2 baseline within +RMSE_TOLERANCE_PCT%
+# (one-sided: any measured value at or below the baseline always passes).
 expected_rmse_m() {
   case "$1" in
-    nclt_4) echo "8.6" ;;
+    ulhk_4) echo "2.57" ;;
     *) echo "unknown" ;;
   esac
 }
@@ -144,12 +163,12 @@ expected_rmse_m() {
 # Core numbering is specific to this SKU - re-check `lscpu -e` before
 # reusing these defaults on a different PTL SKU or platform.
 #
-# run_nclt.sh wraps each task with `taskset -c` (and, best-effort,
+# run_ulhk.sh wraps each task with `taskset -c` (and, best-effort,
 # `sudo -n chrt -f 85` realtime priority for the algorithm and the dataset
 # publisher) whenever its variable below is non-empty. Leave a variable
 # empty (e.g. CPUSET_ALGO="") to run that task unpinned.
 CPUSET_ALGO="${CPUSET_ALGO:-12,13}"   # fastlio_mapping algorithm - isolated LP-E cores
-CPUSET_BAG="${CPUSET_BAG:-1}"         # `ros2 bag play` of the converted NCLT bag - dedicated P-core
+CPUSET_BAG="${CPUSET_BAG:-1}"         # `ros2 bag play` of the converted UrbanLoco bag - dedicated P-core
 CPUSET_RVIZ="${CPUSET_RVIZ:-2}"       # rviz2 visualization - dedicated P-core
 
 # CPU frequency locking for apples-to-apples PTL benchmarking, applied by

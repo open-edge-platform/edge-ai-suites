@@ -22,14 +22,15 @@ sudo apt-get install -y \
   "ros-${ROS_DISTRO}-tf2-ros" \
   "ros-${ROS_DISTRO}-tf2-geometry-msgs" \
   "ros-${ROS_DISTRO}-rosbag2" \
-  "ros-${ROS_DISTRO}-rosbag2-storage-default-plugins"
+  "ros-${ROS_DISTRO}-rosbag2-storage-default-plugins" \
+  "ros-${ROS_DISTRO}-cyclonedds" \
+  "ros-${ROS_DISTRO}-rmw-cyclonedds-cpp"
 
-# gdown: automated Google Drive download for fetch_ulhk.sh (handles the
-# large-file "can't scan for viruses" confirmation-token dance that plain
-# curl/wget can't). rosbags: pure-Python ROS1<->ROS2 bag conversion for
-# convert_ulhk_to_bag.sh, used only if the downloaded file turns out to be a
-# ROS1 bag.
-pip install --user --break-system-packages gdown rosbags
+# rosbags: pure-Python ROS1<->ROS2 bag conversion for convert_ulhk_to_bag.sh,
+# used if the manually-downloaded UrbanLoco file turns out to be a ROS1 bag
+# (the common case - see fetch_ulhk.sh; UrbanLoco has no scriptable download,
+# so there is no gdown step here).
+pip install --user --break-system-packages rosbags
 
 # Clone, cmake-build and install a plain (non-ROS) C++ dependency, once.
 # Any extra args are forwarded to the cmake configure step.

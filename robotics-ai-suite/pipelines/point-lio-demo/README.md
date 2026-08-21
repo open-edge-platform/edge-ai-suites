@@ -29,6 +29,8 @@ applies to.
 | Patch | Change |
 | ----- | ------ |
 | [0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch) | Full ROS1/catkin → ROS2/ament_cmake port (rclcpp, `livox_ros_driver2`, a ROS2 launch file); new `avia_ros2.yaml`/`mid360_ros2.yaml`/`velodyne_urbanloco.yaml` configs — the last one is the UrbanLoco `ulhk_4` config used for validation below; opt-in latency-profiling CSV (below); `MP_PROC_NUM_CPUSET` CMake option to pin OpenMP thread count to the algorithm's cpuset; a segfault fix for point clouds without a `time` field; and alignment of Avia point filtering with FAST-LIO2 for fair benchmarking. |
+| [0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch) | Reformats `laserMapping.cpp` and `preprocess.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch) | Drops a stray `break` in the first-frame IMU-init block (both `kf_input`/`kf_output` paths) that silently skipped queued IMU messages; fixes a `disA`/`disB` typo in `Preprocess`'s constructor; guards `plane_judge` against a zero-area divide and an out-of-bounds distance-array read; checks `mkdir()`'s return value; wraps `main()` in a try/catch. |
 
 **Profiling**: built behind the `ENABLE_PROFILING` CMake option (off by
 default, matching upstream). When enabled, a lock-free ring buffer plus a
@@ -47,7 +49,7 @@ cd robotics-ai-suite/pipelines/point-lio-demo/scripts
 # 2. One-time host dependencies (needs sudo; safe to re-run)
 ./install_deps.sh
 
-# 3. Apply the Intel patch from the table above
+# 3. Apply the Intel patches from the table above
 ./apply_patches.sh
 
 # 4. Build point_lio with colcon
@@ -69,22 +71,24 @@ is replayed through `pointlio_mapping` and compared against its NovAtel
 SPAN-CPT-derived ground truth.
 
 ```bash
-./fetch_ulhk.sh            # download the raw bag (Google Drive, via gdown - see below if slow)
+./fetch_ulhk.sh            # checks whether the file is already there; otherwise prints download links + target path
 ./convert_ulhk_to_bag.sh   # one-time conversion into a standard ROS 2 bag, if needed
 ./run_ulhk.sh              # launch pointlio_mapping + `ros2 bag play` the converted bag, records the trajectory
 ./evaluate_rmse.sh         # evo_ape RMSE vs. ground truth, printed next to the documented baseline
 
-# or, once install_deps.sh has been run once:
-./reproduce_all.sh # apply patch -> build -> fetch -> convert -> run -> evaluate, in one command
+# or, once install_deps.sh has been run once and the file has been downloaded by hand:
+./reproduce_all.sh # apply patch -> build -> check dataset -> convert -> run -> evaluate, in one command
 ```
 
-UrbanLoco's file is hosted on Google Drive, which needs a large-file
-confirmation step that plain `wget`/`curl` can't complete alone —
-`fetch_ulhk.sh` uses `gdown` (installed by `install_deps.sh`) to automate
-that. If it's slow or rate-limited on your network, the script prints the
-exact manual-download URL, the file to grab, and the exact directory to
-place it in; re-run `./fetch_ulhk.sh` afterward (it detects the file is
-already present) or continue straight to `./convert_ulhk_to_bag.sh`.
+UrbanLoco has no scriptable download: its listed Google Drive links require
+a manual "can't scan for viruses" confirmation step and, in practice, are
+often unreachable at all from a corporate network even with an account.
+`fetch_ulhk.sh` does **not** attempt an automated download — it only checks
+whether the file is already present, and otherwise prints the Dropbox and
+Baidu Netdisk links from the dataset's own GitHub README (same shared
+folder for every Hong Kong sequence) plus the exact path to place the file
+at; re-run `./fetch_ulhk.sh` afterward (it detects the file is already
+present) or continue straight to `./convert_ulhk_to_bag.sh`.
 
 During replay, `pointlio_mapping`'s own log will repeat
 `Failed to find match for field 'time'.` once per LiDAR scan for the whole
@@ -235,7 +239,7 @@ sudo apt-get install -y \
   ros-jazzy-pcl-conversions ros-jazzy-common-interfaces \
   ros-jazzy-tf2 ros-jazzy-tf2-ros ros-jazzy-tf2-geometry-msgs \
   ros-jazzy-rosbag2 ros-jazzy-rosbag2-storage-default-plugins
-pip install --user --break-system-packages gdown rosbags evo
+pip install --user --break-system-packages rosbags evo
 ```
 
 `point_lio`'s `CMakeLists.txt`/`package.xml` unconditionally depend on
@@ -250,11 +254,13 @@ cmake --build /tmp/livox-sdk2/build -j"$(nproc)"
 sudo cmake --install /tmp/livox-sdk2/build
 ```
 
-### 2. Apply the Intel patch
+### 2. Apply the Intel patches
 
 ```bash
 cd Point-LIO
 git am --keep-cr ../patches/0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch
+git am --keep-cr ../patches/0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch
+git am --keep-cr ../patches/0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch
 cd ..
 ```
 
@@ -279,23 +285,24 @@ colcon build --packages-select point_lio   # add --cmake-args -DENABLE_PROFILING
 cd -
 ```
 
-### 4. Fetch the UrbanLoco dataset (`ulhk_4`, session `HK-Data20190117`)
+### 4. Fetch the UrbanLoco dataset (`ulhk_4`, session `HK-Data20190117`) — manual download
+
+UrbanLoco has no scriptable download. Download the `HK-Data20190117` entry
+from section "2. Hong Kong Dataset" of the
+[UrbanLoco GitHub README](https://github.com/weisongwen/UrbanLoco) via
+either mirror it lists (Google Drive is frequently unreachable from
+corporate networks even with an account, so these are the reliable ones):
+
+- Dropbox: https://www.dropbox.com/scl/fo/zrsmoddbq96t4go1wbxwp/AJw_DGVXng06DmLx9j9iQMs?rlkey=rk11n8tt62ejbg8mbixrm6quz&e=1&st=j7sy3izj&dl=0
+- Baidu Netdisk (百度网盘): https://pan.baidu.com/s/1-5d8xM1tzfsSSueTiU6-MQ?pwd=sufc
+
+(same shared folder for every Hong Kong sequence — open the
+`HK-Data20190117` entry inside it). Place the downloaded ROS1 bag at:
 
 ```bash
 mkdir -p datasets/ulhk_4
+mv ~/Downloads/HK-Data20190117.bag datasets/ulhk_4/HK-Data20190117.bag
 ```
-
-Automate it with `gdown` (handles Google Drive's large-file confirmation
-step, which plain `wget`/`curl` can't complete alone):
-
-```bash
-gdown 17JQNs8_Mf2t4nvLUsF76AD6fxaTbZdFg -O datasets/ulhk_4/HK-Data20190117.bag
-```
-
-If that's slow, rate-limited, or blocked on your network, download the
-`HK-Data20190117` session yourself from the official UrbanLoco GitHub repo
-(<https://github.com/weisongwen/UrbanLoco>) using whatever method works for
-you, then place the file at exactly `datasets/ulhk_4/HK-Data20190117.bag`.
 
 ### 5. Convert to a ROS 2 bag
 
@@ -472,9 +479,9 @@ paper's own number.
   layout of that message type as recorded in this dataset; re-verify the
   byte offsets (`_OFF_LAT`/`_OFF_LON`/`_OFF_HGT` in that script) if adapting
   this to a different bag.
-- Only `ulhk_4` has a confirmed session/Google-Drive ID and documented
-  baseline; `ulhk_5`/`ulhk_6` are structural placeholders in
-  `scripts/env.sh` for future extension, not yet populated.
+- Only `ulhk_4` has a confirmed session name and documented baseline;
+  `ulhk_5`/`ulhk_6` are structural placeholders in `scripts/env.sh` for
+  future extension, not yet populated.
 - The converted `ulhk_4` bag's `PointCloud2` has no per-point `time` field
   (see "Validate without hardware" above for why `pointlio_mapping` logs
   "Failed to find match for field 'time'" once per scan because of this).
@@ -486,10 +493,13 @@ paper's own number.
   packages aren't installed by `install_deps.sh` — expected and harmless,
   since `extract_ulhk_gt.py` reads ground truth directly from the bag's own
   `.db3` file rather than subscribing to a live topic.
-- Google Drive's automated-download detection can temporarily gate this
-  specific shared file behind a sign-in wall (confirmed in practice — not a
-  proxy/network issue, reproduced identically from two different networks);
-  `fetch_ulhk.sh`'s manual-download fallback exists for exactly this case.
+- UrbanLoco has no scriptable download (see "Validate without hardware"
+  above) — Google Drive's automated-download detection gates this specific
+  shared file behind a sign-in wall that plain `wget`/`curl` (or an
+  unattended script) can't get past, confirmed unreachable in practice even
+  with an account, from more than one network. `fetch_ulhk.sh` only checks
+  for the file and prints the Dropbox/Baidu Netdisk links to download it by
+  hand instead.
 - UrbanLoco's terms of use should be checked on the
   [dataset's own page](https://advdataset2019.wixsite.com/urbanloco/hong-kong)
   before redistributing any downloaded data.
