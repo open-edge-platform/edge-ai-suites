@@ -109,6 +109,7 @@ services:
       BASLER_FIXED_CAMERA:         ${BASLER_FIXED_CAMERA:-0}
       BASLER_EXPOSURE_US:          ${BASLER_EXPOSURE_US:-}
       BASLER_GAIN:                 ${BASLER_GAIN:-}
+      BASLER_THROUGHPUT_LIMIT:     ${BASLER_THROUGHPUT_LIMIT:-}
       BASLER_PIXEL_FORMAT:         ${BASLER_PIXEL_FORMAT:-bayerbggr}
       # Startup GPU warmup: pre-warms OpenVINO/GPU state so the first /start
       # after a container (re)create runs at full fps instead of a cold ~16 fps.
