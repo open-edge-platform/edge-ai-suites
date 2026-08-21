@@ -1,4 +1,4 @@
-# UAV Vision Analytics Application
+# Uncrewed Aerial Vehicle (UAV) Vision Analytics Application
 
 <!--hide_directive
 <div class="component_card_widget">
