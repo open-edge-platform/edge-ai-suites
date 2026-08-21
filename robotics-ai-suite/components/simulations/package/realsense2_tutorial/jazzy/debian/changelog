@@ -1,3 +1,16 @@
+ros-jazzy-realsense2-tutorial-demo (2.3-5) noble; urgency=medium
+
+  * Add camera_type launch argument (usb/gmsl) with a find_cameras.sh helper
+    script to detect which is connected, replacing the old use_sub_camera arg.
+  * Explicitly set rgb_camera.color_profile and depth_module.depth_profile for
+    the D457 GMSL branch to avoid the driver's invalid-resolution fallback.
+  * Add image_transport_overrides.yaml, restricting each raw image topic to
+    its compatible transports (color vs depth). Fixes realsense2_camera_node
+    attaching the color compressor to depth topics and vice versa, which threw
+    continuous conversion errors and caused visible camera stream stutter.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 19 Aug 2026 00:00:00 +0000
+
 ros-jazzy-realsense2-tutorial-demo (2.3-4) noble; urgency=medium
 
   * Add functional launch file structure tests.
