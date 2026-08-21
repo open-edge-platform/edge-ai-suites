@@ -339,7 +339,9 @@ The `vision-processor-multicam` container automatically:
    - Pauses inference when disarmed (saves GPU)
    - Resumes inference when armed
 3. **Publishes detections** to MQTT: `uav/uav-1/camera/{camera_id}/detections`
-4. **Pushes annotated video** back to MediaMTX: `rtsp://mediamtx:8554/uav-1/{camera_id}/processed`
+4. **Publishes annotated frames** (JPEG with bounding boxes) to MQTT: `uav/uav-1/camera/{camera_id}/processed`
+
+> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, use the dashboard at http://localhost:5002 or subscribe to the MQTT topic above.
 
 ### Dashboard Features
 
@@ -436,8 +438,11 @@ sudo apt install ffmpeg
 # View raw camera feed
 ffplay rtsp://localhost:8554/uav-1/nadir
 
-# View annotated feed with detections
-ffplay rtsp://localhost:8554/uav-1/nadir/processed
+# View annotated frames with detections delivered over MQTT. The dashboard at
+# http://localhost:5002 renders these directly; the CLI equivalent grabs one
+# JPEG from the MQTT topic:
+mosquitto_sub -h localhost -p 1884 \
+  -t "uav/uav-1/camera/nadir/processed" -C 1 > frame.jpg && xdg-open frame.jpg
 
 # Capture one frame
 ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 frame.jpg
