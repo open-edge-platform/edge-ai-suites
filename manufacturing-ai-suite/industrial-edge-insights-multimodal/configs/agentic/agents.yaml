@@ -27,7 +27,20 @@ policy:
     - No Weld
     - No Label
   
-  alert_threshold: 0.75
+  # Per-tier thresholds — must match values in the POLICY prompt exactly
+  priority_thresholds:
+    critical:
+      min_avg_confidence: 0.80
+      classes: [Burnthrough, Crater Cracks, Lack of Fusion]
+    high:
+      min_avg_confidence: 0.75
+      classes: [Excessive Penetration]
+    medium:
+      min_avg_confidence: 0.65
+      classes: [Porosity, Porosity with Excessive Penetration, Undercut, Warping]
+    low:
+      min_avg_confidence: 0.55
+      classes: [Overlap, Spatter, Excessive Convexity]
   
   # Fusion strategy: both modalities must agree for high-confidence detection
   critical_classes:
@@ -75,19 +88,23 @@ evidence:
   max_images_per_evidence: 0
 
 ticketing:
-  # Priority rules: matched against policy.critical_classes
+  # Priority rules: must match policy.priority_thresholds exactly
   priority_rules:
-    high:
-      classes: ["Burnthrough", "Lack of Fusion", "Crater Cracks", "Excessive Penetration"]
+    critical:
+      classes: ["Burnthrough", "Crater Cracks", "Lack of Fusion"]
       confidence_threshold: 0.80
     
+    high:
+      classes: ["Excessive Penetration"]
+      confidence_threshold: 0.75
+    
     medium:
-      classes: ["Porosity", "Porosity with Excessive Penetration", "Undercut", "Spatter", "Warping", "Overlap", "Excessive Convexity"]
-      confidence_threshold: 0.70
+      classes: ["Porosity", "Porosity with Excessive Penetration", "Undercut", "Warping"]
+      confidence_threshold: 0.65
     
     low:
-      classes: ["No Weld", "Good Weld", "No Label"]
-      confidence_threshold: 0.60
+      classes: ["Overlap", "Spatter", "Excessive Convexity"]
+      confidence_threshold: 0.55
   
   # Ticketing backend configuration
   auto_create: true

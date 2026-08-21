@@ -220,6 +220,7 @@ services:
       TS_MS_PORT: ${KAPACITOR_PORT}
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
       SIMULATION_TARGET_FPS: ${SIMULATION_TARGET_FPS}
+      SIMULATION_REPLAY_COUNT: ${SIMULATION_REPLAY_COUNT}
       LOG_LEVEL: ${LOG_LEVEL}
     volumes:
       - ./weld-data-simulator/simulation-data:/simulation-data

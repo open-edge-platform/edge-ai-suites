@@ -52,6 +52,7 @@ env:
   # Weld Data Simulator config
   TS_TOPIC: weld-data
   SIMULATION_TARGET_FPS: 10
+  SIMULATION_REPLAY_COUNT: 3
 
   ## DL Streamer Pipeline Server
   # HOST_IP defaults to localhost; set it to the host system IP address if you want to access the UI remotely
