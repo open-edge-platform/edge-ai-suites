@@ -97,7 +97,7 @@ def _build_source(
             # via gvadetect(pre-process-backend=va-surface-sharing).
             # The caps element is single-quoted because it contains parens
             # (memory:VAMemory) which the shell would otherwise interpret.
-            va_caps = "'video/x-raw(memory:VAMemory)'"
+            va_caps = "'video/x-raw(memory:VAMemory),format=NV12'"
             if is_bayer:
                 return [
                     gencamsrc_elem,
