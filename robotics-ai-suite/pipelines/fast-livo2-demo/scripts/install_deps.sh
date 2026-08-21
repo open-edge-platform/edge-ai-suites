@@ -16,7 +16,9 @@ sudo apt-get install -y \
   libpcl-dev libeigen3-dev libopencv-dev \
   "ros-${ROS_DISTRO}-pcl-ros" \
   "ros-${ROS_DISTRO}-cv-bridge" \
-  "ros-${ROS_DISTRO}-image-transport"
+  "ros-${ROS_DISTRO}-image-transport" \
+  "ros-${ROS_DISTRO}-cyclonedds" \
+  "ros-${ROS_DISTRO}-rmw-cyclonedds-cpp"
 
 # Clone, cmake-build and install a plain (non-ROS) C++ dependency, once.
 # Any extra args are forwarded to the cmake configure step.
