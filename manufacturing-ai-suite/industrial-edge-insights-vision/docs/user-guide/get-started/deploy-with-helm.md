@@ -433,7 +433,7 @@ configured Kubernetes cluster.
     ::::
     hide_directive-->
 
-   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/` for Pallet Defect Detection. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
+    > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/` for Pallet Defect Detection or `https://<host_IP>:30443/mediamtx/anomaly/` for PCB Anomaly Detection. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
 
 ### Start GPU- and NPU-Based Pipelines
 
