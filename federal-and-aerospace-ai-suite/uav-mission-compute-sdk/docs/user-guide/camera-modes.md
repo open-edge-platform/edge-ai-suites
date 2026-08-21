@@ -76,7 +76,7 @@ flowchart LR
 GZ_WORLD=baylands_multicam
 PX4_MODEL_DIR=multi_cam
 
-# Vision processor consumes all 3 streams
+# Camera streams consumed by AI inference
 VISION_CAMERA_IDS=nadir,forward,rear
 ```
 
@@ -94,7 +94,6 @@ VISION_CAMERA_IDS=nadir,forward,rear
 cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                    # Set passwords in .env
 make up-sim-camera                      # Start PX4 + Gazebo + camera-bridge
-make apps                    # Start vision processor + dashboard
 ```
 
 ### Gazebo Camera Details
@@ -180,7 +179,7 @@ USB_CAPTURE_HEIGHT=720            # Video resolution height
 USB_SENSOR_FPS=30                 # Frames per second (camera capability)
 USB_CAPTURE_FORMAT=mjpeg          # mjpeg (compressed) or raw (uncompressed)
 
-# Vision processor: only 1 camera available
+# Only 1 camera available
 VISION_CAMERA_IDS=nadir           # Must match USB_CAMERA_ID
 ```
 
@@ -245,9 +244,6 @@ nano .env
 
 # 3. Start core infrastructure with USB camera profile
 make up-usb-camera
-
-# 4. Start vision processor + dashboard (1 camera)
-make apps
 ```
 
 ### Typical Performance
@@ -293,9 +289,6 @@ make down
 
 # 4. Start with USB profile (sets VISION_CAMERA_IDS=nadir automatically)
 make up-usb-camera
-
-# 5. Restart apps with 1-camera config
-make apps
 ```
 
 ### From USB to Sim
@@ -308,9 +301,6 @@ make down
 
 # 2. Start with default sim profile (sets VISION_CAMERA_IDS=nadir,forward,rear automatically)
 make up-sim-camera
-
-# 3. Restart apps with 3-camera config
-make apps
 ```
 
 ### Environment Variable Checklist
@@ -358,23 +348,12 @@ The `vision-processor-multicam` container automatically:
 ### Troubleshooting
 
 **No camera frames on dashboard**:
-1. Check `VISION_CAMERA_IDS` matches available cameras
-   ```bash
-   docker logs vision-processor-multicam | grep "Cameras:"
-   ```
-   Should show: `Cameras: ['nadir', 'forward', 'rear']` (sim) or `Cameras: ['nadir']` (USB)
-
-2. Verify RTSP paths exist at MediaMTX
+1. Verify RTSP paths exist at MediaMTX
    ```bash
    docker logs mediamtx | grep -E "rtsp.*announce"
    ```
 
-3. Check vision processor connection to MediaMTX
-   ```bash
-   docker logs vision-processor-multicam 2>&1 | grep -i "rtsp\|error\|connection"
-   ```
-
-4. Ensure UAV is armed (camera inference pauses when disarmed)
+2. Ensure UAV is armed (camera inference pauses when disarmed)
    ```bash
    curl http://localhost:8080/state
    ```
@@ -515,9 +494,7 @@ make build-nc            # Build all images (no-cache)
 make up-sim-camera                  # Start PX4 + Gazebo + sim cameras
 make up-usb-camera       # Start PX4 + USB camera bridge
 make down                # Stop all containers
-make apps                # Start vision processor + dashboard
 make logs-infra          # Tail infrastructure logs
-make logs-apps           # Tail application logs
 make clean               # Remove all containers, networks, volumes
 ```
 
@@ -547,9 +524,6 @@ Start here: Which camera source?
       USB_CAMERA_ID=nadir
       VISION_CAMERA_IDS=nadir
    3. make up-usb-camera
-   4. make apps          3. make apps
-
-Dashboard: http://localhost:5002
 ```
 
 ---
@@ -586,7 +560,7 @@ Dashboard: http://localhost:5002
 
 3. **Restart**:
    ```bash
-   make down && make up-sim-camera && make apps
+   make down && make up-sim-camera
    ```
 
 ### Custom USB Camera Settings
