@@ -70,7 +70,7 @@ sed -i 's|^HOST_IP=.*|HOST_IP=0.0.0.0|' .env
 make up-sim-camera        # start PX4, MQTT, RTSP server
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../uav-mission-compute-sdk/docs/user-guide/get-started.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
 
 ### 2. Configure environment
 
