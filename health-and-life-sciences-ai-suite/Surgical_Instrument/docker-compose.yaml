@@ -43,6 +43,9 @@ services:
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
+    # Share the host IPC namespace so X11 MIT-SHM (XVideo) segments used by the
+    # display sink are valid — prevents BadShmSeg/SIGSEGV on desktop popups.
+    ipc: host
 
     # Intel Arc iGPU passthrough for DL Streamer (VAAPI + OpenCL / Level Zero).
     # /dev/accel is the Meteor Lake NPU (accel0) — required when
