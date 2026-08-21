@@ -89,7 +89,7 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	fi; \
 	if [ ! -d data/nginx-certs/ ]; then \
 		sudo mkdir -p data/nginx-certs/; \
-		sudo chown 1000:1000 -R data/nginx-certs/; \
+		sudo chown "$$(id -u)":"$$(id -g)" -R data/nginx-certs/; \
 		openssl genrsa -out data/nginx-certs/ca-key.pem 3072; \
 		openssl req -x509 -new -nodes -key data/nginx-certs/ca-key.pem -days 3650 \
 			-out data/nginx-certs/ca-cert.pem -subj '/CN=Handheld Multi-Modal Local CA'; \
