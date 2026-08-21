@@ -126,7 +126,7 @@ or authorization.
   Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
   TLS transport on the `localhost` bound addresses.
 
-To add certificate to trust pool, open Browser of your choice, navigate to `Settings->Certificates->Manage certificates` page, select `Authorities` tab and click `Import`. In file explorer navigate to folder that contains Handheld Multi-Modal Application and select `data/nginx-certs/ca-cert.pem` file. Select `Trust this CA to identify websites` checkbox and click `ok`.
+To add a certificate to the trust pool, open a browser of your choice and navigate to `Settings->Certificates->Manage certificates` page. Next, select the `Authorities` tab and click `Import`. In file explorer, navigate to the folder that contains Handheld Multi-Modal Application and select the `data/nginx-certs/ca-cert.pem` file. Finally, select the `Trust this CA to identify websites` checkbox and click `Ok`.
 
 
 | Service | URL | Notes |
