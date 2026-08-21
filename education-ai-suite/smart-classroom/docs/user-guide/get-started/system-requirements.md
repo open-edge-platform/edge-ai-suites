@@ -34,9 +34,9 @@ This page provides detailed hardware, software, platform requirements, and suppo
 
 ### Content Segmentation and Topic Search
 
-- **Embedding Model**: `BAAI/bge-large-en-v1.5` for semantic topic indexing and search
-- **Vector Store**: FAISS (IndexFlatIP with cosine similarity)
-- Content segmentation uses the shared vision-language model (`Qwen3-VL-8B-Instruct` by default)
+- **Embedding Model**: `intfloat/multilingual-e5-small` for semantic topic indexing and search
+- **Vector Store**: ChromaDB
+- **Content segmentation**: uses the shared vision-language model (`Qwen3-VL-8B-Instruct` by default)
 
 ###  Supported Weight Formats  
 - **int4** → Recommended default (fast + memory-efficient on GPU)  
