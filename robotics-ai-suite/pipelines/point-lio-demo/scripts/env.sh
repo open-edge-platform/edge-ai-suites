@@ -71,18 +71,11 @@ ENABLE_PROFILING="${ENABLE_PROFILING:-OFF}"
 ULHK_SEQUENCE="${ULHK_SEQUENCE:-ulhk_4}"
 
 # UrbanLoco session name (the dataset's own on-disk naming) for each
-# sequence, and the Google Drive file ID hosting it (see README.md
-# "Validate without hardware", official source: github.com/weisongwen/
-# UrbanLoco, advdataset2019.wixsite.com/urbanloco/hong-kong).
+# sequence - see README.md "Validate without hardware", official source:
+# github.com/weisongwen/UrbanLoco, section "2. Hong Kong Dataset".
 ulhk_session_name() {
   case "$1" in
     ulhk_4) echo "HK-Data20190117" ;;
-    *) echo "" ;;
-  esac
-}
-ulhk_gdrive_id() {
-  case "$1" in
-    ulhk_4) echo "17JQNs8_Mf2t4nvLUsF76AD6fxaTbZdFg" ;;
     *) echo "" ;;
   esac
 }

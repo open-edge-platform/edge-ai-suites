@@ -6,7 +6,7 @@ The Deterministic Threat Detection with Time-Sensitive Networking (TSN) project 
 
 ## Overview
 
-![Deterministic Threat Detection Architecture](../../docs/deterministic-threat-detection/user-guide/_assets/common-deterministic-threat-detection-architecture.svg)
+![Deterministic Threat Detection Architecture](./docs/user-guide/_assets/common-deterministic-threat-detection-architecture.svg)
 
 | Component | Role |
 |-----------|------|
@@ -21,11 +21,11 @@ This project demonstrates two complementary use cases for industrial edge AI, bo
 
 Deep Learning Streamer (DL Streamer) processes the RTSP camera streams from AXIS cameras for person detection. The DL Streamer then publishes the inference results and simulated sensor telemetry over MQTT with PTP timestamps. An MQTT aggregation node measures end-to-end latency in real time, demonstrating how TSN protects critical streams from iperf3 background congestion.
 
-[Get Started — Use Case 1](../../docs/deterministic-threat-detection/user-guide/get-started.md)
+[Get Started — Use Case 1](./docs/user-guide/get-started.md)
 
 Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Time Protocol (PTP). A patched GStreamer pipeline propagates these timestamps through DL Streamer into Scenescape for 3D multi-camera tracking. This use case measures how TSN congestion affects Higher Order Tracking Accuracy (HOTA) and demonstrates that traffic shaping restores accuracy to the baseline.
 
-[Get Started — Use Case 2](../../docs/deterministic-threat-detection/user-guide/get-started-scenescape.md)
+[Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
 
 ---
 
@@ -56,10 +56,10 @@ cd deterministic-threat-detection
 
 ## Documentation
 
-- [Get Started — Use Case 1](../../docs/deterministic-threat-detection/user-guide/get-started.md)
-- [Get Started — Use Case 2](../../docs/deterministic-threat-detection/user-guide/get-started-scenescape.md)
-- [How-to Guides](../../docs/deterministic-threat-detection/user-guide/how-to-guides.md)
-- [Release Notes](../../docs/deterministic-threat-detection/user-guide/release-notes.md)
+- [Get Started — Use Case 1](./docs/user-guide/get-started.md)
+- [Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
+- [How-to Guides](./docs/user-guide/how-to-guides.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
 
 ## Key References
 
