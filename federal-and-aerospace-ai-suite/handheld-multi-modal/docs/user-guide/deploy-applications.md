@@ -147,7 +147,7 @@ Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/ma
 After opening the main page of ViPPET, you can select one of the several options available in ViPPET:
 1) Pipelines - to check and run one of the predefined pipelines and understand how it works. Predefined pipelines will provide a video output stream that shows how a model works, as well as a small subset of system metrics during execution of the pipeline. It also exposes an option to add a new custom pipeline for advanced users, but it might require additional input from other options. 
 2) Benchmarks - allows you to compare performance of pipelines on different combinations of supported hardware (CPU/NPU/GPU/NPU+GPU) to find out the best device for a specific pipeline.
-3) Models - exposes list of available models that could be used in pipeline as well as import functionality for models
+3) Models - exposes a list of available models that can be used in a pipeline, as well as the import functionality for models.
 4) Video/Images/Cameras - allows to configure source of data that could be used in pipeline.
 
 ### Open WebUI
