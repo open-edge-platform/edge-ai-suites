@@ -46,60 +46,38 @@ If you have multiple GPUs (integrated/discrete), please follow [this](https://do
 
 > **Note:** The sample applications already provide a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
-Follow the steps below to run the pipeline.
+Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
-### Steps
+  > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
-1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
+  ```sh
+  docker compose up -d
+  ```
 
-    > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+<!--hide_directive ::::{tab-set} hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+<!--hide_directive :sync: pallet-detect hide_directive-->
 
-    ```sh
-    docker compose up -d
-    ```
+The pipeline `pallet_defect_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. Start the pipeline as follows:
 
-2. Start the pipeline.
+```sh
+./sample_start.sh -p pallet_defect_detection_gpu
+```
 
-    <!--hide_directive ::::{tab-set} hide_directive-->
-    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-    <!--hide_directive :sync: pallet-detect hide_directive-->
+<!--hide_directive ::: hide_directive-->
+<!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+<!--hide_directive :sync: pcb-detect hide_directive-->
 
-    The pipeline `pallet_defect_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing.
+The pipeline `pcb_anomaly_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. Start the pipeline as follows:
 
-    ```sh
-    ./sample_start.sh -p pallet_defect_detection_gpu
-    ```
+```sh
+./sample_start.sh -p pcb_anomaly_detection_gpu
+```
 
-    This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
-
-    > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-
-    ```text
-    https://<HOST_IP>/mediamtx/pdd/
-    ```
-
-    <!--hide_directive ::: hide_directive-->
-    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-    <!--hide_directive :sync: pcb-detect hide_directive-->
-
-    The pipeline `pcb_anomaly_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing.
-
-    ```sh
-    ./sample_start.sh -p pcb_anomaly_detection_gpu
-    ```
-
-    This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
-
-    > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-
-    ```text
-    https://<HOST_IP>/mediamtx/anomaly/
-    ```
-    
-    <!--hide_directive
-    :::
-    ::::
-    hide_directive-->
+<!--hide_directive
+:::
+::::
+hide_directive-->
 
 ## Deployment with Helm
 
