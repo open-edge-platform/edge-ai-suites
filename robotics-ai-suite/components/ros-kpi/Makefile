@@ -24,6 +24,7 @@ endif
         bag-replay bag-replay-plot bag-replay-benchmark \
         fastmapping fastmapping-plot fastmapping-benchmark \
         adbscan adbscan-plot adbscan-benchmark \
+        realsense2_tutorial realsense2_tutorial-plot realsense2_tutorial-benchmark \
         analyze-benchmark analyze-e2e regression-check regression-check-l2 \
         report visualize-kpi results analysis-menu show-sessions summarize-benchmark \
         test package license-check lint lint-all
@@ -92,6 +93,14 @@ help:
 	@echo "  make adbscan-plot [BAG=<dir>]          - Same + trigger-timeline plots"
 	@echo "  make adbscan-benchmark [RUNS=10] [RATE=1.0] [PAUSE=10]"
 	@echo "                                             - N runs using bundled spinning bag"
+	@echo ""
+	@echo "REALSENSE2 TUTORIAL (live-camera pipeline):"
+	@echo "  Run scripts/find_cameras.sh (in the realsense2_tutorial package) first"
+	@echo "  to check camera_type; override via RUN_CONFIG if the camera is gmsl."
+	@echo "  make realsense2_tutorial [TIMEOUT=30]      - camera driver + rviz2"
+	@echo "  make realsense2_tutorial-plot               - Same + trigger-timeline plots"
+	@echo "  make realsense2_tutorial-benchmark [RUNS=10] [PAUSE=10]"
+	@echo "                                             - N runs, aggregate KPI"
 	@echo ""
 	@echo "GRAFANA + PROMETHEUS:"
 	@echo "  ./start_grafana.sh                        - Start stack"
@@ -927,6 +936,74 @@ adbscan-benchmark:
 		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
 		bash src/adbscan_run.sh \
 			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
+			--record \
+			$$_PROMPT \
+			--output-parent "$$BENCH_DIR"; \
+		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
+	done; \
+	echo ""; \
+	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)) $$([ "$(NO_PROMPT)" = "1" ] && echo --log-level WARNING); \
+	[ "$(NO_PROMPT)" = "1" ] && echo "KPI aggregation complete -> $$BENCH_DIR"; \
+	[ "$(NO_PROMPT)" = "1" ] || bash src/bench_menu.sh "$$BENCH_DIR" "$(CURDIR)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RealSense2 Tutorial benchmarking (live-camera pipeline, not a bag replay)
+# Uses: ros2 launch realsense2_tutorial realsense2_tutorial.launch.py
+# (starts the RealSense camera driver + rviz2)
+#
+# Run scripts/find_cameras.sh (in the realsense2_tutorial package) first to
+# check whether camera_type:=usb or camera_type:=gmsl should be passed via
+# RUN_CONFIG or config/realsense2_tutorial_run.yaml's launch.args.
+#
+# Optional: RUNS=10  — independent benchmark runs (realsense2_tutorial-benchmark)
+#           PAUSE=10 — seconds between runs (realsense2_tutorial-benchmark)
+#           TIMEOUT  — override yaml stop.timeout (default: 30s)
+#           RUN_CONFIG — path to YAML run profile (default: config/realsense2_tutorial_run.yaml)
+#           NO_PROMPT=1 — skip the interactive post-run analysis menu (all
+#                         three targets below honor this)
+# ─────────────────────────────────────────────────────────────────────────────
+
+realsense2_tutorial:
+	bash src/realsense2_tutorial_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(NO_PROMPT),--no-prompt)
+
+realsense2_tutorial-plot:
+	bash src/realsense2_tutorial_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(NO_PROMPT),--no-prompt)
+
+# realsense2_tutorial-benchmark: repeats the realsense2_tutorial scenario RUNS times and aggregates KPIs.
+#
+# Use cases:
+#   Local/interactive : make realsense2_tutorial-benchmark RUNS=10
+#                        (all runs but the last use --no-prompt; the final run
+#                        stops at an interactive menu so you can inspect results)
+#   CI / automated     : make realsense2_tutorial-benchmark RUNS=3 NO_PROMPT=1
+#                        (forces --no-prompt on every run, including the last,
+#                        and skips the interactive post-benchmark menu, so the
+#                        target never blocks waiting for input)
+realsense2_tutorial-benchmark:
+	@RUNS=$(if $(RUNS),$(RUNS),10); \
+	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
+	BENCH_DIR=monitoring_sessions/realsense2_tutorial/bench_$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p "$$BENCH_DIR"; \
+	echo "▶  RealSense2 Tutorial benchmark: $$RUNS runs  →  $$BENCH_DIR"; \
+	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
+	echo "   Log level           : $$([ "$(NO_PROMPT)" = "1" ] && echo "WARNING (forced by NO_PROMPT=1)" || echo "$${LOG_LEVEL:-INFO (default; see .env)}")"; \
+	if [ -n "$(SIDE_TERMINALS)" ]; then \
+		if command -v terminator >/dev/null 2>&1; then \
+			echo "   Side terminals     : opening htop + qmassa..."; \
+			terminator -e "htop" --title="htop — benchmark" & \
+			_QM=$$(command -v qmassa 2>/dev/null || ls ~/.cargo/bin/qmassa ~/.local/bin/qmassa /usr/bin/qmassa 2>/dev/null | head -1 || true); \
+			[ -n "$$_QM" ] && terminator -e "$$_QM" --title="qmassa — GPU monitor" & \
+		else \
+			echo "   WARNING: SIDE_TERMINALS set but terminator not found" >&2; \
+		fi; \
+	fi; \
+	for i in $$(seq 1 $$RUNS); do \
+		echo "--- Run $$i / $$RUNS ---"; \
+		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
+		bash src/realsense2_tutorial_run.sh \
+			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
+			$(if $(TIMEOUT),--timeout $(TIMEOUT)) \
 			--record \
 			$$_PROMPT \
 			--output-parent "$$BENCH_DIR"; \
