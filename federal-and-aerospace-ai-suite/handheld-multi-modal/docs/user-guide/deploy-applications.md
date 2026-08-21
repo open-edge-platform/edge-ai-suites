@@ -157,7 +157,7 @@ It is recommended to open the `New Chat` window and start a new chat to change t
 
 ### Whisper
 
-After entering main page of Whisper, there are 2 options to upload audio for transcription:
+On the main page of Whisper, there are two options to upload audio for the transcription:
 1) By uploading an audio file in one of the supported audio formats ("flac", "m4a", "mp3", "mp4", "ogg", "wav", "webm") and clicking on the corresponding section in UI, and selecting a file in the file explorer, or by drag-and-dropping the file into the section.
 2) By recording audio from a microphone. Click the round `record` button, allow Whisper access to the microphone and start talking into the microphone.
 In both cases, the transcription text will appear on the lower part of the page in real-time, in parts, as soon as Whisper has completed the transcription of a part of the recording. Once the whole recording has been transcribed, an additional section will appear and show the duration and ratio of the transcription.
