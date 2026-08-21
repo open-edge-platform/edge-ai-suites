@@ -7,7 +7,8 @@
 
 services:
   # Init - creates bind-mount directories with correct ownership before any
-  # service starts.
+  # service starts. Grafana runs as uid 472 without doing its own chown;
+  # OVMS runs as a non-root uid without a chown entrypoint.
   init:
     image: alpine
     network_mode: none
@@ -16,11 +17,10 @@ services:
       - ./data:/data
     command: >
       sh -c "
-        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache &&
+        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs &&
         chown 472:472 /data/grafana &&
         chown 5000:5000 /data/ovms-models &&
-        chmod 750 /data/ovms-models &&
-        chown 101:101 /data/nginx-certs/key.pem /data/nginx-certs/cert.pem 
+        chmod 750 /data/ovms-models
       "
 
   # Grafana - Dashboard with provisioned dashboards
