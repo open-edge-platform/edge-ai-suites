@@ -115,6 +115,21 @@ foreach ($Service in $Services) {
 Write-Header "SHUTDOWN COMPLETE"
 Write-Success "Stopped $StoppedCount service(s)"
 
+# Clear the ingested knowledge base so a fresh start begins with no uploaded
+# document. The React UI reconciles its persisted file list against the backend
+# context on load, so wiping the vector store here also clears the UI list.
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$VectorDb = Join-Path $ScriptDir "voice-enabled-interactions\smart-kiosk-assistant\rag-service\storage\vector_db"
+if (Test-Path $VectorDb) {
+    try {
+        Remove-Item -Path $VectorDb -Recurse -Force -ErrorAction Stop
+        Write-Success "Cleared ingested knowledge base"
+    }
+    catch {
+        Write-Error-Custom "Could not clear knowledge base at $VectorDb : $($_.Exception.Message)"
+    }
+}
+
 Write-Info "All services are now stopped."
 Write-Host "`nTo start again, run: powershell -ExecutionPolicy Bypass -File start_ata.ps1`n" -ForegroundColor Green
 

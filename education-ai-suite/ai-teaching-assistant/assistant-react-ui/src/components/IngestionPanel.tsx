@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ALLOWED_EXTENSIONS, MAX_UPLOAD_BYTES } from "../config";
 import { clearContext, ingestFiles } from "../api";
 
@@ -15,6 +15,9 @@ interface Props {
   onIngested: (topic?: string) => void;
   onBusyChange?: (busy: boolean) => void;
   disabled?: boolean;
+  // Status restored from a previous session (e.g. the ingested chunk count)
+  // shown until the user ingests again.
+  initialMessage?: string;
 }
 
 // Upload + ingest + reingest. Picking one or more valid files uploads and
@@ -27,10 +30,20 @@ export default function IngestionPanel({
   onIngested,
   onBusyChange,
   disabled,
+  initialMessage,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<IngestState>("idle");
   const [message, setMessage] = useState<string>("");
+
+  // Seed the status line from a restored session once, without clobbering a
+  // message produced by a later ingest in this session.
+  useEffect(() => {
+    if (initialMessage) {
+      setState((s) => (s === "idle" ? "success" : s));
+      setMessage((m) => (m === "" ? initialMessage : m));
+    }
+  }, [initialMessage]);
 
   const validate = (f: File): string | null => {
     const ext = "." + (f.name.toLowerCase().split(".").pop() ?? "");

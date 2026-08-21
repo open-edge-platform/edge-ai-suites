@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import DeviceSelector from "./components/DeviceSelector";
 import IngestionPanel from "./components/IngestionPanel";
 import UploadedFiles from "./components/UploadedFiles";
@@ -8,18 +8,88 @@ import TextInput from "./components/TextInput";
 import DualVisualizer from "./components/DualVisualizer";
 import SessionResetTimer from "./components/SessionResetTimer";
 import MetricsPanel from "./components/MetricsPanel";
-import { clearContext, ingestFiles } from "./api";
+import { clearContext, getContextStats, ingestFiles } from "./api";
+import {
+  clearUploadedFiles,
+  loadUploadedFiles,
+  saveUploadedFiles,
+} from "./storage/uploadedFiles";
 import { INACTIVITY_RESET_MS } from "./config";
 import { useAudioLevel } from "./hooks/useAudioLevel";
 import { usePerformanceMetrics } from "./hooks/usePerformanceMetrics";
 import { useVoiceSession } from "./hooks/useVoiceSession";
 import intelLogo from "./assets/Intel-logo-2022.png";
 
+const INGESTED_NAME_KEY = "ata.ingestedName";
+
 export default function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [deviceId, setDeviceId] = useState<string>();
   const [ingestedName, setIngestedName] = useState<string>("");
   const [ingesting, setIngesting] = useState(false);
+  // Guards the persistence effects so the initial empty state isn't written
+  // back over the stored files before hydration finishes.
+  const [hydrated, setHydrated] = useState(false);
+  // Status line restored after a refresh (e.g. "2 file(s) ingested · 40 chunks").
+  const [restoredStatus, setRestoredStatus] = useState<string>("");
+
+  const labelFor = (list: File[]) =>
+    list.length === 1 ? list[0].name : list.length > 1 ? `${list.length} files` : "";
+
+  // Restore the uploaded files (and last ingested label) from a previous
+  // session so a page refresh doesn't drop them. The backend keeps the ingested
+  // chunks, so if it reports an empty context (e.g. after stop_ata reset it) the
+  // stale UI list is cleared to stay in sync.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const stored = await loadUploadedFiles();
+        if (stored.length === 0) return;
+        let hasChunks = true;
+        let chunkCount: number | null = null;
+        try {
+          const stats = await getContextStats();
+          chunkCount = stats.document_count;
+          hasChunks = (stats.document_count ?? 0) > 0;
+        } catch {
+          // Backend not reachable yet; keep the files rather than wiping them.
+          hasChunks = true;
+        }
+        if (cancelled) return;
+        if (hasChunks) {
+          setFiles(stored);
+          setIngestedName(
+            localStorage.getItem(INGESTED_NAME_KEY) || labelFor(stored)
+          );
+          if (chunkCount !== null) {
+            setRestoredStatus(
+              `${stored.length} file(s) ingested \u00b7 ${chunkCount} chunks`
+            );
+          }
+        } else {
+          await clearUploadedFiles();
+          localStorage.removeItem(INGESTED_NAME_KEY);
+        }
+      } finally {
+        if (!cancelled) setHydrated(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    saveUploadedFiles(files).catch(() => {});
+  }, [files, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (ingestedName) localStorage.setItem(INGESTED_NAME_KEY, ingestedName);
+    else localStorage.removeItem(INGESTED_NAME_KEY);
+  }, [ingestedName, hydrated]);
 
   const {
     recording,
@@ -47,14 +117,16 @@ export default function App() {
   // and played, so it doesn't compete with TTS segment delivery to the UI.
   const perfMetrics = usePerformanceMetrics(responseActive);
 
-  const labelFor = (list: File[]) =>
-    list.length === 1 ? list[0].name : list.length > 1 ? `${list.length} files` : "";
-
   // Removes a file from the batch and re-ingests the remaining files so the
-  // knowledge base stays in sync with the visible list.
+  // knowledge base stays in sync with the visible list. The conversation is
+  // reset too so the assistant can no longer answer from the removed file's
+  // content that may linger in the chat history.
   const handleRemoveFile = async (index: number) => {
     const remaining = files.filter((_, i) => i !== index);
     setFiles(remaining);
+    if (remaining.length === 0) {
+      await clearUploadedFiles().catch(() => {});
+    }
     try {
       await clearContext();
       if (remaining.length > 0) {
@@ -64,6 +136,7 @@ export default function App() {
     } catch {
       // Leave the list as-is; the next upload/re-ingest will reconcile state.
     }
+    reset();
   };
 
   return (
@@ -118,6 +191,7 @@ export default function App() {
               onIngested={(topic) => setIngestedName(topic ?? labelFor(files))}
               onBusyChange={setIngesting}
               disabled={recording}
+              initialMessage={restoredStatus || undefined}
             />
           </section>
 
