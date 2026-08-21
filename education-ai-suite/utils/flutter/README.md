@@ -213,6 +213,16 @@ Agent: [Reads sc-files skill, calls files endpoint, displays table]
 - **PowerShell 7+** (for automation scripts)
 - **VS Code** (recommended for agentic mode)
 - **Coding Companion** (optional): GitHub Copilot, Continue, Cursor, Claude Code, etc.
+- **Visual Studio Build Tools 2022** with the following components:
+
+  1. Open **Visual Studio Installer** and locate **Visual Studio Build Tools 2022**, then click **Modify**.
+  2. Under the **Workloads** tab, enable **Desktop development with C++**.
+  3. Under the **Individual components** tab, ensure the following are selected:
+     - `MSVC v142 - VS 2019 C++ x64/x86 build tools`
+     - `C++ CMake tools for Windows`
+     - `Windows 11 SDK`
+     - `Windows 10 SDK`
+  4. Click **Modify** to apply the changes, then restart your terminal before running the setup script.
 
 ### Python Dependencies
 
