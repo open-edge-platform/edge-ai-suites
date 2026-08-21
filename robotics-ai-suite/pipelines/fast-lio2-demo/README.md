@@ -29,7 +29,9 @@ commit the patch below applies to.
 
 | Patch | Change |
 | ----- | ------ |
-| [0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch) | New Avia configs; `config/velodyne_generic.yaml` — a Velodyne HDL-32E parameter set for NCLT validation below, with the LiDAR-IMU extrinsic derived from the NCLT dataset paper's own Table 4 sensor calibration (not the UrbanLoco/Point-LIO placeholder it started from — see the comment above `extrinsic_T`/`extrinsic_R` in that file); C++17 + configurable OMP thread count in the build; a preprocess crash fix for Velodyne scans missing a `time` field; and a latency-profiling CSV (below). |
+| [0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch) | New Avia configs; `config/velodyne_generic.yaml` — a Velodyne HDL-32E parameter set originally tuned for NCLT, with the LiDAR-IMU extrinsic derived from the NCLT dataset paper's own Table 4 sensor calibration (kept for reference/extension — the validation flow below uses the pristine upstream `config/velodyne.yaml` instead, unmodified, since it already fits UrbanLoco's own Velodyne+IMU rig); C++17 + configurable OMP thread count in the build; a preprocess crash fix for Velodyne scans missing a `time` field; and a latency-profiling CSV (below). |
+| [0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch) | Reformats `laserMapping.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch) | Widens the `imu_cbk`/`sync_packages` mutex lock to cover the shared buffer's full read/write window; fixes `res_last` never reaching its `-1000` sentinel (`memset` truncated the float fill argument) via `std::fill`, dropping a leftover duplicate reset; checks `mkdir()`'s return value for the log directory; wraps `main()` in a try/catch. |
 
 **Profiling**: built behind the `ENABLE_PROFILING` CMake option (off by
 default, matching upstream). When enabled, a lock-free ring buffer plus a
@@ -60,71 +62,85 @@ All paths, the ROS distro, and the dataset sequence used below are
 centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) — edit that one file to
 retarget a different workspace/sequence; nothing else needs to change.
 
-## Validate without hardware: NCLT dataset replay
+## Validate without hardware: UrbanLoco dataset replay
 
 No robot or sensor is required to verify the build and measure accuracy:
-the `nclt_4` session (2012-01-15) from the public
-[NCLT dataset](http://robots.engin.umich.edu/nclt/) (University of
-Michigan) is replayed through `fastlio_mapping` and compared against its
-SLAM-derived ground truth. NCLT is hosted directly over plain HTTP with no
-access request or login — `fetch_nclt.sh` is a straight `wget`.
+the `ulhk_4` session (`HK-Data20190117`, ~5:21) from the public
+[UrbanLoco dataset](https://github.com/weisongwen/UrbanLoco) (PolyU IPN-Lab,
+ICRA 2020) is replayed through `fastlio_mapping` and compared against its
+NovAtel SPAN-CPT ground truth.
+
+UrbanLoco has no scriptable download: its listed Google Drive links require
+a manual "can't scan for viruses" confirmation step and, in practice, are
+often unreachable at all from a corporate network even with an account.
+`fetch_ulhk.sh` does **not** attempt an automated download — it only checks
+whether the file is already present, and otherwise prints the Dropbox and
+Baidu Netdisk links from the dataset's own GitHub README (same shared
+folder for every Hong Kong sequence) plus the exact path to place the file
+at:
 
 ```bash
-./fetch_nclt.sh           # download the Velodyne/IMU/ground-truth files (plain wget, no gating)
-./convert_nclt_to_bag.sh  # one-time conversion of the raw files into a standard ROS 2 bag
-./run_nclt.sh             # launch fastlio_mapping + `ros2 bag play` the converted bag, records the trajectory
+./fetch_ulhk.sh           # checks whether the file is already there; otherwise prints download links + target path
+./convert_ulhk_to_bag.sh  # one-time conversion of the (ROS1) downloaded bag into a standard ROS 2 bag
+./run_ulhk.sh             # launch fastlio_mapping + `ros2 bag play` the converted bag, records the trajectory
 ./evaluate_rmse.sh        # evo_ape RMSE vs. ground truth, printed next to the documented baseline
 
-# or, once install_deps.sh has been run once:
-./reproduce_all.sh # apply patches -> build -> fetch -> convert -> run -> evaluate, in one command
+# or, once install_deps.sh has been run once and the file has been downloaded by hand:
+./reproduce_all.sh # apply patches -> build -> check dataset -> convert -> run -> evaluate, in one command
 ```
 
-NCLT's raw data isn't a plug-and-play rosbag (custom binary Velodyne format
-+ CSV IMU); [scripts/convert_nclt_to_bag.py](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/convert_nclt_to_bag.py)
-parses it once and writes a standard ROS 2 bag under `BAG_DIR`
-([scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh)) — `convert_nclt_to_bag.sh` skips this
-step on subsequent runs if that bag already exists (pass
-`FORCE_CONVERT=true` to redo it). `run_nclt.sh` then replays that bag with
-the standard `ros2 bag play`, like every other RAI-suite SLAM demo.
+UrbanLoco's public download is a ROS1 bag, not a plug-and-play ROS2 one;
+`convert_ulhk_to_bag.sh` uses the `rosbags` library's `rosbags-convert` to
+produce a standard ROS 2 bag under `BAG_DIR`
+([scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh)). It skips
+this step on subsequent runs if that bag already exists and its topics look
+right (pass `FORCE_CONVERT=true` to redo it anyway) — so a colleague who has
+already converted this exact sequence once can just reuse that bag directly
+instead of re-downloading or re-converting it. `run_ulhk.sh` then replays
+it with the standard `ros2 bag play`, like every other RAI-suite SLAM demo.
 
-For `nclt_4`, the documented baseline is **8.6 m** RMSE (FAST-LIO2 paper,
-arXiv 2107.06829, Table IV — consistent across all tested map sizes,
-8.5–8.72 m). The check is one-sided: it passes as long as the freshly
-measured RMSE does not exceed that baseline by more than
-`RMSE_TOLERANCE_PCT` (20% by default) — a measured RMSE *lower* than the
-baseline always passes, since the check exists to catch regressions, not to
-flag outperforming the paper's own number.
+No FAST_LIO source or config change was needed to support this dataset: the
+pristine upstream `config/velodyne.yaml` already has the right LiDAR/IMU
+parameters for UrbanLoco's Velodyne HDL-32E + external-IMU rig (`scan_line:
+32`, `scan_rate: 10`, `timestamp_unit: 2`, `blind: 2.0`, `extrinsic_T:
+[0,0,0.28]`, identity `extrinsic_R` — the same values the sibling
+point-lio-demo pipeline's own `velodyne_urbanloco.yaml` uses for the same
+physical rig). Only the topic names and `pcd_save_en` differ from that
+file's defaults; `run_ulhk.sh` overrides both at the `ros2 run` level via
+`-p`.
 
-### Fast iteration on a slice
+During replay, `fastlio_mapping`'s own log will repeat
+`Failed to find match for field 'time'.` once per LiDAR scan for the whole
+run — this is **expected and harmless**, not a sign of a broken pipeline.
+It's a PCL-level warning (see `FAST_LIO/README.md`'s note B) that the
+incoming `PointCloud2` has no per-point timestamp field; UrbanLoco's 2019
+Velodyne recording predates that convention, so FAST-LIO2 falls back to
+estimating each point's capture time from scan geometry instead (still
+correct, just an internal fallback path). This is specific to this public
+dataset's age — a real Velodyne (or other) LiDAR driver on live hardware
+does populate that field, so production/live-sensor runs of this pipeline
+won't print this at all.
 
-The full `nclt_4` bag is ~112 minutes and `ros2 bag play` replays it in real
-time (no fast-forward), so a full run takes roughly that long. For quicker
-iteration, replay only part of the bag via
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh)'s `PLAY_START_OFFSET_S` /
-`PLAY_DURATION_S`:
-
-```bash
-PLAY_START_OFFSET_S=0 PLAY_DURATION_S=180 ./run_nclt.sh   # ~3min smoke test
-./evaluate_rmse.sh
-```
-
-`PLAY_START_OFFSET_S=0` (start from the beginning) is recommended over a
-nonzero offset: FAST-LIO2 needs an IMU-init + map-convergence period right
-at the start, so skipping ahead produces an unstable trajectory whose RMSE
-isn't meaningful. `180s` is enough to get past that init and see a stable
-odometry stream while staying fast; bump it toward 600–900s for a more
-representative (but still partial) RMSE. `evaluate_rmse.sh` still prints the
-measured RMSE for a sliced run but skips the PASS/FAIL check, since the
-documented baseline above is for the full sequence only.
+For `ulhk_4`, the documented baseline is **2.57 m** RMSE (FAST-LIO2 paper,
+arXiv 2107.06829, Table IV — constant across all four non-feature map sizes
+tested there; Point-LIO's own paper reports 2.17 m on this same sequence,
+printed alongside for context only). Intel's own `reproduce_all.sh` run on
+the PTL board (see "Reference: running on Intel PTL" below) measured
+**1.327 m**, comfortably inside the tolerance band. The check is one-sided:
+it passes as long as the freshly measured RMSE does not exceed that
+baseline by more than `RMSE_TOLERANCE_PCT` (20% by default) — a measured
+RMSE *lower* than the baseline always passes, since the check exists to
+catch regressions,
+not to flag outperforming the paper's own number.
 
 ### Rviz visualization
 
-`run_nclt.sh` gates `rviz2` behind the `USE_RVIZ` variable in
+`run_ulhk.sh` gates `rviz2` behind the `USE_RVIZ` variable in
 [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh), off by default so the flow stays headless
 over SSH:
 
 ```bash
-USE_RVIZ=true ./run_nclt.sh   # or: USE_RVIZ=true ./reproduce_all.sh
+USE_RVIZ=true ./run_ulhk.sh   # or: USE_RVIZ=true ./reproduce_all.sh
 ```
 
 Run this directly on the target machine's own logged-in Ubuntu desktop
@@ -134,7 +150,7 @@ SSH is impractical.
 
 ### Reference: running on Intel PTL
 
-`run_nclt.sh` ships a reference core-pinning + frequency-locking setup for
+`run_ulhk.sh` ships a reference core-pinning + frequency-locking setup for
 Intel PTL (validated on Core Ultra X7 358H: 4 P-cores `cpu0-3` up to 4700
 MHz, 8 E-cores `cpu4-11` up to 3500 MHz, 4 LP-E-cores `cpu12-15` up to 3300
 MHz). Core numbering is specific to this SKU — re-check `lscpu -e` before
@@ -143,10 +159,10 @@ reusing these defaults on a different PTL SKU or platform.
 | Task | Pinned to | Why |
 | ---- | --------- | --- |
 | `fastlio_mapping` algorithm | LP-E cores `12,13` (`CPUSET_ALGO`) | Keeps the timing-critical LIO thread on isolated cores the general scheduler and rest of the OS don't touch. |
-| `ros2 bag play` of the converted NCLT bag | P-core `1` (`CPUSET_BAG`) | Replaying the pre-converted bag is bursty I/O + decode work; a dedicated P-core keeps it from stealing cycles from the algorithm cores. |
+| `ros2 bag play` of the converted UrbanLoco bag | P-core `1` (`CPUSET_BAG`) | Replaying the pre-converted bag is bursty I/O + decode work; a dedicated P-core keeps it from stealing cycles from the algorithm cores. |
 | `rviz2` (when `USE_RVIZ=true`) | P-core `2` (`CPUSET_RVIZ`) | Point-cloud rendering is bursty GUI work best kept off the algorithm's isolated cores; a P-core has the headroom for it. |
 
-`run_nclt.sh` wraps the algorithm and `ros2 bag play` with `taskset -c` and,
+`run_ulhk.sh` wraps the algorithm and `ros2 bag play` with `taskset -c` and,
 best-effort, `sudo -n chrt -f -a -p 85 <pid>` SCHED_FIFO priority-85 —
 applied to the process *after* it's already launched as the invoking
 (non-root) user, not chained into the launch itself — whenever the matching
@@ -157,7 +173,7 @@ script warns and continues unprioritized rather than failing the run. To
 disable pinning for a given task, blank out its variable in `env.sh` (e.g.
 `CPUSET_ALGO=""`).
 
-Every process `run_nclt.sh` launches — including the RT-prioritized ones —
+Every process `run_ulhk.sh` launches — including the RT-prioritized ones —
 stays owned by the invoking user throughout, never root: `chrt -p <pid>`
 only changes an already-running process's scheduling class via `sudo`'s
 privilege, it never re-execs or changes that process's own UID. This
@@ -198,7 +214,7 @@ fast on a single host.
 ./setup_dds_shm.sh start    # installs cyclonedds/iceoryx apt packages, writes
                              # generated/cyclonedds_shm.xml + roudi_config.toml,
                              # starts the iox-roudi shared-memory daemon
-./run_nclt.sh                # picks up CYCLONEDDS_URI automatically once iox-roudi is running
+./run_ulhk.sh                # picks up CYCLONEDDS_URI automatically once iox-roudi is running
 ./setup_dds_shm.sh stop     # stop iox-roudi when done
 ./setup_dds_shm.sh status   # check whether iox-roudi is currently running
 ```
@@ -213,7 +229,7 @@ USE_DDS_SHM=false ./reproduce_all.sh
 # or edit scripts/env.sh: USE_DDS_SHM="false"
 ```
 
-If `run_nclt.sh` is run directly (not via `reproduce_all.sh`) and
+If `run_ulhk.sh` is run directly (not via `reproduce_all.sh`) and
 `./setup_dds_shm.sh start` was never run first, it warns and falls back to
 plain CycloneDDS rather than failing the run.
 
@@ -253,6 +269,8 @@ sudo cmake --install /tmp/livox-sdk2/build
 ```bash
 cd FAST_LIO
 git am --keep-cr ../patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch
+git am --keep-cr ../patches/0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch
+git am --keep-cr ../patches/0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch
 cd ..
 ```
 
@@ -277,33 +295,36 @@ colcon build --packages-select fast_lio   # add --cmake-args -DENABLE_PROFILING=
 cd -
 ```
 
-### 4. Fetch the NCLT dataset (`nclt_4`, session `2012-01-15`)
+### 4. Fetch the UrbanLoco dataset (`ulhk_4`, session `HK-Data20190117`) — manual download
+
+UrbanLoco has no scriptable download. Download the `HK-Data20190117` entry
+from section "2. Hong Kong Dataset" of the
+[UrbanLoco GitHub README](https://github.com/weisongwen/UrbanLoco) via
+either mirror it lists (Google Drive is frequently unreachable from
+corporate networks even with an account, so these are the reliable ones):
+
+- Dropbox: https://www.dropbox.com/scl/fo/zrsmoddbq96t4go1wbxwp/AJw_DGVXng06DmLx9j9iQMs?rlkey=rk11n8tt62ejbg8mbixrm6quz&e=1&st=j7sy3izj&dl=0
+- Baidu Netdisk (百度网盘): https://pan.baidu.com/s/1-5d8xM1tzfsSSueTiU6-MQ?pwd=sufc
+
+(same shared folder for every Hong Kong sequence — open the
+`HK-Data20190117` entry inside it). Place the downloaded ROS1 bag at:
 
 ```bash
-mkdir -p datasets/nclt_4 && cd datasets/nclt_4
-BASE=https://s3.us-east-2.amazonaws.com/nclt.perl.engin.umich.edu
-wget "${BASE}/velodyne_data/2012-01-15_vel.tar.gz"
-wget "${BASE}/sensor_data/2012-01-15_sen.tar.gz"
-wget "${BASE}/ground_truth/groundtruth_2012-01-15.csv"
-tar -xzf 2012-01-15_vel.tar.gz
-tar -xzf 2012-01-15_sen.tar.gz
-cd ../..
+mkdir -p datasets/ulhk_4
+mv ~/Downloads/HK-Data20190117.bag datasets/ulhk_4/HK-Data20190117.bag
 ```
 
-This should leave `velodyne_hits.bin` and `ms25.csv` somewhere under
-`datasets/nclt_4/2012-01-15/`.
+### 5. Convert to a ROS 2 bag
 
-### 5. Convert NCLT's raw format into a ROS 2 bag
-
-NCLT ships a custom binary Velodyne format + CSV IMU, not a rosbag — this is
-a one-time parse:
+UrbanLoco's public download is a ROS1 bag, not a rosbag2 one — this is a
+one-time conversion via the `rosbags` library:
 
 ```bash
+pip install --user --break-system-packages rosbags
 source /opt/ros/jazzy/setup.bash
-python3 scripts/convert_nclt_to_bag.py \
-  --dataset-dir datasets/nclt_4 \
-  --output-bag datasets/nclt_4/nclt_bag \
-  --storage-id sqlite3
+~/.local/bin/rosbags-convert \
+  --src datasets/ulhk_4/HK-Data20190117.bag \
+  --dst datasets/ulhk_4/ulhk_bag
 ```
 
 ### 6. Run `fastlio_mapping` against the bag
@@ -317,12 +338,16 @@ export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 export ROS_DOMAIN_ID=199
 
 ros2 run fast_lio fastlio_mapping --ros-args \
-  --params-file ~/fast_lio2_ws/install/fast_lio/share/fast_lio/config/velodyne_generic.yaml \
-  -p common.lid_topic:=/velodyne_points \
+  --params-file ~/fast_lio2_ws/install/fast_lio/share/fast_lio/config/velodyne.yaml \
+  -p common.lid_topic:=/velodyne_points_0 \
   -p common.imu_topic:=/imu/data \
   -p pcd_save.pcd_save_en:=false \
   -p use_sim_time:=false
 ```
+
+Note this uses the pristine upstream `velodyne.yaml` (not a new/patched
+config) — see "Validate without hardware" above for why its defaults
+already fit this dataset's sensor rig.
 
 **Terminal B — bag playback + trajectory recording** (start once Terminal A
 is up and printing):
@@ -332,19 +357,19 @@ source /opt/ros/jazzy/setup.bash
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 export ROS_DOMAIN_ID=199
 
-python3 scripts/record_odometry_tum.py --topic /Odometry --out datasets/nclt_4/results/nclt_4_est_tum.txt &
-ros2 bag play datasets/nclt_4/nclt_bag
+python3 scripts/record_odometry_tum.py --topic /Odometry --out datasets/ulhk_4/results/ulhk_4_est_tum.txt &
+ros2 bag play datasets/ulhk_4/ulhk_bag
 ```
 
-`ros2 bag play` runs at the recorded (real-time) rate — the full `nclt_4`
-sequence is ~112 minutes; there's no fast-forward. Once it exits, wait a
-couple of seconds for the last odometry messages to land, then stop the
-recorder (`kill %1` in Terminal B) and `fastlio_mapping` (`Ctrl-C` in Terminal
-A — a clean SIGTERM, not `kill -9`, so its destructor flushes any open CSV
-writer). The core-pinning/SCHED_FIFO wrapping `run_nclt.sh` applies on PTL
-(taskset/chrt) is an optional performance extra, not required for a
-correctness repro — see "Reference: running on Intel PTL" above if you want
-that too.
+`ros2 bag play` runs at the recorded (real-time) rate — the full `ulhk_4`
+sequence is ~5:21; there's no fast-forward, but it's short enough that this
+rarely matters. Once it exits, wait a couple of seconds for the last
+odometry messages to land, then stop the recorder (`kill %1` in Terminal B)
+and `fastlio_mapping` (`Ctrl-C` in Terminal A — a clean SIGTERM, not
+`kill -9`, so its destructor flushes any open CSV writer). The
+core-pinning/SCHED_FIFO wrapping `run_ulhk.sh` applies on PTL (taskset/chrt)
+is an optional performance extra, not required for a correctness repro —
+see "Reference: running on Intel PTL" above if you want that too.
 
 **Optional — the CycloneDDS+iceoryx shared-memory transport, by hand**
 (equivalent to `scripts/setup_dds_shm.sh start` — run that script instead if
@@ -399,7 +424,7 @@ size = 1048576
 count = 30
 [[segment.mempool]]
 size = 4194304
-count = 20
+count = 100
 EOF
 
 source /opt/ros/jazzy/setup.bash
@@ -430,42 +455,51 @@ play`, then `pkill -x iox-roudi`.
 ### 7. Evaluate RMSE
 
 ```bash
-python3 scripts/extract_nclt_gt.py \
-  --csv datasets/nclt_4/groundtruth_2012-01-15.csv \
-  --out datasets/nclt_4/results/nclt_4_gt_tum.txt
+python3 scripts/extract_ulhk_gt.py \
+  --bag-dir datasets/ulhk_4/ulhk_bag \
+  --topic /novatel_data/inspvax \
+  --out datasets/ulhk_4/results/ulhk_4_gt_tum.txt
 
 pip install --user --break-system-packages evo   # if not already installed
-evo_ape tum datasets/nclt_4/results/nclt_4_gt_tum.txt datasets/nclt_4/results/nclt_4_est_tum.txt -a
+evo_ape tum datasets/ulhk_4/results/ulhk_4_gt_tum.txt datasets/ulhk_4/results/ulhk_4_est_tum.txt -a
 ```
 
-Compare the printed RMSE against the documented `nclt_4` baseline of **8.6 m**
-(FAST-LIO2 paper, arXiv 2107.06829, Table IV) — a fresh measurement up to 20%
-above that baseline is an expected pass, since the check exists to catch
-regressions rather than to require beating the paper's own number.
+Compare the printed RMSE against the documented `ulhk_4` baseline of
+**2.57 m** (FAST-LIO2 paper, arXiv 2107.06829, Table IV) — a fresh
+measurement up to 20% above that baseline is an expected pass, since the
+check exists to catch regressions rather than to require beating the
+paper's own number.
 
 ## Limitations / non-goals
 
 - Validated here: functional LIO operation and pose-tracking accuracy
-  (RMSE) against the public NCLT baseline, on a Velodyne-class LiDAR.
+  (RMSE) against the public UrbanLoco baseline, on a Velodyne-class LiDAR.
 - `fast_lio`'s build unconditionally depends on `livox_ros_driver2` (and
   transitively Livox-SDK2), even though this pipeline only ever runs the
-  Velodyne/NCLT path — confirmed in `CMakeLists.txt`/`package.xml`, not a
-  choice made by this integration.
-- The NCLT Velodyne/IMU binary-format parsing in
-  [scripts/convert_nclt_to_bag.py](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/convert_nclt_to_bag.py) and the
-  ground-truth parsing in
-  [scripts/extract_nclt_gt.py](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/extract_nclt_gt.py) were verified
-  against NCLT's own devkit scripts and a real (partial) download of the
-  `nclt_4` session's raw files — but a full end-to-end `reproduce_all.sh`
-  run (through `fastlio_mapping` and RMSE evaluation) has not been
-  exercised in the environment this was authored in, which lacks a ROS 2
-  install; validate on your own machine or PTL before relying
-  on the PASS/FAIL result.
-- Only `nclt_4` has a confirmed session date and documented baseline;
-  `nclt_5`–`nclt_10` are structural placeholders in `scripts/env.sh` for
+  Velodyne/UrbanLoco path — confirmed in `CMakeLists.txt`/`package.xml`, not
+  a choice made by this integration.
+- UrbanLoco has no scriptable download (see "Validate without hardware"
+  above) — `fetch_ulhk.sh` only checks for the file and prints where to get
+  it by hand; there is no automated-download fallback like the old NCLT
+  flow's plain `wget` had.
+- The ground-truth parsing in
+  [scripts/extract_ulhk_gt.py](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/extract_ulhk_gt.py)
+  reads NovAtel INSPVAX messages directly out of the bag's sqlite3 `.db3`
+  file by fixed CDR byte offset rather than deserializing through the
+  `novatel_oem7_msgs` message definitions, so no extra ROS package needs to
+  be installed just to read ground truth.
+- Only `ulhk_4` has a confirmed session name and documented baseline;
+  `ulhk_5`/`ulhk_6` are structural placeholders in `scripts/env.sh` for
   future extension, not yet populated.
-- NCLT's terms of use should be checked on the
-  [dataset's own page](http://robots.engin.umich.edu/nclt/) before
-  redistributing any downloaded data.
+- The converted `ulhk_4` bag's `PointCloud2` has no per-point `time` field
+  (see "Validate without hardware" above for why `fastlio_mapping` logs
+  "Failed to find match for field 'time'" once per scan because of this).
+  This is non-fatal — FAST-LIO2 falls back to a scan-rate-based per-point
+  time estimate — and the measured RMSE already reflects this; it is not a
+  config bug to fix.
+- UrbanLoco's license (Creative Commons Attribution-NonCommercial-ShareAlike
+  4.0, non-commercial/academic use) should be checked on the
+  [dataset's own GitHub page](https://github.com/weisongwen/UrbanLoco)
+  before redistributing any downloaded data.
 - GPLv2 licensing (see callout above) applies to the upstream code as-is;
   this integration does not change that.

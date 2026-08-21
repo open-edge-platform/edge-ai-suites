@@ -49,14 +49,6 @@ export class FeatureGuard {
   }
 
   /**
-   * Whether ASR streams partial transcripts. When false, an uploaded file is
-   * transcribed in a single pass and nothing shows up until it completes.
-   */
-  isAsrChunkingEnabled(): boolean {
-    return this.featureMap.get('asr')?.chunking !== false;
-  }
-
-  /**
    * Whether speaker diarization is enabled in the ASR model config.
    */
   isDiarizationEnabled(): boolean {

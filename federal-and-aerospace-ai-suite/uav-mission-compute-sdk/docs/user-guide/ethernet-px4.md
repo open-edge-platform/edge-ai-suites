@@ -95,6 +95,9 @@ bash infra/scripts/deploy_remote.sh <FC_IP> <FC_USER>
 
 **Option B — Manual deploy**:
 ```bash
+# Create the target directory on the FC machine first
+ssh <FC_USER>@<FC_IP> "mkdir -p ~/px4-sim"
+
 # Copy files to FC machine
 scp -r infra/px4-sim/ <FC_USER>@<FC_IP>:~/px4-sim/
 

@@ -312,6 +312,15 @@ def rest_telemetry():
     return jsonify(_state)
 
 
+@rest_app.route("/state", methods=["GET", "POST"])
+def rest_state():
+    """Backward-compatible endpoint for clients expecting /state."""
+    return jsonify({
+        "success": True,
+        "state": _state,
+    })
+
+
 def _start_rest_server():
     log.info("REST API listening on port %d", REST_PORT)
     try:
