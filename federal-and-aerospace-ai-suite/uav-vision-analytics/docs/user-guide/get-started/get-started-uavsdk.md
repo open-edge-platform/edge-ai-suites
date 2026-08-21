@@ -63,6 +63,8 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                # create .env, detect GPU
 ```
 
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
+
 The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and all other published ports to loopback only. Since `uav-vision-analytics` runs in a separate Docker container/network, it cannot reach loopback-bound ports. Set the SDK's `.env` to bind on all interfaces before starting it:
 
 ```bash
