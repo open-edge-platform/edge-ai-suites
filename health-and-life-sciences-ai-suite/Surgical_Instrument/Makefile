@@ -51,8 +51,8 @@ ifeq ($(strip $(SOURCE_KIND)),basler)
   PIPELINE_PREPROC_BACKEND      ?= va-surface-sharing
   SCHEDULING_POLICY             ?= latency
   BATCH_SIZE                    ?= 1
-  PIPELINE_GST_CORES            ?= 3-5
-  PIPELINE_GST_RT_PRIORITY      ?= 70
+  # Core pinning (taskset -c) and RT priority (chrt -f) are opt-in only —
+  # pass PIPELINE_GST_CORES / PIPELINE_GST_RT_PRIORITY on the CLI to enable.
   PIPELINE_DISPLAY_VIEW         ?= 1
   # autovideosink is avoided here: in-container it auto-selects kmssink, which
   # fails with a DRM resource error and crash-loops. xvimagesink is the
