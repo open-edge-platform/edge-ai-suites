@@ -168,4 +168,4 @@ By default, the main page shows generic metrics from the system, such as CPU/NPU
 1) `Frame Rate Over Time` and `Latest Pipeline Frame Rate Average` are from ViPPET.
 2) `LLM Number of Responses Generated` and `LLM Number of Responses Generated` are from Open WebUI.
 3) `Speech to text Processing Ratio Last` and `Speech To Text Processing Ratio` are from Whisper.
-Metrics are not persisted in any database, so refresh of page will reset ALL gathered metrics.
+Metrics do not persist in any database, so a refresh of the page will reset ALL gathered metrics.
