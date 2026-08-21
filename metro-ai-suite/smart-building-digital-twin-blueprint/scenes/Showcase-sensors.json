@@ -1,0 +1,486 @@
+{
+  "scenarios": [
+    {
+      "name": "tailgating_1",
+      "start_time": 0.0,
+      "duration": 120.9,
+      "end_time": 120.9,
+      "has_sensor_data": true,
+      "message_count": 7,
+      "original_capture_start": 1771967347.9251814
+    },
+    {
+      "name": "tailgating_2",
+      "start_time": 120.9,
+      "duration": 93.0,
+      "end_time": 213.9,
+      "has_sensor_data": true,
+      "message_count": 7,
+      "original_capture_start": 1771967619.3087745
+    },
+    {
+      "name": "badge_switch_1",
+      "start_time": 213.9,
+      "duration": 58.5,
+      "end_time": 272.4,
+      "has_sensor_data": true,
+      "message_count": 7,
+      "original_capture_start": 1771969244.1829238
+    },
+    {
+      "name": "badge_switch_2",
+      "start_time": 272.4,
+      "duration": 40.0,
+      "end_time": 312.4,
+      "has_sensor_data": true,
+      "message_count": 2,
+      "original_capture_start": 1771969367.8759642
+    },
+    {
+      "name": "bag_left_behind",
+      "start_time": 312.4,
+      "duration": 89.1,
+      "end_time": 401.5,
+      "has_sensor_data": false,
+      "message_count": 0
+    },
+    {
+      "name": "bag_switch",
+      "start_time": 401.5,
+      "duration": 134.8,
+      "end_time": 536.3,
+      "has_sensor_data": false,
+      "message_count": 0
+    },
+    {
+      "name": "stolen_bag",
+      "start_time": 536.3,
+      "duration": 118.1,
+      "end_time": 654.4,
+      "has_sensor_data": false,
+      "message_count": 0
+    },
+    {
+      "name": "person_fall",
+      "start_time": 654.4,
+      "duration": 70.5,
+      "end_time": 724.9,
+      "has_sensor_data": false,
+      "message_count": 0
+    }
+  ],
+  "total_duration": 724.9,
+  "total_messages": 41,
+  "messages": [
+    {
+      "timestamp": 8.912447690963745,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:00:08.912448Z",
+        "value": "7ed42f5b08c04f7f"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 12.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:00:12Z",
+        "value": "aabc63b977271370c7265b94f362cc"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 21.345215797424316,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:00:21.345216Z",
+        "value": "99d289c30283e796"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 29.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:00:29Z",
+        "value": "7e2686efe5c4e5eec174eb324706e7"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 36.88679265975952,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:00:36.886793Z",
+        "value": "4c4ef4d88729beb2"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 39.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:00:39Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 46.52093720436096,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:00:46.520937Z",
+        "value": "d979985ea3e42a6a"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 52.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:00:52Z",
+        "value": "a6ec2c1c8cfe5d9a9cc6014a7d9831"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 53.840238094329834,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:00:53.840238Z",
+        "value": "795f02c26cb7869d"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 59.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:00:59Z",
+        "value": "983d193e476cf97a13d13973c62c07"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 70.19679927825928,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:01:10.196799Z",
+        "value": "1efdffb140523091"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 77.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:01:17Z",
+        "value": "f74f8d4363169685ac1bffed20ffc4"
+      },
+      "scenario": "tailgating_1"
+    },
+    {
+      "timestamp": 130.0685082912445,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:02:10.068508Z",
+        "value": "7ed42f5b08c04f7f"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 133.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:13Z",
+        "value": "aabc63b977271370c7265b94f362cc"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 136.18480052948,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:02:16.184801Z",
+        "value": "99d289c30283e796"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 139.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:19Z",
+        "value": "7e2686efe5c4e5eec174eb324706e7"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 141.09705057144166,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:02:21.097051Z",
+        "value": "4c4ef4d88729beb2"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 143.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:23Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 146.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:26Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 149.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:29Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 154.23153247833253,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:02:34.231532Z",
+        "value": "1efdffb140523091"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 156.4404076576233,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:02:36.440408Z",
+        "value": "795f02c26cb7869d"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 157.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:37Z",
+        "value": "f74f8d4363169685ac1bffed20ffc4"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 159.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:39Z",
+        "value": "f74f8d4363169685ac1bffed20ffc4"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 162.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:42Z",
+        "value": "983d193e476cf97a13d13973c62c07"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 162.65669503211976,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:02:42.656695Z",
+        "value": "d979985ea3e42a6a"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 167.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:47Z",
+        "value": "983d193e476cf97a13d13973c62c07"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 175.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:02:55Z",
+        "value": "a6ec2c1c8cfe5d9a9cc6014a7d9831"
+      },
+      "scenario": "tailgating_2"
+    },
+    {
+      "timestamp": 226.1638988494873,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:03:46.163899Z",
+        "value": "4c4ef4d88729beb2"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 228.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:03:48Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 231.4909526348114,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:03:51.490953Z",
+        "value": "d979985ea3e42a6a"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 235.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:03:55Z",
+        "value": "a6ec2c1c8cfe5d9a9cc6014a7d9831"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 253.34766426086426,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:04:13.347664Z",
+        "value": "d979985ea3e42a6a"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 255.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:04:15Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 261.4690870285034,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:04:21.469087Z",
+        "value": "4c4ef4d88729beb2"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 263.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:04:23Z",
+        "value": "a6ec2c1c8cfe5d9a9cc6014a7d9831"
+      },
+      "scenario": "badge_switch_1"
+    },
+    {
+      "timestamp": 285.50906291007993,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:04:45.509063Z",
+        "value": "d979985ea3e42a6a"
+      },
+      "scenario": "badge_switch_2"
+    },
+    {
+      "timestamp": 288.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:04:48Z",
+        "value": "830fdb10c283bc602839a6edc26099"
+      },
+      "scenario": "badge_switch_2"
+    },
+    {
+      "timestamp": 291.92574253082273,
+      "topic": "scenescape/data/sensor/badge-001",
+      "payload": {
+        "id": "badge-001",
+        "timestamp": "1970-01-01T00:04:51.925743Z",
+        "value": "4c4ef4d88729beb2"
+      },
+      "scenario": "badge_switch_2"
+    },
+    {
+      "timestamp": 294.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:04:54Z",
+        "value": "a6ec2c1c8cfe5d9a9cc6014a7d9831"
+      },
+      "scenario": "badge_switch_2"
+    },
+    {
+      "timestamp": 300.0,
+      "topic": "scenescape/data/sensor/faceid-001",
+      "payload": {
+        "id": "faceid-001",
+        "timestamp": "1970-01-01T00:05:00Z",
+        "value": "a6ec2c1c8cfe5d9a9cc6014a7d9831"
+      },
+      "scenario": "badge_switch_2"
+    }
+  ]
+}
