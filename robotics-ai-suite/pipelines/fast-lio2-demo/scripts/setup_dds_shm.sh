@@ -7,7 +7,7 @@
 # /work/misc/0052_point_lio_fast_lio2/reports/colleague_guide.md §4.4 (same
 # setup, documented there for the point_lio_fast_lio2 benchmark harness).
 #
-# Entirely optional: run_nclt.sh falls back to plain CycloneDDS (no SHM) if
+# Entirely optional: run_ulhk.sh falls back to plain CycloneDDS (no SHM) if
 # this was never run, or if USE_DDS_SHM=false in env.sh - customers/
 # colleagues who don't want this extra moving part can just skip it.
 #
@@ -30,6 +30,28 @@ roudi_pid() {
   [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null && echo "${pid}"
 }
 
+# Kill every iox-roudi process on the box, whether or not it's the one
+# ROUDI_PIDFILE currently tracks. An iox-roudi from an earlier run can
+# outlive its own pidfile (e.g. this script's config changed and got
+# re-run, or the pidfile was lost/overwritten by a since-interrupted run) -
+# starting a second instance next to that orphan instead of replacing it
+# leaves the orphan (with its STALE mempool config) as the one everything
+# actually talks to. Always call this before starting a fresh one.
+stop_all_roudi() {
+  local pid any=false
+  for pid in $(pgrep -x iox-roudi 2>/dev/null); do
+    any=true
+    kill "${pid}" 2>/dev/null || true
+  done
+  if "${any}"; then
+    for _ in $(seq 1 20); do pgrep -x iox-roudi >/dev/null 2>&1 || break; sleep 0.1; done
+    for pid in $(pgrep -x iox-roudi 2>/dev/null); do
+      kill -9 "${pid}" 2>/dev/null || true
+    done
+  fi
+  rm -f "${ROUDI_PIDFILE}"
+}
+
 do_status() {
   local pid
   if pid="$(roudi_pid)"; then
@@ -42,13 +64,9 @@ do_status() {
 }
 
 do_stop() {
-  local pid
-  if pid="$(roudi_pid)"; then
-    echo "==> Stopping iox-roudi (pid ${pid})"
-    kill "${pid}"
-    for _ in $(seq 1 50); do kill -0 "${pid}" 2>/dev/null || break; sleep 0.1; done
-    kill -0 "${pid}" 2>/dev/null && kill -9 "${pid}" 2>/dev/null || true
-    rm -f "${ROUDI_PIDFILE}"
+  if pgrep -x iox-roudi >/dev/null 2>&1; then
+    echo "==> Stopping iox-roudi"
+    stop_all_roudi
   else
     echo "==> iox-roudi not running (nothing to stop)"
   fi
@@ -123,16 +141,21 @@ count = 30
 
 [[segment.mempool]]
 size = 4194304
-count = 20
+count = 100
 EOF
   # Mempool sizes are sized for full PointCloud2 scans (a few MB/frame) -
   # RouDi's own stock example config is too small for that and silently
-  # drops SHM segments instead of erroring.
+  # drops SHM segments instead of erroring. The largest pool's count is set
+  # to 100 (not the stock example's 20) matching the sibling point-lio-demo
+  # pipeline's own fix: a full-length ulhk_4 run (~10Hz velodyne scans over
+  # 5:21) there hit "MemoryManager: unable to acquire a chunk"/
+  # MEPOO__MEMPOOL_GETCHUNK_POOL_IS_RUNNING_OUT_OF_CHUNKS with count=20 - the
+  # real fix was ensuring ptl_wrap's SCHED_FIFO reprioritization actually
+  # reaches the algorithm's real process (see run_ulhk.sh's ptl_wrap), but a
+  # bigger pool gives headroom against any remaining transient backlog too.
 
-  if roudi_pid >/dev/null; then
-    echo "==> iox-roudi already running (pid $(roudi_pid)), skipping"
-    return 0
-  fi
+  echo "==> Ensuring no stale/orphaned iox-roudi is left running before starting with this config"
+  stop_all_roudi
 
   echo "==> Starting iox-roudi"
   set +u
@@ -141,7 +164,7 @@ EOF
   # --monitoring-mode off is required, not optional: RouDi's default
   # liveness monitor evicts (silently drops SHM pub/sub for) any participant
   # that misses a ~1.5s heartbeat, which CPU isolation/governor/SCHED_FIFO
-  # changes (see run_nclt.sh's ptl_wrap) can easily trigger even though the
+  # changes (see run_ulhk.sh's ptl_wrap) can easily trigger even though the
   # process is alive and working - this was the root cause of a real class
   # of "profiling.csv has 0 data rows" failures. Do not add
   # --killall-on-sigterm either - that flag doesn't exist in the iceoryx
