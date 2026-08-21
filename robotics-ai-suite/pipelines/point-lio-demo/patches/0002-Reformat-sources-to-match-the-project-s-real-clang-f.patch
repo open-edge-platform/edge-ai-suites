@@ -1,0 +1,3730 @@
+From c018b76643f94a52eeffde53946d5bf41f33d6cd Mon Sep 17 00:00:00 2001
+From: "Deng, Bing" <bing.deng@intel.com>
+Date: Mon, 17 Aug 2026 15:39:21 +0800
+Subject: [PATCH] Reformat sources to match the project's real clang-format
+ style
+
+Super-linter's CLANG_FORMAT validator was failing on these files
+because they had never actually been run through amr-common's
+Google-based .clang-format config (now wired into the pipeline).
+Reformat laserMapping.cpp and preprocess.cpp against it; no logic
+changes.
+
+Signed-off-by: Deng, Bing <bing.deng@intel.com>
+---
+ src/laserMapping.cpp | 2004 +++++++++++++++++++++---------------------
+ src/preprocess.cpp   | 1191 ++++++++++++-------------
+ 2 files changed, 1532 insertions(+), 1663 deletions(-)
+
+diff --git a/src/laserMapping.cpp b/src/laserMapping.cpp
+index b2f3252..a189a2a 100755
+--- a/src/laserMapping.cpp
++++ b/src/laserMapping.cpp
+@@ -23,7 +23,7 @@
+ 
+ using namespace std;
+ 
+-#define PUBFRAME_PERIOD     (20)
++#define PUBFRAME_PERIOD (20)
+ 
+ const float MOV_THRESHOLD = 1.5f;
+ 
+@@ -36,7 +36,7 @@ bool init_map = false, flg_first_scan = true;
+ // Time Log Variables
+ double match_time = 0, solve_time = 0, propag_time = 0, update_time = 0;
+ 
+-bool  flg_reset = false, flg_exit = false;
++bool flg_reset = false, flg_exit = false;
+ 
+ //surf feature in map
+ PointCloudXYZI::Ptr feats_undistort(new PointCloudXYZI());
+@@ -55,108 +55,121 @@ geometry_msgs::msg::PoseStamped msg_body_pose;
+ #ifdef ENABLE_PROFILING
+ double recv_wall = 0.0;  // CLOCK_REALTIME — only for S0 = recv_wall − timestamp
+ double recv_mono = 0.0;  // omp_get_wtime() (CLOCK_MONOTONIC) — anchor for TOTAL and T2
+-int    raw_pts_size_last = 0;
+-
+-struct CsvRow {
+-    double timestamp, recv_wall, recv_mono, t0, t1, t3, t5, end_wall;
+-    double propag_time, kf_solve_time, coord_xform_time;
+-    int    feats_down_size;
+-    int    feats_undistort_size;
+-    int    raw_pts_size;
+-    double queue_wait, s_plot11;
++int raw_pts_size_last = 0;
++
++struct CsvRow
++{
++  double timestamp, recv_wall, recv_mono, t0, t1, t3, t5, end_wall;
++  double propag_time, kf_solve_time, coord_xform_time;
++  int feats_down_size;
++  int feats_undistort_size;
++  int raw_pts_size;
++  double queue_wait, s_plot11;
+ };
+ 
+ static constexpr int CSV_RING_SIZE = 1024;  // must be power-of-2
+-struct CsvRing {
+-    CsvRow  buf[CSV_RING_SIZE];
+-    // Each counter on its own cache line to prevent false sharing between
+-    // the producer (algo thread, P-core) and consumer (CSV thread, E-core).
+-    alignas(64) std::atomic<uint32_t> head{0};  // written by producer
+-    alignas(64) std::atomic<uint32_t> tail{0};  // written by consumer
++struct CsvRing
++{
++  CsvRow buf[CSV_RING_SIZE];
++  // Each counter on its own cache line to prevent false sharing between
++  // the producer (algo thread, P-core) and consumer (CSV thread, E-core).
++  alignas(64) std::atomic<uint32_t> head{0};  // written by producer
++  alignas(64) std::atomic<uint32_t> tail{0};  // written by consumer
+ } g_csv_ring;
+ 
+-FILE                   *g_csv_fp        = nullptr;
+-std::thread             g_csv_thread;
+-std::atomic<bool>       g_csv_stop{false};
+-std::atomic<uint32_t>   g_csv_drop_count{0};
++FILE * g_csv_fp = nullptr;
++std::thread g_csv_thread;
++std::atomic<bool> g_csv_stop{false};
++std::atomic<uint32_t> g_csv_drop_count{0};
+ 
+-static bool pin_csv_thread(pthread_t tid) {
++static bool pin_csv_thread(pthread_t tid)
++{
+ #if !defined(PROFILING_CSV_CPU)
+-    return false;
++  return false;
+ #else
+-    int target = PROFILING_CSV_CPU;
+-    if (target >= 0) {
+-        cpu_set_t s; CPU_ZERO(&s); CPU_SET(target, &s);
+-        return pthread_setaffinity_np(tid, sizeof(s), &s) == 0;
++  int target = PROFILING_CSV_CPU;
++  if (target >= 0) {
++    cpu_set_t s;
++    CPU_ZERO(&s);
++    CPU_SET(target, &s);
++    return pthread_setaffinity_np(tid, sizeof(s), &s) == 0;
++  }
++  cpu_set_t proc_set;
++  if (pthread_getaffinity_np(pthread_self(), sizeof(proc_set), &proc_set) != 0) return false;
++  int ncpus = (int)sysconf(_SC_NPROCESSORS_ONLN);
++  for (int c = 0; c < ncpus; ++c) {
++    if (!CPU_ISSET(c, &proc_set)) {
++      cpu_set_t s;
++      CPU_ZERO(&s);
++      CPU_SET(c, &s);
++      return pthread_setaffinity_np(tid, sizeof(s), &s) == 0;
+     }
+-    cpu_set_t proc_set;
+-    if (pthread_getaffinity_np(pthread_self(), sizeof(proc_set), &proc_set) != 0)
+-        return false;
+-    int ncpus = (int)sysconf(_SC_NPROCESSORS_ONLN);
+-    for (int c = 0; c < ncpus; ++c) {
+-        if (!CPU_ISSET(c, &proc_set)) {
+-            cpu_set_t s; CPU_ZERO(&s); CPU_SET(c, &s);
+-            return pthread_setaffinity_np(tid, sizeof(s), &s) == 0;
+-        }
+-    }
+-    return false;
++  }
++  return false;
+ #endif
+ }
+ 
+ static constexpr int CSV_BATCH = 64;  // rows to drain per wakeup
+ 
+-static void csv_writer_thread() {
+-    uint32_t last_seen_drops = 0;
+-    char line_buf[CSV_BATCH][256];
+-    while (true) {
+-        uint32_t t = g_csv_ring.tail.load(std::memory_order_acquire);
+-        uint32_t h = g_csv_ring.head.load(std::memory_order_acquire);
+-        if (t == h) {
+-            uint32_t drops = g_csv_drop_count.load(std::memory_order_relaxed);
+-            if (drops != last_seen_drops) {
+-                fprintf(stderr, "[PROFILING] WARNING: CSV ring buffer overflow, dropped %u row(s) so far\n",
+-                        drops);
+-                last_seen_drops = drops;
+-            }
+-            if (g_csv_stop.load(std::memory_order_acquire)) break;
+-            struct timespec ts{1, 0};  // 1 s — reduces IO wakeups; ring holds 1024 rows
+-            nanosleep(&ts, nullptr);
+-            continue;
+-        }
+-        // Drain up to CSV_BATCH rows into line_buf, then fputs once each.
+-        int n = 0;
+-        while (n < CSV_BATCH) {
+-            t = g_csv_ring.tail.load(std::memory_order_acquire);
+-            h = g_csv_ring.head.load(std::memory_order_acquire);
+-            if (t == h) break;
+-            const CsvRow &r = g_csv_ring.buf[t & (CSV_RING_SIZE - 1)];
+-            n += snprintf(line_buf[n], sizeof(line_buf[n]),
+-                "%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%d,%d,%d,%0.9f,%0.9f\n",
+-                r.timestamp, r.recv_wall, r.recv_mono, r.t0, r.t1, r.t3, r.t5, r.end_wall,
+-                r.propag_time, r.kf_solve_time, r.coord_xform_time,
+-                r.feats_down_size, r.feats_undistort_size, r.raw_pts_size, r.queue_wait, r.s_plot11) > 0 ? 1 : 0;
+-            g_csv_ring.tail.store(t + 1, std::memory_order_release);
+-        }
+-        for (int i = 0; i < n; ++i) fputs(line_buf[i], g_csv_fp);
++static void csv_writer_thread()
++{
++  uint32_t last_seen_drops = 0;
++  char line_buf[CSV_BATCH][256];
++  while (true) {
++    uint32_t t = g_csv_ring.tail.load(std::memory_order_acquire);
++    uint32_t h = g_csv_ring.head.load(std::memory_order_acquire);
++    if (t == h) {
++      uint32_t drops = g_csv_drop_count.load(std::memory_order_relaxed);
++      if (drops != last_seen_drops) {
++        fprintf(
++          stderr, "[PROFILING] WARNING: CSV ring buffer overflow, dropped %u row(s) so far\n",
++          drops);
++        last_seen_drops = drops;
++      }
++      if (g_csv_stop.load(std::memory_order_acquire)) break;
++      struct timespec ts{1, 0};  // 1 s — reduces IO wakeups; ring holds 1024 rows
++      nanosleep(&ts, nullptr);
++      continue;
+     }
+-    fflush(g_csv_fp);
+-    uint32_t total_drops = g_csv_drop_count.load(std::memory_order_relaxed);
+-    if (total_drops > 0) {
+-        fprintf(g_csv_fp, "# WARNING: %u row(s) dropped due to ring buffer overflow\n", total_drops);
+-        fprintf(stderr, "[PROFILING] WARNING: total CSV rows dropped = %u\n", total_drops);
+-        fflush(g_csv_fp);
++    // Drain up to CSV_BATCH rows into line_buf, then fputs once each.
++    int n = 0;
++    while (n < CSV_BATCH) {
++      t = g_csv_ring.tail.load(std::memory_order_acquire);
++      h = g_csv_ring.head.load(std::memory_order_acquire);
++      if (t == h) break;
++      const CsvRow & r = g_csv_ring.buf[t & (CSV_RING_SIZE - 1)];
++      n += snprintf(
++             line_buf[n], sizeof(line_buf[n]),
++             "%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%d,%d,%d,%0.9f,%0."
++             "9f\n",
++             r.timestamp, r.recv_wall, r.recv_mono, r.t0, r.t1, r.t3, r.t5, r.end_wall,
++             r.propag_time, r.kf_solve_time, r.coord_xform_time, r.feats_down_size,
++             r.feats_undistort_size, r.raw_pts_size, r.queue_wait, r.s_plot11) > 0
++             ? 1
++             : 0;
++      g_csv_ring.tail.store(t + 1, std::memory_order_release);
+     }
++    for (int i = 0; i < n; ++i) fputs(line_buf[i], g_csv_fp);
++  }
++  fflush(g_csv_fp);
++  uint32_t total_drops = g_csv_drop_count.load(std::memory_order_relaxed);
++  if (total_drops > 0) {
++    fprintf(g_csv_fp, "# WARNING: %u row(s) dropped due to ring buffer overflow\n", total_drops);
++    fprintf(stderr, "[PROFILING] WARNING: total CSV rows dropped = %u\n", total_drops);
++    fflush(g_csv_fp);
++  }
+ }
+ 
+-static inline void csv_push(const CsvRow &row) {
+-    uint32_t h = g_csv_ring.head.load(std::memory_order_relaxed);
+-    uint32_t t = g_csv_ring.tail.load(std::memory_order_acquire);
+-    if (h - t >= CSV_RING_SIZE) {
+-        g_csv_drop_count.fetch_add(1, std::memory_order_relaxed);
+-        return;
+-    }
+-    g_csv_ring.buf[h & (CSV_RING_SIZE - 1)] = row;
+-    g_csv_ring.head.store(h + 1, std::memory_order_release);
++static inline void csv_push(const CsvRow & row)
++{
++  uint32_t h = g_csv_ring.head.load(std::memory_order_relaxed);
++  uint32_t t = g_csv_ring.tail.load(std::memory_order_acquire);
++  if (h - t >= CSV_RING_SIZE) {
++    g_csv_drop_count.fetch_add(1, std::memory_order_relaxed);
++    return;
++  }
++  g_csv_ring.buf[h & (CSV_RING_SIZE - 1)] = row;
++  g_csv_ring.head.store(h + 1, std::memory_order_release);
+ }
+ #endif
+ 
+@@ -168,1058 +181,1003 @@ rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pubLaserCloudMap;
+ rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pubOdomAftMapped;
+ rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath;
+ 
+-static inline builtin_interfaces::msg::Time stamp_from_sec(double t) {
+-    builtin_interfaces::msg::Time s;
+-    s.sec = static_cast<int32_t>(t);
+-    s.nanosec = static_cast<uint32_t>((t - s.sec) * 1e9);
+-    return s;
++static inline builtin_interfaces::msg::Time stamp_from_sec(double t)
++{
++  builtin_interfaces::msg::Time s;
++  s.sec = static_cast<int32_t>(t);
++  s.nanosec = static_cast<uint32_t>((t - s.sec) * 1e9);
++  return s;
+ }
+ 
+ void SigHandle(int sig)
+ {
+-    flg_exit = true;
+-    printf("catch sig %d\n", sig);
+-    sig_buffer.notify_all();
++  flg_exit = true;
++  printf("catch sig %d\n", sig);
++  sig_buffer.notify_all();
+ }
+ 
+-inline void dump_lio_state_to_log(FILE *fp)  
++inline void dump_lio_state_to_log(FILE * fp)
+ {
+-    V3D rot_ang;
+-    if (!use_imu_as_input)
+-    {
+-        rot_ang = SO3ToEuler(kf_output.x_.rot);
+-    }
+-    else
+-    {
+-        rot_ang = SO3ToEuler(kf_input.x_.rot);
+-    }
+-    
+-    fprintf(fp, "%lf ", Measures.lidar_beg_time - first_lidar_time);
+-    fprintf(fp, "%lf %lf %lf ", rot_ang(0), rot_ang(1), rot_ang(2));
+-    if (use_imu_as_input)
+-    {
+-        fprintf(fp, "%lf %lf %lf ", kf_input.x_.pos(0), kf_input.x_.pos(1), kf_input.x_.pos(2));
+-        fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
+-        fprintf(fp, "%lf %lf %lf ", kf_input.x_.vel(0), kf_input.x_.vel(1), kf_input.x_.vel(2));
+-        fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
+-        fprintf(fp, "%lf %lf %lf ", kf_input.x_.bg(0), kf_input.x_.bg(1), kf_input.x_.bg(2));
+-        fprintf(fp, "%lf %lf %lf ", kf_input.x_.ba(0), kf_input.x_.ba(1), kf_input.x_.ba(2));
+-        fprintf(fp, "%lf %lf %lf ", kf_input.x_.gravity(0), kf_input.x_.gravity(1), kf_input.x_.gravity(2));
+-    }
+-    else
+-    {
+-        fprintf(fp, "%lf %lf %lf ", kf_output.x_.pos(0), kf_output.x_.pos(1), kf_output.x_.pos(2));
+-        fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
+-        fprintf(fp, "%lf %lf %lf ", kf_output.x_.vel(0), kf_output.x_.vel(1), kf_output.x_.vel(2));
+-        fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
+-        fprintf(fp, "%lf %lf %lf ", kf_output.x_.bg(0), kf_output.x_.bg(1), kf_output.x_.bg(2));
+-        fprintf(fp, "%lf %lf %lf ", kf_output.x_.ba(0), kf_output.x_.ba(1), kf_output.x_.ba(2));
+-        fprintf(fp, "%lf %lf %lf ", kf_output.x_.gravity(0), kf_output.x_.gravity(1), kf_output.x_.gravity(2));
+-    }
+-    fprintf(fp, "\r\n");  
+-    fflush(fp);
++  V3D rot_ang;
++  if (!use_imu_as_input) {
++    rot_ang = SO3ToEuler(kf_output.x_.rot);
++  } else {
++    rot_ang = SO3ToEuler(kf_input.x_.rot);
++  }
++
++  fprintf(fp, "%lf ", Measures.lidar_beg_time - first_lidar_time);
++  fprintf(fp, "%lf %lf %lf ", rot_ang(0), rot_ang(1), rot_ang(2));
++  if (use_imu_as_input) {
++    fprintf(fp, "%lf %lf %lf ", kf_input.x_.pos(0), kf_input.x_.pos(1), kf_input.x_.pos(2));
++    fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
++    fprintf(fp, "%lf %lf %lf ", kf_input.x_.vel(0), kf_input.x_.vel(1), kf_input.x_.vel(2));
++    fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
++    fprintf(fp, "%lf %lf %lf ", kf_input.x_.bg(0), kf_input.x_.bg(1), kf_input.x_.bg(2));
++    fprintf(fp, "%lf %lf %lf ", kf_input.x_.ba(0), kf_input.x_.ba(1), kf_input.x_.ba(2));
++    fprintf(
++      fp, "%lf %lf %lf ", kf_input.x_.gravity(0), kf_input.x_.gravity(1), kf_input.x_.gravity(2));
++  } else {
++    fprintf(fp, "%lf %lf %lf ", kf_output.x_.pos(0), kf_output.x_.pos(1), kf_output.x_.pos(2));
++    fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
++    fprintf(fp, "%lf %lf %lf ", kf_output.x_.vel(0), kf_output.x_.vel(1), kf_output.x_.vel(2));
++    fprintf(fp, "%lf %lf %lf ", 0.0, 0.0, 0.0);
++    fprintf(fp, "%lf %lf %lf ", kf_output.x_.bg(0), kf_output.x_.bg(1), kf_output.x_.bg(2));
++    fprintf(fp, "%lf %lf %lf ", kf_output.x_.ba(0), kf_output.x_.ba(1), kf_output.x_.ba(2));
++    fprintf(
++      fp, "%lf %lf %lf ", kf_output.x_.gravity(0), kf_output.x_.gravity(1),
++      kf_output.x_.gravity(2));
++  }
++  fprintf(fp, "\r\n");
++  fflush(fp);
+ }
+ 
+ void pointBodyLidarToIMU(PointType const * const pi, PointType * const po)
+ {
+-    V3D p_body_lidar(pi->x, pi->y, pi->z);
+-    V3D p_body_imu;
+-    if (extrinsic_est_en)
+-    {
+-        if (!use_imu_as_input)
+-        {
+-            p_body_imu = kf_output.x_.offset_R_L_I * p_body_lidar + kf_output.x_.offset_T_L_I;
+-        }
+-        else
+-        {
+-            p_body_imu = kf_input.x_.offset_R_L_I * p_body_lidar + kf_input.x_.offset_T_L_I;
+-        }
+-    }
+-    else
+-    {
+-        p_body_imu = Lidar_R_wrt_IMU * p_body_lidar + Lidar_T_wrt_IMU;
++  V3D p_body_lidar(pi->x, pi->y, pi->z);
++  V3D p_body_imu;
++  if (extrinsic_est_en) {
++    if (!use_imu_as_input) {
++      p_body_imu = kf_output.x_.offset_R_L_I * p_body_lidar + kf_output.x_.offset_T_L_I;
++    } else {
++      p_body_imu = kf_input.x_.offset_R_L_I * p_body_lidar + kf_input.x_.offset_T_L_I;
+     }
+-    po->x = p_body_imu(0);
+-    po->y = p_body_imu(1);
+-    po->z = p_body_imu(2);
+-    po->intensity = pi->intensity;
++  } else {
++    p_body_imu = Lidar_R_wrt_IMU * p_body_lidar + Lidar_T_wrt_IMU;
++  }
++  po->x = p_body_imu(0);
++  po->y = p_body_imu(1);
++  po->z = p_body_imu(2);
++  po->intensity = pi->intensity;
+ }
+ 
+-void MapIncremental() {
+-    PointVector points_to_add;
+-    int cur_pts = feats_down_world->size();
+-    points_to_add.reserve(cur_pts);
+-
+-    for (size_t i = 0; i < cur_pts; ++i) {
+-        PointType &point_world = feats_down_world->points[i];
+-        if (!Nearest_Points[i].empty()) {
+-            const PointVector &points_near = Nearest_Points[i];
+-
+-            Eigen::Vector3f center =
+-                ((point_world.getVector3fMap() / filter_size_map_min).array().floor() + 0.5) * filter_size_map_min;
+-            bool need_add = true;
+-            for (int readd_i = 0; readd_i < (int)points_near.size(); readd_i++) {
+-                Eigen::Vector3f dis_2_center = points_near[readd_i].getVector3fMap() - center;
+-                if (fabs(dis_2_center.x()) < 0.5 * filter_size_map_min &&
+-                    fabs(dis_2_center.y()) < 0.5 * filter_size_map_min &&
+-                    fabs(dis_2_center.z()) < 0.5 * filter_size_map_min) {
+-                    need_add = false;
+-                    break;
+-                }
+-            }
+-            if (need_add) {
+-                points_to_add.emplace_back(point_world);
+-            }
+-        } else {
+-            points_to_add.emplace_back(point_world);
++void MapIncremental()
++{
++  PointVector points_to_add;
++  int cur_pts = feats_down_world->size();
++  points_to_add.reserve(cur_pts);
++
++  for (size_t i = 0; i < cur_pts; ++i) {
++    PointType & point_world = feats_down_world->points[i];
++    if (!Nearest_Points[i].empty()) {
++      const PointVector & points_near = Nearest_Points[i];
++
++      Eigen::Vector3f center =
++        ((point_world.getVector3fMap() / filter_size_map_min).array().floor() + 0.5) *
++        filter_size_map_min;
++      bool need_add = true;
++      for (int readd_i = 0; readd_i < (int)points_near.size(); readd_i++) {
++        Eigen::Vector3f dis_2_center = points_near[readd_i].getVector3fMap() - center;
++        if (
++          fabs(dis_2_center.x()) < 0.5 * filter_size_map_min &&
++          fabs(dis_2_center.y()) < 0.5 * filter_size_map_min &&
++          fabs(dis_2_center.z()) < 0.5 * filter_size_map_min) {
++          need_add = false;
++          break;
+         }
++      }
++      if (need_add) {
++        points_to_add.emplace_back(point_world);
++      }
++    } else {
++      points_to_add.emplace_back(point_world);
+     }
+-    ivox_->AddPoints(points_to_add);
++  }
++  ivox_->AddPoints(points_to_add);
+ }
+ 
+ void publish_init_map()
+ {
+-    int size_init_map = init_feats_world->size();
++  int size_init_map = init_feats_world->size();
+ 
+-    sensor_msgs::msg::PointCloud2 laserCloudmsg;
+-                
+-    pcl::toROSMsg(*init_feats_world, laserCloudmsg);
+-        
+-    laserCloudmsg.header.stamp = stamp_from_sec(lidar_end_time);
+-    laserCloudmsg.header.frame_id = "camera_init";
+-    pubLaserCloudMap->publish(laserCloudmsg);
++  sensor_msgs::msg::PointCloud2 laserCloudmsg;
++
++  pcl::toROSMsg(*init_feats_world, laserCloudmsg);
++
++  laserCloudmsg.header.stamp = stamp_from_sec(lidar_end_time);
++  laserCloudmsg.header.frame_id = "camera_init";
++  pubLaserCloudMap->publish(laserCloudmsg);
+ }
+ 
+ PointCloudXYZI::Ptr pcl_wait_pub(new PointCloudXYZI(500000, 1));
+ PointCloudXYZI::Ptr pcl_wait_save(new PointCloudXYZI());
+ void publish_frame_world()
+ {
+-    if (scan_pub_en)
+-    {
+-        PointCloudXYZI::Ptr laserCloudFullRes(feats_down_body);
+-        int size = laserCloudFullRes->points.size();
+-
+-        PointCloudXYZI::Ptr   laserCloudWorld(new PointCloudXYZI(size, 1));
+-        
+-        for (int i = 0; i < size; i++)
+-        {
+-            laserCloudWorld->points[i].x = feats_down_world->points[i].x;
+-            laserCloudWorld->points[i].y = feats_down_world->points[i].y;
+-            laserCloudWorld->points[i].z = feats_down_world->points[i].z;
+-            laserCloudWorld->points[i].intensity = feats_down_world->points[i].intensity;
+-        }
+-        sensor_msgs::msg::PointCloud2 laserCloudmsg;
+-        pcl::toROSMsg(*laserCloudWorld, laserCloudmsg);
+-        
+-        laserCloudmsg.header.stamp = stamp_from_sec(lidar_end_time);
+-        laserCloudmsg.header.frame_id = "camera_init";
+-        pubLaserCloudFullRes->publish(laserCloudmsg);
+-    }
+-    
+-    if (pcd_save_en)
+-    {
+-        int size = feats_down_world->points.size();
+-        PointCloudXYZI::Ptr   laserCloudWorld(new PointCloudXYZI(size, 1));
++  if (scan_pub_en) {
++    PointCloudXYZI::Ptr laserCloudFullRes(feats_down_body);
++    int size = laserCloudFullRes->points.size();
+ 
+-        for (int i = 0; i < size; i++)
+-        {
+-            laserCloudWorld->points[i].x = feats_down_world->points[i].x;
+-            laserCloudWorld->points[i].y = feats_down_world->points[i].y;
+-            laserCloudWorld->points[i].z = feats_down_world->points[i].z;
+-            laserCloudWorld->points[i].intensity = feats_down_world->points[i].intensity;
+-        }
++    PointCloudXYZI::Ptr laserCloudWorld(new PointCloudXYZI(size, 1));
+ 
+-        *pcl_wait_save += *laserCloudWorld;
++    for (int i = 0; i < size; i++) {
++      laserCloudWorld->points[i].x = feats_down_world->points[i].x;
++      laserCloudWorld->points[i].y = feats_down_world->points[i].y;
++      laserCloudWorld->points[i].z = feats_down_world->points[i].z;
++      laserCloudWorld->points[i].intensity = feats_down_world->points[i].intensity;
++    }
++    sensor_msgs::msg::PointCloud2 laserCloudmsg;
++    pcl::toROSMsg(*laserCloudWorld, laserCloudmsg);
+ 
+-        static int scan_wait_num = 0;
+-        scan_wait_num ++;
+-        if (pcl_wait_save->size() > 0 && scan_wait_num >= pcd_save_interval)
+-        {
+-            pcd_index ++;
+-            string all_points_dir(string(string(ROOT_DIR) + "PCD/scans_") + to_string(pcd_index) + string(".pcd"));
+-            pcl::PCDWriter pcd_writer;
+-            cout << "current scan saved to /PCD/" << all_points_dir << endl;
+-            pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
+-            pcl_wait_save->clear();
+-            scan_wait_num = 0;
+-        }
++    laserCloudmsg.header.stamp = stamp_from_sec(lidar_end_time);
++    laserCloudmsg.header.frame_id = "camera_init";
++    pubLaserCloudFullRes->publish(laserCloudmsg);
++  }
++
++  if (pcd_save_en) {
++    int size = feats_down_world->points.size();
++    PointCloudXYZI::Ptr laserCloudWorld(new PointCloudXYZI(size, 1));
++
++    for (int i = 0; i < size; i++) {
++      laserCloudWorld->points[i].x = feats_down_world->points[i].x;
++      laserCloudWorld->points[i].y = feats_down_world->points[i].y;
++      laserCloudWorld->points[i].z = feats_down_world->points[i].z;
++      laserCloudWorld->points[i].intensity = feats_down_world->points[i].intensity;
+     }
++
++    *pcl_wait_save += *laserCloudWorld;
++
++    static int scan_wait_num = 0;
++    scan_wait_num++;
++    if (pcl_wait_save->size() > 0 && scan_wait_num >= pcd_save_interval) {
++      pcd_index++;
++      string all_points_dir(
++        string(string(ROOT_DIR) + "PCD/scans_") + to_string(pcd_index) + string(".pcd"));
++      pcl::PCDWriter pcd_writer;
++      cout << "current scan saved to /PCD/" << all_points_dir << endl;
++      pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
++      pcl_wait_save->clear();
++      scan_wait_num = 0;
++    }
++  }
+ }
+ 
+ void publish_frame_body()
+ {
+-    int size = feats_undistort->points.size();
+-    PointCloudXYZI::Ptr laserCloudIMUBody(new PointCloudXYZI(size, 1));
+-
+-    for (int i = 0; i < size; i++)
+-    {
+-        pointBodyLidarToIMU(&feats_undistort->points[i], \
+-                            &laserCloudIMUBody->points[i]);
+-    }
+-
+-    sensor_msgs::msg::PointCloud2 laserCloudmsg;
+-    pcl::toROSMsg(*laserCloudIMUBody, laserCloudmsg);
+-    laserCloudmsg.header.stamp = stamp_from_sec(lidar_end_time);
+-    laserCloudmsg.header.frame_id = "body";
+-    pubLaserCloudFullRes_body->publish(laserCloudmsg);
++  int size = feats_undistort->points.size();
++  PointCloudXYZI::Ptr laserCloudIMUBody(new PointCloudXYZI(size, 1));
++
++  for (int i = 0; i < size; i++) {
++    pointBodyLidarToIMU(&feats_undistort->points[i], &laserCloudIMUBody->points[i]);
++  }
++
++  sensor_msgs::msg::PointCloud2 laserCloudmsg;
++  pcl::toROSMsg(*laserCloudIMUBody, laserCloudmsg);
++  laserCloudmsg.header.stamp = stamp_from_sec(lidar_end_time);
++  laserCloudmsg.header.frame_id = "body";
++  pubLaserCloudFullRes_body->publish(laserCloudmsg);
+ }
+ 
+-template<typename T>
++template <typename T>
+ void set_posestamp(T & out)
+ {
+-    if (!use_imu_as_input)
+-    {
+-        out.position.x = kf_output.x_.pos(0);
+-        out.position.y = kf_output.x_.pos(1);
+-        out.position.z = kf_output.x_.pos(2);
+-        Eigen::Quaterniond q(kf_output.x_.rot);
+-        out.orientation.x = q.coeffs()[0];
+-        out.orientation.y = q.coeffs()[1];
+-        out.orientation.z = q.coeffs()[2];
+-        out.orientation.w = q.coeffs()[3];
+-    }
+-    else
+-    {
+-        out.position.x = kf_input.x_.pos(0);
+-        out.position.y = kf_input.x_.pos(1);
+-        out.position.z = kf_input.x_.pos(2);
+-        Eigen::Quaterniond q(kf_input.x_.rot);
+-        out.orientation.x = q.coeffs()[0];
+-        out.orientation.y = q.coeffs()[1];
+-        out.orientation.z = q.coeffs()[2];
+-        out.orientation.w = q.coeffs()[3];
+-    }
++  if (!use_imu_as_input) {
++    out.position.x = kf_output.x_.pos(0);
++    out.position.y = kf_output.x_.pos(1);
++    out.position.z = kf_output.x_.pos(2);
++    Eigen::Quaterniond q(kf_output.x_.rot);
++    out.orientation.x = q.coeffs()[0];
++    out.orientation.y = q.coeffs()[1];
++    out.orientation.z = q.coeffs()[2];
++    out.orientation.w = q.coeffs()[3];
++  } else {
++    out.position.x = kf_input.x_.pos(0);
++    out.position.y = kf_input.x_.pos(1);
++    out.position.z = kf_input.x_.pos(2);
++    Eigen::Quaterniond q(kf_input.x_.rot);
++    out.orientation.x = q.coeffs()[0];
++    out.orientation.y = q.coeffs()[1];
++    out.orientation.z = q.coeffs()[2];
++    out.orientation.w = q.coeffs()[3];
++  }
+ }
+ 
+ void publish_odometry()
+ {
+-    odomAftMapped.header.frame_id = "camera_init";
+-    odomAftMapped.child_frame_id = "body";
+-    if (publish_odometry_without_downsample)
+-    {
+-        odomAftMapped.header.stamp = stamp_from_sec(time_current);
+-    }
+-    else
+-    {
+-        odomAftMapped.header.stamp = stamp_from_sec(lidar_end_time);
+-    }
+-    set_posestamp(odomAftMapped.pose.pose);
+-    
+-    pubOdomAftMapped->publish(odomAftMapped);
+-
+-    static std::unique_ptr<tf2_ros::TransformBroadcaster> br;
+-    if (!br) br = std::make_unique<tf2_ros::TransformBroadcaster>(g_node);
+-    geometry_msgs::msg::TransformStamped t;
+-    t.header = odomAftMapped.header;
+-    t.child_frame_id = "body";
+-    t.transform.translation.x = odomAftMapped.pose.pose.position.x;
+-    t.transform.translation.y = odomAftMapped.pose.pose.position.y;
+-    t.transform.translation.z = odomAftMapped.pose.pose.position.z;
+-    t.transform.rotation = odomAftMapped.pose.pose.orientation;
+-    br->sendTransform(t);
++  odomAftMapped.header.frame_id = "camera_init";
++  odomAftMapped.child_frame_id = "body";
++  if (publish_odometry_without_downsample) {
++    odomAftMapped.header.stamp = stamp_from_sec(time_current);
++  } else {
++    odomAftMapped.header.stamp = stamp_from_sec(lidar_end_time);
++  }
++  set_posestamp(odomAftMapped.pose.pose);
++
++  pubOdomAftMapped->publish(odomAftMapped);
++
++  static std::unique_ptr<tf2_ros::TransformBroadcaster> br;
++  if (!br) br = std::make_unique<tf2_ros::TransformBroadcaster>(g_node);
++  geometry_msgs::msg::TransformStamped t;
++  t.header = odomAftMapped.header;
++  t.child_frame_id = "body";
++  t.transform.translation.x = odomAftMapped.pose.pose.position.x;
++  t.transform.translation.y = odomAftMapped.pose.pose.position.y;
++  t.transform.translation.z = odomAftMapped.pose.pose.position.z;
++  t.transform.rotation = odomAftMapped.pose.pose.orientation;
++  br->sendTransform(t);
+ }
+ 
+ void publish_path()
+ {
+-    set_posestamp(msg_body_pose.pose);
+-    msg_body_pose.header.stamp = stamp_from_sec(lidar_end_time);
+-    msg_body_pose.header.frame_id = "camera_init";
+-    static int jjj = 0;
+-    jjj++;
+-    {
+-        path.poses.emplace_back(msg_body_pose);
+-        pubPath->publish(path);
+-    }
+-}        
++  set_posestamp(msg_body_pose.pose);
++  msg_body_pose.header.stamp = stamp_from_sec(lidar_end_time);
++  msg_body_pose.header.frame_id = "camera_init";
++  static int jjj = 0;
++  jjj++;
++  {
++    path.poses.emplace_back(msg_body_pose);
++    pubPath->publish(path);
++  }
++}
+ 
+-int main(int argc, char** argv)
++int main(int argc, char ** argv)
+ {
+-    rclcpp::init(argc, argv);
+-    g_node = std::make_shared<rclcpp::Node>("pointlio_mapping");
+-    auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+-    executor->add_node(g_node);
+-
+-    readParameters(g_node);
+-    cout<<"lidar_type: "<<lidar_type<<endl;
+-    ivox_ = std::make_shared<IVoxType>(ivox_options_);
+-    
+-    path.header.stamp = stamp_from_sec(lidar_end_time);
+-    path.header.frame_id ="camera_init";
+-
+-    /*** variables definition for counting ***/
+-    int frame_num = 0;
+-    double aver_time_consu = 0, aver_time_icp = 0, aver_time_match = 0, aver_time_incre = 0, aver_time_solve = 0, aver_time_propag = 0;
+-
+-    memset(point_selected_surf, true, sizeof(point_selected_surf));
+-    downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
+-    downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
+-    
+-        Lidar_T_wrt_IMU<<VEC_FROM_ARRAY(extrinT);
+-        Lidar_R_wrt_IMU<<MAT_FROM_ARRAY(extrinR);
+-    
+-    if (extrinsic_est_en)
+-    {
+-        if (!use_imu_as_input)
+-        {
+-            kf_output.x_.offset_R_L_I = Lidar_R_wrt_IMU;
+-            kf_output.x_.offset_T_L_I = Lidar_T_wrt_IMU;
+-        }
+-        else
+-        {
+-            kf_input.x_.offset_R_L_I = Lidar_R_wrt_IMU;
+-            kf_input.x_.offset_T_L_I = Lidar_T_wrt_IMU;
+-        }
++  rclcpp::init(argc, argv);
++  g_node = std::make_shared<rclcpp::Node>("pointlio_mapping");
++  auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
++  executor->add_node(g_node);
++
++  readParameters(g_node);
++  cout << "lidar_type: " << lidar_type << endl;
++  ivox_ = std::make_shared<IVoxType>(ivox_options_);
++
++  path.header.stamp = stamp_from_sec(lidar_end_time);
++  path.header.frame_id = "camera_init";
++
++  /*** variables definition for counting ***/
++  int frame_num = 0;
++  double aver_time_consu = 0, aver_time_icp = 0, aver_time_match = 0, aver_time_incre = 0,
++         aver_time_solve = 0, aver_time_propag = 0;
++
++  memset(point_selected_surf, true, sizeof(point_selected_surf));
++  downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
++  downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
++
++  Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
++  Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
++
++  if (extrinsic_est_en) {
++    if (!use_imu_as_input) {
++      kf_output.x_.offset_R_L_I = Lidar_R_wrt_IMU;
++      kf_output.x_.offset_T_L_I = Lidar_T_wrt_IMU;
++    } else {
++      kf_input.x_.offset_R_L_I = Lidar_R_wrt_IMU;
++      kf_input.x_.offset_T_L_I = Lidar_T_wrt_IMU;
+     }
++  }
++
++  p_imu->lidar_type = p_pre->lidar_type = lidar_type;
++  p_imu->imu_en = imu_en;
++
++  kf_input.init_dyn_share_modified_2h(get_f_input, df_dx_input, h_model_input);
++  kf_output.init_dyn_share_modified_3h(
++    get_f_output, df_dx_output, h_model_output, h_model_IMU_output);
++  Eigen::Matrix<double, 24, 24> P_init;
++  reset_cov(P_init);
++  kf_input.change_P(P_init);
++  Eigen::Matrix<double, 30, 30> P_init_output;
++  reset_cov_output(P_init_output);
++  kf_output.change_P(P_init_output);
++  Eigen::Matrix<double, 24, 24> Q_input = process_noise_cov_input();
++  Eigen::Matrix<double, 30, 30> Q_output = process_noise_cov_output();
++  /*** debug record ***/
++  FILE * fp;
++  {
++    string log_dir = root_dir + "/Log";
++    mkdir(log_dir.c_str(), 0755);
++  }
++  string pos_log_dir = root_dir + "/Log/pos_log.txt";
++  fp = fopen(pos_log_dir.c_str(), "w");
++  open_file();
+ 
+-    p_imu->lidar_type = p_pre->lidar_type = lidar_type;
+-    p_imu->imu_en = imu_en;
+-
+-    kf_input.init_dyn_share_modified_2h(get_f_input, df_dx_input, h_model_input);
+-    kf_output.init_dyn_share_modified_3h(get_f_output, df_dx_output, h_model_output, h_model_IMU_output);
+-    Eigen::Matrix<double, 24, 24> P_init;
+-    reset_cov(P_init);
+-    kf_input.change_P(P_init);
+-    Eigen::Matrix<double, 30, 30> P_init_output;
+-    reset_cov_output(P_init_output);
+-    kf_output.change_P(P_init_output);
+-    Eigen::Matrix<double, 24, 24> Q_input = process_noise_cov_input();
+-    Eigen::Matrix<double, 30, 30> Q_output = process_noise_cov_output();
+-    /*** debug record ***/
+-    FILE *fp;
+-    {
+-        string log_dir = root_dir + "/Log";
+-        mkdir(log_dir.c_str(), 0755);
++#ifdef ENABLE_PROFILING
++  {
++    string log_dir = root_dir + "/Log";
++    mkdir(log_dir.c_str(), 0755);
++    string csv_dir = log_dir + "/point_lio_profiling.csv";
++    g_csv_fp = fopen(csv_dir.c_str(), "w");
++    if (g_csv_fp) {
++      fprintf(
++        g_csv_fp,
++        "timestamp,recv_wall,recv_mono,t0,t1,t3,t5,end_wall,propag_time,kf_solve_time,coord_xform_"
++        "time,feats_down_size,feats_undistort_size,raw_pts_size,queue_wait,s_plot11\n");
++      fflush(g_csv_fp);
++      g_csv_stop.store(false);
++      g_csv_thread = std::thread(csv_writer_thread);
++      // Pin CSV writer outside the algorithm cpuset so it doesn't compete with P-cores.
++      if (!pin_csv_thread(g_csv_thread.native_handle()))
++        fprintf(
++          stderr, "[PROFILING] WARNING: could not pin CSV thread (PROFILING_CSV_CPU=%d)\n",
++          PROFILING_CSV_CPU);
++    } else {
++      fprintf(stderr, "[PROFILING] failed to open %s: %s\n", csv_dir.c_str(), strerror(errno));
+     }
+-    string pos_log_dir = root_dir + "/Log/pos_log.txt";
+-    fp = fopen(pos_log_dir.c_str(),"w");
+-    open_file();
++  }
++#endif
+ 
+-#ifdef ENABLE_PROFILING
+-    {
+-        string log_dir = root_dir + "/Log";
+-        mkdir(log_dir.c_str(), 0755);
+-        string csv_dir = log_dir + "/point_lio_profiling.csv";
+-        g_csv_fp = fopen(csv_dir.c_str(), "w");
+-        if (g_csv_fp) {
+-            fprintf(g_csv_fp, "timestamp,recv_wall,recv_mono,t0,t1,t3,t5,end_wall,propag_time,kf_solve_time,coord_xform_time,feats_down_size,feats_undistort_size,raw_pts_size,queue_wait,s_plot11\n");
+-            fflush(g_csv_fp);
+-            g_csv_stop.store(false);
+-            g_csv_thread = std::thread(csv_writer_thread);
+-            // Pin CSV writer outside the algorithm cpuset so it doesn't compete with P-cores.
+-            if (!pin_csv_thread(g_csv_thread.native_handle()))
+-                fprintf(stderr, "[PROFILING] WARNING: could not pin CSV thread (PROFILING_CSV_CPU=%d)\n", PROFILING_CSV_CPU);
++  /*** ROS subscribe initialization ***/
++  rclcpp::SubscriptionBase::SharedPtr sub_pcl;
++  if (p_pre->lidar_type == AVIA) {
++    sub_pcl = g_node->create_subscription<livox_ros_driver2::msg::CustomMsg>(
++      lid_topic, rclcpp::QoS(200000), livox_pcl_cbk);
++  } else {
++    sub_pcl = g_node->create_subscription<sensor_msgs::msg::PointCloud2>(
++      lid_topic, rclcpp::QoS(200000), standard_pcl_cbk);
++  }
++  auto sub_imu =
++    g_node->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(200000), imu_cbk);
++
++  pubLaserCloudFullRes =
++    g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 1000);
++  pubLaserCloudFullRes_body =
++    g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 1000);
++  pubLaserCloudMap = g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 1000);
++  pubOdomAftMapped = g_node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_to_init", 1000);
++  pubPath = g_node->create_publisher<nav_msgs::msg::Path>("/path", 1000);
++
++  //------------------------------------------------------------------------------------------------------
++  signal(SIGINT, SigHandle);
++  rclcpp::Rate loop_rate(500);
++  while (rclcpp::ok()) {
++    if (flg_exit) break;
++    executor->spin_some();
++    if (sync_packages(Measures)) {
++      if (flg_reset) {
++        printf("reset when rosbag play back\n");
++        p_imu->Reset();
++        feats_undistort.reset(new PointCloudXYZI());
++        if (use_imu_as_input) {
++          state_in = state_input();
++          kf_input.change_P(P_init);
+         } else {
+-            fprintf(stderr, "[PROFILING] failed to open %s: %s\n", csv_dir.c_str(), strerror(errno));
++          state_out = state_output();
++          kf_output.change_P(P_init_output);
+         }
+-    }
+-#endif
++        flg_first_scan = true;
++        is_first_frame = true;
++        flg_reset = false;
++        init_map = false;
+ 
+-    /*** ROS subscribe initialization ***/
+-    rclcpp::SubscriptionBase::SharedPtr sub_pcl;
+-    if (p_pre->lidar_type == AVIA) {
+-        sub_pcl = g_node->create_subscription<livox_ros_driver2::msg::CustomMsg>(
+-            lid_topic, rclcpp::QoS(200000), livox_pcl_cbk);
+-    } else {
+-        sub_pcl = g_node->create_subscription<sensor_msgs::msg::PointCloud2>(
+-            lid_topic, rclcpp::QoS(200000), standard_pcl_cbk);
+-    }
+-    auto sub_imu = g_node->create_subscription<sensor_msgs::msg::Imu>(
+-        imu_topic, rclcpp::QoS(200000), imu_cbk);
+-
+-    pubLaserCloudFullRes = g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 1000);
+-    pubLaserCloudFullRes_body = g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 1000);
+-    pubLaserCloudMap = g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 1000);
+-    pubOdomAftMapped = g_node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_to_init", 1000);
+-    pubPath = g_node->create_publisher<nav_msgs::msg::Path>("/path", 1000);
+-
+-//------------------------------------------------------------------------------------------------------
+-    signal(SIGINT, SigHandle);
+-    rclcpp::Rate loop_rate(500);
+-    while (rclcpp::ok())
+-    {
+-        if (flg_exit) break;
+-        executor->spin_some();
+-        if(sync_packages(Measures)) 
+         {
+-            if (flg_reset)
+-            {
+-                printf("reset when rosbag play back\n");
+-                p_imu->Reset();
+-                feats_undistort.reset(new PointCloudXYZI());
+-                if (use_imu_as_input)
+-                {
+-                    state_in = state_input();
+-                    kf_input.change_P(P_init);
+-                }
+-                else
+-                {
+-                    state_out = state_output();
+-                    kf_output.change_P(P_init_output);
+-                }
+-                flg_first_scan = true;
+-                is_first_frame = true;
+-                flg_reset = false;
+-                init_map = false;
+-                
+-                {
+-                    ivox_.reset(new IVoxType(ivox_options_));
+-                }
+-            }
+-
+-            if (flg_first_scan)
+-            {
+-                first_lidar_time = Measures.lidar_beg_time;
+-                flg_first_scan = false;
+-                if (first_imu_time < 1)
+-                {
+-                    first_imu_time = rclcpp::Time(imu_next.header.stamp).seconds();
+-                    printf("first imu time: %f\n", first_imu_time);
+-                }
+-                time_current = 0.0;
+-                if(imu_en)
+-                {
+-                    kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
+-                    kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
+-
+-                    {
+-                        while (Measures.lidar_beg_time > rclcpp::Time(imu_next.header.stamp).seconds())
+-                        {
+-                            imu_deque.pop_front();
+-                            if (imu_deque.empty())
+-                            {
+-                                break;
+-                            }
+-                            imu_last = imu_next;
+-                            imu_next = *(imu_deque.front());
+-                        }
+-                    }
+-                }
+-                else
+-                {
+-                    kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
+-                    kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
+-                    kf_output.x_.acc << VEC_FROM_ARRAY(gravity);
+-                    kf_output.x_.acc *= -1; 
+-                    p_imu->imu_need_init_ = false;
+-                }     
+-                G_m_s2 = std::sqrt(gravity[0] * gravity[0] + gravity[1] * gravity[1] + gravity[2] * gravity[2]);
++          ivox_.reset(new IVoxType(ivox_options_));
++        }
++      }
++
++      if (flg_first_scan) {
++        first_lidar_time = Measures.lidar_beg_time;
++        flg_first_scan = false;
++        if (first_imu_time < 1) {
++          first_imu_time = rclcpp::Time(imu_next.header.stamp).seconds();
++          printf("first imu time: %f\n", first_imu_time);
++        }
++        time_current = 0.0;
++        if (imu_en) {
++          kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
++          kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
++
++          {
++            while (Measures.lidar_beg_time > rclcpp::Time(imu_next.header.stamp).seconds()) {
++              imu_deque.pop_front();
++              if (imu_deque.empty()) {
++                break;
++              }
++              imu_last = imu_next;
++              imu_next = *(imu_deque.front());
+             }
++          }
++        } else {
++          kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
++          kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
++          kf_output.x_.acc << VEC_FROM_ARRAY(gravity);
++          kf_output.x_.acc *= -1;
++          p_imu->imu_need_init_ = false;
++        }
++        G_m_s2 =
++          std::sqrt(gravity[0] * gravity[0] + gravity[1] * gravity[1] + gravity[2] * gravity[2]);
++      }
+ 
+-            double t0,t1,t2,t3,t4,t5,match_start, solve_start;
+-            match_time = 0;
++      double t0, t1, t2, t3, t4, t5, match_start, solve_start;
++      match_time = 0;
+ #ifdef ENABLE_PROFILING
+-            solve_time = 0;
+-            propag_time = 0;
+-            update_time = 0;
++      solve_time = 0;
++      propag_time = 0;
++      update_time = 0;
+ #endif
+-            t0 = omp_get_wtime();
+-            
+-            /*** downsample the feature points in a scan ***/
+-            t1 = omp_get_wtime();
+-            p_imu->Process(Measures, feats_undistort);
+-            if(space_down_sample)
+-            {
+-                downSizeFilterSurf.setInputCloud(feats_undistort);
+-                downSizeFilterSurf.filter(*feats_down_body);
+-                sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list); 
+-            }
+-            else
+-            {
+-                feats_down_body = Measures.lidar;
+-                sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list); 
+-            }
+-            {
+-                time_seq = time_compressing<int>(feats_down_body);
+-                feats_down_size = feats_down_body->points.size();
+-            }
++      t0 = omp_get_wtime();
++
++      /*** downsample the feature points in a scan ***/
++      t1 = omp_get_wtime();
++      p_imu->Process(Measures, feats_undistort);
++      if (space_down_sample) {
++        downSizeFilterSurf.setInputCloud(feats_undistort);
++        downSizeFilterSurf.filter(*feats_down_body);
++        sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list);
++      } else {
++        feats_down_body = Measures.lidar;
++        sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list);
++      }
++      {
++        time_seq = time_compressing<int>(feats_down_body);
++        feats_down_size = feats_down_body->points.size();
++      }
++
++      if (!p_imu->after_imu_init_) {
++        if (!p_imu->imu_need_init_) {
++          V3D tmp_gravity;
++          if (imu_en) {
++            tmp_gravity = -p_imu->mean_acc / p_imu->mean_acc.norm() * G_m_s2;
++          } else {
++            tmp_gravity << VEC_FROM_ARRAY(gravity_init);
++            p_imu->after_imu_init_ = true;
++          }
++          M3D rot_init;
++          p_imu->Set_init(tmp_gravity, rot_init);
++          kf_input.x_.rot = rot_init;
++          kf_output.x_.rot = rot_init;
++          kf_output.x_.acc = -rot_init.transpose() * kf_output.x_.gravity;
++        } else {
++          continue;
++        }
++      }
++      /*** initialize the map ***/
++      if (!init_map) {
++        feats_down_world->resize(feats_undistort->size());
++        for (int i = 0; i < (int)feats_undistort->size(); i++) {
++          {
++            pointBodyToWorld(&(feats_undistort->points[i]), &(feats_down_world->points[i]));
++          }
++        }
++        for (size_t i = 0; i < feats_down_world->size(); i++) {
++          init_feats_world->points.emplace_back(feats_down_world->points[i]);
++        }
++        if ((int)init_feats_world->size() < init_map_size) {
++          init_map = false;
++        } else {
++          ivox_->AddPoints(init_feats_world->points);
++          publish_init_map();
+ 
+-            if (!p_imu->after_imu_init_)
+-            {
+-                if (!p_imu->imu_need_init_)
+-                { 
+-                    V3D tmp_gravity;
+-                    if (imu_en)
+-                    {tmp_gravity = - p_imu->mean_acc / p_imu->mean_acc.norm() * G_m_s2;}
+-                    else
+-                    {tmp_gravity << VEC_FROM_ARRAY(gravity_init);
+-                    p_imu->after_imu_init_ = true;
+-                    }
+-                    M3D rot_init;
+-                    p_imu->Set_init(tmp_gravity, rot_init);
+-                    kf_input.x_.rot = rot_init;
+-                    kf_output.x_.rot = rot_init;
+-                    kf_output.x_.acc = - rot_init.transpose() * kf_output.x_.gravity;
++          init_feats_world.reset(new PointCloudXYZI());
++          init_map = true;
++        }
++        continue;
++      }
++
++      /*** ICP and Kalman filter update ***/
++      normvec->resize(feats_down_size);
++      feats_down_world->resize(feats_down_size);
++
++      Nearest_Points.resize(feats_down_size);
++
++      t2 = omp_get_wtime();
++
++      /*** iterated state estimation ***/
++      crossmat_list.reserve(feats_down_size);
++      pbody_list.reserve(feats_down_size);
++
++      for (size_t i = 0; i < feats_down_body->size(); i++) {
++        V3D point_this(
++          feats_down_body->points[i].x, feats_down_body->points[i].y, feats_down_body->points[i].z);
++        pbody_list[i] = point_this;
++        if (!extrinsic_est_en) {
++          point_this = Lidar_R_wrt_IMU * point_this + Lidar_T_wrt_IMU;
++          M3D point_crossmat;
++          point_crossmat << SKEW_SYM_MATRX(point_this);
++          crossmat_list[i] = point_crossmat;
++        }
++      }
++      if (!use_imu_as_input) {
++        bool imu_upda_cov = false;
++        effct_feat_num = 0;
++        /**** point by point update ****/
++        if (time_seq.size() > 0) {
++          double pcl_beg_time = Measures.lidar_beg_time;
++          idx = -1;
++          for (k = 0; k < (int)time_seq.size(); k++) {
++            PointType & point_body = feats_down_body->points[idx + time_seq[k]];
++
++            time_current = point_body.curvature / 1000.0 + pcl_beg_time;
++
++            if (is_first_frame) {
++              if (imu_en) {
++                while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
+                 }
+-                else{
+-                continue;}
++                angvel_avr << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                  imu_last.angular_velocity.z;
++                acc_avr << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                  imu_last.linear_acceleration.z;
++              }
++              is_first_frame = false;
++              imu_upda_cov = true;
++              time_update_last = time_current;
++              time_predict_last_const = time_current;
+             }
+-            /*** initialize the map ***/
+-            if(!init_map)
+-            {
+-                feats_down_world->resize(feats_undistort->size());
+-                for(int i = 0; i < (int)feats_undistort->size(); i++)
+-                {
+-                    {
+-                        pointBodyToWorld(&(feats_undistort->points[i]), &(feats_down_world->points[i]));
+-                    }
+-                }
+-                for (size_t i = 0; i < feats_down_world->size(); i++) 
+-                {
+-                    init_feats_world->points.emplace_back(feats_down_world->points[i]);
+-                }
+-                if((int)init_feats_world->size() < init_map_size) 
+-                {init_map = false;}
+-                else
+-                {   
+-                    ivox_->AddPoints(init_feats_world->points);
+-                    publish_init_map();
+-                    
+-                    init_feats_world.reset(new PointCloudXYZI());
+-                    init_map = true;
++            if (imu_en && !imu_deque.empty()) {
++              bool last_imu = rclcpp::Time(imu_next.header.stamp).seconds() ==
++                              rclcpp::Time(imu_deque.front()->header.stamp).seconds();
++              while (rclcpp::Time(imu_next.header.stamp).seconds() < time_predict_last_const &&
++                     !imu_deque.empty()) {
++                if (!last_imu) {
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
++                  break;
++                } else {
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
+                 }
+-                continue;
+-            }
++              }
++              bool imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
++              while (imu_comes) {
++                imu_upda_cov = true;
++                angvel_avr << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
++                  imu_next.angular_velocity.z;
++                acc_avr << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
++                  imu_next.linear_acceleration.z;
++
++                /*** covariance update ***/
++                double dt = rclcpp::Time(imu_next.header.stamp).seconds() - time_predict_last_const;
++                kf_output.predict(dt, Q_output, input_in, true, false);
++                time_predict_last_const = rclcpp::Time(imu_next.header.stamp).seconds();
+ 
+-            /*** ICP and Kalman filter update ***/
+-            normvec->resize(feats_down_size);
+-            feats_down_world->resize(feats_down_size);
+-
+-            Nearest_Points.resize(feats_down_size);
+-
+-            t2 = omp_get_wtime();
+-            
+-            /*** iterated state estimation ***/
+-            crossmat_list.reserve(feats_down_size);
+-            pbody_list.reserve(feats_down_size);
+-                          
+-            for (size_t i = 0; i < feats_down_body->size(); i++)
+-            {
+-                V3D point_this(feats_down_body->points[i].x,
+-                            feats_down_body->points[i].y,
+-                            feats_down_body->points[i].z);
+-                pbody_list[i]=point_this;
+-                if (!extrinsic_est_en)
+-                {
+-                    point_this = Lidar_R_wrt_IMU * point_this + Lidar_T_wrt_IMU;
+-                    M3D point_crossmat;
+-                    point_crossmat << SKEW_SYM_MATRX(point_this);
+-                    crossmat_list[i]=point_crossmat;
+-                }
+-            }
+-            if (!use_imu_as_input)
+-            {     
+-                bool imu_upda_cov = false;
+-                effct_feat_num = 0;
+-                /**** point by point update ****/
+-                if (time_seq.size() > 0)
+                 {
+-                double pcl_beg_time = Measures.lidar_beg_time;
+-                idx = -1;
+-                for (k = 0; k < (int)time_seq.size(); k++)
+-                {
+-                    PointType &point_body  = feats_down_body->points[idx+time_seq[k]];
+-
+-                    time_current = point_body.curvature / 1000.0 + pcl_beg_time;
+-
+-                    if (is_first_frame)
+-                    {
+-                        if(imu_en)
+-                        {
+-                            while (time_current > rclcpp::Time(imu_next.header.stamp).seconds())
+-                            {
+-                                imu_deque.pop_front();
+-                                if (imu_deque.empty()) break;
+-                                imu_last = imu_next;
+-                                imu_next = *(imu_deque.front());
+-                            }
+-                            angvel_avr<<imu_last.angular_velocity.x, imu_last.angular_velocity.y, imu_last.angular_velocity.z;
+-                            acc_avr   <<imu_last.linear_acceleration.x, imu_last.linear_acceleration.y, imu_last.linear_acceleration.z;
+-                        }
+-                        is_first_frame = false;
+-                        imu_upda_cov = true;
+-                        time_update_last = time_current;
+-                        time_predict_last_const = time_current;
+-                    }
+-                    if(imu_en && !imu_deque.empty())
+-                    {
+-                        bool last_imu = rclcpp::Time(imu_next.header.stamp).seconds() == rclcpp::Time(imu_deque.front()->header.stamp).seconds();
+-                        while (rclcpp::Time(imu_next.header.stamp).seconds() < time_predict_last_const && !imu_deque.empty())
+-                        {
+-                            if (!last_imu)
+-                            {
+-                                imu_last = imu_next;
+-                                imu_next = *(imu_deque.front());
+-                                break;
+-                            }
+-                            else
+-                            {
+-                                imu_deque.pop_front();
+-                                if (imu_deque.empty()) break;
+-                                imu_last = imu_next;
+-                                imu_next = *(imu_deque.front());
+-                            }
+-                        }
+-                        bool imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
+-                        while (imu_comes) 
+-                        {
+-                            imu_upda_cov = true;
+-                            angvel_avr<<imu_next.angular_velocity.x, imu_next.angular_velocity.y, imu_next.angular_velocity.z;
+-                            acc_avr   <<imu_next.linear_acceleration.x, imu_next.linear_acceleration.y, imu_next.linear_acceleration.z;
+-
+-                            /*** covariance update ***/
+-                            double dt = rclcpp::Time(imu_next.header.stamp).seconds() - time_predict_last_const;
+-                            kf_output.predict(dt, Q_output, input_in, true, false);
+-                            time_predict_last_const = rclcpp::Time(imu_next.header.stamp).seconds();
+-                            
+-                            {
+-                                double dt_cov = rclcpp::Time(imu_next.header.stamp).seconds() - time_update_last; 
+-
+-                                if (dt_cov > 0.0)
+-                                {
+-                                    time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
++                  double dt_cov = rclcpp::Time(imu_next.header.stamp).seconds() - time_update_last;
++
++                  if (dt_cov > 0.0) {
++                    time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
+ #ifdef ENABLE_PROFILING
+-                                    double propag_imu_start = omp_get_wtime();
++                    double propag_imu_start = omp_get_wtime();
+ #endif
+-                                    kf_output.predict(dt_cov, Q_output, input_in, false, true);
++                    kf_output.predict(dt_cov, Q_output, input_in, false, true);
+ #ifdef ENABLE_PROFILING
+-                                    propag_time += omp_get_wtime() - propag_imu_start;
+-                                    double solve_imu_start = omp_get_wtime();
++                    propag_time += omp_get_wtime() - propag_imu_start;
++                    double solve_imu_start = omp_get_wtime();
+ #endif
+-                                    kf_output.update_iterated_dyn_share_IMU();
++                    kf_output.update_iterated_dyn_share_IMU();
+ #ifdef ENABLE_PROFILING
+-                                    solve_time += omp_get_wtime() - solve_imu_start;
++                    solve_time += omp_get_wtime() - solve_imu_start;
+ #endif
+-                                }
+-                            }
+-                            imu_deque.pop_front();
+-                            if (imu_deque.empty()) break;
+-                            imu_last = imu_next;
+-                            imu_next = *(imu_deque.front());
+-                            imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
+-                        }
+-                    }
+-                    if (flg_reset)
+-                    {
+-                        break;
+-                    }
++                  }
++                }
++                imu_deque.pop_front();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
++                imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
++              }
++            }
++            if (flg_reset) {
++              break;
++            }
+ 
+-                    double dt = time_current - time_predict_last_const;
++            double dt = time_current - time_predict_last_const;
+ #ifdef ENABLE_PROFILING
+-                    double propag_state_start = omp_get_wtime();
++            double propag_state_start = omp_get_wtime();
+ #endif
+-                    if(!prop_at_freq_of_imu)
+-                    {
+-                        double dt_cov = time_current - time_update_last;
+-                        if (dt_cov > 0.0)
+-                        {
+-                            kf_output.predict(dt_cov, Q_output, input_in, false, true);
+-                            time_update_last = time_current;
+-                        }
+-                    }
+-                    kf_output.predict(dt, Q_output, input_in, true, false);
++            if (!prop_at_freq_of_imu) {
++              double dt_cov = time_current - time_update_last;
++              if (dt_cov > 0.0) {
++                kf_output.predict(dt_cov, Q_output, input_in, false, true);
++                time_update_last = time_current;
++              }
++            }
++            kf_output.predict(dt, Q_output, input_in, true, false);
+ #ifdef ENABLE_PROFILING
+-                    propag_time += omp_get_wtime() - propag_state_start;
++            propag_time += omp_get_wtime() - propag_state_start;
+ #endif
+-                    time_predict_last_const = time_current;
++            time_predict_last_const = time_current;
+ #ifdef ENABLE_PROFILING
+-                    double t_update_start = omp_get_wtime();
++            double t_update_start = omp_get_wtime();
+ #endif
+ 
+-                    if (feats_down_size < 1)
+-                    {
+-                        printf("No point, skip this scan!\n");
+-                        idx += time_seq[k];
+-                        continue;
+-                    }
+-                    if (!kf_output.update_iterated_dyn_share_modified()) 
+-                    {
+-                        idx = idx+time_seq[k];
+-                        continue;
+-                    }
++            if (feats_down_size < 1) {
++              printf("No point, skip this scan!\n");
++              idx += time_seq[k];
++              continue;
++            }
++            if (!kf_output.update_iterated_dyn_share_modified()) {
++              idx = idx + time_seq[k];
++              continue;
++            }
+ #ifdef ENABLE_PROFILING
+-                    solve_start = omp_get_wtime();
++            solve_start = omp_get_wtime();
+ #endif
+-                    if (publish_odometry_without_downsample)
+-                    {
+-                        publish_odometry();
+-                        if (runtime_pos_log)
+-                        {
+-                            euler_cur = SO3ToEuler(kf_output.x_.rot);
+-                            fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " " << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " " << kf_output.x_.vel.transpose() \
+-                            <<" "<<kf_output.x_.omg.transpose()<<" "<<kf_output.x_.acc.transpose()<<" "<<kf_output.x_.gravity.transpose()<<" "<<kf_output.x_.bg.transpose()<<" "<<kf_output.x_.ba.transpose()<<" "<<feats_undistort->points.size()<<endl;
+-                        }
+-                    }
++            if (publish_odometry_without_downsample) {
++              publish_odometry();
++              if (runtime_pos_log) {
++                euler_cur = SO3ToEuler(kf_output.x_.rot);
++                fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                         << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " "
++                         << kf_output.x_.vel.transpose() << " " << kf_output.x_.omg.transpose()
++                         << " " << kf_output.x_.acc.transpose() << " "
++                         << kf_output.x_.gravity.transpose() << " " << kf_output.x_.bg.transpose()
++                         << " " << kf_output.x_.ba.transpose() << " "
++                         << feats_undistort->points.size() << endl;
++              }
++            }
+ 
+-                    for (int j = 0; j < time_seq[k]; j++)
+-                    {
+-                        PointType &point_body_j  = feats_down_body->points[idx+j+1];
+-                        PointType &point_world_j = feats_down_world->points[idx+j+1];
+-                        pointBodyToWorld(&point_body_j, &point_world_j);
+-                    }
++            for (int j = 0; j < time_seq[k]; j++) {
++              PointType & point_body_j = feats_down_body->points[idx + j + 1];
++              PointType & point_world_j = feats_down_world->points[idx + j + 1];
++              pointBodyToWorld(&point_body_j, &point_world_j);
++            }
+ #ifdef ENABLE_PROFILING
+-                    solve_time += omp_get_wtime() - solve_start;
+-                    update_time += omp_get_wtime() - t_update_start;
++            solve_time += omp_get_wtime() - solve_start;
++            update_time += omp_get_wtime() - t_update_start;
+ #endif
+-                    idx += time_seq[k];
+-                }
+-                }
+-                else
++            idx += time_seq[k];
++          }
++        } else {
++          if (!imu_deque.empty()) {
++            imu_last = imu_next;
++            imu_next = *(imu_deque.front());
++
++            while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current &&
++                   ((rclcpp::Time(imu_next.header.stamp).seconds() <
++                     Measures.lidar_beg_time + lidar_time_inte))) {
++              if (is_first_frame) {
+                 {
+-                    if (!imu_deque.empty())
+-                    { 
+-                        imu_last = imu_next;
+-                        imu_next = *(imu_deque.front());
+-
+-                    while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current && ((rclcpp::Time(imu_next.header.stamp).seconds() < Measures.lidar_beg_time + lidar_time_inte )))
+-                    {
+-                        if (is_first_frame)
+-                        {
+-                            {
+-                                {
+-                                    while (rclcpp::Time(imu_next.header.stamp).seconds() < Measures.lidar_beg_time + lidar_time_inte)
+-                                    {
+-                                        imu_deque.pop_front();
+-                                        if(imu_deque.empty()) break;
+-                                        imu_last = imu_next;
+-                                        imu_next = *(imu_deque.front());
+-                                    }
+-                                }
+-                                break;
+-                            }
+-                            angvel_avr<<imu_last.angular_velocity.x, imu_last.angular_velocity.y, imu_last.angular_velocity.z;
+-                                            
+-                            acc_avr   <<imu_last.linear_acceleration.x, imu_last.linear_acceleration.y, imu_last.linear_acceleration.z;
+-
+-                            imu_upda_cov = true;
+-                            time_update_last = time_current;
+-                            time_predict_last_const = time_current;
+-
+-                                is_first_frame = false;
+-                        }
+-                        time_current = rclcpp::Time(imu_next.header.stamp).seconds();
+-
+-                        if (!is_first_frame)
+-                        {
+-                        double dt = time_current - time_predict_last_const;
+-                        {
+-                            double dt_cov = time_current - time_update_last;
+-                            if (dt_cov > 0.0)
+-                            {
+-                                kf_output.predict(dt_cov, Q_output, input_in, false, true);
+-                                time_update_last = time_current;
+-                            }
+-                            kf_output.predict(dt, Q_output, input_in, true, false);
+-                        }
+-
+-                        time_predict_last_const = time_current;
+-
+-                        angvel_avr<<imu_next.angular_velocity.x, imu_next.angular_velocity.y, imu_next.angular_velocity.z;
+-                        acc_avr   <<imu_next.linear_acceleration.x, imu_next.linear_acceleration.y, imu_next.linear_acceleration.z; 
+-                        kf_output.update_iterated_dyn_share_IMU();
+-                        imu_deque.pop_front();
+-                        if (imu_deque.empty()) break;
+-                        imu_last = imu_next;
+-                        imu_next = *(imu_deque.front());
+-                    }
+-                    else
+-                    {
+-                        imu_deque.pop_front();
+-                        if (imu_deque.empty()) break;
+-                        imu_last = imu_next;
+-                        imu_next = *(imu_deque.front());
+-                    }
+-                    }
++                  {
++                    while (rclcpp::Time(imu_next.header.stamp).seconds() <
++                           Measures.lidar_beg_time + lidar_time_inte) {
++                      imu_deque.pop_front();
++                      if (imu_deque.empty()) break;
++                      imu_last = imu_next;
++                      imu_next = *(imu_deque.front());
+                     }
++                  }
++                  break;
+                 }
+-            }
+-            else
+-            {
+-                bool imu_prop_cov = false;
+-                effct_feat_num = 0;
+-                if (time_seq.size() > 0)
+-                {
+-                double pcl_beg_time = Measures.lidar_beg_time;
+-                idx = -1;
+-                for (k = 0; k < (int)time_seq.size(); k++)
++                angvel_avr << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                  imu_last.angular_velocity.z;
++
++                acc_avr << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                  imu_last.linear_acceleration.z;
++
++                imu_upda_cov = true;
++                time_update_last = time_current;
++                time_predict_last_const = time_current;
++
++                is_first_frame = false;
++              }
++              time_current = rclcpp::Time(imu_next.header.stamp).seconds();
++
++              if (!is_first_frame) {
++                double dt = time_current - time_predict_last_const;
+                 {
+-                    PointType &point_body  = feats_down_body->points[idx+time_seq[k]];
+-                    time_current = point_body.curvature / 1000.0 + pcl_beg_time;
+-                    if (is_first_frame)
+-                    {
+-                        while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) 
+-                        {
+-                            imu_deque.pop_front();
+-                            if (imu_deque.empty()) break;
+-                            imu_last = imu_next;
+-                            imu_next = *(imu_deque.front());
+-                        }
+-                        imu_prop_cov = true;
+-
+-                        is_first_frame = false;
+-                        t_last = time_current;
+-                        time_update_last = time_current; 
+-                        {
+-                            input_in.gyro<<imu_last.angular_velocity.x, imu_last.angular_velocity.y, imu_last.angular_velocity.z;                 
+-                            input_in.acc<<imu_last.linear_acceleration.x, imu_last.linear_acceleration.y, imu_last.linear_acceleration.z;
+-                            input_in.acc = input_in.acc * G_m_s2 / acc_norm;
+-                        }
+-                    }
+-                    
+-                    while (time_current > rclcpp::Time(imu_next.header.stamp).seconds())
+-                    {
+-                        imu_deque.pop_front();
+-                        
+-                        input_in.gyro<<imu_last.angular_velocity.x, imu_last.angular_velocity.y, imu_last.angular_velocity.z;
+-                        input_in.acc <<imu_last.linear_acceleration.x, imu_last.linear_acceleration.y, imu_last.linear_acceleration.z; 
+-                        input_in.acc    = input_in.acc * G_m_s2 / acc_norm; 
+-                        double dt = rclcpp::Time(imu_last.header.stamp).seconds() - t_last;
+-
+-                        double dt_cov = rclcpp::Time(imu_last.header.stamp).seconds() - time_update_last;
+-                        if (dt_cov > 0.0)
+-                        {
+-                            kf_input.predict(dt_cov, Q_input, input_in, false, true); 
+-                            time_update_last = rclcpp::Time(imu_last.header.stamp).seconds();
+-                        }
+-                        kf_input.predict(dt, Q_input, input_in, true, false); 
+-                        t_last = rclcpp::Time(imu_last.header.stamp).seconds();
+-                        imu_prop_cov = true;
+-
+-                        if (imu_deque.empty()) break;
+-                        imu_last = imu_next;
+-                        imu_next = *(imu_deque.front());
+-                    }     
+-                    if (flg_reset)
+-                    {
+-                        break;
+-                    }     
+-                    double dt = time_current - t_last;
+-                    t_last = time_current;
++                  double dt_cov = time_current - time_update_last;
++                  if (dt_cov > 0.0) {
++                    kf_output.predict(dt_cov, Q_output, input_in, false, true);
++                    time_update_last = time_current;
++                  }
++                  kf_output.predict(dt, Q_output, input_in, true, false);
++                }
++
++                time_predict_last_const = time_current;
++
++                angvel_avr << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
++                  imu_next.angular_velocity.z;
++                acc_avr << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
++                  imu_next.linear_acceleration.z;
++                kf_output.update_iterated_dyn_share_IMU();
++                imu_deque.pop_front();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
++              } else {
++                imu_deque.pop_front();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
++              }
++            }
++          }
++        }
++      } else {
++        bool imu_prop_cov = false;
++        effct_feat_num = 0;
++        if (time_seq.size() > 0) {
++          double pcl_beg_time = Measures.lidar_beg_time;
++          idx = -1;
++          for (k = 0; k < (int)time_seq.size(); k++) {
++            PointType & point_body = feats_down_body->points[idx + time_seq[k]];
++            time_current = point_body.curvature / 1000.0 + pcl_beg_time;
++            if (is_first_frame) {
++              while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
++                imu_deque.pop_front();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
++              }
++              imu_prop_cov = true;
++
++              is_first_frame = false;
++              t_last = time_current;
++              time_update_last = time_current;
++              {
++                input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                  imu_last.angular_velocity.z;
++                input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                  imu_last.linear_acceleration.z;
++                input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++              }
++            }
++
++            while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
++              imu_deque.pop_front();
++
++              input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                imu_last.angular_velocity.z;
++              input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                imu_last.linear_acceleration.z;
++              input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++              double dt = rclcpp::Time(imu_last.header.stamp).seconds() - t_last;
++
++              double dt_cov = rclcpp::Time(imu_last.header.stamp).seconds() - time_update_last;
++              if (dt_cov > 0.0) {
++                kf_input.predict(dt_cov, Q_input, input_in, false, true);
++                time_update_last = rclcpp::Time(imu_last.header.stamp).seconds();
++              }
++              kf_input.predict(dt, Q_input, input_in, true, false);
++              t_last = rclcpp::Time(imu_last.header.stamp).seconds();
++              imu_prop_cov = true;
++
++              if (imu_deque.empty()) break;
++              imu_last = imu_next;
++              imu_next = *(imu_deque.front());
++            }
++            if (flg_reset) {
++              break;
++            }
++            double dt = time_current - t_last;
++            t_last = time_current;
+ #ifdef ENABLE_PROFILING
+-                    double propag_start = omp_get_wtime();
++            double propag_start = omp_get_wtime();
+ #endif
+-                    if(!prop_at_freq_of_imu)
+-                    {
+-                        double dt_cov = time_current - time_update_last;
+-                        if (dt_cov > 0.0)
+-                        {
+-                            kf_input.predict(dt_cov, Q_input, input_in, false, true);
+-                            time_update_last = time_current;
+-                        }
+-                    }
+-                    kf_input.predict(dt, Q_input, input_in, true, false);
++            if (!prop_at_freq_of_imu) {
++              double dt_cov = time_current - time_update_last;
++              if (dt_cov > 0.0) {
++                kf_input.predict(dt_cov, Q_input, input_in, false, true);
++                time_update_last = time_current;
++              }
++            }
++            kf_input.predict(dt, Q_input, input_in, true, false);
+ #ifdef ENABLE_PROFILING
+-                    propag_time += omp_get_wtime() - propag_start;
++            propag_time += omp_get_wtime() - propag_start;
+ #endif
+ #ifdef ENABLE_PROFILING
+-                    double t_update_start = omp_get_wtime();
++            double t_update_start = omp_get_wtime();
+ #endif
+-                    
+-                    if (feats_down_size < 1)
+-                    {
+-                        printf("No point, skip this scan!\n");
+ 
+-                        idx += time_seq[k];
+-                        continue;
+-                    }
+-                    if (!kf_input.update_iterated_dyn_share_modified()) 
+-                    {
+-                        idx = idx+time_seq[k];
+-                        continue;
+-                    }
++            if (feats_down_size < 1) {
++              printf("No point, skip this scan!\n");
++
++              idx += time_seq[k];
++              continue;
++            }
++            if (!kf_input.update_iterated_dyn_share_modified()) {
++              idx = idx + time_seq[k];
++              continue;
++            }
+ 
+ #ifdef ENABLE_PROFILING
+-                    solve_start = omp_get_wtime();
++            solve_start = omp_get_wtime();
+ #endif
+-                    if (publish_odometry_without_downsample)
+-                    {
+-                        publish_odometry();
+-                        if (runtime_pos_log)
+-                        {
+-                            euler_cur = SO3ToEuler(kf_input.x_.rot);
+-                            fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " " << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " " << kf_input.x_.vel.transpose() \
+-                            <<" "<<kf_input.x_.bg.transpose()<<" "<<kf_input.x_.ba.transpose()<<" "<<kf_input.x_.gravity.transpose()<<" "<<feats_undistort->points.size()<<endl;
+-                        }
+-                    }
++            if (publish_odometry_without_downsample) {
++              publish_odometry();
++              if (runtime_pos_log) {
++                euler_cur = SO3ToEuler(kf_input.x_.rot);
++                fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                         << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " "
++                         << kf_input.x_.vel.transpose() << " " << kf_input.x_.bg.transpose() << " "
++                         << kf_input.x_.ba.transpose() << " " << kf_input.x_.gravity.transpose()
++                         << " " << feats_undistort->points.size() << endl;
++              }
++            }
+ 
+-                    for (int j = 0; j < time_seq[k]; j++)
+-                    {
+-                        PointType &point_body_j  = feats_down_body->points[idx+j+1];
+-                        PointType &point_world_j = feats_down_world->points[idx+j+1];
+-                        pointBodyToWorld(&point_body_j, &point_world_j);
+-                    }
++            for (int j = 0; j < time_seq[k]; j++) {
++              PointType & point_body_j = feats_down_body->points[idx + j + 1];
++              PointType & point_world_j = feats_down_world->points[idx + j + 1];
++              pointBodyToWorld(&point_body_j, &point_world_j);
++            }
+ #ifdef ENABLE_PROFILING
+-                    solve_time += omp_get_wtime() - solve_start;
+-                    update_time += omp_get_wtime() - t_update_start;
++            solve_time += omp_get_wtime() - solve_start;
++            update_time += omp_get_wtime() - t_update_start;
+ #endif
+-                    idx = idx + time_seq[k];
+-                }  
+-                }
+-                else
++            idx = idx + time_seq[k];
++          }
++        } else {
++          if (!imu_deque.empty()) {
++            imu_last = imu_next;
++            imu_next = *(imu_deque.front());
++            while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current &&
++                   ((rclcpp::Time(imu_next.header.stamp).seconds() <
++                     Measures.lidar_beg_time + lidar_time_inte))) {
++              if (is_first_frame) {
+                 {
+-                    if (!imu_deque.empty())
+-                    { 
+-                    imu_last = imu_next;
+-                    imu_next = *(imu_deque.front());
+-                    while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current && ((rclcpp::Time(imu_next.header.stamp).seconds() < Measures.lidar_beg_time + lidar_time_inte)))
+-                    {
+-                        if (is_first_frame)
+-                        {
+-                            {
+-                                {
+-                                    while (rclcpp::Time(imu_next.header.stamp).seconds() < Measures.lidar_beg_time + lidar_time_inte)
+-                                    {
+-                                        imu_deque.pop_front();
+-                                        if(imu_deque.empty()) break;
+-                                        imu_last = imu_next;
+-                                        imu_next = *(imu_deque.front());
+-                                    }
+-                                }
+-                                
+-                                break;
+-                            }
+-                            imu_prop_cov = true;
+-                            
+-                            t_last = time_current;
+-                            time_update_last = time_current; 
+-                            input_in.gyro<<imu_last.angular_velocity.x, imu_last.angular_velocity.y, imu_last.angular_velocity.z;
+-                            input_in.acc   <<imu_last.linear_acceleration.x, imu_last.linear_acceleration.y, imu_last.linear_acceleration.z;
+-                            input_in.acc = input_in.acc * G_m_s2 / acc_norm;
+-                            
+-                                is_first_frame = false;
+-                            
+-                        }
+-                        time_current = rclcpp::Time(imu_next.header.stamp).seconds();
+-
+-                        if (!is_first_frame)
+-                        {
+-                        double dt = time_current - t_last;
+-
+-                        double dt_cov = time_current - time_update_last;
+-                        if (dt_cov > 0.0)
+-                        {        
+-                            time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
+-                        }
+-
+-                        t_last = rclcpp::Time(imu_next.header.stamp).seconds();
+-                    
+-                        input_in.gyro<<imu_next.angular_velocity.x, imu_next.angular_velocity.y, imu_next.angular_velocity.z;
+-                        input_in.acc<<imu_next.linear_acceleration.x, imu_next.linear_acceleration.y, imu_next.linear_acceleration.z; 
+-                        input_in.acc = input_in.acc * G_m_s2 / acc_norm;
+-                        imu_deque.pop_front();
+-                        if (imu_deque.empty()) break;
+-                        imu_last = imu_next;
+-                        imu_next = *(imu_deque.front());
+-                        }
+-                        else
+-                        {
+-                            imu_deque.pop_front();
+-                            if (imu_deque.empty()) break;
+-                            imu_last = imu_next;
+-                            imu_next = *(imu_deque.front());
+-                        }
+-                    }
++                  {
++                    while (rclcpp::Time(imu_next.header.stamp).seconds() <
++                           Measures.lidar_beg_time + lidar_time_inte) {
++                      imu_deque.pop_front();
++                      if (imu_deque.empty()) break;
++                      imu_last = imu_next;
++                      imu_next = *(imu_deque.front());
+                     }
++                  }
++
++                  break;
+                 }
++                imu_prop_cov = true;
++
++                t_last = time_current;
++                time_update_last = time_current;
++                input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                  imu_last.angular_velocity.z;
++                input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                  imu_last.linear_acceleration.z;
++                input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++
++                is_first_frame = false;
++              }
++              time_current = rclcpp::Time(imu_next.header.stamp).seconds();
++
++              if (!is_first_frame) {
++                double dt = time_current - t_last;
++
++                double dt_cov = time_current - time_update_last;
++                if (dt_cov > 0.0) {
++                  time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
++                }
++
++                t_last = rclcpp::Time(imu_next.header.stamp).seconds();
++
++                input_in.gyro << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
++                  imu_next.angular_velocity.z;
++                input_in.acc << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
++                  imu_next.linear_acceleration.z;
++                input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++                imu_deque.pop_front();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
++              } else {
++                imu_deque.pop_front();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
++              }
+             }
+-            /******* Publish odometry downsample *******/
+-            if (!publish_odometry_without_downsample)
+-            {
+-                publish_odometry();
+-            }
++          }
++        }
++      }
++      /******* Publish odometry downsample *******/
++      if (!publish_odometry_without_downsample) {
++        publish_odometry();
++      }
+ 
+-            /*** add the feature points to map ***/
++      /*** add the feature points to map ***/
+ #ifdef ENABLE_PROFILING
+-            t3 = omp_get_wtime();
++      t3 = omp_get_wtime();
+ #endif
+-            if(feats_down_size > 4)
+-            {
+-                MapIncremental();
+-            }
++      if (feats_down_size > 4) {
++        MapIncremental();
++      }
+ #ifdef ENABLE_PROFILING
+-            t5 = omp_get_wtime();
+-            {
+-                static double prev_lidar_time = 0.0;
+-                static int total_skipped = 0;
+-                if (prev_lidar_time > 0.0) {
+-                    int skipped = (int)round((Measures.lidar_beg_time - prev_lidar_time) / lidar_time_inte) - 1;
+-                    if (skipped > 0) {
+-                        total_skipped += skipped;
+-                        printf("[PROFILING] lidar skip: +%d frame(s) (gap=%.3fs), total_skipped=%d\n",
+-                               skipped, Measures.lidar_beg_time - prev_lidar_time, total_skipped);
+-                    }
+-                }
+-                prev_lidar_time = Measures.lidar_beg_time;
+-            }
+-            {
+-                double end_wall = omp_get_wtime();
+-                if (g_csv_fp) {
+-                    double queue_wait = t0 - (recv_mono + s_plot11[scan_count]);
+-                    csv_push({Measures.lidar_beg_time, recv_wall, recv_mono, t0, t1, t3, t5, end_wall,
+-                              propag_time, (update_time - solve_time), solve_time,
+-                              feats_down_size, (int)feats_undistort->size(), raw_pts_size_last,
+-                              queue_wait, s_plot11[scan_count]});
+-                }
+-            }
++      t5 = omp_get_wtime();
++      {
++        static double prev_lidar_time = 0.0;
++        static int total_skipped = 0;
++        if (prev_lidar_time > 0.0) {
++          int skipped =
++            (int)round((Measures.lidar_beg_time - prev_lidar_time) / lidar_time_inte) - 1;
++          if (skipped > 0) {
++            total_skipped += skipped;
++            printf(
++              "[PROFILING] lidar skip: +%d frame(s) (gap=%.3fs), total_skipped=%d\n", skipped,
++              Measures.lidar_beg_time - prev_lidar_time, total_skipped);
++          }
++        }
++        prev_lidar_time = Measures.lidar_beg_time;
++      }
++      {
++        double end_wall = omp_get_wtime();
++        if (g_csv_fp) {
++          double queue_wait = t0 - (recv_mono + s_plot11[scan_count]);
++          csv_push(
++            {Measures.lidar_beg_time, recv_wall, recv_mono, t0, t1, t3, t5, end_wall, propag_time,
++             (update_time - solve_time), solve_time, feats_down_size, (int)feats_undistort->size(),
++             raw_pts_size_last, queue_wait, s_plot11[scan_count]});
++        }
++      }
+ #endif
+ 
+-            /******* Publish points *******/
+-            if (path_en)                         publish_path();
+-            if (scan_pub_en || pcd_save_en)      publish_frame_world();
+-            if (scan_pub_en && scan_body_pub_en) publish_frame_body();
+-            
+-            /*** Debug variables Logging ***/
+-            if (runtime_pos_log)
+-            {
+-                frame_num ++;
+-                aver_time_consu = aver_time_consu * (frame_num - 1) / frame_num + (t5 - t0) / frame_num;
+-                {aver_time_icp = aver_time_icp * (frame_num - 1)/frame_num + update_time/frame_num;}
+-                aver_time_match = aver_time_match * (frame_num - 1)/frame_num + (match_time)/frame_num;
+-                aver_time_solve = aver_time_solve * (frame_num - 1)/frame_num + solve_time/frame_num;
+-                aver_time_propag = aver_time_propag * (frame_num - 1)/frame_num + propag_time / frame_num;
+-                T1[time_log_counter] = Measures.lidar_beg_time;
+-                s_plot[time_log_counter] = t5 - t0;
+-                s_plot2[time_log_counter] = feats_undistort->points.size();
+-                s_plot3[time_log_counter] = aver_time_consu;
+-                time_log_counter ++;
+-                printf("[ mapping ]: time: IMU + Map + Input Downsample: %0.6f ave match: %0.6f ave solve: %0.6f  ave ICP: %0.6f  map incre: %0.6f ave total: %0.6f icp: %0.6f propogate: %0.6f \n",t1-t0,aver_time_match,aver_time_solve,t3-t1,t5-t3,aver_time_consu, aver_time_icp, aver_time_propag); 
+-                if (!publish_odometry_without_downsample)
+-                {
+-                    if (!use_imu_as_input)
+-                    {
+-                        euler_cur = SO3ToEuler(kf_output.x_.rot);
+-                        fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " " << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " " << kf_output.x_.vel.transpose() \
+-                        <<" "<<kf_output.x_.omg.transpose()<<" "<<kf_output.x_.acc.transpose()<<" "<<kf_output.x_.gravity.transpose()<<" "<<kf_output.x_.bg.transpose()<<" "<<kf_output.x_.ba.transpose()<<" "<<feats_undistort->points.size()<<endl;
+-                    }
+-                    else
+-                    {
+-                        euler_cur = SO3ToEuler(kf_input.x_.rot);
+-                        fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " " << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " " << kf_input.x_.vel.transpose() \
+-                        <<" "<<kf_input.x_.bg.transpose()<<" "<<kf_input.x_.ba.transpose()<<" "<<kf_input.x_.gravity.transpose()<<" "<<feats_undistort->points.size()<<endl;
+-                    }
+-                }
+-                dump_lio_state_to_log(fp);
+-            }
++      /******* Publish points *******/
++      if (path_en) publish_path();
++      if (scan_pub_en || pcd_save_en) publish_frame_world();
++      if (scan_pub_en && scan_body_pub_en) publish_frame_body();
++
++      /*** Debug variables Logging ***/
++      if (runtime_pos_log) {
++        frame_num++;
++        aver_time_consu = aver_time_consu * (frame_num - 1) / frame_num + (t5 - t0) / frame_num;
++        {
++          aver_time_icp = aver_time_icp * (frame_num - 1) / frame_num + update_time / frame_num;
+         }
+-        loop_rate.sleep();
+-    }
+-    //--------------------------save map-----------------------------------
+-    if (pcl_wait_save->size() > 0 && pcd_save_en)
+-    {
+-        string file_name = string("scans.pcd");
+-        string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
+-        pcl::PCDWriter pcd_writer;
+-        pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
++        aver_time_match = aver_time_match * (frame_num - 1) / frame_num + (match_time) / frame_num;
++        aver_time_solve = aver_time_solve * (frame_num - 1) / frame_num + solve_time / frame_num;
++        aver_time_propag = aver_time_propag * (frame_num - 1) / frame_num + propag_time / frame_num;
++        T1[time_log_counter] = Measures.lidar_beg_time;
++        s_plot[time_log_counter] = t5 - t0;
++        s_plot2[time_log_counter] = feats_undistort->points.size();
++        s_plot3[time_log_counter] = aver_time_consu;
++        time_log_counter++;
++        printf(
++          "[ mapping ]: time: IMU + Map + Input Downsample: %0.6f ave match: %0.6f ave solve: "
++          "%0.6f  ave ICP: %0.6f  map incre: %0.6f ave total: %0.6f icp: %0.6f propogate: %0.6f \n",
++          t1 - t0, aver_time_match, aver_time_solve, t3 - t1, t5 - t3, aver_time_consu,
++          aver_time_icp, aver_time_propag);
++        if (!publish_odometry_without_downsample) {
++          if (!use_imu_as_input) {
++            euler_cur = SO3ToEuler(kf_output.x_.rot);
++            fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                     << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " "
++                     << kf_output.x_.vel.transpose() << " " << kf_output.x_.omg.transpose() << " "
++                     << kf_output.x_.acc.transpose() << " " << kf_output.x_.gravity.transpose()
++                     << " " << kf_output.x_.bg.transpose() << " " << kf_output.x_.ba.transpose()
++                     << " " << feats_undistort->points.size() << endl;
++          } else {
++            euler_cur = SO3ToEuler(kf_input.x_.rot);
++            fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                     << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " "
++                     << kf_input.x_.vel.transpose() << " " << kf_input.x_.bg.transpose() << " "
++                     << kf_input.x_.ba.transpose() << " " << kf_input.x_.gravity.transpose() << " "
++                     << feats_undistort->points.size() << endl;
++          }
++        }
++        dump_lio_state_to_log(fp);
++      }
+     }
+-    fout_out.close();
+-    fout_imu_pbp.close();
++    loop_rate.sleep();
++  }
++  //--------------------------save map-----------------------------------
++  if (pcl_wait_save->size() > 0 && pcd_save_en) {
++    string file_name = string("scans.pcd");
++    string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
++    pcl::PCDWriter pcd_writer;
++    pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
++  }
++  fout_out.close();
++  fout_imu_pbp.close();
+ #ifdef ENABLE_PROFILING
+-    if (g_csv_fp) {
+-        g_csv_stop.store(true, std::memory_order_release);
+-        if (g_csv_thread.joinable()) g_csv_thread.join();
+-        fclose(g_csv_fp);
+-        g_csv_fp = nullptr;
+-    }
++  if (g_csv_fp) {
++    g_csv_stop.store(true, std::memory_order_release);
++    if (g_csv_thread.joinable()) g_csv_thread.join();
++    fclose(g_csv_fp);
++    g_csv_fp = nullptr;
++  }
+ #endif
+-    rclcpp::shutdown();
+-    return 0;
++  rclcpp::shutdown();
++  return 0;
+ }
+diff --git a/src/preprocess.cpp b/src/preprocess.cpp
+index 136c4ea..cd47868 100755
+--- a/src/preprocess.cpp
++++ b/src/preprocess.cpp
+@@ -1,24 +1,21 @@
+ #include "preprocess.h"
+ 
+-#define RETURN0     0x00
++#define RETURN0 0x00
+ #define RETURN0AND1 0x10
+ 
+-const bool time_list_cut_frame(PointType &x, PointType &y) {
+-    return (x.curvature < y.curvature);
+-}
++const bool time_list_cut_frame(PointType & x, PointType & y) { return (x.curvature < y.curvature); }
+ 
+-Preprocess::Preprocess()
+-  :lidar_type(AVIA), blind(0.01), point_filter_num(1), det_range(1000)
++Preprocess::Preprocess() : lidar_type(AVIA), blind(0.01), point_filter_num(1), det_range(1000)
+ {
+   inf_bound = 10;
+-  N_SCANS   = 6;
++  N_SCANS = 6;
+   SCAN_RATE = 10;
+   group_size = 8;
+   disA = 0.01;
+-  disA = 0.1; // B?
++  disA = 0.1;  // B?
+   p2l_ratio = 225;
+-  limit_maxmid =6.25;
+-  limit_midmin =6.25;
++  limit_maxmid = 6.25;
++  limit_midmin = 6.25;
+   limit_maxmin = 3.24;
+   jump_up_limit = 170.0;
+   jump_down_limit = 8.0;
+@@ -29,10 +26,10 @@ Preprocess::Preprocess()
+   smallp_ratio = 1.2;
+   given_offset_time = false;
+ 
+-  jump_up_limit = cos(jump_up_limit/180*M_PI);
+-  jump_down_limit = cos(jump_down_limit/180*M_PI);
+-  cos160 = cos(cos160/180*M_PI);
+-  smallp_intersect = cos(smallp_intersect/180*M_PI);
++  jump_up_limit = cos(jump_up_limit / 180 * M_PI);
++  jump_down_limit = cos(jump_down_limit / 180 * M_PI);
++  cos160 = cos(cos160 / 180 * M_PI);
++  smallp_intersect = cos(smallp_intersect / 180 * M_PI);
+ }
+ 
+ Preprocess::~Preprocess() {}
+@@ -44,16 +41,17 @@ void Preprocess::set(bool feat_en, int lid_type, double bld, int pfilt_num)
+   point_filter_num = pfilt_num;
+ }
+ 
+-void Preprocess::process(const livox_ros_driver2::msg::CustomMsg::SharedPtr msg, PointCloudXYZI::Ptr &pcl_out)
+-{  
++void Preprocess::process(
++  const livox_ros_driver2::msg::CustomMsg::SharedPtr msg, PointCloudXYZI::Ptr & pcl_out)
++{
+   avia_handler(msg);
+   *pcl_out = pl_surf;
+ }
+ 
+-void Preprocess::process(const sensor_msgs::msg::PointCloud2::SharedPtr msg, PointCloudXYZI::Ptr &pcl_out)
++void Preprocess::process(
++  const sensor_msgs::msg::PointCloud2::SharedPtr msg, PointCloudXYZI::Ptr & pcl_out)
+ {
+-  switch (time_unit)
+-  {
++  switch (time_unit) {
+     case SEC:
+       time_unit_scale = 1.e3f;
+       break;
+@@ -71,251 +69,260 @@ void Preprocess::process(const sensor_msgs::msg::PointCloud2::SharedPtr msg, Poi
+       break;
+   }
+ 
+-  switch (lidar_type)
+-  {
+-  case OUST64:
+-    oust64_handler(msg);
+-    break;
+-
+-  case VELO16:
+-    velodyne_handler(msg);
+-    break;
+-  
+-  case HESAIxt32:
+-    hesai_handler(msg);
+-    break;
+-  
+-  default:
+-    printf("Error LiDAR Type");
+-    break;
++  switch (lidar_type) {
++    case OUST64:
++      oust64_handler(msg);
++      break;
++
++    case VELO16:
++      velodyne_handler(msg);
++      break;
++
++    case HESAIxt32:
++      hesai_handler(msg);
++      break;
++
++    default:
++      printf("Error LiDAR Type");
++      break;
+   }
+   *pcl_out = pl_surf;
+ }
+ 
+-void Preprocess::process_cut_frame_livox(const livox_ros_driver2::msg::CustomMsg::SharedPtr msg,
+-                                         deque<PointCloudXYZI::Ptr> &pcl_out, deque<double> &time_lidar,
+-                                         const int required_frame_num, int scan_count) {
+-    int plsize = msg->point_num;
+-    pl_surf.clear();
+-    pl_surf.reserve(plsize);
+-    pl_full.clear();
+-    pl_full.resize(plsize);
+-    int valid_point_num = 0;
+-
+-    for (uint i = 1; i < plsize; i++) {
+-        if ((msg->points[i].line < N_SCANS) &&
+-        ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00))
+-        {
+-            valid_point_num++;
+-            if (valid_point_num % point_filter_num == 0) {
+-                pl_full[i].x = msg->points[i].x;
+-                pl_full[i].y = msg->points[i].y;
+-                pl_full[i].z = msg->points[i].z;
+-                pl_full[i].intensity = msg->points[i].reflectivity;
+-                //use curvature as time of each laser points，unit: ms
+-                pl_full[i].curvature = msg->points[i].offset_time / float(1000000);
+-
+-                double dist = pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z;
+-                if (dist < blind * blind || dist > det_range * det_range) continue;
+-
+-                if ((abs(pl_full[i].x - pl_full[i - 1].x) > 1e-7)
+-                    || (abs(pl_full[i].y - pl_full[i - 1].y) > 1e-7)
+-                    || (abs(pl_full[i].z - pl_full[i - 1].z) > 1e-7)) {
+-                    pl_surf.push_back(pl_full[i]);
+-                }
+-            }
++void Preprocess::process_cut_frame_livox(
++  const livox_ros_driver2::msg::CustomMsg::SharedPtr msg, deque<PointCloudXYZI::Ptr> & pcl_out,
++  deque<double> & time_lidar, const int required_frame_num, int scan_count)
++{
++  int plsize = msg->point_num;
++  pl_surf.clear();
++  pl_surf.reserve(plsize);
++  pl_full.clear();
++  pl_full.resize(plsize);
++  int valid_point_num = 0;
++
++  for (uint i = 1; i < plsize; i++) {
++    if (
++      (msg->points[i].line < N_SCANS) &&
++      ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00)) {
++      valid_point_num++;
++      if (valid_point_num % point_filter_num == 0) {
++        pl_full[i].x = msg->points[i].x;
++        pl_full[i].y = msg->points[i].y;
++        pl_full[i].z = msg->points[i].z;
++        pl_full[i].intensity = msg->points[i].reflectivity;
++        //use curvature as time of each laser points，unit: ms
++        pl_full[i].curvature = msg->points[i].offset_time / float(1000000);
++
++        double dist =
++          pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z;
++        if (dist < blind * blind || dist > det_range * det_range) continue;
++
++        if (
++          (abs(pl_full[i].x - pl_full[i - 1].x) > 1e-7) ||
++          (abs(pl_full[i].y - pl_full[i - 1].y) > 1e-7) ||
++          (abs(pl_full[i].z - pl_full[i - 1].z) > 1e-7)) {
++          pl_surf.push_back(pl_full[i]);
+         }
++      }
+     }
+-    sort(pl_surf.points.begin(), pl_surf.points.end(), time_list_cut_frame);
+-    //end time of last frame，单位ms
+-    double last_frame_end_time = rclcpp::Time(msg->header.stamp).seconds() * 1000;
+-    uint valid_num = 0;
+-    uint cut_num = 0;
+-    uint valid_pcl_size = pl_surf.points.size();
+-
+-    int required_cut_num = required_frame_num;
+-    if (scan_count < 5)
+-        required_cut_num = 1;
+-
+-    PointCloudXYZI pcl_cut;
+-    for (uint i = 1; i < valid_pcl_size; i++) {
+-        valid_num++;
+-        //Compute new opffset time of each point：ms
+-        pl_surf[i].curvature += rclcpp::Time(msg->header.stamp).seconds() * 1000 - last_frame_end_time;
+-        pcl_cut.push_back(pl_surf[i]);
+-        if (valid_num == (int((cut_num + 1) * valid_pcl_size / required_cut_num) - 1)) {
+-            cut_num++;
+-            time_lidar.push_back(last_frame_end_time);
+-            PointCloudXYZI::Ptr pcl_temp(new PointCloudXYZI()); //Initialize shared_ptr
+-            *pcl_temp = pcl_cut;
+-            pcl_out.push_back(pcl_temp);
+-            //Update frame head
+-            last_frame_end_time += pl_surf[i].curvature;
+-            pcl_cut.clear();
+-            pcl_cut.reserve(valid_pcl_size * 2 / required_frame_num);
+-        }
++  }
++  sort(pl_surf.points.begin(), pl_surf.points.end(), time_list_cut_frame);
++  //end time of last frame，单位ms
++  double last_frame_end_time = rclcpp::Time(msg->header.stamp).seconds() * 1000;
++  uint valid_num = 0;
++  uint cut_num = 0;
++  uint valid_pcl_size = pl_surf.points.size();
++
++  int required_cut_num = required_frame_num;
++  if (scan_count < 5) required_cut_num = 1;
++
++  PointCloudXYZI pcl_cut;
++  for (uint i = 1; i < valid_pcl_size; i++) {
++    valid_num++;
++    //Compute new opffset time of each point：ms
++    pl_surf[i].curvature += rclcpp::Time(msg->header.stamp).seconds() * 1000 - last_frame_end_time;
++    pcl_cut.push_back(pl_surf[i]);
++    if (valid_num == (int((cut_num + 1) * valid_pcl_size / required_cut_num) - 1)) {
++      cut_num++;
++      time_lidar.push_back(last_frame_end_time);
++      PointCloudXYZI::Ptr pcl_temp(new PointCloudXYZI());  //Initialize shared_ptr
++      *pcl_temp = pcl_cut;
++      pcl_out.push_back(pcl_temp);
++      //Update frame head
++      last_frame_end_time += pl_surf[i].curvature;
++      pcl_cut.clear();
++      pcl_cut.reserve(valid_pcl_size * 2 / required_frame_num);
+     }
++  }
+ }
+ #define MAX_LINE_NUM 128
+-void
+-Preprocess::process_cut_frame_pcl2(const sensor_msgs::msg::PointCloud2::SharedPtr msg, deque<PointCloudXYZI::Ptr> &pcl_out,
+-                                   deque<double> &time_lidar, const int required_frame_num, int scan_count) {
+-    pl_surf.clear();
+-    pl_corn.clear();
+-    pl_full.clear();
+-    if (lidar_type == VELO16) {
+-        pcl::PointCloud<velodyne_ros::Point> pl_orig;
+-        pcl::fromROSMsg(*msg, pl_orig);
+-        int plsize = pl_orig.points.size();
+-        pl_surf.reserve(plsize);
+-
+-        bool is_first[MAX_LINE_NUM];
+-        double yaw_fp[MAX_LINE_NUM] = {0};     // yaw of first scan point
+-        double omega_l = 3.61;       // scan angular velocity (deg/ms)
+-        float yaw_last[MAX_LINE_NUM] = {0.0};  // yaw of last scan point
+-        float time_last[MAX_LINE_NUM] = {0.0}; // last offset time
+-
+-        bool has_time_field = false;
+-        for (const auto &field : msg->fields) {
+-            if (field.name == "time") { has_time_field = true; break; }
+-        }
++void Preprocess::process_cut_frame_pcl2(
++  const sensor_msgs::msg::PointCloud2::SharedPtr msg, deque<PointCloudXYZI::Ptr> & pcl_out,
++  deque<double> & time_lidar, const int required_frame_num, int scan_count)
++{
++  pl_surf.clear();
++  pl_corn.clear();
++  pl_full.clear();
++  if (lidar_type == VELO16) {
++    pcl::PointCloud<velodyne_ros::Point> pl_orig;
++    pcl::fromROSMsg(*msg, pl_orig);
++    int plsize = pl_orig.points.size();
++    pl_surf.reserve(plsize);
+ 
+-        if (has_time_field && pl_orig.points[plsize - 1].time > 0) {
+-            given_offset_time = true;
+-        } else {
+-            cout << "Compute offset time using constant rotation model." << endl;
+-            given_offset_time = false;
+-            memset(is_first, true, sizeof(is_first));
+-        }
++    bool is_first[MAX_LINE_NUM];
++    double yaw_fp[MAX_LINE_NUM] = {0};      // yaw of first scan point
++    double omega_l = 3.61;                  // scan angular velocity (deg/ms)
++    float yaw_last[MAX_LINE_NUM] = {0.0};   // yaw of last scan point
++    float time_last[MAX_LINE_NUM] = {0.0};  // last offset time
+ 
+-        for (int i = 0; i < plsize; i++) {
+-            PointType added_pt;
+-            added_pt.normal_x = 0;
+-            added_pt.normal_y = 0;
+-            added_pt.normal_z = 0;
+-            added_pt.x = pl_orig.points[i].x;
+-            added_pt.y = pl_orig.points[i].y;
+-            added_pt.z = pl_orig.points[i].z;
+-            added_pt.intensity = pl_orig.points[i].intensity;
+-            added_pt.curvature = pl_orig.points[i].time * 1000.0;  //ms
+-
+-            double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
+-            if ( dist < blind * blind || dist > det_range * det_range || isnan(added_pt.x) || isnan(added_pt.y) || isnan(added_pt.z))
+-                continue;
+-
+-            if (!given_offset_time) {
+-                int layer = pl_orig.points[i].ring;
+-                double yaw_angle = atan2(added_pt.y, added_pt.x) * 57.2957;
+-
+-                if (is_first[layer]) {
+-                    yaw_fp[layer] = yaw_angle;
+-                    is_first[layer] = false;
+-                    added_pt.curvature = 0.0;
+-                    yaw_last[layer] = yaw_angle;
+-                    time_last[layer] = added_pt.curvature;
+-                    continue;
+-                }
+-                // compute offset time
+-                if (yaw_angle <= yaw_fp[layer]) {
+-                    added_pt.curvature = (yaw_fp[layer] - yaw_angle) / omega_l;
+-                } else {
+-                    added_pt.curvature = (yaw_fp[layer] - yaw_angle + 360.0) / omega_l;
+-                }
+-                if (added_pt.curvature < time_last[layer]) added_pt.curvature += 360.0 / omega_l;
+-
+-                yaw_last[layer] = yaw_angle;
+-                time_last[layer] = added_pt.curvature;
+-            }
+-
+-
+-            if (i % point_filter_num == 0 && pl_orig.points[i].ring < N_SCANS) {
+-                pl_surf.points.push_back(added_pt);
+-            }
+-        }
+-    } else if (lidar_type == OUST64) {
+-        pcl::PointCloud<ouster_ros::Point> pl_orig;
+-        pcl::fromROSMsg(*msg, pl_orig);
+-        int plsize = pl_orig.points.size();
+-        pl_surf.reserve(plsize);
+-        for (int i = 0; i < plsize; i++) {
+-            PointType added_pt;
+-            added_pt.normal_x = 0;
+-            added_pt.normal_y = 0;
+-            added_pt.normal_z = 0;
+-            added_pt.x = pl_orig.points[i].x;
+-            added_pt.y = pl_orig.points[i].y;
+-            added_pt.z = pl_orig.points[i].z;
+-            added_pt.intensity = pl_orig.points[i].intensity;
+-            added_pt.curvature = pl_orig.points[i].t / 1e6;  //ns to ms
+-
+-            double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
+-            if ( dist < blind * blind || dist > det_range * det_range || isnan(added_pt.x) || isnan(added_pt.y) || isnan(added_pt.z))
+-                continue;
+-
+-            if (i % point_filter_num == 0 && pl_orig.points[i].ring < N_SCANS) {
+-                pl_surf.points.push_back(added_pt);
+-            }
++    bool has_time_field = false;
++    for (const auto & field : msg->fields) {
++      if (field.name == "time") {
++        has_time_field = true;
++        break;
++      }
++    }
++
++    if (has_time_field && pl_orig.points[plsize - 1].time > 0) {
++      given_offset_time = true;
++    } else {
++      cout << "Compute offset time using constant rotation model." << endl;
++      given_offset_time = false;
++      memset(is_first, true, sizeof(is_first));
++    }
++
++    for (int i = 0; i < plsize; i++) {
++      PointType added_pt;
++      added_pt.normal_x = 0;
++      added_pt.normal_y = 0;
++      added_pt.normal_z = 0;
++      added_pt.x = pl_orig.points[i].x;
++      added_pt.y = pl_orig.points[i].y;
++      added_pt.z = pl_orig.points[i].z;
++      added_pt.intensity = pl_orig.points[i].intensity;
++      added_pt.curvature = pl_orig.points[i].time * 1000.0;  //ms
++
++      double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
++      if (
++        dist < blind * blind || dist > det_range * det_range || isnan(added_pt.x) ||
++        isnan(added_pt.y) || isnan(added_pt.z))
++        continue;
++
++      if (!given_offset_time) {
++        int layer = pl_orig.points[i].ring;
++        double yaw_angle = atan2(added_pt.y, added_pt.x) * 57.2957;
++
++        if (is_first[layer]) {
++          yaw_fp[layer] = yaw_angle;
++          is_first[layer] = false;
++          added_pt.curvature = 0.0;
++          yaw_last[layer] = yaw_angle;
++          time_last[layer] = added_pt.curvature;
++          continue;
+         }
+-    } else if(lidar_type == HESAIxt32) {
+-        pcl::PointCloud<hesai_ros::Point> pl_orig;
+-        pcl::fromROSMsg(*msg, pl_orig);
+-        int plsize = pl_orig.points.size();
+-        pl_surf.reserve(plsize);
+-        for (int i = 0; i < plsize; i++) {
+-            PointType added_pt;
+-            added_pt.normal_x = 0;
+-            added_pt.normal_y = 0;
+-            added_pt.normal_z = 0;
+-            added_pt.x = pl_orig.points[i].x;
+-            added_pt.y = pl_orig.points[i].y;
+-            added_pt.z = pl_orig.points[i].z;
+-            added_pt.intensity = pl_orig.points[i].intensity;
+-            added_pt.curvature = (pl_orig.points[i].timestamp - rclcpp::Time(msg->header.stamp).seconds()) * 1000;  //s to ms
+-
+-            double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
+-            if ( dist < blind * blind || dist > det_range * det_range || isnan(added_pt.x) || isnan(added_pt.y) || isnan(added_pt.z))
+-                continue;
+-
+-            if (i % point_filter_num == 0 && pl_orig.points[i].ring < N_SCANS) {
+-                pl_surf.points.push_back(added_pt);
+-            }
++        // compute offset time
++        if (yaw_angle <= yaw_fp[layer]) {
++          added_pt.curvature = (yaw_fp[layer] - yaw_angle) / omega_l;
++        } else {
++          added_pt.curvature = (yaw_fp[layer] - yaw_angle + 360.0) / omega_l;
+         }
+-    }else{
+-        cout << "Wrong LiDAR Type!!!" << endl;
+-        return;
++        if (added_pt.curvature < time_last[layer]) added_pt.curvature += 360.0 / omega_l;
++
++        yaw_last[layer] = yaw_angle;
++        time_last[layer] = added_pt.curvature;
++      }
++
++      if (i % point_filter_num == 0 && pl_orig.points[i].ring < N_SCANS) {
++        pl_surf.points.push_back(added_pt);
++      }
+     }
++  } else if (lidar_type == OUST64) {
++    pcl::PointCloud<ouster_ros::Point> pl_orig;
++    pcl::fromROSMsg(*msg, pl_orig);
++    int plsize = pl_orig.points.size();
++    pl_surf.reserve(plsize);
++    for (int i = 0; i < plsize; i++) {
++      PointType added_pt;
++      added_pt.normal_x = 0;
++      added_pt.normal_y = 0;
++      added_pt.normal_z = 0;
++      added_pt.x = pl_orig.points[i].x;
++      added_pt.y = pl_orig.points[i].y;
++      added_pt.z = pl_orig.points[i].z;
++      added_pt.intensity = pl_orig.points[i].intensity;
++      added_pt.curvature = pl_orig.points[i].t / 1e6;  //ns to ms
+ 
+-    sort(pl_surf.points.begin(), pl_surf.points.end(), time_list_cut_frame);
++      double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
++      if (
++        dist < blind * blind || dist > det_range * det_range || isnan(added_pt.x) ||
++        isnan(added_pt.y) || isnan(added_pt.z))
++        continue;
+ 
+-    //ms
+-    double last_frame_end_time = rclcpp::Time(msg->header.stamp).seconds() * 1000;
+-    uint valid_num = 0;
+-    uint cut_num = 0;
+-    uint valid_pcl_size = pl_surf.points.size();
++      if (i % point_filter_num == 0 && pl_orig.points[i].ring < N_SCANS) {
++        pl_surf.points.push_back(added_pt);
++      }
++    }
++  } else if (lidar_type == HESAIxt32) {
++    pcl::PointCloud<hesai_ros::Point> pl_orig;
++    pcl::fromROSMsg(*msg, pl_orig);
++    int plsize = pl_orig.points.size();
++    pl_surf.reserve(plsize);
++    for (int i = 0; i < plsize; i++) {
++      PointType added_pt;
++      added_pt.normal_x = 0;
++      added_pt.normal_y = 0;
++      added_pt.normal_z = 0;
++      added_pt.x = pl_orig.points[i].x;
++      added_pt.y = pl_orig.points[i].y;
++      added_pt.z = pl_orig.points[i].z;
++      added_pt.intensity = pl_orig.points[i].intensity;
++      added_pt.curvature =
++        (pl_orig.points[i].timestamp - rclcpp::Time(msg->header.stamp).seconds()) * 1000;  //s to ms
+ 
+-    int required_cut_num = required_frame_num;
++      double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
++      if (
++        dist < blind * blind || dist > det_range * det_range || isnan(added_pt.x) ||
++        isnan(added_pt.y) || isnan(added_pt.z))
++        continue;
+ 
+-    if (scan_count < 20)
+-        required_cut_num = 1;
++      if (i % point_filter_num == 0 && pl_orig.points[i].ring < N_SCANS) {
++        pl_surf.points.push_back(added_pt);
++      }
++    }
++  } else {
++    cout << "Wrong LiDAR Type!!!" << endl;
++    return;
++  }
+ 
++  sort(pl_surf.points.begin(), pl_surf.points.end(), time_list_cut_frame);
+ 
+-    PointCloudXYZI pcl_cut;
+-    for (uint i = 1; i < valid_pcl_size; i++) {
+-        valid_num++;
+-        pl_surf[i].curvature += rclcpp::Time(msg->header.stamp).seconds() * 1000 - last_frame_end_time;
+-        pcl_cut.push_back(pl_surf[i]);
++  //ms
++  double last_frame_end_time = rclcpp::Time(msg->header.stamp).seconds() * 1000;
++  uint valid_num = 0;
++  uint cut_num = 0;
++  uint valid_pcl_size = pl_surf.points.size();
+ 
+-        if (valid_num == (int((cut_num + 1) * valid_pcl_size / required_cut_num) - 1)) {
+-            cut_num++;
+-            time_lidar.push_back(last_frame_end_time);
+-            PointCloudXYZI::Ptr pcl_temp(new PointCloudXYZI());
+-            *pcl_temp = pcl_cut;
+-            pcl_out.push_back(pcl_temp);
+-            last_frame_end_time += pl_surf[i].curvature;
+-            pcl_cut.clear();
+-            pcl_cut.reserve(valid_pcl_size * 2 / required_frame_num);
+-        }
++  int required_cut_num = required_frame_num;
++
++  if (scan_count < 20) required_cut_num = 1;
++
++  PointCloudXYZI pcl_cut;
++  for (uint i = 1; i < valid_pcl_size; i++) {
++    valid_num++;
++    pl_surf[i].curvature += rclcpp::Time(msg->header.stamp).seconds() * 1000 - last_frame_end_time;
++    pcl_cut.push_back(pl_surf[i]);
++
++    if (valid_num == (int((cut_num + 1) * valid_pcl_size / required_cut_num) - 1)) {
++      cut_num++;
++      time_lidar.push_back(last_frame_end_time);
++      PointCloudXYZI::Ptr pcl_temp(new PointCloudXYZI());
++      *pcl_temp = pcl_cut;
++      pcl_out.push_back(pcl_temp);
++      last_frame_end_time += pl_surf[i].curvature;
++      pcl_cut.clear();
++      pcl_cut.reserve(valid_pcl_size * 2 / required_frame_num);
+     }
++  }
+ }
+ 
+ void Preprocess::avia_handler(const livox_ros_driver2::msg::CustomMsg::SharedPtr msg)
+@@ -330,38 +337,36 @@ void Preprocess::avia_handler(const livox_ros_driver2::msg::CustomMsg::SharedPtr
+   pl_surf.reserve(plsize);
+   pl_full.resize(plsize);
+ 
+-  for(int i=0; i<N_SCANS; i++)
+-  {
++  for (int i = 0; i < N_SCANS; i++) {
+     pl_buff[i].clear();
+     pl_buff[i].reserve(plsize);
+   }
+   uint valid_num = 0;
+-  
+-  
+-  for(uint i=1; i<plsize; i++)
+-  {
+-    if((msg->points[i].line < N_SCANS) && ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00))
+-    {
+-      valid_num ++;
+-      if (valid_num % point_filter_num == 0)
+-      {
++
++  for (uint i = 1; i < plsize; i++) {
++    if (
++      (msg->points[i].line < N_SCANS) &&
++      ((msg->points[i].tag & 0x30) == 0x10 || (msg->points[i].tag & 0x30) == 0x00)) {
++      valid_num++;
++      if (valid_num % point_filter_num == 0) {
+         pl_full[i].x = msg->points[i].x;
+         pl_full[i].y = msg->points[i].y;
+         pl_full[i].z = msg->points[i].z;
+-        pl_full[i].intensity = msg->points[i].reflectivity; // z; //
+-        pl_full[i].curvature = msg->points[i].offset_time / float(1000000); // use curvature as time of each laser points, curvature unit: ms
+-        double dist = pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z;
++        pl_full[i].intensity = msg->points[i].reflectivity;  // z; //
++        pl_full[i].curvature =
++          msg->points[i].offset_time /
++          float(1000000);  // use curvature as time of each laser points, curvature unit: ms
++        double dist =
++          pl_full[i].x * pl_full[i].x + pl_full[i].y * pl_full[i].y + pl_full[i].z * pl_full[i].z;
+         if (dist < blind * blind || dist > det_range * det_range) continue;
+-        if(((abs(pl_full[i].x - pl_full[i-1].x) > 1e-7) 
+-            || (abs(pl_full[i].y - pl_full[i-1].y) > 1e-7)
+-            || (abs(pl_full[i].z - pl_full[i-1].z) > 1e-7)))
+-        {
++        if (((abs(pl_full[i].x - pl_full[i - 1].x) > 1e-7) ||
++             (abs(pl_full[i].y - pl_full[i - 1].y) > 1e-7) ||
++             (abs(pl_full[i].z - pl_full[i - 1].z) > 1e-7))) {
+           pl_surf.push_back(pl_full[i]);
+         }
+       }
+     }
+   }
+-
+ }
+ 
+ void Preprocess::oust64_handler(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
+@@ -374,19 +379,22 @@ void Preprocess::oust64_handler(const sensor_msgs::msg::PointCloud2::SharedPtr m
+   int plsize = pl_orig.size();
+   pl_corn.reserve(plsize);
+   pl_surf.reserve(plsize);
+-  
+-  
++
+   double time_stamp = rclcpp::Time(msg->header.stamp).seconds();
+   // cout << "===================================" << endl;
+   // printf("Pt size = %d, N_SCANS = %d\r\n", plsize, N_SCANS);
+-  for (int i = 0; i < pl_orig.points.size(); i++)
+-  {
++  for (int i = 0; i < pl_orig.points.size(); i++) {
+     if (i % point_filter_num != 0) continue;
+ 
+-    double range = pl_orig.points[i].x * pl_orig.points[i].x + pl_orig.points[i].y * pl_orig.points[i].y + pl_orig.points[i].z * pl_orig.points[i].z;
+-    
+-    if (range < (blind * blind) || range > det_range * det_range || isnan(pl_orig.points[i].x) || isnan(pl_orig.points[i].y) || isnan(pl_orig.points[i].z)) continue;
+-    
++    double range = pl_orig.points[i].x * pl_orig.points[i].x +
++                   pl_orig.points[i].y * pl_orig.points[i].y +
++                   pl_orig.points[i].z * pl_orig.points[i].z;
++
++    if (
++      range < (blind * blind) || range > det_range * det_range || isnan(pl_orig.points[i].x) ||
++      isnan(pl_orig.points[i].y) || isnan(pl_orig.points[i].z))
++      continue;
++
+     Eigen::Vector3d pt_vec;
+     PointType added_pt;
+     added_pt.x = pl_orig.points[i].x;
+@@ -396,226 +404,208 @@ void Preprocess::oust64_handler(const sensor_msgs::msg::PointCloud2::SharedPtr m
+     added_pt.normal_x = 0;
+     added_pt.normal_y = 0;
+     added_pt.normal_z = 0;
+-    added_pt.curvature = pl_orig.points[i].t * time_unit_scale; // curvature unit: ms
++    added_pt.curvature = pl_orig.points[i].t * time_unit_scale;  // curvature unit: ms
+ 
+     pl_surf.points.push_back(added_pt);
+   }
+-  
+-
+-
+ }
+ 
+ void Preprocess::velodyne_handler(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
+ {
+-    pl_surf.clear();
+-    pl_corn.clear();
+-    pl_full.clear();
+-
+-    pcl::PointCloud<velodyne_ros::Point> pl_orig;
+-    pcl::fromROSMsg(*msg, pl_orig);
+-    int plsize = pl_orig.points.size();
+-    if (plsize == 0) return;
+-    pl_surf.reserve(plsize);
+-    
+-    /*** These variables only works when no point timestamps given ***/
+-    double omega_l = 0.361 * SCAN_RATE;       // scan angular velocity
+-    std::vector<bool> is_first(N_SCANS,true);
+-    std::vector<double> yaw_fp(N_SCANS, 0.0);      // yaw of first scan point
+-    std::vector<float> yaw_last(N_SCANS, 0.0);   // yaw of last scan point
+-    std::vector<float> time_last(N_SCANS, 0.0);  // last offset time
+-    /*****************************************************************/
++  pl_surf.clear();
++  pl_corn.clear();
++  pl_full.clear();
+ 
+-    bool has_time_field = false;
+-    for (const auto &field : msg->fields) {
+-      if (field.name == "time") { has_time_field = true; break; }
+-    }
++  pcl::PointCloud<velodyne_ros::Point> pl_orig;
++  pcl::fromROSMsg(*msg, pl_orig);
++  int plsize = pl_orig.points.size();
++  if (plsize == 0) return;
++  pl_surf.reserve(plsize);
+ 
+-    if (has_time_field && pl_orig.points[plsize - 1].time > 0)
+-    {
+-      given_offset_time = true;
+-    }
+-    else
+-    {
+-      given_offset_time = false;
++  /*** These variables only works when no point timestamps given ***/
++  double omega_l = 0.361 * SCAN_RATE;  // scan angular velocity
++  std::vector<bool> is_first(N_SCANS, true);
++  std::vector<double> yaw_fp(N_SCANS, 0.0);    // yaw of first scan point
++  std::vector<float> yaw_last(N_SCANS, 0.0);   // yaw of last scan point
++  std::vector<float> time_last(N_SCANS, 0.0);  // last offset time
++  /*****************************************************************/
++
++  bool has_time_field = false;
++  for (const auto & field : msg->fields) {
++    if (field.name == "time") {
++      has_time_field = true;
++      break;
+     }
++  }
+ 
+-    for (int i = 0; i < plsize; i++)
+-    {
+-      PointType added_pt;
+-      // cout<<"!!!!!!"<<i<<" "<<plsize<<endl;
+-      
+-      added_pt.normal_x = 0;
+-      added_pt.normal_y = 0;
+-      added_pt.normal_z = 0;
+-      added_pt.x = pl_orig.points[i].x;
+-      added_pt.y = pl_orig.points[i].y;
+-      added_pt.z = pl_orig.points[i].z;
+-      added_pt.intensity = pl_orig.points[i].intensity;
+-      added_pt.curvature = pl_orig.points[i].time * time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
+-      if (i % point_filter_num != 0 || std::isnan(added_pt.x) || std::isnan(added_pt.y) || std::isnan(added_pt.z)) continue;
+-
+-      if (!given_offset_time)
+-      {
+-        // int unit_size = plsize / 16;
+-        // int layer = i / unit_size; // pl_orig.points[i].ring;
+-        // cout << "check layer:" << unit_size << ";" << i << ";" << layer << endl;
+-        int layer = 0;
+-        double yaw_angle = atan2(added_pt.y, added_pt.x) * 57.2957;
++  if (has_time_field && pl_orig.points[plsize - 1].time > 0) {
++    given_offset_time = true;
++  } else {
++    given_offset_time = false;
++  }
+ 
+-        if (is_first[layer])
+-        {
+-          // printf("layer: %d; is first: %d", layer, is_first[layer]);
+-            yaw_fp[layer]=yaw_angle;
+-            is_first[layer]=false;
+-            added_pt.curvature = 0.0;
+-            yaw_last[layer]=yaw_angle;
+-            time_last[layer]=added_pt.curvature;
+-            continue;
+-        }
++  for (int i = 0; i < plsize; i++) {
++    PointType added_pt;
++    // cout<<"!!!!!!"<<i<<" "<<plsize<<endl;
+ 
+-        // compute offset time
+-        if (yaw_angle < yaw_fp[layer])
+-        {
+-          added_pt.curvature = (yaw_fp[layer]-yaw_angle) / omega_l;
+-          // added_pt.curvature = (yaw_angle + 360.0 - yaw_fp[layer]) / omega_l;
+-        }
+-        else
+-        {
+-          added_pt.curvature = (yaw_fp[layer]-yaw_angle+360.0) / omega_l;
+-          // added_pt.curvature = (yaw_angle-yaw_fp[layer]) / omega_l;
+-        }
++    added_pt.normal_x = 0;
++    added_pt.normal_y = 0;
++    added_pt.normal_z = 0;
++    added_pt.x = pl_orig.points[i].x;
++    added_pt.y = pl_orig.points[i].y;
++    added_pt.z = pl_orig.points[i].z;
++    added_pt.intensity = pl_orig.points[i].intensity;
++    added_pt.curvature = pl_orig.points[i].time *
++                         time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
++    if (
++      i % point_filter_num != 0 || std::isnan(added_pt.x) || std::isnan(added_pt.y) ||
++      std::isnan(added_pt.z))
++      continue;
+ 
+-        // if (added_pt.curvature < time_last[layer])  added_pt.curvature+=360.0/omega_l;
++    if (!given_offset_time) {
++      // int unit_size = plsize / 16;
++      // int layer = i / unit_size; // pl_orig.points[i].ring;
++      // cout << "check layer:" << unit_size << ";" << i << ";" << layer << endl;
++      int layer = 0;
++      double yaw_angle = atan2(added_pt.y, added_pt.x) * 57.2957;
++
++      if (is_first[layer]) {
++        // printf("layer: %d; is first: %d", layer, is_first[layer]);
++        yaw_fp[layer] = yaw_angle;
++        is_first[layer] = false;
++        added_pt.curvature = 0.0;
++        yaw_last[layer] = yaw_angle;
++        time_last[layer] = added_pt.curvature;
++        continue;
++      }
+ 
+-        // yaw_last[layer] = yaw_angle;
+-        // time_last[layer]=added_pt.curvature;
++      // compute offset time
++      if (yaw_angle < yaw_fp[layer]) {
++        added_pt.curvature = (yaw_fp[layer] - yaw_angle) / omega_l;
++        // added_pt.curvature = (yaw_angle + 360.0 - yaw_fp[layer]) / omega_l;
++      } else {
++        added_pt.curvature = (yaw_fp[layer] - yaw_angle + 360.0) / omega_l;
++        // added_pt.curvature = (yaw_angle-yaw_fp[layer]) / omega_l;
+       }
+ 
+-      // if (i % point_filter_num == 0 && !std::isnan(added_pt.x) && !std::isnan(added_pt.y) && !std::isnan(added_pt.z))
+-      double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
+-      {
+-        if(dist > (blind * blind)
+-        && dist < (det_range * det_range))
+-        {
+-          pl_surf.points.push_back(added_pt);
+-        }
++      // if (added_pt.curvature < time_last[layer])  added_pt.curvature+=360.0/omega_l;
++
++      // yaw_last[layer] = yaw_angle;
++      // time_last[layer]=added_pt.curvature;
++    }
++
++    // if (i % point_filter_num == 0 && !std::isnan(added_pt.x) && !std::isnan(added_pt.y) && !std::isnan(added_pt.z))
++    double dist = added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z;
++    {
++      if (dist > (blind * blind) && dist < (det_range * det_range)) {
++        pl_surf.points.push_back(added_pt);
+       }
+     }
+-    
++  }
+ }
+ 
+ void Preprocess::hesai_handler(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
+ {
+-    pl_surf.clear();
+-    pl_corn.clear();
+-    pl_full.clear();
++  pl_surf.clear();
++  pl_corn.clear();
++  pl_full.clear();
+ 
+-    pcl::PointCloud<hesai_ros::Point> pl_orig;
+-    pcl::fromROSMsg(*msg, pl_orig);
+-    int plsize = pl_orig.points.size();
+-    if (plsize == 0) return;
+-    pl_surf.reserve(plsize);
+-    
+-    /*** These variables only works when no point timestamps given ***/
+-    double omega_l = 0.361 * SCAN_RATE;       // scan angular velocity
+-    std::vector<bool> is_first(N_SCANS,true);
+-    std::vector<double> yaw_fp(N_SCANS, 0.0);      // yaw of first scan point
+-    std::vector<float> yaw_last(N_SCANS, 0.0);   // yaw of last scan point
+-    std::vector<float> time_last(N_SCANS, 0.0);  // last offset time
+-    /*****************************************************************/
+-
+-    if (pl_orig.points[plsize - 1].timestamp > 0)
+-    {
+-      given_offset_time = true;
+-    }
+-    else
+-    {
+-      given_offset_time = false;
+-      double yaw_first = atan2(pl_orig.points[0].y, pl_orig.points[0].x) * 57.29578;
+-      double yaw_end  = yaw_first;
+-      int layer_first = pl_orig.points[0].ring;
+-      for (uint i = plsize - 1; i > 0; i--)
+-      {
+-        if (pl_orig.points[i].ring == layer_first)
+-        {
+-          yaw_end = atan2(pl_orig.points[i].y, pl_orig.points[i].x) * 57.29578;
+-          break;
+-        }
++  pcl::PointCloud<hesai_ros::Point> pl_orig;
++  pcl::fromROSMsg(*msg, pl_orig);
++  int plsize = pl_orig.points.size();
++  if (plsize == 0) return;
++  pl_surf.reserve(plsize);
++
++  /*** These variables only works when no point timestamps given ***/
++  double omega_l = 0.361 * SCAN_RATE;  // scan angular velocity
++  std::vector<bool> is_first(N_SCANS, true);
++  std::vector<double> yaw_fp(N_SCANS, 0.0);    // yaw of first scan point
++  std::vector<float> yaw_last(N_SCANS, 0.0);   // yaw of last scan point
++  std::vector<float> time_last(N_SCANS, 0.0);  // last offset time
++  /*****************************************************************/
++
++  if (pl_orig.points[plsize - 1].timestamp > 0) {
++    given_offset_time = true;
++  } else {
++    given_offset_time = false;
++    double yaw_first = atan2(pl_orig.points[0].y, pl_orig.points[0].x) * 57.29578;
++    double yaw_end = yaw_first;
++    int layer_first = pl_orig.points[0].ring;
++    for (uint i = plsize - 1; i > 0; i--) {
++      if (pl_orig.points[i].ring == layer_first) {
++        yaw_end = atan2(pl_orig.points[i].y, pl_orig.points[i].x) * 57.29578;
++        break;
+       }
+     }
++  }
+ 
+-    double time_head = pl_orig.points[0].timestamp;
+-    
+-    for (int i = 0; i < plsize; i++)
+-    {
+-      PointType added_pt;
+-      // cout<<"!!!!!!"<<i<<" "<<plsize<<endl;
+-      
+-      added_pt.normal_x = 0;
+-      added_pt.normal_y = 0;
+-      added_pt.normal_z = 0;
+-      added_pt.x = pl_orig.points[i].x;
+-      added_pt.y = pl_orig.points[i].y;
+-      added_pt.z = pl_orig.points[i].z;
+-      added_pt.intensity = pl_orig.points[i].intensity;
+-      added_pt.curvature = (pl_orig.points[i].timestamp - time_head) * time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
+-      if (!given_offset_time)
+-      {
+-        int layer = pl_orig.points[i].ring;
+-        double yaw_angle = atan2(added_pt.y, added_pt.x) * 57.2957;
+-
+-        if (is_first[layer])
+-        {
+-          // printf("layer: %d; is first: %d", layer, is_first[layer]);
+-            yaw_fp[layer]=yaw_angle;
+-            is_first[layer]=false;
+-            added_pt.curvature = 0.0;
+-            yaw_last[layer]=yaw_angle;
+-            time_last[layer]=added_pt.curvature;
+-            continue;
+-        }
+-
+-        // compute offset time
+-        if (yaw_angle <= yaw_fp[layer])
+-        {
+-          added_pt.curvature = (yaw_fp[layer]-yaw_angle) / omega_l;
+-        }
+-        else
+-        {
+-          added_pt.curvature = (yaw_fp[layer]-yaw_angle+360.0) / omega_l;
+-        }
++  double time_head = pl_orig.points[0].timestamp;
+ 
+-        if (added_pt.curvature < time_last[layer])  added_pt.curvature+=360.0/omega_l;
++  for (int i = 0; i < plsize; i++) {
++    PointType added_pt;
++    // cout<<"!!!!!!"<<i<<" "<<plsize<<endl;
+ 
++    added_pt.normal_x = 0;
++    added_pt.normal_y = 0;
++    added_pt.normal_z = 0;
++    added_pt.x = pl_orig.points[i].x;
++    added_pt.y = pl_orig.points[i].y;
++    added_pt.z = pl_orig.points[i].z;
++    added_pt.intensity = pl_orig.points[i].intensity;
++    added_pt.curvature = (pl_orig.points[i].timestamp - time_head) *
++                         time_unit_scale;  // curvature unit: ms // cout<<added_pt.curvature<<endl;
++    if (!given_offset_time) {
++      int layer = pl_orig.points[i].ring;
++      double yaw_angle = atan2(added_pt.y, added_pt.x) * 57.2957;
++
++      if (is_first[layer]) {
++        // printf("layer: %d; is first: %d", layer, is_first[layer]);
++        yaw_fp[layer] = yaw_angle;
++        is_first[layer] = false;
++        added_pt.curvature = 0.0;
+         yaw_last[layer] = yaw_angle;
+-        time_last[layer]=added_pt.curvature;
++        time_last[layer] = added_pt.curvature;
++        continue;
+       }
+ 
+-      if (i % point_filter_num == 0 && !std::isnan(added_pt.x) && !std::isnan(added_pt.y) && !std::isnan(added_pt.z))
+-      {
+-        if(added_pt.x*added_pt.x+added_pt.y*added_pt.y+added_pt.z*added_pt.z > (blind * blind)
+-        &&added_pt.x*added_pt.x+added_pt.y*added_pt.y+added_pt.z*added_pt.z < (det_range * det_range))
+-        {
+-          pl_surf.points.push_back(added_pt);
+-        }
++      // compute offset time
++      if (yaw_angle <= yaw_fp[layer]) {
++        added_pt.curvature = (yaw_fp[layer] - yaw_angle) / omega_l;
++      } else {
++        added_pt.curvature = (yaw_fp[layer] - yaw_angle + 360.0) / omega_l;
++      }
++
++      if (added_pt.curvature < time_last[layer]) added_pt.curvature += 360.0 / omega_l;
++
++      yaw_last[layer] = yaw_angle;
++      time_last[layer] = added_pt.curvature;
++    }
++
++    if (
++      i % point_filter_num == 0 && !std::isnan(added_pt.x) && !std::isnan(added_pt.y) &&
++      !std::isnan(added_pt.z)) {
++      if (
++        added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z >
++          (blind * blind) &&
++        added_pt.x * added_pt.x + added_pt.y * added_pt.y + added_pt.z * added_pt.z <
++          (det_range * det_range)) {
++        pl_surf.points.push_back(added_pt);
+       }
+     }
+-    
++  }
+ }
+ 
+-void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &types)
++void Preprocess::give_feature(pcl::PointCloud<PointType> & pl, vector<orgtype> & types)
+ {
+   int plsize = pl.size();
+   int plsize2;
+-  if(plsize == 0)
+-  {
++  if (plsize == 0) {
+     printf("something wrong\n");
+     return;
+   }
+   uint head = 0;
+ 
+-  while(types[head].range < blind)
+-  {
++  while (types[head].range < blind) {
+     head++;
+   }
+ 
+@@ -626,53 +616,42 @@ void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &t
+   Eigen::Vector3d last_direct(Eigen::Vector3d::Zero());
+ 
+   uint i_nex = 0, i2;
+-  uint last_i = 0; uint last_i_nex = 0;
++  uint last_i = 0;
++  uint last_i_nex = 0;
+   int last_state = 0;
+   int plane_type;
+ 
+-  for(uint i=head; i<plsize2; i++)
+-  {
+-    if(types[i].range < blind)
+-    {
++  for (uint i = head; i < plsize2; i++) {
++    if (types[i].range < blind) {
+       continue;
+     }
+ 
+     i2 = i;
+ 
+     plane_type = plane_judge(pl, types, i, i_nex, curr_direct);
+-    
+-    if(plane_type == 1)
+-    {
+-      for(uint j=i; j<=i_nex; j++)
+-      { 
+-        if(j!=i && j!=i_nex)
+-        {
++
++    if (plane_type == 1) {
++      for (uint j = i; j <= i_nex; j++) {
++        if (j != i && j != i_nex) {
+           types[j].ftype = Real_Plane;
+-        }
+-        else
+-        {
++        } else {
+           types[j].ftype = Poss_Plane;
+         }
+       }
+-      
++
+       // if(last_state==1 && fabs(last_direct.sum())>0.5)
+-      if(last_state==1 && last_direct.norm()>0.1)
+-      {
++      if (last_state == 1 && last_direct.norm() > 0.1) {
+         double mod = last_direct.transpose() * curr_direct;
+-        if(mod>-0.707 && mod<0.707)
+-        {
++        if (mod > -0.707 && mod < 0.707) {
+           types[i].ftype = Edge_Plane;
+-        }
+-        else
+-        {
++        } else {
+           types[i].ftype = Real_Plane;
+         }
+       }
+-      
++
+       i = i_nex - 1;
+       last_state = 1;
+-    }
+-    else // if(plane_type == 2)
++    } else  // if(plane_type == 2)
+     {
+       i = i_nex;
+       last_state = 0;
+@@ -684,135 +663,101 @@ void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &t
+   }
+ 
+   plsize2 = plsize > 3 ? plsize - 3 : 0;
+-  for(uint i=head+3; i<plsize2; i++)
+-  {
+-    if(types[i].range<blind || types[i].ftype>=Real_Plane)
+-    {
++  for (uint i = head + 3; i < plsize2; i++) {
++    if (types[i].range < blind || types[i].ftype >= Real_Plane) {
+       continue;
+     }
+ 
+-    if(types[i-1].dista<1e-16 || types[i].dista<1e-16)
+-    {
++    if (types[i - 1].dista < 1e-16 || types[i].dista < 1e-16) {
+       continue;
+     }
+ 
+     Eigen::Vector3d vec_a(pl[i].x, pl[i].y, pl[i].z);
+     Eigen::Vector3d vecs[2];
+ 
+-    for(int j=0; j<2; j++)
+-    {
++    for (int j = 0; j < 2; j++) {
+       int m = -1;
+-      if(j == 1)
+-      {
++      if (j == 1) {
+         m = 1;
+       }
+ 
+-      if(types[i+m].range < blind)
+-      {
+-        if(types[i].range > inf_bound)
+-        {
++      if (types[i + m].range < blind) {
++        if (types[i].range > inf_bound) {
+           types[i].edj[j] = Nr_inf;
+-        }
+-        else
+-        {
++        } else {
+           types[i].edj[j] = Nr_blind;
+         }
+         continue;
+       }
+ 
+-      vecs[j] = Eigen::Vector3d(pl[i+m].x, pl[i+m].y, pl[i+m].z);
++      vecs[j] = Eigen::Vector3d(pl[i + m].x, pl[i + m].y, pl[i + m].z);
+       vecs[j] = vecs[j] - vec_a;
+-      
++
+       types[i].angle[j] = vec_a.dot(vecs[j]) / vec_a.norm() / vecs[j].norm();
+-      if(types[i].angle[j] < jump_up_limit)
+-      {
++      if (types[i].angle[j] < jump_up_limit) {
+         types[i].edj[j] = Nr_180;
+-      }
+-      else if(types[i].angle[j] > jump_down_limit)
+-      {
++      } else if (types[i].angle[j] > jump_down_limit) {
+         types[i].edj[j] = Nr_zero;
+       }
+     }
+ 
+     types[i].intersect = vecs[Prev].dot(vecs[Next]) / vecs[Prev].norm() / vecs[Next].norm();
+-    if(types[i].edj[Prev]==Nr_nor && types[i].edj[Next]==Nr_zero && types[i].dista>0.0225 && types[i].dista>4*types[i-1].dista)
+-    {
+-      if(types[i].intersect > cos160)
+-      {
+-        if(edge_jump_judge(pl, types, i, Prev))
+-        {
++    if (
++      types[i].edj[Prev] == Nr_nor && types[i].edj[Next] == Nr_zero && types[i].dista > 0.0225 &&
++      types[i].dista > 4 * types[i - 1].dista) {
++      if (types[i].intersect > cos160) {
++        if (edge_jump_judge(pl, types, i, Prev)) {
+           types[i].ftype = Edge_Jump;
+         }
+       }
+-    }
+-    else if(types[i].edj[Prev]==Nr_zero && types[i].edj[Next]== Nr_nor && types[i-1].dista>0.0225 && types[i-1].dista>4*types[i].dista)
+-    {
+-      if(types[i].intersect > cos160)
+-      {
+-        if(edge_jump_judge(pl, types, i, Next))
+-        {
++    } else if (
++      types[i].edj[Prev] == Nr_zero && types[i].edj[Next] == Nr_nor &&
++      types[i - 1].dista > 0.0225 && types[i - 1].dista > 4 * types[i].dista) {
++      if (types[i].intersect > cos160) {
++        if (edge_jump_judge(pl, types, i, Next)) {
+           types[i].ftype = Edge_Jump;
+         }
+       }
+-    }
+-    else if(types[i].edj[Prev]==Nr_nor && types[i].edj[Next]==Nr_inf)
+-    {
+-      if(edge_jump_judge(pl, types, i, Prev))
+-      {
++    } else if (types[i].edj[Prev] == Nr_nor && types[i].edj[Next] == Nr_inf) {
++      if (edge_jump_judge(pl, types, i, Prev)) {
+         types[i].ftype = Edge_Jump;
+       }
+-    }
+-    else if(types[i].edj[Prev]==Nr_inf && types[i].edj[Next]==Nr_nor)
+-    {
+-      if(edge_jump_judge(pl, types, i, Next))
+-      {
++    } else if (types[i].edj[Prev] == Nr_inf && types[i].edj[Next] == Nr_nor) {
++      if (edge_jump_judge(pl, types, i, Next)) {
+         types[i].ftype = Edge_Jump;
+       }
+-     
+-    }
+-    else if(types[i].edj[Prev]>Nr_nor && types[i].edj[Next]>Nr_nor)
+-    {
+-      if(types[i].ftype == Nor)
+-      {
++
++    } else if (types[i].edj[Prev] > Nr_nor && types[i].edj[Next] > Nr_nor) {
++      if (types[i].ftype == Nor) {
+         types[i].ftype = Wire;
+       }
+     }
+   }
+ 
+-  plsize2 = plsize-1;
++  plsize2 = plsize - 1;
+   double ratio;
+-  for(uint i=head+1; i<plsize2; i++)
+-  {
+-    if(types[i].range<blind || types[i-1].range<blind || types[i+1].range<blind)
+-    {
++  for (uint i = head + 1; i < plsize2; i++) {
++    if (types[i].range < blind || types[i - 1].range < blind || types[i + 1].range < blind) {
+       continue;
+     }
+-    
+-    if(types[i-1].dista<1e-8 || types[i].dista<1e-8)
+-    {
++
++    if (types[i - 1].dista < 1e-8 || types[i].dista < 1e-8) {
+       continue;
+     }
+ 
+-    if(types[i].ftype == Nor)
+-    {
+-      if(types[i-1].dista > types[i].dista)
+-      {
+-        ratio = types[i-1].dista / types[i].dista;
+-      }
+-      else
+-      {
+-        ratio = types[i].dista / types[i-1].dista;
++    if (types[i].ftype == Nor) {
++      if (types[i - 1].dista > types[i].dista) {
++        ratio = types[i - 1].dista / types[i].dista;
++      } else {
++        ratio = types[i].dista / types[i - 1].dista;
+       }
+ 
+-      if(types[i].intersect<smallp_intersect && ratio < smallp_ratio)
+-      {
+-        if(types[i-1].ftype == Nor)
+-        {
+-          types[i-1].ftype = Real_Plane;
++      if (types[i].intersect < smallp_intersect && ratio < smallp_ratio) {
++        if (types[i - 1].ftype == Nor) {
++          types[i - 1].ftype = Real_Plane;
+         }
+-        if(types[i+1].ftype == Nor)
+-        {
+-          types[i+1].ftype = Real_Plane;
++        if (types[i + 1].ftype == Nor) {
++          types[i + 1].ftype = Real_Plane;
+         }
+         types[i].ftype = Real_Plane;
+       }
+@@ -820,17 +765,13 @@ void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &t
+   }
+ 
+   int last_surface = -1;
+-  for(uint j=head; j<plsize; j++)
+-  {
+-    if(types[j].ftype==Poss_Plane || types[j].ftype==Real_Plane)
+-    {
+-      if(last_surface == -1)
+-      {
++  for (uint j = head; j < plsize; j++) {
++    if (types[j].ftype == Poss_Plane || types[j].ftype == Real_Plane) {
++      if (last_surface == -1) {
+         last_surface = j;
+       }
+-    
+-      if(j == uint(last_surface+point_filter_num-1))
+-      {
++
++      if (j == uint(last_surface + point_filter_num - 1)) {
+         PointType ap;
+         ap.x = pl[j].x;
+         ap.y = pl[j].y;
+@@ -841,29 +782,24 @@ void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &t
+ 
+         last_surface = -1;
+       }
+-    }
+-    else
+-    {
+-      if(types[j].ftype==Edge_Jump || types[j].ftype==Edge_Plane)
+-      {
++    } else {
++      if (types[j].ftype == Edge_Jump || types[j].ftype == Edge_Plane) {
+         pl_corn.push_back(pl[j]);
+       }
+-      if(last_surface != -1)
+-      {
++      if (last_surface != -1) {
+         PointType ap;
+-        for(uint k=last_surface; k<j; k++)
+-        {
++        for (uint k = last_surface; k < j; k++) {
+           ap.x += pl[k].x;
+           ap.y += pl[k].y;
+           ap.z += pl[k].z;
+           ap.intensity += pl[k].intensity;
+           ap.curvature += pl[k].curvature;
+         }
+-        ap.x /= (j-last_surface);
+-        ap.y /= (j-last_surface);
+-        ap.z /= (j-last_surface);
+-        ap.intensity /= (j-last_surface);
+-        ap.curvature /= (j-last_surface);
++        ap.x /= (j - last_surface);
++        ap.y /= (j - last_surface);
++        ap.z /= (j - last_surface);
++        ap.intensity /= (j - last_surface);
++        ap.curvature /= (j - last_surface);
+         pl_surf.push_back(ap);
+       }
+       last_surface = -1;
+@@ -871,11 +807,11 @@ void Preprocess::give_feature(pcl::PointCloud<PointType> &pl, vector<orgtype> &t
+   }
+ }
+ 
+-
+-
+-int Preprocess::plane_judge(const PointCloudXYZI &pl, vector<orgtype> &types, uint i_cur, uint &i_nex, Eigen::Vector3d &curr_direct)
++int Preprocess::plane_judge(
++  const PointCloudXYZI & pl, vector<orgtype> & types, uint i_cur, uint & i_nex,
++  Eigen::Vector3d & curr_direct)
+ {
+-  double group_dis = disA*types[i_cur].range + disB;
++  double group_dis = disA * types[i_cur].range + disB;
+   group_dis = group_dis * group_dis;
+   // i_nex = i_cur;
+ 
+@@ -883,31 +819,26 @@ int Preprocess::plane_judge(const PointCloudXYZI &pl, vector<orgtype> &types, ui
+   vector<double> disarr;
+   disarr.reserve(20);
+ 
+-  for(i_nex=i_cur; i_nex<i_cur+group_size; i_nex++)
+-  {
+-    if(types[i_nex].range < blind)
+-    {
++  for (i_nex = i_cur; i_nex < i_cur + group_size; i_nex++) {
++    if (types[i_nex].range < blind) {
+       curr_direct.setZero();
+       return 2;
+     }
+     disarr.push_back(types[i_nex].dista);
+   }
+-  
+-  for(;;)
+-  {
+-    if((i_cur >= pl.size()) || (i_nex >= pl.size())) break;
+ 
+-    if(types[i_nex].range < blind)
+-    {
++  for (;;) {
++    if ((i_cur >= pl.size()) || (i_nex >= pl.size())) break;
++
++    if (types[i_nex].range < blind) {
+       curr_direct.setZero();
+       return 2;
+     }
+     vx = pl[i_nex].x - pl[i_cur].x;
+     vy = pl[i_nex].y - pl[i_cur].y;
+     vz = pl[i_nex].z - pl[i_cur].z;
+-    two_dis = vx*vx + vy*vy + vz*vz;
+-    if(two_dis >= group_dis)
+-    {
++    two_dis = vx * vx + vy * vy + vz * vz;
++    if (two_dis >= group_dis) {
+       break;
+     }
+     disarr.push_back(types[i_nex].dista);
+@@ -916,38 +847,31 @@ int Preprocess::plane_judge(const PointCloudXYZI &pl, vector<orgtype> &types, ui
+ 
+   double leng_wid = 0;
+   double v1[3], v2[3];
+-  for(uint j=i_cur+1; j<i_nex; j++)
+-  {
+-    if((j >= pl.size()) || (i_cur >= pl.size())) break;
++  for (uint j = i_cur + 1; j < i_nex; j++) {
++    if ((j >= pl.size()) || (i_cur >= pl.size())) break;
+     v1[0] = pl[j].x - pl[i_cur].x;
+     v1[1] = pl[j].y - pl[i_cur].y;
+     v1[2] = pl[j].z - pl[i_cur].z;
+ 
+-    v2[0] = v1[1]*vz - vy*v1[2];
+-    v2[1] = v1[2]*vx - v1[0]*vz;
+-    v2[2] = v1[0]*vy - vx*v1[1];
++    v2[0] = v1[1] * vz - vy * v1[2];
++    v2[1] = v1[2] * vx - v1[0] * vz;
++    v2[2] = v1[0] * vy - vx * v1[1];
+ 
+-    double lw = v2[0]*v2[0] + v2[1]*v2[1] + v2[2]*v2[2];
+-    if(lw > leng_wid)
+-    {
++    double lw = v2[0] * v2[0] + v2[1] * v2[1] + v2[2] * v2[2];
++    if (lw > leng_wid) {
+       leng_wid = lw;
+     }
+   }
+ 
+-
+-  if((two_dis*two_dis/leng_wid) < p2l_ratio)
+-  {
++  if ((two_dis * two_dis / leng_wid) < p2l_ratio) {
+     curr_direct.setZero();
+     return 0;
+   }
+ 
+   uint disarrsize = disarr.size();
+-  for(uint j=0; j<disarrsize-1; j++)
+-  {
+-    for(uint k=j+1; k<disarrsize; k++)
+-    {
+-      if(disarr[j] < disarr[k])
+-      {
++  for (uint j = 0; j < disarrsize - 1; j++) {
++    for (uint k = j + 1; k < disarrsize; k++) {
++      if (disarr[j] < disarr[k]) {
+         leng_wid = disarr[j];
+         disarr[j] = disarr[k];
+         disarr[k] = leng_wid;
+@@ -955,60 +879,49 @@ int Preprocess::plane_judge(const PointCloudXYZI &pl, vector<orgtype> &types, ui
+     }
+   }
+ 
+-  if(disarr[disarr.size()-2] < 1e-16)
+-  {
++  if (disarr[disarr.size() - 2] < 1e-16) {
+     curr_direct.setZero();
+     return 0;
+   }
+ 
+-  if(lidar_type==AVIA)
+-  {
+-    double dismax_mid = disarr[0]/disarr[disarrsize/2];
+-    double dismid_min = disarr[disarrsize/2]/disarr[disarrsize-2];
++  if (lidar_type == AVIA) {
++    double dismax_mid = disarr[0] / disarr[disarrsize / 2];
++    double dismid_min = disarr[disarrsize / 2] / disarr[disarrsize - 2];
+ 
+-    if(dismax_mid>=limit_maxmid || dismid_min>=limit_midmin)
+-    {
++    if (dismax_mid >= limit_maxmid || dismid_min >= limit_midmin) {
+       curr_direct.setZero();
+       return 0;
+     }
+-  }
+-  else
+-  {
+-    double dismax_min = disarr[0] / disarr[disarrsize-2];
+-    if(dismax_min >= limit_maxmin)
+-    {
++  } else {
++    double dismax_min = disarr[0] / disarr[disarrsize - 2];
++    if (dismax_min >= limit_maxmin) {
+       curr_direct.setZero();
+       return 0;
+     }
+   }
+-  
++
+   curr_direct << vx, vy, vz;
+   curr_direct.normalize();
+   return 1;
+ }
+ 
+-bool Preprocess::edge_jump_judge(const PointCloudXYZI &pl, vector<orgtype> &types, uint i, Surround nor_dir)
++bool Preprocess::edge_jump_judge(
++  const PointCloudXYZI & pl, vector<orgtype> & types, uint i, Surround nor_dir)
+ {
+-  if(nor_dir == 0)
+-  {
+-    if(types[i-1].range<blind || types[i-2].range<blind)
+-    {
++  if (nor_dir == 0) {
++    if (types[i - 1].range < blind || types[i - 2].range < blind) {
+       return false;
+     }
+-  }
+-  else if(nor_dir == 1)
+-  {
+-    if(types[i+1].range<blind || types[i+2].range<blind)
+-    {
++  } else if (nor_dir == 1) {
++    if (types[i + 1].range < blind || types[i + 2].range < blind) {
+       return false;
+     }
+   }
+-  double d1 = types[i+nor_dir-1].dista;
+-  double d2 = types[i+3*nor_dir-2].dista;
++  double d1 = types[i + nor_dir - 1].dista;
++  double d2 = types[i + 3 * nor_dir - 2].dista;
+   double d;
+ 
+-  if(d1<d2)
+-  {
++  if (d1 < d2) {
+     d = d1;
+     d1 = d2;
+     d2 = d;
+@@ -1017,11 +930,9 @@ bool Preprocess::edge_jump_judge(const PointCloudXYZI &pl, vector<orgtype> &type
+   d1 = sqrt(d1);
+   d2 = sqrt(d2);
+ 
+- 
+-  if(d1>edgea*d2 || (d1-d2)>edgeb)
+-  {
++  if (d1 > edgea * d2 || (d1 - d2) > edgeb) {
+     return false;
+   }
+-  
++
+   return true;
+ }
+-- 
+2.43.0
+

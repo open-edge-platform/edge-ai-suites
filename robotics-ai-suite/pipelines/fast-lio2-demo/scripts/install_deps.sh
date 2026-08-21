@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# One-time host setup: system packages and Livox-SDK2 (the fast_lio package
-# unconditionally depends on livox_ros_driver2 even for Velodyne-only use -
-# see README.md "Intel contributions" / limitations). Safe to re-run (the
-# third-party build is skipped once already installed).
+# One-time host setup: system packages, Python tooling for dataset convert,
+# and Livox-SDK2 (the fast_lio package unconditionally depends on
+# livox_ros_driver2 even for Velodyne-only use - see README.md "Intel
+# contributions" / limitations). Safe to re-run (the third-party build is
+# skipped once already installed).
 #
 # Usage: ./install_deps.sh
 set -euo pipefail
@@ -14,13 +15,21 @@ mkdir -p "${BUILD_CACHE}"
 echo "==> Installing apt / ROS packages"
 sudo apt-get update -qq
 sudo apt-get install -y \
-  libpcl-dev libeigen3-dev \
+  libpcl-dev libeigen3-dev python3-pip \
   "ros-${ROS_DISTRO}-pcl-ros" \
   "ros-${ROS_DISTRO}-pcl-conversions" \
   "ros-${ROS_DISTRO}-common-interfaces" \
   "ros-${ROS_DISTRO}-tf2" \
   "ros-${ROS_DISTRO}-rosbag2" \
-  "ros-${ROS_DISTRO}-rosbag2-storage-default-plugins"
+  "ros-${ROS_DISTRO}-rosbag2-storage-default-plugins" \
+  "ros-${ROS_DISTRO}-cyclonedds" \
+  "ros-${ROS_DISTRO}-rmw-cyclonedds-cpp"
+
+# rosbags: pure-Python ROS1<->ROS2 bag conversion for convert_ulhk_to_bag.sh,
+# used if the manually-downloaded UrbanLoco file turns out to be a ROS1 bag
+# (the common case - see fetch_ulhk.sh). Wheel cached under BUILD_CACHE for
+# the same reason as apt above.
+pip install --user --break-system-packages --cache-dir "${BUILD_CACHE}/pip-cache" rosbags
 
 # Clone, cmake-build and install a plain (non-ROS) C++ dependency, once.
 # Any extra args are forwarded to the cmake configure step.
