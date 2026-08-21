@@ -164,7 +164,7 @@ In both cases, the transcription text will appear on the lower part of the page 
 
 ### Grafana
 
-By-default, main page shows generic metrics from system, such as CPU/NPU and power consumption. To switch to more detailed, per-application, view navigate to `Dashboards->Panther Lake Live Dashboard` dashboard. On this dashboard, most of metrics will be either empty or will not display any value, since metrics are gathered in real-time and other applications must execute workload to generate metrics. Metrics map to other handheld applcications as follows:
+By default, the main page shows generic metrics from the system, such as CPU/NPU and power consumption. To switch to more detailed, per-application view, navigate to `Dashboards->Panther Lake Live Dashboard`. On this dashboard, most of the metrics will be either empty or will not display any values, since the metrics are gathered in real-time and other applications must execute a workload to generate metrics. The metrics map to other handheld applications as follows:
 1) `Frame Rate Over Time` and `Latest Pipeline Frame Rate Average` are from ViPPET.
 2) `LLM Number of Responses Generated` and `LLM Number of Responses Generated` are from Open WebUI.
 3) `Speech to text Processing Ratio Last` and `Speech To Text Processing Ratio` are from Whisper.
