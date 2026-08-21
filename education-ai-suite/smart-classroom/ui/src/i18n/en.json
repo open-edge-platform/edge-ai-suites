@@ -446,7 +446,8 @@
     "reset": "Reset",
     "searchNotAvailable": "Search is not available.",
     "filesStillUploading": "Files are still uploading...",
-    "uploadFilesToEnable": "Upload files to enable search."
+    "uploadFilesToEnable": "Upload files to enable search.",
+    "unsupportedImageWarning": "Unsupported file(s) skipped: {{files}}. Supported formats for image search: JPG, JPEG, PNG."
   },
   "qaSection": {
     "title": "Q&A",
