@@ -69,9 +69,9 @@ gpu:
   type: "gpu.intel.com/i915"
   count: 1
 ```
-2. **`dlstreamer` pod shows `CreateContainerError`**
+2. **`dlstreamer-pipeline-server` pod shows `CreateContainerError`**
 
-  - **Issue**: The `dlstreamer` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
+  - **Issue**: The `dlstreamer-pipeline-server` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
   - **Check Container Runtime**: Run the following command to check which container runtime is being used:
 
     ```bash
