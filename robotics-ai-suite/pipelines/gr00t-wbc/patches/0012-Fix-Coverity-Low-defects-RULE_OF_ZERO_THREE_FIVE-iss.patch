@@ -1,0 +1,132 @@
+From 73c51d98d30a59e43ca60f7b5b6403a5703331b3 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Sun, 9 Aug 2026 18:36:22 +0800
+Subject: [PATCH 12/13] =?UTF-8?q?=20Fix=20Coverity=20Low=20defects=20RULE?=
+ =?UTF-8?q?=5FOF=5FZERO=5FTHREE=5FFIVE=20issue=20=20=20-=20OVInferenceEngi?=
+ =?UTF-8?q?ne:=20delete=20copy,=20default=20move=20(pimpl=20shares=20buffe?=
+ =?UTF-8?q?rs).=20=20=20-=20PolicyEngine,=20EncoderEngine,=20MotionRecorde?=
+ =?UTF-8?q?r:=20delete=20copy.=20=20=20-=20StateLogger:=20add=20defaulted?=
+ =?UTF-8?q?=20destructor.=20=20=20-=20XMLOwner=20(fk.cpp):=20delete=20copy?=
+ =?UTF-8?q?=20=E2=80=94=20prevents=20double-free?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ gear_sonic_deploy/src/OVInference/OVInferenceEngine.h    | 9 +++++++++
+ .../src/g1/g1_deploy_onnx_ref/include/control_policy.hpp | 5 +++++
+ .../src/g1/g1_deploy_onnx_ref/include/encoder.hpp        | 5 +++++
+ .../g1/g1_deploy_onnx_ref/include/motion_data_reader.hpp | 9 +++++++--
+ .../src/g1/g1_deploy_onnx_ref/include/state_logger.hpp   | 5 ++++-
+ gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/fk.cpp   | 5 +++++
+ 6 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+index 7f3e71e..8e5c3cc 100644
+--- a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+@@ -102,6 +102,15 @@ public:
+     OVInferenceEngine();
+     ~OVInferenceEngine();
+ 
++    // The engine owns a single OpenVINO compiled model plus pre-allocated
++    // tensor buffers (behind the pimpl). Copying would shallow-share that state
++    // via the shared_ptr and let two engines race on the same buffers, so copy
++    // is deleted; move transfers ownership cleanly (Coverity RULE_OF_ZERO_THREE_FIVE).
++    OVInferenceEngine(const OVInferenceEngine&) = delete;
++    OVInferenceEngine& operator=(const OVInferenceEngine&) = delete;
++    OVInferenceEngine(OVInferenceEngine&&) noexcept = default;
++    OVInferenceEngine& operator=(OVInferenceEngine&&) noexcept = default;
++
+     using AxisSizes = std::map<std::string, int>;
+ 
+     /**
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+index 8141d15..295e554 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+@@ -46,6 +46,11 @@ public:
+   PolicyEngine() = default;
+   ~PolicyEngine() { Destroy(); }
+ 
++  // Owns a unique_ptr<TRTInferenceEngine> and I/O buffers; make the documented
++  // "non-copyable" contract explicit (Coverity RULE_OF_ZERO_THREE_FIVE).
++  PolicyEngine(const PolicyEngine&) = delete;
++  PolicyEngine& operator=(const PolicyEngine&) = delete;
++
+   /**
+    * @brief Initialize the control policy from a model path
+    * @param model_path Path to ONNX model file
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+index 5f280ec..a699076 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+@@ -52,6 +52,11 @@ public:
+   EncoderEngine() = default;
+   ~EncoderEngine() { Destroy(); }
+ 
++  // Owns the inference engine and I/O buffers; make the documented
++  // "non-copyable" contract explicit (Coverity RULE_OF_ZERO_THREE_FIVE).
++  EncoderEngine(const EncoderEngine&) = delete;
++  EncoderEngine& operator=(const EncoderEngine&) = delete;
++
+   /**
+    * @brief Initialize the encoder engine from a model path
+    * @param model_path Path to ONNX model file
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/motion_data_reader.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/motion_data_reader.hpp
+index 3bc8e69..977ead7 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/motion_data_reader.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/motion_data_reader.hpp
+@@ -359,9 +359,14 @@ struct PlannerMotionState {
+  */
+ class MotionRecorder {
+ public:
+-  MotionRecorder(const std::string& base_dir = "reference/recorded_motion") 
++  MotionRecorder(const std::string& base_dir = "reference/recorded_motion")
+     : base_dir_(base_dir), active_(false), frames_written_(0) {}
+-  
++
++  // Owns output file streams finalized in the destructor; copying would duplicate
++  // that ownership, so it is deleted (Coverity RULE_OF_ZERO_THREE_FIVE).
++  MotionRecorder(const MotionRecorder&) = delete;
++  MotionRecorder& operator=(const MotionRecorder&) = delete;
++
+   ~MotionRecorder() {
+     if (active_) {
+       Finalize();
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/state_logger.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/state_logger.hpp
+index 87bcc17..4197e47 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/state_logger.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/state_logger.hpp
+@@ -142,7 +142,10 @@ class StateLogger {
+   StateLogger(std::string csv_dir, size_t ring_capacity, int num_joints = -1, int num_actions = -1, double dt_seconds = 0.0, bool enable_csv = true,
+               std::map<std::string, std::variant<std::string, int, double, bool>> robot_config = {});
+ 
+-  // Non-copyable, movable
++  // Non-copyable, movable. Destructor declared explicitly so all five special
++  // members are declared together (Coverity RULE_OF_ZERO_THREE_FIVE); the
++  // default is correct since members clean up via RAII.
++  ~StateLogger() = default;
+   StateLogger(const StateLogger&) = delete;
+   StateLogger& operator=(const StateLogger&) = delete;
+   StateLogger(StateLogger&&) = default;
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/fk.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/fk.cpp
+index b430995..cdedf49 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/fk.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/fk.cpp
+@@ -43,6 +43,11 @@ struct XMLOwner
+         }
+     }
+ 
++    // Owns a raw xml.h parse tree freed in the destructor; copying would
++    // double-free it, so copy is deleted (Coverity RULE_OF_ZERO_THREE_FIVE).
++    XMLOwner(const XMLOwner&) = delete;
++    XMLOwner& operator=(const XMLOwner&) = delete;
++
+     XMLNode *root_ = nullptr;
+ };
+ 
+-- 
+2.43.0
+

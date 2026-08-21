@@ -292,3 +292,23 @@ to file new tickets there (after learning about the guidelines for [Contributing
   ```
 
   > **Note:** The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
+
+### 6. **`dlstreamer-pipeline-server` pod shows `CreateContainerError`**
+
+  - **Issue**: The `dlstreamer-pipeline-server` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
+  - **Check Container Runtime**: Run the following command to check which container runtime is being used:
+
+    ```bash
+    kubectl get nodes -o wide
+    ```
+
+    Inspect the `CONTAINER-RUNTIME` column to check if the node is using the `docker://` runtime.
+
+  - **Fix**: Run the following command to configure the Intel GPU device plugin for container runtime compatibility:
+
+    ```bash
+    kubectl patch ds intel-gpu-plugin -n intel-device-plugins --type='json' \
+      -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "-bypath=none"}]'
+    ```
+    Restart the Helm deployment once this fix is implemented.
+---

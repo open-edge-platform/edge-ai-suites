@@ -10,7 +10,7 @@ The application combines LLM inference capability served through the OpenVINO™
 
 ## Project Structure
 
-```
+```text
 docker-compose.yml            Defines and runs all services in the application using the standard GPU configuration.
 docker-compose-cdi.yml        Container Device Interface (CDI) and Single Root I/O Virtualization (SR-IOV) variant.
 docker-compose-standalone.yml Development or test. No Visual Pipeline and Platform Evaluation Tool required.
@@ -85,7 +85,7 @@ Open WebUI, Grafana dashboard, and Whisper speech-to-text service are only acces
 
 ## Make Targets
 
-```
+```text
 make deploy           # full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
 make deploy-cdi        The same for CDI and SR-IOV environments
 make up                Start this stack (standard, requires Visual Pipeline and Platform Evaluation Tool network)

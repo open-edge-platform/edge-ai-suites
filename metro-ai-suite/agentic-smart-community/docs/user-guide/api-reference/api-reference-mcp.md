@@ -190,7 +190,7 @@ Validate or apply all monitor declarations in a `monitors.yaml` file.
 
 ```bash
 mcp_tool_call smart_community_monitors_compose \
-  '{"action":"ps","file":"demo/monitors.demo.yaml"}'
+  '{"action":"ps","file":"demo/quick-start/monitors.demo.yaml"}'
 ```
 
 ### `smart_community_video_db`

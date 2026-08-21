@@ -37,7 +37,7 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 High-level flow:
 
 ```powershell
-git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git;
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0;
 cd edge-ai-suites;
 git sparse-checkout set education-ai-suite/ai-teaching-assistant;
 cd education-ai-suite/ai-teaching-assistant;
