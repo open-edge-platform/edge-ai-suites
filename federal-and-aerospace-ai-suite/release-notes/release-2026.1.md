@@ -32,7 +32,7 @@ The application introduces the following features:
 - [FIXED] Incorrect power readings may occur on The Infrastructure Blueprint images built with
   6.18-intel kernel, resulting in spurious analytic data.
 
-## UAV Vision Analytics Version
+## UAV Vision Analytics
 
 ### Version 1.0.0
 
