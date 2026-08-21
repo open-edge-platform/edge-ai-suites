@@ -76,7 +76,7 @@ flowchart LR
 GZ_WORLD=baylands_multicam
 PX4_MODEL_DIR=multi_cam
 
-# Vision processor consumes all 3 streams
+# Camera streams consumed by AI inference
 VISION_CAMERA_IDS=nadir,forward,rear
 ```
 
@@ -94,7 +94,6 @@ VISION_CAMERA_IDS=nadir,forward,rear
 cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                    # Set passwords in .env
 make up-sim-camera                      # Start PX4 + Gazebo + camera-bridge
-make apps                    # Start vision processor + dashboard
 ```
 
 ### Gazebo Camera Details
@@ -116,6 +115,23 @@ make apps                    # Start vision processor + dashboard
 | camera-bridge | ~25% | - | 80 MB | 3 ffmpeg processes |
 | vision-processor | 40-70% | 40% | 750 MB | 3 GStreamer pipelines |
 | **Total** | **~300%** | **~80%** | **~4.6 GB** | Requires 16 GB RAM |
+
+### System Constraints? Use Mono Camera Instead
+
+If your host doesn't comfortably meet the 3-camera footprint above (limited
+CPU cores, RAM, or GPU), switch to the single-camera (nadir-only) variant of
+the sim instead of the default 3-camera world:
+
+```bash
+make up-sim-camera-mono          # with observability stack
+make up-sim-camera-mono-lean     # without observability stack (saves ~300 MB RAM)
+```
+
+This runs Gazebo with 1 camera instead of 3, reducing camera-bridge and
+vision-processor load (fewer ffmpeg/GStreamer pipelines) while keeping full
+PX4 flight telemetry and control. Set `VISION_CAMERA_IDS=nadir` (done
+automatically by these targets). Switch back at any time with
+`make up-sim-camera` / `make up-sim-camera-lean`.
 
 ---
 
@@ -163,7 +179,7 @@ USB_CAPTURE_HEIGHT=720            # Video resolution height
 USB_SENSOR_FPS=30                 # Frames per second (camera capability)
 USB_CAPTURE_FORMAT=mjpeg          # mjpeg (compressed) or raw (uncompressed)
 
-# Vision processor: only 1 camera available
+# Only 1 camera available
 VISION_CAMERA_IDS=nadir           # Must match USB_CAMERA_ID
 ```
 
@@ -228,9 +244,6 @@ nano .env
 
 # 3. Start core infrastructure with USB camera profile
 make up-usb-camera
-
-# 4. Start vision processor + dashboard (1 camera)
-make apps
 ```
 
 ### Typical Performance
@@ -276,9 +289,6 @@ make down
 
 # 4. Start with USB profile (sets VISION_CAMERA_IDS=nadir automatically)
 make up-usb-camera
-
-# 5. Restart apps with 1-camera config
-make apps
 ```
 
 ### From USB to Sim
@@ -291,20 +301,18 @@ make down
 
 # 2. Start with default sim profile (sets VISION_CAMERA_IDS=nadir,forward,rear automatically)
 make up-sim-camera
-
-# 3. Restart apps with 3-camera config
-make apps
 ```
 
 ### Environment Variable Checklist
 
-| Variable | Sim Mode | USB Mode | Set by |
-|----------|----------|----------|--------|
-| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | auto (`make up-*`) |
-| `GZ_WORLD` | `baylands_multicam` | `baylands_multicam` | `.env` |
-| `USB_VIDEO_DEVICE` | — | `/dev/video32` (your device) | `.env` manually |
-| `USB_CAMERA_ID` | — | `nadir` | `.env` |
-| `USB_CAPTURE_FORMAT` | — | `mjpeg` or `raw` | `.env` |
+| Variable | Sim Mode | Sim Mode (mono) | USB Mode | Set by |
+|----------|----------|-----------------|----------|--------|
+| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | `nadir` | auto (`make up-*`) |
+| `GZ_WORLD` | `baylands_multicam` | `baylands_detection` | `baylands_multicam` | auto (`make up-*`) |
+| `PX4_MODEL_DIR` | `multi_cam` | `mono_cam` | `multi_cam` | auto (`make up-*`) |
+| `USB_VIDEO_DEVICE` | — | — | `/dev/video32` (your device) | `.env` manually |
+| `USB_CAMERA_ID` | — | — | `nadir` | `.env` |
+| `USB_CAPTURE_FORMAT` | — | — | `mjpeg` or `raw` | `.env` |
 
 ---
 
@@ -321,7 +329,9 @@ The `vision-processor-multicam` container automatically:
    - Pauses inference when disarmed (saves GPU)
    - Resumes inference when armed
 3. **Publishes detections** to MQTT: `uav/uav-1/camera/{camera_id}/detections`
-4. **Pushes annotated video** back to MediaMTX: `rtsp://mediamtx:8554/uav-1/{camera_id}/processed`
+4. **Publishes annotated frames** (JPEG with bounding boxes) to MQTT: `uav/uav-1/camera/{camera_id}/processed`
+
+> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, use the dashboard at http://localhost:5002 or subscribe to the MQTT topic above.
 
 ### Dashboard Features
 
@@ -338,23 +348,12 @@ The `vision-processor-multicam` container automatically:
 ### Troubleshooting
 
 **No camera frames on dashboard**:
-1. Check `VISION_CAMERA_IDS` matches available cameras
-   ```bash
-   docker logs vision-processor-multicam | grep "Cameras:"
-   ```
-   Should show: `Cameras: ['nadir', 'forward', 'rear']` (sim) or `Cameras: ['nadir']` (USB)
-
-2. Verify RTSP paths exist at MediaMTX
+1. Verify RTSP paths exist at MediaMTX
    ```bash
    docker logs mediamtx | grep -E "rtsp.*announce"
    ```
 
-3. Check vision processor connection to MediaMTX
-   ```bash
-   docker logs vision-processor-multicam 2>&1 | grep -i "rtsp\|error\|connection"
-   ```
-
-4. Ensure UAV is armed (camera inference pauses when disarmed)
+2. Ensure UAV is armed (camera inference pauses when disarmed)
    ```bash
    curl http://localhost:8080/state
    ```
@@ -376,7 +375,8 @@ docker compose --profile usb-camera up -d
 docker compose --profile sim-camera --profile usb-camera down
 
 # Helper targets
-make up-sim-camera              # sim-camera
+make up-sim-camera              # sim-camera (3x nadir, forward, rear)
+make up-sim-camera-mono         # sim-camera (1x nadir — use if system is resource-constrained)
 make up-usb-camera   # usb-camera
 make down            # both
 ```
@@ -417,8 +417,11 @@ sudo apt install ffmpeg
 # View raw camera feed
 ffplay rtsp://localhost:8554/uav-1/nadir
 
-# View annotated feed with detections
-ffplay rtsp://localhost:8554/uav-1/nadir/processed
+# View annotated frames with detections delivered over MQTT. The dashboard at
+# http://localhost:5002 renders these directly; the CLI equivalent grabs one
+# JPEG from the MQTT topic:
+mosquitto_sub -h localhost -p 1884 \
+  -t "uav/uav-1/camera/nadir/processed" -C 1 > frame.jpg && xdg-open frame.jpg
 
 # Capture one frame
 ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 frame.jpg
@@ -491,9 +494,7 @@ make build-nc            # Build all images (no-cache)
 make up-sim-camera                  # Start PX4 + Gazebo + sim cameras
 make up-usb-camera       # Start PX4 + USB camera bridge
 make down                # Stop all containers
-make apps                # Start vision processor + dashboard
 make logs-infra          # Tail infrastructure logs
-make logs-apps           # Tail application logs
 make clean               # Remove all containers, networks, volumes
 ```
 
@@ -523,9 +524,6 @@ Start here: Which camera source?
       USB_CAMERA_ID=nadir
       VISION_CAMERA_IDS=nadir
    3. make up-usb-camera
-   4. make apps          3. make apps
-
-Dashboard: http://localhost:5002
 ```
 
 ---
@@ -562,7 +560,7 @@ Dashboard: http://localhost:5002
 
 3. **Restart**:
    ```bash
-   make down && make up-sim-camera && make apps
+   make down && make up-sim-camera
    ```
 
 ### Custom USB Camera Settings
