@@ -29,6 +29,8 @@ services:
       # event; never subscribes to raw detections directly.
       MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-apm-client}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-change-me-mqtt-password}
       MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
       MQTT_QOS: ${MQTT_QOS:-1}
       MQTT_KEEPALIVE: ${MQTT_KEEPALIVE:-60}
@@ -50,8 +52,6 @@ services:
       - ${USE_CASE_CONFIGS_DIR:-/tmp/apm-placeholder}/policy_fallback.json:/app/config/policy_fallback.json:ro
       - ${USE_CASE_PROMPTS_DIR:-/tmp/apm-placeholder}:/app/prompts:ro
       - apm_agent_output:/app/output
-    ports:
-      - "${AGENT_PORT:-5002}:5002"
     depends_on:
       apm-storage:
         condition: service_healthy
