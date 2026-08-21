@@ -153,7 +153,7 @@ After opening the main page of ViPPET, you can select one of the several options
 ### Open WebUI
 
 The main page exposes a chat with the default AI model, where you can ask questions. If an initial response is not sufficient, the chat with the AI model can be continued in the same window, which will keep context. If a question is related to attachment(s), such as a file, web-page or other chat, it could be added by clicking the `+` sign and selecting the corresponding option.
-If user wants to change topic, it is recommended to open `New Chat` windows and start new chat to keep AI model context clean, as it improves results.
+It is recommended to open the `New Chat` window and start a new chat to change the topic and to keep the AI model context clean, as it improves results.
 
 ### Whisper
 
