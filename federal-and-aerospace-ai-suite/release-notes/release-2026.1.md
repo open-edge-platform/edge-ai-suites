@@ -36,8 +36,8 @@ The application introduces the following features:
 
 **New**
 
-- Added new Single Pane Page on port :443 and moved ViPPET to port :1443.
-- Updated ViPPET to latest available version
+- Added a new Single Pane Page on port :443 and moved ViPPET to port :1443.
+- Updated ViPPET to the latest available version
 - Security hardening
 
 **Known issues and limitations**
