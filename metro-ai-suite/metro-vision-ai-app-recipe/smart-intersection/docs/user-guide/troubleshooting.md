@@ -310,4 +310,5 @@ to file new tickets there (after learning about the guidelines for [Contributing
     kubectl patch ds intel-gpu-plugin -n intel-device-plugins --type='json' \
       -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "-bypath=none"}]'
     ```
+    Restart the Helm deployment once this fix is implemented.
 ---
