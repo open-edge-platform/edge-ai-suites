@@ -1,20 +1,10 @@
-# Release Notes: Federal And Aerospace Suite
+# Federal And Aerospace AI Suite 2026.1
 
-## Version 2026.2.0
+**Release Date**: 2026-06-25
 
-07 Sep. 2026
+## Handheld Multi-Modal Application
 
-**New**
-
-- Added new Single Pane Page on port :443 and moved ViPPET to port :1443.
-- Updated ViPPET to latest available version
-- Security hardening
-
-**Known issues and limitations**
-
-- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
-
-## Version 2026.1.2
+### Version 2026.1.2
 
 Initial release (preview) version of the application and the Infrastructure blueprint.
 The application is optimized for AI inference on portable devices, focusing on SWaP-C
@@ -41,3 +31,25 @@ The application introduces the following features:
 - Grafana metric for Whisper only appear after whole file is processed instead of appearing in realtime. Whisper itself is working as expected and performs speech-to-text in realtime, which is visible on Whisper's page.
 - [FIXED] Incorrect power readings may occur on The Infrastructure Blueprint images built with
   6.18-intel kernel, resulting in spurious analytic data.
+
+## Version 2026.2
+
+**New**
+
+- Added new Single Pane Page on port :443 and moved ViPPET to port :1443.
+- Updated ViPPET to latest available version
+- Security hardening
+
+**Known issues and limitations**
+
+- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
+
+## UAV Vision Analytics Version
+
+### Version 1.0.0
+
+**New**
+
+- **UAV Vision Analytics application** is now available as a standalone application and integrates with MAVLink telemetry provided by the UAV Mission Compute SDK.
+- **Use Case Implementation**: Includes the necessary code to test both the standalone application and the UAV Mission Compute SDK use case.
+- **Documentation**: Comprehensive documentation on how to set up, configure, and run tests for the use case.

@@ -1,18 +1,22 @@
 # Troubleshooting
 
-This page provides comprehensive support and troubleshooting information for the Smart Intersection Sample Application. It is divided into the following sections:
+This page provides comprehensive support and troubleshooting information for
+the Smart Intersection Sample Application. It is divided into the following sections:
 
-- **Common Issues**: General troubleshooting steps for resolving issues like container failures, port conflicts, and missing dependencies.
-- **Troubleshooting Docker Deployments**: Steps to address problems specific to Docker deployments.
+- **Common Issues**: General troubleshooting steps for resolving issues like
+  container failures, port conflicts, and missing dependencies.
+- **Troubleshooting Docker Deployments**: Steps to address problems specific to
+  Docker deployments.
 - **Troubleshooting Helm Deployments**: Guidance for resolving issues in Helm-based deployments.
 
 If you encounter any problems with the application not addressed here, check the
 [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues) board. Feel free
-to file new tickets there (after learning about the guidelines for [Contributing](https://github.com/open-edge-platform/edge-ai-suites/blob/main/CONTRIBUTING.md)).
+to file new tickets there (after learning about the guidelines for
+[Contributing](https://github.com/open-edge-platform/edge-ai-suites/blob/main/CONTRIBUTING.md)).
 
-## Troubleshooting Common Issues
+## 1. Common Issues
 
-### 1. Containers Not Starting
+### 1.1 Containers Not Starting
 
 - **Issue**: The application containers fail to start.
 - **Solution**:
@@ -23,12 +27,12 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
   Check the logs for errors and resolve dependency issues.
 
-### 2. Port Conflicts
+### 1.2 Port Conflicts
 
 - **Issue**: Port conflicts with other running applications.
 - **Solution**: Update the ports section in the Docker Compose file.
 
-### 3. Missing Dependencies
+### 1.3 Missing Dependencies
 
 - **Issue**: Required software dependencies are not installed.
 - **Solution**:
@@ -37,24 +41,33 @@ to file new tickets there (after learning about the guidelines for [Contributing
   sudo apt-get install -y <dependency>
   ```
 
-### 4. Camera Stream Stuck
+### 1.4 Camera Stream Stuck
 
 - **Issue**: Camera Streams seem to be stuck when Scenescape UI is accessed with localhost URL.
 - **Solution**: Make sure to access the localhost URL ONLY via RDP/VNC sessions. Opening via browser extensions from a remote machine is NOT recommended.
 
-### 5. Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
+### 1.5 Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
 
-- This is a known issue tracked [here](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
+This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
 
-### 6. NPU Inference Failures with Geti-Trained Models
+### 1.6 NPU Inference Failures with Geti-Trained Models
 
-- **Issue**: If you experience errors or failures when running an NPU workload with a model trained in Intel Geti, this may be caused by **Non-Maximum Suppression (NMS)** being embedded within the model graph. The NPU does not support dynamic shapes, and NMS operations with dynamic output shapes are incompatible with NPU execution.
-- **Solution**: Follow the [Export and Optimize Geti Model](./export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
+- **Issue**: If you experience errors or failures when running an NPU workload
+  with a model trained in Intel Geti, this may be caused by
+  **Non-Maximum Suppression (NMS)** being embedded within the model graph.
+  The NPU does not support dynamic shapes, and NMS operations with dynamic
+  output shapes are incompatible with NPU execution.
+- **Solution**: Follow the [Export and Optimize Geti Model](./export-and-optimize-geti-model.md)
+  guide to generate a model with NMS removed from the model graph. NMS will then
+  be handled by DL Streamer.
 
-### 7. Application Fails to Start in Air-Gapped (No Internet) Environments
+### 1.7 Application Fails to Start in Air-Gapped (No Internet) Environments
 
-- **Issue**: When running the application on a machine without internet access, containers fail to start with errors like `failed to resolve reference`, or Grafana dashboards show "No data" even though containers appear healthy.
-- **Solution**: While internet is still available, run the following preparation steps after `./install.sh smart-intersection`:
+- **Issue**: When running the application on a machine without internet access,
+  containers fail to start with errors like `failed to resolve reference`, or
+  Grafana dashboards show "No data" even though containers appear healthy.
+- **Solution**: While internet is still available, run the following preparation
+  steps after `./install.sh smart-intersection`:
 
   ```bash
   # Pre-install Node-RED InfluxDB plugin into the named volume
@@ -78,9 +91,9 @@ to file new tickets there (after learning about the guidelines for [Contributing
     docker compose up -d
     ```
 
-## Troubleshooting Docker Deployments
+## 2. Docker Deployments
 
-### 1. Containers Failing To Start
+### 2.1 Containers Failing To Start
 
 - Check the Docker logs for errors:
 
@@ -88,11 +101,11 @@ to file new tickets there (after learning about the guidelines for [Contributing
   docker compose logs
   ```
 
-### 2. Port Conflicts:
+### 2.2 Port Conflicts
 
 - Update the `ports` section in the Compose file to resolve conflicts.
 
-### 3. Reset Application
+### 2.3 Reset Application
 
 - Follow these steps to reset the application to the initial state
 
@@ -101,7 +114,7 @@ to file new tickets there (after learning about the guidelines for [Contributing
   docker volume ls | grep metro-vision-ai-app-recipe | awk '{ print $2 }' | xargs docker volume rm
   ```
 
-### 4. Cleanup secrets
+### 2.4 Cleanup secrets
 
 - Follow these steps to re-generate the secrets:
 
@@ -109,9 +122,10 @@ to file new tickets there (after learning about the guidelines for [Contributing
   rm ./src/secrets/browser.auth
   ```
 
-- Then repeat Step 2 **Setup Credentials and Download Assets** in [Get Started](./get-started.md)
+- Then repeat Step 2 **Setup Credentials and Download Assets** in
+  [Get Started](./get-started.md)
 
-### 5. Cannot access application in remote host
+### 2.5 Cannot access application in remote host
 
 - Update the firewall to receive request to port 443
 
@@ -121,30 +135,42 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
 - Stop other services that might be running in port 443 (e.g. Kubernetes Load Balancer)
 
-### 6. Services scene or web fails to start
+### 2.6 Services scene or web fails to start
 
-- On first starts, `scene` or `web` might fail to start due to a timeout on waiting for `pgserver` initialization to be ready. Restart the services with:
+- On first starts, `scene` or `web` might fail to start due to a timeout on
+  waiting for `pgserver` initialization to be ready. Restart the services with:
 
   ```bash
   docker compose up -d scene web
   ```
 
-### 7. Grafana shows No data when accessed remotely
+### 2.7 Grafana shows No data when accessed remotely
 
-- This issue occurs when there is a time synchronization mismatch between the system running the application and the system accessing Grafana through a browser. Grafana relies on timestamps to display data, and if the clocks on the two systems are not synchronized, it may result in no data being shown.
-- Use Grafana's time range filter to adjust the displayed time range. Set it to match the timestamp of the data being generated by the application. This ensures that the data falls within the selected time range and becomes visible in the dashboard.
-- This adjustment is particularly useful when the systems are in different time zones or have slight clock differences
+- This issue occurs when there is a time synchronization mismatch between the
+  system running the application and the system accessing Grafana through a
+  browser. Grafana relies on timestamps to display data, and if the clocks on
+  the two systems are not synchronized, it may result in no data being shown.
+- Use Grafana's time range filter to adjust the displayed time range. Set it to
+  match the timestamp of the data being generated by the application. This
+  ensures that the data falls within the selected time range and becomes visible
+  in the dashboard.
+- This adjustment is particularly useful when the systems are in different time
+  zones or have slight clock differences
 
-### 8. Application UI shows No objects detected on scene
+### 2.8 Application UI shows No objects detected on scene
 
-- This issue occurs when the scene controller is unable to establish a connection with the message broker. Ensure that the broker service is running and accessible, and verify the network configuration to allow communication between the scene controller and the broker.
+- This issue occurs when the scene controller is unable to establish a
+  connection with the message broker. Ensure that the broker service is
+  running and accessible, and verify the network configuration to allow
+  communication between the scene controller and the broker.
 - Inspect the logs of the scene controller with:
 
   ```bash
   docker compose logs scene
   ```
 
-- When the scene controller can't connect to the broker, the following log lines are shown:
+- When the scene controller can't connect to the broker, the following
+  log lines are shown:
 
   ```text
   Starting scene controller
@@ -185,10 +211,12 @@ to file new tickets there (after learning about the guidelines for [Contributing
   kubectl delete pod/<scene-pod-name> -n smart-intersection
   ```
 
-### 9. Accessing the MQTT Broker Externally
+### 2.9 Accessing the MQTT Broker Externally
 
-- **Issue**: You want to connect an external MQTT client to the broker for debugging or monitoring topics.
-- **Solution**: Expose port 1883 on the broker service by adding a `ports` section in `docker-compose.yml`:
+- **Issue**: You want to connect an external MQTT client to the broker for
+  debugging or monitoring topics.
+- **Solution**: Expose port 1883 on the broker service by adding a `ports`
+  section in `docker-compose.yml`:
 
   ```yaml
   broker:
@@ -212,9 +240,9 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
   > **Note:** The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
 
-## Troubleshooting Helm Deployments
+## 3. Helm Deployments
 
-### 1. Helm Chart Not Found
+### 3.1 Helm Chart Not Found
 
 - Check if the Helm repository was added:
 
@@ -222,7 +250,7 @@ to file new tickets there (after learning about the guidelines for [Contributing
   helm repo list
   ```
 
-### 2. Pods Not Running
+### 3.2 Pods Not Running
 
 - Review pod logs:
 
@@ -230,7 +258,7 @@ to file new tickets there (after learning about the guidelines for [Contributing
   kubectl logs {{pod-name}} -n {{namespace}}
   ```
 
-### 3. Service Unreachable
+### 3.3 Service Unreachable
 
 - Confirm the service configuration:
 
@@ -238,10 +266,16 @@ to file new tickets there (after learning about the guidelines for [Contributing
   kubectl get svc -n {{namespace}}
   ```
 
-### 4. DL Streamer Pipeline Server Pod Stuck in Pending State
+### 3.4 DL Streamer Pipeline Server Pod Stuck in Pending State
 
-- **Issue**: When `gpu.enabled` is set to `true` or `npu.enabled` is set to `true` in `values.yaml`, the DL Streamer Pipeline Server pod remains in `Pending` state and does not get scheduled.
-- **Cause**: The deployment requests `gpu.intel.com/i915` (or the configured `gpu.type`) or `npu.intel.com/accel` as a resource limit. If the node does not have the corresponding hardware or the Intel Device Plugin is not installed, Kubernetes cannot satisfy the resource request and the pod will not be scheduled.
+- **Issue**: When `gpu.enabled` is set to `true` or `npu.enabled` is set to
+  `true` in `values.yaml`, the DL Streamer Pipeline Server pod remains in
+  `Pending` state and does not get scheduled.
+- **Cause**: The deployment requests `gpu.intel.com/i915` (or the configured
+  `gpu.type`) or `npu.intel.com/accel` as a resource limit. If the node does
+  not have the corresponding hardware or the Intel Device Plugin is not
+  installed, Kubernetes cannot satisfy the resource request and the pod will
+  not be scheduled.
 - **Diagnosis**: Check the pod events for the scheduling failure:
 
   ```bash
@@ -262,21 +296,29 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), you will see `gpu.intel.com/xe` instead of `gpu.intel.com/i915`.
 
-- **Verification**: Confirm whether the GPU and/or NPU resources are available on your nodes:
+- **Verification**: Confirm whether the GPU and/or NPU resources are available
+  on your nodes:
 
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
 
-  If the output shows `"gpu": null` or `"npu": null`, the corresponding Intel Device Plugin is not installed or the node does not have the required hardware.
+  If the output shows `"gpu": null` or `"npu": null`, the corresponding Intel
+  Device Plugin is not installed or the node does not have the required hardware.
 
-- **Solution**: Ensure the [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes) (NFD + GPU plugin + NPU plugin) are installed on your cluster and that the target node has the required hardware. See the [Prerequisites](./get-started/deploy-with-helm.md#prerequisites) section for installation steps.
+- **Solution**: Ensure the
+  [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes)
+  (NFD + GPU plugin + NPU plugin) are installed on your cluster and that the
+  target node has the required hardware. See the
+  [Prerequisites](./get-started/deploy-with-helm.md#prerequisites)
+  section for installation steps.
 
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `gpu.intel.com/xe` in `values.yaml`.
 
-### 5. Accessing the MQTT Broker Externally
+### 3.5 Accessing the MQTT Broker Externally
 
-- **Issue**: You want to connect an external MQTT client to the broker for debugging or monitoring topics in a Helm deployment.
+- **Issue**: You want to connect an external MQTT client to the broker for
+  debugging or monitoring topics in a Helm deployment.
 - **Solution**: Use `kubectl port-forward` to expose the broker service locally:
 
   ```bash

@@ -3,9 +3,10 @@
 
 # Core Infra: PX4 + Gazebo simulation, Bridges, MQTT, RTSP, Observability
 #
-# Camera mode (set via env or .env file):
-#   CAMERA_MODE=multi  (default) — 3 cameras: nadir, forward, rear
-#   CAMERA_MODE=single           — 1 camera: nadir only
+# Camera mode (set via .env — see Makefile up-sim-camera* targets):
+#   make up-sim-camera        (default) — 3 cameras: nadir, forward, rear
+#   make up-sim-camera-mono              — 1 camera: nadir only
+#   Vars: PX4_START_SCRIPT, PX4_MODEL_DIR, PX4_WORLD_FILE, GZ_WORLD, CAMERA_IDS
 #
 # Simulation + bridges:
 #   px4               — PX4 SITL + Gazebo Harmonic simulation (profile: sim-camera)
