@@ -26,7 +26,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
 -  Supports transcription of .mp3/.wav audio files up to 45 minutes long.
 
 ###  Summarization (LLMs)  
-- **Qwen Models (OpenVINO / IPEX)**  
+- **Qwen Models (OpenVINO)**  
   - `Qwen2.0-7B-Instruct`  
   -  `Qwen2.5-7B-Instruct`
 -  Summarization supports up to 7,500 tokens (≈ 45 minutes of audio) on GPU

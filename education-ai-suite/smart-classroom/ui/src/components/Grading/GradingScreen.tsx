@@ -84,7 +84,11 @@ const GradingScreen: React.FC = () => {
         </div>
       </div>
 
-      <div className="grading-right" ref={panelRef} style={{ flex: rightCollapsed ? 0 : 1 }}>
+      <div
+        className={`grading-right${rightCollapsed ? ' collapsed' : ''}`}
+        ref={panelRef}
+        style={{ flex: rightCollapsed ? 0 : 1 }}
+      >
         <GradingRightPanel />
       </div>
 

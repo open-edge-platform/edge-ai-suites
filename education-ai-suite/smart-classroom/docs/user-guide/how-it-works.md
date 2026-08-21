@@ -33,10 +33,7 @@ The audio pipeline handles speech-to-text conversion and content summarization:
   Identifies and separates individual speakers using Pyannote Audio models. This could be enabled/disabled by modifying `config.yaml`
 
 - **Summariser Component**
-  Generates concise summaries of transcribed text using LLM providers:
-
-  - iPexLLM
-  - OpenVINO
+  Generates concise summaries of transcribed text using the OpenVINO LLM provider.
 
 - **Content Segmentation**
   The LLM segments the transcript into 15–25 topic-based sections, each is encoded and indexed into vector store. Users can then search lecture content by natural-language queries, retrieving the most relevant topic segments.

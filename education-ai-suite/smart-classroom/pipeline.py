@@ -33,7 +33,7 @@ class Pipeline:
         ]
 
         self.summarizer_pipeline = [
-            SummarizerComponent(self.session_id, provider=config.models.summarizer.provider, model_name=config.models.summarizer.name, temperature=config.models.summarizer.temperature, device=config.models.summarizer.device, mode=config.models.summarizer.mode)
+            SummarizerComponent(self.session_id, mode=config.models.summarizer.mode)
         ]
         
         text_gen_handler = ModelManager.instance().text_gen()
@@ -43,7 +43,6 @@ class Pipeline:
                 provider=config.models.text_gen.provider,
                 model_name=config.models.text_gen.vlm_name,
                 device=config.models.text_gen.device,
-                temperature=config.models.summarizer.temperature,
             )
 
         self.mindmap_component.model = text_gen_handler

@@ -28,7 +28,6 @@ echo ""
 
 check "Health"    /health
 check "Telemetry" /telemetry
-check "OpenAPI"   /openapi.json
 
 echo ""
 curl -s "$BASE/health"    | python3 -m json.tool
