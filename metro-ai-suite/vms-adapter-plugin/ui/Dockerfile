@@ -3,7 +3,7 @@
 
 # Multi-stage Dockerfile for VMS-UI
 # Stage 1: Build the React/Vite application
-FROM node:26.2.0-trixie-slim AS builder
+FROM node:26.7.0-trixie-slim AS builder
 
 ARG COPYLEFT_SOURCES=false
 
@@ -28,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve with nginx
-FROM nginx:1.31.1-trixie
+FROM nginx:1.31.4-trixie
 
 ARG COPYLEFT_SOURCES=false
 
