@@ -41,7 +41,7 @@ COPY ./plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc
 
 RUN cd /home/pipeline-server/src-gst-gencamsrc && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc) && cmake --install build && ldconfig
 
-# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2 base image
+# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.2.0-ubuntu22-rc2 base image
 RUN apt-get update && apt-get install -y libwxgtk-webview3.2-dev
 
 # For Ubuntu 22 with intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2 uncomment the line below and comment the above line
