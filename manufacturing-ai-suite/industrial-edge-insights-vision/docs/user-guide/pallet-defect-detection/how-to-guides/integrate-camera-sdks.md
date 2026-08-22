@@ -44,7 +44,7 @@ RUN cd /home/pipeline-server/src-gst-gencamsrc && cmake -B build -DCMAKE_BUILD_T
 # For Ubuntu24 intel/dlstreamer-pipeline-server:2026.2.0-ubuntu22-rc2 base image
 RUN apt-get update && apt-get install -y libwxgtk-webview3.2-dev
 
-# For Ubuntu 22 with intel/dlstreamer-pipeline-server:3.1.0-ubuntu22 uncomment the line below and comment the above line
+# For Ubuntu 22 with intel/dlstreamer-pipeline-server:3.1.0-ubuntu22, uncomment the line below and comment the above line
 # RUN apt-get update && apt-get install -y libwxgtk-webview3.0-gtk3-dev
 
 RUN mkdir /home/pipeline-server/Balluff_Impact_Acquire_V3
