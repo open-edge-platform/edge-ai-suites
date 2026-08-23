@@ -1,15 +1,9 @@
-# UAV Vision Analytics Application
+# Uncrewed Aerial Vehicle (UAV) Vision Analytics Application
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-aalytics">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-analytics">
      GitHub
-  </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-aalytics/README.md">
-     Readme
-  </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/uav-vision-analytics.zip">
-     Download Package
   </a>
 </div>
 hide_directive-->

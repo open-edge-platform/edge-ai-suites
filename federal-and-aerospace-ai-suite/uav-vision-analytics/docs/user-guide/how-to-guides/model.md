@@ -9,21 +9,23 @@ The UAV Vision Analytics application uses **YOLOv8n-VisDrone**, an object detect
 fine-tuned on the [VisDrone dataset](https://github.com/VisDrone/VisDrone-Dataset) for
 detecting objects commonly seen in drone-view imagery.
 
-
 ## Model Details
 
-| Property            | Value                                                                |
-|---------------------|----------------------------------------------------------------------|
-| Model               | YOLOv8n-VisDrone                                                     |
-| Source              | [mshamrai/yolov8n-visdrone](https://huggingface.co/mshamrai/yolov8n-visdrone) |
-| Precision           | FP16 (OpenVINO IR)                                                   |
-| Input resolution    | 640 × 640                                                            |
-| Detection classes   | pedestrian, people, bicycle, car, van, truck, tricycle, awning-tricycle, bus, motor |
-| Ultralytics version | 8.4.67 (pinned — see `resources/requirements.txt`)                   |
+| Property | Value |
+| --- | --- |
+| Model | YOLOv8n-VisDrone |
+| Source | [mshamrai/yolov8n-visdrone](https://huggingface.co/mshamrai/yolov8n-visdrone) |
+| Precision | FP16 (OpenVINO IR) |
+| Input resolution | 640 × 640 |
+| Detection classes | pedestrian, people, bicycle, car, van, truck, tricycle, awning-tricycle, bus, motor |
+| Ultralytics version | 8.4.67 (pinned — see `resources/requirements.txt`) |
 
-> ⚠️ **`ultralytics` is pinned to `8.4.67`.** Newer releases (8.4.115+ tested) changed the detection head's box-decoding math to use a `CumSum` op instead of `Range`. The resulting OpenVINO IR runs fine on **CPU** but fails to compile on **GPU** and **NPU** plugins. Version `8.4.67` produces a `Range`-based graph verified on all three devices. Do not upgrade `ultralytics` without re-verifying GPU/NPU compatibility.
-
----
+> **Important:** `ultralytics` **is pinned to** `8.4.67`. Newer releases
+> (8.4.115+ tested) changed the detection head's box-decoding math to use a
+> `CumSum` op instead of `Range`. The resulting OpenVINO IR runs fine on
+> **CPU** but fails to compile on **GPU** and **NPU** plugins. Version `8.4.67`
+> produces a `Range`-based graph verified on all three devices. Do not upgrade
+> `ultralytics` without re-verifying GPU/NPU compatibility.
 
 ## Prerequisites
 
@@ -37,8 +39,6 @@ detecting objects commonly seen in drone-view imagery.
 ```bash
 sudo apt install python3.12-venv
 ```
-
----
 
 ## Quick Setup — `make model` (recommended)
 
@@ -60,8 +60,6 @@ export http_proxy=http://proxy-org.com:port-number
 
 make model
 ```
-
----
 
 ## Expected Output Path
 
