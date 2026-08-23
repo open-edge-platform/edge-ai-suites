@@ -28,8 +28,8 @@ images=(
   "intel/multimodal-embedding-serving:2026.2.0-rc1"
   "intel/multimodal-dataprep:2026.2.0-rc1"
   "intel/model-download:2026.2.0-rc1"
-  "intel/chatqna:2026.2.0-rc1"
-  "intel/chatqna-ui:2026.2.0-rc1"
+  "intel/chatqna:core_2026.2.0-rc1"
+  "intel/chatqna-ui:core_2026.2.0-rc1"
 )
 NAME="OEP Gen AI SDK"
 
