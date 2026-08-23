@@ -13,7 +13,7 @@ Before you start, ensure the following:
 - Python programming language version 3.10 or later: only needed to prepare sample data.
 - `opencv-python` Python package: only needed for the data preparation script.
 - A Hugging Face account and API token if you use a gated model such as
-  `microsoft/Phi-4-mini-instruct`.
+  `microsoft/Phi-4-mini-instruct`,`Qwen/Qwen2.5-1.5B-Instruct`.
 
 Verify that your system meets the
 [hardware and software requirements](./get-started/system-requirements.md) before continuing.
@@ -78,7 +78,7 @@ The most important variables are:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LLM_MODE` | `llm` | Set to `fallback` to run without an LLM (rule-based mode) |
-| `LLM_MODEL_NAME` | `microsoft/Phi-4-mini-instruct` | Language model used by the agent pipeline |
+| `LLM_MODEL_NAME` | `microsoft/Phi-4-mini-instruct`, `Qwen/Qwen2.5-1.5B-Instruct` | Language model used by the agent pipeline |
 | `LLM_DEVICE` | `CPU` | Inference device: `CPU`, `GPU`, or `NPU` |
 | `LLM_WEIGHT_FORMAT` | `int4` | Model quantization format: `fp32`, `fp16`, `int8`, or `int4` |
 | `DL_DEVICE` | `CPU` | Default DL Streamer mode. The UI device list is hardware-detected: `CPU` is always available, `GPU` appears when `/dev/dri/render*` exists, and `NPU` appears when `/dev/accel` exists. |
@@ -227,6 +227,9 @@ Ask & Analyze is available in `LLM_MODE=llm`. In `LLM_MODE=fallback`, the dashbo
 workflow, and rule-based agent pipeline remain available, but chat cannot generate answers because
 the deployment omits `apm-llm`. The UI intentionally has no hard Compose dependency on that service,
 which allows fallback deployments to start normally.
+
+> **Note — Fallback mode**: If you deployed with `LLM_MODE=fallback`, the **Ask & Analyze** page
+> displays a banner explaining that conversational analysis is disabled. The chat form is locked.
 
 ## Stop and Clean Up
 

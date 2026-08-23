@@ -5,9 +5,11 @@ SPDX-License-Identifier: Apache-2.0
 
 # Benchmark — UAV Vision Analytics
 
-This document explains how to measure the performance of the UAV Vision Analytics application using the `calc_stream_density.sh` benchmarking script. The script determines the maximum number of concurrent drone-camera video streams the system can process (**stream density**) while sustaining a target frame rate, and simultaneously collects hardware utilization and power metrics from `metrics-manager`.
-
----
+This document explains how to measure the performance of the UAV Vision Analytics
+application using the `calc_stream_density.sh` benchmarking script. The script
+determines the maximum number of concurrent drone-camera video streams the
+system can process (**stream density**) while sustaining a target frame rate,
+and simultaneously collects hardware utilization and power metrics from `metrics-manager`.
 
 ## Table of Contents
 
@@ -28,16 +30,16 @@ This document explains how to measure the performance of the UAV Vision Analytic
    - [Output Directory Structure](#output-directory-structure)
 7. [Troubleshooting](./troubleshooting.md#benchmark)
 
----
-
 ## Prerequisites
 
-Before running the benchmark, ensure the application stack is configured and running. See [index.md](../index.md) for full setup instructions.
+Before running the benchmark, ensure the application stack is configured and
+running. See [index.md](../index.md) for full setup instructions.
 
 ### 1. Model must be exported
 
 The model must exist at:
-```
+
+```text
 resources/models/yolov8n-visdrone/best_openvino_model/best.xml
 ```
 
@@ -45,7 +47,8 @@ Run `make model` if it is missing (Deployment will fail with an error if the mod
 
 ### 2. Start the application stack
 
-The DL Streamer Pipeline Server (`dlstreamer-pipeline-server`) and `metrics-manager` must be running. Use the pymavlink stack:
+The DL Streamer Pipeline Server (`dlstreamer-pipeline-server`) and
+`metrics-manager` must be running. Use the pymavlink stack:
 
 ```bash
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
@@ -63,14 +66,14 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 ### 3. Install required host tools
 
 | Tool | Used for | Install |
-|---|---|---|
+| --- | --- | --- |
 | `curl` | DLSPS API calls, metrics polling | `sudo apt-get install -y curl` |
 | `gawk` | FPS and HW metrics statistical aggregation | `sudo apt-get install -y gawk` |
 | `python3` | Continuous SSE metrics streamer | `sudo apt install python3` |
 | `jq` | JSON parsing of DLSPS status responses | `sudo apt-get install -y jq` |
 | `ffmpeg` | Creating looped video files (optional) | `sudo apt-get install -y ffmpeg` |
 
-> If **`jq` is not available without root**, create a zero-dependency `docker exec` wrapper:
+> **Note:** If **`jq` is not available without root**, create a zero-dependency `docker exec` wrapper:
 >
 > ```bash
 > mkdir -p ~/.local/bin
@@ -100,7 +103,7 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 ### 4. Verify services are reachable
 
 | Service | URL | Description |
-|---|---|---|
+| --- | --- | --- |
 | DL Streamer Pipeline Server | `http://localhost:8081` | Pipeline REST API |
 | metrics-manager | `http://localhost:9090` | HW metrics SSE + REST endpoint |
 
@@ -109,21 +112,26 @@ curl -s http://localhost:8081/pipelines/status | head -3
 curl -s http://localhost:9090/api/v1/metrics/latest | head -3
 ```
 
----
-
 ## How the Script Works
 
 The benchmarking script (`benchmark/calc_stream_density.sh`) automates three tasks:
 
-1. **Start N concurrent pipeline instances** via the DLSPS REST API (`POST /pipelines/user_defined_pipelines/<name>`), each with a unique RTSP path, metadata topic, and `model-instance-id` so concurrent streams do not conflict.
-2. **Collect FPS samples** by polling `/pipelines/status` every second during a configurable measurement window (default 60 s), then compute p90/avg/median/min statistics with `gawk`.
-3. **Collect HW metrics** from `metrics-manager` in parallel via a Python3 SSE streamer, and aggregate avg/min/max per metric for the same measurement window.
+1. **Start N concurrent pipeline instances** via the DLSPS REST API
+   (`POST /pipelines/user_defined_pipelines/<name>`), each with a unique RTSP
+   path, metadata topic, and `model-instance-id` so concurrent streams
+   do not conflict.
+2. **Collect FPS samples** by polling `/pipelines/status` every second during a
+   configurable measurement window (default 60 s), then compute
+   `p90/avg/median/min` statistics with `gawk`.
+3. **Collect HW metrics** from `metrics-manager` in parallel via a Python3 SSE
+   streamer, and aggregate avg/min/max per metric for the same measurement window.
 
 ### Exponential + Bisect Algorithm
 
-The script finds the **maximum sustainable stream count automatically** — no manual bounds need to be supplied:
+The script finds the **maximum sustainable stream count automatically** —
+no manual bounds need to be supplied:
 
-```
+```text
 Phase 1 — Exponential doubling:
   Test N = 1 → 2 → 4 → 8 → 16 ... until fps/stream drops below the floor (-t)
   or N reaches the upper limit (-u, default 24).
@@ -135,10 +143,12 @@ Phase 2 — Bisect:
 
 ### FPS Statistics (p90)
 
-During each N-stream test, DLSPS reports the `avg_fps` for every running pipeline instance every second. After the measurement window ends (`-i`, default 60 s), `gawk` computes:
+During each N-stream test, DLSPS reports the `avg_fps` for every running
+pipeline instance every second. After the measurement window ends
+(`-i`, default 60 s), `gawk` computes:
 
 | Metric | Meaning |
-|---|---|
+| --- | --- |
 | `throughput #N` | p90 FPS of stream N over the window |
 | `throughput median` | Median of the per-stream p90 values |
 | `throughput average` | Mean of the per-stream p90 values |
@@ -146,26 +156,40 @@ During each N-stream test, DLSPS reports the `avg_fps` for every running pipelin
 | `throughput cumulative` | Sum of all per-stream p90 values (total system FPS) |
 | `throughput min` | Lowest per-stream p90 — used to decide **pass/fail** vs `-t` floor |
 
-The **p90 (90th percentile)** is used instead of the raw average to discard outlier frames caused by pipeline startup spikes or scheduling jitter. A run passes if `throughput min >= target_fps` (`-t`).
+The **p90 (90th percentile)** is used instead of the raw average to discard
+outlier frames caused by pipeline startup spikes or scheduling jitter.
+A run passes if `throughput min >= target_fps` (`-t`).
 
 ### HW Metrics Integration
 
-The script integrates with `intel/metrics-manager` to collect real hardware metrics in parallel with FPS sampling.
+The script integrates with `intel/metrics-manager` to collect real hardware
+metrics in parallel with FPS sampling.
 
 **Collection method — SSE primary, REST fallback:**
 
-1. **SSE primary** (`GET /metrics/stream`): A Python3 subprocess subscribes to the Server-Sent Events endpoint, which streams `data:` events as fast as the hardware counters update. All events are written continuously to `hw_samples.log` — zero polling lag, no missed samples.
+1. **SSE primary** (`GET /metrics/stream`)
 
-2. **REST fallback** (`GET /api/v1/metrics/latest`): Used automatically if the SSE endpoint is unreachable. Polls at `METRICS_INTERVAL` seconds (default: 2 s).
+   A Python3 subprocess subscribes to the Server-Sent Events endpoint, which
+   streams `data:` events as fast as the hardware counters update. All events
+   are written continuously to `hw_samples.log` — zero polling lag,
+   no missed samples.
+
+2. **REST fallback** (`GET /api/v1/metrics/latest`)
+
+  Used automatically if the SSE endpoint is unreachable. Polls at
+  `METRICS_INTERVAL` seconds (default: 2 s).
 
 **Timing — warmup exclusion:**
 
-The HW monitor starts **after** all pipeline instances reach `RUNNING` state (after model loading and JIT compilation finish), and stops **before** pipeline teardown. This ensures GPU/NPU warmup time does not skew power and utilization measurements.
+The HW monitor starts **after** all pipeline instances reach `RUNNING` state
+(after model loading and JIT compilation finish), and stops **before** pipeline
+teardown. This ensures GPU/NPU warmup time does not skew power and
+utilization measurements.
 
 **Metrics collected:**
 
 | Category | Metric names in `kpi.txt` | Notes |
-|---|---|---|
+| --- | --- | --- |
 | **CPU** | `hw_cpu_util_pct`, `hw_cpu_usage_user`, `hw_cpu_usage_system`, `hw_cpu_freq_mhz`, `hw_cpu_temperature`, `hw_mem_used_percent` | `cpu_util_pct = 100 - cpu_idle` |
 | **GPU engines** | `hw_gpu_compute_util_pct` (CCS), `hw_gpu_video_util_pct` (VCS), `hw_gpu_render_util_pct` (RCS), `hw_gpu_enhance_util_pct` (VECS) | Per GPU 0 only |
 | **GPU combined** | `hw_gpu_util_combined` | `max(CCS, VCS)` per sample — best single-number GPU load indicator |
@@ -173,42 +197,45 @@ The HW monitor starts **after** all pipeline instances reach `RUNNING` state (af
 | **Platform power** | `hw_rapl_psys_w` (full platform), `hw_rapl_pkg_w` (SoC), `hw_rapl_core_w`, `hw_rapl_uncore_w`, `hw_pkg_power_w` | RAPL + qmassa |
 | **NPU** | `hw_npu_utilization`, `hw_npu_frequency`, `hw_npu_power`, `hw_npu_temperature`, `hw_npu_memory_mb`, `hw_npu_bandwidth` | Zero when pipeline uses CPU/GPU |
 
-> **HW metrics disabled automatically** if `metrics-manager` is not reachable — the FPS benchmark continues normally and `hw_sample_count: 0` appears in `kpi.txt`.
-
----
+> **Note:** *HW metrics disabled automatically** if `metrics-manager` is not
+> reachable — the FPS benchmark continues normally and `hw_sample_count: 0` appears in `kpi.txt`.
 
 ## Available Pipelines
 
-Pipeline names are defined in `benchmark/benchmark_app_payload.json`. Each entry maps a pipeline name to the DLSPS POST payload (source URI, destination, inference device, model path).
+Pipeline names are defined in `benchmark/benchmark_app_payload.json`. Each entry
+maps a pipeline name to the DLSPS POST payload (source URI, destination,
+inference device, model path).
 
 ### File-source pipelines (recommended for benchmarking)
 
-These use `uav_sample.avi` as a looping file source — ideal for repeatable, controlled benchmarks with deterministic input:
+These use `uav_sample.avi` as a looping file source — ideal for repeatable,
+controlled benchmarks with deterministic input:
 
 | Pipeline name | Device | Source |
-|---|---|---|
+| --- | --- | --- |
 | `uav_object_detection_cpu` | CPU | `uav_sample.avi` (loop) |
 | `uav_object_detection_gpu` | GPU | `uav_sample.avi` (loop) |
 | `uav_object_detection_npu` | NPU | `uav_sample.avi` (loop) |
 
 ### RealSense camera pipelines
 
-These use a live Intel RealSense D-series camera (`/dev/video4`). The camera must be physically attached and accessible inside the container.
+These use a live Intel RealSense D-series camera (`/dev/video4`). The camera
+must be physically attached and accessible inside the container.
 
 | Pipeline name | Device | Source |
-|---|---|---|
+| --- | --- | --- |
 | `uav_realsense_cpu` | CPU | RealSense (v4l2) |
 | `uav_realsense_gpu` | GPU | RealSense (v4l2) |
 | `uav_realsense_npu` | NPU | RealSense (v4l2) |
 
-All pipelines use the **YOLOv8n-VisDrone** model (FP16 OpenVINO IR) at 640×640 resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, motor, etc.).
+All pipelines use the **YOLOv8n-VisDrone** model (FP16 OpenVINO IR) at 640×640
+resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, motor, etc.).
 
 List pipeline names available in the payload file at any time:
+
 ```bash
 jq -r '.[].pipeline' benchmark/benchmark_app_payload.json
 ```
-
----
 
 ## Run Modes
 
@@ -217,8 +244,6 @@ All examples assume you run from the app root directory:
 ```bash
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 ```
-
----
 
 ### Mode 1 — Single-Pipeline Stream Density
 
@@ -232,6 +257,7 @@ Finds the maximum number of concurrent streams for a **single pipeline** while s
 ```
 
 **What happens:**
+
 1. Pre-flight check: verifies DLSPS (`http://localhost:8081`) and metrics-manager (`http://localhost:9090`) are reachable.
 2. Stops any previously running pipelines.
 3. Tests N=1 → 2 → 4 → 8 … (exponential), then bisects to find the exact max.
@@ -275,8 +301,6 @@ No running pipelines found.
 stream density: 6
 ```
 
----
-
 ### Mode 2 — All-Devices Stream Density
 
 Runs the density search **sequentially** for multiple pipelines (typically CPU, GPU, NPU) and prints a unified summary table. This is the standard way to generate platform capability claims.
@@ -291,6 +315,7 @@ Runs the density search **sequentially** for multiple pipelines (typically CPU, 
 ```
 
 **What happens:**
+
 1. Pre-flight checks (DLSPS + metrics-manager).
 2. Runs the density search for each pipeline in order: CPU → GPU → NPU.
 3. 10-second thermal cooldown between pipeline types.
@@ -316,19 +341,20 @@ KPI files:
   NPU: benchmark-density-uav_object_detection_npu/kpi.txt
 ```
 
-> **Reading the table:**
-> - **Streams** — maximum concurrent streams sustaining ≥ target FPS (`-t`).
-> - **FPS@N** — p90 fps/stream at the max sustainable N.
-> - **CPU%** — average CPU utilization during the sustained measurement window.
-> - **GPU%** — average combined GPU utilization (max of CCS and VCS engines per sample).
-> - **NPU%** — average NPU utilization (non-zero only for NPU pipelines).
-> - **PkgPwr(W)** — average SoC package power during the measurement window.
+**Reading the table:**
 
----
+- **Streams** — maximum concurrent streams sustaining ≥ target FPS (`-t`).
+- **FPS@N** — p90 fps/stream at the max sustainable N.
+- **CPU%** — average CPU utilization during the sustained measurement window.
+- **GPU%** — average combined GPU utilization (max of CCS and VCS engines per sample).
+- **NPU%** — average NPU utilization (non-zero only for NPU pipelines).
+- **PkgPwr(W)** — average SoC package power during the measurement window.
 
 ### Mode 3 — Fixed Stream Count (nstreams)
 
-Runs a **fixed, pre-specified number of streams** per pipeline simultaneously (no binary search). Use this to validate a known configuration or benchmark heterogeneous concurrent workloads (e.g., CPU + GPU + NPU running at the same time).
+Runs a **fixed, pre-specified number of streams** per pipeline simultaneously
+(no binary search). Use this to validate a known configuration or benchmark
+heterogeneous concurrent workloads (e.g., CPU + GPU + NPU running at the same time).
 
 ```bash
 # Run 3 GPU streams and 3 NPU streams simultaneously
@@ -373,8 +399,6 @@ Runs a **fixed, pre-specified number of streams** per pipeline simultaneously (n
 ================================================================
 ```
 
----
-
 ## CLI Reference
 
 ```text
@@ -393,7 +417,7 @@ Usage (nstreams — fixed concurrent streams):
 ### Arguments
 
 | Flag | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `-p <name(s)>` | required | Pipeline name(s) from `benchmark/benchmark_app_payload.json`. |
 | `--all-devices` | off | Run density search sequentially for all `-p` pipelines, print unified results table. |
 | `-nstreams <N1> [N2...]` | — | Fixed stream counts per pipeline (nstreams mode). Count order must match `-p` order. |
@@ -409,7 +433,7 @@ Usage (nstreams — fixed concurrent streams):
 ### Environment variable overrides
 
 | Variable | Equivalent flag | Default |
-|---|---|---|
+| --- | --- | --- |
 | `METRICS_URL` | `-m` | `http://localhost:9090` |
 | `METRICS_INTERVAL` | `-M` | `2` |
 | `DLSPS_NODE_IP` | — | `localhost` |
@@ -443,8 +467,6 @@ DLSPS_NODE_IP=x.x.x.x ./benchmark/calc_stream_density.sh \
   -m http://x.x.x.x:9090 \
   -t 20
 ```
-
----
 
 ## Understanding the Output
 
@@ -531,10 +553,12 @@ uav-vision-analytics/
     └── sample.logs
 ```
 
-> Intermediate numbered directories (`benchmark-1/`, `benchmark-2/`, etc.) are created during the search and **automatically cleaned up** once the best result is copied to the named `benchmark-density-<pipeline>/` directory.
-
----
+> **Note:** Intermediate numbered directories (`benchmark-1/`, `benchmark-2/`,
+> etc.) are created during the search and **automatically cleaned up** once the
+> best result is copied to the named `benchmark-density-<pipeline>/` directory.
 
 ## Troubleshooting
 
-For all benchmark-related troubleshooting (missing tools, connectivity issues, result anomalies, GPU/NPU visibility, and power readings), see the [Troubleshooting guide](./troubleshooting.md#benchmark).
+For all benchmark-related troubleshooting (missing tools, connectivity issues,
+result anomalies, GPU/NPU visibility, and power readings), see the
+[Troubleshooting guide](./troubleshooting.md#benchmark).

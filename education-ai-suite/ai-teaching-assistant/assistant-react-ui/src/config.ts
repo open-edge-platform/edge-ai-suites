@@ -1,6 +1,6 @@
 // Central configuration for the React UI.
 // All backend calls go through the same-origin proxy exposed by
-// kiosk_ui_server.py (production) or the Vite dev proxy (development).
+// ata_ui_server.py (production) or the Vite dev proxy (development).
 
 export const API = {
   kiosk: "/api/kiosk",

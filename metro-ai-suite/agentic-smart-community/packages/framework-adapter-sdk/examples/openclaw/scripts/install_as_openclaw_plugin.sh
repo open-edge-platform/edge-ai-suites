@@ -98,12 +98,17 @@ if [[ -z "$PLUGIN_ID" ]]; then
 fi
 [[ -n "$PLUGIN_ID" ]] || { echo "ERROR: no plugin id in $PLUGIN_DIR/openclaw.plugin.json (pass --plugin-id)." >&2; exit 1; }
 SDK_PKG="$(jq -r '.name' "$SDK_DIR/package.json")"
+DB_DIR="$COMPONENT_ROOT/packages/db"
+[[ -f "$DB_DIR/package.json" ]] || { echo "ERROR: database workspace not found: $DB_DIR" >&2; exit 1; }
+DB_PKG="$(jq -r '.name' "$DB_DIR/package.json")"
 
 run_prepare() {
-  title "Step 1: build $SDK_PKG"
+  title "Step 1: build $DB_PKG and $SDK_PKG"
   if [[ "$SKIP_BUILD" == "1" ]]; then
     info "SKIP_BUILD=1 — reusing $SDK_DIR/dist"
   else
+    npm --prefix "$COMPONENT_ROOT" -w "$DB_PKG" run build
+    info "$DB_PKG built"
     npm --prefix "$COMPONENT_ROOT" -w "$SDK_PKG" run build
     info "SDK built"
   fi

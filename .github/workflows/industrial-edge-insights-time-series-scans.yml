@@ -207,7 +207,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: open-edge-platform/edge-ai-libraries
-          ref: main
+          ref: release-2026.2.0
           path: edge-ai-libraries
           persist-credentials: false
       - name: Building Time Series Analytics microservices
@@ -652,7 +652,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           repository: open-edge-platform/edge-ai-libraries
-          ref: main
+          ref: release-2026.2.0
           path: edge-ai-libraries
           persist-credentials: false
       - name: Building Time Series Analytics microservices

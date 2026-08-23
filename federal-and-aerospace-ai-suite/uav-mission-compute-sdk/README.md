@@ -50,12 +50,7 @@ make init
 
 # 2. Start core infra (PX4 + Gazebo + camera bridges + MQTT + RTSP + observability)
 make up-sim-camera
-
-# 3. Start AI helpers + sample apps
-make apps
 ```
-
-Open **http://localhost:5002**
 
 See [docs/user-guide/get-started.md](docs/user-guide/get-started.md) for full setup, troubleshooting, and ports.
 
@@ -110,11 +105,8 @@ make up-sim-camera         # Start sim stack (includes Grafana/InfluxDB)
 make up-sim-camera-lean    # Start sim stack without observability (~300 MB RAM saved)
 make up-usb-camera         # Start USB camera stack
 make up-usb-camera-lean    # Start USB camera stack without observability
-make apps                  # Start vision processor + dashboard
-make apps-down             # Stop apps only
 make down                  # Stop all containers (core infra + apps)
 make logs                  # Tail core infra logs
-make apps-logs             # Tail app logs
 ```
 
 ---
@@ -148,7 +140,6 @@ docker-compose.ethernet.yml  Override for remote PX4 FC over Ethernet
 
 | Service | URL | Purpose |
 |---|---|---|
-| Edge AI Dashboard | http://localhost:5002 | Live camera feeds, detections, arm/fly/land |
 | REST API | http://localhost:8080 | UAV commands (arm, takeoff, land, goto) |
 | RTSP Streams | rtsp://localhost:8554/uav-1/{cam} | Raw + annotated video |
 | MQTT broker | localhost:1884 | Telemetry + detection events |

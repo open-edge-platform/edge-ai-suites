@@ -23,7 +23,7 @@ SPDX-License-Identifier: Apache-2.0
 
 | Port | Service | Description |
 |------|---------|-------------|
-| 9997 | MediaMTX API | Stream management — use `docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list` |
+| 9997 | MediaMTX API | Stream management API (container-internal only) |
 | 9998 | MediaMTX Metrics | Prometheus-compatible — container-internal only |
 
 ## Observability (always on)
