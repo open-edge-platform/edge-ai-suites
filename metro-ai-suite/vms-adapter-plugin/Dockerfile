@@ -3,7 +3,7 @@
 
 FROM python:3.12-slim AS base
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.5 /uv /uvx /bin/
 
 RUN groupadd -g 1000 appuser && useradd -u 1000 -g appuser -m appuser
 

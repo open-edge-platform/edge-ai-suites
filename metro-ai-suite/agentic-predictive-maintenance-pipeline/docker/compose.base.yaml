@@ -48,8 +48,6 @@ services:
     image: eclipse-mosquitto:2.0.18
     container_name: apm-mqtt-broker
     hostname: mqtt-broker
-    ports:
-      - "${MQTT_PORT:-1883}:1883"
     volumes:
       - ../config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
@@ -79,8 +77,6 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - apm_sqlite_data:/data
-    ports:
-      - "${STORAGE_PORT:-5001}:5001"
     networks:
       - apm_network
     restart: unless-stopped
@@ -107,9 +103,9 @@ services:
       REST_SERVER_PORT: ${PIPELINE_SERVER_PORT:-8554}
       MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-apm-client}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-change-me-mqtt-password}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "${PIPELINE_SERVER_PORT:-8554}:${PIPELINE_SERVER_PORT:-8554}"
     volumes:
       - ${USE_CASE_CONFIGS_DIR:-/tmp/apm-placeholder}/pipeline-server-config.json:/home/pipeline-server/config.json:ro
       - ${USE_CASE_MODELS_DIR:-/tmp/models}:/home/pipeline-server/models:ro

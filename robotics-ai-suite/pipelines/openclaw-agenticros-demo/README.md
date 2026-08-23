@@ -55,7 +55,7 @@ First, clone this deployment folder with all submodules:
 ```bash
 # Clone the edge-ai-suites repository (if not already done)
 cd ~
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 
 # Navigate to the deployment folder
 cd ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo

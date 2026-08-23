@@ -56,7 +56,7 @@ The Stationary Robot (RVC) reference application performs vision-guided pick-and
 
 ![RVC reference application: pick-and-place with a UR5e](../images/architecture/RVC-Reference-Application.svg)
 
-For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-robotics.html).
 
 ## Stationary Robot Resources
 
