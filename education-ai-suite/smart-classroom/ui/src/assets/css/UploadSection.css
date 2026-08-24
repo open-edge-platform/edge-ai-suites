@@ -185,13 +185,19 @@
 
 /* Filename */
 .cs-file-name {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 6px;
   max-width: 100%;
-  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cs-file-name-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* OCR handwritten icon */
@@ -205,10 +211,18 @@
 /* Column widths */
 .cs-col-check  { width: 28px; text-align: center; }
 .cs-col-name   { text-align: left; }
-.cs-col-type   { width: 44px; text-align: center; color: #607d8b; font-size: 11px; }
-.cs-col-size   { width: 56px; text-align: right;  color: #607d8b; }
-.cs-col-status { padding-right: 6px; }
-.cs-col-remove { width: 24px; text-align: center; }
+.cs-col-type   { width: 48px; text-align: center; color: #607d8b; font-size: 11px; }
+.cs-col-size   { width: 88px; text-align: right;  color: #607d8b; }
+.cs-col-status { width: 108px; }
+.cs-col-remove { width: 32px; text-align: center; }
+
+/* The header cells only need the widths, not the body cells' colour/alignment. */
+th.cs-col-type,
+th.cs-col-size {
+  color: inherit;
+  font-size: 12px;
+  text-align: left;
+}
 
 /* Checkbox */
 .cs-checkbox {
@@ -382,6 +396,10 @@
   color: #c62828;
   line-height: 1.3;
   word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .cs-retry-btn {
@@ -437,54 +455,6 @@
   color: #c62828;
 }
 
-/* ─── Remove Confirmation Modal ──────────────────────────── */
-
-.cs-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.cs-modal {
-  background: #fff;
-  padding: 18px 20px;
-  border-radius: 6px;
-  width: 320px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-  font-size: 13px;
-}
-
-.cs-modal-actions {
-  margin-top: 14px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.cs-modal-actions button {
-  padding: 6px 14px;
-  font-size: 12px;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-}
-
-.cs-modal-actions button:first-child {
-  background: #e0e0e0;
-}
-
-.cs-danger-btn {
-  background: #0071c5;
-  color: white;
-}
-
-.cs-danger-btn:hover {
-  background: #005fa3;
-}
 
 .cs-ocr-icon--clickable {
   cursor: pointer;
@@ -678,6 +648,18 @@
   border-color: #1976d2;
 }
 
+.cs-meta-input--pending,
+.cs-meta-input--pending:focus {
+  border-color: #f0a020;
+}
+
+.cs-meta-hint--pending {
+  display: block;
+  margin-top: 4px;
+  color: #8a6100;
+  font-style: normal;
+}
+
 .cs-meta-input--tags {
   background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M21.41 11.58l-9-9A2 2 0 0011 2H4a2 2 0 00-2 2v7a2 2 0 00.59 1.42l9 9a2 2 0 002.82 0l7-7a2 2 0 000-2.84z'/%3E%3C/svg%3E") no-repeat 10px center;
   padding-left: 28px;
@@ -751,6 +733,11 @@
   padding: 1px 7px;
   font-size: 10px;
   font-weight: 500;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ───────── Table Footer / Clear All ───────── */
@@ -763,14 +750,26 @@
   gap: 8px;
 }
 
-.cs-clear-all-btn {
-  background: none;
-  border: 1px solid #d32f2f;
-  color: #d32f2f;
+.cs-clear-all-btn,
+.cs-upload-all-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  border-width: 1px;
+  border-style: solid;
   border-radius: 4px;
   padding: 4px 12px;
   font-size: 12px;
+  line-height: 16px;
+  box-sizing: border-box;
   cursor: pointer;
+}
+
+.cs-clear-all-btn {
+  background: none;
+  border-color: #d32f2f;
+  color: #d32f2f;
   transition: background 0.15s, color 0.15s;
 }
 
@@ -788,13 +787,9 @@
 
 .cs-upload-all-btn {
   background: #0071c5;
-  border: none;
+  border-color: transparent;
   color: #fff;
-  border-radius: 4px;
-  padding: 4px 14px;
-  font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
   transition: background 0.15s;
 }
 
