@@ -12,7 +12,8 @@ See [`handheld-multi-modal/`](handheld-multi-modal/README.md).
 
 ### Deterministic Threat Detection (Preview)
 
-[Deterministic Threat Detection](deterministic-threat-detection) : A sample application that showcases Time-Sensitive Networking (TSN) to enable deterministic, low-latency transmission of AI-processed video and sensor data alongside best-effort traffic on a shared network. This application is currently in preview. [User Docs](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/docs/deterministic-threat-detection/user-guide/index.md)
+[Deterministic Threat Detection](deterministic-threat-detection) : A sample application that showcases Time-Sensitive Networking (TSN) to enable deterministic, low-latency transmission of AI-processed video and sensor data alongside best-effort traffic on a shared network. This application is currently in preview. [User Docs](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/deterministic-threat-detection/docs/user-guide/index.md)
+
 
 
 ### UAV Vision Analytics

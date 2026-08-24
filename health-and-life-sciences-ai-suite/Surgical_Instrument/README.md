@@ -9,7 +9,7 @@ Real-time polyp detection in endoscopic video using Intel hardware acceleration
 
 |   |   |
 |---|---|
-| **Model** | YOLO11n (FP16 OpenVINO IR) — trained in-container on CVC-ColonDB (mAP@50 ≈ 0.98 on val) |
+| **Model** | YOLO11n (FP16 OpenVINO IR) — trained in-container on ColonDB (mAP@50 ≈ 0.98 on val) |
 | **Inference** | Ultralytics (train/export) + OpenVINO 2026.2 (serve) on Intel Arc iGPU via torch+xpu |
 | **Backend** | Flask 3.0 — bootstrap orchestrator + REST + SSE control plane (`backend/main_server.py`) |
 | **UI** | React + Vite + nginx |
@@ -100,12 +100,12 @@ If GitHub is fully blocked even with the proxy, use the offline weights workarou
 
 ### 1. Download the dataset
 
-- Preferred (working): **CVC-ColonDB mirror on Kaggle** — https://www.kaggle.com/datasets/longvil/cvc-colondb (same 380-image set + masks; direct `kaggle datasets download longvil/cvc-colondb` works with a personal Kaggle API token).
+- Download ColonDB Dataset
 - Do not add the dataset to git; it stays local under `datasets/`.
 - Place the archive or extracted contents here (create the folder if it doesn't exist):
 
   ```text
-  Surgical_Instrument/datasets/CVC-ColonDB/raw/
+  Surgical_Instrument/datasets/ColonDB/raw/
   ```
 
 - Accepted archive types: `.zip`, `.tar`, `.tar.gz`, `.tgz`. Extract `.rar` downloads locally before copying.
@@ -124,14 +124,14 @@ Model source:
 
 ```bash
 make backend-venv       # one-time Python environment with torch+xpu, Ultralytics, OpenVINO
-make backend-bootstrap  # prepares CVC-ColonDB, trains YOLO11n, exports FP16 OpenVINO IR
+make backend-bootstrap  # prepares ColonDB, trains YOLO11n, exports FP16 OpenVINO IR
 ```
 
 `backend-bootstrap` does the full model preparation:
 
-- reads the dataset from `datasets/CVC-ColonDB/raw/`
+- reads the dataset from `datasets/ColonDB/raw/`
 - extracts the archive if needed
-- converts CVC masks into YOLO bounding-box labels
+- converts masks into YOLO bounding-box labels
 - creates the train/validation/test split
 - downloads the base `yolo11n.pt` weights through Ultralytics
 - trains YOLO11n using the settings in `backend/config/model.yaml`
@@ -170,7 +170,7 @@ The bootstrap looks for `${CACHE_DIR}/weights/<model_name>.pt` (default: `/cache
 
 **Optional: train elsewhere and copy the result**
 
-- Train YOLO11n on CVC-ColonDB on another machine.
+- Train YOLO11n on ColonDB on another machine.
 - Export the trained model to FP16 OpenVINO IR. For an Ultralytics checkpoint, the export command is typically:
 
   ```bash
@@ -203,7 +203,7 @@ The bootstrap looks for `${CACHE_DIR}/weights/<model_name>.pt` (default: `/cache
 
   ```bash
   .venv-backend/bin/python scripts/create_endoscopy_video.py \
-    --images-dir datasets/CVC-ColonDB/raw/CVC-ColonDB/images \
+    --images-dir datasets/ColonDB/raw/ColonDB/images \
     --output videos/polyp_test.mp4 \
     --seconds 60 --fps 60 --width 1920 --height 1080
   ```
@@ -273,7 +273,7 @@ Surgical_Instrument/
 │       ├── redux/middleware/sseMiddleware.ts
 │       └── types/detection.ts
 ├── scripts/
-│   └── create_endoscopy_video.py  # generate H.264 demo video from CVC-ColonDB frames
+│   └── create_endoscopy_video.py  # generate H.264 demo video from ColonDB frames
 ├── docker-compose.yaml
 └── Makefile                   # up / run / down / logs / clean
 ```

@@ -25,9 +25,9 @@ ENCODER_CHOICES = ("auto", "opencv", "ffmpeg")
 
 def _default_images_dir(repo_root: Path) -> Path:
     candidates = [
-        repo_root / "datasets" / "CVC-ColonDB" / "raw" / "CVC-ColonDB" / "images",
-        repo_root / "datasets" / "CVC-ColonDB" / "images" / "train",
-        repo_root / "datasets" / "CVC-ColonDB" / "raw" / "images",  # legacy layout
+        repo_root / "datasets" / "ColonDB" / "raw" / "ColonDB" / "images",
+        repo_root / "datasets" / "ColonDB" / "images" / "train",
+        repo_root / "datasets" / "ColonDB" / "raw" / "images",  # legacy layout
     ]
     for p in candidates:
         if p.exists():

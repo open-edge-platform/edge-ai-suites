@@ -21,26 +21,9 @@ model:
   artifact_marker: ${MODELS_DIR:-./models}/yolo11n_polyp/.trained_ok
 
 dataset:
-  name: CVC-ColonDB
-  # Primary source: CVC-Colon lab, Universitat Autònoma de Barcelona
-  #   download page: https://pages.cvc.uab.es/CVC-Colon/index.php/databases/
-  #   direct link:   http://mv.cvc.uab.es/projects/colon-qa/cvccolondb
-  #   citation:      Bernal, Sánchez, Vilariño (2012) Pattern Recognition 45(9), 3166-3182
-  #   license:       research use only per CVC terms — accept on their site
-  #                  before downloading; we never redistribute the data
-  #
-  # Manual-drop flow (no third-party mirrors):
-  #   1) On a machine with network access to the CVC lab, visit the URL above
-  #      and download the CVC-ColonDB archive (accept their terms).
-  #   2) Place the archive OR the extracted folder inside `raw_dir` below.
-  #      Accepted archive types: .zip, .tar, .tar.gz, .tgz. If your download
-  #      is .rar, extract it locally first.
-  #   3) `make backend-bootstrap` will auto-detect images + masks, convert
-  #      binary masks to YOLO bounding-box labels via OpenCV connected-
-  #      components, split 70/15/15 into train/val/test, and write data.yaml.
-  #   4) Subsequent runs cache on `output_dir/data.yaml`.
-  raw_dir:    ${DATASETS_DIR:-./datasets}/CVC-ColonDB/raw
-  output_dir: ${DATASETS_DIR:-./datasets}/CVC-ColonDB
+  name: ColonDB
+  raw_dir:    ${DATASETS_DIR:-./datasets}/ColonDB/raw
+  output_dir: ${DATASETS_DIR:-./datasets}/ColonDB
   convert:
     class_id:      0        # single class: Polyp
     min_area_px:   10       # discard mask blobs smaller than this (noise)
