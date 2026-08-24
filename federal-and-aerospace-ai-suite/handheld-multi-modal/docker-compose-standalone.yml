@@ -20,7 +20,7 @@ services:
       - ./data:/data
     command: >
       sh -c "
-        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs &&
+        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache &&
         chown 472:472 /data/grafana &&
         chown 5000:5000 /data/ovms-models &&
         chmod 750 /data/ovms-models
