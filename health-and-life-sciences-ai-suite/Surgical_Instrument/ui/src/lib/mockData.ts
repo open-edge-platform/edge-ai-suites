@@ -74,7 +74,7 @@ export const mockDetectionState: DetectionState = {
     name: 'yolo11n-polyp',
     precision: 'FP16 OpenVINO IR',
     task: 'Polyp Detection',
-    dataset: 'CVC-ColonDB',
+    dataset: 'ColonDB',
     input_source: 'Recorded file',
     model_input: '640x640',
     device: 'GPU',

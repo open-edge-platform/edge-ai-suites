@@ -11,7 +11,7 @@
 # backend SSE stream sourced from the pipeline control plane.
 #
 # The UI does NOT come online until the backend HEALTHCHECK passes. First
-# boot may take 20-35 min while YOLO11n trains on CVC-ColonDB — see
+# boot may take 20-35 min while YOLO11n trains on ColonDB — see
 # docs/user-guide/quickstart.md for the manual dataset-drop instructions.
 #
 #   make up            # build + start (detached)
@@ -192,7 +192,7 @@ services:
       # Trained IR + Ultralytics runs directory. Cache-first bootstrap
       # skips training when `.trained_ok` marker is present here.
       - ./models:/models
-      # Manual-drop location for the CVC-ColonDB archive (see quickstart).
+      # Manual-drop location for the ColonDB archive (see quickstart).
       - ./datasets:/datasets
       # Demo videos consumed by the pipeline container (path exposed via
       # /api/config for the UI).
