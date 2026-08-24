@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional, TypeVar
+from typing import Literal, Optional, TypeVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -59,6 +59,13 @@ class RecordingConfig(BaseModel):
     a legacy alias accepted on input but written as `interval_seconds`.
     Recordings on disk are pruned by the MCP server (storage.retention_days);
     VSA does not do its own retention cleanup.
+
+    `backend` selects how segments are produced:
+      - "copy" (default): an ffmpeg subprocess pulls the stream and cuts
+        segments with `-c copy` — no decode, no encode, original codec/bitrate
+        preserved. Requires ffmpeg on PATH.
+      - "x264" (rollback): cv2 decode + libx264 re-encode via H264SegmentWriter.
+        Kept as an escape hatch; `fps` is only used by this backend.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -66,6 +73,7 @@ class RecordingConfig(BaseModel):
     enabled: bool = True
     interval_seconds: int = Field(default=60, alias="interval")
     fps: int = 15
+    backend: Literal["copy", "x264"] = "copy"
 
 
 class RoiConfig(BaseModel):
