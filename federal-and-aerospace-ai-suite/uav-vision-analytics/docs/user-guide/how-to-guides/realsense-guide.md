@@ -97,7 +97,7 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 ```
 
-**Example** — start the CPU pipeline and publish the stream at `rtsp://localhost:8555/realsense`:
+**Example** — start the CPU pipeline and publish the stream at `rtsp://<HOST_IP>:8555/realsense`:
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
@@ -128,7 +128,7 @@ echo "Instance ID: $INSTANCE_ID"
 View the annotated stream:
 
 ```bash
-ffplay rtsp://localhost:8555/realsense
+ffplay rtsp://<HOST_IP>:8555/realsense
 ```
 
 To stop the pipeline:
