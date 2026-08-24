@@ -247,6 +247,13 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 To deploy the Smart Intersection application with Intel Trusted Compute for hardware-isolated workloads (CPU or GPU passthrough), refer to the [Deploy with Trusted Compute using Helm](./deploy-with-trusted-compute-helm.md) guide.
 
+## Uninstall the application and delete the namespace
+
+```bash
+helm uninstall smart-intersection -n smart-intersection
+kubectl delete namespace smart-intersection
+```
+
 ## Complete Cleanup
 
 If you want to completely remove all infrastructure components installed during the setup process:
