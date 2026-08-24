@@ -13,7 +13,7 @@ import {
   clearUploadedFiles,
   loadUploadedFiles,
   saveUploadedFiles,
-} from "./storage/uploadedFiles";
+} from "./persistence/uploadedFiles";
 import { INACTIVITY_RESET_MS } from "./config";
 import { useAudioLevel } from "./hooks/useAudioLevel";
 import { usePerformanceMetrics } from "./hooks/usePerformanceMetrics";
