@@ -176,7 +176,7 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `max_duration` | `float` | `10.0` | Hard ceiling on segment length, in seconds. |
-| `min_duration` | `float` | `1.0` | Minimum clip duration; shorter clips are discarded. |
+| `min_duration` | `float` | `1.0` | Cut-frequency guard: forced cuts (ROI early-split) are rejected while the running segment is younger than this. Finished segments are always emitted — short motion-end tails are never discarded. |
 
 ##### `StaticConfig`
 
@@ -214,7 +214,6 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | `enabled` | `bool` | `true` | Enable the continuous recorder branch (independent of motion). |
 | `interval_seconds` (alias `interval`) | `int` | `60` | Duration of each recording segment. |
 | `fps` | `int` | `15` | Recording output frame rate. |
-| `retention_days` | `int` | `5` | Days to retain old recordings on disk. |
 
 ##### `HealthConfig`
 
@@ -252,7 +251,7 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
       "device": "NPU"
     },
     "roi":       { "enabled": true, "mode": "crop", "expand": 0.25, "auto_split_area": 0.35 },
-    "recording": { "enabled": true, "interval_seconds": 60, "retention_days": 5 },
+    "recording": { "enabled": true, "interval_seconds": 60 },
     "health":    { "max_failures": 30, "recovery_strategy": "retry" },
     "keepalive": { "enabled": true, "timeout_seconds": 90.0, "check_interval_seconds": 10.0 }
   }

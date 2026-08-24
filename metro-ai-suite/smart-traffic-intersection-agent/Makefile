@@ -77,7 +77,6 @@ VLM_WEIGHT_FORMAT ?=
 VLM_MAX_COMPLETION_TOKENS ?= 1500
 
 # Traffic Agent Configuration
-REFRESH_INTERVAL ?= 15
 HIGH_DENSITY_THRESHOLD ?= 10
 WEATHER_MOCK ?= false
 
@@ -155,7 +154,6 @@ define DEPLOY_BANNER
 	@echo "  VLM_MAX_COMPLETION_TOKENS: $${VLM_MAX_COMPLETION_TOKENS:-$(VLM_MAX_COMPLETION_TOKENS)}"
 	@echo ""
 	@echo "  Traffic Agent:"
-	@echo "  REFRESH_INTERVAL:          $${REFRESH_INTERVAL:-$(REFRESH_INTERVAL)}"
 	@echo "  HIGH_DENSITY_THRESHOLD:    $${HIGH_DENSITY_THRESHOLD:-$(HIGH_DENSITY_THRESHOLD)}"
 	@echo "  WEATHER_MOCK:              $${WEATHER_MOCK:-$(WEATHER_MOCK)}"
 	@echo "  MQTT_HOST:                 $${MQTT_HOST:-$(MQTT_HOST)}"
@@ -171,7 +169,6 @@ define SETUP_EXPORTS
 	export VLM_TARGET_DEVICE="$${VLM_TARGET_DEVICE:-$(VLM_TARGET_DEVICE)}" && \
 	export VLM_WEIGHT_FORMAT="$${VLM_WEIGHT_FORMAT:-$(VLM_WEIGHT_FORMAT)}" && \
 	export VLM_MAX_COMPLETION_TOKENS="$${VLM_MAX_COMPLETION_TOKENS:-$(VLM_MAX_COMPLETION_TOKENS)}" && \
-	export REFRESH_INTERVAL="$${REFRESH_INTERVAL:-$(REFRESH_INTERVAL)}" && \
 	export HIGH_DENSITY_THRESHOLD="$${HIGH_DENSITY_THRESHOLD:-$(HIGH_DENSITY_THRESHOLD)}" && \
 	export WEATHER_MOCK="$${WEATHER_MOCK:-$(WEATHER_MOCK)}" && \
 	export MQTT_HOST="$${MQTT_HOST:-$(MQTT_HOST)}" && \
@@ -619,7 +616,6 @@ help:
 	@echo "    HUGGINGFACE_TOKEN            HuggingFace API token (required)"
 	@echo ""
 	@echo "    Traffic Agent:"
-	@echo "    REFRESH_INTERVAL             Data refresh in seconds (default: 15)"
 	@echo "    HIGH_DENSITY_THRESHOLD       High density vehicle count (default: 10)"
 	@echo "    WEATHER_MOCK                 Mock weather data (default: false)"
 	@echo "    MQTT_HOST                    MQTT broker host (default: broker.scenescape.intel.com)"

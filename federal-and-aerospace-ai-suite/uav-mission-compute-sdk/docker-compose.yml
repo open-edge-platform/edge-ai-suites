@@ -1,0 +1,369 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Core Infra: PX4 + Gazebo simulation, Bridges, MQTT, RTSP, Observability
+#
+# Camera mode (set via .env — see Makefile up-sim-camera* targets):
+#   make up-sim-camera        (default) — 3 cameras: nadir, forward, rear
+#   make up-sim-camera-mono              — 1 camera: nadir only
+#   Vars: PX4_START_SCRIPT, PX4_MODEL_DIR, PX4_WORLD_FILE, GZ_WORLD, CAMERA_IDS
+#
+# Simulation + bridges:
+#   px4               — PX4 SITL + Gazebo Harmonic simulation (profile: sim-camera)
+#   px4-sih           — PX4 SITL SIH lightweight simulation (profile: usb-camera)
+#   companion-bridge  — MAVLink ↔ MQTT bridge (telemetry + commands)
+#   camera-bridge     — Gazebo camera → RTSP via MediaMTX (profile: sim-camera)
+#   usb-camera-bridge — real USB (V4L2) camera → RTSP via MediaMTX (profile: usb-camera)
+#   Exactly one of the two camera bridges should be active at a time.
+#     make up               → sim (Gazebo) cameras
+#     make up-usb-camera    → real USB camera (/dev/video32)
+#   mediamtx          — RTSP server for camera streams
+#   mosquitto         — MQTT broker
+#
+# Observability:
+#   influxdb           — time-series storage for flight + platform metrics
+#   grafana            — dashboards (Flight Telemetry + Platform Health) at :3000
+#   topic-extractor    — MQTT → InfluxDB bridge for flight telemetry
+#   metrics-manager    — host platform metrics (CPU/mem/power/GPU/NPU) → InfluxDB + Prometheus :9273 (container-internal)
+#
+# AI helper (vision-processor) and edge-ai-showcase app are in:
+#   sample-apps/docker-compose.yml
+
+name: uav-mission-compute-sdk
+
+services:
+  px4:
+    image: uav-mission-compute-sdk/px4-gazebo
+    build:
+      context: ./infra/px4-sim
+      dockerfile: Dockerfile
+      args:
+        - http_proxy=${HTTP_PROXY:-}
+        - https_proxy=${HTTPS_PROXY:-}
+        - no_proxy=${NO_PROXY:-localhost,127.0.0.0/8}
+    container_name: px4-gazebo
+    hostname: px4-gazebo
+    profiles: ["sim-camera"]
+    ipc: shareable
+    environment:
+      - HEADLESS=1
+      - http_proxy=${HTTP_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - no_proxy=${NO_PROXY:-localhost,127.0.0.0/8}
+    devices:
+      - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
+      - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
+    ports:
+      - "${HOST_IP:-127.0.0.1}:14540:14540/udp"
+      - "${HOST_IP:-127.0.0.1}:14580:14580/udp"
+      - "${HOST_IP:-127.0.0.1}:8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./infra/px4-sim/${PX4_START_SCRIPT:-start_px4_multicam.sh}:/root/start_px4.sh
+      - ./infra/px4-sim/models/${PX4_MODEL_DIR:-multi_cam}/model.sdf:/px4/Tools/simulation/gz/models/mono_cam/model.sdf:ro
+      - ./infra/px4-sim/worlds/${PX4_WORLD_FILE:-baylands_multicam.sdf}:/px4/Tools/simulation/gz/worlds/${PX4_WORLD_FILE:-baylands_multicam.sdf}:ro
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x px4 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 180s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  px4-sih:
+    image: px4io/px4-sitl:latest
+    container_name: px4-sitl
+    hostname: px4-sitl
+    profiles: ["usb-camera"]
+    ipc: shareable
+    environment:
+      - HEADLESS=1
+      - http_proxy=${HTTP_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - no_proxy=${NO_PROXY:-localhost,127.0.0.0/8}
+    ports:
+      - "${HOST_IP:-127.0.0.1}:14550:14550/udp"
+      - "${HOST_IP:-127.0.0.1}:14580:14580/udp"
+      - "${HOST_IP:-127.0.0.1}:8080:8080"
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x px4 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  companion-bridge:
+    image: uav-mission-compute-sdk/companion-bridge
+    build:
+      context: ./infra/bridges/companion
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: companion-bridge
+    profiles: ["sim-camera", "usb-camera"]
+    network_mode: service:${PX4_NETWORK_SERVICE:-px4}
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - PX4_ADDRESS=${PX4_ADDRESS:-udpin://0.0.0.0:14540}
+      # Outbound MQTT publish caps (Hz) — enforced per-topic by the publish timer.
+      - RATE_POSITION_HZ=${RATE_POSITION_HZ:-20}
+      - RATE_ATTITUDE_HZ=${RATE_ATTITUDE_HZ:-30}
+      - RATE_VELOCITY_HZ=${RATE_VELOCITY_HZ:-20}
+      - RATE_GPS_HZ=${RATE_GPS_HZ:-5}
+      - RATE_BATTERY_HZ=${RATE_BATTERY_HZ:-2}
+      - RATE_IN_AIR_HZ=${RATE_IN_AIR_HZ:-4}
+      # MAVSDK subscription rate (Hz)
+      - READER_RATE_HZ=${READER_RATE_HZ:-1000}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  camera-bridge:
+    image: uav-mission-compute-sdk/camera-bridge
+    build:
+      context: ./infra/bridges/camera
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: camera-bridge
+    profiles: ["sim-camera"]
+    network_mode: service:px4
+    ipc: service:px4
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - GZ_WORLD=${GZ_WORLD:-baylands_multicam}
+      - GZ_MODEL=x500_mono_cam_down_0
+      - CAMERA_IDS=${VISION_CAMERA_IDS:-nadir,forward,rear}
+      - SENSOR_FPS=30
+      - USE_RTSP=true
+      - RTSP_HOST=mediamtx
+      - RTSP_PORT=8554
+    volumes:
+      - ./infra/bridges/camera/camera_bridge.py:/app/camera_bridge.py:ro
+    depends_on:
+      px4:
+        condition: service_healthy
+      mediamtx:
+        condition: service_started
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # Real USB camera → RTSP. Mutually exclusive with camera-bridge (sim-camera).
+  # Start with: make up-usb-camera
+  # PX4 + companion-bridge stay enabled for flight telemetry in both camera modes.
+  # Streams to rtsp://localhost:8554/uav-1/<USB_CAMERA_ID> (default: uav-1/nadir)
+  # vision-processor consumes it unchanged when USB_CAMERA_ID matches one of CAMERA_IDS.
+  usb-camera-bridge:
+    image: uav-mission-compute-sdk/usb-camera-bridge
+    build:
+      context: ./infra/bridges/usb-camera
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: usb-camera-bridge
+    profiles: ["usb-camera"]
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - CAMERA_ID=${USB_CAMERA_ID:-usb}
+      - VIDEO_DEVICE=${USB_VIDEO_DEVICE:-/dev/video0}
+      - CAPTURE_WIDTH=${USB_CAPTURE_WIDTH:-1280}
+      - CAPTURE_HEIGHT=${USB_CAPTURE_HEIGHT:-720}
+      - SENSOR_FPS=${USB_SENSOR_FPS:-30}
+      - CAPTURE_FORMAT=${USB_CAPTURE_FORMAT:-mjpeg}
+      - USE_RTSP=true
+      - RTSP_HOST=mediamtx
+      - RTSP_PORT=8554
+    devices:
+      - "${USB_VIDEO_DEVICE:-/dev/video0}:${USB_VIDEO_DEVICE:-/dev/video0}"
+    volumes:
+      - ./infra/bridges/usb-camera/usb_camera_bridge.py:/app/usb_camera_bridge.py:ro
+    depends_on:
+      companion-bridge:
+        condition: service_started
+      mediamtx:
+        condition: service_started
+      mosquitto:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  mediamtx:
+    image: bluenviron/mediamtx:1.19.2
+    container_name: mediamtx
+    hostname: mediamtx
+    ports:
+      - "${HOST_IP:-127.0.0.1}:8554:8554"  # RTSP
+      - "${HOST_IP:-127.0.0.1}:8888:8888"  # HLS
+      - "${HOST_IP:-127.0.0.1}:8889:8889"  # WebRTC
+    volumes:
+      - ./infra/mediamtx/mediamtx.yml:/mediamtx.yml:ro
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.22
+    container_name: mqtt-broker
+    hostname: mosquitto
+    ports:
+      - "${HOST_IP:-127.0.0.1}:1884:1883"
+    volumes:
+      - ./infra/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ── Observability ──────────────────────────────────────────────────────────
+
+  influxdb:
+    image: influxdb:2.9.1
+    container_name: influxdb
+    profiles: ["observability"]
+    restart: unless-stopped
+    ports:
+      - "${HOST_IP:-127.0.0.1}:8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE:        setup
+      DOCKER_INFLUXDB_INIT_USERNAME:    admin
+      DOCKER_INFLUXDB_INIT_PASSWORD:    ${INFLUXDB_PASSWORD:?Set INFLUXDB_PASSWORD in .env before starting}
+      DOCKER_INFLUXDB_INIT_ORG:         ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
+      DOCKER_INFLUXDB_INIT_BUCKET:      telemetry
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    container_name: grafana
+    profiles: ["observability"]
+    restart: unless-stopped
+    ports:
+      - "${HOST_IP:-127.0.0.1}:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER:     admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:?Set GRAFANA_PASSWORD in .env before starting}
+      INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+      INFLUXDB_ORG:               ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
+      no_proxy:                   localhost,127.0.0.1,influxdb
+      NO_PROXY:                   localhost,127.0.0.1,influxdb
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/etc/grafana/dashboards:ro
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+  topic-extractor:
+    build:
+      context: ./infra/topic-extractor
+      dockerfile: Dockerfile
+      args:
+        http_proxy:  ${HTTP_PROXY:-}
+        https_proxy: ${HTTPS_PROXY:-}
+        no_proxy:    ${NO_PROXY:-localhost,127.0.0.0/8}
+    container_name: topic-extractor
+    profiles: ["observability"]
+    restart: unless-stopped
+    environment:
+      MQTT_BROKER_HOST: mosquitto
+      MQTT_BROKER_PORT: 1883
+      UAV_ID:         ${UAV_ID:?Set UAV_ID in .env before starting}
+      INFLUXDB_URL:     http://influxdb:8086
+      INFLUXDB_TOKEN:   ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+      INFLUXDB_ORG:     ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
+      INFLUXDB_BUCKET:  telemetry
+      LOG_LEVEL:        INFO
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+
+  metrics-manager:
+    image: intel/metrics-manager:2026.1.0
+    container_name: metrics-manager
+    profiles: ["observability"]
+    restart: unless-stopped
+    privileged: true
+    pid: host
+    environment:
+      METRICS_PORT:               9090
+      LOG_LEVEL:                  INFO
+      CORS_ORIGINS:               "*"
+      INFLUXDB_URL:               http://influxdb:8086
+      INFLUXDB_TOKEN:             ${INFLUXDB_TOKEN:?Set INFLUXDB_TOKEN in .env before starting}
+      INFLUXDB_ORG:               ${INFLUXDB_ORG:?Set INFLUXDB_ORG in .env before starting}
+      INFLUXDB_BUCKET:            telemetry
+      METRICS_MANAGER_HOSTNAME:   uav-sdk-host
+      no_proxy:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
+      NO_PROXY:                   localhost,127.0.0.1,influxdb,mosquitto,mediamtx
+    devices:
+      - /dev/dri             # Intel GPU — required for qmassa
+    volumes:
+      - /sys:/sys:ro
+      - /run:/run:ro
+      - ./infra/metrics-manager/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./infra/metrics-manager/scripts:/app/custom-scripts:ro
+    depends_on:
+      influxdb:
+        condition: service_healthy
+
+volumes:
+  influxdb-data:
+  grafana-data:

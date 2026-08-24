@@ -102,8 +102,12 @@ test:
 				ros-${ROS_DISTRO}-ros-gz-sim ros-${ROS_DISTRO}-pcl-conversions || \
 		    	(sleep 5 && apt install -qq -y equivs devscripts libtbb-dev \
 				ros-${ROS_DISTRO}-ros-gz-sim ros-${ROS_DISTRO}-pcl-conversions)) && \
-			echo 'Installing all built .deb packages...' && \
-			find . -maxdepth 1 -name 'ros-$(ROS_DISTRO)-*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' -exec apt-get install -f -y {} \; && \
+			echo 'Installing built test .deb packages...' && \
+			find . -maxdepth 1 -type f -name 'ros-$(ROS_DISTRO)-*.deb' \
+				! -name 'ros-$(ROS_DISTRO)-aaeon-adbscan-tutorial_*' \
+				! -name 'ros-$(ROS_DISTRO)-follow-me-tutorial_*' \
+				! -name 'ros-$(ROS_DISTRO)-follow-me-tutorial-w-gesture_*' \
+				-print0 | xargs -0 -r apt-get install -f -y && \
 			echo 'Setting up ROS environment and running tests...' && \
 			echo 'Cleaning up stale build artifacts...' && \
 			rm -rf install/ log/ build/ && \
@@ -207,5 +211,3 @@ help:
 				target = ""; \
 			} \
 		}' | sort -k1,1
-
-

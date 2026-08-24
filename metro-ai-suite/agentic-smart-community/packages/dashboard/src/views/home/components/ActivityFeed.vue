@@ -39,7 +39,7 @@
         </div>
       </div>
     </div>
-    <template v-if="visibleRecords.length">
+    <template v-if="visibleRecords.length || coverageBlocks.length">
       <div
         ref="timelineScrollRef"
         class="timeline-scroll"
@@ -53,7 +53,25 @@
           class="timeline-track"
           :style="{ width: `${timelineScale * 100}%` }"
         >
-          <div class="timeline-segment recording"></div>
+          <div class="timeline-segment recording-track"></div>
+          <div
+            v-for="block in coverageBlocks"
+            :key="block.key"
+            class="timeline-segment recording"
+            :title="$t('smartCommunity.recordingSeekTip')"
+            :style="{
+              left: `${getTimelinePosition(toDayMinutes(block.startMs))}%`,
+              width: `${getTimelineWidth(
+                toDayMinutes(block.endMs) - toDayMinutes(block.startMs),
+              )}%`,
+            }"
+            @click="handleCoverageClick"
+          ></div>
+          <div
+            v-if="playbackProgressPercent !== null"
+            class="timeline-playback-line"
+            :style="{ left: `${playbackProgressPercent}%` }"
+          ></div>
           <div
             v-if="timelineProgressPercent !== null"
             class="timeline-progress-line"
@@ -286,8 +304,9 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { videoPlay as VideoPlayer } from "vue3-video-play/dist/index.mjs";
 import CustomRenderer from "@/utils/customRenderer";
-import type { ActivityRecord, CameraTaskRecord } from "../type";
+import type { ActivityRecord, CameraTaskRecord, RecordingSegment } from "../type";
 import { getSmartCommunitySourceMeta } from "../deviceMeta";
+import { mergeCoverage } from "../recordings";
 
 type AlertFilterValue = "motion" | "alert";
 
@@ -330,12 +349,15 @@ const INITIAL_PREVIEW_LOAD_COUNT = 3;
 const props = defineProps<{
   loading: boolean;
   tasks: CameraTaskRecord[];
+  recordings: RecordingSegment[];
+  playbackTimeMs: number | null;
   selectedDate: string;
   selectedSourceId: string;
 }>();
 
 const emit = defineEmits<{
   select: [record: ActivityRecord];
+  "seek-recording": [timeMs: number];
 }>();
 
 const historyListRef = ref<HTMLElement | null>(null);
@@ -685,6 +707,47 @@ const timelineProgressPercent = computed(() => {
 
   return Math.min(100, Math.max(0, (minutes / DAY_MINUTES) * 100));
 });
+
+const selectedDayStartMs = computed(() => {
+  return dayjs(props.selectedDate).startOf("day").valueOf();
+});
+
+const toDayMinutes = (timeMs: number) => {
+  return (timeMs - selectedDayStartMs.value) / 60000;
+};
+
+const coverageBlocks = computed(() => mergeCoverage(props.recordings));
+
+const playbackProgressPercent = computed(() => {
+  if (props.playbackTimeMs === null) {
+    return null;
+  }
+
+  const minutes = toDayMinutes(props.playbackTimeMs);
+  if (minutes < 0 || minutes > DAY_MINUTES) {
+    return null;
+  }
+
+  return (minutes / DAY_MINUTES) * 100;
+});
+
+// The coverage bar spans a whole recording run, so the clicked instant has to
+// come from the pointer position on the track, not from the block itself.
+const handleCoverageClick = (event: MouseEvent) => {
+  if (timelineSuppressClick.value) {
+    timelineSuppressClick.value = false;
+    return;
+  }
+
+  const trackElement = timelineTrackRef.value;
+  if (!trackElement) {
+    return;
+  }
+
+  const rect = trackElement.getBoundingClientRect();
+  const ratio = clamp((event.clientX - rect.left) / Math.max(rect.width, 1), 0, 1);
+  emit("seek-recording", selectedDayStartMs.value + ratio * DAY_MINUTES * 60000);
+};
 
 const getRecordStartMinutes = (record: ActivityRecord) => {
   const timestamp = dayjs(record.timestampLabel);
@@ -1533,7 +1596,7 @@ const playRecord = (record: ActivityRecord) => {
   opacity: 1;
 }
 
-.timeline-segment.recording {
+.timeline-segment.recording-track {
   top: 4px;
   left: 0;
   width: 100%;
@@ -1542,6 +1605,42 @@ const playRecord = (record: ActivityRecord) => {
   background: var(--color-primaryBg);
   border: 1px solid var(--border-primary);
   cursor: default;
+}
+
+.timeline-segment.recording {
+  top: 4px;
+  height: 20px;
+  min-width: 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-primary) 34%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 46%, transparent);
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 48%, transparent);
+    border-color: var(--color-primary);
+  }
+}
+
+.timeline-playback-line {
+  position: absolute;
+  top: 0;
+  height: 28px;
+  width: 2px;
+  background: var(--color-primary);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.timeline-playback-line::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
 }
 
 .timeline-segment.motion {

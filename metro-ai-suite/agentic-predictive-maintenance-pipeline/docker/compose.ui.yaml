@@ -24,13 +24,12 @@ services:
       # compose.llm.yaml, and the UI remains available with chat disabled.
       LLM_BASE_URL: http://apm-llm:8000/v3
       LLM_MODEL_NAME: ${LLM_MODEL_NAME:-}
+      LLM_MODE: ${LLM_MODE:-llm}
       USE_CASE_ID: ${USE_CASE}
       AVAILABLE_DEVICES: ${AVAILABLE_DEVICES:-CPU}
       HOST: 0.0.0.0
       PORT: 5003
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "${UI_PORT:-5003}:5003"
     depends_on:
       apm-agent:
         condition: service_healthy

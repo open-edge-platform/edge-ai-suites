@@ -1,8 +1,15 @@
-# Weld VLM Fine-Tuning
+# VLM Fine-Tuning with Unsloth
 
-Standalone, self-contained toolkit to prepare a multimodal (image + sensor
-telemetry) weld-defect dataset and fine-tune a Qwen vision-language model
-(VLM) on it using [Unsloth](https://github.com/unslothai/unsloth) + LoRA.
+Standalone process for fine-tuning a vision-language
+model (VLM) on your own multimodal (image + text) dataset using
+[Unsloth](https://github.com/unslothai/unsloth) + LoRA, and running
+inference with the resulting adapter. This document describes the flow
+generically — it applies regardless of what domain or dataset you bring.
+
+> **Looking for a concrete, ready-to-run example?** See
+> [`weld-process.md`](weld-process.md) for a full worked instance of this
+> flow applied to a weld-defect visual inspection dataset (input schema,
+> prompt design, and the exact commands used).
 
 This directory is **not integrated** with the rest of
 `industrial-edge-insights-multimodal` — it does not wire into the
@@ -19,49 +26,48 @@ any OpenAI-compatible VLM server that supports LoRA adapters.
 - [Directory Layout](#directory-layout)
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
-- [Step 1: Input Data](#step-1-input-data)
-- [Step 2: Prepare the Dataset](#step-2-prepare-the-dataset)
-- [Step 3: Fine-Tune the Model](#step-3-fine-tune-the-model)
-- [Step 4: Run Inference](#step-4-run-inference)
 - [Pipeline Architecture](#pipeline-architecture)
+- [Expected Dataset Format](#expected-dataset-format)
+- [Step: Fine-Tune the Model](#step-fine-tune-the-model)
+- [Step: Run Inference](#step-run-inference)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
 ## Overview
 
-The pipeline has three independent stages, each its own script:
+This process is intentionally split into two concerns:
 
-| Stage | Script | Input | Output |
-|---|---|---|---|
-| 1. Data preparation | `prepare_weld_dataset.py` | Fused CSV + weld images | HF `DatasetDict`, parquet splits, conversation JSONL, `summary.json` |
-| 2. Fine-tuning | `train_qwen.py` | Parquet dataset (from stage 1) | LoRA adapter + tokenizer |
-| 3. Inference | `infer_qwen.py` | Base model or adapter (from stage 2) | Streamed structured weld-quality report |
+1. **Bring your own dataset**, prepared as a parquet file (or files) in the
+   chat-conversation shape described in
+   [Expected Dataset Format](#expected-dataset-format). How you produce
+   that parquet file is entirely up to your domain/data — see
+   [`weld-process.md`](weld-process.md) for one concrete example
+   (`prepare_weld_dataset.py`) that fuses weld images + sensor telemetry
+   into this shape.
+2. **Fine-tune and run inference** on that dataset with the two generic,
+   domain-agnostic scripts in this directory:
+
+| Script | Input | Output |
+|---|---|---|
+| `train_qwen.py` | A parquet dataset (`image` + `conversation_json` columns) | LoRA adapter + tokenizer |
+| `infer_qwen.py` | Base model or adapter (from `train_qwen.py`) | Streamed model response, token-by-token |
 
 `common.py` holds small helpers shared by `train_qwen.py` and
 `infer_qwen.py` (device detection, chat-message conversion) so the two
-scripts stay modular and independently runnable.
-
-The fine-tuned model is trained to produce a structured report per weld
-image + sensor reading, covering:
-
-- Weld Classification (Good Weld vs. one of 11 defect types)
-- Visual Observation
-- Sensor Analysis (telemetry vs. expected class profile)
-- Model Confidence + Defect Probability
-- Severity
-- Root Cause
-- Corrective Actions
+scripts stay modular and independently runnable, and so neither one embeds
+any domain-specific assumptions about your dataset's content.
 
 ## Directory Layout
 
 ```
 vlm-fine-tuning/
-├── README.md                  # this file
+├── README.md                  # this file — generic setup / train / infer
+├── weld-process.md            # concrete worked example (weld-defect analysis)
 ├── requirements.txt           # pinned Python dependencies
 ├── common.py                  # shared chat-format / device-detection helpers
-├── prepare_weld_dataset.py    # Stage 1: dataset preparation
-├── train_qwen.py              # Stage 2: LoRA fine-tuning (Unsloth + TRL)
-└── infer_qwen.py              # Stage 3: standalone inference
+├── prepare_weld_dataset.py    # weld-specific dataset prep (see weld-process.md)
+├── train_qwen.py               # Generic LoRA fine-tuning (Unsloth + TRL)
+└── infer_qwen.py               # Generic standalone inference
 ```
 
 Generated artifacts (not checked in — see `.gitignore` note below) land in
@@ -74,12 +80,31 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
 
 ## Prerequisites
 
-- Python 3.10+
-- ~16 GB+ RAM for data preparation (image + CSV processing)
+- Python 3.12
+- ~16 GB+ RAM for data preparation (image + tabular processing), if your
+  dataset-prep step is similarly memory-bound
+- Install the Intel Compute Runtime drivers - https://github.com/intel/compute-runtime/releases
 - A GPU/XPU is strongly recommended for fine-tuning and inference:
   - Intel GPU (Arc / integrated) via Intel XPU PyTorch build, or
   - CPU (functional but slow; useful only for smoke-testing the pipeline)
-- Access to a fused weld dataset — see [Step 1](#step-1-input-data)
+- Ensure your user can access the GPU's DRM render nodes. The `render` group
+  provides GPU rendering access without granting broader display-management
+  permissions. Check the render-node group and your current group memberships:
+
+  ```bash
+  stat -c "%G" /dev/dri/render*
+  groups ${USER}
+  ```
+
+  If you are not a member of the group used by the DRM render nodes, add your
+  user to the `render` group, then update the current shell's group:
+
+  ```bash
+  sudo gpasswd -a ${USER} render
+  newgrp render
+  ```
+- A dataset already prepared as parquet, in the shape described in
+  [Expected Dataset Format](#expected-dataset-format)
 
 ## Setup
 
@@ -88,121 +113,100 @@ python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
 
-# 1. Install PyTorch for your target device first (pick ONE):
-#    Intel XPU:
-pip install torch --index-url https://download.pytorch.org/whl/xpu
-#    CPU only:
-# pip install torch
+# Latest unsloth
+git clone https://github.com/unslothai/unsloth.git
+cd unsloth
+pip install .[intel-gpu-torch2110]
 
-# 2. Install the rest of the pipeline dependencies
-pip install -r requirements.txt
 ```
+
+To validate if XPU setup is done correctly.
+```python
+
+import torch
+print(f"PyTorch version: {torch.__version__}")
+print(f"XPU available: {torch.xpu.is_available()}")
+print(f"XPU device count: {torch.xpu.device_count()}")
+print(f"XPU device name: {torch.xpu.get_device_name(0)}")
+```
+
 
 Unsloth auto-detects the installed PyTorch backend (XPU/CUDA/CPU) at import
 time, and `common.detect_device()` selects `xpu` > `cpu` for
 tensor placement during training/inference.
 
-## Step 1: Input Data
+## Pipeline Architecture
 
-`prepare_weld_dataset.py` consumes two inputs that you must provide:
+At a high level, this is a generic 2-stage flow that sits on top of
+any dataset-preparation step you bring:
 
-1. **A fused CSV** (`--input-csv`), one row per labeled weld image/sample,
-   with (at minimum) these columns:
+```mermaid
+flowchart LR
+    subgraph S0["Your Dataset Prep\n(domain-specific — bring your own,\nsee weld-process.md for an example)"]
+        direction TB
+        A["Your raw data"] --> B["system/user/assistant\nconversations per sample"]
+        B --> C["Parquet export\n(image + conversation_json columns)"]
+    end
 
-   | Column | Type | Description |
-   |---|---|---|
-   | `Frame_id` | string | Image filename stem used to resolve the image file under `--images-root` |
-   | `output_prediction_details` | Python-dict literal (string) | Classifier output — see below |
-   | `Category` | string | Canonical weld-session label used for stratified splitting (falls back to the parsed `predicted_category` if absent) |
-   | `Primary Weld Current`, `Secondary Weld Voltage`, `Pressure`, `CO2 Weld Flow`, `Feed`, `Wire Consumed` | numeric | Sensor telemetry injected into the prompt |
+    subgraph S1["Fine-Tuning\n(generic — train_qwen.py)"]
+        direction TB
+        E["Load parquet dataset"] --> F["Base VLM + LoRA adapter\n(FastVisionModel)"]
+        F --> G["SFTTrainer\n(Unsloth vision collator)"]
+        G --> H["LoRA adapter\nsaved to disk"]
+    end
 
-   `output_prediction_details` must parse (via `ast.literal_eval`) into a
-   dict shaped like the output of
-   [`classification-training`](../classification-training)'s
-   `WeldDefectPredictor` — see its
-   [Output Format](../classification-training/README.md#output-format)
-   section for the exact shape, e.g.:
+    subgraph S2["Inference / Serving\n(generic — infer_qwen.py)"]
+        direction TB
+        J["Load base model\n+ LoRA adapter"] --> K["Streamed model response"]
+    end
 
-   ```python
-   {
-       "predicted_category": "Excessive Penetration",
-       "is_defect": True,
-       "defect_probability": 1.0,
-       "good_weld_probability": 0.0,
-       "confidence": 0.9886,
-       "explanation": {
-           "reason": "...",
-           "top_signal_features": [
-               {"feature": "Primary Weld Current", "value": 89.06,
-                "predicted_mean": 92.1, "good_weld_mean": 60.4,
-                "evidence_score": 0.42},
-               ...
-           ],
-       },
-   }
-   ```
-
-   In practice, this CSV is produced by fusing:
-   - Per-frame classifier predictions (run `classification-training`'s
-     inference over your weld image/sensor dataset to get
-     `output_prediction_details` per row), with
-   - Raw sensor telemetry and image `Frame_id`s, aligned by timestamp.
-
-   This repo does not include a fusion script — build one for your own data
-   pipeline, or provide the CSV in the schema above directly.
-
-2. **An image root** (`--images-root`): a directory tree of weld images
-   (`.jpg`/`.jpeg`/`.png`/`.bmp`/`.webp`), searched recursively. Each image's
-   filename stem (without extension) must match a `Frame_id` value in the
-   CSV. Sub-folder structure (e.g. per-class folders) does not matter — only
-   the filename stem is used for matching.
-
-The underlying raw images and sensor CSVs for weld defect data can be
-sourced from the same public dataset used by `classification-training`:
-[IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset).
-
-## Step 2: Prepare the Dataset
-
-```bash
-python prepare_weld_dataset.py \
-  --input-csv /path/to/merged_by_ts_time.csv \
-  --images-root /path/to/dataset/images \
-  --output-dir ./processed_dataset \
-  --train-ratio 0.8 --val-ratio 0.1 --test-ratio 0.1 \
-  --seed 42
+    C -->|"train_qwen.py\n--dataset-path"| E
+    H -->|"infer_qwen.py\n--model-path, or\nvLLM --enable-lora"| J
 ```
 
-Useful flags:
+Each stage is independently runnable and only depends on the previous
+stage's on-disk output (parquet dataset → LoRA adapter → served model), so
+you can re-run, inspect, or swap out any one stage without touching the
+others — including swapping in a completely different dataset-prep script
+for a different domain.
 
-- `--limit N` — cap the number of rows processed, for a quick dry-run.
-- `--skip-missing` — drop rows whose image cannot be resolved instead of
-  raising an error (default: strict, raises on the first missing image).
+## Expected Dataset Format
 
-What it does:
+`train_qwen.py` and `infer_qwen.py` only require a
+[HuggingFace `datasets`](https://github.com/huggingface/datasets)-loadable
+parquet file (or directory of per-split parquet files) with two columns:
 
-1. Loads and cleans the CSV (strips whitespace from headers and string
-   fields).
-2. Builds an index of `Frame_id → image path` from `--images-root`.
-3. Parses `output_prediction_details` per row.
-4. Builds a sensor-telemetry text block and picks one of 7 rotating user
-   prompt templates (deterministic given `--seed`).
-5. Synthesizes a structured assistant response (classification, visual
-   observation, sensor analysis, confidence, severity, root cause,
-   corrective actions), drawing on a small built-in defect knowledge base
-   with a generic fallback for unseen categories.
-6. Assembles a 3-turn `system` / `user(text+image)` / `assistant`
-   conversation per row.
-7. Performs a stratified train/validation/test split by canonical category,
-   with guardrails so small classes still get at least one sample per
-   split when possible.
-8. Writes:
-   - `hf_dataset/` — HF `DatasetDict`, image column castable to PIL
-   - `parquet/{train,validation,test}.parquet` — used by `train_qwen.py`
-   - `conversations/{train,validation,test}.jsonl` — raw messages, useful
-     for manual inspection or use with other trainers
-   - `summary.json` — row counts, missing-image count, output paths
+| Column | Type | Description |
+|---|---|---|
+| `image` | image (bytes, castable via `datasets.Image()`) | The image for this sample |
+| `conversation_json` | string (JSON) | A 3-turn chat conversation: `system` (persona/instructions), `user` (text + image reference), `assistant` (the target response the model should learn to produce) |
 
-## Step 3: Fine-Tune the Model
+The `conversation_json` value must parse into a list of chat messages, e.g.:
+
+```json
+[
+  {"role": "system", "content": [{"type": "text", "text": "..."}]},
+  {"role": "user", "content": [{"type": "text", "text": "..."},
+                                {"type": "image", "image": "<path>"}]},
+  {"role": "assistant", "content": [{"type": "text", "text": "..."}]}
+]
+```
+
+`common.convert_to_conversation()` parses this per row and swaps in the
+loaded `image` column value at train time; `common.build_inference_messages()`
+does the analogous thing for a single inference request. Neither function
+(nor `train_qwen.py`/`infer_qwen.py`) makes any assumption about what the
+system/user/assistant text actually contains — that's entirely up to your
+dataset-prep step. Splitting into `train`/`validation`/`test` (e.g. as
+separate parquet files, or as named splits in one directory) is expected by
+`train_qwen.py` (`train`/`validation`) and `infer_qwen.py` (any split you
+pass via `--split`).
+
+For a concrete example of building this format from raw domain data
+(images + tabular telemetry), including how many prompt variants to use
+and why, see [`weld-process.md`](weld-process.md).
+
+## Step: Fine-Tune the Model
 
 ```bash
 python train_qwen.py \
@@ -226,19 +230,73 @@ Notable flags (all optional, defaults shown):
 | `--preview-only` | off | Load data, print the first converted sample, and exit (no model build/training) |
 | `--skip-save` | off | Skip saving the adapter/tokenizer at the end |
 
-Training details:
+### Training details, and why these defaults
 
-- LoRA is applied to vision layers, language layers, attention modules, and
-  MLP modules (`FastVisionModel.get_peft_model`), with 4-bit quantized base
-  weights (`load_in_4bit=True`, default on) and gradient checkpointing.
-- Trains with `trl.SFTTrainer` + `UnslothVisionDataCollator`, evaluating and
-  checkpointing every 50 steps.
-- Optimizer is `adamw_8bit` on CUDA, `adamw_torch` otherwise (Intel
-  XPU/CPU), selected automatically via `common.detect_device()`.
+- **LoRA applied to all four module groups** — vision layers, language
+  layers, attention modules, and MLP modules
+  (`FastVisionModel.get_peft_model(finetune_vision_layers=True,
+  finetune_language_layers=True, finetune_attention_modules=True,
+  finetune_mlp_modules=True, ...)`). Most fine-tuning objectives for a VLM
+  require the model to change *both* how it perceives new visual patterns
+  (vision layers) *and* how it phrases/structures its response (language
+  layers) — tuning only one half would leave the other modality
+  un-adapted. If your task only needs one modality adapted (e.g. purely
+  stylistic text changes with no new visual concepts), you can disable the
+  unused group in `build_model()` to shrink the adapter further.
+- **`--lora-r 16` / `--lora-alpha 16`** — rank 16 is a well-established
+  middle ground: high enough capacity to learn new behavior on a
+  moderately sized dataset, low enough to keep the adapter small and fast
+  to train without overfitting to phrasing. Setting `alpha == r` (scaling
+  factor `alpha/r = 1`) keeps the effective LoRA update magnitude close to
+  Unsloth's tested default, avoiding the extra tuning needed if the ratio
+  were pushed higher. Increase `r` mainly if the base model underfits
+  (loss plateaus high); decrease it if the adapter overfits a small
+  dataset quickly.
+- **`load_in_4bit=True` (default on)** — 4-bit quantization of the frozen
+  base weights is what makes fine-tuning a multi-billion-parameter VLM
+  practical on a single Intel Arc/integrated GPU or a modest CUDA card;
+  only the small LoRA adapter is trained in higher precision, so quality
+  loss from quantizing the frozen base is minimal.
+- **`use_gradient_checkpointing="unsloth"`** — trades recomputation for
+  activation memory, which is needed headroom for `--max-seq-length 2048`
+  image + text sequences on memory-constrained GPUs.
+- **`--max-seq-length 2048`** — sized to comfortably fit a full
+  system + user (text + image) + assistant conversation, including image
+  tokens, without truncating the response the model needs to learn
+  end-to-end. Raise it if your conversations (e.g. longer prompts or
+  responses) exceed this; lower it to save memory if you know your
+  samples are shorter.
+- **`--per-device-train-batch-size 4` + `--gradient-accumulation-steps 4`**
+  (effective batch size 16) — a batch size chosen to fit typical single-GPU
+  memory budgets for a 4-bit-quantized VLM at `max_seq_length=2048`, with
+  accumulation restoring a more stable effective batch size for gradient
+  updates. Lower the batch size and raise accumulation steps proportionally
+  if you hit out-of-memory errors (see [Troubleshooting](#troubleshooting)).
+- **`--learning-rate 2e-4`** — a standard LoRA fine-tuning learning rate.
+  Because LoRA only updates a small adapter (not the full model), it
+  tolerates a rate roughly 10-20x higher than typical full fine-tuning
+  rates (~1e-5–2e-5) without diverging.
+- **`--num-train-epochs 2`** — a good starting point when target responses
+  follow a fairly consistent structure/template, since the model converges
+  on that structure quickly; more epochs beyond that mainly risk
+  overfitting to exact phrasing rather than improving generalization.
+  Increase if train/eval loss is still trending down after 2 epochs; keep
+  it low for small or highly templated datasets.
+- **Optimizer** is `adamw_8bit` on CUDA (reduces optimizer-state memory),
+  `adamw_torch` otherwise (Intel XPU/CPU, where the 8-bit optimizer isn't
+  yet the well-supported path), selected automatically via
+  `common.detect_device()`.
+- **`seed=3407`** — Unsloth's own commonly used example seed, kept here for
+  reproducibility parity with Unsloth's published examples/benchmarks.
+- **Eval/checkpoint every 50 steps** (`eval_steps=50`, `save_steps=50`) —
+  frequent enough to catch overfitting or divergence early on typical
+  dataset sizes for this workflow, without adding significant overhead
+  from constant evaluation.
+- Trains with `trl.SFTTrainer` + `UnslothVisionDataCollator`.
 - On completion, the adapter and tokenizer are saved to `--output-dir`
   (unless `--skip-save` is set).
 
-## Step 4: Run Inference
+## Step: Run Inference
 
 Run inference either against samples from your prepared test split, or
 against a single arbitrary image.
@@ -254,8 +312,8 @@ python infer_qwen.py \
 # Against a single external image
 python infer_qwen.py \
   --model-path ./qwen_3.5_2b_adapter \
-  --image /path/to/weld.jpg \
-  --instruction "Analyze this weld image for quality and identify any anomalies."
+  --image /path/to/image.jpg \
+  --instruction "Analyze this image and produce a structured report."
 ```
 
 `--model-path` accepts either a HuggingFace base model id (to sanity-check
@@ -263,52 +321,8 @@ the un-tuned base model) or a local directory containing a saved LoRA
 adapter from `train_qwen.py`. Output streams token-by-token to stdout via
 `TextStreamer`.
 
-## Pipeline Architecture
-
-```mermaid
-flowchart TD
-    A["Fused CSV\n(--input-csv)"] --> B["CSV Loader and Cleaner"]
-    I["Image Root\n(--images-root)"] --> C["Image Index by Frame_id stem"]
-
-    B --> D["Parse output_prediction_details"]
-    C --> E["Frame_id to Image Resolution"]
-    D --> F["Sensor Block Builder"]
-    E --> F
-
-    F --> G["Prompt Variant Sampler\n7 templates, seeded"]
-    D --> H["Defect Knowledge Lookup + Fallback"]
-
-    G --> J["Assistant Response Composer"]
-    H --> J
-
-    J --> K["Conversation Builder\nsystem + user(text,image) + assistant"]
-    K --> L["Record Assembler\nid, image, label, confidence, conversation_json"]
-    L --> M["Stratified Split by canonical_category\ntrain / validation / test"]
-
-    M --> N["HF DatasetDict Export"]
-    M --> O["Parquet Export per split"]
-    M --> P["JSONL Conversation Export per split"]
-    M --> Q["summary.json"]
-
-    O --> R["train_qwen.py\nload_dataset(parquet)"]
-    R --> S["Conversation Conversion (common.py)"]
-    S --> T["FastVisionModel + LoRA Adapter Setup"]
-    T --> U["SFTTrainer + UnslothVisionDataCollator"]
-    U --> V["Fine-Tuning on XPU / CUDA / CPU"]
-
-    V --> W["LoRA Adapter Save"]
-    W --> X["infer_qwen.py\nStandalone Inference"]
-    X --> Y["Structured Weld-Quality Report\nclassification + evidence + root cause + corrective actions"]
-```
-
 ## Troubleshooting
 
-- **`FileNotFoundError` / missing image errors during Step 2** — verify
-  `--images-root` contains files whose stem exactly matches `Frame_id`
-  values in the CSV, or pass `--skip-missing` to drop unmatched rows
-  instead of failing.
-- **Split ratios error** — `--train-ratio` + `--val-ratio` + `--test-ratio`
-  must sum to exactly `1.0`.
 - **Out-of-memory during training** — lower
   `--per-device-train-batch-size` and/or raise
   `--gradient-accumulation-steps` to keep the effective batch size
@@ -320,6 +334,10 @@ flowchart TD
   serve it with an OpenAI-compatible API, see
   [`docker-compose-vllm.yml`](../docker-compose-vllm.yml) and
   [`vllm.env`](../vllm.env) at the root of this component.
+- **Dataset-prep issues** (missing files, split-ratio errors, malformed
+  `conversation_json`, etc.) are specific to whichever dataset-prep script
+  you use — see [`weld-process.md` — Data-Prep Troubleshooting](weld-process.md#data-prep-troubleshooting)
+  for the worked example's troubleshooting notes.
 
 ## License
 
@@ -336,6 +354,6 @@ Third-party components used by the scripts in this directory (see
 - [PEFT](https://github.com/huggingface/peft) — Apache-2.0
 - [PyTorch](https://github.com/pytorch/pytorch) — BSD-3-Clause
 
-Dataset: sourced from
-[IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset)
-(Apache-2.0), see that dataset's card for its own license terms.
+For the license of any dataset used with this toolkit, see the dataset's
+own license terms — e.g. for the weld worked example, see
+[`weld-process.md` — License / Dataset Attribution](weld-process.md#license--dataset-attribution).

@@ -76,7 +76,7 @@ The sample video contains:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/home/dlstreamer/metro-suite" \
-  intel/dlstreamer:2026.2.0-ubuntu24-rc1 bash -c "$(cat <<EOF
+  intel/dlstreamer:2026.2.0-ubuntu24-rc2 bash -c "$(cat <<EOF
 
 cd /home/dlstreamer/metro-suite/
 

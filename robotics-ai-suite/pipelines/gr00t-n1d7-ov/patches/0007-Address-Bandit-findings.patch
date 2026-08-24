@@ -1,0 +1,182 @@
+From 7613b29571f5716bfc9ceea8d436f9d9a8565b91 Mon Sep 17 00:00:00 2001
+From: He Yue <yue.he@intel.com>
+Date: Tue, 11 Aug 2026 06:20:32 +0000
+Subject: [PATCH 7/7] Address Bandit findings
+
+In deployment OpenVINO and GR00T server scripts
+---
+ gr00t/eval/run_gr00t_server.py                | 12 +++++++-----
+ scripts/deployment/export_ov_n1d7.py          |  4 ++--
+ scripts/deployment/export_ov_n1d7_all_onnx.py |  9 ++++++---
+ scripts/deployment/run_base_ov_inference.py   | 10 ++++++----
+ .../run_base_single_ov_inference.py           | 19 ++++++++++++-------
+ 5 files changed, 33 insertions(+), 21 deletions(-)
+
+diff --git a/gr00t/eval/run_gr00t_server.py b/gr00t/eval/run_gr00t_server.py
+index 3d0a3d3db6c5..d3a46d15e1d8 100644
+--- a/gr00t/eval/run_gr00t_server.py
++++ b/gr00t/eval/run_gr00t_server.py
+@@ -60,7 +60,7 @@ class ServerConfig:
+     """Policy execution horizon during inference. Required when --dataset-path is set (ReplayPolicy)."""
+ 
+     # Server configs
+-    host: str = "0.0.0.0"
++    host: str = "0.0.0.0"  # nosec B104
+     """Host address for the server"""
+ 
+     port: int = DEFAULT_MODEL_SERVER_PORT
+@@ -104,7 +104,7 @@ def _load_policy_config_only(ov_model_dir: str, embodiment_tag: EmbodimentTag) -
+             "Re-export with the OV export flow that copies checkpoint configs."
+         )
+ 
+-    config = AutoConfig.from_pretrained(config_dir)
++    config = AutoConfig.from_pretrained(config_dir)  # nosec B615
+     model = Gr00tN1d7(config)
+     model.eval()
+ 
+@@ -114,7 +114,7 @@ def _load_policy_config_only(ov_model_dir: str, embodiment_tag: EmbodimentTag) -
+         and not (config_dir / "processor_config.json").exists()
+         else config_dir
+     )
+-    processor = AutoProcessor.from_pretrained(processor_dir)
++    processor = AutoProcessor.from_pretrained(processor_dir)  # nosec B615
+     processor.eval()
+ 
+     policy = object.__new__(Gr00tPolicy)
+@@ -141,8 +141,10 @@ def _load_policy_config_only(ov_model_dir: str, embodiment_tag: EmbodimentTag) -
+ 
+     language_keys = policy.modality_configs["language"].modality_keys
+     language_delta_indices = policy.modality_configs["language"].delta_indices
+-    assert len(language_keys) >= 1, "At least one language key is required"
+-    assert len(language_delta_indices) == 1, "Only one language delta index is supported"
++    if len(language_keys) < 1:
++        raise ValueError("At least one language key is required")
++    if len(language_delta_indices) != 1:
++        raise ValueError("Only one language delta index is supported")
+     policy.language_key = language_keys[0]
+     return policy
+ 
+diff --git a/scripts/deployment/export_ov_n1d7.py b/scripts/deployment/export_ov_n1d7.py
+index 40ccd3444718..d988ddf2c564 100755
+--- a/scripts/deployment/export_ov_n1d7.py
++++ b/scripts/deployment/export_ov_n1d7.py
+@@ -929,8 +929,8 @@ def _infer_feature_dim(norm_stats, fallback: int) -> int:
+             if arr.ndim == 0:
+                 return int(arr.item())
+             return int(arr.shape[-1])
+-        except Exception:
+-            continue
++        except (TypeError, ValueError, IndexError):
++            pass
+     return fallback
+ 
+ 
+diff --git a/scripts/deployment/export_ov_n1d7_all_onnx.py b/scripts/deployment/export_ov_n1d7_all_onnx.py
+index b8128b1e7101..e718677147a8 100644
+--- a/scripts/deployment/export_ov_n1d7_all_onnx.py
++++ b/scripts/deployment/export_ov_n1d7_all_onnx.py
+@@ -734,9 +734,12 @@ def _infer_feature_dim_from_stats(norm_stats: Any, fallback: int) -> int:
+         attr = getattr(norm_stats, attr_name, None)
+         if attr is not None:
+             try:
+-                return int(np.asarray(attr).shape[-1])
+-            except Exception:
+-                continue
++                arr = np.asarray(attr)
++                if arr.ndim == 0:
++                    return int(arr.item())
++                return int(arr.shape[-1])
++            except (TypeError, ValueError, IndexError):
++                pass
+     return fallback
+ 
+ 
+diff --git a/scripts/deployment/run_base_ov_inference.py b/scripts/deployment/run_base_ov_inference.py
+index cdb0ee5fd36e..675d81c22aa3 100644
+--- a/scripts/deployment/run_base_ov_inference.py
++++ b/scripts/deployment/run_base_ov_inference.py
+@@ -248,7 +248,7 @@ def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) ->
+     from gr00t.policy.policy import BasePolicy
+ 
+     model_dir = Path(model_path)
+-    config = AutoConfig.from_pretrained(model_dir)
++    config = AutoConfig.from_pretrained(model_dir)  # nosec B615
+     model = Gr00tN1d7(config)
+     model.eval()
+ 
+@@ -257,7 +257,7 @@ def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) ->
+         if (model_dir / "processor").is_dir() and not (model_dir / "processor_config.json").exists()
+         else model_dir
+     )
+-    processor = AutoProcessor.from_pretrained(processor_dir)
++    processor = AutoProcessor.from_pretrained(processor_dir)  # nosec B615
+     processor.eval()
+ 
+     policy = object.__new__(Gr00tPolicy)
+@@ -282,8 +282,10 @@ def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) ->
+ 
+     language_keys = policy.modality_configs["language"].modality_keys
+     language_delta_indices = policy.modality_configs["language"].delta_indices
+-    assert len(language_keys) >= 1, "At least one language key is required"
+-    assert len(language_delta_indices) == 1, "Only one language delta index is supported"
++    if len(language_keys) < 1:
++        raise ValueError("At least one language key is required")
++    if len(language_delta_indices) != 1:
++        raise ValueError("Only one language delta index is supported")
+     policy.language_key = language_keys[0]
+     return policy
+ 
+diff --git a/scripts/deployment/run_base_single_ov_inference.py b/scripts/deployment/run_base_single_ov_inference.py
+index 84ad77521ab6..a5bbf5f08baa 100644
+--- a/scripts/deployment/run_base_single_ov_inference.py
++++ b/scripts/deployment/run_base_single_ov_inference.py
+@@ -116,7 +116,7 @@ def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) ->
+     from gr00t.policy.policy import BasePolicy
+ 
+     model_dir = Path(model_path)
+-    config = AutoConfig.from_pretrained(model_dir)
++    config = AutoConfig.from_pretrained(model_dir)  # nosec B615
+     model = Gr00tN1d7(config)
+     model.eval()
+ 
+@@ -125,7 +125,7 @@ def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) ->
+         if (model_dir / "processor").is_dir() and not (model_dir / "processor_config.json").exists()
+         else model_dir
+     )
+-    processor = AutoProcessor.from_pretrained(processor_dir)
++    processor = AutoProcessor.from_pretrained(processor_dir)  # nosec B615
+     processor.eval()
+ 
+     policy = object.__new__(Gr00tPolicy)
+@@ -150,8 +150,10 @@ def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) ->
+ 
+     language_keys = policy.modality_configs["language"].modality_keys
+     language_delta_indices = policy.modality_configs["language"].delta_indices
+-    assert len(language_keys) >= 1, "At least one language key is required"
+-    assert len(language_delta_indices) == 1, "Only one language delta index is supported"
++    if len(language_keys) < 1:
++        raise ValueError("At least one language key is required")
++    if len(language_delta_indices) != 1:
++        raise ValueError("Only one language delta index is supported")
+     policy.language_key = language_keys[0]
+     logger.info("  Policy created without loading PyTorch weights")
+     return policy
+@@ -298,9 +300,12 @@ def _infer_feature_dim_from_stats(norm_stats: Any, fallback: int) -> int:
+             attr = norm_stats.get(attr_name)
+         if attr is not None:
+             try:
+-                return int(np.asarray(attr).shape[-1])
+-            except Exception:
+-                continue
++                arr = np.asarray(attr)
++                if arr.ndim == 0:
++                    return int(arr.item())
++                return int(arr.shape[-1])
++            except (TypeError, ValueError, IndexError):
++                pass
+     return fallback
+ 
+ 
+-- 
+2.43.0
+

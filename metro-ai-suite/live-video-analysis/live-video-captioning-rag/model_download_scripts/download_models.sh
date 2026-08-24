@@ -39,11 +39,11 @@ DEVICE="CPU"
 PRECISION="int8"
 MODEL=""
 
-EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh}"
+EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/release-2026.2.0/microservices/model-download/scripts/get_model.sh}"
 # Tag for the ephemeral intel/model-download container. Kept separate from the
 # application image TAG (used by compose.yaml) to avoid pinning the app release
 # tag onto the model-download image, which has its own tag stream.
-IMAGE_TAG="${MODEL_DOWNLOAD_IMAGE_TAG:-latest}"
+IMAGE_TAG="${MODEL_DOWNLOAD_IMAGE_TAG:-2026.2.0-rc1}"
 OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
 EPHEMERAL_CONTAINER_NAME="${MODEL_DOWNLOAD_EPHEMERAL_CONTAINER_NAME:-model-download-ephemeral}"
 

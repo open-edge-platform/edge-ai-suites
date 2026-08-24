@@ -19,7 +19,7 @@ elif [ -f "/opt/ros/jazzy/setup.bash" ]; then
 else
     echo "⚠️  ROS2 not found in /opt/ros/"
     echo "Please follow the Intel Robotics AI Suite getting started guide:"
-    echo "  https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html"
+    echo "  https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html"
     exit 1
 fi
 

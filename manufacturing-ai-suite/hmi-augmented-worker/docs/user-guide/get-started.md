@@ -118,8 +118,8 @@ To use the application effectively, make sure that all the steps mentioned in th
 - [Edge Microvisor Toolkit Main Page](https://github.com/open-edge-platform/edge-microvisor-toolkit)
 - [Create Edge Microvisor Toolkit bootable USB drive using source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/get-started-guide.md#create-a-bootable-usb-drive-using-source-code)
 - [Desktop Virtualization on Edge Microvisor Toolkit](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/desktop-virtualization-image-guide.md)
-- [Edge Microvisor Toolkit Documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/docs/developer-guide)
-- [Chat Question & Answer Core Main Page](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/sample-applications/chat-question-and-answer-core)
+- [Edge Microvisor Toolkit Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-microvisor-toolkit/index.html)
+- [Chat Question & Answer Core Main Page](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/chat-question-and-answer-core/index.html)
 
 <!--hide_directive
 :::{toctree}

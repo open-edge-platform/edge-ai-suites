@@ -134,6 +134,11 @@ docker compose restart vms-adapter-backend
 - Verify integration credentials: if the integration was reused from a previous run, the
   password may not be available. In that case, remove the integration from Nx Witness and
   restart VAP to recreate it.
+- Close any camera visualizer window that was already open in the Nx Witness client before the
+  pipeline started. With the camera window closed, stop the pipeline and start it again, then
+  reopen the camera. A visualizer window opened before strating the analytics does not render overlays correctly. This is Nx Optix limitaion and is being tracked with the Nx team
+  in the
+  [Network Optix developer forum](https://support.networkoptix.com/hc/en-us/community/posts/42656716334871-Analytics-bounding-box-overlay-not-shown-on-live-camera-view-REST-API-based-integration).
 
 ### MQTT Messages Not Received
 

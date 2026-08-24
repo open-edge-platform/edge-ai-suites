@@ -207,6 +207,7 @@ up: check_env_variables validate_host_ip down
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm configs/grafana/provisioning/*.json; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	$(DOCKER_COMPOSE) up -d; \
 	$(MAKE) upload_tar_file
@@ -229,24 +230,32 @@ check_models:
 
 .PHONY: check_hardware
 check_hardware:
-	@echo "Checking hardware compatibility (Panther Lake or above required)..."
-	@cpu_model=$$(grep -m1 "model name" /proc/cpuinfo | cut -d: -f2 | xargs); \
+	@echo "Checking hardware compatibility (Intel Panther Lake / Core Ultra 3xx required)..."; \
+	cpu_model=$$(lscpu | awk -F: '/Model name:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
+	cpu_vendor=$$(lscpu | awk -F: '/Vendor ID:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
+	cpu_family=$$(lscpu | awk -F: '/CPU family:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
+	cpu_model_id=$$(lscpu | awk -F: '/^Model:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
 	echo "Detected CPU: $$cpu_model"; \
-	if ! echo "$$cpu_model" | grep -qi "intel"; then \
-		echo "Error: An Intel processor is required. Panther Lake (Core Ultra 3xx) or above."; \
+	\
+	if [ "$$cpu_vendor" != "GenuineIntel" ]; then \
+		echo "Error: An Intel processor is required."; \
 		exit 1; \
 	fi; \
-	model_num=$$(echo "$$cpu_model" | grep -oiP 'Ultra\s+[3579]\s+\K\d{3}'); \
-	if [ -z "$$model_num" ]; then \
-		echo "Error: Intel Core Ultra processor not detected. Panther Lake (Core Ultra 3xx) or above is required."; \
+	\
+	if ! echo "$$cpu_model" | grep -Eqi 'Core\(TM\)[[:space:]]+Ultra[[:space:]]+([3579]|X[3579])[[:space:]]+3[0-9]{2}[A-Z]*'; then \
+		echo "Error: Intel Core Ultra 3xx processor is required."; \
+		echo "Detected: $$cpu_model"; \
 		exit 1; \
 	fi; \
-	gen=$$(echo "$$model_num" | cut -c1); \
-	if [ "$$gen" -lt 3 ]; then \
-		echo "Error: Panther Lake (Intel Core Ultra 3xx) or above is required. Detected: $$cpu_model"; \
+	\
+	if [ "$$cpu_family" != "6" ] || [ "$$cpu_model_id" != "204" ]; then \
+		echo "Error: Unsupported CPU platform."; \
+		echo "Required: Intel Panther Lake (Family 6, Model 204)."; \
+		echo "Detected: $$cpu_model (Family $$cpu_family, Model $$cpu_model_id)"; \
 		exit 1; \
 	fi; \
-	echo "Hardware check passed: Intel Core Ultra $${model_num} detected."
+	\
+	echo "Hardware check passed: $$cpu_model (Panther Lake)."
 
 .PHONY: up_vllm
 up_vllm: check_hardware check_models check_env_variables validate_host_ip down
@@ -254,6 +263,7 @@ up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm configs/grafana/provisioning/*.json; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d; \
 	$(MAKE) upload_tar_file
@@ -322,6 +332,7 @@ up_agentic: check_hardware check_models check_env_variables validate_host_ip dow
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm configs/grafana/provisioning/*.json; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection_agentic.json || exit 1; \
 	$(MAKE) download_model; \
@@ -334,10 +345,14 @@ up_agentic: check_hardware check_models check_env_variables validate_host_ip dow
 .PHONY: status
 status:
 	@echo "Status of the deployed containers..."; \
-	docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
+	docker ps -a \
+		--filter "network=timeseriessoftware_timeseries_network" \
+		--format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
 	echo "Parsing the logs of all containers to catch any error messages..."; \
 	sleep 20; \
-	containers=$$(docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "{{.Names}}"); \
+	containers=$$(docker ps -a \
+		--filter "network=timeseriessoftware_timeseries_network" \
+		--format "{{.Names}}"); \
 	failure_cont_flag=0; \
 	for container in $$containers; do \
 		errors=$$(docker logs --tail 5 $$container 2>&1 | grep -i "error"); \

@@ -160,25 +160,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
    make status
    ```
 
-2. Confirm that the agentic containers are running:
-
-   ```bash
-   docker ps --filter "name=apm-"
-   ```
-
-   Expected containers:
-   - `apm-agent` — LangGraph meta-agent
-   - `apm-llm` — LLM service provided by OpenVINO model server
-   - `apm-ui` — UI (Dashboard)
-   - `apm-metrics` — Prometheus metrics collector (if enabled)
-
-3. Inspect agent logs:
-
-   ```bash
-   docker logs -f apm-agent
-   ```
-
-4. Check the output in Grafana dashboard:
+2. Check the output in Grafana dashboard:
 
    - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
    
@@ -187,7 +169,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 
      ![Grafana dashboard login](../_assets/login_wt.png)
 
-   - After logging in, click **Dashboards** and then select **Multimodal Weld Defect Detection Explainability Dashboard**:
+   - After logging in, click **Dashboards** and then select **Multimodal Weld Defect Detection - Agentic Dashboard**:
      ![Menu view](../_assets/grafana_agentic_dashboard.png)
 
    - The following pages appear:
