@@ -23,7 +23,7 @@ export DOCKER_VOLUME_DIRECTORY="/opt"
 export DATA_INGEST_WITH_DETECT=true
 
 # huggingface mirror 
-export HF_ENDPOINT=https://hf-mirror.com
+# export HF_ENDPOINT=https://hf-mirror.com
 
 export VLM_DEVICE="${VLM_DEVICE:-GPU.1}"
 export HOST_DATA_PATH="$HOME/data"
