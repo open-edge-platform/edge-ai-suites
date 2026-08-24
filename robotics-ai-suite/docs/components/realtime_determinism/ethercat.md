@@ -42,20 +42,20 @@ This section describes the procedure to run IgH EtherCAT Master Stack on ECI.
 
 - **Native EtherCAT Device Driver** - IGB/IGC (High performance)
 
-    - Only supports IGB, IGC devices (Intel® Ethernet Controller I210,
-      Intel® Ethernet Controller I211, Intel® Ethernet Controller I225/I226)
-      and mGBE devices
-    - One networking driver for EtherCAT and non-EtherCAT devices
+  - Only supports IGB, IGC devices (Intel® Ethernet Controller I210,
+    Intel® Ethernet Controller I211, Intel® Ethernet Controller I225/I226)
+    and mGBE devices
+  - One networking driver for EtherCAT and non-EtherCAT devices
 
-    The driver gets more complicated, as it must handle EtherCAT and
-    non-EtherCAT devices.
+  The driver gets more complicated, as it must handle EtherCAT and
+  non-EtherCAT devices.
 
 - **Generic EtherCAT Device Driver** - Generic (Low performance)
 
-    - Any Ethernet hardware that is covered by a Linux Ethernet driver can be
-      used for EtherCAT
-    - Performance is low compared to the native approach, because the frame
-      data have to traverse the lower layers of the network stack
+  - Any Ethernet hardware that is covered by a Linux Ethernet driver can be
+    used for EtherCAT
+  - Performance is low compared to the native approach, because the frame
+    data have to traverse the lower layers of the network stack
 
 :::{note}
 If the target system does not support the IGB device driver, select the

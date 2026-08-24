@@ -10,8 +10,6 @@ The guides below are conditional based on your hardware and software requirement
 
 ## Enabling Intel® Graphics on Ubuntu 22.04
 
-(a) 
-
 If you are using an Intel® platform with Ubuntu 22
 you may need to install an experimental Linux kernel, firmware, and GPU drivers for
 development and deployment. Support for a custom Ubuntu 22 kernel and firmware is provided through Intel Edge Controls for Industrial (ECI). Driver support is provided through the third-party `kisak` PPA.

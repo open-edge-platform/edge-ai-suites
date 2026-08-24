@@ -19,4 +19,4 @@ Blueprints can add robot-specific drivers, bridges, and runtime packages. Refer
 to the relevant Blueprint before installing those components:
 
 - [Autonomous Mobile Robot architecture](../../hardware_blueprints/amr/index.md)
-- [Reference Implementations](../../introduction.md)
+- [Reference Implementations](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html)

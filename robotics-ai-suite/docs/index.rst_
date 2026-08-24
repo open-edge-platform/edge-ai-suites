@@ -7,5 +7,50 @@ CI/CD pipeline.
 .. toctree::
    :maxdepth: 1
    :hidden:
+   :caption: Platform Foundation
 
-   introduction
+   System Requirements <platform_foundation/system_requirements.md>
+   Getting Started <platform_foundation/getting_started.md>
+   Troubleshooting <resources/troubleshooting.md>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Components
+
+   Intel Optimized Robotics Solutions and Ingredients <components/optimized_solutions/index>
+   Real-time Determinism <components/realtime_determinism/index>
+   Benchmarking <components/benchmarking/index>
+   Security <components/security/index>
+   Middleware <components/middleware/index>
+   Sensors <components/sensors/index>
+   AI Resources <components/ai_resources/index>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Hardware Blueprints
+
+   Autonomous Mobile Robot <hardware_blueprints/amr/index>
+   Humanoid Robot <hardware_blueprints/humanoid/index>
+   Stationary Arm <hardware_blueprints/stationary_arm/index>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Software References
+
+   Autonomous Mobile Robot <software_references/amr/index>
+   Humanoid Robot <software_references/humanoid/index>
+   Stationary Arm<software_references/stationary_arm/index>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Resources
+
+   Migrating from NVIDIA <resources/migrating_from_nvidia/index>
+   Heterogeneous Computing <resources/heterogeneous_computing.md>
+   Release Notes <resources/release-notes.md>
+   Glossary <resources/glossary.md>
+

@@ -37,13 +37,13 @@ Install Intel® oneAPI™ Base Toolkit **2024.2.1**:
 
 2. To launch the GUI installer as the root, do one of the following:
 
-```bash
-# launch the GUI installer as the root
-sudo sh ./l_BaseKit_p_2024.2.1.100_offline.sh
+   ```bash
+   # launch the GUI installer as the root
+   sudo sh ./l_BaseKit_p_2024.2.1.100_offline.sh
 
-# Optionally, to launch the GUI installer as the current user
-sh ./l_BaseKit_p_2024.2.1.100_offline.sh
-```
+   # Optionally, to launch the GUI installer as the current user
+   sh ./l_BaseKit_p_2024.2.1.100_offline.sh
+   ```
 
 3. Follow the instructions in the installer.
 

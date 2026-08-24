@@ -157,9 +157,9 @@ To see a full list of available Makefile targets:
 
 ```bash
 make help
-```                                                              
+```
 
-```text         
+```text
 Target               Description
 ------               -----------
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
@@ -214,7 +214,7 @@ The skill enforces:
 2. A proposed plan and diff shown for approval before changes are applied.
 3. Changes scoped to the Wandering Sample unless you ask otherwise.
 
-The full skill definition, including the expected ASCII pipeline diagram and simulation/real-robot guidance, lives at [`.github/skills/wandering-sample/SKILL.md`](.github/skills/wandering-sample/SKILL.md).
+The full skill definition, including the expected ASCII pipeline diagram and simulation/real-robot guidance, lives at [`.github/skills/wandering-sample/SKILL.md`](../../.github/skills/wandering-sample/SKILL.md).
 
 ## License
 

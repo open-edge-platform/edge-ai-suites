@@ -96,7 +96,7 @@ ssh username@remote-ip-address "echo 'SSH works!'"
 
 Optional: add a host alias in `~/.ssh/config`:
 
-```
+```text
 Host robot
     HostName 192.168.1.100
     User ubuntu
