@@ -89,8 +89,21 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	fi; \
 	if [ ! -d data/nginx-certs/ ]; then \
 		sudo mkdir -p data/nginx-certs/; \
-		sudo openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout data/nginx-certs/key.pem -out data/nginx-certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'; \
-		sudo chmod 644 ./data/nginx-certs/key.pem; \
+		sudo chown "$$(id -u)":"$$(id -g)" -R data/nginx-certs/; \
+		openssl genrsa -out data/nginx-certs/ca-key.pem 3072; \
+		openssl req -x509 -new -nodes -key data/nginx-certs/ca-key.pem -days 3650 \
+			-out data/nginx-certs/ca-cert.pem -subj '/CN=Handheld Multi-Modal Local CA'; \
+		openssl genrsa -out data/nginx-certs/key.pem 3072; \
+		openssl req -new -key data/nginx-certs/key.pem \
+			-out data/nginx-certs/server.csr -subj '/CN=localhost'; \
+		printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\n' > data/nginx-certs/server.ext; \
+		openssl x509 -req -in data/nginx-certs/server.csr \
+			-CA data/nginx-certs/ca-cert.pem -CAkey data/nginx-certs/ca-key.pem -CAcreateserial \
+			-out data/nginx-certs/cert.pem -days 365 \
+			-extfile data/nginx-certs/server.ext; \
+		sudo chown 101:101 ./data/nginx-certs/key.pem ./data/nginx-certs/cert.pem; \
+		sudo cp ./data/nginx-certs/ca-cert.pem /usr/local/share/ca-certificates/handheld.crt; \
+		sudo update-ca-certificates; \
 		echo "Created self-signed TLS cert for localhost"; \
 	fi; \
 	echo "✓ .env updated  (RENDER_GID=$$RENDER_GID)"
@@ -156,7 +169,7 @@ vippet-up: vippet-configure ## Start vippet (builds images, installs all models,
 	else \
 		echo 'METRICS_MANAGER_HOSTNAME=ptl' >> .env; \
 	fi && \
-	$(MAKE) build-onvif-discovery run && \
+	$(MAKE) build run && \
 	echo "✓ vippet running"
 	# fedaero makefile
 	@$(MAKE) models-license models-download models-status 
@@ -200,11 +213,11 @@ build-whisper: ## Build whisper-stt image if not already present
 	fi
 
 up: build-whisper ## Start all services (standard)
-	@echo "Starting handheld-multi-modal stack (standard)..."
+	@echo "Starting handheld-multi-modal stack (standard)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE) up -d
 
 up-cdi: build-whisper ## Start all services (CDI / SR-IOV)
-	@echo "Starting handheld-multi-modal stack (CDI)..."
+	@echo "Starting handheld-multi-modal stack (CDI)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_CDI) up -d
 
 down: vippet-down ## Stop all services (standard) and vippet
@@ -214,7 +227,7 @@ down-cdi: vippet-down ## Stop all services (CDI) and vippet
 	$(COMPOSE_CDI) down
 
 up-standalone: build-whisper ## Start all services (standalone — no VIPPET required, dev/testing only)
-	@echo "Starting handheld-multi-modal stack (standalone)..."
+	@echo "Starting handheld-multi-modal stack (standalone)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_STANDALONE) up -d
 
 down-standalone: ## Stop all services (standalone)
@@ -235,9 +248,10 @@ rebuild: ## Rebuild images without touching volumes
 clean: ## Remove staging scratch (.work). Add CONFIRM=yes to also stop containers and wipe data dirs
 	rm -rf "$(WORK_DIR)"
 	@if [ "$(CONFIRM)" = "yes" ]; then \
-		$(COMPOSE) down -v; \
+		$(MAKE) down; \
 		docker run --rm -v "$(SELF_DIR)/data:/data" alpine \
 			sh -c "rm -rf /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs"; \
+		rm -rf $(VIPPET_DIR); \
 		echo "✓ Containers stopped and data directories removed"; \
 	else \
 		echo "  Tip: run  make clean CONFIRM=yes  to also stop containers and remove data dirs"; \
@@ -456,7 +470,7 @@ install-deps:
 		echo "✓ yq already present"; \
 	else \
 		echo "yq not found — installing via apt..."; \
-		sudo apt update && sudo apt install -y yq && echo "✓ yq installed via apt"; \
+		sudo apt update && sudo apt  --fix-broken install -y && sudo apt install -y yq && echo "✓ yq installed via apt"; \
     fi; \
 	if yq --help 2>&1 | grep -q 'github.com/kislyuk/yq'; then \
 		echo "✓ yq is the kislyuk/yq (Python) implementation"; \
