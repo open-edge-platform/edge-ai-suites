@@ -55,4 +55,4 @@ To exit the application, press ``Ctrl-c`` in the terminal where the launch scrip
 ### Troubleshooting
 
 For general robot issues, refer to
-the {doc}`troubleshooting guide </resources/troubleshooting>`.
+the [troubleshooting guide](../../../../resources/troubleshooting).

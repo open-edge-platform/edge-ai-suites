@@ -144,4 +144,4 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
 You can stop the demo anytime by pressing ``ctrl-C``.
 
-For general robot issues, see the {doc}`troubleshooting guide </resources/troubleshooting>`.
+For general robot issues, see the [troubleshooting guide](../../../resources/troubleshooting).
