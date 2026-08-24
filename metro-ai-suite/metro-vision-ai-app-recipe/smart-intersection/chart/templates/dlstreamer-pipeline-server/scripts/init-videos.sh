@@ -20,7 +20,7 @@ else
     VIDEOS="1122east_h264.ts 1122west_h264.ts 1122north_h264.ts 1122south_h264.ts"
     for video in $VIDEOS; do
         echo "Downloading $video..."
-        wget --no-check-certificate -O "/data/videos/$video" "$VIDEO_URL/$video"
+        wget -O "/data/videos/$video" "$VIDEO_URL/$video"
     done
     echo "Videos downloaded successfully"
     touch /data/videos/.done
