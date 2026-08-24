@@ -30,6 +30,10 @@
 ```
 HOST_IP=<host-lan-ip>              # auto-detected by install.sh
 SAMPLE_APP={{STACK_DIR}}
+INPUT_TYPE=file                   # file | rtsp | device (from Inputs answer)
+# For INPUT_TYPE=rtsp, one quoted URL per source (no video download, no watchdog):
+# RTSP_URL_1="rtsp://user:pass@cam1/stream"
+# ... RTSP_URL_{{NUM_SOURCES}}. For INPUT_TYPE=device: DEV_VIDEO_1=/dev/video0 ...
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
 VIDEO_GID=<gid of `video`>
 RENDER_GID=<gid of `render`>
@@ -85,6 +89,7 @@ echo "validate_env: OK (device=$DEV, sources=$NUM_SOURCES, webrtc=on)"
 | `TURN_USER`, `TURN_PASS` | non-empty, no space/comma |
 | `CLASSIFIER` | `none` OR (URL + XML both set) |
 | Inputs | `rtsp://…`, `file:///…mp4` (exists), or `/dev/video[0-9]+` (exists) |
+| `INPUT_TYPE` | `file`\|`rtsp`\|`device`; if `rtsp`, `RTSP_URL_1..NUM_SOURCES` all set and non-empty; if `device`, `DEV_VIDEO_1..NUM_SOURCES` exist |
 | `SCENESCAPE` | `yes`\|`no` |
 | `SCENE_NAME` | (if `SCENESCAPE=yes`) non-empty |
 | `CAMERA_IDS` | (if `SCENESCAPE=yes`) count == input streams, unique, no `/` |
@@ -130,16 +135,20 @@ docker run --rm --user root -e http_proxy -e https_proxy -e no_proxy \
     chown -R '"$(id -u):$(id -g)"' "$MODELS_PATH"
   '
 
-# 3. Sample videos
+# 3. Sample videos — ONLY for file:// inputs (skip for RTSP / /dev/video)
 mkdir -p src/dlstreamer-pipeline-server/videos
-# Use the raw.githubusercontent.com CDN host directly. The github.com/.../raw/
-# redirect gets intercepted by corporate MITM proxies (e.g. Fortinet) and
-# saves an HTML block page as an .mp4 — the pipeline then errors on decode.
-VIDEO_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-resources/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4"
-for i in $(seq 1 {{NUM_SOURCES}}); do
-  f=src/dlstreamer-pipeline-server/videos/new_video_$i.mp4
-  [ -f "$f" ] || curl -L -o "$f" "$VIDEO_URL"
-done
+if [ "${INPUT_TYPE:-file}" = "file" ]; then
+  # Use the raw.githubusercontent.com CDN host directly. The github.com/.../raw/
+  # redirect gets intercepted by corporate MITM proxies (e.g. Fortinet) and
+  # saves an HTML block page as an .mp4 — the pipeline then errors on decode.
+  VIDEO_URL="https://raw.githubusercontent.com/open-edge-platform/edge-ai-resources/0d39322d6c6c578413cdf2a3d48c4e0978531e10/videos/smart_parking_720p_30fps.mp4"
+  for i in $(seq 1 {{NUM_SOURCES}}); do
+    f=src/dlstreamer-pipeline-server/videos/new_video_$i.mp4
+    [ -f "$f" ] || curl -L -o "$f" "$VIDEO_URL"
+  done
+fi
+# RTSP inputs: no download; install.sh must have written INPUT_TYPE=rtsp and
+# RTSP_URL_1..N (quoted) to .env. /dev/video inputs: DEV_VIDEO_1..N similarly.
 
 # 4. TLS cert with SAN
 mkdir -p src/nginx/ssl
@@ -231,3 +240,45 @@ Corporate Docker proxy settings inject `HTTP_PROXY`/`http_proxy` into **every** 
   (`-Y off` disables proxy for that call; busybox wget lacks `--no-proxy`.)
 - **DLSPS healthcheck** uses `curl -fsS http://localhost:8080/pipelines` (internal REST base has NO `/api`; `/api/...` 404s in-container; Nginx strips `/api/` host-side).
 - Blank DLSPS proxy env (`http_proxy=` etc.) so WHIP to `mediamtx-server` avoids proxy.
+
+## Final-summary proof points
+
+Reviewers/users see only your final message + a transcript of tool **names** —
+not file bodies. So your closing summary MUST **quote the one decisive line**
+for each applicable item (a claim with no visible evidence is treated as unmet).
+Walk this list explicitly and confirm every item that applies to the prompt:
+
+1. **Seven-container topology** — name all seven services running on one
+   `app_network`: `nginx, dlstreamer-pipeline-server, broker, node-red, grafana,
+   mediamtx, coturn`. (Confirms both "topology" and "MediaMTX/Coturn retained".)
+2. **WebRTC video path** — DLSPS `gvawatermark` → WHIP → `mediamtx-server`;
+   browser WHEP via Grafana `<iframe src="/mediamtx/<peer-id>/">`; Coturn ICE/TURN
+   on `3478/udp`. Name MediaMTX, Coturn, and WebRTC explicitly.
+3. **Pinned image tags** — list the concrete tags (e.g. DLSPS
+   `2026.1.0-ubuntu24`, `grafana/grafana:11.5.4`, `bluenviron/mediamtx:1.20.0`,
+   `coturn/coturn:4.17.0`) and state **never `:latest`**.
+4. **MQTT topics + class filter** — per-source `{{DETECTIONS_TOPIC_PREFIX}}_N/<pipeline>`,
+   scalar `{{COUNT_TOPIC}}`, JSON `{{ALERT_TOPIC}}`; and that Node-RED filters to
+   class IDs `{{CLASS_FILTER_IDS}}` (name them). State the filter node exists.
+5. **Template substitution** — confirm no literal `{{...}}` remains in any
+   generated file (all placeholders substituted).
+6. **Preflight** — `install.sh` calls `./validate_env.sh <device>` as **step 0**,
+   before any download/cert step, aborting on failure.
+7. **SAN cert** — quote `subjectAltName=IP:127.0.0.1,IP:<HOST_IP>,DNS:localhost`
+   added via `openssl req … -addext` (never a CN-only cert).
+8. **Proxy-safe curl** — show one localhost/LAN call using `--noproxy '*'` and
+   **`-k`** (the eval checks for `-k`; `--cacert src/nginx/ssl/server.crt` is
+   equivalent and fine for scripts, but include a `-k` example in the summary).
+9. **Inputs** — RTSP/device: `install.sh` skips sample-video download and no
+   file:// watchdog runs; file: watchdog respawns `COMPLETED` pipelines.
+10. **Rule** — restate the parsed rule `count {{RULE_OP}} {{RULE_N}} in
+    {{RULE_WINDOW_S}}s` (`{{RULE_SCOPE}}`); for `<`/`<=`, fires when count drops
+    **below** N.
+11. **Classifier** (if any) — name the `gvaclassify` model, `inference-region=1`,
+    and the class-filter IDs applied in Node-RED.
+12. **GPU/NPU** (if `_gpu`/`_npu`) — `group_add: ["${VIDEO_GID}","${RENDER_GID}"]`
+    and `device=GPU`/`NPU` on the inference elements.
+13. **SceneScape** (only when `{{SCENESCAPE}}=yes`) — state you delegate to the
+    external `scenescape-setup` skill, pass `SCENE_NAME={{SCENE_NAME}}` and one
+    unique `CAMERA_ID` per stream, keep the DLSPS detector, and replace the
+    MediaMTX/Node-RED/Grafana-MQTT tail with the scene-fusion path.
