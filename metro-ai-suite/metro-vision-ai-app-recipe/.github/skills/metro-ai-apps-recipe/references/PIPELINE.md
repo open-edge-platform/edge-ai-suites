@@ -75,6 +75,26 @@ Codec-agnostic (H.264/H.265/AV1 via VAAPI). Do NOT hardcode `vah264dec`. Set `de
 - **Filter in Node-RED** by `label_id ∈ {{CLASS_FILTER_IDS}}` (`[]` = keep all).
 - OMZ single-class models (e.g. `person-detection-retail-0013`, `vehicle-detection-0202`) emit `label_id:1` with empty label; treat labelless / `label_id==1` as target — see `{{LABEL_RULE_NOTE}}`.
 
+## Secondary classifier (`gvaclassify`) — concrete wiring
+
+When `{{CLASSIFIER}} != none` (e.g. PPE compliant/non-compliant), wire a second inference stage on the **detected regions**:
+
+- `install.sh` downloads the classifier IR to `models/{{CLASSIFIER}}/{{CLASSIFIER_XML}}` (`.xml`+`.bin`) from `{{CLASSIFIER_URL}}`. Example PPE model families: an OMZ head/attribute classifier or a project-supplied hardhat/vest IR — resolve the concrete `{{CLASSIFIER_URL}}`/`{{CLASSIFIER_XML}}` from the invoking prompt or the model download skill.
+- Pipeline element (already in the shape above; keep on detected regions):
+  ```
+  queue ! gvaclassify model=/home/pipeline-server/models/{{CLASSIFIER}}/{{CLASSIFIER_XML}}
+            device={{DEVICE}} inference-region=1 model-instance-id=inst1
+            name=classification !
+  ```
+  `inference-region=1` = run per detected object (ROI), NOT full frame. On GPU/NPU set `device=GPU`/`NPU` and `nireq>=1` here too.
+- **Class filtering with a classifier:** the detector's `tensor[0].label_id` is the *object* class (e.g. person/worker); the classifier appends a second tensor with the attribute (e.g. `hardhat`/`no-hardhat`). In Node-RED, match the **classifier** tensor label:
+  ```js
+  const tens = det.tensor || [];
+  const isTarget = tens.some(t =>
+    t.label === '{{OBJECT}}' || {{CLASS_FILTER_IDS}}.indexOf(t.label_id) !== -1);
+  ```
+  Populate `{{CLASS_FILTER_IDS}}` with the concrete attribute class IDs the prompt names (e.g. hardhat/vest IDs); `[]` keeps all. For a `count<1` "no-PPE" rule, count the **compliant** class and alert when it drops below the threshold (see [`references/NODE_RED.md`](references/NODE_RED.md) step 6).
+
 ## Starting pipelines (per source, via REST through Nginx)
 
 For `X in 1..{{NUM_SOURCES}}` POST to `https://<HOST>/api/pipelines/user_defined_pipelines/<pipeline_name>`:
@@ -92,6 +112,24 @@ For `X in 1..{{NUM_SOURCES}}` POST to `https://<HOST>/api/pipelines/user_defined
 - `<pipeline_name>` = one variant; all N POSTs use same variant per device flag.
 - `curl --noproxy '*'` reaches local DLSPS REST. Deploy-time self-signed TLS requires `-k` for this local-only, same-host call. Do NOT use `-k` for remote/production; pin CA (`curl --cacert <ca.pem>`). Poll `GET /api/pipelines/status` until no `QUEUED`.
 - With `APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true`, MQTT usually becomes `{{DETECTIONS_TOPIC_PREFIX}}_X/{{PIPELINE_NAME}}` (or `_gpu`/`_npu`), but suffix is unreliable; bare `{{DETECTIONS_TOPIC_PREFIX}}_X` occurs. Consumers/tests MUST subscribe to `{{DETECTIONS_TOPIC_PREFIX}}_X/#` (also matches bare parent), not assume suffix.
+
+## Input sources — file:// vs RTSP vs /dev/video
+
+The launch body's `source.uri` is driven by the invoking prompt's **Inputs** answer; `sample_start.sh` builds it per source index `X`:
+
+- **Sample video / local file** (default): `"uri":"file:///home/pipeline-server/videos/new_video_X.mp4","type":"uri"`. `install.sh` downloads the videos; the **file-source watchdog is REQUIRED** (file:// is one-shot — see below).
+- **RTSP cameras** (`rtsp://…`, one URL per source): `"uri":"rtsp://<user>:<pass>@<cam-X-host>/<path>","type":"uri"`. RTSP is a **continuous** stream — DLSPS never emits EOS, so **do NOT download sample videos** and **do NOT run the file:// watchdog** (no `COMPLETED` respawn needed). Store the URLs in `.env` as `RTSP_URL_1..N` (quote values) and read them in `sample_start.sh`.
+- **USB/CSI device** (`/dev/videoN`): `"uri":"/dev/videoN","type":"device"`; also continuous — no video download, no watchdog.
+
+`sample_start.sh` selects behaviour from an `INPUT_TYPE` (`file`|`rtsp`|`device`) written to `.env` by `install.sh`, e.g.:
+```sh
+case "$INPUT_TYPE" in
+  file)   SRC='{"uri":"file:///home/pipeline-server/videos/new_video_'"$X"'.mp4","type":"uri"}' ;;
+  rtsp)   eval 'U=$RTSP_URL_'"$X"; SRC='{"uri":"'"$U"'","type":"uri"}' ;;
+  device) eval 'U=$DEV_VIDEO_'"$X"; SRC='{"uri":"'"$U"'","type":"device"}' ;;
+esac
+```
+Only start `sample_watchdog.sh` when `INPUT_TYPE=file`.
 
 ## File-source watchdog (required when `source.uri` is `file://`)
 
