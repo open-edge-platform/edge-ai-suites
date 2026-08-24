@@ -580,11 +580,8 @@ echo ""
 
 # Determine defaults for generated fields
 PRIMARY_DATASET=$(echo "${SCENES[0]}" | tr '[:upper:]' '[:lower:]')
-if [ "$DEFAULT_DEVICE" = "GPU" ]; then
-    MODEL_NAME="smartbuilding-fp16"
-else
-    MODEL_NAME="smartbuilding-int8"
-fi
+MODEL_NAME="${MODEL_NAME:-$(read_env_var "MODEL_NAME")}"
+MODEL_NAME="${MODEL_NAME:-smartbuilding-int8}"
 
 # Upsert helper for .env key-value pairs
 upsert_env_var() {
