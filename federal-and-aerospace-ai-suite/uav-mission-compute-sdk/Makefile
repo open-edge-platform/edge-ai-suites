@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-sim-camera-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
+.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -36,19 +36,39 @@ init:
 	fi
 
 # ── Local simulation mode (default) ───────────────────────────────────────
-# Camera mode is controlled via .env (multi-cam default, single-cam by switching vars)
+# Camera mode is controlled via .env. Each target below sets every relevant
+# var on every run, so switching between multi-cam and mono-cam is clean
+# regardless of what a previous `make up-sim-camera*` run left behind.
+SIM_CAMERA_VARS_MULTI = PX4_START_SCRIPT=start_px4_multicam.sh PX4_MODEL_DIR=multi_cam PX4_WORLD_FILE=baylands_multicam.sdf GZ_WORLD=baylands_multicam CAMERA_IDS=nadir,forward,rear VISION_CAMERA_IDS=nadir,forward,rear COMPANION_BRIDGE_URL=http://px4-gazebo:8080
+SIM_CAMERA_VARS_MONO = PX4_START_SCRIPT=start_px4.sh PX4_MODEL_DIR=mono_cam PX4_WORLD_FILE=baylands_detection.sdf GZ_WORLD=baylands_detection CAMERA_IDS=nadir VISION_CAMERA_IDS=nadir COMPANION_BRIDGE_URL=http://px4-gazebo:8080
+
+define set_env_vars
+	@touch .env
+	@for kv in $(1); do \
+		key=$${kv%%=*}; \
+		sed -i "/^$${key}=/d" .env; \
+		echo "$$kv" >> .env; \
+	done
+endef
+
 up-sim-camera:
-	@# Help: Start core infra with PX4 Gazebo sim cameras (sim-camera profile)
-	@touch .env \
-		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
-		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
+	@# Help: Start core infra with PX4 Gazebo sim cameras — 3 cameras: nadir, forward, rear (sim-camera profile)
+	$(call set_env_vars,$(SIM_CAMERA_VARS_MULTI))
 	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera --profile observability up -d --build
 
 up-sim-camera-lean:
 	@# Help: Start sim-camera without observability stack (saves ~300 MB RAM)
-	@touch .env \
-		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-gazebo:8080' >> .env \
-		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir,forward,rear' >> .env
+	$(call set_env_vars,$(SIM_CAMERA_VARS_MULTI))
+	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera up -d --build
+
+up-sim-camera-mono:
+	@# Help: Start core infra with PX4 Gazebo sim cameras — 1 camera: nadir only (sim-camera profile)
+	$(call set_env_vars,$(SIM_CAMERA_VARS_MONO))
+	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera --profile observability up -d --build
+
+up-sim-camera-mono-lean:
+	@# Help: Start mono sim-camera without observability stack (saves ~300 MB RAM)
+	$(call set_env_vars,$(SIM_CAMERA_VARS_MONO))
 	PX4_NETWORK_SERVICE=px4 $(COMPOSE_LOCAL) --profile sim-camera up -d --build
 
 up-usb-camera:
@@ -76,8 +96,9 @@ build-nc:
 	$(COMPOSE_APPS) build --no-cache
 
 down:
-	@# Help: Stop core infra (works for both sim-camera and usb-camera profiles)
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down
+	@# Help: Stop all containers — core infra (sim-camera/usb-camera) + apps
+	$(COMPOSE_APPS) down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
 
 logs:
 	@# Help: Tail logs for core infra

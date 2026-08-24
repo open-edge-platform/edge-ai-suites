@@ -86,7 +86,7 @@
         </div>
         {% endif %}
 
-        {% if result.get("evidence") %}
+        {# {% if result.get("evidence") %}
         <div class="result-section">
           <h3>&#128196; Evidence Audit Trail</h3>
           {% set e = result.evidence %}
@@ -96,7 +96,7 @@
           <pre class="llm-output">{{ e.evidence }}</pre>
           {% endif %}
         </div>
-        {% endif %}
+        {% endif %} #}
 
         {% if result.get("ticket") %}
         <div class="result-section">

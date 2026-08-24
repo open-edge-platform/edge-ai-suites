@@ -19,7 +19,7 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-suites|main|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.2.0|edge-ai-suites"
 )
 
 # Placeholder for Docker images to pull;
@@ -450,6 +450,43 @@ clone_repositories() {
 }
 
 #######################################
+# Populate required .env credentials with generated values
+# Fills UAV_ID, INFLUXDB_PASSWORD, INFLUXDB_TOKEN, INFLUXDB_ORG, and
+# GRAFANA_PASSWORD if they are absent or empty, then prints a summary.
+# Arguments:
+#   Path to the .env file
+#######################################
+populate_env_credentials() {
+  local env_file="$1"
+
+  # Helper: set a key only when it is absent or blank
+  set_if_empty() {
+    local key="$1" value="$2"
+    if ! grep -qE "^${key}=.+" "${env_file}" 2>/dev/null; then
+      sed -i "/^${key}=/d" "${env_file}"
+      echo "${key}=${value}" >> "${env_file}"
+    fi
+  }
+
+  local uav_id="uav-1"
+  local influxdb_password influxdb_token influxdb_org grafana_password
+  influxdb_password="$(openssl rand -hex 16)"
+  influxdb_token="$(openssl rand -hex 32)"
+  influxdb_org="uav-sdk"
+  grafana_password="$(openssl rand -hex 12)"
+
+  set_if_empty "UAV_ID"            "${uav_id}"
+  set_if_empty "INFLUXDB_PASSWORD" "${influxdb_password}"
+  set_if_empty "INFLUXDB_TOKEN"    "${influxdb_token}"
+  set_if_empty "INFLUXDB_ORG"      "${influxdb_org}"
+  set_if_empty "GRAFANA_PASSWORD"  "${grafana_password}"
+
+  echo ""
+  echo -e "${BOLD}${CYAN}Generated Credentials (saved to ${env_file})${NC}"
+  echo ""
+}
+
+#######################################
 # Bring up the UAV Mission Compute SDK stack
 # Starts the local simulation stack from the cloned Federal Aerospace package
 #######################################
@@ -466,6 +503,8 @@ bring_up_uav_sdk() {
 
   info "Preparing UAV Mission Compute SDK in ${sdk_dir}..."
   (cd "${sdk_dir}" && make init) || err "Failed to initialize the UAV Mission Compute SDK environment"
+
+  populate_env_credentials "${sdk_dir}/.env"
 
   info "Bringing up the UAV Mission Compute SDK stack..."
   (cd "${sdk_dir}" && make up-sim-camera) || err "Failed to bring up the UAV Mission Compute SDK stack"
@@ -649,9 +688,7 @@ main() {
   
   echo ""
   info "Next steps:"
-  info "1. Navigate to ${HOME}/oep/ to explore the cloned repositories"
-  info "2. Check repository documentation for usage instructions"
-  info "3. Start developing with ${NAME}!"
+  info "1. Navigate to ${HOME}/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk to explore the SDK"
 
 }
 

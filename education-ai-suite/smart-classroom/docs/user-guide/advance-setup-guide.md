@@ -84,7 +84,7 @@ features:
 
 ### B. Default Configuration
 
-By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
+By default, the project uses Whisper for transcription, and summarization runs on the shared OpenVINO vision-language model configured under `models.text_gen`. You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```yaml
 asr:
@@ -94,11 +94,14 @@ asr:
   temperature: 0.0
 
 summarizer:
-  provider: openvino
-  name: Qwen/Qwen2-7B-Instruct # Examples: Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct, Qwen/Qwen2.5-7B-Instruct
+  mode: dialog # Supported: dialog, teacher, hybrid
+
+  text_gen: # Shared by summary, mindmap, segmentation and Q&A
+  provider: vlm
+  vlm_name: Qwen/Qwen3-VL-8B-Instruct
   device: GPU                 # Options: GPU or CPU
-  weight_format: int8         # Supported: fp16, fp32, int4, int8
-  max_new_tokens: 1024        # Maximum tokens to generate in summaries
+  weight_format: int4         # Supported: fp16, int4, int8
+  max_new_tokens: 5120        # Maximum tokens to generate
 ```
 
 ### C. Chinese Audio Transcription
@@ -380,7 +383,7 @@ If you changed the port, adjust the URL accordingly.
 
   2. Rerun only Step 1, option D. If the virtual environment already exists, rerun the required pip commands.
 
-- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try running the model on CPU by setting `device: CPU` under `models.text_gen` in `config.yaml`.
 
 - **Tokenizer load issue:**
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The UAV Mission Compute SDK provides a comprehensive development environment for UAV (Uncrewed Aerial Vehicle) applications using Intel's optimized compute tools and frameworks. It packages a PX4 + Gazebo simulation with multi-camera support, OpenVINO-based vision processing on Intel GPU, MQTT telemetry, RTSP streaming, and an interactive Edge AI dashboard — all orchestrated via Docker Compose.
+The UAV Mission Compute SDK provides a comprehensive development environment for UAV (Uncrewed Aerial Vehicle) applications using Intel's optimized compute tools and frameworks. It packages a PX4 + Gazebo simulation with multi-camera support, OpenVINO-based vision processing on Intel GPU, MQTT telemetry, and RTSP streaming — all orchestrated via Docker Compose.
 
 ## Learning Objectives
 
@@ -10,8 +10,7 @@ Upon completion of this guide, you will be able to:
 
 - Install and configure the UAV Mission Compute SDK
 - Launch the PX4 simulation stack with simulated cameras
-- Start the AI vision processing and Edge AI dashboard
-- Access the real-time dashboard for UAV telemetry and detection overlays
+- Start the AI vision processing pipeline
 - View live RTSP camera streams with Intel Edge AI inference
 
 ## System Requirements
@@ -44,7 +43,6 @@ The installation process configures the following components:
 - InfluxDB time-series storage and Grafana dashboards
 - Metrics manager for host platform monitoring
 - OpenVINO-based vision processor (YOLOv2 on Intel GPU)
-- Edge AI Showcase dashboard
 
 Once the script completes, the full stack is built and running:
 
@@ -63,34 +61,15 @@ cd ~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 docker compose ps px4
 ```
 
-### Step 2: Start AI Helpers and Sample Apps
+### Step 2: Arm the UAV (Activate Cameras)
 
-Vision processing and the web dashboard depend on PX4 being healthy:
-
-```bash
-make apps
-```
-
-### Step 3: Access the Edge AI Dashboard
-
-Open a browser and navigate to **http://localhost:5002**
-
-The dashboard displays:
-
-- **Camera tiles**: 3 live video feeds (nadir, forward, rear) with real-time vehicle detections
-- **Telemetry panel**: position, altitude, battery, velocity
-- **ARM/DISARM button**: activates camera inference
-- **Demo mission button**: executes a pre-programmed waypoint sequence
-
-### Step 4: Arm the UAV (Activate Cameras)
-
-Cameras only stream when the UAV is armed. Arm it from the dashboard or via the REST API:
+Cameras only stream when the UAV is armed. Arm it via the REST API:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
 ```
 
-### Step 5: View RTSP Streams Directly (Optional)
+### Step 3: View RTSP Streams (Optional)
 
 View any camera feed using an RTSP player:
 
@@ -98,13 +77,7 @@ View any camera feed using an RTSP player:
 ffplay rtsp://localhost:8554/uav-1/nadir
 ```
 
-### Step 6: Stop the Application
-
-To stop the sample apps and AI helpers:
-
-```bash
-make apps-down
-```
+### Step 4: Stop the Application
 
 To stop the entire infrastructure stack:
 
@@ -124,14 +97,13 @@ The UAV Mission Compute SDK integrates multiple technologies:
 - **OpenVINO Vision Processor**: Real-time YOLOv2 vehicle detection on Intel GPU
 - **MQTT Broker (Mosquitto)**: Lightweight messaging for telemetry and detections
 - **InfluxDB + Grafana**: Time-series storage and dashboards for flight and platform metrics
-- **Edge AI Showcase Dashboard**: Web UI at port 5002
 
 ## Next Steps
 
 After installation completes:
 
-1. Navigate to `$HOME/oep/edge-ai-suites/federal-aerospace/uav-mission-compute-sdk/` to explore the SDK
-2. Review [GETTING_STARTED.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/GETTING_STARTED.md) for USB camera setup and advanced configuration
+1. Navigate to `$HOME/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/` to explore the SDK
+2. Review the [Get Started](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) section for USB camera setup and advanced configuration
 3. Access Grafana dashboards at **http://localhost:3000** (admin/admin)
 4. Explore the REST API at **http://localhost:8080** for flight control commands
 

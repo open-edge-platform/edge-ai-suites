@@ -114,7 +114,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.8.0-rc1
+         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.8.0-rc2
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -122,7 +122,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.4.0-rc1
+         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.4.0-rc2
          ```
 
          <!--hide_directive
@@ -137,7 +137,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         tar -xvf pallet-defect-detection-reference-implementation-2.8.0-rc1.tgz
+         tar -xvf pallet-defect-detection-reference-implementation-2.8.0-rc2.tgz
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -145,7 +145,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         tar -xvf pcb-anomaly-detection-1.4.0-rc1.tgz
+         tar -xvf pcb-anomaly-detection-1.4.0-rc2.tgz
          ```
 
          <!--hide_directive
@@ -219,7 +219,9 @@ configured Kubernetes cluster.
    ::::
    hide_directive-->
 
-   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
+   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 5. Install prerequisites. Run with sudo if needed.
 

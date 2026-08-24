@@ -112,7 +112,7 @@ mkdir -p ~/oep/oep-vision-tutorial-2/videos/
 cd ~/oep/oep-vision-tutorial-2
 
 # Download Big Buck Bunny sample video (Creative Commons licensed)
-wget -O videos/Big_Buck_Bunny.mp4 "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"
+wget -O videos/Big_Buck_Bunny.mp4 "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_30MB.mp4"
 ```
 
 ### Step 3: Create Multi-Stream Video Processing Script
@@ -257,7 +257,7 @@ docker run -it --rm --net=host \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
   -v $PWD/videos:/home/dlstreamer/videos:ro \
   -v $PWD/decode.sh:/home/dlstreamer/decode.sh:ro \
-  intel/dlstreamer:2026.2.0-ubuntu24-rc1 \
+  intel/dlstreamer:2026.2.0-ubuntu24-rc2 \
   /home/dlstreamer/decode.sh
 ```
 
