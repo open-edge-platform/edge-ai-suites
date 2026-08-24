@@ -157,7 +157,7 @@ ok "Mock webhook up (pid $MOCK_PID)"
 
 info "Starting analytics on :$ANALYTICS_PORT..."
 WEBHOOK_URL="http://localhost:$WEBHOOK_PORT/events" \
-    $PYTHON __main__.py --host 0.0.0.0 --port "$ANALYTICS_PORT" --config config/config.yaml &
+    $PYTHON __main__.py --host 127.0.0.1 --port "$ANALYTICS_PORT" --config config/config.yaml &
 ANALYTICS_PID=$!
 for _ in {1..15}; do
     curl -sf "http://localhost:$ANALYTICS_PORT/health" >/dev/null 2>&1 && break
