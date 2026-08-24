@@ -164,7 +164,6 @@ services:
     ports:
       - "127.0.0.1:80:80"       # redirect to single pane HTTPS
       - "127.0.0.1:443:443"     # Single pane dashboard over HTTPS
-      - "127.0.0.1:1443:1443"   # VIPPET UI over HTTPS
       - "127.0.0.1:5443:5443"   # Whisper STT over HTTPS
       - "127.0.0.1:6443:6443"   # OVMS Prometheus metrics over HTTPS
       - "127.0.0.1:7443:7443"   # Grafana over HTTPS
