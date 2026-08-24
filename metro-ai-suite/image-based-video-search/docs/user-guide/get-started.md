@@ -73,7 +73,7 @@ By following this guide, you will learn how to:
       docker run --rm --user=root \
         -e http_proxy -e https_proxy -e no_proxy \
         -v "$MODELS_PATH:/output" \
-        intel/dlstreamer:2026.2.0-ubuntu24-rc1 bash -c "$(cat <<EOF
+        intel/dlstreamer:2026.2.0-ubuntu24-rc2 bash -c "$(cat <<EOF
 
       mkdir -p src/dlstreamer-pipeline-server/models/public
 
@@ -119,13 +119,13 @@ By following this guide, you will learn how to:
           cp -r ./models/public/resnet-50-pytorch /output
           "
       # Download and quantize the yolov11s model
-      docker pull docker.io/intel/dlstreamer:2025.1.2-ubuntu24
+      docker pull docker.io/intel/dlstreamer:2026.2.0-ubuntu24-rc2
       docker run --rm --user=root `
         -e http_proxy `
         -e https_proxy `
         -e no_proxy `
         -v "${MODELS_PATH}:/output" `
-        intel/dlstreamer:2025.1.2-ubuntu24 bash -c @'
+        intel/dlstreamer:2026.2.0-ubuntu24-rc2 bash -c @'
         set -e
 
         mkdir -p src/dlstreamer-pipeline-server/models/public

@@ -15,6 +15,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Tell the main process which language to render the native menus in
   // (application menu + right-click context menu). Call on language change.
   setLanguage: (lang) => ipcRenderer.send('menu:setLanguage', lang),
+  // Recolour the native title bar overlay to match whatever is covering the
+  // caption area: 'dimmed' behind a modal, 'light' behind the report panel,
+  // 'default' for the app header.
+  setTitleBarTheme: (theme) => ipcRenderer.send('titlebar:setTheme', theme),
   // Open the OS-native folder chooser, optionally starting at `defaultPath`.
   // Resolves to the selected absolute path, or '' if the user cancelled.
   pickDirectory: (defaultPath) => ipcRenderer.invoke('dialog:pickDirectory', defaultPath),

@@ -174,3 +174,74 @@ class TestSegmentExtractorWithRealVideo:
             extractor.add_frame(frame)
         extractor.close()
         assert extractor.is_recording is False
+
+    def test_output_codec_is_h264(self, extractor, video_frames):
+        """Segments are browser-playable H.264 by construction — no post-hoc
+        transcode pass exists anymore (rtsp_monitor emits the file as-is)."""
+        extractor.start_segment()
+        for frame in video_frames[:90]:
+            extractor.add_frame(frame)
+        result = extractor.finish()
+        assert result is not None
+
+        # stsd sample-entry fourcc: avc1 = H.264-in-mp4 (mp4v would be "mp4v").
+        # Byte-probe instead of ffprobe — the production image ships none.
+        with open(result.path, "rb") as f:
+            data = f.read(64 * 1024)
+        assert b"avc1" in data, "segment is not H.264 (no avc1 sample entry)"
+
+    def test_output_has_faststart_moov(self, extractor, video_frames):
+        """moov precedes mdat so the dashboard can seek with one range request."""
+        extractor.start_segment()
+        for frame in video_frames[:90]:
+            extractor.add_frame(frame)
+        result = extractor.finish()
+        assert result is not None
+
+        with open(result.path, "rb") as f:
+            data = f.read()
+        moov, mdat = data.find(b"moov"), data.find(b"mdat")
+        assert 0 < moov < mdat, "moov must precede mdat (faststart)"
+
+    def test_writer_open_failure_latches_and_recovers(self, tmp_path, video_frames, monkeypatch):
+        """ffmpeg missing: segment is dropped with an error log, frames are
+        counted (duration logic intact), and the NEXT segment retries."""
+        from stream_monitor.pipeline import segment_extractor as se
+
+        class DeadWriter:
+            def __init__(self, *a, **k): pass
+            def isOpened(self): return False
+            def write(self, frame): pass
+            def release(self): pass
+
+        monkeypatch.setattr(se, "H264SegmentWriter", DeadWriter)
+        extractor = SegmentExtractor(
+            config=SegmentConfig(max_duration=5.0, min_duration=0.5),
+            output_dir=str(tmp_path / "motion_events"),
+            source_id="test_cam", fps=30.0, frame_size=(1280, 720),
+        )
+        extractor.start_segment()
+        assert extractor.is_recording is False
+        for frame in video_frames[:30]:
+            assert extractor.add_frame(frame) is None
+        assert extractor.finish() is None
+        # Latch cleared by finish: next segment retries the writer.
+        extractor.start_segment()
+        assert extractor._write_failed is True  # DeadWriter still fails
+
+    def test_writer_mid_segment_death_discards_segment(self, tmp_path, video_frames):
+        """If the ffmpeg pipe dies mid-segment the mp4 has no moov — discard
+        instead of emitting an unreadable file."""
+        extractor = SegmentExtractor(
+            config=SegmentConfig(max_duration=5.0, min_duration=0.5),
+            output_dir=str(tmp_path / "motion_events"),
+            source_id="test_cam", fps=30.0, frame_size=(1280, 720),
+        )
+        extractor.start_segment()
+        for frame in video_frames[:30]:
+            extractor.add_frame(frame)
+        # Simulate ffmpeg dying mid-segment (broken pipe path in the writer).
+        extractor._writer._proc = None
+        result = extractor.finish()
+        assert result is None
+        assert extractor.is_recording is False

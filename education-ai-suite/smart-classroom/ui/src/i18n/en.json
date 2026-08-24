@@ -435,6 +435,8 @@
     "summarize":"Summarize",
     "videoSummarizationToggle":"Enable video summarization for this file",
     "summarizationFailed": "Video summarization failed. Please try again",
+    "addTagPlaceholder": "Add a tag — press Enter or comma",
+    "tagPendingHint": "Press Enter to add this tag to {{count}} selected file(s) — or click away and it will be added for you.",
     "unsupportedFilesWarning": "Unsupported file(s) skipped: {{files}}. Supported formats: MP4, JPG, PNG, JPEG, TXT, PDF, DOCX, DOC, PPTX, PPT, XLSX, XLS, HTML, HTM, XML, MD."
   },
   "searchSection": {
