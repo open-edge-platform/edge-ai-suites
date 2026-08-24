@@ -38,7 +38,7 @@ dlstreamerpipelineserver:
     # key: dlstreamerpipelineserver.repository.image
     image: docker.io/intel/dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 2025.2.0-ubuntu24
+    tag: 2026.2.0-ubuntu24-rc2
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector

@@ -80,7 +80,7 @@ sudo apt-get install ros-humble-benchmark-framework
 Then install Python and optional dependencies:
 
 ```bash
-cd /opt/ros/$ROS_DISTRO/share/benchmark-framework
+cd /opt/ros/$ROS_DISTRO/benchmarking
 make install
 ```
 
@@ -209,11 +209,14 @@ Parses `monitor_resources.py` log files and generates CPU/memory plots, heatmaps
 | `--pids` | CPU utilization per PID/thread (top N) |
 | `--heatmap` | Core utilization heatmap |
 | `--mapping` | Thread-to-core scatter plot |
+| `--core-nodes` | Per-core CPU stacked by ROS2 node (top busiest cores), if `ros2_node_map` is present |
 | `--disk-io` | Per-process disk I/O (read/write) plot, if collected via `--io`/`-d` |
 | `--ctx-switches` | Per-process context-switch (voluntary/involuntary) plot, if collected via `--ctx-switches`/`-x` |
 | `--top N` | Number of top threads to show (default: 10) |
 | `--output-dir DIR` | Save plots as PNG (omit to display interactively) |
 | `--summary` | Print statistics only, no plots |
+
+> A stack dominated by a single node on `--core-nodes` signals affinity/scheduling contention on that core; an even mix signals generally CPU-heavy load. PIDs absent from `ros2_node_map` are grouped as `(non-ROS2)`; less-busy nodes per core are summed into `(other)`.
 
 ```bash
 ./src/visualize_resources.py ros2.log --cores --heatmap --top 20 --output-dir ./plots/
@@ -594,6 +597,7 @@ Top-level fields:
 | `jitter_stdev_ms` | number\|null | ✅ | ms | Standard deviation of per-node mean jitter values |
 | `cpu_mean_pct` | number\|null | ✅ | % | Mean CPU utilization (ROS2 processes, via `resource_usage.json`); null when resource monitor was not run |
 | `cpu_max_pct` | number\|null | ✅ | % | Peak CPU utilization; null when resource monitor was not run |
+| `latency_spikes` | array | ✅ | — | Latency outliers (≥ that pair's own p99) cross-referenced against the nearest `resource_usage.json` sample; capped to `--max-latency-spikes` (default 5). Empty when resource monitor was not run or no outliers found (see below) |
 | `per_node` | object | ✅ | — | Per-node summary keyed by fully-qualified node name (see below) |
 | `pairs` | array | ✅ | — | Full scalar statistics for every de-duplicated (node, input, output) pair |
 | `metadata` | object | ✅ | — | Session provenance (see below) |
@@ -614,6 +618,21 @@ Each key is a fully-qualified ROS 2 node name (e.g. `/controller_server`):
 | `primary_input` | string | — | Topic used as the latency trigger input |
 | `primary_output` | string | — | Topic used as the latency trigger output |
 | `pipeline_stage` | string | — | Classified stage: `Sensor` / `Perception` / `Planning` / `Control` / `Other` |
+
+#### `latency_spikes` entry fields
+
+One entry per cross-referenced latency outlier, sorted by `latency_ms` descending:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `node` / `input` / `output` | string | The (node, input, output) pair this outlier belongs to |
+| `out_ts` | number | Epoch-seconds timestamp of the outlier output message |
+| `latency_ms` | number | Observed latency for this event |
+| `resource_sample_ts` | number\|null | Epoch-seconds timestamp of the nearest `resource_usage.json` sample |
+| `time_delta_sec` | number\|null | Absolute time gap between `out_ts` and the matched resource sample |
+| `top_consumers` | array | Top 3 CPU-consuming processes at that sample: `{pid, node (nullable), cpu_pct}` |
+
+> **Known limitation**: `out_ts` is wall-clock/bag-recorded epoch seconds, while `resource_usage.json`'s `ts` is always the resource probe's wall clock. If the session used `--use-sim-time`, `out_ts` may be simulated time and diverge from the probe's wall-clock samples, making the correlation unreliable.
 
 #### `metadata` fields (Level 1 & 2 shared)
 

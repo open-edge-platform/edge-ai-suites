@@ -30,7 +30,11 @@ setup(
             'share/' + package_name + '/launch',
             [package_name + '/launch/realsense2_tutorial.launch.py'],
         ),
-        ('share/' + package_name + '/config', glob(package_name + '/config/*.rviz')),
+        (
+            'share/' + package_name + '/config',
+            glob(package_name + '/config/*.rviz') + glob(package_name + '/config/*.yaml'),
+        ),
+        ('share/' + package_name + '/scripts', ['scripts/find_cameras.sh']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
