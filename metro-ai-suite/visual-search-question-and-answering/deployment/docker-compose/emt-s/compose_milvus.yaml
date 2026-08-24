@@ -18,7 +18,7 @@ services:
       VLM_DEVICE: ${VLM_DEVICE}
       VLM_SEED: ${VLM_SEED}
       WORKERS: ${WORKERS:-1}
-      HF_ENDPOINT: https://hf-mirror.com
+      HF_ENDPOINT: ${HF_ENDPOINT}
     restart: unless-stopped
     devices:
       - /dev/dri:/dev/dri
@@ -27,11 +27,11 @@ services:
       - ${VIDEO_GROUP_ID}    
       - ${RENDER_GROUP_ID}   
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode()==200 else 1)"]
       interval: 10s
       timeout: 10s
-      retries: 40
-      start_period: 10s
+      retries: 50
+      start_period: 30s
     networks:
       - default
     volumes:
