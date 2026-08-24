@@ -92,6 +92,8 @@ make up                Start this stack (standard, requires Visual Pipeline and 
 make up-cdi            Start this stack (CDI, requires Visual Pipeline and Platform Evaluation Tool network)
 make up-standalone     Start this stack without Visual Pipeline and Platform Evaluation Tool (development or testing only)
 make down              Stop all services
+make down-cdi          Stop all services started with up-cdi (or with deploy-cdi)
+make down-standalone   Stop all services started with up-standalone
 make build             Build local images
 make restart           Restart all services
 make urls              Print all service endpoints
