@@ -226,7 +226,8 @@ $VeiSubmoduleUrl = "https://github.com/intel-retail/voice-enabled-interactions.g
 
 # Pinned commit for reproducible builds (see edge-ai-libraries note above).
 # $VeiPinnedCommit = "cc9b25d2b28717a74380d853c762c68072e82e8b" Last Stable commit SHA (Voice Enabled Interactions)
-$VeiPinnedCommit = "771132c3a784fdea1f5617a5b349fc30bd1640a7"
+# $VeiPinnedCommit = "771132c3a784fdea1f5617a5b349fc30bd1640a7"
+$VeiPinnedCommit = "34ed87379dfac43c675c3ca74e4f814fd1c061b6"
 
 $VeiRepoRoot = $null
 try { $VeiRepoRoot = (git -C $ScriptDir rev-parse --show-toplevel 2>$null) } catch {}
