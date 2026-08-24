@@ -85,9 +85,9 @@ Follow the steps below to run the pipeline.
 
 2. Start the pipeline.
 
-  <!--hide_directive ::::{tab-set} hide_directive-->
-  <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-  <!--hide_directive :sync: pallet-detect hide_directive-->
+    <!--hide_directive ::::{tab-set} hide_directive-->
+    <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+    <!--hide_directive :sync: pallet-detect hide_directive-->
 
     ```sh
     ./sample_start.sh -p pallet_defect_detection_npu

@@ -121,8 +121,9 @@ instructions.
 After installation, verify the Nx Witness REST API is accessible:
 
 ```bash
-curl -k -s https://<NX_HOST_IP>:7001/rest/v4/info | python3 -m json.tool | grep '"name"\|"version"'
+curl -k -s -o /dev/null -w 'HTTP %{http_code}\n' https://<NX_HOST_IP>:7001/api/moduleInformation
 ```
+You should get a response- `HTTP 200` to confirm REST API is up.
 
 ### 2.2 Enable Digest Authentication for RTSP
 
@@ -190,7 +191,7 @@ look for the **Camera ID**.
 To run this test in a DL Streamer Pipeline Server container:
 
 ```bash
-docker run -it --entrypoint bash  --rm --net host  intel/dlstreamer-pipeline-server:latest
+docker run -it --entrypoint bash  --rm --net host  intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
 ```
 
 Then run the GStreamer command:
