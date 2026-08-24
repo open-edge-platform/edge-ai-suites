@@ -785,17 +785,18 @@ class SystemTelemetry:
     if not self._gpu_tool or not os.path.exists("/dev/dri"):
       return None
 
-    cmd = [self._gpu_tool, "-J", "-s", "200", "-l", "1"]
+    # -l is a plain-text flag in newer intel_gpu_top, not a sample count; run
+    # without it and kill after 800 ms to collect a few JSON samples then parse.
+    cmd = [self._gpu_tool, "-J", "-s", "200"]
     try:
-      proc = subprocess.run(
-        cmd,
-        check=False,
-        capture_output=True,
-        text=True,
-        timeout=3.0,
-      )
-      output = (proc.stdout or "") + (proc.stderr or "")
-    except (OSError, subprocess.TimeoutExpired) as exc:
+      proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+      try:
+        out, err = proc.communicate(timeout=0.8)
+      except subprocess.TimeoutExpired:
+        proc.kill()
+        out, err = proc.communicate()
+      output = (out or "") + (err or "")
+    except OSError as exc:
       logger.debug("intel_gpu_top probe failed: %s", exc)
       return None
 
@@ -809,23 +810,30 @@ class SystemTelemetry:
     if not output:
       return None
 
-    for line in reversed(output.splitlines()):
-      line = line.strip().rstrip(",")
-      if not line.startswith("{"):
-        continue
-      try:
-        payload = json.loads(line)
-      except json.JSONDecodeError:
-        continue
-      engines = payload.get("engines") or {}
-      candidates = []
-      for name, info in engines.items():
-        if not isinstance(info, dict):
-          continue
-        if any(token in name.lower() for token in ("render", "3d", "compute")):
-          busy = info.get("busy")
-          if isinstance(busy, (int, float)):
-            candidates.append(float(busy))
-      if candidates:
-        return round(max(candidates), 1)
-    return None
+    # intel_gpu_top -J streams objects without commas between them (not valid JSON
+    # array); extract each complete top-level {...} block by tracking brace depth.
+    last_percent: float | None = None
+    depth = 0
+    start = -1
+    for i, ch in enumerate(output):
+      if ch == '{':
+        if depth == 0:
+          start = i
+        depth += 1
+      elif ch == '}':
+        depth -= 1
+        if depth == 0 and start != -1:
+          try:
+            payload = json.loads(output[start:i + 1])
+          except json.JSONDecodeError:
+            start = -1
+            continue
+          for name, info in (payload.get("engines") or {}).items():
+            if not isinstance(info, dict):
+              continue
+            if any(t in name.lower() for t in ("render", "3d", "compute")):
+              busy = info.get("busy")
+              if isinstance(busy, (int, float)):
+                last_percent = round(float(busy), 1)
+          start = -1
+    return last_percent

@@ -429,6 +429,8 @@ services:
       - SCENE_ID=${SCENE_ID:-}
     devices:
       - "/dev/dri:/dev/dri"
+    cap_add:
+      - PERFMON
     volumes:
       - ./scripts:/app/scripts:ro
       - ./config:/app/config:ro
@@ -438,7 +440,8 @@ services:
         target: certs/scenescape-ca.pem
       - controller.auth
     command: >
-      sh -c "pip install --no-cache-dir fastapi 'uvicorn[standard]' httpx paho-mqtt &&
+      sh -c "apt-get update -qq && apt-get install -y --no-install-recommends intel-gpu-tools &&
+             pip install --no-cache-dir fastapi 'uvicorn[standard]' httpx paho-mqtt &&
              python3 /app/scripts/dashboard.py"
     restart: unless-stopped
     pids_limit: 1000
