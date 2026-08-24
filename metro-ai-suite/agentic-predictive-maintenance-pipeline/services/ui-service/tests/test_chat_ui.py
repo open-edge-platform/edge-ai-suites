@@ -79,22 +79,53 @@ def test_chat_page_preselects_requested_completed_run(client, respx_mock):
 
 @pytest.mark.parametrize("path", ["/", "/detections", "/results/example-run"])
 def test_existing_pages_link_to_chat(client, path, respx_mock):
-    if path == "/":
-        respx_mock.get("http://mock-storage/detections/summary").respond(200, json={})
-        respx_mock.get("http://mock-detection/detection/runs").respond(200, json=[])
-        respx_mock.get("http://mock-agent/agents/runs").respond(200, json=[])
-        respx_mock.get("http://mock-detection/detection/videos").respond(200, json={"videos": []})
-    elif path == "/detections":
-        respx_mock.get("http://mock-storage/detections").respond(200, json=[])
-        respx_mock.get("http://mock-storage/detections/summary").respond(200, json={})
-    else:
-        respx_mock.get("http://mock-detection/detection/status/example-run").respond(
-            200, json={"phase": "detecting"}
-        )
+    original_available = app_module._chat_available
+    try:
+        app_module._chat_available = True
+        if path == "/":
+            respx_mock.get("http://mock-storage/detections/summary").respond(200, json={})
+            respx_mock.get("http://mock-detection/detection/runs").respond(200, json=[])
+            respx_mock.get("http://mock-agent/agents/runs").respond(200, json=[])
+            respx_mock.get("http://mock-detection/detection/videos").respond(200, json={"videos": []})
+        elif path == "/detections":
+            respx_mock.get("http://mock-storage/detections").respond(200, json=[])
+            respx_mock.get("http://mock-storage/detections/summary").respond(200, json={})
+        else:
+            respx_mock.get("http://mock-detection/detection/status/example-run").respond(
+                200, json={"phase": "detecting"}
+            )
 
-    response = client.get(path)
-    assert response.status_code == 200
-    assert 'href="/chat"' in response.text
+        response = client.get(path)
+        assert response.status_code == 200
+        assert 'href="/chat"' in response.text
+    finally:
+        app_module._chat_available = original_available
+
+
+@pytest.mark.parametrize("path", ["/", "/detections", "/results/example-run"])
+def test_existing_pages_hide_chat_in_fallback(client, path, respx_mock):
+    """When chat is unavailable (fallback mode), the Ask & Analyze link is hidden."""
+    original_available = app_module._chat_available
+    try:
+        app_module._chat_available = False
+        if path == "/":
+            respx_mock.get("http://mock-storage/detections/summary").respond(200, json={})
+            respx_mock.get("http://mock-detection/detection/runs").respond(200, json=[])
+            respx_mock.get("http://mock-agent/agents/runs").respond(200, json=[])
+            respx_mock.get("http://mock-detection/detection/videos").respond(200, json={"videos": []})
+        elif path == "/detections":
+            respx_mock.get("http://mock-storage/detections").respond(200, json=[])
+            respx_mock.get("http://mock-storage/detections/summary").respond(200, json={})
+        else:
+            respx_mock.get("http://mock-detection/detection/status/example-run").respond(
+                200, json={"phase": "detecting"}
+            )
+
+        response = client.get(path)
+        assert response.status_code == 200
+        assert 'href="/chat"' not in response.text
+    finally:
+        app_module._chat_available = original_available
 
 
 def test_chat_script_uses_safe_dom_rendering():

@@ -17,7 +17,7 @@
   <nav>
     <a href="/">Dashboard</a>
     <a href="/detections" class="active">Detections</a>
-    <a href="/chat">Ask &amp; Analyze</a>
+    {% if chat_available %}<a href="/chat">Ask &amp; Analyze</a>{% endif %}
   </nav>
 
   <main>
