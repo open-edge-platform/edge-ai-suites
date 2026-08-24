@@ -383,4 +383,4 @@ in the configuration file below for the `Ackermann ITS planner`:
 ## Troubleshooting
 
 For general robot issues, refer to
-the {doc}`troubleshooting guide </resources/troubleshooting>`.
+the [troubleshooting guide](../../resources/troubleshooting).

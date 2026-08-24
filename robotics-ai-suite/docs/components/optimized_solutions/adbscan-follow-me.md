@@ -810,4 +810,4 @@ Find a brief description of the parameters in the following list.
   parameter `max_angular` in the parameter file.
 - If the motor controller board does not start, restart the robot.
 - For general robot issues, refer to
-  the {doc}`troubleshooting guide </resources/troubleshooting>`.
+  the [troubleshooting guide](../../resources/troubleshooting).

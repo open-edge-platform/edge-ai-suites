@@ -60,4 +60,4 @@ RealSense camera input. Stop the workflow with `Ctrl-c`.
 
 ## Troubleshooting
 
-For general robot issues, see the {doc}`troubleshooting guide </resources/troubleshooting>`.
+For general robot issues, see the [troubleshooting guide](../../../resources/troubleshooting).

@@ -108,4 +108,4 @@ the launch script.
 ## Troubleshooting
 
 For general robot issues, refer to
-the {doc}`troubleshooting guide </resources/troubleshooting>`.
+the [troubleshooting guide](../../resources/troubleshooting).
