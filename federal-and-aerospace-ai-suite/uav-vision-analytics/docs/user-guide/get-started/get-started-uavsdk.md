@@ -129,6 +129,7 @@ curl -X POST http://localhost:8080/action/land
 ### 6. Start inference pipelines
 
 > Open a new terminal window and launch the inference pipeline to begin processing the video stream.
+
 Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
