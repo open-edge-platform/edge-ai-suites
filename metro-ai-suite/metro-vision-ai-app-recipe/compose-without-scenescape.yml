@@ -19,8 +19,8 @@ services:
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP},mediamtx-server,otel-collector
-      - NO_PROXY=${no_proxy},${HOST_IP},mediamtx-server,otel-collector
+      - no_proxy=${HOST_IP},mediamtx-server,otel-collector,${no_proxy}
+      - NO_PROXY=${HOST_IP},mediamtx-server,otel-collector,${no_proxy}
       - ENABLE_WEBRTC=true
       - WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889
       - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
