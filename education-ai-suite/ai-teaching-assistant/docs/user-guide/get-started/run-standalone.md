@@ -1,7 +1,7 @@
 # Run Services Manually on Windows
 
 Use this guide when you want to run services individually for debugging or
-custom development. For normal usage, prefer `start_kiosk.ps1`.
+custom development. For normal usage, prefer `start_ata.ps1`.
 
 ## Scope
 
@@ -86,7 +86,7 @@ curl http://127.0.0.1:8012/health
 
 ```powershell
 cd .
-voice-enabled-interactions\smart-kiosk-assistant\venv\Scripts\python.exe kiosk_ui_server.py
+voice-enabled-interactions\smart-kiosk-assistant\venv\Scripts\python.exe ata_ui_server.py
 ```
 
 Health check:
@@ -101,7 +101,7 @@ http://127.0.0.1:7860
 
 ## Build React UI (if needed)
 
-If `kiosk_ui_server.py` reports that React assets are missing:
+If `ata_ui_server.py` reports that React assets are missing:
 
 ```powershell
 cd assistant-react-ui
@@ -109,7 +109,7 @@ npm install
 npm run build
 ```
 
-Then restart `kiosk_ui_server.py`.
+Then restart `ata_ui_server.py`.
 
 ## Verify End-to-End
 
@@ -124,11 +124,11 @@ Press `Ctrl+C` in each terminal.
 Or use:
 
 ```powershell
-.\stop_kiosk.ps1
+.\stop_ata.ps1
 ```
 
 ## Notes
 
-- The launcher flow (`start_kiosk.ps1`) is the supported default.
+- The launcher flow (`start_ata.ps1`) is the supported default.
 - Manual mode is primarily for debugging service-level behavior.
 - Response audio clips are written under `generated_audio/` in the kiosk-core area.

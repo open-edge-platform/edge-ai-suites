@@ -18,7 +18,7 @@ from your video data.
 | Separate VSS device | Any mode | 2 |
 | With GenAI (optional) | Any | +1 for VLM Microservice |
 
-Deploy VSS before starting Smart NVR. See [VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html) for setup instructions.
+Deploy VSS before starting Smart NVR. See [VSS Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/get-started.html) for setup instructions.
 
 ### Software Dependencies
 
@@ -32,7 +32,7 @@ Deploy VSS before starting Smart NVR. See [VSS Documentation](https://docs.opene
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
 git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git

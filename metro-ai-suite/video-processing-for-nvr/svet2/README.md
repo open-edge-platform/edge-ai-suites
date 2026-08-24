@@ -71,4 +71,4 @@ The sample application has been validated on Intel® platforms Arrow Lake, Meteo
 
 ## License
 
-The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/main/LICENSE).
+The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/LICENSE).

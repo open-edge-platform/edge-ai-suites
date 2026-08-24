@@ -2,25 +2,30 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# Loop a local video and publish it as rtsp://localhost:8555/live.
+# Loop a local video and publish it to an RTSP URL.
 #
 # Usage:
-#   bash scripts/helpers/local_video_to_rtsp.sh /path/to/video.mp4
+#   bash scripts/helpers/local_video_to_rtsp.sh /path/to/video.mp4 [RTSP_URL]
+#
+# Example:
+#   bash scripts/helpers/local_video_to_rtsp.sh video.mp4 rtsp://localhost:8555/live/test
 #
 # Environment:
 #   MEDIAMTX_BIN=/path/to/mediamtx  # default: ~/.local/bin/mediamtx
 
 set -euo pipefail
 
-RTSP_PORT=8555
-RTSP_URL="rtsp://localhost:${RTSP_PORT}/live"
+
+VIDEO_FILE="${1:-}"
+RTSP_URL="${2:-rtsp://localhost:8555/live/test}"
+
 MEDIAMTX_BIN="${MEDIAMTX_BIN:-$HOME/.local/bin/mediamtx}"
 RUN_DIR=""
 MEDIAMTX_PID=""
 FFMPEG_PID=""
 
 usage() {
-	sed -n '4,10p' "$0"
+	sed -n '4,13p' "$0"
 }
 
 cleanup() {
@@ -40,8 +45,17 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
 	exit 0
 fi
 
-[[ $# -eq 1 ]] || { echo "ERROR: Provide exactly one local video file." >&2; usage; exit 1; }
-VIDEO_FILE="$1"
+if [[ ! "$RTSP_URL" =~ ^rtsp://(\[[0-9A-Fa-f:]+\]|[A-Za-z0-9.-]+):([0-9]{1,5})/([-A-Za-z0-9._~%]+(/[-A-Za-z0-9._~%]+)*)$ ]]; then
+	echo "ERROR: Invalid RTSP URL: $RTSP_URL" >&2
+	echo "Expected format: rtsp://host:port/path" >&2
+	exit 1
+fi
+RTSP_PORT="$((10#${BASH_REMATCH[2]}))"
+RTSP_PATH="${BASH_REMATCH[3]}"
+if (( RTSP_PORT < 1 || RTSP_PORT > 65535 )); then
+	echo "ERROR: RTSP port must be between 1 and 65535: $RTSP_PORT" >&2
+	exit 1
+fi
 
 command -v ffmpeg >/dev/null 2>&1 || { echo "ERROR: 'ffmpeg' not found in PATH." >&2; exit 1; }
 [[ -x "$MEDIAMTX_BIN" ]] || { echo "ERROR: MediaMTX not found or not executable: $MEDIAMTX_BIN" >&2; exit 1; }
@@ -68,7 +82,7 @@ printf '%s\n' \
 	'srt: false' \
 	'api: false' \
 	'paths:' \
-	'  live:' \
+	"  ${RTSP_PATH}:" \
 	'    source: publisher' >"$MEDIAMTX_CONFIG"
 
 "$MEDIAMTX_BIN" "$MEDIAMTX_CONFIG" >"$MEDIAMTX_LOG" 2>&1 &

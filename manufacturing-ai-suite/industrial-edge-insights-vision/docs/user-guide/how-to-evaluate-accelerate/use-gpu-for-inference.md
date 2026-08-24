@@ -32,19 +32,27 @@ GStreamer has a variety of hardware specific encoders and decoders elements such
 
 Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® GPUs (integrated and discrete).
 
-Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
+Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
 
 ### GPU specific element properties
 
-DL Streamer inference elements also provides property such as `device=GPU` and `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
+DL Streamer inference elements also provides property such as `device=GPU` and `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
 
 ### Select the GPU render device of your choice if there is more than one GPU device on the system
 
-If you have multiple GPUs (integrated/discrete), please follow [this](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) DL Streamer document for selecting the GPU render device of your choice for VA codecs plugins.
+If you have multiple GPUs (integrated/discrete), please follow [this](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) DL Streamer document for selecting the GPU render device of your choice for VA codecs plugins.
 
 ## Tutorial on how to use GPU specific pipelines
 
 > **Note:** The sample applications already provide a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
+
+Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
+
+  > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+
+  ```sh
+  docker compose up -d
+  ```
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**

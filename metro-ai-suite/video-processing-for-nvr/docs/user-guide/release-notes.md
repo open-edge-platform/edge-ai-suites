@@ -4,18 +4,18 @@
 
 <!--date TBD-->
 
-## Version 2026.1.0
+## Version 2026.2.0
 
-**June 17, 2026**
+**Aug 19, 2026**
 
 **Improved**
 
 - **Core Library support**
 
   - Functions: Decode, Postprocessing, Encode
-  - Hardware: PTL, ARL, MTL, RPL, ADL, B580, B60
+  - Hardware: PTL, WCL
 
 - **Sample app**
 
-  - Video Analytic: decode + postprocessing + yolo/resnet on GPU
+  - Video Analytic: decode + postprocessing + yolo/resnet on GPU/NPU
   - decode + postprocessing + encode

@@ -79,7 +79,7 @@ Create and run the model download script to install all required AI models:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/home/dlstreamer/metro-suite" \
-  intel/dlstreamer:2026.2.0-ubuntu24-rc1 bash -c "$(cat <<EOF
+  intel/dlstreamer:2026.2.0-ubuntu24-rc2 bash -c "$(cat <<EOF
 
 cd /home/dlstreamer/metro-suite/
 
@@ -386,5 +386,5 @@ After successfully setting up the AI Tolling system, consider these enhancements
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-- [Metro AI Solutions](https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/index.html)
+- [Metro AI Solutions](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-metro.html)

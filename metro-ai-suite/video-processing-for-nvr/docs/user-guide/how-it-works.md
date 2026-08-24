@@ -79,7 +79,7 @@ state.
 
 ## SVET2 Application Architecture
 
-> **Note:** SVET2 is a legacy solution. You can see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md) for details on how to use it.
+> **Note:** SVET2 is a legacy solution. You can see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md) for details on how to use it.
 
 **SVET2 (Smart Video Evaluation Tool 2)** is the reference NVR application built on the Video
 Processing Platform SDK. Its binary is `svet_app`. SVET2 is configuration-driven: instead of
@@ -100,9 +100,9 @@ surface that is sent to the display.
 
 With SVET2, you can use a configuration file to specify the parameters of each function block,
 such as the input video file path, codec, a display channel's position on the video layer,
-the video layer's resolution, and the composition fps. The [sample_config](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config) folder contains
+the video layer's resolution, and the composition fps. The [sample_config](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/svet2/sample_config) folder contains
 sample configuration files; for descriptions of each configuration file, refer to
-[sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
+[sample_config/README.md](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/video-processing-for-nvr/svet2/sample_config/README.md).
 
 ![Architecture](./_assets/VPNVR-SVET-architecture.drawio.svg)
 

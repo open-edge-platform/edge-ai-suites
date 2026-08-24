@@ -7,7 +7,7 @@ if not already done.
 
 ### Volume mount GPU config
 
-Comment out CPU and NPU volume mount and uncomment the GPU volume mount present in [compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/image-based-video-search/compose.yml)
+Comment out CPU and NPU volume mount and uncomment the GPU volume mount present in [compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/image-based-video-search/compose.yml)
 file under `volumes` section as shown below:
 
 ```sh
@@ -28,7 +28,7 @@ Follow step 1 mentioned in this [document](./get-started/deploy-with-helm.md#ste
 
 ### Update values.yaml
 
-In [`values.yaml`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/image-based-video-search/chart/values.yaml) file, change value of `pipeline` config present under
+In [`values.yaml`](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/image-based-video-search/chart/values.yaml) file, change value of `pipeline` config present under
 `dlstreamerpipelineserver` section as shown below:
 
 ```sh
@@ -38,7 +38,7 @@ dlstreamerpipelineserver:
     # key: dlstreamerpipelineserver.repository.image
     image: docker.io/intel/dlstreamer-pipeline-server
     # key: dlstreamerpipelineserver.repository.tag
-    tag: 2025.2.0-ubuntu24
+    tag: 2026.2.0-ubuntu24-rc2
   # key: dlstreamerpipelineserver.replicas
   replicas: 1
   # key: dlstreamerpipelineserver.nodeSelector

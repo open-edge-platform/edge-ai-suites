@@ -12,7 +12,7 @@ webhook:
 # Each registered source gets its own subdirectory `<data_dir>/<source_id>/`
 # (or whatever absolute path the register_source body specifies in its
 # `data_dir` field; MCP sends an absolute per-source path).
-data_dir: "~/.mcp-smartbuilding/segments"
+data_dir: "~/.mcp-smart-community/segments"
 
 defaults:
   motion:
@@ -34,7 +34,6 @@ defaults:
     enabled: true
     interval_seconds: 60
     fps: 15
-    retention_days: 5
   prefilter:
     enabled: true
     model_path: /path/to/prefilter-ov-model.xml

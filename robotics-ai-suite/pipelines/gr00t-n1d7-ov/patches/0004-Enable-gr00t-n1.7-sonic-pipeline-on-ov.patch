@@ -1,0 +1,1009 @@
+From 5eb2efcd790836fac4c19f24d7d7ca4f08d3ed0c Mon Sep 17 00:00:00 2001
+From: nacui <na.cui@intel.com>
+Date: Fri, 29 May 2026 10:11:29 +0800
+Subject: [PATCH 4/7] Enable gr00t n1.7 + sonic pipeline on ov
+
+Enable gr00t_server load single ov
+Save ckpt config when export
+
+Signed-off-by: nacui <na.cui@intel.com>
+Signed-off-by: He Yue <yue.he@intel.com>
+---
+ gr00t/eval/run_gr00t_server.py                | 151 +++++++++++++++--
+ scripts/deployment/copy_configs_to_ov.py      | 109 ++++++++++++
+ scripts/deployment/export_ov_n1d7.py          |  42 +++++
+ .../deployment/export_ov_n1d7_single_ov.py    |  41 +++++
+ scripts/deployment/ov_n1d7_forward.py         | 133 +++++++++++++++
+ scripts/deployment/run_base_ov_inference.py   | 143 ++++++++++++++--
+ .../run_base_single_ov_inference.py           | 156 ++++++++++++++++--
+ 7 files changed, 733 insertions(+), 42 deletions(-)
+ create mode 100644 scripts/deployment/copy_configs_to_ov.py
+
+diff --git a/gr00t/eval/run_gr00t_server.py b/gr00t/eval/run_gr00t_server.py
+index b1a406751046..3d0a3d3db6c5 100644
+--- a/gr00t/eval/run_gr00t_server.py
++++ b/gr00t/eval/run_gr00t_server.py
+@@ -22,10 +22,13 @@ import sys
+ 
+ from gr00t.data.embodiment_tags import EmbodimentTag
+ from gr00t.data.types import ModalityConfig
++from gr00t.model.gr00t_n1d7.gr00t_n1d7 import Gr00tN1d7
+ from gr00t.policy.gr00t_policy import Gr00tPolicy
++from gr00t.policy.policy import BasePolicy
+ from gr00t.policy.replay_policy import ReplayPolicy
+ from gr00t.policy.server_client import PolicyServer
+ import tyro
++from transformers import AutoConfig, AutoProcessor
+ 
+ 
+ DEFAULT_MODEL_SERVER_PORT = 5555
+@@ -37,7 +40,8 @@ class ServerConfig:
+ 
+     # Gr00t policy configs
+     model_path: str | None = None
+-    """Path to the model checkpoint directory"""
++    """Path to the model checkpoint directory. Optional when --enable-ov is set
++    and configs are loaded from --ov-model-dir/config."""
+ 
+     embodiment_tag: str = "new_embodiment"
+     """Embodiment tag (name or value, case-insensitive). Run with --help to see known tags."""
+@@ -68,6 +72,100 @@ class ServerConfig:
+     use_sim_policy_wrapper: bool = False
+     """Whether to use the sim policy wrapper"""
+ 
++    # OpenVINO configs
++    enable_ov: bool = False
++    """Enable OpenVINO inference. The PyTorch shell loads on CPU/FP32 and
++    policy.model.get_action is replaced with the single fused OpenVINO IR
++    (exported by export_ov_n1d7_single_ov.py) loaded from --ov-model-dir."""
++
++    ov_model_dir: str | None = None
++    """Directory containing exactly one OpenVINO IR XML file (the fused single-OV
++    export). Required when --enable-ov is set."""
++
++    ov_device: str = "GPU"
++    """OpenVINO device for the compiled model: CPU, GPU, NPU, or AUTO."""
++
++    static_shape: bool = False
++    """Reshape the OpenVINO model to static shapes (using the actual input shapes)
++    before compilation. May reduce first-call latency on some devices."""
++
++
++def _load_policy_config_only(ov_model_dir: str, embodiment_tag: EmbodimentTag) -> Gr00tPolicy:
++    """Create a lightweight policy shell using config files under the OV export."""
++    config_dir = Path(ov_model_dir) / "config"
++    if not config_dir.exists() or not (config_dir / "config.json").exists():
++        config_dir = Path(ov_model_dir)
++
++    required_files = ["config.json", "processor_config.json"]
++    missing = [filename for filename in required_files if not (config_dir / filename).exists()]
++    if missing:
++        raise FileNotFoundError(
++            f"Missing config files in {config_dir}: {missing}. "
++            "Re-export with the OV export flow that copies checkpoint configs."
++        )
++
++    config = AutoConfig.from_pretrained(config_dir)
++    model = Gr00tN1d7(config)
++    model.eval()
++
++    processor_dir = (
++        config_dir / "processor"
++        if (config_dir / "processor").is_dir()
++        and not (config_dir / "processor_config.json").exists()
++        else config_dir
++    )
++    processor = AutoProcessor.from_pretrained(processor_dir)
++    processor.eval()
++
++    policy = object.__new__(Gr00tPolicy)
++    BasePolicy.__init__(policy, strict=True)
++    policy.model = model
++    policy.model_dtype = None
++    policy.processor = processor
++    policy.embodiment_tag = embodiment_tag
++    policy.device = "cpu"
++
++    all_modality_configs = policy.processor.get_modality_configs()
++    if policy.embodiment_tag.value not in all_modality_configs:
++        raise ValueError(
++            f"Embodiment tag '{embodiment_tag.name}' not found in processor config. "
++            f"Available: {list(all_modality_configs.keys())}"
++        )
++
++    policy.modality_configs = {
++        key: value
++        for key, value in all_modality_configs[policy.embodiment_tag.value].items()
++        if key != "rl_info"
++    }
++    policy.collate_fn = policy.processor.collator
++
++    language_keys = policy.modality_configs["language"].modality_keys
++    language_delta_indices = policy.modality_configs["language"].delta_indices
++    assert len(language_keys) >= 1, "At least one language key is required"
++    assert len(language_delta_indices) == 1, "Only one language delta index is supported"
++    policy.language_key = language_keys[0]
++    return policy
++
++
++def _apply_openvino_to_policy(policy: Gr00tPolicy, config: "ServerConfig") -> None:
++    """Swap PyTorch ``policy.model.get_action`` for the fused single-OV IR.
++
++    Reuses the loader in scripts/deployment/ov_n1d7_forward.py so the server
++    path matches the standalone single-OV runner exactly.
++    """
++    deployment_dir = Path(__file__).resolve().parents[2] / "scripts" / "deployment"
++    if str(deployment_dir) not in sys.path:
++        sys.path.insert(0, str(deployment_dir))
++
++    from ov_n1d7_forward import setup_openvino_models_n1d7_single  # type: ignore[import-not-found]
++
++    setup_openvino_models_n1d7_single(
++        policy,
++        ov_model_path=config.ov_model_dir,
++        device=config.ov_device,
++        static_shape=config.static_shape,
++    )
++
+ 
+ def main(config: ServerConfig):
+     config.embodiment_tag = EmbodimentTag.resolve(config.embodiment_tag)
+@@ -77,18 +175,47 @@ def main(config: ServerConfig):
+     print(f"  Device: {config.device}")
+     print(f"  Host: {config.host}")
+     print(f"  Port: {config.port}")
++    if config.enable_ov:
++        if config.ov_model_dir is None:
++            raise ValueError("--ov-model-dir is required when --enable-ov is set")
++        if not os.path.isdir(config.ov_model_dir):
++            raise FileNotFoundError(
++                f"OpenVINO model directory not found: {config.ov_model_dir}"
++            )
++        print(f"  OpenVINO: enabled (single-OV, device={config.ov_device}, "
++              f"static_shape={config.static_shape})")
++        print(f"  OpenVINO model dir: {config.ov_model_dir}")
+ 
+     # Create and start the server
+-    if config.model_path is not None:
+-        # check if the model path exists
+-        if config.model_path.startswith("/") and not os.path.exists(config.model_path):
+-            raise FileNotFoundError(f"Model path {config.model_path} does not exist")
+-        policy = Gr00tPolicy(
+-            embodiment_tag=config.embodiment_tag,
+-            model_path=config.model_path,
+-            device=config.device,
+-            strict=config.strict,
+-        )
++    if config.model_path is not None or config.enable_ov:
++        if config.enable_ov and config.model_path is None:
++            policy = _load_policy_config_only(config.ov_model_dir, config.embodiment_tag)
++            _apply_openvino_to_policy(policy, config)
++        elif config.model_path is not None:
++            if config.model_path.startswith("/") and not os.path.exists(config.model_path):
++                raise FileNotFoundError(f"Model path {config.model_path} does not exist")
++            if config.enable_ov:
++                # OpenVINO path: PyTorch shell must live on CPU/FP32 because the OV
++                # setup deletes the heavy submodules after compiling IR models.
++                policy = Gr00tPolicy(
++                    embodiment_tag=config.embodiment_tag,
++                    model_path=config.model_path,
++                    device="cpu",
++                    enable_ov=True,
++                    strict=config.strict,
++                )
++                _apply_openvino_to_policy(policy, config)
++            else:
++                policy = Gr00tPolicy(
++                    embodiment_tag=config.embodiment_tag,
++                    model_path=config.model_path,
++                    device=config.device,
++                    strict=config.strict,
++                )
++        else:
++            raise ValueError(
++                "Either --model-path or --enable-ov with --ov-model-dir must be provided"
++            )
+     elif config.dataset_path is not None:
+         if config.execution_horizon is None:
+             raise ValueError(
+@@ -140,7 +267,7 @@ def main(config: ServerConfig):
+             strict=config.strict,
+         )
+     else:
+-        raise ValueError("Either model_path or dataset_path must be provided")
++        raise ValueError("Either model_path, or dataset_path, or --enable-ov with --ov-model-dir must be provided")
+ 
+     # Apply sim policy wrapper if needed
+     if config.use_sim_policy_wrapper:
+diff --git a/scripts/deployment/copy_configs_to_ov.py b/scripts/deployment/copy_configs_to_ov.py
+new file mode 100644
+index 000000000000..50010d86f84f
+--- /dev/null
++++ b/scripts/deployment/copy_configs_to_ov.py
+@@ -0,0 +1,109 @@
++#!/usr/bin/env python3
++"""Copy necessary config files from checkpoint to OpenVINO IR directory.
++
++This allows running inference without specifying --model-path.
++
++Usage:
++    python scripts/deployment/copy_configs_to_ov.py \
++        --checkpoint-dir checkpoints/GR00T-N1.7-G1 \
++        --ov-dir checkpoints/ov_export_g1
++"""
++
++import argparse
++from pathlib import Path
++import shutil
++
++
++def copy_configs(checkpoint_dir: str, ov_dir: str, overwrite: bool = False) -> None:
++    """Copy config files from checkpoint to OV directory/config subdirectory."""
++    checkpoint_path = Path(checkpoint_dir)
++    ov_path = Path(ov_dir)
++
++    if not checkpoint_path.is_dir():
++        raise FileNotFoundError(f"Checkpoint directory not found: {checkpoint_dir}")
++
++    if not ov_path.is_dir():
++        raise FileNotFoundError(f"OpenVINO directory not found: {ov_dir}")
++
++    config_dir = ov_path / "config"
++    config_dir.mkdir(parents=True, exist_ok=True)
++    print(f"Created config directory: {config_dir}\n")
++
++    config_files = [
++        "processor_config.json",
++        "statistics.json",
++        "embodiment_id.json",
++        "config.json",
++        "model.safetensors.index.json",
++    ]
++
++    copied = []
++    skipped = []
++
++    for filename in config_files:
++        src = checkpoint_path / filename
++        dst = config_dir / filename
++
++        if not src.exists():
++            print(f"{filename}: not found in checkpoint (skipping)")
++            continue
++
++        if dst.exists() and not overwrite:
++            print(f"{filename}: already exists in config/ (use --overwrite to replace)")
++            skipped.append(filename)
++            continue
++
++        shutil.copy2(src, dst)
++        print(f"Copied {filename} to config/")
++        copied.append(filename)
++
++    print("\n" + "=" * 60)
++    print("Summary:")
++    print(f"  Copied: {len(copied)} files to {config_dir}")
++    if copied:
++        print(f"    {', '.join(copied)}")
++    if skipped:
++        print(f"  Skipped: {len(skipped)} files (already exist)")
++        print(f"    {', '.join(skipped)}")
++    print(f"  Target: {ov_path}")
++    print("=" * 60)
++
++    if "processor_config.json" in copied or (
++        "processor_config.json" in skipped and (config_dir / "processor_config.json").exists()
++    ):
++        print("\nYou can now run inference without --model-path:")
++        print("  python scripts/deployment/run_base_single_ov_inference.py \\")
++        print(f"    --ov-model-dir {ov_dir} \\")
++        print("    --embodiment-tag YOUR_TAG \\")
++        print("    --device GPU")
++
++
++def main() -> None:
++    parser = argparse.ArgumentParser(
++        description="Copy config files from checkpoint to OpenVINO IR directory",
++        formatter_class=argparse.RawTextHelpFormatter,
++    )
++    parser.add_argument(
++        "--checkpoint-dir",
++        type=str,
++        required=True,
++        help="Source checkpoint directory containing config files",
++    )
++    parser.add_argument(
++        "--ov-dir",
++        type=str,
++        required=True,
++        help="Target OpenVINO IR directory",
++    )
++    parser.add_argument(
++        "--overwrite",
++        action="store_true",
++        help="Overwrite existing config files in OV directory",
++    )
++
++    args = parser.parse_args()
++    copy_configs(args.checkpoint_dir, args.ov_dir, args.overwrite)
++
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+diff --git a/scripts/deployment/export_ov_n1d7.py b/scripts/deployment/export_ov_n1d7.py
+index 8fa279956e4b..40ccd3444718 100755
+--- a/scripts/deployment/export_ov_n1d7.py
++++ b/scripts/deployment/export_ov_n1d7.py
+@@ -58,6 +58,7 @@ import json
+ import logging
+ import os
+ from pathlib import Path
++import shutil
+ from typing import Any, Literal, Optional
+ 
+ from diffusers.models.attention_processor import Attention, AttnProcessor2_0
+@@ -92,6 +93,44 @@ def _get_device() -> str:
+     return _DEVICE
+ 
+ 
++def copy_checkpoint_configs_to_ov_dir(checkpoint_dir: str, output_dir: str) -> None:
++    """Copy lightweight checkpoint config files into the OV export directory."""
++    checkpoint_path = Path(checkpoint_dir)
++    output_path = Path(output_dir)
++
++    if not checkpoint_path.is_dir():
++        logger.warning("Checkpoint directory not found: %s, skipping config copy", checkpoint_dir)
++        return
++
++    config_dir = output_path / "config"
++    config_dir.mkdir(parents=True, exist_ok=True)
++    logger.info("  Created config directory: %s", config_dir)
++
++    config_files = [
++        "processor_config.json",
++        "statistics.json",
++        "embodiment_id.json",
++        "config.json",
++        "model.safetensors.index.json",
++    ]
++
++    copied = []
++    for filename in config_files:
++        src = checkpoint_path / filename
++        dst = config_dir / filename
++        if not src.exists():
++            logger.debug("  %s: not found in checkpoint (skipping)", filename)
++            continue
++
++        shutil.copy2(src, dst)
++        logger.info("  Copied %s to config/", filename)
++        copied.append(filename)
++
++    if copied:
++        logger.info("\nCopied %d config file(s) to %s.", len(copied), config_dir)
++        logger.info("  Note: model weights were not copied; OV inference can use config-only mode.")
++
++
+ def _flatten_tensor_outputs(outputs: Any) -> list[torch.Tensor]:
+     if isinstance(outputs, torch.Tensor):
+         return [outputs.detach().float().flatten().cpu()]
+@@ -1899,6 +1938,9 @@ def main(args):
+             logger.info("\n--- [4g] Action Decoder ---")
+             export_action_decoder_to_ov(policy, args.output_dir, use_fp32=use_fp32, batch_size=bs)
+ 
++    logger.info("\n[Step 5] Copying checkpoint config files to OV directory...")
++    copy_checkpoint_configs_to_ov_dir(args.model_path, args.output_dir)
++
+     # Summary
+     logger.info("\n" + "=" * 80)
+     logger.info("EXPORT COMPLETE!")
+diff --git a/scripts/deployment/export_ov_n1d7_single_ov.py b/scripts/deployment/export_ov_n1d7_single_ov.py
+index 101f673e621c..a1500558f64a 100644
+--- a/scripts/deployment/export_ov_n1d7_single_ov.py
++++ b/scripts/deployment/export_ov_n1d7_single_ov.py
+@@ -44,6 +44,7 @@ import json
+ import logging
+ import os
+ from pathlib import Path
++import shutil
+ from typing import Literal, Optional
+ 
+ from diffusers.models.attention_processor import Attention, AttnProcessor2_0
+@@ -62,6 +63,44 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
+ logger = logging.getLogger(__name__)
+ 
+ 
++def copy_checkpoint_configs_to_ov_dir(checkpoint_dir: str, output_dir: str) -> None:
++    """Copy lightweight checkpoint config files into the OV export directory."""
++    checkpoint_path = Path(checkpoint_dir)
++    output_path = Path(output_dir)
++
++    if not checkpoint_path.is_dir():
++        logger.warning("Checkpoint directory not found: %s, skipping config copy", checkpoint_dir)
++        return
++
++    config_dir = output_path / "config"
++    config_dir.mkdir(parents=True, exist_ok=True)
++    logger.info("  Created config directory: %s", config_dir)
++
++    config_files = [
++        "processor_config.json",
++        "statistics.json",
++        "embodiment_id.json",
++        "config.json",
++        "model.safetensors.index.json",
++    ]
++
++    copied = []
++    for filename in config_files:
++        src = checkpoint_path / filename
++        dst = config_dir / filename
++        if not src.exists():
++            logger.debug("  %s: not found in checkpoint (skipping)", filename)
++            continue
++
++        shutil.copy2(src, dst)
++        logger.info("  Copied %s to config/", filename)
++        copied.append(filename)
++
++    if copied:
++        logger.info("\nCopied %d config file(s) to %s.", len(copied), config_dir)
++        logger.info("  Note: model weights were not copied; OV inference can use config-only mode.")
++
++
+ @dataclass
+ class ExportConfig:
+     model_path: str
+@@ -668,6 +707,8 @@ def main(args: ExportConfig) -> None:
+             static_seq_len=static_seq_len,
+         )
+         logger.info("\nSingle-OV export complete: %s", output_path)
++        logger.info("\nCopying checkpoint config files to OV directory...")
++        copy_checkpoint_configs_to_ov_dir(args.model_path, args.output_dir)
+     finally:
+         if attention_patched:
+             restore_diffusers_attention()
+diff --git a/scripts/deployment/ov_n1d7_forward.py b/scripts/deployment/ov_n1d7_forward.py
+index c17153f116b1..b30c6d8330c8 100644
+--- a/scripts/deployment/ov_n1d7_forward.py
++++ b/scripts/deployment/ov_n1d7_forward.py
+@@ -1200,6 +1200,139 @@ def setup_openvino_models_n1d7_full_fp32(policy, ov_model_path, device="GPU", us
+     print("  Slower than FP16 but numerically stable on Intel iGPU")
+ 
+ 
++def _resolve_single_ov_xml(ov_model_path: Path) -> Path:
++    xml_files = sorted(ov_model_path.glob("*.xml"))
++    if not xml_files:
++        raise FileNotFoundError(f"No XML model found under OpenVINO directory: {ov_model_path}")
++    if len(xml_files) > 1:
++        names = [path.name for path in xml_files]
++        raise ValueError(
++            f"Multiple XML models found under OpenVINO directory {ov_model_path}: {names}. "
++            "Single-OV mode expects exactly one XML."
++        )
++    return xml_files[0]
++
++
++def _gr00t_get_action_single_ov(policy_model, inputs, options=None):
++    if not hasattr(policy_model, "_single_ov_timing_stats"):
++        policy_model._single_ov_timing_stats = {}
++    timing = policy_model._single_ov_timing_stats
++
++    backbone_inputs, action_inputs = policy_model.prepare_input(inputs)
++
++    input_ids = backbone_inputs["input_ids"]
++    attention_mask = backbone_inputs["attention_mask"]
++    pixel_values = backbone_inputs["pixel_values"]
++    image_grid_thw = backbone_inputs.get("image_grid_thw")
++
++    state = action_inputs["state"]
++    embodiment_id = action_inputs["embodiment_id"]
++    if embodiment_id.dtype != torch.int64:
++        embodiment_id = embodiment_id.to(torch.int64)
++
++    if input_ids.shape[0] != 1:
++        raise ValueError("single-OV inference currently supports batch size 1 observations only")
++
++    inner_model = policy_model.backbone.model.model
++    t0 = time.perf_counter()
++    position_ids, rope_deltas = inner_model.get_rope_index(
++        input_ids,
++        image_grid_thw,
++        video_grid_thw=None,
++        attention_mask=attention_mask,
++    )
++    inner_model.rope_deltas = rope_deltas
++    timing["rope_prep"] = time.perf_counter() - t0
++
++    valid_mask = attention_mask[0] == 1
++    if not valid_mask.all():
++        input_ids = input_ids[:, valid_mask]
++        attention_mask = attention_mask[:, valid_mask]
++        position_ids = position_ids[:, :, valid_mask]
++
++    action_head_config = policy_model.action_head.config
++    actions = torch.randn(
++        input_ids.shape[0],
++        action_head_config.action_horizon,
++        action_head_config.max_action_dim,
++        dtype=torch.float32,
++        device=input_ids.device,
++    )
++
++    if isinstance(pixel_values, (list, tuple)):
++        pixel_values = torch.cat(pixel_values, dim=0)
++
++    ov_inputs = {
++        "input_ids": input_ids.detach().cpu().to(torch.int64).numpy(),
++        "attention_mask": attention_mask.detach().cpu().to(torch.int64).numpy(),
++        "pixel_values": pixel_values.detach().cpu().to(torch.float32).numpy(),
++        "position_ids": position_ids.detach().cpu().to(torch.int64).numpy(),
++        "state": state.detach().cpu().to(torch.float32).numpy(),
++        "embodiment_id": embodiment_id.detach().cpu().numpy(),
++        "actions": actions.detach().cpu().numpy(),
++    }
++
++    t0 = time.perf_counter()
++    compiled_model = policy_model._single_ov_compiled
++    outputs = compiled_model(ov_inputs)
++    output_port = compiled_model.outputs[0]
++    action_pred_np = outputs[output_port]
++    timing["single_ov_inference"] = time.perf_counter() - t0
++
++    action_pred = torch.from_numpy(action_pred_np) if isinstance(action_pred_np, np.ndarray) else action_pred_np
++    return BatchFeature(data={"action_pred": action_pred})
++
++
++def setup_openvino_models_n1d7_single(policy, ov_model_path, device="GPU", static_shape=False):
++    """Compile a single fused OpenVINO IR and route ``policy.model.get_action`` through it.
++
++    The IR is the one produced by ``export_ov_n1d7_single_ov.py``; it bundles ViT,
++    LLM, VL self-attention, state encoder, and DiT into one graph. Heavy PyTorch
++    submodules are deleted to free memory; only the bits needed for input prep
++    (rope index, embed lookups via ``inner_model.get_rope_index``) remain.
++    """
++    ov_model_path = Path(ov_model_path)
++    print("[OpenVINO Single Setup] Deleting PyTorch heavy submodules to save memory...")
++    if hasattr(policy.model.backbone.model.model, "visual"):
++        del policy.model.backbone.model.model.visual
++    language_model = getattr(policy.model.backbone.model.model, "language_model", None)
++    if language_model is not None and hasattr(language_model, "layers"):
++        del language_model.layers
++    if hasattr(policy.model.action_head, "state_encoder"):
++        del policy.model.action_head.state_encoder
++    if hasattr(policy.model.action_head, "action_encoder"):
++        del policy.model.action_head.action_encoder
++    if hasattr(policy.model.action_head, "model"):
++        del policy.model.action_head.model
++    if hasattr(policy.model.action_head, "action_decoder"):
++        del policy.model.action_head.action_decoder
++    if hasattr(policy.model.action_head, "vlln"):
++        del policy.model.action_head.vlln
++    print("✓ Deleted PyTorch submodules")
++
++    xml_path = _resolve_single_ov_xml(ov_model_path)
++    print(f"[OpenVINO Single Setup] Loading single OV model: {xml_path}")
++    core = ov.Core()
++    cache_dir = ov_model_path.parent / ".ov_cache"
++    cache_dir.mkdir(parents=True, exist_ok=True)
++    core.set_property({"CACHE_DIR": str(cache_dir)})
++    print(f"  Model cache enabled: {cache_dir}")
++
++    available_devices = core.available_devices
++    print(f"  Available OpenVINO devices: {available_devices}")
++    if device.upper() == "GPU" and "GPU" in available_devices:
++        core.set_property("GPU", {"PERFORMANCE_HINT": "LATENCY", "NUM_STREAMS": "1"})
++        print(f"  GPU device: {core.get_property('GPU', 'FULL_DEVICE_NAME')}")
++
++    ov_model = core.read_model(str(xml_path))
++    compiled = _compile_or_lazy(core, ov_model, "single_ov", device, static_shape=static_shape)
++    policy.model._single_ov_compiled = compiled
++    print(f"✓ Single OV model compiled on {device}")
++
++    policy.model.get_action = partial(_gr00t_get_action_single_ov, policy.model)
++    print("✓ Single-OV setup complete; policy.model.get_action now runs the fused IR")
++
++
+ @dataclass(frozen=True)
+ class EmbodimentAdapter:
+     name: str
+diff --git a/scripts/deployment/run_base_ov_inference.py b/scripts/deployment/run_base_ov_inference.py
+index c774f2a899ad..cdb0ee5fd36e 100644
+--- a/scripts/deployment/run_base_ov_inference.py
++++ b/scripts/deployment/run_base_ov_inference.py
+@@ -79,11 +79,29 @@ def _run_policy_get_action(policy: Gr00tPolicy, observation: dict, diffusion_see
+             return policy.get_action(observation)
+ 
+ 
+-def load_modality_configs_from_checkpoint(model_path: str, embodiment_tag: str):
+-    """Load modality configs directly from the checkpoint's processor_config.json."""
+-    processor_config_path = Path(model_path) / "processor_config.json"
+-    if not processor_config_path.exists():
+-        raise FileNotFoundError(f"processor_config.json not found in {model_path}")
++def load_modality_configs_from_checkpoint(
++    model_path: str | None,
++    embodiment_tag: str,
++    ov_model_dir: str | None = None,
++):
++    """Load modality configs from OV export config or the original checkpoint."""
++    search_paths = []
++    if ov_model_dir:
++        search_paths.append(Path(ov_model_dir) / "config")
++        search_paths.append(Path(ov_model_dir))
++    if model_path:
++        search_paths.append(Path(model_path))
++
++    processor_config_path = None
++    for search_dir in search_paths:
++        candidate = search_dir / "processor_config.json"
++        if candidate.exists():
++            processor_config_path = candidate
++            break
++
++    if processor_config_path is None:
++        searched = ", ".join(str(path) for path in search_paths)
++        raise FileNotFoundError(f"processor_config.json not found in any of: {searched}")
+ 
+     with open(processor_config_path) as f:
+         config = json.load(f)
+@@ -120,10 +138,27 @@ def load_modality_configs_from_checkpoint(model_path: str, embodiment_tag: str):
+     }
+ 
+ 
+-def load_state_dimensions(model_path: str, embodiment_tag: str) -> dict[str, int]:
+-    """Load per-key state dimensions from statistics.json."""
+-    stats_path = Path(model_path) / "statistics.json"
+-    if not stats_path.exists():
++def load_state_dimensions(
++    model_path: str | None,
++    embodiment_tag: str,
++    ov_model_dir: str | None = None,
++) -> dict[str, int]:
++    """Load per-key state dimensions from OV export config or checkpoint."""
++    search_paths = []
++    if ov_model_dir:
++        search_paths.append(Path(ov_model_dir) / "config")
++        search_paths.append(Path(ov_model_dir))
++    if model_path:
++        search_paths.append(Path(model_path))
++
++    stats_path = None
++    for search_dir in search_paths:
++        candidate = search_dir / "statistics.json"
++        if candidate.exists():
++            stats_path = candidate
++            break
++
++    if stats_path is None:
+         return {}
+ 
+     with open(stats_path) as f:
+@@ -205,12 +240,65 @@ BASE_ADAPTER = EmbodimentAdapter(
+ )
+ 
+ 
++def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) -> Gr00tPolicy:
++    """Create a lightweight policy shell without loading PyTorch weights."""
++    from transformers import AutoConfig, AutoProcessor
++
++    from gr00t.model.gr00t_n1d7.gr00t_n1d7 import Gr00tN1d7
++    from gr00t.policy.policy import BasePolicy
++
++    model_dir = Path(model_path)
++    config = AutoConfig.from_pretrained(model_dir)
++    model = Gr00tN1d7(config)
++    model.eval()
++
++    processor_dir = (
++        model_dir / "processor"
++        if (model_dir / "processor").is_dir() and not (model_dir / "processor_config.json").exists()
++        else model_dir
++    )
++    processor = AutoProcessor.from_pretrained(processor_dir)
++    processor.eval()
++
++    policy = object.__new__(Gr00tPolicy)
++    BasePolicy.__init__(policy, strict=True)
++    policy.model = model
++    policy.model_dtype = torch.float32
++    policy.processor = processor
++    policy.embodiment_tag = embodiment_tag
++    policy.device = "cpu"
++
++    all_modality_configs = policy.processor.get_modality_configs()
++    if policy.embodiment_tag.value not in all_modality_configs:
++        raise ValueError(
++            f"Embodiment tag '{embodiment_tag.name}' not found in processor config. "
++            f"Available: {list(all_modality_configs.keys())}"
++        )
++
++    policy.modality_configs = {
++        key: value for key, value in all_modality_configs[policy.embodiment_tag.value].items() if key != "rl_info"
++    }
++    policy.collate_fn = policy.processor.collator
++
++    language_keys = policy.modality_configs["language"].modality_keys
++    language_delta_indices = policy.modality_configs["language"].delta_indices
++    assert len(language_keys) >= 1, "At least one language key is required"
++    assert len(language_delta_indices) == 1, "Only one language delta index is supported"
++    policy.language_key = language_keys[0]
++    return policy
++
++
+ def build_parser() -> argparse.ArgumentParser:
+     parser = argparse.ArgumentParser(
+         description="Run OpenVINO-accelerated inference on the GR00T base model (dummy input)",
+         formatter_class=argparse.RawTextHelpFormatter,
+     )
+-    parser.add_argument("--model-path", type=str, required=True, help="Path to PyTorch checkpoint")
++    parser.add_argument(
++        "--model-path",
++        type=str,
++        default=None,
++        help="Path to PyTorch checkpoint. If omitted, load config from --ov-model-dir/config.",
++    )
+     parser.add_argument("--ov-model-dir", type=str, required=True, help="Directory containing OpenVINO IR models")
+     parser.add_argument("--embodiment-tag", type=str, default="REAL_G1", help="Embodiment tag")
+     parser.add_argument("--num-samples", type=int, default=10, help="Number of inference iterations")
+@@ -300,9 +388,17 @@ def main() -> None:
+     logger.info(f"Per-iteration timing breakdown: {args.log_timing_breakdown}")
+     logger.info("=" * 80)
+ 
+-    logger.info("\n[Step 1] Loading modality configs from checkpoint...")
+-    modality_configs = load_modality_configs_from_checkpoint(args.model_path, args.embodiment_tag)
+-    state_dims = load_state_dimensions(args.model_path, args.embodiment_tag)
++    logger.info("\n[Step 1] Loading modality configs from checkpoint or OV export...")
++    modality_configs = load_modality_configs_from_checkpoint(
++        args.model_path,
++        args.embodiment_tag,
++        ov_model_dir=args.ov_model_dir,
++    )
++    state_dims = load_state_dimensions(
++        args.model_path,
++        args.embodiment_tag,
++        ov_model_dir=args.ov_model_dir,
++    )
+     logger.info(f"  Video keys: {modality_configs['video'].modality_keys}")
+     logger.info(f"  Video frames: {len(modality_configs['video'].delta_indices)}")
+     logger.info(f"  State keys: {modality_configs['state'].modality_keys}")
+@@ -313,8 +409,25 @@ def main() -> None:
+ 
+     logger.info("\n[Step 2] Loading GR00T policy...")
+     embodiment_tag = EmbodimentTag.resolve(args.embodiment_tag)
+-    policy = Gr00tPolicy(model_path=args.model_path, embodiment_tag=embodiment_tag, device="cpu", enable_ov=True)
+-    logger.info("Policy loaded (PyTorch, CPU)")
++    if args.model_path:
++        policy_model_path = args.model_path
++        skip_weights = False
++    else:
++        config_subdir = Path(args.ov_model_dir) / "config"
++        if config_subdir.is_dir() and (config_subdir / "config.json").exists():
++            policy_model_path = str(config_subdir)
++            skip_weights = not list(config_subdir.glob("model-*.safetensors"))
++        else:
++            policy_model_path = args.ov_model_dir
++            skip_weights = not list(Path(args.ov_model_dir).glob("model-*.safetensors"))
++
++    logger.info("  Loading model from: %s", policy_model_path)
++    if skip_weights:
++        logger.info("  Mode: config-only (no PyTorch weights, OpenVINO-only inference)")
++        policy = _load_policy_config_only(policy_model_path, embodiment_tag)
++    else:
++        policy = Gr00tPolicy(model_path=policy_model_path, embodiment_tag=embodiment_tag, device="cpu", enable_ov=True)
++    logger.info("Policy loaded (config + processor)")
+ 
+     logger.info("\n[Step 3] Setting up OpenVINO models...")
+     _setup_openvino_policy(args, policy)
+diff --git a/scripts/deployment/run_base_single_ov_inference.py b/scripts/deployment/run_base_single_ov_inference.py
+index 704c391cc978..84ad77521ab6 100644
+--- a/scripts/deployment/run_base_single_ov_inference.py
++++ b/scripts/deployment/run_base_single_ov_inference.py
+@@ -76,6 +76,17 @@ class _RuntimeLLMInputCapture:
+ 
+ 
+ def _load_policy_cpu_fp32(model_path: str, embodiment_tag: EmbodimentTag) -> Gr00tPolicy:
++    return _load_policy_cpu_fp32_with_mode(model_path, embodiment_tag, skip_weights=False)
++
++
++def _load_policy_cpu_fp32_with_mode(
++    model_path: str,
++    embodiment_tag: EmbodimentTag,
++    skip_weights: bool = False,
++) -> Gr00tPolicy:
++    if skip_weights:
++        return _load_policy_config_only(model_path, embodiment_tag)
++
+     try:
+         return Gr00tPolicy(
+             model_path=model_path,
+@@ -97,6 +108,55 @@ def _load_policy_cpu_fp32(model_path: str, embodiment_tag: EmbodimentTag) -> Gr0
+         return policy
+ 
+ 
++def _load_policy_config_only(model_path: str, embodiment_tag: EmbodimentTag) -> Gr00tPolicy:
++    """Create a lightweight policy shell without loading PyTorch weights."""
++    from transformers import AutoConfig, AutoProcessor
++
++    from gr00t.model.gr00t_n1d7.gr00t_n1d7 import Gr00tN1d7
++    from gr00t.policy.policy import BasePolicy
++
++    model_dir = Path(model_path)
++    config = AutoConfig.from_pretrained(model_dir)
++    model = Gr00tN1d7(config)
++    model.eval()
++
++    processor_dir = (
++        model_dir / "processor"
++        if (model_dir / "processor").is_dir() and not (model_dir / "processor_config.json").exists()
++        else model_dir
++    )
++    processor = AutoProcessor.from_pretrained(processor_dir)
++    processor.eval()
++
++    policy = object.__new__(Gr00tPolicy)
++    BasePolicy.__init__(policy, strict=True)
++    policy.model = model
++    policy.model_dtype = torch.float32
++    policy.processor = processor
++    policy.embodiment_tag = embodiment_tag
++    policy.device = "cpu"
++
++    all_modality_configs = policy.processor.get_modality_configs()
++    if policy.embodiment_tag.value not in all_modality_configs:
++        raise ValueError(
++            f"Embodiment tag '{embodiment_tag.name}' not found in processor config. "
++            f"Available: {list(all_modality_configs.keys())}"
++        )
++
++    policy.modality_configs = {
++        key: value for key, value in all_modality_configs[policy.embodiment_tag.value].items() if key != "rl_info"
++    }
++    policy.collate_fn = policy.processor.collator
++
++    language_keys = policy.modality_configs["language"].modality_keys
++    language_delta_indices = policy.modality_configs["language"].delta_indices
++    assert len(language_keys) >= 1, "At least one language key is required"
++    assert len(language_delta_indices) == 1, "Only one language delta index is supported"
++    policy.language_key = language_keys[0]
++    logger.info("  Policy created without loading PyTorch weights")
++    return policy
++
++
+ def resolve_ov_model_xml(ov_model_dir: str) -> str:
+     """Resolve the single OpenVINO XML model file from a directory."""
+     model_dir = Path(ov_model_dir)
+@@ -130,11 +190,29 @@ def _load_static_seq_len_from_metadata(ov_model_dir: str) -> int | None:
+     return int(value) if value is not None else None
+ 
+ 
+-def load_modality_configs_from_checkpoint(model_path: str, embodiment_tag: str):
+-    """Load modality configs directly from the checkpoint's processor_config.json."""
+-    processor_config_path = Path(model_path) / "processor_config.json"
+-    if not processor_config_path.exists():
+-        raise FileNotFoundError(f"processor_config.json not found in {model_path}")
++def load_modality_configs_from_checkpoint(
++    model_path: str | None,
++    embodiment_tag: str,
++    ov_model_dir: str | None = None,
++):
++    """Load modality configs from OV export config or the original checkpoint."""
++    search_paths = []
++    if ov_model_dir:
++        search_paths.append(Path(ov_model_dir) / "config")
++        search_paths.append(Path(ov_model_dir))
++    if model_path:
++        search_paths.append(Path(model_path))
++
++    processor_config_path = None
++    for search_dir in search_paths:
++        candidate = search_dir / "processor_config.json"
++        if candidate.exists():
++            processor_config_path = candidate
++            break
++
++    if processor_config_path is None:
++        searched = ", ".join(str(path) for path in search_paths)
++        raise FileNotFoundError(f"processor_config.json not found in any of: {searched}")
+ 
+     with open(processor_config_path) as file_obj:
+         config = json.load(file_obj)
+@@ -171,10 +249,27 @@ def load_modality_configs_from_checkpoint(model_path: str, embodiment_tag: str):
+     }
+ 
+ 
+-def load_state_dimensions(model_path: str, embodiment_tag: str) -> dict[str, int]:
+-    """Load per-key state dimensions from statistics.json."""
+-    stats_path = Path(model_path) / "statistics.json"
+-    if not stats_path.exists():
++def load_state_dimensions(
++    model_path: str | None,
++    embodiment_tag: str,
++    ov_model_dir: str | None = None,
++) -> dict[str, int]:
++    """Load per-key state dimensions from OV export config or checkpoint."""
++    search_paths = []
++    if ov_model_dir:
++        search_paths.append(Path(ov_model_dir) / "config")
++        search_paths.append(Path(ov_model_dir))
++    if model_path:
++        search_paths.append(Path(model_path))
++
++    stats_path = None
++    for search_dir in search_paths:
++        candidate = search_dir / "statistics.json"
++        if candidate.exists():
++            stats_path = candidate
++            break
++
++    if stats_path is None:
+         return {}
+ 
+     with open(stats_path) as file_obj:
+@@ -584,7 +679,12 @@ def build_parser() -> argparse.ArgumentParser:
+         description="Run single-OV OpenVINO inference on the GR00T base model (dummy input)",
+         formatter_class=argparse.RawTextHelpFormatter,
+     )
+-    parser.add_argument("--model-path", type=str, required=True, help="Path to PyTorch checkpoint")
++    parser.add_argument(
++        "--model-path",
++        type=str,
++        default=None,
++        help="Path to PyTorch checkpoint. If omitted, load config from --ov-model-dir/config.",
++    )
+     parser.add_argument(
+         "--ov-model-dir",
+         type=str,
+@@ -673,9 +773,17 @@ def main() -> None:
+     logger.info("Image size: %s", args.image_size)
+     logger.info("=" * 80)
+ 
+-    logger.info("\n[Step 1] Loading modality configs from checkpoint...")
+-    modality_configs = load_modality_configs_from_checkpoint(args.model_path, args.embodiment_tag)
+-    state_dims = load_state_dimensions(args.model_path, args.embodiment_tag)
++    logger.info("\n[Step 1] Loading modality configs from checkpoint or OV export...")
++    modality_configs = load_modality_configs_from_checkpoint(
++        args.model_path,
++        args.embodiment_tag,
++        ov_model_dir=args.ov_model_dir,
++    )
++    state_dims = load_state_dimensions(
++        args.model_path,
++        args.embodiment_tag,
++        ov_model_dir=args.ov_model_dir,
++    )
+     logger.info("  Video keys: %s", modality_configs["video"].modality_keys)
+     logger.info("  Video frames: %d", len(modality_configs["video"].delta_indices))
+     logger.info("  State keys: %s", modality_configs["state"].modality_keys)
+@@ -686,8 +794,26 @@ def main() -> None:
+ 
+     logger.info("\n[Step 2] Loading GR00T policy for processor + decode path...")
+     embodiment_tag = EmbodimentTag.resolve(args.embodiment_tag)
+-    policy = _load_policy_cpu_fp32(args.model_path, embodiment_tag)
+-    logger.info("Policy loaded (PyTorch, CPU)")
++    if args.model_path:
++        policy_model_path = args.model_path
++        skip_weights = False
++    else:
++        config_subdir = Path(args.ov_model_dir) / "config"
++        if config_subdir.is_dir() and (config_subdir / "config.json").exists():
++            policy_model_path = str(config_subdir)
++            skip_weights = not list(config_subdir.glob("model-*.safetensors"))
++        else:
++            policy_model_path = args.ov_model_dir
++            skip_weights = not list(Path(args.ov_model_dir).glob("model-*.safetensors"))
++
++    logger.info("  Loading model from: %s", policy_model_path)
++    if skip_weights:
++        logger.info("  Mode: config-only (no PyTorch weights, OpenVINO-only inference)")
++        if args.verify_pytorch:
++            raise ValueError("--verify-pytorch requires --model-path with PyTorch weights; it cannot run in config-only mode")
++
++    policy = _load_policy_cpu_fp32_with_mode(policy_model_path, embodiment_tag, skip_weights=skip_weights)
++    logger.info("Policy loaded (config + processor)")
+ 
+     logger.info("\n[Step 3] Reading single OpenVINO model...")
+     core = ov.Core()
+-- 
+2.43.0
+

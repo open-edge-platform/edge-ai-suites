@@ -24,16 +24,16 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-[VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html)
+[VSS Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/video-search-and-summarization/get-started.html)
 
 ### 2. VLM Microservice (Optional)
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
+- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
-[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Helm Chart Installation
 

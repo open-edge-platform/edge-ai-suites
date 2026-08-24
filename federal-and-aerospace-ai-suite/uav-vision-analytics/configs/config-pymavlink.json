@@ -1,0 +1,170 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "uav_object_detection_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "uav_object_detection_gpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=GPU model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-RTSP-GPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "uav_object_detection_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=NPU model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-RTSP-NPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+
+            {
+                "name": "uav_realsense_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "v4l2src device=/dev/video4 ! videoconvert ! video/x-raw,format=NV12,width=1280,height=720 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"RealSense-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "uav_realsense_gpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "v4l2src device=/dev/video4 ! videoconvert ! video/x-raw,format=NV12,width=1280,height=720 ! gvadetect device=GPU model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"RealSense-RTSP-GPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "uav_realsense_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "v4l2src device=/dev/video4 ! videoconvert ! video/x-raw,format=NV12,width=1280,height=720 ! gvadetect device=NPU model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"RealSense-RTSP-NPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+
+            {
+                "name": "uav_udpsink_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-UDP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5600",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "uav_udpsink_gpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=GPU model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-UDP-GPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5601",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "uav_udpsink_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=NPU model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-UDP-NPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5602",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}

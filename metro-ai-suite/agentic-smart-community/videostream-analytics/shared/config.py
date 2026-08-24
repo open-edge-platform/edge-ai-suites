@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Optional, TypeVar
+from typing import Literal, Optional, TypeVar
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
@@ -25,6 +25,12 @@ class SegmentConfig(BaseModel):
 
     `max_duration` — hard ceiling on segment length in seconds; when a running
     segment reaches this, it is closed and a new one starts.
+
+    `min_duration` — cut-frequency guard, NOT a delete filter: forced cuts
+    (ROI early-split) are rejected while the running segment is younger than
+    this, and prefilter motion-exit is held open until it. Finished segments
+    are always emitted regardless of length — short motion-end tails still
+    reach the VLM.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -51,6 +57,15 @@ class RecordingConfig(BaseModel):
 
     `interval_seconds` is the canonical field MCP sends. `interval` is kept as
     a legacy alias accepted on input but written as `interval_seconds`.
+    Recordings on disk are pruned by the MCP server (storage.retention_days);
+    VSA does not do its own retention cleanup.
+
+    `backend` selects how segments are produced:
+      - "copy" (default): an ffmpeg subprocess pulls the stream and cuts
+        segments with `-c copy` — no decode, no encode, original codec/bitrate
+        preserved. Requires ffmpeg on PATH.
+      - "x264" (rollback): cv2 decode + libx264 re-encode via H264SegmentWriter.
+        Kept as an escape hatch; `fps` is only used by this backend.
     """
 
     model_config = ConfigDict(populate_by_name=True)
@@ -58,7 +73,7 @@ class RecordingConfig(BaseModel):
     enabled: bool = True
     interval_seconds: int = Field(default=60, alias="interval")
     fps: int = 15
-    retention_days: int = 5
+    backend: Literal["copy", "x264"] = "copy"
 
 
 class RoiConfig(BaseModel):
@@ -159,7 +174,7 @@ class SourceConfig(BaseModel):
 class AppConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
     webhook: WebhookConfig = Field(default_factory=WebhookConfig)
-    data_dir: str = "~/.mcp-smartbuilding/segments"
+    data_dir: str = "~/.mcp-smart-community/segments"
     defaults: DefaultsConfig = Field(default_factory=DefaultsConfig)
     logging: dict = Field(default_factory=lambda: {"level": "INFO"})
 
@@ -217,13 +232,13 @@ def load_config(config_path: str | None = None) -> AppConfig:
     if prefilter_model := os.environ.get("PREFILTER_MODEL"):
         config.defaults.prefilter.model_path = expand_path(prefilter_model)
 
-    # SMARTBUILDING_DATA_DIR is the MCP server's data root. VSA writes under its
+    # SMART_COMMUNITY_DATA_DIR is the MCP server's data root. VSA writes under its
     # `segments/` subdir so the DEFAULT output root lines up with the per-monitor
-    # data_dir MCP sends in register_source bodies (<SMARTBUILDING_DATA_DIR>/
+    # data_dir MCP sends in register_source bodies (<SMART_COMMUNITY_DATA_DIR>/
     # segments/<id>). An explicit `data_dir` in a register_source request still
     # takes precedence — see source_worker._resolve_data_dir. This supersedes the
     # old RECORDINGS_DIR override (Docker no longer sets that).
-    if root := os.environ.get("SMARTBUILDING_DATA_DIR"):
+    if root := os.environ.get("SMART_COMMUNITY_DATA_DIR"):
         config.data_dir = os.path.join(expand_path(root), "segments")
 
     return config

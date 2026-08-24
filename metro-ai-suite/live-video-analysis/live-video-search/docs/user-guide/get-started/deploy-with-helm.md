@@ -53,10 +53,8 @@ cd live-video-search
 Clone the repository and navigate to the chart directory:
 
 ```bash
-# Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
-# Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b 2026.2.0-rc1
+# Clone the release branch
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.2.0
 cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-search/chart
 ```
 

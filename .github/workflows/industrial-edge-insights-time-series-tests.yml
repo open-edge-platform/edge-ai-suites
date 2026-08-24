@@ -282,7 +282,11 @@ jobs:
             TS_IMAGE_SUFFIX=$(grep 'image_suffix:' \
               "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/helm/values.yaml" \
               | head -1 | awk -F'"' '{print $2}')
-            TS_CHART_VERSION="${TS_IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE_INPUT}-weekly"
+            if [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]]; then
+              TS_CHART_VERSION="${TS_IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE_INPUT}-weekly"
+            else
+              TS_CHART_VERSION="${TS_IMAGE_SUFFIX}"
+            fi
             echo "Time Series Helm chart pull: image_suffix=$TS_IMAGE_SUFFIX chart_version=$TS_CHART_VERSION"
             pull_chart \
               "oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app" \
@@ -296,7 +300,11 @@ jobs:
             MM_IMAGE_SUFFIX=$(grep 'image_suffix:' \
               "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/helm/values.yaml" \
               | head -1 | awk -F'"' '{print $2}')
-            MM_CHART_VERSION="${MM_IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE_INPUT}-weekly"
+            if [[ -n "$WEEKLY_BUILD_DATE_INPUT" ]]; then
+              MM_CHART_VERSION="${MM_IMAGE_SUFFIX}-${WEEKLY_BUILD_DATE_INPUT}-weekly"
+            else
+              MM_CHART_VERSION="${MM_IMAGE_SUFFIX}"
+            fi
             echo "Multimodal Helm chart pull: image_suffix=$MM_IMAGE_SUFFIX chart_version=$MM_CHART_VERSION"
             pull_chart \
               "oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app" \

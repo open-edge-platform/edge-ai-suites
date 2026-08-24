@@ -12,7 +12,7 @@ RUN chmod +x /tmp/drivers/install_gpu_drivers.sh
 RUN echo "Installing GPU drivers version $INSTALL_DRIVER_VERSION" && \
     apt-get update && apt-get install -y --no-install-recommends ca-certificates libxml2 && \
     /tmp/drivers/install_gpu_drivers.sh && \
-    python -m pip install --upgrade --no-cache-dir pip && \
+    python -m pip install --upgrade --no-cache-dir pip==26.1.2 && \
     apt-get clean && rm -rf /tmp/drivers /var/lib/apt/lists/* /tmp/*
 
 # Build stage

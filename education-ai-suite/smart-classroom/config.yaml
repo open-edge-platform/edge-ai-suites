@@ -82,7 +82,7 @@ models:
     provider: vlm
     vlm_name: Qwen/Qwen3-VL-8B-Instruct
     device: GPU # GPU or CPU
-    weight_format: int4 # int4,int 8-- shared with content_search.vlm.weight_format
+    weight_format: int4 # supports int4, int8
     max_new_tokens: 5120
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
@@ -154,23 +154,18 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
-    model_name: "Qwen/Qwen3-VL-8B-Instruct"
     host_addr: "127.0.0.1"
     port: 8000  # warm VLM now hosted by main app (:8000); standalone :9900 retired
-    device: "GPU"
-    weight_format: "int8"
-    ingest_enabled: true
-    stream: false  
 
   video_preprocess:
     host_addr: "127.0.0.1"
     port: 8001
-    vlm_timeout_seconds: 300
+    vlm_timeout_seconds: 600
+    max_completion_tokens: 500
     chunk_duration_s: 30
     chunk_overlap_s: 4
     max_num_frames: 8
-    frame_width: 0
-    frame_height: 0
+    max_image_pixels: 1048576  # downscale frames above this area (px) before sending to VLM
 
   file_ingest:
     host_addr: "127.0.0.1"
@@ -200,7 +195,7 @@ content_search:
     max_tokens: 1024        # maximum tokens the VLM can generate for an answer (prevents mid-sentence cutoff)
     max_history_turns: 3    # number of prior conversation turns (user+assistant pairs) sent to the VLM
     context_window: 16384   # token budget for dynamic context selection; 
-    retrieval_score_threshold: 85  # minimum relevance score (0-100) a chunk must have to be used as context
+    retrieval_score_threshold: 60  # minimum relevance score (0-100) a chunk must have to be used as context
 
 # ── Telegram integration (OpenClaw bridge) ────────────────────────────────────
 # Set enabled: true and fill in bot_token + chat_id to activate.

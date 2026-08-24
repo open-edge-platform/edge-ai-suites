@@ -1,0 +1,584 @@
+From 4a0340eaf5617f2db79277c30dc5bc8136efe550 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Tue, 30 Jun 2026 23:11:06 +0800
+Subject: [PATCH 05/13] Support VLA token + nav2_cmd dual-mode switching in
+ ROS2 input handler
+
+  Adds VLA-driven manipulation as a peer to navigate-driven locomotion in
+  the same ROS2 input handler
+    - Subscribe to ControlPolicy/vla_token (ByteMultiArray) carrying a
+      ZMQ-Protocol-v4-compatible packed payload; parse 1280-byte JSON
+      header + binary fields (token_state, toggle_vla_mode, frame_index,
+      left/right_hand_joints)
+    - Hand-joint payloads (shape [7] or [N,7], f32/f64) feed
+      left_hand_joint_ / right_hand_joint_ via SetData(), matching ZMQ v4
+      semantics so downstream GetHandPose() is transport-agnostic.
+    - Fix toggle_policy_action 2nd-press behaviour: 1st pulse = START,
+      2nd = PAUSE in place (planner stays enabled, navigate_cmd forced
+      to 0, deploy does NOT exit)
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../input_interface/ros2_input_handler.hpp    | 428 +++++++++++++++++-
+ 1 file changed, 410 insertions(+), 18 deletions(-)
+
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp
+index 90224cf..b5fadf0 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp
+@@ -63,16 +63,19 @@
+ #include <vector>
+ #include <variant>
+ #include <cstdlib>
++#include <cstring>
+ 
+ #include <termios.h>
+ #include <fcntl.h>
+ #include <unistd.h>
+ 
+ #include <msgpack.hpp>
++#include <nlohmann/json.hpp>
+ 
+ #include "input_interface.hpp"
+ #include "../math_utils.hpp"
+ #include "../policy_parameters.hpp"  // For isaaclab_to_mujoco and default_angles
++#include "zmq_packed_message_subscriber.hpp"  // For is_little_endian()/byte_swap() helpers
+ 
+ /**
+  * @brief Deserialized control-goal message received from the Python teleop script.
+@@ -111,6 +114,41 @@ struct ControlGoalMsg {
+     bool valid = false;           ///< True once the message has been successfully parsed.
+ };
+ 
++/**
++ * @brief Deserialized VLA-token message received on `ControlPolicy/vla_token`.
++ *
++ * The wire format mirrors the ZMQ Protocol v4 packed layout used by
++ * ZMQEndpointInterface so the same VLA producer can switch transport with
++ * minimal changes:
++ *
++ *   [1280-byte JSON header] [concatenated binary fields]
++ *
++ * The JSON header is identical to the ZMQ format
++ * (see zmq_packed_message_subscriber.hpp:1-25) and declares fields:
++ *   - token_state: f32/f64, shape [N]                     (required, latent action token)
++ *   - toggle_vla_mode: bool, shape [1]                    (optional, edge-triggered VLA on/off)
++ *   - frame_index: i64, shape [1]                         (optional, for logging)
++ *   - left_hand_joints: f32/f64, shape [7] or [N,7]       (optional, Dex3 left-hand 7 DOF)
++ *   - right_hand_joints: f32/f64, shape [7] or [N,7]      (optional, Dex3 right-hand 7 DOF)
++ *
++ * Hand-joint shape semantics match ZMQ v4 exactly: chunked payloads [N,7]
++ * use the first frame; flat [7] is taken as-is.
++ */
++struct VlaTokenMsg {
++    std::vector<double> token_state;  ///< Decoded N-dim latent action vector.
++    bool toggle_vla_mode = false;     ///< Edge-triggered toggle: ENTER/EXIT VLA mode.
++    int64_t frame_index = -1;         ///< Optional frame index (for logging).
++
++    /// Dex3 hand joint targets (7 DOF each). Populated only if the optional
++    /// `left_hand_joints` / `right_hand_joints` fields are present in the payload.
++    std::array<double, 7> left_hand_joint = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
++    std::array<double, 7> right_hand_joint = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
++    bool has_left_hand_joint = false;
++    bool has_right_hand_joint = false;
++
++    bool valid = false;               ///< True once the payload has been successfully parsed.
++};
++
+ /**
+  * @class ROS2InputHandler
+  * @brief InputInterface driven by ROS 2 DDS messages (msgpack-serialised ControlGoalMsg).
+@@ -160,11 +198,12 @@ public:
+                 std::cout << "[ROS2 DEBUG] ROS2InputHandler node '" << node_name << "' initialized" << std::endl;
+             }
+             
+-            // Setup subscriber for control goal topic
++            // Setup subscribers for control goal + VLA token topics
+             setup_subscribers();
+-            
++
+             if constexpr (DEBUG_LOGGING) {
+-                std::cout << "[ROS2 DEBUG] Subscribed to topic: ControlPolicy/upper_body_pose" << std::endl;
++                std::cout << "[ROS2 DEBUG] Subscribed to topics: ControlPolicy/upper_body_pose, "
++                          << "ControlPolicy/vla_token" << std::endl;
+             }
+         } catch (const std::exception& e) {
+             std::cerr << "[ROS2 ERROR] Failed to initialize ROS2InputHandler: " << e.what() << std::endl;
+@@ -199,6 +238,12 @@ public:
+                 }
+                 control_goal_sub_.reset();
+             }
++            if (vla_token_sub_) {
++                if constexpr (DEBUG_LOGGING) {
++                    std::cout << "[ROS2 DEBUG] Resetting vla_token subscriber" << std::endl;
++                }
++                vla_token_sub_.reset();
++            }
+             
+             // Step 3: Allow DDS cleanup time (critical for preventing assertion)
+             std::this_thread::sleep_for(std::chrono::milliseconds(50));
+@@ -325,27 +370,54 @@ public:
+             base_height_command_ = control_goal_buffer_.base_height_command;
+             use_teleop_navigate_cmd_ = true;
+             
+-            // Handle toggle_policy_action (edge-triggered toggle between start/stop)
++            // Handle toggle_policy_action (edge-triggered).
++            //
++            //   1st pulse: control was OFF → START (control_is_active_=true, fire start_control_)
++            //   2nd pulse: control already ON → PAUSE navigation (planner still enabled,
++            //              decoder still running, but navigate_cmd is forced to 0 so the
++            //              robot holds in place — the deploy does NOT exit).
++            //   3rd pulse: paused → RESUME navigation (no re-init: planner is still up).
++            //
++            //   Special case: if we are currently in VLA mode (vla_mode_active_),
++            //   a toggle_policy_action pulse means "navigate wants to take back
++            //   control". We treat it as an implicit EXIT-VLA edge: clear the
++            //   VLA flags and drop into the safety-reset path so the planner
++            //   re-initialises exactly as it would on toggle_vla_mode=falling.
++            //
++            // The previous semantic ("2nd pulse → operator_state.stop=true → deploy exits")
++            // was unsuitable for the navigate ↔ VLA mode-switch use case where we want
++            // to come back later. Emergency stop is still available via the 'O'/'o' key.
+             if (control_goal_buffer_.toggle_policy_action) {
+-                // Toggle the control state
+-                control_is_active_ = !control_is_active_;
+-                
+-                if (control_is_active_) {
++                if (vla_mode_active_.load()) {
++                    // Implicit EXIT VLA: nav is taking back control.
++                    vla_mode_active_.store(false);
++                    pause_navigation_ = false;
++                    trigger_safety_reset = true;
++                    if constexpr (DEBUG_LOGGING) {
++                        std::cout << "[VLA Mode] EXIT  (toggle_policy_action while in VLA): "
++                                     "nav reclaiming control via safety reset" << std::endl;
++                    }
++                } else if (!control_is_active_) {
++                    control_is_active_ = true;
+                     start_control_ = true;
++                    pause_navigation_ = false;
+                     if constexpr (DEBUG_LOGGING) {
+                         std::cout << "[ROS2 DEBUG] toggle_policy_action: START control" << std::endl;
+                     }
+                 } else {
+-                    stop_control_ = true;
++                    pause_navigation_ = !pause_navigation_;
+                     if constexpr (DEBUG_LOGGING) {
+-                        std::cout << "[ROS2 DEBUG] toggle_policy_action: STOP control" << std::endl;
++                        std::cout << "[ROS2 DEBUG] toggle_policy_action: "
++                                  << (pause_navigation_ ? "PAUSE navigation (robot holds in place)"
++                                                        : "RESUME navigation")
++                                  << std::endl;
+                     }
+                 }
+-                
++
+                 // Clear the trigger after reading (edge-triggered behavior)
+                 control_goal_buffer_.toggle_policy_action = false;
+             }
+-            
++
+             // Handle locomotion_mode (direct state: 0 = slow walk, 1 = fast walk)
+             locomotion_mode_is_fast_ = (control_goal_buffer_.locomotion_mode == 1);
+             
+@@ -555,6 +627,53 @@ public:
+             // No control goal data available
+             use_teleop_navigate_cmd_ = false;
+         }
++
++        // ----------------------------------------------------------------
++        // VLA-token channel: pop pending toggle_vla_mode pulses (each pulse
++        // flips encoder ↔ decoder mode). On EXIT, reuse the existing
++        // safety-reset semantic to bring the planner back online.
++        // ----------------------------------------------------------------
++        bool vla_toggle_edge = false;
++        {
++            std::lock_guard<std::mutex> lock(token_mutex_);
++            if (pending_vla_toggle_) {
++                pending_vla_toggle_ = false;
++                vla_toggle_edge = true;
++            }
++        }
++        if (vla_toggle_edge) {
++            const bool new_vla_active = !vla_mode_active_.load();
++            vla_mode_active_.store(new_vla_active);
++            if (new_vla_active) {
++                // ENTER VLA mode: decoder will read external tokens via
++                // GetExternalTokenState(); also park navigation so the
++                // planner's IDLE/decay output never fights the VLA action.
++                pause_navigation_ = true;
++
++                // toggle_vla_mode is itself an operator intent to drive
++                // the robot, so auto-START control if it isn't already
++                // armed — no separate toggle_policy_action pulse needed.
++                // (Mirrors the behaviour of toggle_policy_action's 1st pulse.)
++                if (!control_is_active_) {
++                    control_is_active_ = true;
++                    start_control_ = true;
++                    std::cout << "[VLA Mode] auto-START control "
++                                 "(toggle_vla_mode while control was idle)" << std::endl;
++                }
++
++                std::cout << "[VLA Mode] ENTER (toggle_vla_mode rising edge): "
++                             "external tokens drive decoder; navigation paused" << std::endl;
++            } else {
++                // EXIT VLA mode: hand control back to encoder + planner. We
++                // reuse the safety-reset path so handle_input() walks the
++                // planner re-init flow exactly as if the operator had just
++                // re-armed control.
++                pause_navigation_ = false;
++                trigger_safety_reset = true;
++                std::cout << "[VLA Mode] EXIT  (toggle_vla_mode falling edge): "
++                             "encoder + planner resuming via safety reset" << std::endl;
++            }
++        }
+     }
+ 
+     // Override the handle_input function from InputInterface
+@@ -732,9 +851,11 @@ public:
+             if (use_teleop_navigate_cmd_) {
+                 // navigate_cmd format: [lin_vel_x, lin_vel_y, ang_vel_z]
+                 // Convert to movement_direction and mode
+-                double lin_vel_x = navigate_cmd_from_teleop_[0];
+-                double lin_vel_y = navigate_cmd_from_teleop_[1];
+-                double ang_vel_z = navigate_cmd_from_teleop_[2];
++                // When pause_navigation_ is set (2nd toggle_policy_action pulse), force zeros
++                // so the planner emits IDLE — robot holds in place, control loop keeps running.
++                double lin_vel_x = pause_navigation_ ? 0.0 : navigate_cmd_from_teleop_[0];
++                double lin_vel_y = pause_navigation_ ? 0.0 : navigate_cmd_from_teleop_[1];
++                double ang_vel_z = pause_navigation_ ? 0.0 : navigate_cmd_from_teleop_[2];
+                 
+                 // Update facing angle based on angular velocity (similar to gamepad)
+                 if (std::abs(ang_vel_z) > 0.01f) {
+@@ -852,6 +973,34 @@ public:
+         return 0.0;
+     }
+ 
++    /**
++     * @brief Provide the external token vector when VLA mode is active and tokens are fresh.
++     *
++     * Three conditions must all hold:
++     *  1. `vla_mode_active_` — operator-driven intent (toggle_vla_mode rising edge).
++     *  2. At least one VLA token message has ever been received.
++     *  3. The most-recent token is younger than `TOKEN_FRESHNESS_MS_` (default 200 ms).
++     *
++     * The third condition is the safety fallback: if the VLA producer crashes,
++     * the deploy automatically reverts to encoder + planner via the same path
++     * the upstream control loop already uses for the encoder branch.
++     */
++    std::pair<bool, std::vector<double>> GetExternalTokenState() const override {
++        if (!vla_mode_active_.load()) return {false, {}};
++        if (!has_external_token_state_.load()) return {false, {}};
++
++        const int64_t now_ns = std::chrono::steady_clock::now().time_since_epoch().count();
++        const int64_t age_ns = now_ns - last_token_time_ns_.load();
++        if (age_ns > TOKEN_FRESHNESS_MS_ * 1'000'000LL) {
++            return {false, {}};
++        }
++
++        std::lock_guard<std::mutex> lock(token_mutex_);
++        return {true, external_token_buffer_};
++    }
++
++    bool IsVlaModeActive() const { return vla_mode_active_.load(); }
++
+ private:
+     // ------------------------------------------------------------------
+     // ROS 2 infrastructure
+@@ -861,6 +1010,9 @@ private:
+     /// Subscription to `ControlPolicy/upper_body_pose` (ByteMultiArray, msgpack).
+     rclcpp::Subscription<std_msgs::msg::ByteMultiArray>::SharedPtr control_goal_sub_;
+ 
++    /// Subscription to `ControlPolicy/vla_token` (ByteMultiArray, ZMQ Protocol v4 packed).
++    rclcpp::Subscription<std_msgs::msg::ByteMultiArray>::SharedPtr vla_token_sub_;
++
+     // ------------------------------------------------------------------
+     // Thread-safe receiving buffer (written by callback, read by update())
+     // ------------------------------------------------------------------
+@@ -869,6 +1021,19 @@ private:
+     std::atomic<bool> received_control_goal_{false};   ///< True once at least one message arrived.
+     std::atomic<int64_t> last_control_goal_time_ns_{0}; ///< Monotonic timestamp of last message (ns).
+     static constexpr double CONTROL_GOAL_TIMEOUT = 1.0; ///< Seconds before a timeout reset.
++
++    // ------------------------------------------------------------------
++    // VLA token channel (written by vla_token_callback, read by update() / GetExternalTokenState)
++    // ------------------------------------------------------------------
++    mutable std::mutex token_mutex_;                    ///< Guards external_token_buffer_ and pending_vla_toggle_.
++    std::vector<double> external_token_buffer_;         ///< Latest decoded token vector.
++    std::atomic<int64_t> last_token_time_ns_{0};        ///< Monotonic timestamp of last token message (ns).
++    bool pending_vla_toggle_ = false;                   ///< OR-accumulated toggle_vla_mode pulses (consumed by update()).
++    std::atomic<bool> vla_mode_active_{false};          ///< True when VLA mode is the source of decoder tokens.
++    static constexpr int64_t TOKEN_FRESHNESS_MS_ = 500; ///< VLA token age limit before fallback to encoder.
++                                                        ///< Generous vs the 50 Hz publish rate (20 ms inter-msg)
++                                                        ///< to avoid flapping between encoder and external tokens
++                                                        ///< on transient publisher hiccups (GC, GIL, ROS2 spin lag).
+     
+     /// When true, use IK-processed transformation matrices for VR position;
+     /// when false, use raw left_wrist / right_wrist matrices.
+@@ -878,6 +1043,8 @@ private:
+     // Control-toggle state
+     // ------------------------------------------------------------------
+     bool control_is_active_ = false;       ///< Tracks the toggle state for toggle_policy_action.
++    bool pause_navigation_ = false;         ///< Set by 2nd toggle_policy_action pulse: holds robot in place
++                                            ///< (planner still enabled, navigate_cmd forced to zero); 3rd pulse resumes.
+     bool locomotion_mode_is_fast_ = false;  ///< false = SLOW_WALK (custom speed), true = WALK (default speed).
+     
+     // ------------------------------------------------------------------
+@@ -1246,15 +1413,228 @@ private:
+                 this->control_goal_callback(msg);
+             }
+         );
+-        
++
++        // Create subscriber for VLA token topic (latent action stream from VLA inference)
++        vla_token_sub_ = node_->create_subscription<std_msgs::msg::ByteMultiArray>(
++            "ControlPolicy/vla_token",
++            1,
++            [this](std::shared_ptr<const std_msgs::msg::ByteMultiArray> msg) {
++                this->vla_token_callback(msg);
++            }
++        );
++
+         if constexpr (DEBUG_LOGGING) {
+             std::cout << "[ROS2 DEBUG] Control goal subscriber created for topic: ControlPolicy/upper_body_pose" << std::endl;
++            std::cout << "[ROS2 DEBUG] VLA token subscriber created for topic: ControlPolicy/vla_token" << std::endl;
++        }
++    }
++
++    /**
++     * @brief Decode a ZMQ Protocol v4 packed payload (1280-byte JSON header + binary fields)
++     *        into a VlaTokenMsg.
++     *
++     * Wire format is identical to ZMQEndpointInterface v4 (see
++     * zmq_packed_message_subscriber.hpp), so the same VLA producer can switch
++     * between ZMQ and ROS2 transports without changing payload encoding.
++     *
++     * Required field: `token_state` (f32 or f64).
++     * Optional fields: `toggle_vla_mode` (bool/u8/i8), `frame_index` (i64).
++     */
++    VlaTokenMsg parse_packed_vla_token(const std::vector<uint8_t>& data) {
++        VlaTokenMsg out;
++        constexpr size_t HEADER_SIZE = 1280;
++
++        if (data.size() < HEADER_SIZE) {
++            std::cerr << "[ROS2 VLA ERROR] payload smaller than header (" << data.size()
++                      << " < " << HEADER_SIZE << ")" << std::endl;
++            return out;
++        }
++
++        // ----- Parse JSON header -----
++        const char* hdr_begin = reinterpret_cast<const char*>(data.data());
++        size_t hdr_len = HEADER_SIZE;
++        while (hdr_len > 0 && hdr_begin[hdr_len - 1] == '\0') --hdr_len;
++        nlohmann::json hdr;
++        try {
++            hdr = nlohmann::json::parse(std::string(hdr_begin, hdr_len));
++        } catch (const std::exception& e) {
++            std::cerr << "[ROS2 VLA ERROR] header JSON parse failed: " << e.what() << std::endl;
++            return out;
++        }
++
++        const std::string endian = hdr.value("endian", std::string("le"));
++        const bool needs_swap = (is_little_endian() ? (endian == "be") : (endian != "be"));
++
++        if (!hdr.contains("fields") || !hdr["fields"].is_array()) {
++            std::cerr << "[ROS2 VLA ERROR] header missing 'fields' array" << std::endl;
++            return out;
++        }
++
++        // ----- Walk fields in order, extracting the ones we care about -----
++        size_t cursor = HEADER_SIZE;
++        bool got_token = false;
++        for (const auto& f : hdr["fields"]) {
++            const std::string name = f.value("name", std::string{});
++            const std::string dtype = f.value("dtype", std::string("f32"));
++            std::vector<size_t> shape;
++            if (f.contains("shape") && f["shape"].is_array()) {
++                for (const auto& s : f["shape"]) shape.push_back(s.get<size_t>());
++            }
++            size_t elem_size = 4;
++            if (dtype == "f64" || dtype == "i64") elem_size = 8;
++            else if (dtype == "f32" || dtype == "i32") elem_size = 4;
++            else if (dtype == "i16" || dtype == "f16") elem_size = 2;
++            else if (dtype == "i8" || dtype == "u8" || dtype == "bool") elem_size = 1;
++            size_t num_elements = shape.empty() ? 0 : 1;
++            for (size_t d : shape) num_elements *= d;
++            const size_t field_bytes = num_elements * elem_size;
++
++            if (cursor + field_bytes > data.size()) {
++                std::cerr << "[ROS2 VLA ERROR] field '" << name << "' exceeds payload ("
++                          << cursor << " + " << field_bytes << " > " << data.size() << ")" << std::endl;
++                return out;
++            }
++            const uint8_t* fbuf = data.data() + cursor;
++            cursor += field_bytes;
++
++            if (name == "token_state") {
++                out.token_state.resize(num_elements);
++                if (dtype == "f32") {
++                    for (size_t i = 0; i < num_elements; ++i) {
++                        float v;
++                        std::memcpy(&v, fbuf + i * sizeof(float), sizeof(float));
++                        if (needs_swap) v = byte_swap(v);
++                        out.token_state[i] = static_cast<double>(v);
++                    }
++                } else if (dtype == "f64") {
++                    for (size_t i = 0; i < num_elements; ++i) {
++                        double v;
++                        std::memcpy(&v, fbuf + i * sizeof(double), sizeof(double));
++                        if (needs_swap) v = byte_swap(v);
++                        out.token_state[i] = v;
++                    }
++                } else {
++                    std::cerr << "[ROS2 VLA ERROR] unsupported token_state dtype '" << dtype << "'" << std::endl;
++                    return out;
++                }
++                got_token = true;
++            } else if (name == "toggle_vla_mode") {
++                if (num_elements >= 1 && (dtype == "bool" || dtype == "u8" || dtype == "i8")) {
++                    out.toggle_vla_mode = (fbuf[0] != 0);
++                }
++            } else if (name == "frame_index") {
++                if (num_elements >= 1 && dtype == "i64") {
++                    int64_t fi;
++                    std::memcpy(&fi, fbuf, sizeof(int64_t));
++                    if (needs_swap) fi = byte_swap(fi);
++                    out.frame_index = fi;
++                }
++            } else if (name == "left_hand_joints" || name == "right_hand_joints") {
++                // Match ZMQ v4 shape semantics: accept [7] or [N, 7] (chunk → first frame).
++                bool shape_ok = (shape.size() == 1 && shape[0] == 7) ||
++                                (shape.size() == 2 && shape[1] == 7);
++                if (!shape_ok) {
++                    std::cerr << "[ROS2 VLA ERROR] " << name << ": invalid shape" << std::endl;
++                    continue;  // skip this field but don't reject the whole message
++                }
++                std::array<double, 7> joints{};
++                bool dtype_ok = true;
++                if (dtype == "f32") {
++                    for (int j = 0; j < 7; ++j) {
++                        float v;
++                        std::memcpy(&v, fbuf + j * sizeof(float), sizeof(float));
++                        if (needs_swap) v = byte_swap(v);
++                        joints[j] = static_cast<double>(v);
++                    }
++                } else if (dtype == "f64") {
++                    for (int j = 0; j < 7; ++j) {
++                        double v;
++                        std::memcpy(&v, fbuf + j * sizeof(double), sizeof(double));
++                        if (needs_swap) v = byte_swap(v);
++                        joints[j] = v;
++                    }
++                } else {
++                    dtype_ok = false;
++                    std::cerr << "[ROS2 VLA ERROR] " << name << ": unsupported dtype '" << dtype << "'" << std::endl;
++                }
++                if (dtype_ok) {
++                    if (name == "left_hand_joints") {
++                        out.left_hand_joint = joints;
++                        out.has_left_hand_joint = true;
++                    } else {
++                        out.right_hand_joint = joints;
++                        out.has_right_hand_joint = true;
++                    }
++                }
++            }
++            // Unknown fields are silently skipped — same lenient behaviour as ZMQ v4.
++        }
++
++        if (!got_token) {
++            std::cerr << "[ROS2 VLA ERROR] required field 'token_state' missing" << std::endl;
++            return out;
++        }
++        out.valid = true;
++        return out;
++    }
++
++    /**
++     * @brief ROS 2 callback for `ControlPolicy/vla_token` (runs on executor thread).
++     */
++    void vla_token_callback(std::shared_ptr<const std_msgs::msg::ByteMultiArray> msg) {
++        try {
++            std::vector<uint8_t> data(msg->data.begin(), msg->data.end());
++            VlaTokenMsg parsed = parse_packed_vla_token(data);
++            if (!parsed.valid) return;
++
++            // Hand-joint buffers live in the base class and are read by the
++            // control loop via GetHandPose(). Write them under the same path
++            // as the ZMQ v4 producer (zmq_endpoint_interface.hpp:838-865) so
++            // downstream consumers don't care which transport is in use.
++            const bool any_hand = parsed.has_left_hand_joint || parsed.has_right_hand_joint;
++            if (parsed.has_left_hand_joint) {
++                left_hand_joint_.SetData(parsed.left_hand_joint);
++            }
++            if (parsed.has_right_hand_joint) {
++                right_hand_joint_.SetData(parsed.right_hand_joint);
++            }
++            if (any_hand) {
++                has_hand_joints_.store(true);
++            }
++
++            const size_t token_size = parsed.token_state.size();
++            const double token_first = token_size ? parsed.token_state[0] : 0.0;
++            {
++                std::lock_guard<std::mutex> lock(token_mutex_);
++                external_token_buffer_ = std::move(parsed.token_state);
++                // toggle_vla_mode pulses are accumulated with OR: never lose an edge
++                // between update() cycles (same pattern as toggle_policy_action).
++                pending_vla_toggle_ = pending_vla_toggle_ || parsed.toggle_vla_mode;
++            }
++            last_token_time_ns_.store(std::chrono::steady_clock::now().time_since_epoch().count());
++            has_external_token_state_.store(true);
++
++            if constexpr (DEBUG_LOGGING) {
++                static int vla_counter = 0;
++                if ((vla_counter++ % 50) == 0) {
++                    std::cout << "[ROS2 VLA] token msg #" << vla_counter
++                              << " size=" << token_size
++                              << " token[0]=" << token_first
++                              << " frame=" << parsed.frame_index
++                              << " toggle=" << (parsed.toggle_vla_mode ? 1 : 0)
++                              << " hand_l=" << (parsed.has_left_hand_joint ? 1 : 0)
++                              << " hand_r=" << (parsed.has_right_hand_joint ? 1 : 0)
++                              << std::endl;
++                }
++            }
++        } catch (const std::exception& e) {
++            std::cerr << "[ROS2 VLA ERROR] callback failed: " << e.what() << std::endl;
+         }
+     }
+ 
+     /*
+      * ROS2 Topic Structure:
+-     * 
++     *
+      * ControlPolicy/upper_body_pose (std_msgs/ByteMultiArray) - msgpack-serialized ControlGoalMsg:
+      *    - navigate_cmd: double[3] (navigation velocities [lin_vel_x, lin_vel_y, ang_vel_z])
+      *    - wrist_pose: double[14] (left + right wrist poses: [x,y,z,qw,qx,qy,qz] * 2)
+@@ -1266,10 +1646,22 @@ private:
+      *    - left_hand_joint: double[7] (7 DOF joint positions for left hand)
+      *    - right_hand_joint: double[7] (7 DOF joint positions for right hand)
+      *    - base_height_command: double (desired base height)
+-     *    - toggle_policy_action: bool (toggle between start/stop control)
++     *    - toggle_policy_action: bool (1st pulse=START, 2nd=PAUSE in place, 3rd=RESUME — never exits)
+      *    - locomotion_mode: int (0 = slow walk with custom speed, 1 = fast walk with default speed)
+      *    - ros_timestamp: double (ROS time in seconds for synchronization)
+      *    - valid: bool (message validity flag)
++     *
++     * ControlPolicy/vla_token (std_msgs/ByteMultiArray) - ZMQ Protocol v4 packed payload:
++     *    Layout: [1280-byte JSON header][concatenated binary fields]
++     *    Fields (declared in JSON header):
++     *      - token_state (f32 or f64, shape [N]) — required, latent action vector
++     *      - toggle_vla_mode (bool/u8, shape [1]) — optional, edge-triggered ENTER/EXIT VLA mode
++     *      - frame_index (i64, shape [1]) — optional, for logging
++     *      - left_hand_joints (f32/f64, shape [7] or [N,7]) — optional, Dex3 left-hand 7 DOF
++     *      - right_hand_joints (f32/f64, shape [7] or [N,7]) — optional, Dex3 right-hand 7 DOF
++     *    Wire format intentionally mirrors ZMQEndpointInterface v4 so the
++     *    upstream VLA producer can switch between ZMQ and ROS2 transports
++     *    without re-encoding the payload.
+      */
+ };
+ 
+-- 
+2.43.0
+

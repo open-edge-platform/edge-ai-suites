@@ -1,12 +1,12 @@
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/robot-vision-control">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/robot-vision-control">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/rvc/releasenotes.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/docs/rvc/releasenotes.md">
      Release Notes
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/robot-vision-control/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/robot-vision-control/README.md">
      Readme
   </a>
 </div>
@@ -56,7 +56,7 @@ The Stationary Robot (RVC) reference application performs vision-guided pick-and
 
 ![RVC reference application: pick-and-place with a UR5e](../images/architecture/RVC-Reference-Application.svg)
 
-For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-robotics.html).
 
 ## Stationary Robot Resources
 

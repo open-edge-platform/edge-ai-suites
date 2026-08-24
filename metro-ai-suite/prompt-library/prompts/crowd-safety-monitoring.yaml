@@ -1,0 +1,17 @@
+name: crowd-safety-monitoring
+description: >-
+  Monitor people across public spaces and transit hubs for occupancy, crowd
+  safety, and after-hours awareness.
+tags:
+  - person-detection
+  - crowd-safety
+  - people-counting
+  - computer-vision
+  - metro-ai-apps-builder
+  - intel
+prompt: |
+  I want to detect and keep track of people across my public-space and transit camera feeds for occupancy, crowd safety, or after-hours awareness and be notified when someone appears.
+
+  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
+
+  npx skills add open-edge-platform/skills --skill metro-ai-apps-builder

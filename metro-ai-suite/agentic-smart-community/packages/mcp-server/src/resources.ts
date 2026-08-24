@@ -4,7 +4,7 @@ import {
   UnsubscribeRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import type { ServerConfig } from "./config.js";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { McpSubscriberRegistry } from "./mcp-subscriber-registry.js";
 import { logger } from "./logger.js";
 
@@ -21,11 +21,11 @@ import { logger } from "./logger.js";
 export function registerResources(
   server: McpServer,
   _config: ServerConfig,
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   registry?: McpSubscriberRegistry,
   getSessionId?: () => string,
 ): void {
-  server.registerResource("monitors-list", "smartbuilding://monitors", {
+  server.registerResource("monitors-list", "smart-community://monitors", {
     description: "All monitors with online status",
   }, async (uri) => {
     const monitors = db.listMonitors();
@@ -40,7 +40,7 @@ export function registerResources(
 
   server.registerResource(
     "monitor-latest-frame",
-    new ResourceTemplate("smartbuilding://monitor/{id}/latest-frame", { list: undefined }),
+    new ResourceTemplate("smart-community://monitor/{id}/latest-frame", { list: undefined }),
     { description: "Latest frame (base64 JPEG) for a monitor" },
     async (uri, variables) => {
       const id = variables.id as string;
@@ -56,7 +56,7 @@ export function registerResources(
 
   server.registerResource(
     "monitor-stats",
-    new ResourceTemplate("smartbuilding://monitor/{id}/stats", { list: undefined }),
+    new ResourceTemplate("smart-community://monitor/{id}/stats", { list: undefined }),
     { description: "Today's event/alert statistics for a monitor" },
     async (uri, variables) => {
       const id = variables.id as string;
@@ -76,8 +76,8 @@ export function registerResources(
   // (not optional in this SDK's UriTemplate), so we need two separate registrations.
   server.registerResource(
     "monitor-alerts-since",
-    new ResourceTemplate("smartbuilding://monitor/{id}/alerts{?since}", { list: undefined }),
-    { description: "Delivered (notified) alerts for a monitor with id strictly greater than the ?since= cursor. Cooled-down audit rows are excluded; use smartbuilding_alert_query for the full audit trail." },
+    new ResourceTemplate("smart-community://monitor/{id}/alerts{?since}", { list: undefined }),
+    { description: "Delivered (notified) alerts for a monitor with id strictly greater than the ?since= cursor. Cooled-down audit rows are excluded; use smart_community_alert_query for the full audit trail." },
     async (uri, variables) => {
       const id = variables.id as string;
       const sinceRaw = variables.since as string | undefined;
@@ -101,10 +101,10 @@ export function registerResources(
 
   server.registerResource(
     "monitor-alerts",
-    new ResourceTemplate("smartbuilding://monitor/{id}/alerts", { list: undefined }),
+    new ResourceTemplate("smart-community://monitor/{id}/alerts", { list: undefined }),
     {
       description:
-        "Recent delivered (notified) alerts for a monitor (latest 20). Cooled-down audit rows are excluded — use `smartbuilding_alert_query` for the full audit trail. Response includes `latestId` for cursor-based clients; use `smartbuilding://monitor/{id}/alerts?since={id}` for incremental reads.",
+        "Recent delivered (notified) alerts for a monitor (latest 20). Cooled-down audit rows are excluded — use `smart_community_alert_query` for the full audit trail. Response includes `latestId` for cursor-based clients; use `smart-community://monitor/{id}/alerts?since={id}` for incremental reads.",
     },
     async (uri, variables) => {
       const id = variables.id as string;
