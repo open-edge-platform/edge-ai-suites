@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/handheld-multi-modal">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md">
      Readme
   </a>
   <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.1/handheld-multi-modal.zip">
@@ -25,7 +25,7 @@ All components of the composite application share the visual pipeline solution's
 
 Deployment of the the full solution consists of two main stages:
 
-1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) which is an edge computing platform that enables hardware acceleration capabilities,
+1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) which is an edge computing platform that enables hardware acceleration capabilities,
 2. Installation of the composite Handheld Multi-Modal Application that makes use of the hardware accellerated compute platform.
 
 ## Components of the Handheld Multi-Modal Application
@@ -80,7 +80,7 @@ long-term persistence.
 
 ## Composite Application installation
 
-Proceed to [Application Deployment](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/handheld-multi-modal-application/deploy-applications.html).
+Proceed to [Application Deployment](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/handheld-multi-modal-application/deploy-applications.html).
 and follow the guide to install Handheld Multi-Modal Application.
 
 <!--hide_directive
