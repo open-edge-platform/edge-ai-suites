@@ -21,6 +21,8 @@ from utils.rtsp_recorder import (
 from utils.runtime_config_loader import RuntimeConfig
 from utils.artifacts.path import get_artifact_path
 from utils.system_checker import check_dlstreamer_installation
+from utils.time_marker import mark
+from monitoring.stage_metrics import STAGE_VIDEO
 
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
@@ -61,6 +63,9 @@ class VideoAnalyticsPipelineService:
             "mobilenetv2": "mobilenetv2.xml",
             "reid": "person-reidentification-retail-0288.xml",
         }
+
+        # Owning session; assigned by the caller right after construction.
+        self.x_session_id: Optional[str] = None
 
         # Active pipelines
         self.pipelines: Dict[str, subprocess.Popen] = {}
@@ -356,6 +361,13 @@ class VideoAnalyticsPipelineService:
             # Check every 2 seconds
             time.sleep(2)
 
+        mark(
+            f"va_pipeline-{pipeline_name}-completed _monitor_pipeline",
+            self.x_session_id,
+            STAGE_VIDEO,
+            "end",
+        )
+
         self.logger.info(f"Monitor thread for pipeline '{pipeline_name}' stopped")
 
     def _fire_done_callback_if_all_finished(self):
@@ -373,7 +385,7 @@ class VideoAnalyticsPipelineService:
         self.logger.info("[VA] All pipelines finished — triggering engagement report generation.")
         if callable(self.on_all_pipelines_done):
             try:
-                self.on_all_pipelines_done(getattr(self, "x_session_id", None))
+                self.on_all_pipelines_done(self.x_session_id)
             except Exception as exc:
                 self.logger.error(f"[VA] on_all_pipelines_done callback raised: {exc}", exc_info=True)
 
@@ -419,6 +431,13 @@ class VideoAnalyticsPipelineService:
             self.pipeline_logs[pipeline_name] = log_file
             self.pipeline_log_handles[pipeline_name] = log_handle
 
+            mark(
+                f"va_pipeline-{pipeline_name} launched",
+                self.x_session_id,
+                STAGE_VIDEO,
+                "start",
+            )
+
             self.logger.info(
                 f"Pipeline '{pipeline_name}' started with PID: {process.pid}"
             )
@@ -428,6 +447,11 @@ class VideoAnalyticsPipelineService:
             time.sleep(5)
             self.pipeline_log_handles[pipeline_name].flush()
             if self._check_redistribute_latency(log_file):
+                mark(
+                    f"va_pipeline-{pipeline_name} launched successfully (check log)",
+                    self.x_session_id,
+                    STAGE_VIDEO,
+                )
                 self.logger.info("Pipeline initialized successfully")
             else:
                 self.logger.warning("Pipeline may not have initialized properly")
@@ -720,6 +744,12 @@ class VideoAnalyticsPipelineService:
 
             # Build full command
             command = ["gst-launch-1.0.exe", "-e"] + pipeline_elements
+
+            mark(
+                f"va_pipeline-{pipeline_name} build command",
+                self.x_session_id,
+                STAGE_VIDEO,
+            )
 
             self.logger.info(f"Launching pipeline '{pipeline_name}'")
             self.logger.info(f"  Source: {source} (type: {input_type})")

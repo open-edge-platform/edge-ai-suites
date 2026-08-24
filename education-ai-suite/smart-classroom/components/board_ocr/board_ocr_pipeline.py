@@ -13,7 +13,9 @@ from typing import Optional
 import numpy as np
 from PIL import Image
 
+from monitoring.stage_metrics import STAGE_VIDEO
 from utils.config_loader import config
+from utils.time_marker import mark
 
 logger = logging.getLogger(__name__)
 
@@ -723,6 +725,10 @@ def start_board_ocr(session_id: str, content_source: Optional[str]) -> bool:
         if not pipe.start():
             return False
         _active_pipeline = pipe
+        # Timestamped only (info): board OCR is a twin of the VA content
+        # pipeline, so the Video stage window is already delimited by the VA
+        # launch/exit markers and must not be widened from here.
+        mark("board_ocr-started", session_id, STAGE_VIDEO)
         logger.info(f"Board OCR controller: started (session={session_id})")
         return True
 
@@ -745,11 +751,13 @@ def _stop_locked() -> None:
     """Assumes _controller_lock is held. Stops any active pipeline."""
     global _active_pipeline
     if _active_pipeline is not None:
+        session_id = _active_pipeline.session_id
         try:
             _active_pipeline.stop()
         except Exception as e:
             logger.error(f"Error stopping board OCR pipeline: {e}")
         _active_pipeline = None
+        mark("board_ocr-completed", session_id, STAGE_VIDEO)
 
 
 def get_status(session_id: str) -> str:

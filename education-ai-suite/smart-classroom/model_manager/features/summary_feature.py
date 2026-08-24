@@ -7,9 +7,11 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 
 from dto.summarizer_dto import SummaryRequest
+from monitoring.stage_metrics import STAGE_SUMMARY
 from pipeline import Pipeline
 from utils.config_loader import config
 from utils.locks import audio_pipeline_lock
+from utils.time_marker import mark
 
 logger = logging.getLogger(__name__)
 
@@ -21,23 +23,27 @@ async def summarize_audio(request: SummaryRequest):
     if audio_pipeline_lock.locked():
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
 
+    mark("summarize-started", request.session_id, STAGE_SUMMARY)
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
         warned_partial_board = False
-        for token in pipeline.run_summarizer():
-            if not warned_partial_board and pipeline.board_ocr_partial:
-                warned_partial_board = True
-                yield json.dumps(
-                    {"token": "", "error": "", "board_ocr_partial": True}
-                ) + "\n"
-            if token.startswith("[ERROR]:"):
-                logger.error(f"Error while summarizing: {token}")
-                yield json.dumps({"token": "", "error": token}) + "\n"
-                break
-            else:
-                yield json.dumps({"token": token, "error": ""}) + "\n"
-            await asyncio.sleep(0)
+        try:
+            for token in pipeline.run_summarizer():
+                if not warned_partial_board and pipeline.board_ocr_partial:
+                    warned_partial_board = True
+                    yield json.dumps(
+                        {"token": "", "error": "", "board_ocr_partial": True}
+                    ) + "\n"
+                if token.startswith("[ERROR]:"):
+                    logger.error(f"Error while summarizing: {token}")
+                    yield json.dumps({"token": "", "error": token}) + "\n"
+                    break
+                else:
+                    yield json.dumps({"token": token, "error": ""}) + "\n"
+                await asyncio.sleep(0)
+        finally:
+            mark("summarize-completed", request.session_id, STAGE_SUMMARY)
 
     return StreamingResponse(event_stream(), media_type="application/json")
 

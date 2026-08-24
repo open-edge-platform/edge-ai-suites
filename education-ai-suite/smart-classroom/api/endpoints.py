@@ -19,6 +19,7 @@ from utils import session_state, orchestrator
 from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
+from monitoring.stage_metrics import STAGE_VIDEO, export_stage_metrics, get_stage_metrics
 from dto.audiosource import AudioSource
 from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
@@ -32,6 +33,7 @@ from dto.ocr_dto import OCRExtractRequest, OCRResponse
 from components.ocr.ocr_pipeline import ocr_detect_file, ocr_extract_text
 from utils.telegram_sender import get_sender
 from utils.scp_sender import get_scp_sender
+from utils.time_marker import mark
 
 import logging
 logger = logging.getLogger(__name__)
@@ -187,14 +189,48 @@ def update_project_config(payload: ProjectSettings):
 
 @router.post("/start-monitoring")
 def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None)):
+    if not x_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required header: x-session-id"
+        )
     start_monitoring(get_artifact_path(x_session_id, "utilization_logs"))
     return JSONResponse(content={"status": "success", "message": "Monitoring started"})
 
 @router.get("/metrics")
 def get_metrics_endpoint(x_session_id: Optional[str] = Header(None)):
-    if x_session_id is None or "":
+    if not x_session_id:
         return ""
     return get_metrics(get_artifact_path(x_session_id, "utilization_logs"))
+
+@router.get("/stage-metrics")
+def get_stage_metrics_endpoint(
+    x_session_id: Optional[str] = Header(None),
+    save: bool = False,
+):
+    """Per-stage utilization summary (ASR / Summary / Mind map / Video).
+
+    Slices the raw utilization CSVs by the stage windows recorded from the
+    ``[STAGE]`` markers and reports Time Range plus average/peak memory, CPU,
+    GPU (3D, Compute, Decode, Video Process) and NPU utilization per stage.
+    Pass ``save=true`` to also rewrite ``utilization_logs/stage_metrics.csv``
+    (which is refreshed automatically as each stage completes).
+    """
+    if not x_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required header: x-session-id"
+        )
+
+    try:
+        metrics_logs = get_artifact_path(x_session_id, "utilization_logs")
+        report = (
+            export_stage_metrics(metrics_logs) if save else get_stage_metrics(metrics_logs)
+        )
+        report["session_id"] = x_session_id
+        return JSONResponse(content=report, status_code=200)
+    except Exception as e:
+        logger.error(f"Error aggregating stage metrics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/platform-info")
 def get_platform_info():
@@ -253,10 +289,11 @@ def start_video_analytics_pipeline(
             )
 
     results = []
+    mark("video-pipeline-API-started", x_session_id, STAGE_VIDEO)
 
     with video_analytics_lock:
         try:
-            
+
             ensure_media_service_running()
 
             if x_session_id not in va_services:
@@ -432,7 +469,8 @@ def start_video_analytics_pipeline(
         except Exception as e:
             logger.error(f"Error starting video analytics pipelines: {e}")
             raise HTTPException(status_code=500, detail=str(e))
-
+        finally:
+            mark("video-pipeline-API-completed", x_session_id, STAGE_VIDEO)
 
 @router.post("/stop-video-analytics-pipeline")
 def stop_video_analytics_pipeline(

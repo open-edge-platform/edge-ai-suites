@@ -7,15 +7,21 @@ from monitoring.scripts.windows.collect_gpu import start_gpu_monitoring
 from monitoring.scripts.common.collect_memory import start_memory_monitoring
 from monitoring.scripts.windows.collect_power import start_power_monitoring
 from monitoring.scripts.windows.collect_npu import start_npu_monitoring
+from monitoring.stage_metrics import export_stage_metrics
 import logging
 import platform
 
 logger = logging.getLogger(__name__)
 INTERVAL_SECONDS = config.monitoring.interval
 OUTPUT_DIR = config.monitoring.logs_dir
+# A collector can be mid-sample when asked to stop (the power collector blocks
+# for a full interval inside SoCWatch). Bound the wait so a stuck collector can
+# never keep stop_monitoring() from exporting the report.
+COLLECTOR_JOIN_TIMEOUT = INTERVAL_SECONDS + 10
 monitoring_threads=[]
 os_name = platform.system()
 stop_event = None
+current_metrics_logs = None
 
 collector_scripts = {
     "cpu_collector": start_cpu_monitoring,
@@ -70,12 +76,13 @@ def is_monitoring_active():
     return stop_event is not None and not stop_event.is_set()
 
 def start_monitoring(metrics_logs="./logs"):
-    global stop_event,monitoring_threads
+    global stop_event,monitoring_threads,current_metrics_logs
 
     if is_monitoring_active():
         logger.info("Stopping existing monitoring before starting new one...")
         stop_monitoring()
 
+    current_metrics_logs = metrics_logs
     stop_event = threading.Event()
     logger.info("Starting monitoring processes")
     monitoring_threads=[]
@@ -90,15 +97,27 @@ def start_monitoring(metrics_logs="./logs"):
             logger.error(f"Error starting {mt.name}:{e}")
 
 def stop_monitoring():
-    global stop_event, monitoring_threads
+    global stop_event, monitoring_threads, current_metrics_logs
 
     if stop_event is not None:
         stop_event.set()
     for mt in monitoring_threads:
         if mt.is_alive():
-            mt.join()
+            mt.join(timeout=COLLECTOR_JOIN_TIMEOUT)
+            if mt.is_alive():
+                logger.warning(
+                    f"{mt.name} did not stop within {COLLECTOR_JOIN_TIMEOUT}s; "
+                    "exporting stage metrics without it."
+                )
     stop_event = None
     monitoring_threads = []
+
+    # Collectors have flushed — freeze the per-stage summary alongside the raw
+    # CSVs. stage_metrics.csv is also refreshed as each stage ends, so this is a
+    # final consolidation rather than the only chance to produce the report.
+    if current_metrics_logs is not None:
+        export_stage_metrics(current_metrics_logs)
+        current_metrics_logs = None
 
 def get_metrics(metrics_logs="./logs"):
     latest_utilization = monitor_logs(metrics_logs)

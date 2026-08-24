@@ -9,10 +9,13 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from components.ffmpeg import audio_preprocessing
 from dto.transcription_dto import TranscriptionRequest
+from monitoring.stage_metrics import STAGE_ASR
 from pipeline import Pipeline
 from utils.audio_util import save_audio_file
 from utils.config_loader import config
 from utils.locks import audio_pipeline_lock
+from utils.session_manager import generate_session_id
+from utils.time_marker import flush_pending_uploads, mark, mark_pending_upload
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ def upload_audio(file: UploadFile = File(...)):
     if audio_pipeline_lock.locked():
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
 
+    mark_pending_upload("upload-audio-started")
     try:
         filename, filepath = save_audio_file(file)
         return JSONResponse(
@@ -48,6 +52,8 @@ def upload_audio(file: UploadFile = File(...)):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"status": "error", "message": "Failed to upload audio file"}
     )
+    finally:
+        mark_pending_upload("upload-audio-completed")
 
 
 @router.post("/transcribe")
@@ -58,11 +64,17 @@ def transcribe_audio(
     if audio_pipeline_lock.locked():
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
 
-    pipeline = Pipeline(x_session_id)
+    session_id = x_session_id or generate_session_id()
+    flush_pending_uploads(session_id)
+    mark("ASR-started", session_id, STAGE_ASR)
+    pipeline = Pipeline(session_id)
 
     def stream_transcription():
-        for chunk_data in pipeline.run_transcription(request):
-            yield json.dumps(chunk_data) + "\n"
+        try:
+            for chunk_data in pipeline.run_transcription(request):
+                yield json.dumps(chunk_data) + "\n"
+        finally:
+            mark("ASR-completed", session_id, STAGE_ASR)
 
     response = StreamingResponse(stream_transcription(), media_type="application/json")
     response.headers["X-Session-ID"] = pipeline.session_id

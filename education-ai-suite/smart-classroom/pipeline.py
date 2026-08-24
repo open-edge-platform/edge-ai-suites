@@ -20,13 +20,16 @@ import json
 from utils.media_validation_service import MediaValidationService
 from utils.session_state_manager import SessionState
 from utils.content_search_client import ContentSearchClient
+from utils.time_marker import mark
+from monitoring.stage_metrics import STAGE_ASR, STAGE_MINDMAP, STAGE_SUMMARY
 import time
 logger = logging.getLogger(__name__)
 
 class Pipeline:
     def __init__(self, session_id=None):
-        logger.info("pipeline initialized")
         self.session_id = session_id or generate_session_id()
+        mark("audio pipeline start initialize", self.session_id)
+        logger.info("pipeline initialized")
         # Bind models during construction
         self.transcription_pipeline = [
             AudioStreamReader(self.session_id),
@@ -55,6 +58,7 @@ class Pipeline:
         )
 
         self.content_component.model = text_gen_handler
+        mark("audio pipeline initialize completed", self.session_id)
 
     @property
     def board_ocr_partial(self) -> bool:
@@ -63,6 +67,7 @@ class Pipeline:
         return any(getattr(c, "board_ocr_partial", False) for c in self.summarizer_pipeline)
 
     def run_transcription(self, input):
+        mark("audio pipeline-ASR-started", self.session_id, STAGE_ASR, "start")
         project_config = RuntimeConfig.get_section("Project")
         input_gen = ({"input": input} for _ in range(1))
 
@@ -73,118 +78,126 @@ class Pipeline:
             for chunk_trancription in input_gen:
                 yield chunk_trancription
         finally:
-            pass
-            
-    
+            mark("audio pipeline-ASR-completed", self.session_id, STAGE_ASR, "end")
+
     def run_summarizer(self):
-
-        transcription_path = get_artifact_path(self.session_id, "transcription.txt")
-
+        # The whole body is wrapped so the stage window always closes: an
+        # unbalanced start would leave Summary "in progress" in stage_metrics.
+        mark("audio pipeline-summarizer-started", self.session_id, STAGE_SUMMARY, "start")
         try:
-            input = StorageManager.read_text_file(transcription_path)
-            if not input:
-                logger.error(f"Transcription is empty. No content available for summarization.")
-                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Transcription is empty. No content available for summarization.")
-        except FileNotFoundError:
-            logger.error(f"Invalid Session ID: {self.session_id}")
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid session id: {self.session_id}, transcription not found.")
-        except Exception:
-            logger.error(f"An unexpected error occurred while accessing the transcription.")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred while accessing the transcription.")
-        
-        for component in self.summarizer_pipeline:
-            input = component.process(input)
+            transcription_path = get_artifact_path(self.session_id, "transcription.txt")
 
-        try:
+            try:
+                input = StorageManager.read_text_file(transcription_path)
+                if not input:
+                    logger.error(f"Transcription is empty. No content available for summarization.")
+                    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Transcription is empty. No content available for summarization.")
+            except FileNotFoundError:
+                logger.error(f"Invalid Session ID: {self.session_id}")
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid session id: {self.session_id}, transcription not found.")
+            except HTTPException:
+                raise
+            except Exception:
+                logger.error(f"An unexpected error occurred while accessing the transcription.")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred while accessing the transcription.")
+
+            for component in self.summarizer_pipeline:
+                input = component.process(input)
+
             for token in input:
                 yield token
-        finally: 
-            pass 
+        finally:
+            mark("audio pipeline-summarizer-completed", self.session_id, STAGE_SUMMARY, "end")
 
     def run_mindmap(self):
-
-        summary_path = get_artifact_path(self.session_id, "summary.md")
-        min_tokens = config.mindmap.min_token
-
+        # One try/finally around the whole body: every exit \u2014 the insufficient
+        # token short-circuit, an HTTPException or a successful generation \u2014
+        # closes the Mind map stage window exactly once.
+        mark("audio pipeline-mindmap-started", self.session_id, STAGE_MINDMAP, "start")
         try:
-            summary_md = StorageManager.read_text_file(summary_path)
+            summary_path = get_artifact_path(self.session_id, "summary.md")
+            min_tokens = config.mindmap.min_token
 
-            if not summary_md:
-                logger.error("Summary is empty. Cannot generate mindmap.")
+            try:
+                summary_md = StorageManager.read_text_file(summary_path)
+
+                if not summary_md:
+                    logger.error("Summary is empty. Cannot generate mindmap.")
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Summary is empty. Cannot generate mindmap."
+                    )
+
+            except FileNotFoundError:
+                logger.error(f"Invalid Session ID: {self.session_id}")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Summary is empty. Cannot generate mindmap."
+                    detail=f"Invalid session id: {self.session_id}, summary not found."
                 )
+            except HTTPException:
+                raise
+            except Exception as e:
+                logger.error(f"Unexpected error while accessing summary: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="An unexpected error occurred while accessing the summary."
+                )
+            summary_plain = markdown_to_plain(summary_md)
 
-        except FileNotFoundError:
-            logger.error(f"Invalid Session ID: {self.session_id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid session id: {self.session_id}, summary not found."
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error while accessing summary: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An unexpected error occurred while accessing the summary."
-            )
-        summary_plain = markdown_to_plain(summary_md)
+            token_count = len(re.findall(r'[\u4e00-\u9fff]|[^\u4e00-\u9fff\s]+', summary_plain))
+            logger.info(f"Summary token count: {token_count}, Minimum required: {min_tokens}")
 
-        token_count = len(re.findall(r'[\u4e00-\u9fff]|[^\u4e00-\u9fff\s]+', summary_plain))
-        logger.info(f"Summary token count: {token_count}, Minimum required: {min_tokens}")
-
-        if token_count < min_tokens:
-            logger.warning("Insufficient information to generate mindmap.")
-            insufficient_mindmap = {
-                "meta": {
-                    "name": "insufficient_input",
-                    "author": "ai_assistant",
-                    "version": "1.0"
-                },
-                "format": "node_tree",
-                "data": {
-                    "id": "root",
-                    "topic": "Insufficient Input",
-                    "children": [
-                        {
-                            "id": "insufficient_info",
-                            "topic": "Insufficient Information",
-                            "children": [
-                                {
-                                    "id": "short_summary",
-                                    "topic": "The summary is too short to generate a meaningful mindmap"
-                                },
-                                {
-                                    "id": "token_info",
-                                    "topic": f"Current tokens: {token_count}, Required: {min_tokens}"
-                                }
-                            ]
-                        }
-                    ]
+            if token_count < min_tokens:
+                logger.warning("Insufficient information to generate mindmap.")
+                insufficient_mindmap = {
+                    "meta": {
+                        "name": "insufficient_input",
+                        "author": "ai_assistant",
+                        "version": "1.0"
+                    },
+                    "format": "node_tree",
+                    "data": {
+                        "id": "root",
+                        "topic": "Insufficient Input",
+                        "children": [
+                            {
+                                "id": "insufficient_info",
+                                "topic": "Insufficient Information",
+                                "children": [
+                                    {
+                                        "id": "short_summary",
+                                        "topic": "The summary is too short to generate a meaningful mindmap"
+                                    },
+                                    {
+                                        "id": "token_info",
+                                        "topic": f"Current tokens: {token_count}, Required: {min_tokens}"
+                                    }
+                                ]
+                            }
+                        ]
+                    }
                 }
-            }
-            
-            # Convert to JSON string
-            import json
-            insufficient_mindmap_json = json.dumps(insufficient_mindmap, indent=2)
-            
-            mindmap_path = get_artifact_path(self.session_id, "mindmap.mmd")
-            StorageManager.save(mindmap_path, insufficient_mindmap_json, append=False)
-            return insufficient_mindmap_json
 
-        try:
-            full_mindmap = self.mindmap_component.generate_mindmap(summary_plain)
-            logger.info("Mindmap generation successful.")
-            return full_mindmap
+                # Convert to JSON string
+                insufficient_mindmap_json = json.dumps(insufficient_mindmap, indent=2)
 
-        except Exception as e:
-            logger.error(f"Error during mindmap generation: {e}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error during mindmap generation: {e}"
-            )
+                mindmap_path = get_artifact_path(self.session_id, "mindmap.mmd")
+                StorageManager.save(mindmap_path, insufficient_mindmap_json, append=False)
+                return insufficient_mindmap_json
+
+            try:
+                full_mindmap = self.mindmap_component.generate_mindmap(summary_plain)
+                logger.info("Mindmap generation successful.")
+                return full_mindmap
+
+            except Exception as e:
+                logger.error(f"Error during mindmap generation: {e}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error during mindmap generation: {e}"
+                )
         finally:
-            pass
+            mark("audio pipeline-mindmap-completed", self.session_id, STAGE_MINDMAP, "end")
 
     def run_content_segmentation(self):
         transcription_path = get_artifact_path(self.session_id, "content_segmentation_transcription.txt")
@@ -219,6 +232,9 @@ class Pipeline:
                 detail=f"Invalid session id: {self.session_id}, transcription not found."
             )
 
+        except HTTPException:
+            raise
+
         except Exception as e:
             logger.error(f"Unexpected error while accessing transcription: {e}")
             raise HTTPException(
@@ -227,9 +243,6 @@ class Pipeline:
             )
 
         try:
-            import json
-            from pathlib import Path
-
             # 🔹 Generate topics (returns JSON string from LLM)
             topic_json_str = self.content_component.generate_topics(
                 transcript_text,

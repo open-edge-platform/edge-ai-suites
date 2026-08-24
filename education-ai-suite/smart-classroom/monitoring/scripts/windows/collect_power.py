@@ -90,14 +90,20 @@ def run_socwatch_quick(collection_duration, interval_ms):
         return "unavailable" if _is_fatal_socwatch_error(message) else "retry"
 
 def gmt_to_local_timestamp(gmt_string):
+    """SoCWatch's GMT stamp as naive local time, like every other collector.
+
+    The UTC offset is dropped on purpose: monitoring.stage_metrics parses all
+    timestamps with datetime.fromisoformat and compares them against the naive
+    stage-window bounds, and mixing aware and naive datetimes raises TypeError.
+    """
     try:
         gmt_time = datetime.strptime(gmt_string.replace(" GMT", ""), "%Y-%m-%d %H:%M:%S")
         gmt_time = gmt_time.replace(tzinfo=timezone.utc)
-        local_time = gmt_time.astimezone()
-        return local_time.strftime("%Y-%m-%dT%H:%M:%S")
+        local_time = gmt_time.astimezone().replace(tzinfo=None)
+        return local_time.isoformat(timespec="milliseconds")
     except Exception as e:
         logger.error(f"Error converting GMT timestamp: {e}")
-        return datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        return datetime.now().isoformat(timespec="milliseconds")
 
 def extract_average_power_from_automatic_summary(csv_file):
     try:
@@ -160,7 +166,7 @@ def start_power_monitoring(interval_seconds, stop_event, output_dir=None):
 
             while not stop_event.is_set():
                 try:
-                    timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                    timestamp = datetime.now().isoformat(timespec="milliseconds")
                     power_w = 0.0  
                     status = run_socwatch_quick(collection_duration=interval_seconds, interval_ms=500)
                     if status == "unavailable":

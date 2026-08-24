@@ -34,7 +34,14 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     startup(app)
     yield
-    # Shutdown: drain in-flight capability work and release device (GPU) memory.
+    # Shutdown: stop the utilization collectors first so the per-stage report is
+    # frozen even when the UI never called /stop-monitoring.
+    try:
+        from monitoring.monitor import stop_monitoring
+        stop_monitoring()
+    except Exception as e:
+        logger.error(f"Shutdown: failed to stop monitoring: {e}")
+    # Drain in-flight capability work and release device (GPU) memory.
     from model_manager import ModelManager
     logger.info("Shutdown: draining capabilities and releasing devices...")
     ModelManager.instance().shutdown()

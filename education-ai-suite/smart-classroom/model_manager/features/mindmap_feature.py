@@ -4,8 +4,10 @@ from typing import Dict, List
 from fastapi import APIRouter, HTTPException
 
 from dto.summarizer_dto import SummaryRequest
+from monitoring.stage_metrics import STAGE_MINDMAP
 from pipeline import Pipeline
 from utils.config_loader import config
+from utils.time_marker import mark
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ router = APIRouter()
 
 @router.post("/mindmap")
 async def generate_mindmap(request: SummaryRequest):
+    mark("mindmap-started", request.session_id, STAGE_MINDMAP)
     pipeline = Pipeline(request.session_id)
     try:
         mindmap_text = pipeline.run_mindmap()
@@ -27,6 +30,8 @@ async def generate_mindmap(request: SummaryRequest):
             status_code=500,
             detail=f"Mindmap generation failed: {e}"
         )
+    finally:
+        mark("mindmap-completed", request.session_id, STAGE_MINDMAP)
 
 
 class MindmapFeature:

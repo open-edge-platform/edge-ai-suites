@@ -1,10 +1,8 @@
 import os
-import time
 import csv
 from datetime import datetime
 import psutil # type: ignore
 import logging
-import threading
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ def start_memory_monitoring(interval_seconds, stop_event, output_dir=None):
                 writer.writerow(["timestamp", "total_gb", "available_gb", "used_gb", "usage_percent"])
                 file.flush()  
             while not stop_event.is_set():
-                timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                timestamp = datetime.now().isoformat(timespec="milliseconds")
                 try:
                     vm = psutil.virtual_memory()
                     total_gb = vm.total / (1024**3)
