@@ -61,8 +61,8 @@ services:
       - "${RENDER_GID:-109}"
     devices:
       - ${CDI_XE_DEVICE_0}
-      # alternatively without the environment variable for PF
-      # - intel.com/xe=pf0
+      # alternatively without the environment variable for PF you can use CDI from docker config in /etc/cdi folder
+      # - intel.com/gpu=card0
     depends_on:
       init:
         condition: service_completed_successfully
