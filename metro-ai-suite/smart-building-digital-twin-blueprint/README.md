@@ -5,7 +5,7 @@ Intel Scenescape deployment for smart building monitoring — person, door, and 
 ## Overview
 
 - 7-camera scene with looping RTSP video streams
-- YOLOX-S detection model in FP16 (GPU) and INT8 (CPU) variants
+- YOLOX-S detection model in INT8 (default for both GPU and CPU; override `MODEL_NAME` to `smartbuilding-fp16` if needed)
 - Badge and FaceID sensor replay synchronized to video loops via raw camera metadata
 - Ambient light sensor driven by loop dark/live transitions
 - Analytics dashboard at the configured `DASHBOARD_URL` with live scene narration
@@ -179,6 +179,7 @@ Key variables in `.env`:
 | `SNAPSHOT_INTERVAL` | `10` | Seconds between narrator snapshots |
 | `DASHBOARD_PORT` | `7000` | Host port for the analytics dashboard |
 | `SCENESCAPE_IMAGE_TAG` | `2026.2.0-rc1` | Scenescape image tag pulled from Docker Hub |
+| `MODEL_NAME` | `smartbuilding-int8` | Detection model variant; set to `smartbuilding-fp16` for FP16 |
 
 ## Adding a New Scene
 
