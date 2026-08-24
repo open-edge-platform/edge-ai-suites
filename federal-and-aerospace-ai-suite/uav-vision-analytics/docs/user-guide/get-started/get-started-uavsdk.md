@@ -58,7 +58,7 @@ sudo apt install -y python3.12-venv ffmpeg
 Clone the repo and start the SDK's core infrastructure (PX4, MQTT broker, MediaMTX RTSP server).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch release-2026.2.0
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                # create .env, detect GPU
 ```
@@ -117,7 +117,7 @@ make uavsdk-up
 
 > **Note:** Video streams are not available until the UAV is armed and actively on a mission.
 
-The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
+Run the simple UAV mission in a persistent terminal window to keep the simulation active. The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
@@ -129,6 +129,8 @@ curl -X POST http://localhost:8080/action/land
 ```
 
 ### 6. Start inference pipelines
+
+> Open a new terminal window and launch the inference pipeline to begin processing the video stream.
 
 Two options are available depending on your use case:
 
