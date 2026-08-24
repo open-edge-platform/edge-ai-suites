@@ -152,7 +152,7 @@ as `LLM_MODEL_PATH`. `setup.sh` mounts this path read-only into the `apm-llm` co
 
 ## Step 5 — Launch the Application
 
-**LLM mode** (requires the LLM and OpenVINO model server service; uses AI-generated analysis):
+**LLM mode** (requires the `apm-llm` service; uses AI-generated analysis):
 
 ```bash
 source ./setup.sh --use-case pipeline-defect-detection
@@ -186,7 +186,7 @@ If successful, you will see the following containers running:
 | `apm-dlstreamer` | Video inference |
 | `apm-mqtt-broker` | Message Queuing Telemetry Transport (MQTT) broker |
 | `apm-model-download` | Model download utility |
-| `apm-llm` | LLM service (OpenVINO model server) *(LLM mode only)* |
+| `apm-llm` | LLM service served by the OpenVINO model server *(LLM mode only)* |
 
 ## Step 6 — Open the Dashboard
 
@@ -225,7 +225,7 @@ supporting data and run results.
 
 Ask & Analyze is available in `LLM_MODE=llm`. In `LLM_MODE=fallback`, the dashboard, detection
 workflow, and rule-based agent pipeline remain available, but chat cannot generate answers because
-the deployment omits `apm-llm`. The UI intentionally has no hard Compose dependency on that service,
+the deployment omits the `apm-llm` service. The UI intentionally has no hard Compose dependency on that service,
 which allows fallback deployments to start normally.
 
 > **Note — Fallback mode**: If you deployed with `LLM_MODE=fallback`, the **Ask & Analyze** page
