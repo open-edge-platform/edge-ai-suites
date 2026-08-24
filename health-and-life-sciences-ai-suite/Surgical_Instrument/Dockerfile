@@ -4,7 +4,7 @@
 # Surgical Instrument — backend image.
 #
 # Runs the Phase 3 Flask server (backend.main_server) with a first-boot
-# bootstrap that fetches CVC-ColonDB (manual-drop), trains YOLO11n on the
+# bootstrap that fetches ColonDB (manual-drop), trains YOLO11n on the
 # host's Intel Arc / Xe iGPU via torch+xpu, and exports to OpenVINO IR.
 #
 # The host mounts /dev/dri (and /dev/accel for NPU, optional). The container

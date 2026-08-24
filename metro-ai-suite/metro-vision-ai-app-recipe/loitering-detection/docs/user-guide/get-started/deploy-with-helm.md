@@ -107,10 +107,10 @@ Optional: Pull the Helm chart and replace the existing helm-chart folder with it
 cd loitering-detection
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.6.0-rc1
+helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.6.0-rc2
 
 #unzip the package using the following command
-tar -xvf loitering-detection-1.6.0-rc1.tgz
+tar -xvf loitering-detection-1.6.0-rc2.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv loitering-detection helm-chart
@@ -159,7 +159,7 @@ visualization in the Grafana.
     ```
 
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with
-the Node IP. (Total 8 places)
+the Node IP. (Total 4 places)
 
    ``` sh
    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
