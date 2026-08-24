@@ -262,13 +262,8 @@ templates.
 ## Reference implementation
 
 The upstream
-<<<<<<< HEAD
 [`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
-recipe uses the same MediaMTX + Coturn + WebRTC path. Consult it for
-=======
-[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
 recipe uses the same MediaMTX + Coturn + WebRTC path — consult it for the
->>>>>>> 5bccad4a (Updated metro ai suites skills)
 `config.json`, `mosquitto.conf`, `nginx.conf`, `datasources.yml`,
 `dashboards.yml`, `flows.json` shapes; drop `prometheus`/`otel-collector`/`metrics-manager`.
 

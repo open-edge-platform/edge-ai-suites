@@ -138,5 +138,5 @@ or authorization.
 
 
 <!--
-Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md#endpoints)
+Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md#endpoints)
 -->
