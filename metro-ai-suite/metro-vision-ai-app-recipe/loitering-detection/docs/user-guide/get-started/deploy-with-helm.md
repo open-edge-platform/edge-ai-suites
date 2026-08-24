@@ -161,7 +161,7 @@ visualization in the Grafana.
     ```
 
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with
-the Node IP. (Total 8 places)
+the Node IP. (Total 4 places)
 
    ``` sh
    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
