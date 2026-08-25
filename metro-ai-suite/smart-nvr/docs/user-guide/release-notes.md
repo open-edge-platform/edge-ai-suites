@@ -20,7 +20,7 @@
 **Improved**
 
 - Event-processing pipeline no longer blocks the UI during high event volume: summarization and search-embedding calls now run on background threads, and rule summaries are fetched concurrently instead of serially.
-- - Continuous camera ingestion now uploads videos through Pipeline Manager and
+- Continuous camera ingestion now uploads videos through Pipeline Manager and
   submits their search embeddings through asynchronous DataPrep batch jobs.
 - Added configurable watcher batch size, job polling interval, and job timeout
   settings for Docker Compose and Helm deployments.
