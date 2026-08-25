@@ -107,12 +107,14 @@ _cleanup() {
 trap _cleanup EXIT
 
 # ── Locate --run-config before full arg parsing so we can load YAML first ────
+# Scenario wrappers (e.g. wandering_run.sh) prepend their own default
+# --run-config before forwarding "$@"; take the LAST occurrence so a
+# caller-supplied --run-config overrides the wrapper's default.
 RUN_CONFIG=""
 for (( _i=1; _i<=$#; _i++ )); do
   if [[ "${!_i}" == "--run-config" ]]; then
     _next=$(( _i + 1 ))
     RUN_CONFIG="${!_next:-}"
-    break
   fi
 done
 

@@ -44,13 +44,6 @@ optimized hardware selection and performance tuning.
 
 For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 
-> **Notice:**
-> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld
-  Multi-Modal Application does not fully support pipelines that utilize
-  [Hugging Face](https://huggingface.co/) models, requiring access approval and downloading
-  via an access token. As a result the Video Summarization VLM pipeline is not available in
-  the preview release.
-
 ### Speech To Text (Whisper Model)
 
 This component is responsible for speech to text functionality and uses Whisper model.

@@ -435,6 +435,8 @@
     "summarize": "摘要",
     "videoSummarizationToggle": "为此文件启用视频摘要",
     "summarizationFailed": "视频摘要失败，请重试",
+    "addTagPlaceholder": "添加标签 — 按回车或逗号",
+    "tagPendingHint": "按回车将此标签添加到 {{count}} 个已选文件；点击其他位置也会自动添加。",
     "unsupportedFilesWarning": "已跳过不支持的文件：{{files}}。支持的格式：MP4、JPG、PNG、JPEG、TXT、PDF、DOCX、DOC、PPTX、PPT、XLSX、XLS、HTML、HTM、XML、MD。"
   },
   "searchSection": {

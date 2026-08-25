@@ -56,7 +56,9 @@ make vippet-up        # starts Visual Pipeline and Platform Evaluation Tool (bui
 make vippet-down      # stops Visual Pipeline and Platform Evaluation Tool
 make up               # starts this stack only (Visual Pipeline and Platform Evaluation Tool must already be running)
 make up-standalone    # starts without Visual Pipeline and Platform Evaluation Tool (for development or testing)
-make down             # stops all services and Visual Pipeline and Platform Evaluation Tool
+make down             # Stop all services
+make down-cdi         # Stop all services started with up-cdi (or with deploy-cdi)
+make down-standalone  # Stop all services started with up-standalone
 make build            # builds local images (whisper-stt:latest)
 make restart          # restarts all services
 make test             # checks service connectivity (curl health endpoints)

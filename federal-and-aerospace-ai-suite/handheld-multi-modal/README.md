@@ -28,8 +28,8 @@ apps/
 
 | Service | Image | Role |
 |---------|-------|------|
-| `grafana` | `grafana/grafana:latest` | Dashboards — consumes metrics via Grafana Live |
-| `ovms` | `openvino/model_server:latest-gpu` | LLM inference via OpenAI-compatible REST API |
+| `grafana` | `grafana/grafana:13.1.0-25893932881` | Dashboards — consumes metrics via Grafana Live |
+| `ovms` | `openvino/model_server@sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00` | LLM inference via OpenAI-compatible REST API |
 | `open-webui` | `ghcr.io/open-webui/open-webui:v0.11.0-slim` | Chat UI connected to OpenVINO model server |
 | `whisper-stt` | `whisper-stt:latest` (local build) | Speech-to-text with Prometheus metrics |
 | `nginx-https` | `nginx:alpine` | HTTPS reverse proxy (self-signed cert, enables browser microphone) |
@@ -92,6 +92,8 @@ make up                Start this stack (standard, requires Visual Pipeline and 
 make up-cdi            Start this stack (CDI, requires Visual Pipeline and Platform Evaluation Tool network)
 make up-standalone     Start this stack without Visual Pipeline and Platform Evaluation Tool (development or testing only)
 make down              Stop all services
+make down-cdi          Stop all services started with up-cdi (or with deploy-cdi)
+make down-standalone   Stop all services started with up-standalone
 make build             Build local images
 make restart           Restart all services
 make urls              Print all service endpoints
