@@ -15,6 +15,20 @@ export interface SchemaDefinition {
 export class SchemaManager {
   private db: Database.Database;
 
+  /**
+   * Identifiers are interpolated verbatim into DDL below, so they must be
+   * plain SQL identifiers — same rule updateTaskStatus enforces on its
+   * dynamic column names. `createCustomTable` goes through db.exec (multi
+   * -statement capable), which makes this check load-bearing, not cosmetic.
+   */
+  private static IDENTIFIER_RE = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
+  private static assertIdentifier(kind: string, name: string): void {
+    if (!SchemaManager.IDENTIFIER_RE.test(name)) {
+      throw new Error(`invalid ${kind} identifier: ${JSON.stringify(name)}`);
+    }
+  }
+
   constructor(db: Database.Database) {
     this.db = db;
   }
@@ -90,6 +104,7 @@ export class SchemaManager {
   }
 
   private addColumnIfMissing(table: string, ext: SchemaExtension): "exists" | "added" | "type_mismatch" {
+    SchemaManager.assertIdentifier("column", ext.name);
     const existing = this.getExistingColumns(table);
     if (existing.has(ext.name)) {
       const currentType = existing.get(ext.name)!;
@@ -101,6 +116,8 @@ export class SchemaManager {
   }
 
   private createCustomTable(name: string, columns: SchemaExtension[]): void {
+    SchemaManager.assertIdentifier("table", name);
+    for (const c of columns) SchemaManager.assertIdentifier("column", c.name);
     const cols = columns.map((c) => `${c.name} ${c.type.toUpperCase()}`).join(", ");
     this.db.exec(`CREATE TABLE IF NOT EXISTS ${name} (id INTEGER PRIMARY KEY AUTOINCREMENT, ${cols})`);
   }

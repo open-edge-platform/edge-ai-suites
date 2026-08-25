@@ -1,6 +1,11 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 FROM node:22.14.0 AS vue-app
 
-RUN apt-get update -y && apt-get install -y git
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends git \
+	&& rm -rf /var/lib/apt/lists/*
 
 WORKDIR /home/user/ui
 
@@ -25,7 +30,12 @@ COPY --from=vue-app /home/user/ui/dist /usr/share/nginx/html
 COPY ./ui/docker/nginx.conf /etc/nginx/templates/default.conf.template
 COPY ./ui/docker/replace-env.sh /docker-entrypoint.d/99-replace-runtime-env.sh
 
-RUN chmod +x /docker-entrypoint.d/99-replace-runtime-env.sh
+RUN chmod +x /docker-entrypoint.d/99-replace-runtime-env.sh \
+	&& chown -R nginx:nginx /usr/share/nginx/html /etc/nginx/conf.d /var/cache/nginx \
+	&& touch /var/run/nginx.pid \
+	&& chown nginx:nginx /var/run/nginx.pid
+
+USER nginx
 
 EXPOSE 7000
 

@@ -88,7 +88,7 @@ Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -102,10 +102,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.20.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.20.0-rc2
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.20.0-rc1.tgz
+tar -xvf smart-intersection-1.20.0-rc2.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart
@@ -129,8 +129,9 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-> **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. 
-For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
+   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 ### Step 3: Configure External IP and Proxy Settings
 
@@ -246,6 +247,13 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 ## Deploy with Trusted Compute
 
 To deploy the Smart Intersection application with Intel Trusted Compute for hardware-isolated workloads (CPU or GPU passthrough), refer to the [Deploy with Trusted Compute using Helm](./deploy-with-trusted-compute-helm.md) guide.
+
+## Uninstall the application and delete the namespace
+
+```bash
+helm uninstall smart-intersection -n smart-intersection
+kubectl delete namespace smart-intersection
+```
 
 ## Complete Cleanup
 

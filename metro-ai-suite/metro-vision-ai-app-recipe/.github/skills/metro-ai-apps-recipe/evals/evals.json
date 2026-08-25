@@ -32,14 +32,14 @@
     {
       "id": 3,
       "prompt": "Build a smart-parking occupancy stack in ./smart-parking-stack/ for vehicle detection from 4 live RTSP cameras; rule count>10 in 30s per-source; dashboard slug smart-parking.",
-      "expected_output": "A stack whose inputs are RTSP URLs, annotated video streamed over WebRTC (DLSPS WHIP -> MediaMTX, Grafana WHEP iframe at /mediamtx/<peer-id>/) with Coturn TURN, a SAN in the self-signed cert, and curl calls using --noproxy '*' -k.",
+      "expected_output": "A stack whose inputs are RTSP URLs, annotated video streamed over WebRTC (DLSPS WHIP -> MediaMTX, Grafana WHEP iframe at /mediamtx/<peer-id>/) with Coturn TURN, a SAN in the self-signed cert, and curl calls using --noproxy '*' --cacert (self-signed CA).",
       "should_trigger": true,
       "files": ["../example-prompts/03-smart-parking-rtsp.md"],
       "expectations": [
         "Accepts RTSP URLs as sources instead of sample videos",
         "Streams annotated video over WebRTC via MediaMTX (WHIP in from DLSPS, WHEP out) embedded as Grafana iframe panels at /mediamtx/<peer-id>/, with Coturn providing ICE/TURN on 3478/udp",
         "Generates a self-signed TLS cert that includes a SAN",
-        "Uses --noproxy '*' and -k on localhost/LAN curl calls"
+        "Uses --noproxy '*' and --cacert on localhost/LAN curl calls"
       ]
     },
     {

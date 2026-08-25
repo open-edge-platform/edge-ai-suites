@@ -20,6 +20,12 @@
   camera discovery and enable/disable controls, analytics run management, WebRTC live stream
   with caption overlay, and analysis results timeline.
 
+**Validated Versions**
+
+- Nx Witness: 6.1.2.42921
+- Live Video Captioning (LVC): 2026.2.0
+- Loitering Detection: 1.6.0
+
 **Known Issues**
 
 - For fresh intergration with Loitering detection application, the bouding boxes may not render. Workaround is available.

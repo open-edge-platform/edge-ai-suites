@@ -1,0 +1,226 @@
+From 0b8183250f69356f5292b2737ae1c5b11baa1191 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Mon, 10 Aug 2026 14:14:19 +0800
+Subject: [PATCH 13/13] Refine the build dependency - Stop downloading
+ observation_config.yaml during model download - Make OpenVINO required build
+ dependency, add notification for missing installation
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ download_from_hf.py                          |  6 +-
+ gear_sonic_deploy/.justfile                  | 28 +++++--
+ gear_sonic_deploy/scripts/detect_openvino.sh | 87 ++++++++++++++++++++
+ gear_sonic_deploy/scripts/setup_env.sh       | 44 +++-------
+ 4 files changed, 124 insertions(+), 41 deletions(-)
+ create mode 100644 gear_sonic_deploy/scripts/detect_openvino.sh
+
+diff --git a/download_from_hf.py b/download_from_hf.py
+index fc78b54..e653857 100644
+--- a/download_from_hf.py
++++ b/download_from_hf.py
+@@ -25,7 +25,11 @@ REPO_ID = "nvidia/GEAR-SONIC"
+ POLICY_FILES = [
+     ("model_encoder.onnx", "policy/release/model_encoder.onnx"),
+     ("model_decoder.onnx", "policy/release/model_decoder.onnx"),
+-    ("observation_config.yaml", "policy/release/observation_config.yaml"),
++    # NOTE: observation_config.yaml is intentionally NOT downloaded here.
++    # It is tracked in git and carries local customizations (e.g. the
++    # `inference:` NPU device block). The upstream HF copy lacks that block,
++    # so downloading it would overwrite the local config and silently fall
++    # back to CPU for the planner. Keep the version-controlled file instead.
+ ]
+ 
+ PLANNER_FILE = ("planner_sonic.onnx", "planner/target_vel/V2/planner_sonic.onnx")
+diff --git a/gear_sonic_deploy/.justfile b/gear_sonic_deploy/.justfile
+index 4ada6d4..f74f70a 100644
+--- a/gear_sonic_deploy/.justfile
++++ b/gear_sonic_deploy/.justfile
+@@ -15,16 +15,26 @@ default:
+ # Get the number of cores
+ CORES := if os() == "macos" { `sysctl -n hw.ncpu` } else if os() == "linux" { `nproc` } else { "1" }
+ 
+-# Detect OpenVINO from environment
+-OV_FLAG := if env("USE_OPENVINO", "0") == "1" { "-DUSE_OPENVINO=ON" } else { "" }
+-
+-# Build the project
++# Build the project (OpenVINO is a hard requirement — no TensorRT fallback)
+ build *build_type='Release':
+-  @mkdir -p build
+-  @echo "Configuring the build system..."
+-  @cd build && cmake -S .. -B . -DCMAKE_BUILD_TYPE={{build_type}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON {{OV_FLAG}}
+-  @echo "Building the project..."
+-  @cd build && cmake --build . -j{{CORES}}
++  #!/usr/bin/env bash
++  set -euo pipefail
++  # ── OpenVINO detection (shared helper) ────────────────────────────────────
++  # This project depends strictly on OpenVINO. If it is not found we abort the
++  # build instead of silently falling back to the TensorRT/CUDA backend.
++  # shellcheck disable=SC1091
++  source scripts/detect_openvino.sh
++  if ! detect_openvino; then
++    openvino_install_hint
++    echo "Aborting build."
++    exit 1
++  fi
++  # ── Configure & build (OpenVINO backend enforced) ─────────────────────────
++  mkdir -p build
++  echo "Configuring the build system..."
++  cmake -S . -B build -DCMAKE_BUILD_TYPE={{build_type}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DUSE_OPENVINO=ON
++  echo "Building the project..."
++  cmake --build build -j{{CORES}}
+ 
+ # Run a package
+ run *package='hello':
+diff --git a/gear_sonic_deploy/scripts/detect_openvino.sh b/gear_sonic_deploy/scripts/detect_openvino.sh
+new file mode 100644
+index 0000000..96e87f4
+--- /dev/null
++++ b/gear_sonic_deploy/scripts/detect_openvino.sh
+@@ -0,0 +1,87 @@
++# Shared OpenVINO detection — source this file, don't execute it.
++#
++# Provides two functions:
++#   detect_openvino      → sets global OPENVINO_FOUND (true/false); on success
++#                          exports OpenVINO_DIR and USE_OPENVINO=1.
++#                          Returns 0 if found, non-zero otherwise.
++#   openvino_install_hint → prints the "OpenVINO is required" install message.
++#
++# This project depends strictly on OpenVINO and never falls back to TensorRT/CUDA.
++# Both scripts/setup_env.sh and the .justfile `build` recipe use these helpers so
++# the detection logic lives in exactly one place.
++
++# Locations checked for an OpenVINO archive install (in priority order).
++# Entries are glob patterns, so e.g. "/opt/intel/openvino_2026*" also matches
++# "/opt/intel/openvino_2026.4.0", "/opt/intel/openvino_2026rc", etc.
++OPENVINO_PATHS=(
++  "/opt/intel/openvino_2026*"
++  "/opt/intel/openvino"
++  "/opt/intel/openvino_2025*"
++  "$HOME/intel/openvino*"
++)
++
++detect_openvino() {
++  # OpenVINO's setupvars.sh references vars that may be unset in a clean shell
++  # (LD_LIBRARY_PATH, PYTHONPATH, ...). Remember the caller's `nounset` state and
++  # relax it while sourcing so `set -u` callers (e.g. the justfile) don't abort.
++  local restore_u=0
++  case "$-" in *u*) restore_u=1 ;; esac
++  set +u
++  # Expand unmatched globs to nothing instead of the literal pattern.
++  local restore_nullglob
++  restore_nullglob="$(shopt -p nullglob)"
++  shopt -s nullglob
++
++  OPENVINO_FOUND=false
++  local pattern ov_path
++  for pattern in "${OPENVINO_PATHS[@]}"; do
++    for ov_path in $pattern; do   # unquoted → glob-expanded (nullglob skips misses)
++      [ -d "$ov_path" ] && [ -f "$ov_path/setupvars.sh" ] || continue
++      echo "✅ OpenVINO found at: $ov_path"
++      # shellcheck disable=SC1090
++      source "$ov_path/setupvars.sh" >/dev/null 2>&1 || true
++      # Prefer the path setupvars.sh resolved (follows symlinks); fall back to
++      # the archive's own runtime/cmake if it didn't export one.
++      export OpenVINO_DIR="${OpenVINO_DIR:-$ov_path/runtime/cmake}"
++      export USE_OPENVINO=1
++      OPENVINO_FOUND=true
++      break 2
++    done
++  done
++  eval "$restore_nullglob"
++
++  if [ "$OPENVINO_FOUND" = false ] && pkg-config --exists openvino 2>/dev/null; then
++    echo "✅ OpenVINO found via pkg-config"
++    export USE_OPENVINO=1
++    OPENVINO_FOUND=true
++  fi
++
++  if [ "$OPENVINO_FOUND" = false ] && [ "${USE_OPENVINO:-0}" = "1" ]; then
++    echo "✅ OpenVINO enabled via USE_OPENVINO=1"
++    OPENVINO_FOUND=true
++  fi
++
++  if [ "$restore_u" = 1 ]; then set -u; fi
++  [ "$OPENVINO_FOUND" = true ]
++}
++
++openvino_install_hint() {
++  cat <<'EOF'
++
++═══════════════════════════════════════════════════════════════════════
++❌ OpenVINO not found — this project REQUIRES the OpenVINO runtime.
++═══════════════════════════════════════════════════════════════════════
++
++This project depends strictly on OpenVINO and does NOT fall back to the
++TensorRT/CUDA backend. Please install the OpenVINO runtime using the
++official archive method for Linux:
++
++  https://docs.openvino.ai/2026/get-started/install-openvino/install-openvino-archive-linux.html
++
++Then run the standard setup from this directory:
++  source /opt/intel/openvino_2026/setupvars.sh
++  source scripts/setup_env.sh
++  just build
++
++EOF
++}
+diff --git a/gear_sonic_deploy/scripts/setup_env.sh b/gear_sonic_deploy/scripts/setup_env.sh
+index ed271e3..6c014fc 100755
+--- a/gear_sonic_deploy/scripts/setup_env.sh
++++ b/gear_sonic_deploy/scripts/setup_env.sh
+@@ -5,39 +5,21 @@
+ 
+ echo "🔧 Setting up G1 Deploy environment..."
+ 
+-# ── OpenVINO detection ─────────────────────────────────────────────────────
+-# Check for OpenVINO installation and set USE_OPENVINO=1 if found
+-OPENVINO_FOUND=false
+-OPENVINO_PATHS=(
+-    "/opt/intel/openvino_2026"
+-    "/opt/intel/openvino"
+-    "/opt/intel/openvino_2025"
+-    "$HOME/intel/openvino"
+-)
+-
+-for ov_path in "${OPENVINO_PATHS[@]}"; do
+-    if [ -f "$ov_path/setupvars.sh" ]; then
+-        echo "✅ OpenVINO found at: $ov_path"
+-        source "$ov_path/setupvars.sh" 2>/dev/null || true
+-        export OpenVINO_DIR="$ov_path/runtime/cmake"
+-        export USE_OPENVINO=1
+-        OPENVINO_FOUND=true
+-        break
+-    fi
+-done
+-
+-if [ "$OPENVINO_FOUND" = false ]; then
+-    # Try pkg-config or cmake find
+-    if pkg-config --exists openvino 2>/dev/null; then
+-        echo "✅ OpenVINO found via pkg-config"
+-        export USE_OPENVINO=1
+-        OPENVINO_FOUND=true
+-    fi
+-fi
+-
+-if [ "$OPENVINO_FOUND" = true ]; then
++# ── OpenVINO detection (required — shared helper) ──────────────────────────
++# OpenVINO is a hard dependency. Detection lives in scripts/detect_openvino.sh
++# and is shared with the .justfile `build` recipe. If OpenVINO is missing we
++# prompt the user to install it and stop here (this script is meant to be
++# *sourced*, so we `return` rather than kill the user's shell).
++SETUP_ENV_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++# shellcheck disable=SC1091
++source "$SETUP_ENV_DIR/detect_openvino.sh"
++
++if detect_openvino; then
+     echo "🔵 OpenVINO mode enabled (USE_OPENVINO=1)"
+     echo "   CUDA/TensorRT detection will be skipped"
++else
++    openvino_install_hint
++    return 1 2>/dev/null || exit 1
+ fi
+ 
+ # Run jetson_clocks on Jetson systems (bare-metal only)
+-- 
+2.43.0
+

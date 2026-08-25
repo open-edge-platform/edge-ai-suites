@@ -1,0 +1,141 @@
+services:
+
+  broker:
+    image: docker.io/library/eclipse-mosquitto:2.0.22
+    container_name: broker
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP}
+      - NO_PROXY=${no_proxy},${HOST_IP}
+    volumes:
+      - ./configs/mosquitto:/mosquitto/config
+    networks:
+      - app_network
+    restart: on-failure:5
+
+  px4:
+    image: px4io/px4-sitl:latest
+    hostname: px4-sitl
+    container_name: px4
+    volumes:
+      - ./10040_sihsim_quadx.post:/opt/px4/etc/init.d-posix/airframes/10040_sihsim_quadx.post
+    stdin_open: true
+    tty: true
+    networks:
+      - app_network
+    depends_on:
+       - mavlink-router
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  mavlink-router:
+    build:
+      context: ../uav-mission-compute-sdk/infra/px4-sim/mavlink-router
+      dockerfile: Dockerfile
+      args:
+        http_proxy:  ${http_proxy:-}
+        https_proxy: ${https_proxy:-}
+        no_proxy:    ${no_proxy:-localhost,127.0.0.0/8}
+        NO_PROXY:    ${NO_PROXY:-localhost,127.0.0.0/8}
+    container_name: mavlink-router
+    restart: unless-stopped
+    volumes:
+      - ./configs/mavlink-router/main.conf:/etc/mavlink-router/main.conf
+    networks:
+      - app_network
+
+  dlstreamer-pipeline-server:
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
+        RUN pip install --no-cache-dir pymavlink
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}-pymavlink
+    pull_policy: build
+    container_name: dlstreamer-pipeline-server
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},${HOST_IP},host.docker.internal
+      - NO_PROXY=${no_proxy},${HOST_IP},host.docker.internal
+      - ENABLE_WEBRTC=true
+      - ENABLE_RTSP=true
+      - RTSP_PORT=8555
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
+      - RUN_MODE=EVA
+      - EMIT_SOURCE_AND_DESTINATION=true
+      - REST_SERVER_PORT=8081
+      - SERVICE_NAME=dlstreamer-pipeline-server
+      - MQTT_HOST=broker
+      - MQTT_PORT=1883
+      - ENABLE_OPEN_TELEMETRY=true
+      # NPU related environment variables
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+      - NPU_DEVICE=${NPU_DEVICE:-/dev/null}
+    volumes:
+      - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
+      - "./resources:/home/pipeline-server/resources"
+      - "./configs/config-pymavlink.json:/home/pipeline-server/config.json"
+      - "./gvapython/telemetry-overlay-pymavlink.py:/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py"
+      - "./scripts/mavlink_pipeline_manager.py:/home/pipeline-server/scripts/pipeline_manager.py"
+      - "/run/udev:/run/udev:ro"
+      - "/tmp:/tmp"
+      - "${REALSENSE_DEVICE:-/dev/null}:/dev/video4"
+    group_add:
+      - "44"
+      - "109"
+      - "110"
+      - "990"
+      - "992"
+      - "993"
+      - "994"
+      - "996"
+    device_cgroup_rules:
+      - "c 189:* rmw"
+      - "c 209:* rmw"
+      - "a 189:* rwm"
+    devices:
+      - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
+      - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
+      - ${NPU_DEVICE:-/dev/null}:${NPU_DEVICE:-/dev/null}
+    ports:
+      - '8081:8081'
+      - "8555:8555"
+      - "5600:5600"
+      - "5601:5601"
+      - "5602:5602"
+    networks:
+      - app_network
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  metrics-manager:
+    image: intel/metrics-manager:2026.2.0-rc2
+    container_name: metrics-manager
+    privileged: true
+    pid: host
+    devices:
+      - /dev/dri            # Intel GPU — card0 + renderD128 required for qmassa
+    volumes:
+      - /sys:/sys:ro
+    restart: unless-stopped
+    networks:
+      - app_network
+    ports:
+      - "9090:9090"
+
+networks:
+  app_network:
+    driver: "bridge"
+
+volumes:
+  dlstreamer-pipeline-server-pipeline-root:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

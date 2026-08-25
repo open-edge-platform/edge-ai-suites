@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 # GMSL Ingestion Guide icamera-usm
 
 
-This tutorial will cover getting GMSL RGB camera stream working as a ROS node to enable quick ingest of GMSL RBG Camera streams. This tutorial expect that the user has completed [GMSL Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html).
+This tutorial will cover getting GMSL RGB camera stream working as a ROS node to enable quick ingest of GMSL RBG Camera streams. This tutorial expect that the user has completed [GMSL Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_gmslguide.html).
 
 
 The current tested cameras for this tutorials are the following

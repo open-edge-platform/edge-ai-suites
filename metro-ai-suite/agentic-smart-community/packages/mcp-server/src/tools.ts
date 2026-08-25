@@ -13,6 +13,8 @@ export function registerTools(
   workerService: WorkerService,
   summaryClient: VideoSummaryClient,
 ): void {
+  const reportJobs = new Map<string, Promise<unknown>>();
+
   // --- smart_community_alert_query ---
   server.registerTool("smart_community_alert_query", {
     description: "Query or acknowledge alerts. action: latest | by_date | ack | stats",
@@ -111,12 +113,49 @@ export function registerTools(
         filter: (params.filter ?? ucReports?.filter) as Record<string, any> | undefined,
         debugDir: config.reportsLogsDir,
       };
-      const result = await generateReport(db, reportConfig, {
+      const reportParams = {
         monitor_id: params.monitor_id,
         type: params.type,
         period_start: params.period_start,
         period_end: params.period_end,
-      });
+      };
+      const jobKey = JSON.stringify({ reportParams, dataSource: reportConfig.dataSource, filter: reportConfig.filter });
+      let reportJob = reportJobs.get(jobKey);
+      if (!reportJob) {
+        reportJob = generateReport(db, reportConfig, reportParams);
+        reportJobs.set(jobKey, reportJob);
+        void reportJob.then(
+          () => reportJobs.delete(jobKey),
+          (error) => {
+            reportJobs.delete(jobKey);
+            logger.error(`Background report generation failed for ${params.monitor_id}: ${error}`);
+          },
+        );
+      }
+
+      const pending = Symbol("report-pending");
+      let waitTimer: ReturnType<typeof setTimeout> | undefined;
+      const result = await Promise.race([
+        reportJob,
+        new Promise<typeof pending>((resolve) => {
+          waitTimer = setTimeout(() => resolve(pending), 10_000);
+        }),
+      ]);
+      if (waitTimer) clearTimeout(waitTimer);
+      if (result === pending) {
+        return {
+          content: [{
+            type: "text" as const,
+            text: JSON.stringify({
+              status: "processing",
+              monitorId: params.monitor_id,
+              type: params.type ?? reportConfig.defaultType,
+              dataSource: reportConfig.dataSource,
+              message: "Report generation is still running. Query the reports table for this monitor shortly; do not start a duplicate report.",
+            }, null, 2),
+          }],
+        };
+      }
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     } catch (err: any) {
       return { content: [{ type: "text" as const, text: `Error: ${err.message}` }], isError: true };
@@ -416,7 +455,8 @@ export function registerTools(
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
       ),
       schema_extensions: z.array(z.object({
-        name: z.string(),
+        // Names land verbatim in ALTER/CREATE TABLE DDL — plain identifiers only.
+        name: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "must be a plain SQL identifier ([a-zA-Z_][a-zA-Z0-9_]*)"),
         type: z.enum(["text", "integer", "real"]),
         required: z.boolean(),
       })).optional().describe(
@@ -551,6 +591,7 @@ export function registerTools(
         db,
         {
           useCaseDict: config.useCaseDict,
+          alertCooldownSeconds: config.alerts.cooldownSeconds,
         },
         params as any,
       );

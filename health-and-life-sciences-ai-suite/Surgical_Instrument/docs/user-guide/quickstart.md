@@ -2,7 +2,7 @@
 
 Deployment guide for the three-service Docker stack: `surgical-backend` (Flask 3 + Ultralytics + OpenVINO bootstrap), `surgical-pipeline` (GStreamer + DL Streamer runtime), and `surgical-ui` (nginx + React SPA).
 
-The UI is **health-gated on the backend**: the browser tab will not answer until `surgical-backend` reports `/api/readiness → ready`. On first boot this window is 20–35 minutes while YOLO11n trains on CVC-ColonDB on the Intel Arc iGPU. Subsequent boots take seconds because the trained IR is cached in `./models/`.
+The UI is **health-gated on the backend**: the browser tab will not answer until `surgical-backend` reports `/api/readiness → ready`. On first boot this window is 20–35 minutes while YOLO11n trains on ColonDB on the Intel Arc iGPU. Subsequent boots take seconds because the trained IR is cached in `./models/`.
 
 ---
 
@@ -25,15 +25,15 @@ getent group video
 
 ---
 
-## 2. One-time: drop the CVC-ColonDB dataset
+## 2. One-time: drop the ColonDB dataset
 
-The bootstrap will refuse to train without the dataset. We do not redistribute it; you must download it directly from the CVC lab (research use only).
+The bootstrap will refuse to train without the dataset. We do not redistribute it; you must download.
 
-1. Visit **https://pages.cvc.uab.es/CVC-Colon/index.php/databases/** and download the CVC-ColonDB archive after accepting their terms. Citation: *Bernal, Sánchez, Vilariño (2012) Pattern Recognition 45(9), 3166–3182*.
+1. Download the ColonDB dataset
 2. Place the archive or extracted folder here:
 
    ```
-   Surgical_Instrument/datasets/CVC-ColonDB/raw/
+   Surgical_Instrument/datasets/ColonDB/raw/
    ```
 
    Accepted archive types: `.zip`, `.tar`, `.tar.gz`, `.tgz`. If your download is `.rar`, extract it locally first.
@@ -150,7 +150,7 @@ Everything on-screen is driven by the backend's `/api/events` SSE stream (~1 Hz 
 Below the table:
 
 - **End-to-end summary bar** — pipeline FPS · sample count · uptime · source kind.
-- **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset (`Polyp Detection` on `CVC-ColonDB`), **video source** resolution (e.g. `1080p H.264 (looped)`), **model input** tensor size (`640x640`), and the runtime **device**.
+- **Model & Input block** — model name, precision (`FP16 OpenVINO IR`), task/dataset (`Polyp Detection` on `ColonDB`), **video source** resolution (e.g. `1080p H.264 (looped)`), **model input** tensor size (`640x640`), and the runtime **device**.
 
 **Right column — Platform accordion**
 
@@ -179,7 +179,7 @@ make up UI_HOST_PORT=9000 DETECTION_DEVICE=cpu
 | Symptom | Diagnosis / Fix |
 |---|---|
 | `docker compose up` fails with `permission denied` on `/dev/dri/renderD128` | The `render` group GID inside the container doesn't match the host. Confirm `getent group render` on the host and re-run `make up` (the Makefile auto-detects). |
-| `surgical-backend` never becomes healthy; logs show `preparing_dataset → error` | The CVC-ColonDB archive isn't at `datasets/CVC-ColonDB/raw/`. See step 2. |
+| `surgical-backend` never becomes healthy; logs show `preparing_dataset → error` | The ColonDB archive isn't at `datasets/ColonDB/raw/`. See step 2. |
 | Browser at `http://localhost:8080` returns "connection refused" | The UI is still waiting for the backend HEALTHCHECK. `docker ps` will show `surgical-ui` as `Created` (not `Up`). Follow `make logs surgical-backend` until you see `state=ready`. |
 | Training runs on CPU instead of iGPU (very slow) | The container did not see `/dev/dri`. Check `docker exec surgical-backend ls /dev/dri` and `python -c "import torch; print(torch.xpu.is_available())"`. |
 | `torch.xpu` prints `False` inside the container | Level-Zero library missing. The backend image ships `libze1`; if your host has a mismatched driver, install `intel-i915-dkms` (or the equivalent for your kernel) and reboot. |

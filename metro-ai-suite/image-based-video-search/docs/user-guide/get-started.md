@@ -23,7 +23,7 @@ By following this guide, you will learn how to:
      To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
      ```bash
-     git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+     git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
      cd edge-ai-suites
      git sparse-checkout set metro-ai-suite
      cd metro-ai-suite/image-based-video-search
@@ -73,7 +73,7 @@ By following this guide, you will learn how to:
       docker run --rm --user=root \
         -e http_proxy -e https_proxy -e no_proxy \
         -v "$MODELS_PATH:/output" \
-        intel/dlstreamer:2026.2.0-ubuntu24-rc1 bash -c "$(cat <<EOF
+        intel/dlstreamer:2026.2.0-ubuntu24-rc2 bash -c "$(cat <<EOF
 
       mkdir -p src/dlstreamer-pipeline-server/models/public
 
@@ -119,13 +119,13 @@ By following this guide, you will learn how to:
           cp -r ./models/public/resnet-50-pytorch /output
           "
       # Download and quantize the yolov11s model
-      docker pull docker.io/intel/dlstreamer:2025.1.2-ubuntu24
+      docker pull docker.io/intel/dlstreamer:2026.2.0-ubuntu24-rc2
       docker run --rm --user=root `
         -e http_proxy `
         -e https_proxy `
         -e no_proxy `
         -v "${MODELS_PATH}:/output" `
-        intel/dlstreamer:2025.1.2-ubuntu24 bash -c @'
+        intel/dlstreamer:2026.2.0-ubuntu24-rc2 bash -c @'
         set -e
 
         mkdir -p src/dlstreamer-pipeline-server/models/public

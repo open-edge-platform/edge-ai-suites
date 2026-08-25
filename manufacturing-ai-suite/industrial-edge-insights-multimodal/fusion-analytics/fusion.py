@@ -20,13 +20,14 @@ Key Features:
 """
 
 import paho.mqtt.client as mqtt
-import pandas as pd
 from collections import deque
 import os
+import re
 from typing import Dict, Optional, Any, Literal
 import json
 import threading
 import time
+from datetime import datetime, timedelta, timezone
 from influxdb import InfluxDBClient as Influx1Client
 import logging
 import uvicorn
@@ -114,6 +115,53 @@ def combine_classifications(
     if v == t:
         return v
     return v if vision_confidence >= timeseries_confidence else t
+
+
+def parse_ts_string_to_ns(ts_str: str) -> int:
+    """Parse incoming timestamp strings into nanoseconds since epoch."""
+    cleaned = ts_str.strip()
+    # Common input shape from TS service: "YYYY-MM-DD HH:MM:SS.fffffffff +0000 UTC"
+    cleaned = re.sub(r"\s+UTC$", "", cleaned, flags=re.IGNORECASE)
+    if cleaned.endswith("Z"):
+        cleaned = f"{cleaned[:-1]}+00:00"
+
+    # Some payloads include a duplicated UTC offset, e.g. "+0000+00:00".
+    cleaned = re.sub(r"([+-]\d{4})([+-]\d{2}:\d{2})$", r"\1", cleaned)
+
+    # Accept either space or 'T' separator and optional timezone.
+    match = re.match(
+        r"^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?(?:\s*([+-]\d{2}:?\d{2}))?$",
+        cleaned,
+    )
+    if not match:
+        raise ValueError(f"Unsupported timestamp format: {ts_str}")
+
+    date_part, time_part, frac_part, tz_part = match.groups()
+    frac_ns = int((frac_part or "").ljust(9, "0")[:9]) if frac_part else 0
+    micros = frac_ns // 1_000
+    ns_remainder = frac_ns % 1_000
+
+    tz_token = tz_part or "+0000"
+    tz_token = tz_token.replace(":", "")
+    sign = 1 if tz_token[0] == "+" else -1
+    tz_hours = int(tz_token[1:3])
+    tz_mins = int(tz_token[3:5])
+    offset = timezone(sign * timedelta(hours=tz_hours, minutes=tz_mins))
+
+    dt = datetime.strptime(f"{date_part} {time_part}", "%Y-%m-%d %H:%M:%S")
+    dt = dt.replace(microsecond=micros, tzinfo=offset).astimezone(timezone.utc)
+
+    epoch = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    delta = dt - epoch
+    seconds = delta.days * 86_400 + delta.seconds
+    return seconds * 1_000_000_000 + dt.microsecond * 1_000 + ns_remainder
+
+
+def ns_to_iso8601_utc(ts_ns: int) -> str:
+    """Convert epoch nanoseconds to RFC3339 UTC string."""
+    seconds, ns_remainder = divmod(int(ts_ns), 1_000_000_000)
+    dt = datetime.fromtimestamp(seconds, tz=timezone.utc).replace(microsecond=ns_remainder // 1_000)
+    return dt.isoformat().replace("+00:00", "Z")
 
 # ===================== UTILITY FUNCTIONS =====================
 
@@ -210,10 +258,9 @@ def on_message(client, userdata, msg):
         if msg.topic == TS_TOPIC:
             # Process time-series anomaly detection message
             ts_str = payload["time"]
-            ts_str = ts_str.replace(" UTC", "")  # Clean timestamp format
-            
+
             # Convert timestamp string to nanosecond epoch
-            ts_epoch = pd.to_datetime(ts_str).value
+            ts_epoch = parse_ts_string_to_ns(ts_str)
             payload["time"] = ts_epoch
             queues["ts"].append(payload)
             
@@ -248,7 +295,7 @@ def on_message(client, userdata, msg):
             # Write vision weld classification results to InfluxDB
             json_body = [{
                 "measurement": VISION_MEASUREMENT,
-                "time": pd.to_datetime(time, unit="ns").isoformat(),
+                "time": ns_to_iso8601_utc(int(time)),
                 "tags": {
                     "search_time": int(time),
                     "label": vision_classification,
@@ -485,7 +532,7 @@ def main():
                     
                     json_body = [{
                         "measurement": FUSION_MEASUREMENT,
-                        "time": pd.to_datetime(ts, unit="ns").isoformat(),
+                        "time": ns_to_iso8601_utc(int(ts)),
                         "tags": {
                             "fusion_classification": str(result["fusion_classification"]) if result["fusion_classification"] is not None else None
                         },

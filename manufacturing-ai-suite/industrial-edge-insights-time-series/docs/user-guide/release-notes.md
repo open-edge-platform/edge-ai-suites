@@ -1,8 +1,43 @@
 # Release Notes: Industrial Edge Insights - Time Series
 
-<!--## Version 2026.2-->
+## Version 2026.2
 
-<!--date TBD-->
+**September 2026**
+
+This release removes the deprecated **Weld Defect Detection sample app**, adds **ViPPET
+integration** for deploying the Time Series Analytics Microservice, aligns naming for
+**DL Streamer / DL Streamer Pipeline Server** and includes **security hardening** along with
+various fixes and documentation improvements.
+
+**New**
+
+- **ViPPET Integration**: The Time Series Analytics Microservice can now be deployed as part
+  of the Visual Pipeline and Platform Evaluation Tool (ViPPET) stack
+
+**Improved**
+
+- **Weld Defect Detection Sample App Removed**: As previously announced, the deprecated Weld
+  Defect Detection Time Series sample app, its training scripts, models, simulation data, and
+  documentation have been removed from the repository.
+- **DL Streamer Naming Alignment**: Updated references across configuration, documentation,
+  and test utilities to align with the DL Streamer / DL Streamer Pipeline Server naming.
+- **Model Registry and CatBoost References Removed**: Removed remaining model registry
+  configuration references and CatBoost mentions from deployment manifests, tests, and
+  documentation, aligning with the current scikit-learn RandomForestClassifier-based workflow.
+- **Container Image and Helm Chart Updates**: Bumped Telegraf, Grafana, and NGINX image
+  versions in Docker Compose deployments, and updated the Helm chart/appVersion and
+  `IMAGE_SUFFIX` to the 2026.2.0 release line.
+- **Localhost Access and Reduced MQTT Exposure**: Replaced `<host_ip>` placeholders with
+  `localhost` in user guides and reduced MQTT port exposure in Helm/nginx configuration.
+- **Security**: Bumped aiohttp and cryptography dependencies to address reported
+  vulnerabilities, fixed Bandit `shell=True` (B602) findings and CodeQL alerts by removing
+  credential logging, applied SDLe scan remediations with justified `# nosec` annotations, and
+  upgraded to the latest available third-party versions in all applicable manifests.
+- **Documentation**: Multiple language, formatting, and editorial fixes applied across the
+  Time Series user guides.
+
+
+---
 
 ## Version 2026.1
 

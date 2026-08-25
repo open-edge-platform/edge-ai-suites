@@ -86,7 +86,7 @@ Before you can deploy with Helm, you must clone the repository and download the 
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -103,10 +103,10 @@ Optional: Pull the Helm chart and replace the existing `helm-chart` folder with 
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.6.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.6.0-rc2
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.6.0-rc1.tgz
+tar -xvf smart-parking-1.6.0-rc2.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart
@@ -133,7 +133,9 @@ cd ..
         password: # example: password: mypassword
     ```
 
-    > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
+   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 ## Step 3: Deploy the application and Run multiple AI pipelines
 
@@ -151,7 +153,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
     kubectl wait --for=condition=ready pod --all -n sp --timeout=300s
     ```
 
-3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
+3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 4 places)
 
    ``` sh
    #!/bin/bash

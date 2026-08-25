@@ -1,12 +1,12 @@
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/release-notes.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/docs/embodied/release-notes.md">
      Release Notes
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/README.md">
      Readme
   </a>
 </div>
@@ -47,7 +47,7 @@ The reference application turns a natural-language command into robot motion. An
 
 ![Humanoid reference application: LLM task planning with VLA/ACT manipulation](../images/architecture/Humanoid-Reference-Application.svg)
 
-The ACT, Diffusion Policy / iDP3, and VLA models are interchangeable skill policies trained from demonstrations (for example, ALOHA teleoperation). For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
+The ACT, Diffusion Policy / iDP3, and VLA models are interchangeable skill policies trained from demonstrations (for example, ALOHA teleoperation). For how this collection fits into the full stack, see the [Robotics AI Suite architecture overview](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-robotics.html).
 
 ## Humanoid - Imitation Learning Resources
 

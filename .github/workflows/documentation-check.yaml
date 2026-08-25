@@ -39,7 +39,6 @@ jobs:
       robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
       smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
-      smart-tolling_changed: ${{ steps.filter.outputs.smart-tolling }}
       sensor-fusion-for-traffic-management_changed: ${{ steps.filter.outputs.sensor-fusion-for-traffic-management }}
       smart-nvr_changed: ${{ steps.filter.outputs.smart-nvr }}
       smart-route-planning-agent_changed: ${{ steps.filter.outputs.smart-route-planning-agent }}
@@ -90,8 +89,6 @@ jobs:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/**'
             smart-parking:
               - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/**'
-            smart-tolling:
-              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/docs/user-guide/**'
             sensor-fusion-for-traffic-management:
               - 'metro-ai-suite/sensor-fusion-for-traffic-management/docs/user-guide/**'
             smart-nvr:
@@ -269,15 +266,6 @@ jobs:
     uses: ./.github/workflows/docs-reusable-workflow.yaml
     with:
       docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
-
-  build-smart-tolling:
-    permissions:
-      contents: read # needed for actions/checkout
-    needs: filter
-    if: ${{ needs.filter.outputs.smart-tolling_changed == 'true' }}
-    uses: ./.github/workflows/docs-reusable-workflow.yaml
-    with:
-      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling
 
   build-sensor-fusion-for-traffic-management:
     permissions:
