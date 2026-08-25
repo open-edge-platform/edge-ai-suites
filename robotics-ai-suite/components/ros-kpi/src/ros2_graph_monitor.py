@@ -1312,16 +1312,18 @@ Examples:
                         other_nodes = [(name, ns) for name, ns in all_nodes if name != 'ros2_graph_monitor']
 
                         if not other_nodes:
-                            logger.info("  (No ROS2 processes found!)")
-                            logger.info("\nNo ROS2 processes are running.")
-                            logger.info("Start your ROS2 launch file first, then run this monitor.")
-                            logger.info("\nExiting...")
-                            return
-
-                        for name, ns in sorted(other_nodes):
-                            full_name = f"{ns}/{name}".replace('//', '/')
-                            logger.info(f"  {full_name}")
-                        logger.info("\nWaiting for target node to appear...")
+                            # DDS peer discovery can lag a beat right after this monitor's own
+                            # rclpy node joins the graph -- an empty result here doesn't mean no
+                            # nodes exist, just that discovery hasn't caught up yet. Keep retrying
+                            # instead of giving up on the very first check (previously this
+                            # returned immediately, silently producing an empty graph_timing.csv
+                            # whenever this race was lost).
+                            logger.info("  (No other ROS2 nodes visible yet -- still discovering...)")
+                        else:
+                            for name, ns in sorted(other_nodes):
+                                full_name = f"{ns}/{name}".replace('//', '/')
+                                logger.info(f"  {full_name}")
+                            logger.info("\nWaiting for target node to appear...")
                     else:
                         print(f"Retry {retry_count}: Node '{args.node}' not found yet...", end='\r')
 

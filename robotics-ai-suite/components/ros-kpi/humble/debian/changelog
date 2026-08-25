@@ -1,3 +1,40 @@
+ros-humble-benchmark-framework (0.2.6-2) UNRELEASED; urgency=low
+
+  * realsense2_tutorial_fixes: fix a silent graph-monitor bug and correct
+    docs/config for the realsense2_tutorial benchmark scenario.
+    - ros2_graph_monitor.py: fixed a startup race where the node-discovery
+      retry loop gave up permanently (instead of retrying) if no other ROS
+      nodes were visible on the first check, silently producing an empty
+      graph_timing.csv with no error shown.
+    - README.md: corrected the post-install cd path to the actual install
+      location, /opt/ros/$ROS_DISTRO/benchmarking.
+    - config/realsense2_tutorial_run.yaml: bumped init_sleep 8s -> 20s to
+      cover the RealSense USB camera's measured ~15-16s device-detection
+      delay.
+    - Removed the generated uv.lock from version control (added to
+      .gitignore).
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 19 Aug 2026 00:00:00 +0000
+
+ ros-humble-benchmark-framework (0.2.6-1) UNRELEASED; urgency=low
+
+  * per_node_resource_followups: per-core CPU hot-spotting joined with
+    per-node attribution, latency-spike/resource-usage correlation, and a
+    thread-mode attribution fix.
+    - visualize_resources.py --core-nodes: per-core CPU stacked by ROS2 node
+      (top busiest cores), joining the existing per-core series with
+      ros2_node_map to distinguish affinity/scheduling hot spots from
+      generally CPU-heavy load.
+    - analyze_trigger_latency.py now cross-references latency outliers
+      (events at/above their pair's own p99) against resource_usage.json,
+      surfacing the nearest sample's top CPU consumers as a new
+      latency_spikes array in Level 1 KPI output (--max-latency-spikes,
+      default 5).
+    - Fixed aggregate_core_by_node() to attribute thread CPU via tgid so
+      per-thread samples roll up to their owning process/node correctly.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 14 Aug 2026 00:00:00 +0000
+
 ros-humble-benchmark-framework (0.2.6) UNRELEASED; urgency=low
 
   * system_wide_resource_attribution: psutil-based system-wide resource

@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (C) 2026 Intel Corporation
+#
+# realsense2_camera advertises every raw image topic through ALL discovered
+# image_transport plugins (raw, compressed, compressedDepth, theora, zstd) by
+# default. This wrongly attaches the color-only "compressed" publisher to
+# depth-encoded (16UC1) topics and would attach the depth-only
+# "compressedDepth" publisher to the color (rgb8) topic, causing a continuous
+# stream of "not a color format" / cv_bridge / compressed_depth_image_transport
+# errors -- and, under load, visible stutter -- confirmed via graph_timing.csv
+# jitter analysis and empirical testing.
+#
+# image_transport derives each enable_pub_plugins parameter name from the
+# resolved topic string with only the node's ROS namespace stripped (verified
+# against image_transport's publisher.cpp), so the camera_name/D457_mux_a
+# segment must stay in the key. Loaded via rs_launch.py's `config_file` launch
+# argument, which expects this flat (non ros__parameters-wrapped) dict shape.
+---
+camera.depth.image_rect_raw.enable_pub_plugins: ["image_transport/raw", "image_transport/compressedDepth", "image_transport/theora", "image_transport/zstd"]
+camera.aligned_depth_to_color.image_raw.enable_pub_plugins: ["image_transport/raw", "image_transport/compressedDepth", "image_transport/theora", "image_transport/zstd"]
+camera.color.image_raw.enable_pub_plugins: ["image_transport/raw", "image_transport/compressed", "image_transport/theora", "image_transport/zstd"]
+
+# Same restrictions, keyed for the GMSL branch's camera_name (D457_mux_a).
+D457_mux_a.depth.image_rect_raw.enable_pub_plugins: ["image_transport/raw", "image_transport/compressedDepth", "image_transport/theora", "image_transport/zstd"]
+D457_mux_a.aligned_depth_to_color.image_raw.enable_pub_plugins: ["image_transport/raw", "image_transport/compressedDepth", "image_transport/theora", "image_transport/zstd"]
+D457_mux_a.color.image_raw.enable_pub_plugins: ["image_transport/raw", "image_transport/compressed", "image_transport/theora", "image_transport/zstd"]

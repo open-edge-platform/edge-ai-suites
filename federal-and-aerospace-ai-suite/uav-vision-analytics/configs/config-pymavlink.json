@@ -5,7 +5,7 @@
                 "name": "uav_object_detection_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -60,7 +60,7 @@
                 "name": "uav_realsense_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "v4l2src device=/dev/video4 ! videoconvert ! video/x-raw,format=NV12,width=1280,height=720 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"RealSense-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "v4l2src device=/dev/video4 ! videoconvert ! video/x-raw,format=NV12,width=1280,height=720 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"RealSense-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -115,7 +115,7 @@
                 "name": "uav_udpsink_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-UDP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5600",
+                "pipeline": "multifilesrc location=/home/pipeline-server/resources/videos/uav_sample.avi loop=true ! h264parse ! decodebin3 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-pymavlink.py class=DrawDynamicText function=process_frame arg=[\"PyMAVLink-UDP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! gvawatermark ! vah264lpenc ! rtph264pay ! udpsink host=host.docker.internal port=5600",
                 "parameters": {
                     "type": "object",
                     "properties": {

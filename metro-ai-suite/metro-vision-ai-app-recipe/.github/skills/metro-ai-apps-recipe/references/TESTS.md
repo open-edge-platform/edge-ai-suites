@@ -2,22 +2,7 @@
 
 Tests live in `./{{STACK_DIR}}/tests/`. Python venv at `./.venv` (`python -m venv .venv`) — system pip is PEP-668 blocked; `/tmp` may be `noexec`.
 
-**If host lacks python/pip/venv**, run pytest inside `python:3.12-slim` reusing host Docker so tests can still `docker run mosquitto_sub` / `docker compose ps`. Mount socket + client binary + compose plugin, join docker group, split proxy: `http_proxy` for `pip install`, `NO_PROXY=*` for LAN-host test HTTP.
-
-> **Security note — Docker socket mount.** Mounting `/var/run/docker.sock` grants host Docker control (root-equivalent) and is ONLY for minimal hosts lacking python/pip/venv. Justification: tests must drive same host Docker for `mosquitto_sub` / `docker compose ps`. Least privilege: join `docker` group via `--group-add` instead of root, mount client binary/CLI plugins read-only (`:ro`), and use `--rm` (ephemeral). Prefer host venv; use socket mount only when no local Python exists.
-
-```sh
-GID_DOCKER=$(getent group docker | cut -d: -f3)
-docker run --rm --network host \
-  -e HOST_IP="$HOST_IP" -e COMPOSE_PROJECT_NAME="$COMPOSE_PROJECT_NAME" \
-  -e http_proxy="$http_proxy" -e https_proxy="$https_proxy" -e NO_PROXY='*' \
-  --group-add "${GID_DOCKER:-999}" \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v /usr/bin/docker:/usr/bin/docker:ro \
-  -v /usr/libexec/docker/cli-plugins:/usr/libexec/docker/cli-plugins:ro \
-  -v "$PWD":/app -w /app \
-  python:3.12-slim bash -c "pip install -q pytest requests urllib3 && python -m pytest -q tests/"
-```
+**If the host lacks python/pip/venv**, install Python 3 (with `venv`) on the host first, then create `./.venv` and run pytest from it. Split proxy for any test that pulls packages: `http_proxy` for `pip install`, `NO_PROXY=*` for LAN-host test HTTP. Tests drive the running stack via the already-published host ports (`https://<HOST_IP>/...`) and the `mosquitto_sub` container on the compose network — no host Docker socket is mounted.
 
 ## `tests/conftest.py`
 

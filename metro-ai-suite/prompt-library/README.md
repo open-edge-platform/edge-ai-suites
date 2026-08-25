@@ -1,6 +1,6 @@
-# Metro Prompt Library
+# Metro Apps Builder
 
-The Metro AI Suite **Prompt Library** is a collection of reusable,
+The Metro AI Suite **Metro Apps Builder** is a collection of reusable,
 business-objective prompts that turn a plain-language goal (for example,
 "I want to detect people in my camera feeds") into a running Intel® Edge AI
 application. Each prompt states **only a business outcome** — no framework, model,

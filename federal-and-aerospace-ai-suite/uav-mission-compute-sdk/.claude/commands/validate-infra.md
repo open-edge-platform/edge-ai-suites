@@ -77,19 +77,13 @@ ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/re
 ```
 Expected: `nadir` always present when armed; `forward/rear` present only in sim profile.
 
-### 7. Verify vision processor detections (requires `make apps` running)
-```bash
-docker exec mqtt-broker mosquitto_sub -t "uav/uav-1/camera/+/detections" -C 1 -W 10 --verbose 2>&1 | head -c 200
-```
-Expected: JSON detection payload on at least one camera topic
-
-### 8. Verify telemetry is flowing
+### 7. Verify telemetry is flowing
 ```bash
 docker exec mqtt-broker mosquitto_sub -t "uav/uav-1/telemetry/position" -C 1 -W 5
 ```
 Expected: JSON with lat_deg, lng_deg, relative_altitude_m
 
-### 9. Test companion bridge REST API
+### 8. Test companion bridge REST API
 ```bash
 docker exec px4-gazebo curl -sf http://127.0.0.1:8080/health   # sim-camera mode
 docker exec px4-sitl curl -sf http://127.0.0.1:8080/health     # usb-camera mode
@@ -115,5 +109,4 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 ```bash
 make down
 make up-sim-camera
-make apps   # if you need AI helpers
 ```
