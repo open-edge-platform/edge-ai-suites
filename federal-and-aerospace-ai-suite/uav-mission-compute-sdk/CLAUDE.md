@@ -62,7 +62,7 @@ All topics use the pattern `uav/{uav_id}/...` (default `uav_id` = `uav-1`) on br
 - `uav/{id}/camera/+/detections` — Wildcard, all cameras' detections
 - `uav/{id}/camera/+/frame` — Wildcard, all cameras' raw frames
 
-**Commands & SceneScape**:
+**Commands & Scenescape**:
 - `uav/{id}/command` — Legacy command channel (arm/disarm/etc.)
 - `scenescape/data/camera/{ss_camera_id}` — 3D fusion data published by scenescape-adapter
 

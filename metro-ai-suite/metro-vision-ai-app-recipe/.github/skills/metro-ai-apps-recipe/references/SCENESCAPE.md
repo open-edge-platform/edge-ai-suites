@@ -1,8 +1,8 @@
-# SceneScape spatial-analysis path (optional, opt-in)
+# Scenescape Spatial Analysis Path (optional, opt-in)
 
-Load **only when `{{SCENESCAPE}}=yes`**. Replaces default MediaMTX/WebRTC + Node-RED-alert + Grafana-MQTT *video/analytics tail* with Intel® **SceneScape** multi-camera **scene-fusion**, based on [smart-intersection](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection).
+Load **only when `{{SCENESCAPE}}=yes`**. Replaces default MediaMTX/WebRTC + Node-RED-alert + Grafana-MQTT *video/analytics tail* with Intel® **Scenescape** multi-camera **scene-fusion**, based on [smart-intersection](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection).
 
-**Do not reproduce SceneScape orchestration by hand.** Delegate to its deployer skill; it gathers streams/camera-ids/scene-name and runs bootstrap → calibrate → scene → tracking verification:
+**Do not reproduce Scenescape orchestration by hand.** Delegate to its deployer skill; it gathers streams/camera-ids/scene-name and runs bootstrap → calibrate → scene → tracking verification:
 
 > External skill:
 > `https://github.com/open-edge-platform/skills/tree/main/.agents/skills/scenescape-setup`
@@ -12,7 +12,7 @@ If available, **invoke it** with parameters below; otherwise use smart-intersect
 
 ## When to choose this path
 
-Choose SceneScape for **spatial** analytics unavailable per camera:
+Choose Scenescape for **spatial** analytics unavailable per camera:
 
 - Multi-camera **multi-object tracking** — one identity fused across overlapping views.
 - **Scene-based regions of interest** defined once on a map/floorplan (not per-camera), e.g. crosswalks, lanes, zones.
@@ -21,7 +21,7 @@ Choose SceneScape for **spatial** analytics unavailable per camera:
 
 For single-camera count/alert, keep `{{SCENESCAPE}}=no` (default) and standard MediaMTX/WebRTC + Node-RED.
 
-## Architecture (SceneScape branch)
+## Architecture (Scenescape branch)
 
 DLSPS still publishes detections over MQTT. **Scene Controller** fuses tracks; ROI analytics go to **InfluxDB** for **Grafana Flux**; live fused tracks appear in **Scene Management UI**, not Grafana WebRTC iframes.
 
@@ -39,7 +39,7 @@ Cameras (N, unique camera_ids) ─RTSP─▶ DLSPS ─MQTT─▶ broker (mosquit
                               └▶ /nodered/      → Node-RED
 ```
 
-`web` (SceneScape manager) serves UI + REST scene API and owns calibration, camera poses, and ROIs.
+`web` (Scenescape manager) serves UI + REST scene API and owns calibration, camera poses, and ROIs.
 
 ## Pinned images (from the smart-intersection reference)
 
@@ -56,7 +56,7 @@ Cameras (N, unique camera_ids) ─RTSP─▶ DLSPS ─MQTT─▶ broker (mosquit
 
 No MediaMTX, Coturn, WebRTC, Prometheus, or OpenTelemetry.
 
-## Parameters (SceneScape branch)
+## Parameters (Scenescape branch)
 
 When `{{SCENESCAPE}}=yes`:
 
@@ -86,7 +86,7 @@ When `{{SCENESCAPE}}=yes`:
 2. **Preferred:** invoke external `scenescape-setup` with `deploy_dir=./{{STACK_DIR}}`, `scene_name={{SCENE_NAME}}`, `camera_ids={{CAMERA_IDS}}`, and `streams=<inputs>`. It runs bootstrap → calibrate → scene, launches services async, captures one calibration frame per `camera_id`, reconstructs scene, and verifies tracking. Do not re-implement.
 3. **Fallback (skill unavailable):** author `docker-compose.yml` from smart-intersection service shapes above (services `ntpserver`, `broker`, `node-red`, `influxdb2`, `grafana`, `dlstreamer-pipeline-server`, `pgserver`, `web`, `scene`, `nginx` on one `scenescape` network, with TLS secrets and `tracker-config.json`), pulling files from [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src) (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`, `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
 
-## Completion criteria (SceneScape branch — all must pass)
+## Completion criteria (Scenescape branch — all must pass)
 
 1. All services `running`/`healthy`, including `scene`, `web`, `pgserver`, `influxdb2`, `ntpserver`.
 2. Scene Management UI reachable at `https://localhost/`; scene `{{SCENE_NAME}}` exists with calibrated cameras `{{CAMERA_IDS}}`.

@@ -55,7 +55,7 @@ export VSS_IP=<vss-device-ip>
 export VSS_PORT=<vss-port>                         # optional, default 12345
 
 # Optional — set only if needed
-# export NVR_SCENESCAPE=false           # optional, default false; set to 'true' to enable SceneScape integration
+# export NVR_SCENESCAPE=false           # optional, default false; set to 'true' to enable Scenescape integration
 # export http_proxy=<http-proxy>
 # export https_proxy=<https-proxy>
 # export no_proxy=<no_proxy>
