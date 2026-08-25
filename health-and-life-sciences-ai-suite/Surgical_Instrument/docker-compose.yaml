@@ -137,7 +137,7 @@ services:
   # Instrument exposes only UI :8080 to the host; backend reaches collector
   # over the internal `surgical-internal` bridge network.
   surgical-metrics-collector:
-    image: intel/hl-ai-metrics-collector:${METRICS_COLLECTOR_TAG:-1.0.0}
+    image: intel/hl-ai-metrics-collector:${TAG}
     container_name: surgical-metrics-collector
     restart: unless-stopped
     networks: [surgical-internal]
