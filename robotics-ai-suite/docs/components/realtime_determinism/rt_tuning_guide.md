@@ -41,7 +41,7 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
    | Low Power S0 Idle Capability | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Native ASPM | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Enabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
-   
+
    :::
    :::{tab-item} Generic (non-real-time)
 
@@ -75,63 +75,63 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
    **Note<sup>*</sup>**: Active SOC-North Efficient-cores can be enabled **all** on Intel® Core™ Ultra Series 3 (Panther Lake) processor, while still **0** on Intel® Core™ Ultra Series 2 (Arrow Lake) processor under Real-time Optimization.
 
 ## Modify Boot Parameters
+
 To modify default boot parameters, edit `/etc/grub.d/10_eci_experimental`.
 
-   :::{note}
-   Modify `eci_cmdline_exp` in `/etc/grub.d/10_eci_experimental` for a better real-time performance and power consumption:
-   :::
+:::{note}
+Modify `eci_cmdline_exp` in `/etc/grub.d/10_eci_experimental` for a better real-time performance and power consumption:
+:::
 
-   ::::{tab-set}
-   :::{tab-item} **Ubuntu 24.04**
-   :sync: jazzy
+::::{tab-set}
+:::{tab-item} **Ubuntu 24.04**
+:sync: jazzy
 
-   ```bash
-   # Modify default cmdline parameters to enable cstate/pstate
-   sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to affinity irq to core 0-7
-   sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to isolate cpus to core 8-11
-   sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set efi=noruntime
-   sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
-   # Kernel parameters need to load the correct Xe firmware
-   sudo sed -i '/^eci_cmdline_exp=/ s/i915\.[^ ]*[[:space:]]*//g' /etc/grub.d/10_eci_experimental
-   sudo sed -i '/^eci_cmdline_exp=/ s/xe\.force_probe/modprobe.blacklist=i915 xe.force_probe/' /etc/grub.d/10_eci_experimental
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ udmabuf.list_limit=8192 "/' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set iommu to passthrough mode
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' /etc/grub.d/10_eci_experimental
+```bash
+# Modify default cmdline parameters to enable cstate/pstate
+sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to affinity irq to core 0-7
+sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to isolate cpus to core 8-11
+sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set efi=noruntime
+sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+# Kernel parameters need to load the correct Xe firmware
+sudo sed -i '/^eci_cmdline_exp=/ s/i915\.[^ ]*[[:space:]]*//g' /etc/grub.d/10_eci_experimental
+sudo sed -i '/^eci_cmdline_exp=/ s/xe\.force_probe/modprobe.blacklist=i915 xe.force_probe/' /etc/grub.d/10_eci_experimental
+sudo sed -i '/^eci_cmdline_exp=/ s/"$/ udmabuf.list_limit=8192 "/' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set iommu to passthrough mode
+sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' /etc/grub.d/10_eci_experimental
 
-   sudo update-grub
-   ```
+sudo update-grub
+```
 
-   :::
-   :::{tab-item} **Ubuntu 22.04**
-   :sync: humble
+:::
+:::{tab-item} **Ubuntu 22.04**
+:sync: humble
 
-   ```bash
-   # Modify default cmdline parameters to enable cstate/pstate
-   sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to affinity irq to core 0-9
-   sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to isolate cpus to core 10-13
-   sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set efi=noruntime
-   sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set iommu to passthrough mode
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
-   sudo update-grub
-   ```
-   
-   :::
-   ::::
+```bash
+# Modify default cmdline parameters to enable cstate/pstate
+sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to affinity irq to core 0-9
+sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to isolate cpus to core 10-13
+sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set efi=noruntime
+sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set iommu to passthrough mode
+sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
+sudo update-grub
+```
 
-   The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
+:::
+::::
 
-   - `isolcpus`: Isolates specified CPU cores from the generic scheduler, dedicating them to real-time tasks.
-   - `rcu_nocbs`: Prevents specified CPU cores from handling RCU (Real-Copy-Update) callback, reducing latency.
-   - `nohz_full`: Enables full dynamic ticks on specified CPU cores, reducing timer interrupts.
-   - `irqaffinity`: Directs all hardware interrupts to specified CPU cores, keeping them free for real-time tasks.
+The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
 
+- `isolcpus`: Isolates specified CPU cores from the generic scheduler, dedicating them to real-time tasks.
+- `rcu_nocbs`: Prevents specified CPU cores from handling RCU (Real-Copy-Update) callback, reducing latency.
+- `nohz_full`: Enables full dynamic ticks on specified CPU cores, reducing timer interrupts.
+- `irqaffinity`: Directs all hardware interrupts to specified CPU cores, keeping them free for real-time tasks.
 
 To achieve optimum real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
 
@@ -167,7 +167,6 @@ Below is an example script to partition the Last Level Cache (LLC) and L2 Cache,
 ::::{tab-set}
 :::{tab-item} **Ubuntu 24.04**
 :sync: jazzy
-
 
 (e.g. core 11 as isolated core)
 
@@ -383,6 +382,7 @@ Swap can be disabled with following command:
 ```bash
 swapoff -a
 ```
+
 ## Stop Unnecessary Services
 
 On Linux, by default, many services run in the background. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
@@ -405,7 +405,7 @@ systemctl stop fwupd-refresh.timer fwupd.service snapd.socket snapd.service
 
 ## Prevent integrated graphics from changing power states
 
-The Intel integrated graphics engine manages power and frequency, which impacts latency for real-time workloads. 
+The Intel integrated graphics engine manages power and frequency, which impacts latency for real-time workloads.
 
 Intel® Graphics Render Standby Technology (Intel® GRST), RC6, or RC6+ adjusts the integrated graphics engine's voltage very low, or close to zero, when the system is asleep. In some cases, RC6 has caused latency spikes in real-time workloads. Therefore, RC6 should be disabled to improve real-time performance.
 
@@ -441,7 +441,7 @@ As the Xe driver does not support disabling RC6, there is no parameter for it. T
    ```bash
    sleep 999999 < /sys/kernel/debug/dri/0/forcewake_all &
    # Kill the sleep to release
-   kill -9 pid 
+   kill -9 pid
    ```
 
 :::

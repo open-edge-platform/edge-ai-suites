@@ -48,9 +48,9 @@ sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 
 1. Download and convert a YOLOv8 model into OpenVINO format:
 
-```bash
-python3 -c 'from ultralytics import YOLO; model = YOLO("yolov8n.pt"); model.export(format="openvino")'
-```
+   ```bash
+   python3 -c 'from ultralytics import YOLO; model = YOLO("yolov8n.pt"); model.export(format="openvino")'
+   ```
 
 2. Create a config file `pipeline.toml`. If not present, sample content for
    this configuration file (including the comments) will be generated in the

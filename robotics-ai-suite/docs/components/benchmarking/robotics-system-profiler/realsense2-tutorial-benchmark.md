@@ -93,7 +93,7 @@ uv run src/visualize_graph.py monitoring_sessions/realsense2_tutorial/<session>/
 
 ## Session Data Layout
 
-```
+```text
 monitoring_sessions/
 └── realsense2_tutorial/
     └── 20260819_141351/

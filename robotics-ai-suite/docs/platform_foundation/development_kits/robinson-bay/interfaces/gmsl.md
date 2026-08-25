@@ -36,7 +36,7 @@ Modify these values according to the information below. Your settings may vary d
 
 This table is a validated example of ACPI GMSL settings for the [RealSense D457](https://www.realsenseai.com/products/d457-gmsl-fakra/)
 
-Here, 4 individual cameras are setup, split across both FAKRA connectors. This enables the maximum bandwidth and compatiblity for the multi-sensor devices. Additional D457 GMSL connections are not currently supported. For simplicity, the top two GMSL ports (rotation 90 and 180) are used.
+Here, 4 individual cameras are setup, split across both FAKRA connectors. This enables the maximum bandwidth and compatibility for the multi-sensor devices. Additional D457 GMSL connections are not currently supported. For simplicity, the top two GMSL ports (rotation 90 and 180) are used.
 
 |                      | Camera 1         | Camera 2         | Camera 3         | Camera 4         |
 | -------------------- | ---------------- | ---------------- | ---------------- | ---------------- |
@@ -44,8 +44,8 @@ Here, 4 individual cameras are setup, split across both FAKRA connectors. This e
 | Custom HID           | `INTC10CD`       | `INTC10CD`       | `INTC10CD`       | `INTC10CD`       |
 | Lanes Clock division | 4 4 2 2          | 4 4 2 2          | 4 4 2 2          | 4 4 2 2          |
 | CRD Version          | CRD-D            | CRD-D            | CRD-D            | CRD-D            |
-| GPIO control         | No Control Logic | No Control Logic | No Control Logic | No Control Logic | 
-| Camera postion       | Back             | Back             | Front            | Front            |
+| GPIO control         | No Control Logic | No Control Logic | No Control Logic | No Control Logic |
+| Camera position      | Back             | Back             | Front            | Front            |
 | Flash Support        | Disabled         | Disabled         | Disabled         | Disabled         |
 | Privacy LED          | Disabled         | Disabled         | Disabled         | Disabled         |
 | Rotation             | 90               | 180              | 90               |  180             |
@@ -112,7 +112,7 @@ Below is a table showing the default rotation per port location.
 | 180 | Upper-right |
 | 0 | Lower-right |
 
-Here is an image overlayed with the correct rotation values, MIPI port, and I2C bus for reference:
+Here is an image overlaid with the correct rotation values, MIPI port, and I2C bus for reference:
 
 ![CEXD external ports](../images/gmsl_label_CEXD.png)
 

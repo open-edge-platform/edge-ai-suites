@@ -112,7 +112,7 @@ For the full control reference — including Normal Mode, all motion sets, and t
 
 Once control is running, the deploy log periodically prints a `Loop timing` line with running latency stats (in microseconds) for the control loop:
 
-```
+```text
 Loop timing - ... Obs: 645us (avg:689 min:460 P99:907 max:1023), Policy: 405us (avg:405 min:306 P99:618 max:723), ...
 ```
 
@@ -134,7 +134,7 @@ The `inference:` section of `gear_sonic_deploy/policy/release/observation_config
 
 To confirm which device a model landed on, watch the deploy log during model init (encoder, policy, planner) — before `Starting control` is printed. Each NPU model logs:
 
-```
+```text
 [OVInference] Requested device: NPU
 [OVInference] Model priority: HIGH
 ```
