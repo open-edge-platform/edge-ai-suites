@@ -2,6 +2,8 @@
 
 ## Version 1.6.0
 
+**Release Date**: September 9, 2026
+
 **New**
 
 - Fixed coturn server configuration for WebRTC relay.

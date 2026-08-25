@@ -2,6 +2,8 @@
 
 ## 2026.2.0
 
+**Release Date**: September 9, 2026
+
 This initial release introduces an AI agent-native video analysis platform designed for MCP (Model Context Protocol) integration.
 
 **New**

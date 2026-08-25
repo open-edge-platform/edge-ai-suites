@@ -4,18 +4,16 @@
 - [Version 2026.1.0](#version-202610)
 - [Version 1.2.4](#version-124)
 
-## Current Release
+## Version 2026.2.0
 
-### Version 2026.2.0
-
-**Aug 4, 2026**
+**Release Date**: September 9, 2026
 
 **New**
 
-- Distributed, multi-broker deployment: Smart NVR can now connect to multiple independent MQTT brokers at once, running side-by-side with SceneScape (Smart Intersection) in a dual-mode configuration. Adds `brokers` and `vss` REST API endpoints for managing this.
-- Single-command startup: `setup.sh` now brings up the full stack (RTSP streamer, SceneScape, NVR event-router) in one command, including automatic network joining.
+- Distributed, multi-broker deployment: Smart NVR can now connect to multiple independent MQTT brokers at once, running side-by-side with Scenescape (Smart Intersection) in a dual-mode configuration. Adds `brokers` and `vss` REST API endpoints for managing this.
+- Single-command startup: `setup.sh` now brings up the full stack (RTSP streamer, Scenescape, NVR event-router) in one command, including automatic network joining.
 - Migrated Python dependency management from Poetry to `uv`.
-- Added multi-broker SceneScape integration and advanced configuration guides.
+- Added multi-broker Scenescape integration and advanced configuration guides.
 
 **Improved**
 
@@ -27,7 +25,7 @@
 
 **Fixed**
 
-- Fixed MQTT broker TLS/certificate handling in SceneScape dual-mode by migrating the MQTT client to `aiomqtt`, removing an unnecessary client-certificate requirement.
+- Fixed MQTT broker TLS/certificate handling in Scenescape dual-mode by migrating the MQTT client to `aiomqtt`, removing an unnecessary client-certificate requirement.
 
 **Known Issues**
 
@@ -35,7 +33,7 @@
 - Smart NVR will not work on either Standalone or Developer Node versions of Edge Microvisor Toolkit due to its incompatibility with Frigate.
 - The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
 
-### Version 2026.1.0
+## Version 2026.1.0
 
 **June 17, 2026**
 
@@ -56,9 +54,7 @@
 - The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit
   instability or bugs, impacting event data processing reliability.
 
-## Previous Releases
-
-### Version 1.2.4
+## Version 1.2.4
 
 **Release Date**: 17 Feb 2026
 
