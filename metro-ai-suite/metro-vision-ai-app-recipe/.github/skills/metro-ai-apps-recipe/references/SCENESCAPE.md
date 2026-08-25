@@ -82,29 +82,9 @@ When `{{SCENESCAPE}}=yes`:
 
 ## How to run (delegate first)
 
-<<<<<<< HEAD
-1. Confirm `{{SCENESCAPE}}=yes`, and that `{{SCENE_NAME}}`, `{{CAMERA_IDS}}`,
-   and the per-camera input streams are known.
-2. **Preferred:** invoke the external `scenescape-setup` skill with
-   `deploy_dir=./{{STACK_DIR}}`, `scene_name={{SCENE_NAME}}`,
-   `camera_ids={{CAMERA_IDS}}`, and `streams=<inputs>`. It orchestrates
-   bootstrap → calibrate → scene, launches services async, captures one
-   calibration frame per `camera_id`, reconstructs the scene, and verifies
-   multi-camera tracking. Do not re-implement its steps.
-3. **Fallback (skill unavailable):** author `docker-compose.yml` from the
-   smart-intersection service shapes above (services `ntpserver`, `broker`,
-   `node-red`, `influxdb2`, `grafana`, `dlstreamer-pipeline-server`,
-   `pgserver`, `web`, `scene`, `nginx` on one `scenescape` network, with TLS
-   secrets and the `tracker-config.json` config), pulling the concrete files
-   from
-   [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src)
-   (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`,
-   `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
-=======
 1. Confirm `{{SCENESCAPE}}=yes`, and that `{{SCENE_NAME}}`, `{{CAMERA_IDS}}`, and per-camera input streams are known.
 2. **Preferred:** invoke external `scenescape-setup` with `deploy_dir=./{{STACK_DIR}}`, `scene_name={{SCENE_NAME}}`, `camera_ids={{CAMERA_IDS}}`, and `streams=<inputs>`. It runs bootstrap → calibrate → scene, launches services async, captures one calibration frame per `camera_id`, reconstructs scene, and verifies tracking. Do not re-implement.
-3. **Fallback (skill unavailable):** author `docker-compose.yml` from smart-intersection service shapes above (services `ntpserver`, `broker`, `node-red`, `influxdb2`, `grafana`, `dlstreamer-pipeline-server`, `pgserver`, `web`, `scene`, `nginx` on one `scenescape` network, with TLS secrets and `tracker-config.json`), pulling files from [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src) (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`, `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
->>>>>>> 5c95c419 (Updated Skill for metro-vision-ai-app-recipe)
+3. **Fallback (skill unavailable):** author `docker-compose.yml` from smart-intersection service shapes above (services `ntpserver`, `broker`, `node-red`, `influxdb2`, `grafana`, `dlstreamer-pipeline-server`, `pgserver`, `web`, `scene`, `nginx` on one `scenescape` network, with TLS secrets and `tracker-config.json`), pulling files from [smart-intersection/src](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src) (`controller/`, `webserver/`, `grafana/`, `node-red/`, `mosquitto/`, `nginx/`, `dlstreamer-pipeline-server/`, `secrets/`).
 
 ## Completion criteria (SceneScape branch — all must pass)
 

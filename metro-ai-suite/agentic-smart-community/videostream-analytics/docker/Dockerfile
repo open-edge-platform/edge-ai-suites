@@ -28,6 +28,13 @@
 FROM python:3.13-slim AS python-base
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Security updates first: Docker Hub's official slim images lag the Debian
+# repos, so preinstalled base-layer packages (e.g. util-linux 2.41-5) can carry
+# CVEs that already have fixes in trixie (e.g. 2.41.5-0+deb13u1). Doing this in
+# python-base makes every stage below inherit the patched packages.
+RUN apt-get update -y && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # ---------------------------------------------------------------------------
 FROM python-base AS builder-base
 

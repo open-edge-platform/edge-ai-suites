@@ -1440,7 +1440,7 @@ if ($appChecksFailed) {
         Write-Host "    Download and run the installer" -ForegroundColor Gray
         Write-Host ""
         Write-Host "  Installation Guide:" -ForegroundColor White
-        Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md" -ForegroundColor Cyan
+        Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/docs-release/2026.2/docs/user-guide/install/install_guide_windows.md" -ForegroundColor Cyan
         Write-Host ""
     }
 

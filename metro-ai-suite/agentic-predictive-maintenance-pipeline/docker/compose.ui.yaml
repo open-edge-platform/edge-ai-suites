@@ -5,7 +5,7 @@
 
 services:
   apm-ui:
-    image: ${REGISTRY-intel/}apm-ui-service:${TAG:-2026.2.0-rc1}
+    image: ${REGISTRY-intel/}apm-ui-service:${TAG:-2026.2.0-rc2}
     container_name: apm-ui
     hostname: apm-ui
     build:

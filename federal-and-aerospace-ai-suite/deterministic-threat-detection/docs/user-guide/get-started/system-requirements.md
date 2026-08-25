@@ -4,7 +4,7 @@
 
 - **Operating System:** Ubuntu 24.04 or later
 - **Docker Engine** with Docker Compose V2
-- [**DL Streamer Pipeline Server**](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server)
+- [**DL Streamer Pipeline Server**](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/dlstreamer-pipeline-server)
 
 ## Hardware Requirements
 

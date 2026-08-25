@@ -2,7 +2,7 @@ SPDXVersion: SPDX-2.3
 DataLicense: CC0-1.0
 SPDXID: SPDXRef-DOCUMENT
 DocumentName: handheld-multi-modal
-DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/handheld-multi-modal
+DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal
 Creator: Organization: Intel Corporation
 Creator: Tool: manual-curation
 Created: 2026-05-27T00:00:00Z
@@ -28,7 +28,7 @@ SPDXID: SPDXRef-Package-handheld-multi-modal
 PackageVersion: 2026.1
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-suites
-PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/handheld-multi-modal
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal
 FilesAnalyzed: false
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0
@@ -285,7 +285,7 @@ SPDXID: SPDXRef-Package-vippet
 PackageVersion: see-VIPPET_REF-file
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-libraries
-PackageHomePage: https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/visual-pipeline-and-platform-evaluation-tool
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0
 PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>

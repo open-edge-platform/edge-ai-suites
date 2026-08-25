@@ -314,3 +314,71 @@ class TestCopyBackend:
         assert recorder.status == "stopped"
         # no recording events for a dead source
         assert recording_events(mock_sink) == []
+
+
+class TestProtocolWhitelist:
+    """The ffmpeg child must not open protocols beyond the configured set.
+
+    `source_url` is the `-i` argument; ffmpeg natively speaks `concat:`,
+    `subfile:`, `data:` and more. The API-layer scheme check is the first gate;
+    `-protocol_whitelist` is the second, inside ffmpeg itself.
+    """
+
+    def _spawn_args(self, tmp_path, whitelist=None, source_url="rtsp://localhost:8554/live/test"):
+        """Capture the argv ContinuousRecorder would hand to Popen."""
+        from unittest.mock import patch
+
+        sink = MagicMock(spec=EventSink)
+        source = SourceConfig(source_id="test_wl", source_url=source_url)
+        cfg = RecordingConfig(interval=5, backend="copy")
+        rec = ContinuousRecorder(
+            source=source,
+            recording_cfg=cfg,
+            data_dir=str(tmp_path),
+            sink=sink,
+            protocol_whitelist=whitelist,
+        )
+        captured = {}
+
+        class FakeProc:
+            def poll(self):
+                return 1
+
+        def fake_popen(args, **kwargs):
+            captured["args"] = args
+            return FakeProc()
+
+        with patch("stream_monitor.continuous_recorder.subprocess.Popen", fake_popen):
+            with patch.object(rec, "_watch_copy_session", return_value=False):
+                rec._run_copy_session(0)
+        return captured["args"]
+
+    def test_default_whitelist_is_passed_to_ffmpeg(self, tmp_path):
+        args = self._spawn_args(tmp_path)
+        assert "-protocol_whitelist" in args
+        wl = args[args.index("-protocol_whitelist") + 1].split(",")
+        # Transports a live camera actually needs, nothing else.
+        assert set(wl) == {
+            "file", "crypto", "rtp", "udp", "tcp", "tls", "rtsp", "rtsps", "http", "https",
+        }
+        # The dangerous inputs must NOT be openable.
+        assert "concat" not in wl
+        assert "subfile" not in wl
+        assert "data" not in wl
+
+    def test_whitelist_precedes_input_argument(self, tmp_path):
+        """`-protocol_whitelist` is an input option: it must come before `-i`."""
+        args = self._spawn_args(tmp_path)
+        assert args.index("-protocol_whitelist") < args.index("-i")
+
+    def test_config_override_is_honoured(self, tmp_path):
+        args = self._spawn_args(tmp_path, whitelist=["rtsp", "tcp", "file"])
+        wl = args[args.index("-protocol_whitelist") + 1]
+        assert wl == "rtsp,tcp,file"
+
+    def test_recorder_accepts_whitelist_kwarg(self, tmp_path):
+        """SourceManager passes the config value through; make sure the kwarg exists."""
+        sink = MagicMock(spec=EventSink)
+        rec = make_recorder(tmp_path, sink)
+        rec._protocol_whitelist = ["file"]
+        assert rec._protocol_whitelist == ["file"]

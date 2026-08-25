@@ -45,8 +45,10 @@ function runningLabel(activeRun) {
 function runActionHtml(run) {
   const runPath = encodeURIComponent(run.run_id);
   if (run.status === "completed") {
-    return `<a href="/results/${runPath}">View Results</a><span aria-hidden="true"> · </span>`
-      + `<a href="/chat?run_id=${runPath}">Ask about run</a>`;
+    const ask = window.__chatAvailable
+      ? `<span aria-hidden="true"> · </span><a href="/chat?run_id=${runPath}">Ask about run</a>`
+      : "";
+    return `<a href="/results/${runPath}">View Results</a>` + ask;
   }
   if (run.status === "running") return `<a href="/results/${runPath}">Waiting…</a>`;
   return `<a href="/results/${runPath}">View Error</a>`;
