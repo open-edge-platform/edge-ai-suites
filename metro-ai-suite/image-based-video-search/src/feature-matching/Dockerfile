@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.14
+FROM docker.io/library/python:3.14.7
 
 USER root
 
@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 
 RUN python -m pip install --upgrade \
     pip \
-    setuptools \
+    "setuptools>=78.1.1" \
     wheel
 
 COPY ./requirements.txt .
