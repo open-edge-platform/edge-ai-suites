@@ -18,12 +18,30 @@
   --header-bar-height: 56px;
   --footer-height: 48px;
 
+  /* Form controls — the shared look for text inputs and selects inside a form.
+     Consumed by the settings form (SettingsForm.css) and the upload modal
+     (UploadFilesModal.css). */
+  --control-padding: 8px 12px;
+  --control-radius: 4px;
+  --control-font-size: 14px;
+  --control-border-color: #ccc;
+  --control-background: #f7f7f7;
+  --control-focus-color: #007bff;
+  --control-focus-ring: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  --control-placeholder-color: #999;
+
   --z-index-main-content: 1;
   --z-index-header: 50;
   --z-index-toast: 1100;
   --z-index-video-stream: 1000;
   --z-index-modal: 9999;
   
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 body {
@@ -39,6 +57,46 @@ h1, h2, h3, h4 {
   color: var(--color-dark);
   font-weight: 400;
   line-height: 1.2;
+}
+
+/* ── App-wide element defaults ──  */
+
+h2 {
+  font-size: clamp(18px, 5vw, 24px);
+  margin-bottom: 10px;
+  text-align: left;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+label {
+  color: var(--color-gray-700);
+  font-family: var(--font-text);
+  font-size: clamp(11px, 2.5vw, 12px);
+  font-weight: 400;
+  line-height: clamp(12px, 3vw, 14px);
+  text-align: left;
+}
+
+/* Text inputs and selects. Specificity is deliberately 0-0-1: the element
+   selector carries it while `:where([type="text"])` adds nothing. That sits
+   between the `*` reset in App.css (0-0-0, which would otherwise strip the
+   padding off every unstyled input) and any component's own class rule (0-1-0,
+   e.g. `.search-input`, `.grading-input`), which a plain `input[type="text"]`
+   at 0-1-1 would silently override. */
+input:where([type="text"]),
+select {
+  width: 100%;
+  padding: clamp(8px, 2vw, 10px);
+  border: 1px solid #ccc;
+  border-radius: 0px;
+  font-family: var(--font-text);
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 400;
+  color: var(--color-dark);
+  line-height: clamp(14px, 3.5vw, 16px);
+  box-sizing: border-box;
+  background: #f7f7f7;
 }
 
 button, .text-button {
@@ -97,14 +155,6 @@ button:disabled, .text-button:disabled {
   color: var(--color-dark);
   background: none;
   line-height: 16px;
-}
-
-.project-name-display {
-  font-family: var(--font-text);
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--color-dark);
-  line-height: 20px;
 }
 
 @media (prefers-color-scheme: light) {

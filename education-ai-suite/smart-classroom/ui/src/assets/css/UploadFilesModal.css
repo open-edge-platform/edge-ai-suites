@@ -30,6 +30,30 @@
   gap: 8px;
 }
 
+.upload-files-modal input[type="text"] {
+  width: 100%;
+  padding: var(--control-padding);
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  font-family: inherit;
+  font-size: var(--control-font-size);
+  line-height: 1.4;
+  color: #2B2C30;
+  background: var(--control-background);
+  box-sizing: border-box;
+}
+
+.upload-files-modal input[type="text"]:focus {
+  outline: none;
+  border-color: var(--control-focus-color);
+  box-shadow: var(--control-focus-ring);
+}
+
+.upload-files-modal input[type="text"]::placeholder {
+  color: var(--control-placeholder-color);
+  font-style: italic;
+}
+
 .folder-icon {
   width: 36px;
   height: 36px;
@@ -78,9 +102,10 @@
   cursor: not-allowed;
 }
 
-.error-message {
+.upload-files-modal .error-message {
   color: #c00;
   font-size: 12px;
+  margin-top: 4px;
   /* One reason per line, and long file paths wrap instead of overflowing. */
   white-space: pre-line;
   overflow-wrap: anywhere;

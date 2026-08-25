@@ -35,7 +35,7 @@ Intel-operated generative artificial intelligence solutions.
 | Pipeline graph (interactive) | `uv run python src/visualize_graph.py <session>/graph_timing.csv --show` | — |
 | List sessions | `uv run python src/monitor_stack.py --list-sessions` | — |
 | Re-visualize timing | `uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show` | — |
-| Re-visualize resources | `uv run python src/visualize_resources.py <session>/resource_usage.log --cores --heatmap --show` | — |
+| Re-visualize resources | `uv run python src/visualize_resources.py <session>/resource_usage.json --cores --heatmap --show` | — |
 | Trigger latency analysis | `uv run python src/analyze_trigger_latency.py` | — |
 | Trigger latency + JSON output | `uv run python src/analyze_trigger_latency.py --json-out SESSION/kpi.json` | — |
 | Trigger latency from rosbag | `uv run python src/analyze_trigger_latency.py --bag <bag_dir>` | — |
@@ -66,7 +66,8 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--pid-only` | Process-level only, no thread details |
 | `--gpu` | Enable Intel GPU monitoring (auto-detected when hardware present) |
 | `--npu` | Enable Intel NPU monitoring via sysfs |
-| `--power` | Enable Intel RAPL CPU package power monitoring (writes cpu_power.log) |
+| `--io` | Include per-process disk I/O (read/write bytes since last tick) |
+| `--ctx-switches` | Include per-process voluntary/involuntary context-switch counts since last tick |
 | `--no-visualize` | Skip auto-visualization on exit |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
@@ -111,10 +112,13 @@ uv run python src/monitor_resources.py --memory --threads         # CPU + memory
 uv run python src/monitor_resources.py --memory --log out.log     # With logging
 uv run python src/monitor_resources.py --list                     # List ROS2 processes
 uv run python src/monitor_resources.py --remote-ip 192.168.1.100 --memory
-uv run python src/monitor_resources.py --power                    # + Intel RAPL CPU package power
-uv run python src/monitor_resources.py --memory --npu --power     # CPU + NPU + power
-uv run python src/monitor_resources.py --check-hw                 # Probe GPU / NPU / RAPL availability
+uv run python src/monitor_resources.py --check-hw                 # Probe GPU / NPU availability
 ```
+
+> **Known limitation:** `ros2_pids`/`ros2_node_map` in `resource_usage.json` are point-in-time
+> snapshots keyed by PID. The OS can recycle a PID after its original process exits (e.g. a
+> crashed/respawned node), so on long-running sessions a PID late in the run is not guaranteed
+> to refer to the same node as when it was first captured.
 
 ### visualize_timing.py
 
@@ -126,28 +130,15 @@ uv run python src/visualize_timing.py timing.csv --delays --frequencies --output
 
 ```bash
 uv run python src/visualize_resources.py resource.log --cores --heatmap --top 10 --output-dir ./plots/
+uv run python src/visualize_resources.py resource.log --core-nodes --top 8 --output-dir ./plots/
 uv run python src/visualize_resources.py resource.log --summary   # text table only
 ```
 
 > CPU% scale: 100% = 1 full core. Use the **Avg Cores** column in `--summary` output for a human-readable reading.
-
-### visualize_thermal.py
-
-Renders CPU/GPU temperature, throttle state, and RAPL power from `cpu_power.log` and `gpu_usage.log`.
-
-```bash
-uv run python src/visualize_thermal.py <session_dir> --save   # writes 3 PNGs to visualizations/
-uv run python src/visualize_thermal.py <session_dir> --show   # interactive window
-uv run python src/visualize_thermal.py                        # auto-uses latest session
-```
-
-Output files written when `--save` is used:
-
-| File | Contents |
-|------|----------|
-| `thermal_throttle.png` | Combined 3-panel overview (temp + throttle + power) |
-| `thermal_temperature.png` | CPU / GPU temperature over time |
-| `thermal_power.png` | RAPL CPU package power (W) over time |
+>
+> A **PER-NODE ATTRIBUTION** table prints automatically alongside the per-PID summary (no flag needed) when `ros2_node_map` is present in the log; older sessions without it just skip that section.
+>
+> `--core-nodes` requires `ros2_node_map` in the log; skipped with a warning otherwise.
 
 ---
 
@@ -195,6 +186,14 @@ make picknplace-run                         # single run with record + plot
 make fastmapping                            # single run with record + plot
 ```
 
+`*-benchmark` targets accept `NO_PROMPT=1` for non-interactive/CI use — every
+run gets `--no-prompt`, the post-benchmark menu is skipped, and the effective
+log level is forced to `WARNING`. Verbosity for all Python scripts under
+`src/` is otherwise controlled by the `LOG_LEVEL` env var (or a `.env` file at
+the repo root, copy `.env.example` to get started): `INFO` (default) shows
+progress messages, `DEBUG` additionally shows full result tables, `WARNING`
+suppresses both (errors/missing-data warnings still show).
+
 ---
 
 ### gpu_pid_analyzer.py
@@ -217,7 +216,7 @@ uv run python src/gpu_pid_analyzer.py --json-log gpu.jsonl         # raw JSON-li
 | `--watch` | Keep refreshing until Ctrl-C |
 | `--csv FILE` | Append rows to a CSV file |
 | `--json-log FILE` | Append raw JSON-lines to a file |
-| `--quiet` | Suppress console output (useful with `--csv`) |
+| `--log-level LEVEL` | Logging verbosity (`DEBUG`/`INFO`/`WARNING`/`ERROR`/`CRITICAL`); use `WARNING` to suppress per-snapshot console output (useful with `--csv`) |
 
 ### visualize_gpu.py
 
@@ -278,7 +277,7 @@ uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --durati
 | Component | How it works |
 |-----------|-------------|
 | Graph monitor | DDS peer discovery via `CYCLONEDDS_URI` / `ROS_STATIC_PEERS` |
-| Resource monitor | Runs `ps` and `pidstat` over SSH |
+| Resource monitor | Runs `_psutil_probe.py` over SSH (must be pre-deployed on the remote host, e.g. via `scp`) |
 
 Results are stored and visualized **locally** on the monitoring machine.
 
@@ -291,7 +290,7 @@ monitoring_sessions/
 └── 20260209_143022/
     ├── session_info.txt
     ├── graph_timing.csv
-    ├── resource_usage.log
+    ├── resource_usage.json
     └── visualizations/
 ```
 
@@ -306,7 +305,7 @@ monitoring_sessions/
 | Visualizations not generated | `uv run python src/visualize_timing.py <session>/graph_timing.csv --show` |
 | Permission denied | Run `uv sync` if modules are missing |
 | Remote: no data | Check SSH auth and matching `ROS_DOMAIN_ID` |
-| CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 core. Check **Avg Cores** column. |
+| CPU shows e.g. "563%" | Normal — 100% = 1 core (standard CPU% convention). Check **Avg Cores** column. |
 | Prometheus exporter port in use | `fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir <session>` |
 | Graph click does nothing | Use `--show` flag (not `--no-show`) to enable TkAgg interactive mode |
 

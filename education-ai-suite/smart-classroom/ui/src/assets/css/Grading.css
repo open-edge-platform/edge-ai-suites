@@ -29,6 +29,13 @@
   padding: 12px 8px;
 }
 
+.grading-right.collapsed {
+  padding-left: 0;
+  padding-right: 0;
+  border-left: none;
+  overflow: hidden;
+}
+
 .grading-right .right-panel {
   flex: 1;
   height: auto;
@@ -169,7 +176,7 @@
 
 /* Buttons */
 .grading-btn {
-  padding: 6px 16px;
+  padding: 6px 10px;
   border: 1px solid transparent;
   border-radius: 4px;
   font-size: 13px;
@@ -674,7 +681,7 @@
 .grading-picker-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;

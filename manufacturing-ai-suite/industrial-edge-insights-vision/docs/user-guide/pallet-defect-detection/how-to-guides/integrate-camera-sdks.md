@@ -31,7 +31,7 @@ Create a Dockerfile inside your `dlstreamer-pipeline-server` directory with the 
 Create a Dockerfile named `BalluffDockerfile`.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
 
 USER root
 
@@ -41,7 +41,7 @@ COPY ./plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc
 
 RUN cd /home/pipeline-server/src-gst-gencamsrc && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc) && cmake --install build && ldconfig
 
-# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1 base image
+# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2 base image
 RUN apt-get update && apt-get install -y libwxgtk-webview3.2-dev
 
 # For Ubuntu 22 with intel/dlstreamer-pipeline-server:3.1.0-ubuntu22, uncomment the line below and comment the above line
@@ -69,7 +69,7 @@ USER intelmicroserviceuser
 Create a Dockerfile named `BaslerDockerfile`.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
 
 USER root
 
@@ -103,7 +103,7 @@ Run the following command to build the image.
 <!--hide_directive :sync: balluff-sdk hide_directive-->
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc-balluff -f BalluffDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2-gencamsrc-balluff -f BalluffDockerfile .
 ```
 
 <!--hide_directive ::: hide_directive-->
@@ -111,7 +111,7 @@ docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc
 <!--hide_directive :sync: pylon-sdk hide_directive-->
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc-basler -f BaslerDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2-gencamsrc-basler -f BaslerDockerfile .
 ```
 
 <!--hide_directive
@@ -132,7 +132,7 @@ After the build completes, inside `dlstreamer-pipeline-server/docker` directory,
 Update `.env` with:
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc-balluff
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2-gencamsrc-balluff
 ```
 
 <!--hide_directive ::: hide_directive-->
@@ -142,7 +142,7 @@ DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubunt
 Update `.env` with:
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc-basler
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2-gencamsrc-basler
 ```
 
 <!--hide_directive
@@ -212,7 +212,7 @@ Update the `.env` file with the image you built and modify any other required va
 <!--hide_directive :sync: balluff-sdk hide_directive-->
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc-balluff
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2-gencamsrc-balluff
 ```
 
 <!--hide_directive ::: hide_directive-->
@@ -220,7 +220,7 @@ DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubunt
 <!--hide_directive :sync: pylon-sdk hide_directive-->
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1-gencamsrc-basler
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2-gencamsrc-basler
 ```
 
 <!--hide_directive

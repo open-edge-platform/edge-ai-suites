@@ -57,6 +57,13 @@ export class FeatureGuard {
   }
 
   /**
+   * Whether speaker diarization is enabled in the ASR model config.
+   */
+  isDiarizationEnabled(): boolean {
+    return this.featureMap.get('asr')?.diarization === true;
+  }
+
+  /**
    * Get list of all enabled feature IDs
    */
   getEnabledFeatures(): string[] {

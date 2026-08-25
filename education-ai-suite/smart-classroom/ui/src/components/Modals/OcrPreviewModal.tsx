@@ -1,7 +1,9 @@
 import React from "react";
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import closeIcon from "../../assets/images/close_frame.svg";
 import "../../assets/css/OcrPreviewModal.css";
+import { useTitleBarTheme } from "../../hooks/useTitleBarTheme";
 
 interface OcrPreviewModalProps {
   isOpen: boolean;
@@ -21,10 +23,11 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
   onDownload,
 }) => {
   const { t } = useTranslation();
+  useTitleBarTheme(isOpen, 'dimmed');
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="cs-modal-overlay" onClick={onClose}>
       <div className="cs-ocr-preview-modal" onClick={(e) => e.stopPropagation()}>
         <div className="cs-ocr-preview-header">
@@ -54,7 +57,8 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -5,7 +5,8 @@
 # These contents may have been developed with support from one or more
 # Intel-operated generative artificial intelligence solutions.
 """
-Visualize ROS2 resource monitoring data from pidstat logs.
+Visualize ROS2 resource monitoring data from resource_usage.json (written by
+_psutil_probe.py via monitor_resources.py).
 Creates interactive plots showing CPU utilization per core and per PID/thread over time.
 """
 
@@ -14,186 +15,112 @@ import json
 import argparse
 from datetime import datetime
 from collections import defaultdict
+
+from monitor_resources import is_ros2_process
+
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+
+from log_config import get_logger
+
+logger = get_logger(__name__)
 try:
     from ._accel import np  # type: ignore[import-not-found]
 except ImportError:  # running as a script (e.g., `python src/visualize_resources.py`)
     from _accel import np  # Intel dpnp/numpy shim
 
 
-def parse_pidstat_log(log_file):
+def parse_resource_log(log_file):
     """
-    Parse pidstat log file and extract CPU usage data.
+    Parse resource_usage.json, a single JSON document written by
+    _psutil_probe.py (see monitor_resources.py):
+    `{"num_cpus": N, "ros2_pids": [...], "started_at": "...", "ended_at":
+    "...", "samples": [{"ts": "...", "processes": [{"pid", "cpu_pct",
+    "rss_kb", ...}]}, ...]}`.
 
     Returns:
         dict: Parsed data with timestamps, PIDs, CPU cores, and utilization
     """
     data = {
         'timestamps': [],
-        'pids': defaultdict(list),  # pid -> list of (timestamp, cpu%, core)
-        'cores': defaultdict(list),  # core -> list of (timestamp, total_cpu%)
-        'threads': defaultdict(list),  # tid -> list of (timestamp, cpu%, core, command)
-        'tgid_commands': {},  # tgid -> command mapping
-        'num_cpus': 0,  # total logical CPUs on the monitored system
+        'pids': defaultdict(list),
+        'cores': defaultdict(list),
+        'threads': defaultdict(list),
+        'tgid_commands': {},
+        'num_cpus': 0,
+        'ros2_pids': set(),
+        'ros2_node_map': {},
+        'has_memory': False,
+        'has_io': False,
+        'has_ctx': False,
     }
 
-    current_timestamp = None
     monitoring_sessions = []
-    current_session = None
-    current_tgid_command = {}  # Track TGID commands within each timestamp
-
-    # ANSI color code pattern for stripping
-    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
 
     with open(log_file, 'r') as f:
-        for line in f:
-            # Strip ANSI color codes from line
-            line = ansi_escape.sub('', line)
+        try:
+            document = json.load(f)
+        except json.JSONDecodeError:
+            return data, monitoring_sessions
 
-            # Detect total CPU count from pidstat header, e.g. "(20 CPU)"
-            if not data['num_cpus']:
-                cpu_count_match = re.search(r'\((\d+) CPU\)', line)
-                if cpu_count_match:
-                    data['num_cpus'] = int(cpu_count_match.group(1))
+    data['num_cpus'] = document.get('num_cpus', 0) or 0
+    data['ros2_pids'].update(document.get('ros2_pids') or [])
+    data['ros2_node_map'].update(document.get('ros2_node_map') or {})
 
-            # Check for session start
-            if 'Monitoring started at' in line:
-                match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', line)
-                if match:
-                    current_session = {
-                        'start': match.group(1),
-                        'data_points': []
-                    }
-                    monitoring_sessions.append(current_session)
+    started_at = document.get('started_at')
+    if started_at:
+        monitoring_sessions.append({'start': started_at, 'data_points': []})
 
-            # Check for timestamp line (pidstat output)
-            time_match = re.match(r'^(\d{2}:\d{2}:\d{2} [AP]M)\s+\d+', line)
-            if time_match:
-                current_timestamp = time_match.group(1)
-                if current_timestamp not in data['timestamps']:
-                    data['timestamps'].append(current_timestamp)
-                # Reset TGID command tracking for new timestamp
-                current_tgid_command = {}
+    for rec in document.get('samples', []):
+        ts_iso = rec.get('ts')
+        if not ts_iso:
+            continue
+        try:
+            time_str = datetime.fromisoformat(ts_iso).strftime('%H:%M:%S')
+        except ValueError:
+            continue
+        if time_str not in data['timestamps']:
+            data['timestamps'].append(time_str)
 
-            # Parse data lines
-            if current_timestamp and re.match(r'^\d{2}:\d{2}:\d{2} [AP]M', line):
-                parts = line.split()
-                if len(parts) >= 12:
-                    time_str = parts[0] + ' ' + parts[1]
-
-                    # Detect format based on column count and structure
-                    # Thread mode: Time UID TGID TID %usr %system %guest %wait %CPU CPU minflt/s majflt/s VSZ RSS %MEM Command
-                    #              parts[3] is TGID, parts[4] is TID (could be '-' or thread ID)
-                    # PID mode:    Time UID PID %usr %system %guest %wait %CPU CPU minflt/s majflt/s VSZ RSS %MEM Command
-                    #              parts[3] is PID, parts[4] is %usr (a float percentage)
-
-                    # Simple detection: In thread mode, parts[4] == '-' or is a number (thread ID)
-                    # In PID mode, parts[4] is a float percentage like "0.00" or "1.25"
-                    # We check if it looks like a TID (dash or integer) vs a percentage
-                    has_threads = (parts[4] == '-' or
-                                   (parts[4].isdigit() and len(parts) >= 16))
-
-                    if has_threads:
-                        # Thread mode format
-                        # Time UID TGID TID %usr %system %guest %wait %CPU CPU minflt/s majflt/s VSZ RSS %MEM Command
-                        tgid = parts[3]
-                        tid = parts[4]
-                        cpu_pct = float(parts[9])  # %CPU column
-                        try:
-                            cpu_core = int(parts[10])   # CPU core column
-                        except (ValueError, IndexError):
-                            cpu_core = 0  # Default if not available
-
-                        # Parse memory stats
-                        try:
-                            minflt = float(parts[11])  # minor page faults/s
-                            majflt = float(parts[12])  # major page faults/s
-                            vsz = int(parts[13])       # virtual memory KB
-                            rss = int(parts[14])       # resident set size KB
-                            mem_pct = float(parts[15])  # memory %
-                        except (ValueError, IndexError):
-                            minflt = majflt = vsz = rss = mem_pct = 0
-
-                        command = ' '.join(parts[16:]) if len(parts) > 16 else ''
-
-                        # If this is a TGID line (TID is '-'), store the command
-                        if tid == '-':
-                            current_tgid_command[tgid] = command
-                            data['tgid_commands'][tgid] = command
-
-                            # Store PID data
-                            data['pids'][tgid].append({
-                                'time': time_str,
-                                'cpu': cpu_pct,
-                                'core': cpu_core,
-                                'command': command,
-                                'minflt': minflt,
-                                'majflt': majflt,
-                                'vsz': vsz,
-                                'rss': rss,
-                                'mem_pct': mem_pct
-                            })
-                        else:
-                            # This is a thread line, use parent TGID command if available
-                            full_command = current_tgid_command.get(tgid, command)
-                            if tgid in data['tgid_commands']:
-                                full_command = data['tgid_commands'][tgid]
-
-                            # Enhance thread command with TGID info
-                            if full_command != command and not command.startswith('|__'):
-                                enhanced_command = f"{full_command} {command}"
-                            elif full_command != command:
-                                enhanced_command = f"{full_command} (thread)"
-                            else:
-                                enhanced_command = command
-
-                            # Store thread data
-                            data['threads'][tid].append({
-                                'time': time_str,
-                                'cpu': cpu_pct,
-                                'core': cpu_core,
-                                'command': enhanced_command,
-                                'tgid': tgid,
-                                'minflt': minflt,
-                                'majflt': majflt,
-                                'vsz': vsz,
-                                'rss': rss,
-                                'mem_pct': mem_pct
-                            })
-                    else:
-                        # PID-only mode format
-                        pid = parts[3]
-                        cpu_pct = float(parts[8])  # %CPU column (position 8 in PID mode)
-                        try:
-                            cpu_core = int(parts[9])   # CPU core column (position 9 in PID mode)
-                        except (ValueError, IndexError):
-                            cpu_core = 0  # Default if not available
-
-                        # Parse memory stats
-                        try:
-                            minflt = float(parts[10])
-                            majflt = float(parts[11])
-                            vsz = int(parts[12])
-                            rss = int(parts[13])
-                            mem_pct = float(parts[14])
-                        except (ValueError, IndexError):
-                            minflt = majflt = vsz = rss = mem_pct = 0
-
-                        command = ' '.join(parts[15:]) if len(parts) > 15 else parts[-1]
-
-                        # Store PID data
-                        data['pids'][pid].append({
-                            'time': time_str,
-                            'cpu': cpu_pct,
-                            'core': cpu_core,
-                            'command': command,
-                            'minflt': minflt,
-                            'majflt': majflt,
-                            'vsz': vsz,
-                            'rss': rss,
-                            'mem_pct': mem_pct
-                        })
+        for p in rec.get('processes', []):
+            pid = str(p.get('pid'))
+            command = p.get('cmdline') or p.get('name') or ''
+            data['tgid_commands'][pid] = command
+            if 'rss_kb' in p:
+                data['has_memory'] = True
+            if 'io_read_bytes' in p or 'io_write_bytes' in p:
+                data['has_io'] = True
+            if 'ctx_switches_voluntary' in p or 'ctx_switches_involuntary' in p:
+                data['has_ctx'] = True
+            data['pids'][pid].append({
+                'time':    time_str,
+                'cpu':     p.get('cpu_pct', 0.0),
+                'core':    p.get('core') if p.get('core') is not None else 0,
+                'command': command,
+                'minflt':  0,
+                'majflt':  0,
+                'vsz':     p.get('vsz_kb', 0),
+                'rss':     p.get('rss_kb', 0),
+                'mem_pct': p.get('mem_pct', 0),
+                'io_read':  p.get('io_read_bytes', 0),
+                'io_write': p.get('io_write_bytes', 0),
+                'ctx_voluntary':   p.get('ctx_switches_voluntary', 0),
+                'ctx_involuntary': p.get('ctx_switches_involuntary', 0),
+            })
+            for t in p.get('threads', []) or []:
+                tid = str(t.get('tid'))
+                data['threads'][tid].append({
+                    'time':    time_str,
+                    'cpu':     t.get('cpu_pct', 0.0),
+                    'core':    p.get('core') if p.get('core') is not None else 0,
+                    'command': command,
+                    'tgid':    pid,
+                    'minflt':  0,
+                    'majflt':  0,
+                    'vsz':     p.get('vsz_kb', 0),
+                    'rss':     p.get('rss_kb', 0),
+                    'mem_pct': p.get('mem_pct', 0),
+                })
 
     return data, monitoring_sessions
 
@@ -280,7 +207,7 @@ def plot_core_utilization(core_data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Core utilization plot saved to {output_file}")
+        logger.info(f"Core utilization plot saved to {output_file}")
 
 
 def plot_pid_utilization(data, top_n=10, output_file=None):
@@ -301,7 +228,7 @@ def plot_pid_utilization(data, top_n=10, output_file=None):
             item_avg[item_id] = (avg_cpu, records[0]['command'])
 
     if not item_avg:
-        print("No data to plot")
+        logger.warning("No data to plot")
         return
 
     # Get top N items
@@ -353,7 +280,152 @@ def plot_pid_utilization(data, top_n=10, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"{'PID' if not data['threads'] else 'Thread'} utilization plot saved to {output_file}")
+        logger.info(f"{'PID' if not data['threads'] else 'Thread'} utilization plot saved to {output_file}")
+
+
+def plot_disk_io(data, top_n=10, output_file=None):
+    """
+    Plot per-process disk I/O (read/write) over time for the top N processes
+    by total bytes transferred.
+
+    Each process's io_read/io_write records are delta-since-last-tick byte
+    counts (see _psutil_probe.py's --disk-io), plotted here in KB per sample
+    tick -- absolute bytes/sec would require also knowing the sampling
+    interval, which parse_resource_log() doesn't track per-record.
+    """
+    if not data.get('has_io'):
+        logger.warning("No disk I/O data to plot (monitor with --io/-d to collect it)")
+        return
+
+    item_total = {}
+    for pid, records in data['pids'].items():
+        total = sum(r.get('io_read', 0) + r.get('io_write', 0) for r in records)
+        if total > 0:
+            item_total[pid] = (total, records[0]['command'])
+
+    if not item_total:
+        logger.warning("No non-zero disk I/O activity found")
+        return
+
+    top_items = sorted(item_total.items(), key=lambda x: x[1][0], reverse=True)[:top_n]
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+    colors = plt.cm.tab20(np.linspace(0, 1, len(top_items)))
+
+    for idx, (pid, (_total, command)) in enumerate(top_items):
+        records = data['pids'][pid]
+        times = list(range(len(records)))
+        reads = [r.get('io_read', 0) / 1024.0 for r in records]
+        writes = [r.get('io_write', 0) / 1024.0 for r in records]
+
+        label_base = f'PID {pid} ({command})'
+        ax.plot(times, reads, marker='o', linestyle='-', color=colors[idx],
+                linewidth=1.5, markersize=3, alpha=0.7, label=f'{label_base} read')
+        ax.plot(times, writes, marker='x', linestyle='--', color=colors[idx],
+                linewidth=1.2, markersize=4, alpha=0.7, label=f'{label_base} write')
+
+    ax.set_xlabel('Time Index', fontsize=12)
+    ax.set_ylabel('Disk I/O (KB per sample tick)', fontsize=12)
+    ax.set_title(
+        f'Top {top_n} Processes by Disk I/O\n(solid = read, dashed = write  |  Click legend to toggle lines)',
+        fontsize=14, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    legend = ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
+
+    lined = {}
+    for legline, origline in zip(legend.get_lines(), ax.get_lines()):
+        legline.set_picker(5)
+        lined[legline] = origline
+
+    def on_pick(event):
+        legline = event.artist
+        origline = lined[legline]
+        visible = not origline.get_visible()
+        origline.set_visible(visible)
+        legline.set_alpha(1.0 if visible else 0.2)
+        fig.canvas.draw()
+
+    fig.canvas.mpl_connect('pick_event', on_pick)
+
+    plt.tight_layout()
+
+    if output_file:
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
+        logger.info(f"Disk I/O plot saved to {output_file}")
+
+
+def plot_ctx_switches(data, top_n=10, output_file=None):
+    """
+    Plot per-process involuntary context-switch counts over time for the top
+    N processes by total involuntary switches.
+
+    Involuntary switches (the process was preempted by the scheduler, not
+    voluntarily yielding e.g. via a blocking syscall) are a privilege-free
+    signal of CPU oversubscription/contention -- relevant on constrained
+    hardware (see _psutil_probe.py's --ctx-switches). Voluntary switches are
+    plotted too (dashed) for context but aren't used for ranking, since a
+    process doing lots of blocking I/O/sleeping isn't necessarily contended.
+    """
+    if not data.get('has_ctx'):
+        logger.warning("No context-switch data to plot (monitor with --ctx-switches/-x to collect it)")
+        return
+
+    item_total = {}
+    for pid, records in data['pids'].items():
+        total = sum(r.get('ctx_involuntary', 0) for r in records)
+        if total > 0:
+            item_total[pid] = (total, records[0]['command'])
+
+    if not item_total:
+        logger.warning("No non-zero involuntary context switches found")
+        return
+
+    top_items = sorted(item_total.items(), key=lambda x: x[1][0], reverse=True)[:top_n]
+
+    fig, ax = plt.subplots(figsize=(14, 8))
+    colors = plt.cm.tab20(np.linspace(0, 1, len(top_items)))
+
+    for idx, (pid, (_total, command)) in enumerate(top_items):
+        records = data['pids'][pid]
+        times = list(range(len(records)))
+        involuntary = [r.get('ctx_involuntary', 0) for r in records]
+        voluntary = [r.get('ctx_voluntary', 0) for r in records]
+
+        label_base = f'PID {pid} ({command})'
+        ax.plot(times, involuntary, marker='o', linestyle='-', color=colors[idx],
+                linewidth=1.5, markersize=3, alpha=0.7, label=f'{label_base} involuntary')
+        ax.plot(times, voluntary, marker='x', linestyle='--', color=colors[idx],
+                linewidth=1.0, markersize=3, alpha=0.4, label=f'{label_base} voluntary')
+
+    ax.set_xlabel('Time Index', fontsize=12)
+    ax.set_ylabel('Context switches per sample tick', fontsize=12)
+    ax.set_title(
+        f'Top {top_n} Processes by Involuntary Context Switches\n'
+        '(solid = involuntary/preempted, dashed = voluntary  |  Click legend to toggle lines)',
+        fontsize=14, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    legend = ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
+
+    lined = {}
+    for legline, origline in zip(legend.get_lines(), ax.get_lines()):
+        legline.set_picker(5)
+        lined[legline] = origline
+
+    def on_pick(event):
+        legline = event.artist
+        origline = lined[legline]
+        visible = not origline.get_visible()
+        origline.set_visible(visible)
+        legline.set_alpha(1.0 if visible else 0.2)
+        fig.canvas.draw()
+
+    fig.canvas.mpl_connect('pick_event', on_pick)
+
+    plt.tight_layout()
+
+    if output_file:
+        plt.savefig(output_file, dpi=300, bbox_inches='tight')
+        logger.info(f"Context-switch plot saved to {output_file}")
 
 
 def plot_core_heatmap(core_data, data, output_file=None):
@@ -366,7 +438,7 @@ def plot_core_heatmap(core_data, data, output_file=None):
     all_times = sorted(set(t for records in core_data.values() for t, _ in records))
 
     if not all_times or not all_cores:
-        print("No data to plot heatmap")
+        logger.warning("No data to plot heatmap")
         return
 
     # Use threads if available, otherwise use PIDs
@@ -549,7 +621,115 @@ def plot_core_heatmap(core_data, data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Core heatmap saved to {output_file}")
+        logger.info(f"Core heatmap saved to {output_file}")
+
+
+def aggregate_core_by_node(data, top_cores=8, top_nodes_per_core=6):
+    """
+    Group per-core CPU utilization by ROS2 node name
+    instead of raw PID, to distinguish "core-bound due to poor affinity/
+    scheduling" (one node dominating a core) from "generally CPU-heavy" (many
+    nodes sharing it). Complements plot_core_heatmap()'s raw per-core total.
+
+    Returns a list of (core, times, node_series) tuples for the top_cores
+    busiest cores (by total CPU across the session), sorted by core number.
+    node_series is {label: [cpu_pct_per_tick, ...]} aligned to `times`.
+    PIDs absent from ros2_node_map are bucketed under '(non-ROS2)'; within
+    each core, only the top_nodes_per_core busiest labels are kept
+    individually and the remainder are summed into '(other)'.
+
+    Returns [] if ros2_node_map is empty (older session, or non-ROS2 host).
+    """
+    node_map = data.get('ros2_node_map') or {}
+    if not node_map:
+        return []
+
+    # Use threads if available, otherwise PIDs -- same source as plot_core_heatmap.
+    source_data = data['threads'] if data['threads'] else data['pids']
+
+    per_core_time_node = defaultdict(lambda: defaultdict(float))
+    core_totals = defaultdict(float)
+    for pid, records in source_data.items():
+        for record in records:
+            # Thread records are keyed by TID but carry their parent PID in
+            # 'tgid'; ros2_node_map is keyed by PID, so look that up instead.
+            node_pid = record.get('tgid', pid)
+            node_label = node_map.get(node_pid, '(non-ROS2)')
+            per_core_time_node[(record['core'], record['time'])][node_label] += record['cpu']
+            core_totals[record['core']] += record['cpu']
+
+    if not core_totals:
+        return []
+
+    all_times = sorted(set(record['time'] for records in source_data.values() for record in records))
+    busiest_cores = sorted(core_totals, key=core_totals.get, reverse=True)[:top_cores]
+
+    result = []
+    for core in sorted(busiest_cores):
+        node_totals = defaultdict(float)
+        for time_str in all_times:
+            for node_label, cpu in per_core_time_node.get((core, time_str), {}).items():
+                node_totals[node_label] += cpu
+
+        top_nodes = sorted(node_totals, key=node_totals.get, reverse=True)[:top_nodes_per_core]
+        top_nodes_set = set(top_nodes)
+
+        node_series = {node: [] for node in top_nodes}
+        other_series = []
+        for time_str in all_times:
+            cell = per_core_time_node.get((core, time_str), {})
+            for node in top_nodes:
+                node_series[node].append(cell.get(node, 0.0))
+            other_series.append(sum(cpu for label, cpu in cell.items() if label not in top_nodes_set))
+
+        if any(v > 0 for v in other_series):
+            node_series['(other)'] = other_series
+
+        result.append((core, all_times, node_series))
+
+    return result
+
+
+def plot_core_node_stacking(data, top_n=10, output_file=None):
+    """
+    Stacked-area CPU utilization by node, one subplot per busiest core --
+    a stack dominated by a single node signals affinity/scheduling
+    contention on that core; an even mix signals generally CPU-heavy load.
+    """
+    core_series = aggregate_core_by_node(data, top_cores=top_n)
+    if not core_series:
+        logger.warning("No per-node core data to plot (requires ros2_node_map -- "
+                        "re-capture with a monitor_resources.py version that writes it)")
+        return
+
+    fig, axes = plt.subplots(len(core_series), 1, figsize=(14, 3.2 * len(core_series)), sharex=True)
+    if len(core_series) == 1:
+        axes = [axes]
+
+    all_nodes = sorted({node for _core, _times, series in core_series for node in series})
+    colors = dict(zip(all_nodes, plt.cm.tab20(np.linspace(0, 1, max(len(all_nodes), 1)))))
+
+    for ax, (core, times, node_series) in zip(axes, core_series):
+        x = list(range(len(times)))
+        y_stack = np.zeros(len(times))
+        for node, values in node_series.items():
+            vals = np.array(values)
+            ax.fill_between(x, y_stack, y_stack + vals, alpha=0.7, color=colors[node], label=node)
+            y_stack += vals
+        ax.set_ylabel(f'Core {core}\nCPU %', fontsize=9)
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='upper right', fontsize=7, ncol=2)
+
+    axes[-1].set_xlabel('Time Index', fontsize=11)
+    fig.suptitle(
+        f'Per-Core CPU by Node (top {len(core_series)} busiest cores)\n'
+        'Stack dominated by one node = affinity/scheduling hot spot; even mix = generally CPU-heavy',
+        fontsize=13, fontweight='bold')
+    plt.tight_layout()
+
+    if output_file:
+        plt.savefig(output_file, dpi=200, bbox_inches='tight')
+        logger.info(f"Per-core node stacking plot saved to {output_file}")
 
 
 def plot_pid_to_core_mapping(data, output_file=None):
@@ -572,7 +752,7 @@ def plot_pid_to_core_mapping(data, output_file=None):
     top_items = sorted(item_avg.items(), key=lambda x: x[1][0], reverse=True)[:15]
 
     if not top_items:
-        print(f"No significant {'thread' if data['threads'] else 'process'} data to plot")
+        logger.info(f"No significant {'thread' if data['threads'] else 'process'} data to plot")
         return
 
     fig, ax = plt.subplots(figsize=(16, 10))
@@ -664,37 +844,116 @@ def plot_pid_to_core_mapping(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"{'Thread' if data['threads'] else 'Process'}-to-core mapping plot saved to {output_file}")
+        logger.info(f"{'Thread' if data['threads'] else 'Process'}-to-core mapping plot saved to {output_file}")
 
 
-def print_summary(data, core_data):
+def aggregate_by_node(data):
+    """
+    Group per-PID resource records by ROS2 node name, using
+    data['ros2_node_map'] (PID -> node name, written by monitor_resources.py'
+    get_ros2_pid_node_map()). PIDs absent from the map (e.g.
+    non-ROS2 system processes) are skipped -- this view is ROS2-node-scoped
+    by design, mirroring the "ALL ROS2 PIDS" tables in print_summary().
+
+    Returns:
+        dict: node_name -> list of per-PID record lists (one list per
+        contributing PID), so callers can pick whichever aggregation (sum,
+        mean, max) is appropriate to the metric. A node backed by more than
+        one process (e.g. component containers) has more than one entry.
+    """
+    node_map = data.get('ros2_node_map') or {}
+    by_node = defaultdict(list)
+    for pid, records in data['pids'].items():
+        node_name = node_map.get(pid)
+        if node_name and records:
+            by_node[node_name].append(records)
+    return by_node
+
+
+def print_node_summary(data, top=10):
+    """
+    Print a per-ROS2-node CPU/memory summary. Complements print_summary()'s
+    per-PID/per-TID tables with a coarser, node-name-scoped view -- e.g.
+    "controller_server" instead of a bare PID -- so customers can see which
+    *node* is resource-hungry without cross-referencing PIDs by hand.
+
+    Requires the session to have been captured with a monitor_resources.py
+    version that writes ros2_node_map; sessions captured before that are
+    reported as unavailable rather than silently showing an empty table.
+    """
+    by_node = aggregate_by_node(data)
+    if not by_node:
+        logger.info(f"\n{'='*80}")
+        logger.info("PER-NODE ATTRIBUTION: not available for this session "
+                     "(re-capture with a monitor_resources.py version that "
+                     "writes ros2_node_map)")
+        logger.info(f"{'='*80}")
+        return
+
+    node_stats = []
+    for node_name, pid_record_lists in by_node.items():
+        # Average CPU per contributing PID over time, then sum across PIDs --
+        # consistent with how "Total system CPU %" is computed in
+        # print_summary() (sum of each process's own time-average).
+        avg_cpu_total = sum(sum(r['cpu'] for r in records) / len(records) for records in pid_record_lists)
+        max_cpu_total = max((max(r['cpu'] for r in records) for records in pid_record_lists), default=0.0)
+        avg_rss_total_mb = sum(
+            sum(r.get('rss', 0) for r in records) / len(records) for records in pid_record_lists
+        ) / 1024.0
+        node_stats.append((node_name, avg_cpu_total, max_cpu_total, avg_rss_total_mb, len(pid_record_lists)))
+
+    node_stats.sort(key=lambda x: x[1], reverse=True)
+
+    logger.info(f"\n{'='*80}")
+    logger.info(f"PER-NODE ATTRIBUTION ({len(node_stats)} nodes)")
+    logger.info(f"{'='*80}")
+    logger.info(f"{'Node':<40} {'Avg CPU %':<12} {'Max CPU %':<12} {'Avg RSS (MB)':<14} {'PIDs':<6}")
+    logger.info("-"*80)
+    for node_name, avg_cpu, max_cpu, avg_rss, pid_count in node_stats[:top]:
+        logger.info(f"{node_name:<40} {avg_cpu:<12.2f} {max_cpu:<12.2f} {avg_rss:<14.1f} {pid_count:<6}")
+    logger.info("\n")
+
+
+def print_summary(data, core_data, by_tid=False, top=10):
     """
     Print summary statistics.
+
+    ROS2 attribution uses data['ros2_pids'] (PIDs classified via a one-time
+    `ps aux` scan at capture time, see monitor_resources.py) when available.
+    Falls back to name-matching each entry's Command field via
+    is_ros2_process() for sessions captured without that marker line --
+    less accurate, since the Command field may be a bare executable name,
+    not a full command line.
+
+    Defaults to PID (process-level) granularity even when the log was
+    captured with --threads -- each process's own summary is always recorded
+    in data['pids'] regardless of whether per-thread data exists. Pass
+    by_tid=True to instead show the individual per-thread (TID) breakdown.
     """
     num_cpus = data.get('num_cpus', 0)
     cpu_note = (
-        f"Note: CPU% uses pidstat scale where 100% = 1 full core. "
+        f"Note: CPU% is on a 100%=1 full core scale. "
         f"System has {num_cpus} logical cores (theoretical max: {num_cpus * 100}%)."
         if num_cpus else
-        "Note: CPU% uses pidstat scale where 100% = 1 full core (values >100% = multi-core usage)."
+        "Note: CPU% is on a 100%=1 full core scale (values >100% = multi-core usage)."
     )
 
-    print("\n" + "="*80)
-    print("RESOURCE UTILIZATION SUMMARY")
-    print("="*80)
-    print(f"\n{cpu_note}")
+    logger.info("\n" + "="*80)
+    logger.info("RESOURCE UTILIZATION SUMMARY")
+    logger.info("="*80)
+    logger.info(f"\n{cpu_note}")
 
     # Number of unique threads/PIDs
-    print(f"\nTotal unique threads monitored: {len(data['threads'])}")
-    print(f"Total unique PIDs monitored: {len(data['pids'])}")
-    print(f"Total time samples: {len(data['timestamps'])}")
+    logger.info(f"\nTotal unique threads monitored: {len(data['threads'])}")
+    logger.info(f"Total unique PIDs monitored: {len(data['pids'])}")
+    logger.info(f"Total time samples: {len(data['timestamps'])}")
 
     # Core statistics
-    print(f"\n{'='*80}")
-    print("CPU CORE STATISTICS")
-    print(f"{'='*80}")
-    print(f"{'Core':<8} {'Avg CPU %':<12} {'Max CPU %':<12} {'Avg Cores':<12} {'Samples':<10}")
-    print("-"*80)
+    logger.info(f"\n{'='*80}")
+    logger.info("CPU CORE STATISTICS")
+    logger.info(f"{'='*80}")
+    logger.info(f"{'Core':<8} {'Avg CPU %':<12} {'Max CPU %':<12} {'Avg Cores':<12} {'Samples':<10}")
+    logger.info("-"*80)
 
     for core in sorted(core_data.keys()):
         records = core_data[core]
@@ -702,18 +961,14 @@ def print_summary(data, core_data):
         avg_cpu = sum(cpus) / len(cpus) if cpus else 0
         max_cpu = max(cpus) if cpus else 0
         avg_cores = avg_cpu / 100.0
-        print(f"{core:<8} {avg_cpu:<12.2f} {max_cpu:<12.2f} {avg_cores:<12.2f} {len(records):<10}")
+        logger.info(f"{core:<8} {avg_cpu:<12.2f} {max_cpu:<12.2f} {avg_cores:<12.2f} {len(records):<10}")
 
-    # Top threads/processes by average CPU
-    source_data = data['threads'] if data['threads'] else data['pids']
-    label = "THREADS" if data['threads'] else "PROCESSES"
-    id_label = "TID" if data['threads'] else "PID"
-
-    print(f"\n{'='*80}")
-    print(f"TOP 10 {label} BY AVERAGE CPU UTILIZATION")
-    print(f"{'='*80}")
-    print(f"{id_label:<10} {'Avg CPU %':<12} {'Avg Cores':<12} {'Max CPU %':<12} {'Core Affinity':<17} {'Command'}")
-    print("-"*80)
+    # Top threads/processes by average CPU. Defaults to PID (process-level)
+    # granularity; pass by_tid=True to break down by individual thread instead.
+    use_threads = by_tid and bool(data['threads'])
+    source_data = data['threads'] if use_threads else data['pids']
+    label = "THREADS" if use_threads else "PROCESSES"
+    id_label = "TID" if use_threads else "PID"
 
     thread_stats = []
     for tid, records in source_data.items():
@@ -724,15 +979,142 @@ def print_summary(data, core_data):
             max_cpu = max(cpus)
             command = records[0]['command']
             core_affinity = '[' + ','.join(map(str, cores)) + ']'
-            thread_stats.append((tid, avg_cpu, max_cpu, core_affinity, command))
+            # Prefer the parent TGID (process) for attribution when this row
+            # is a thread; PID-mode rows already key on the process itself.
+            pid_for_attribution = records[0].get('tgid', tid)
+            thread_stats.append((tid, avg_cpu, max_cpu, core_affinity, command, pid_for_attribution))
+
+    # ROS2 vs. system-wide attribution (this log covers ALL processes, see #55).
+    # Prefer PID cross-reference against data['ros2_pids'] (captured via a
+    # `ps aux` full-command-line scan); fall back to name-matching the
+    # (truncated) Command field for older sessions without that marker line.
+    ros2_pid_set = data.get('ros2_pids') or set()
+
+    def _is_ros2(entry):
+        if ros2_pid_set:
+            try:
+                return int(entry[5]) in ros2_pid_set
+            except (ValueError, TypeError):
+                return False
+        return is_ros2_process(entry[4])
+
+    attribution_method = "PID cross-reference" if ros2_pid_set else "name-matched (less accurate)"
+    total_cpu = sum(s[1] for s in thread_stats)
+    ros2_cpu = sum(s[1] for s in thread_stats if _is_ros2(s))
+    ros2_share = (ros2_cpu / total_cpu * 100) if total_cpu > 0 else 0.0
+    logger.info(f"\n{'='*80}")
+    logger.info("RESOURCE ATTRIBUTION: ROS2 vs. SYSTEM")
+    logger.info(f"{'='*80}")
+    logger.info(f"Total system CPU %  (sum of avg CPU across all {label.lower()}): {total_cpu:.2f}")
+    logger.info(f"ROS2-attributed CPU %  ({attribution_method}):        {ros2_cpu:.2f}")
+    logger.info(f"ROS2 share of total system CPU:                              {ros2_share:.1f}%")
 
     thread_stats.sort(key=lambda x: x[1], reverse=True)
 
-    for tid, avg_cpu, max_cpu, core_affinity, command in thread_stats[:10]:
-        avg_cores = avg_cpu / 100.0
-        print(f"{tid:<10} {avg_cpu:<12.2f} {avg_cores:<12.2f} {max_cpu:<12.2f} {core_affinity:<17} {command}")
+    logger.info(f"\n{'='*80}")
+    logger.info(f"TOP {top} {label} BY AVERAGE CPU UTILIZATION")
+    logger.info(f"{'='*80}")
+    logger.info(f"{id_label:<10} {'Avg CPU %':<12} {'Avg Cores':<12} {'Max CPU %':<12} {'Core Affinity':<17} {'Command'}")
+    logger.info("-"*80)
 
-    print("\n")
+    for tid, avg_cpu, max_cpu, core_affinity, command, _pid in thread_stats[:top]:
+        avg_cores = avg_cpu / 100.0
+        logger.info(f"{tid:<10} {avg_cpu:<12.2f} {avg_cores:<12.2f} {max_cpu:<12.2f} {core_affinity:<17} {command}")
+
+    # All ROS2-attributed PIDs (process-level, regardless of by_tid) -- unlike
+    # the TOP N table above, this always lists every ROS2 process so none are
+    # hidden behind a top-N cutoff.
+    ros2_pid_stats = []
+    for pid, records in data['pids'].items():
+        if not records:
+            continue
+        cpus = [r['cpu'] for r in records]
+        cores = sorted(set(r['core'] for r in records))
+        avg_cpu = sum(cpus) / len(cpus)
+        max_cpu = max(cpus)
+        command = records[0]['command']
+        core_affinity = '[' + ','.join(map(str, cores)) + ']'
+        if _is_ros2((pid, avg_cpu, max_cpu, core_affinity, command, pid)):
+            ros2_pid_stats.append((pid, avg_cpu, max_cpu, core_affinity, command))
+    ros2_pid_stats.sort(key=lambda x: x[1], reverse=True)
+
+    logger.info(f"\n{'='*80}")
+    logger.info(f"ALL ROS2 PIDS ({len(ros2_pid_stats)}) BY AVERAGE CPU UTILIZATION")
+    logger.info(f"{'='*80}")
+    logger.info(f"{'PID':<10} {'Avg CPU %':<12} {'Avg Cores':<12} {'Max CPU %':<12} {'Core Affinity':<17} {'Command'}")
+    logger.info("-"*80)
+
+    for pid, avg_cpu, max_cpu, core_affinity, command in ros2_pid_stats:
+        avg_cores = avg_cpu / 100.0
+        logger.info(f"{pid:<10} {avg_cpu:<12.2f} {avg_cores:<12.2f} {max_cpu:<12.2f} {core_affinity:<17} {command}")
+
+    # Memory (RSS/%MEM) summary -- only meaningful when the capture included
+    # memory stats (monitor_resources.py --memory). data['has_memory'] is
+    # detected from the "Running: ..." line at parse time.
+    if not data.get('has_memory'):
+        logger.info(f"\n{'='*80}")
+        logger.info("MEMORY UTILIZATION: not collected for this session "
+                     "(re-run monitor_resources.py with --memory)")
+        logger.info(f"{'='*80}")
+    else:
+        mem_stats = []
+        for tid, records in source_data.items():
+            if not records:
+                continue
+            rss_mb_vals = [r.get('rss', 0) / 1024.0 for r in records]
+            mem_pct_vals = [r.get('mem_pct', 0) for r in records]
+            avg_rss = sum(rss_mb_vals) / len(rss_mb_vals)
+            max_rss = max(rss_mb_vals)
+            avg_mem_pct = sum(mem_pct_vals) / len(mem_pct_vals)
+            command = records[0]['command']
+            mem_stats.append((tid, avg_rss, max_rss, avg_mem_pct, command))
+        mem_stats.sort(key=lambda x: x[1], reverse=True)
+
+        logger.info(f"\n{'='*80}")
+        logger.info("MEMORY UTILIZATION SUMMARY")
+        logger.info(f"{'='*80}")
+        total_rss_mb = sum(s[1] for s in mem_stats)
+        logger.info(f"Total average RSS across all {label.lower()}: {total_rss_mb:.1f} MB")
+
+        logger.info(f"\n{'='*80}")
+        logger.info(f"TOP {top} {label} BY AVERAGE MEMORY (RSS)")
+        logger.info(f"{'='*80}")
+        logger.info(f"{id_label:<10} {'Avg RSS (MB)':<14} {'Max RSS (MB)':<14} {'Avg %MEM':<10} {'Command'}")
+        logger.info("-"*80)
+        for tid, avg_rss, max_rss, avg_mem_pct, command in mem_stats[:top]:
+            logger.info(f"{tid:<10} {avg_rss:<14.1f} {max_rss:<14.1f} {avg_mem_pct:<10.2f} {command}")
+
+        # All ROS2-attributed PIDs by memory (process-level), mirroring the
+        # CPU "ALL ROS2 PIDS" table above -- never capped at top-N.
+        ros2_mem_stats = []
+        for pid, records in data['pids'].items():
+            if not records:
+                continue
+            cpus = [r['cpu'] for r in records]
+            cores = sorted(set(r['core'] for r in records))
+            avg_cpu = sum(cpus) / len(cpus)
+            max_cpu = max(cpus)
+            command = records[0]['command']
+            core_affinity = '[' + ','.join(map(str, cores)) + ']'
+            if not _is_ros2((pid, avg_cpu, max_cpu, core_affinity, command, pid)):
+                continue
+            rss_mb_vals = [r.get('rss', 0) / 1024.0 for r in records]
+            mem_pct_vals = [r.get('mem_pct', 0) for r in records]
+            avg_rss = sum(rss_mb_vals) / len(rss_mb_vals)
+            max_rss = max(rss_mb_vals)
+            avg_mem_pct = sum(mem_pct_vals) / len(mem_pct_vals)
+            ros2_mem_stats.append((pid, avg_rss, max_rss, avg_mem_pct, command))
+        ros2_mem_stats.sort(key=lambda x: x[1], reverse=True)
+
+        logger.info(f"\n{'='*80}")
+        logger.info(f"ALL ROS2 PIDS ({len(ros2_mem_stats)}) BY AVERAGE MEMORY (RSS)")
+        logger.info(f"{'='*80}")
+        logger.info(f"{'PID':<10} {'Avg RSS (MB)':<14} {'Max RSS (MB)':<14} {'Avg %MEM':<10} {'Command'}")
+        logger.info("-"*80)
+        for pid, avg_rss, max_rss, avg_mem_pct, command in ros2_mem_stats:
+            logger.info(f"{pid:<10} {avg_rss:<14.1f} {max_rss:<14.1f} {avg_mem_pct:<10.2f} {command}")
+
+    logger.info("\n")
 
 
 def parse_gpu_log(gpu_log_file: str):
@@ -761,13 +1143,13 @@ def plot_gpu(records: list, output_file=None, show=False):
     Falls back to an inline implementation if the module is unavailable.
     """
     if not records:
-        print("  No GPU records to plot.")
+        logger.info("  No GPU records to plot.")
         return
 
     # Filter out event markers
     records = [r for r in records if 'busy_pct' in r]
     if not records:
-        print("  No GPU data records to plot.")
+        logger.info("  No GPU data records to plot.")
         return
 
     # ── Prefer the dedicated visualize_gpu module ────────────────────────────
@@ -807,7 +1189,6 @@ def plot_gpu(records: list, output_file=None, show=False):
                     break
         return out
 
-    source      = records[0].get('source', 'sysfs')
     timestamps  = [datetime.fromisoformat(r['ts']) for r in records]
     busy        = [r.get('busy_pct', 0.0) for r in records]
     has_temp    = any(r.get('temp_c') is not None for r in records)
@@ -828,11 +1209,6 @@ def plot_gpu(records: list, output_file=None, show=False):
     ax1 = next(ax_iter)
     ax1.fill_between(timestamps, busy, alpha=0.25, color='steelblue')
     ax1.plot(timestamps, busy, color='steelblue', linewidth=1.2, label='GPU busy %')
-    if source == 'sysfs':
-        throttle_ts = [t for t, r in zip(timestamps, records) if r.get('throttled')]
-        if throttle_ts:
-            ax1.vlines(throttle_ts, 0, 100, colors='red', alpha=0.4,
-                       linewidth=0.8, label='Throttle active')
     ax1.set_ylabel('GPU Busy (%)', fontsize=10)
     ax1.set_ylim(0, 105)
     ax1.legend(loc='upper right', fontsize=8)
@@ -928,7 +1304,7 @@ def plot_gpu(records: list, output_file=None, show=False):
 
     if output_file:
         plt.savefig(output_file, dpi=150, bbox_inches='tight')
-        print(f"  Saved: {output_file}")
+        logger.info(f"  Saved: {output_file}")
         if not show:
             plt.close()
     if show:
@@ -938,7 +1314,7 @@ def plot_gpu(records: list, output_file=None, show=False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Visualize ROS2 resource monitoring data from pidstat logs',
+        description='Visualize ROS2 resource monitoring data from resource_usage.json',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -957,17 +1333,28 @@ Examples:
     )
 
     parser.add_argument('log_file', type=str,
-                        help='Path to pidstat log file')
+                        help='Path to resource_usage.json')
     parser.add_argument('--cores', action='store_true',
                         help='Plot CPU utilization per core')
     parser.add_argument('--pids', action='store_true',
                         help='Plot CPU utilization per PID/thread')
     parser.add_argument('--heatmap', action='store_true',
                         help='Generate core utilization heatmap')
+    parser.add_argument('--core-nodes', action='store_true',
+                        help='Plot per-core CPU stacked by ROS2 node (top busiest cores), '
+                             'if ros2_node_map is present')
     parser.add_argument('--mapping', action='store_true',
                         help='Show thread-to-core mapping')
+    parser.add_argument('--disk-io', action='store_true',
+                        help='Plot per-process disk I/O (read/write), if collected via --io/-d')
+    parser.add_argument('--ctx-switches', action='store_true',
+                        help='Plot per-process involuntary/voluntary context switches, '
+                             'if collected via --ctx-switches/-x')
     parser.add_argument('--top', type=int, default=10,
                         help='Number of top threads to display (default: 10)')
+    parser.add_argument('--by-tid', action='store_true',
+                        help='Break down the top-N table by individual thread (TID) '
+                             'instead of the default per-process (PID) view')
     parser.add_argument('--output-dir', type=str, default=None,
                         help='Directory to save plots (if not specified, displays interactively)')
     parser.add_argument('--show', action='store_true',
@@ -985,28 +1372,32 @@ Examples:
         args.pids = True
         args.heatmap = True
         args.mapping = True
+        args.disk_io = True
+        args.ctx_switches = True
+        args.core_nodes = True
 
-    print(f"Parsing log file: {args.log_file}")
-    data, _ = parse_pidstat_log(args.log_file)
+    logger.info(f"Parsing log file: {args.log_file}")
+    data, _ = parse_resource_log(args.log_file)
 
     if not data['threads'] and not data['pids']:
-        print("No data found in log file. Make sure the log contains pidstat output.")
+        logger.warning("No data found in log file. Make sure it is a valid resource_usage.json document.")
         return
 
     # Report what we found
     if data['threads']:
-        print(f"Found {len(data['threads'])} threads across {len(data['timestamps'])} time samples")
+        logger.info(f"Found {len(data['threads'])} threads across {len(data['timestamps'])} time samples")
     elif data['pids']:
-        print(f"Found {len(data['pids'])} processes across {len(data['timestamps'])} time samples")
+        logger.info(f"Found {len(data['pids'])} processes across {len(data['timestamps'])} time samples")
 
     # Aggregate core utilization
     core_data = aggregate_core_utilization(data)
 
     # Print summary
-    print_summary(data, core_data)
+    print_summary(data, core_data, by_tid=args.by_tid, top=args.top)
+    print_node_summary(data, top=args.top)
 
     if data.get('num_cpus'):
-        print(f"  System CPU count detected from log: {data['num_cpus']} logical cores")
+        logger.info(f"  System CPU count detected from log: {data['num_cpus']} logical cores")
 
     if args.summary:
         return
@@ -1024,38 +1415,53 @@ Examples:
 
     # Generate plots
     if args.cores:
-        print("\nGenerating core utilization plot...")
+        logger.info("\nGenerating core utilization plot...")
         plot_core_utilization(core_data, core_out)
 
     if args.pids:
-        print(f"\nGenerating top {args.top} thread utilization plot...")
+        logger.info(f"\nGenerating top {args.top} thread utilization plot...")
         plot_pid_utilization(data, top_n=args.top, output_file=pid_out)
 
     if args.heatmap:
-        print("\nGenerating core utilization heatmap...")
+        logger.info("\nGenerating core utilization heatmap...")
         plot_core_heatmap(core_data, data, heatmap_out)
 
     if args.mapping:
-        print("\nGenerating thread-to-core mapping...")
+        logger.info("\nGenerating thread-to-core mapping...")
         plot_pid_to_core_mapping(data, mapping_out)
+
+    if args.disk_io:
+        logger.info(f"\nGenerating top {args.top} disk I/O plot...")
+        disk_io_out = os.path.join(args.output_dir, 'disk_io.png') if args.output_dir else None
+        plot_disk_io(data, top_n=args.top, output_file=disk_io_out)
+
+    if args.ctx_switches:
+        logger.info(f"\nGenerating top {args.top} context-switch plot...")
+        ctx_out = os.path.join(args.output_dir, 'ctx_switches.png') if args.output_dir else None
+        plot_ctx_switches(data, top_n=args.top, output_file=ctx_out)
+
+    if args.core_nodes:
+        logger.info("\nGenerating per-core CPU-by-node stacking plot...")
+        core_nodes_out = os.path.join(args.output_dir, 'core_node_stacking.png') if args.output_dir else None
+        plot_core_node_stacking(data, top_n=args.top, output_file=core_nodes_out)
 
     if args.gpu_log:
         import os
         gpu_out = os.path.join(args.output_dir, 'gpu_utilization.png') if args.output_dir else None
-        print("\nGenerating GPU utilization plot...")
+        logger.info("\nGenerating GPU utilization plot...")
         gpu_records = parse_gpu_log(args.gpu_log)
         if gpu_records:
-            print(f"  Found {len(gpu_records)} GPU samples")
+            logger.info(f"  Found {len(gpu_records)} GPU samples")
             plot_gpu(gpu_records, gpu_out, show=(args.show or not args.output_dir))
         else:
-            print("  No GPU data found.")
+            logger.warning("  No GPU data found.")
 
     # Display plots interactively if requested or if no output directory
     if args.show or not args.output_dir:
-        print("\nDisplaying plots interactively. Close windows to exit.")
+        logger.info("\nDisplaying plots interactively. Close windows to exit.")
         plt.show()
 
-    print("\nVisualization complete!")
+    logger.info("\nVisualization complete!")
 
 
 if __name__ == '__main__':

@@ -1,12 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom'; // Add this import
+import React, { useEffect, useState } from 'react';
 import TopPanel from './components/TopPanel/TopPanel';
 import HeaderBar from './components/Header/Header';
 import Body from './components/common/Body';
 import GradingScreen from './components/Grading/GradingScreen';
 import Footer from './components/Footer/Footer';
-import Modal from './components/Modals/Modal'; // Import your existing Modal
-import SettingsForm from './components/Modals/SettingsForm'; // Import your existing SettingsForm
 import ReportPanel from './components/ReportPanel';
 import './App.css';
 import './assets/css/HeaderBar.css';
@@ -100,7 +97,7 @@ const App: React.FC = () => {
     return (
       <div className="app-loading">
         <div className="loading-content">
-          <div className="spinner" />
+          <div className="app-spinner" />
           <h2>{t('app.checkingBackendTitle')}</h2>
           <p>{t('app.checkingBackendMessage')}</p>
         </div>
@@ -126,7 +123,7 @@ const App: React.FC = () => {
     return (
       <div className="app-loading">
         <div className="loading-content">
-          <div className="spinner" />
+          <div className="app-spinner" />
           <h2>{t('app.loadingConfigTitle')}</h2>
           <p>{t('app.loadingConfigMessage')}</p>
         </div>
@@ -182,23 +179,6 @@ const App: React.FC = () => {
         </>
       )}
       <Footer />
-      
-      {/* Render modal as portal to document.body using your existing Modal component */}
-      {createPortal(
-        <Modal 
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-          showCloseIcon={true}
-        >
-          <SettingsForm 
-            onClose={() => setIsSettingsOpen(false)}
-            projectName={projectName}
-            setProjectName={setProjectName}
-            featureGuard={guard}
-          />
-        </Modal>,
-        document.body
-      )}
       
       {/* Report Panel */}
       <ReportPanel

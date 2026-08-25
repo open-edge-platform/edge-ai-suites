@@ -15,6 +15,8 @@ from typing import Iterator, Optional, Union
 import openvino_genai as ov_genai
 from transformers import AutoTokenizer
 
+from utils.chat_prompt import render_chat_prompt
+from utils.markdown_cleaner import StreamThinkFilter, strip_think_tokens
 from utils.ov_genai_util import YieldingTextStreamer
 
 logger = logging.getLogger(__name__)
@@ -23,6 +25,15 @@ _SC_ROOT = Path(__file__).resolve().parents[2]
 _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
 
 _DEFAULT_MAX_NEW_TOKENS = 5120
+
+
+def _filtered(tokens: Iterator[str]) -> Iterator[str]:
+    """Drop reasoning from a token stream, suppressing now-empty chunks."""
+    think_filter = StreamThinkFilter()
+    for token in tokens:
+        clean = think_filter.filter(token)
+        if clean:
+            yield clean
 
 
 def _import_convert_helpers():
@@ -112,16 +123,13 @@ class VLMTextGen:
             str(model_dir), device=self._device, **self._ov_config()
         )
         try:
+            # Think tags are ordinary vocabulary entries in every Qwen3 family,
+            # so the streamer decodes them intact. Marking them special would
+            # make skip_special_tokens drop the tags while keeping the reasoning
+            # text between them, leaving nothing for StreamThinkFilter to match.
             self.tokenizer = AutoTokenizer.from_pretrained(
                 str(model_dir), extra_special_tokens={}
             )
-            if "qwen3" in self._model_name.lower():
-                _think_tokens = ["<think>", "</think>"]
-                _existing = set(getattr(self.tokenizer, "additional_special_tokens", []) or [])
-                _missing = [t for t in _think_tokens if t not in _existing]
-                if _missing:
-                    self.tokenizer.add_special_tokens({"additional_special_tokens": _missing})
-                    logger.info("Registered think tags as special tokens: %s", _missing)
         except Exception as exc:
             logger.warning(
                 "transformers AutoTokenizer failed (%s); falling back to the "
@@ -145,8 +153,9 @@ class VLMTextGen:
     # ------------------------------------------------------------------
     def generate(
         self,
-        prompt: str,
+        prompt: Optional[str] = None,
         *,
+        messages: Optional[list] = None,
         images: Optional[list] = None,
         stream: bool = True,
         max_new_tokens: Optional[int] = None,
@@ -154,47 +163,80 @@ class VLMTextGen:
         enable_thinking: Optional[bool] = None,
         json_schema: Optional[str] = None,
     ) -> Union[Iterator[str], str]:
-        """Generate from ``prompt`` (optionally multimodal) using the warm pipeline.
+        """Generate from a chat history using the warm pipeline.
 
         Mirrors ``TextGen.generate``: streaming yields decoded token chunks,
-        non-streaming returns the full string. ``images`` (a list of
-        ``ov.Tensor`` frames, already decoded by the caller) enables the
-        multimodal path used by content-search video summarization; when
-        omitted the call is text-only. ``enable_thinking=False`` suppresses
-        Qwen3 thinking for this request only; ``None`` keeps the model default.
+        non-streaming returns the full string.
+
+        Pass ``messages`` (a chat history) or ``prompt`` (a single user turn),
+        never both. Either way this method owns the templating, so callers must
+        not run ``apply_chat_template`` themselves -- doing so would wrap the
+        rendered string in a second user turn, burying the ``<think></think>``
+        prefill and bringing reasoning back.
+
+        ``images`` (a list of ``ov.Tensor`` frames, already decoded by the
+        caller) enables the multimodal path used by content-search video
+        summarization; when omitted the call is text-only.
+        ``enable_thinking=False`` suppresses Qwen3 thinking and strips any
+        reasoning that slips through; ``None`` keeps the model default.
         ``json_schema`` (a JSON-schema string) constrains decoding to output
         matching that schema.
         """
         if self._pipe is None:
             raise RuntimeError("VLM pipeline is not loaded")
-        if not prompt or not prompt.strip():
-            raise ValueError("Invalid prompt provided.")
+        if (messages is None) == (prompt is None):
+            raise ValueError("Provide exactly one of prompt or messages.")
+        if messages is None:
+            if not prompt.strip():
+                raise ValueError("Invalid prompt provided.")
+            messages = [{"role": "user", "content": prompt}]
+        elif not messages:
+            raise ValueError("Invalid messages provided.")
 
         config = self._generation_config(max_new_tokens, temperature, json_schema)
-        if enable_thinking is False:
-            prompt = self._apply_no_think_template(prompt, config, bool(images))
+        prompt = self._render(messages, config, enable_thinking, bool(images))
+
         if stream:
-            return self._generate_stream(prompt, config, images)
+            tokens = self._generate_stream(prompt, config, images)
+            return _filtered(tokens) if enable_thinking is False else tokens
         if images:
-            return str(
+            raw = str(
                 self._pipe.generate(prompt, images=images, generation_config=config)
             )
-        return str(self._pipe.generate(prompt, generation_config=config))
+        else:
+            raw = str(self._pipe.generate(prompt, generation_config=config))
+        return strip_think_tokens(raw) if enable_thinking is False else raw
 
-    def _apply_no_think_template(
-        self, prompt: str, config: "ov_genai.GenerationConfig", has_images: bool
+    def _render(
+        self,
+        messages: list,
+        config: "ov_genai.GenerationConfig",
+        enable_thinking: Optional[bool],
+        has_images: bool,
     ) -> str:
+        """Render ``messages`` here rather than inside the pipeline.
+
+        Keeping templating on this side means one engine and one set of rules
+        for every caller. The pipeline only takes over for a model that has no
+        chat template at all, where rendering is impossible.
+        """
         try:
-            media_tags = "<ov_genai_image_0>" if has_images else ""
-            history = [{"role": "user", "content": media_tags + prompt}]
-            templated = self._pipe.get_tokenizer().apply_chat_template(
-                history, True, "", None, {"enable_thinking": False}
+            prompt = render_chat_prompt(
+                self.tokenizer,
+                messages,
+                self._model_name,
+                enable_thinking,
+                has_images,
             )
             config.apply_chat_template = False
-            return templated
-        except Exception as exc:  # noqa: BLE001 - fall back to raw prompt with think
-            logger.warning("no-think template failed (%s); using raw prompt", exc)
             return prompt
+        except Exception as exc:  # noqa: BLE001 - model without a chat template
+            logger.warning(
+                "Chat template rendering failed (%s); letting the pipeline "
+                "template the last user turn.", exc
+            )
+            config.apply_chat_template = True
+            return str(messages[-1].get("content", ""))
 
     def _generation_config(
         self,

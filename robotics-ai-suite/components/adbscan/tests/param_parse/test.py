@@ -48,11 +48,19 @@ class AtfTest(AMRTest):
         self.open_container_terminal(self.testing_targets[0], self.testing_targets[0].term3)
         self.configure_local_apt_repo(self.testing_targets[0].term1)
         self.testing_targets[0].run_cmd(
-            "apt update; apt install -y /tmp/debs/ros-${ROS_DISTRO}-adbscan-ros2_*; echo 'finish'",
+            "set -euo pipefail; "
+            "deb=$(ls /tmp/debs/ros-*-adbscan-ros2_*.deb | head -n1); "
+            "export ROS_DISTRO=$(basename \"${deb}\" | cut -d- -f2); "
+            "apt-get install -y \"${deb}\"",
             self.testing_targets[0].term1,
-            check_code=False,
+            check_code=True,
             timeout=300,
-            check_output="finish",
+        )
+        self.testing_targets[0].run_cmd(
+            "export ROS_DISTRO=$(dpkg -l 'ros-*-adbscan-ros2' | "
+            "awk '/^ii/ {print $2}' | head -n1 | cut -d- -f2)",
+            self.testing_targets[0].term2,
+            check_code=True,
         )
 
         self.testing_targets[0].run_cmd(

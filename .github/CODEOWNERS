@@ -164,12 +164,21 @@ README.md          @xwu2intel
 # Federal & Aerospace AI Suite
 # ============================================================================
 
-/federal-aerospace/                                          @pperycz @jakubsikorski @ikyrycho @rrajore @xwu2intel
-/federal-aerospace/apps/deterministic-threat-detection/      @rrajore @sugnanprabhu @ajagadi1 @xwu2intel
-/federal-aerospace/apps/deterministic-threat-detection/docs/ @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/federal-aerospace/apps/uav-vision-analytics                 @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz
-/federal-aerospace/docs/uav-vision-analytics                 @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz @open-edge-platform/open-edge-platform-docs-write
-/federal-aerospace/apps/handheld-multi-modal/                @pperycz @jakubsikorski @ikyrycho @xwu2intel
-/federal-aerospace/apps/handheld-multi-modal/docs/           @pperycz @jakubsikorski @ikyrycho @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/federal-aerospace/docs/                                     @pperycz @jakubsikorski @ikyrycho @rrajore @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/federal-aerospace/uav-mission-compute-sdk                   @k-mochi @nathsudi @rranjan3 @pperycz
+/federal-and-aerospace-ai-suite/                                             @rrajore @pperycz @jakubsikorski @ikyrycho @xwu2intel
+/federal-and-aerospace-ai-suite/README.md                                    @rrajore @pperycz @jakubsikorski @ikyrycho @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/handheld-multi-modal/                        @rrajore @pperycz @jakubsikorski @ikyrycho @kpuczyns @xwu2intel
+/federal-and-aerospace-ai-suite/handheld-multi-modal/docs/                   @rrajore @pperycz @jakubsikorski @ikyrycho @kpuczyns @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md               @rrajore @pperycz @jakubsikorski @ikyrycho @kpuczyns @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/deterministic-threat-detection/              @rrajore @sugnanprabhu @ajagadi1 @xwu2intel
+/federal-and-aerospace-ai-suite/deterministic-threat-detection/docs/         @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/deterministic-threat-detection/README.md     @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/uav-vision-analytics                         @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz
+/federal-and-aerospace-ai-suite/uav-vision-analytics/docs/                   @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/uav-vision-analytics/README.md               @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/uav-mission-compute-sdk                      @k-mochi @nathsudi @rranjan3 @pperycz
+/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/                @k-mochi @nathsudi @rranjan3 @pperycz @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md            @k-mochi @nathsudi @rranjan3 @pperycz @open-edge-platform/open-edge-platform-docs-write

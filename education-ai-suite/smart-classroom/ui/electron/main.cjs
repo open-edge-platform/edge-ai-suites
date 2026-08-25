@@ -16,6 +16,19 @@ const { startServer } = require('./server.cjs');
 // native Window Controls Overlay buttons align with the app header.
 const TITLE_BAR_HEIGHT = 63;
 
+// The Window Controls Overlay strip is painted by OS, not by the page, so a
+// DOM overlay cannot dim it. The renderer reports which surface is on top and we
+// recolour the caption to match.
+const TITLE_BAR_THEMES = {
+  // App header.
+  default: { color: '#0071c5', symbolColor: '#ffffff' },
+  // Brand blue and white composited under 50% black.
+  dimmed: { color: '#003862', symbolColor: '#7f7f7f' },
+  // The report panel is a white sheet pinned to the right edge, full height, so
+  // it sits directly under the caption buttons.
+  light: { color: '#ffffff', symbolColor: '#5a6374' },
+};
+
 // ---------------------------------------------------------------------------
 // Native-menu localization
 // ---------------------------------------------------------------------------
@@ -146,8 +159,10 @@ async function resolveStartUrl() {
 
 async function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
+    width: 1280,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 600,
     show: false,
     title: 'Smart Classroom',
     titleBarStyle: 'hidden',
@@ -186,7 +201,6 @@ async function createWindow() {
   });
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.maximize();
     mainWindow.show();
   });
   mainWindow.on('closed', () => {
@@ -205,6 +219,20 @@ if (!app.requestSingleInstanceLock()) {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
+    }
+  });
+
+  // Renderer reports the surface currently covering the caption area (a modal,
+  // the report panel, or nothing) so the overlay can be recoloured to match.
+  ipcMain.on('titlebar:setTheme', (event, theme) => {
+    if (process.platform === 'darwin') return;
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return;
+    const colors = TITLE_BAR_THEMES[theme] || TITLE_BAR_THEMES.default;
+    try {
+      win.setTitleBarOverlay({ ...colors, height: TITLE_BAR_HEIGHT });
+    } catch {
+      // Overlay unavailable on this platform/frame — leave the caption alone.
     }
   });
 

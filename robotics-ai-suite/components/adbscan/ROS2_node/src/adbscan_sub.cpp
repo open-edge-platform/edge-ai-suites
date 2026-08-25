@@ -193,6 +193,7 @@ public:
     this->declare_parameter("coeff_1");
     this->declare_parameter("coeff_2");
     this->declare_parameter("scale_factor");
+    this->declare_parameter("min_3d_epsilon");
     this->declare_parameter("oneapi_library");
     this->declare_parameter("benchmark_number_of_frames");
 #else
@@ -210,6 +211,7 @@ public:
     this->declare_parameter("coeff_1", static_cast<double>(-0.164835164));
     this->declare_parameter("coeff_2", static_cast<double>(-0.017982017));
     this->declare_parameter("scale_factor", static_cast<double>(0.9));
+    this->declare_parameter("min_3d_epsilon", static_cast<double>(0.9));
     this->declare_parameter("oneapi_library", std::string("kdtree"));
     this->declare_parameter("benchmark_number_of_frames", static_cast<int>(1));
 #endif  // PRE_ROS_HUMBLE
@@ -227,6 +229,7 @@ public:
     rclcpp::Parameter coeff_1_param = this->get_parameter("coeff_1");
     rclcpp::Parameter coeff_2_param = this->get_parameter("coeff_2");
     rclcpp::Parameter scale_factor_param = this->get_parameter("scale_factor");
+    rclcpp::Parameter min_3d_epsilon_param = this->get_parameter("min_3d_epsilon");
     rclcpp::Parameter oneapi_library_param = this->get_parameter("oneapi_library");
 
 #ifdef USE_ONEAPI
@@ -252,6 +255,7 @@ public:
     CONFIG_PARAMS.coeff_2 = coeff_2_param.as_double();
     CONFIG_PARAMS.Lidar_type = Lidar_type_param.as_string();
     CONFIG_PARAMS.scale_factor = scale_factor_param.as_double();
+    CONFIG_PARAMS.min_3d_epsilon = min_3d_epsilon_param.as_double();
     CONFIG_PARAMS.oneapi_library = oneapi_library_param.as_string();
 
     // oneapi_library_ parameter is used to print out the library name with benchmark data
@@ -485,7 +489,9 @@ private:
       // function successful, run ADBSCAN to obtain a list of objects
       vector<Obstacle> obstacles;
       if (Lidar_type_ == "3D") {
-        obstacles = doDBSCAN(p_Data, data_size * sizeof(LiDAR_data_4D_t), 3, &benchmarking_time);
+        obstacles = doDBSCAN(
+          p_Data, data_size * sizeof(LiDAR_data_4D_t), 3, &benchmarking_time,
+          CONFIG_PARAMS.scale_factor, CONFIG_PARAMS.min_3d_epsilon);
       } else if (Lidar_type_ == "RS") {
         // subsampling but not filtering
         obstacles = doDBSCAN(p_Data, data_size * sizeof(LiDAR_data_4D_t), 4, &benchmarking_time);

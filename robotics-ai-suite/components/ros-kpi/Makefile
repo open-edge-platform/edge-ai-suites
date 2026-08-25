@@ -16,15 +16,17 @@ else
 	UBUNTU_CODENAME := noble
 endif
 
-.PHONY: help install install-qmassa enable-power-mon check-deps check-hw check-domain \
+.PHONY: help install install-qmassa check-deps check-hw check-domain \
         clean clean-last clean-session \
         grafana-start grafana-stop grafana-pull grafana-status grafana-logs grafana-open \
         wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
         picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
         bag-replay bag-replay-plot bag-replay-benchmark \
         fastmapping fastmapping-plot fastmapping-benchmark \
+        adbscan adbscan-plot adbscan-benchmark \
+        realsense2_tutorial realsense2_tutorial-plot realsense2_tutorial-benchmark \
         analyze-benchmark analyze-e2e regression-check regression-check-l2 \
-        report visualize-kpi results visualize-thermal show-sessions summarize-benchmark \
+        report visualize-kpi results analysis-menu show-sessions summarize-benchmark \
         test package license-check lint lint-all
 
 
@@ -48,11 +50,11 @@ help:
 	@echo ""
 	@echo "VISUALIZATION:"
 	@echo "  $(PYTHON) src/visualize_timing.py <session>/graph_timing.csv --help"
-	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.json --help"
 	@echo "  $(PYTHON) src/visualize_gpu.py <session>/gpu_usage.log --help"
 	@echo "  $(PYTHON) src/visualize_npu.py <session>/npu_usage.log --help"
 	@echo "  $(PYTHON) src/visualize_timing.py <session>/graph_timing.csv --help"
-	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.json --help"
 	@echo "  $(PYTHON) src/visualize_gpu.py <session>/gpu_usage.log --help"
 	@echo "  $(PYTHON) src/visualize_npu.py <session>/npu_usage.log --help"
 	@echo "  $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
@@ -60,7 +62,7 @@ help:
 	@echo "  $(PYTHON) src/visualize_kpi.py --kpi a.json b.json --label A B  - Cross-SKU comparison"
 	@echo "  make visualize-kpi SESSION=<session>                               - Same via make"
 	@echo "  make results [SESSION=<session>]                                   - KPI charts + HTML report for latest (or given) session"
-	@echo "  make visualize-thermal [SESSION=<session>]                         - CPU/GPU temperature + throttle + power plot"
+	@echo "  make analysis-menu [SESSION=<session>]                             - Post-run analysis menu (single run or bench_* sweep)"
 	@echo "  uv run python demo_interactive_heatmap.py [SESSION_DIR]"
 	@echo ""
 	@echo "ANALYSIS:"
@@ -86,6 +88,20 @@ help:
 	@echo "  make fastmapping-benchmark [RUNS=10] [RATE=1.0] [PAUSE=10]"
 	@echo "                                             - N runs using bundled spinning bag"
 	@echo ""
+	@echo "ADBSCAN (bag-replay pipeline):"
+	@echo "  make adbscan [BAG=<dir>] [RATE=1.0]   - adbscan_node + bag replay"
+	@echo "  make adbscan-plot [BAG=<dir>]          - Same + trigger-timeline plots"
+	@echo "  make adbscan-benchmark [RUNS=10] [RATE=1.0] [PAUSE=10]"
+	@echo "                                             - N runs using bundled spinning bag"
+	@echo ""
+	@echo "REALSENSE2 TUTORIAL (live-camera pipeline):"
+	@echo "  Run scripts/find_cameras.sh (in the realsense2_tutorial package) first"
+	@echo "  to check camera_type; override via RUN_CONFIG if the camera is gmsl."
+	@echo "  make realsense2_tutorial [TIMEOUT=30]      - camera driver + rviz2"
+	@echo "  make realsense2_tutorial-plot               - Same + trigger-timeline plots"
+	@echo "  make realsense2_tutorial-benchmark [RUNS=10] [PAUSE=10]"
+	@echo "                                             - N runs, aggregate KPI"
+	@echo ""
 	@echo "GRAFANA + PROMETHEUS:"
 	@echo "  ./start_grafana.sh                        - Start stack"
 	@echo "  ./stop_grafana.sh                         - Stop stack"
@@ -98,7 +114,6 @@ help:
 	@echo "                                              if using the Debian pkg, copy first:"
 	@echo "                                              cp -r /opt/ros/jazzy/benchmarking ~/ros-kpi && cd ~/ros-kpi)"
 	@echo "  make install-qmassa                       - Compile and install qmassa/qmmd (xe GPU monitoring)"
-	@echo "  make enable-power-mon                     - Install udev rule to allow RAPL power reading without root"
 	@echo "  make check-deps                           - Check all dependencies"
 	@echo "  make check-hw                             - Probe GPU and NPU tool availability"
 	@echo "  make check-domain [REMOTE_IP=<ip>]        - Verify ROS_DOMAIN_ID matches"
@@ -174,23 +189,12 @@ install-qmassa:
 	@echo "   Run: qmassa --help"
 	@echo "   Run: qmmd   --help"
 
-enable-power-mon:
-	@# Help: Install udev rule granting read access to Intel RAPL energy counter (no root required at runtime)
-	@echo "Installing RAPL udev rule..."
-	@echo 'SUBSYSTEM=="powercap", KERNEL=="intel-rapl:0", ACTION=="add", RUN+="/bin/chmod o+r /sys/class/powercap/intel-rapl/%k/energy_uj"' \
-		| sudo tee /etc/udev/rules.d/51-rapl.rules > /dev/null
-	@sudo udevadm control --reload-rules
-	@sudo udevadm trigger --subsystem-match=powercap
-	@echo "✅ udev rule installed → /etc/udev/rules.d/51-rapl.rules"
-	@echo "   RAPL will be readable without root after next reboot (or udev trigger above)."
-	@echo "   Re-run: make check-hw"
-
 # Install dependencies
 install:
 	@echo "Installing required dependencies..."
 	@echo ""
-	@echo "[1/3] Installing system packages (sysstat, python3-tk, curl, build-essential)..."
-	@sudo apt-get update -qq && sudo apt-get install -y sysstat python3-tk curl build-essential
+	@echo "[1/3] Installing system packages (python3-tk, curl, build-essential)..."
+	@sudo apt-get update -qq && sudo apt-get install -y python3-tk curl build-essential
 	@echo ""
 	@echo "[2/3] Installing uv (Astral)..."
 	@if command -v uv >/dev/null 2>&1; then \
@@ -249,7 +253,7 @@ install:
 # Collected per sample:
 #   GPU-level  : Engine-class busy % (Render/3D, Blitter, Compute, Video, VE)
 #                Freq actual (MHz), GPU Temp (°C), GPU/Pkg Power (W)
-#                VRAM / shared-mem MB, throttle status
+#                VRAM / shared-mem MB
 #   Per-PID    : GPU busy % broken down by engine class (via DRM fdinfo)
 # ============================================================================
 
@@ -299,7 +303,7 @@ check-deps:
 	@echo ""
 	@echo "Checking dependencies..."
 	@echo ""
-	@echo "[1/7] Checking uv installation..."
+	@echo "[1/6] Checking uv installation..."
 	@if command -v uv >/dev/null 2>&1; then \
 		echo "  ✅ uv is installed: $$(uv --version)"; \
 	else \
@@ -308,7 +312,7 @@ check-deps:
 		exit 1; \
 	fi
 	@echo ""
-	@echo "[2/7] Checking ROS2 installation..."
+	@echo "[2/6] Checking ROS2 installation..."
 	@if [ -d "/opt/ros/humble" ]; then \
 		echo "  ✅ ROS2 Humble is installed"; \
 	elif [ -d "/opt/ros/foxy" ]; then \
@@ -321,7 +325,7 @@ check-deps:
 		exit 1; \
 	fi
 	@echo ""
-	@echo "[3/7] Checking ROS2 environment..."
+	@echo "[3/6] Checking ROS2 environment..."
 	@if [ -n "$$ROS_DISTRO" ]; then \
 		echo "  ✅ ROS2 is sourced: $$ROS_DISTRO"; \
 		echo "     ROS_DOMAIN_ID: $${ROS_DOMAIN_ID:-not set (will use default 0)}"; \
@@ -331,7 +335,7 @@ check-deps:
 		echo "     Or:  source ./setup_ros2_env.sh"; \
 	fi
 	@echo ""
-	@echo "[4/7] Checking Python dependencies..."
+	@echo "[4/6] Checking Python dependencies..."
 	@if uv run python -c "import matplotlib, numpy, psutil, prometheus_client" 2>/dev/null; then \
 		echo "  ✅ Python packages installed (matplotlib, numpy, psutil, prometheus-client)"; \
 	else \
@@ -346,16 +350,7 @@ check-deps:
 		echo "     Install: sudo apt-get install -y python3-tk"; \
 	fi
 	@echo ""
-	@echo "[5/7] Checking system utilities..."
-	@if command -v iostat >/dev/null 2>&1; then \
-		echo "  ✅ sysstat (iostat/pidstat) is installed"; \
-	else \
-		echo "  ❌ sysstat is NOT installed"; \
-		echo "     Install: sudo apt-get install -y sysstat"; \
-		exit 1; \
-	fi
-	@echo ""
-	@echo "[6/7] Checking Docker (Grafana stack)..."
+	@echo "[5/6] Checking Docker (Grafana stack)..."
 	@if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then \
 		echo "  ✅ Docker is available (Grafana stack ready)"; \
 	else \
@@ -364,7 +359,7 @@ check-deps:
 		echo "     Then   : sudo usermod -aG docker $$USER && newgrp docker"; \
 	fi
 	@echo ""
-	@echo "[7/7] Checking remote monitoring prerequisites..."
+	@echo "[6/6] Checking remote monitoring prerequisites..."
 	@if [ -n "$(REMOTE_IP)" ]; then \
 		echo "  Testing connection to $(REMOTE_IP)..."; \
 		if ping -c 1 -W 2 $(REMOTE_IP) >/dev/null 2>&1; then \
@@ -658,7 +653,7 @@ monitor-remote-repeat:
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulation benchmarking
 #
-# Optional params: RUNS TIMEOUT PN_TIMEOUT PAUSE BENCH NODE RUN_CONFIG
+# Optional params: RUNS TIMEOUT PAUSE BENCH NODE RUN_CONFIG SHOW SIDE_TERMINALS
 #   RUN_CONFIG : path to YAML run profile (default: config/<scenario>_run.yaml)
 #                Example: make wandering RUN_CONFIG=config/my_custom_run.yaml
 # ─────────────────────────────────────────────────────────────────────────────
@@ -675,6 +670,16 @@ wandering-plot:
 wandering-record-plot:
 	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
+# wandering-benchmark: repeats the wandering scenario RUNS times and aggregates KPIs.
+#
+# Use cases:
+#   Local/interactive : make wandering-benchmark RUNS=25 TIMEOUT=300
+#                        (all runs but the last use --no-prompt; the final run
+#                        stops at an interactive menu so you can inspect results)
+#   CI / automated     : make wandering-benchmark RUNS=3 TIMEOUT=240 NO_PROMPT=1
+#                        (forces --no-prompt on every run, including the last,
+#                        and skips the interactive post-benchmark menu, so the
+#                        target never blocks waiting for input)
 wandering-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
 	TIMEOUT=$(if $(TIMEOUT),$(TIMEOUT),300); \
@@ -683,8 +688,9 @@ wandering-benchmark:
 	BENCH_DIR=monitoring_sessions/wandering/bench_$$(date +%Y%m%d_%H%M%S); \
 	mkdir -p "$$BENCH_DIR"; \
 	echo "▶  Wandering benchmark: $$RUNS runs x $${TIMEOUT}s  →  $$BENCH_DIR"; \
-	[ "$$GOALS" -gt 0 ] && echo "   Stop condition    : $$GOALS goals per run" || echo "   Stop condition    : timeout only"; \
+	[ "$$GOALS" -gt 0 ] && echo "   Stop condition      : $$GOALS goals per run" || echo "   Stop condition      : timeout only"; \
 	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
+	echo "   Log level           : $$([ "$(NO_PROMPT)" = "1" ] && echo "WARNING (forced by NO_PROMPT=1)" || echo "$${LOG_LEVEL:-INFO (default; see .env)}")"; \
 	if [ -n "$(SIDE_TERMINALS)" ]; then \
 		if command -v terminator >/dev/null 2>&1; then \
 			echo "   Side terminals     : opening htop + qmassa..."; \
@@ -697,36 +703,48 @@ wandering-benchmark:
 	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR" \
+		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
+		bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record $$_PROMPT --output-parent "$$BENCH_DIR" \
 			$(if $(GOALS), --goals $$GOALS); \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
 	echo ""; \
 	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
-	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
-	echo ""; \
-	echo "▶  Level 2 e2e analysis ready to run:"; \
-	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)) $$([ "$(NO_PROMPT)" = "1" ] && echo --log-level WARNING); \
+	[ "$(NO_PROMPT)" = "1" ] && echo "KPI aggregation complete -> $$BENCH_DIR"; \
+	[ "$(NO_PROMPT)" = "1" ] || bash src/bench_menu.sh "$$BENCH_DIR" "$(CURDIR)"
 
 picknplace-run:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT),--timeout 300) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
 picknplace-record:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(TIMEOUT),--timeout $(TIMEOUT),--timeout 300) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
 picknplace-plot:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(TIMEOUT),--timeout $(TIMEOUT),--timeout 300) $(if $(SHOW),--show)
 
 picknplace-record-plot:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT),--timeout 300) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
+# picknplace-benchmark: repeats the pick-n-place scenario RUNS times and aggregates KPIs.
+#
+# Use cases:
+#   Local/interactive : make picknplace-benchmark RUNS=25 TIMEOUT=300
+#                        (all runs but the last use --no-prompt; the final run
+#                        stops at an interactive menu so you can inspect results)
+#   CI / automated     : make picknplace-benchmark RUNS=3 TIMEOUT=240 NO_PROMPT=1
+#                        (forces --no-prompt on every run, including the last,
+#                        and skips the interactive post-benchmark menu, so the
+#                        target never blocks waiting for input)
 picknplace-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
-	TIMEOUT=$(if $(PN_TIMEOUT),$(PN_TIMEOUT),300); \
+	TIMEOUT=$(if $(TIMEOUT),$(TIMEOUT),300); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),30); \
 	BENCH_DIR=monitoring_sessions/picknplace/bench_$$(date +%Y%m%d_%H%M%S); \
 	mkdir -p "$$BENCH_DIR"; \
 	echo "▶  Pick-n-place benchmark: $$RUNS runs x $${TIMEOUT}s  →  $$BENCH_DIR"; \
+	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
+	echo "   Log level           : $$([ "$(NO_PROMPT)" = "1" ] && echo "WARNING (forced by NO_PROMPT=1)" || echo "$${LOG_LEVEL:-INFO (default; see .env)}")"; \
 	if [ -n "$(SIDE_TERMINALS)" ]; then \
 		if command -v terminator >/dev/null 2>&1; then \
 			echo "   Side terminals     : opening htop + qmassa..."; \
@@ -739,15 +757,15 @@ picknplace-benchmark:
 	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
+		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
+		bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record $$_PROMPT --output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
 	echo ""; \
 	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
-	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
-	echo ""; \
-	echo "▶  Level 2 e2e analysis ready to run:"; \
-	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)) $$([ "$(NO_PROMPT)" = "1" ] && echo --log-level WARNING); \
+	[ "$(NO_PROMPT)" = "1" ] && echo "KPI aggregation complete -> $$BENCH_DIR"; \
+	[ "$(NO_PROMPT)" = "1" ] || bash src/bench_menu.sh "$$BENCH_DIR" "$(CURDIR)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Bag-replay benchmarking
@@ -819,16 +837,40 @@ fastmapping:
 fastmapping-plot:
 	bash src/fastmapping_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(SHOW),--show)
 
+# fastmapping-benchmark: repeats the fast mapping scenario RUNS times and aggregates KPIs.
+#
+# Use cases:
+#   Local/interactive : make fastmapping-benchmark RUNS=10
+#                        (all runs but the last use --no-prompt; the final run
+#                        stops at an interactive menu so you can inspect results)
+#   CI / automated     : make fastmapping-benchmark RUNS=3 NO_PROMPT=1
+#                        (forces --no-prompt on every run, including the last,
+#                        and skips the interactive post-benchmark menu, so the
+#                        target never blocks waiting for input)
 fastmapping-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),10); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
 	BENCH_DIR=monitoring_sessions/fastmapping/bench_$$(date +%Y%m%d_%H%M%S); \
 	mkdir -p "$$BENCH_DIR"; \
 	echo "▶  Fast Mapping benchmark: $$RUNS runs  →  $$BENCH_DIR"; \
+	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
+	echo "   Log level           : $$([ "$(NO_PROMPT)" = "1" ] && echo "WARNING (forced by NO_PROMPT=1)" || echo "$${LOG_LEVEL:-INFO (default; see .env)}")"; \
+	if [ -n "$(SIDE_TERMINALS)" ]; then \
+		if command -v terminator >/dev/null 2>&1; then \
+			echo "   Side terminals     : opening htop + qmassa..."; \
+			terminator -e "htop" --title="htop — benchmark" & \
+			_QM=$$(command -v qmassa 2>/dev/null || ls ~/.cargo/bin/qmassa ~/.local/bin/qmassa /usr/bin/qmassa 2>/dev/null | head -1 || true); \
+			[ -n "$$_QM" ] && terminator -e "$$_QM" --title="qmassa — GPU monitor" & \
+		else \
+			echo "   WARNING: SIDE_TERMINALS set but terminator not found" >&2; \
+		fi; \
+	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
+		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
 		bash src/fastmapping_run.sh \
 			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
+			$$_PROMPT \
 			--output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
@@ -839,7 +881,139 @@ fastmapping-benchmark:
 	done; \
 	echo ""; \
 	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
-	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)) $$([ "$(NO_PROMPT)" = "1" ] && echo --log-level WARNING); \
+	[ "$(NO_PROMPT)" = "1" ] && echo "KPI aggregation complete -> $$BENCH_DIR"; \
+	[ "$(NO_PROMPT)" = "1" ] || bash src/bench_menu.sh "$$BENCH_DIR" "$(CURDIR)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ADBScan benchmarking
+# Uses: ros2 launch adbscan_ros2 play_demo_lidar_launch.py
+# (starts adbscan_sub_node, and ros2 bag replay)
+#
+# Optional: RUNS=10  — independent benchmark runs (adbscan-benchmark)
+#           PAUSE=10 — seconds between runs (adbscan-benchmark)
+#           RUN_CONFIG — path to YAML run profile (default: config/adbscan_run.yaml)
+#           NO_PROMPT=1 — skip the interactive post-run analysis menu (adbscan,
+#                         adbscan-plot, and adbscan-benchmark all honor this)
+# ─────────────────────────────────────────────────────────────────────────────
+
+adbscan:
+	bash src/adbscan_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(SHOW),--show) $(if $(NO_PROMPT),--no-prompt)
+
+adbscan-plot:
+	bash src/adbscan_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(SHOW),--show) $(if $(NO_PROMPT),--no-prompt)
+
+# adbscan-benchmark: repeats the adbscan scenario RUNS times and aggregates KPIs.
+#
+# Use cases:
+#   Local/interactive : make adbscan-benchmark RUNS=10
+#                        (all runs but the last use --no-prompt; the final run
+#                        stops at an interactive menu so you can inspect results)
+#   CI / automated     : make adbscan-benchmark RUNS=3 NO_PROMPT=1
+#                        (forces --no-prompt on every run, including the last,
+#                        and skips the interactive post-benchmark menu, so the
+#                        target never blocks waiting for input)
+adbscan-benchmark:
+	@RUNS=$(if $(RUNS),$(RUNS),10); \
+	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
+	BENCH_DIR=monitoring_sessions/adbscan/bench_$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p "$$BENCH_DIR"; \
+	echo "▶  ADBScan benchmark: $$RUNS runs  →  $$BENCH_DIR"; \
+	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
+	echo "   Log level           : $$([ "$(NO_PROMPT)" = "1" ] && echo "WARNING (forced by NO_PROMPT=1)" || echo "$${LOG_LEVEL:-INFO (default; see .env)}")"; \
+	if [ -n "$(SIDE_TERMINALS)" ]; then \
+		if command -v terminator >/dev/null 2>&1; then \
+			echo "   Side terminals     : opening htop + qmassa..."; \
+			terminator -e "htop" --title="htop — benchmark" & \
+			_QM=$$(command -v qmassa 2>/dev/null || ls ~/.cargo/bin/qmassa ~/.local/bin/qmassa /usr/bin/qmassa 2>/dev/null | head -1 || true); \
+			[ -n "$$_QM" ] && terminator -e "$$_QM" --title="qmassa — GPU monitor" & \
+		else \
+			echo "   WARNING: SIDE_TERMINALS set but terminator not found" >&2; \
+		fi; \
+	fi; \
+	for i in $$(seq 1 $$RUNS); do \
+		echo "--- Run $$i / $$RUNS ---"; \
+		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
+		bash src/adbscan_run.sh \
+			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
+			--record \
+			$$_PROMPT \
+			--output-parent "$$BENCH_DIR"; \
+		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
+	done; \
+	echo ""; \
+	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)) $$([ "$(NO_PROMPT)" = "1" ] && echo --log-level WARNING); \
+	[ "$(NO_PROMPT)" = "1" ] && echo "KPI aggregation complete -> $$BENCH_DIR"; \
+	[ "$(NO_PROMPT)" = "1" ] || bash src/bench_menu.sh "$$BENCH_DIR" "$(CURDIR)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RealSense2 Tutorial benchmarking (live-camera pipeline, not a bag replay)
+# Uses: ros2 launch realsense2_tutorial realsense2_tutorial.launch.py
+# (starts the RealSense camera driver + rviz2)
+#
+# Run scripts/find_cameras.sh (in the realsense2_tutorial package) first to
+# check whether camera_type:=usb or camera_type:=gmsl should be passed via
+# RUN_CONFIG or config/realsense2_tutorial_run.yaml's launch.args.
+#
+# Optional: RUNS=10  — independent benchmark runs (realsense2_tutorial-benchmark)
+#           PAUSE=10 — seconds between runs (realsense2_tutorial-benchmark)
+#           TIMEOUT  — override yaml stop.timeout (default: 30s)
+#           RUN_CONFIG — path to YAML run profile (default: config/realsense2_tutorial_run.yaml)
+#           NO_PROMPT=1 — skip the interactive post-run analysis menu (all
+#                         three targets below honor this)
+# ─────────────────────────────────────────────────────────────────────────────
+
+realsense2_tutorial:
+	bash src/realsense2_tutorial_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(NO_PROMPT),--no-prompt)
+
+realsense2_tutorial-plot:
+	bash src/realsense2_tutorial_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(NO_PROMPT),--no-prompt)
+
+# realsense2_tutorial-benchmark: repeats the realsense2_tutorial scenario RUNS times and aggregates KPIs.
+#
+# Use cases:
+#   Local/interactive : make realsense2_tutorial-benchmark RUNS=10
+#                        (all runs but the last use --no-prompt; the final run
+#                        stops at an interactive menu so you can inspect results)
+#   CI / automated     : make realsense2_tutorial-benchmark RUNS=3 NO_PROMPT=1
+#                        (forces --no-prompt on every run, including the last,
+#                        and skips the interactive post-benchmark menu, so the
+#                        target never blocks waiting for input)
+realsense2_tutorial-benchmark:
+	@RUNS=$(if $(RUNS),$(RUNS),10); \
+	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
+	BENCH_DIR=monitoring_sessions/realsense2_tutorial/bench_$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p "$$BENCH_DIR"; \
+	echo "▶  RealSense2 Tutorial benchmark: $$RUNS runs  →  $$BENCH_DIR"; \
+	echo "   Hardware monitoring : GPU/NPU auto-detected per run"; \
+	echo "   Log level           : $$([ "$(NO_PROMPT)" = "1" ] && echo "WARNING (forced by NO_PROMPT=1)" || echo "$${LOG_LEVEL:-INFO (default; see .env)}")"; \
+	if [ -n "$(SIDE_TERMINALS)" ]; then \
+		if command -v terminator >/dev/null 2>&1; then \
+			echo "   Side terminals     : opening htop + qmassa..."; \
+			terminator -e "htop" --title="htop — benchmark" & \
+			_QM=$$(command -v qmassa 2>/dev/null || ls ~/.cargo/bin/qmassa ~/.local/bin/qmassa /usr/bin/qmassa 2>/dev/null | head -1 || true); \
+			[ -n "$$_QM" ] && terminator -e "$$_QM" --title="qmassa — GPU monitor" & \
+		else \
+			echo "   WARNING: SIDE_TERMINALS set but terminator not found" >&2; \
+		fi; \
+	fi; \
+	for i in $$(seq 1 $$RUNS); do \
+		echo "--- Run $$i / $$RUNS ---"; \
+		if [ "$(NO_PROMPT)" = "1" ] || [ $$i -lt $$RUNS ]; then _PROMPT="--no-prompt"; else _PROMPT=""; fi; \
+		bash src/realsense2_tutorial_run.sh \
+			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
+			$(if $(TIMEOUT),--timeout $(TIMEOUT)) \
+			--record \
+			$$_PROMPT \
+			--output-parent "$$BENCH_DIR"; \
+		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
+	done; \
+	echo ""; \
+	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)) $$([ "$(NO_PROMPT)" = "1" ] && echo --log-level WARNING); \
+	[ "$(NO_PROMPT)" = "1" ] && echo "KPI aggregation complete -> $$BENCH_DIR"; \
+	[ "$(NO_PROMPT)" = "1" ] || bash src/bench_menu.sh "$$BENCH_DIR" "$(CURDIR)"
 
 # ═══════════════════════════════════════════════════════════════
 # HTML REPORT
@@ -852,7 +1026,7 @@ report:
 	@# Help: Generate self-contained HTML report from SESSION=<dir> (writes <session>/report.html)
 	@if [ -z "$(SESSION)" ]; then \
 		echo "Error: Please specify SESSION=<session_directory>"; \
-		echo "Example: make report SESSION=monitoring_sessions/fastmapping/20260513_130427"; \
+		echo "Example: make report SESSION=monitoring_sessions/adbscan/20260513_130427"; \
 		exit 1; \
 	fi
 	$(PYTHON) src/generate_report.py --session "$(SESSION)" $(if $(OUTPUT),--output $(OUTPUT))
@@ -862,7 +1036,7 @@ report:
 visualize-kpi:
 	@if [ -z "$(SESSION)" ]; then \
 		echo "Error: Please specify SESSION=<session_directory>"; \
-		echo "Example: make visualize-kpi SESSION=monitoring_sessions/fastmapping/20260513_130427"; \
+		echo "Example: make visualize-kpi SESSION=monitoring_sessions/adbscan/20260513_130427"; \
 		exit 1; \
 	fi
 	$(PYTHON) src/visualize_kpi.py \
@@ -927,13 +1101,23 @@ results:
 		fi; \
 	fi
 
-# Generate CPU/GPU thermal + throttle time-series plot from a session.
-# Usage: make visualize-thermal                  (auto-detects latest session)
-#        make visualize-thermal SESSION=<path>
-visualize-thermal:
-	$(PYTHON) src/visualize_thermal.py \
-		$(if $(SESSION),"$(SESSION)") \
-		--save $(if $(SHOW),--show) $(if $(NO_SHOW),--no-show)
+# Show the post-run analysis menu for a given (or the latest) session/bench dir.
+# Works for both a single-run session directory and a bench_* multi-run sweep
+# directory - bench_menu.sh auto-detects which kind it is.
+# Usage: make analysis-menu                                    (auto-detects latest)
+#        make analysis-menu SESSION=monitoring_sessions/wandering/20260715_161448
+#        make analysis-menu SESSION=monitoring_sessions/wandering/bench_20260709_150510
+analysis-menu:
+	@SESSION="$(SESSION)"; \
+	if [ -z "$$SESSION" ]; then \
+		SESSION=$$(find "$(CURDIR)/monitoring_sessions" -mindepth 2 -maxdepth 2 -type d \
+			-printf '%T@ %p\n' 2>/dev/null | sort -rn | head -1 | awk '{print $$2}'); \
+	fi; \
+	if [ -z "$$SESSION" ]; then \
+		echo "Error: no sessions found. Run a benchmark first or specify SESSION=<path>"; \
+		exit 1; \
+	fi; \
+	bash src/bench_menu.sh "$$SESSION" "$(CURDIR)"
 
 analyze-benchmark:
 	@if [ -z "$(BENCH)" ]; then \

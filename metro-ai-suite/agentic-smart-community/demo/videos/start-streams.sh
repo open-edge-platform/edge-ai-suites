@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Start RTSP push for each enabled stream in streams.yaml.
+# Start RTSP push for each enabled stream declared in a streams config.
+#
+# The default config lives with the rest of the demo resources in
+# ../quick-start/streams.yaml. Point STREAMS_CONFIG at another file to publish a
+# different set of streams (see demo/user-case-register/streams.elder_care.yaml).
 #
 # Usage:
 #   ./start-streams.sh                 # start every enabled stream
@@ -12,7 +16,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="${STREAMS_CONFIG:-$SCRIPT_DIR/streams.yaml}"
+CONFIG_FILE="${STREAMS_CONFIG:-$SCRIPT_DIR/../quick-start/streams.yaml}"
 RUN_DIR="$SCRIPT_DIR/.run"
 VENV_DIR="$SCRIPT_DIR/.venv"
 REQUIREMENTS_FILE="$SCRIPT_DIR/requirements.txt"
@@ -23,6 +27,10 @@ mkdir -p "$RUN_DIR"
 command -v ffmpeg >/dev/null || { echo "ffmpeg not found in PATH" >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 not found in PATH" >&2; exit 1; }
 [[ -f "$CONFIG_FILE" ]] || { echo "config not found: $CONFIG_FILE" >&2; exit 1; }
+
+# Relative `file:` entries resolve against the config's own directory, so a
+# config can sit anywhere and still point at videos next to it.
+CONFIG_DIR="$(cd "$(dirname "$CONFIG_FILE")" && pwd)"
 
 ensure_python_env() {
   if [[ ! -d "$VENV_DIR" ]]; then
@@ -73,7 +81,7 @@ PY
 }
 
 write_mediamtx_conf() {
-  # Read mediamtx.binary and mediamtx.config from streams.yaml, expand ~ in
+  # Read mediamtx.binary and mediamtx.config from the streams config, expand ~ in
   # binary path, dump mediamtx.config sub-tree to a temp YAML file.
   # Emit a single tab-separated row: binary\tconf_path
   "$PYTHON_BIN" - "$CONFIG_FILE" "$RUN_DIR/_mediamtx.yml" <<'PY'
@@ -144,10 +152,7 @@ stop_one() {
 }
 
 cmd_stop() {
-  shopt -s nullglob
-  for pidfile in "$RUN_DIR"/*.pid; do
-    stop_one "$(basename "$pidfile" .pid)"
-  done
+  exec "$SCRIPT_DIR/stop_streams.sh"
 }
 
 cmd_status() {
@@ -174,7 +179,7 @@ start_one() {
     return 1
   fi
   local abs_file="$file"
-  [[ "$abs_file" != /* ]] && abs_file="$SCRIPT_DIR/$file"
+  [[ "$abs_file" != /* ]] && abs_file="$CONFIG_DIR/$file"
   if [[ ! -f "$abs_file" ]]; then
     echo "  warning: skip $sid: video file not found: $abs_file" >&2
     return 1
@@ -203,7 +208,7 @@ case "${1:-}" in
   --stop) cmd_stop; exit 0 ;;
   --status) cmd_status; exit 0 ;;
   -h|--help)
-    sed -n '2,11p' "$0"
+    sed -n '2,14p' "$0"
     exit 0 ;;
 esac
 

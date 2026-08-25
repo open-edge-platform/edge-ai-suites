@@ -2,19 +2,10 @@
 name: metro-ai-apps-builder
 description: >-
   Conversational orchestrator that turns a plain business objective into a
-  working Intel Edge AI application. It OWNS the conversation: it asks only
-  business questions (what outcome you want, your inputs, where it runs, your
-  hardware) — never which framework, model, or device — then DISCOVERS the
-  relevant skills from the open-edge-platform/skills catalog, proposes a plan,
-  and only after you confirm builds the deliverable by DELEGATING to the right
-  skill(s). USE FOR any "I want to <business outcome> on Intel edge" request:
-  detect/count/track objects in camera feeds, spatial multi-camera analytics,
-  video search & summarization, conversational Q&A / RAG over documents,
-  multimodal embeddings, downloading/converting models, training a
-  computer-vision model, or deploying a robot policy — when you do NOT already
-  know which specific skill to run. DO NOT USE when the user already named a
-  concrete skill (invoke that skill directly) or asks a pure code question with
-  no deployable outcome.
+  working Intel Edge AI application by asking only business questions — never
+  which framework, model, or device — then discovering the relevant
+  open-edge-platform/skills, proposing a plan, and building the deliverable by
+  DELEGATING to the right skill(s) after you confirm.
 license: Apache-2.0
 compatibility: >-
   Requires: Node.js 20+ and the `npx skills` CLI (from open-edge-platform/skills)
@@ -53,12 +44,23 @@ technology**. You:
 
 ## When to use this skill
 
+Use this skill for any *"I want to `<business outcome>` on Intel edge"* request —
+asking only business questions (what outcome you want, your inputs, where it
+runs, your hardware) — when you do **not** already know which specific skill to
+run. Specifically:
+
 - The user describes a **desired outcome** on Intel edge but has **not** named a
   concrete skill (this is the default entry point for the prompt library).
 - The objective may span multiple domains (vision, RAG, video search, model
   prep, training, robotics) and you must **route** to the right one.
 - The user asks *"what can I build?"* or *"how do I do X on Intel?"* and needs a
   guided path.
+
+Typical objectives this skill routes: detect/count/track objects in camera
+feeds, spatial multi-camera analytics, video search & summarization,
+conversational Q&A / RAG over documents, multimodal embeddings,
+downloading/converting models, training a computer-vision model, or deploying a
+robot policy.
 
 **Do not** use this skill when the user already named a specific skill (invoke
 that skill directly) or wants a pure code answer with no deployable artifact.
@@ -84,11 +86,13 @@ Adapt the wording to the stated outcome, but cover these axes:
 1. **Outcome** — what decision/insight/action do you want? (e.g. "alert when a
    person enters after hours", "answer questions from my manuals", "find the
    clip where the forklift stops").
-2. **Inputs / data** — what feeds it? (camera RTSP/USB/sample video; a folder of
-   videos; a document set/PDF corpus; a dataset for training; a robot + policy).
+2. **Inputs / data** — what feeds it? (an ONVIF camera [default], or RTSP/USB/
+   sample video; a folder of videos; a document set/PDF corpus; a dataset for
+   training; a robot + policy). For live camera use cases assume **ONVIF** unless
+   the user says otherwise.
 3. **Deployment target** — a quick local demo/POC, a single-host Docker Compose
    solution, or a Kubernetes/Helm cluster? [Docker Compose]
-4. **Hardware** — Intel CPU only, or Intel GPU/NPU available? [CPU]
+4. **Hardware** — Intel GPU (default), or Intel CPU/NPU? [Intel GPU]
 5. **Scale / operations** — one stream vs many; interactive vs batch; needs a
    dashboard/UI vs an API? [reasonable default per domain]
 
@@ -108,6 +112,7 @@ refresh the live index and check what is already installed. Routing summary:
 | "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full analytics stack + dashboard | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
 | "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-apps-recipe` SceneScape path) |
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
+| "Migrate / convert / port an NVIDIA DeepStream pipeline to Intel DL Streamer" | **`dlstreamer-coding-agent`** |
 | "Chatbot / Q&A / RAG over my documents" — Docker | **`chatqna-docker-deploy`**; Kubernetes → **`chatqna-helm-deploy`** |
 | "Search / summarize my video library" | **`vss-deploy`** (+ `vss-search-index` / `vss-summarize-video`); k8s → **`vss-deploy-helm`** |
 | "Embed text/images/videos for similarity search" | **`multimodal-embedding-serving-user`** |
@@ -139,6 +144,24 @@ Present a concise plan and **stop for approval**. Include:
 - **Requirements/assumptions** — Docker/Helm, GPU groups, ports, network, tokens
   (e.g. `HF_TOKEN`) — surfaced from the delegate's `compatibility`.
 - **Any skill that must be installed** with the exact `npx skills add` command.
+- **Deployment-target alternative** — whenever the chosen delegate has a
+  Kubernetes/Helm sibling (`chatqna-helm-deploy` for `chatqna-docker-deploy`,
+  `vss-deploy-helm` for `vss-deploy`), always add a one-line *"on Kubernetes →
+  use `<helm-skill>`"* note, even when the user picked Docker, so the cluster
+  path is visible.
+- **Follow-on path** — when the deliverable is an intermediate artifact rather
+  than a running app (e.g. a trained/exported/quantized model IR from the
+  `getitune-*` pipeline, or a downloaded/converted model), always state the
+  natural next step that turns it into something usable (e.g. deploy the IR via
+  `model-download-user` → `metro-ai-apps-recipe`), offered as the obvious
+  follow-on.
+- **Next action on approval** — close the plan with one explicit line naming
+  what you will do the moment the user says `go`: *delegate to `<primary skill>`
+  (then the supporting skills, in order) and verify the result against that
+  delegate's own completion criteria* (health checks, a sample query, validation
+  metrics — whatever the delegate defines). State this as your committed next
+  step even though you build nothing yet, so the hand-off and verification are
+  unambiguous.
 
 Do **not** create or modify any files, download anything, or start containers
 until the user replies with an affirmative (`go`, `yes`, `build it`, `approved`).
@@ -179,6 +202,8 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 - `03-video-search.md` — search a video archive → `vss-deploy` + `vss-search-index`.
 - `04-train-a-model.md` — train a detector → `getitune-*`.
 - `05-ambiguous-discovery.md` — vague objective → discovery + clarify + route.
+- `06-deepstream-to-dlstreamer.md` — migrate an NVIDIA DeepStream pipeline →
+  `dlstreamer-coding-agent`.
 
 ## Edge cases
 

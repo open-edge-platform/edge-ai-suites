@@ -63,7 +63,11 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-# Optional wandering-specific latency extraction (sibling module)
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
+# Optional wandering-specific goal-calc latency extraction (sibling module)
 try:
     from wandering_metrics import extract_goal_calc_latency as _extract_goal_calc_latency
     from wandering_metrics import extract_goal_response_latency as _extract_goal_response_latency
@@ -339,7 +343,7 @@ def _health(mean_ms: float) -> str:
 def print_results(all_results: List[dict], node_filter: Optional[str] = None) -> None:
     """Print detailed per-node trigger latency results."""
     if not all_results:
-        print('No trigger-based latency data found (need ≥5 samples per pair).')
+        logger.warning('No trigger-based latency data found (need ≥5 samples per pair).')
         return
 
     # Group by node
@@ -354,10 +358,9 @@ def print_results(all_results: List[dict], node_filter: Optional[str] = None) ->
         # Sort pairs: primary key = output topic, secondary = mean latency asc
         pairs.sort(key=lambda x: (x['output'], x['mean_ms']))
 
-        print()
-        print('╔' + '═' * 110 + '╗')
-        print(f'║  Node: {node_name:<102}║')
-        print('╠' + '═' * 110 + '╣')
+        logger.debug('\n╔' + '═' * 110 + '╗')
+        logger.debug(f'║  Node: {node_name:<102}║')
+        logger.debug('╠' + '═' * 110 + '╣')
 
         # Group by output topic
         by_out: Dict[str, List[dict]] = defaultdict(list)
@@ -365,12 +368,12 @@ def print_results(all_results: List[dict], node_filter: Optional[str] = None) ->
             by_out[p['output']].append(p)
 
         for out_t, in_pairs in sorted(by_out.items()):
-            print(f'║  OUTPUT ➜  {out_t:<98}║')
-            print('║' + '─' * 110 + '║')
+            logger.debug(f'║  OUTPUT ➜  {out_t:<98}║')
+            logger.debug('║' + '─' * 110 + '║')
             # hdr: 2 + 55 + 1+5 + 1+7 + 1+7 + 1+7 + 1+7 + 1+7 + 1+6 = 110
             hdr = f"  {'Input Topic':<55} {'N':>5} {'mean':>7} {'p50':>7} {'p90':>7} {'p99':>7} {'stdev':>7} {'trigs':>6}"
-            print(f'║{hdr:<110}║')
-            print('║' + '─' * 110 + '║')
+            logger.debug(f'║{hdr:<110}║')
+            logger.debug('║' + '─' * 110 + '║')
             for p in sorted(in_pairs, key=lambda x: x['trigger_count'], reverse=True):
                 h = _health(p['mean_ms'])
                 name_trunc = p['input'][-47:] if len(p['input']) > 47 else p['input']
@@ -384,10 +387,10 @@ def print_results(all_results: List[dict], node_filter: Optional[str] = None) ->
                         f"{p['p99_ms']:>6.1f}ms "
                         f"{p['stdev_ms']:>6.1f}ms "
                         f"{p['trigger_count']:>6}")
-                print(f'║  {h}{body}║')
-            print('║' + ' ' * 110 + '║')
+                logger.debug(f'║  {h}{body}║')
+            logger.debug('║' + ' ' * 110 + '║')
 
-        print('╚' + '═' * 110 + '╝')
+        logger.debug('╚' + '═' * 110 + '╝')
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -436,7 +439,7 @@ def export_events_csv(all_results: List[dict], out_path: Path) -> None:
                         row[col] = ''
                 writer.writerow(row)
 
-    print(f'\n  Events CSV written → {out_path}')
+    logger.info(f'\n  Events CSV written → {out_path}')
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -457,20 +460,19 @@ def print_summary_table(all_results: List[dict]) -> None:
 
     ranked = sorted(seen.values(), key=lambda x: x['p90_ms'], reverse=True)
 
-    print()
-    print('━' * 110)
-    print(f"  {'#':>3}  {'Node':<30} {'Input':<32} {'Output':<28} {'mean':>7} {'p90':>7} {'trigs':>6}")
-    print('━' * 110)
+    logger.debug('\n' + '━' * 110)
+    logger.debug(f"  {'#':>3}  {'Node':<30} {'Input':<32} {'Output':<28} {'mean':>7} {'p90':>7} {'trigs':>6}")
+    logger.debug('━' * 110)
     for i, r in enumerate(ranked[:30], 1):
         h = _health(r['mean_ms'])
         nd = r['node'].split('/')[-1][:28]
         inp = r['input'][-31:] if len(r['input']) > 31 else r['input']
         out = r['output'][-27:] if len(r['output']) > 27 else r['output']
-        print(f'  {i:>3}  {h} {nd:<28} {inp:<32} {out:<28} '
+        logger.debug(f'  {i:>3}  {h} {nd:<28} {inp:<32} {out:<28} '
               f"{r['mean_ms']:>6.1f}ms {r['p90_ms']:>6.1f}ms {r['trigger_count']:>6}")
-    print('━' * 110)
+    logger.debug('━' * 110)
     if len(ranked) > 30:
-        print(f'  … {len(ranked) - 30} more pairs not shown (use --node to filter)')
+        logger.debug(f'  … {len(ranked) - 30} more pairs not shown (use --node to filter)')
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -491,10 +493,11 @@ def plot_trigger_timeline(
       coloured by which input topic triggered it.
     """
     try:
+        import matplotlib
         import matplotlib.pyplot as plt
         import matplotlib.patches as mpatches
     except ImportError:
-        print('  matplotlib not available – skipping plot')
+        logger.info('  matplotlib not available – skipping plot')
         return
 
     # Group by node
@@ -505,7 +508,7 @@ def plot_trigger_timeline(
         by_node[r['node']].append(r)
 
     if not by_node:
-        print('  No matching nodes for plot.')
+        logger.info('  No matching nodes for plot.')
         return
 
     for node_name, pairs in sorted(by_node.items()):
@@ -523,7 +526,9 @@ def plot_trigger_timeline(
         all_inputs_used: List[str] = sorted({
             e['best_input'] for events in by_out.values() for e in events
         })
-        cmap = plt.cm.get_cmap('tab10', max(len(all_inputs_used), 1))
+        # matplotlib.cm.get_cmap(name, lut) was removed in matplotlib 3.11;
+        # matplotlib.colormaps[name].resampled(lut) is the modern equivalent.
+        cmap = matplotlib.colormaps['tab10'].resampled(max(len(all_inputs_used), 1))
         in_color = {t: cmap(i) for i, t in enumerate(all_inputs_used)}
 
         fig, ax = plt.subplots(figsize=(16, max(4, len(out_topics) * 1.4)))
@@ -573,7 +578,7 @@ def plot_trigger_timeline(
         out_png = session_dir / 'visualizations' / f'trigger_timeline_{node_slug}.png'
         out_png.parent.mkdir(parents=True, exist_ok=True)
         plt.savefig(out_png, dpi=150, bbox_inches='tight')
-        print(f'  Plot saved → {out_png}')
+        logger.info(f'  Plot saved → {out_png}')
         if show:
             plt.show()
         plt.close(fig)
@@ -608,10 +613,9 @@ def _framework_version() -> str:
     except Exception:
         pass
     try:
-        import re as _re
         _pyproject = Path(__file__).resolve().parent.parent / 'pyproject.toml'
         text = _pyproject.read_text()
-        m = _re.search(r'^version\s*=\s*"([^"]+)"', text, _re.MULTILINE)
+        m = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
         return m.group(1) if m else 'unknown'
     except Exception:
         return 'unknown'
@@ -669,122 +673,34 @@ def _hardware_info() -> dict:
     }
 
 
-def _read_cpu_thermal_sysfs() -> dict:
-    """
-    Read CPU package temperature and throttle state from local sysfs.
-
-    Temperature source: the ``x86_pkg_temp`` thermal zone under
-    ``/sys/class/thermal/thermal_zone*/``.
-
-    Throttle detection: compares ``scaling_cur_freq`` against
-    ``cpuinfo_max_freq`` for CPU 0; throttling is assumed when the current
-    frequency falls below 95 % of the maximum.
-
-    Returns ``{'temp_c': float|None, 'throttled': bool|None}``.
-    """
-    import glob as _glob
-
-    temp_c: Optional[float] = None
-    throttled: Optional[bool] = None
-
-    for zone_dir in sorted(_glob.glob('/sys/class/thermal/thermal_zone*')):
-        try:
-            zone_type = open(f'{zone_dir}/type').read().strip()
-            if zone_type == 'x86_pkg_temp':
-                raw = int(open(f'{zone_dir}/temp').read().strip())
-                temp_c = round(raw / 1000.0, 1)
-                break
-        except (OSError, ValueError):
-            continue
-
-    try:
-        cur = int(open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq').read().strip())
-        mxf = int(open('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').read().strip())
-        throttled = cur < mxf * 0.95
-    except (OSError, ValueError):
-        throttled = None
-
-    return {'temp_c': temp_c, 'throttled': throttled}
-
-
 def _compute_resource_cpu_stats(session_dir: Path):
     """
-    Parse ``resource_usage.log`` (pidstat format) and return
-    ``(cpu_mean_pct, cpu_max_pct)`` as percentage of total system capacity
-    (0-100), or ``(None, None)`` if the log is absent or unreadable.
+    Parse ``resource_usage.json`` (a single JSON document written by
+    _psutil_probe.py via monitor_resources.py) and return
+    ``(cpu_mean_pct, cpu_max_pct)`` as a percentage of total system capacity
+    (0-100), or ``(None, None)`` if the file is absent, empty, or unreadable.
 
-    pidstat lines may wrap onto a continuation line that starts with
-    whitespace; we join them before parsing.  Only TGID rows (TID == '-')
-    are summed per timestamp to avoid double-counting threads.
+    Sums each sample's per-process cpu_pct across all processes (each
+    already on a 100%=1-core scale), then scales by num_cpus to get 0-100
+    system-wide.
     """
-    log = session_dir / 'resource_usage.log'
+    log = session_dir / 'resource_usage.json'
     if not log.exists():
         return None, None
 
     try:
-        raw_lines = log.read_text(errors='replace').splitlines()
-    except OSError:
+        document = json.loads(log.read_text(errors='replace'))
+    except (OSError, json.JSONDecodeError):
         return None, None
 
-    num_cpus = 0
-    # Merge wrapped continuation lines into full records
-    merged: list[str] = []
-    for raw in raw_lines:
-        if not num_cpus:
-            m = re.search(r'\((\d+) CPU\)', raw)
-            if m:
-                num_cpus = int(m.group(1))
-        stripped = raw.rstrip()
-        if stripped and stripped[0] == ' ' and merged:
-            merged[-1] += stripped  # continuation
-        else:
-            merged.append(stripped)
-
-    if not num_cpus:
-        num_cpus = 1  # safe fallback
-
-    # Sum TGID CPU per timestamp
-    ts_cpu: dict = {}  # timestamp str -> total %CPU
-    _ts_re = re.compile(r'^(\d{2}:\d{2}:\d{2}(?:\s+[AP]M)?)\s+')
-    for line in merged:
-        m = _ts_re.match(line)
-        if not m:
-            continue
-        parts = line.split()
-        # Thread mode:  Time UID TGID TID %usr %system %guest %wait %CPU CPU ...
-        # TGID row: parts[2]=TGID(int), parts[3]='-' → parts[8] is %CPU
-        # Thread row: parts[2]='-', parts[3]=TID(int)
-        # PID mode:   Time UID PID %usr %system %guest %wait %CPU CPU ...
-        #             parts[2]=PID, parts[3]=%usr (float)
-        try:
-            tgid_col = parts[2]
-            tid_col  = parts[3]
-        except IndexError:
-            continue
-        if tid_col == '-':
-            # TGID aggregate row in thread mode — parts[8] is %CPU
-            try:
-                cpu_pct = float(parts[8])
-            except (ValueError, IndexError):
-                continue
-        elif tgid_col == '-':
-            # Thread row — skip to avoid double-counting
-            continue
-        elif '.' in parts[3] or not parts[3].lstrip('-').isdigit():
-            # PID-only mode — parts[7] is %CPU
-            try:
-                cpu_pct = float(parts[7])
-            except (ValueError, IndexError):
-                continue
-        else:
-            continue  # unrecognised
-        ts = parts[0]
-        ts_cpu[ts] = ts_cpu.get(ts, 0.0) + cpu_pct
-
-    if not ts_cpu:
+    num_cpus = document.get('num_cpus') or 1  # safe fallback
+    totals = [
+        sum(p.get('cpu_pct', 0.0) for p in sample.get('processes', []))
+        for sample in document.get('samples', [])
+    ]
+    if not totals:
         return None, None
 
-    totals = list(ts_cpu.values())
     scale = num_cpus * 100.0
     cpu_mean = round(statistics.mean(totals) / scale * 100.0, 1)
     cpu_max = round(max(totals) / scale * 100.0, 1)
@@ -793,127 +709,150 @@ def _compute_resource_cpu_stats(session_dir: Path):
 
 def _load_resource_thermal(session_dir: Path) -> dict:
     """
-    Build a session-level thermal summary from the resource logs in *session_dir*.
-
-    Reads:
-      - ``gpu_usage.log``  - JSON-lines written by monitor_resources.monitor_gpu()
-      - ``npu_usage.log``  - JSON-lines written by monitor_resources.monitor_npu()
-      - sysfs live read    - CPU package temperature at analysis time
-
-    Returns a dict with the keys expected by the Level 1 KPI ``thermal`` section:
-      cpu_temp_c     - mean CPU package temperature (°C), or None
-      gpu_temp_c     - mean GPU temperature (°C), or None
-      npu_temp_c     - mean NPU temperature (°C), or None
-      cpu_throttled  - True if CPU throttling was observed, False/None otherwise
-      gpu_throttled  - True if GPU throttling was observed during the session
-      npu_throttled  - True/False when NPU monitoring was active (cur_freq < max_freq*0.95),
-                       None when npu_usage.log is absent
+    DEPRECATED: GPU/NPU thermal collection is not reliably supported across
+    hardware (no hwmon sysfs node for many iGPUs; NPU temp via PMT telemetry
+    was never implemented), so this data is no longer surfaced in kpi.json to
+    avoid confusing consumers with always-null fields. Kept only for any
+    external callers; returns an empty dict.
     """
-    result: dict = {
-        'cpu_temp_c':      None,
-        'gpu_temp_c':      None,
-        'npu_temp_c':      None,
-        'cpu_throttled':   None,
-        'gpu_throttled':   None,
-        'npu_throttled':   None,
-        'cpu_pkg_power_w': None,
-    }
+    return {}
 
-    # ── GPU: read gpu_usage.log ──────────────────────────────────────────────
-    gpu_log = session_dir / 'gpu_usage.log'
-    if gpu_log.exists():
-        gpu_temps: List[float] = []
-        gpu_throttled_any = False
-        try:
-            for raw in gpu_log.read_text().splitlines():
-                raw = raw.strip()
-                if not raw:
-                    continue
-                try:
-                    rec = json.loads(raw)
-                except json.JSONDecodeError:
-                    continue
-                if rec.get('event'):
-                    continue
-                if rec.get('temp_c') is not None:
-                    gpu_temps.append(float(rec['temp_c']))
-                if rec.get('throttled'):
-                    gpu_throttled_any = True
-        except OSError:
-            pass
-        if gpu_temps:
-            result['gpu_temp_c']    = round(statistics.mean(gpu_temps), 1)
-            result['gpu_throttled'] = gpu_throttled_any
 
-    # ── NPU: read npu_usage.log ──────────────────────────────────────────────
-    npu_log = session_dir / 'npu_usage.log'
-    if npu_log.exists():
-        npu_temps: List[float] = []
-        npu_throttled_any = False
-        try:
-            for raw in npu_log.read_text().splitlines():
-                raw = raw.strip()
-                if not raw:
-                    continue
-                try:
-                    rec = json.loads(raw)
-                except json.JSONDecodeError:
-                    continue
-                if rec.get('event'):
-                    continue
-                if rec.get('temp_c') is not None:
-                    npu_temps.append(float(rec['temp_c']))
-                if rec.get('throttled'):
-                    npu_throttled_any = True
-        except OSError:
-            pass
-        if npu_temps:
-            result['npu_temp_c'] = round(statistics.mean(npu_temps), 1)
-        if npu_temps or npu_throttled_any:
-            result['npu_throttled'] = npu_throttled_any
+# Default cap on how many latency spikes are surfaced in kpi.json.
+DEFAULT_MAX_LATENCY_SPIKES = 5
 
-    # ── CPU: read cpu_power.log (recorded during the session) ───────────────
-    # This is accurate: throttle status was sampled live during the run.
-    # Fall back to a live sysfs snapshot only when the log is absent.
-    cpu_power_log = session_dir / 'cpu_power.log'
-    if cpu_power_log.exists():
-        power_samples: List[float] = []
-        cpu_throttled_any = False
-        cpu_temps_log: List[float] = []
-        try:
-            for raw in cpu_power_log.read_text().splitlines():
-                raw = raw.strip()
-                if not raw:
-                    continue
-                try:
-                    rec = json.loads(raw)
-                except json.JSONDecodeError:
-                    continue
-                if rec.get('event'):
-                    continue
-                if rec.get('power_w') is not None:
-                    power_samples.append(float(rec['power_w']))
-                if rec.get('temp_c') is not None:
-                    cpu_temps_log.append(float(rec['temp_c']))
-                if rec.get('throttled'):
-                    cpu_throttled_any = True
-        except OSError:
-            pass
-        if power_samples:
-            result['cpu_pkg_power_w'] = round(statistics.mean(power_samples), 2)
-        if cpu_temps_log:
-            result['cpu_temp_c'] = round(statistics.mean(cpu_temps_log), 1)
-        result['cpu_throttled'] = cpu_throttled_any
-    else:
-        # Fallback: live sysfs snapshot (less accurate — post-run state)
-        try:
-            cpu_thermal = _read_cpu_thermal_sysfs()
-            result['cpu_temp_c']    = cpu_thermal.get('temp_c')
-            result['cpu_throttled'] = cpu_thermal.get('throttled')
-        except Exception:
-            pass
 
-    return result
+def _load_resource_samples(session_dir: Path):
+    """
+    Parse ``resource_usage.json`` once and return ``(epoch_ts, samples,
+    node_map)`` sorted by time, or ``None`` if the file is absent, empty, or
+    unreadable.
+
+    epoch_ts is a list of epoch-second floats (each sample's ISO ``ts``
+    converted via ``datetime.fromisoformat(...).timestamp()``), parallel to
+    samples -- ready for a bisect-based nearest-timestamp lookup. node_map is
+    ``{pid: node_name}`` from ``ros2_node_map`` (#58), empty if absent.
+    """
+    log = session_dir / 'resource_usage.json'
+    if not log.exists():
+        return None
+    try:
+        document = json.loads(log.read_text(errors='replace'))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    epoch_ts, samples = [], []
+    for sample in document.get('samples', []):
+        try:
+            ts = datetime.datetime.fromisoformat(sample['ts']).timestamp()
+        except (KeyError, TypeError, ValueError):
+            continue
+        epoch_ts.append(ts)
+        samples.append(sample)
+    if not epoch_ts:
+        return None
+
+    order = sorted(range(len(epoch_ts)), key=epoch_ts.__getitem__)
+    epoch_ts = [epoch_ts[i] for i in order]
+    samples = [samples[i] for i in order]
+
+    node_map = {int(pid): name for pid, name in (document.get('ros2_node_map') or {}).items()}
+    return epoch_ts, samples, node_map
+
+
+def _nearest_sample_index(epoch_ts: List[float], target: float) -> int:
+    """Return the index into a sorted epoch_ts closest to target."""
+    idx = bisect.bisect_left(epoch_ts, target)
+    if idx == 0:
+        return 0
+    if idx == len(epoch_ts):
+        return len(epoch_ts) - 1
+    before, after = epoch_ts[idx - 1], epoch_ts[idx]
+    return idx - 1 if (target - before) <= (after - target) else idx
+
+
+def _find_latency_spikes(
+    all_results: List[dict],
+    session_dir: Path,
+    max_spikes: int = DEFAULT_MAX_LATENCY_SPIKES,
+) -> List[dict]:
+    """
+    Cross-reference latency outliers against resource_usage.json to surface
+    "node X spiked CPU right before this latency outlier" root-cause hints,
+    instead of two disconnected charts (#59).
+
+    A spike is any event whose latency for its own (node, input, output)
+    pair meets or exceeds that pair's own p99_ms (reusing the percentile
+    already computed per pair rather than a second statistical pass). Each
+    surfaced spike is joined to the nearest resource_usage.json sample by
+    timestamp and annotated with its top-3 CPU consumers.
+
+    Known limitation: out_ts is wall-clock/bag-recorded epoch seconds, while
+    resource_usage.json's ts is always the resource probe's wall clock. If
+    the session used --use-sim-time, out_ts may be simulated time and
+    diverge from the probe's wall-clock samples, making the correlation
+    unreliable (same category as the sim-time bug fixed in
+    ros2_graph_monitor.py).
+
+    Returns [] if resource_usage.json is absent/unreadable or no event meets
+    its pair's p99 threshold. Sorted by latency_ms descending, capped to
+    max_spikes to keep kpi.json bounded.
+    """
+    loaded = _load_resource_samples(session_dir)
+    if loaded is None:
+        return []
+    epoch_ts, samples, node_map = loaded
+
+    candidates = []
+    for pair_result in all_results:
+        threshold = pair_result.get('p99_ms')
+        if threshold is None:
+            continue
+        in_t = pair_result['input']
+        for event in pair_result.get('events', []):
+            hit = event.get('all_inputs', {}).get(in_t)
+            if hit is None:
+                continue
+            _trigger_ts, lat_ms = hit
+            if lat_ms < threshold:
+                continue
+            candidates.append({
+                'node':       pair_result['node'],
+                'input':      in_t,
+                'output':     pair_result['output'],
+                'out_ts':     event['out_ts'],
+                'latency_ms': round(lat_ms, 3),
+            })
+
+    if not candidates:
+        return []
+
+    candidates.sort(key=lambda c: c['latency_ms'], reverse=True)
+    candidates = candidates[:max_spikes]
+
+    spikes = []
+    for c in candidates:
+        idx = _nearest_sample_index(epoch_ts, c['out_ts'])
+        sample_ts, sample = epoch_ts[idx], samples[idx]
+        top_processes = sorted(
+            sample.get('processes', []),
+            key=lambda p: p.get('cpu_pct', 0.0), reverse=True,
+        )[:3]
+        spikes.append({
+            **c,
+            'resource_sample_ts': sample_ts,
+            'time_delta_sec':     round(abs(sample_ts - c['out_ts']), 3),
+            'top_consumers': [
+                {
+                    'pid':     p.get('pid'),
+                    'node':    node_map.get(p.get('pid')),
+                    'cpu_pct': p.get('cpu_pct', 0.0),
+                }
+                for p in top_processes
+            ],
+        })
+
+    return spikes
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -971,6 +910,7 @@ def build_performance_kpi(
     all_results: List[dict],
     session_dir: Path,
     topic_times: Dict[str, List[float]],  # noqa: ARG001 — kept for API symmetry
+    max_latency_spikes: int = DEFAULT_MAX_LATENCY_SPIKES,
 ) -> dict:
     """
     Build a structured per-session KPI dict using standard benchmark metric keys.
@@ -999,13 +939,16 @@ def build_performance_kpi(
         dominant     = max(deduped, key=lambda r: r.get('trigger_count', 0))
         sys_fps      = dominant.get('fps')
         sys_lat      = dominant['mean_ms']
+        sys_lat_min  = dominant['min_ms']
+        sys_lat_max  = dominant['max_ms']
         sys_jit_mean = dominant.get('jitter_mean_ms', dominant['stdev_ms'])
         sys_jit_max  = dominant.get('jitter_max_ms', dominant['max_ms'] - dominant['mean_ms'])
         all_jitters  = [r.get('jitter_mean_ms', r['stdev_ms']) for r in deduped]
         sys_jit_min  = min(all_jitters)
         sys_jit_std  = statistics.stdev(all_jitters) if len(all_jitters) > 1 else 0.0
     else:
-        sys_fps = sys_lat = sys_jit_mean = sys_jit_max = sys_jit_min = sys_jit_std = None
+        sys_fps = sys_lat = sys_lat_min = sys_lat_max = None
+        sys_jit_mean = sys_jit_max = sys_jit_min = sys_jit_std = None
 
     # Per-node summary
     by_node: Dict[str, List[dict]] = defaultdict(list)
@@ -1018,6 +961,8 @@ def build_performance_kpi(
         per_node[node_name] = {
             'throughput_hz':    primary.get('fps'),
             'mean_latency_ms':  primary['mean_ms'],
+            'min_latency_ms':   primary['min_ms'],
+            'max_latency_ms':   primary['max_ms'],
             'mean_jitter_ms':   primary.get('jitter_mean_ms', primary['stdev_ms']),
             'max_jitter_ms':    primary.get('jitter_max_ms',
                                             primary['max_ms'] - primary['mean_ms']),
@@ -1028,17 +973,20 @@ def build_performance_kpi(
         }
 
     _cpu_mean, _cpu_max = _compute_resource_cpu_stats(session_dir)
+    _latency_spikes = _find_latency_spikes(all_results, session_dir, max_latency_spikes)
     payload = {
         'schema_version':   'level1_v1',
         'throughput_hz':    sys_fps,
         'mean_latency_ms':  sys_lat,
+        'min_latency_ms':   sys_lat_min,
+        'max_latency_ms':   sys_lat_max,
         'max_jitter_ms':    sys_jit_max,
         'min_jitter_ms':    sys_jit_min,
         'mean_jitter_ms':   sys_jit_mean,
         'jitter_stdev_ms':  sys_jit_std,
         'cpu_mean_pct':     _cpu_mean,
         'cpu_max_pct':      _cpu_max,
-        'thermal':          _load_resource_thermal(session_dir),
+        'latency_spikes':   _latency_spikes,
         'per_node': per_node,
         'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
         'metadata': {
@@ -1091,12 +1039,11 @@ def print_performance_summary(all_results: List[dict]) -> None:
     )
 
     W = 104
-    print()
-    print('━' * W)
-    print('  Performance Summary')
-    print('━' * W)
-    print(f"  {'Component':<28} {'Input → Output':<44} {'Throughput':>12}  {'Latency':>9}  {'p90':>9}")
-    print('━' * W)
+    logger.info('\n' + '━' * W)
+    logger.info('  Performance Summary')
+    logger.info('━' * W)
+    logger.info(f"  {'Component':<28} {'Input → Output':<44} {'Throughput':>12}  {'Latency':>9}  {'p90':>9}")
+    logger.info('━' * W)
     for r in ranked:
         nd   = r['node'].split('/')[-1][:26]
         inp  = r['input'].split('/')[-1][:18]
@@ -1105,8 +1052,8 @@ def print_performance_summary(all_results: List[dict]) -> None:
         fps  = r.get('fps')
         fps_s = f'{fps:.1f} Hz' if fps is not None else '—'
         h    = _health(r['mean_ms'])
-        print(f"  {h} {nd:<26} {io:<44} {fps_s:>12}  {r['mean_ms']:>7.1f} ms  {r['p90_ms']:>7.1f} ms")
-    print('━' * W)
+        logger.info(f"  {h} {nd:<26} {io:<44} {fps_s:>12}  {r['mean_ms']:>7.1f} ms  {r['p90_ms']:>7.1f} ms")
+    logger.info('━' * W)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -1165,6 +1112,14 @@ def main() -> None:
         help='Minimum number of trigger events required to report a pair (default: 5).',
     )
     parser.add_argument(
+        '--max-latency-spikes',
+        type=int,
+        default=DEFAULT_MAX_LATENCY_SPIKES,
+        help='Max number of latency outliers to cross-reference against resource_usage.json '
+             'in the KPI output (default: 5). An outlier is an event at or above its own '
+             'pair\'s p99 latency.',
+    )
+    parser.add_argument(
         '--no-filter',
         action='store_true',
         help='Include internal / bookkeeping topics (rosout, bond, clock, etc.).',
@@ -1188,6 +1143,12 @@ def main() -> None:
         '--summary-only',
         action='store_true',
         help='Print only the ranked summary table, skip per-node details.',
+    )
+    parser.add_argument(
+        '--no-table',
+        action='store_true',
+        help='Suppress all table output (summary table + performance summary). '
+             'KPI exports (--json-out, --csv-out) are unaffected.',
     )
     parser.add_argument(
         '--json-out',
@@ -1223,13 +1184,13 @@ def main() -> None:
         bag_input = Path(args.bag).resolve()
         # Accept both the bag directory AND a direct path to a .mcap/.db3 file
         bag_dir = bag_input.parent if bag_input.is_file() else bag_input
-        # resource_usage.log and other session logs live in the parent of the
+        # resource_usage.json and other session logs live in the parent of the
         # bag directory (e.g. session_dir/bag/ → session_dir/)
-        session_dir = bag_dir.parent if (bag_dir.parent / 'resource_usage.log').exists() else bag_dir
+        session_dir = bag_dir.parent if (bag_dir.parent / 'resource_usage.json').exists() else bag_dir
 
         bag_files = sorted(bag_dir.glob('*.mcap')) + sorted(bag_dir.glob('*.db3'))
         if not bag_files:
-            print(f'ERROR: No .mcap or .db3 file found in {bag_dir}', file=sys.stderr)
+            logger.error(f'No .mcap or .db3 file found in {bag_dir}')
             sys.exit(1)
 
         if args.topology:
@@ -1245,27 +1206,26 @@ def main() -> None:
             )
             if candidates:
                 topo_path = candidates[0]
-                print('\n  ℹ  No topology in bag dir — using nearest session:')
-                print(f'     {topo_path}')
-                print('     (pass --topology <path> to override)')
+                logger.info('\n  ℹ  No topology in bag dir — using nearest session:')
+                logger.info(f'     {topo_path}')
+                logger.info('     (pass --topology <path> to override)')
             else:
-                print('ERROR: graph_topology.json not found.', file=sys.stderr)
-                print(f'  Looked in: {bag_dir}', file=sys.stderr)
-                print('  Fix: run a --analyze session first, or pass --topology <path>',
-                      file=sys.stderr)
+                logger.error('graph_topology.json not found.')
+                logger.error(f'  Looked in: {bag_dir}')
+                logger.error('  Fix: run a --analyze session first, or pass --topology <path>')
                 sys.exit(1)
 
         bag_file = bag_files[0]
         fmt = 'MCAP' if bag_file.suffix == '.mcap' else 'DB3'
-        print(f'\n  Bag dir  : {bag_dir}')
-        print(f'  {fmt:<8} : {bag_file.name}')
-        print(f'  Topology : {topo_path.name}')
+        logger.info(f'\n  Bag dir  : {bag_dir}')
+        logger.info(f'  {fmt:<8} : {bag_file.name}')
+        logger.info(f'  Topology : {topo_path.name}')
         if args.node:
-            print(f'  Node filter: {args.node}')
+            logger.info(f'  Node filter: {args.node}')
 
         print('\n  Loading topic timestamps from bag…', end='', flush=True)
         topic_times = load_topic_timestamps_from_bag(bag_dir)
-        print(f' {len(topic_times)} topics loaded.')
+        logger.info(f' {len(topic_times)} topics loaded.')
 
     else:
         # ── Session mode: graph_timing.csv + graph_topology.json ─────────────
@@ -1275,7 +1235,7 @@ def main() -> None:
         else:
             session_dir = find_latest_session(sessions_root)
             if session_dir is None:
-                print(f'ERROR: No valid session found under {sessions_root}', file=sys.stderr)
+                logger.error(f'No valid session found under {sessions_root}')
                 sys.exit(1)
 
         csv_path  = session_dir / 'graph_timing.csv'
@@ -1283,18 +1243,18 @@ def main() -> None:
 
         for p in (csv_path, topo_path):
             if not p.exists():
-                print(f'ERROR: Required file not found: {p}', file=sys.stderr)
+                logger.error(f'Required file not found: {p}')
                 sys.exit(1)
 
-        print(f'\n  Session  : {session_dir}')
-        print(f'  CSV      : {csv_path.name}')
-        print(f'  Topology : {topo_path.name}')
+        logger.info(f'\n  Session  : {session_dir}')
+        logger.info(f'  CSV      : {csv_path.name}')
+        logger.info(f'  Topology : {topo_path.name}')
         if args.node:
-            print(f'  Node filter: {args.node}')
+            logger.info(f'  Node filter: {args.node}')
 
         print('\n  Loading topic timestamps…', end='', flush=True)
         topic_times = load_topic_timestamps(csv_path)
-        print(f' {len(topic_times)} topics loaded.')
+        logger.info(f' {len(topic_times)} topics loaded.')
 
     nodes, _ = load_topology(topo_path)
     filter_internal = not args.no_filter
@@ -1318,15 +1278,18 @@ def main() -> None:
         node_results = [r for r in node_results if r['n'] >= args.min_samples]
         all_results.extend(node_results)
 
-    print(f' {len(all_results)} (input→output) pairs found.')
+    if not args.no_table:
+        logger.info(f' {len(all_results)} (input→output) pairs found.')
 
     # ── Report ───────────────────────────────────────────────────────────────
-    print_summary_table(all_results)
+    if not args.no_table:
+        print_summary_table(all_results)
 
-    if not args.summary_only:
+    if not args.summary_only and not args.no_table:
         print_results(all_results, node_filter=args.node)
 
-    print_performance_summary(all_results)
+    if not args.no_table:
+        print_performance_summary(all_results)
 
     # ── Export CSV ───────────────────────────────────────────────────────────
     if args.export_csv:
@@ -1335,22 +1298,28 @@ def main() -> None:
 
     # ── JSON output (for benchmark aggregation) ──────────────────────────────
     if args.json_out:
-        payload = build_performance_kpi(all_results, session_dir, topic_times)
+        payload = build_performance_kpi(
+            all_results, session_dir, topic_times,
+            max_latency_spikes=args.max_latency_spikes,
+        )
         json_path = Path(args.json_out)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         with open(json_path, 'w') as _jf:
             json.dump(payload, _jf, indent=2)
-        print(f'  KPI JSON written → {json_path}')
+        logger.info(f'  KPI JSON written → {json_path}')
+        if not args.no_table and payload.get('latency_spikes'):
+            logger.info(f"  ⚠  {len(payload['latency_spikes'])} latency spike(s) cross-referenced "
+                        f"against resource usage — see 'latency_spikes' in the KPI JSON")
         errors = validate_kpi_json(payload)
         if errors:
-            print(f'  WARNING: KPI JSON failed schema validation ({len(errors)} error(s)):')
+            logger.warning(f'  KPI JSON failed schema validation ({len(errors)} error(s)):')
             for err in errors:
-                print(f'    • {err}')
+                logger.info(f'    • {err}')
         else:
-            print('  KPI JSON schema validation passed ✓')
+            logger.info('  KPI JSON schema validation passed ✓')
         _gcl = (payload.get('wandering') or {}).get('goal_calc_latency_ms')
         if _gcl:
-            print(f'  Goal-calc latency    mean={_gcl["mean_ms"]:.1f}ms  '
+            logger.info(f'  Goal-calc latency    mean={_gcl["mean_ms"]:.1f}ms  '
                   f'p90={_gcl["p90_ms"]:.1f}ms  max={_gcl["max_ms"]:.1f}ms  '
                   f'(n={_gcl["n"]} transitions)')
 
@@ -1391,7 +1360,7 @@ def main() -> None:
                 writer = csv.DictWriter(_cf, fieldnames=_L1_FIELDS, extrasaction='ignore')
                 writer.writeheader()
                 writer.writerows(_l1_rows)
-            print(f'  Level 1 KPI CSV written → {csv_out_path}  ({len(_l1_rows)} rows)')
+            logger.info(f'  Level 1 KPI CSV written → {csv_out_path}  ({len(_l1_rows)} rows)')
 
         if args.xlsx_out:
             xlsx_out_path = Path(args.xlsx_out)
@@ -1412,14 +1381,14 @@ def main() -> None:
                         max((len(str(c.value or '')) for c in _col), default=8) + 2
                     )
                 _wb.save(xlsx_out_path)
-                print(f'  Level 1 KPI Excel written → {xlsx_out_path}  ({len(_l1_rows)} rows)')
+                logger.info(f'  Level 1 KPI Excel written → {xlsx_out_path}  ({len(_l1_rows)} rows)')
             except ImportError:
-                print('  WARNING: openpyxl not installed — Excel export skipped. '
-                      'Install with: pip install openpyxl', file=sys.stderr)
+                logger.warning('  openpyxl not installed — Excel export skipped. '
+                      'Install with: pip install openpyxl')
 
     # ── Plot ─────────────────────────────────────────────────────────────────
     if args.plot:
-        print('\n  Generating plots…')
+        logger.info('\n  Generating plots…')
         plot_trigger_timeline(
             all_results,
             node_filter=args.node,
