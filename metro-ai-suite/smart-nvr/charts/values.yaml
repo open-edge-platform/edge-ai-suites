@@ -34,7 +34,7 @@ frigate:
 nvr-event-router:
   image:
     repository: intel/nvr-event-router
-    tag: 2026.2.0-rc1
+    tag: 2026.2.0-rc2
 
   replicaCount: 1
 
@@ -69,7 +69,7 @@ nvr-event-router:
 nvr-event-router-ui:
   image:
     repository: intel/nvr-event-router
-    tag: 2026.2.0-rc1
+    tag: 2026.2.0-rc2
   env:
     MODE: "ui"
     API_BASE_URL: "http://nvr-event-router:8000"
