@@ -11,7 +11,7 @@
 # annotated video in a host X11 popup, and parses the latency_tracer stderr
 # into rolling P50/P90/P95/P99 percentiles served over HTTP.
 
-FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
 
 
 USER root
