@@ -18,7 +18,7 @@ REGISTRY      ?= true
 # Optional registry / namespace prefix (include the trailing slash), e.g.
 #   REGISTRY_URL=intel/   or   REGISTRY_URL=myreg.example.com:5000/intel/
 REGISTRY_URL  ?=
-TAG           ?= 2026.2.0-rc1
+TAG           ?= 2026.2.0-rc2
 export TAG
 # Image references shared with docker-compose.yaml. Same names in both modes;
 # only the build-vs-pull action differs. Override individually if needed.
