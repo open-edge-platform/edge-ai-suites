@@ -49,12 +49,20 @@ class ContinuousRecorder(BaseMonitor):
         recording_cfg: RecordingConfig,
         data_dir: str,
         sink: EventSink,
+        protocol_whitelist: list[str] | None = None,
     ):
         self.source = source
         self.source_id = source.source_id
         self.rtsp_url = source.source_url
         self._cfg = recording_cfg
         self._sink = sink
+        # Constrains which protocols the ffmpeg child may open, independently of
+        # the API-layer scheme check on `source_url`. Defaults to the same set as
+        # `SecurityConfig.ffmpeg_protocol_whitelist` so a directly-constructed
+        # recorder (CLI `stream` mode, tests) is restricted too.
+        self._protocol_whitelist = protocol_whitelist or [
+            "file", "crypto", "rtp", "udp", "tcp", "tls", "rtsp", "rtsps", "http", "https",
+        ]
 
         # `data_dir` is the per-source root resolved by SourceManager.
         self._output_dir = os.path.join(data_dir, "recordings")
@@ -210,6 +218,10 @@ class ContinuousRecorder(BaseMonitor):
         )
 
         args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y"]
+        # Must precede -i: it constrains which protocols the demuxer may open.
+        # Defence in depth behind the API-layer scheme allowlist — ffmpeg itself
+        # refuses `concat:`/`subfile:`/`data:` inputs even if one gets through.
+        args += ["-protocol_whitelist", ",".join(self._protocol_whitelist)]
         if self.rtsp_url.startswith("rtsp://"):
             args += ["-rtsp_transport", "tcp", "-timeout", str(_RW_TIMEOUT_US)]
         else:
