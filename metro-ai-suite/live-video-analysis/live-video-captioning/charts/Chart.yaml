@@ -9,7 +9,7 @@ description: >
   DL Streamer pipeline server, MQTT broker, MediaMTX WebRTC relay, coturn TURN server,
   and a bundled metrics service.
 type: application
-version: 2026.2.0-rc1-helm
+version: 2026.2.0-rc2-helm
 appVersion: "2026.2.0"
 keywords:
   - intel
@@ -27,20 +27,20 @@ maintainers:
 kubeVersion: ">=1.24.0-0"
 dependencies:
   - name: mqtt-broker
-    version: "2026.2.0-rc1-helm"
+    version: "2026.2.0-rc2-helm"
     repository: "file://subcharts/mqtt-broker"
   - name: dlstreamer-pipeline-server
-    version: "2026.2.0-rc1-helm"
+    version: "2026.2.0-rc2-helm"
     repository: "file://subcharts/dlstreamer-pipeline-server"
   - name: mediamtx
-    version: "2026.2.0-rc1-helm"
+    version: "2026.2.0-rc2-helm"
     repository: "file://subcharts/mediamtx"
   - name: coturn
-    version: "2026.2.0-rc1-helm"
+    version: "2026.2.0-rc2-helm"
     repository: "file://subcharts/coturn"
   - name: video-caption-service
-    version: "2026.2.0-rc1-helm"
+    version: "2026.2.0-rc2-helm"
     repository: "file://subcharts/video-caption-service"
   - name: metrics-manager
-    version: "2026.2.0-rc1-helm"
+    version: "2026.2.0-rc2-helm"
     repository: "file://subcharts/metrics-manager"

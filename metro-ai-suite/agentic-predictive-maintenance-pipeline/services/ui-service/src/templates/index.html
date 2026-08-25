@@ -27,7 +27,7 @@
   <nav>
     <a href="/" class="active">Dashboard</a>
     <a href="/detections">Detections</a>
-    <a href="/chat">Ask &amp; Analyze</a>
+    {% if chat_available %}<a href="/chat">Ask &amp; Analyze</a>{% endif %}
   </nav>
 
   <div class="layout-wrapper">
@@ -142,8 +142,10 @@
             <td>
               {% if run.status == "completed" %}
               <a href="/results/{{ run.run_id }}">View Results</a>
+              {% if chat_available %}
               <span aria-hidden="true"> · </span>
               <a href="/chat?run_id={{ run.run_id | urlencode }}">Ask about run</a>
+              {% endif %}
               {% elif run.status == "running" %}
               <a href="/results/{{ run.run_id }}">Waiting…</a>
               {% else %}
@@ -201,6 +203,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script>window.__chatAvailable = {{ chat_available | tojson }};</script>
   <script src="/static/js/live-status.js"></script>
   <script src="/static/js/metrics.js"></script>
   <script src="/static/js/system-capabilities.js"></script>

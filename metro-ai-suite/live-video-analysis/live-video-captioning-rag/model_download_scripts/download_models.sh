@@ -43,7 +43,7 @@ EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubu
 # Tag for the ephemeral intel/model-download container. Kept separate from the
 # application image TAG (used by compose.yaml) to avoid pinning the app release
 # tag onto the model-download image, which has its own tag stream.
-IMAGE_TAG="${MODEL_DOWNLOAD_IMAGE_TAG:-2026.2.0-rc1}"
+IMAGE_TAG="${MODEL_DOWNLOAD_IMAGE_TAG:-2026.2.0-rc2}"
 OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
 EPHEMERAL_CONTAINER_NAME="${MODEL_DOWNLOAD_EPHEMERAL_CONTAINER_NAME:-model-download-ephemeral}"
 

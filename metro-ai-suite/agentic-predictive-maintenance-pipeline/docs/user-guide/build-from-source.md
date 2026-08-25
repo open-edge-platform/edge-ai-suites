@@ -27,7 +27,7 @@ Set the registry URL and tag for the images you want to build. If you leave `REG
 
 ```bash
 export REGISTRY=            # e.g. "docker.io/myusername/" — leave empty for local builds
-export TAG=2026.2.0-rc1
+export TAG=2026.2.0-rc2
 ```
 
 ### 3. Build the Images

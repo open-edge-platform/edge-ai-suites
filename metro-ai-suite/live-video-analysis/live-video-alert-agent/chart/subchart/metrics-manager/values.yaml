@@ -5,7 +5,7 @@
 
 image:
   repository: intel/metrics-manager
-  tag: "2026.2.0-extended-rc1"
+  tag: "2026.2.0-extended-rc2"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
