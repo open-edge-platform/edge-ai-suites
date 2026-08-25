@@ -93,6 +93,8 @@ jobs:
 
   bandit-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
@@ -116,6 +118,8 @@ jobs:
 
   clamav-scan:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
