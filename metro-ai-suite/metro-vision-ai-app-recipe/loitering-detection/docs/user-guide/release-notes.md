@@ -4,12 +4,12 @@
 
 **New**
 
-- Fixed coturn server configuration for webrtc relay.
-- Fixed Grafana MQTT datasource version to avoid errors with latest version.
+- Fixed coturn server configuration for WebRTC relay.
+- Fixed Grafana MQTT datasource version to avoid errors with the latest version.
 
 **Improved**
 
-- Improved the security context of Grafana and nodered containers.
+- Improved the security context of Grafana and Node-RED containers.
 - Consumed latest DL Streamer version 2026.2.0.
 
 

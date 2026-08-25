@@ -16,7 +16,7 @@ application.
 
 - Python libraries and npm package updates.
 
-**Improved:**
+**Improved**
 
 - Consumed latest DL Streamer version 2026.2.0.
 

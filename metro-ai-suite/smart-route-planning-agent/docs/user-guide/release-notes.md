@@ -8,8 +8,8 @@
 
 - Updated dependency specifications to use compatible-release (`~=`) versioning based on PEP 440 standard.
 - Updated all dependencies to latest compatible versions.
-- Pinned `uv` installer to semantic versioning range (>=0.9.22,<1.0.0) for reproducible docker builds.
-- Removal of unused and few transitive dependencies for cleaner dependency tree.
+- Pinned `uv` installer to semantic versioning range (>=0.9.22,<1.0.0) for reproducible Docker builds.
+- Removed unused and a few transitive dependencies for a cleaner dependency tree.
 
 ## Version 2026.1.0
 

@@ -6,8 +6,8 @@
 
 **New**
 
-- Added NPU device inference compute support to captioning pipelines.
-- Added system capability information in the Live Video Captioning UI through metrics-manager updates.
+- Added support for NPU device inference in captioning pipelines.
+- Added system capability information to the Live Video Captioning UI through Metrics Manager updates. Platform details are now displayed in the UI.
 - Decoupled RAG-related changes (charts, Docker Compose, and documentation) from Live Video Captioning.
 - Updated documentation, including a workflow diagram and GIFs, to reflect all applied changes.
 - Bumped dependency package versions to address reported vulnerabilities.

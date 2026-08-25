@@ -4,11 +4,11 @@
 
 **Aug 4, 2026**
 
-- Integrate model-download microservice to manage VLM models
-- Replace live-metrics with metrics-manager
+- Integrated model-download microservice to manage VLM models
+- Replaced live-metrics with Metrics Manager
 - Enabled fullscreen and download actions for camera gallery images so pedestrian and traffic views can be inspected more easily.
 - Added configurable camera-feed staleness detection with a visual `STALE` badge when a frame is older than the configured threshold
-- Enable GPU with Trusted Compute
+- Enabled GPU with Trusted Compute
 
 ## Version 2026.1.0
 
