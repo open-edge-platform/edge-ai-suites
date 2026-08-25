@@ -72,7 +72,7 @@ sed -i 's|^HOST_IP=.*|HOST_IP=0.0.0.0|' .env
 make up-sim-camera        # start PX4, MQTT, RTSP server
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../uav-mission-compute-sdk/docs/user-guide/get-started.md) — no further SDK steps are needed here, since `uav-vision-analytics` runs its own inference via DLSPS.
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md) — no further SDK steps are needed here, since `uav-vision-analytics` runs its own inference via DLSPS.
 
 ### 2. Configure environment
 
@@ -150,7 +150,7 @@ make start-rtsp DEVICE=all     # all three cameras simultaneously
 > `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **uav-mission-compute-sdk mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`; available after drone arms):
-```
+```text
 rtsp://localhost:8555/nadir      (nadir camera, CPU)
 rtsp://localhost:8555/forward    (forward camera, GPU)
 rtsp://localhost:8555/rear       (rear camera, NPU)

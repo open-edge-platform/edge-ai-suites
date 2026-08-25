@@ -8,7 +8,8 @@ SPDX-License-Identifier: Apache-2.0
 PX4 SITL + Gazebo multi-camera UAV simulation with Intel Edge AI vision processing.
 
 ## Stack
-```
+
+```text
 infra/                     Core simulation + messaging (root compose)
 ├── px4-sim/               PX4 + Gazebo + 3 cameras (nadir, forward, rear)
 ├── bridges/               MAVLink ↔ MQTT + Gazebo → RTSP + REST API (port 8080)
