@@ -63,7 +63,7 @@ For additional details, refer to the official [CUDA-FastBEV GitHub repository].
 
 After unzipping `model.zip`, the following directory structure will be created:
 
-```
+```text
 ├── resnet18
 │   ├── fastbev-det.pth
 │   ├── fastbev_post_trt_decode.onnx

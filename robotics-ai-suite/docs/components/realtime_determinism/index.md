@@ -1,6 +1,6 @@
-# Real-time Determinsm
+# Real-time Determinism
 
-Real-time control documentation covers determistic compute, motion, industrial communication, and performance guidance.
+Real-time control documentation covers deterministic compute, motion, industrial communication, and performance guidance.
 
 ::::{grid} 2
 

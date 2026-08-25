@@ -14,7 +14,7 @@ using an LLM. The picture below shows the architecture of the demo:
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](./imitation_learning_act.md)
+Refer to the [comprehensive documentation on this component](./imitation_learning_act.md)
 
 ## Prerequisites
 
@@ -323,7 +323,7 @@ Ultra IPC.
 
 | Item    | Explanation                                     | Link                                                             |
 | ------- | ----------------------------------------------- | ---------------------------------------------------------------- |
-| Camera  | RealSense Depth Camera D435                    | <https://www.realsenseai.com/products/stereo-depth-camera-d435/> |
+| Camera  | RealSense Depth Camera D435                     | <https://www.realsenseai.com/products/stereo-depth-camera-d435/> |
 | USB Mic | Audio input device of FunASR, 16k sampling rate | UGREEN CM564                                                     |
 
 ### Launch LLM Robotic Demo
