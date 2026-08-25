@@ -888,12 +888,29 @@ foreach ($Service in $ModelServices) {
     Write-Step "Warming up models for $($Service.Name) (downloads + OpenVINO export on first run)..."
     Push-Location $Service.Path
     try {
-        $WarmupPy | & $PythonExe -
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "Models ready for $($Service.Name)"
+        # First-run model download/export can fail transiently (interrupted HF
+        # download, timeout, rate-limiting). Retry a few times; already-exported
+        # IR files are cached, so a retry only re-attempts the failed step.
+        $MaxAttempts = 3
+        $Succeeded = $false
+        for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
+            if ($Attempt -gt 1) {
+                Write-Info "Retrying model warmup for $($Service.Name) (attempt $Attempt of $MaxAttempts)..."
+                Start-Sleep -Seconds 5
+            }
+
+            $WarmupPy | & $PythonExe -
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Models ready for $($Service.Name)"
+                $Succeeded = $true
+                break
+            }
+
+            Write-Error-Custom "Model warmup attempt $Attempt failed for $($Service.Name) (exit code $LASTEXITCODE)"
         }
-        else {
-            Write-Error-Custom "Model warmup failed for $($Service.Name) (exit code $LASTEXITCODE)"
+
+        if (-not $Succeeded) {
+            Write-Error-Custom "Model warmup failed for $($Service.Name) after $MaxAttempts attempts"
             Write-Info "The service will retry the export on first startup, which may be slow."
         }
     }
