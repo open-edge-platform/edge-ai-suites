@@ -251,7 +251,7 @@ clean: ## Remove staging scratch (.work). Add CONFIRM=yes to also stop container
 		$(MAKE) down; \
 		docker run --rm -v "$(SELF_DIR)/data:/data" alpine \
 			sh -c "rm -rf /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs"; \
-        # script-based ENIB runs as 1001:1001, model-downloader/ICT ENIB as 1000:1000, so sudo is needed. \
+		# script-based ENIB runs as 1001:1001, model-downloader/ICT ENIB as 1000:1000, so sudo is needed. \
 		sudo rm -rf $(VIPPET_DIR); \
 		echo "✓ Containers stopped and data directories removed"; \
 	else \
