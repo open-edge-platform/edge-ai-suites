@@ -39,7 +39,7 @@
         "Accepts RTSP URLs as sources instead of sample videos",
         "Streams annotated video over WebRTC via MediaMTX (WHIP in from DLSPS, WHEP out) embedded as Grafana iframe panels at /mediamtx/<peer-id>/, with Coturn providing ICE/TURN on 3478/udp",
         "Generates a self-signed TLS cert that includes a SAN",
-        "Uses --noproxy '*' and -k on localhost/LAN curl calls"
+        "Uses --noproxy '*' and --cacert on localhost/LAN curl calls"
       ]
     },
     {
