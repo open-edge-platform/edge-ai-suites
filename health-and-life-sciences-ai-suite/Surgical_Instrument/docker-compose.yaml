@@ -39,7 +39,7 @@ services:
     build:
       context: ./pipeline
       dockerfile: Dockerfile
-    image: intel/surgical-pipeline:gencamsrc-fix
+    image: intel/surgical-pipeline:${TAG}
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
