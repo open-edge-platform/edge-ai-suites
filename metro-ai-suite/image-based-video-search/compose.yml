@@ -142,8 +142,8 @@ services:
     entrypoint: ["./run.sh"]
       # - '8554:8554'
     environment:
-      - NO_PROXY=${no_proxy},ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16
-      - no_proxy=${no_proxy},ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16
+      - NO_PROXY=ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16,${no_proxy}
+      - no_proxy=ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16,${no_proxy}
       - ENABLE_RTSP=true
       - RTSP_PORT=8554
       - ENABLE_WEBRTC=true
