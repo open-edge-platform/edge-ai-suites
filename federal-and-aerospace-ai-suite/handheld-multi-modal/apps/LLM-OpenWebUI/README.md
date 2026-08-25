@@ -10,8 +10,8 @@ OpenVINO™ model server-accelerated LLM inference on Intel iGPU with a web chat
 
 | Service | Image | Role |
 |---------|-------|------|
-| `ovms` | `openvino/model_server:latest-gpu` | Serves OpenVINO-optimized LLMs via OpenAI-compatible REST API |
-| `open-webui` | `ghcr.io/open-webui/open-webui:main` | Chat UI connected to OVMS |
+| `ovms` | `openvino/model_server@sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00` | Serves OpenVINO-optimized LLMs via OpenAI-compatible REST API |
+| `open-webui` | `ghcr.io/open-webui/open-webui:v0.11.0-slim` | Chat UI connected to OVMS |
 
 Both services are defined in the root [`docker-compose.yml`](../../docker-compose.yml) and share the `fedaero` network.
 
