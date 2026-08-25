@@ -34,6 +34,29 @@ from sinks import EventSink, WebhookSink
 logger = logging.getLogger(__name__)
 
 
+def _log_id(source_id: str) -> str:
+    """Strip line breaks from `source_id` before it reaches a log line.
+
+    A no-op in practice. Every `source_id` that can get here has already been
+    matched against `service.SOURCE_ID_PATTERN` (`^[A-Za-z0-9_-]{1,128}$`) —
+    on the request body via a pydantic `Field(pattern=...)` and on every path
+    parameter via `service.SourceIdPath` — so a line break cannot be present.
+
+    It exists because that constraint lives in another module behind pydantic's
+    declarative validation, which static analysis cannot see through: CodeQL
+    treats the whole request object as tainted and flags every log call below
+    as `py/log-injection` without an explicit scrub on the data flow. Inline
+    suppression comments (`# codeql[...]` / `# lgtm[...]`) do not work — they
+    are honoured by GitHub code scanning at ingestion, not by
+    `codeql database analyze`, which is what the SDL gate runs.
+
+    Keep the literal `"\\n"` argument: the query only recognises
+    `.replace("\\n", ...)` / `.replace("\\r\\n", ...)` with a string literal as a
+    sanitizer, so hoisting it into a constant silently re-opens all findings.
+    """
+    return source_id.replace("\n", "").replace("\r", "")
+
+
 @dataclass
 class SourceBundle:
     """Per-source state: motion pipeline + optional continuous recorder + sink.
@@ -231,7 +254,7 @@ class SourceManager:
             try:
                 bundle.sink.close()
             except Exception as e:
-                logger.warning("[%s] sink close error: %s", source_id, e)
+                logger.warning("[%s] sink close error: %s", _log_id(source_id), e)
 
     def unregister_source(self, source_id: str) -> dict[str, Any]:
         # Pop under the registry lock, tear down outside it. Once popped the
@@ -243,7 +266,7 @@ class SourceManager:
             return {"status": "not_found", "source_id": source_id}
         with bundle.lock:
             self._teardown_bundle(source_id, bundle)
-        logger.info("Unregistered source: %s", source_id)
+        logger.info("Unregistered source: %s", _log_id(source_id))
         return {"status": "stopped", "source_id": source_id}
 
     def _handle_source_removed(self, source_id: str):
@@ -346,7 +369,7 @@ class SourceManager:
                 )
                 bundle.recorder.start()
 
-        logger.info("Pipeline config updated: %s", source_id)
+        logger.info("Pipeline config updated: %s", _log_id(source_id))
         return {"status": "updated", "source_id": source_id}
 
     def restart_source(self, source_id: str) -> dict[str, Any]:
@@ -366,7 +389,7 @@ class SourceManager:
             if bundle.recorder is not None:
                 bundle.recorder.stop()
                 bundle.recorder.start()
-        logger.info("Restarted source: %s", source_id)
+        logger.info("Restarted source: %s", _log_id(source_id))
         return {"status": "restarted", "source_id": source_id}
 
     def pause_source(self, source_id: str) -> dict[str, Any]:

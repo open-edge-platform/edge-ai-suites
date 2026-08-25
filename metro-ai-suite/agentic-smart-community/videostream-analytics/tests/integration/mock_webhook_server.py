@@ -26,8 +26,15 @@ async def health():
 
 
 def _ev_type(event: dict) -> str:
-    """Envelope reads `type`; tolerate legacy `event_type` for safety."""
-    return event.get("type") or event.get("event_type") or "?"
+    """Envelope reads `type`; tolerate legacy `event_type` for safety.
+
+    The body is arbitrary JSON, so the value is coerced to `str` and stripped
+    of line breaks before it reaches a log line. Unlike `source_id` in the
+    service itself there is no schema constraining this field, so the scrub is
+    real rather than defensive (CodeQL `py/log-injection`).
+    """
+    raw = event.get("type") or event.get("event_type") or "?"
+    return str(raw).replace("\n", "").replace("\r", "")
 
 
 @app.post("/events")
