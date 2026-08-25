@@ -213,7 +213,7 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	BASLER_THROUGHPUT_LIMIT=$(BASLER_THROUGHPUT_LIMIT) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d $(_BUILD_FLAG)
+		$(COMPOSE) -f docker-compose.yaml $$(test -f $(CAMERA_OVERRIDE) && echo -f $(CAMERA_OVERRIDE)) up -d $(_BUILD_FLAG)
 	@echo "[up] image mode: $(if $(filter true,$(REGISTRY)),REGISTRY (prebuilt images @ $(TAG)),SOURCE (built from Dockerfiles))"
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
 	@echo "[up] Follow progress: make logs"
@@ -243,7 +243,7 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	BASLER_THROUGHPUT_LIMIT=$(BASLER_THROUGHPUT_LIMIT) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d
+		$(COMPOSE) -f docker-compose.yaml $$(test -f $(CAMERA_OVERRIDE) && echo -f $(CAMERA_OVERRIDE)) up -d
 	$(_print_urls)
 
 .PHONY: show-cores
