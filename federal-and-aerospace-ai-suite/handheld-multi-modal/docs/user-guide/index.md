@@ -64,7 +64,7 @@ For more information, see [Web UI documentation](https://github.com/open-webui/o
 
 ### Observability
 
-The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/v13.0/), a data visualization and analytics tool. A Grafana Dashboard is
+The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/latest/), a data visualization and analytics tool. A Grafana Dashboard is
 supplied that aggregates and presents metrics from the components of the application
 and from the underlying platform. Metrics are streamed over websocket to Grafana
 for a live, ephemeral on-device view. Additionally, a Prometheus endpoint is exposed at
