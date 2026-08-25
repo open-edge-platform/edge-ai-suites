@@ -141,7 +141,7 @@ uv run python src/visualize_graph.py monitoring_sessions/<name> --show
 |---------|-------------|
 | `make grafana-start` | Start Grafana + Prometheus (Docker) |
 | `make grafana-stop` | Stop the stack |
-| `make grafana-status` | Check services — shows URL http://localhost:30000 |
+| `make grafana-status` | Check services — shows URL <http://localhost:30000> |
 | `make grafana-export SESSION=<name>` | Export session metrics to Prometheus |
 | `make grafana-export-live` | Continuously export live monitoring data |
 | `make grafana-open` | Open dashboard in browser |

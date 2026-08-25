@@ -107,7 +107,7 @@ uv run python src/visualize_gpu.py monitoring_sessions/picknplace/bench_20260319
 
 ## Session Data Layout
 
-```
+```text
 monitoring_sessions/
 └── picknplace/
     ├── bench_20260319_164521/        # benchmark run directory

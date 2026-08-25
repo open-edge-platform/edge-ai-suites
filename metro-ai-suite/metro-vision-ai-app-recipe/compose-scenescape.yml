@@ -194,8 +194,8 @@ services:
       - MQTT_PORT=1883
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
-      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - no_proxy=.scenescape.intel.com,influxdb2,${no_proxy}
+      - NO_PROXY=.scenescape.intel.com,influxdb2,${no_proxy}
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
       # NPU related environment variables
