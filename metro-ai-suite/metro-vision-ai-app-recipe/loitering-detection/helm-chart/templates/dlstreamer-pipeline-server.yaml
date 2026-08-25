@@ -95,7 +95,7 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+          value: "{{ $.Values.env.HOST_IP }},{{ $.Values.env.no_proxy }}"
         volumeMounts:
         - name: models-volume
           mountPath: /tmp/models
@@ -157,9 +157,9 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
+          value: "{{ $.Values.env.HOST_IP }},mediamtx,otel-collector,{{ $.Values.env.no_proxy }}"
         - name: NO_PROXY
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
+          value: "{{ $.Values.env.HOST_IP }},mediamtx,otel-collector,{{ $.Values.env.no_proxy }}"
         - name: MQTT_HOST
           value: "broker"
         - name: MQTT_PORT
