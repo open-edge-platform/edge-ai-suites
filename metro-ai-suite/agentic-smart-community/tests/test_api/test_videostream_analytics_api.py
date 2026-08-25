@@ -106,15 +106,15 @@ def test_path_unregister_variants(client_and_manager, method: str, path: str):
 
 
 def test_restart_controls_pipeline_and_recorder(client_and_manager):
-    client, _, bundle = client_and_manager
+    """Restart is delegated to the manager, which sequences stop/start under the
+    per-source lock (the endpoint used to reach into `_bundles` itself)."""
+    client, manager, _ = client_and_manager
+    manager.restart_source.return_value = {"status": "restarted", "source_id": "cam_child"}
 
     response = client.post("/sources/cam_child/restart")
 
     assert response.json() == {"status": "restarted", "source_id": "cam_child"}
-    bundle.pipeline.stop.assert_called_once_with()
-    bundle.pipeline.start.assert_called_once_with()
-    bundle.recorder.stop.assert_called_once_with()
-    bundle.recorder.start.assert_called_once_with()
+    manager.restart_source.assert_called_once_with("cam_child")
 
 
 @pytest.mark.parametrize(
@@ -177,3 +177,77 @@ def test_legacy_register_fields_return_422(client_and_manager):
 
     assert response.status_code == 422
     assert {"rtsp_url", "use_case"} <= set(response.json()["unknown_fields"])
+
+def test_semantically_invalid_input_returns_422_not_500(client_and_manager):
+    """Type-valid but semantically invalid input must never reach the business layer.
+
+    Fuzz finding §1.1: these bodies passed the pydantic type check and then blew
+    up in the business layer as bare 500s.
+    """
+    client, manager, _ = client_and_manager
+
+    cases = [
+        {"source_id": "../../tmp/pwn", "source_url": "rtsp://h/s"},
+        {"source_id": "cam_child", "source_url": "rtsp://h/s", "data_dir": "fuzzstring"},
+        {"source_id": "cam_child", "source_url": "rtsp://h/s", "webhook_url": "fuzzstring"},
+        {
+            "source_id": "cam_child",
+            "source_url": "rtsp://h/s",
+            "pipeline": {"health": {"recovery_strategy": "fuzzstring"}},
+        },
+        {
+            "source_id": "cam_child",
+            "source_url": "rtsp://h/s",
+            "pipeline": {"roi": {"mode": "fuzzstring"}},
+        },
+    ]
+    for body in cases:
+        response = client.post("/register_source", json=body)
+        assert response.status_code == 422, body
+    manager.register_source.assert_not_called()
+
+
+def test_422_body_is_serializable_and_names_the_field(client_and_manager):
+    """A field_validator failure must render as 422, not 500 inside the encoder.
+
+    pydantic v2 puts the live exception in `ctx["error"]`; serializing the raw
+    error list would raise inside JSONResponse and surface as a 500.
+    """
+    client, _, _ = client_and_manager
+
+    response = client.post(
+        "/register_source",
+        json={"source_id": "cam_child", "source_url": "rtsp://h/s", "webhook_url": "ftp://h/x"},
+    )
+
+    assert response.status_code == 422
+    locs = [".".join(str(p) for p in d["loc"]) for d in response.json()["detail"]]
+    assert any("webhook_url" in loc for loc in locs)
+
+
+def test_business_layer_failure_returns_400_without_server_paths(client_and_manager):
+    """Fuzz finding §1.1 repro: `os.makedirs` PermissionError used to be a 500."""
+    client, manager, _ = client_and_manager
+    manager.register_source.side_effect = PermissionError(
+        13, "Permission denied", "/home/operator/private/segments"
+    )
+
+    response = client.post(
+        "/register_source", json={"source_id": "cam_child", "source_url": "rtsp://h/s"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"]["reason"] == "PermissionError"
+    assert "/home/operator/private" not in response.text
+
+
+def test_missing_ffmpeg_returns_503(client_and_manager):
+    client, manager, _ = client_and_manager
+    manager.register_source.side_effect = ConnectionError("ffmpeg not found on PATH")
+
+    response = client.post(
+        "/register_source", json={"source_id": "cam_child", "source_url": "rtsp://h/s"}
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["error"] == "dependency_unavailable"

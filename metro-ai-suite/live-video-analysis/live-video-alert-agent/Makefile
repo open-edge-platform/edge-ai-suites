@@ -40,7 +40,7 @@ SHELL := bash
 # ==============================================================================
 
 SERVICE_NAME := live-video-alert-agent
-VERSION ?= 2026.2.0-rc1
+VERSION ?= 2026.2.0-rc2
 
 # ==============================================================================
 # Image Configuration
@@ -49,7 +49,7 @@ VERSION ?= 2026.2.0-rc1
 # Registry and tag defaults
 REGISTRY_URL ?= intel
 PROJECT_NAME ?=
-TAG ?= 2026.2.0-rc1
+TAG ?= 2026.2.0-rc2
 
 # Compute REGISTRY the same way as the compose file: REGISTRY_URL/PROJECT_NAME/
 REGISTRY := $(if $(REGISTRY_URL),$(REGISTRY_URL)/)$(if $(PROJECT_NAME),$(PROJECT_NAME)/)
@@ -63,7 +63,7 @@ COMPONENTS := live-video-alert-agent
 DOCKER_DIR := docker
 
 # Intel platform images (pre-built, fixed release tags)
-METRICS_MANAGER_IMAGE := intel/metrics-manager:2026.2.0-extended-rc1
+METRICS_MANAGER_IMAGE := intel/metrics-manager:2026.2.0-extended-rc2
 PLATFORM_IMAGES       := $(METRICS_MANAGER_IMAGE)
 
 # ==============================================================================

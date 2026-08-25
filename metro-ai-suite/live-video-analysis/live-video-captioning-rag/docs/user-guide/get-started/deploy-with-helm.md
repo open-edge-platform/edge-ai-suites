@@ -74,7 +74,7 @@ To set up the integrated deployment, obtain the chart and install it with your e
 1. Run the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning-rag/tags) from Docker Hub. Refer to the release notes for details on the latest version number to use for the sample application.
 
      ```bash
-	 helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version 2026.2.0-rc1-helm
+	 helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version 2026.2.0-rc2-helm
      ```
 	 > Note: When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
 
