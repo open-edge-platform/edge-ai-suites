@@ -27,10 +27,8 @@ if [ ! -f .env ]; then
 fi
 
 # VISION_CAMERA_IDS is set automatically by make up-sim-camera
-make apps-down || true
 make down || true
 make up-sim-camera
-make apps
 
 echo "Done. Sim mode active (nadir, forward, rear)."
 ```
@@ -57,10 +55,8 @@ grep -q '^USB_VIDEO_DEVICE=' .env || echo 'USB_VIDEO_DEVICE=/dev/video32' >> .en
 grep -q '^USB_CAMERA_ID=' .env || echo 'USB_CAMERA_ID=nadir' >> .env
 grep -q '^USB_CAPTURE_FORMAT=' .env || echo 'USB_CAPTURE_FORMAT=mjpeg' >> .env
 
-make apps-down || true
 make down || true
 make up-usb-camera
-make apps
 
 echo "Done. USB mode active (nadir)."
 ```

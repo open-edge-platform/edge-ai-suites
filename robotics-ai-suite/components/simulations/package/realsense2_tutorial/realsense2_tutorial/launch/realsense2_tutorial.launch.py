@@ -17,74 +17,44 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import (
-    IncludeLaunchDescription,
-    DeclareLaunchArgument,
-    ExecuteProcess,
-    TimerAction,
-)
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.conditions import LaunchConfigurationEquals
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
-from launch.conditions import IfCondition, UnlessCondition
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    # Launch file argument to change type camera
-    use_usb_camera = LaunchConfiguration('use_usb_camera')
+    # Run scripts/find_cameras.sh to determine which value to pass here.
+    camera_type = LaunchConfiguration('camera_type')
 
-    declare_use_usb_camera_cmd = DeclareLaunchArgument(
-        'use_usb_camera',
-        default_value='true',
-        description='Launch with USB camera (true) or GMSL camera (false)',
+    declare_camera_type_cmd = DeclareLaunchArgument(
+        'camera_type',
+        default_value='usb',
+        choices=['usb', 'gmsl'],
+        description='Connected camera type, as reported by scripts/find_cameras.sh',
     )
 
-    # Get the path to the RealSense Tutorial package share directory
     realsense2_tutorial_share_dir = get_package_share_directory('realsense2_tutorial')
-
-    # Get the path to the RealSense Camera package share directory
-    realsense2_camera_share_dir = get_package_share_directory('realsense2_camera')
-
-    # RealSense Camera launch file
     realsense2_camera_launch_file_path = os.path.join(
-        realsense2_camera_share_dir, 'launch', 'rs_launch.py'
+        get_package_share_directory('realsense2_camera'), 'launch', 'rs_launch.py'
+    )
+    # Restricts each raw image topic to its compatible image_transport plugins;
+    # see the file for why this is needed.
+    image_transport_overrides_path = os.path.join(
+        realsense2_tutorial_share_dir, 'config', 'image_transport_overrides.yaml'
     )
 
-    launch_description = LaunchDescription()
-
-    # ROS2 topic list command
-    ros2_topic_list_cmd = TimerAction(
-        period=5.0, actions=[ExecuteProcess(cmd=['ros2', 'topic', 'list'], output='screen')]
-    )
-
-    # USB
     realsense2_usb_launch_file = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(realsense2_camera_launch_file_path),
-        launch_arguments={'align_depth.enable': 'true', 'camera_namespace': '/'}.items(),
-        condition=IfCondition(use_usb_camera),
+        launch_arguments={
+            'align_depth.enable': 'true',
+            'camera_namespace': '/',
+            'config_file': image_transport_overrides_path,
+        }.items(),
+        condition=LaunchConfigurationEquals('camera_type', 'usb'),
     )
 
-    rviz2_usb_config_file = os.path.join(
-        realsense2_tutorial_share_dir, 'config', 'realsense_config.rviz'
-    )
-
-    rviz2_usb_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        output='screen',
-        arguments=['-d', rviz2_usb_config_file],
-        condition=IfCondition(use_usb_camera),
-    )
-
-    ros2_usb_hz_cmd = TimerAction(
-        period=5.0,
-        actions=[
-            ExecuteProcess(cmd=['ros2', 'topic', 'hz', '/camera/color/image_raw'], output='screen')
-        ],
-        condition=IfCondition(use_usb_camera),
-    )
-
-    # GMSL
     realsense2_gmsl_launch_file = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(realsense2_camera_launch_file_path),
         launch_arguments={
@@ -92,39 +62,45 @@ def generate_launch_description():
             'camera_name': 'D457_mux_a',
             'device_type': 'd457',
             'camera_namespace': '/',
+            'config_file': image_transport_overrides_path,
+            # D457 GMSL only exposes YUYV; without an explicit profile the
+            # driver's "first available profile" fallback picks an invalid
+            # resolution and fails to open the RGB stream.
+            'rgb_camera.color_profile': '640x480x30',
+            'depth_module.depth_profile': '640x480x30',
         }.items(),
-        condition=UnlessCondition(use_usb_camera),
+        condition=LaunchConfigurationEquals('camera_type', 'gmsl'),
     )
 
-    rviz2_gmsl_config_file = os.path.join(
-        realsense2_tutorial_share_dir, 'config', 'realsense_config_rsd457_gmsl.rviz'
+    rviz2_usb_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        output='screen',
+        arguments=[
+            '-d', os.path.join(realsense2_tutorial_share_dir, 'config', 'realsense_config.rviz')
+        ],
+        condition=LaunchConfigurationEquals('camera_type', 'usb'),
     )
 
     rviz2_gmsl_node = Node(
         package='rviz2',
         executable='rviz2',
         output='screen',
-        arguments=['-d', rviz2_gmsl_config_file],
-        condition=UnlessCondition(use_usb_camera),
-    )
-
-    ros2_gmsl_hz_cmd = TimerAction(
-        period=5.0,
-        actions=[
-            ExecuteProcess(
-                cmd=['ros2', 'topic', 'hz', '/D457_mux_a/color/image_raw'], output='screen'
-            )
+        arguments=[
+            '-d',
+            os.path.join(
+                realsense2_tutorial_share_dir, 'config', 'realsense_config_rsd457_gmsl.rviz'
+            ),
         ],
-        condition=UnlessCondition(use_usb_camera),
+        condition=LaunchConfigurationEquals('camera_type', 'gmsl'),
     )
 
-    launch_description.add_action(declare_use_usb_camera_cmd)
-    launch_description.add_action(realsense2_usb_launch_file)
-    launch_description.add_action(realsense2_gmsl_launch_file)
-    launch_description.add_action(rviz2_usb_node)
-    launch_description.add_action(rviz2_gmsl_node)
-    launch_description.add_action(ros2_topic_list_cmd)
-    launch_description.add_action(ros2_usb_hz_cmd)
-    launch_description.add_action(ros2_gmsl_hz_cmd)
-
-    return launch_description
+    return LaunchDescription(
+        [
+            declare_camera_type_cmd,
+            realsense2_usb_launch_file,
+            realsense2_gmsl_launch_file,
+            rviz2_usb_node,
+            rviz2_gmsl_node,
+        ]
+    )

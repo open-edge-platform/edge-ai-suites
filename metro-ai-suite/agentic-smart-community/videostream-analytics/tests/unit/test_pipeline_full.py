@@ -162,7 +162,9 @@ class TestFullPipeline:
         assert isinstance(payload["start_time"], str)
         assert isinstance(payload["end_time"], str)
 
-    def test_non_roi_clip_is_transcoded_before_emit(self, pipeline, tmp_path, mock_sink):
+    def test_non_roi_clip_is_emitted_as_written(self, pipeline, tmp_path, mock_sink):
+        """Clips are H.264 by construction (SegmentExtractor writes H.264
+        directly): emit passes the path through, no transcode step."""
         clip_path = str(tmp_path / "motion.mp4")
         result = MagicMock(
             path=clip_path,
@@ -171,10 +173,8 @@ class TestFullPipeline:
             duration_s=4.0,
         )
 
-        with patch("stream_monitor.rtsp_monitor.transcode_h264_in_place") as transcode:
-            pipeline._emit_segment(result)
+        pipeline._emit_segment(result)
 
-        transcode.assert_called_once_with(clip_path)
         payload = mock_sink.emit.call_args.args[0]["payload"]
         assert payload["event_file_path"] == clip_path
         assert payload["summary_clip_input"] == clip_path

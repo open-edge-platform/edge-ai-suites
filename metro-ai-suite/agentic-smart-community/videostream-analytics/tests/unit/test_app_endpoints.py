@@ -240,24 +240,29 @@ class TestStopSource:
 
 
 class TestRestartSource:
+    """Restart is delegated to `SourceManager.restart_source`.
+
+    The endpoint used to reach into `mgr._bundles` and drive stop/start itself,
+    which meant it ran outside the per-source lock and could interleave with an
+    unregister. The stop/start sequencing is covered by
+    `test_source_manager.py`; here we only assert the delegation.
+    """
+
     def test_restart_success(self, client, mock_mgr):
-        mock_pipeline = MagicMock()
-        mock_recorder = MagicMock()
-        mock_bundle = MagicMock(pipeline=mock_pipeline, recorder=mock_recorder)
-        mock_mgr.get_source_status.return_value = {
+        mock_mgr.restart_source.return_value = {
+            "status": "restarted",
             "source_id": "cam1",
-            "status": "online",
-            "running": True,
         }
-        mock_mgr._bundles = {"cam1": mock_bundle}
         resp = client.post("/sources/cam1/restart")
         assert resp.status_code == 200
         assert resp.json()["status"] == "restarted"
-        mock_pipeline.stop.assert_called_once()
-        mock_pipeline.start.assert_called_once()
+        mock_mgr.restart_source.assert_called_once_with("cam1")
 
     def test_restart_not_found(self, client, mock_mgr):
-        mock_mgr.get_source_status.return_value = None
+        mock_mgr.restart_source.return_value = {
+            "status": "not_found",
+            "source_id": "nonexistent",
+        }
         resp = client.post("/sources/nonexistent/restart")
         assert resp.status_code == 404
 
@@ -389,4 +394,367 @@ class TestTargetClassesValidation:
                 },
             },
         })
+        assert resp.status_code == 200
+
+
+class TestSourceIdValidation:
+    """`source_id` reaches the filesystem as `<data_dir>/<source_id>`.
+
+    Same regex as the dashboard's `monitorIdSchema`
+    (packages/mcp-server/src/dashboard/router.ts), so an id MCP accepts is an
+    id VSA accepts.
+    """
+
+    @pytest.mark.parametrize("source_id", ["cam_ok\n", "cam_ok\r", "cam_ok\t"])
+    def test_trailing_whitespace_is_not_a_bypass(self, client, mock_mgr, source_id):
+        """`$` must not match before a trailing newline.
+
+        Python's `re` treats `^...$` as newline-lax, so `"cam_ok\\n"` would slip
+        through and become a directory name. pydantic v2's default rust-regex
+        engine anchors strictly; this test fails loudly if that ever changes
+        (e.g. someone sets `regex_engine="python-re"`).
+        """
+        resp = client.post(
+            "/register_source",
+            json={"source_id": source_id, "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 422
+        mock_mgr.register_source.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "source_id",
+        ["../../tmp/pwn", "..", "a/b", "cam child", "cam.child", "", "x" * 129],
+    )
+    def test_register_rejects_invalid_source_id(self, client, mock_mgr, source_id):
+        resp = client.post(
+            "/register_source",
+            json={"source_id": source_id, "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 422
+        mock_mgr.register_source.assert_not_called()
+
+    @pytest.mark.parametrize("source_id", ["cam_child", "cam-1", "CAM1", "x" * 128])
+    def test_register_accepts_valid_source_id(self, client, mock_mgr, source_id):
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": source_id}
+        resp = client.post(
+            "/register_source",
+            json={"source_id": source_id, "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 200
+
+    def test_path_param_traversal_is_rejected(self, client, mock_mgr):
+        resp = client.get("/sources/..%2F..%2Fetc")
+        assert resp.status_code in (404, 422)
+        mock_mgr.get_source_status.assert_not_called()
+
+    def test_delete_with_invalid_id_is_rejected(self, client, mock_mgr):
+        resp = client.delete("/sources/cam%20child")
+        assert resp.status_code == 422
+        mock_mgr.unregister_source.assert_not_called()
+
+
+class TestRequestFieldValidation:
+    def test_relative_data_dir_is_rejected(self, client, mock_mgr):
+        """The reported §1.1 repro: `data_dir: "fuzzstring"` used to 500."""
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "fuzz-repro",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "data_dir": "fuzzstring",
+            },
+        )
+        assert resp.status_code == 422
+        mock_mgr.register_source.assert_not_called()
+
+    def test_empty_source_url_is_rejected(self, client, mock_mgr):
+        resp = client.post(
+            "/register_source", json={"source_id": "cam1", "source_url": ""}
+        )
+        assert resp.status_code == 422
+
+    @pytest.mark.parametrize(
+        "webhook_url",
+        ["ftp://host/x", "file:///etc/passwd", "not-a-url", "http://u:p@host/x", "http://"],
+    )
+    def test_bad_webhook_url_is_rejected(self, client, mock_mgr, webhook_url):
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "webhook_url": webhook_url,
+            },
+        )
+        assert resp.status_code == 422
+        mock_mgr.register_source.assert_not_called()
+
+    def test_good_webhook_url_is_accepted(self, client, mock_mgr):
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "webhook_url": "http://localhost:3101/events",
+            },
+        )
+        assert resp.status_code == 200
+
+    def test_control_characters_are_rejected(self, client, mock_mgr):
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "rtsp://host/\x00x"},
+        )
+        assert resp.status_code == 422
+
+    def test_out_of_range_pipeline_value_is_rejected(self, client, mock_mgr):
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "pipeline": {"motion": {"area_ratio": 5.0}},
+            },
+        )
+        assert resp.status_code == 422
+
+    def test_unknown_recovery_strategy_is_rejected(self, client, mock_mgr):
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "pipeline": {"health": {"recovery_strategy": "fuzzstring"}},
+            },
+        )
+        assert resp.status_code == 422
+
+
+class TestErrorMapping:
+    """Business-layer failures must map to a deliberate status, never a bare 500."""
+
+    def test_oserror_becomes_400(self, client, mock_mgr):
+        mock_mgr.register_source.side_effect = PermissionError(
+            13, "Permission denied", "/home/someone/secret/segments"
+        )
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 400
+
+    def test_400_body_does_not_leak_server_paths(self, client, mock_mgr):
+        mock_mgr.register_source.side_effect = PermissionError(
+            13, "Permission denied", "/home/someone/secret/segments"
+        )
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert "/home/someone/secret" not in resp.text
+        assert resp.json()["detail"]["reason"] == "PermissionError"
+
+    def test_value_error_becomes_400(self, client, mock_mgr):
+        mock_mgr.register_source.side_effect = ValueError(
+            "path escapes the permitted data root(s)"
+        )
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 400
+
+    def test_connection_error_becomes_503(self, client, mock_mgr):
+        """ffmpeg missing from PATH is a server defect, not a bad request."""
+        mock_mgr.register_source.side_effect = ConnectionError(
+            "ffmpeg not found on PATH; cannot record (copy backend)"
+        )
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 503
+        assert resp.json()["detail"]["error"] == "dependency_unavailable"
+
+    def test_delete_maps_oserror_to_400(self, client, mock_mgr):
+        mock_mgr.unregister_source.side_effect = OSError("boom")
+        resp = client.delete("/sources/cam1")
+        assert resp.status_code == 400
+
+    def test_update_pipeline_maps_value_error_to_400(self, client, mock_mgr):
+        mock_mgr.update_pipeline_config.side_effect = ValueError(
+            "effective segment.min_duration (30.0) must not exceed"
+        )
+        resp = client.put(
+            "/sources/cam1/pipeline", json={"pipeline": {"segment": {"min_duration": 30}}}
+        )
+        assert resp.status_code == 400
+
+    def test_partial_segment_update_is_not_rejected_by_schema(self, client, mock_mgr):
+        """A lone `min_duration` must reach the manager, not 422 at the schema."""
+        mock_mgr.update_pipeline_config.return_value = {
+            "status": "updated",
+            "source_id": "cam1",
+        }
+        resp = client.put(
+            "/sources/cam1/pipeline", json={"pipeline": {"segment": {"min_duration": 30}}}
+        )
+        assert resp.status_code == 200
+        mock_mgr.update_pipeline_config.assert_called_once()
+
+
+class TestSourceUrlSchemeAllowlist:
+    """`source_url` reaches `ffmpeg -i` and cv2.VideoCapture verbatim.
+
+    ffmpeg speaks `file:`, `concat:`, `subfile:`, `data:` … so an unrestricted
+    scheme is an arbitrary-file-read whose output lands in `data_dir`, which the
+    MCP dashboard serves back as mp4.
+    """
+
+    @pytest.mark.parametrize(
+        "source_url",
+        [
+            "file:///etc/shadow",
+            "concat:/etc/passwd|/etc/shadow",
+            "subfile,,start,0,end,100,,:/etc/passwd",
+            "data:text/plain;base64,AAAA",
+            "ftp://host/x",
+            "/etc/passwd",
+            "relative/path.mp4",
+        ],
+    )
+    def test_disallowed_scheme_is_rejected(self, client, mock_mgr, source_url):
+        resp = client.post(
+            "/register_source", json={"source_id": "cam1", "source_url": source_url}
+        )
+        assert resp.status_code == 400, source_url
+        mock_mgr.register_source.assert_not_called()
+
+    @pytest.mark.parametrize(
+        "source_url",
+        [
+            "rtsp://localhost:8554/live/x",
+            "rtsps://localhost:8555/live/x",
+            "http://cam.local/stream.m3u8",
+            "https://cam.local/stream.m3u8",
+        ],
+    )
+    def test_allowed_scheme_is_accepted(self, client, mock_mgr, source_url):
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        resp = client.post(
+            "/register_source", json={"source_id": "cam1", "source_url": source_url}
+        )
+        assert resp.status_code == 200, source_url
+
+    def test_scheme_check_is_case_insensitive(self, client, mock_mgr):
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "FILE:///etc/shadow"},
+        )
+        assert resp.status_code == 400
+
+    def test_file_source_allowed_when_opted_in(self, mock_manager, monkeypatch):
+        """`allow_file_source` exists for offline evaluation against local clips."""
+        from fastapi.testclient import TestClient
+
+        import service as service_module
+        from service import create_app
+        from shared.config import AppConfig
+
+        config = AppConfig()
+        config.security.allow_file_source = True
+        app = create_app(config)
+        with TestClient(app, raise_server_exceptions=False) as tc:
+            monkeypatch.setattr(service_module, "_manager", mock_manager)
+            mock_manager.register_source.return_value = {
+                "status": "started",
+                "source_id": "cam1",
+            }
+            resp = tc.post(
+                "/register_source",
+                json={"source_id": "cam1", "source_url": "file:///tmp/sample.mp4"},
+            )
+        assert resp.status_code == 200
+
+
+class TestConcurrentRegistration:
+    def test_concurrent_registration_of_same_id_returns_409(self, client, mock_mgr):
+        """Second concurrent register for one id is refused, not queued.
+
+        Queueing would park a threadpool worker through a 20s teardown, which is
+        exactly the amplification an unauthenticated caller would want.
+        """
+        mock_mgr.register_source.return_value = {
+            "status": "registration_in_progress",
+            "source_id": "cam1",
+        }
+        resp = client.post(
+            "/register_source",
+            json={"source_id": "cam1", "source_url": "rtsp://localhost:8554/live/x"},
+        )
+        assert resp.status_code == 409
+        assert resp.json()["detail"]["error"] == "registration_in_progress"
+
+
+class TestModelPathStatFailure:
+    """`Path.exists()` raises (not False) for un-stat-able paths.
+
+    Python's `Path.exists()` only swallows ENOENT/ENOTDIR/ELOOP; a fuzzed
+    model_path longer than NAME_MAX raises ENAMETOOLONG. That used to escape
+    `_validate_target_classes` as a bare 500 (InvalidValueChecker_500 on
+    register_source and PUT /pipeline). An un-stat-able path cannot name a
+    readable model either, so it must behave like a missing one: skip the
+    label check and let the request through.
+    """
+
+    def _register(self, client, model_path):
+        return client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "pipeline": {
+                    "prefilter": {
+                        "enabled": True,
+                        "model_path": model_path,
+                        "target_classes": ["person"],
+                    },
+                },
+            },
+        )
+
+    def test_overlong_model_path_does_not_500(self, client, mock_mgr):
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        resp = self._register(client, "z" * 2000)
+        assert resp.status_code == 200
+
+    def test_overlong_model_path_on_update_pipeline(self, client, mock_mgr):
+        mock_mgr.update_pipeline_config.return_value = {
+            "status": "updated",
+            "source_id": "cam1",
+        }
+        resp = client.put(
+            "/sources/cam1/pipeline",
+            json={
+                "pipeline": {
+                    "prefilter": {
+                        "enabled": True,
+                        "model_path": "z" * 2000,
+                        "target_classes": ["person"],
+                    },
+                },
+            },
+        )
+        assert resp.status_code == 200
+
+    def test_exists_oserror_is_treated_as_missing(self, client, mock_mgr, monkeypatch):
+        """Any OSError from exists() -> labels unavailable -> skip, not crash."""
+        from pathlib import Path as _P
+
+        monkeypatch.setattr(
+            _P, "exists", lambda self: (_ for _ in ()).throw(OSError("boom"))
+        )
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        resp = self._register(client, "/some/model.xml")
         assert resp.status_code == 200

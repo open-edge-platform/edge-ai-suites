@@ -109,7 +109,7 @@ For every telemetry topic published by `companion-bridge`:
   window. Checked against the per-topic rate caps configured in
   `companion-bridge` (defaults: `attitude` ≤ 30 Hz, `velocity` ≤ 20 Hz,
   `position` ≤ 20 Hz, `gps` ≤ 5 Hz — see `RATE_<TOPIC>_HZ` in
-  [docker-compose.yml](../docker-compose.yml))​.
+  [docker-compose.yml](../../docker-compose.yml))​.
 - **End-to-end latency (avg + P99)** — the bridge stamps every reader-loop
   event with `reader_ts_ns` (nanosecond UNIX epoch) at MAVSDK consumption
   time, and every outbound MQTT message with `bridge_ts_ns` at publish

@@ -12,6 +12,11 @@ interface ElectronAPI {
   /** Set the language for the native menus (application + context menu). */
   setLanguage: (lang: string) => void;
   /**
+   * Recolour the native title bar overlay to match the surface covering the
+   * caption area.
+   */
+  setTitleBarTheme: (theme: 'default' | 'dimmed' | 'light') => void;
+  /**
    * Open the OS-native folder chooser, optionally starting at `defaultPath`.
    * Resolves to the chosen absolute path, or '' if the user cancelled.
    */

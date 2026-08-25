@@ -8,8 +8,4 @@ CI/CD pipeline.
    :maxdepth: 1
    :hidden:
 
-   robotics/index
-   embodied/index
-   rvc/index
-   troubleshooting
-   glossary
+   introduction
