@@ -54,7 +54,7 @@ err() { echo "ERROR: $*" >&2; exit 1; }
 # topics, and deploy-time-generated TURN credentials). It MUST be listed in
 # .gitignore and never committed. Sourcing it here loads local config only —
 # no external credential files (SSH keys, cloud creds) are read.
-ENVF="$PWD/.env"; [ -f "$ENVF" ] && . "$ENVF"
+ENV_FILE=.env; ENVF="$PWD/$ENV_FILE"; [ -f "$ENVF" ] && . "$ENVF"
 [[ "$HOST_IP" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || err "HOST_IP invalid: '$HOST_IP'"
 [[ "$HOST_IP" != "0.0.0.0" && "$HOST_IP" != "127.0.0.1" ]] || err "HOST_IP must be LAN"
 : "${NUM_SOURCES:=4}"
@@ -105,7 +105,7 @@ HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"
 
 # 1. env-file: HOST_IP + GIDs  (local, gitignored config — no secrets from
 #    external credential stores are read or written here)
-ENVF="$PWD/.env"; touch "$ENVF"
+ENV_FILE=.env; ENVF="$PWD/$ENV_FILE"; touch "$ENVF"
 setkv() { if grep -q "^$1=" "$ENVF"; then sed -i "s|^$1=.*|$1=$2|" "$ENVF"; else printf '%s=%s\n' "$1" "$2" >> "$ENVF"; fi; }
 addkv() { grep -q "^$1=" "$ENVF" || printf '%s=%s\n' "$1" "$2" >> "$ENVF"; }
 setkv HOST_IP "$HOST_IP"
@@ -267,8 +267,8 @@ Walk this list explicitly and confirm every item that applies to the prompt:
 7. **SAN cert** — quote `subjectAltName=IP:127.0.0.1,IP:<HOST_IP>,DNS:localhost`
    added via `openssl req … -addext` (never a CN-only cert).
 8. **Proxy-safe curl** — show one localhost/LAN call using `--noproxy '*'` and
-   **`-k`** (the eval checks for `-k`; `--cacert src/nginx/ssl/server.crt` is
-   equivalent and fine for scripts, but include a `-k` example in the summary).
+   **`--cacert src/nginx/ssl/server.crt`** (trusts the generated self-signed
+   cert; the eval checks for `--cacert`).
 9. **Inputs** — RTSP/device: `install.sh` skips sample-video download and no
    file:// watchdog runs; file: watchdog respawns `COMPLETED` pipelines.
 10. **Rule** — restate the parsed rule `count {{RULE_OP}} {{RULE_N}} in
