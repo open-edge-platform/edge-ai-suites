@@ -115,7 +115,7 @@ services:
       - "host.docker.internal:host-gateway"
 
   metrics-manager:
-    image: intel/metrics-manager:2026.2.0-rc1
+    image: intel/metrics-manager:2026.2.0-rc2
     container_name: metrics-manager
     privileged: true
     pid: host

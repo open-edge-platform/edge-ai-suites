@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Literal, Optional, TypeVar
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 ConfigModelT = TypeVar("ConfigModelT", bound=BaseModel)
@@ -15,9 +15,9 @@ ConfigModelT = TypeVar("ConfigModelT", bound=BaseModel)
 
 class MotionConfig(BaseModel):
     enabled: bool = True
-    diff_threshold: int = 25
-    area_ratio: float = 0.015
-    stable_frames: int = 30
+    diff_threshold: int = Field(default=25, ge=1, le=255)
+    area_ratio: float = Field(default=0.015, ge=0.0, le=1.0)
+    stable_frames: int = Field(default=30, ge=1)
 
 
 class SegmentConfig(BaseModel):
@@ -35,8 +35,27 @@ class SegmentConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    max_duration: float = 10.0
-    min_duration: float = 1.0
+    max_duration: float = Field(default=10.0, gt=0.0)
+    min_duration: float = Field(default=1.0, ge=0.0)
+
+    @model_validator(mode="after")
+    def _check_duration_order(self) -> "SegmentConfig":
+        """Compare the two durations ONLY when both were explicitly supplied.
+
+        `PUT /sources/{id}/pipeline` merges via `merge_config`'s `exclude_unset`
+        semantics, so a body of `{"segment": {"min_duration": 30}}` builds this
+        model with the *default* `max_duration=10.0` while the effective value
+        after the merge may well be 60. Comparing unconditionally would reject
+        that legitimate request. The effective (post-merge) pair is checked by
+        `validate_effective_segment`.
+        """
+        if {"min_duration", "max_duration"} <= self.model_fields_set:
+            if self.min_duration > self.max_duration:
+                raise ValueError(
+                    f"segment.min_duration ({self.min_duration}) must not exceed "
+                    f"segment.max_duration ({self.max_duration})"
+                )
+        return self
 
 
 class StaticConfig(BaseModel):
@@ -49,7 +68,7 @@ class StaticConfig(BaseModel):
     """
 
     enabled: bool = True
-    min_duration: float = 3.0
+    min_duration: float = Field(default=3.0, ge=0.0)
 
 
 class RecordingConfig(BaseModel):
@@ -71,8 +90,8 @@ class RecordingConfig(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     enabled: bool = True
-    interval_seconds: int = Field(default=60, alias="interval")
-    fps: int = 15
+    interval_seconds: int = Field(default=60, alias="interval", ge=1, le=3600)
+    fps: int = Field(default=15, ge=1, le=120)
     backend: Literal["copy", "x264"] = "copy"
 
 
@@ -88,30 +107,30 @@ class RoiConfig(BaseModel):
     """
 
     enabled: bool = False
-    mode: str = "crop"  # crop | highlight | crop_and_concat
-    expand: float = 0.25
-    auto_split_area: float = 0.0  # 0 disables early-split
+    mode: Literal["crop", "highlight", "crop_and_concat"] = "crop"
+    expand: float = Field(default=0.25, ge=0.0)
+    auto_split_area: float = Field(default=0.0, ge=0.0, le=1.0)  # 0 disables early-split
 
 
 class PrefilterConfig(BaseModel):
     enabled: bool = False
     model_path: str = ""
     target_classes: list[str] = Field(default_factory=lambda: ["person"])
-    min_confidence: float = 0.4
-    min_frames_hit: int = 2
-    detect_fps: float = 2.0
+    min_confidence: float = Field(default=0.4, ge=0.0, le=1.0)
+    min_frames_hit: int = Field(default=2, ge=1)
+    detect_fps: float = Field(default=2.0, gt=0.0)
     device: str = "CPU"
     # Long-side resize target for pre-inference frame downscaling (0 disables).
     # Consumed by prefilter_yolo._resize_long_side when > 0.
-    long_side: int = 0
+    long_side: int = Field(default=0, ge=0)
 
 
 class HealthConfig(BaseModel):
     """Per-source health monitoring configuration."""
-    max_failures: int = 30
-    recovery_strategy: str = "retry"  # "retry" | "pause" | "remove"
-    backoff_base: float = 2.0
-    backoff_max: float = 120.0
+    max_failures: int = Field(default=30, ge=1)
+    recovery_strategy: Literal["retry", "pause", "remove"] = "retry"
+    backoff_base: float = Field(default=2.0, ge=1.0)
+    backoff_max: float = Field(default=120.0, gt=0.0)
 
 
 class KeepaliveConfig(BaseModel):
@@ -123,8 +142,39 @@ class KeepaliveConfig(BaseModel):
     """
 
     enabled: bool = False
-    timeout_seconds: float = 90.0
-    check_interval_seconds: float = 10.0
+    timeout_seconds: float = Field(default=90.0, gt=0.0)
+    check_interval_seconds: float = Field(default=10.0, gt=0.0)
+
+
+class SecurityConfig(BaseModel):
+    """Input-surface restrictions for request-supplied stream URLs.
+
+    `source_url` is handed verbatim to `ffmpeg -i` (continuous_recorder.py) and
+    to `cv2.VideoCapture(..., CAP_FFMPEG)` (rtsp_monitor.py). ffmpeg supports a
+    large protocol set — `file:`, `concat:`, `subfile:`, `http:` — so without an
+    allowlist a caller can point a "camera" at any local file or internal HTTP
+    endpoint and have the contents muxed into `data_dir`, from where the MCP
+    dashboard will happily serve it back as an mp4.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    # Schemes accepted in a register_source `source_url`.
+    allowed_source_schemes: list[str] = Field(
+        default_factory=lambda: ["rtsp", "rtsps", "http", "https"]
+    )
+    # `file://` sources are off by default: they are a local-file-read primitive.
+    # Turn on only for offline evaluation against sample clips on disk.
+    allow_file_source: bool = False
+    # Passed to ffmpeg as `-protocol_whitelist`. Second line of defence behind
+    # `allowed_source_schemes`: even if a URL slips through, ffmpeg itself will
+    # refuse to open a protocol that is not listed. `file` and `crypto` are
+    # required for the segment muxer's own output handling.
+    ffmpeg_protocol_whitelist: list[str] = Field(
+        default_factory=lambda: [
+            "file", "crypto", "rtp", "udp", "tcp", "tls", "rtsp", "rtsps", "http", "https",
+        ]
+    )
 
 
 class WebhookConfig(BaseModel):
@@ -135,8 +185,19 @@ class WebhookConfig(BaseModel):
 
 
 class ServerConfig(BaseModel):
-    host: str = "0.0.0.0"
-    port: int = 8999
+    """HTTP bind address.
+
+    Defaults to loopback: the service has no authentication, so every endpoint
+    (register/delete a source, rewrite `webhook_url`, change the pipeline) is
+    reachable by anyone who can open a socket. Binding `127.0.0.1` makes the
+    kernel drop non-local SYNs outright. The docker deployment is
+    `network_mode: host` and MCP reaches VSA over `http://localhost:8999`, so
+    loopback is sufficient there. Cross-host deployments must set this
+    explicitly (and put their own authentication in front of it).
+    """
+
+    host: str = "127.0.0.1"
+    port: int = Field(default=8999, ge=1, le=65535)
 
 
 class DefaultsConfig(BaseModel):
@@ -175,14 +236,99 @@ class AppConfig(BaseModel):
     server: ServerConfig = Field(default_factory=ServerConfig)
     webhook: WebhookConfig = Field(default_factory=WebhookConfig)
     data_dir: str = "~/.mcp-smart-community/segments"
+    # Extra roots a register_source `data_dir` is allowed to live under, on top
+    # of `data_dir` itself. Empty (the default) means `data_dir` is the only
+    # permitted root — which is what the standard deployment needs, since MCP
+    # always sends `<SMART_COMMUNITY_DATA_DIR>/segments/<monitor_id>` and VSA
+    # derives `data_dir` from the same env var. This list is the escape hatch
+    # for deployments that mount the segment tree somewhere else.
+    allowed_data_roots: list[str] = Field(default_factory=list)
+    security: SecurityConfig = Field(default_factory=SecurityConfig)
     defaults: DefaultsConfig = Field(default_factory=DefaultsConfig)
     logging: dict = Field(default_factory=lambda: {"level": "INFO"})
 
 
 def expand_path(p: str) -> str:
+    """Expand `~` and `$VAR` in a path from a TRUSTED source (config/env).
+
+    Do NOT use this on request-supplied paths — `expandvars` would turn a
+    `data_dir` of `"${HOME}/x"` into a server path that is then echoed back in
+    the register response and `GET /sources`, handing an unauthenticated caller
+    an environment-variable oracle. Use `expand_user_path` for those.
+    """
     p = os.path.expanduser(p)
     p = os.path.expandvars(p)
     return p
+
+
+def expand_user_path(p: str) -> str:
+    """Expand `~` only — safe for request-supplied paths (no `$VAR` oracle)."""
+    return os.path.expanduser(p)
+
+
+def validate_effective_segment(cfg: SegmentConfig) -> None:
+    """Check the post-merge segment durations. Raises ValueError when inverted.
+
+    `SegmentConfig._check_duration_order` can only compare the pair when both
+    were explicitly supplied in one body; this is the check against the
+    *effective* config after `merge_config` has filled the gaps from defaults.
+    """
+    if cfg.min_duration > cfg.max_duration:
+        raise ValueError(
+            f"effective segment.min_duration ({cfg.min_duration}) must not exceed "
+            f"segment.max_duration ({cfg.max_duration})"
+        )
+
+
+def resolve_contained_dir(roots: list[str], candidate: str) -> str:
+    """Return `candidate` normalized, or raise ValueError if it escapes `roots`.
+
+    The directory need not exist yet (VSA creates it right after), so this is
+    the moral equivalent of the dashboard's
+    `resolveContainedFile` (packages/mcp-server/src/dashboard/media.ts) adapted
+    to a not-yet-existing target:
+
+    1. reject relative paths, NUL bytes and `..` segments outright
+    2. lexical containment under some root
+    3. re-check containment after resolving symlinks, so a symlinked component
+       cannot smuggle writes outside the root
+
+    Unlike `resolveContainedFile` this does NOT reject symlinks outright — only
+    ones that resolve *outside* a permitted root. Pointing the segments dir at
+    another volume (`~/.mcp-smart-community/segments -> /mnt/nvme/segments`) is
+    a legitimate ops setup, and it stays contained under step 3.
+    """
+    if not roots:
+        raise ValueError("no permitted data root is configured")
+    if "\x00" in candidate:
+        raise ValueError("path must not contain NUL bytes")
+    if not os.path.isabs(candidate):
+        raise ValueError("path must be absolute")
+    if ".." in candidate.split(os.sep):
+        raise ValueError("path must not contain '..' segments")
+
+    lexical = os.path.normpath(candidate)
+    lexical_roots = [os.path.normpath(r) for r in roots]
+
+    def _contained(path: str, root: str) -> bool:
+        # `commonpath` raises on mixed absolute/relative input; both are
+        # absolute and normalized here. Require a strict descendant so the root
+        # itself cannot be claimed as a source's data_dir.
+        return path != root and os.path.commonpath([path, root]) == root
+
+    if not any(_contained(lexical, r) for r in lexical_roots):
+        raise ValueError("path escapes the permitted data root(s)")
+
+    # `realpath` is non-strict: it resolves the symlinks in whatever prefix
+    # exists and normalizes the rest lexically. That keeps a not-yet-created
+    # root working (fresh install, before the first register creates it) while
+    # still catching `<root>/link/pwn` where `link` points outside.
+    real_candidate = os.path.realpath(lexical)
+    real_roots = [os.path.realpath(r) for r in lexical_roots]
+    if not any(_contained(real_candidate, r) for r in real_roots):
+        raise ValueError("path escapes the permitted data root(s) after symlink resolution")
+
+    return lexical
 
 
 def merge_config(defaults: ConfigModelT, override: ConfigModelT | None) -> ConfigModelT:
@@ -209,6 +355,7 @@ def load_config(config_path: str | None = None) -> AppConfig:
         config = AppConfig()
 
     config.data_dir = expand_path(config.data_dir)
+    config.allowed_data_roots = [expand_path(r) for r in config.allowed_data_roots]
 
     # `prefilter.model_path` may use ${HOME}/~ placeholders in config.yaml, mirroring
     # the node side which already expands ${HOME} in monitor-yaml paths. VSA reads its

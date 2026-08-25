@@ -115,7 +115,7 @@ make uavsdk-up
 
 > **Note:** Video streams are not available until the UAV is armed and actively on a mission.
 
-The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
+Run the simple UAV mission in a persistent terminal window to keep the simulation active. The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
@@ -127,6 +127,8 @@ curl -X POST http://localhost:8080/action/land
 ```
 
 ### 6. Start inference pipelines
+
+> Open a new terminal window and launch the inference pipeline to begin processing the video stream.
 
 Two options are available depending on your use case:
 
