@@ -23,7 +23,7 @@ Before you begin, ensure the following:
 
   ```bash
   export REGISTRY="intel"
-  export TAG="2026.2.0-rc1"
+  export TAG="2026.2.0-rc2"
   ```
 
 **Additional Prerequisites for GPU Deployment:**

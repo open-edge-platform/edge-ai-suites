@@ -86,7 +86,7 @@ export HOST_IP
 # Add HOST_IP to no_proxy only if not already present
 [[ $no_proxy != *"${HOST_IP}"* ]] && export no_proxy="${no_proxy},${HOST_IP}"
 
-export TAG=${TAG:-latest}
+export TAG=${TAG:-2026.2.0-rc2}
 # Construct registry path properly to avoid double slashes
 if [[ -n "$REGISTRY" ]]; then
     export REGISTRY="${REGISTRY%/}/"
@@ -197,7 +197,7 @@ case "$1" in
         # Remove project-related images only with --all
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing container images...${NC}"
-            docker rmi -f "${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}" 2>/dev/null || true
+            docker rmi -f "${REGISTRY:-}smart-route-planning-agent:${TAG:-2026.2.0-rc2}" 2>/dev/null || true
             echo -e "${GREEN}Images removed.${NC}"
         fi
 

@@ -7,7 +7,7 @@ networks:
 
 services:
   route-planner-agent:
-    image: intel/smart-route-planning-agent:2026.2.0-rc1
+    image: intel/smart-route-planning-agent:2026.2.0-rc2
     build:
       context: .
       dockerfile: Dockerfile

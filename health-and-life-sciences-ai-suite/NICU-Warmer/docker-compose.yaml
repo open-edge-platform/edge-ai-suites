@@ -1,6 +1,6 @@
 services:
   nicu-backend:
-    image: ${NICU_BACKEND_IMAGE:-intel/hl-ai-nicu-backend:${TAG:-2026.2.0-rc1}}
+    image: ${NICU_BACKEND_IMAGE:-intel/hl-ai-nicu-backend:${TAG}}
     build:
       context: .
       dockerfile: Dockerfile
@@ -40,7 +40,7 @@ services:
         condition: service_healthy
 
   nicu-ui:
-    image: ${NICU_UI_IMAGE:-intel/hl-ai-nicu-ui:${TAG:-2026.2.0-rc1}}
+    image: ${NICU_UI_IMAGE:-intel/hl-ai-nicu-ui:${TAG}}
     build:
       context: ./ui
       dockerfile: Dockerfile
@@ -61,7 +61,7 @@ services:
         condition: service_healthy
 
   nicu-metrics-collector:
-    image: intel/hl-ai-metrics-collector:${TAG:-2026.2.0-rc1}
+    image: intel/hl-ai-metrics-collector:${TAG}
     container_name: nicu-metrics-collector
     pid: host
     ports:
@@ -90,7 +90,7 @@ services:
     privileged: true
 
   nicu-dlsps:
-    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1}
+    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2}
     container_name: nicu-dlsps
     user: "0:0"
     profiles: ["dlsps"]

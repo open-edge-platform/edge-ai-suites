@@ -28,6 +28,8 @@ from shared.config import (
     HealthConfig,
     KeepaliveConfig,
     SecurityConfig,
+    expand_user_path,
+    resolve_contained_file,
 )
 from source_worker import SourceManager
 
@@ -349,26 +351,79 @@ def create_app(config: AppConfig) -> FastAPI:
             "available_devices": _available_devices(),
         }
 
-    def _validate_target_classes(prefilter: PrefilterConfig | None) -> None:
+    def _model_roots() -> list[str]:
+        """Directories a request-supplied ``model_path`` may live under.
+
+        The deployment's own model directory, plus any explicit escape hatch.
+        Derived from ``defaults.prefilter.model_path`` rather than from
+        ``MODEL_DIR``: that variable is host-side only (docker-compose uses it
+        for the read-only bind mount and never puts it in the container
+        environment), and the container sets ``HOME=/tmp``, so a ``~/models``
+        fallback here would resolve to the wrong directory entirely. The
+        configured model path is already absolute and container-valid.
+        """
+        roots = []
+        if config.defaults.prefilter.model_path:
+            roots.append(os.path.dirname(config.defaults.prefilter.model_path))
+        roots.extend(config.security.allowed_model_roots)
+        return [r for r in roots if r]
+
+    def validate_model_path(prefilter: PrefilterConfig | None) -> str:
+        """Confine a request-supplied ``prefilter.model_path`` to a model root.
+
+        Returns the resolved path (``""`` when the request omitted it and the
+        deployment default should be inherited — trusted config, deliberately
+        not re-checked), and also writes it back onto ``prefilter`` so the
+        running pipeline (rtsp_monitor._init_prefilter) loads the resolved path
+        rather than the raw request string.
+
+        Callers must pass the RETURN VALUE on to `_validate_target_classes`
+        instead of letting it re-read ``prefilter.model_path``. The write-back
+        alone is not enough: taint is tracked on the `prefilter` object, so
+        reading the attribute off it again re-derives the unvalidated value and
+        `py/path-injection` still reports `Path(model_path)`. Only the returned
+        string carries the containment check on its data flow.
+
+        Raises ValueError (-> 400 via `_guard`), matching `validate_source_url`.
+        """
+        if not prefilter or not prefilter.model_path:
+            return ""
+        resolved = resolve_contained_file(
+            _model_roots(), expand_user_path(prefilter.model_path), "model"
+        )
+        prefilter.model_path = resolved
+        return resolved
+
+    def _validate_target_classes(
+        prefilter: PrefilterConfig | None, model_path: str
+    ) -> None:
         """Reject ``target_classes`` not in the model's embedded label set.
 
         Only hard-fails when labels are trustworthy (``embedded``); a
         ``fallback_coco``/``unavailable`` label set is a guess, so we let the
         request through rather than block on an untrusted list.
+
+        ``model_path`` is the confined, resolved path returned by
+        `validate_model_path` — empty when the request omitted it, in which case
+        the trusted deployment default applies. It is passed in rather than read
+        back off ``prefilter`` on purpose; see `validate_model_path`.
         """
         if not prefilter or not prefilter.enabled or not prefilter.target_classes:
             return
-        model_path = prefilter.model_path or config.defaults.prefilter.model_path
+        model_path = model_path or config.defaults.prefilter.model_path
         if not model_path:
             return
         try:
             model_exists = Path(model_path).exists()
         except OSError:
-            # `exists()` only swallows ENOENT/ENOTDIR/ELOOP; an over-long or
-            # otherwise un-stat-able fuzzed path (ENAMETOOLONG, EACCES, …)
-            # propagates. Such a path cannot name a readable model either, so
-            # treat it exactly like a missing one: labels unavailable, skip the
-            # check rather than block (or crash) on an untrusted path.
+            # `exists()` only swallows ENOENT/ENOTDIR/ELOOP; an un-stat-able
+            # path (ENAMETOOLONG, EACCES, …) propagates. Request-supplied paths
+            # no longer reach this — `validate_model_path` rejects them with a
+            # 400 first — but the *configured* default is not containment-
+            # checked, so a mistyped config.yaml can still land here. Such a
+            # path cannot name a readable model either, so treat it exactly
+            # like a missing one: labels unavailable, skip the check rather
+            # than crash.
             model_exists = False
         if not model_exists:
             return
@@ -415,7 +470,8 @@ def create_app(config: AppConfig) -> FastAPI:
         mgr = get_manager()
         with _guard("register_source"):
             validate_source_url(req.source_url, config.security)
-            _validate_target_classes(req.pipeline.prefilter)
+            model_path = validate_model_path(req.pipeline.prefilter)
+            _validate_target_classes(req.pipeline.prefilter, model_path)
         source = SourceConfig(
             source_id=req.source_id,
             source_url=req.source_url,
@@ -499,7 +555,8 @@ def create_app(config: AppConfig) -> FastAPI:
     ) -> dict[str, Any]:
         mgr = get_manager()
         with _guard("update_pipeline"):
-            _validate_target_classes(req.pipeline.prefilter)
+            model_path = validate_model_path(req.pipeline.prefilter)
+            _validate_target_classes(req.pipeline.prefilter, model_path)
             result = mgr.update_pipeline_config(
                 source_id=source_id,
                 motion=req.pipeline.motion,

@@ -31,6 +31,9 @@ The application runs locally on Intel hardware using OpenVINO-backed services.
 
 See [docs/user-guide/get-started.md](docs/user-guide/get-started.md) for the complete flow.
 
+> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
+
 At a high level:
 
 ```powershell
