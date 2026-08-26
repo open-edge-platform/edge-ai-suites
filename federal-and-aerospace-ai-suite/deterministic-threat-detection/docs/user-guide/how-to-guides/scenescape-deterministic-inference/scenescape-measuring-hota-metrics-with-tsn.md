@@ -23,7 +23,7 @@ Alongside HOTA, the evaluation also reports:
 
 Scenescape's evaluation framework uses the [TrackEval](https://github.com/JonathonLuiten/TrackEval) toolkit to compute these scores. The framework lives at:
 
-```
+```text
 scenescape/tools/tracker/evaluation/
 ```
 
@@ -33,7 +33,7 @@ For a full reference, see the [Tracker Evaluation Pipeline README](https://githu
 
 Scenescape ships with a reference dataset in:
 
-```
+```text
 scenescape/tests/system/metric/dataset/
 ```
 
@@ -105,7 +105,7 @@ Two pre-prepared MPEG-TS video files are provided. They are derived from the Sce
 
 The video files are at:
 
-```
+```text
 usecases/scenescape-deterministic-inference/hota/media/Cam_x1_0_1k_sei.ts
 usecases/scenescape-deterministic-inference/hota/media/Cam_x2_0_1k_sei.ts
 ```
@@ -234,7 +234,7 @@ docker logs -f scenescape-queuing-video-1
 
 You should see the pipeline connecting to both RTSP streams and the SEI parser logging decoded frame numbers such as:
 
-```
+```text
 [Cam_x1_0] Decoded SEI frame_num = 0
 [Cam_x2_0] Decoded SEI frame_num = 0
 ```

@@ -28,7 +28,7 @@ language
 
 1. Click **Upload Files** to browse, or drag and drop files into the drop zone:
 
-![Upload Flow](./_assets/content-search-upload.png)
+   ![Upload Flow](./_assets/content-search-upload.png)
 
 2. **Select files** using checkboxes to manage file tags
 3. **Add tags** to selected files before the upload

@@ -399,6 +399,19 @@ doctor:  ## Pre-flight: check Docker, /dev/dri, models, videos, ports
 	else \
 	  printf "  [FAIL] docker daemon not reachable — is the service running and is your user in the docker group?\n"; fail=1; \
 	fi; \
+	missing_l0=""; \
+	for pkg in $(L0_PKGS); do \
+	  if ! dpkg-query -W -f='$${Status}' "$$pkg" 2>/dev/null | grep -q "install ok installed"; then \
+	    missing_l0="$$missing_l0 $$pkg"; \
+	  fi; \
+	done; \
+	if [ -z "$$missing_l0" ]; then \
+	  printf "  [ OK ] intel gpu compute runtime (Level Zero + IGC + GMM) installed\n"; \
+	else \
+	  printf "  [WARN] missing host packages required by 'make backend-bootstrap':%s\n" "$$missing_l0"; \
+	  printf "         (in-container 'make up' is unaffected — see docs/user-guide/quickstart.md §1a)\n"; \
+	  printf "         install with 'make check-l0' to see the exact apt commands\n"; \
+	fi; \
 	printf "\n[doctor] --- accelerator visibility ---\n"; \
 	if [ -e /dev/dri ]; then \
 	  RENDERS=$$(ls /dev/dri/renderD* 2>/dev/null | wc -l); \
@@ -486,8 +499,55 @@ BACKEND_VENV     ?= .venv-backend
 BACKEND_PY       ?= $(BACKEND_VENV)/bin/python
 TORCH_XPU_INDEX  ?= https://download.pytorch.org/whl/xpu
 
+# Intel GPU compute runtime packages required on the HOST for `make
+# backend-bootstrap` (torch+xpu loads Level Zero + IGC + GMM from the host).
+# Container-side runs (`make up`) install these inside the image and are
+# unaffected. Keep this list in sync with the Dockerfile and with the
+# "Host prerequisites" section of docs/user-guide/quickstart.md.
+L0_PKGS ?= libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 intel-opencl-icd
+
+# Preflight helper: prints [ OK ] / [FAIL] for every L0_PKGS entry. Prints
+# copy-pasteable apt commands and exits non-zero if any are missing. Used
+# by `backend-venv` and `backend-bootstrap` so operators do not silently
+# hit `torch.xpu.is_available() == False` or `zeInit` loader errors.
+define _check_l0_pkgs
+	@missing=""; \
+	for pkg in $(L0_PKGS); do \
+	  if dpkg-query -W -f='$${Status}' "$$pkg" 2>/dev/null | grep -q "install ok installed"; then \
+	    printf "  [ OK ] $$pkg\n"; \
+	  else \
+	    printf "  [FAIL] $$pkg (not installed)\n"; \
+	    missing="$$missing $$pkg"; \
+	  fi; \
+	done; \
+	if [ -n "$$missing" ]; then \
+	  echo ""; \
+	  echo "  Missing Intel GPU compute runtime packages required by torch+xpu."; \
+	  echo "  Install them once from the Intel graphics apt repo (Ubuntu 24.04):"; \
+	  echo ""; \
+	  echo "    sudo apt-get update && sudo apt-get install -y ca-certificates gnupg wget"; \
+	  echo "    wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \\"; \
+	  echo "      | sudo gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg"; \
+	  echo "    echo \"deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] \\"; \
+	  echo "    https://repositories.intel.com/gpu/ubuntu noble unified\" \\"; \
+	  echo "      | sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list"; \
+	  echo "    sudo apt-get update && sudo apt-get install -y$$missing intel-media-va-driver-non-free"; \
+	  echo ""; \
+	  echo "  See docs/user-guide/quickstart.md \"1a. Intel GPU compute runtime\" for details."; \
+	  exit 1; \
+	fi
+endef
+
+.PHONY: check-l0
+check-l0:  ## Verify host Intel GPU compute runtime (Level Zero + IGC + GMM) is installed
+	@printf "[check-l0] verifying host Intel GPU compute runtime packages...\n"
+	$(_check_l0_pkgs)
+	@printf "[check-l0] all required packages present.\n"
+
 .PHONY: backend-venv
 backend-venv:  ## Create .venv-backend with torch+xpu + Ultralytics + OpenVINO
+	@printf "[backend-venv] checking host Intel GPU compute runtime...\n"
+	$(_check_l0_pkgs)
 	@if [ ! -d $(BACKEND_VENV) ]; then \
 		python3 -m venv $(BACKEND_VENV); \
 		$(BACKEND_PY) -m pip install -U pip wheel; \
@@ -501,6 +561,8 @@ backend-venv:  ## Create .venv-backend with torch+xpu + Ultralytics + OpenVINO
 .PHONY: backend-bootstrap
 backend-bootstrap:  ## Run the cache-first bootstrap (skips train if IR cached)
 	@test -x $(BACKEND_PY) || (echo "[backend-bootstrap] run 'make backend-venv' first"; exit 1)
+	@printf "[backend-bootstrap] checking host Intel GPU compute runtime...\n"
+	$(_check_l0_pkgs)
 	$(BACKEND_PY) -m backend.main_bootstrap
 
 .PHONY: backend-infer

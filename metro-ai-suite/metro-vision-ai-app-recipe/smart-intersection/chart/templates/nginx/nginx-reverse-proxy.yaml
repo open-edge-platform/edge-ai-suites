@@ -33,7 +33,7 @@ data:
             server smart-intersection-dlstreamer-pipeline-server:8080;
         }
 
-        # Maximum allowed size for client request body (e.g. SceneScape GLB 3D base map file uploads; max 132m)
+        # Maximum allowed size for client request body (e.g. Scenescape GLB 3D base map file uploads; max 132m)
         client_max_body_size {{ .Values.nginx.clientMaxBodySize }};
 
         # HTTP server - redirect to HTTPS

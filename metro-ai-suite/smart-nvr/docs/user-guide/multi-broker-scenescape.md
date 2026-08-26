@@ -1,8 +1,8 @@
-# Multiple SceneScape Deployment
+# Multiple Scenescape Deployment
 
-Smart NVR with SceneScape running on separate machines: Smart Intersection (SI) on
+Smart NVR with Scenescape running on separate machines: Smart Intersection (SI) on
 System 1, NVR stack on System 2. For single-node deployment, see
-[Integrate SceneScape with Smart NVR](./scenescape-integration.md).
+[Integrate Scenescape with Smart NVR](./scenescape-integration.md).
 
 ## Overview
 
@@ -71,7 +71,7 @@ brokers:
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `NVR_SCENESCAPE` | ✅ | — | Must be `true` to enable SceneScape mode. |
+| `NVR_SCENESCAPE` | ✅ | — | Must be `true` to enable Scenescape mode. |
 | `VSS_IP` | ✅ | — | VSS service IP. The single nginx proxy serves both summary and search. |
 | `VSS_PORT` | — | `12345` | VSS service port. |
 | `MQTT_USER` | — | auto-generated | Local Mosquitto username (Frigate ↔ NVR). |
@@ -236,7 +236,7 @@ nc -zv <siN_host> 1883
 RTSP IPs are written into `config.yml` at startup. If they changed, re-run
 `setup.sh start-nvr` to regenerate the config.
 
-**UI shows no SceneScape source**
+**UI shows no Scenescape source**
 
 ```bash
 docker exec nvr-event-router-ui env | grep NVR_SCENESCAPE

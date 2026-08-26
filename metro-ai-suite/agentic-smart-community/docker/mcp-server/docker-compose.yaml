@@ -17,10 +17,13 @@ services:
     build:
       context: ../..
       dockerfile: docker/mcp-server/Dockerfile
+      # Docker predefines these build args and injects each in BOTH cases, so the
+      # Dockerfile needs no ARG line. Read the host's lowercase spelling as a
+      # fallback — it is the usual convention on Linux and what set_env.sh exports.
       args:
-        HTTP_PROXY: ${HTTP_PROXY:-}
-        HTTPS_PROXY: ${HTTPS_PROXY:-}
-        NO_PROXY: ${NO_PROXY:-}
+        HTTP_PROXY: ${HTTP_PROXY:-${http_proxy:-}}
+        HTTPS_PROXY: ${HTTPS_PROXY:-${https_proxy:-}}
+        NO_PROXY: ${NO_PROXY:-${no_proxy:-}}
     image: ${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}
     # Host network keeps localhost semantics in both directions: the MCP server
     # reaches multilevel/vllm/videostream-analytics on localhost, and VSA (also on
