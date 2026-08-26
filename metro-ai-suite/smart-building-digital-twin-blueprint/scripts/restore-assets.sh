@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 
 # Restore object class definitions (assets) from a JSON backup file.

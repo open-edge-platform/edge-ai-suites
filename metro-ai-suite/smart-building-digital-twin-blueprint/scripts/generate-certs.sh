@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # Smart Building Digital Twin Blueprint
 # Generate self-signed TLS certificates and secrets for Scenescape
 

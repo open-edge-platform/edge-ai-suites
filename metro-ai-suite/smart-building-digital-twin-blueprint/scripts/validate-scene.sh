@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 # Validate camera and sensor ID consistency for a scene
 
 SCENE_NAME="$1"

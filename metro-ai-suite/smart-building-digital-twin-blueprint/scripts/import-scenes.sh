@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-${API_BASE_URL:-}}"
