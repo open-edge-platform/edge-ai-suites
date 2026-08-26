@@ -27,5 +27,5 @@ Deploy object detection, pose and grasp selection, ROS 2 task orchestration, and
 :hidden:
 
 Vision and Controls Simulation Reference <simulation/rvc_sim>
-Vision and Controls Deployment Referene <deployment/rvc_deploy>
+Vision and Controls Deployment Reference <deployment/rvc_deploy>
 :::

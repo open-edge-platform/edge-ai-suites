@@ -20,7 +20,7 @@ Some of the models used in Humanoid Toolkit solutions are enabled on Intel platf
 
 - [OpenVINO Model Guidance](../openvino/models/index.md)
 
-
+<!--hide_directive
 :::{toctree}
 :hidden:
 :maxdepth: 1
@@ -31,5 +31,4 @@ ipex-llm
 oneapi
 iopenxla
 
-:::
-
+:::hide_directive-->

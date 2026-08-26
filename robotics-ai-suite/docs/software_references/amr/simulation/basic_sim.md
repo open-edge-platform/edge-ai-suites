@@ -1,8 +1,8 @@
 # Simulated Robotics with Gazebo
 
-The Robotics AI Suite relys on the open source ROS 2 stack to provide dependable, tested, and expandable capabilties for your robotics use-case. When designing a new robotics platform or use-case, you'll use simulation as your proving ground, ensuring that your ROS application doesn't stress or break your real world robot beyond its means. In ROS 2, the simulator of choice is Gazebo. It provides first-class ROS integration, meaning that the nodes you create to drive your code are delivering the same messages that you would use on your real bot, while giving you a wide ecosystem of out of the box ready models, simulated sensor data, and an expressive world format that lets you create robust approximation of your real world deployment.
+The Robotics AI Suite relies on the open source ROS 2 stack to provide dependable, tested, and expandable capabilities for your robotics use-case. When designing a new robotics platform or use-case, you'll use simulation as your proving ground, ensuring that your ROS application doesn't stress or break your real world robot beyond its means. In ROS 2, the simulator of choice is Gazebo. It provides first-class ROS integration, meaning that the nodes you create to drive your code are delivering the same messages that you would use on your real bot, while giving you a wide ecosystem of out of the box ready models, simulated sensor data, and an expressive world format that lets you create robust approximation of your real world deployment.
 
-This software reference will walk you through setting up and using Gazebo to give you base undestanding of _how_ the Robotics AI Suite uses it in the various pipelines and ingredients that you can use in your own platform.
+This software reference will walk you through setting up and using Gazebo to give you base understanding of _how_ the Robotics AI Suite uses it in the various pipelines and ingredients that you can use in your own platform.
 
 ## Source Code
 
