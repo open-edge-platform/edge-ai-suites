@@ -69,6 +69,7 @@ Convert, compress, benchmark, and validate the Pi0.5 vision-language-action mode
 Reference Applications <reference_applications/index>
 models/index
 pi05-optimization
+OpenVINO Physical AI Runtime <https://github.com/openvinotoolkit/physicalai>
 :::
 
 ## Additional Guidance
