@@ -40,47 +40,47 @@ The reference application is available as an additional downloadable package thr
 
 Install with the following command:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install -y ros-jazzy-pyrealsense2-ai-demo
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install -y ros-humble-pyrealsense2-ai-demo
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Setup `uv` Python Virtual Environment
 
 `uv` is recommended to manage the Python virtual environment.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 cd /opt/ros/humble/share/pyrealsense2-ai-demo
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 
 ```bash
@@ -98,9 +98,9 @@ source .venv/bin/activate
 
 Before running the application, you need to set configure it to use the appropriate camera streams. A script called `find_cameras.sh` will scan for RGB-compatible camera streams and create a reusable config file at `.config/config_camera.json`. You can modify this file after creation to adjust model, OpenVINO inference device, input stream settings, and other parameters. After, you can run the demo:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
@@ -108,9 +108,9 @@ cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.json
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 cd /opt/ros/humble/share/pyrealsense2-ai-demo
@@ -118,8 +118,8 @@ cd /opt/ros/humble/share/pyrealsense2-ai-demo
 uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.jsony
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 After a few seconds, you will see the camera streams overlaid with inference statistics:
 
