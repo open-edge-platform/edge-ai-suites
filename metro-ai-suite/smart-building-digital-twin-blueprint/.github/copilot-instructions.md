@@ -12,7 +12,7 @@ This repo layers analytics and setup automation on top of a Scenescape deploymen
 - For loopback API access, bypass host proxy settings so local `curl` traffic does not tunnel through `HTTP_PROXY` or `HTTPS_PROXY`.
 
 ## Images And Runtime
-All Scenescape images (`intel/scenescape-*:2026.2.0-rc1`) are pulled from Docker Hub — do not add build steps for them. The DLStreamer GST plugin scripts are sparse-cloned by `setup.sh` into `generated/scenescape-plugins/` (no full repo clone, no build). `scene-narrator` uses `python:3.12-slim` directly with pip dependencies installed at container start; there is no Dockerfile for it.
+All Scenescape images (`intel/scenescape-*:2026.2.0-rc2`) are pulled from Docker Hub — do not add build steps for them. The DLStreamer GST plugin scripts are sparse-cloned by `setup.sh` into `generated/scenescape-plugins/` (no full repo clone, no build). `scene-narrator` uses `python:3.12-slim` directly with pip dependencies installed at container start; there is no Dockerfile for it.
 
 ## Setup And Runtime
 When working on setup, preserve these behaviors unless the task explicitly requires a change.

@@ -338,7 +338,7 @@ info "Locating DLStreamer GST plugins..."
 SCENESCAPE_PLUGINS_DIR="$SCRIPT_DIR/generated/scenescape-plugins"
 # SCENESCAPE_PLUGINS_REF selects the branch or tag for the gstplugins sparse clone independently of the image SCENESCAPE_IMAGE_TAG
 SCENESCAPE_PLUGINS_REF="${SCENESCAPE_PLUGINS_REF:-$(grep -E '^SCENESCAPE_PLUGINS_REF=' .env 2>/dev/null | head -n1 | cut -d'=' -f2-)}"
-SCENESCAPE_PLUGINS_REF="${SCENESCAPE_PLUGINS_REF:-2026.2.0-rc1}"
+SCENESCAPE_PLUGINS_REF="${SCENESCAPE_PLUGINS_REF:-2026.2.0-rc2}"
 
 scenescape_valid() {
     [ -d "$1/dlstreamer-pipeline-server/user_scripts/gstplugins" ]
@@ -608,7 +608,7 @@ delete_env_var "INTERNAL_BROKER_HOST"
 delete_env_var "INTERNAL_WEB_HOST"
 delete_env_var "INTERNAL_AUTOCALIBRATION_HOST"
 upsert_env_var "DATABASE_PASSWORD" "$CURRENT_DATABASE_PASSWORD"
-upsert_env_var "SCENESCAPE_IMAGE_TAG" "2026.2.0-rc1"
+upsert_env_var "SCENESCAPE_IMAGE_TAG" "2026.2.0-rc2"
 upsert_env_var "SCENESCAPE_DIR" "$SCENESCAPE_DIR_INPUT"
 upsert_env_var "PRIMARY_SCENE" "${SCENES[0]}"
 upsert_env_var "PRIMARY_DATASET" "$PRIMARY_DATASET"
@@ -654,7 +654,7 @@ success "Docker images ready"
 # Verify Scenescape images are available (pulled from Docker Hub)
 info "Verifying Scenescape images are available..."
 REQUIRED_IMAGE_VERSION="${SCENESCAPE_IMAGE_TAG:-$(read_env_var "SCENESCAPE_IMAGE_TAG")}"
-REQUIRED_IMAGE_VERSION="${REQUIRED_IMAGE_VERSION:-2026.2.0-rc1}"
+REQUIRED_IMAGE_VERSION="${REQUIRED_IMAGE_VERSION:-2026.2.0-rc2}"
 missing_images=()
 for img in scenescape-manager scenescape-controller scenescape-autocalibration scenescape-analytics; do
     if ! docker image inspect "intel/${img}:${REQUIRED_IMAGE_VERSION}" >/dev/null 2>&1; then

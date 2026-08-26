@@ -97,11 +97,11 @@ Scenescape images are pulled automatically from Docker Hub by `./setup.sh` — n
 
 | Image | Tag |
 |---|---|
-| `intel/scenescape-manager` | `2026.2.0-rc1` |
-| `intel/scenescape-controller` | `2026.2.0-rc1` |
-| `intel/scenescape-autocalibration` | `2026.2.0-rc1` |
-| `intel/scenescape-analytics` | `2026.2.0-rc1` |
-| `intel/dlstreamer-pipeline-server` | `2026.2.0-ubuntu24-rc1` |
+| `intel/scenescape-manager` | `2026.2.0-rc2` |
+| `intel/scenescape-controller` | `2026.2.0-rc2` |
+| `intel/scenescape-autocalibration` | `2026.2.0-rc2` |
+| `intel/scenescape-analytics` | `2026.2.0-rc2` |
+| `intel/dlstreamer-pipeline-server` | `2026.2.0-ubuntu24-rc2` |
 
 The DLStreamer GST plugin scripts (`gstplugins/`) are fetched automatically by `setup.sh` via a sparse shallow clone of the Scenescape repository — only that subdirectory is downloaded, no full clone or image build is needed.
 
@@ -178,7 +178,7 @@ Key variables in `.env`:
 | `DASHBOARD_URL` | `http://$PUBLIC_HOSTNAME:$DASHBOARD_PORT` | Browser URL for the analytics dashboard |
 | `SNAPSHOT_INTERVAL` | `10` | Seconds between narrator snapshots |
 | `DASHBOARD_PORT` | `7000` | Host port for the analytics dashboard |
-| `SCENESCAPE_IMAGE_TAG` | `2026.2.0-rc1` | Scenescape image tag pulled from Docker Hub |
+| `SCENESCAPE_IMAGE_TAG` | `2026.2.0-rc2` | Scenescape image tag pulled from Docker Hub |
 | `MODEL_NAME` | `smartbuilding-int8` | Detection model variant; set to `smartbuilding-fp16` for FP16 |
 
 ## Adding a New Scene
