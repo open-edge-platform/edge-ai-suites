@@ -1,0 +1,14 @@
+data
+*.pyc
+**/data
+__pycache__/
+.*_cache/
+envs
+**/charts
+coverage
+.coverage
+virtual_env
+workspace
+ov_models
+.vscode
+.venv

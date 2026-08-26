@@ -9,7 +9,9 @@ from streamlit.testing.v1 import AppTest
 
 from ut_utils import generate_fake_meta, remove_fake_meta_files
 
-APP_TIMEOUT = 300
+# Cluster deployments run far slower than a local compose stack, so allow the
+# timeout to be raised via APP_TEST_TIMEOUT without editing the suite.
+APP_TIMEOUT = max(int(os.environ.get("APP_TEST_TIMEOUT", "0")), 300)
 
 Query_list = {"deer": "deer",
 "violin": "guitar-violin",
@@ -46,23 +48,23 @@ def test_filter_search():
         at.button(key="kSearch").click().run()
         assert len(at.session_state.latest_log) > 0, "No search results found."
 
-        # get unique camera label and timestamp
+        # get unique camera label and capture date
         match = re.search(r"'camera': '([^']+)'", at.session_state.latest_log[0])
         camera = match.group(1)
 
-        match = re.search(r"'timestamp': (\d+)", at.session_state.latest_log[0])
-        timestamp = int(match.group(1)) if match else None
+        match = re.search(r"'capture_date': (\d+)", at.session_state.latest_log[0])
+        capture_date = int(match.group(1)) if match else None
 
         # filter search by camera label, should return 1 result because each fake meta has unique camera label
         at.text_input(key="kCamera").input(camera)
         at.button(key="kSearch").click().run()
         assert len(at.session_state.latest_log) == 1, f"Filter search by camera '{camera}' did not return expected result."
 
-        # filter search by timestamp, should return 1 result
-        at.date_input(key="kf_s_time").set_value(datetime.datetime.strptime(str(timestamp), "%Y%m%d").date())
-        at.date_input(key="kf_e_time").set_value(datetime.datetime.strptime(str(timestamp), "%Y%m%d").date())
+        # filter search by capture date, should return 1 result
+        at.date_input(key="kf_s_time").set_value(datetime.datetime.strptime(str(capture_date), "%Y%m%d").date())
+        at.date_input(key="kf_e_time").set_value(datetime.datetime.strptime(str(capture_date), "%Y%m%d").date())
         at.button(key="kSearch").click().run()
-        assert len(at.session_state.latest_log) == 1, f"Filter search by timestamp '{timestamp}' did not return expected result."
+        assert len(at.session_state.latest_log) == 1, f"Filter search by capture_date '{capture_date}' did not return expected result."
 
     # clean up
     remove_fake_meta_files(helper_map2container(HOST_DATA_PATH))

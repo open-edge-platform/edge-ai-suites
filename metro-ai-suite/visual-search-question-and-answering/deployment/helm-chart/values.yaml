@@ -13,6 +13,10 @@ global:
 
   registry: ""
 
+  # Optional node pinning for all VSQA pods. Required when the data hostPath
+  # or GPU device nodes (/dev/dri) only exist on specific nodes.
+  nodeSelector: {}
+
   env:
     keeppvc: false # Set to true to keep PVCs after uninstalling the chart
 
@@ -25,7 +29,7 @@ volumes:
 servicePorts:
   vlm: 8000
   mme: 8000
-  dataprep: 9990
+  dataprep: 8000
   retriever: 8000
   visualSearch: 17580
 
@@ -33,10 +37,12 @@ MILVUS_HOST: "my-milvus.milvus.svc.cluster.local"
 MILVUS_PORT: 19530
 
 vlmOpenvinoServing:
+  # Set when VLM_DEVICE is GPU/NPU, e.g. limits: {gpu.intel.com/i915: 1}
+  resources: {}
   name: vlm-openvino-serving
   image:
-    repository: "vlm-openvino-serving"
-    tag: "latest"
+    # The image reference is pinned in the deployment template and is not
+    # configurable, so that global.registry cannot repoint this upstream image.
     pullPolicy: "IfNotPresent"
   replicaCount: 1
   service:
@@ -64,6 +70,8 @@ vlmOpenvinoServing:
   renderGroupId: 110
 
 multimodalembeddingServing:
+  # Set when EMBEDDING_DEVICE is GPU/NPU, e.g. limits: {gpu.intel.com/i915: 1}
+  resources: {}
   replicaCount: 1
   name: multimodal-embedding-serving
   image:
@@ -76,7 +84,7 @@ multimodalembeddingServing:
     targetPort: 8000
   env:
     HF_ENDPOINT: "https://hf-mirror.com"
-    EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.vsqa.svc.cluster.local:8000"
+    EMBEDDING_BASE_URL: "http://multimodal-embedding-serving.{{ .Release.Namespace }}.svc.cluster.local:8000"
     EMBEDDING_DEVICE: "CPU"
     EMBEDDING_USE_OV: false
     EMBEDDING_OV_MODELS_DIR: "/app/ov_models"
@@ -94,20 +102,47 @@ multimodalembeddingServing:
   videoGroupId: 44
   renderGroupId: 110
 
-dataprepVisualdataMilvus:
+multimodalDataprep:
+  # Set when MM_DATAPREP_*_DEVICE is GPU/NPU, e.g. limits: {gpu.intel.com/i915: 1}
+  resources: {}
+  # Host group ids owning the accelerator device nodes, so the non-root
+  # container user can open them. Check with: ls -ln /dev/dri
+  videoGroupId: 44
+  renderGroupId: 110
   replicaCount: 1
-  name: dataprep-visualdata-milvus
+  name: multimodal-dataprep
   image:
-    repository: "dataprep-visualdata-milvus"
+    repository: "multimodal-dataprep"
     tag: "latest"
     pullPolicy: "IfNotPresent"
   service:
     type: ClusterIP
-    port: 9990
-    targetPort: 9990
+    port: 8000
+    targetPort: 8000
   env:
-    DEVICE: "CPU"
-    MILVUS_PORT: 19530
+    # Milvus for vectors; local filesystem for storage, because media is
+    # embedded in place from the shared data mount (store_copy=false).
+    MM_DATAPREP_VECTORDB_BACKEND: "milvus"
+    MM_DATAPREP_STORAGE_BACKEND: "local"
+    MM_DATAPREP_LOCAL_STORAGE_PATH: "/tmp/dataprep/storage"
+    MM_DATAPREP_VDB_METRIC_TYPE: "IP"
+    MM_DATAPREP_VDB_INDEX_TYPE: "FLAT"
+    MM_DATAPREP_DEFAULT_BUCKET_NAME: "vsqa"
+    MM_DATAPREP_EMBEDDING_DEVICE: "CPU"
+    MM_DATAPREP_DETECTION_DEVICE: "CPU"
+    MM_DATAPREP_USE_OPENVINO: "true"
+    MM_DATAPREP_ENABLE_OBJECT_DETECTION: "false"
+    MM_DATAPREP_FRAME_INTERVAL: 15
+    MM_DATAPREP_VIDEO_SHM_BLOCK_SIZE: "6266880"
+    # Keep the batch size well below MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS so the
+    # detected crops of a batch still fit in the shared-memory pool.
+    MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS: 128
+    MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE: 32
+    MM_DATAPREP_INGEST_DATA_ROOT: "/home/user/data"
+    # Skip files already embedded, so re-running UpdateDB on the same directory
+    # does not duplicate results.
+    MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS: "false"
+    MM_DATAPREP_LOG_LEVEL: "INFO"
     HF_ENDPOINT: "https://hf-mirror.com"
   livenessProbe:
     initialDelaySeconds: 60
@@ -116,7 +151,7 @@ dataprepVisualdataMilvus:
     failureThreshold: 120
     httpGet:
       path: /v1/dataprep/health
-      port: 9990
+      port: 8000
   readinessProbe:
     sameAsLiveness: true
 
@@ -135,7 +170,6 @@ retrieverMilvus:
     RETRIEVER_BACKEND: "milvus"
     MILVUS_PORT: 19530
     INDEX_NAME: "default"
-    MILVUS_METADATA_FIELD: "meta"
     DEFAULT_TOP_K: "20"
     MAX_TOP_K: "1000"
     LOG_LEVEL: "INFO"
@@ -169,10 +203,22 @@ visualSearchQaApp:
     port: 17580
     targetPort: 17580
   env:
-    BACKEND_VQA_BASE_URL: "http://vlm-openvino-serving.vsqa.svc.cluster.local:8000"
-    BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.vsqa.svc.cluster.local:8000"
-    BACKEND_DATAPREP_BASE_URL: "http://dataprep-visualdata-milvus.vsqa.svc.cluster.local:9990"
+    BACKEND_VQA_BASE_URL: "http://vlm-openvino-serving.{{ .Release.Namespace }}.svc.cluster.local:8000"
+    BACKEND_SEARCH_BASE_URL: "http://retriever-milvus.{{ .Release.Namespace }}.svc.cluster.local:8000"
+    BACKEND_DATAPREP_BASE_URL: "http://multimodal-dataprep.{{ .Release.Namespace }}.svc.cluster.local:8000"
+    # Browser-reachable dataprep URL. Search results stream directly from
+    # GET /media/download (HTTP Range/seek), so this must resolve from the
+    # user's browser - set it to the ingress/NodePort address exposing
+    # multimodal-dataprep. Empty falls back to BACKEND_DATAPREP_BASE_URL,
+    # which only works when the browser can reach the cluster service.
+    DATAPREP_PUBLIC_BASE_URL: ""
     DATA_INGEST_WITH_DETECT: false
+    DATA_INGEST_FRAME_INTERVAL: 15
+    # Must match multimodalDataprep.env.MM_DATAPREP_DEFAULT_BUCKET_NAME.
+    DATAPREP_BUCKET_NAME: "vsqa"
+    # User metadata fields (from meta/<basename>.json sidecars) the UI filters on.
+    METADATA_CAMERA_FIELD: "camera"
+    METADATA_DATE_FIELD: "capture_date"
     VISUAL_SEARCH_QA_UI_PORT: 17580
     MAX_MAX_NUM_SEARCH_RESULTS: 200
     DEFAULT_NUM_SEARCH_RESULTS: 10

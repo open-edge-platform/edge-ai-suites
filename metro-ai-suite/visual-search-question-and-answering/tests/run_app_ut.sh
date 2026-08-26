@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+set -uo pipefail
+
 CONTAINER_IDS=$(docker ps -a --filter "status=running" -q | xargs -r docker inspect --format '{{.Config.Image}} {{.Id}}' | grep "visual-search-qa-app" | awk '{print $2}')
 
 # Check if any containers were found
@@ -20,14 +25,16 @@ total_count=0
 for test_file in unit_tests/test_*.py; do
   test_file_name=$(basename "$test_file")  # Remove the unit_tests/ prefix
   echo "Running tests in $test_file_name"
-  # Capture the output of the pytest command
-  output=$(docker exec -it ${CONTAINER_IDS[0]} bash -c "cd /home/user/visual-search-qa/src && python -m pytest $test_file_name --tb=short")
-  echo "$output"
+  # Capture the output of the pytest command. No -t: this script must work in
+  # non-interactive contexts (CI), where allocating a TTY fails outright.
+  output=$(docker exec "${CONTAINER_IDS[0]}" bash -c "cd /home/user/visual-search-qa/src && python -m pytest $test_file_name --tb=short" 2>&1)
   exit_code=$?
+  echo "$output"
 
   total_count=$((total_count + 1))
-  # Check if the output contains "failed"
-  if echo "$output" | grep -q "failed"; then
+  # pytest's exit code is the source of truth; a non-zero code also catches
+  # collection errors and container/exec failures that print no "failed" line.
+  if [ $exit_code -ne 0 ]; then
     TEST_RESULTS+=("$test_file_name: FAIL")
   else
     TEST_RESULTS+=("$test_file_name: PASS")

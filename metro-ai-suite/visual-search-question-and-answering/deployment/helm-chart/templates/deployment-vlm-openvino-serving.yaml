@@ -14,12 +14,21 @@ spec:
       labels:
         app: {{ .Values.vlmOpenvinoServing.name }}
     spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       hostIPC: true
       securityContext:
         fsGroup: {{ .Values.vlmOpenvinoServing.videoGroupId }}
+        supplementalGroups:
+          - {{ .Values.vlmOpenvinoServing.videoGroupId }}
+          - {{ .Values.vlmOpenvinoServing.renderGroupId }}
       containers:
         - name: {{ .Values.vlmOpenvinoServing.name }}
-          image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.vlmOpenvinoServing.image.repository }}:{{ .Values.vlmOpenvinoServing.image.tag }}"
+          # Published upstream image, pinned deliberately. It is not built from
+          # this repository, so global.registry is intentionally not applied.
+          image: "intel/vlm-openvino-serving:2026.2.0-20260807-weekly"
           imagePullPolicy: {{ .Values.vlmOpenvinoServing.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.vlmOpenvinoServing.service.targetPort }}
@@ -44,6 +53,10 @@ spec:
               value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
             - name: HF_ENDPOINT
               value: {{ .Values.vlmOpenvinoServing.env.HF_ENDPOINT | quote }}
+          {{- with .Values.vlmOpenvinoServing.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           volumeMounts:
           - name: workspace
             mountPath: /app/ov_models

@@ -1,3 +1,34 @@
+if [[ " $* " == *" --clean-data "* ]]; then
+    _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    export HOST_DATA_PATH="${HOST_DATA_PATH:-$HOME/data}"
+    export USER_GROUP_ID="${USER_GROUP_ID:-$(id -g)}"
+    export VIDEO_GROUP_ID="${VIDEO_GROUP_ID:-44}"
+    export RENDER_GROUP_ID="${RENDER_GROUP_ID:-1002}"
+    export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-vsqa}"
+    _project="${COMPOSE_PROJECT_NAME}"
+
+    echo "Cleaning VSQA stack data for project '${_project}' (preserving ov-models and dataprep-yolox-models)..."
+
+    docker compose -f "${_script_dir}/compose_milvus.yaml" down --remove-orphans || true
+    docker compose -f "${_script_dir}/../compose_milvus.yaml" down --remove-orphans || true
+
+    while IFS= read -r _vol; do
+        [[ -z "${_vol}" ]] && continue
+        case "${_vol}" in
+            *_ov-models|*_dataprep-yolox-models)
+                continue
+                ;;
+        esac
+        docker volume rm "${_vol}" >/dev/null 2>&1 || true
+    done < <(docker volume ls --filter "label=com.docker.compose.project=${_project}" --format '{{.Name}}')
+
+    echo "Clean complete. Preserved Docker volumes: ov-models, dataprep-yolox-models"
+    if return 0 2>/dev/null; then
+        return 0
+    fi
+    exit 0
+fi
+
 host_ip=$(ip route get 1 | awk '{print $7}'|head -1)
 HOST_IP=$(ip route get 1 | awk '{print $7}'|head -1)
 USER_GROUP_ID=$(id -g)
@@ -10,17 +41,33 @@ export VIDEO_GROUP_ID
 export RENDER_GROUP_ID
 
 # Append the value of the public IP address to the no_proxy list 
-export no_proxy="localhost,127.0.0.1,::1,${host_ip},milvus-standalone,vlm-openvino-serving,multimodal-embedding-serving,dataprep-visualdata-milvus,retriever-milvus,visual-search-qa-app"
-export no_proxy_env=${no_proxy},$HOST_IP
+export no_proxy="localhost,127.0.0.1,::1,${host_ip},milvus-standalone,vlm-openvino-serving,multimodal-embedding-serving,multimodal-dataprep,retriever-milvus,visual-search-qa-app"
 export http_proxy=${http_proxy}
 export https_proxy=${https_proxy}
 export no_proxy_env=${no_proxy}
 
 export MILVUS_HOST=milvus-standalone
 export MILVUS_PORT=19530
-export DOCKER_VOLUME_DIRECTORY="/opt"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-vsqa}"
 
-export DATA_INGEST_WITH_DETECT=true
+export DATA_INGEST_WITH_DETECT="${DATA_INGEST_WITH_DETECT:-false}"
+export DATA_INGEST_FRAME_INTERVAL="${DATA_INGEST_FRAME_INTERVAL:-15}"
+export DATAPREP_NOFILE_SOFT="${DATAPREP_NOFILE_SOFT:-65535}"
+export DATAPREP_NOFILE_HARD="${DATAPREP_NOFILE_HARD:-65535}"
+export MM_DATAPREP_MAX_PARALLEL_WORKERS="${MM_DATAPREP_MAX_PARALLEL_WORKERS:-2}"
+export MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS="${MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS:-128}"
+# 1088-line decode surfaces are common for 1080p H.264 streams; keep headroom
+# above 1920x1080x3 so frame transport does not stall at ingest time.
+export MM_DATAPREP_VIDEO_SHM_BLOCK_SIZE="${MM_DATAPREP_VIDEO_SHM_BLOCK_SIZE:-$((1920 * 1088 * 3))}"
+# Frames per decode batch. Frame and detected-crop shared-memory blocks are only
+# released once a whole batch is embedded, so keep this well below
+# MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS to leave room for the detected crops of a batch.
+export MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE="${MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE:-32}"
+export MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS="${MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS:-1}"
+export MM_DATAPREP_DETECTION_WORKER_THREADS="${MM_DATAPREP_DETECTION_WORKER_THREADS:-1}"
+export MM_DATAPREP_EMBED_WORKER_THREADS="${MM_DATAPREP_EMBED_WORKER_THREADS:-1}"
+export DATAPREP_BUCKET_NAME="${DATAPREP_BUCKET_NAME:-vsqa}"
+export INDEX_NAME="${INDEX_NAME:-default}"
 
 # huggingface mirror 
 export HF_ENDPOINT=https://hf-mirror.com
@@ -30,14 +77,10 @@ export VLM_DEVICE="GPU.1"
 export HOST_DATA_PATH="$HOME/data"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
 
-export DEFAULT_START_OFFSET_SEC=0
-export DEFAULT_CLIP_DURATION=-1  # -1 means take the video till end
-export DEFAULT_NUM_FRAMES=64
-
 # OpenVINO configuration
-export EMBEDDING_USE_OV=false
 export EMBEDDING_DEVICE="GPU.1"
-export OV_PERFORMANCE_MODE=${OV_PERFORMANCE_MODE:-LATENCY}
+export MM_DATAPREP_EMBEDDING_DEVICE="${MM_DATAPREP_EMBEDDING_DEVICE:-${EMBEDDING_DEVICE:-CPU}}"
+export MM_DATAPREP_DETECTION_DEVICE="${MM_DATAPREP_DETECTION_DEVICE:-${EMBEDDING_DEVICE:-CPU}}"
 export EMBEDDING_USE_OV=true
 
 export VLM_COMPRESSION_WEIGHT_FORMAT=int8
@@ -52,7 +95,13 @@ export EMBEDDING_SERVER_PORT=9777
 
 export BACKEND_VQA_BASE_URL="http://vlm-openvino-serving:8000"
 export BACKEND_SEARCH_BASE_URL="http://retriever-milvus:${RETRIEVER_SERVICE_PORT}"
-export BACKEND_DATAPREP_BASE_URL="http://dataprep-visualdata-milvus:${DATAPREP_SERVICE_PORT}"
+export BACKEND_DATAPREP_BASE_URL="http://multimodal-dataprep:${DATAPREP_SERVICE_PORT}"
+# Browser-reachable dataprep URL. Search results are streamed straight from
+# GET /media/download by the browser itself, so this must resolve there -
+# container names (multimodal-dataprep) never do. host_ip is used so the UI
+# also works when opened from another machine; http://localhost:<port> is a
+# valid override only when the browser runs on this host.
+export DATAPREP_PUBLIC_BASE_URL="${DATAPREP_PUBLIC_BASE_URL:-http://${host_ip}:${DATAPREP_SERVICE_PORT}}"
 export EMBEDDING_BASE_URL="http://multimodal-embedding-serving:8000"
 
 # export EMBEDDING_MODEL_NAME="CLIP/clip-vit-h-14"

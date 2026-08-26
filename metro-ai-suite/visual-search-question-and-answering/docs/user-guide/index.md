@@ -51,9 +51,13 @@ the image encoder from the CLIP model, and stores them in a vector database.
 
 #### Image/Frame Processing
 
-- Resize, convert colors, normalize, and apply object detection with cropping.
+- Resize, convert colors, normalize, and optionally apply object detection with cropping.
 
 > **Note**
+>
+> Object detection and cropping are disabled by default, so only full frames are
+> indexed. Enable them with `MM_DATAPREP_ENABLE_OBJECT_DETECTION` and
+> `DATA_INGEST_WITH_DETECT`.
 >
 > Object detection and cropping improve retrieval performance for large-scale scene
 > images (e.g., high-resolution surveillance images with multiple objects).

@@ -4,7 +4,9 @@
 import os
 from streamlit.testing.v1 import AppTest
 
-APP_TIMEOUT = 30
+# Cluster deployments run far slower than a local compose stack, so allow the
+# timeout to be raised via APP_TEST_TIMEOUT without editing the suite.
+APP_TIMEOUT = max(int(os.environ.get("APP_TEST_TIMEOUT", "0")), 30)
 
 VLM_MODEL_NAME=os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-7B-Instruct")
 
