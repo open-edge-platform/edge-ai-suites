@@ -2,9 +2,11 @@
 
 ## v1.20.0
 
+**Release Date**: September 9, 2026
+
 **New**
 
-- Configurable NGINX upload limit is now available (e.g. for SceneScape GLB 3D base map files).
+- Configurable NGINX upload limit is now available (e.g. for Scenescape GLB 3D base map files).
 - GPU and NPU support with trusted compute has been integrated.
 
 **Improved**
