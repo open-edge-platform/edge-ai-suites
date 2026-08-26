@@ -6,9 +6,7 @@ raw image patches, avoiding explicit feature extraction/matching. It targets
 real-time onboard localization and mapping, including in visually- or
 geometrically-degraded environments where either sensor alone struggles.
 
-<div align="center">
-    <img src="https://raw.githubusercontent.com/hku-mars/FAST-LIVO2/0d2c0346107b75b59934975adec9a6eeeb913c64/pics/Framework.png" width="80%">
-</div>
+![system framework overview](https://raw.githubusercontent.com/hku-mars/FAST-LIVO2/0d2c0346107b75b59934975adec9a6eeeb913c64/pics/Framework.png "system framework overview")
 
 - Paper: [FAST-LIVO2: Fast, Direct LiDAR-Inertial-Visual Odometry](https://arxiv.org/pdf/2408.14035) (accepted, T-RO'24)
 - Paper: [FAST-LIVO2 on Resource-Constrained Platforms](https://arxiv.org/pdf/2501.13876)
