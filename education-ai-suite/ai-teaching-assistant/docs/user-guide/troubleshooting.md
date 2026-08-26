@@ -49,7 +49,7 @@ Stop conflicting PIDs or run:
 
 ## Models Download Slowly or First Run Is Long
 
-First startup can take significant time due to model downloads and OpenVINO
+First startup can take significant time due to model downloads and OpenVINO™
 compilation.
 
 Useful checks:
