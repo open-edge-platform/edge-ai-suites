@@ -7,7 +7,7 @@ inference with the resulting adapter. This document describes the flow
 generically — it applies regardless of what domain or dataset you bring.
 
 > **Looking for a concrete, ready-to-run example?** See
-> [`weld-process.md`](weld-process.md) for a full worked instance of this
+> [Fine-Tune a VLM with Unsloth — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md) for a full worked instance of this
 > flow applied to a weld-defect visual inspection dataset (input schema,
 > prompt design, and the exact commands used).
 
@@ -17,7 +17,7 @@ This directory is **not integrated** with the rest of
 repo. It is a self-contained data-prep + fine-tuning + inference workflow you
 run independently (e.g. on a dev box or training server) to produce a LoRA
 adapter. Once you have an adapter, you can serve it with the existing
-[`docker-compose-vllm.yml`](../docker-compose-vllm.yml) in this repo, or with
+`docker-compose-vllm.yml` in this repo, or with
 any OpenAI-compatible VLM server that supports LoRA adapters.
 
 ## Table of Contents
@@ -40,8 +40,8 @@ This process is intentionally split into two concerns:
 1. **Bring your own dataset**, prepared as a parquet file (or files) in the
    chat-conversation shape described in
    [Expected Dataset Format](#expected-dataset-format). How you produce
-   that parquet file is entirely up to your domain/data — see
-   [`weld-process.md`](weld-process.md) for one concrete example
+   that parquet file is entirely up to your domain/data — see the
+   [Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md) for one concrete example
    (`prepare_weld_dataset.py`) that fuses weld images + sensor telemetry
    into this shape.
 2. **Fine-tune and run inference** on that dataset with the two generic,
@@ -61,11 +61,10 @@ any domain-specific assumptions about your dataset's content.
 
 ```
 vlm-fine-tuning/
-├── README.md                  # this file — generic setup / train / infer
-├── weld-process.md            # concrete worked example (weld-defect analysis)
+├── README.md                  # short pointer to this guide
 ├── requirements.txt           # pinned Python dependencies
 ├── common.py                  # shared chat-format / device-detection helpers
-├── prepare_weld_dataset.py    # weld-specific dataset prep (see weld-process.md)
+├── prepare_weld_dataset.py    # weld-specific dataset prep (see the Weld Usecase guide)
 ├── train_qwen.py               # Generic LoRA fine-tuning (Unsloth + TRL)
 └── infer_qwen.py               # Generic standalone inference
 ```
@@ -142,7 +141,7 @@ any dataset-preparation step you bring:
 
 ```mermaid
 flowchart LR
-    subgraph S0["Your Dataset Prep\n(domain-specific — bring your own,\nsee weld-process.md for an example)"]
+    subgraph S0["Your Dataset Prep\n(domain-specific — bring your own,\nsee the Weld Usecase guide)"]
         direction TB
         A["Your raw data"] --> B["system/user/assistant\nconversations per sample"]
         B --> C["Parquet export\n(image + conversation_json columns)"]
@@ -204,7 +203,7 @@ pass via `--split`).
 
 For a concrete example of building this format from raw domain data
 (images + tabular telemetry), including how many prompt variants to use
-and why, see [`weld-process.md`](weld-process.md).
+and why, see the [Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
 
 ## Step: Fine-Tune the Model
 
@@ -332,17 +331,13 @@ adapter from `train_qwen.py`. Output streams token-by-token to stdout via
   your PyTorch build matches your hardware (see [Setup](#setup)).
 - **Serving the adapter** — this directory only produces the adapter; to
   serve it with an OpenAI-compatible API, see
-  [`docker-compose-vllm.yml`](../docker-compose-vllm.yml) and
-  [`vllm.env`](../vllm.env) at the root of this component.
+  `docker-compose-vllm.yml`and `.env` under `VLLM config` section
 - **Dataset-prep issues** (missing files, split-ratio errors, malformed
   `conversation_json`, etc.) are specific to whichever dataset-prep script
-  you use — see [`weld-process.md` — Data-Prep Troubleshooting](weld-process.md#data-prep-troubleshooting)
+  you use — see [Weld Usecase — Data-Prep Troubleshooting](./how-to-fine-tune-vlm-weld-usecase.md#data-prep-troubleshooting)
   for the worked example's troubleshooting notes.
 
 ## License
-
-Licensed under the Apache License, Version 2.0. See the repository root
-[`LICENSE`](../../../LICENSE) file.
 
 Third-party components used by the scripts in this directory (see
 `requirements.txt`), each under their own upstream license:
@@ -356,4 +351,4 @@ Third-party components used by the scripts in this directory (see
 
 For the license of any dataset used with this toolkit, see the dataset's
 own license terms — e.g. for the weld worked example, see
-[`weld-process.md` — License / Dataset Attribution](weld-process.md#license--dataset-attribution).
+[Weld Usecase — License / Dataset Attribution](./how-to-fine-tune-vlm-weld-usecase.md#license--dataset-attribution).
