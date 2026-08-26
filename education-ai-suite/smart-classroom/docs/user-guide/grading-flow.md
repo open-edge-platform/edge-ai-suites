@@ -13,7 +13,7 @@ Classroom main screen:
 
 A rubric tells the model how to grade. Upload one before creating a task:
 
-1. Click **Upload Rubric** and select a `.txt` or `.json` file.
+1. Click **Upload Rubric** and select a `.txt` file.
 2. The uploaded rubric appears in the rubric list and can be edited in place.
 
 ![Upload Rubric](./_assets/grading-rubric.png)
