@@ -350,8 +350,8 @@ services:
       retries: 5
       start_period: 10s
     environment:
-      - no_proxy=${no_proxy:-},mediaserver,ntpserv,.scenescape.intel.com
-      - NO_PROXY=${NO_PROXY:-},mediaserver,ntpserv,.scenescape.intel.com
+      - no_proxy=mediaserver,ntpserv,.scenescape.intel.com,${no_proxy:-}
+      - NO_PROXY=mediaserver,ntpserv,.scenescape.intel.com,${NO_PROXY:-}
       - RUN_MODE=EVA
       - DETECTION_DEVICE=${DETECTION_DEVICE}
       - GST_DEBUG=1
