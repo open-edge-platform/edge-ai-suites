@@ -24,24 +24,24 @@ Complete the [Getting Started guide](../../../platform_foundation/getting_starte
 
 1. Download and install the RealSense camera with ROS 2 sample application:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
    ```bash
    sudo apt-get install -y ros-jazzy-realsense2-tutorial-demo
    ```
 
-   :::
-   :::{tab-item} **Humble**
-   :sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
    ```bash
    sudo apt-get install -y ros-humble-realsense2-tutorial-demo
    ```
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 2. Run `find_cameras.sh` to detect the connected camera type:
 
