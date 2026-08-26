@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/content_search_api_service.dart';
 import '../entities/health_status.dart';
@@ -24,11 +26,23 @@ class HealthNotifier extends StateNotifier<HealthStatus> {
   }
 
   final ContentSearchApiService _service;
+  Timer? _retryTimer;
 
   Future<void> check() async {
+    _retryTimer?.cancel();
     state = HealthStatus.unknown();
     final status = await _service.checkHealth();
     state = status;
+    // Auto-retry while services are still starting up.
+    if (status.state != HealthState.ok) {
+      _retryTimer = Timer(const Duration(seconds: 10), check);
+    }
+  }
+
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
   }
 }
 

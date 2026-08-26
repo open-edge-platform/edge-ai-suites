@@ -1,11 +1,16 @@
 import os
 import json, csv
-from threading import Thread
+import time
+from threading import Thread, Lock
 from typing import Union, List, Dict, Tuple
 from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
+
+_inflight_lock = Lock()
+_inflight = 0
+
 
 class StorageManager:
     @staticmethod
@@ -46,8 +51,38 @@ class StorageManager:
 
     @staticmethod
     def save_async(path: str, data: Union[str, dict], append: bool = False):
-        Thread(target=StorageManager._write, args=(path, data, append)).start()
-        
+        global _inflight
+        with _inflight_lock:
+            _inflight += 1
+
+        def _run():
+            global _inflight
+            try:
+                StorageManager._write(path, data, append)
+            finally:
+                with _inflight_lock:
+                    _inflight -= 1
+
+        Thread(target=_run).start()
+
+    @staticmethod
+    def wait_idle(timeout: float = 30.0) -> bool:
+        """Block until all async writes have flushed, or timeout elapses.
+
+        Returns True if writes drained, False on timeout. Used to barrier
+        between pipeline stages so a stage never reads a file the previous
+        stage is still writing.
+        """
+        waited = 0.0
+        while waited < timeout:
+            with _inflight_lock:
+                if _inflight == 0:
+                    return True
+            time.sleep(0.1)
+            waited += 0.1
+        return False
+
+
     @staticmethod
     def save_csv(path: str, data: dict, headers: List[str], append: bool = True):
         StorageManager._ensure_dir(path)
