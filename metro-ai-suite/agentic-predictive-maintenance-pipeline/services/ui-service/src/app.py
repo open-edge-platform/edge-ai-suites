@@ -19,6 +19,7 @@ vs-reasoning plumbing needs to leak into the UI layer itself.
 """
 
 import json
+import asyncio
 import logging
 import math
 import os
@@ -40,6 +41,7 @@ _DETECTION_URL = os.environ.get("DETECTION_SERVICE_URL", "http://apm-detection:5
 _STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://apm-storage:5001")
 _LLM_BASE_URL  = os.environ.get("LLM_BASE_URL",          "")
 _LLM_MODEL     = os.environ.get("LLM_MODEL_NAME",        "")
+_LLM_MODE      = os.environ.get("LLM_MODE",              "llm").lower()
 _USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
 _API_KEY       = os.environ.get("APM_API_KEY",           "")
 _STORAGE_MUTATION_HEADERS = {"X-API-Key": _API_KEY} if _API_KEY else {}
@@ -51,6 +53,12 @@ _AVAILABLE_DEVICES = [
 if not _AVAILABLE_DEVICES:
     _AVAILABLE_DEVICES = ["CPU"]
 _TIMEOUT       = 15.0
+_LLM_MAX_RETRIES   = 3
+_LLM_BACKOFF_BASE  = 1.0
+_LLM_BACKOFF_FACTOR = 2.0
+_LLM_BACKOFF_MAX   = 8.0
+_CHARS_PER_TOKEN_ESTIMATE = 4
+_LLM_CONTEXT_LIMIT = int(os.environ.get("LLM_CONTEXT_LIMIT", "8192"))
 _MAX_LLM_CONTENT_CHARS = 16_000
 _MAX_CONTEXT_CHARS = 12_000
 _MAX_ANSWER_CHARS = 4_000
@@ -310,6 +318,9 @@ _QUERY_OPERATION_ALIASES = {
     "GroupByQuery": "group_by",
     "FramesQuery": "frames",
 }
+_DETECTION_RECORD_KEYS = {
+    "id", "frame_id", "label", "confidence", "x", "y", "width", "height", "timestamp",
+}
 _DETECTION_QUERY_RESPONSE_FORMAT = {
     "type": "json_schema",
     "json_schema": {
@@ -378,7 +389,98 @@ def _normalize_detection_plan(raw_plan: Any) -> Any:
         normalized["sort"] = [normalized["sort"]]
     if isinstance(normalized.get("metrics"), dict):
         normalized["metrics"] = [normalized["metrics"]]
+    if operation in {"aggregate", "group_by"}:
+        metrics = []
+        for metric in normalized.get("metrics", []):
+            if not isinstance(metric, dict):
+                metrics.append(metric)
+                continue
+            normalized_metric = dict(metric)
+            function = normalized_metric.get("function")
+            alias = normalized_metric.get("alias")
+            if (
+                function in {"avg", "min", "max", "sum"}
+                and "field" not in normalized_metric
+                and isinstance(alias, str)
+                and "confidence" in _label_alias(alias)
+            ):
+                normalized_metric["field"] = "confidence"
+            metrics.append(normalized_metric)
+        normalized["metrics"] = metrics
     return normalized
+
+
+def _estimate_tokens(text: str) -> int:
+    """Rough char-based token estimate (1 token ≈ 4 chars for English + JSON)."""
+    return max(1, len(text) // _CHARS_PER_TOKEN_ESTIMATE)
+
+
+def _fit_messages_to_budget(
+    messages: list[dict],
+    max_tokens: int,
+) -> list[dict]:
+    """Proactively shrink user message content so input + max_tokens fits within the OVMS context window.
+
+    The approach preserves all system messages intact and progressively reduces
+    the user message: first by trimming detection data rows, then by trimming
+    analysis keys, and finally by hard-truncating the serialized JSON.
+    """
+    budget_chars = (_LLM_CONTEXT_LIMIT - max_tokens) * _CHARS_PER_TOKEN_ESTIMATE
+    total_chars = sum(len(m.get("content", "")) for m in messages)
+    if total_chars <= budget_chars:
+        return messages
+
+    log.info("Context (%d chars, ~%d tokens) exceeds budget (%d tokens input); trimming.",
+             total_chars, _estimate_tokens(str(total_chars)), _LLM_CONTEXT_LIMIT - max_tokens)
+
+    system_chars = sum(len(m.get("content", "")) for m in messages if m.get("role") != "user")
+    user_budget = max(200, budget_chars - system_chars)
+
+    fitted: list[dict] = []
+    for msg in messages:
+        if msg.get("role") != "user":
+            fitted.append(msg)
+            continue
+
+        content = msg.get("content", "")
+        if len(content) <= user_budget:
+            fitted.append(msg)
+            continue
+
+        try:
+            parsed = json.loads(content)
+        except (json.JSONDecodeError, TypeError):
+            fitted.append({"role": "user", "content": content[:user_budget]})
+            continue
+
+        if isinstance(parsed, dict) and "supporting_data" in parsed:
+            sd = parsed["supporting_data"]
+            if isinstance(sd.get("detections"), dict):
+                data_rows = sd["detections"].get("data")
+                if isinstance(data_rows, list) and len(data_rows) > 1:
+                    for keep in (len(data_rows) // 2, len(data_rows) // 4, 10, 5, 1):
+                        sd["detections"]["data"] = data_rows[:max(1, keep)]
+                        candidate = json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
+                        if len(candidate) <= user_budget:
+                            break
+            if isinstance(sd.get("analysis"), dict):
+                candidate = json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
+                if len(candidate) > user_budget:
+                    sd["analysis"] = {
+                        k: v for k, v in sd["analysis"].items()
+                        if k in ("run_id", "analysis", "window")
+                    }
+
+        shrunk = json.dumps(parsed, ensure_ascii=False, separators=(",", ":"))
+        if len(shrunk) > user_budget:
+            shrunk = json.dumps(
+                {"truncated": True, "content": shrunk[:user_budget - 100]},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+        fitted.append({"role": "user", "content": shrunk})
+
+    return fitted
 
 
 async def _call_llm(
@@ -387,34 +489,88 @@ async def _call_llm(
     max_tokens: int,
     response_format: dict[str, Any] | None = None,
 ) -> str:
-    if not _LLM_BASE_URL or not _LLM_MODEL:
-        raise HTTPException(status_code=503, detail="Chat is unavailable because the LLM is not configured.")
+    if not _LLM_BASE_URL or not _LLM_MODEL or _LLM_MODE == "fallback":
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Ask & Analyze is unavailable in fallback mode because no LLM "
+                "service is configured. Redeploy with LLM_MODE=llm and a valid "
+                "LLM_MODEL_NAME to enable this feature."
+            ),
+        )
+    response_format_tokens = (
+        _estimate_tokens(json.dumps(response_format, separators=(",", ":")))
+        if response_format else 0
+    )
+    available_input_tokens = _LLM_CONTEXT_LIMIT - max_tokens
+    use_response_format = (
+        response_format is not None
+        and response_format_tokens < available_input_tokens * 0.25
+    )
+    if response_format and not use_response_format:
+        log.info("Dropping response_format schema (%d tokens) to fit context budget (%d available).",
+                 response_format_tokens, available_input_tokens)
+    effective_max_tokens = max_tokens + (response_format_tokens if use_response_format else 0)
+    fitted_messages = _fit_messages_to_budget(messages, effective_max_tokens)
     request_body: dict[str, Any] = {
         "model": _LLM_MODEL,
-        "messages": messages,
+        "messages": fitted_messages,
         "temperature": 0,
         "max_tokens": max_tokens,
         "stream": False,
     }
-    if response_format is not None:
+    if use_response_format:
         request_body["response_format"] = response_format
-    try:
-        response = await client.post(
-            f"{_LLM_BASE_URL.rstrip('/')}/chat/completions",
-            json=request_body,
-        )
-        response.raise_for_status()
-        body = response.json()
-        content = body["choices"][0]["message"]["content"]
-        if not isinstance(content, str) or not content.strip():
-            raise ValueError("missing model content")
-        if len(content) > _MAX_LLM_CONTENT_CHARS:
-            raise ValueError("model content too large")
-        return content.strip()
-    except HTTPException:
-        raise
-    except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError):
-        raise HTTPException(status_code=502, detail="The language model could not complete the request.")
+    last_exc: Exception | None = None
+    for attempt in range(_LLM_MAX_RETRIES + 1):
+        try:
+            response = await client.post(
+                f"{_LLM_BASE_URL.rstrip('/')}/chat/completions",
+                json=request_body,
+            )
+            response.raise_for_status()
+            body = response.json()
+            finish_reason = (
+                body.get("choices", [{}])[0].get("finish_reason", "")
+                if isinstance(body, dict) else ""
+            )
+            if finish_reason == "length":
+                log.warning(
+                    "LLM response truncated (finish_reason=length, attempt %d/%d)",
+                    attempt + 1, _LLM_MAX_RETRIES + 1,
+                )
+                if attempt < _LLM_MAX_RETRIES:
+                    request_body["max_tokens"] = max(100, request_body["max_tokens"] // 2)
+                    delay = min(_LLM_BACKOFF_BASE * (_LLM_BACKOFF_FACTOR ** attempt), _LLM_BACKOFF_MAX)
+                    await asyncio.sleep(delay)
+                    continue
+            content = body["choices"][0]["message"]["content"]
+            if not isinstance(content, str) or not content.strip():
+                raise ValueError("missing model content")
+            if len(content) > _MAX_LLM_CONTENT_CHARS:
+                raise ValueError("model content too large")
+            return content.strip()
+        except HTTPException:
+            raise
+        except (httpx.HTTPStatusError,) as exc:
+            last_exc = exc
+            status = exc.response.status_code
+            if status < 500 or attempt == _LLM_MAX_RETRIES:
+                break
+            delay = min(_LLM_BACKOFF_BASE * (_LLM_BACKOFF_FACTOR ** attempt), _LLM_BACKOFF_MAX)
+            log.warning("LLM request failed (attempt %d/%d, status %d), retrying in %.1fs",
+                        attempt + 1, _LLM_MAX_RETRIES + 1, status, delay)
+            await asyncio.sleep(delay)
+        except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
+            last_exc = exc
+            if attempt == _LLM_MAX_RETRIES:
+                break
+            delay = min(_LLM_BACKOFF_BASE * (_LLM_BACKOFF_FACTOR ** attempt), _LLM_BACKOFF_MAX)
+            log.warning("LLM request failed (attempt %d/%d), retrying in %.1fs",
+                        attempt + 1, _LLM_MAX_RETRIES + 1, delay)
+            await asyncio.sleep(delay)
+    log.error("LLM request failed after %d attempts: %s", _LLM_MAX_RETRIES + 1, last_exc)
+    raise HTTPException(status_code=502, detail="The language model could not complete the request.")
 
 
 async def _get_completed_analysis(client: httpx.AsyncClient, run_id: str | None) -> dict:
@@ -654,6 +810,83 @@ def _add_mentioned_label_filter(
         )
 
 
+def _fallback_detection_query(message: str, labels: tuple[str, ...]) -> dict:
+    """Build a conservative query when a supported planner response cannot be validated."""
+    normalized = _label_alias(message)
+
+    if re.search(r"\b(most|least)\s+(common|frequent)\b|\bmost often\b", normalized):
+        direction = "asc" if re.search(r"\bleast\b", normalized) else "desc"
+        plan: dict[str, Any] = {
+            "operation": "group_by",
+            "group_by": ["label"],
+            "filters": [],
+            "metrics": [{"function": "count", "alias": "detections"}],
+            "sort": [{"field": "detections", "direction": direction}],
+            "limit": 10,
+            "offset": 0,
+        }
+    elif re.search(r"\b(by|per|for each)\s+(class|defect|detection|label|type)s?\b", normalized):
+        plan = {
+            "operation": "group_by",
+            "group_by": ["label"],
+            "filters": [],
+            "metrics": [{"function": "count", "alias": "detections"}],
+            "sort": [{"field": "detections", "direction": "desc"}],
+            "limit": 10,
+            "offset": 0,
+        }
+    elif "frame" in normalized and re.search(
+        r"\b(summary|summarize|most|least|highest|lowest|by|per)\b", normalized
+    ):
+        direction = "asc" if re.search(r"\b(least|lowest|minimum)\b", normalized) else "desc"
+        plan = {
+            "operation": "frames",
+            "filters": [],
+            "sort": [{"field": "detection_count", "direction": direction}],
+            "limit": 10,
+            "offset": 0,
+        }
+    elif "confidence" in normalized and re.search(r"\b(average|avg|mean)\b", normalized):
+        plan = {
+            "operation": "aggregate",
+            "filters": [],
+            "metrics": [
+                {"function": "avg", "field": "confidence", "alias": "avg_confidence"},
+            ],
+        }
+    elif "confidence" in normalized and re.search(r"\b(minimum|min|lowest)\b", normalized):
+        plan = {
+            "operation": "aggregate",
+            "filters": [],
+            "metrics": [
+                {"function": "min", "field": "confidence", "alias": "min_confidence"},
+            ],
+        }
+    elif "confidence" in normalized and re.search(r"\b(maximum|max|highest)\b", normalized):
+        plan = {
+            "operation": "aggregate",
+            "filters": [],
+            "metrics": [
+                {"function": "max", "field": "confidence", "alias": "max_confidence"},
+            ],
+        }
+    elif re.search(r"\b(how many|count|number of|total)\b", normalized):
+        plan = {"operation": "count", "filters": []}
+    else:
+        direction = "asc" if re.search(r"\b(lowest|minimum)\b", normalized) else "desc"
+        plan = {
+            "operation": "list",
+            "fields": ["id", "frame_id", "label", "confidence", "timestamp"],
+            "filters": [],
+            "sort": [{"field": "confidence", "direction": direction}],
+            "limit": 10,
+            "offset": 0,
+        }
+
+    validated = _QUERY_ADAPTER.validate_python(plan).model_dump(mode="json", exclude_none=True)
+    return _add_mentioned_label_filter(validated, message, labels)
+
+
 async def _build_detection_query(
     client: httpx.AsyncClient,
     message: str,
@@ -669,12 +902,14 @@ async def _build_detection_query(
         },
         {"role": "user", "content": message},
     ]
-    for attempt in range(2):
+    saw_supported_shape = False
+    for attempt in range(3):
+        use_schema = attempt == 0
         content = await _call_llm(
             client,
             messages,
             max_tokens=700,
-            response_format=_DETECTION_QUERY_RESPONSE_FORMAT,
+            response_format=_DETECTION_QUERY_RESPONSE_FORMAT if use_schema else None,
         )
         candidate = content.strip()
         if candidate.startswith("```") and candidate.endswith("```"):
@@ -682,7 +917,21 @@ async def _build_detection_query(
             if len(lines) >= 3 and lines[0].lower() in {"```", "```json"}:
                 candidate = "\n".join(lines[1:-1]).strip()
         try:
-            raw_plan = _normalize_detection_plan(json.loads(candidate))
+            decoded_plan = json.loads(candidate)
+            if isinstance(decoded_plan, dict):
+                candidate_operation = _QUERY_OPERATION_ALIASES.get(
+                    decoded_plan.get("operation"),
+                    decoded_plan.get("operation"),
+                )
+                saw_supported_shape = saw_supported_shape or (
+                    candidate_operation in _QUERY_KEYS_BY_OPERATION
+                    or (
+                        "operation" not in decoded_plan
+                        and bool(decoded_plan)
+                        and decoded_plan.keys() <= _DETECTION_RECORD_KEYS
+                    )
+                )
+            raw_plan = _normalize_detection_plan(decoded_plan)
             plan = _QUERY_ADAPTER.validate_python(raw_plan)
             canonical_plan = _canonicalize_plan_labels(
                 plan.model_dump(mode="json", exclude_none=True),
@@ -693,15 +942,30 @@ async def _build_detection_query(
                 message,
                 labels,
             )
-        except (json.JSONDecodeError, ValueError):
-            if attempt == 0:
+        except (json.JSONDecodeError, ValueError) as exc:
+            log.warning("Detection planner attempt %d/%d returned invalid plan: %s (error: %s)",
+                        attempt + 1, 3, candidate[:200], exc)
+            if attempt < 2:
                 messages.append({
                     "role": "user",
                     "content": (
-                        "The previous response was not a valid plan for the supplied schema. "
-                        "Try again and return only one JSON object."
+                        "The previous response was not a valid plan. "
+                        "You must include an \"operation\" field set to one of: "
+                        "\"list\", \"count\", \"aggregate\", \"group_by\", or \"frames\". "
+                        "For a total or number of detections, use the count operation. "
+                        "For avg, min, max, or sum, include a numeric field such as "
+                        "\"confidence\". Do NOT return a detection record or unsupported keys. "
+                        "Return only one complete query plan JSON object."
                     ),
                 })
+
+    if saw_supported_shape:
+        fallback_plan = _fallback_detection_query(message, labels)
+        log.warning(
+            "Detection planner exhausted retries; using validated fallback operation %s",
+            fallback_plan["operation"],
+        )
+        return fallback_plan
 
     raise HTTPException(
         status_code=502,
@@ -874,6 +1138,15 @@ async def api_status():
     }
 
 
+_chat_available = bool(_LLM_BASE_URL and _LLM_MODEL and _LLM_MODE != "fallback")
+
+
+@app.get("/api/chat/available")
+async def api_chat_available():
+    """Return whether Ask & Analyze is available (LLM configured)."""
+    return {"available": _chat_available}
+
+
 @app.post("/api/chat", response_model=ChatResponse)
 async def api_chat(request: ChatRequest):
     """Answer a bounded question using completed analysis and/or detection data."""
@@ -1008,6 +1281,7 @@ async def chat_page(request: Request):
             "use_case_id": _USE_CASE_ID,
             "completed_runs": completed_runs,
             "requested_run_id": requested_run_id,
+            "chat_available": _chat_available,
         },
     )
 

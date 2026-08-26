@@ -16,8 +16,8 @@ services:
       ENABLE_RTSP: false
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME}
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME}
+      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME},${no_proxy}
+      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME},${no_proxy}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${MINIO_HOSTNAME}

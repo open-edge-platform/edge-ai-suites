@@ -20,15 +20,15 @@ if (-not $IsWindowsOS) {
 # ============================================================================
 if (-not $NoElevate) {
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    
+
     if (-not $isAdmin) {
         Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
-        
+
         $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
         if ($Help) { $argList += " -Help" }
         if ($Silent) { $argList += " -Silent" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
-        
+
         try {
             Start-Process powershell -Verb RunAs -ArgumentList $argList
             Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
@@ -121,16 +121,16 @@ if (Test-Path $proxyConfigFile) {
     if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
     if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
     if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
-    if (-not $script:httpProxy -and -not $script:httpsProxy) { 
-        Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray 
-        
+    if (-not $script:httpProxy -and -not $script:httpsProxy) {
+        Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray
+
         # Check environment for proxy settings
         Write-Host ""
         Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
         $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
         $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
         $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
-        
+
         $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
         if ($envProxies) {
             $envProxies | ForEach-Object {
@@ -160,21 +160,21 @@ if (Test-Path $proxyConfigFile) {
         Write-Host ""
         $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
     }
-    
+
     if ($changeProxy -match "^[Yy]") {
         Write-Host ""
         Write-Host "Enter new proxy settings (press Enter to keep current value):" -ForegroundColor Yellow
         Write-Host "  (Common Intel proxy: http://proxy-iind.intel.com:912)" -ForegroundColor DarkGray
         Write-Host ""
-        
+
         $newHttpProxy = Read-Host "HTTP_PROXY  [$($script:httpProxy)]"
         $newHttpsProxy = Read-Host "HTTPS_PROXY [$($script:httpsProxy)]"
         $newNoProxy = Read-Host "NO_PROXY    [$($script:noProxy)]"
-        
+
         if ($newHttpProxy) { $script:httpProxy = $newHttpProxy }
         if ($newHttpsProxy) { $script:httpsProxy = $newHttpsProxy }
         if ($newNoProxy) { $script:noProxy = $newNoProxy }
-        
+
         $proxyConfig = @{
             httpProxy = $script:httpProxy
             httpsProxy = $script:httpsProxy
@@ -192,7 +192,7 @@ if (Test-Path $proxyConfigFile) {
             $script:httpProxy = $envHttpProxy
             $script:httpsProxy = $envHttpsProxy
             $script:noProxy = $envNoProxy
-            
+
             $proxyConfig = @{
                 httpProxy = $script:httpProxy
                 httpsProxy = $script:httpsProxy
@@ -212,12 +212,12 @@ if (Test-Path $proxyConfigFile) {
     Write-Host "  No proxy configuration found in .proxy-config file." -ForegroundColor Gray
     Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
     Write-Host ""
-    
+
     # Check environment variables for proxy settings
     $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
     $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
     $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
-    
+
     $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
     if ($envProxies) {
         $envProxies | ForEach-Object {
@@ -250,15 +250,15 @@ if (Test-Path $proxyConfigFile) {
         Write-Host "Enter proxy settings:" -ForegroundColor Yellow
         Write-Host "  (Common Intel proxy: http://proxy-iind.intel.com:912)" -ForegroundColor DarkGray
         Write-Host ""
-        
+
         $script:httpProxy = Read-Host "HTTP_PROXY"
         $script:httpsProxy = Read-Host "HTTPS_PROXY (press Enter to use same as HTTP)"
         $script:noProxy = Read-Host "NO_PROXY"
-        
+
         if (-not $script:httpsProxy -and $script:httpProxy) {
             $script:httpsProxy = $script:httpProxy
         }
-        
+
         $proxyConfig = @{
             httpProxy = $script:httpProxy
             httpsProxy = $script:httpsProxy
@@ -272,7 +272,7 @@ if (Test-Path $proxyConfigFile) {
             $script:httpProxy = $envHttpProxy
             $script:httpsProxy = $envHttpsProxy
             $script:noProxy = $envNoProxy
-            
+
             $proxyConfig = @{
                 httpProxy = $script:httpProxy
                 httpsProxy = $script:httpsProxy
@@ -302,15 +302,15 @@ function Invoke-WebRequestWithProxy {
         [string]$OutFile,
         [switch]$UseBasicParsing
     )
-    
+
     # Ensure TLS 1.2 is enabled
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    
+
     # For large files (GitHub releases), use WebClient which handles better through proxies
     if ($OutFile -and ($Uri -match "github.com.*releases")) {
         Write-Host "    Using WebClient for large file download..." -ForegroundColor DarkGray
         $webClient = New-Object System.Net.WebClient
-        
+
         if ($script:httpProxy -or $script:httpsProxy) {
             $proxyUrl = if ($Uri -match "^https") { $script:httpsProxy } else { $script:httpProxy }
             if ($proxyUrl) {
@@ -319,10 +319,10 @@ function Invoke-WebRequestWithProxy {
                 $webClient.Proxy = $proxy
             }
         }
-        
+
         # Add progress indicator
         $webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PowerShell")
-        
+
         try {
             $webClient.DownloadFile($Uri, $OutFile)
             return
@@ -330,18 +330,18 @@ function Invoke-WebRequestWithProxy {
             Write-Host "    WebClient failed, trying Invoke-WebRequest..." -ForegroundColor DarkYellow
         }
     }
-    
+
     # Standard method for smaller files or API calls
     $params = @{
         Uri = $Uri
         UseBasicParsing = $UseBasicParsing
         TimeoutSec = 300
     }
-    
+
     if ($OutFile) {
         $params.OutFile = $OutFile
     }
-    
+
     if ($script:httpProxy -or $script:httpsProxy) {
         $proxyUrl = if ($Uri -match "^https") { $script:httpsProxy } else { $script:httpProxy }
         if ($proxyUrl) {
@@ -349,7 +349,7 @@ function Invoke-WebRequestWithProxy {
             $params.ProxyUseDefaultCredentials = $true
         }
     }
-    
+
     Invoke-WebRequest @params
 }
 
@@ -438,7 +438,7 @@ try {
     $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
     $osCaption = $osInfo.Caption
     $osBuild = [int]$osInfo.BuildNumber
-    
+
     if ($osBuild -ge 22000) {
         Write-Host "  [OK] $osCaption (Build $osBuild)" -ForegroundColor Green
     } else {
@@ -454,7 +454,7 @@ Write-Host "Checking Processor..." -ForegroundColor White
 try {
     $cpuInfo = Get-CimInstance -ClassName Win32_Processor | Select-Object -First 1
     $cpuName = $cpuInfo.Name
-    
+
     if ($cpuName -match "Intel.*Core.*Ultra") {
         Write-Host "  [OK] $cpuName" -ForegroundColor Green
     } elseif ($cpuName -match "Intel") {
@@ -475,7 +475,7 @@ Write-Host "Checking Memory..." -ForegroundColor White
 try {
     $memInfo = Get-CimInstance -ClassName Win32_ComputerSystem
     $totalMemGB = [math]::Round($memInfo.TotalPhysicalMemory / 1GB, 1)
-    
+
     if ($totalMemGB -ge 30) {
         Write-Host "  [OK] $totalMemGB GB RAM" -ForegroundColor Green
     } elseif ($totalMemGB -ge 16) {
@@ -494,10 +494,10 @@ Write-Host "Checking Storage..." -ForegroundColor White
 try {
     $driveLetter = (Split-Path -Qualifier $ScriptDir)
     $driveInfo = Get-PSDrive -Name $driveLetter.TrimEnd(':') -ErrorAction SilentlyContinue
-    
+
     if ($driveInfo) {
         $freeSpaceGB = [math]::Round($driveInfo.Free / 1GB, 1)
-        
+
         if ($freeSpaceGB -ge 50) {
             Write-Host "  [OK] $freeSpaceGB GB free on $driveLetter" -ForegroundColor Green
         } elseif ($freeSpaceGB -ge 30) {
@@ -521,14 +521,14 @@ try {
     $gpuList = Get-CimInstance -ClassName Win32_VideoController
     $intelGpuFound = $false
     $gpuNames = @()
-    
+
     foreach ($gpu in $gpuList) {
         $gpuNames += $gpu.Name
         if ($gpu.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)") {
             $intelGpuFound = $true
         }
     }
-    
+
     if ($intelGpuFound) {
         $intelGpuObj = $gpuList | Where-Object { $_.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)" } | Select-Object -First 1
         Write-Host "  [OK] $($intelGpuObj.Name)" -ForegroundColor Green
@@ -576,24 +576,24 @@ function Install-NPUDriver {
     Write-Host "  Intel NPU Driver Installation" -ForegroundColor Cyan
     Write-Host "  ============================================" -ForegroundColor Cyan
     Write-Host ""
-    
+
     $npuDriverVersion = "32.0.100.4778"
     $npuDriverFileName = "npu_win_$npuDriverVersion.exe"
     $npuDriverUrl = "https://downloadmirror.intel.com/919954/$npuDriverFileName"
     $npuDriverPath = Join-Path $env:TEMP $npuDriverFileName
-    
+
     Write-Host "  Intel NPU Driver version: $npuDriverVersion" -ForegroundColor Gray
     Write-Host "  Supports: Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)" -ForegroundColor Gray
     Write-Host ""
-    
+
     Write-Host "  Step 1: Downloading NPU Driver..." -ForegroundColor Yellow
     Write-Host "    URL: $npuDriverUrl" -ForegroundColor DarkGray
     if ($script:httpProxy) { Write-Host "    Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
-    
+
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    
+
     $downloadSuccess = $false
-    
+
     try {
         Invoke-WebRequestWithProxy -Uri $npuDriverUrl -OutFile $npuDriverPath -UseBasicParsing
         if (Test-Path $npuDriverPath) {
@@ -609,7 +609,7 @@ function Install-NPUDriver {
     } catch {
         Write-Host "    [WARN] PowerShell download failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
-    
+
     if (-not $downloadSuccess -and (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
         Write-Host "    Trying curl.exe..." -ForegroundColor Gray
         try {
@@ -618,9 +618,9 @@ function Install-NPUDriver {
                 $curlArgs += @("-x", $script:httpProxy)
             }
             $curlArgs += $npuDriverUrl
-            
+
             & curl.exe @curlArgs 2>&1 | Out-Null
-            
+
             if ((Test-Path $npuDriverPath) -and ((Get-Item $npuDriverPath).Length -gt 10MB)) {
                 $downloadSuccess = $true
                 $fileSize = (Get-Item $npuDriverPath).Length
@@ -630,7 +630,7 @@ function Install-NPUDriver {
             Write-Host "    [WARN] curl download failed: $_" -ForegroundColor Yellow
         }
     }
-    
+
     if (-not $downloadSuccess) {
         Write-Host "    [FAIL] Download failed." -ForegroundColor Red
         Write-Host ""
@@ -642,19 +642,19 @@ function Install-NPUDriver {
         Write-Host ""
         return $false
     }
-    
+
     Write-Host ""
-    
+
     Write-Host "  Step 2: Running NPU Driver Installer..." -ForegroundColor Yellow
     Write-Host "    Please follow the on-screen instructions." -ForegroundColor Gray
     Write-Host "    The installer window will open shortly..." -ForegroundColor Gray
     Write-Host ""
-    
+
     try {
         $process = Start-Process -FilePath $npuDriverPath -Wait -PassThru
-        
+
         Remove-Item $npuDriverPath -Force -ErrorAction SilentlyContinue
-        
+
         if ($process.ExitCode -eq 0) {
             Write-Host "    [OK] NPU Driver installation completed" -ForegroundColor Green
         } else {
@@ -664,7 +664,7 @@ function Install-NPUDriver {
         Write-Host "    [WARN] Could not run installer: $_" -ForegroundColor Yellow
         Write-Host "    Please run the installer manually: $npuDriverPath" -ForegroundColor Gray
     }
-    
+
     Write-Host ""
     Write-Host "  ============================================" -ForegroundColor Yellow
     Write-Host "  IMPORTANT: System Restart Required" -ForegroundColor Yellow
@@ -674,10 +674,10 @@ function Install-NPUDriver {
     Write-Host "    1. Restart your computer" -ForegroundColor Gray
     Write-Host "    2. Re-run this setup script to verify NPU detection" -ForegroundColor Gray
     Write-Host ""
-    
-    $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue | 
+
+    $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue |
                         Where-Object { $_.FriendlyName -match "Intel.*(NPU|Neural|AI Boost|VPU|Accelerator)" }
-    
+
     if ($npuDevicesRecheck) {
         $npuName = ($npuDevicesRecheck | Select-Object -First 1).FriendlyName
         Write-Host "  [OK] NPU detected: $npuName" -ForegroundColor Green
@@ -691,33 +691,33 @@ function Install-NPUDriver {
 Write-Host "Checking NPU..." -ForegroundColor White
 try {
     # Check multiple device classes where NPU might appear (System, Compute, SoftwareComponent)
-    $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
+    $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue |
                   Where-Object { $_.FriendlyName -match "NPU|Neural|AI Boost|VPU" -and $_.FriendlyName -match "Intel" }
-    
+
     if (-not $npuDevices) {
         # Broader search including Accelerator keyword
-        $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
+        $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue |
                       Where-Object { $_.FriendlyName -match "Intel.*(NPU|Neural|AI Boost|VPU|Accelerator)" }
     }
-    
+
     if ($npuDevices) {
         $npuDevice = $npuDevices | Select-Object -First 1
         $npuName = $npuDevice.FriendlyName
         $npuStatus = $npuDevice.Status
-        
+
         if ($npuStatus -eq "OK") {
             Write-Host "  [OK] $npuName" -ForegroundColor Green
-            
+
             # Try to get driver version information from registry and WMI
             $npuDriverVersion = $null
             try {
                 $instanceId = $npuDevice.InstanceId
-                
+
                 # Method 1: Check device registry for DriverVersion
                 $regPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$instanceId"
                 if (Test-Path $regPath) {
                     $deviceProps = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
-                    
+
                     # Try to get from Device Parameters
                     $deviceParamsPath = "$regPath\Device Parameters"
                     if (Test-Path $deviceParamsPath) {
@@ -726,18 +726,18 @@ try {
                             $npuDriverVersion = $deviceParams.DriverVersion
                         }
                     }
-                    
+
                     # Fallback: Check direct properties
                     if (-not $npuDriverVersion -and $deviceProps.DriverVersion) {
                         $npuDriverVersion = $deviceProps.DriverVersion
                     }
                 }
-                
+
                 # Method 2: Use WMI to find driver by device name
                 if (-not $npuDriverVersion) {
-                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue | 
+                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue |
                                     Where-Object { $_.DeviceName -match "Intel.*(NPU|Neural|AI Boost|VPU)" }
-                    
+
                     if ($signedDrivers) {
                         $driver = $signedDrivers | Select-Object -First 1
                         if ($driver.DriverVersion) {
@@ -745,25 +745,25 @@ try {
                         }
                     }
                 }
-                
+
                 if ($npuDriverVersion) {
                     Write-Host "  Driver version: $npuDriverVersion" -ForegroundColor Gray
-                    
+
                     # Define known latest versions for NPU drivers
                     $latestVersionMap = @{
                         "32" = "32.0.100.4778"   # Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)
                     }
-                    
+
                     # Parse version and compare
                     $installedMajor = [int]($npuDriverVersion.Split('.')[0])
-                    
+
                     if ($latestVersionMap.ContainsKey($installedMajor.ToString())) {
                         $latestVersion = $latestVersionMap[$installedMajor.ToString()]
-                        
+
                         try {
                             $installedVersion = [version]$npuDriverVersion
                             $latestVersionObj = [version]$latestVersion
-                            
+
                             if ($installedVersion -ge $latestVersionObj) {
                                 Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
                             } else {
@@ -827,37 +827,37 @@ Write-Host "Checking Python version..." -ForegroundColor White
 
 function Install-Python312 {
     $Version = "3.12.10"
-    
+
     Write-Host ""
     Write-Host "  Installing Python $Version..." -ForegroundColor Yellow
-    
+
     $is64Bit = [Environment]::Is64BitOperatingSystem
     if ($is64Bit) {
         $installerName = "python-$Version-amd64.exe"
     } else {
         $installerName = "python-$Version.exe"
     }
-    
+
     $installerUrl = "https://www.python.org/ftp/python/$Version/$installerName"
     $installerPath = Join-Path $env:TEMP $installerName
-    
+
     try {
         Write-Host "  Downloading from: $installerUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequestWithProxy -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
-        
+
         if (Test-Path $installerPath) {
             Write-Host "  Running installer (this may take a few minutes)..." -ForegroundColor Gray
-            
+
             $arguments = "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0"
             $process = Start-Process -FilePath $installerPath -ArgumentList $arguments -Wait -PassThru
-            
+
             if ($process.ExitCode -eq 0) {
                 Write-Host "  [OK] Python $Version installed successfully" -ForegroundColor Green
-                
+
                 Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-                
+
                 # Detect Python installation directory
                 $pythonExe = $null
                 $versionShort = "Python" + ($Version -replace "^(\d+)\.(\d+).*", '$1$2')  # e.g. Python312
@@ -879,11 +879,11 @@ function Install-Python312 {
                         if ($whereResult -and (Test-Path $whereResult)) { $pythonExe = $whereResult }
                     } catch {}
                 }
-                
+
                 if ($pythonExe) {
                     $pythonDir     = Split-Path -Parent $pythonExe
                     $pythonScripts = Join-Path $pythonDir "Scripts"
-                    
+
                     function Add-PathEntries {
                         param(
                             [string]$Scope,
@@ -925,11 +925,11 @@ function Install-Python312 {
                 } else {
                     Write-Host "  [WARN] Could not locate Python install dir - PATH not updated" -ForegroundColor Yellow
                 }
-                
+
                 # Refresh current session PATH
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 Write-Host "  NOTE: Restart PowerShell if 'python' is still not recognised" -ForegroundColor Cyan
-                
+
                 return $true
             } else {
                 Write-Host "  [FAIL] Installer exited with code: $($process.ExitCode)" -ForegroundColor Red
@@ -954,7 +954,7 @@ try {
         $major = [int]$Matches[1]
         $minor = [int]$Matches[2]
         $patch = [int]$Matches[3]
-        
+
         if ($major -eq 3 -and $minor -eq 12) {
             Write-Host "  [OK] Python $major.$minor.$patch" -ForegroundColor Green
             $pythonInstalled = $true
@@ -1089,7 +1089,7 @@ Write-Host "Checking Node.js version..." -ForegroundColor White
 function Get-LatestNodeLTSVersion {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        
+
         # Build proxy parameters
         $params = @{
             Uri = "https://nodejs.org/dist/index.json"
@@ -1100,9 +1100,9 @@ function Get-LatestNodeLTSVersion {
             $params.ProxyUseDefaultCredentials = $true
         }
         $indexJson = Invoke-RestMethod @params
-        
+
         $latestLTS = $indexJson | Where-Object { $_.lts -ne $false } | Select-Object -First 1
-        
+
         if ($latestLTS) {
             return $latestLTS.version.TrimStart('v')
         }
@@ -1115,33 +1115,33 @@ function Get-LatestNodeLTSVersion {
 function Install-NodeJS {
     Write-Host ""
     Write-Host "  Fetching latest Node.js LTS version..." -ForegroundColor Gray
-    
+
     $Version = Get-LatestNodeLTSVersion
     Write-Host "  Installing Node.js v$Version (Latest LTS)..." -ForegroundColor Yellow
-    
+
     $arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
     $msiUrl = "https://nodejs.org/dist/v$Version/node-v$Version-$arch.msi"
     $msiPath = Join-Path $env:TEMP "node-v$Version-$arch.msi"
-    
+
     try {
         Write-Host "  Downloading from: $msiUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequestWithProxy -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
-        
+
         if (Test-Path $msiPath) {
             Write-Host "  Running installer (this may take a minute)..." -ForegroundColor Gray
-            
+
             $process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$msiPath`" /qn /norestart" -Wait -PassThru
-            
+
             if ($process.ExitCode -eq 0) {
                 Write-Host "  [OK] Node.js v$Version installed successfully" -ForegroundColor Green
                 Write-Host "  NOTE: You may need to restart PowerShell for PATH changes" -ForegroundColor Cyan
-                
+
                 Remove-Item $msiPath -Force -ErrorAction SilentlyContinue
-                
+
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-                
+
                 return $true
             } else {
                 Write-Host "  [FAIL] Installer exited with code: $($process.ExitCode)" -ForegroundColor Red
@@ -1166,7 +1166,7 @@ try {
         $nodeMajor = [int]$Matches[1]
         $nodeMinor = [int]$Matches[2]
         $nodePatch = [int]$Matches[3]
-        
+
         if ($nodeMajor -ge 18) {
             Write-Host "  [OK] Node.js v$nodeMajor.$nodeMinor.$nodePatch" -ForegroundColor Green
             $nodeInstalled = $true
@@ -1281,13 +1281,13 @@ $appChecksFailed = $false
 function Install-FFmpeg {
     Write-Host ""
     Write-Host "  Installing FFmpeg..." -ForegroundColor Yellow
-    
+
     try {
         $wingetAvailable = Get-Command winget -ErrorAction SilentlyContinue
         if ($wingetAvailable) {
             Write-Host "  Using winget to install FFmpeg..." -ForegroundColor Gray
             $process = Start-Process -FilePath "winget" -ArgumentList "install -e --id Gyan.FFmpeg --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
-            
+
             if ($process.ExitCode -eq 0) {
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 Write-Host "  [OK] FFmpeg installed via winget" -ForegroundColor Green
@@ -1297,49 +1297,49 @@ function Install-FFmpeg {
     } catch {
         Write-Host "  [INFO] winget not available, trying manual download..." -ForegroundColor Gray
     }
-    
+
     try {
         $ffmpegDir = "C:\ffmpeg"
         $ffmpegZip = Join-Path $env:TEMP "ffmpeg-release.zip"
-        
+
         $downloadUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
-        
+
         Write-Host "  Downloading from: $downloadUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $ffmpegZip -UseBasicParsing
-        
+
         if (Test-Path $ffmpegZip) {
             Write-Host "  Extracting to $ffmpegDir..." -ForegroundColor Gray
-            
+
             if (-not (Test-Path $ffmpegDir)) {
                 New-Item -ItemType Directory -Path $ffmpegDir -Force | Out-Null
             }
-            
+
             Expand-Archive -Path $ffmpegZip -DestinationPath $env:TEMP -Force
-            
+
             $extractedFolder = Get-ChildItem -Path $env:TEMP -Directory -Filter "ffmpeg-*-essentials_build" | Select-Object -First 1
-            
+
             if ($extractedFolder) {
                 Copy-Item -Path "$($extractedFolder.FullName)\*" -Destination $ffmpegDir -Recurse -Force
-                
+
                 $ffmpegBin = Join-Path $ffmpegDir "bin"
                 $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-                
+
                 if ($currentPath -notlike "*$ffmpegBin*") {
                     [System.Environment]::SetEnvironmentVariable("Path", "$currentPath;$ffmpegBin", "Machine")
                     $env:Path = "$env:Path;$ffmpegBin"
                     Write-Host "  Added $ffmpegBin to system PATH" -ForegroundColor Gray
                 }
-                
+
                 Remove-Item $ffmpegZip -Force -ErrorAction SilentlyContinue
                 Remove-Item $extractedFolder.FullName -Recurse -Force -ErrorAction SilentlyContinue
-                
+
                 Write-Host "  [OK] FFmpeg installed to $ffmpegDir" -ForegroundColor Green
                 return $true
             }
         }
-        
+
         Write-Host "  [FAIL] FFmpeg download/extraction failed" -ForegroundColor Red
         return $false
     } catch {
@@ -1426,24 +1426,24 @@ if ($appChecksFailed) {
     Write-Host ""
     Write-Host "Please install the missing dependencies:" -ForegroundColor Yellow
     Write-Host ""
-    
+
     if (-not $ffmpegInstalled) {
         Write-Host "  FFmpeg (required for audio processing):" -ForegroundColor White
         Write-Host "    https://ffmpeg.org/download.html" -ForegroundColor Cyan
         Write-Host "    Or: winget install Gyan.FFmpeg" -ForegroundColor Gray
         Write-Host ""
     }
-    
+
     if (-not $dlStreamerFound) {
         Write-Host "  DL Streamer (required for video pipelines):" -ForegroundColor White
         Write-Host "    https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.1.0/dlstreamer-2026.1.0-win64.exe" -ForegroundColor Cyan
         Write-Host "    Download and run the installer" -ForegroundColor Gray
         Write-Host ""
         Write-Host "  Installation Guide:" -ForegroundColor White
-        Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md" -ForegroundColor Cyan
+        Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/install/install_guide_windows.md" -ForegroundColor Cyan
         Write-Host ""
     }
-    
+
     Write-Host "----------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "WARNING: Some application dependencies are missing." -ForegroundColor Yellow
@@ -1496,7 +1496,7 @@ function Update-YamlValue {
         [string]$NewValue,
         [string]$Section = ""
     )
-    
+
     if ($Section) {
         # More complex: need to find section and update key within it
         # For simplicity, we'll use regex patterns
@@ -1712,14 +1712,14 @@ if ($Silent) {
 
 if ($changeAsr -match "^[Yy]") {
     Write-Host ""
-    
+
     # Language selection
     Write-Host "Select Language:" -ForegroundColor Yellow
     Write-Host "  [1] en - English" -ForegroundColor White
     Write-Host "  [2] zh - Chinese" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentLanguage)" -ForegroundColor White
     $langChoice = Read-Host "Choice (1/2/N)"
-    
+
     if ($langChoice -eq "1") {
         $configContent = $configContent -replace "(language:\s*)\S+", "`${1}en"
         $currentLanguage = "en"
@@ -1729,9 +1729,9 @@ if ($changeAsr -match "^[Yy]") {
         $currentLanguage = "zh"
         Write-Host "  [OK] Language set to: zh" -ForegroundColor Green
     }
-    
+
     Write-Host ""
-    
+
     # ASR Provider selection
     Write-Host "Select ASR Provider:" -ForegroundColor Yellow
     Write-Host "  [1] openai   - OpenAI Whisper (recommended for English)" -ForegroundColor White
@@ -1739,22 +1739,22 @@ if ($changeAsr -match "^[Yy]") {
     Write-Host "  [3] funasr   - FunASR (recommended for Chinese)" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentAsrProvider)" -ForegroundColor White
     $providerChoice = Read-Host "Choice (1/2/3/N)"
-    
+
     $newProvider = $null
     switch ($providerChoice) {
         "1" { $newProvider = "openai" }
         "2" { $newProvider = "openvino" }
         "3" { $newProvider = "funasr" }
     }
-    
+
     if ($newProvider) {
         $configContent = $configContent -replace "(asr:\s*\n\s*provider:\s*)\w+", "`${1}$newProvider"
         $currentAsrProvider = $newProvider
         Write-Host "  [OK] Provider set to: $newProvider" -ForegroundColor Green
     }
-    
+
     Write-Host ""
-    
+
     # ASR Model selection
     Write-Host "Select ASR Model:" -ForegroundColor Yellow
     Write-Host "  [1] whisper-base   - Smaller, faster" -ForegroundColor White
@@ -1764,7 +1764,7 @@ if ($changeAsr -match "^[Yy]") {
     Write-Host "  [5] paraformer-zh  - Chinese optimized (FunASR)" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentAsrModel)" -ForegroundColor White
     $modelChoice = Read-Host "Choice (1/2/3/4/5/N)"
-    
+
     $newModel = $null
     switch ($modelChoice) {
         "1" { $newModel = "whisper-base" }
@@ -1773,22 +1773,22 @@ if ($changeAsr -match "^[Yy]") {
         "4" { $newModel = "whisper-large" }
         "5" { $newModel = "paraformer-zh" }
     }
-    
+
     if ($newModel) {
         $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*name:\s*)[\w-]+", "`${1}$newModel"
         $currentAsrModel = $newModel
         Write-Host "  [OK] Model set to: $newModel" -ForegroundColor Green
     }
-    
+
     Write-Host ""
-    
+
     # ASR Device selection
     Write-Host "Select ASR Device:" -ForegroundColor Yellow
     Write-Host "  [C] CPU - Recommended, most compatible" -ForegroundColor White
     Write-Host "  [G] GPU - Faster if supported" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentAsrDevice)" -ForegroundColor White
     $deviceChoice = Read-Host "Choice (C/G/N)"
-    
+
     if ($deviceChoice -match "^[Cc]") {
         $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*device:\s*)\w+", "`${1}CPU"
         $currentAsrDevice = "CPU"
@@ -1798,7 +1798,7 @@ if ($changeAsr -match "^[Yy]") {
         $currentAsrDevice = "GPU"
         Write-Host "  [OK] Device set to: GPU" -ForegroundColor Green
     }
-    
+
     Write-Host ""
     Write-Host "Final ASR Settings:" -ForegroundColor Cyan
     Write-Host "  Language: $currentLanguage" -ForegroundColor Gray
@@ -1977,17 +1977,17 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
     Write-Host ""
     $newDocMax = Read-Host "Enter document_max_mb (blank = $currentDocMax)"
     $newVideoMax = Read-Host "Enter video_max_mb (blank = $currentVideoMax)"
-    
+
     if ($newDocMax -and $newDocMax -match "^\d+$") {
         $configContent = $configContent -replace "(document_max_mb:\s*)\d+", "`${1}$newDocMax"
         Write-Host "  document_max_mb set to $newDocMax" -ForegroundColor Gray
     }
-    
+
     if ($newVideoMax -and $newVideoMax -match "^\d+$") {
         $configContent = $configContent -replace "(video_max_mb:\s*)\d+", "`${1}$newVideoMax"
         Write-Host "  video_max_mb set to $newVideoMax" -ForegroundColor Gray
     }
-    
+
     Write-Host "Upload limits updated." -ForegroundColor Green
 } else {
     Write-Host "Keeping current upload limits." -ForegroundColor Gray

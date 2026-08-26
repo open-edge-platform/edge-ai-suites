@@ -50,14 +50,22 @@ RUN cd /tmp \
  && rm -f /tmp/gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb \
  && rm -rf /var/lib/apt/lists/*
 
+
+
+# gencamsrc fix — overwrite upstream plugins/genicam.{h,cc} before building
+COPY genicam.h  /tmp/gencamsrc-fix/genicam.h
+COPY genicam.cc /tmp/gencamsrc-fix/genicam.cc
+
 RUN git clone --depth 1 --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-libraries.git /tmp/edge-ai-libraries \
  && cp -r /tmp/edge-ai-libraries/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc \
+ && cp /tmp/gencamsrc-fix/genicam.h  /home/pipeline-server/src-gst-gencamsrc/plugins/genicam.h \
+ && cp /tmp/gencamsrc-fix/genicam.cc /home/pipeline-server/src-gst-gencamsrc/plugins/genicam.cc \
  && cd /home/pipeline-server/src-gst-gencamsrc \
  && cmake -B build -DCMAKE_BUILD_TYPE=Release \
  && cmake --build build -j$(nproc) \
  && cmake --install build \
  && ldconfig \
- && rm -rf /tmp/edge-ai-libraries
+ && rm -rf /tmp/edge-ai-libraries /tmp/gencamsrc-fix
 
 ENV GENICAM_GENTL64_PATH=/opt/pylon/lib/gentlproducer/gtl \
     GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/local/lib/gstreamer-1.0

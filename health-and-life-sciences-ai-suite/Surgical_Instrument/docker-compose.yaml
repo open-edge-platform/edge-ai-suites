@@ -11,7 +11,7 @@
 # backend SSE stream sourced from the pipeline control plane.
 #
 # The UI does NOT come online until the backend HEALTHCHECK passes. First
-# boot may take 20-35 min while YOLO11n trains on CVC-ColonDB — see
+# boot may take 20-35 min while YOLO11n trains on ColonDB — see
 # docs/user-guide/quickstart.md for the manual dataset-drop instructions.
 #
 #   make up            # build + start (detached)
@@ -43,6 +43,9 @@ services:
     container_name: surgical-pipeline
     restart: unless-stopped
     networks: [surgical-internal]
+    # Share the host IPC namespace so X11 MIT-SHM (XVideo) segments used by the
+    # display sink are valid — prevents BadShmSeg/SIGSEGV on desktop popups.
+    ipc: host
 
     # Intel Arc iGPU passthrough for DL Streamer (VAAPI + OpenCL / Level Zero).
     # /dev/accel is the Meteor Lake NPU (accel0) — required when
@@ -109,6 +112,7 @@ services:
       BASLER_FIXED_CAMERA:         ${BASLER_FIXED_CAMERA:-0}
       BASLER_EXPOSURE_US:          ${BASLER_EXPOSURE_US:-}
       BASLER_GAIN:                 ${BASLER_GAIN:-}
+      BASLER_THROUGHPUT_LIMIT:     ${BASLER_THROUGHPUT_LIMIT:-}
       BASLER_PIXEL_FORMAT:         ${BASLER_PIXEL_FORMAT:-bayerbggr}
       # Startup GPU warmup: pre-warms OpenVINO/GPU state so the first /start
       # after a container (re)create runs at full fps instead of a cold ~16 fps.
@@ -137,7 +141,7 @@ services:
   # Instrument exposes only UI :8080 to the host; backend reaches collector
   # over the internal `surgical-internal` bridge network.
   surgical-metrics-collector:
-    image: intel/hl-ai-metrics-collector:${METRICS_COLLECTOR_TAG:-1.0.0}
+    image: intel/hl-ai-metrics-collector:${TAG}
     container_name: surgical-metrics-collector
     restart: unless-stopped
     networks: [surgical-internal]
@@ -192,7 +196,7 @@ services:
       # Trained IR + Ultralytics runs directory. Cache-first bootstrap
       # skips training when `.trained_ok` marker is present here.
       - ./models:/models
-      # Manual-drop location for the CVC-ColonDB archive (see quickstart).
+      # Manual-drop location for the ColonDB archive (see quickstart).
       - ./datasets:/datasets
       # Demo videos consumed by the pipeline container (path exposed via
       # /api/config for the UI).

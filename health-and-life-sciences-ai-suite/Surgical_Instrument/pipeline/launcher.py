@@ -70,6 +70,7 @@ _GST_PRIO  = os.environ.get("PIPELINE_GST_RT_PRIORITY", "").strip()
 BASLER_FIXED_CAMERA = os.environ.get("BASLER_FIXED_CAMERA", "0").strip() not in {"0", "false", "no"}
 BASLER_EXPOSURE_US  = os.environ.get("BASLER_EXPOSURE_US", "").strip()
 BASLER_GAIN         = os.environ.get("BASLER_GAIN", "").strip()
+BASLER_THROUGHPUT_LIMIT = os.environ.get("BASLER_THROUGHPUT_LIMIT", "").strip()
 BASLER_PIXEL_FORMAT = os.environ.get("BASLER_PIXEL_FORMAT", "bayerbggr").strip() or "bayerbggr"
 # ---- GPU warmup -----------------------------------------------------------
 # The first GPU-inference process in a freshly (re)created container pays a
@@ -138,6 +139,7 @@ def _spawn(
         basler_fixed_camera=BASLER_FIXED_CAMERA,
         basler_exposure_us=BASLER_EXPOSURE_US or None,
         basler_gain=BASLER_GAIN or None,
+        basler_throughput_limit=BASLER_THROUGHPUT_LIMIT or None,
     )
 
     env = os.environ.copy()
