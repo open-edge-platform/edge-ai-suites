@@ -105,7 +105,7 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
         enable_thinking=False,
     )
 
-    raw = tg.generate(prompt, stream=False)
+    raw = tg.generate(prompt, stream=False, pre_templated=True)
     summary = strip_think_tokens(raw if isinstance(raw, str) else "".join(raw))
 
     logger.info(

@@ -15,10 +15,98 @@ Qwen3 comes in two shapes that need different prompting, and both match a naive
   same qwen3_5 export path and the same prompting contract.
 """
 
+from dataclasses import dataclass
+import re
+from typing import Optional
+
 # Substrings identifying the Qwen3.5 / Qwen3.6 / Qwen3.8 native vision-language
 # family. Matched against the lowercased model name, so "qwen3.8" also covers
 # any future Qwen3.8-<size> member.
 _QWEN3_NATIVE_VLM_MARKERS = ("qwen3.5", "qwen3.6", "qwen3.8")
+
+
+@dataclass(frozen=True)
+class TextGenModelProfile:
+  model_name: str
+  weight_formats: tuple[str, ...]
+  reasoning_effort: bool = False
+  minimum_openvino: Optional[tuple[int, int]] = None
+  minimum_openvino_genai: Optional[tuple[int, int]] = None
+
+
+_TEXT_GEN_MODEL_PROFILES = {
+  "qwen/qwen3.6-35b-a3b": TextGenModelProfile(
+    model_name="Qwen/Qwen3.6-35B-A3B",
+    weight_formats=("int4", "int8"),
+  ),
+  "qwen/qwen3.8-27b": TextGenModelProfile(
+    model_name="Qwen/Qwen3.8-27B",
+    weight_formats=("int8",),
+    reasoning_effort=True,
+    minimum_openvino=(2026, 4),
+    minimum_openvino_genai=(2026, 4),
+  ),
+}
+
+
+def text_gen_model_profile(model_name) -> Optional[TextGenModelProfile]:
+  """Return switching constraints for a known text-gen model."""
+  return _TEXT_GEN_MODEL_PROFILES.get(str(model_name).strip().lower())
+
+
+def supports_reasoning_effort(model_name) -> bool:
+  profile = text_gen_model_profile(model_name)
+  return bool(profile and profile.reasoning_effort)
+
+
+def _version_pair(version) -> tuple[int, int]:
+  parts = [int(part) for part in re.findall(r"\d+", str(version))]
+  return tuple((parts + [0, 0])[:2])
+
+
+def validate_text_gen_model_config(model_name, device, weight_format) -> None:
+  """Validate constraints that differ between selectable text-gen models."""
+  profile = text_gen_model_profile(model_name)
+  if profile is None:
+    return
+
+  normalized_device = str(device).strip().upper()
+  normalized_weight = str(weight_format).strip().lower()
+  if not normalized_device.startswith("GPU"):
+    raise ValueError(
+      f"{profile.model_name} is supported by Smart Classroom on GPU; "
+      f"configured device={device!r}."
+    )
+  if normalized_weight not in profile.weight_formats:
+    allowed = ", ".join(profile.weight_formats)
+    raise ValueError(
+      f"{profile.model_name} does not support weight_format={weight_format!r}; "
+      f"use one of: {allowed}."
+    )
+
+  if profile.minimum_openvino is not None:
+    import openvino
+
+    version_parts = _version_pair(openvino.__version__)
+    if version_parts < profile.minimum_openvino:
+      minimum = ".".join(str(part) for part in profile.minimum_openvino)
+      raise RuntimeError(
+        f"{profile.model_name} requires OpenVINO {minimum}+; found "
+        f"{openvino.__version__}. Install requirements-qwen3.8.txt."
+      )
+
+  if profile.minimum_openvino_genai is not None:
+    import openvino_genai
+
+    version = getattr(openvino_genai, "__version__", "0.0")
+    if _version_pair(version) < profile.minimum_openvino_genai:
+      minimum = ".".join(
+        str(part) for part in profile.minimum_openvino_genai
+      )
+      raise RuntimeError(
+        f"{profile.model_name} requires OpenVINO GenAI {minimum}+; found "
+        f"{version}. Install requirements-qwen3.8.txt."
+      )
 
 
 def is_qwen3_native_vlm(model_name) -> bool:

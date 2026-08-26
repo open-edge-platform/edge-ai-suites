@@ -434,7 +434,9 @@ POST http://<host>:8000/v1/chat/completions
   并需要 `models/openvino/Qwen3.8-27B/int8` 下约 26 GB 的权重。它的 chat template
   默认 `reasoning_effort` 为 `xhigh`;对于未关闭 thinking 的请求,可用
   `text_gen.reasoning_effort`(`low`、`medium`、`xhigh`)限制思考长度。
-- **切换模型**需改服务端 `config.yaml` 的 `text_gen.vlm_name`(以及 `weight_format`、`device`),重启服务生效。
+- **在 Qwen3.6-35B-A3B 与 Qwen3.8-27B 之间切换**时，只需修改服务端
+  `config.yaml` 的 `models.text_gen.vlm_name`，然后重启服务。公共配置
+  `device: GPU` 和 `weight_format: int8` 对两者都有效。
 - 接口的 `model` 参数会被忽略——**以服务端配置的模型为准**,客户传入 `model` 名不会切换模型。
 - 具体可用模型和量化由服务端部署决定;若需在部署上新增模型,请与服务提供方确认。
 

@@ -26,7 +26,7 @@ if str(REPO_ROOT) not in sys.path:
 
 os.chdir(CONTENT_SEARCH_DIR)
 
-from utils.config import DEFAULT_VLM_MODEL  
+from content_search.utils.config import DEFAULT_VLM_MODEL
 
 def _load_config_to_env(config_path: str = "config.yaml") -> None:
     path = REPO_ROOT / config_path
@@ -59,9 +59,14 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("VIDEO_MAX_MB", storage.get("video_max_mb", 1024))
 
         vlm = cs.get("vlm", {})
+        text_gen = data.get("models", {}).get("text_gen", {})
         _set("VLM_HOST", vlm.get("host_addr", "127.0.0.1"))
         _set("VLM_PORT", vlm.get("port", "8000"))
-        _set("VLM_MODEL_NAME", vlm.get("model_name", DEFAULT_VLM_MODEL))
+        _set(
+            "VLM_MODEL_NAME",
+            text_gen.get("vlm_name")
+            or vlm.get("model_name", DEFAULT_VLM_MODEL),
+        )
         _set("VLM_DEVICE", vlm.get("device", "CPU"))
 
         main_app = cs.get("main_app", {})

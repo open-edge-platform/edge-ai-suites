@@ -15,7 +15,11 @@ from typing import Iterator, Optional, Union
 import openvino_genai as ov_genai
 from transformers import AutoTokenizer
 
-from utils.model_family import is_qwen3_dense
+from utils.model_family import (
+    is_qwen3_dense,
+    supports_reasoning_effort,
+    validate_text_gen_model_config,
+)
 from utils.ov_genai_util import YieldingTextStreamer
 
 logger = logging.getLogger(__name__)
@@ -77,8 +81,14 @@ class VLMTextGen:
         self._max_new_tokens = int(
             getattr(text_gen, "max_new_tokens", _DEFAULT_MAX_NEW_TOKENS)
         )
-        self._reasoning_effort = self._resolve_reasoning_effort(
-            getattr(text_gen, "reasoning_effort", None)
+        validate_text_gen_model_config(
+            self._model_name, self._device, self._weight_format
+        )
+        configured_effort = getattr(text_gen, "reasoning_effort", None)
+        self._reasoning_effort = (
+            self._resolve_reasoning_effort(configured_effort)
+            if supports_reasoning_effort(self._model_name)
+            else None
         )
 
     @staticmethod
@@ -228,8 +238,8 @@ class VLMTextGen:
         left at the model default, Qwen3.8's template resolves
         ``reasoning_effort`` to ``xhigh``, which prefixes every answer with a long
         reasoning pass; the configured ``models.text_gen.reasoning_effort`` caps
-        that. Templates that predate the flag (Qwen3.5/3.6, Qwen3-VL) ignore the
-        key, so passing it is harmless there.
+        that. Model config loading retains this option only for Qwen3.8, so it is
+        never passed to Qwen3.5/3.6 or Qwen3-VL templates.
         """
         if enable_thinking is False:
             return {"enable_thinking": False}

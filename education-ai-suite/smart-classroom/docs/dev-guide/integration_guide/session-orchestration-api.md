@@ -466,8 +466,9 @@ Notes:
   `reasoning_effort` to `xhigh`; set `text_gen.reasoning_effort` (`low`,
   `medium`, `xhigh`) to cap the reasoning pass for requests that leave thinking
   enabled.
-- **To switch models**, edit `config.yaml` (`text_gen.vlm_name`, plus
-  `weight_format` / `device`) and restart the service.
+- **To switch between Qwen3.6-35B-A3B and Qwen3.8-27B**, change only
+  `models.text_gen.vlm_name` in `config.yaml`, then restart the service. The
+  shared `device: GPU` and `weight_format: int8` settings are valid for both.
 - The `model` parameter in the request is **ignored** — the server-side configured
   model is always used. Passing a different `model` name does not switch models.
 - Actual model availability and quantization depend on the deployment; contact the

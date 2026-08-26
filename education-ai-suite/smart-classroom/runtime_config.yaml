@@ -1,4 +1,4 @@
 "Project":
   "name": "smart-classroom"
   "location": "storage/"
-  "microphone": ""
+  "microphone": "audio=\u7EBF\u8DEF\u8F93\u5165 (Realtek High Definition Audio(SST))"

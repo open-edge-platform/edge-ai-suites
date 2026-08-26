@@ -368,6 +368,8 @@ models:
     enabled: true
     provider: vlm
     vlm_name: Qwen/Qwen3.8-27B
+    # Switch between Qwen3.8 and Qwen3.6 by changing only vlm_name. The shared
+    # device: GPU and weight_format: int8 settings below are valid for both.
     # Qwen/Qwen3.8-27B, Qwen/Qwen3.6-35B-A3B and Qwen/Qwen3.5-9B are also
     # supported; all are validated only on device: GPU with weight_format: int8.
     # Qwen/Qwen3.8-27B is published as an EXPERIMENTAL OpenVINO IR and needs the
@@ -378,8 +380,8 @@ models:
     weight_format: int8 # int4,int 8-- shared with content_search.vlm.weight_format
     max_new_tokens: 5120
     context_length: 160000 # input token budget; prompts trim to context_length - max_new_tokens
-    # Reasoning budget for requests that leave thinking on (Qwen3.8 only; older
-    # templates ignore it). low | medium | xhigh, or Null.
+    # Reasoning budget for requests that leave thinking on (Qwen3.8 only; the
+    # application ignores it for other models). low | medium | xhigh, or Null.
     #
     # Null is the default and means "pass nothing" -- the model resolves its own
     # default (xhigh) exactly as it would have before this knob existed, which
@@ -535,6 +537,8 @@ content_search:
     video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
+    # Standalone fallback only. When port 8000 points to the main backend,
+    # content_search inherits models.text_gen.vlm_name automatically.
     model_name: "Qwen/Qwen3-VL-8B-Instruct"
     host_addr: "127.0.0.1"
     port: 8000  # warm VLM now hosted by main app (:8000); standalone :9900 retired
