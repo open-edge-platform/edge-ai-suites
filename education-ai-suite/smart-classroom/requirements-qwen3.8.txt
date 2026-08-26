@@ -1,0 +1,42 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Dependency overlay for models.text_gen.vlm_name: Qwen/Qwen3.8-27B (int8).
+#
+# Apply ON TOP OF requirements.txt, into the same venv:
+#
+#   pip install -r requirements.txt
+#   pip install -r requirements-qwen3.8.txt
+#
+# Why this is a separate file
+# ---------------------------
+# Qwen3.8-27B is published as an EXPERIMENTAL OpenVINO IR. Its model card
+# (OpenVINO/Qwen3.8-27B-int8-ov) requires:
+#
+#   - OpenVINO 2026.4.0 (nightly) or higher
+#   - OpenVINO GenAI nightly builds from 2026-08-14 or later
+#   - Transformers 5.2
+#
+# The 2026.3.0 runtime pinned in requirements.txt cannot load the qwen3_5
+# dense IR, so it has to be replaced. Transformers needs no change:
+# requirements.txt already pins 5.2.0 exactly, which is what this model wants
+# as well.
+#
+# Tradeoff: this swaps the validated 2026.3.0 runtime for a nightly across the
+# WHOLE venv, so Qwen3.5-9B / Qwen3.6-35B-A3B / Qwen3-VL-8B-Instruct end up on
+# the nightly too. Keep a separate venv if you need the released stack back,
+# and drop this overlay once 2026.4.0 ships as a stable release.
+
+--extra-index-url https://storage.openvinotoolkit.org/simple/wheels/nightly
+--pre
+
+openvino>=2026.4.0.dev
+openvino-tokenizers>=2026.4.0.0.dev
+openvino-genai>=2026.4.0.0.dev20260814
+
+# Only needed to re-export Qwen3.8-27B from the source weights; the default
+# path downloads the published OpenVINO/Qwen3.8-27B-int8-ov IR (or reuses a
+# local copy under models/openvino/Qwen3.8-27B/int8) and never runs an export.
+# Uncomment if you must convert it yourself -- note this also unpins the
+# optimum-intel 2.1.0 in requirements.txt.
+# optimum-intel @ git+https://github.com/huggingface/optimum-intel.git

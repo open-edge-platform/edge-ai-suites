@@ -2,6 +2,11 @@ fastapi==0.116.1
 funasr==1.2.7
 
 # OpenVINO stack
+#
+# Qwen/Qwen3.8-27B does NOT run on this 2026.3.0 runtime -- its IR needs
+# OpenVINO 2026.4.0 nightly and GenAI nightly >= 2026-08-14. Layer
+# requirements-qwen3.8.txt on top of this file when text_gen.vlm_name is set
+# to that model.
 openvino==2026.3.0
 openvino-genai==2026.3.0.0
 openvino-tokenizers==2026.3.0.0

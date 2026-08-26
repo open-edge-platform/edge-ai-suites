@@ -57,7 +57,7 @@ def monitor_logs(metrics_logs):
 
     log_files = {
         "cpu_utilization": (os.path.join(metrics_logs, "cpu_utilization.csv"), [1]),
-        "gpu_utilization": (os.path.join(metrics_logs, "gpu_metrics.csv"), [1, 2, 3, 4, 5, 6,7,8,9]),
+        "gpu_utilization": (os.path.join(metrics_logs, "gpu_metrics.csv"), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
         "memory": (os.path.join(metrics_logs, "memory_metrics.csv"), [1, 2, 3,4]),
         "power": (os.path.join(metrics_logs, "power_metrics.csv"), [1]),
         "npu_utilization": (os.path.join(metrics_logs, "npu_metrics.csv"), [1])

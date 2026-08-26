@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 
 from monitoring.scripts.windows.gpu_engines import (
+    ENGTYPE_COMPUTE,
     ENGTYPE_NEURAL,
     classify_adapters,
     enumerate_engines,
@@ -19,18 +20,17 @@ logger = logging.getLogger(__name__)
 # adapters (those exposing a 3D engine) contribute; the dedicated NPU adapter is
 # owned by collect_npu.py so its Neural engine is never counted here.
 #
-# "Compute" carries both engine types that can run compute work on a GPU:
-# engtype_Compute (the compute-only command streamers) and engtype_Neural (the
-# iGPU's XMX/AI block). OpenVINO's device: GPU inference — the summarizer and
-# the mind-map/VLM text_gen models — runs on the Neural engine on Intel
-# platforms, so leaving it out reported those stages as using no GPU at all.
+# Keep Neural at index 9: monitor.py and ResourceUtilizationAccordion consume
+# this CSV by index. Compute is separate so Neural matches Task Manager's
+# Neural engine rather than combining two physically distinct engines.
 ENGINE_BUCKETS = {
     "3D": ("3d",),
     "VideoEncode": ("videoencode",),
     "VideoDecode": ("videodecode",),
     "VideoProcessing": ("videoprocessing",),
     "Copy": ("copy",),
-    "Compute": ("compute", ENGTYPE_NEURAL),
+    "Neural": (ENGTYPE_NEURAL,),
+    "ComputeEngine": (ENGTYPE_COMPUTE,),
 }
 CSV_COLUMNS = list(ENGINE_BUCKETS)
 
@@ -75,7 +75,7 @@ def get_gpu_memory_total():
         return None, None, None
 
 
-def get_gpu_utilization():
+def get_gpu_utilization(settle_seconds=0.2):
     """Per-engine GPU utilization, keyed by CSV column name (see ENGINE_BUCKETS)."""
     engines = enumerate_engines()
     render_adapters, _npu_adapters = classify_adapters(engines)
@@ -92,7 +92,7 @@ def get_gpu_utilization():
         if luid in render_adapters and engtype in engtype_to_column
     ]
 
-    totals = sample_utilization(wanted)
+    totals = sample_utilization(wanted, settle_seconds=settle_seconds)
     return {column: totals.get(column, 0.0) for column in CSV_COLUMNS}
 
 
@@ -117,10 +117,15 @@ def start_gpu_monitoring(interval_seconds, stop_event, output_dir=None):
 
             while not stop_event.is_set():
                 start_time = time.perf_counter()
-                timestamp = datetime.now().isoformat(timespec="milliseconds")
                 try:
                     total, dedicated, shared = get_gpu_memory_total()
-                    engine_totals = get_gpu_utilization()
+                    # Use the full configured interval as the PDH observation
+                    # window. A 0.2s snapshot every 2s aliases bursty inference
+                    # into misleading 0/100 spikes unlike Task Manager.
+                    engine_totals = get_gpu_utilization(
+                        settle_seconds=interval_seconds
+                    )
+                    timestamp = datetime.now().isoformat(timespec="milliseconds")
 
                     if total is not None:
                         writer.writerow(
@@ -132,6 +137,7 @@ def start_gpu_monitoring(interval_seconds, stop_event, output_dir=None):
                     file.flush()
                 except Exception as e:
                     logger.error(f"Error collecting GPU metrics: {e}")
+                    timestamp = datetime.now().isoformat(timespec="milliseconds")
                     writer.writerow([timestamp, 0.0, 0.0, 0.0] + [0.0] * len(CSV_COLUMNS))
                     file.flush()
 

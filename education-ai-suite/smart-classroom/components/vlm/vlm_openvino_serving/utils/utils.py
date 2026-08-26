@@ -29,6 +29,11 @@ _PRECONVERTED_OV_MODELS = {
     # Only int4 is published for the 35B MoE; there is no -int8-ov repo, so an
     # int8 run of this model still falls through to a local export.
     ("Qwen/Qwen3.6-35B-A3B", "int4"): "OpenVINO/Qwen3.6-35B-A3B-int4-ov",
+    # Qwen3.8-27B ships only as an int8 IR, and it is flagged experimental: a
+    # local export needs an optimum-intel dev build, so always prefer the
+    # published IR. It also needs the OpenVINO 2026.4.0 nightly runtime --
+    # see smart-classroom/requirements-qwen3.8.txt.
+    ("Qwen/Qwen3.8-27B", "int8"): "OpenVINO/Qwen3.8-27B-int8-ov",
 }
 
 

@@ -12,7 +12,7 @@ import { useResourceMetricTimer } from '../../hooks/useResourceMetricTimer';
 import MonitoringPausedBanner from '../common/MonitoringPausedBanner';
 Chart.register(...registerables);
 
-type GPUMetricKey = 'shared_memory_mb' | '3D_utilization_percent' | 'VideoDecode_utilization_percent' | 'VideoProcessing_utilization_percent' | 'Compute_utilization_percent';
+type GPUMetricKey = 'shared_memory_mb' | '3D_utilization_percent' | 'VideoDecode_utilization_percent' | 'VideoProcessing_utilization_percent' | 'Neural_utilization_percent' | 'ComputeEngine_utilization_percent';
 interface GPUMetricConfig {
   index: number;
   color: string;
@@ -98,12 +98,19 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
       yAxis: 'y', 
       shortLabel: 'Vid Proc' 
     },
-    Compute_utilization_percent: { 
-      index: 9, 
-      color: 'rgba(153, 102, 255, 1)', 
-      label: 'Compute Utilization (%)', 
-      yAxis: 'y', 
-      shortLabel: 'Compute' 
+    Neural_utilization_percent: {
+      index: 9,
+      color: 'rgba(153, 102, 255, 1)',
+      label: 'Neural Utilization (%)',
+      yAxis: 'y',
+      shortLabel: 'Neural'
+    },
+    ComputeEngine_utilization_percent: {
+      index: 10,
+      color: 'rgba(255, 159, 64, 1)',
+      label: 'Compute Utilization (%)',
+      yAxis: 'y',
+      shortLabel: 'Compute'
     },
   };
 

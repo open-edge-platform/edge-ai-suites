@@ -28,8 +28,8 @@ def get_npu_instances():
     Instances are per-process and come and go with the workload, so this is
     re-enumerated on every sample. An integrated GPU also exposes a Neural
     engine; adapters that additionally expose a 3D engine are therefore skipped
-    so their AI work is not double counted as NPU (collect_gpu.py owns those,
-    folded into its Compute column).
+    so their AI work is not double counted as NPU (collect_gpu.py owns the
+    render GPU's Neural engine).
     """
     engines = enumerate_engines()
     _render_adapters, npu_adapters = classify_adapters(engines)

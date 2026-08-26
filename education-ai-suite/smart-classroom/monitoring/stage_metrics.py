@@ -5,10 +5,12 @@
 
 The collectors under ``monitoring/scripts`` write one undifferentiated CSV row
 per sampling interval for the whole session. This module slices those series by
-pipeline stage (ASR / Summary / Mind map / Video) and reports, for each stage:
+pipeline stage (ASR / Summary / Mind map / Video / VA Front / VA Back /
+VA Content / Board OCR) and reports, for each stage:
 
     Time Range, Memory Util(GB), CPU Util(%), GPU 3D Util(%),
-    GPU Compute Util(%), GPU Decode Util(%), GPU Video Process Util(%),
+    GPU Neural Util(%), GPU Compute Util(%), GPU Decode Util(%),
+    GPU Video Process Util(%),
     NPU Util(%)
 
 What each stage window covers in the running product:
@@ -22,6 +24,14 @@ What each stage window covers in the running product:
 ``Video``     ``/start-video-analytics-pipeline``: the front/back/content
               GStreamer subprocesses, from the first launch until the last
               pipeline's monitor thread observes it exit.
+``VA Front``  One GStreamer subprocess each, from its own launch until its own
+``VA Back``   monitor thread observes it exit. The three start staggered and
+``VA Content``exit independently, so these break the ``Video`` umbrella down
+              into what each pipeline actually cost.
+``Board OCR`` ``components.board_ocr``: frame extraction plus the PP-OCR worker
+              draining those frames. It is a twin of the VA content pipeline but
+              outlives it — OCR keeps draining after the GStreamer process is
+              gone — so it needs a window of its own.
 
 Stage windows come from the ``[STAGE]`` markers emitted by
 ``utils.time_marker.mark``: every marker is appended to
@@ -30,21 +40,26 @@ Stage windows come from the ``[STAGE]`` markers emitted by
 earliest ``start`` boundary to its latest ``end`` boundary, so the ``Video``
 stage covers all three concurrent VA pipelines as one window. Markers recorded
 with the ``info`` boundary (API entry/exit, uploads, pipeline construction, VA
-launch and board OCR details) are kept in the timeline for end-to-end timing
-analysis but do not move any window.
+launch detail and launch failures) are kept in the timeline for end-to-end
+timing analysis but do not move any window.
 
 Two properties of the report follow from the real pipeline flow and are worth
 keeping in mind when reading it:
 
 * **The windows overlap.** ``Video`` is started alongside ``ASR`` and keeps
   running through ``Summary`` and ``Mind map``, so its window contains all
-  three. The three audio stages are sequential and do not overlap each other.
+  three, and it in turn contains the per-pipeline ``VA *`` windows. ``Board
+  OCR`` overlaps ``VA Content`` and usually outlives it. Only the three audio
+  stages are sequential and non-overlapping. Durations therefore do not sum to
+  the session wall clock, and the same sample is counted in several rows.
 * **The collectors are system wide.** A row says what the machine was doing
   during that stage, not what the stage alone consumed — the GPU decode and
-  video-process figures during ``ASR`` are the concurrent VA pipelines, not the
-  ASR model. ``GPU Compute Util(%)`` is where OpenVINO ``device: GPU``
-  inference lands (see ``scripts/windows/gpu_engines.py``), so it is the column
-  that tracks the summarizer and mind-map models.
+    video-process figures during ``ASR`` are the concurrent VA pipelines, not the
+    ASR model. ``GPU Neural Util(%)`` is only the iGPU's Neural (XMX/AI) engine,
+    where OpenVINO ``device: GPU`` inference lands. ``GPU Compute Util(%)`` is a
+    separate physical engine and must not be added to Neural when comparing with
+    Task Manager. Stage values are averages and peaks over the whole stage, while
+    Task Manager displays the current sampling interval.
 
 ``stage_metrics.csv`` is refreshed as soon as each stage closes, so the report
 exists even when the process never reaches ``monitor.stop_monitoring`` (the
@@ -70,9 +85,38 @@ STAGE_ASR = "ASR"
 STAGE_SUMMARY = "Summary"
 STAGE_MINDMAP = "Mind map"
 STAGE_VIDEO = "Video"
+STAGE_BOARD_OCR = "Board OCR"
+
+# Per-VA-pipeline stages, nested inside the ``Video`` umbrella window. The three
+# pipelines start staggered, exit independently and load different devices, so
+# collapsing them into ``Video`` alone hides which one was actually running.
+STAGE_VA_FRONT = "VA Front"
+STAGE_VA_BACK = "VA Back"
+STAGE_VA_CONTENT = "VA Content"
+
+_VA_STAGES = {
+    "front": STAGE_VA_FRONT,
+    "back": STAGE_VA_BACK,
+    "content": STAGE_VA_CONTENT,
+}
+
+
+def va_stage(pipeline_name: str) -> Optional[str]:
+    """Per-pipeline stage name for a VA pipeline, or ``None`` if unrecognised."""
+    return _VA_STAGES.get((pipeline_name or "").strip().lower())
+
 
 # Report order; stages with no recorded window are omitted from the output.
-STAGE_ORDER = [STAGE_ASR, STAGE_SUMMARY, STAGE_MINDMAP, STAGE_VIDEO]
+STAGE_ORDER = [
+    STAGE_ASR,
+    STAGE_SUMMARY,
+    STAGE_MINDMAP,
+    STAGE_VIDEO,
+    STAGE_VA_FRONT,
+    STAGE_VA_BACK,
+    STAGE_VA_CONTENT,
+    STAGE_BOARD_OCR,
+]
 
 # Timeline boundaries. start/end delimit a stage window; info is a milestone
 # that is recorded for timing analysis only.
@@ -86,7 +130,20 @@ METRIC_SOURCES = {
     "memory_util_gb": ("memory_metrics.csv", "used_gb", "GB"),
     "cpu_util_percent": ("cpu_utilization.csv", "total_cpu_utilization", "%"),
     "gpu_3d_util_percent": ("gpu_metrics.csv", "3D_utilization_percent", "%"),
-    "gpu_compute_util_percent": ("gpu_metrics.csv", "Compute_utilization_percent", "%"),
+    # Legacy sessions stored the merged Neural+Compute bucket under
+    # Compute_utilization_percent. Keep it only as a Neural fallback; the new
+    # pure Compute engine uses a distinct header to prevent duplicate columns
+    # when historical sessions are re-aggregated.
+    "gpu_neural_util_percent": (
+        "gpu_metrics.csv",
+        ("Neural_utilization_percent", "Compute_utilization_percent"),
+        "%",
+    ),
+    "gpu_compute_util_percent": (
+        "gpu_metrics.csv",
+        "ComputeEngine_utilization_percent",
+        "%",
+    ),
     "gpu_decode_util_percent": ("gpu_metrics.csv", "VideoDecode_utilization_percent", "%"),
     "gpu_video_process_util_percent": (
         "gpu_metrics.csv",
@@ -104,6 +161,7 @@ REPORT_COLUMNS = [
     ("memory_util_gb", "Memory Util(GB)"),
     ("cpu_util_percent", "CPU Util(%)"),
     ("gpu_3d_util_percent", "GPU 3D Util(%)"),
+    ("gpu_neural_util_percent", "GPU Neural Util(%)"),
     ("gpu_compute_util_percent", "GPU Compute Util(%)"),
     ("gpu_decode_util_percent", "GPU Decode Util(%)"),
     ("gpu_video_process_util_percent", "GPU Video Process Util(%)"),
@@ -213,25 +271,32 @@ def _read_windows(metrics_logs: str) -> Dict[str, Dict]:
     return {s: w for s, w in windows.items() if w["start"] is not None}
 
 
-def _read_series(metrics_logs: str, file_name: str, column: str) -> List[tuple]:
-    """Return [(datetime, float)] for one column of one collector CSV."""
+def _read_series(metrics_logs: str, file_name: str, column) -> List[tuple]:
+    """Return [(datetime, float)] for one column of one collector CSV.
+
+    ``column`` may be a tuple of names tried in order, so a column that has been
+    renamed can still be read from sessions collected under the old name.
+    """
     path = os.path.join(metrics_logs, file_name)
     if not os.path.exists(path):
         return []
 
+    names = (column,) if isinstance(column, str) else tuple(column)
     series = []
     try:
         with open(path, "r", encoding="utf-8", newline="") as fh:
             reader = csv.DictReader(fh)
-            if reader.fieldnames is None or column not in reader.fieldnames:
-                logger.warning("Column '%s' not found in %s", column, path)
+            fields = reader.fieldnames or ()
+            resolved = next((name for name in names if name in fields), None)
+            if resolved is None:
+                logger.warning("None of the columns %s found in %s", names, path)
                 return []
             for row in reader:
                 stamp = _parse(row.get("timestamp") or "")
                 if stamp is None:
                     continue
                 try:
-                    series.append((stamp, float(row[column])))
+                    series.append((stamp, float(row[resolved])))
                 except (TypeError, ValueError):
                     continue
     except Exception as e:

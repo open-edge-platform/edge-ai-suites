@@ -423,11 +423,17 @@ POST http://<host>:8000/v1/chat/completions
 | `Qwen/Qwen3-VL-8B-Instruct` | int4、int8 |
 | `Qwen/Qwen3.5-9B` | int4、int8 |
 | `Qwen/Qwen3.6-35B-A3B` | int4、int8 |
+| `Qwen/Qwen3.8-27B` | int8 |
 
 说明:
 
-- **当前默认**为 `Qwen/Qwen3-VL-8B-Instruct`(config 里 `vlm_name`),多模态。
-- `Qwen/Qwen3.5-9B` 和 `Qwen/Qwen3.6-35B-A3B` 仅在 `device: GPU` + `weight_format: int8` 下验证过。
+- **当前默认**为 `Qwen/Qwen3.8-27B`(config 里 `vlm_name`),多模态。
+- `Qwen/Qwen3.5-9B`、`Qwen/Qwen3.6-35B-A3B` 和 `Qwen/Qwen3.8-27B` 仅在 `device: GPU` + `weight_format: int8` 下验证过。
+- `Qwen/Qwen3.8-27B` 是**实验性** OpenVINO IR:需要 OpenVINO 2026.4.0 nightly 运行时
+  (在 `requirements.txt` 之上再执行 `pip install -r requirements-qwen3.8.txt`),
+  并需要 `models/openvino/Qwen3.8-27B/int8` 下约 26 GB 的权重。它的 chat template
+  默认 `reasoning_effort` 为 `xhigh`;对于未关闭 thinking 的请求,可用
+  `text_gen.reasoning_effort`(`low`、`medium`、`xhigh`)限制思考长度。
 - **切换模型**需改服务端 `config.yaml` 的 `text_gen.vlm_name`(以及 `weight_format`、`device`),重启服务生效。
 - 接口的 `model` 参数会被忽略——**以服务端配置的模型为准**,客户传入 `model` 名不会切换模型。
 - 具体可用模型和量化由服务端部署决定;若需在部署上新增模型,请与服务提供方确认。

@@ -452,12 +452,20 @@ The server currently supports the following models (OpenVINO quantized):
 | `Qwen/Qwen3-VL-8B-Instruct` | int4, int8 |
 | `Qwen/Qwen3.5-9B` | int4, int8 |
 | `Qwen/Qwen3.6-35B-A3B` | int4, int8 |
+| `Qwen/Qwen3.8-27B` | int8 |
 
 Notes:
 
-- **Current default** is `Qwen/Qwen3-VL-8B-Instruct` (config `vlm_name`), multimodal.
-- `Qwen/Qwen3.5-9B` and `Qwen/Qwen3.6-35B-A3B` are validated only on
-  `device: GPU` + `weight_format: int8`.
+- **Current default** is `Qwen/Qwen3.8-27B` (config `vlm_name`), multimodal.
+- `Qwen/Qwen3.5-9B`, `Qwen/Qwen3.6-35B-A3B` and `Qwen/Qwen3.8-27B` are validated
+  only on `device: GPU` + `weight_format: int8`.
+- `Qwen/Qwen3.8-27B` is an **experimental** OpenVINO IR: it needs the OpenVINO
+  2026.4.0 nightly runtime (`pip install -r requirements-qwen3.8.txt` on top of
+  `requirements.txt`) and ~26 GB of weights under
+  `models/openvino/Qwen3.8-27B/int8`. Its chat template defaults
+  `reasoning_effort` to `xhigh`; set `text_gen.reasoning_effort` (`low`,
+  `medium`, `xhigh`) to cap the reasoning pass for requests that leave thinking
+  enabled.
 - **To switch models**, edit `config.yaml` (`text_gen.vlm_name`, plus
   `weight_format` / `device`) and restart the service.
 - The `model` parameter in the request is **ignored** — the server-side configured

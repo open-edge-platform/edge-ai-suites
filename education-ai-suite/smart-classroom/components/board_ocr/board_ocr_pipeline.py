@@ -8,12 +8,12 @@ import threading
 import time
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import numpy as np
 from PIL import Image
 
-from monitoring.stage_metrics import STAGE_VIDEO
+from monitoring.stage_metrics import STAGE_BOARD_OCR
 from utils.config_loader import config
 from utils.time_marker import mark
 
@@ -240,6 +240,7 @@ class BoardOCRWorker:
         lang: str,
         session_id: str,
         extractor: Optional["FrameExtractor"] = None,
+        on_done: Optional[Callable[[], None]] = None,
     ):
         self.frames_dir = Path(frames_dir)
         self.output_file = Path(output_file)
@@ -248,6 +249,7 @@ class BoardOCRWorker:
         self.lang = lang
         self.session_id = session_id
         self._extractor = extractor
+        self._on_done = on_done
 
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
@@ -256,6 +258,8 @@ class BoardOCRWorker:
         self._frame_count = 0
         self._finalized = False
         self._finalize_lock = threading.Lock()
+        self._done_notified = False
+        self._done_lock = threading.Lock()
 
     def start(self) -> bool:
         """Start the worker thread. Returns False if OCR model init fails."""
@@ -337,37 +341,47 @@ class BoardOCRWorker:
         return not self._extractor.is_running
 
     def _run(self):
-        while not self._stop.is_set():
-            try:
-                frames = sorted(self.frames_dir.glob("frame_*.jpg"))
-            except Exception as e:
-                logger.warning(f"Failed to list frames: {e}")
-                frames = []
+        try:
+            while not self._stop.is_set():
+                try:
+                    frames = sorted(self.frames_dir.glob("frame_*.jpg"))
+                except Exception as e:
+                    logger.warning(f"Failed to list frames: {e}")
+                    frames = []
 
-            if not frames:
-                # ffmpeg has exited and the backlog is fully drained: the worker
-                # is done, so clean the output and exit on its own instead of
-                # idling until the content pipeline stops it.
-                if self._extraction_ended() and not self.has_pending_frames():
-                    logger.info(
-                        "Board OCR: extraction ended and backlog drained; finishing"
+                if not frames:
+                    if self._extraction_ended() and not self.has_pending_frames():
+                        logger.info(
+                            "Board OCR: extraction ended and backlog drained; finishing"
+                        )
+                        break
+                    time.sleep(_POLL_INTERVAL)
+                    continue
+
+                if len(frames) >= _BACKLOG_WARN:
+                    logger.warning(
+                        f"{len(frames)} frames pending (backlog); OCR is lagging real time or full-speed local file frame extraction."
                     )
-                    break
-                time.sleep(_POLL_INTERVAL)
-                continue
 
-            if len(frames) >= _BACKLOG_WARN:
-                logger.warning(
-                    f"{len(frames)} frames pending (backlog); OCR is lagging real time or full-speed local file frame extraction."
-                )
+                for frame_path in frames:
+                    if self._stop.is_set():
+                        break
+                    self._process_frame(frame_path)
+        finally:
+            logger.info("Board OCR worker stopped")
+            self._finalize()
+            self._notify_done()
 
-            for frame_path in frames:
-                if self._stop.is_set():
-                    return
-                self._process_frame(frame_path)
-
-        logger.info("Board OCR worker stopped")
-        self._finalize()
+    def _notify_done(self) -> None:
+        with self._done_lock:
+            if self._done_notified:
+                return
+            self._done_notified = True
+        if self._on_done is not None:
+            try:
+                self._on_done()
+            except Exception as e:
+                logger.error(f"Board OCR completion callback failed: {e}")
 
     def _process_frame(self, frame_path: Path):
         try:
@@ -574,7 +588,8 @@ class BoardOCRPipeline:
 
     It is a "twin" of the VA content pipeline: it consumes the same video source
     and produces board_ocr.txt for the session. Lifecycle is driven entirely by
-    the module-level controller (start_board_ocr / stop_board_ocr).
+    worker completion, with the module-level controller handling startup and
+    explicit cancellation.
 
     Usage:
         pipeline = BoardOCRPipeline(source, session_id, output_dir)
@@ -589,6 +604,25 @@ class BoardOCRPipeline:
         self.output_dir = Path(output_dir)
         self._extractor: Optional[FrameExtractor] = None
         self._worker: Optional[BoardOCRWorker] = None
+        self._completed = threading.Event()
+        self._completion_lock = threading.Lock()
+        self._on_completed: Optional[Callable[["BoardOCRPipeline"], None]] = None
+
+    def set_completion_callback(
+        self, callback: Callable[["BoardOCRPipeline"], None]
+    ) -> None:
+        with self._completion_lock:
+            self._on_completed = callback
+            completed = self._completed.is_set()
+        if completed:
+            callback(self)
+
+    def _worker_completed(self) -> None:
+        self._completed.set()
+        with self._completion_lock:
+            callback = self._on_completed
+        if callback is not None:
+            callback(self)
 
     @property
     def is_running(self) -> bool:
@@ -626,6 +660,9 @@ class BoardOCRPipeline:
             logger.error("Failed to start frame extractor")
             return False
 
+        ocr_output.parent.mkdir(parents=True, exist_ok=True)
+        ocr_output.write_text("", encoding="utf-8")
+
         ocr_cfg = config.models.ocr
         self._worker = BoardOCRWorker(
             frames_dir=frames_dir,
@@ -635,10 +672,12 @@ class BoardOCRPipeline:
             lang=getattr(ocr_cfg, "lang", "en"),
             session_id=self.session_id,
             extractor=self._extractor,
+            on_done=self._worker_completed,
         )
         if not self._worker.start():
             logger.error("Failed to start OCR worker, stopping frame extractor")
             self._extractor.stop()
+            ocr_output.unlink(missing_ok=True)
             return False
 
         logger.info(f"Board OCR pipeline started for session {self.session_id}")
@@ -646,13 +685,13 @@ class BoardOCRPipeline:
 
     def stop(self):
         """Stop both the OCR worker and frame extractor."""
-        if self._worker is not None:
-            self._worker.stop()
-            self._worker = None
-
         if self._extractor is not None:
             self._extractor.stop()
             self._extractor = None
+
+        if self._worker is not None:
+            self._worker.stop()
+            self._worker = None
 
         logger.info(f"Board OCR pipeline stopped for session {self.session_id}")
 
@@ -712,52 +751,57 @@ def start_board_ocr(session_id: str, content_source: Optional[str]) -> bool:
         return False
 
     with _controller_lock:
-        if (
-            _active_pipeline is not None
-            and _active_pipeline.session_id == session_id
-            and _active_pipeline.is_running
-        ):
+        if _active_pipeline is not None and _active_pipeline.session_id == session_id:
             return True
-        _stop_locked()
 
-        out_dir = default_board_ocr_output_dir(session_id)
-        pipe = BoardOCRPipeline(source=source, session_id=session_id, output_dir=out_dir)
-        if not pipe.start():
-            return False
+    stop_board_ocr()
+
+    out_dir = default_board_ocr_output_dir(session_id)
+    pipe = BoardOCRPipeline(source=source, session_id=session_id, output_dir=out_dir)
+    if not pipe.start():
+        return False
+
+    with _controller_lock:
         _active_pipeline = pipe
-        # Timestamped only (info): board OCR is a twin of the VA content
-        # pipeline, so the Video stage window is already delimited by the VA
-        # launch/exit markers and must not be widened from here.
-        mark("board_ocr-started", session_id, STAGE_VIDEO)
-        logger.info(f"Board OCR controller: started (session={session_id})")
-        return True
+    mark("board_ocr-started", session_id, STAGE_BOARD_OCR, "start")
+    pipe.set_completion_callback(_pipeline_completed)
+    logger.info(f"Board OCR controller: started (session={session_id})")
+    return True
 
 
 def stop_board_ocr(session_id: Optional[str] = None) -> None:
     """Stop the board OCR twin pipeline.
 
-    Called from endpoints.py when the VA content pipeline stops or reaches EOS.
+    Called when the VA content pipeline is explicitly stopped or the feature
+    shuts down. Natural completion is owned by the OCR worker.
     If `session_id` is given, only stops when it matches the active pipeline.
     """
-    with _controller_lock:
-        if _active_pipeline is None:
-            return
-        if session_id and _active_pipeline.session_id != session_id:
-            return
-        _stop_locked()
-
-
-def _stop_locked() -> None:
-    """Assumes _controller_lock is held. Stops any active pipeline."""
     global _active_pipeline
-    if _active_pipeline is not None:
-        session_id = _active_pipeline.session_id
-        try:
-            _active_pipeline.stop()
-        except Exception as e:
-            logger.error(f"Error stopping board OCR pipeline: {e}")
+    with _controller_lock:
+        pipe = _active_pipeline
+        if pipe is None or (session_id and pipe.session_id != session_id):
+            return
         _active_pipeline = None
-        mark("board_ocr-completed", session_id, STAGE_VIDEO)
+    try:
+        pipe.stop()
+    except Exception as e:
+        logger.error(f"Error stopping board OCR pipeline: {e}")
+    _mark_pipeline_completed(pipe)
+
+
+def _pipeline_completed(pipe: BoardOCRPipeline) -> None:
+    """Release a naturally completed worker without waiting for VA shutdown."""
+    global _active_pipeline
+    with _controller_lock:
+        if _active_pipeline is not pipe:
+            return
+        _active_pipeline = None
+    _mark_pipeline_completed(pipe)
+
+
+def _mark_pipeline_completed(pipe: BoardOCRPipeline) -> None:
+    mark("board_ocr-completed", pipe.session_id, STAGE_BOARD_OCR, "end")
+    logger.info(f"Board OCR controller: completed (session={pipe.session_id})")
 
 
 def get_status(session_id: str) -> str:

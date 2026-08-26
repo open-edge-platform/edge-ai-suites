@@ -45,6 +45,7 @@ UTILIZATION_COUNTER = "Utilization Percentage"
 
 ENGTYPE_3D = "3d"
 ENGTYPE_NEURAL = "neural"
+ENGTYPE_COMPUTE = "compute"
 
 # pid_4_luid_0x00000000_0x0000E7CC_phys_0_eng_0_engtype_Neural
 _LUID_RE = re.compile(r"luid_0x[0-9A-Fa-f]+_0x[0-9A-Fa-f]+", re.IGNORECASE)

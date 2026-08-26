@@ -367,13 +367,30 @@ models:
   text_gen:
     enabled: true
     provider: vlm
-    vlm_name: Qwen/Qwen3.6-35B-A3B
-    # Qwen/Qwen3.6-35B-A3B and Qwen/Qwen3.5-9B are also supported; both are
-    # validated only on device: GPU with weight_format: int8.
+    vlm_name: Qwen/Qwen3.8-27B
+    # Qwen/Qwen3.8-27B, Qwen/Qwen3.6-35B-A3B and Qwen/Qwen3.5-9B are also
+    # supported; all are validated only on device: GPU with weight_format: int8.
+    # Qwen/Qwen3.8-27B is published as an EXPERIMENTAL OpenVINO IR and needs the
+    # OpenVINO 2026.4.0 nightly stack on top of requirements.txt:
+    #   pip install -r requirements-qwen3.8.txt
+    # Its IR lives in models/openvino/Qwen3.8-27B/int8 (~26 GB of weights).
     device: GPU # GPU or CPU
     weight_format: int8 # int4,int 8-- shared with content_search.vlm.weight_format
     max_new_tokens: 5120
     context_length: 160000 # input token budget; prompts trim to context_length - max_new_tokens
+    # Reasoning budget for requests that leave thinking on (Qwen3.8 only; older
+    # templates ignore it). low | medium | xhigh, or Null.
+    #
+    # Null is the default and means "pass nothing" -- the model resolves its own
+    # default (xhigh) exactly as it would have before this knob existed, which
+    # keeps behaviour identical to the pre-Qwen3.8 code path. Set it only to
+    # deliberately cap a caller that leaves thinking on.
+    #
+    # This does NOT affect Summary or Mind map: both render their prompt through
+    # utils.prompt_budget.render_summarizer_prompt, which sets
+    # enable_thinking=False, so no reasoning pass runs there at all. It only
+    # reaches /v1/chat/completions callers that omit enable_thinking.
+    reasoning_effort: Null
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
 
@@ -407,40 +424,14 @@ mindmap:
       11. Do NOT include any markdown formatting, code fences, or explanatory text
       12. Output only the raw JSON structure
       13. Always return a valid JSON structure.
- 
-      Example of GOOD specificity:
-      {
-        "meta": {
-          "name": "physics_lecture",
-          "author": "ai_assistant", 
-          "version": "1.0"
-        },
-        "format": "node_tree",
-        "data": {
-          "id": "root",
-          "topic": "Quantum Mechanics and Wave Theory",
-          "children": [
-            {
-              "id": "wave_particle_duality",
-              "topic": "Wave-Particle Duality",
-              "children": [
-                {"id": "photon_behavior", "topic": "Photons exhibit both wave and particle properties"},
-                {"id": "double_slit", "topic": "Double-slit experiment demonstrates interference"},
-                {"id": "measurement_effect", "topic": "Measurement collapses wave function"}
-              ]
-            },
-            {
-              "id": "uncertainty_principle",
-              "topic": "Heisenberg Uncertainty Principle",
-              "children": [
-                {"id": "position_momentum", "topic": "Cannot precisely know both position and momentum"},
-                {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 mathematical relationship"},
-                {"id": "quantum_limitations", "topic": "Fundamental limit of quantum measurements"}
-              ]
-            }
-          ]
-        }
-      }
+      14. Output COMPACT JSON: one single line, no indentation, no line breaks,
+          and no space after ':' or ','. This is a FORMATTING rule only. It must
+          NOT reduce the number of nodes, the depth of the hierarchy, or the
+          level of detail demanded by rules 7-9 — indentation is stripped before
+          the JSON is parsed, so every whitespace character is wasted output.
+
+      Example of GOOD specificity (note the compact formatting):
+      {"meta":{"name":"physics_lecture","author":"ai_assistant","version":"1.0"},"format":"node_tree","data":{"id":"root","topic":"Quantum Mechanics and Wave Theory","children":[{"id":"wave_particle_duality","topic":"Wave-Particle Duality","children":[{"id":"photon_behavior","topic":"Photons exhibit both wave and particle properties"},{"id":"double_slit","topic":"Double-slit experiment demonstrates interference"},{"id":"measurement_effect","topic":"Measurement collapses wave function"}]},{"id":"uncertainty_principle","topic":"Heisenberg Uncertainty Principle","children":[{"id":"position_momentum","topic":"Cannot precisely know both position and momentum"},{"id":"mathematical_formulation","topic":"Δx·Δp ≥ ℏ/2 mathematical relationship"},{"id":"quantum_limitations","topic":"Fundamental limit of quantum measurements"}]}]}}
 
     zh: |
       生成全面的jsMind JSON结构，准确捕获摘要中的所有关键概念。严格遵循以下规则：
@@ -470,40 +461,12 @@ mindmap:
       11. 不要包含任何markdown格式、代码块或解释性文本
       12. 只输出原始JSON结构
       13. 始终返回有效的JSON结构。
- 
-      良好特异性示例：
-      {
-        "meta": {
-          "name": "物理课程",
-          "author": "人工智能助手",
-          "version": "1.0"
-        },
-        "format": "node_tree", 
-        "data": {
-          "id": "root",
-          "topic": "量子力学与波动理论",
-          "children": [
-            {
-              "id": "波粒二象性",
-              "topic": "波粒二象性",
-              "children": [
-                {"id": "光子特性", "topic": "光子同时表现出波动和粒子特性"},
-                {"id": "双缝实验", "topic": "双缝实验证明干涉现象"},
-                {"id": "测量效应", "topic": "测量导致波函数坍缩"}
-              ]
-            },
-            {
-              "id": "不确定性原理",
-              "topic": "海森堡不确定性原理",
-              "children": [
-                {"id": "位置动量", "topic": "无法同时精确知道位置和动量"},
-                {"id": "数学表达式", "topic": "Δx·Δp ≥ ℏ/2 数学关系"},
-                {"id": "量子限制", "topic": "量子测量的基本限制"}
-              ]
-            }
-          ]
-        }
-      }
+      14. 输出紧凑的单行JSON：不要缩进、不要换行、':' 和 ',' 后不要加空格。
+          这只是格式要求，不得因此减少节点数量、层级深度，或规则7-9要求的细节。
+          JSON在解析前会忽略缩进，所以每一个空白字符都是被浪费的输出。
+
+      良好特异性示例（注意紧凑格式）：
+      {"meta":{"name":"物理课程","author":"人工智能助手","version":"1.0"},"format":"node_tree","data":{"id":"root","topic":"量子力学与波动理论","children":[{"id":"波粒二象性","topic":"波粒二象性","children":[{"id":"光子特性","topic":"光子同时表现出波动和粒子特性"},{"id":"双缝实验","topic":"双缝实验证明干涉现象"},{"id":"测量效应","topic":"测量导致波函数坍缩"}]},{"id":"不确定性原理","topic":"海森堡不确定性原理","children":[{"id":"位置动量","topic":"无法同时精确知道位置和动量"},{"id":"数学表达式","topic":"Δx·Δp ≥ ℏ/2 数学关系"},{"id":"量子限制","topic":"量子测量的基本限制"}]}]}}
   min_token: 20
 
 audio_preprocessing:

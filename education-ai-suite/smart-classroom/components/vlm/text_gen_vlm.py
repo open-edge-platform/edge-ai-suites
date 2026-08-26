@@ -25,6 +25,10 @@ _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
 
 _DEFAULT_MAX_NEW_TOKENS = 5120
 
+# Reasoning budgets accepted by the Qwen3.8 chat template. Its default is
+# "xhigh"; anything outside this set makes the template raise.
+_REASONING_EFFORTS = ("low", "medium", "xhigh")
+
 
 def _import_convert_helpers():
     if str(_CONTENT_SEARCH_DIR) not in sys.path:
@@ -47,6 +51,7 @@ class VLMTextGen:
         self._device: Optional[str] = None
         self._weight_format: Optional[str] = None
         self._max_new_tokens: int = _DEFAULT_MAX_NEW_TOKENS
+        self._reasoning_effort: Optional[str] = None
         self._load_config()
         self._load()
 
@@ -72,6 +77,25 @@ class VLMTextGen:
         self._max_new_tokens = int(
             getattr(text_gen, "max_new_tokens", _DEFAULT_MAX_NEW_TOKENS)
         )
+        self._reasoning_effort = self._resolve_reasoning_effort(
+            getattr(text_gen, "reasoning_effort", None)
+        )
+
+    @staticmethod
+    def _resolve_reasoning_effort(configured) -> Optional[str]:
+        """Validate ``models.text_gen.reasoning_effort``, or ``None`` if unset."""
+        if not configured:
+            return None
+        effort = str(configured).strip().lower()
+        if effort not in _REASONING_EFFORTS:
+            logger.warning(
+                "Ignoring unsupported models.text_gen.reasoning_effort=%r; "
+                "expected one of %s.",
+                configured,
+                ", ".join(_REASONING_EFFORTS),
+            )
+            return None
+        return effort
 
     def _model_dir(self) -> Path:
         """Return the shared IR directory ``models/openvino/<name>/<weight>``."""
@@ -163,9 +187,10 @@ class VLMTextGen:
         ``ov.Tensor`` frames, already decoded by the caller) enables the
         multimodal path used by content-search video summarization; when
         omitted the call is text-only. ``enable_thinking=False`` suppresses
-        Qwen3 thinking for this request only; ``None`` keeps the model default.
-        ``json_schema`` (a JSON-schema string) constrains decoding to output
-        matching that schema.
+        Qwen3 thinking for this request only; ``None`` keeps the model default,
+        capped by ``models.text_gen.reasoning_effort`` where the template
+        supports it. ``json_schema`` (a JSON-schema string) constrains decoding
+        to output matching that schema.
 
         ``pre_templated=True`` means ``prompt`` is already a fully rendered chat
         template (see ``utils.prompt_budget.render_summarizer_prompt``), so the
@@ -182,8 +207,12 @@ class VLMTextGen:
         config = self._generation_config(max_new_tokens, temperature, json_schema)
         if pre_templated:
             config.apply_chat_template = False
-        elif enable_thinking is False:
-            prompt = self._apply_no_think_template(prompt, config, bool(images))
+        else:
+            template_kwargs = self._template_kwargs(enable_thinking)
+            if template_kwargs:
+                prompt = self._apply_chat_template(
+                    prompt, config, bool(images), template_kwargs
+                )
         if stream:
             return self._generate_stream(prompt, config, images)
         if images:
@@ -192,19 +221,43 @@ class VLMTextGen:
             )
         return str(self._pipe.generate(prompt, generation_config=config))
 
-    def _apply_no_think_template(
-        self, prompt: str, config: "ov_genai.GenerationConfig", has_images: bool
+    def _template_kwargs(self, enable_thinking: Optional[bool]) -> dict:
+        """Chat-template kwargs for this request, ``{}`` to let the pipeline template.
+
+        ``enable_thinking=False`` turns reasoning off outright. When thinking is
+        left at the model default, Qwen3.8's template resolves
+        ``reasoning_effort`` to ``xhigh``, which prefixes every answer with a long
+        reasoning pass; the configured ``models.text_gen.reasoning_effort`` caps
+        that. Templates that predate the flag (Qwen3.5/3.6, Qwen3-VL) ignore the
+        key, so passing it is harmless there.
+        """
+        if enable_thinking is False:
+            return {"enable_thinking": False}
+        if self._reasoning_effort:
+            return {"reasoning_effort": self._reasoning_effort}
+        return {}
+
+    def _apply_chat_template(
+        self,
+        prompt: str,
+        config: "ov_genai.GenerationConfig",
+        has_images: bool,
+        template_kwargs: dict,
     ) -> str:
         try:
             media_tags = "<ov_genai_image_0>" if has_images else ""
             history = [{"role": "user", "content": media_tags + prompt}]
             templated = self._pipe.get_tokenizer().apply_chat_template(
-                history, True, "", None, {"enable_thinking": False}
+                history, True, "", None, template_kwargs
             )
             config.apply_chat_template = False
             return templated
-        except Exception as exc:  # noqa: BLE001 - fall back to raw prompt with think
-            logger.warning("no-think template failed (%s); using raw prompt", exc)
+        except Exception as exc:  # noqa: BLE001 - fall back to the pipeline default
+            logger.warning(
+                "chat template %s failed (%s); using raw prompt",
+                template_kwargs,
+                exc,
+            )
             return prompt
 
     def _generation_config(

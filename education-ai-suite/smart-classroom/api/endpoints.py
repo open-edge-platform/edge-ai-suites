@@ -249,6 +249,32 @@ def stop_monitoring_endpoint():
 # Global video analytics service instances per session
 va_services = {}  # {session_id: VideoAnalyticsPipelineService}
 
+
+def _pipeline_launch_failed(req, session_id: str, error: str) -> dict:
+    """Log a VA launch failure, record it on the timeline, and build the result.
+
+    A pipeline that never launches emits no start/end boundary, so without this
+    marker the session timeline shows the video API opening and closing with
+    nothing in between — indistinguishable from an audio-only run. The result
+    dict is still returned inside a 200 response (callers request several
+    pipelines and each can fail independently).
+    """
+    logger.error(
+        f"Failed to start VA pipeline '{req.pipeline_name}' for session "
+        f"{session_id} (source={req.source!r}): {error}"
+    )
+    mark(
+        f"va_pipeline-{req.pipeline_name} launch failed: {error}",
+        session_id,
+        STAGE_VIDEO,
+    )
+    return {
+        "status": "error",
+        "pipeline_name": req.pipeline_name,
+        "session_id": session_id,
+        "error": error,
+    }
+
 @router.post("/start-video-analytics-pipeline")
 def start_video_analytics_pipeline(
     http_request: Request,
@@ -344,24 +370,6 @@ def start_video_analytics_pipeline(
                     except Exception as _e:
                         logger.error(f"[VA done] Failed to generate/send reports: {_e}", exc_info=True)
 
-                    # Board OCR: stop only if eos/stopped
-                    try:
-                        from components.board_ocr.board_ocr_pipeline import (
-                            stop_board_ocr,
-                        )
-                        content_status = _svc.pipeline_final_status.get("content")
-                        if content_status == "failed":
-                            logger.info(
-                                "[VA done] content pipeline failed after max retries; "
-                                "leaving board OCR running (reads source directly)."
-                            )
-                        else:
-                            stop_board_ocr(session_id)
-                    except Exception as _e:
-                        logger.error(
-                            f"[VA done] Failed to stop board OCR: {_e}",
-                            exc_info=True,
-                        )
                 va_services[x_session_id].on_all_pipelines_done = _on_all_pipelines_done
                 # ───────────────────────────────────────────────────────────────────────────
 
@@ -406,12 +414,11 @@ def start_video_analytics_pipeline(
                     )
 
                     if not success:
-                        return {
-                            "status": "error",
-                            "pipeline_name": req.pipeline_name,
-                            "session_id": x_session_id,
-                            "error": f"Failed to start pipeline '{req.pipeline_name}'",
-                        }
+                        return _pipeline_launch_failed(
+                            req,
+                            x_session_id,
+                            f"Failed to start pipeline '{req.pipeline_name}'",
+                        )
                     else:
                         if config.va_pipeline.stream_protocol == "webrtc":
                             stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
@@ -426,13 +433,10 @@ def start_video_analytics_pipeline(
                             "overlays_embedded": True,
                         }
                 except Exception as e:
-                    logger.error(f"Error starting pipeline '{req.pipeline_name}': {e}")
-                    return {
-                        "status": "error",
-                        "pipeline_name": req.pipeline_name,
-                        "session_id": x_session_id,
-                        "error": str(e),
-                    }
+                    # launch_pipeline raises ValueError for a missing or
+                    # undecodable source before it ever spawns GStreamer, so
+                    # this is the path a bad `source` takes.
+                    return _pipeline_launch_failed(req, x_session_id, str(e))
 
             def _launch_single_delayed(req, record, delay):
                 time.sleep(delay)
@@ -447,6 +451,19 @@ def start_video_analytics_pipeline(
                 ]
                 results = [f.result() for f in futures]
 
+            launched = [r for r in results if r.get("status") == "success"]
+            if not launched:
+                logger.error(
+                    f"Session {x_session_id}: no video analytics pipeline started "
+                    f"({len(results)} requested). This session will produce no VA "
+                    f"artifacts and no Video stage."
+                )
+            elif len(launched) < len(results):
+                logger.warning(
+                    f"Session {x_session_id}: {len(results) - len(launched)} of "
+                    f"{len(results)} video analytics pipelines failed to start."
+                )
+
             # Board OCR: bring up the twin pipeline for the content source.
             # It reads the source directly, so start it even if the VA content
             # pipeline itself failed to launch/stay up — as long as a content
@@ -456,11 +473,33 @@ def start_video_analytics_pipeline(
                     (r for r in requests if r.pipeline_name == "content"), None
                 )
                 eff = getattr(http_request.app.state, "features", None)
-                if content_req and eff is not None and eff.is_enabled("board_ocr"):
+                if content_req is None:
+                    # Board OCR reads the content source; front/back-only
+                    # requests have nothing for it to read.
+                    logger.info(
+                        f"Session {x_session_id}: no 'content' pipeline requested; "
+                        f"board OCR not started."
+                    )
+                elif eff is None:
+                    logger.error(
+                        f"Session {x_session_id}: app.state.features is unset; "
+                        f"cannot tell whether board OCR is enabled — not started."
+                    )
+                elif not eff.is_enabled("board_ocr"):
+                    logger.info(
+                        f"Session {x_session_id}: board_ocr feature disabled; "
+                        f"board OCR not started."
+                    )
+                else:
                     from components.board_ocr.board_ocr_pipeline import (
                         start_board_ocr,
                     )
-                    start_board_ocr(x_session_id, content_req.source)
+                    if not start_board_ocr(x_session_id, content_req.source):
+                        logger.error(
+                            f"Session {x_session_id}: board OCR pipeline refused to "
+                            f"start for source {content_req.source!r}; there will be "
+                            f"no Board OCR stage or board_ocr.txt."
+                        )
             except Exception as _e:
                 logger.error(f"Failed to start board OCR pipeline: {_e}", exc_info=True)
 
@@ -468,6 +507,11 @@ def start_video_analytics_pipeline(
 
         except Exception as e:
             logger.error(f"Error starting video analytics pipelines: {e}")
+            mark(
+                f"video-pipeline-API-failed: {e}",
+                x_session_id,
+                STAGE_VIDEO,
+            )
             raise HTTPException(status_code=500, detail=str(e))
         finally:
             mark("video-pipeline-API-completed", x_session_id, STAGE_VIDEO)

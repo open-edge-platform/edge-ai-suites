@@ -13,6 +13,7 @@ from components.board_ocr.board_ocr_service import (
 )
 from utils.config_loader import config
 from utils.markdown_cleaner import strip_think_tokens
+from utils.model_family import is_qwen3_dense
 
 logger = logging.getLogger(__name__)
 
@@ -87,7 +88,10 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
 
     model_name = str(config.models.text_gen.vlm_name)
     user_content = board_text
-    if "qwen3" in model_name.lower() and not user_content.lstrip().startswith("/no_think"):
+    # Only the dense Qwen3 models honour the /no_think soft switch. The native
+    # VLMs (Qwen3.5/3.6/3.8) ignore it and would just read it as board text --
+    # thinking is turned off for them by enable_thinking below.
+    if is_qwen3_dense(model_name) and not user_content.lstrip().startswith("/no_think"):
         user_content = "/no_think\n" + board_text
 
     messages = [

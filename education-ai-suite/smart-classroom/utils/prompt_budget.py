@@ -3,8 +3,10 @@
 
 """Context-length aware prompt rendering for the ``text_gen`` VLM.
 
-The Qwen3.x MoE VLMs (Qwen3.6-35B-A3B, Qwen3.5-9B) support very long contexts
-(default 160k tokens, see config ``models.text_gen.context_length``). On CPU/GPU
+The Qwen3.x native VLMs (Qwen3.8-27B, Qwen3.6-35B-A3B, Qwen3.5-9B) support very
+long contexts -- 262k positions, bounded here to a default 160k tokens by
+``models.text_gen.context_length``, which keeps KV-cache growth in check on a
+single GPU. On CPU/GPU
 the pipeline uses dynamic shapes, so there is no runtime knob for the context
 limit; we bound it here at build time instead by trimming the user content to
 fit the configured budget.

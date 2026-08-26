@@ -1,9 +1,11 @@
 from utils.platform_info import get_platform_and_model_info
+import os
 import sys
 import re
 import subprocess
 import shutil
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -13,6 +15,57 @@ REQUIRED_PYTHON_MAJOR = 3
 REQUIRED_PYTHON_MINOR = 12
 REQUIRED_NODE_MAJOR = 18  # Minimum required Node.js version
 MIN_DLSTREAMER_VERSION = (2026, 1, 0)
+
+
+def _configure_windows_dlstreamer_environment() -> bool:
+    """Activate an installed DL Streamer for the current Python process."""
+    if sys.platform != "win32":
+        return False
+
+    try:
+        import winreg
+
+        with winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Intel\dlstreamer"
+        ) as key:
+            install_dir, _ = winreg.QueryValueEx(key, "InstallDir")
+
+        dlstreamer_bin = Path(install_dir).resolve() / "bin"
+        if not dlstreamer_bin.is_dir():
+            logger.error("DL Streamer bin directory not found: %s", dlstreamer_bin)
+            return False
+
+        gstreamer_root = os.environ.get("GSTREAMER_1_0_ROOT_MSVC_X86_64")
+        if not gstreamer_root:
+            gstreamer_root = os.environ.get("GSTREAMER_1_0_ROOT_X86_64")
+        if not gstreamer_root:
+            logger.error(
+                "GStreamer root environment variable is not set; cannot activate DL Streamer."
+            )
+            return False
+
+        gstreamer_bin = Path(gstreamer_root).resolve() / "bin"
+        if not gstreamer_bin.is_dir():
+            logger.error("GStreamer bin directory not found: %s", gstreamer_bin)
+            return False
+
+        existing_path = os.environ.get("PATH", "").split(os.pathsep)
+        required_paths = [str(dlstreamer_bin), str(gstreamer_bin)]
+        normalized_required = {os.path.normcase(path) for path in required_paths}
+        remaining_paths = [
+            path
+            for path in existing_path
+            if path and os.path.normcase(path) not in normalized_required
+        ]
+
+        os.environ["DLSTREAMER_DIR"] = str(Path(install_dir).resolve())
+        os.environ["GST_PLUGIN_PATH"] = str(dlstreamer_bin)
+        os.environ["PATH"] = os.pathsep.join(required_paths + remaining_paths)
+        logger.info("Activated DL Streamer environment from %s", install_dir)
+        return True
+    except (FileNotFoundError, OSError) as error:
+        logger.error("Could not activate DL Streamer from the Windows registry: %s", error)
+        return False
 
 
 def check_meteor_lake(processor_name: str) -> bool:
@@ -83,12 +136,14 @@ def check_dlstreamer_installation() -> bool:
     """
     try:
         gst_inspect_path = shutil.which("gst-inspect-1.0")
+        if gst_inspect_path is None and _configure_windows_dlstreamer_environment():
+            gst_inspect_path = shutil.which("gst-inspect-1.0")
         if gst_inspect_path is None:
             logger.error("❌ gst-inspect-1.0 is not installed or not found in PATH.")
             return False
 
         result = subprocess.run(
-            ["gst-inspect-1.0.exe", "gvadetect"],
+            [gst_inspect_path, "gvadetect"],
             capture_output=True,
             text=True,
             encoding="utf-8",

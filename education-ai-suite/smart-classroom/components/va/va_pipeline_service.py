@@ -22,7 +22,20 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.artifacts.path import get_artifact_path
 from utils.system_checker import check_dlstreamer_installation
 from utils.time_marker import mark
-from monitoring.stage_metrics import STAGE_VIDEO
+from monitoring.stage_metrics import STAGE_VIDEO, va_stage
+
+
+def _mark_va_boundary(event: str, session_id: str, pipeline_name: str, boundary: str):
+    """Record a VA start/end boundary on both the umbrella and per-pipeline stage.
+
+    ``Video`` keeps spanning all three pipelines as one window; the per-pipeline
+    ``VA Front`` / ``VA Back`` / ``VA Content`` windows break that down so a
+    single pipeline exiting early is visible in ``stage_metrics.csv``.
+    """
+    mark(event, session_id, STAGE_VIDEO, boundary)
+    stage = va_stage(pipeline_name)
+    if stage:
+        mark(event, session_id, stage, boundary)
 
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
@@ -361,10 +374,10 @@ class VideoAnalyticsPipelineService:
             # Check every 2 seconds
             time.sleep(2)
 
-        mark(
+        _mark_va_boundary(
             f"va_pipeline-{pipeline_name}-completed _monitor_pipeline",
             self.x_session_id,
-            STAGE_VIDEO,
+            pipeline_name,
             "end",
         )
 
@@ -431,10 +444,10 @@ class VideoAnalyticsPipelineService:
             self.pipeline_logs[pipeline_name] = log_file
             self.pipeline_log_handles[pipeline_name] = log_handle
 
-            mark(
+            _mark_va_boundary(
                 f"va_pipeline-{pipeline_name} launched",
                 self.x_session_id,
-                STAGE_VIDEO,
+                pipeline_name,
                 "start",
             )
 
