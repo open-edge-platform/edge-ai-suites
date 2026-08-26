@@ -16,7 +16,7 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 2026.2.0-ubuntu24-rc1
+  imageTag: 2026.2.0-ubuntu24-rc2
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4
@@ -28,7 +28,7 @@ nginx:
   imageTag: 1.30.2-alpine
 metrics_service:
   image: intel/metrics-manager
-  imageTag: 2026.2.0-rc1
+  imageTag: 2026.2.0-rc2
 timezone: ""  # Leave empty; set dynamically at install time: --set timezone=$(cat /etc/timezone)
 env:
   ENABLE_WEBRTC: "true"

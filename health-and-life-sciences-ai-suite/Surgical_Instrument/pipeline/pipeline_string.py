@@ -30,8 +30,8 @@ VALID_SOURCE_KINDS = {"file", "basler"}
 # of building up unbounded latency when inference is slower than capture.
 PRE_DETECT_QUEUE_FILE   = "queue max-size-buffers=1"
 POST_DETECT_QUEUE_FILE  = "queue max-size-buffers=1"
-PRE_DETECT_QUEUE_LIVE   = "queue max-size-buffers=1 leaky=downstream"
-POST_DETECT_QUEUE_LIVE  = "queue max-size-buffers=1 leaky=downstream"
+PRE_DETECT_QUEUE_LIVE   = "queue "
+POST_DETECT_QUEUE_LIVE  = "queue "
 
 
 def _build_source(
@@ -44,6 +44,7 @@ def _build_source(
     basler_fixed_camera: bool = False,
     basler_exposure_us: str | None = None,
     basler_gain: str | None = None,
+    basler_throughput_limit: str | None = None,
 ) -> tuple[list[str], str]:
     """Return the source elements and the matching gvadetect preproc backend."""
     kind = kind.lower()
@@ -71,11 +72,20 @@ def _build_source(
             "width=1280",
             "height=720",
         ]
+        # DeviceLinkThroughputLimit (bytes/sec) caps camera streaming rate; the
+        # default 160 MB/s throttles dart cameras. Applied regardless of
+        # fixed-camera mode since it is not an auto-exposure setting.
+        if basler_throughput_limit:
+            source_props.append(
+                f"throughput-limit={shlex.quote(basler_throughput_limit)}"
+            )
         if basler_fixed_camera:
-            source_props.extend(["exposure-auto=off", "gain-auto=off"])
+            source_props.append("exposure-auto=off")
             if basler_exposure_us:
                 source_props.append(f"exposure-time={shlex.quote(basler_exposure_us)}")
+            # gain-auto=off is only pinned when an explicit gain is supplied.
             if basler_gain:
+                source_props.append("gain-auto=off")
                 source_props.append(f"gain={shlex.quote(basler_gain)}")
         gencamsrc_elem = f"gencamsrc {' '.join(source_props)}"
         is_bayer = basler_pixel_format.lower().startswith("bayer")
@@ -107,12 +117,12 @@ def _build_source(
                 gencamsrc_elem,
                 "bayer2rgb",
                 "videoconvert",
-                "video/x-raw,format=NV12",
+                "video/x-raw",
             ], "ie"
         return [
             gencamsrc_elem,
             "videoconvert",
-            "video/x-raw,format=NV12",
+            "video/x-raw",
         ], "ie"
     raise ValueError(f"unsupported source_kind: {kind!r} (want file|basler)")
 
@@ -143,6 +153,7 @@ def build(
     basler_fixed_camera: bool = False,
     basler_exposure_us: str | None = None,
     basler_gain: str | None = None,
+    basler_throughput_limit: str | None = None,
 ) -> str:
     """Return the finalized single-branch gst-launch pipeline string.
 
@@ -170,6 +181,7 @@ def build(
         basler_fixed_camera=basler_fixed_camera,
         basler_exposure_us=basler_exposure_us,
         basler_gain=basler_gain,
+        basler_throughput_limit=basler_throughput_limit,
     )
 
     if requested_pre_proc:
@@ -201,7 +213,7 @@ def build(
     gvadetect_parts = [
         f"gvadetect model={model_arg} device={dev} threshold={threshold}",
         f"pre-process-backend={pre_proc}",
-        "nireq=1",
+      
     ]
     if ie_config:
         gvadetect_parts.append(f"ie-config={ie_config}")
@@ -270,7 +282,6 @@ if __name__ == "__main__":  # smoke: `python3 pipeline_string.py [file|basler]`
             source_arg=arg,
             ir_xml="/models/yolo11n_polyp/best_openvino_model/best.xml",
             device="GPU",
-            threshold=0.5,
             target_fps=60,
             frame_limit=3000,
             display_view=True,

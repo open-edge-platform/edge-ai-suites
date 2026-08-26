@@ -25,6 +25,7 @@ LEVEL1_KPI = {
     'jitter_stdev_ms': 1.0,
     'cpu_mean_pct': 30.0,
     'cpu_max_pct': 60.0,
+    'latency_spikes': [],
     'per_node': {
         '/camera_node': {
             'throughput_hz': 20.0,

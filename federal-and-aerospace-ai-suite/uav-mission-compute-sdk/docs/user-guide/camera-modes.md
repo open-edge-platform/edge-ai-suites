@@ -411,8 +411,11 @@ usb-camera (implies):
 ### View Streams Locally
 
 ```bash
-# Install ffplay if needed
-sudo apt install ffmpeg
+# Install prerequisites if needed.
+# If `xdg-utils` shows "no installation candidate", enable the Ubuntu `main`
+# /`universe` repos and refresh the cache first:
+# `sudo add-apt-repository universe && sudo apt update`.
+sudo apt install ffmpeg mosquitto-clients xdg-utils -y
 
 # View raw camera feed
 ffplay rtsp://localhost:8554/uav-1/nadir

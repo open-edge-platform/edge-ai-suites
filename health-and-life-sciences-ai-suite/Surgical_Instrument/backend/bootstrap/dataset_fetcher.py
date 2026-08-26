@@ -1,13 +1,11 @@
-"""Prepare the CVC-ColonDB training dataset from a user-supplied raw drop.
+"""Prepare the ColonDB training dataset from a user-supplied raw drop.
 
-The customer downloads CVC-ColonDB directly from the CVC lab
-(http://mv.cvc.uab.es/projects/colon-qa/cvccolondb, research-use license),
-accepts their terms, and drops the archive or extracted folder into
+The customer downloads ColonDB and drops the archive or extracted folder into
 ``dataset.raw_dir``. This module then:
 
 1. If ``raw_dir`` contains a single archive (``.zip`` / ``.tar`` / ``.tar.gz`` /
    ``.tgz``), extracts it in-place.
-2. Auto-detects the images + masks sub-directories under ``raw_dir`` (CVC
+2. Auto-detects the images + masks sub-directories under ``raw_dir`` (dataset
    distributions vary — ``images``/``masks``, ``original``/``mask``, etc.).
 3. Converts each binary mask to YOLO bounding boxes via OpenCV
    ``connectedComponentsWithStats`` — same well-known technique used by
@@ -18,7 +16,7 @@ accepts their terms, and drops the archive or extracted folder into
 Cache-hit: if ``output_dir/data.yaml`` already exists on a subsequent run,
 we skip all of the above and return it directly.
 
-We never redistribute CVC data — the archive must come from the user.
+We never redistribute data set — the archive must come from the user.
 """
 from __future__ import annotations
 
@@ -50,7 +48,7 @@ def ensure_dataset(
     """Return an absolute path to a ready-to-train ``data.yaml``.
 
     Raises :class:`DatasetError` with a customer-actionable message when the
-    user hasn't dropped the CVC archive yet.
+    user hasn't dropped the dataset archive yet.
     """
     output_dir = Path(cfg["output_dir"]).resolve()
     data_yaml = output_dir / "data.yaml"
@@ -144,19 +142,7 @@ def clear_dataset(output_dir: Path) -> None:
 
 def _missing_raw_message(raw_dir: Path, name: str) -> str:
     return (
-        f"\n{name} raw data not found at {raw_dir}\n"
-        "\n"
-        "This product does not redistribute the CVC-ColonDB dataset. Please:\n"
-        "  1) Visit https://pages.cvc.uab.es/CVC-Colon/index.php/databases/\n"
-        "  2) Download CVC-ColonDB from http://mv.cvc.uab.es/projects/colon-qa/cvccolondb\n"
-        "     (accept the CVC research-use license on their site)\n"
-        f"  3) Place the .zip / .tar.gz archive (or the extracted folder) inside:\n"
-        f"       {raw_dir}\n"
-        "  4) Re-run `make backend-bootstrap`.\n"
-        "\n"
-        "Citation required in any downstream use:\n"
-        "  Bernal, Sánchez, Vilariño (2012). Towards automatic polyp detection\n"
-        "  with a polyp appearance model. Pattern Recognition 45(9), 3166-3182.\n"
+        f"\n{name} raw data not found at {raw_dir} \n"
     )
 
 
@@ -203,7 +189,6 @@ def _autodetect_layout(raw_dir: Path) -> tuple[Path, Path]:
     images_hits = [d for d in images_hits if _has_files_with_exts(d, _IMAGE_EXTS)]
     masks_hits = [d for d in masks_hits if _has_files_with_exts(d, _MASK_EXTS)]
 
-    # Prefer siblings that share a parent (typical CVC layout).
     for img in images_hits:
         for msk in masks_hits:
             if img.parent == msk.parent and img != msk:

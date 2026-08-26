@@ -102,10 +102,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.20.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.20.0-rc2
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.20.0-rc1.tgz
+tar -xvf smart-intersection-1.20.0-rc2.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart
@@ -246,6 +246,13 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 ## Deploy with Trusted Compute
 
 To deploy the Smart Intersection application with Intel Trusted Compute for hardware-isolated workloads (CPU or GPU passthrough), refer to the [Deploy with Trusted Compute using Helm](./deploy-with-trusted-compute-helm.md) guide.
+
+## Uninstall the application and delete the namespace
+
+```bash
+helm uninstall smart-intersection -n smart-intersection
+kubectl delete namespace smart-intersection
+```
 
 ## Complete Cleanup
 

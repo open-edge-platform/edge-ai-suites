@@ -12,11 +12,13 @@ application.
 
 ## Version 1.4.0
 
+**Release Date**: September 9, 2026
+
 **New**
 
 - Python libraries and npm package updates.
 
-**Improved:**
+**Improved**
 
 - Consumed latest DL Streamer version 2026.2.0.
 

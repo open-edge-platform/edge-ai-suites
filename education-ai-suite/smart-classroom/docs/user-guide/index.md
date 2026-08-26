@@ -53,6 +53,8 @@ The main features are as follows:
 ./how-it-works
 ./application-flow
 ./content-search-flow
+./class-report-flow
+./grading-flow
 Release Notes <./release-notes>
 
 :::

@@ -16,6 +16,7 @@
     "jitter_stdev_ms",
     "cpu_mean_pct",
     "cpu_max_pct",
+    "latency_spikes",
     "per_node",
     "pairs",
     "metadata"
@@ -243,6 +244,72 @@
             "type": "string",
             "enum": ["Sensor", "Perception", "Planning", "Control", "Other"],
             "description": "Pipeline stage classification for this node pair."
+          }
+        }
+      }
+    },
+    "latency_spikes": {
+      "type": "array",
+      "description": "Latency outliers (events at or above their own pair's p99_ms) cross-referenced against the nearest resource_usage.json sample by timestamp, identifying top CPU consumers at each spike. Empty when resource_usage.json is absent or no event meets its pair's threshold. Capped to --max-latency-spikes entries (default 5), sorted by latency_ms descending.",
+      "items": {
+        "type": "object",
+        "required": ["node", "input", "output", "out_ts", "latency_ms",
+                     "resource_sample_ts", "time_delta_sec", "top_consumers"],
+        "additionalProperties": false,
+        "properties": {
+          "node": {
+            "type": "string",
+            "description": "Fully-qualified ROS 2 node name."
+          },
+          "input": {
+            "type": "string",
+            "description": "Input topic name for this pair."
+          },
+          "output": {
+            "type": "string",
+            "description": "Output topic name for this pair."
+          },
+          "out_ts": {
+            "type": "number",
+            "description": "Epoch-seconds timestamp of the outlier output message."
+          },
+          "latency_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Observed latency for this event, in milliseconds."
+          },
+          "resource_sample_ts": {
+            "type": ["number", "null"],
+            "description": "Epoch-seconds timestamp of the nearest resource_usage.json sample."
+          },
+          "time_delta_sec": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Absolute time gap between out_ts and the matched resource sample."
+          },
+          "top_consumers": {
+            "type": "array",
+            "description": "Top CPU-consuming processes at the matched resource sample.",
+            "items": {
+              "type": "object",
+              "required": ["pid", "node", "cpu_pct"],
+              "additionalProperties": false,
+              "properties": {
+                "pid": {
+                  "type": "integer",
+                  "description": "Process ID at capture time."
+                },
+                "node": {
+                  "type": ["string", "null"],
+                  "description": "ROS 2 node name from ros2_node_map, or null if unmapped."
+                },
+                "cpu_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "CPU utilization percentage (100% = 1 core) at that sample."
+                }
+              }
+            }
           }
         }
       }

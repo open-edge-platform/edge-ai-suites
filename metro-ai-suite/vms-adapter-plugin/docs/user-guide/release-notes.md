@@ -1,5 +1,7 @@
 # Release Notes
 
+**Release Date**: September 9, 2026
+
 ## Version 1.0.0
 
 **New**

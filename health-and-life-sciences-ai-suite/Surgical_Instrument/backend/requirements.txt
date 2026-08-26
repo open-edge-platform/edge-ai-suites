@@ -7,7 +7,7 @@ psutil==6.0.0
 
 # --- Runtime architecture note ---
 # The heavy inference stack (Ultralytics + torch + OpenCV) is still needed
-# for first-boot bootstrap (weights fetch → CVC-ColonDB train → OpenVINO
+# for first-boot bootstrap (weights fetch → ColonDB train → OpenVINO
 # export). Runtime inference itself happens inside `surgical-pipeline`.
 
 # --- Bootstrap-only: training + export (Ultralytics + OpenVINO) ---
