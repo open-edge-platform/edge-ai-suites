@@ -12,6 +12,13 @@
 # Everything below is therefore an explicit dependency — slim ships none of it.
 FROM node:22-trixie-slim
 
+# Security updates first: Docker Hub's official slim images lag the Debian
+# repos, so preinstalled base-layer packages (e.g. util-linux 2.41-5) can carry
+# CVEs that already have fixes in trixie (e.g. 2.41.5-0+deb13u1). A plain
+# rebuild without this layer keeps the stale base-layer debs forever.
+RUN apt-get update -y && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # Runtime deps:
 #   ffmpeg          — for scene_query frame resize
 #   jq              — bundled use-case registration in the entrypoint
@@ -89,6 +96,9 @@ COPY config.yaml.example monitors.yaml.example ./
 
 COPY docker/mcp-server/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+RUN apt-get purge -y --allow-remove-essential perl-base \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN groupmod -n appuser node \
     && usermod -l appuser -d /home/appuser -m node

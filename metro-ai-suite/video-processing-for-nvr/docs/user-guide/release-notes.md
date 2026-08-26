@@ -1,12 +1,8 @@
 # Release Notes: Video Processing for NVR
 
-<!--## Version 2026.2.0-->
-
-<!--date TBD-->
-
 ## Version 2026.2.0
 
-**Aug 19, 2026**
+**Release Date**: September 9, 2026
 
 **Improved**
 

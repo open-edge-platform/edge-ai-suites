@@ -38,7 +38,7 @@ Below the table:
 
 - **End-to-end summary bar** — pipeline FPS · sample count · uptime · source kind.
 - **Model & Input block** — model name, precision (`FP16 OpenVINO IR`),
-  task/dataset (`Polyp Detection` on `CVC-ColonDB`), **video source** resolution
+  task/dataset (`Polyp Detection` on `ColonDB`), **video source** resolution
   (e.g. `1080p H.264 (looped)`), **model input** tensor size (`640x640`), and the
   runtime **device**.
 

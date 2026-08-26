@@ -23,10 +23,12 @@ a LLM inference server, a speech-to-text service and
 [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 All components of the composite application share the visual pipeline solution's Docker network.
 
+The Handheld Multi-Modal application is deployed on top of the
+[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 Deployment of the the full solution consists of two main stages:
 
-1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) which is an edge computing platform that enables hardware acceleration capabilities,
-2. Installation of the composite Handheld Multi-Modal Application that makes use of the hardware accellerated compute platform.
+1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html),
+2. Installation of the composite Handheld Multi-Modal Application that makes use of the hardware accelerated compute platform.
 
 ## Components of the Handheld Multi-Modal Application
 
@@ -43,13 +45,6 @@ CPU usage, and GPU usage. With its intuitive interface, the tool provides action
 optimized hardware selection and performance tuning.
 
 For more information, see [ViPPET documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
-
-> **Notice:**
-> The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld
-  Multi-Modal Application does not fully support pipelines that utilize
-  [Hugging Face](https://huggingface.co/) models, requiring access approval and downloading
-  via an access token. As a result the Video Summarization VLM pipeline is not available in
-  the preview release.
 
 ### Speech To Text (Whisper Model)
 
@@ -71,7 +66,7 @@ For more information, see [Web UI documentation](https://github.com/open-webui/o
 
 ### Observability
 
-The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/v13.0/), a data visualization and analytics tool. A Grafana Dashboard is
+The application includes [Grafana Open Source (OSS)](https://grafana.com/docs/grafana/latest/), a data visualization and analytics tool. A Grafana Dashboard is
 supplied that aggregates and presents metrics from the components of the application
 and from the underlying platform. Metrics are streamed over websocket to Grafana
 for a live, ephemeral on-device view. Additionally, a Prometheus endpoint is exposed at

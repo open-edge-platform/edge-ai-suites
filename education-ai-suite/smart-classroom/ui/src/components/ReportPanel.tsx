@@ -21,6 +21,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { FeatureGuard } from '../utils/featureGuards';
 import '../assets/css/ReportPanel.css';
+import { useTitleBarTheme } from '../hooks/useTitleBarTheme';
 
 const activeReportSessions = new Set<string>();
 
@@ -57,6 +58,8 @@ interface ReportPanelProps {
 }
 
 const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard }) => {
+  useTitleBarTheme(isOpen, 'light');
+
   const dispatch = useAppDispatch();
   const { i18n, t } = useTranslation();
   const lang: 'en' | 'zh' = (i18n.language || 'en').startsWith('zh') ? 'zh' : 'en';

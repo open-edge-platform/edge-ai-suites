@@ -6,7 +6,7 @@ This repository implements a comprehensive optimization of the SONIC whole-body-
 
 ## Prerequisites
 
-- Follow the [Embodied AI Get Started guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) to set up the base system.
+- Follow the [Embodied AI Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) to set up the base system.
 - NPU driver (> 1.32.0)
 - Ubuntu 24.04 RT release
 - OpenVINO 2026.3, ROS2 Jazzy

@@ -34,16 +34,8 @@ git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge
 
 Download the dataset and place it in the following local folder for datasets
 (create it if it does not exist), for example:
-`Surgical_Instrument/datasets/CVC-ColonDB/raw/`.
+`Surgical_Instrument/datasets/ColonDB/raw/`.
 
-
-Download sources:
-- Official source (research-use terms):
-  [https://pages.cvc.uab.es/CVC-Colon/index.php/databases/](https://pages.cvc.uab.es/CVC-Colon/index.php/databases/)
-- Kaggle mirror (preferred working source) — same 380-image set + masks:
-  [https://www.kaggle.com/datasets/longvil/cvc-colondb](https://www.kaggle.com/datasets/longvil/cvc-colondb)
-  (`kaggle datasets download longvil/cvc-colondb` with a personal Kaggle API token).
-- Citation: *Bernal, Sánchez, Vilariño (2012) Pattern Recognition 45(9), 3166–3182*.
 
 Archive support:
 - `.zip`, `.tar`, `.tar.gz`, `.tgz` can be consumed directly.
@@ -100,14 +92,13 @@ You can prepare the model artifacts ahead of time:
 
 ```bash
 make backend-venv       # one-time Python environment: torch+xpu, Ultralytics, OpenVINO
-make backend-bootstrap  # prepares CVC-ColonDB, trains YOLO11n, exports FP16 OpenVINO IR
+make backend-bootstrap  # prepares ColonDB, trains YOLO11n, exports FP16 OpenVINO IR
 ```
 
 `backend-bootstrap` does the full model preparation in sequence:
 
-- reads the dataset from `datasets/CVC-ColonDB/raw/`
+- reads the dataset from `datasets/ColonDB/raw/`
 - extracts the archive if needed
-- converts CVC masks into YOLO bounding-box labels
 - creates the train/validation/test split
 - downloads the base `yolo11n.pt` weights through Ultralytics
 - trains YOLO11n using the settings in `backend/config/model.yaml`
@@ -127,7 +118,7 @@ models/yolo11n_polyp/
 
 ### 2.3 Optional: train elsewhere and import the IR
 
-If you have trained YOLO11n on CVC-ColonDB on another machine:
+If you have trained YOLO11n on ColonDB on another machine:
 
 1. Export the checkpoint to FP16 OpenVINO IR:
 
@@ -167,7 +158,7 @@ running `make doctor` / `make up`.
 
 ```bash
 .venv-backend/bin/python scripts/create_endoscopy_video.py \
-        --images-dir datasets/CVC-ColonDB/raw/CVC-ColonDB/images \
+        --images-dir datasets/ColonDB/raw/ColonDB/images \
         --output videos/polyp_test.mp4 \
         --seconds 60 --fps 60 --width 1920 --height 1080
 ```
@@ -201,7 +192,13 @@ starts them with `RENDER_GID` / `VIDEO_GID` auto-detected from the host — no l
 needed.
 
 ```bash
-# Live Basler camera (P-core pinned, free-running sink).
+# Live Basler camera, tuned for fixed exposure + GPU detection with a live window.
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        BASLER_PIXEL_FORMAT=ycbcr422_8 BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=5000 \
+        BASLER_THROUGHPUT_LIMIT=400000000 DETECT=1 DETECTION_DEVICE=GPU \
+        AUTOVIDEOSINK=true PIPELINE_VIDEO_SINK=autovideosink
+
+# Minimal live Basler camera (P-core pinned, free-running sink).
 make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
         PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false
 
@@ -216,7 +213,13 @@ make logs            # optional: follow readiness/startup logs
 OpenVINO + Ultralytics, UI = Vite build → nginx, pipeline = DL Streamer + gencamsrc).
 
 ```bash
-# Live Basler camera, built from source
+# Live Basler camera, tuned and built from source
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        BASLER_PIXEL_FORMAT=ycbcr422_8 BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=5000 \
+        BASLER_THROUGHPUT_LIMIT=400000000 DETECT=1 DETECTION_DEVICE=GPU \
+        AUTOVIDEOSINK=true PIPELINE_VIDEO_SINK=autovideosink REGISTRY=false
+
+# Minimal live Basler camera, built from source
 make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
         PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false REGISTRY=false
 
@@ -255,7 +258,7 @@ Expect to see the FSM walk through:
 Note that the UI is **health-gated on the backend** -
 the browser tab will not answer until `surgical-backend` reports `/api/readiness → ready`.
 On the first boot this time window is 20–35 minutes while YOLO11n trains (an estimate for
-CVC-ColonDB on the Intel® Arc™ iGPU).
+ColonDB on the Intel® Arc™ iGPU).
 Subsequent boots take seconds because the trained IR is cached in `./models/`.
 
 Once the backend is healthy the UI starts and answers on `http://localhost:8080`
@@ -340,6 +343,22 @@ Three common shapes are used in practice:
 - File preview
 - Minimal live camera
 - Tuned live inference
+
+### Basler camera tuning knobs
+
+For live Basler sources (`SOURCE_KIND=basler`), the following variables tune the
+camera and the display sink. See the tuned command in
+[4a. Pull images from registry](#4a-pull-images-from-registry-default) for a full example.
+
+| Variable                 | Default        | Meaning                                                                                     |
+|--------------------------|----------------|---------------------------------------------------------------------------------------------|
+| `BASLER_PIXEL_FORMAT`    | `ycbcr422_8`   | Camera pixel format (e.g. `ycbcr422_8`, `bayerbggr`).                                        |
+| `BASLER_FIXED_CAMERA`    | `0`            | Set to `1` to disable auto-exposure/auto-gain and apply the fixed values below.             |
+| `BASLER_EXPOSURE_US`     | unset          | Fixed exposure time in microseconds (applied only when `BASLER_FIXED_CAMERA=1`).            |
+| `BASLER_THROUGHPUT_LIMIT`| `400000000`    | `DeviceLinkThroughputLimit` in bytes/sec; lifts the camera off its default cap.             |
+| `DETECT`                 | `1`            | Set to `0` to run passthrough (no inference).                                                |
+| `AUTOVIDEOSINK`          | unset          | `true` opens a live render window (`DISPLAY_VIEW=1` + `SINK_SYNC=true`); `false` disables it.|
+| `PIPELINE_VIDEO_SINK`    | `autovideosink`| GStreamer sink element (e.g. `autovideosink`, `xvimagesink`).                                |
 
 
 

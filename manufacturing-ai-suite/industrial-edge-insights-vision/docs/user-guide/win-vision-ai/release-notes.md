@@ -4,7 +4,7 @@
 
 **New**
 
-- Allow camera pipelines to use defaults of width/height when not provided and update WHIP URL guidance.
+- Added camera pipeline support for width and height defaults when not provided, and updated WHIP URL guidance.
 
 ## Version 2026.1.0
 
