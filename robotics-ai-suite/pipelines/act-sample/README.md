@@ -8,7 +8,7 @@ In this tutorial, we will introduce how to setup ACT pipeline.
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/imitation_learning_act.html)
 
 ## Changes to 3rd party source
 
@@ -23,7 +23,7 @@ The following patches are provided to enhance the ACT source:
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
+Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/components/ai_resources/developer_tools/oneapi.html) to setup Intel® oneAPI packages.
 
 ## Installation
 
@@ -44,7 +44,7 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 ### Install Intel® Extension for PyTorch
 
 > [!IMPORTANT]
-> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/troubleshooting.html).
+> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/resources/troubleshooting.html).
 
 Install the Intel® Extension for PyTorch with the following command:
 

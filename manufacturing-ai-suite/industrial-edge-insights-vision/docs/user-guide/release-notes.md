@@ -4,7 +4,7 @@
 
 **New:**
 
-- Fixed coturn server configuration for webrtc relay.
+- Fixed coturn server configuration for WebRTC relay.
 - Fixed Grafana MQTT datasource version to avoid errors with latest version.
 
 **Improved:**

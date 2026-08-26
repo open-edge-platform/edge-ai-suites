@@ -10,7 +10,7 @@ Intel-operated generative artificial intelligence solutions.
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/kpi_monitoring/index.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/components/benchmarking/robotics-system-profiler/index.html).
 
 ## Overview
 
@@ -59,7 +59,7 @@ uv run python src/monitor_stack.py --duration 30    # Quick 30-second health che
 
 | Requirement | Install |
 |-------------|---------|
-| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
+| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) |
 | Python 3.8+ | included with Ubuntu 22.04 |
 | `uv`, `psutil`, `matplotlib`, `numpy` | installed automatically by `make install` |
 

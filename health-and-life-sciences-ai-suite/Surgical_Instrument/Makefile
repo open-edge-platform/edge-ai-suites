@@ -45,11 +45,14 @@ SOURCE_ARG            ?=
 # SOURCE_ARG=40067928 BASLER_PIXEL_FORMAT=bayerbggr`).
 ifeq ($(strip $(SOURCE_KIND)),basler)
   BASLER_PIXEL_FORMAT           ?= ycbcr422_8
+  # DeviceLinkThroughputLimit in bytes/sec; 400 MB/s lifts the dart camera off
+  # its 160 MB/s default cap. Override on the CLI to change or set empty.
+  BASLER_THROUGHPUT_LIMIT       ?= 400000000
   PIPELINE_PREPROC_BACKEND      ?= va-surface-sharing
   SCHEDULING_POLICY             ?= latency
   BATCH_SIZE                    ?= 1
-  PIPELINE_GST_CORES            ?= 3-5
-  PIPELINE_GST_RT_PRIORITY      ?= 70
+  # Core pinning (taskset -c) and RT priority (chrt -f) are opt-in only —
+  # pass PIPELINE_GST_CORES / PIPELINE_GST_RT_PRIORITY on the CLI to enable.
   PIPELINE_DISPLAY_VIEW         ?= 1
   # autovideosink is avoided here: in-container it auto-selects kmssink, which
   # fails with a DRM resource error and crash-loops. xvimagesink is the
@@ -114,6 +117,7 @@ PIPELINE_GST_RT_PRIORITY      ?=
 BASLER_FIXED_CAMERA  ?= 0
 BASLER_EXPOSURE_US   ?=
 BASLER_GAIN          ?=
+BASLER_THROUGHPUT_LIMIT ?=
 BASLER_PIXEL_FORMAT  ?= bayerbggr
 
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
@@ -206,9 +210,10 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
 	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_THROUGHPUT_LIMIT=$(BASLER_THROUGHPUT_LIMIT) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d $(_BUILD_FLAG)
+		$(COMPOSE) -f docker-compose.yaml $$(test -f $(CAMERA_OVERRIDE) && echo -f $(CAMERA_OVERRIDE)) up -d $(_BUILD_FLAG)
 	@echo "[up] image mode: $(if $(filter true,$(REGISTRY)),REGISTRY (prebuilt images @ $(TAG)),SOURCE (built from Dockerfiles))"
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
 	@echo "[up] Follow progress: make logs"
@@ -235,9 +240,10 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
 	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_THROUGHPUT_LIMIT=$(BASLER_THROUGHPUT_LIMIT) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d
+		$(COMPOSE) -f docker-compose.yaml $$(test -f $(CAMERA_OVERRIDE) && echo -f $(CAMERA_OVERRIDE)) up -d
 	$(_print_urls)
 
 .PHONY: show-cores

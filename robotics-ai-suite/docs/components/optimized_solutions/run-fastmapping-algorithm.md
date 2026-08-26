@@ -90,7 +90,7 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
    Expected output:
 
-   <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
+   <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/software_references/amr/videos/fast_mapping.mp4>
 
 5. Run the FastMapping sample application using RealSense camera
    input with RTAB-Map:
