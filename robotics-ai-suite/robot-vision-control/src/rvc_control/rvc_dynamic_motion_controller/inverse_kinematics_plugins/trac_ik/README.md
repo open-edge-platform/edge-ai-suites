@@ -8,8 +8,8 @@ mitigates local minima due to joint limits by random jumps.  The second is an
 SQP (Sequential Quadratic Programming) nonlinear optimization approach which
 uses quasi-Newton methods that better handle joint limits.  By default, the IK
 search returns immediately when either of these algorithms converges to an
-answer.  Secondary constraints of distance and manipulability are also provided 
-in order to receive back the "best" IK solution.  
+answer.  Secondary constraints of distance and manipulability are also provided
+in order to receive back the "best" IK solution.
 **Note:** TRAC-IK is built on top of the KDL library, which is not thread safe (there's some internals that I think use _static_ variables).  Thus, you should not use multiple instances of TRAC-IK in the same process.
 
 ###This repo contains 5 ROS packages:###
@@ -36,7 +36,7 @@ Details for use are in trac\_ik\_kinematics\_plugin/README.md. (Note prior to v1
 
 [Humanoids-2015](https://www.researchgate.net/publication/282852814_TRAC-IK_An_Open-Source_Library_for_Improved_Solving_of_Generic_Inverse_Kinematics) (reported results are from v1.0.0 of TRAC-IK, see below for newer results).
 
-###Some sample results are below: 
+###Some sample results are below:
 
 _Orocos' **KDL**_ (inverse Jacobian w/ joint limits), _**KDL-RR**_ (our fixes to KDL joint limit handling), and _**TRAC-IK**_ (our concurrent inverse Jacobian and non-linear optimization solver; Speed mode) are compared below.
 
@@ -44,7 +44,7 @@ IK success and average speed as of TRAC-IK tag v1.5.1.  All results are from 10,
 
 **Note on success**: Neither KDL nor TRAC-IK uses any mesh information to determine if _valid_ IK solutions result in self-collisions.  IK solutions deal with link distances and joint ranges, and remain agnostic about self-collisions due to volumes.  Expected future enhancements to TRAC-IK that search for multiple solutions may also include the ability to throw out solutions that result in self collisions (provided the URDF has valid geometry information); however, this is currently not the behaviour of any generic IK solver examined to date.
 
-**Note on timings**: The timings provided include both successful and unsuccessful runs.  When an IK solution is not found, the numerical IK solver implementations will run for the full timeout requested, searching for an answer; thus for robot chains where KDL fails much of the time (e.g., Jaco-2), the KDL times are skewed towards the user requested timeout value (here 5 ms).  
+**Note on timings**: The timings provided include both successful and unsuccessful runs.  When an IK solution is not found, the numerical IK solver implementations will run for the full timeout requested, searching for an answer; thus for robot chains where KDL fails much of the time (e.g., Jaco-2), the KDL times are skewed towards the user requested timeout value (here 5 ms).
 
 Chain | DOFs | Orocos' _KDL_ solve rate | Orocos' _KDL_ Avg Time | _KDL-RR_ solve rate | _KDL-RR_ Avg Time | _TRAC-IK_ solve rate | _TRAC-IK_ Avg Time
 - | - | - | - | - | - | - | -

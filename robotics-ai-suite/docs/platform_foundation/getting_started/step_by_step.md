@@ -301,7 +301,7 @@ access to commonly used robotic functionality with ease.
 
 ## 6. Install Robotics AI Suite Deb packages
 
-This section details steps to install Robotis AI Suite Deb packages.
+This section details steps to install Robotics AI Suite Deb packages.
 
 1. Before using the Robotics AI Suite APT repositories, update the APT packages list:
 
@@ -398,7 +398,7 @@ This section details steps to install Robotis AI Suite Deb packages.
    :::
    ::::
 
-   Your installation time will vary based on network speed and chosed packages.
+   Your installation time will vary based on network speed and chosen packages.
 
    ![apt-install-ros-pkt](../../images/download/apt-install-ros-pkt.png)
 

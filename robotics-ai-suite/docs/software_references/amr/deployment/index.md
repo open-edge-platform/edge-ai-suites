@@ -1,5 +1,5 @@
 # Deployable Robot Software References
-This softare reference series showcases actual real-world deployable algorithms and pipelines delivered by the Intel Robotics AI Suite.
+This software reference series showcases actual real-world deployable algorithms and pipelines delivered by the Intel Robotics AI Suite.
 
 You'll start by validating direct keyboard control of a deployed robot. Next,
 you'll learn about mapping the real world for your robot using AI Robotics Suite, to give your software real, actionable data to power navigation, safety, and critical controls systems

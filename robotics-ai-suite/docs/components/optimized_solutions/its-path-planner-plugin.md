@@ -198,7 +198,7 @@ ros2 launch its_planner its_ackermann_launch.py use_sim_time:=true
 
 3. Set new destinations for the robot, one at a time.
 
-   ![goal_achived_gazebo_rviz](images/goal_achived_gazebo_rviz.png)
+   ![goal_achieved_gazebo_rviz](images/goal_achieved_gazebo_rviz.png)
 
 4. To close this, do the following:
 

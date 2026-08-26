@@ -59,7 +59,7 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
    cd ~/orb_lze_samples/
    ```
 
-2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites//blob/main/robotics-ai-suite/docs/software_references/amr/sources/sample/main.cpp) to read the comments for the code.
+2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/software_references/amr/sources/sample/main.cpp) to read the comments for the code.
 
 3. Build the code:
 
@@ -125,7 +125,7 @@ The GPU orb-extractor feature OpenCV-free library provides similar features, exc
    cd /opt/intel/orb_lze/samples/
    ```
 
-2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/sources/sample/main.cpp) to read the comments for the code.
+2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/software_references/amr/sources/sample/main.cpp) to read the comments for the code.
 
    > **Note:** Refer to the [OpenCV API tutorial](#opencv-api-tutorial) for details on using the orb-extractor feature library API.
 

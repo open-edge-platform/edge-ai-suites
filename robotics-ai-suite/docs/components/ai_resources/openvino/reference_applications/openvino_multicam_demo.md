@@ -1,11 +1,11 @@
 # Multi-Camera Object Detection Powered by OpenVINO™
 
-This reference application showcases using one or mulitiple cameras to run simultaneous AI-powered vision pipelines.
+This reference application showcases using one or multiple cameras to run simultaneous AI-powered vision pipelines.
 It supports one to four USB or GMSL connected cameras.
 
 Object detection and segmentation masking are run in parallel using up to four camera streams.
-This application uses an OpenVINO-optimized verison of YOLOv8, available here:
-[Ultralytics YOLOv8 object detection model](https://docs.ultralytics.com/). 
+This application uses an OpenVINO-optimized version of YOLOv8, available here:
+[Ultralytics YOLOv8 object detection model](https://docs.ultralytics.com/).
 
 ## Prerequisites
 To run this reference applications, make sure you've completed the [Getting Started](../../../../platform_foundation/getting_started.md) guide to onboard your device, install the relevant packages, and setup your device drivers.
@@ -20,13 +20,16 @@ The source code of this component can be found here:
 ## Software Installation
 
 This reference application uses some additional software. `uv` is the preferred tool for managing the Python environment - a `uv.lock` and `pyproject.toml` are provided to quickly set it up.
+
 ### Install `uv`
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```
+
 ### Source `uv`
+
 ```bash
 source $HOME/.local/bin/env
 ```
@@ -118,7 +121,7 @@ uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.jsony
 :::
 ::::
 
-After a few seconds, you will see the camera streams overlayed with inference statistics:
+After a few seconds, you will see the camera streams overlaid with inference statistics:
 
 ![multicam_demo_SDK2.2_1](../../../../components/images/pyrealsense2-ai-demo-two-camera-example.png )
 
