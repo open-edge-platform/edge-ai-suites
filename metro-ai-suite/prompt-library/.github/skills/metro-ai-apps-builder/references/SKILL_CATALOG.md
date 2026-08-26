@@ -16,14 +16,14 @@ refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 |---|---|---|
 | A full **end-to-end analytics stack** (live annotated video + dashboard + alerts) for detection/classification/counting/zone-alerting on any vertical (smart city, retail, industrial, PPE, parking, healthcare…) | **`metro-ai-apps-recipe`** *(this repo)* — production mode (`MODE=production`, the default) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (custom pipeline JSON) |
 | A **quick local demo / PoC** — a single lightweight app (no full stack) that just proves a model runs and emits inference: a simple DL Streamer pipeline **or** a minimal OpenVINO inference script | **`metro-ai-apps-recipe`** *(this repo)* — demo/PoC mode (`MODE=demo`) | `dlstreamer-coding-agent` (DL Streamer sub-path), OpenVINO 2026 docs (OpenVINO sub-path), `model-download-user` (model IR) |
-| **Multi-camera / spatial** cross-camera tracking & scene fusion (smart-intersection style) | **`scenescape-setup`** — reached via the `metro-ai-apps-recipe` SceneScape opt-in path | `metro-ai-apps-recipe` for the detection front-end |
+| **Multi-camera / spatial** cross-camera tracking & scene fusion (smart-intersection style) | **`scenescape-setup`** — reached via the `metro-ai-apps-recipe` Scenescape opt-in path | `metro-ai-apps-recipe` for the detection front-end |
 | A **custom vision pipeline / sample app in code** (Python/C/C++/GStreamer): detection, classification, tracking, VLM, recording, custom elements | **`dlstreamer-coding-agent`** | `model-download-user` |
 | **Migrate / convert / port** an existing **NVIDIA DeepStream** (or raw GStreamer) pipeline to an equivalent **Intel DL Streamer** pipeline/app | **`dlstreamer-coding-agent`** | `model-download-user` (equivalent IR model) |
 
 Deliverable shape: *end-to-end solution* (Compose stack) for
 `metro-ai-apps-recipe` in **production mode**; *quick single app / PoC* for
 `metro-ai-apps-recipe` in **demo mode** (`MODE=demo`) or for
-`dlstreamer-coding-agent`; *multi-camera solution* for the SceneScape path. Map
+`dlstreamer-coding-agent`; *multi-camera solution* for the Scenescape path. Map
 the Step 1 **deployment-target** answer to the recipe mode: "quick local
 demo/POC" → `MODE=demo`; "Docker Compose end-to-end" → `MODE=production`.
 

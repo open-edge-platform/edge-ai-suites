@@ -4,7 +4,7 @@
 
 Smart NVR is a Python application for edge video analytics. It has a FastAPI backend,
 a Gradio-based UI, and Docker/Helm deployment assets for running with Frigate, MQTT,
-Redis, VSS Search, VSS Summary, and optional VLM/SceneScape integrations.
+Redis, VSS Search, VSS Summary, and optional VLM/Scenescape integrations.
 
 The project is not packaged as an installable library. `pyproject.toml` sets
 `[tool.uv] package = false`, and the Docker image copies `src/` and `ui/` directly
@@ -29,7 +29,7 @@ into the runtime image.
   - `ui/test/`: UI tests.
 - `docker/`: Dockerfile, Compose file, and entrypoint.
 - `charts/`: Helm chart and packaged chart artifacts.
-- `resources/`: Frigate, MQTT, SceneScape, RTSP, and sample-video resources.
+- `resources/`: Frigate, MQTT, Scenescape, RTSP, and sample-video resources.
 - `scripts/`: supporting shell utilities.
 - `docs/user-guide/`: user, developer, API, deployment, and troubleshooting docs.
 
@@ -70,7 +70,7 @@ source setup.sh stop-streamer
 
 `setup.sh start` validates required environment variables and starts Docker Compose.
 It may also generate MQTT secrets, alter `resources/frigate-config/config.yml`, and
-start RTSP/SceneScape components depending on environment flags. Treat changes under
+start RTSP/Scenescape components depending on environment flags. Treat changes under
 `resources/` as potentially user-visible deployment configuration.
 
 Important environment variables used by the stack include:

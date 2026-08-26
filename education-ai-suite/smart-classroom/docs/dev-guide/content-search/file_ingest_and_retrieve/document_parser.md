@@ -4,7 +4,7 @@
 
 `DocumentParser` processes a file in two independent steps:
 
-```
+```text
 File  →  [Step 1: Text Extraction]  →  raw text  →  [Step 2: Chunking]  →  nodes
 ```
 

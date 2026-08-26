@@ -13,7 +13,7 @@ requests to backend services.
 All inference stays local: speech-to-text, retrieval, LLM generation, and
 text-to-speech are served on the same machine.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                     User's Web Browser                     │
 │              (React UI + Web Audio API)                    │
