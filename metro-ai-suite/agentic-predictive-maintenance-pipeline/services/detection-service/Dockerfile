@@ -11,6 +11,49 @@ WORKDIR /app
 
 RUN groupadd -r appuser && useradd -r -g appuser -u 1002 appuser
 
+# Intel GPU compute runtime (OpenCL + Level Zero user-mode drivers). Required
+# for use cases that run OpenVINO inference on device=GPU directly inside this
+# container (e.g. gas-detection-multimodal). Without it OpenVINO's GPU plugin
+# can't initialize and only CPU is enumerated. Sourced from the same Intel
+# graphics PPA the host uses so the user-mode driver tracks the host kernel
+# driver. Set --build-arg INSTALL_GPU_RUNTIME=false to build a CPU-only image.
+ARG INSTALL_GPU_RUNTIME=true
+COPY intel-graphics.sources /tmp/intel-graphics.sources
+RUN if [ "$INSTALL_GPU_RUNTIME" = "true" ]; then \
+        set -e; \
+        apt-get update && apt-get install -y --no-install-recommends ca-certificates; \
+        cp /tmp/intel-graphics.sources /etc/apt/sources.list.d/intel-graphics.sources; \
+        apt-get update; \
+        apt-get install -y --no-install-recommends \
+            intel-opencl-icd \
+            libze-intel-gpu1 \
+            libze1 \
+            ocl-icd-libopencl1; \
+        rm -rf /var/lib/apt/lists/*; \
+    fi; \
+    rm -f /tmp/intel-graphics.sources
+
+# Intel NPU user-mode driver (Level Zero NPU + compiler). Required for use
+# cases that run OpenVINO inference on device=NPU directly inside this
+# container. Not carried by the Intel graphics PPA, so it's installed from the
+# intel/linux-npu-driver GitHub release (same build the host uses); libtbb12 is
+# a required dependency of intel-driver-compiler-npu. intel-fw-npu is skipped —
+# the NPU firmware is loaded by the host kernel, not the container. Set
+# --build-arg INSTALL_NPU_RUNTIME=false to build without NPU support.
+ARG INSTALL_NPU_RUNTIME=true
+ARG NPU_DRIVER_VERSION=v1.35.0
+ARG NPU_DRIVER_TARBALL=linux-npu-driver-v1.35.0.20260722-29947505341-ubuntu2404.tar.gz
+RUN if [ "$INSTALL_NPU_RUNTIME" = "true" ]; then \
+        set -e; \
+        apt-get update; \
+        apt-get install -y --no-install-recommends ca-certificates wget libtbb12; \
+        cd /tmp; \
+        wget -q "https://github.com/intel/linux-npu-driver/releases/download/${NPU_DRIVER_VERSION}/${NPU_DRIVER_TARBALL}" -O npu.tar.gz; \
+        mkdir -p npu && tar -xf npu.tar.gz -C npu; \
+        dpkg -i $(find npu -name 'intel-level-zero-npu*.deb') $(find npu -name 'intel-driver-compiler-npu*.deb'); \
+        rm -rf /tmp/npu /tmp/npu.tar.gz /var/lib/apt/lists/*; \
+    fi
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

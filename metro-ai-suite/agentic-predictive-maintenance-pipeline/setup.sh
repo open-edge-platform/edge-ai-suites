@@ -137,6 +137,16 @@ validate_env() {
         RENDER_GROUP_ID=$(stat -c "%g" "${render_devices[0]}")
     fi
 
+    # NPU accel group configuration. The detection container runs as a non-root
+    # user, so it needs the group owning /dev/accel/accel* added to reach the
+    # NPU. Keep the compose default if this host has no NPU accel node.
+    local accel_devices=(/dev/accel/accel*)
+    if [ -e "${accel_devices[0]}" ]; then
+        echo -e "\nACCEL (NPU) device exists. Getting the GID...\n"
+        export ACCEL_GROUP_ID
+        ACCEL_GROUP_ID=$(stat -c "%g" "${accel_devices[0]}")
+    fi
+
     # LLM_MODEL_PATH is stored relative to the repo root in the use-case env
     # file (e.g. "./apps/.../Phi-4-mini-instruct") for portability across
     # machines/users. Docker Compose resolves relative volume host paths
@@ -318,8 +328,24 @@ case "${ACTION}" in
         fi
 
         if has_gpu_device; then
+            COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.detection-gpu.yaml"
+            echo -e "${BLUE}Detection service GPU device mapping enabled.${NC}"
+        fi
+
+        if has_gpu_device; then
             COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.dlstreamer-gpu.yaml"
             echo -e "${BLUE}DL Streamer GPU device mapping enabled.${NC}"
+        fi
+
+        if has_npu_device; then
+            COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.detection-npu.yaml"
+            echo -e "${BLUE}Detection service NPU device mapping enabled.${NC}"
+            # Grant the accel group only when it isn't already added by the GPU
+            # overlay's render group (same GID on Intel client platforms) —
+            # docker compose rejects duplicate group_add entries.
+            if ! has_gpu_device || [ "${ACCEL_GROUP_ID:-}" != "${RENDER_GROUP_ID:-}" ]; then
+                COMPOSE_CMD="${COMPOSE_CMD} -f docker/compose.detection-npu-group.yaml"
+            fi
         fi
 
         if has_npu_device; then

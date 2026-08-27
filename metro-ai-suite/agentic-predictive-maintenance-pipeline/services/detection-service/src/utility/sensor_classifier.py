@@ -79,6 +79,13 @@ class SensorMLPClassifier:
 
         core = ov.Core()
         model = core.read_model(self.model_path)
+        # Inference is always batch-1, but the exported model declares a dynamic
+        # batch dimension. NPU requires static shapes, so pin the input to
+        # [1, n_features] before compiling (a no-op for CPU/GPU).
+        try:
+            model.reshape([1, len(self.feature_columns)])
+        except Exception:
+            pass
         self._compiled = core.compile_model(model, self.device)
         self._output_layer = self._compiled.output(0)
 

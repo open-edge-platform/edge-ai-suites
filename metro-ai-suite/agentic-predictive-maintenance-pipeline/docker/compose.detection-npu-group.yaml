@@ -1,0 +1,15 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Grants the non-root detection container user membership in the group that
+# owns /dev/accel so it can reach the NPU. Kept separate from
+# compose.detection-npu.yaml (device mapping) because docker compose rejects
+# duplicate group_add entries: on Intel client platforms the NPU accel node and
+# the GPU render node are both owned by the "render" group, so setup.sh only
+# includes this overlay when the accel group differs from the render group the
+# GPU overlay already adds (or when no GPU is present).
+
+services:
+  apm-detection:
+    group_add:
+      - ${ACCEL_GROUP_ID:-992}
