@@ -1,11 +1,11 @@
 # Release Notes: AI Teaching Assistant
 
-## 2026.1.0
+## Version 2026.2.0
 
-Initial AI Teaching Assistant documentation baseline aligned to the current
+Initial AI Teaching Assistant documentation baseline aligned with the current
 Windows-native runtime architecture.
 
-Highlights:
+**Features**:
 
 - React-based browser UI served by `ata_ui_server.py`
 - `kiosk-core` streaming session orchestration API
@@ -14,9 +14,9 @@ Highlights:
 - Metrics integration via `metrics-collector`
 - Windows launcher workflow (`setup_windows.ps1`, `start_ata.ps1`, `stop_ata.ps1`)
 
-Documentation updates in this release:
+**Documentation updates**:
 
-- Removed outdated container/build-path docs from this app guide
-- Removed repository clone guidance that pointed to upstream VEI directly
+- Removed outdated container/build-path documentation from this guide
+- Removed repository clone instructions that pointed to upstream Voice Enabled Interactions (VEI)
 - Updated architecture, API, configuration, and troubleshooting pages to match
   `ai-teaching-assistant` as shipped in `edge-ai-suites`
