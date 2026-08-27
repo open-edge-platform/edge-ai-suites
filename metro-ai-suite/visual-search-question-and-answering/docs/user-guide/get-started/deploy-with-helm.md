@@ -65,7 +65,6 @@ Edit the `values.yaml` file to set the necessary environment variables. At minim
 | `global.proxy.https_proxy` | HTTPS proxy if required | `http://proxy-example.com:000` |
 | `global.VLM_MODEL_NAME` | VLM model to be used by vlm-openvino-serving | `Qwen/Qwen2.5-VL-7B-Instruct` |
 | `global.EMBEDDING_MODEL_NAME` | Embedding model to be used for feature extraction by multimodal-embedding-serving  | `CLIP/clip-vit-h-14` |
-| `global.registry` | Remote registry to pull images from. Default as blank | `intel/` |
 | `global.env.keeppvc` | Set to true to persist the storage. Default is false | false |
 
 ### Step 3: Build Helm Dependencies
