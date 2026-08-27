@@ -25,7 +25,7 @@ UAVVA_SRC    := uav-vision-analytics
 # Output archives.
 HANDHELD_ZIP := $(DIST_DIR)/handheld-multi-modal.zip
 DTD_ZIP      := $(DIST_DIR)/deterministic-threat-detection.zip
-UAV_ZIP      := $(DIST_DIR)/uav.zip
+UAV_ZIP      := $(DIST_DIR)/uav-mission-apps.zip
 SOLUTION_ZIP := $(DIST_DIR)/federal-and-aerospace-ai-suite.zip
 
 # Forwarded to sub-Makefiles when overridden on the command line.
@@ -35,7 +35,7 @@ override_vars := $(foreach v,VIPPET_REPO VIPPET_REF VIPPET_PATH,\
 # --- Public targets ----------------------------------------------------------
 
 .PHONY: all
-all: handheld-multi-modal deterministic-threat-detection uav federal-and-aerospace-ai-suite ## Build every component ZIP and the full-solution ZIP
+all: handheld-multi-modal deterministic-threat-detection uav-mission-apps federal-and-aerospace-ai-suite ## Build every component ZIP
 
 .PHONY: handheld-multi-modal
 handheld-multi-modal: $(HANDHELD_ZIP) ## Build handheld-multi-modal.zip (includes vippet)
@@ -43,8 +43,8 @@ handheld-multi-modal: $(HANDHELD_ZIP) ## Build handheld-multi-modal.zip (include
 .PHONY: deterministic-threat-detection
 deterministic-threat-detection: $(DTD_ZIP) ## Build deterministic-threat-detection.zip
 
-.PHONY: uav
-uav: $(UAV_ZIP) ## Build uav.zip (uav-mission-compute-sdk + uav-vision-analytics)
+.PHONY: uav-mission-apps
+uav-mission-apps: $(UAV_ZIP) ## Build uav-mission-apps.zip (uav-mission-compute-sdk + uav-vision-analytics)
 
 .PHONY: federal-and-aerospace-ai-suite
 federal-and-aerospace-ai-suite: $(SOLUTION_ZIP) ## Build federal-and-aerospace-ai-suite.zip with the entire solution

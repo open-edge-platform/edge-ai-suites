@@ -11,7 +11,7 @@
 #   It builds zip artifacts from the `federal-and-aerospace-ai-suite/` directory:
 #     - handheld-multi-modal.zip         (one app)
 #     - deterministic-threat-detection.zip (one app)
-#     - uav.zip (two apps, one zip)
+#     - uav-mission-apps.zip (two apps, one zip)
 #
 #   Where those zips end up depends on what triggered the workflow:
 #
@@ -102,7 +102,7 @@ jobs:
     outputs:
       handheld-multi-modal: ${{ steps.force.outputs.handheld-multi-modal || steps.filter.outputs.handheld-multi-modal }}
       deterministic-threat-detection: ${{ steps.force.outputs.deterministic-threat-detection || steps.filter.outputs.deterministic-threat-detection }}
-      uav: ${{ steps.force.outputs.uav || steps.filter.outputs.uav }}
+      uav-mission-apps: ${{ steps.force.outputs.uav-mission-apps || steps.filter.outputs.uav-mission-apps }}
     steps:
       # Guard for manual dispatches: only allow runs from a release-* branch
       # or a tag. The Actions UI shows every branch in its ref dropdown, so
@@ -136,7 +136,7 @@ jobs:
         run: |
           echo "handheld-multi-modal=true"           >> "$GITHUB_OUTPUT"
           echo "deterministic-threat-detection=true" >> "$GITHUB_OUTPUT"
-          echo "uav=true"                            >> "$GITHUB_OUTPUT"
+          echo "uav-mission-apps=true"               >> "$GITHUB_OUTPUT"
 
       - id: filter
         if: github.event_name != 'workflow_dispatch'
@@ -151,7 +151,7 @@ jobs:
               - 'federal-and-aerospace-ai-suite/deterministic-threat-detection/**'
               - 'federal-and-aerospace-ai-suite/Makefile'
               - '.github/workflows/fedaero.yaml'
-            uav:
+            uav-mission-apps:
               - 'federal-and-aerospace-ai-suite/uav-mission-compute-sdk/**'
               - 'federal-and-aerospace-ai-suite/uav-vision-analytics/**'
               - 'federal-and-aerospace-ai-suite/Makefile'
@@ -202,10 +202,10 @@ jobs:
           path: federal-and-aerospace-ai-suite/dist/deterministic-threat-detection.zip
           if-no-files-found: error
 
-  uav:
-    name: Build UAV apps
+  uav-mission-apps:
+    name: Build UAV mission apps
     needs: changes
-    if: needs.changes.outputs.uav == 'true'
+    if: needs.changes.outputs.uav-mission-apps == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -213,11 +213,11 @@ jobs:
       - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
           persist-credentials: false
-      - run: make -C federal-and-aerospace-ai-suite uav
+      - run: make -C federal-and-aerospace-ai-suite uav-mission-apps
       - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: uav
-          path: federal-and-aerospace-ai-suite/dist/uav.zip
+          name: uav-mission-apps
+          path: federal-and-aerospace-ai-suite/dist/uav-mission-apps.zip
           if-no-files-found: error
 
   release:
@@ -228,12 +228,12 @@ jobs:
       github.event_name != 'pull_request' &&
       (needs.changes.outputs.handheld-multi-modal == 'true' ||
        needs.changes.outputs.deterministic-threat-detection == 'true' ||
-       needs.changes.outputs.uav == 'true')
+       needs.changes.outputs.uav-mission-apps == 'true')
     needs:
       - changes
       - handheld-multi-modal
       - deterministic-threat-detection
-      - uav
+      - uav-mission-apps
     runs-on: ubuntu-latest
     permissions:
       # contents: write is required to create/update releases and move the tag.
@@ -256,10 +256,10 @@ jobs:
           path: assets
 
       - name: Download UAV artifact
-        if: needs.changes.outputs.uav == 'true'
+        if: needs.changes.outputs.uav-mission-apps == 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: uav
+          name: uav-mission-apps
           path: assets
 
       # Sanity-check which zips landed before we touch the release.
@@ -290,7 +290,7 @@ jobs:
     needs:
       - handheld-multi-modal
       - deterministic-threat-detection
-      - uav
+      - uav-mission-apps
     runs-on: ubuntu-latest
     permissions:
       # contents: write is required to create the release and tag.
@@ -336,7 +336,7 @@ jobs:
       - name: Download UAV artifact
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
-          name: uav
+          name: uav-mission-apps
           path: assets
 
       - name: List downloaded assets
@@ -349,6 +349,6 @@ jobs:
           GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
           GH_REPO: ${{ github.repository }}
         run: |
-          notes=$'Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- `handheld-multi-modal.zip` — handheld multi-modal app\n- `deterministic-threat-detection.zip` — deterministic threat detection app\n- `uav.zip` — UAV Mission Compute SDK + UAV Vision Analytics'
+          notes=$'Immutable versioned release built from `${{ github.sha }}`\n\nContains:\n- `handheld-multi-modal.zip` — handheld multi-modal app\n- `deterministic-threat-detection.zip` — deterministic threat detection app\n- `uav-mission-apps.zip` — UAV Mission Compute SDK + UAV Vision Analytics'
           gh release create --title "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}" \
             --notes "$notes" v${{ env.VERSION }} assets/*.zip
