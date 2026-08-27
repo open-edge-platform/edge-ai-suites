@@ -15,7 +15,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
-> Note: DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
+> **Note:** DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
 **Run your shell with admin privileges before starting the application**
 
@@ -84,7 +84,7 @@ features:
 
 ### B. Default Configuration
 
-By default, the project uses Whisper for transcription, and summarization runs on the shared OpenVINO vision-language model configured under `models.text_gen`. You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
+By default, the project uses Whisper for transcription, and summarization runs on the shared OpenVINO™ vision-language model configured under `models.text_gen`. You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```yaml
 asr:
@@ -253,7 +253,7 @@ Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 
 > **Note:** Skip this step if `grading.enabled: false` in `config.yaml`.
 
-Smart Grading uses a layout detection model that requires a one-time conversion from Paddle format to OpenVINO IR. This step creates a dedicated conversion environment.
+Smart Grading uses a layout detection model that requires a one-time conversion from Paddle format to OpenVINO™ IR. This step creates a dedicated conversion environment.
 
 ### A. Create the Model Conversion Environment
 
@@ -269,7 +269,7 @@ python -m venv venv_convert
 .\venv_convert\Scripts\python ensure_layout_model.py
 ```
 
-> **Note:** This downloads PP-DocLayoutV2 (~200 MB) and converts it to OpenVINO IR. Subsequent runs detect the existing model and skip this step automatically.
+> **Note:** This downloads PP-DocLayoutV2 (~200 MB) and converts it to OpenVINO™ IR. Subsequent runs detect the existing model and skip this step automatically.
 
 ### C. Launch Grading Services
 
@@ -383,7 +383,7 @@ If you changed the port, adjust the URL accordingly.
 
   2. Rerun only Step 1, option D. If the virtual environment already exists, rerun the required pip commands.
 
-- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try running the model on CPU by setting `device: CPU` under `models.text_gen` in `config.yaml`.
+- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO™ GenAI models may crash on newer hardware. Try running the model on CPU by setting `device: CPU` under `models.text_gen` in `config.yaml`.
 
 - **Tokenizer load issue:**
 

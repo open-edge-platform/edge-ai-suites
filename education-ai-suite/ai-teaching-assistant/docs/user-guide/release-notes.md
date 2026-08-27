@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: AI Teaching Assistant
 
 ## Version 2026.2.0
 

@@ -9,7 +9,7 @@
 | Parameter | Default | Effect |
 |-----------|---------|--------|
 | `reranker_model` | _(required)_ | HuggingFace model ID or local OV IR directory name under `models/openvino/`. If the OV IR does not exist it is exported and saved automatically. |
-| `device` | `"CPU"` | OpenVINO inference device (e.g. `"GPU"`, `"NPU"`). |
+| `device` | `"CPU"` | OpenVINO™ inference device (e.g. `"GPU"`, `"NPU"`). |
 | `dedup_time_threshold` | `5.0` s | Two video frames from the same file within this temporal window are treated as duplicates; only the one with lower distance is kept. |
 | `overfetch_multiplier` | `3` | Available for callers to overfetch candidates before post-processing (not used internally by `PostProcessor` itself). |
 | `RRF_K` (module constant) | `60` | Controls how steeply RRF scores drop off with rank. Higher → more diversity; lower → top-rank items dominate more. |
