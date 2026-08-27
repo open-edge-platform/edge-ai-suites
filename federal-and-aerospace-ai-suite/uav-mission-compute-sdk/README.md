@@ -47,7 +47,20 @@ ls /dev/dri/renderD*
 ```bash
 # 1. Create .env and detect GPU devices
 make init
+```
 
+Then edit `.env` and fill in these required values — the stack will fail to
+start if left empty. Login username for both Grafana and InfluxDB is `admin`
+(fixed, not configurable via `.env`) — only the passwords below are yours to set:
+```env
+INFLUXDB_PASSWORD=your-strong-password
+INFLUXDB_TOKEN=your-long-random-token
+INFLUXDB_ORG=your-org-name
+GRAFANA_PASSWORD=your-strong-password
+UAV_ID=uav-1
+```
+
+```bash
 # 2. Start core infra (PX4 + Gazebo + camera bridges + MQTT + RTSP + observability)
 make up-sim-camera
 ```

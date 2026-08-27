@@ -78,6 +78,10 @@ GRAFANA_PASSWORD=your-strong-password
 UAV_ID=uav-1
 ```
 
+> **Login username** — both Grafana and InfluxDB log in with username `admin`
+> (hardcoded in `docker-compose.yml`, not set via `.env`). Only the passwords
+> above are yours to choose.
+
 > **Note** — `.env` is gitignored and never committed. Leave these values empty until you have set them in your local copy; the stack now requires a real value instead of silently using any placeholder defaults.
 
 ### Step 1 — Choose camera source (sim or USB)
