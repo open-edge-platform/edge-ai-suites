@@ -124,13 +124,6 @@ for scene_zip in "$SCENES_DIR"/*.zip; do
         exit 1
     fi
 
-    has_errors=$(echo "$response" | jq -r 'to_entries[]? | .value | .. | arrays? | select(length > 0) | length' 2>/dev/null | head -n1 || true)
-    if [ -n "$has_errors" ]; then
-        echo "ERROR: Scene import reported validation errors for $scene_name"
-        echo "$response"
-        exit 1
-    fi
-
     imported_count=$(api_curl -H "Authorization: Token $token" \
         "$BASE_URL/scenes?name=$encoded_name" | jq -r '.results | length // 0')
 
