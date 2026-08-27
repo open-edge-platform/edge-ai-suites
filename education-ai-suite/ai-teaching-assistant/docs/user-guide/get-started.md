@@ -10,7 +10,7 @@ Confirm your machine meets the [System Requirements](./get-started/system-requir
 ## Step 1: Prerequisites
 
 - **Git for Windows** — [Download here](https://git-scm.com/download/win)
-- **Python 3.10+** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
+- **Python 3.11 or 3.12** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
 - **Visual C++ Build Tools** — Required for some Python packages
 
 ## Step 2: Clone The Repository
