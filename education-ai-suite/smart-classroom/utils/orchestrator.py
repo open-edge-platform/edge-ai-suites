@@ -6,10 +6,10 @@ from pipeline import Pipeline
 from dto.transcription_dto import TranscriptionRequest
 from dto.audiosource import AudioSource
 from utils.config_loader import config
-from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.session_manager import generate_session_id
 from utils import session_store
+from utils.session_paths import SessionPaths
 from utils.va_completion import wait_for_va_completion
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 
@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 def _va_output_dir(session_id: str) -> str:
-    proj = RuntimeConfig.get_section("Project")
-    return os.path.join(proj.get("location"), proj.get("name"), session_id, "va")
+    return str(SessionPaths.va_dir(session_id))
 
 
 def start_process(request: dict) -> str:

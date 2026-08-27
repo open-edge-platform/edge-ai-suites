@@ -2,8 +2,8 @@ import logging
 import os
 import shutil
 
-from utils.runtime_config_loader import RuntimeConfig
 from utils import session_store, orchestrator
+from utils.session_paths import SessionPaths
 from api.v1.schemas.session import WorkflowRequest
 
 logger = logging.getLogger(__name__)
@@ -106,8 +106,7 @@ def _check_file(path: str, field: str) -> None:
 
 
 def _session_dir(session_id: str) -> str:
-    proj = RuntimeConfig.get_section("Project")
-    return os.path.join(proj.get("location"), proj.get("name"), session_id)
+    return str(SessionPaths.session_dir(session_id))
 
 
 def _status_response(state: dict) -> dict:
