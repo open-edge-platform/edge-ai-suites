@@ -73,7 +73,7 @@ cd ../..
 1. Check the overall stack health:
 
    > **Note:** The command `make status` may show errors in containers like `ia-grafana` if
-   > you have not logged in to Grafana dashboard for the first time, or if your session has
+   > you have not logged in to the Grafana dashboard for the first time, or if your session has
    > timed out. Log in to the Grafana dashboard, and if the dashboard works correctly, ignore
    > `user token not found` and other minor errors in the Grafana logs.
 
