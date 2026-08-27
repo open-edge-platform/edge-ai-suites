@@ -28,10 +28,10 @@ NVIDIA model needs an OpenVINO IR equivalent.
   `gvadetect`, `nvdsosd` → `gvawatermark`, `nvstreammux`/`nvvideoconvert` →
   standard GStreamer `videoconvert`; YOLO-family vehicle detector as OpenVINO
   INT8 IR; Intel GPU inference; ONVIF camera source.
-- Requirements: Node 20+ / `npx skills` to install the delegate; Intel GPU
+- Requirements: Node 20+ / `npx skills@1.5.23` to install the delegate; Intel GPU
   drivers for GPU inference; OpenVINO runtime.
 - Install command (run only after approval):
-  `npx skills add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent`
+  `npx skills@1.5.23 add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent`
 
 **Build (Step 5, after "go"):** delegate to `dlstreamer-coding-agent`, passing the
 inferred element mapping, model IR, `DEVICE=GPU`, and the ONVIF source. Verify

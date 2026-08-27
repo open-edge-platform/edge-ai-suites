@@ -22,7 +22,7 @@
 - Skill: `chatqna-docker-deploy` (must install).
 - Inferred technology: OpenVINO GPU profile, default embedding + LLM for GPU.
 - Install command (run only after approval):
-  `npx skills add open-edge-platform/skills --skill chatqna-docker-deploy`
+  `npx skills@1.5.23 add open-edge-platform/skills --skill chatqna-docker-deploy`
 - Requirements: Docker + Compose v2; enough RAM for the chosen LLM.
 
 **Build (Step 5, after approval):** install then delegate to

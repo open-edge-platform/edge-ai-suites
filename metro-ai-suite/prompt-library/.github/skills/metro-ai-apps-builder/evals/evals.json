@@ -17,12 +17,12 @@
     {
       "id": 2,
       "prompt": "I want employees to ask questions in plain English against our internal PDFs.",
-      "expected_output": "Q&A establishes a document-grounded chatbot on Docker; discovery routes to chatqna-docker-deploy; plan includes the npx skills add install command and waits for confirmation before deploying.",
+      "expected_output": "Q&A establishes a document-grounded chatbot on Docker; discovery routes to chatqna-docker-deploy; plan includes the npx skills@1.5.23 add install command and waits for confirmation before deploying.",
       "should_trigger": true,
       "files": ["../example-prompts/02-document-chatbot.md"],
       "expectations": [
         "Routes a RAG/Q&A-over-documents objective to chatqna-docker-deploy (or chatqna-helm-deploy for Kubernetes)",
-        "Includes the exact `npx skills add open-edge-platform/skills --skill chatqna-docker-deploy` install step, run only after approval",
+        "Includes the exact `npx skills@1.5.23 add open-edge-platform/skills --skill chatqna-docker-deploy` install step, run only after approval",
         "Surfaces requirements (Docker, RAM) in the plan",
         "Delegates the deploy to the chatqna skill and verifies against its criteria"
       ]

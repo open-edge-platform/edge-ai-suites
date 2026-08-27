@@ -8,7 +8,7 @@ description: >-
   DELEGATING to the right skill(s) after you confirm.
 license: Apache-2.0
 compatibility: >-
-  Requires: Node.js 20+ and the `npx skills` CLI (from open-edge-platform/skills)
+  Requires: Node.js 20+ and the `npx skills@1.5.23` CLI (from open-edge-platform/skills)
   to add delegate skills on demand; `git`/`gh` and network access to github.com
   to read the live skill index. Individual delegate skills add their own
   requirements (Docker + Compose v2, Intel CPU/GPU/NPU, Kubernetes/Helm, Python)
@@ -70,7 +70,7 @@ that skill directly) or wants a pure code answer with no deployable artifact.
 | File | Load when |
 |---|---|
 | [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) | Mapping a business objective → the delegate skill(s). Load in Step 2 (Discover). |
-| [`references/DISCOVERY.md`](references/DISCOVERY.md) | Confirming/refreshing the live catalog, checking which skills are installed, and adding a skill with `npx skills`. Load in Step 2 when the catalog is stale or a skill is missing locally. |
+| [`references/DISCOVERY.md`](references/DISCOVERY.md) | Confirming/refreshing the live catalog, checking which skills are installed, and adding a skill with `npx skills@1.5.23`. Load in Step 2 when the catalog is stale or a skill is missing locally. |
 
 Do **not** load delegate skills' bodies yourself up front — you hand off to them
 in Step 5 and *they* load their own references.
@@ -143,7 +143,7 @@ Present a concise plan and **stop for approval**. Include:
   shown as *decisions you made*, not questions.
 - **Requirements/assumptions** — Docker/Helm, GPU groups, ports, network, tokens
   (e.g. `HF_TOKEN`) — surfaced from the delegate's `compatibility`.
-- **Any skill that must be installed** with the exact `npx skills add` command.
+- **Any skill that must be installed** with the exact `npx skills@1.5.23 add` command.
 - **Deployment-target alternative** — whenever the chosen delegate has a
   Kubernetes/Helm sibling (`chatqna-helm-deploy` for `chatqna-docker-deploy`,
   `vss-deploy-helm` for `vss-deploy`), always add a one-line *"on Kubernetes →
@@ -176,7 +176,7 @@ Only after confirmation:
    [`references/DISCOVERY.md`](references/DISCOVERY.md)):
 
    ```bash
-   npx skills add open-edge-platform/skills --skill <skill-name>
+   npx skills@1.5.23 add open-edge-platform/skills --skill <skill-name>
    ```
 
 2. **Invoke the delegate skill**, passing the parameters you inferred in Step 3.

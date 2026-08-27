@@ -19,7 +19,7 @@ A delegate may already be available (installed skills expose their own
 
 ```bash
 # Skills the CLI has installed for the active agent(s)
-npx skills list 2>/dev/null || true
+npx skills@1.5.23 list 2>/dev/null || true
 
 # Repos commonly used in these environments (adjust to your setup)
 ls .github/skills 2>/dev/null                 # skills shipped in this repo
@@ -61,11 +61,11 @@ plan, add each not-yet-installed delegate:
 
 ```bash
 # Add one skill from the catalog repo
-npx skills add open-edge-platform/skills --skill <skill-name>
+npx skills@1.5.23 add open-edge-platform/skills --skill <skill-name>
 
 # Some products live in their own repos (see skills-config.json "repo"/"path"),
 # e.g. DL Streamer's coding agent:
-npx skills add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent
+npx skills@1.5.23 add open-edge-platform/dlstreamer --skill dlstreamer-coding-agent
 ```
 
 Use the `repo` + `path` fields from `skills-config.json` when a skill is **not**
