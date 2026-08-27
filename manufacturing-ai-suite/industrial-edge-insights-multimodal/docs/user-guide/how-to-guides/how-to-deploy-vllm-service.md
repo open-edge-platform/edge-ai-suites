@@ -80,7 +80,7 @@ cd ../..
 
    > **Note:** The command `make status` may show errors in containers like `ia-grafana` if
    > you have not logged in to Grafana dashboard for the first time, or if your session has
-   > timed out. Log in to Grafana dashboard and if the dashboard works correctly, ignore
+   > timed out. Log in to the Grafana dashboard, and if the dashboard works correctly, ignore
    > `user token not found` and other minor errors in the Grafana logs.
 
    ```bash
@@ -101,9 +101,9 @@ cd ../..
    ```
 
 4. Check the output in Grafana dashboard:
-   - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably
+   - Use the link `https://localhost:3000` to open the Grafana dashboard in a browser, preferably
      the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
-   - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+   - Log in to the Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      values from the `.env` file:
 
      ![Grafana login](../_assets/login_wt.png)
