@@ -203,7 +203,7 @@ The Wandering Sample has a dedicated VS Code Copilot skill that enforces a revie
 
 **Direct invocation** — mention the skill by name in the chat to activate it explicitly:
 
-```
+```text
 @wandering-sample <describe your change and target mode: simulation, real robot, or both>
 ```
 

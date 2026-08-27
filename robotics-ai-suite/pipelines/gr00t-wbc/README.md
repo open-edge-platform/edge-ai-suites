@@ -112,7 +112,7 @@ For the full control reference — including Normal Mode, all motion sets, and t
 
 Once control is running, the deploy log periodically prints a `Loop timing` line with running latency stats (in microseconds) for the control loop:
 
-```
+```text
 Loop timing - ... Obs: 645us (avg:689 min:460 P99:907 max:1023), Policy: 405us (avg:405 min:306 P99:618 max:723), ...
 ```
 
@@ -125,7 +125,7 @@ Use these numbers to confirm real-time deadlines are met and to compare latency 
 
 ## NPU Inference Configuration
 
-The `inference:` section of [`gear_sonic_deploy/policy/release/observation_config.yaml`](gear_sonic_deploy/policy/release/observation_config.yaml) controls how the encoder, policy, and planner models are scheduled on the NPU:
+The `inference:` section of [`gear_sonic_deploy/policy/release/observation_config.yaml`](../gear_sonic_deploy/policy/release/observation_config.yaml) controls how the encoder, policy, and planner models are scheduled on the NPU:
 
 - **NPU priority** (`encoder_priority` / `policy_priority` / `planner_priority`): `HIGH`, `NORMAL`, or `LOW`. Controls how the OpenVINO scheduler arbitrates models that share the same NPU device (mapped to `ov::hint::model_priority`). Encoder and policy default to `HIGH` since they run on the real-time control thread; the planner defaults to `NORMAL`.
 - **NPU turbo mode** (`npu_turbo`): when `true`, applies `NPU_TURBO=YES` to all NPU models, trading power efficiency for lower inference latency. Recommended on for real-time control; set to `false` to save power/thermal headroom. This is an NPU-only hint and is ignored on CPU/GPU.
@@ -134,7 +134,7 @@ The `inference:` section of [`gear_sonic_deploy/policy/release/observation_confi
 
 To confirm which device a model landed on, watch the deploy log during model init (encoder, policy, planner) — before `Starting control` is printed. Each NPU model logs:
 
-```
+```text
 [OVInference] Requested device: NPU
 [OVInference] Model priority: HIGH
 ```

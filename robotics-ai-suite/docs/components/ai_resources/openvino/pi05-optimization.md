@@ -94,7 +94,9 @@ The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://
 
 ## Model Conversion and OpenVINO™ Optimization
 
-1. Clone the edge-ai-suites repository and then run the `convert_pytorch_onnx.py` script. This will download the HuggingFace Pi0.5 model taken from [here](https://huggingface.co/lerobot/pi05_base) and will convert it to ONNX using the `torch.onnx.export` method.
+1. Clone the edge-ai-suites repository and then run the `convert_pytorch_onnx.py` script.
+
+   This will download [the HuggingFace Pi0.5 model](https://huggingface.co/lerobot/pi05_base) and will convert it to ONNX using the `torch.onnx.export` method.
 
    ```bash
    cd ..
@@ -154,7 +156,9 @@ To benchmark the model using the OpenVINO™ `benchmark_tool` application on CPU
 
 To validate the outputs of the model ensuring that model predictions are the same before and after OpenVINO™ optimization:
 
-1. Ensure you have run the `convert_pytorch_onnx.py` script (see [Model Conversion and OpenVINO™ Optimization](#model-conversion-and-openvino-optimization)). This will generate a random input tensor and pass it through the original HuggingFace Pi0.5 model and save both the model input and output in the validation folder.
+1. Ensure you have run the `convert_pytorch_onnx.py` script (see [Model Conversion and OpenVINO™ Optimization](#model-conversion-and-openvino-optimization)).
+
+   This will generate a random input tensor and pass it through the original HuggingFace Pi0.5 model and save both the model input and output in the validation folder.
 
 2. Run the `validation/lerobot_ov_inferencing.py` file on the randomly generated input tensor from step 1. This will generate the model output for that tensor.
 

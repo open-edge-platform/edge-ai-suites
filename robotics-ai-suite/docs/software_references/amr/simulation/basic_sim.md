@@ -1,8 +1,8 @@
 # Simulated Robotics with Gazebo
 
-The Robotics AI Suite relys on the open source ROS 2 stack to provide dependable, tested, and expandable capabilties for your robotics use-case. When designing a new robotics platform or use-case, you'll use simulation as your proving ground, ensuring that your ROS application doesn't stress or break your real world robot beyond its means. In ROS 2, the simulator of choice is Gazebo. It provides first-class ROS integration, meaning that the nodes you create to drive your code are delivering the same messages that you would use on your real bot, while giving you a wide ecosystem of out of the box ready models, simulated sensor data, and an expressive world format that lets you create robust approximation of your real world deployment.
+The Robotics AI Suite relies on the open source ROS 2 stack to provide dependable, tested, and expandable capabilities for your robotics use-case. When designing a new robotics platform or use-case, you'll use simulation as your proving ground, ensuring that your ROS application doesn't stress or break your real world robot beyond its means. In ROS 2, the simulator of choice is Gazebo. It provides first-class ROS integration, meaning that the nodes you create to drive your code are delivering the same messages that you would use on your real bot, while giving you a wide ecosystem of out of the box ready models, simulated sensor data, and an expressive world format that lets you create robust approximation of your real world deployment.
 
-This software reference will walk you through setting up and using Gazebo to give you base undestanding of _how_ the Robotics AI Suite uses it in the various pipelines and ingredients that you can use in your own platform.
+This software reference will walk you through setting up and using Gazebo to give you base understanding of _how_ the Robotics AI Suite uses it in the various pipelines and ingredients that you can use in your own platform.
 
 ## Source Code
 
@@ -29,49 +29,49 @@ Complete the [Getting Started](../../../platform_foundation/getting_started.md) 
 
 Install `picknplace-simulation` Debian package from Intel® Autonomous Mobile Robot APT repository.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-picknplace-simulation
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-picknplace-simulation
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Run PicknPlace Simulation
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch picknplace warehouse.launch.py
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 launch picknplace warehouse.launch.py
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 FastDDS as backend some times causing stability issues. Recommended to run with Cyclone DDS. See [Cyclone DDS usage](#cyclone-dds-usage) for more information.
 
@@ -326,26 +326,26 @@ default configurations, optimized for speed.
 To utilize Cyclone DDS, enable it through the following commands. The apt
 install command issued earlier will ensure Cyclone DDS is installed.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt-get install ros-jazzy-rmw-cyclonedds-cpp
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt-get install ros-humble-rmw-cyclonedds-cpp
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ### Reusing ARM and AMR modules
 

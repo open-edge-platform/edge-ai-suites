@@ -82,4 +82,6 @@ async def clear_events():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=9999)
+    # Loopback: the only clients are the test harness and a --network host
+    # container, both of which reach it over localhost.
+    uvicorn.run(app, host="127.0.0.1", port=9999)

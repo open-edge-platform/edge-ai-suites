@@ -2,7 +2,7 @@
 
 ## Canonical Instructions
 
-Use this file as the canonical router for all coding agents. 
+Use this file as the canonical router for all coding agents.
 
 ---
 
@@ -29,13 +29,13 @@ The system has multiple tiers:
 
 ---
 
-## Architecture 
+## Architecture
 
 ### VLM Integration
 
 The Content Search RAG pipeline uses a Vision-Language Model for answer generation:
 
-```
+```text
 Clients:
   - PowerShell scripts (sc-qa skill)
     ↓ HTTP requests (port 9011)
@@ -90,7 +90,7 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 ## Tech Stack
 
 - **Backend**: Python 3.12, FastAPI, OpenVINO
-- **VLM**: Qwen3-VL-8B-Instruct 
+- **VLM**: Qwen3-VL-8B-Instruct
 - **Frontend**: React, Vite, Node.js v18+
 - **Flutter**: Flutter 3.22+ / Dart 3.3+, Dio (HTTP), Riverpod (state management)
 - **Infrastructure**: FFmpeg, DL Streamer

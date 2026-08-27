@@ -182,7 +182,7 @@ start_mock_webhook() {
     fi
     info "Starting mock webhook server on :$WEBHOOK_PORT..."
     $PYTHON -m uvicorn tests.integration.mock_webhook_server:app \
-        --host 0.0.0.0 --port $WEBHOOK_PORT --log-level warning &
+        --host 127.0.0.1 --port $WEBHOOK_PORT --log-level warning &
     PIDS_TO_KILL+=($!)
     sleep 2
     if curl -sf "http://localhost:$WEBHOOK_PORT/health" >/dev/null; then

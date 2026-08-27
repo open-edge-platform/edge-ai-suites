@@ -110,7 +110,7 @@ refresh the live index and check what is already installed. Routing summary:
 | Business objective (what the user says) | Route to |
 |---|---|
 | "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full analytics stack + dashboard | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
-| "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-apps-recipe` SceneScape path) |
+| "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-apps-recipe` Scenescape path) |
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
 | "Migrate / convert / port an NVIDIA DeepStream pipeline to Intel DL Streamer" | **`dlstreamer-coding-agent`** |
 | "Chatbot / Q&A / RAG over my documents" — Docker | **`chatqna-docker-deploy`**; Kubernetes → **`chatqna-helm-deploy`** |

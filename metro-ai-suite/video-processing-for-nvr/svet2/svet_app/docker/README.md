@@ -11,7 +11,7 @@
 ## Build docker image
 
 1. Build docker image for reference application `bash build_sample.sh`
-Make sure docker is corrently installed and configured.
+Make sure docker is correctly installed and configured.
 
 ## Run docker container
 
