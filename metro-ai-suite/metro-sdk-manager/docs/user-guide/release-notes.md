@@ -4,7 +4,7 @@
 
 **Release Date**: September 9, 2026
 
-### New
+**New**:
 
 - **Latest Available Components**
   - Updated Docker images to the 2026.2.0 RC1 tags on Docker Hub where available.

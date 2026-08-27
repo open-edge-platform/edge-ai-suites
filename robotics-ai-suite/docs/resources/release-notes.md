@@ -1,6 +1,6 @@
 # Release Notes: Robotics AI Suite 2026.2
 
-**September 07, 2026**
+**Release Date**: September 9, 2026
 
 ## Autonomous Mobile Robot
 
