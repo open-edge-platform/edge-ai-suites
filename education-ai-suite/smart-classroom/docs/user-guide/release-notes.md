@@ -62,9 +62,9 @@ WebRTC WHEP streaming, Intel Wildcat Lake platform support, and updates to audio
 **New**:
 
 - **Content Search module** for uploading documents and media, indexing them with
-  OpenVINO-accelerated embedding models, and retrieving results by text or image query.
+  OpenVINO™-accelerated embedding models, and retrieving results by text or image query.
 - **Q&A support** in Content Search for querying uploaded content with locally running LLMs.
-- **OCR** in Content Search with OpenVINO and PaddleOCR for printed and handwritten documents.
+- **OCR** in Content Search with OpenVINO™ and PaddleOCR for printed and handwritten documents.
 - **Mandarin/Chinese language support** for QnA and transcription pipelines.
 - **File listing and file removal endpoints** in the Content Search API.
 - **Config API endpoint** in Content Search for runtime search and embedding settings.
