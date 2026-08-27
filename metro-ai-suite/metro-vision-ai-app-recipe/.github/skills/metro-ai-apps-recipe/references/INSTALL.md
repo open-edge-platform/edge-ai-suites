@@ -214,7 +214,7 @@ No `frames` volume — video leaves DLSPS over WebRTC.
     networks: [app_network]
 ```
 
-Services: `nginx`, `dlstreamer-pipeline-server`, `broker` (mosquitto), `node-red`, `grafana`, `mediamtx`, `coturn`. No Prometheus, OTel, metrics-manager, or SceneScape. `nginx` should `depends_on: [mediamtx]`. DLSPS env adds `ENABLE_WEBRTC=true`, `WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`, and `mediamtx-server` in `no_proxy`.
+Services: `nginx`, `dlstreamer-pipeline-server`, `broker` (mosquitto), `node-red`, `grafana`, `mediamtx`, `coturn`. No Prometheus, OTel, metrics-manager, or Scenescape. `nginx` should `depends_on: [mediamtx]`. DLSPS env adds `ENABLE_WEBRTC=true`, `WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889`, and `mediamtx-server` in `no_proxy`.
 
 ### WebRTC ICE reachability — REQUIRED or the video panels stay black
 
@@ -278,7 +278,7 @@ Walk this list explicitly and confirm every item that applies to the prompt:
     and the class-filter IDs applied in Node-RED.
 12. **GPU/NPU** (if `_gpu`/`_npu`) — `group_add: ["${VIDEO_GID}","${RENDER_GID}"]`
     and `device=GPU`/`NPU` on the inference elements.
-13. **SceneScape** (only when `{{SCENESCAPE}}=yes`) — state you delegate to the
+13. **Scenescape** (only when `{{SCENESCAPE}}=yes`) — state you delegate to the
     external `scenescape-setup` skill, pass `SCENE_NAME={{SCENE_NAME}}` and one
     unique `CAMERA_ID` per stream, keep the DLSPS detector, and replace the
     MediaMTX/Node-RED/Grafana-MQTT tail with the scene-fusion path.

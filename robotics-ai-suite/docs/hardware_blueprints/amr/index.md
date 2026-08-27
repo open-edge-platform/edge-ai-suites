@@ -49,25 +49,26 @@ supports every hardware or middleware combination.
 
 ## AMR Development Paths
 
-::::{grid} 2
+<!--hide_directive
+::::{grid} 2hide_directive-->
 
-:::{grid-item-card} Simulation Learning Path
-:link: ../../software_references/amr/simulation/index
+<!--hide_directive:::{grid-item-card}hide_directive--> **Simulation Learning Path**
+<!--hide_directive:link: ../../software_references/amr/simulation/index
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Learn how to use the simulation-focused tools and components provided in the toolkit.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} Deployment Learning Path
-:link: ../../software_references/amr/deployment/index
+<!--hide_directive:::{grid-item-card}hide_directive--> **Deployment Learning Path**
+<!--hide_directive:link: ../../software_references/amr/deployment/index
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Learn how to use the deployment-focused tools and components provided in the toolkit.
-:::
-
+<!--hide_directive:::
 ::::
+hide_directive-->
 
 ```{toctree}
 :maxdepth: 1

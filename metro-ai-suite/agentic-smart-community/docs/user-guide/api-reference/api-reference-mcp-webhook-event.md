@@ -13,6 +13,7 @@ The MCP server exposes an HTTP webhook `POST /events` that ingests pipeline even
 | Default port | `3101` (configurable in `config.yaml`) |
 | Content-Type | `application/json` |
 | Auth | None (loopback / intranet deployment) |
+| Bind address | `127.0.0.1`, hardcoded and not configurable — anyone who reaches this port can write events into the database. The only producer is the on-host videostream-analytics service, which runs with `network_mode: host` and POSTs to localhost. |
 | Client | Any process that can issue an HTTP POST; the production client is `videostream-analytics`, but the protocol is not tied to any implementation |
 
 ### 1.1 Health Probe

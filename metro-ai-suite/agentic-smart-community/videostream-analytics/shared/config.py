@@ -147,7 +147,7 @@ class KeepaliveConfig(BaseModel):
 
 
 class SecurityConfig(BaseModel):
-    """Input-surface restrictions for request-supplied stream URLs.
+    """Input-surface restrictions for request-supplied stream URLs and paths.
 
     `source_url` is handed verbatim to `ffmpeg -i` (continuous_recorder.py) and
     to `cv2.VideoCapture(..., CAP_FFMPEG)` (rtsp_monitor.py). ffmpeg supports a
@@ -155,6 +155,13 @@ class SecurityConfig(BaseModel):
     allowlist a caller can point a "camera" at any local file or internal HTTP
     endpoint and have the contents muxed into `data_dir`, from where the MCP
     dashboard will happily serve it back as an mp4.
+
+    `prefilter.model_path` is the same shape of problem one layer down: it
+    reaches `openvino.Core().read_model()` both at validation time
+    (service._validate_target_classes) and in the running pipeline
+    (rtsp_monitor._init_prefilter), so an unrestricted value hands an
+    unauthenticated caller a file-existence oracle plus a way to have arbitrary
+    server files parsed as an IR model. See `service.validate_model_path`.
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -175,6 +182,19 @@ class SecurityConfig(BaseModel):
             "file", "crypto", "rtp", "udp", "tcp", "tls", "rtsp", "rtsps", "http", "https",
         ]
     )
+    # Extra roots a request-supplied `prefilter.model_path` may live under, on
+    # top of the directory holding `defaults.prefilter.model_path` (the
+    # deployment's own model, injected as `PREFILTER_MODEL`). Empty (the
+    # default) means that one directory is the only permitted root — which
+    # costs nothing today, since neither the MCP server nor the API test suite
+    # ever sends `model_path`; the field exists in the schema but every caller
+    # inherits the deployment default. Set this (e.g. to `~/models`) only for a
+    # deployment that genuinely switches models over the API.
+    #
+    # Deliberately NOT a suffix allowlist: `setup_docker.sh` already checks the
+    # `.xml` IR pair deployment-side, and `read_model` also accepts ONNX/TF, so
+    # the API should not assume a format on the caller's behalf.
+    allowed_model_roots: list[str] = Field(default_factory=list)
 
 
 class WebhookConfig(BaseModel):
@@ -331,6 +351,49 @@ def resolve_contained_dir(roots: list[str], candidate: str) -> str:
     return lexical
 
 
+def resolve_contained_file(roots: list[str], candidate: str, kind: str) -> str:
+    """Return `candidate` fully resolved, or raise ValueError if it escapes `roots`.
+
+    Same job as `resolve_contained_dir`, for a file target that the caller is
+    going to read rather than create, with two deliberate differences:
+
+    * It resolves symlinks up front (`realpath`) and containment is checked
+      once, against the resolved path. `resolve_contained_dir` has to check
+      twice because its target does not exist yet, so the lexical pass is the
+      only thing guarding the not-yet-created suffix. Existence is NOT required
+      here either — `realpath` is non-strict, and callers already tolerate a
+      missing model — so this does not become an existence oracle for paths
+      that are inside a permitted root.
+    * Containment is expressed as `startswith(root + os.sep)` rather than
+      `commonpath(...) == root`. The two are equivalent (both require a strict
+      descendant), but `str.startswith` is the only check CodeQL's
+      `py/path-injection` state machine recognises as a `SafeAccessCheck` — see
+      `Path::SafeAccessCheck::Range` in the Python library, whose sole
+      implementation is `StartswithCall`. Without it the query reports
+      `read_model(model_path)` no matter how the path was validated.
+
+    For the same reason the RESOLVED path is returned and callers must use it:
+    a validate-and-discard helper leaves the raw request value on the flow into
+    the sink, so the check would be invisible to the query and, worse, the
+    pipeline would go on to load an unnormalized path.
+    """
+    if not roots:
+        raise ValueError(f"no permitted {kind} root is configured")
+    if "\x00" in candidate:
+        raise ValueError("path must not contain NUL bytes")
+    if not os.path.isabs(candidate):
+        raise ValueError("path must be absolute")
+
+    resolved = os.path.realpath(os.path.normpath(candidate))
+    for root in roots:
+        # `rstrip` then re-append so a root of `/` (or a trailing slash in
+        # config) yields `/` rather than `//`, which nothing would match.
+        prefix = os.path.realpath(os.path.normpath(root)).rstrip(os.sep) + os.sep
+        if resolved.startswith(prefix):
+            return resolved
+    raise ValueError(f"path escapes the permitted {kind} root(s)")
+
+
 def merge_config(defaults: ConfigModelT, override: ConfigModelT | None) -> ConfigModelT:
     """Merge explicitly-set override fields onto defaults."""
     if override is None:
@@ -356,6 +419,9 @@ def load_config(config_path: str | None = None) -> AppConfig:
 
     config.data_dir = expand_path(config.data_dir)
     config.allowed_data_roots = [expand_path(r) for r in config.allowed_data_roots]
+    config.security.allowed_model_roots = [
+        expand_path(r) for r in config.security.allowed_model_roots
+    ]
 
     # `prefilter.model_path` may use ${HOME}/~ placeholders in config.yaml, mirroring
     # the node side which already expands ${HOME} in monitor-yaml paths. VSA reads its

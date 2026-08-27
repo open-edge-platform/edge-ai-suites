@@ -22,9 +22,11 @@ See **[USB Camera Guide](./usb/index.md)** for instructions on setting up a GMSL
 ```
 
 
+<!--hide_directive
 :::{toctree}
 :hidden:
 
 GMSL Cameras <gmsl/index>
 USB Cameras <usb/index>
 :::
+hide_directive-->
