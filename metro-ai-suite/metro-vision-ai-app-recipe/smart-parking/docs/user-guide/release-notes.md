@@ -4,20 +4,20 @@
 
 **Release Date**: September 9, 2026
 
-**New**
+**New**:
 
 - Fixed coturn server configuration for WebRTC relay.
 - Fixed Grafana MQTT datasource version to avoid errors with the latest version.
 - Added documentation showcasing NPU value addition.
 
-**Improved**
+**Improved**:
 
 - Improved the security context of Grafana and Node-RED containers.
 - Consumed latest DL Streamer version 2026.2.0.
 
 ## Version 1.5.0
 
-**New**
+**New**:
 
 - Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
 - Deprecated EMF deployment packages.
@@ -28,11 +28,11 @@
 
 ## v1.4.0
 
-**New**
+**New**:
 
 - Qualified on the Intel® Core™ Ultra Series 3 processor.
 
-**Improved**
+**Improved**:
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
 - Optimized the latency for GPU and NPU workloads.
@@ -45,9 +45,9 @@
 
 ## Version 1.2
 
-March 28th, 2025
+**Release Date**: March 28, 2025
 
-### High-Level Features
+**Features**:
 
 - **Enhanced Object Detection Models:** Improved accuracy and performance of pre-trained deep learning models for object detection and classification.
 - **Advanced Analytics Dashboard:** Grafana dashboards with additional metrics and visualizations for better monitoring and analysis.

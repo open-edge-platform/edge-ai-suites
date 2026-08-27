@@ -1,12 +1,8 @@
 # Release Notes: Multi-Modal Patient Monitoring
 
-<!--## Version 2026.2-->
-
-<!--date TBD-->
-
 ## Version 1.0.0
 
-**March 25, 2026**
+**Release Date**: March 25, 2026
 
 This is the initial release of the application, therefore, it is considered a preview version.
 
@@ -18,7 +14,7 @@ It proves that heterogeneous workloads — from 3D human pose estimation to hear
 extraction, AI-based ECG analysis, and medical device simulation — can coexist efficiently on
 one platform without compromising performance or stability.
 
-**New**
+**New**:
 
 The initial feature set of the application is now available:
 
@@ -27,7 +23,7 @@ The initial feature set of the application is now available:
 - Pose estimation with joint tracking
 - ECG analysis with 12-lead classification
 
-**Known issues**
+**Known issues**:
 
 - Docker fails with the `gathering device information` error.
 
