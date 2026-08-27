@@ -53,7 +53,7 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
    ![Installer](../../images/install/installer_6.png)
 
-7. If the installation is successful, you will see a dialog simliar to the following:
+7. If the installation is successful, you will see a dialog similar to the following:
 
    ![Installer](../../images/install/installer_7.png)
 
@@ -63,7 +63,7 @@ The Robotics AI Suite Installer automatically sets ``ROS_DOMAIN_ID`` environment
 to a random number between 0 and 100 within your ``.bashrc`` configuration.
 
 Your shell profile script has already been modified to use this ID and the ROS toolkit.
-To use ROS 2 commands in thecurrent shell, source ROS 2 shell setup script:
+To use ROS 2 commands in the current shell, source ROS 2 shell setup script:
 
 ```bash
 source /opt/ros/jazzy/setup.bash

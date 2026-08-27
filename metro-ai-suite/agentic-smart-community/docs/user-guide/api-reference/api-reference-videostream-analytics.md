@@ -217,7 +217,7 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `true` | Enable OpenVINO™ YOLO prefilter on motion clips. |
-| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO™ `.xml` model. |
+| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO™ `.xml` model. When supplied in a request it must resolve (after symlinks) inside a permitted model root — the directory of `defaults.prefilter.model_path`, plus anything in `security.allowed_model_roots` — otherwise the request is rejected with 400. Omit it to inherit the deployment default, which is what the MCP server does; the stored value is the resolved path. |
 | `target_classes` | `array<string>` | `["person"]` | Class labels that count as a hit. |
 | `min_confidence` | `float` | `0.4` | Minimum detection confidence. Must be within 0–1. |
 | `min_frames_hit` | `int` | `1` | Number of hits within a clip required for PASS. Must be ≥ 1. |
@@ -610,6 +610,7 @@ Retention responsibilities:
 | `security.allowed_source_schemes` | `["rtsp", "rtsps", "http", "https"]` | Schemes accepted in a register `source_url`. The URL is handed to `ffmpeg -i` verbatim, and ffmpeg can open local files and exotic inputs without this gate. |
 | `security.allow_file_source` | `false` | Also allow `file://` sources. Enable only for offline evaluation against sample clips on disk; in any shared deployment it is an arbitrary-file-read. |
 | `security.ffmpeg_protocol_whitelist` | `[file, crypto, rtp, udp, tcp, tls, rtsp, rtsps, http, https]` | Passed to ffmpeg as `-protocol_whitelist` — a second gate inside ffmpeg itself, so an input that slips past the scheme check still cannot be opened. `file` and `crypto` are required by the segment muxer's own output handling. |
+| `security.allowed_model_roots` | `[]` (empty) | Additional roots a request-supplied `prefilter.model_path` may live under, on top of the directory holding `defaults.prefilter.model_path`. Empty means that one directory is the only permitted root — enough for the standard deployment, since neither the MCP server nor the API test suite ever sends `model_path`. A request-supplied path reaches `read_model()` both during validation and in the running pipeline, so leaving it unconfined on an unauthenticated API is a file-existence oracle plus an arbitrary-file-parse primitive. Set this only for a deployment that genuinely switches models over the API. |
 | `SMART_COMMUNITY_DATA_DIR` | `~/.mcp-smart-community` | Overrides the platform data root; VSA writes under its `segments/` subdirectory. |
 | `VIDEOSTREAM_CONFIG` | `config/config.yaml` | Alternate configuration file path. |
 | `PREFILTER_MODEL` | `~/models/openvino/yolo11s/FP16/yolo11s.xml` | OpenVINO™ prefilter XML. `setup_docker.sh` validates the XML/BIN pair before startup and prepares the static YOLO11s IR automatically when it is missing. The model must be under `MODEL_DIR`, which is mounted read-only into the container. |

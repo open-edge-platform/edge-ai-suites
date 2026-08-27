@@ -33,11 +33,7 @@ If you want to build the image.Using the provided script to build the image is h
 
 export MODEL_DIR=your_model_dir
 
-eg:/home/vpp/yolov8n_int8
-
 export MODEL_FILE=your_model_file
-
-eg:yolov8n_with_preprocess.xml
 
 docker compose build
 ```

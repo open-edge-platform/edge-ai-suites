@@ -259,7 +259,7 @@ Content Search runs in the same `smartclassroom` environment as the backend.
 
 When all services are ready:
 
-```
+```text
 [launcher] All 5 services are ready. (startup took XXs)
 [launcher] You can use Ctrl+C to stop all services.
 ```

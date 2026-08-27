@@ -24,7 +24,6 @@ RUN mkdir -p /models/intel/yolo-v2-tiny-vehicle-detection-0001/FP16 && \
 
 ENV HTTP_PROXY="" HTTPS_PROXY="" http_proxy="" https_proxy=""
 
-COPY detector.py .
 COPY detector_multicam.py .
 COPY detector_multicam_rtsp.py .
 COPY entrypoint.sh .
@@ -41,4 +40,4 @@ ENV LIBVA_DRIVERS_PATH=/usr/lib/x86_64-linux-gnu/dri
 
 USER dlstreamer
 
-CMD ["python3", "-u", "detector.py"]
+CMD ["/app/entrypoint.sh"]
