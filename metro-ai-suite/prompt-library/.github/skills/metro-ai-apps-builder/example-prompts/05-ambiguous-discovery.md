@@ -19,7 +19,7 @@ technology):
 - spot/count/alert on live feed → **`metro-ai-apps-recipe`**
 - search/summarize recordings → **`vss-deploy`** (+ `vss-search-index` /
   `vss-summarize-video`)
-- cross-camera tracking → **`scenescape-setup`** via the recipe's SceneScape path
+- cross-camera tracking → **`scenescape-setup`** via the recipe's Scenescape path
 
 If still unclear, load [`../references/DISCOVERY.md`](../references/DISCOVERY.md)
 to confirm the live catalog, then present **two** candidate plans and let the

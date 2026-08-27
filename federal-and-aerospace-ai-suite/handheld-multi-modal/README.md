@@ -54,7 +54,7 @@ Run `make setup` after cloning to auto-detect the `render` group GID and write t
 
 > **Recommended — use `make deploy`.**
 > This stack requires the Visual Pipeline and Platform Evaluation Tool to be running first because the tool will create the `fedaero` Docker network. Running `docker compose up -d` first **will fail** with:
-> ```
+> ```text
 > network visual-pipeline-and-platform-evaluation-tool_default declared as external, but could not be found
 > ```
 > `make deploy` handles everything — it fetches Visual Pipeline and Platform Evaluation Tool, starts it, waits for the network, then brings up this stack.

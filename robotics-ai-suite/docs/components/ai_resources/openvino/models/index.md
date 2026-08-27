@@ -26,6 +26,7 @@ For Humanoid workflows, complete the [platform getting-started guide](../../../.
 
 Please also find information for the models of imitation learning, grasp generation, simultaneous localization and mapping (SLAM) and bird's-eye view (BEV):
 
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 
@@ -39,3 +40,4 @@ model_fastbev
 model_depthanythingv2
 model_rdt
 :::
+hide_directive-->

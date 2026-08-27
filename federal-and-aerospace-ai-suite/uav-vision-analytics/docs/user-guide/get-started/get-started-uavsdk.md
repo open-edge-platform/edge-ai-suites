@@ -148,7 +148,7 @@ make start-rtsp DEVICE=all     # all three cameras simultaneously
 > `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **uav-mission-compute-sdk mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`; available after drone arms):
-```
+```text
 rtsp://localhost:8555/nadir      (nadir camera, CPU)
 rtsp://localhost:8555/forward    (forward camera, GPU)
 rtsp://localhost:8555/rear       (rear camera, NPU)

@@ -28,7 +28,7 @@ Coturn) serves any DL Streamer / OpenVINO CV pipeline — only the model, class
 filter, alert rule, dashboard, and topics differ. Follows the open-edge-platform
 [Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe)
 **MediaMTX + Coturn + WebRTC** path, streamlined (**no Prometheus/OTel**).
-SceneScape is **off by default** (opt-in multi-camera analysis). Metadata flows
+Scenescape is **off by default** (opt-in multi-camera analysis). Metadata flows
 DLSPS→MQTT→Node-RED→Grafana; video is decoupled (DLSPS overlays via
 `gvawatermark`, WHIP-pushes each source to MediaMTX, `ENABLE_WEBRTC=true`,
 per-source `peer-id`) — see architecture below.
@@ -38,7 +38,7 @@ per-source `peer-id`) — see architecture below.
 **Use when** building an object-detection, classification, object-counting, or
 zone/line-crossing alerting pipeline for any vertical (smart city/ITS, retail,
 industrial, logistics, healthcare, or a custom OpenVINO/ONNX model). Optionally
-adds a SceneScape multi-camera path, or a lightweight demo/PoC single app when
+adds a Scenescape multi-camera path, or a lightweight demo/PoC single app when
 no full stack is needed.
 
 **Not for:** non-Intel or cloud-only deployments, Prometheus/OpenTelemetry
@@ -66,10 +66,10 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
    [`references/DEMO_POC.md`](references/DEMO_POC.md), skip questions 1–7; else
    (**production**, default) continue.
 3. Ask the 7 questions in ONE batched message (defaults in brackets); accept
-   `go`/`defaults`/empty. Question 7 selects the **SceneScape** path.
+   `go`/`defaults`/empty. Question 7 selects the **Scenescape** path.
 4. Run parameter validation (below); refuse to proceed on any failure.
 5. Load reference file(s) on demand — **not all up front** (per the *Reference
-   files* table): SceneScape only when `{{SCENESCAPE}}=yes`; PIPELINE for
+   files* table): Scenescape only when `{{SCENESCAPE}}=yes`; PIPELINE for
    GPU/NPU, RTSP/`/dev/video`, or classifier; NODE_RED for `<`/`<=`/`>=` rules
    or a non-empty `{{CLASS_FILTER_IDS}}`.
 6. Verify against completion criteria before declaring success (record
@@ -108,8 +108,8 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 | `{{DASHBOARD_SLUG}}` | e.g. `smart-parking` |
 | `{{NUM_SOURCES}}` | default `4` |
 | `{{SCENESCAPE}}` | `yes` \| `no` (default `no`). `yes` = multi-camera path ([SCENESCAPE](references/SCENESCAPE.md)) |
-| `{{SCENE_NAME}}` | (SceneScape only) scene name, e.g. `intersection-1` |
-| `{{CAMERA_IDS}}` | (SceneScape only) unique IDs (no `/`), one per input stream, in input order |
+| `{{SCENE_NAME}}` | (Scenescape only) scene name, e.g. `intersection-1` |
+| `{{CAMERA_IDS}}` | (Scenescape only) unique IDs (no `/`), one per input stream, in input order |
 | `{{TURN_USER}}`, `{{TURN_PASS}}` | Coturn / MediaMTX ICE credentials (default `turnuser` / a generated secret) |
 
 ## Questions (single batched prompt)
@@ -126,7 +126,7 @@ questions 1–7 (they apply to `production` only).
    download, no file:// watchdog (see [PIPELINE](references/PIPELINE.md)).
 5. Node-RED rule [`{{DEFAULT_RULE}}`, `{{RULE_SCOPE}}`]
 6. Alert channel [MQTT `{{ALERT_TOPIC}}`]
-7. SceneScape multi-camera spatial analysis? [`{{SCENESCAPE}}`, default `no`]
+7. Scenescape multi-camera spatial analysis? [`{{SCENESCAPE}}`, default `no`]
    (if `yes`, also collect `{{SCENE_NAME}}` + one unique `{{CAMERA_IDS}}` per
    input stream → [`references/SCENESCAPE.md`](references/SCENESCAPE.md))
 
@@ -134,7 +134,7 @@ questions 1–7 (they apply to `production` only).
 
 Ship `validate_env.sh` and call it as step 0 of `install.sh`; reject on any
 failure. The script body and full **validation rules table** (`MODE`, `HOST_IP`,
-`NUM_SOURCES`, `DEVICE`, `PIPELINE_NAME`, topics, TURN creds, inputs, SceneScape
+`NUM_SOURCES`, `DEVICE`, `PIPELINE_NAME`, topics, TURN creds, inputs, Scenescape
 params, …) are in [`references/INSTALL.md`](references/INSTALL.md).
 
 ## Reference architecture
@@ -150,7 +150,7 @@ DLSPS→MQTT→Mosquitto→Node-RED→Grafana; DLSPS→WHIP→MediaMTX (peer-id
 ## Demo/PoC mode
 
 When Question 0 selects `demo`, **do not build the full stack** (no Compose
-topology, no MediaMTX/Coturn/Node-RED/Grafana/Nginx, no SceneScape). Produce one
+topology, no MediaMTX/Coturn/Node-RED/Grafana/Nginx, no Scenescape). Produce one
 lightweight app proving a model runs on Intel hardware. Two sub-paths (ask which):
 
 - **DL Streamer app** — a simple DL Streamer / GStreamer pipeline; delegate to
@@ -162,11 +162,11 @@ Full guidance + lightweight criteria are in
 [`references/DEMO_POC.md`](references/DEMO_POC.md) — load only on this branch;
 production criteria (1–11) do **not** apply in demo mode.
 
-## SceneScape spatial-analysis path (optional, `{{SCENESCAPE}}=yes`)
+## Scenescape spatial-analysis path (optional, `{{SCENESCAPE}}=yes`)
 
-When Question 7 selects SceneScape, **branch**: keep the DLSPS detection pipeline
+When Question 7 selects Scenescape, **branch**: keep the DLSPS detection pipeline
 but replace the MediaMTX/WebRTC + Node-RED + Grafana-MQTT tail with an Intel®
-SceneScape multi-camera scene-fusion stack. **Do not re-implement by hand** —
+Scenescape multi-camera scene-fusion stack. **Do not re-implement by hand** —
 delegate to `scenescape-setup`, passing `{{SCENE_NAME}}` + `{{CAMERA_IDS}}`.
 Architecture, images, validation, criteria in
 [`references/SCENESCAPE.md`](references/SCENESCAPE.md); load only on this branch.
@@ -255,7 +255,7 @@ recipe uses the same path — consult it for `config.json`, `mosquitto.conf`,
 
 ## Completion criteria (all must pass)
 
-> When `{{SCENESCAPE}}=yes`, criteria 3–11 are **superseded** by the SceneScape
+> When `{{SCENESCAPE}}=yes`, criteria 3–11 are **superseded** by the Scenescape
 > criteria in [`references/SCENESCAPE.md`](references/SCENESCAPE.md); 1–2 still apply.
 
 1. `./install.sh` succeeds: `.env` populated; INT8 model + optional classifier
@@ -299,6 +299,6 @@ line** in your closing summary — walk every completion criterion plus the
 proof-point checklist (topology, WebRTC, pinned tags incl. `grafana:11.5.4`,
 MQTT/class filter, no literal `{{...}}`, `validate_env.sh` step 0, cert
 `subjectAltName`, curl `--noproxy '*'` + `--cacert`, inputs/watchdog, parsed
-rule, classifier, GPU `group_add`, SceneScape) detailed in
+rule, classifier, GPU `group_add`, Scenescape) detailed in
 [`references/INSTALL.md`](references/INSTALL.md) → *Final-summary proof points*.
 A claim with no quoted evidence is treated as unmet.

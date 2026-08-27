@@ -83,7 +83,7 @@ Each response should be: `{"status": "ok"}`
 
 Open your browser and navigate to:
 
-```
+```text
 http://127.0.0.1:7860
 ```
 
