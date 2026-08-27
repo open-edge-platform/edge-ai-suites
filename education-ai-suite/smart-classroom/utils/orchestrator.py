@@ -10,6 +10,7 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.session_manager import generate_session_id
 from utils import session_store
+from utils.va_completion import wait_for_va_completion
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 
 logger = logging.getLogger(__name__)
@@ -158,7 +159,8 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
 
     _start_board_ocr_if_enabled(session_id, wanted)
 
-    if not done.wait(timeout=3600):
+    timeout = getattr(config.va_pipeline, "completion_timeout_sec", 3600)
+    if not wait_for_va_completion(service, wanted, done, final_status, timeout):
         raise _OrchestrationError("va timed out")
 
     _stop_board_ocr_if_enabled(session_id, final_status)
