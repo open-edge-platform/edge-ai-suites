@@ -487,6 +487,17 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
       const token: string | undefined = chunk.token ?? chunk.summary_token;
       if (typeof token === 'string' && token.length > 0) {
         yield { type: 'summary_token', token };
+        continue;
+      }
+      // Progress from the staged path of a long summary: map counts lesson
+      // segments, fold counts note groups, reduce just marks the final write.
+      if (chunk.event === 'progress' && typeof chunk.chunks === 'number') {
+        yield {
+          type: 'summary_progress',
+          stage: String(chunk.stage ?? 'map'),
+          chunk: Number(chunk.chunk ?? 0),
+          chunks: Number(chunk.chunks),
+        };
       }
     }
   }

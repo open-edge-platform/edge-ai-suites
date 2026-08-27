@@ -57,3 +57,11 @@
 .summary-content b {
   font-weight: 700;
 }
+
+/* Shown while a long transcript is being summarized segment by segment,
+   before the first token of the final summary arrives. */
+.summary-progress {
+  padding: 0.75rem 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
