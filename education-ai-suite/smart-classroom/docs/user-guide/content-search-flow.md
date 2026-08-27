@@ -175,7 +175,7 @@ Upload and search functionality is affected until all services are healthy.
 | Content Search API | 9011 | Orchestrator and public API |
 | File Ingest & Retrieve | 9990 | Embedding, indexing, and retrieval |
 | Video Preprocess | 8001 | Video chunking and VLM summarization |
-| VLM OpenVINO Serving | 9900 | VLM inference |
+| VLM OpenVINO™ Serving | 9900 | VLM inference |
 | ChromaDB | 9090 | Vector database |
 
 ## Learn More
