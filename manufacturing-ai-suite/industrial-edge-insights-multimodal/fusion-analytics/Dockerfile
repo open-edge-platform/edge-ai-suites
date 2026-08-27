@@ -40,6 +40,8 @@ RUN  if [ "$COPYLEFT_SOURCES" = "true" ]; then \
       done; \
     fi
 
+RUN python -m pip uninstall -y pip && \
+    rm -rf /usr/local/lib/python3.13/ensurepip/_bundled  
 # Expose any necessary ports (if needed for debugging/monitoring)
 EXPOSE 8080
 
