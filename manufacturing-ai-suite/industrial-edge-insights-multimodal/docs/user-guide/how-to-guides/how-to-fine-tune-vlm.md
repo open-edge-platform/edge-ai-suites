@@ -1,24 +1,26 @@
-# VLM Fine-Tuning with Unsloth
+# VLM Fine-Tuning with Unsloth Library
 
-Standalone process for fine-tuning a vision-language
-model (VLM) on your own multimodal (image + text) dataset using
-[Unsloth](https://github.com/unslothai/unsloth) + LoRA, and running
-inference with the resulting adapter. This document describes the flow
-generically — it applies regardless of what domain or dataset you bring.
+VLM Fine-Tuning with the Unsloth Library is a standalone process for
+fine-tuning a vision-language model (VLM) on your own multimodal
+(image and text) dataset using the [Unsloth](https://github.com/unslothai/unsloth)
+library and the Low-Rank Adaptation (LoRA) fine-tuning method, and
+running inference with the resulting adapter.
 
-> **Looking for a concrete, ready-to-run example?** See
-> [Fine-Tune a VLM with Unsloth — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md) for a full worked instance of this
-> flow applied to a weld-defect visual inspection dataset (input schema,
-> prompt design, and the exact commands used).
+> **Note**: This section describes a generic flow that applies to all domains and
+datasets. For a concrete and ready-to-run example, see
+[Fine-Tune a VLM with Unsloth Library — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
+This example applies the generic flow to the weld-defect visual
+inspection dataset, including but not limited to, the input schema,
+prompt design, and the exact commands.
 
 This directory is **not integrated** with the rest of
-`industrial-edge-insights-multimodal` — it does not wire into the
+`industrial-edge-insights-multimodal; it does not wire into the
 `docker-compose*.yml` stacks, `configs/`, or the vLLM serving setup in this
-repo. It is a self-contained data-prep + fine-tuning + inference workflow you
-run independently (e.g. on a dev box or training server) to produce a LoRA
-adapter. Once you have an adapter, you can serve it with the existing
-`docker-compose-vllm.yml` in this repo, or with
-any OpenAI-compatible VLM server that supports LoRA adapters.
+repository. It is a self-contained data preparation, fine-tuning, and inference
+workflow that you run independently (e.g. on a development box or training server)
+to produce a LoRA adapter. Once you have the adapter, you can serve it with the
+existing configuration in [`docker-compose-vllm.yml`](../../docker-compose-vllm.yml),
+or with any OpenAI-compatible VLM server that supports LoRA adapters.
 
 ## Table of Contents
 
@@ -40,22 +42,22 @@ This process is intentionally split into two concerns:
 1. **Bring your own dataset**, prepared as a parquet file (or files) in the
    chat-conversation shape described in
    [Expected Dataset Format](#expected-dataset-format). How you produce
-   that parquet file is entirely up to your domain/data — see the
+   that parquet file depends on your domain and data; see the
    [Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md) for one concrete example
-   (`prepare_weld_dataset.py`) that fuses weld images + sensor telemetry
+   (`prepare_weld_dataset.py`) that fuses weld images and sensor telemetry
    into this shape.
 2. **Fine-tune and run inference** on that dataset with the two generic,
    domain-agnostic scripts in this directory:
 
-| Script | Input | Output |
-|---|---|---|
-| `train_qwen.py` | A parquet dataset (`image` + `conversation_json` columns) | LoRA adapter + tokenizer |
-| `infer_qwen.py` | Base model or adapter (from `train_qwen.py`) | Streamed model response, token-by-token |
+   | Script | Input | Output |
+   |---|---|---|
+   | `train_qwen.py` | A parquet dataset (`image` + `conversation_json` columns) | LoRA adapter + tokenizer |
+   | `infer_qwen.py` | Base model or adapter (from `train_qwen.py`) | Streamed model response, token-by-token |
 
-`common.py` holds small helpers shared by `train_qwen.py` and
-`infer_qwen.py` (device detection, chat-message conversion) so the two
-scripts stay modular and independently runnable, and so neither one embeds
-any domain-specific assumptions about your dataset's content.
+   `common.py` holds small helpers (e.g. device detection and chat-message conversion)
+   shared by the `train_qwen.py` and `infer_qwen.py` scripts, so the two scripts
+   stay modular and independently runnable, and neither embeds any domain-specific
+   assumptions about your dataset's content.
 
 ## Directory Layout
 
@@ -63,32 +65,45 @@ any domain-specific assumptions about your dataset's content.
 vlm-fine-tuning/
 ├── README.md                  # short pointer to this guide
 ├── requirements.txt           # pinned Python dependencies
-├── common.py                  # shared chat-format / device-detection helpers
-├── prepare_weld_dataset.py    # weld-specific dataset prep (see the Weld Usecase guide)
-├── train_qwen.py               # Generic LoRA fine-tuning (Unsloth + TRL)
+├── common.py                  # shared chat-format and device-detection helpers
+├── prepare_weld_dataset.py    # weld-specific dataset preparation (see the Weld use case guide)
+├── train_qwen.py               # Generic LoRA fine-tuning using the Unsloth library and Transformer Reinforcement Learning (TRL) trainer
 └── infer_qwen.py               # Generic standalone inference
 ```
 
-Generated artifacts (not checked in — see `.gitignore` note below) land in
-whatever `--output-dir` / `--dataset-path` you pass on the command line,
-e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
+> **Notes**:
+> Generated artifacts are written to the directories specified by
+> `--output-dir` and `--dataset-path` that you pass on the command line,
+> for example, `processed_dataset/` and `qwen_3.5_2b_adapter/`.
+> If you fork the `vlm-fine-tuning` directory into your own repository, add
+> `processed_dataset/`, `*_adapter/`, `checkpoint-*/`, and downloaded
+> datasets and images to `.gitignore`. Do not commit these generated artifacts.
 
-> If you fork this into your own repo, add `processed_dataset/`,
-> `*_adapter/`, `checkpoint-*/`, and any downloaded datasets/images to
-> `.gitignore` — none of these generated artifacts should be committed.
 
 ## Prerequisites
 
-- Python 3.12
-- ~16 GB+ RAM for data preparation (image + tabular processing), if your
-  dataset-prep step is similarly memory-bound
-- Install the Intel Compute Runtime drivers - https://github.com/intel/compute-runtime/releases
-- A GPU/XPU is strongly recommended for fine-tuning and inference:
+- Python programming version 3.12 or newer
+- 16-GB RAM or more for data preparation, i.e. image and tabular processing,
+  if your dataset preparation requires intensive memory operations like the
+  Weld Worked example does.
+- Install the Intel® Graphics Compute Runtime for oneAPI Level Zero and OpenCL™ Driver
+  from https://github.com/intel/compute-runtime/releases.
+- A GPU or an XPU is strongly recommended for fine-tuning and inference:
+  - An Intel® Arc™ GPU or integrated Intel® GPU with the PyTorch build for Intel XPU, or
+
+
   - Intel GPU (Arc / integrated) via Intel XPU PyTorch build, or
-  - CPU (functional but slow; useful only for smoke-testing the pipeline)
-- Ensure your user can access the GPU's DRM render nodes. The `render` group
+
+In summary, Intel XPU PyTorch build is a PyTorch distribution specifically configured to work with Intel GPUs (Arc or integrated), enabling accelerated fine-tuning and inference in the VLM workflow for Manufacturing AI applications.
+
+Intel XPU PyTorch build is a PyTorch distribution with Intel GPU (XPU) support that enables accelerated VLM training, fine-tuning, and inference on supported Intel hardware for Manufacturing AI workloads.
+
+
+  - A CPU that supports the workflow but runs slowly; use it for pipeline smoke tests only.
+- Ensure that your user can access the GPU's DRM render nodes. The `render` group
   provides GPU rendering access without granting broader display-management
   permissions. Check the render-node group and your current group memberships:
+
 
   ```bash
   stat -c "%G" /dev/dri/render*
@@ -119,7 +134,8 @@ pip install .[intel-gpu-torch2110]
 
 ```
 
-To validate if XPU setup is done correctly.
+To validate if XPU setup is done correctly:
+
 ```python
 
 import torch
@@ -129,14 +145,24 @@ print(f"XPU device count: {torch.xpu.device_count()}")
 print(f"XPU device name: {torch.xpu.get_device_name(0)}")
 ```
 
+[CONTINUE FROM HERE]
 
-Unsloth auto-detects the installed PyTorch backend (XPU/CUDA/CPU) at import
+The Unsloth library auto-detects the installed PyTorch backend (XPU/CUDA/CPU) at import
 time, and `common.detect_device()` selects `xpu` > `cpu` for
 tensor placement during training/inference.
 
+
+
+
+The Unsloth library automatically detects the installed PyTorch backend at initialization by evaluating support for Intel XPU, CUDA, and CPU in that priority order. The detect_device() function in common.py implements this fallback mechanism: it first checks for Intel XPU availability via torch.xpu.is_available(), then CUDA via torch.cuda.is_available(), and defaults to CPU if neither accelerator is detected. The selected device is then used for tensor placement during model training and inference operations."
+
+
+
+
+
 ## Pipeline Architecture
 
-At a high level, this is a generic 2-stage flow that sits on top of
+At a high level, this is a generic two-stage flow that sits on top of
 any dataset-preparation step you bring:
 
 ```mermaid
@@ -166,19 +192,19 @@ flowchart LR
 Each stage is independently runnable and only depends on the previous
 stage's on-disk output (parquet dataset → LoRA adapter → served model), so
 you can re-run, inspect, or swap out any one stage without touching the
-others — including swapping in a completely different dataset-prep script
+others — including swapping in a completely different dataset-preparation script
 for a different domain.
 
 ## Expected Dataset Format
 
-`train_qwen.py` and `infer_qwen.py` only require a
+`train_qwen.py` and `infer_qwen.py` only require
 [HuggingFace `datasets`](https://github.com/huggingface/datasets)-loadable
 parquet file (or directory of per-split parquet files) with two columns:
 
 | Column | Type | Description |
 |---|---|---|
 | `image` | image (bytes, castable via `datasets.Image()`) | The image for this sample |
-| `conversation_json` | string (JSON) | A 3-turn chat conversation: `system` (persona/instructions), `user` (text + image reference), `assistant` (the target response the model should learn to produce) |
+| `conversation_json` | string (JSON) | A three-turn chat conversation: `system` (persona/instructions), `user` (text and image reference), `assistant` (the target response the model should learn to produce) |
 
 The `conversation_json` value must parse into a list of chat messages, e.g.:
 
@@ -192,17 +218,17 @@ The `conversation_json` value must parse into a list of chat messages, e.g.:
 ```
 
 `common.convert_to_conversation()` parses this per row and swaps in the
-loaded `image` column value at train time; `common.build_inference_messages()`
+loaded `image` column value at training time; `common.build_inference_messages()`
 does the analogous thing for a single inference request. Neither function
 (nor `train_qwen.py`/`infer_qwen.py`) makes any assumption about what the
 system/user/assistant text actually contains — that's entirely up to your
-dataset-prep step. Splitting into `train`/`validation`/`test` (e.g. as
+dataset-preparation step. Splitting into `train`/`validation`/`test` (e.g. as
 separate parquet files, or as named splits in one directory) is expected by
 `train_qwen.py` (`train`/`validation`) and `infer_qwen.py` (any split you
 pass via `--split`).
 
 For a concrete example of building this format from raw domain data
-(images + tabular telemetry), including how many prompt variants to use
+(images and tabular telemetry), including how many prompt variants to use
 and why, see the [Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
 
 ## Step: Fine-Tune the Model
