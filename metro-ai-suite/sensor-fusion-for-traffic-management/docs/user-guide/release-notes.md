@@ -2,7 +2,7 @@
 
 ## Version 2026.1.0
 
-**June 17, 2026**
+**Release Date**: June 17, 2026
 
 This release delivers **BEVFusion 3D object detection** enablement and
 optimization on Intel® GPUs. It provides a complete end-to-end pipeline — from
@@ -17,7 +17,7 @@ Supported Platforms:
 | Intel® Panther Lake (PTL)    | Integrated GPU |
 | Intel® Arc B580 (Battlemage) | Discrete GPU   |
 
-**New**
+**New**:
 
 - **Sparse Convolution OpenVINO™ GPU Plugin Implementation**
 
@@ -55,7 +55,7 @@ Supported Platforms:
   quantization (NNCF-based), and NVIDIA checkpoint compatibility (direct
   conversion from CUDA-V2XFusion `.pth` to Intel® GPU deploy without retraining).
 
-**Improved**
+**Improved**:
 
 - **INT8 and FP16 inference optimization**
 
@@ -79,7 +79,7 @@ Supported Platforms:
   Built-in visualization interface with BEV and camera-view overlays
   (`--save-image`, `--save-video`, `--display`).
 
-**Known Issues**
+**Known Issues**:
 
 - On Battlemage GPUs (Arc B580), the split pipeline falls back to FP16 for the
   fuser stage (`fuser.onnx`) due to a known INT8 fuser issue;

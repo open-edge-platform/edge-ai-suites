@@ -4,7 +4,7 @@
 
 **Release Date**: September 9, 2026
 
-**Improved**
+**Improved**:
 
 - **Core Library support**
 
