@@ -30,6 +30,7 @@ from dto.ocr_dto import OCRExtractRequest, OCRResponse
 from components.ocr.ocr_pipeline import ocr_detect_file, ocr_extract_text
 from utils.telegram_sender import get_sender
 from utils.scp_sender import get_scp_sender
+from utils import session_store, orchestrator
 
 import logging
 logger = logging.getLogger(__name__)
@@ -45,6 +46,115 @@ def health():
     from model_manager import ModelManager
     hub = ModelManager.instance().health()
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
+
+
+def _session_dir(session_id: str) -> str:
+    proj = RuntimeConfig.get_section("Project")
+    return os.path.join(proj.get("location"), proj.get("name"), session_id)
+
+
+@router.get("/sessions")
+def list_sessions():
+    sessions = []
+    for state in session_store.SessionStore.list_all():
+        sessions.append(
+            {
+                "session_id": state.get("session_id"),
+                "state": state.get("state"),
+                "current_stage": state.get("current_stage"),
+                "stages": state.get("stages"),
+                "sources": state.get("sources"),
+                "started_at": state.get("started_at"),
+                "updated_at": state.get("updated_at"),
+            }
+        )
+    return JSONResponse(content={"total": len(sessions), "sessions": sessions}, status_code=200)
+
+
+@router.post("/sessions/process")
+def process_session(payload: dict):
+    stages = payload.get("stages") or []
+    if not stages:
+        raise HTTPException(status_code=400, detail="stages required")
+    _validate_stages(stages)
+    session_id = orchestrator.start_process(payload)
+    state = session_store.SessionStore.get(session_id)
+    return JSONResponse(
+        content={
+            "session_id": session_id,
+            "stages": state.get("stages") if state else stages,
+            "output_dir": os.path.abspath(_session_dir(session_id)),
+            "started_at": state.get("started_at") if state else None,
+        },
+        status_code=200,
+    )
+
+
+@router.get("/sessions/{session_id}/status")
+def get_session_progress(session_id: str):
+    state = session_store.SessionStore.get(session_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="session not found")
+    return JSONResponse(content=_status_response(state), status_code=200)
+
+
+@router.delete("/sessions/{session_id}")
+def delete_session(session_id: str):
+    import shutil
+
+    state = session_store.SessionStore.get(session_id)
+    if state is None:
+        raise HTTPException(status_code=404, detail="session not found")
+    if state.get("state") == "running":
+        raise HTTPException(
+            status_code=409,
+            detail="session is running; cannot delete until it finishes",
+        )
+
+    session_store.SessionStore.delete(session_id)
+
+    session_dir = _session_dir(session_id)
+    files_removed = False
+    if os.path.isdir(session_dir):
+        try:
+            shutil.rmtree(session_dir)
+            files_removed = True
+        except OSError as e:
+            logger.error(f"failed to remove session dir {session_dir}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"record deleted but failed to remove files: {e}",
+            )
+
+    return JSONResponse(
+        content={
+            "session_id": session_id,
+            "deleted": True,
+            "files_removed": files_removed,
+        },
+        status_code=200,
+    )
+
+
+def _validate_stages(stages: list) -> None:
+    from utils.session_store import _ALL_STAGES
+    for s in stages:
+        if s not in _ALL_STAGES:
+            raise HTTPException(status_code=400, detail=f"unknown stage: {s}")
+
+
+def _status_response(state: dict) -> dict:
+    return {
+        "session_id": state.get("session_id"),
+        "state": state.get("state"),
+        "current_stage": state.get("current_stage"),
+        "stages": state.get("stages"),
+        "sources": state.get("sources"),
+        "output_dir": os.path.abspath(_session_dir(state.get("session_id"))),
+        "error": state.get("error"),
+        "started_at": state.get("started_at"),
+        "updated_at": state.get("updated_at"),
+    }
 
 
 @router.get("/features")

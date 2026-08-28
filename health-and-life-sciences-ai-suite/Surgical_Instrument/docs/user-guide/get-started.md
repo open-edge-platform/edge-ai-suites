@@ -192,7 +192,13 @@ starts them with `RENDER_GID` / `VIDEO_GID` auto-detected from the host — no l
 needed.
 
 ```bash
-# Live Basler camera (P-core pinned, free-running sink).
+# Live Basler camera, tuned for fixed exposure + GPU detection with a live window.
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        BASLER_PIXEL_FORMAT=ycbcr422_8 BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=5000 \
+        BASLER_THROUGHPUT_LIMIT=400000000 DETECT=1 DETECTION_DEVICE=GPU \
+        AUTOVIDEOSINK=true PIPELINE_VIDEO_SINK=autovideosink
+
+# Minimal live Basler camera (P-core pinned, free-running sink).
 make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
         PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false
 
@@ -207,7 +213,13 @@ make logs            # optional: follow readiness/startup logs
 OpenVINO + Ultralytics, UI = Vite build → nginx, pipeline = DL Streamer + gencamsrc).
 
 ```bash
-# Live Basler camera, built from source
+# Live Basler camera, tuned and built from source
+make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
+        BASLER_PIXEL_FORMAT=ycbcr422_8 BASLER_FIXED_CAMERA=1 BASLER_EXPOSURE_US=5000 \
+        BASLER_THROUGHPUT_LIMIT=400000000 DETECT=1 DETECTION_DEVICE=GPU \
+        AUTOVIDEOSINK=true PIPELINE_VIDEO_SINK=autovideosink REGISTRY=false
+
+# Minimal live Basler camera, built from source
 make up SOURCE_KIND=basler SOURCE_ARG=<SERIAL_NUMBER> \
         PIPELINE_GST_CORES=<P_CORES> PIPELINE_SINK_SYNC=false REGISTRY=false
 
@@ -331,6 +343,22 @@ Three common shapes are used in practice:
 - File preview
 - Minimal live camera
 - Tuned live inference
+
+### Basler camera tuning knobs
+
+For live Basler sources (`SOURCE_KIND=basler`), the following variables tune the
+camera and the display sink. See the tuned command in
+[4a. Pull images from registry](#4a-pull-images-from-registry-default) for a full example.
+
+| Variable                 | Default        | Meaning                                                                                     |
+|--------------------------|----------------|---------------------------------------------------------------------------------------------|
+| `BASLER_PIXEL_FORMAT`    | `ycbcr422_8`   | Camera pixel format (e.g. `ycbcr422_8`, `bayerbggr`).                                        |
+| `BASLER_FIXED_CAMERA`    | `0`            | Set to `1` to disable auto-exposure/auto-gain and apply the fixed values below.             |
+| `BASLER_EXPOSURE_US`     | unset          | Fixed exposure time in microseconds (applied only when `BASLER_FIXED_CAMERA=1`).            |
+| `BASLER_THROUGHPUT_LIMIT`| `400000000`    | `DeviceLinkThroughputLimit` in bytes/sec; lifts the camera off its default cap.             |
+| `DETECT`                 | `1`            | Set to `0` to run passthrough (no inference).                                                |
+| `AUTOVIDEOSINK`          | unset          | `true` opens a live render window (`DISPLAY_VIEW=1` + `SINK_SYNC=true`); `false` disables it.|
+| `PIPELINE_VIDEO_SINK`    | `autovideosink`| GStreamer sink element (e.g. `autovideosink`, `xvimagesink`).                                |
 
 
 

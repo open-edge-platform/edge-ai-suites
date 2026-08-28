@@ -44,7 +44,7 @@ VMS Adapter Plugin (VAP)
   └─────────────────────────────────────────────────────┘
            │
   ┌────────▼─────────────────────┐
-  │  Provider Dashboard (:3100)  │
+  │  Provider Dashboard (:3443)  │
   │  WebRTC player with captions │
   └──────────────────────────────┘
 ```

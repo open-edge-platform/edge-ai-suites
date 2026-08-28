@@ -45,6 +45,7 @@ pip install -e . --extra-index https://download.pytorch.org/whl/cpu
 ```
 
 ## Model Preparation
+
 Running model inference with the OpenVINO toolkit requires converting the model to the OpenVINO IR format.
 You can download the finetuned checkpoint form HF on a simulation task for convenience.
 ```bash
@@ -57,7 +58,7 @@ uv run hf download nvidia/GR00T-N1.7-LIBERO \
 Alternatively, you can convert your own checkpoints trained using the Gr00t framework.
 
 
-### Convert Gr00t n1.7 model 
+### Convert Gr00t n1.7 model
 To convert the standard Gr00t n1.7 model to OpenVINO single-IR, use the `export_ov_n1d7_single_ov.py` script.
 
 **Arguments:**

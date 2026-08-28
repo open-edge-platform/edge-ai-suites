@@ -24,11 +24,20 @@
 
 services:
 
-  # Inherit upstream's on-device model serving unchanged.
+  # Inherit upstream's on-device model serving, then confine its published port.
   vllm-ipex-serving:
     extends:
       file: ../.external/edge-ai-libraries/microservices/multilevel-video-understanding/docker/compose.yaml
       service: vllm-ipex-serving
+    # Upstream publishes this on 0.0.0.0 — an unauthenticated inference endpoint
+    # open to the whole LAN. Default to loopback; nothing off-host needs it in the
+    # single-host deployment. VLLM_BIND_HOST opts in when the model stack runs on a
+    # dedicated box, and drives multilevel below too so the two can't drift apart.
+    #
+    # `!override` REPLACES the inherited list — without it Compose appends and
+    # upstream's 0.0.0.0 mapping survives. Verify with `docker compose config`.
+    ports: !override
+      - "${VLLM_BIND_HOST:-127.0.0.1}:${VLLM_SERVICE_PORT:-41091}:8000"
     healthcheck:
       # First launch downloads + compiles the model (about 30 mins); give it room.
       start_period: 7200s
@@ -45,6 +54,10 @@ services:
     depends_on:
       vllm-ipex-serving:
         condition: service_healthy
+    # Same as vllm above: upstream publishes on 0.0.0.0 and the summary API is
+    # unauthenticated. Shares VLLM_BIND_HOST — see the note there.
+    ports: !override
+      - "${VLLM_BIND_HOST:-127.0.0.1}:${SERVICE_PORT:-8192}:8000"
     healthcheck:
       start_period: 7200s
       start_interval: 10s

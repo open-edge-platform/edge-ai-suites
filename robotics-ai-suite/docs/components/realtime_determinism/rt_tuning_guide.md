@@ -15,8 +15,8 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
   Modify as many configurations as possible.
   :::
 
-   ::::{tab-set}
-   :::{tab-item} Real-time Optimization
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> Real-time Optimization
 
    | Setting Name | Option | Setting Menu |
    |---|---|---|
@@ -41,9 +41,9 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
    | Low Power S0 Idle Capability | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Native ASPM | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Enabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
-   
-   :::
-   :::{tab-item} Generic (non-real-time)
+
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> Generic (non-real-time)
 
    | Setting Name | Option | Setting Menu |
    |---|---|---|
@@ -69,86 +69,86 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
    | Native ASPM | Auto | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Disabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
 
-   :::
-   ::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
    **Note<sup>*</sup>**: Active SOC-North Efficient-cores can be enabled **all** on Intel® Core™ Ultra Series 3 (Panther Lake) processor, while still **0** on Intel® Core™ Ultra Series 2 (Arrow Lake) processor under Real-time Optimization.
 
 ## Modify Boot Parameters
+
 To modify default boot parameters, edit `/etc/grub.d/10_eci_experimental`.
 
-   :::{note}
-   Modify `eci_cmdline_exp` in `/etc/grub.d/10_eci_experimental` for a better real-time performance and power consumption:
-   :::
+:::{note}
+Modify `eci_cmdline_exp` in `/etc/grub.d/10_eci_experimental` for a better real-time performance and power consumption:
+:::
 
-   ::::{tab-set}
-   :::{tab-item} **Ubuntu 24.04**
-   :sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
 
-   ```bash
-   # Modify default cmdline parameters to enable cstate/pstate
-   sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to affinity irq to core 0-7
-   sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to isolate cpus to core 8-11
-   sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set efi=noruntime
-   sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
-   # Kernel parameters need to load the correct Xe firmware
-   sudo sed -i '/^eci_cmdline_exp=/ s/i915\.[^ ]*[[:space:]]*//g' /etc/grub.d/10_eci_experimental
-   sudo sed -i '/^eci_cmdline_exp=/ s/xe\.force_probe/modprobe.blacklist=i915 xe.force_probe/' /etc/grub.d/10_eci_experimental
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ udmabuf.list_limit=8192 "/' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set iommu to passthrough mode
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' /etc/grub.d/10_eci_experimental
+```bash
+# Modify default cmdline parameters to enable cstate/pstate
+sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to affinity irq to core 0-7
+sudo sed -i 's/irqaffinity=0 /irqaffinity=0-7 /g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to isolate cpus to core 8-11
+sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=8-11 rcu_nocbs=8-11 nohz_full=8-11/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set efi=noruntime
+sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+# Kernel parameters need to load the correct Xe firmware
+sudo sed -i '/^eci_cmdline_exp=/ s/i915\.[^ ]*[[:space:]]*//g' /etc/grub.d/10_eci_experimental
+sudo sed -i '/^eci_cmdline_exp=/ s/xe\.force_probe/modprobe.blacklist=i915 xe.force_probe/' /etc/grub.d/10_eci_experimental
+sudo sed -i '/^eci_cmdline_exp=/ s/"$/ udmabuf.list_limit=8192 "/' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set iommu to passthrough mode
+sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' /etc/grub.d/10_eci_experimental
 
-   sudo update-grub
-   ```
+sudo update-grub
+```
 
-   :::
-   :::{tab-item} **Ubuntu 22.04**
-   :sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
-   ```bash
-   # Modify default cmdline parameters to enable cstate/pstate
-   sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to affinity irq to core 0-9
-   sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to isolate cpus to core 10-13
-   sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set efi=noruntime
-   sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
-   # Modify default cmdline parameter to set iommu to passthrough mode
-   sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
-   sudo update-grub
-   ```
-   
-   :::
-   ::::
+```bash
+# Modify default cmdline parameters to enable cstate/pstate
+sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to affinity irq to core 0-9
+sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to isolate cpus to core 10-13
+sudo sed -i 's/isolcpus=[^ ]* rcu_nocbs=[^ ]* nohz_full=[^ ]*/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set efi=noruntime
+sudo sed -i 's/efi=[^ ]*/efi=noruntime/g' /etc/grub.d/10_eci_experimental
+# Modify default cmdline parameter to set iommu to passthrough mode
+sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experimental
+sudo update-grub
+```
 
-   The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
-   - `isolcpus`: Isolates specified CPU cores from the generic scheduler, dedicating them to real-time tasks.
-   - `rcu_nocbs`: Prevents specified CPU cores from handling RCU (Real-Copy-Update) callback, reducing latency.
-   - `nohz_full`: Enables full dynamic ticks on specified CPU cores, reducing timer interrupts.
-   - `irqaffinity`: Directs all hardware interrupts to specified CPU cores, keeping them free for real-time tasks.
+The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
 
+- `isolcpus`: Isolates specified CPU cores from the generic scheduler, dedicating them to real-time tasks.
+- `rcu_nocbs`: Prevents specified CPU cores from handling RCU (Real-Copy-Update) callback, reducing latency.
+- `nohz_full`: Enables full dynamic ticks on specified CPU cores, reducing timer interrupts.
+- `irqaffinity`: Directs all hardware interrupts to specified CPU cores, keeping them free for real-time tasks.
 
 To achieve optimum real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
 
-::::{tab-set}
-:::{tab-item} **Ubuntu 24.04**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ![PTL RT setup diagram](../../components/ai_resources/developer_tools/assets/images/ptl_rt_setup.png)
 
-:::
-:::{tab-item} **Ubuntu 22.04**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
 ![ARL RT setup diagram](../../components/ai_resources/developer_tools/assets/images/arl_rt_setup.png)
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Use Cache Allocation Technology
 
@@ -164,10 +164,9 @@ For more information about CAT, refer to the following resources:
 
 Below is an example script to partition the Last Level Cache (LLC) and L2 Cache, assigning an exclusive portion to real-time tasks. Ensure you have installed the Linux `msr-tools` to test it according to your configuration:
 
-::::{tab-set}
-:::{tab-item} **Ubuntu 24.04**
-:sync: jazzy
-
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 (e.g. core 11 as isolated core)
 
@@ -188,9 +187,9 @@ wrmsr -p11 0xd11 0xff00   # real-time mask
 wrmsr -p11 0xc8f 0x100000000
 ```
 
-:::
-:::{tab-item} **Ubuntu 22.04**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
 (e.g. core 13 as isolated core)
 
@@ -211,8 +210,8 @@ wrmsr -p13 0xd11 0xff00   # real-time mask
 wrmsr -p13 0xc8f 0x100000000
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Use Dynamic Voltage and Frequency
 
@@ -233,9 +232,9 @@ expectations of the CPU and should be used with careful consideration.
 
 Below is an example to boost the real-time core to 3GHz, with the Energy Performance Preference (EPP) set to performance to ensure Quality of Service (QoS) in case of power limit throttling:
 
-::::{tab-set}
-:::{tab-item} **Ubuntu 24.04**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 (e.g. core 11 as isolated core on Intel® Core™ Ultra Processors 358H)
 
@@ -273,9 +272,9 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
   wrmsr 0x774 -p 15 0x80002101
   ```
 
-:::
-:::{tab-item} **Ubuntu 22.04**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
+<!--hide_directive:sync: humblehide_directive-->
 
 (e.g. core 13 as isolated core on Intel® Core™ Ultra Processors 255H)
 
@@ -311,8 +310,8 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
   wrmsr 0x774 -p 13 0x00002a2a
   ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 :::{attention}
 On current Intel platforms, the P-state of performance (P) cores can be selected
@@ -383,6 +382,7 @@ Swap can be disabled with following command:
 ```bash
 swapoff -a
 ```
+
 ## Stop Unnecessary Services
 
 On Linux, by default, many services run in the background. Stopping services may reduce spurious interrupts depending on the workload type. To list the loaded services, run the following command:
@@ -405,12 +405,12 @@ systemctl stop fwupd-refresh.timer fwupd.service snapd.socket snapd.service
 
 ## Prevent integrated graphics from changing power states
 
-The Intel integrated graphics engine manages power and frequency, which impacts latency for real-time workloads. 
+The Intel integrated graphics engine manages power and frequency, which impacts latency for real-time workloads.
 
 Intel® Graphics Render Standby Technology (Intel® GRST), RC6, or RC6+ adjusts the integrated graphics engine's voltage very low, or close to zero, when the system is asleep. In some cases, RC6 has caused latency spikes in real-time workloads. Therefore, RC6 should be disabled to improve real-time performance.
 
-::::{tab-set}
-:::{tab-item} **i915**
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **i915**
 
 Because of the way the Linux i915 graphics driver handles RC6, this feature must be disabled in both the BIOS and in the i915 Linux graphics driver. Refer to Table 5, which describes RC6 disabling in the BIOS. The Linux command-line interface command used to disable RC6 are shown below:
 
@@ -423,8 +423,8 @@ i915.enable_rc6=0
 echo 0 > /sys/class/drm/card0/gt_rc6_enable
 ```
 
-:::
-:::{tab-item}  **Xe**
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive-->  **Xe**
 
 As the Xe driver does not support disabling RC6, there is no parameter for it. Try below methods to hold forcewake so that GT will always ON. Keep the debugfs file descriptor by letting a long‑lived shell process hold it open. Either method works as follows (replace PATH with the real forcewake_all path, e.g., /sys/kernel/debug/dri/0/forcewake_all):
 
@@ -441,11 +441,11 @@ As the Xe driver does not support disabling RC6, there is no parameter for it. T
    ```bash
    sleep 999999 < /sys/kernel/debug/dri/0/forcewake_all &
    # Kill the sleep to release
-   kill -9 pid 
+   kill -9 pid
    ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Verify Benchmark Performance
 

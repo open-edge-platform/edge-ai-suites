@@ -18,8 +18,8 @@ cp .env.example .env
 # Build and start all services (postgres, backend, ui)
 docker compose up -d
 
-# Access the UI (default port 3100)
-open http://localhost:3100
+# Access the UI (default port 3443)
+open https://localhost:3443
 ```
 
 ## Docker Configuration

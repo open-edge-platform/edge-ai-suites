@@ -14,42 +14,42 @@ A 30-second snapshot to verify system health.
 
 1. Source your ROS2 environment:
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+   <!--hide_directive::::{tab-set}hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+   <!--hide_directive:sync: jazzyhide_directive-->
 
-```bash
-source /opt/ros/jazzy/setup.bash
-```
+   ```bash
+   source /opt/ros/jazzy/setup.bash
+   ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
+   <!--hide_directive:sync: humblehide_directive-->
 
-```bash
-source /opt/ros/humble/setup.bash
-```
+   ```bash
+   source /opt/ros/humble/setup.bash
+   ```
 
-:::
-::::
+   <!--hide_directive:::hide_directive-->
+   <!--hide_directive::::hide_directive-->
 
 2. Launch your ROS2 system:
 
-```bash
-ros2 launch my_robot robot.launch.py
-```
+   ```bash
+   ros2 launch my_robot robot.launch.py
+   ```
 
 3. In a new terminal, run the quick check (completes automatically):
 
-```bash
-uv run python src/monitor_stack.py --duration 30
-```
+   ```bash
+   uv run python src/monitor_stack.py --duration 30
+   ```
 
 4. Review auto-generated results:
 
-```bash
-ls monitoring_sessions/latest/visualizations/
-```
+   ```bash
+   ls monitoring_sessions/latest/visualizations/
+   ```
 
 **Output files:**
 

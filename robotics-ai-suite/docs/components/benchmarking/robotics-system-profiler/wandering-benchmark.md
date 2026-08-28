@@ -132,7 +132,7 @@ uv run python src/visualize_graph.py monitoring_sessions/wandering/<session>/gra
 
 ## Session Data Layout
 
-```
+```text
 monitoring_sessions/
 └── wandering/
     ├── bench_20260319_100421/        # benchmark run directory

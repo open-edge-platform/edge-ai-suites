@@ -17,29 +17,30 @@ The source code of this component can be found here:
 
 ## Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#3-set-up-robotics-ai-suite-oneapi-and-graphics-apt-repositories)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#4-install-openvino-packages)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#6-install-robotics-ai-suite-deb-packages)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#7-install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
 ## Run the FastMapping Standalone Application
-1. If Ubuntu 22.04 with Humble is used, then run
 
-```bash
-source /opt/ros/humble/setup.bash
-```
+1. For Ubuntu 22.04 with Humble, run:
 
-If Ubuntu 24.04 with Jazzy is used, then run
+   ```bash
+   source /opt/ros/humble/setup.bash
+   ```
 
-```bash
-source /opt/ros/jazzy/setup.bash
-```
+   For Ubuntu 24.04 with Jazzy, run:
 
-This command will set `ROS_DISTRO` env var that is used in following steps.
+   ```bash
+   source /opt/ros/jazzy/setup.bash
+   ```
+
+   This command will set `ROS_DISTRO` env var that is used in following steps.
 
 2. To download and install the FastMapping standalone sample
-    application run the command below:
+   application run the command below:
 
     ``` bash
     sudo apt-get install ros-${ROS_DISTRO}-fast-mapping
@@ -51,14 +52,14 @@ This command will set `ROS_DISTRO` env var that is used in following steps.
     > bag can be found at `/opt/ros/${ROS_DISTRO}$/share/bagfiles/spinning/`
 
 3. Run the FastMapping sample application using a ROS 2 bag of a robot
-    spinning:
+   spinning:
 
     ``` bash
     ros2 launch fast_mapping fast_mapping.launch.py
     ```
 
 4. Run the FastMapping sample application using Intel® RealSense™
-    camera input with RTAB-Map:
+   camera input with RTAB-Map:
 
     ```bash
     sudo apt install ros-${ROS_DISTRO}-rtabmap-ros

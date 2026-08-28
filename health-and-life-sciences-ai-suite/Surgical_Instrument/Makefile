@@ -45,11 +45,14 @@ SOURCE_ARG            ?=
 # SOURCE_ARG=40067928 BASLER_PIXEL_FORMAT=bayerbggr`).
 ifeq ($(strip $(SOURCE_KIND)),basler)
   BASLER_PIXEL_FORMAT           ?= ycbcr422_8
+  # DeviceLinkThroughputLimit in bytes/sec; 400 MB/s lifts the dart camera off
+  # its 160 MB/s default cap. Override on the CLI to change or set empty.
+  BASLER_THROUGHPUT_LIMIT       ?= 400000000
   PIPELINE_PREPROC_BACKEND      ?= va-surface-sharing
   SCHEDULING_POLICY             ?= latency
   BATCH_SIZE                    ?= 1
-  PIPELINE_GST_CORES            ?= 3-5
-  PIPELINE_GST_RT_PRIORITY      ?= 70
+  # Core pinning (taskset -c) and RT priority (chrt -f) are opt-in only —
+  # pass PIPELINE_GST_CORES / PIPELINE_GST_RT_PRIORITY on the CLI to enable.
   PIPELINE_DISPLAY_VIEW         ?= 1
   # autovideosink is avoided here: in-container it auto-selects kmssink, which
   # fails with a DRM resource error and crash-loops. xvimagesink is the
@@ -114,6 +117,7 @@ PIPELINE_GST_RT_PRIORITY      ?=
 BASLER_FIXED_CAMERA  ?= 0
 BASLER_EXPOSURE_US   ?=
 BASLER_GAIN          ?=
+BASLER_THROUGHPUT_LIMIT ?=
 BASLER_PIXEL_FORMAT  ?= bayerbggr
 
 # Render/video GIDs are auto-detected from the host so /dev/dri passthrough
@@ -206,9 +210,10 @@ up:  ## First-boot: build images + start stack. May take 20-35 min if no cached 
 	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
 	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_THROUGHPUT_LIMIT=$(BASLER_THROUGHPUT_LIMIT) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d $(_BUILD_FLAG)
+		$(COMPOSE) -f docker-compose.yaml $$(test -f $(CAMERA_OVERRIDE) && echo -f $(CAMERA_OVERRIDE)) up -d $(_BUILD_FLAG)
 	@echo "[up] image mode: $(if $(filter true,$(REGISTRY)),REGISTRY (prebuilt images @ $(TAG)),SOURCE (built from Dockerfiles))"
 	@echo "[up] First boot may take 20-35 min while YOLO11n trains on the iGPU."
 	@echo "[up] Follow progress: make logs"
@@ -235,9 +240,10 @@ run:  ## Fast subsequent boot: start stack without rebuild. Requires cached IR.
 	PIPELINE_IE_CONFIG=$(PIPELINE_IE_CONFIG) \
 	PIPELINE_FPSCOUNTER=$(PIPELINE_FPSCOUNTER) \
 	BASLER_FIXED_CAMERA=$(BASLER_FIXED_CAMERA) BASLER_EXPOSURE_US=$(BASLER_EXPOSURE_US) BASLER_GAIN=$(BASLER_GAIN) \
+	BASLER_THROUGHPUT_LIMIT=$(BASLER_THROUGHPUT_LIMIT) \
 	BASLER_PIXEL_FORMAT=$(BASLER_PIXEL_FORMAT) \
 	RENDER_GID=$(RENDER_GID) VIDEO_GID=$(VIDEO_GID) \
-		$(COMPOSE) $(_COMPOSE_FILES) up -d
+		$(COMPOSE) -f docker-compose.yaml $$(test -f $(CAMERA_OVERRIDE) && echo -f $(CAMERA_OVERRIDE)) up -d
 	$(_print_urls)
 
 .PHONY: show-cores
@@ -393,6 +399,19 @@ doctor:  ## Pre-flight: check Docker, /dev/dri, models, videos, ports
 	else \
 	  printf "  [FAIL] docker daemon not reachable — is the service running and is your user in the docker group?\n"; fail=1; \
 	fi; \
+	missing_l0=""; \
+	for pkg in $(L0_PKGS); do \
+	  if ! dpkg-query -W -f='$${Status}' "$$pkg" 2>/dev/null | grep -q "install ok installed"; then \
+	    missing_l0="$$missing_l0 $$pkg"; \
+	  fi; \
+	done; \
+	if [ -z "$$missing_l0" ]; then \
+	  printf "  [ OK ] intel gpu compute runtime (Level Zero + IGC + GMM) installed\n"; \
+	else \
+	  printf "  [WARN] missing host packages required by 'make backend-bootstrap':%s\n" "$$missing_l0"; \
+	  printf "         (in-container 'make up' is unaffected — see docs/user-guide/quickstart.md §1a)\n"; \
+	  printf "         install with 'make check-l0' to see the exact apt commands\n"; \
+	fi; \
 	printf "\n[doctor] --- accelerator visibility ---\n"; \
 	if [ -e /dev/dri ]; then \
 	  RENDERS=$$(ls /dev/dri/renderD* 2>/dev/null | wc -l); \
@@ -480,8 +499,55 @@ BACKEND_VENV     ?= .venv-backend
 BACKEND_PY       ?= $(BACKEND_VENV)/bin/python
 TORCH_XPU_INDEX  ?= https://download.pytorch.org/whl/xpu
 
+# Intel GPU compute runtime packages required on the HOST for `make
+# backend-bootstrap` (torch+xpu loads Level Zero + IGC + GMM from the host).
+# Container-side runs (`make up`) install these inside the image and are
+# unaffected. Keep this list in sync with the Dockerfile and with the
+# "Host prerequisites" section of docs/user-guide/quickstart.md.
+L0_PKGS ?= libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 intel-opencl-icd
+
+# Preflight helper: prints [ OK ] / [FAIL] for every L0_PKGS entry. Prints
+# copy-pasteable apt commands and exits non-zero if any are missing. Used
+# by `backend-venv` and `backend-bootstrap` so operators do not silently
+# hit `torch.xpu.is_available() == False` or `zeInit` loader errors.
+define _check_l0_pkgs
+	@missing=""; \
+	for pkg in $(L0_PKGS); do \
+	  if dpkg-query -W -f='$${Status}' "$$pkg" 2>/dev/null | grep -q "install ok installed"; then \
+	    printf "  [ OK ] $$pkg\n"; \
+	  else \
+	    printf "  [FAIL] $$pkg (not installed)\n"; \
+	    missing="$$missing $$pkg"; \
+	  fi; \
+	done; \
+	if [ -n "$$missing" ]; then \
+	  echo ""; \
+	  echo "  Missing Intel GPU compute runtime packages required by torch+xpu."; \
+	  echo "  Install them once from the Intel graphics apt repo (Ubuntu 24.04):"; \
+	  echo ""; \
+	  echo "    sudo apt-get update && sudo apt-get install -y ca-certificates gnupg wget"; \
+	  echo "    wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \\"; \
+	  echo "      | sudo gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg"; \
+	  echo "    echo \"deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] \\"; \
+	  echo "    https://repositories.intel.com/gpu/ubuntu noble unified\" \\"; \
+	  echo "      | sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list"; \
+	  echo "    sudo apt-get update && sudo apt-get install -y$$missing intel-media-va-driver-non-free"; \
+	  echo ""; \
+	  echo "  See docs/user-guide/quickstart.md \"1a. Intel GPU compute runtime\" for details."; \
+	  exit 1; \
+	fi
+endef
+
+.PHONY: check-l0
+check-l0:  ## Verify host Intel GPU compute runtime (Level Zero + IGC + GMM) is installed
+	@printf "[check-l0] verifying host Intel GPU compute runtime packages...\n"
+	$(_check_l0_pkgs)
+	@printf "[check-l0] all required packages present.\n"
+
 .PHONY: backend-venv
 backend-venv:  ## Create .venv-backend with torch+xpu + Ultralytics + OpenVINO
+	@printf "[backend-venv] checking host Intel GPU compute runtime...\n"
+	$(_check_l0_pkgs)
 	@if [ ! -d $(BACKEND_VENV) ]; then \
 		python3 -m venv $(BACKEND_VENV); \
 		$(BACKEND_PY) -m pip install -U pip wheel; \
@@ -495,6 +561,8 @@ backend-venv:  ## Create .venv-backend with torch+xpu + Ultralytics + OpenVINO
 .PHONY: backend-bootstrap
 backend-bootstrap:  ## Run the cache-first bootstrap (skips train if IR cached)
 	@test -x $(BACKEND_PY) || (echo "[backend-bootstrap] run 'make backend-venv' first"; exit 1)
+	@printf "[backend-bootstrap] checking host Intel GPU compute runtime...\n"
+	$(_check_l0_pkgs)
 	$(BACKEND_PY) -m backend.main_bootstrap
 
 .PHONY: backend-infer

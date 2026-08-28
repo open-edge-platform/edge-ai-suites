@@ -153,7 +153,7 @@ Each suite directory has its own `README.md` with suite-level context. Each sub-
 Treat AI-generated output as **untrusted draft code** until reviewed and tested.
 Reject suggestions that bypass security controls for convenience or introduce unsafe defaults.
 
-Load [`.github/skills/security.md`](skills/security.md) when changes touch authentication, authorization, input parsing, secrets, Dockerfiles, Helm charts, or CI workflows.
+Load [`./skills/security-review/SKILL.md`](./skills/security-review/SKILL.md) when changes touch authentication, authorization, input parsing, secrets, Dockerfiles, Helm charts, or CI workflows.
 
 ## Contributing
 

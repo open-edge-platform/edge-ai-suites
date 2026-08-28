@@ -42,9 +42,9 @@ make grafana-open   # → http://localhost:30000
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
-| Grafana | http://localhost:30000 | admin / admin |
-| Prometheus | http://localhost:9090 | — |
-| Metrics endpoint | http://localhost:9092/metrics | — |
+| Grafana | <http://localhost:30000> | admin / admin |
+| Prometheus | <http://localhost:9090> | — |
+| Metrics endpoint | <http://localhost:9092/metrics> | — |
 
 > **Note:** The exporter uses **port 9092** because Prometheus runs in
 > host-network mode and binds port 9090 itself.
@@ -134,7 +134,7 @@ global:
 | Problem | Fix |
 |---------|-----|
 | No data in Grafana | Check exporter: `curl http://localhost:9092/metrics` |
-| Prometheus not scraping | Check targets: http://localhost:9090/targets |
+| Prometheus not scraping | Check targets: <http://localhost:9090/targets> |
 | No session data | Verify: `ls monitoring_sessions/*/` |
 | Port 9092 in use | `fuser -k 9092/tcp && make grafana-export SESSION=<name>` |
 | Port conflicts | Edit `grafana/docker-compose.yml` to change ports |

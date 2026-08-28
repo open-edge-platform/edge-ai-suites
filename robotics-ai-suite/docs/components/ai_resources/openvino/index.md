@@ -11,65 +11,69 @@ Use the current [OpenVINO installation documentation](https://docs.openvino.ai/l
 OpenVINO reference applications cover object detection, segmentation, and
 RealSense camera workflows.
 
-::::{grid} 2
+<!--hide_directive
+::::{grid} 2hide_directive-->
 
-:::{grid-item-card} Semantic Segmentation with RealSense
-:link: reference_applications/segmentation_realsense_tutorial
+<!--hide_directive:::{grid-item-card}hide_directive--> **Semantic Segmentation with RealSense**
+<!--hide_directive:link: reference_applications/segmentation_realsense_tutorial
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Run semantic segmentation on RealSense image data using OpenVINO inference.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} Object Detection
-:link: reference_applications/object_detection_tutorial
+<!--hide_directive:::{grid-item-card}hide_directive--> **Object Detection**
+<!--hide_directive:link: reference_applications/object_detection_tutorial
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Deploy object-detection workloads with ROS 2 camera inputs and OpenVINO acceleration.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} OpenVINO Multi-Camera Demo
-:link: reference_applications/openvino_multicam_demo
+<!--hide_directive:::{grid-item-card}hide_directive--> **OpenVINO Multi-Camera Demo**
+<!--hide_directive:link: reference_applications/openvino_multicam_demo
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Process multiple camera streams in a single OpenVINO-powered demo pipeline.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} YOLOv8 with OpenVINO
-:link: reference_applications/yolov8_openvino_tutorial
+<!--hide_directive:::{grid-item-card}hide_directive--> **YOLOv8 with OpenVINO**
+<!--hide_directive:link: reference_applications/yolov8_openvino_tutorial
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Use a YOLOv8 model with OpenVINO for accelerated object detection on robotics systems.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} OpenVINO Model Guidance
-:link: models/index
+<!--hide_directive:::{grid-item-card}hide_directive--> **OpenVINO Model Guidance**
+<!--hide_directive:link: models/index
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Optimize and deploy perception, manipulation, and vision-language-action models with OpenVINO.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} Pi0.5 Model Optimization
-:link: pi05-optimization
+<!--hide_directive:::{grid-item-card}hide_directive--> **Pi0.5 Model Optimization**
+<!--hide_directive:link: pi05-optimization
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Convert, compress, benchmark, and validate the Pi0.5 vision-language-action model.
-:::
-
+<!--hide_directive:::
 ::::
+hide_directive-->
 
+<!--hide_directive
 :::{toctree}
 :hidden:
 
 Reference Applications <reference_applications/index>
 models/index
 pi05-optimization
+OpenVINO Physical AI Runtime <https://github.com/openvinotoolkit/physicalai>
 :::
+hide_directive-->
 
 ## Additional Guidance
 

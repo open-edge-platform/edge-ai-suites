@@ -25,32 +25,32 @@ pip3 install numpy pandas openvino-dev ultralytics nncf onnx
 
 ### Install Deb package
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-openvino-yolov8 ros-jazzy-openvino-yolov8-msgs
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Run Demo with RealSense Camera Topic Input
 
 1. Download and convert a YOLOv8 model into OpenVINO format:
 
-```bash
-python3 -c 'from ultralytics import YOLO; model = YOLO("yolov8n.pt"); model.export(format="openvino")'
-```
+   ```bash
+   python3 -c 'from ultralytics import YOLO; model = YOLO("yolov8n.pt"); model.export(format="openvino")'
+   ```
 
 2. Create a config file `pipeline.toml`. If not present, sample content for
    this configuration file (including the comments) will be generated in the

@@ -302,13 +302,21 @@ class VideoAnalyticsPipelineService:
             if process.poll() is not None:
                 # Process has exited
                 log_file = self.pipeline_logs.get(pipeline_name)
+                normal_exit = bool(log_file) and self._check_normal_exit(log_file)
+                self.logger.info(
+                    f"[VA][monitor] pipeline '{pipeline_name}' exited rc={process.returncode} "
+                    f"normal_exit={normal_exit} log={log_file}"
+                )
 
-                if log_file and self._check_normal_exit(log_file):
+                if normal_exit:
                     # Normal exit with EOS
                     self.logger.info(
                         f"Pipeline '{pipeline_name}' exited normally (EOS received)"
                     )
                     self.pipeline_final_status[pipeline_name] = "eos"
+                    self.logger.info(
+                        f"[VA][monitor] marking '{pipeline_name}' eos; firing done callback"
+                    )
                     self._fire_done_callback_if_all_finished()
                     break
                 else:
@@ -343,9 +351,16 @@ class VideoAnalyticsPipelineService:
                         # Restart pipeline using saved parameters
                         params = self.pipeline_params.get(pipeline_name)
                         if params:
-                            self._launch_pipeline_internal(
-                                pipeline_name, params["options"], params["command"]
-                            )
+                            try:
+                                self._launch_pipeline_internal(
+                                    pipeline_name, params["options"], params["command"]
+                                )
+                            except Exception as e:
+                                self.logger.error(
+                                    f"[VA][monitor] restart of pipeline '{pipeline_name}' raised: {e}",
+                                    exc_info=True,
+                                )
+                                break
                         else:
                             self.logger.error(
                                 f"Cannot restart pipeline '{pipeline_name}': parameters not found"
@@ -367,22 +382,29 @@ class VideoAnalyticsPipelineService:
 
     def _fire_done_callback_if_all_finished(self):
         """Fire on_all_pipelines_done once when no pipeline processes remain running."""
-        if self._reports_generated or not self._any_pipeline_ran:
+        if self._reports_generated:
+            self.logger.info("[VA][done] skip: _reports_generated already set")
+            return
+        if not self._any_pipeline_ran:
+            self.logger.info("[VA][done] skip: _any_pipeline_ran is False")
             return
         still_running = [
             name for name, proc in self.pipelines.items()
             if proc.poll() is None
         ]
         if still_running:
-            self.logger.debug(f"[VA] Pipelines still running: {still_running} — reports deferred.")
+            self.logger.info(f"[VA][done] deferring, still running: {still_running}")
             return
         self._reports_generated = True
         self.logger.info("[VA] All pipelines finished — triggering engagement report generation.")
         if callable(self.on_all_pipelines_done):
             try:
                 self.on_all_pipelines_done(getattr(self, "x_session_id", None))
+                self.logger.info("[VA][done] callback returned")
             except Exception as exc:
                 self.logger.error(f"[VA] on_all_pipelines_done callback raised: {exc}", exc_info=True)
+        else:
+            self.logger.warning("[VA][done] no on_all_pipelines_done callback configured")
 
     def _launch_pipeline_internal(
         self, pipeline_name: str, options: PipelineOptions, command: List[str]

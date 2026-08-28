@@ -27,7 +27,7 @@ The main features are as follows:
 
 - **Audio transcription** with ASR models (e.g., Whisper, Paraformer)
 - **Speaker diarization** using Pyannote Audio models or FunASR CAM++
-- **Summarization** using LLMs (e.g., Qwen, LLaMA) optimized with OpenVINO
+- **Summarization** using LLMs (e.g., Qwen, LLaMA) optimized with OpenVINO™
 - **MindMap generation** using Mermaid.js for visual diagram rendering
 - **Content segmentation** for automatic topic extraction from transcripts
 - **Semantic topic search** using FAISS vector indexing
@@ -53,6 +53,8 @@ The main features are as follows:
 ./how-it-works
 ./application-flow
 ./content-search-flow
+./class-report-flow
+./grading-flow
 Release Notes <./release-notes>
 
 :::

@@ -38,9 +38,9 @@ Here is a list of benefits monocular depth estimation can deliver to robotics sc
 
 Depth Anything V2, is an active powerful foundation model for monocular depth estimation. It is capable of
 
-- 1. providing robust and fine-grained depth prediction,
-- 2. supporting extensive applications with varied model sizes (from 25M to 1.3B parameters),
-- 3. being easily fine-tuned to downstream tasks as a promising model initialization.
+- providing robust and fine-grained depth prediction,
+- supporting extensive applications with varied model sizes (from 25M to 1.3B parameters),
+- being easily fine-tuned to downstream tasks as a promising model initialization.
 
 ```{image} ../../developer_tools/assets/images/depthanythingv2.png
 :align: center

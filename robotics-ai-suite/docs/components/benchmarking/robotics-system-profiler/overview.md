@@ -33,7 +33,7 @@ distribution.
 
 The monitoring stack uses a two-layer design:
 
-```
+```text
                     ┌──────────────────────────────────┐
                     │     ROS2 System (Local/Remote)   │
                     │  Node A   Node B   Node C ...    │
@@ -138,7 +138,7 @@ Run with `--show` to enable an interactive window where you can:
 
 All output is saved in timestamped session folders:
 
-```
+```text
 monitoring_sessions/
 └── 20260306_154140/
     ├── session_info.txt          # Test configuration
