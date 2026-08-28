@@ -1,7 +1,7 @@
 # Agentic Smart Community
 
-::::{container} component_header_row
 <!--hide_directive
+::::{container} component_header_row
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/agentic-smart-community">
      GitHub
@@ -12,17 +12,24 @@
 </div>
 hide_directive-->
 
-> Note!
+> Note:
 > This is a sample application **intended for evaluation and development purposes only**.
   For more information, refer to
   [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
-::::
 
-An AI-agent-native video analysis platform built on the **MCP (Model Context Protocol)**. It hands AI agents a universal, framework-agnostic toolkit for video surveillance and analysis, so they can autonomously create, manage, and respond to custom use cases — with no changes to core components.
+<!--hide_directive :::: hide_directive-->
 
-Concretely, an agent can remind you when the fridge is running low on groceries, alert a parent the instant a child climbs onto a window sill, or flag when an elderly family member hasn't gotten up on time — and you can add a brand-new use case just by describing it in chat.
+An AI-agent-native video analysis platform built on the **MCP (Model Context Protocol)**.
+It hands AI agents a universal, framework-agnostic toolkit for video surveillance and analysis,
+so they can autonomously create, manage, and respond to custom use cases — with no changes to
+core components.
+
+For example, an agent can remind you when the fridge is running low on groceries, alert a
+parent when a child climbs onto a window sill, or flag when an elderly family member has
+not got up on time — and you can add a brand-new use case just by describing it in a chat.
 
 > **New here?** Bring the stack up in a few commands with the **[Get Started Guide](./get-started.md)**.
+
 
 ## Example Use Cases
 
