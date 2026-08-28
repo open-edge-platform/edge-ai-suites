@@ -24,7 +24,7 @@ user prefers the Geti app REST workflow instead of the library.
   `getitune-running-inference`.
 - Inferred technology: a detection recipe baseline, device per availability,
   FP32→INT8 via NNCF PTQ.
-- Install (after approval): `npx skills add open-edge-platform/skills --skill getitune-training-a-model` (and the other getitune skills as needed).
+- Install (after approval): `npx skills@1.5.23 add open-edge-platform/skills --skill getitune-training-a-model` (and the other getitune skills as needed).
 - Requirements: Python env for getitune; dataset accessible locally.
 
 **Follow-on:** the resulting IR can be deployed via `model-download-user` →
