@@ -200,6 +200,29 @@ async function createWindow() {
     if (menu) menu.popup({ window: mainWindow });
   });
 
+  // A dead renderer process cannot be caught by the in-page error boundary, so
+  // report it natively rather than leaving a blank window.
+  mainWindow.webContents.on('render-process-gone', async (_event, details) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      title: 'Smart Classroom',
+      message: 'The interface process stopped unexpectedly.',
+      detail: `Reason: ${details.reason}${
+        Number.isInteger(details.exitCode) ? ` (exit code ${details.exitCode})` : ''
+      }\n\nBackend services are unaffected and keep running.`,
+      buttons: ['Reload', 'Quit'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 0) mainWindow.reload();
+    else app.quit();
+  });
+
+  mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error('[electron] preload script failed:', preloadPath, error);
+  });
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
