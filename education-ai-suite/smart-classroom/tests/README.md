@@ -2,7 +2,7 @@
 
 本目录存放新代码的 pytest 单元测试。运行:`python -m pytest tests/`
 
-共 **27** 个用例。
+共 **36** 个用例。
 
 ## test_session_paths.py — SessionPaths 工具类
 
@@ -51,3 +51,33 @@
 | test_running_until_timeout_returns_false | pipeline 一直运行 → 超时返回 False |
 | test_final_status_refreshed_into_caller_dict | 完成后把 `pipeline_final_status` 刷进调用方 dict |
 | test_brief_dip_does_not_complete_prematurely | 进程短暂掉线又恢复 → 不误判完成 |
+
+## test_stage_events.py — 统计事件落盘
+
+验证 `utils/stage_events.py` 的 `StageEventWriter.write`,把 stage 事件 append 到 `<session>/stage_events.jsonl`。
+
+| 测试 | 验证内容 |
+| :--- | :--- |
+| test_write_creates_jsonl_with_fields | 写一条 → 文件存在、可 json 解析、字段齐全 |
+| test_write_appends_second_line | 连写两条 → 两行,failed 事件含 error_class |
+| test_write_swallows_os_error | 磁盘写失败 → 不抛异常(观测层不拖垮业务) |
+
+## test_stage_tracker.py — stage 埋点上下文管理器
+
+验证 `utils/stage_tracker.py` 的 `stage_tracker`,自动记开始/结束/耗时/异常。
+
+| 测试 | 验证内容 |
+| :--- | :--- |
+| test_success_writes_done_event | 正常路径 → 写 status=done、duration≥0 |
+| test_failure_writes_failed_event_and_reraises | 抛异常 → 写 status=failed + error_class,且异常被 re-raise |
+
+## test_session_log.py — per-session 日志 handler
+
+验证 `utils/session_log.py` 的 `session_log_handler`,在 session 执行期间动态挂/卸 `<session>/app.log` 的 file handler。
+
+| 测试 | 验证内容 |
+| :--- | :--- |
+| test_handler_added_and_removed | 进入时 root 多一个 handler、退出时移除 |
+| test_logs_written_to_session_file | 上下文内的日志写进 `<session>/app.log` |
+| test_no_write_after_exit | 退出后再 log 不再写入该文件(handler 已卸) |
+| test_makedirs_failure_does_not_raise | 建目录失败 → 不抛,只 warning |

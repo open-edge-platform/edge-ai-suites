@@ -10,6 +10,8 @@ from utils.storage_manager import StorageManager
 from utils.session_manager import generate_session_id
 from utils import session_store
 from utils.session_paths import SessionPaths
+from utils.session_log import session_log_handler, bind_session
+from utils.stage_tracker import stage_tracker
 from utils.va_completion import wait_for_va_completion
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 
@@ -30,29 +32,31 @@ def start_process(request: dict) -> str:
 
 
 def _run(session_id: str, request: dict, stages: list) -> None:
-    session_store.SessionStore.update(session_id, state="running")
-    va_error = []
-    va_thread = None
-    try:
-        if "va" in stages:
-            va_thread = threading.Thread(
-                target=_run_va_safe,
-                args=(session_id, request, stages, va_error),
-                daemon=True,
-            )
-            va_thread.start()
-        _run_audio_chain(session_id, request, stages, va_thread, va_error)
-        if va_error:
-            raise _OrchestrationError(va_error[0])
-        session_store.SessionStore.mark_completed(session_id)
-    except _OrchestrationError as e:
-        session_store.SessionStore.mark_failed(session_id, str(e))
-    except Exception as e:
-        logger.exception(f"[orchestrator] session {session_id} unexpected failure")
-        session_store.SessionStore.mark_failed(session_id, f"unexpected error: {e}")
+    with session_log_handler(session_id):
+        session_store.SessionStore.update(session_id, state="running")
+        va_error = []
+        va_thread = None
+        try:
+            if "va" in stages:
+                va_thread = threading.Thread(
+                    target=_run_va_safe,
+                    args=(session_id, request, stages, va_error),
+                    daemon=True,
+                )
+                va_thread.start()
+            _run_audio_chain(session_id, request, stages, va_thread, va_error)
+            if va_error:
+                raise _OrchestrationError(va_error[0])
+            session_store.SessionStore.mark_completed(session_id)
+        except _OrchestrationError as e:
+            session_store.SessionStore.mark_failed(session_id, str(e))
+        except Exception as e:
+            logger.exception(f"[orchestrator] session {session_id} unexpected failure")
+            session_store.SessionStore.mark_failed(session_id, f"unexpected error: {e}")
 
 
 def _run_va_safe(session_id: str, request: dict, stages: list, errors: list) -> None:
+    bind_session(session_id)
     try:
         _run_va_if_needed(session_id, request, stages)
     except _OrchestrationError as e:
@@ -72,30 +76,35 @@ def _run_audio_chain(session_id: str, request: dict, stages: list,
         if not audio_path:
             raise _OrchestrationError("stage transcribe requires audio_path")
         tr = TranscriptionRequest(audio_filename=audio_path, source_type=AudioSource.AUDIO_FILE)
-        _drain(pipeline.run_transcription(tr))
+        with stage_tracker(session_id, "transcribe"):
+            _drain(pipeline.run_transcription(tr))
         session_store.SessionStore.set_stage(session_id, "transcribe", "done")
         _await_pending_writes()
 
     if "summarize" in stages:
         session_store.SessionStore.set_stage(session_id, "summarize", "running")
-        _drain(pipeline.run_summarizer())
+        with stage_tracker(session_id, "summarize"):
+            _drain(pipeline.run_summarizer())
         session_store.SessionStore.set_stage(session_id, "summarize", "done")
         _await_pending_writes()
 
     if "mindmap" in stages:
         session_store.SessionStore.set_stage(session_id, "mindmap", "running")
-        pipeline.run_mindmap()
+        with stage_tracker(session_id, "mindmap"):
+            pipeline.run_mindmap()
         session_store.SessionStore.set_stage(session_id, "mindmap", "done")
 
     if "segmentation" in stages:
         _join_va(va_thread, va_error)
         session_store.SessionStore.set_stage(session_id, "segmentation", "running")
-        pipeline.run_content_segmentation()
+        with stage_tracker(session_id, "segmentation"):
+            pipeline.run_content_segmentation()
         session_store.SessionStore.set_stage(session_id, "segmentation", "done")
 
     if "report" in stages:
         session_store.SessionStore.set_stage(session_id, "report", "running")
-        _drain(pipeline.run_report_generator())
+        with stage_tracker(session_id, "report"):
+            _drain(pipeline.run_report_generator())
         session_store.SessionStore.set_stage(session_id, "report", "done")
 
 
@@ -116,56 +125,57 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
 
     session_store.SessionStore.set_stage(session_id, "va", "running")
 
-    va_out_dir = _va_output_dir(session_id)
-    os.makedirs(va_out_dir, exist_ok=True)
+    with stage_tracker(session_id, "va"):
+        va_out_dir = _va_output_dir(session_id)
+        os.makedirs(va_out_dir, exist_ok=True)
 
-    service = VideoAnalyticsPipelineService()
-    service.x_session_id = session_id
+        service = VideoAnalyticsPipelineService()
+        service.x_session_id = session_id
 
-    done = threading.Event()
-    final_status = {}
+        done = threading.Event()
+        final_status = {}
 
-    def _on_done(sid):
-        final_status.update(service.pipeline_final_status)
-        done.set()
+        def _on_done(sid):
+            final_status.update(service.pipeline_final_status)
+            done.set()
 
-    service.on_all_pipelines_done = _on_done
+        service.on_all_pipelines_done = _on_done
 
-    options = PipelineOptions(
-        output_dir=va_out_dir,
-        output_rtsp=config.va_pipeline.output_rtsp_url,
-        threshold=config.models.va.threshold,
-        record=False,
-    )
+        options = PipelineOptions(
+            output_dir=va_out_dir,
+            output_rtsp=config.va_pipeline.output_rtsp_url,
+            threshold=config.models.va.threshold,
+            record=False,
+        )
 
-    launched = 0
-    failures = []
-    for name, source in wanted.items():
-        try:
-            ok = service.launch_pipeline(name, source, options)
-        except Exception as e:
-            failures.append(f"{name}: {e}")
-            logger.warning(f"[orchestrator] VA pipeline {name} launch raised: {e}")
-            continue
-        if not ok:
-            failures.append(f"{name}: launch returned false")
-            logger.warning(f"[orchestrator] VA pipeline {name} failed to launch")
-        else:
-            launched += 1
+        launched = 0
+        failures = []
+        for name, source in wanted.items():
+            try:
+                ok = service.launch_pipeline(name, source, options)
+            except Exception as e:
+                failures.append(f"{name}: {e}")
+                logger.warning(f"[orchestrator] VA pipeline {name} launch raised: {e}")
+                continue
+            if not ok:
+                failures.append(f"{name}: launch returned false")
+                logger.warning(f"[orchestrator] VA pipeline {name} failed to launch")
+            else:
+                launched += 1
 
-    if launched == 0:
-        raise _OrchestrationError(f"all va pipelines failed to launch: {'; '.join(failures)}")
+        if launched == 0:
+            raise _OrchestrationError(f"all va pipelines failed to launch: {'; '.join(failures)}")
 
-    _start_board_ocr_if_enabled(session_id, wanted)
+        _start_board_ocr_if_enabled(session_id, wanted)
 
-    timeout = getattr(config.va_pipeline, "completion_timeout_sec", 3600)
-    if not wait_for_va_completion(service, wanted, done, final_status, timeout):
-        raise _OrchestrationError("va timed out")
+        timeout = getattr(config.va_pipeline, "completion_timeout_sec", 3600)
+        if not wait_for_va_completion(service, wanted, done, final_status, timeout):
+            raise _OrchestrationError("va timed out")
 
-    _stop_board_ocr_if_enabled(session_id, final_status)
+        _stop_board_ocr_if_enabled(session_id, final_status)
 
-    if not _any_success(final_status, wanted):
-        raise _OrchestrationError("all va pipelines failed")
+        if not _any_success(final_status, wanted):
+            raise _OrchestrationError("all va pipelines failed")
 
     session_store.SessionStore.set_stage(session_id, "va", "done")
 
