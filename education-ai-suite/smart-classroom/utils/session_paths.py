@@ -20,6 +20,19 @@ class SessionPaths:
         return SessionPaths.session_dir(session_id) / "va"
 
     @staticmethod
+    def logs_dir(session_id: str) -> Path:
+        """<session>/logs - debug/observability output, kept apart from artifacts."""
+        return SessionPaths.session_dir(session_id) / "logs"
+
+    @staticmethod
+    def app_log_path(session_id: str) -> Path:
+        return SessionPaths.logs_dir(session_id) / "app.log"
+
+    @staticmethod
+    def stage_events_path(session_id: str) -> Path:
+        return SessionPaths.logs_dir(session_id) / "stage_events.jsonl"
+
+    @staticmethod
     def transcript_path(session_id: str) -> Path:
         return SessionPaths.session_dir(session_id) / "transcription.txt"
 

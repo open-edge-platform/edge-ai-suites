@@ -8,7 +8,8 @@ from utils.session_log import session_log_handler
 
 def _patch_dir(tmp):
     return patch(
-        "utils.session_log.SessionPaths.session_dir", return_value=Path(tmp)
+        "utils.session_log.SessionPaths.app_log_path",
+        return_value=Path(tmp) / "logs" / "app.log",
     )
 
 
@@ -25,7 +26,7 @@ def test_logs_written_to_session_file():
     with tempfile.TemporaryDirectory() as tmp, _patch_dir(tmp):
         with session_log_handler("s1"):
             logging.getLogger("some.module").info("hello inside session")
-        path = Path(tmp) / "app.log"
+        path = Path(tmp) / "logs" / "app.log"
         assert path.exists()
         assert "hello inside session" in path.read_text(encoding="utf-8")
 
@@ -35,7 +36,7 @@ def test_no_write_after_exit():
         with session_log_handler("s1"):
             pass
         logging.getLogger("some.module").info("after exit")
-        path = Path(tmp) / "app.log"
+        path = Path(tmp) / "logs" / "app.log"
         content = path.read_text(encoding="utf-8") if path.exists() else ""
         assert "after exit" not in content
 

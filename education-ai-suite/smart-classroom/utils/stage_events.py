@@ -6,8 +6,6 @@ from utils.session_paths import SessionPaths
 
 logger = logging.getLogger(__name__)
 
-_FILE = "stage_events.jsonl"
-
 
 class StageEventWriter:
     @staticmethod
@@ -29,7 +27,7 @@ class StageEventWriter:
             "error_detail": error_detail,
         }
         try:
-            path = SessionPaths.session_dir(session_id) / _FILE
+            path = SessionPaths.stage_events_path(session_id)
             os.makedirs(path.parent, exist_ok=True)
             with open(path, "a", encoding="utf-8") as f:
                 f.write(json.dumps(event, ensure_ascii=False) + "\n")

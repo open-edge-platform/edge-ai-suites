@@ -2,7 +2,7 @@
 
 本目录存放新代码的 pytest 单元测试。运行:`python -m pytest tests/`
 
-共 **36** 个用例。
+共 **39** 个用例。
 
 ## test_session_paths.py — SessionPaths 工具类
 

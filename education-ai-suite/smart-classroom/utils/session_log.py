@@ -8,7 +8,6 @@ from utils.session_paths import SessionPaths
 
 logger = logging.getLogger(__name__)
 
-_LOG_FILE = "app.log"
 _FORMAT = "[%(asctime)s] [%(levelname)s] %(name)s: %(message)s"
 _DATEFMT = "%Y-%m-%d %H:%M:%S"
 
@@ -49,7 +48,7 @@ def session_log_handler(session_id):
     root = logging.getLogger()
     try:
         try:
-            path = SessionPaths.session_dir(session_id) / _LOG_FILE
+            path = SessionPaths.app_log_path(session_id)
             os.makedirs(path.parent, exist_ok=True)
             handler = RotatingFileHandler(
                 path, maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"

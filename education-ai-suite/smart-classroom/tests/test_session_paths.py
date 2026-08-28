@@ -54,6 +54,23 @@ def test_topics_path():
         assert SessionPaths.topics_path("s1") == Path(tmp) / "proj" / "s1" / "topics.json"
 
 
+def test_logs_dir():
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        assert SessionPaths.logs_dir("s1") == Path(tmp) / "proj" / "s1" / "logs"
+
+
+def test_app_log_path():
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        assert SessionPaths.app_log_path("s1") == Path(tmp) / "proj" / "s1" / "logs" / "app.log"
+
+
+def test_stage_events_path():
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        assert SessionPaths.stage_events_path("s1") == (
+            Path(tmp) / "proj" / "s1" / "logs" / "stage_events.jsonl"
+        )
+
+
 def test_returns_path_objects():
     with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
         assert isinstance(SessionPaths.session_dir("s1"), Path)
