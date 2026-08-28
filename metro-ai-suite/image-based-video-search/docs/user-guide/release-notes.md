@@ -20,7 +20,7 @@ application.
 
 **Improved**:
 
-- Consumed latest DL Streamer version 2026.2.0.
+- Consumed the latest DL Streamer version 2026.2.0.
 
 ## Version 1.3.0
 

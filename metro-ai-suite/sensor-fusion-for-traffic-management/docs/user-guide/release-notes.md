@@ -1,4 +1,4 @@
-# Release Notes: Sensor Fusion For Traffic Management
+# Release Notes: Sensor Fusion for Traffic Management
 
 ## Version 2026.1.0
 
@@ -26,7 +26,7 @@ Supported Platforms:
   OpenVINO™ inference call on Intel® GPU. The `SparseConvolution` operator
   (registered under domain `org.openvinotoolkit`) covers both SparseConv3d and
   SubMConv3d variants with fused BatchNorm + optional ReLU, totaling ~21 layers
-  in the lidar sparse encoder. A custom OpenVINO™ build patch
+  in the LiDAR sparse encoder. A custom OpenVINO™ build patch
   (`custom_openvino_2026.1.0_sparse_ops.patch`, ~12K lines) integrates all GPU
   kernel implementations into the OpenVINO™ 2026.1.0 GPU plugin.
 
@@ -38,7 +38,7 @@ Supported Platforms:
 
 - **Two deployment pipelines**
   - Split (PointPillars): `./bevfusion` — 4 independent ONNX sub-graphs (camera
-    backbone, lidar PFE, fuser, detection head) + external SYCL kernels,
+    backbone, LiDAR PFE, fuser, detection head) + external SYCL kernels,
     using standard ONNX / OpenVINO™ IR.
   - Unified (Second): `./bevfusion_unified` — single unified ONNX with custom
     sparse ops executed inside the OpenVINO™ GPU plugin.

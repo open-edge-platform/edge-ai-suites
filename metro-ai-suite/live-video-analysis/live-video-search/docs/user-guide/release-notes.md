@@ -19,7 +19,7 @@
 
 **Improved**:
 
-- Updated LVS compose deployment to a pure per-component device model (`DATAPREP_EMBEDDING_DEVICE`, `DATAPREP_DETECTION_DEVICE`, `MME_EMBEDDING_DEVICE`; each defaults to `CPU`) and mount `/dev/accel` for NPU execution. Retired the redundant `VDMS_DATAPREP_DEVICE` baseline.
+- Updated LVS compose deployment to a pure per-component device model (`DATAPREP_EMBEDDING_DEVICE`, `DATAPREP_DETECTION_DEVICE`, `MME_EMBEDDING_DEVICE`; each defaults to `CPU`) and mounted `/dev/accel` for NPU execution. Retired the redundant `VDMS_DATAPREP_DEVICE` baseline.
 - Updated LVS Helm deployment templates and values to a pure per-component device model via `global.devices.multimodalEmbedding.*` and `global.devices.multimodalDataprep.{embedding,detection}.*` (each defaults to `CPU`), retiring the legacy `global.gpu.*` block to remove device-configuration ambiguity.
 - Removed the ambiguous `ENABLE_EMBEDDING_GPU` shortcut; indexing and query embedding devices are configured independently with `DATAPREP_EMBEDDING_DEVICE` and `MME_EMBEDDING_DEVICE`.
 - Renamed the Compose/setup model input from `EMBEDDING_MODEL_NAME` to `MULTIMODAL_EMBEDDING_MODEL`, the DataPrep variables from `VDMS_DATAPREP_*` to `MM_DATAPREP_*`, and `VDMS_PIPELINE_MANAGER_UPLOAD` to `VIDEO_UPLOAD_ENDPOINT`.

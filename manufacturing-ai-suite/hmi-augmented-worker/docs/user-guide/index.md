@@ -108,7 +108,7 @@ You can also check the [system requirements](./get-started/system-requirements.m
 :hidden:
 
 get-started
-release-notes
+Release Notes <release-notes>
 
 :::
 hide_directive-->
