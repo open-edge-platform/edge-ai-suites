@@ -20,7 +20,7 @@ the edge and performs the following:
 
 **To get started**:
 
-- Run make doctor to check your system is ready.
+- Run make doctor to check that your system is ready.
 - Run make up to build and launch the app.
 - Open your browser to http://localhost:8080. On the first launch, you will see a note:
   `The first startup trains the model and takes about 20–35 minutes on an Intel Arc iGPU.

@@ -9,8 +9,8 @@
 **New**:
 
 - Added new Single Pane Page on port :443 and moved ViPPET to port :1443.
-- Updated ViPPET to latest available version
-- Security hardening
+- Updated ViPPET to latest available version.
+- Security hardening.
 
 **Known issues and limitations**:
 

@@ -30,7 +30,7 @@
 
 **Known Issues**:
 
-- For fresh intergration with Loitering detection application, the bouding boxes may not render. Workaround is available.
+- For fresh integration with Loitering Detection application, the bounding boxes may not render. A workaround is available.
 
 - If the Nx Witness analytics integration is reused from a previous database record (not
   freshly registered), the integration user password is not available from the Nx API. In this

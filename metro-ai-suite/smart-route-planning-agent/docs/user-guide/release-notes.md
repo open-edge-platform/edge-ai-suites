@@ -6,7 +6,7 @@
 
 **Improved**:
 
-- Updated dependency specifications to use compatible-release (`~=`) versioning based on PEP 440 standard.
+- Updated dependency specifications to use compatible-release (`~=`) versioning based on the PEP 440 standard.
 - Updated all dependencies to latest compatible versions.
 - Pinned `uv` installer to semantic versioning range (>=0.9.22,<1.0.0) for reproducible Docker builds.
 - Removed unused and a few transitive dependencies for a cleaner dependency tree.
