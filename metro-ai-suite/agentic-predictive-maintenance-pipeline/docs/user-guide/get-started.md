@@ -21,7 +21,7 @@ Verify that your system meets the
 ## Project Structure
 
 ```text
-agentic-predictive-maintenance/
+agentic-predictive-maintenance-pipeline/
 ├── apps/
 │   └── pipeline-defect-detection/     # Use-case configuration directory
 │       ├── configs/
@@ -61,8 +61,8 @@ agentic-predictive-maintenance/
 ## Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
-cd edge-ai-suites/metro-ai-suite/agentic-predictive-maintenance
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/metro-ai-suite/agentic-predictive-maintenance-pipeline/
 ```
 
 ## Step 2 — Configure the Environment
