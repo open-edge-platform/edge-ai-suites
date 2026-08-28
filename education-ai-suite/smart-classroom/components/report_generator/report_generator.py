@@ -19,6 +19,8 @@ from components.report_generator.prompts import (
     build_field_definitions,
 )
 from utils.config_loader import config
+from utils.markdown_cleaner import strip_think_tokens
+from utils.reasoning import thinking_template_kwargs
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.artifacts.path import get_session_dir, get_artifact_path
@@ -130,8 +132,11 @@ class ReportGenerator:
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_content},
         ]
+        # Reasoning follows models.text_gen.reasoning_effort. The result is fully
+        # templated, so the caller must generate with pre_templated=True.
         return self.model.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True,
+            **thinking_template_kwargs(),
         )
 
     def generate_report(self):
@@ -233,9 +238,14 @@ class ReportGenerator:
             llm_failed = False
             json_response = None
             try:
-                json_response = self.model.generate(gen_prompt, stream=False)
+                json_response = self.model.generate(
+                    gen_prompt, stream=False, pre_templated=True
+                )
                 if isinstance(json_response, str) and json_response.startswith("[ERROR]:"):
                     raise RuntimeError(json_response)
+                # Drop the reasoning block before the JSON is parsed: prose full
+                # of braces derails parse_llm_json_response' tolerant fallback.
+                json_response = strip_think_tokens(json_response)
             except RuntimeError as e:
                 logger.error(f"[ReportGenerator] LLM failed during template fill: {e}. "
                              f"Marking {len(gen_codes)} generated fields as '{na_placeholder}'.")

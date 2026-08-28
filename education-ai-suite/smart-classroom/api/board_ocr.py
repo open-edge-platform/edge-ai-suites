@@ -14,6 +14,7 @@ from components.board_ocr.board_ocr_service import (
 from utils.config_loader import config
 from utils.markdown_cleaner import strip_think_tokens
 from utils.model_family import is_qwen3_dense
+from utils.reasoning import thinking_template_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -88,9 +89,10 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
 
     model_name = str(config.models.text_gen.vlm_name)
     user_content = board_text
-    # Only the dense Qwen3 models honour the /no_think soft switch. The native
-    # VLMs (Qwen3.5/3.6/3.8) ignore it and would just read it as board text --
-    # thinking is turned off for them by enable_thinking below.
+    # Only the dense Qwen3 models honour the /no_think soft switch, and they
+    # never support a reasoning budget, so thinking is always off for them. The
+    # native VLMs (Qwen3.5/3.6/3.8) ignore /no_think and would just read it as
+    # board text -- they are driven by the template kwargs below instead.
     if is_qwen3_dense(model_name) and not user_content.lstrip().startswith("/no_think"):
         user_content = "/no_think\n" + board_text
 
@@ -98,11 +100,13 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
         {"role": "system", "content": _board_summary_system_prompt(config.app.language)},
         {"role": "user", "content": user_content},
     ]
+    # Reasoning follows models.text_gen.reasoning_effort; strip_think_tokens
+    # below removes the block before the summary is returned.
     prompt = tg.tokenizer.apply_chat_template(
         messages,
         tokenize=False,
         add_generation_prompt=True,
-        enable_thinking=False,
+        **thinking_template_kwargs(),
     )
 
     raw = tg.generate(prompt, stream=False, pre_templated=True)

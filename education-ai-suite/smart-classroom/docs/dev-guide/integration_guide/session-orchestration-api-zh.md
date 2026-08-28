@@ -431,9 +431,14 @@ POST http://<host>:8000/v1/chat/completions
 - `Qwen/Qwen3.5-9B`、`Qwen/Qwen3.6-35B-A3B` 和 `Qwen/Qwen3.8-27B` 仅在 `device: GPU` + `weight_format: int8` 下验证过。
 - `Qwen/Qwen3.8-27B` 是**实验性** OpenVINO IR:需要 OpenVINO 2026.4.0 nightly 运行时
   (在 `requirements.txt` 之上再执行 `pip install -r requirements-qwen3.8.txt`),
-  并需要 `models/openvino/Qwen3.8-27B/int8` 下约 26 GB 的权重。它的 chat template
-  默认 `reasoning_effort` 为 `xhigh`;对于未关闭 thinking 的请求,可用
-  `text_gen.reasoning_effort`(`low`、`medium`、`xhigh`)限制思考长度。
+  并需要 `models/openvino/Qwen3.8-27B/int8` 下约 26 GB 的权重。
+- `text_gen.reasoning_effort`(`low`、`medium`、`xhigh` 或 `Null`)是打开 Qwen3.8
+  thinking 的开关,同时决定思考预算,默认发布值为 `low`。配置为有效档位后,服务端所有
+  自行渲染 prompt 的路径——摘要、思维导图、板书/大屏摘要、报告,以及未传
+  `enable_thinking` 的 `/v1/chat/completions` 请求——都会先按该预算思考再作答;
+  设为 `Null` 则保持 thinking 关闭。`<think>` 段在结果保存或流式返回前会被剥离。
+  显式传 `enable_thinking: false` 的请求始终不思考。思考与作答共用
+  `max_new_tokens`,提高档位时请同步调大该值。其他 `vlm_name` 会忽略该配置。
 - **在 Qwen3.6-35B-A3B 与 Qwen3.8-27B 之间切换**时，只需修改服务端
   `config.yaml` 的 `models.text_gen.vlm_name`，然后重启服务。公共配置
   `device: GPU` 和 `weight_format: int8` 对两者都有效。

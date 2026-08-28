@@ -17,10 +17,10 @@ from transformers import AutoTokenizer
 
 from utils.model_family import (
     is_qwen3_dense,
-    supports_reasoning_effort,
     validate_text_gen_model_config,
 )
 from utils.ov_genai_util import YieldingTextStreamer
+from utils.reasoning import resolve_reasoning_effort
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +28,6 @@ _SC_ROOT = Path(__file__).resolve().parents[2]
 _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
 
 _DEFAULT_MAX_NEW_TOKENS = 5120
-
-# Reasoning budgets accepted by the Qwen3.8 chat template. Its default is
-# "xhigh"; anything outside this set makes the template raise.
-_REASONING_EFFORTS = ("low", "medium", "xhigh")
 
 
 def _import_convert_helpers():
@@ -84,28 +80,15 @@ class VLMTextGen:
         validate_text_gen_model_config(
             self._model_name, self._device, self._weight_format
         )
-        configured_effort = getattr(text_gen, "reasoning_effort", None)
-        self._reasoning_effort = (
-            self._resolve_reasoning_effort(configured_effort)
-            if supports_reasoning_effort(self._model_name)
-            else None
+        self._reasoning_effort = resolve_reasoning_effort(
+            getattr(text_gen, "reasoning_effort", None), self._model_name
         )
-
-    @staticmethod
-    def _resolve_reasoning_effort(configured) -> Optional[str]:
-        """Validate ``models.text_gen.reasoning_effort``, or ``None`` if unset."""
-        if not configured:
-            return None
-        effort = str(configured).strip().lower()
-        if effort not in _REASONING_EFFORTS:
-            logger.warning(
-                "Ignoring unsupported models.text_gen.reasoning_effort=%r; "
-                "expected one of %s.",
-                configured,
-                ", ".join(_REASONING_EFFORTS),
-            )
-            return None
-        return effort
+        logger.info(
+            "text_gen reasoning: %s",
+            f"thinking ON at reasoning_effort={self._reasoning_effort}"
+            if self._reasoning_effort
+            else "thinking OFF (models.text_gen.reasoning_effort unset)",
+        )
 
     def _model_dir(self) -> Path:
         """Return the shared IR directory ``models/openvino/<name>/<weight>``."""
@@ -197,10 +180,11 @@ class VLMTextGen:
         ``ov.Tensor`` frames, already decoded by the caller) enables the
         multimodal path used by content-search video summarization; when
         omitted the call is text-only. ``enable_thinking=False`` suppresses
-        Qwen3 thinking for this request only; ``None`` keeps the model default,
-        capped by ``models.text_gen.reasoning_effort`` where the template
-        supports it. ``json_schema`` (a JSON-schema string) constrains decoding
-        to output matching that schema.
+        Qwen3 thinking for this request only; ``None`` defers to
+        ``models.text_gen.reasoning_effort`` — thinking on at that budget when
+        one is configured and the model supports it, off when it is ``Null``.
+        ``json_schema`` (a JSON-schema string) constrains decoding to output
+        matching that schema.
 
         ``pre_templated=True`` means ``prompt`` is already a fully rendered chat
         template (see ``utils.prompt_budget.render_summarizer_prompt``), so the
@@ -218,11 +202,9 @@ class VLMTextGen:
         if pre_templated:
             config.apply_chat_template = False
         else:
-            template_kwargs = self._template_kwargs(enable_thinking)
-            if template_kwargs:
-                prompt = self._apply_chat_template(
-                    prompt, config, bool(images), template_kwargs
-                )
+            prompt = self._apply_chat_template(
+                prompt, config, bool(images), self._template_kwargs(enable_thinking)
+            )
         if stream:
             return self._generate_stream(prompt, config, images)
         if images:
@@ -232,20 +214,28 @@ class VLMTextGen:
         return str(self._pipe.generate(prompt, generation_config=config))
 
     def _template_kwargs(self, enable_thinking: Optional[bool]) -> dict:
-        """Chat-template kwargs for this request, ``{}`` to let the pipeline template.
+        """Chat-template kwargs for this request.
 
-        ``enable_thinking=False`` turns reasoning off outright. When thinking is
-        left at the model default, Qwen3.8's template resolves
-        ``reasoning_effort`` to ``xhigh``, which prefixes every answer with a long
-        reasoning pass; the configured ``models.text_gen.reasoning_effort`` caps
-        that. Model config loading retains this option only for Qwen3.8, so it is
-        never passed to Qwen3.5/3.6 or Qwen3-VL templates.
+        Mirrors :func:`utils.reasoning.thinking_template_kwargs` using the effort
+        resolved at load time. ``enable_thinking=False`` turns reasoning off
+        outright; a configured ``models.text_gen.reasoning_effort`` (Qwen3.8
+        only) turns it explicitly ON at that budget rather than leaving it to the
+        template's ``xhigh`` default.
+
+        Never returns ``{}``: thinking is always stated explicitly. Leaving the
+        kwarg out would let the Qwen3.x templates fall back to their own default
+        — reasoning ON — so a request that omits ``enable_thinking`` under
+        ``reasoning_effort: Null`` would still think, which is exactly what that
+        setting is meant to prevent.
         """
         if enable_thinking is False:
             return {"enable_thinking": False}
         if self._reasoning_effort:
-            return {"reasoning_effort": self._reasoning_effort}
-        return {}
+            return {
+                "enable_thinking": True,
+                "reasoning_effort": self._reasoning_effort,
+            }
+        return {"enable_thinking": bool(enable_thinking)}
 
     def _apply_chat_template(
         self,
@@ -254,21 +244,33 @@ class VLMTextGen:
         has_images: bool,
         template_kwargs: dict,
     ) -> str:
-        try:
-            media_tags = "<ov_genai_image_0>" if has_images else ""
-            history = [{"role": "user", "content": media_tags + prompt}]
-            templated = self._pipe.get_tokenizer().apply_chat_template(
-                history, True, "", None, template_kwargs
+        media_tags = "<ov_genai_image_0>" if has_images else ""
+        history = [{"role": "user", "content": media_tags + prompt}]
+
+        # A template that rejects ``reasoning_effort`` (an older export, or a
+        # non-Qwen3.8 model) must not cost us the thinking flag as well: falling
+        # through to the pipeline default would silently switch reasoning back
+        # ON. Retry with the flag alone before giving up.
+        attempts = [template_kwargs]
+        if len(template_kwargs) > 1:
+            attempts.append(
+                {"enable_thinking": template_kwargs["enable_thinking"]}
             )
-            config.apply_chat_template = False
-            return templated
-        except Exception as exc:  # noqa: BLE001 - fall back to the pipeline default
-            logger.warning(
-                "chat template %s failed (%s); using raw prompt",
-                template_kwargs,
-                exc,
-            )
-            return prompt
+
+        for kwargs in attempts:
+            try:
+                templated = self._pipe.get_tokenizer().apply_chat_template(
+                    history, True, "", None, kwargs
+                )
+                config.apply_chat_template = False
+                return templated
+            except Exception as exc:  # noqa: BLE001 - try the next fallback
+                logger.warning(
+                    "chat template %s failed (%s)", kwargs, exc
+                )
+
+        logger.warning("Using raw prompt; the model's default thinking mode applies.")
+        return prompt
 
     def _generation_config(
         self,

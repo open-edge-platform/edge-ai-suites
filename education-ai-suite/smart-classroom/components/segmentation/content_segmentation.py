@@ -261,9 +261,14 @@ class ContentSegmentationComponent(PipelineComponent):
         try:
             logger.info("Generating topic segmentation...")
 
+            # Thinking stays off regardless of models.text_gen.reasoning_effort:
+            # _generate constrains decoding to the topics JSON schema, which
+            # forces the grammar from the first generated token, so a reasoning
+            # pass could never be emitted.
             prompt = render_summarizer_prompt(
                 self.model.tokenizer,
-                self._build_messages(transcript_text, language=language)
+                self._build_messages(transcript_text, language=language),
+                enable_thinking=False,
             )
 
             full_output = strip_think_tokens(self._generate(prompt))

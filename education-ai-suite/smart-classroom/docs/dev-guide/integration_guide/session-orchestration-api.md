@@ -462,10 +462,17 @@ Notes:
 - `Qwen/Qwen3.8-27B` is an **experimental** OpenVINO IR: it needs the OpenVINO
   2026.4.0 nightly runtime (`pip install -r requirements-qwen3.8.txt` on top of
   `requirements.txt`) and ~26 GB of weights under
-  `models/openvino/Qwen3.8-27B/int8`. Its chat template defaults
-  `reasoning_effort` to `xhigh`; set `text_gen.reasoning_effort` (`low`,
-  `medium`, `xhigh`) to cap the reasoning pass for requests that leave thinking
-  enabled.
+  `models/openvino/Qwen3.8-27B/int8`.
+- `text_gen.reasoning_effort` (`low`, `medium`, `xhigh`, or `Null`) is the
+  switch that turns Qwen3.8 thinking **on**, and sets its budget. It ships as
+  `low`. With an effort configured, every server-side path that renders a prompt
+  — Summary, Mind map, Board/IFPD summary, Report, and `/v1/chat/completions`
+  requests that omit `enable_thinking` — reasons at that budget before
+  answering; `Null` keeps thinking off. The `<think>` block is stripped from
+  each artifact before it is saved or streamed. Requests that send
+  `enable_thinking: false` always stay non-thinking. Reasoning shares
+  `max_new_tokens` with the answer, so raise it alongside the effort. The knob
+  is ignored for every other `vlm_name`.
 - **To switch between Qwen3.6-35B-A3B and Qwen3.8-27B**, change only
   `models.text_gen.vlm_name` in `config.yaml`, then restart the service. The
   shared `device: GPU` and `weight_format: int8` settings are valid for both.

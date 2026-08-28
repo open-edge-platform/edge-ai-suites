@@ -20,6 +20,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from model_manager import ModelManager
 from utils.markdown_cleaner import strip_think_tokens
+from utils.reasoning import thinking_template_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -120,19 +121,26 @@ def _selected_tools(chat_req) -> Optional[List[dict]]:
 
 
 def _render_chat_prompt(chat_req, handler, tools: List[dict]) -> str:
+    """Render the tool-calling prompt ourselves (the pipeline cannot pass tools).
+
+    Reasoning follows the request's ``enable_thinking`` and, when it is omitted,
+    ``models.text_gen.reasoning_effort`` -- the same resolution the non-tool path
+    gets inside ``VLMTextGen``. ``_parse_tool_response`` strips the reasoning
+    block before the tool calls are extracted.
+    """
     messages = [message.model_dump(exclude_none=True) for message in chat_req.messages]
     return handler.tokenizer.apply_chat_template(
         messages,
         tokenize=False,
         add_generation_prompt=True,
-        enable_thinking=False,
         tools=tools,
+        **thinking_template_kwargs(chat_req.enable_thinking),
     )
 
 
 def _parse_tool_response(output: str) -> tuple[Optional[str], List[dict]]:
-    if "</think>" in output and "<think>" not in output:
-        output = output.split("</think>", 1)[1]
+    # strip_think_tokens handles both a self-contained <think>...</think> block
+    # and the prompt-prefilled shape, where only the closing tag is generated.
     cleaned = strip_think_tokens(output)
     tool_calls = []
     for match in _TOOL_CALL_RE.finditer(cleaned):

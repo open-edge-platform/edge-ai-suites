@@ -7,6 +7,7 @@ from utils.artifacts.path import get_artifact_path
 from utils.markdown_cleaner import StreamThinkFilter
 from utils.model_family import is_qwen3_dense
 from utils.prompt_budget import render_summarizer_prompt
+from utils.reasoning import thinking_enabled
 from model_manager import ModelManager
 import logging, os
 import time
@@ -120,7 +121,10 @@ class SummarizerComponent(PipelineComponent):
         start = time.perf_counter()
         first_token_time = None
         raw_tokens = []
-        think_filter = StreamThinkFilter()
+        # When reasoning is on, render_summarizer_prompt left the prompt's
+        # <think> open, so the stream starts inside the block and only ever
+        # carries the closing tag -- seed the filter accordingly.
+        think_filter = StreamThinkFilter(in_think=thinking_enabled())
 
         try:
             streamer = self.summarizer.generate(prompt, pre_templated=True)
@@ -136,6 +140,12 @@ class SummarizerComponent(PipelineComponent):
 
                 StorageManager.save_async(summary_path, clean_token, append=True)
                 yield clean_token
+
+            # Release any tail the filter withheld as a possible split think tag.
+            tail = think_filter.flush()
+            if tail:
+                StorageManager.save_async(summary_path, tail, append=True)
+                yield tail
 
         finally:
             end = time.perf_counter()

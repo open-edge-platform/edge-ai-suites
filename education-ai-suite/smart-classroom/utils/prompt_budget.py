@@ -13,7 +13,10 @@ fit the configured budget.
 """
 
 import logging
+from typing import Optional
+
 from utils.config_loader import config
+from utils.reasoning import thinking_template_kwargs
 
 logger = logging.getLogger(__name__)
 
@@ -81,14 +84,23 @@ def render_prompt_within_budget(tokenizer, messages, max_input_tokens, **templat
     return prompt
 
 
-def render_summarizer_prompt(tokenizer, messages):
-    """Render the standard summarizer/mindmap/segmentation prompt (thinking off,
-    generation prompt appended) bounded by the configured context length, reserving
-    room for ``max_new_tokens`` of generation.
+def render_summarizer_prompt(tokenizer, messages, enable_thinking: Optional[bool] = None):
+    """Render the standard summarizer/mindmap/segmentation prompt (generation
+    prompt appended) bounded by the configured context length, reserving room for
+    ``max_new_tokens`` of generation.
+
+    Thinking follows ``models.text_gen.reasoning_effort`` by default: configure an
+    effort and the rendered prompt ends with an open ``<think>`` so the model
+    reasons at that budget before answering (see :mod:`utils.reasoning`). Pass
+    ``enable_thinking=False`` to opt out where a reasoning pass cannot help —
+    notably schema-constrained decoding, which forces the grammar from the first
+    generated token and so leaves no room for one.
 
     The result is already chat-templated, so callers must pass
     ``pre_templated=True`` to ``generate()`` to stop ``VLMPipeline`` templating it
-    a second time.
+    a second time. Callers that stream must strip the reasoning block with a
+    ``StreamThinkFilter`` seeded from ``utils.reasoning.thinking_enabled()``;
+    non-streaming callers use ``strip_think_tokens``.
     """
     context_length = text_gen_context_length()
     text_gen = _text_gen_config()
@@ -99,5 +111,5 @@ def render_summarizer_prompt(tokenizer, messages):
         messages,
         max_input_tokens,
         add_generation_prompt=True,
-        enable_thinking=False,
+        **thinking_template_kwargs(enable_thinking),
     )

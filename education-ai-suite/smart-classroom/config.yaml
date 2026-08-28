@@ -37,7 +37,7 @@ models:
     name: paraformer-zh  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
-    diarization: False # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional
+    diarization: True # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional
     hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
@@ -380,18 +380,36 @@ models:
     weight_format: int8 # int4,int 8-- shared with content_search.vlm.weight_format
     max_new_tokens: 5120
     context_length: 160000 # input token budget; prompts trim to context_length - max_new_tokens
-    # Reasoning budget for requests that leave thinking on (Qwen3.8 only; the
-    # application ignores it for other models). low | medium | xhigh, or Null.
+    # Reasoning budget, and the single switch that turns thinking on.
+    # low | medium | xhigh, or Null. Only Qwen/Qwen3.8-27B declares support; for
+    # any other vlm_name the value is ignored and thinking stays off.
     #
-    # Null is the default and means "pass nothing" -- the model resolves its own
-    # default (xhigh) exactly as it would have before this knob existed, which
-    # keeps behaviour identical to the pre-Qwen3.8 code path. Set it only to
-    # deliberately cap a caller that leaves thinking on.
+    # Set to a valid effort and every path that renders a prompt turns thinking
+    # ON at that budget -- Summary, Mind map, Board/IFPD summary, Report and
+    # /v1/chat/completions -- passing reasoning_effort into the chat template so
+    # the model reasons before answering. The <think> block is stripped from
+    # each artifact before it is saved or streamed to the UI.
     #
-    # This does NOT affect Summary or Mind map: both render their prompt through
-    # utils.prompt_budget.render_summarizer_prompt, which sets
-    # enable_thinking=False, so no reasoning pass runs there at all. It only
-    # reaches /v1/chat/completions callers that omit enable_thinking.
+    # Null turns thinking OFF everywhere (the pre-Qwen3.8 behaviour). The app
+    # always states enable_thinking explicitly rather than letting the chat
+    # template fall back to its own default -- which for Qwen3.5/3.6/3.8 is
+    # reasoning ON -- so Null also silences /v1/chat/completions requests that
+    # omit enable_thinking, such as content_search QA and video summarization.
+    #
+    # What each level does in the Qwen3.8 template:
+    #   low    - injects "keep your thinking brief and focused, moving directly
+    #            to the conclusion"; the default here, because reasoning shares
+    #            the max_new_tokens budget above with the answer and this app's
+    #            answers (6-section summary, whole-lecture mind-map JSON) are
+    #            long.
+    #   medium - thinking on with no extra steering injected.
+    #   xhigh  - injects "think carefully, validate key assumptions, consider
+    #            alternatives"; the template's own default, and the most likely
+    #            to exhaust max_new_tokens before the answer starts.
+    # Raise max_new_tokens alongside the effort if outputs come back truncated.
+    # Callers that pass enable_thinking=false explicitly always stay
+    # non-thinking: grading, and topic segmentation (its decode is constrained
+    # to a JSON schema from the first token, leaving no room to reason).
     reasoning_effort: Null
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
