@@ -118,7 +118,14 @@ const AISummaryTab: React.FC = () => {
         </div>
       )}
       {progress && !typed && (
-        <div className="summary-progress">{progressLabel(progress)}</div>
+        <div className="summary-progress">
+          {progressLabel(progress).replace(/(?:\u2026|\.{3})\s*$/, "")}
+          <span className="summary-progress-dots" aria-hidden="true">
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </span>
+        </div>
       )}
       {typed && (
         <div className="summary-content">
