@@ -8,7 +8,8 @@ SPDX-License-Identifier: Apache-2.0
 PX4 SITL + Gazebo multi-camera UAV simulation with Intel Edge AI vision processing.
 
 ## Stack
-```
+
+```text
 infra/                     Core simulation + messaging (root compose)
 ├── px4-sim/               PX4 + Gazebo + 3 cameras (nadir, forward, rear)
 ├── bridges/               MAVLink ↔ MQTT + Gazebo → RTSP + REST API (port 8080)
@@ -62,7 +63,7 @@ All topics use the pattern `uav/{uav_id}/...` (default `uav_id` = `uav-1`) on br
 - `uav/{id}/camera/+/detections` — Wildcard, all cameras' detections
 - `uav/{id}/camera/+/frame` — Wildcard, all cameras' raw frames
 
-**Commands & SceneScape**:
+**Commands & Scenescape**:
 - `uav/{id}/command` — Legacy command channel (arm/disarm/etc.)
 - `scenescape/data/camera/{ss_camera_id}` — 3D fusion data published by scenescape-adapter
 

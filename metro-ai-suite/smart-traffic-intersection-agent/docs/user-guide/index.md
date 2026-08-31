@@ -1,7 +1,7 @@
 # Smart Traffic Intersection Agent
 
-::::{container} component_header_row
 <!--hide_directive
+::::{container} component_header_row
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-traffic-intersection-agent">
      GitHub
@@ -12,11 +12,12 @@
 </div>
 hide_directive-->
 
-> Note!
+> Note:
 > This is a sample application **intended for evaluation and development purposes only**.
   For more information, refer to
   [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
-::::
+
+<!--hide_directive :::: hide_directive-->
 
 
 The Smart Traffic Intersection Agent demonstrates how Intel hardware performs in AI solutions

@@ -122,6 +122,34 @@ Model source:
 
 **Expected flow: train from this repo**
 
+> **Host prerequisite for `make backend-bootstrap`:** the training venv uses
+> `torch+xpu`, which loads the Intel Level Zero user-mode driver **from the
+> host**. Install the Intel GPU compute runtime (Level Zero + IGC + GMM) once
+> before running the commands below, otherwise `make backend-bootstrap` will
+> fail with `torch.xpu.is_available() == False` or a `zeInit` loader error.
+> `make up` (containerised path) is unaffected — the Docker image installs
+> them at build time.
+>
+> ```bash
+> # One-time: add the Intel graphics apt repo (Ubuntu 24.04 "noble").
+> sudo apt-get update && sudo apt-get install -y ca-certificates gnupg wget
+> wget -qO - https://repositories.intel.com/gpu/intel-graphics.key \
+>   | sudo gpg --dearmor -o /usr/share/keyrings/intel-graphics.gpg
+> echo "deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] \
+> https://repositories.intel.com/gpu/ubuntu noble unified" \
+>   | sudo tee /etc/apt/sources.list.d/intel-gpu-noble.list
+>
+> # Level Zero + IGC + GMM runtime + OpenCL ICD.
+> sudo apt-get update && sudo apt-get install -y \
+>   libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 \
+>   intel-opencl-icd intel-media-va-driver-non-free
+>
+> # Allow /dev/dri passthrough without sudo (log out/in after this).
+> sudo usermod -aG render "$USER"
+> ```
+>
+> Full rationale + verification snippet: [docs/user-guide/quickstart.md §1a](docs/user-guide/quickstart.md#1a-intel-gpu-compute-runtime-required-for-make-backend-bootstrap).
+
 ```bash
 make backend-venv       # one-time Python environment with torch+xpu, Ultralytics, OpenVINO
 make backend-bootstrap  # prepares ColonDB, trains YOLO11n, exports FP16 OpenVINO IR

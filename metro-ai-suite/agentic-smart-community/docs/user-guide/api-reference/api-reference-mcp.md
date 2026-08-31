@@ -8,6 +8,7 @@ resources over Streamable HTTP.
 | Endpoint | `http://<mcp-host>:3100/mcp` |
 | Protocol | MCP over Streamable HTTP with JSON-RPC 2.0 |
 | Authentication | None; restrict the endpoint to loopback or a trusted private network |
+| Bind address | `127.0.0.1`, hardcoded and not configurable — this endpoint and the dashboard are local-only by design. The container runs with `network_mode: host`, so this is the host's own loopback. For off-host access, forward the port over SSH: `ssh -N -L 3100:127.0.0.1:3100 user@host`. |
 | Required request headers | `Content-Type: application/json` and `Accept: application/json, text/event-stream` |
 | Session header | `mcp-session-id` after initialization |
 

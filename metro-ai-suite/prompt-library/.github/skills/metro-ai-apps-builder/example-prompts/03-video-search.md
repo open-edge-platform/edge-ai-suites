@@ -23,7 +23,7 @@
   `vss-search-index` (query).
 - Inferred technology: OpenVINO GPU, multimodal embeddings, VDMS vector DB.
 - Install (after approval):
-  `npx skills add open-edge-platform/skills --skill vss-deploy`
+  `npx skills@1.5.23 add open-edge-platform/skills --skill vss-deploy`
   (and `vdms-dataprep-user`, `vss-search-index`).
 - Requirements: Docker + Compose v2; disk for the video library + vectors.
 

@@ -4,8 +4,13 @@ from utils.model_download_helper import get_or_download_model_dir
 from funasr import AutoModel
 
 import os
+import re
 import logging
 logger = logging.getLogger(__name__)
+
+
+def _is_empty_input_error(msg: str) -> bool:
+    return "shapes cannot be multiplied" in msg and bool(re.search(r"\(\d+x0\b", msg))
 
 
 FUNASR_MODEL_MAP = {
@@ -72,5 +77,8 @@ class Paraformer(BaseASR):
             }
 
         except Exception as e:
-            logger.error(f"[ASR] Paraformer transcription error: {e}")
+            if _is_empty_input_error(str(e)):
+                logger.info(f"[ASR] empty/silent audio chunk skipped: {audio_path}")
+            else:
+                logger.error(f"[ASR] Paraformer transcription error: {e}")
             return {"text": "", "segments": []}

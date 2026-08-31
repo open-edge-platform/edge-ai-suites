@@ -44,15 +44,15 @@
     },
     {
       "id": 4,
-      "prompt": "Build a multi-camera SceneScape spatial-analysis stack in ./intersection-scene-stack/ for vehicle detection fused across 3 RTSP cameras at scene 'intersection-1' with camera IDs cam-north, cam-east, cam-south.",
-      "expected_output": "A stack that keeps the DLSPS detection pipeline but branches to the opt-in SceneScape multi-camera scene-fusion path, delegating to the external scenescape-setup skill and passing the scene name and camera IDs.",
+      "prompt": "Build a multi-camera Scenescape spatial-analysis stack in ./intersection-scene-stack/ for vehicle detection fused across 3 RTSP cameras at scene 'intersection-1' with camera IDs cam-north, cam-east, cam-south.",
+      "expected_output": "A stack that keeps the DLSPS detection pipeline but branches to the opt-in Scenescape multi-camera scene-fusion path, delegating to the external scenescape-setup skill and passing the scene name and camera IDs.",
       "should_trigger": true,
       "files": ["../example-prompts/04-scenescape-multicamera.md"],
       "expectations": [
-        "Selects the opt-in SceneScape path (SCENESCAPE=yes) and loads references/SCENESCAPE.md only on this branch",
+        "Selects the opt-in Scenescape path (SCENESCAPE=yes) and loads references/SCENESCAPE.md only on this branch",
         "Delegates the multi-camera scene fusion to the external scenescape-setup skill instead of hand-rolling it",
         "Passes SCENE_NAME=intersection-1 and one unique CAMERA_ID per input stream (cam-north, cam-east, cam-south)",
-        "Keeps the DLSPS detection pipeline while replacing the default MediaMTX/Node-RED/Grafana-MQTT tail per the SceneScape branch"
+        "Keeps the DLSPS detection pipeline while replacing the default MediaMTX/Node-RED/Grafana-MQTT tail per the Scenescape branch"
       ]
     },
     {
