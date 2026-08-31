@@ -169,7 +169,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
       Results of the multi-agent pipeline appear:
      ![Agentic Results for weld data](../_assets/agentic_results.png)
 
-     Detections Dashboard appear:
+     The detections dashboard appears:
      ![Detections Results for weld data](../_assets/agent_detection.png)
 
 ## Stop the Stack
