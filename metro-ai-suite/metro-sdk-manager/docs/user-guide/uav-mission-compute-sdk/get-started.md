@@ -61,12 +61,13 @@ cd ~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 docker compose ps px4
 ```
 
-### Step 2: Arm the UAV (Activate Cameras)
+### Step 2: Arm the UAV (Activate Cameras) and takeoff
 
 Cameras only stream when the UAV is armed. Arm it via the REST API:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
+curl -X POST http://localhost:8080/action/takeoff
 ```
 
 ### Step 3: View RTSP Streams (Optional)
