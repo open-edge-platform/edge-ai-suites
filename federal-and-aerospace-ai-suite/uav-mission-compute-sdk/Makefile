@@ -14,24 +14,43 @@ COMPOSE_APPS    := docker compose --env-file .env -f sample-apps/docker-compose.
 
 # ── Environment file ──────────────────────────────────────────────────────
 init:
-	@# Help: Create .env from .env.example and auto-detect GPU devices
-	@if test -f .env; then \
-		echo ".env already exists — skipping"; \
-	else \
+	@# Help: Create .env from .env.example, populate required credentials, and auto-detect GPU devices
+	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
 		echo ".env created"; \
-		if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
-			GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
-			if [ -n "$$GPU_RENDER" ]; then \
-				GPU_RENDER_GID=$$(stat -c "%g" "$$GPU_RENDER" 2>/dev/null); \
-				echo "✅ GPU devices detected. Adding to .env:"; \
-				echo "   GPU_DEVICE=$$GPU_CARD"; \
-				echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
-				echo "   GPU_RENDER_GID=$$GPU_RENDER_GID"; \
-				echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
-				echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
-				echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
-			fi; \
+	fi; \
+	set_if_empty() { \
+		key="$$1"; value="$$2"; \
+		if ! grep -qE "^$$key=.+$$" .env 2>/dev/null; then \
+			sed -i "/^$$key=/d" .env; \
+			echo "$$key=$$value" >> .env; \
+		fi; \
+	}; \
+	uav_id="uav-1"; \
+	influxdb_password="$$(openssl rand -hex 16)"; \
+	influxdb_token="$$(openssl rand -hex 32)"; \
+	influxdb_org="uav-sdk"; \
+	grafana_password="$$(openssl rand -hex 12)"; \
+	set_if_empty "UAV_ID" "$$uav_id"; \
+	set_if_empty "INFLUXDB_PASSWORD" "$$influxdb_password"; \
+	set_if_empty "INFLUXDB_TOKEN" "$$influxdb_token"; \
+	set_if_empty "INFLUXDB_ORG" "$$influxdb_org"; \
+	set_if_empty "GRAFANA_PASSWORD" "$$grafana_password"; \
+	echo "Generated default credentials in .env"; \
+	if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
+		GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
+		if [ -n "$$GPU_RENDER" ]; then \
+			GPU_RENDER_GID=$$(stat -c "%g" "$$GPU_RENDER" 2>/dev/null); \
+			echo "✅ GPU devices detected. Adding to .env:"; \
+			echo "   GPU_DEVICE=$$GPU_CARD"; \
+			echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
+			echo "   GPU_RENDER_GID=$$GPU_RENDER_GID"; \
+			sed -i '/^GPU_DEVICE=/d' .env; \
+			sed -i '/^GPU_RENDER_DEVICE=/d' .env; \
+			sed -i '/^GPU_RENDER_GID=/d' .env; \
+			echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
+			echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
+			echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
 		fi; \
 	fi
 
