@@ -2,7 +2,7 @@
 
 The OpenClaw based agent functions as the "Teacher Assistant" persona that enables the staff of a school, which includes teachers, to create their own custom report based on the per classroom data provided by the Smart Classroom application. The custom report can be at a class level or at a grade level combining all classrooms in that grade and at the school level which combines all the grades. The deployment setup envisaged is shown in the figure below.
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────────┐
 │                        Teacher Assistant Demo                        │
 │  ┌──────────┐     ┌─────────────────┐    ┌──────────────────────┐    │
@@ -147,7 +147,7 @@ chmod +x ./setup-openclaw-workspace.sh
 
 This script creates the following structure:
 
-```
+```text
 ~/.openclaw/workspace/
 ├── SOUL.md                          # Agent persona and behavior
 ├── AGENTS.md                        # Agent definitions

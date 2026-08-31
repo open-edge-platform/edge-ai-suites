@@ -25,24 +25,24 @@ pip3 install numpy pandas openvino-dev ultralytics nncf onnx
 
 ### Install Deb package
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-openvino-yolov8 ros-jazzy-openvino-yolov8-msgs
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Run Demo with RealSense Camera Topic Input
 

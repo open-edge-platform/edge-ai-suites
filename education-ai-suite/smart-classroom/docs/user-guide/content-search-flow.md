@@ -28,7 +28,7 @@ language
 
 1. Click **Upload Files** to browse, or drag and drop files into the drop zone:
 
-![Upload Flow](./_assets/content-search-upload.png)
+   ![Upload Flow](./_assets/content-search-upload.png)
 
 2. **Select files** using checkboxes to manage file tags
 3. **Add tags** to selected files before the upload
@@ -175,7 +175,7 @@ Upload and search functionality is affected until all services are healthy.
 | Content Search API | 9011 | Orchestrator and public API |
 | File Ingest & Retrieve | 9990 | Embedding, indexing, and retrieval |
 | Video Preprocess | 8001 | Video chunking and VLM summarization |
-| VLM OpenVINO Serving | 9900 | VLM inference |
+| VLM OpenVINO™ Serving | 9900 | VLM inference |
 | ChromaDB | 9090 | Vector database |
 
 ## Learn More

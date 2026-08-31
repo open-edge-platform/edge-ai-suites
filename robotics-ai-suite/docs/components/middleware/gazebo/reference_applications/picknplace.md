@@ -19,49 +19,49 @@ Complete the [Getting Started](../../../../platform_foundation/getting_started.m
 
 Install `picknplace-simulation` Debian package from Intel® Autonomous Mobile Robot APT repository.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-picknplace-simulation
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-picknplace-simulation
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Run Demo
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch picknplace warehouse.launch.py
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 launch picknplace warehouse.launch.py
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 FastDDS as backend some times causing stability issues.  Recommended to run with cyclone DDS.
 
@@ -132,26 +132,26 @@ default configurations, optimized for speed.
 To utilize Cyclone DDS, enable it through the following commands. The apt
 install command issued earlier will ensure Cyclone DDS is installed.
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt-get install ros-jazzy-rmw-cyclonedds-cpp
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt-get install ros-humble-rmw-cyclonedds-cpp
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Launch Sequence
 

@@ -16,24 +16,24 @@ Complete the [Getting Started](../../../../platform_foundation/getting_started.m
 
 ## Install OpenVINO™ toolkit tutorial packages
 
-::::{tab-set}
-:::{tab-item} **Jazzy**
-:sync: jazzy
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
 sudo apt install ros-jazzy-object-detection-tutorial
 ```
 
-:::
-:::{tab-item} **Humble**
-:sync: humble
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
 ```bash
 sudo apt install ros-humble-object-detection-tutorial
 ```
 
-:::
-::::
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 ## Run Demo with Image Input
 

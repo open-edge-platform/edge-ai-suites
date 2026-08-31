@@ -1,20 +1,53 @@
 # Release Notes: Industrial Edge Insights - Time Series
 
-<!--## Version 2026.2-->
+## Version 2026.2
 
-<!--date TBD-->
+**Release Date**: September 9, 2026
+
+This release removes the deprecated **Weld Defect Detection sample app**, adds **ViPPET
+integration** for deploying the Time Series Analytics Microservice, aligns naming for
+**DL Streamer / DL Streamer Pipeline Server**, and includes **security hardening** along with
+various fixes and documentation improvements.
+
+**New**:
+
+- **ViPPET Integration**: The Time Series Analytics Microservice can now be deployed as part
+  of the Visual Pipeline and Platform Evaluation Tool (ViPPET) stack.
+
+**Improved**:
+
+- **Weld Defect Detection Sample App Removed**: As previously announced, the deprecated Weld
+  Defect Detection Time Series sample app, its training scripts, models, simulation data, and
+  documentation have been removed from the repository.
+- **DL Streamer Naming Alignment**: Updated references across configuration, documentation,
+  and test utilities to align with the DL Streamer / DL Streamer Pipeline Server naming.
+- **Model Registry and CatBoost References Removed**: Removed remaining model registry
+  configuration references and CatBoost mentions from deployment manifests, tests, and
+  documentation, aligning with the current scikit-learn RandomForestClassifier-based workflow.
+- **Container Image and Helm Chart Updates**: Bumped Telegraf, Grafana, and NGINX image
+  versions in Docker Compose deployments, and updated the Helm chart/appVersion and
+  `IMAGE_SUFFIX` to the 2026.2.0 release line.
+- **Localhost Access and Reduced MQTT Exposure**: Replaced `<host_ip>` placeholders with
+  `localhost` in user guides and reduced MQTT port exposure in Helm/nginx configuration.
+- **Security**: Bumped aiohttp and cryptography dependencies to address reported
+  vulnerabilities, fixed Bandit `shell=True` (B602) findings and CodeQL alerts by removing
+  credential logging, applied SDLe scan remediations with justified `# nosec` annotations, and
+  upgraded to the latest available third-party versions in all applicable manifests.
+- **Documentation**: Multiple language, formatting, and editorial fixes applied across the
+  Time Series user guides.
+
 
 ## Version 2026.1
 
-**June 2026**
+**Release Date**: June 17,2026
 
 This release introduces **batch processing UDFs**, **a new ML model for Weld Defect Detection**,
 **scikit-learn training scripts for Weld Defect Detection**, and various fixes and documentation
 improvements.
 
-**Deprecated:** The Weld Defect Detection Time Series Sample App is deprecated and will be removed in the 2026.2 release.
+**Deprecated**: The Weld Defect Detection Time Series Sample App is deprecated and will be removed in the 2026.2 release.
 
-**New**
+**New**:
 
 - **Batch Processing UDFs**: Batch-mode UDF variants for both Wind Turbine Anomaly
   Detection and Weld Defect Detection are now available, including Kapacitor TICK
@@ -28,7 +61,7 @@ improvements.
   GPU acceleration for weld defect detection on the Time Series Analytics microservice image, with
   updated configuration and user guides for running inference on GPU.
 
-**Improved**
+**Improved**:
 
 - **Wind Turbine Anomaly Detection ML Model**: The LinearRegression model has been removed
   from the Wind Turbine Anomaly Detection sample app; RandomForestRegressor (Intel® Extension
@@ -46,17 +79,15 @@ improvements.
   distinction clarified, Weld Defect Detection docs updated for GPU usage, OPC-UA
   alert configuration docs updated, broken references and typos fixed.
 
----
-
 ## Version 2026.0
 
-**March 2026**
+**Release Date**: March 2026
 
 This release introduces **new documentation for UDF development and wind turbine
 model integration**, along with **updated service images** and
 **documentation improvements**.
 
-**New**
+**New**:
 
 - **UDF Development Guide** — Added a comprehensive guide for writing
   User Defined Functions (UDFs) covering architecture, implementation steps, and
@@ -64,7 +95,7 @@ model integration**, along with **updated service images** and
 - **Wind Turbine Model Guidelines** — Added wind turbine model selection and
   integration guidelines.
 
-**Improved**
+**Improved**:
 
 - Updated image tags/versioning and aligned deployment/documentation examples.
 - Updated third-party service image versions used by Time Series (Telegraf,

@@ -4,7 +4,7 @@
 
 **Release Date**: September 9, 2026
 
-### New
+**New**:
 
 - **Latest Available Components**
   - Updated Docker images to the 2026.2.0 RC1 tags on Docker Hub where available.
@@ -18,12 +18,12 @@
   - Multimodal Embedding Serving and Model Download updated to 2026.2.0-rc1.
   - Document Ingestion and Chat Q&A UI updated to 2026.2.0-rc1.
   - Chat Q&A is deprecated; the Gen AI SDK now uses Chat Q&A Core (2026.2.0-rc1).
-  - Replaced Visual Data Preparation For Retrieval (VDMS) with Multimodal Data Preparation (2026.2.0-rc1).
+  - Replaced Visual Data Preparation for Retrieval (VDMS) with Multimodal Data Preparation (2026.2.0-rc1).
   - Removed the VLM OpenVINO Serving microservice.
 - **Visual AI Demo Kit**
   - Grafana updated to 13.1.3.
 - **Updated Documentation**
-    Tutorials updated with the 2026.2.0 Ubuntu 24 RC1 container image references.
+  - Tutorials updated with the 2026.2.0 Ubuntu 24 RC1 container image references.
 
 ## Intel® OEP SDK Manager 2026.1.0 Release
 

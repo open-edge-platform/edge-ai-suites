@@ -1,18 +1,18 @@
 # Deploy the vLLM Service for Defect Explanation
 
-This section shows how to deploy the multimodal sample application with the vLLM service enabled using the Makefile targets.
+This section shows how to deploy the multimodal sample application with the vLLM service
+enabled using the Makefile targets.
 
 ## System Requirements
 
-| Component | Minimum Requirement |
-|-----------|---------------------|
-| Operating System | Ubuntu OS version 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra Series 3 processor or newer |
+| Component        | Minimum Requirement                            |
+| ---------------- | ---------------------------------------------- |
+| Operating System | Ubuntu OS version 24.04 LTS or later           |
+| Hardware         | Intel® Core™ Ultra Series 3 processor or newer |
 
 ## Prerequisites
 
 1. Ensure the `.env` file is configured with valid values for:
-
    - `HOST_IP`
    - `INFLUXDB_USERNAME`, `INFLUXDB_PASSWORD`
    - `VISUALIZER_GRAFANA_USER`, `VISUALIZER_GRAFANA_PASSWORD`
@@ -21,7 +21,7 @@ This section shows how to deploy the multimodal sample application with the vLLM
 
 ## Download Models
 
-This section shows how to download the **`Unsloth Qwen3.5-2B` model and `Unsloth Qwen3.5-2B fine-tuned LoRA` adapter**.
+This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Qwen3.5-2B fine-tuned LoRA` adapter.
 
 1. Review and accept the [Unsloth Qwen3.5-2B license](https://huggingface.co/unsloth/Qwen3.5-2B/blob/main/LICENSE) before downloading.
 
@@ -47,28 +47,35 @@ cd ../..
 
 ## Deploy the vLLM Service
 
-> **Note:** vLLM preallocates GPU-addressable memory up to the limit specified by `VLLM_GPU_MEMORY_UTILIZATION` [Video Random Access Memory (VRAM) on discrete GPU (dGPU); shared system memory on integrated GPU (iGPU)]. Since the optimal value varies between platforms, update `VLLM_GPU_MEMORY_UTILIZATION` in the `.env` file to match your target hardware.
+> **Note:** vLLM preallocates GPU-addressable memory up to the limit specified by
+> `VLLM_GPU_MEMORY_UTILIZATION` (VRAM on discrete GPU; shared system memory on integrated GPU).
+> Since the optimal value varies between platforms, update `VLLM_GPU_MEMORY_UTILIZATION` in
+> the `.env` file to match your target hardware.
 
 1. Run the Makefile target:
 
-```bash
- cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
- make up_vllm
-```
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   make up_vllm
+   ```
 
-2. (Optional) To build from source instead of deploying the pre-built artifacts, run the following for a fresh build before deployment:
+2. (Optional) To build from source instead of deploying the pre-built artifacts, run the
+   following for a fresh build before deployment:
 
-```bash
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
-make build
-make up_vllm
-```
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   make build
+   make up_vllm
+   ```
 
 ## Verify the Deployment
 
 1. Check the overall stack health:
-   
-   > **Note:** The command `make status` may show errors in containers like ia-grafana if you have not logged in to Grafana dashboard for the first time, or if your session has timed out. Log in to Grafana dashboard and if the dashboard works correctly, ignore `user token not found` and other minor errors in the Grafana logs.
+
+   > **Note:** The command `make status` may show errors in containers like `ia-grafana` if
+   > you have not logged in to the Grafana dashboard for the first time, or if your session has
+   > timed out. Log in to the Grafana dashboard, and if the dashboard works correctly, ignore
+   > `user token not found` and other minor errors in the Grafana logs.
 
    ```bash
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
@@ -88,10 +95,9 @@ make up_vllm
    ```
 
 4. Check the output in Grafana dashboard:
-   
-   - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
-   
-   - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+   - Use the link `https://localhost:3000` to open the Grafana dashboard in a browser, preferably
+     the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
+   - Log in to the Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      values from the `.env` file:
 
      ![Grafana login](../_assets/login_wt.png)
@@ -118,7 +124,8 @@ make down
 ## Troubleshooting
 
 - `vllm-server` startup delay after deployment
-   The `vllm-server` service can take about 10 minutes to fully come up after `make up_vllm`. This is expected while the model is initialized and loaded into memory.
+  The `vllm-server` service can take about 10 minutes to fully come up after `make up_vllm`.
+  This is expected as the model initializes and loads into memory.
 
 - `Error: configs/vllm/models directory does not exist.`
   Create the directory and place the required model artifacts in it.

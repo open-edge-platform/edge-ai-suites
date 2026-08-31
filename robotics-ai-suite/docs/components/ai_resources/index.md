@@ -19,34 +19,36 @@ validating the resulting environment.
 
 For performance analysis, see [Benchmarking and Profiling](../benchmarking/index.md).
 
-::::{grid} 2
+<!--hide_directive
+::::{grid} 2hide_directive-->
 
-:::{grid-item-card} OpenVINO
-:link: openvino/index
+<!--hide_directive:::{grid-item-card}hide_directive--> **OpenVINO**
+<!--hide_directive:link: openvino/index
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Optimize and deploy deep-learning inference on available Intel compute devices.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} Developer Tools
-:link: developer_tools/index
+<!--hide_directive:::{grid-item-card}hide_directive--> **Developer Tools**
+<!--hide_directive:link: developer_tools/index
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Install and configure OpenVINO, oneAPI, IPEX, IPEX-LLM, and OpenXLA.
-:::
+<!--hide_directive:::hide_directive-->
 
-:::{grid-item-card} Agentic Skills
-:link: skills/index
+<!--hide_directive:::{grid-item-card}hide_directive--> **Agentic Skills**
+<!--hide_directive:link: skills/index
 :link-type: doc
-:link-alt: clickable cards
+:link-alt: clickable cardshide_directive-->
 
 Find skills for use with the Robotics AI Suite to power AI-enabled development.
-:::
-
+<!--hide_directive:::
 ::::
+hide_directive-->
 
+<!--hide_directive
 :::{toctree}
 :maxdepth: 1
 :hidden:
@@ -55,3 +57,4 @@ OpenVINO <openvino/index>
 Developer Tools <developer_tools/index>
 Agentic Skills <skills/index>
 :::
+hide_directive-->

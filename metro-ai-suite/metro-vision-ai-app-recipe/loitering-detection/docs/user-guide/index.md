@@ -1,7 +1,7 @@
 # Loitering Detection
 
-::::{container} component_header_row
 <!--hide_directive
+::::{container} component_header_row
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection">
      GitHub
@@ -15,11 +15,12 @@
 </div>
 hide_directive-->
 
-> Note!
+> Note:
 > This is a sample application **intended for evaluation and development purposes only**.
   For more information, refer to
   [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
-::::
+
+<!--hide_directive :::: hide_directive-->
 
 Loitering Detection leverages advanced AI algorithms for monitoring and analyzing real-time
 video feeds to demonstrate the efficiency of Intel hardware in AI systems for detecting

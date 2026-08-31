@@ -4,7 +4,7 @@
 
 **Release Date**: September 9, 2026
 
-**Improved**
+**Improved**:
 
 - **Core Library support**
 
@@ -13,5 +13,5 @@
 
 - **Sample app**
 
-  - Video Analytic: decode + postprocessing + yolo/resnet on GPU/NPU
+  - Video Analytics: decode + postprocessing + yolo/resnet on GPU/NPU
   - decode + postprocessing + encode

@@ -1,10 +1,15 @@
 # NICU Warmer — Intelligent Patient Monitoring
 
-> This application is for **reference and evaluation purposes**. It is
+> Note:
+> This application is for **reference and evaluation purposes only**. It is
   **not intended for direct use in clinical or diagnostic environments** and is not
   validated for such a purpose.
 
-The NICU Warmer application helps medical AI developers and systems engineers evaluate Intel® Core™ Ultra processors, demonstrating that you can run **5 AI models concurrently in a single GStreamer pipeline on Intel GPU, NPU, and CPU** —  with workloads representative of a real neonatal scenario (detects patient presence, caretaker activity, warmer latch status, contactless vital signs, and action recognition).
+The NICU Warmer application is a reference solution that demonstrates how
+**multiple AI models can run simultaneously in a single GStreamer pipeline on Intel® hardware**,
+providing workloads that mimic real-time neonatal patient monitoring in a simulated hospital
+warmer bed scenario. It helps medical AI developers and systems engineers evaluate
+Intel® Core™ Ultra processors.
 
 You can view all monitoring outputs through a single React dashboard that displays:
 
