@@ -39,7 +39,7 @@ HDD is **not recommended** — model loading and inference will be slow.
 
 ### Microphone
 - **Required for voice input** — The assistant captures your speech through the browser, so a working microphone is needed for mic-based interaction.
-- **Optional only for text-only usage** — If you use typed input and do not use voice features, a microphone is not required.
+- **Optional for text-only usage** — If you use typed input and do not use voice features, a microphone is not required.
 If multiple microphones are available, choose the input device from the UI microphone selector.
 
 ## Software Dependencies
