@@ -4,7 +4,8 @@ SPDX-License-Identifier: Apache-2.0
 -->
 # Handheld Multi-Modal Application
 
-The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios, optimized for Intel® edge hardware.
+The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios, optimized for Intel® edge hardware. It is is deployed on top of the
+[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
 The application combines LLM inference capability served through the OpenVINO™ Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; it runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization, sharing its Docker network.
 
@@ -28,8 +29,8 @@ apps/
 
 | Service | Image | Role |
 |---------|-------|------|
-| `grafana` | `grafana/grafana:latest` | Dashboards — consumes metrics via Grafana Live |
-| `ovms` | `openvino/model_server:latest-gpu` | LLM inference via OpenAI-compatible REST API |
+| `grafana` | `grafana/grafana:13.1.0-25893932881` | Dashboards — consumes metrics via Grafana Live |
+| `ovms` | `openvino/model_server@sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00` | LLM inference via OpenAI-compatible REST API |
 | `open-webui` | `ghcr.io/open-webui/open-webui:v0.11.0-slim` | Chat UI connected to OpenVINO model server |
 | `whisper-stt` | `whisper-stt:latest` (local build) | Speech-to-text with Prometheus metrics |
 | `nginx-https` | `nginx:alpine` | HTTPS reverse proxy (self-signed cert, enables browser microphone) |
@@ -53,7 +54,7 @@ Run `make setup` after cloning to auto-detect the `render` group GID and write t
 
 > **Recommended — use `make deploy`.**
 > This stack requires the Visual Pipeline and Platform Evaluation Tool to be running first because the tool will create the `fedaero` Docker network. Running `docker compose up -d` first **will fail** with:
-> ```
+> ```text
 > network visual-pipeline-and-platform-evaluation-tool_default declared as external, but could not be found
 > ```
 > `make deploy` handles everything — it fetches Visual Pipeline and Platform Evaluation Tool, starts it, waits for the network, then brings up this stack.

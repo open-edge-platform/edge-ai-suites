@@ -45,9 +45,11 @@ ls /dev/dri/renderD*
 ## Quick Start
 
 ```bash
-# 1. Create .env and detect GPU devices
+# 1. Create/populate .env and detect GPU devices
 make init
+```
 
+```bash
 # 2. Start core infra (PX4 + Gazebo + camera bridges + MQTT + RTSP + observability)
 make up-sim-camera
 ```

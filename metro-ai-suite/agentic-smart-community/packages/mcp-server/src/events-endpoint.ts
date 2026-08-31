@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
 import type { SmartCommunityDB } from "@smart-community-video/db";
+import { BIND_HOST } from "./config.js";
 import { logger } from "./logger.js";
 
 export interface VideoEvent {
@@ -56,13 +57,20 @@ export class EventsEndpoint {
     this.maxBodyBytes = options?.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
   }
 
+  /**
+   * @param port TCP port to listen on.
+   *
+   * Always binds BIND_HOST (loopback): this endpoint is unauthenticated and
+   * writes straight into the DB, and its only producer is the on-host
+   * videostream-analytics service, which POSTs to localhost.
+   */
   start(port: number = 3101): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = createServer((req, res) => this.route(req, res));
+      const server = createServer((req, res) => this.route(req, res));
 
-      this.server.on("error", (err: NodeJS.ErrnoException) => {
+      server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
-          logger.warn(`[events-endpoint] Port ${port} in use, skipping events endpoint`);
+          logger.warn(`[events-endpoint] ${BIND_HOST}:${port} in use, skipping events endpoint`);
           this.server = null;
           resolve();
         } else {
@@ -70,8 +78,9 @@ export class EventsEndpoint {
         }
       });
 
-      this.server.listen(port, () => {
-        logger.info(`[events-endpoint] Listening on port ${port}`);
+      server.listen(port, BIND_HOST, () => {
+        this.server = server;
+        logger.info(`[events-endpoint] Listening on http://${BIND_HOST}:${port}`);
         resolve();
       });
     });

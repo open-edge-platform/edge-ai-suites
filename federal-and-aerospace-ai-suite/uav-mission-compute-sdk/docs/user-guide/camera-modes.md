@@ -15,22 +15,22 @@ graph LR
         SIM["🟦 SIM-CAMERA Profile<br/>Gazebo 3-camera world"]
         USB["🟩 USB-CAMERA Profile<br/>Real V4L2 device"]
     end
-    
+
     subgraph COMMON["Shared Infrastructure"]
         PX4["PX4 Autopilot<br/>(MAVLink, telemetry)"]
         MQTT["MQTT Broker<br/>(armed state, detections)"]
         MTX["MediaMTX<br/>(RTSP server)"]
         VP["Vision Processor<br/>(YOLOv2-tiny GPU)"]
-        APP["Dashboard & Apps<br/>(http://localhost:5002)"]
+        APP["Dashboard & Apps<br/>"]
     end
-    
+
     SIM --> PX4
     USB --> PX4
     PX4 --> MQTT
     MQTT --> VP
     MTX --> VP
     VP --> APP
-    
+
     style SIM fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style USB fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
     style COMMON fill:#f9f9f9,stroke:#666,stroke-width:1px
@@ -40,7 +40,7 @@ graph LR
 
 ## 1. Simulated Cameras (Default)
 
-**Profile**: `sim-camera`  
+**Profile**: `sim-camera`
 **Command**: `make up-sim-camera`
 
 ### Architecture
@@ -48,20 +48,20 @@ graph LR
 ```mermaid
 flowchart LR
     GAZ["🎮 Gazebo Harmonic<br/>3-camera world<br/>nadir, forward, rear"]
-    
+
     subgraph CB["camera-bridge"]
         GZ["gz-transport<br/>Subscribe cameras"]
         DEC["Decode base64<br/>→ BGR"]
         ENC["ffmpeg libx264<br/>H264 encode<br/>2000kbps"]
     end
-    
+
     MTX["MediaMTX<br/>RTSP :8554"]
-    
+
     GAZ -->|"gz-transport JSON<br/>(base64 RGB)"| GZ
     GZ --> DEC
     DEC --> ENC
     ENC -->|"RTSP ANNOUNCE<br/>/uav-1/{cam}"| MTX
-    
+
     style GAZ fill:#e1f5ff,stroke:#0277bd
     style CB fill:#f1f8e9,stroke:#558b2f
     style MTX fill:#ffe0b2,stroke:#e65100
@@ -137,7 +137,7 @@ automatically by these targets). Switch back at any time with
 
 ## 2. USB Camera
 
-**Profile**: `usb-camera`  
+**Profile**: `usb-camera`
 **Command**: `make up-usb-camera`
 
 ### Architecture
@@ -145,20 +145,20 @@ automatically by these targets). Switch back at any time with
 ```mermaid
 flowchart LR
     USB["📹 V4L2 Device<br/>/dev/video32<br/>C922 @ 1280×720"]
-    
+
     subgraph UCB["usb-camera-bridge"]
         GS["GStreamer<br/>v4l2src"]
         DEC["MJPEG decode<br/>→ BGR"]
         ENC["ffmpeg libx264<br/>H264 encode<br/>2000kbps"]
     end
-    
+
     MTX["MediaMTX<br/>RTSP :8554"]
-    
+
     USB -->|"V4L2 MJPEG<br/>1280×720 30fps"| GS
     GS --> DEC
     DEC --> ENC
     ENC -->|"RTSP ANNOUNCE<br/>/uav-1/nadir"| MTX
-    
+
     style USB fill:#c8e6c9,stroke:#388e3c
     style UCB fill:#f1f8e9,stroke:#558b2f
     style MTX fill:#ffe0b2,stroke:#e65100
@@ -198,7 +198,7 @@ v4l2-ctl --list-devices
 ```
 
 **Example output**:
-```
+```text
 C922 Pro Stream Webcam (usb-0000:00:14.0-1):
     /dev/video32
     /dev/video33
@@ -211,13 +211,13 @@ C922 Pro Stream Webcam (usb-0000:00:14.0-1):
 
 ### usb-camera-bridge Container
 
-**Image**: Built from `infra/bridges/usb-camera/Dockerfile`  
-**Dependencies**: GStreamer 1.0, FFmpeg, V4L2 utilities  
-**Device mapping**: `${USB_VIDEO_DEVICE}:/dev/video0:rw` (remapped to /dev/video0 in container)  
+**Image**: Built from `infra/bridges/usb-camera/Dockerfile`
+**Dependencies**: GStreamer 1.0, FFmpeg, V4L2 utilities
+**Device mapping**: `${USB_VIDEO_DEVICE}:/dev/video0:rw` (remapped to /dev/video0 in container)
 **Network**: Shares Docker bridge (not IPC like camera-bridge)
 
 **GStreamer Pipeline** (internal):
-```
+```text
 v4l2src device=/dev/video0 io-mode=2
   → image/jpeg,width=1280,height=720,framerate=30/1
   → jpegdec
@@ -268,7 +268,7 @@ Both camera bridges **cannot run simultaneously**. Docker Compose profiles enfor
 services:
   camera-bridge:
     profiles: ["sim-camera"]        # Only runs with --profile sim-camera
-  
+
   usb-camera-bridge:
     profiles: ["usb-camera"]        # Only runs with --profile usb-camera
 ```
@@ -331,19 +331,7 @@ The `vision-processor-multicam` container automatically:
 3. **Publishes detections** to MQTT: `uav/uav-1/camera/{camera_id}/detections`
 4. **Publishes annotated frames** (JPEG with bounding boxes) to MQTT: `uav/uav-1/camera/{camera_id}/processed`
 
-> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, use the dashboard at http://localhost:5002 or subscribe to the MQTT topic above.
-
-### Dashboard Features
-
-**URL**: http://localhost:5002
-
-- Camera tiles: One tile per camera in `VISION_CAMERA_IDS`
-  - Sim mode: 3 tiles (nadir, forward, rear)
-  - USB mode: 1 tile (nadir)
-- Detection overlay: Real-time bounding boxes, labels, confidence scores
-- ARM/DISARM button: Controls UAV and camera inference
-- Telemetry panel: Position, altitude, battery, velocity
-- Demo mission button: Pre-programmed waypoint sequence
+> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, subscribe to the MQTT topic above.
 
 ### Troubleshooting
 
@@ -383,7 +371,7 @@ make down            # both
 
 ### Profile Dependencies
 
-```
+```text
 sim-camera (implies):
   └─ px4
   └─ mediamtx
@@ -405,21 +393,21 @@ usb-camera (implies):
 > **Prerequisite**: RTSP paths only exist while the UAV is **armed**. Camera bridges kill ffmpeg on disarm and respawn on arm. Arm the UAV first:
 > ```bash
 > curl -X POST http://localhost:8080/action/arm
-> # or use the ARM button on http://localhost:5002
 > ```
 
 ### View Streams Locally
 
 ```bash
-# Install ffplay if needed
-sudo apt install ffmpeg
+# Install prerequisites if needed.
+# If `xdg-utils` shows "no installation candidate", enable the Ubuntu `main`
+# /`universe` repos and refresh the cache first:
+# `sudo add-apt-repository universe && sudo apt update`.
+sudo apt install ffmpeg mosquitto-clients xdg-utils -y
 
 # View raw camera feed
 ffplay rtsp://localhost:8554/uav-1/nadir
 
-# View annotated frames with detections delivered over MQTT. The dashboard at
-# http://localhost:5002 renders these directly; the CLI equivalent grabs one
-# JPEG from the MQTT topic:
+# View annotated frames with detections delivered over MQTT.
 mosquitto_sub -h localhost -p 1884 \
   -t "uav/uav-1/camera/nadir/processed" -C 1 > frame.jpg && xdg-open frame.jpg
 
@@ -502,7 +490,7 @@ make clean               # Remove all containers, networks, volumes
 
 ## 9. Quick Reference: Decision Tree
 
-```
+```text
 Start here: Which camera source?
 
 ┌─────────────────────────────────────────────────────────────┐
@@ -602,20 +590,20 @@ Beyond consumer UVC cameras (like the C922), you can extend the system to suppor
 ```mermaid
 flowchart LR
     CAM["📷 GenICam Camera<br/>GigE Vision<br/>or USB3 Vision"]
-    
+
     subgraph GENCAM["usb-camera-bridge (GenICam Mode)"]
         GS["GStreamer<br/>gencamsrc"]
         DEC["Decode/Convert<br/>→ BGR"]
         ENC["ffmpeg libx264<br/>H264 encode<br/>2000kbps"]
     end
-    
+
     MTX["MediaMTX<br/>RTSP :8554"]
-    
+
     CAM -->|"GenICam Protocol<br/>GigE or USB3"| GS
     GS --> DEC
     DEC --> ENC
     ENC -->|"RTSP ANNOUNCE<br/>/uav-1/industrial"| MTX
-    
+
     style CAM fill:#9c27b0,stroke:#6a1b9a,color:#fff
     style GENCAM fill:#f1f8e9,stroke:#558b2f
     style MTX fill:#ffe0b2,stroke:#e65100
@@ -716,10 +704,10 @@ class GenICamReader:
         )
         self.pipeline = Gst.parse_launch(pipeline_str)
         self.appsink = self.pipeline.get_by_name('sink')
-        
+
     def start(self):
         self.pipeline.set_state(Gst.State.PLAYING)
-        
+
     def read_frame(self):
         # Block until frame available
         sample = self.appsink.emit('pull-sample')

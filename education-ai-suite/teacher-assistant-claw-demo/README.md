@@ -4,7 +4,7 @@ The OpenClaw-based agent functions as the "Teacher Assistant" persona that enabl
 
 > **Data note:** This demo uses sample input data from `workspace/smart_classroom_incoming`. You can add your own data to `~/.openclaw/workspace/smart_classroom_incoming` for custom analysis.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                  Teacher Assistant Demo                 │
 │                                                         │
@@ -100,7 +100,7 @@ If the model isn't ready in time, the script stops with clear next steps on scre
 
 Try this example prompt to verify the agent works:
 
-```
+```text
 Summarize the lesson from June 15
 ```
 

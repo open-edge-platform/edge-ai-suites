@@ -74,7 +74,7 @@ Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-gr
 
 PackageName: openvino-model-server
 SPDXID: SPDXRef-Package-ovms
-PackageVersion: latest-gpu
+PackageVersion: @sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://hub.docker.com/r/openvino/model_server
 PackageHomePage: https://github.com/openvinotoolkit/model_server

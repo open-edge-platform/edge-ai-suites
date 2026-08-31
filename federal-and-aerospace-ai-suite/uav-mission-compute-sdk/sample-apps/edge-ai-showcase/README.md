@@ -27,7 +27,8 @@ docker compose up -d
 
 Open http://localhost:5002
 
-3. **Verify data flow**:
+**Verify data flow**:
+
 - Camera feeds should appear within 10 seconds
 - Detection counts should update in real-time
 - FPS metrics should show ~20-30 FPS per camera

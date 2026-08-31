@@ -15,7 +15,7 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
+Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/components/ai_resources/developer_tools/oneapi.html) to setup Intel® oneAPI packages.
 
 ## ROS2 Humble Setup
 
@@ -32,7 +32,7 @@ The required ACT module is based on the open-source [ACT](https://github.com/ton
 
 To set up the required ACT module, please follow the ACT installation guide in the [imitation learning ACT documentation](../act-sample/README.md) except `Install ACT package`. Here, we need to install ACT source code by downloading [act-sample](../act-sample), and initialize submodules and apply patches:
 
-```
+```bash
 cd act-sample
 
 # initialize submodules
@@ -63,152 +63,154 @@ It should be noted that the original OCS2 project is based on ROS1 Noetic, so th
 
 1. Install dependencies:
 
-```
-# install basic library
-sudo apt-get install -y \
-libglpk-dev \
-libmpfr-dev \
-libglfw3 \
-libglfw3-dev \
-libosmesa6 \
-freeglut3-dev \
-mesa-common-dev \
-python3-pip \
-python3-wstool \
-wget
-      
-# install ros2 library
-sudo apt-get install -y \
-ros-humble-pinocchio \
-ros-humble-hpp-fcl \
-ros-humble-joint-state-publisher
-```
+   ```bash
+   # install basic library
+   sudo apt-get install -y \
+   libglpk-dev \
+   libmpfr-dev \
+   libglfw3 \
+   libglfw3-dev \
+   libosmesa6 \
+   freeglut3-dev \
+   mesa-common-dev \
+   python3-pip \
+   python3-wstool \
+   wget
+
+   # install ros2 library
+   sudo apt-get install -y \
+   ros-humble-pinocchio \
+   ros-humble-hpp-fcl \
+   ros-humble-joint-state-publisher
+   ```
 
 2. Create workspace for ocs2 and ocs2_robotic_assets:
 
-```
-source /opt/ros/humble/setup.bash
-mkdir -p ~/ocs2_ws/src
-cd ~/ocs2_ws/src
-```
+   ```bash
+   source /opt/ros/humble/setup.bash
+   mkdir -p ~/ocs2_ws/src
+   cd ~/ocs2_ws/src
+   ```
 
 3. Get ocs2 and ocs2_robotic_assets:
 
-Download [ocs2](./ocs2/) and [ocs2_robotic_assets](./ocs2_robotic_assets/) with `git clone --recursive`. Then, initialize submodules and apply patches:
+   Download [ocs2](./ocs2/) and [ocs2_robotic_assets](./ocs2_robotic_assets/) with `git clone --recursive`. Then, initialize submodules and apply patches:
 
-```
-cd ~/ocs2_ws/src/ocs2
-./install_ocs2_patches.sh patches/ocs2.scc
-```
+   ```bash
+   cd ~/ocs2_ws/src/ocs2
+   ./install_ocs2_patches.sh patches/ocs2.scc
+   ```
 
-```
-cd ~/ocs2_ws/src/ocs2_robotic_assets
-./install_ocs2_robotic_assets_patches.sh patches/ocs2_robotic_assets.scc
-```
+   ```bash
+   cd ~/ocs2_ws/src/ocs2_robotic_assets
+   ./install_ocs2_robotic_assets_patches.sh patches/ocs2_robotic_assets.scc
+   ```
 
 4. Build ocs2 and ocs2_robotic_assets:
 
-```
-cd ~/ocs2_ws/
+   ```bash
+   cd ~/ocs2_ws/
 
-# rosdep
-rosdep init
-rosdep update --rosdistro humble
-rosdep install --from-paths src --ignore-src -r -y
+   # rosdep
+   rosdep init
+   rosdep update --rosdistro humble
+   rosdep install --from-paths src --ignore-src -r -y
 
-# build
-source /opt/ros/humble/setup.bash
-colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release 
-```
+   # build
+   source /opt/ros/humble/setup.bash
+   colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release
+   ```
 
 ## MUJOCO Setup
 
 The required Mujoco module is based on the open-source Mujoco Plugin project [MujocoRosUtils](https://github.com/isri-aist/MujocoRosUtils/tree/main) to visualize and simulate the ACT cube transmitting task in Mujoco 2.3.7. Installation guide is as follows:
 
 1. Download Mujoco 2.3.7 library:
-```
-wget https://github.com/deepmind/mujoco/releases/download/2.3.7/mujoco-2.3.7-linux-x86_64.tar.gz
-mkdir ~/.mujoco
-tar -zxvf mujoco-2.3.7-linux-x86_64.tar.gz -C ~/.mujoco/
-rm -fr mujoco-2.3.7-linux-x86_64.tar.gz
-```
+
+   ```bash
+   wget https://github.com/deepmind/mujoco/releases/download/2.3.7/mujoco-2.3.7-linux-x86_64.tar.gz
+   mkdir ~/.mujoco
+   tar -zxvf mujoco-2.3.7-linux-x86_64.tar.gz -C ~/.mujoco/
+   rm -fr mujoco-2.3.7-linux-x86_64.tar.gz
+   ```
 
 2. Download MujocoRosUtils:
 
-Download [mujoco_ros_utils](./mujoco_ros_utils/) with `git clone --recursive`. Then, initialize submodules and apply patches:
+   Download [mujoco_ros_utils](./mujoco_ros_utils/) with `git clone --recursive`. Then, initialize submodules and apply patches:
 
-```
-cd ~/ocs2_ws/src/mujoco_ros_utils
-./install_mujoco_ros_utils_patches.sh patches/mujoco_ros_utils.scc
-```
+   ```bash
+   cd ~/ocs2_ws/src/mujoco_ros_utils
+   ./install_mujoco_ros_utils_patches.sh patches/mujoco_ros_utils.scc
+   ```
 
 3. Build MujocoRosUtils
-```
-source /opt/ros/humble/setup.bash
-source ~/ocs2_ws/install/setup.bash
-cd ~/ocs2_ws
-colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=$HOME/.mujoco/mujoco-2.3.7
-```
 
+   ```bash
+   source /opt/ros/humble/setup.bash
+   source ~/ocs2_ws/install/setup.bash
+   cd ~/ocs2_ws
+   colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=$HOME/.mujoco/mujoco-2.3.7
+   ```
 
 ## Run pipeline
 
 1. Run Mujoco:
 
-Open new terminal and run the following commands:
+   Open new terminal and run the following commands:
 
-```
-source /opt/ros/humble/setup.bash
-source ~/ocs2_ws/install/setup.bash
-cd ~/.mujoco/mujoco-2.3.7/bin
-./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
-```
+   ```bash
+   source /opt/ros/humble/setup.bash
+   source ~/ocs2_ws/install/setup.bash
+   cd ~/.mujoco/mujoco-2.3.7/bin
+   ./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
+   ```
 
-If running successfully, the mujoco UI will display two opposing ALOHA robotic arms. If you observe collisions between the arms, don't worry; this is normal before initialization.
+   If running successfully, the mujoco UI will display two opposing ALOHA robotic arms.
+   If you observe collisions between the arms, don't worry; this is normal before initialization.
 
-`Notes:`If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
-
-```
-# ldd check
-ldd ~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin/libMujocoRosUtils*.so
-# add path
-export LD_LIBRARY_PATH=~/ocs2_ws/install/ocs2_msgs/lib:$LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin:$LD_LIBRARY_PATH
-```
-
+   > **Note:** If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
+   >
+   > ```bash
+   > # ldd check
+   > ldd ~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin/libMujocoRosUtils*.so
+   > # add path
+   > export LD_LIBRARY_PATH=~/ocs2_ws/install/ocs2_msgs/lib:$LD_LIBRARY_PATH
+   > export LD_LIBRARY_PATH=~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin:$LD_LIBRARY_PATH
+   > ```
 
 2. Run MPC:
 
-Open new terminal and run the following commands:
+   Open new terminal and run the following commands:
 
-```
-source /opt/ros/humble/setup.bash
-source ~/ocs2_ws/install/setup.bash
-ros2 launch ocs2_mobile_manipulator_ros manipulator_aloha_dual_arm.launch.py
-```
+   ```bash
+   source /opt/ros/humble/setup.bash
+   source ~/ocs2_ws/install/setup.bash
+   ros2 launch ocs2_mobile_manipulator_ros manipulator_aloha_dual_arm.launch.py
+   ```
 
-If launching successfully, the OCS2 terminal will print out information indicating that two MPC nodes have been successfully reset, and the Mujoco AI will be initialized, as shown in the figures below.
+   If launching successfully, the OCS2 terminal will print out information
+   indicating that two MPC nodes have been successfully reset, and the Mujoco AI will be initialized, as shown in the figures below.
 
-![image](README.assets/mpc-ocs2-node-output.png)
+   ![image](README.assets/mpc-ocs2-node-output.png)
 
-![image](README.assets/mpc-mujoco-initialization.png)
+   ![image](README.assets/mpc-mujoco-initialization.png)
 
 3. Run ACT:
 
-You can download our pre-trained weights for [transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
+You can download our pre-trained weights for
+[transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument ``--ckpt_dir`` to the path of the pre-trained weights. Then, open new terminal and run the following commands:
 
-```
-# env
-source /opt/ros/humble/setup.bash
-source ~/ocs2_ws/install/setup.bash
-source [path to your act venv]/bin/activate
+   ```bash
+   # env
+   source /opt/ros/humble/setup.bash
+   source ~/ocs2_ws/install/setup.bash
+   source [path to your act venv]/bin/activate
 
-# run act-ov on GPU
-cd [your path to act]
-MUJOCO_GL=egl python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir [your path to checkpoints] --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --eval --onscreen_render --device GPU
-```
+   # run act-ov on GPU
+   cd [your path to act]
+   MUJOCO_GL=egl python3 imitate_episodes.py --task_name sim_transfer_cube_scripted --ckpt_dir [your path to checkpoints] --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --eval --onscreen_render --device GPU
+   ```
 
-After ACT running successfully, the Mujoco UI appears as follows:
+   After ACT running successfully, the Mujoco UI appears as follows:
 
-![image](README.assets/mpc-sim-transmit-cube-demo.gif)
-
+   ![image](README.assets/mpc-sim-transmit-cube-demo.gif)
