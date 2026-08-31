@@ -57,7 +57,7 @@ hardware using OpenVINO.
 
 Smart Classroom 2026.1, a modular, extensible framework for the Windows OS, adds a Content Search subsystem, document upload, text/image retrieval,
 OCR, QnA, and multilingual processing including Mandarin/Chinese. This release also adds
-WebRTC WHEP streaming, Intel Wildcat Lake platform support, and updates to audio transcription.
+WebRTC WHEP streaming, Intel® Wildcat Lake (WCL) platform support, and updates to audio transcription.
 
 **New**:
 
