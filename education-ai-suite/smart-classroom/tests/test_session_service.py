@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from api.v1.schemas.session import WorkflowRequest
 from services.session_service import (
+    ConcurrencyLimitError,
     SessionNotFound,
     SessionNotRunning,
     SessionRunning,
@@ -68,6 +69,18 @@ def test_create_process_calls_orchestrator():
             result = create_process(_req(audio_path=audio))
             assert result["session_id"] == "sess-1"
             assert mo.start_process.called
+
+
+def test_create_process_maps_concurrency_limit():
+    from utils import orchestrator as orch
+    with tempfile.TemporaryDirectory() as tmp:
+        audio = os.path.join(tmp, "a.wav")
+        open(audio, "w").close()
+        with patch.object(
+            session_service.orchestrator, "start_process",
+            side_effect=orch._ConcurrencyLimit("too many concurrent sessions"),
+        ):
+            _expect_raises(ConcurrencyLimitError, lambda: create_process(_req(audio_path=audio)))
 
 
 def test_get_status_not_found():

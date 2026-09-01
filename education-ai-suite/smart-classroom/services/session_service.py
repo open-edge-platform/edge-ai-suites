@@ -25,6 +25,10 @@ class SessionValidationError(Exception):
     pass
 
 
+class ConcurrencyLimitError(Exception):
+    pass
+
+
 def list_sessions() -> dict:
     sessions = []
     for state in session_store.SessionStore.list_all():
@@ -48,7 +52,10 @@ def create_process(req: WorkflowRequest) -> dict:
         raise SessionValidationError("stages required")
     _validate_stages(stages)
     _validate_sources(req)
-    session_id = orchestrator.start_process(req.model_dump())
+    try:
+        session_id = orchestrator.start_process(req.model_dump())
+    except orchestrator._ConcurrencyLimit as e:
+        raise ConcurrencyLimitError(str(e))
     state = session_store.SessionStore.get(session_id)
     return {
         "session_id": session_id,

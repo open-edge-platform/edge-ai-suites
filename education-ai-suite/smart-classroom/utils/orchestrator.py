@@ -22,6 +22,20 @@ class _OrchestrationError(Exception):
     pass
 
 
+class _Cancelled(_OrchestrationError):
+    pass
+
+
+class _ConcurrencyLimit(_OrchestrationError):
+    pass
+
+
+# Number of /sessions/process that may run simultaneously in this process.
+# Deliberately small and not exposed to clients; serves as a safety valve so a
+# flood of concurrent requests cannot exhaust GPU/CPU/memory.
+_MAX_CONCURRENT_SESSIONS = 2
+
+
 class _RunningTask:
     """Handle for one in-flight session's background work (A1 registry)."""
 
@@ -73,6 +87,8 @@ def start_process(request: dict) -> str:
     cancel_event = threading.Event()
     thread = threading.Thread(target=_run, args=(session_id, request, stages), daemon=True)
     with _RUNNING_LOCK:
+        if len(_RUNNING) >= _MAX_CONCURRENT_SESSIONS:
+            raise _ConcurrencyLimit("too many concurrent sessions")
         _RUNNING[session_id] = _RunningTask(thread, cancel_event)
     thread.start()
     return session_id
@@ -105,7 +121,7 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
             raise _OrchestrationError(va_error[0])
         session_store.SessionStore.mark_completed(session_id)
     except _Cancelled:
-        session_store.SessionStore.mark_failed(session_id, "cancelled")
+        session_store.SessionStore.mark_cancelled(session_id)
     except _OrchestrationError as e:
         session_store.SessionStore.mark_failed(session_id, str(e))
     except Exception as e:
@@ -115,10 +131,6 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
 
 def _touch_heartbeat(session_id: str) -> None:
     session_store.SessionStore.update(session_id, last_heartbeat=_now_iso())
-
-
-class _Cancelled(_OrchestrationError):
-    pass
 
 
 def _check_cancel(session_id: str) -> None:

@@ -10,6 +10,7 @@ from api.v1.schemas.session import (
 )
 from services import session_service
 from services.session_service import (
+    ConcurrencyLimitError,
     SessionNotFound,
     SessionNotRunning,
     SessionRunning,
@@ -35,6 +36,8 @@ def process_session(req: WorkflowRequest):
         return session_service.create_process(req)
     except SessionValidationError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except ConcurrencyLimitError as e:
+        raise HTTPException(status_code=429, detail=str(e))
 
 
 @router.get("/{session_id}/status", response_model=StatusResponse)

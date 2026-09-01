@@ -135,6 +135,10 @@ class SessionStore:
         return cls.update(session_id, state="failed", error=error)
 
     @classmethod
+    def mark_cancelled(cls, session_id: str) -> dict | None:
+        return cls.update(session_id, state="cancelled")
+
+    @classmethod
     def list_all(cls) -> list:
         with cls._lock:
             cls._init_table()

@@ -22,6 +22,14 @@ def test_create_and_update_new_columns():
         assert state["last_heartbeat"] == "2026-09-01T10:00:00Z"
 
 
+def test_mark_cancelled():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        SessionStore.create("s1", {"stages": ["transcribe"]}, ["transcribe"])
+        SessionStore.mark_cancelled("s1")
+        state = SessionStore.get("s1")
+        assert state["state"] == "cancelled"
+
+
 def test_migration_adds_columns_to_existing_db():
     # Simulate an old DB without the new columns, then have _init_table migrate it.
     with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
