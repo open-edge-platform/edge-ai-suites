@@ -153,7 +153,7 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md) to use the prebuilt images.
 
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
