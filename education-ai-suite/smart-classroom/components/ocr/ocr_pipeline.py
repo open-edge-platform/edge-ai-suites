@@ -13,7 +13,7 @@ from constants.ocr_constant import (
     CODE_OCR_SUCCESS, MSG_OCR_SUCCESS, MSG_OCR_FAILURE,
     OCRStatus,
     ERR_NO_FILE_PROVIDED, ERR_UNSUPPORTED_PDF_TYPE, ERR_UNSUPPORTED_OCR_TYPE,
-    ERR_MISSING_SESSION_ID, ERR_ANALYZING_DOCUMENT, ERR_PROCESSING_DOCUMENT
+    ERR_ANALYZING_DOCUMENT, ERR_PROCESSING_DOCUMENT
 )
 from dto.ocr_dto import OCRResponse
 from utils.runtime_config_loader import RuntimeConfig
@@ -32,17 +32,21 @@ def _get_ocr_capability():
 def create_ocr_response(
     ocr_status: OCRStatus,
     input_file: str,
-    output_file: str = None
-) -> OCRResponse:  
+    output_file: str = None,
+    text: str = None
+) -> OCRResponse:
     data = {
         "status": ocr_status.value,
         "input_file": input_file
-    }  
-    if ocr_status == OCRStatus.SUCCESS and output_file:
-        data["result_file"] = output_file.replace("\\", "/")
+    }
+    if ocr_status == OCRStatus.SUCCESS:
+        if text is not None:
+            data["text"] = text
+        if output_file:
+            data["result_file"] = output_file.replace("\\", "/")
         message = MSG_OCR_SUCCESS
     else:
-        message = MSG_OCR_FAILURE 
+        message = MSG_OCR_FAILURE
     return OCRResponse(
         code=CODE_OCR_SUCCESS,
         data=data,
@@ -57,12 +61,14 @@ def validate_file_extension(filename: str, allowed_extensions: list) -> Tuple[bo
 
 
 def save_temp_file(file_content: bytes, prefix: str, filename: str) -> str:
-    temp_dir = tempfile.gettempdir()
-    temp_path = os.path.join(temp_dir, f"{prefix}_{filename}")
-    
-    with open(temp_path, "wb") as f:
+    # mkstemp, not a fixed <prefix>_<filename> path: concurrent requests for the
+    # same filename would otherwise write over each other's temp file.
+    suffix = os.path.splitext(os.path.basename(filename))[1]
+    fd, temp_path = tempfile.mkstemp(prefix=f"{prefix}_", suffix=suffix)
+
+    with os.fdopen(fd, "wb") as f:
         f.write(file_content)
-    
+
     return temp_path
 
 def cleanup_temp_file(temp_path: str):
@@ -114,11 +120,16 @@ def ocr_detect_file(file: UploadFile) -> OCRResponse:
         cleanup_temp_file(temp_path)
 
 
-def ocr_extract_text(file: UploadFile, session_id: str) -> OCRResponse:
+def ocr_extract_text(file: UploadFile, session_id: Optional[str] = None) -> OCRResponse:
+    """Extract text from an uploaded document.
+
+    The text is always returned in ``data["text"]``. It is additionally written
+    to ``<session>/ocr_result.txt`` only when the caller supplies a real
+    ``X-Session-ID``; callers that just want the text (content_search ingestion)
+    omit it so no session folder is created for them.
+    """
     temp_path = None
     try:
-        if not session_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,detail=ERR_MISSING_SESSION_ID)
         if not file.filename:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ERR_NO_FILE_PROVIDED)
         
@@ -127,7 +138,7 @@ def ocr_extract_text(file: UploadFile, session_id: str) -> OCRResponse:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ERR_UNSUPPORTED_OCR_TYPE)
 
         content = file.file.read()
-        temp_path = save_temp_file(content, f"ocr_extract_{session_id}", file.filename)
+        temp_path = save_temp_file(content, "ocr_extract", file.filename)
 
         from utils.config_loader import config as app_config
         ocr = _get_ocr_capability()
@@ -146,13 +157,13 @@ def ocr_extract_text(file: UploadFile, session_id: str) -> OCRResponse:
 
         combined_text = "\n".join(full_text)
 
-        result_file = save_output(combined_text, session_id, "ocr_result.txt")
+        result_file = save_output(combined_text, session_id, "ocr_result.txt") if session_id else None
 
-        success = result_file is not None and os.path.exists(result_file)
+        success = result_file is None or os.path.exists(result_file)
 
         if success:
-            logger.info(f"OCR extract-text SUCCESS: {file.filename} -> {result_file}")
-            return create_ocr_response(OCRStatus.SUCCESS, input_file, result_file)
+            logger.info(f"OCR extract-text SUCCESS: {file.filename} -> {result_file or 'response only'}")
+            return create_ocr_response(OCRStatus.SUCCESS, input_file, result_file, combined_text)
         else:
             logger.error(f"OCR extract-text FAILURE: {file.filename}")
             return create_ocr_response(OCRStatus.FAILURE, input_file)

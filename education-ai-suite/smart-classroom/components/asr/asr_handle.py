@@ -164,7 +164,7 @@ class AsrHandler:
                 self._runner = None
                 raise
 
-    def transcribe(self, audio_path: str) -> str:
+    def transcribe(self, audio_path: str) -> dict:
         if not self.loaded:
             raise RuntimeError("ASR not loaded. Call load() first.")
         

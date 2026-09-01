@@ -8,7 +8,7 @@ refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 
 > All delegate skills except `metro-ai-apps-recipe` (which lives in this repo)
 > are installed from `open-edge-platform/skills` with:
-> `npx skills add open-edge-platform/skills --skill <name>`
+> `npx skills@1.5.23 add open-edge-platform/skills --skill <name>`
 
 ## 1. Computer vision — detect / count / track / alert on camera feeds
 

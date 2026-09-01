@@ -66,6 +66,7 @@ psycopg2==2.9.11
 
 # Telegram userbot transport
 telethon==1.39.0
+cryptg==0.5.1
 pysocks==1.7.1
 
 # Utilities

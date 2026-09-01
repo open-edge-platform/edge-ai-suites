@@ -267,10 +267,13 @@ def start_video_analytics_pipeline(
     Start one or more video analytics pipelines
 
     Args:
-        requests: List of VideoAnalyticsRequest with pipeline_name, source
+        requests: List of VideoAnalyticsRequest with pipeline_name, source,
+            output_stream. When output_stream is False, that pipeline's video
+            is discarded and no stream URL is returned for it.
 
     Returns:
         JSON array with HLS/WebRTC stream addresses for each pipeline
+        (stream addresses omitted when output_stream is False)
     """
     if not x_session_id:
         raise HTTPException(
@@ -412,6 +415,7 @@ def start_video_analytics_pipeline(
                     pipe_options = PipelineOptions(
                         output_dir=options.output_dir,
                         output_rtsp=options.output_rtsp,
+                        output_stream=req.output_stream,
                         threshold=options.threshold,
                         record=record,
                     )
@@ -430,18 +434,21 @@ def start_video_analytics_pipeline(
                             "error": f"Failed to start pipeline '{req.pipeline_name}'",
                         }
                     else:
-                        if config.va_pipeline.stream_protocol == "webrtc":
-                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
-                        else:
-                            stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
-                        return {
+                        result = {
                             "status": "success",
                             "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "stream_url": stream_url,
-                            "stream_protocol": config.va_pipeline.stream_protocol,
-                            "overlays_embedded": True,
+                            "output_stream": req.output_stream,
                         }
+                        if req.output_stream:
+                            if config.va_pipeline.stream_protocol == "webrtc":
+                                stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
+                            else:
+                                stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
+                            result["stream_url"] = stream_url
+                            result["stream_protocol"] = config.va_pipeline.stream_protocol
+                            result["overlays_embedded"] = True
+                        return result
                 except Exception as e:
                     logger.error(f"Error starting pipeline '{req.pipeline_name}': {e}")
                     return {

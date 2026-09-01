@@ -1,12 +1,17 @@
 # Multi-Modal Patient Monitoring
 
-> This application is for **reference and evaluation purposes**. It is
+> Note:
+> This application is for **reference and evaluation purposes only**. It is
   **not intended for direct use in clinical or diagnostic environments** and is not
   validated for such a purpose.
 
-The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors, demonstrating that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 
-You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard. Each workload displays:
+The Multi-Modal Patient Monitoring application is a reference solution that demonstrates how
+**multiple AI pipelines can run simultaneously on a single Intel‑powered edge device**,
+providing workflows that mimic a consolidated patient monitoring application.
+
+You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard.
+Each workload displays:
 
 - MDPnP OpenICE device integration (running mock vital signs and device data)
 - 3D pose estimation (OpenVINO webcam demo)

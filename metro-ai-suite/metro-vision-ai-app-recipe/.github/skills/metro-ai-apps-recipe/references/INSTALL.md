@@ -119,6 +119,7 @@ addkv MTX_WEBRTCICESERVERS2_0_USERNAME "{{TURN_USER}}"
 addkv MTX_WEBRTCICESERVERS2_0_PASSWORD "$(openssl rand -hex 16)"
 
 # 2. Model dl + INT8 (+ optional classifier)
+# Image tag 2026.1.0-ubuntu24 is an intentional pin (never :latest).
 docker run --rm --user root -e http_proxy -e https_proxy -e no_proxy \
   -v "$PWD:/opt/project" intel/dlstreamer:2026.1.0-ubuntu24 bash -c '
     cd /opt/project

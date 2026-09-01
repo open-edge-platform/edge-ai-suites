@@ -19,33 +19,89 @@ if (-not $IsWindowsOS) {
     exit 1
 }
 
+# Disable QuickEdit Mode on conhost to prevent the process from hanging
+function Disable-ConsoleQuickEdit {
+    try {
+        if (-not ('SmartClassroom.ConsoleMode' -as [type])) {
+            Add-Type -Namespace SmartClassroom -Name ConsoleMode -MemberDefinition @'
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern IntPtr GetStdHandle(int nStdHandle);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+'@ -ErrorAction Stop
+        }
+
+        $handle = [SmartClassroom.ConsoleMode]::GetStdHandle(-10)  # STD_INPUT_HANDLE
+        if ($handle -eq [IntPtr]::Zero -or $handle -eq [IntPtr](-1)) { return }
+
+        $mode = [uint32]0
+        if (-not [SmartClassroom.ConsoleMode]::GetConsoleMode($handle, [ref]$mode)) { return }
+
+        # ENABLE_EXTENDED_FLAGS (0x0080) must be set for the console to honour
+        # a cleared ENABLE_QUICK_EDIT_MODE (0x0040).
+        $newMode = [uint32](($mode -band (-bnot 0x0040)) -bor 0x0080)
+        if ($newMode -ne $mode) {
+            [void][SmartClassroom.ConsoleMode]::SetConsoleMode($handle, $newMode)
+        }
+    } catch {
+        # No real console attached (redirected output, ISE, ...)
+    }
+}
+
+if (-not $env:WT_SESSION) { Disable-ConsoleQuickEdit }
+
 # ============================================================================
 # AUTO-ELEVATE TO ADMINISTRATOR
 # ============================================================================
 if (-not $NoElevate) {
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    
+
     if (-not $isAdmin) {
         Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
-        
-        $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        if ($SkipProxy) { $argList += " -SkipProxy" }
-        if ($Restart) { $argList += " -Restart" }
-        if ($Help) { $argList += " -Help" }
-        if ($Silent) { $argList += " -Silent" }
-        if ($NoWindowsTerminal) { $argList += " -NoWindowsTerminal" }
-        if ($Electron) { $argList += " -Electron" }
-        $argList += " -NoElevate"  # Prevent infinite elevation loop
-        
-        try {
-            Start-Process powershell -Verb RunAs -ArgumentList $argList
-            Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
-            exit 0
-        } catch {
-            Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
-            Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
-            exit 1
+
+        $relaunchArgs = @()
+        if ($SkipProxy) { $relaunchArgs += "-SkipProxy" }
+        if ($Restart) { $relaunchArgs += "-Restart" }
+        if ($Help) { $relaunchArgs += "-Help" }
+        if ($Silent) { $relaunchArgs += "-Silent" }
+        if ($NoWindowsTerminal) { $relaunchArgs += "-NoWindowsTerminal" }
+        if ($Electron) { $relaunchArgs += "-Electron" }
+        $relaunchArgs += "-NoElevate"  # Prevent infinite elevation loop
+
+        # Encoded rather than -File "<path>": wt treats ';' as its own delimiter
+        # and mangles nested quotes.
+        $relaunchCommand = "& '" + $PSCommandPath.Replace("'", "''") + "' " + ($relaunchArgs -join ' ')
+        $relaunchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($relaunchCommand))
+        $psArgs = "-NoExit -ExecutionPolicy Bypass -EncodedCommand $relaunchEncoded"
+
+        $wtCmd = if ($NoWindowsTerminal) { $null } else { Get-Command wt.exe -ErrorAction SilentlyContinue }
+
+        $elevated = $false
+        if ($wtCmd) {
+            # '-w SmartClassroom' also makes the Frontend tab join this window.
+            try {
+                Start-Process $wtCmd.Source -Verb RunAs -ArgumentList "-w SmartClassroom new-tab --title `"Smart Classroom`" powershell.exe $psArgs"
+                $elevated = $true
+            } catch {
+                Write-Host "  Windows Terminal launch failed; falling back to powershell.exe..." -ForegroundColor DarkYellow
+            }
         }
+
+        if (-not $elevated) {
+            try {
+                Start-Process powershell -Verb RunAs -ArgumentList $psArgs
+                $elevated = $true
+            } catch {
+                Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
+                Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
+                exit 1
+            }
+        }
+
+        Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
+        exit 0
     }
 }
 
@@ -930,7 +986,6 @@ function Wait-ForService {
             $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
             if (-not $listening) {
                 Write-Host ""
-                Write-Host ""
                 Write-Host "========================================" -ForegroundColor Red
                 Write-Host "  ERROR: $ServiceName EXITED" -ForegroundColor Red
                 Write-Host "========================================" -ForegroundColor Red
@@ -947,7 +1002,6 @@ function Wait-ForService {
             foreach ($depPort in $DependentPorts) {
                 $depListening = Get-NetTCPConnection -LocalPort $depPort -State Listen -ErrorAction SilentlyContinue
                 if (-not $depListening) {
-                    Write-Host ""
                     Write-Host ""
                     Write-Host "========================================" -ForegroundColor Red
                     Write-Host "  ERROR: DEPENDENT SERVICE STOPPED" -ForegroundColor Red
@@ -1022,7 +1076,6 @@ function Wait-ForService {
                 if (-not $serviceRunning) {
                     # No matching process running and port not listening = crashed or user closed terminal
                     Write-Host ""
-                    Write-Host ""
                     Write-Host "========================================" -ForegroundColor Red
                     Write-Host "  ERROR: $ServiceName CRASHED" -ForegroundColor Red
                     Write-Host "========================================" -ForegroundColor Red
@@ -1039,14 +1092,16 @@ function Wait-ForService {
         try {
             $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
             if ($response.StatusCode -eq 200) {
-                Write-Host "`r  [$elapsed s] $ServiceName is healthy!                              " -ForegroundColor Green
+                Write-Host "  [$elapsed s] $ServiceName is healthy!" -ForegroundColor Green
                 return $true
             }
         } catch {
             # Service not ready yet, continue waiting
         }
         
-        Write-Host "`r  [$elapsed s] Waiting for $ServiceName...                    " -NoNewline -ForegroundColor Gray
+        # Newline-terminated, not an in-place `r overwrite: the Backend and
+        # Content Search share this console and would append to an open line.
+        Write-Host "  [$elapsed s] Waiting for $ServiceName..." -ForegroundColor Gray
         Start-Sleep -Seconds $IntervalSeconds
         $elapsed += $IntervalSeconds
     }

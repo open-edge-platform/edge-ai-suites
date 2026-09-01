@@ -1,9 +1,21 @@
 """
-Test script for MediaService
+Manual driver for MediaService -- launches the real MediaMTX server and waits.
+
+Not a unit test: it has no assertions and runs until interrupted. Run it by
+hand from the repo root:
+
+    python components/tests/manual_media_service.py
 """
 
-from components.va import MediaService
+import os
+import sys
 import time
+
+_SC_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _SC_ROOT not in sys.path:
+    sys.path.insert(0, _SC_ROOT)
+
+from components.va.media_service import MediaService
 
 def example_basic():
     """Basic usage example"""
