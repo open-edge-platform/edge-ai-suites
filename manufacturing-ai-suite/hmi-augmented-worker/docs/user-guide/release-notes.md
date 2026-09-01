@@ -1,28 +1,24 @@
-# Release Notes
+# Release Notes: HMI Augmented Worker
 
-## Current Release
+## Version RC1
 
-**Version**: RC1 \
 **Release Date**: 14 July 2025
 
-**Key Features and Improvements:**
+**Key Features and Improvements**:
 
 - **HMI Augmented Worker Use Case:** First drop of the sample application implementing the documented features.
 
-**Development Testing:**
+**Development Testing**:
 
-Intel® Core&trade; i7-14700 based systems with Edge Microvisor Toolkit and Windows® 11 based Guest VM.
+Intel® Core&trade; i7-14700-based systems with Edge Microvisor Toolkit and Windows® 11-based Guest VM.
 
-**Documentation:**
+**Documentation**:
 
 Documentation is **completed**. [README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/hmi-augmented-worker/README.md) is updated with installation steps and reference documents.
 
-**Known Limitations and Issues:**
+**Known Limitations and Issues**:
 
 - Edge Manageability Framework Deployment package is not applicable to this sample application.
 - Edge Microvisor Toolkit as VM host setup documentation is dependent on what is available in the Edge Microvisor Toolkit documentation.
-- Windows® Guest VM setup is not documented. Users are requested to contact Intel representatives for the same.
+- Windows® Guest VM setup is not documented. Users are requested to contact Intel representatives for assistance.
 
-## Previous releases
-
-None

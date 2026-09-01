@@ -2,25 +2,28 @@
 
 SONIC is a humanoid behavior foundation model that gives robots a core set of motor skills learned from large-scale human motion data. Rather than building a separate controller for each predefined motion, SONIC treats motion tracking as a scalable training task, enabling a single unified policy to produce natural, whole-body movement and to support a wide range of behaviors — from walking and crawling to teleoperation and multi-modal control.
 
-This repository implements a comprehensive optimization of the SONIC whole-body-control (WBC) inference pipeline on the Intel Core Ultra "Panther Lake" (PTL) platform, including OpenVINO inference acceleration, a real-time control thread design, and priority-based NPU scheduling. It demonstrates that the PTL platform can meet SONIC WBC's determinism requirements while achieving substantial power savings compared to GPU execution.
+This repository extends the open-source [GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl.git) and implements a comprehensive optimization of the SONIC whole-body-control (WBC) inference pipeline on the Intel Core Ultra "Panther Lake" (PTL) platform, including OpenVINO inference acceleration, a real-time control thread design, and priority-based NPU scheduling. It demonstrates that the PTL platform can meet SONIC WBC's determinism requirements while achieving substantial power savings compared to GPU execution.
 
 ## Prerequisites
 
-- Follow the [Get Started guide](../../../platform_foundation/getting_started.md) to set up the base system.
-- NPU driver (> 1.32.0)
+- Follow the [Getting Started guide](../../../platform_foundation/getting_started.md) to set up the base system.
+- NPU driver (> v1.32.0)
 - Ubuntu 24.04 RT release
 - OpenVINO 2026.3, ROS2 Jazzy
+
+For optimal NPU inference performance, it is recommended to use the latest NPU driver(e.g. v1.35.0) available from the [linux-npu-driver](https://github.com/intel/linux-npu-driver/releases) repository.
 
 For OpenVINO, this project recommends installing from the archive file. Follow [Install OpenVINO from an Archive File (Linux)](https://docs.openvino.ai/2026/get-started/install-openvino/install-openvino-archive-linux.html), download the latest OpenVINO package, and extract it to the `/opt/intel/<openvino_version>` folder, e.g. `/opt/intel/openvino_2026.3.0`.
 
 ## Installation
 
-This project extends the open-source [GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl.git) project to add OpenVINO acceleration and SONIC WBC pipeline optimizations for the Intel Core Ultra Panther Lake platform. Set up the environment with the following steps.
+This project extends the open-source GR00T-WholeBodyControl project and add OpenVINO acceleration and SONIC WBC pipeline optimizations for the Intel Core Ultra Panther Lake platform. Please get the source code from the Open Edge Platform repo [here](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/gr00t-wbc). Set up the environment with the following steps.
 
 ### 1. Initialize and patch the submodule
 ```bash
 git submodule update --init <GR00T-WholeBodyControl>
 cd <GR00T-WholeBodyControl>
+git lfs pull          # make sure all large files are fetched
 ```
 
 ### 2. Apply the patches
@@ -46,6 +49,10 @@ This downloads the default deployment models — planner, encoder, and decoder �
 Set up the build environment and build the project:
 
 ```bash
+cd gear_sonic_deploy
+chmod +x scripts/install_deps.sh
+./scripts/install_deps.sh
+
 source gear_sonic_deploy/scripts/setup_env.sh
 cd gear_sonic_deploy
 just build
@@ -112,7 +119,7 @@ For the full control reference — including Normal Mode, all motion sets, and t
 
 Once control is running, the deploy log periodically prints a `Loop timing` line with running latency stats (in microseconds) for the control loop:
 
-```text
+```
 Loop timing - ... Obs: 645us (avg:689 min:460 P99:907 max:1023), Policy: 405us (avg:405 min:306 P99:618 max:723), ...
 ```
 
@@ -125,7 +132,7 @@ Use these numbers to confirm real-time deadlines are met and to compare latency 
 
 ## NPU Inference Configuration
 
-The `inference:` section of `gear_sonic_deploy/policy/release/observation_config.yaml` controls how the encoder, policy, and planner models are scheduled on the NPU:
+The `inference:` section of file gear_sonic_deploy/policy/release/observation_config.yaml controls how the encoder, policy, and planner models are scheduled on the NPU:
 
 - **NPU priority** (`encoder_priority` / `policy_priority` / `planner_priority`): `HIGH`, `NORMAL`, or `LOW`. Controls how the OpenVINO scheduler arbitrates models that share the same NPU device (mapped to `ov::hint::model_priority`). Encoder and policy default to `HIGH` since they run on the real-time control thread; the planner defaults to `NORMAL`.
 - **NPU turbo mode** (`npu_turbo`): when `true`, applies `NPU_TURBO=YES` to all NPU models, trading power efficiency for lower inference latency. Recommended on for real-time control; set to `false` to save power/thermal headroom. This is an NPU-only hint and is ignored on CPU/GPU.
@@ -134,7 +141,7 @@ The `inference:` section of `gear_sonic_deploy/policy/release/observation_config
 
 To confirm which device a model landed on, watch the deploy log during model init (encoder, policy, planner) — before `Starting control` is printed. Each NPU model logs:
 
-```text
+```
 [OVInference] Requested device: NPU
 [OVInference] Model priority: HIGH
 ```
