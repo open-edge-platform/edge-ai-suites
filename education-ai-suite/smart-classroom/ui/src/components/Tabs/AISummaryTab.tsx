@@ -26,6 +26,10 @@ const AISummaryTab: React.FC = () => {
 
   const startedRef = useRef(false);
   const sessionRef = useRef<string | null>(null);
+  // Only set for long sessions, where the summary is built segment by segment.
+  const [progress, setProgress] = useState<
+    { stage: string; chunk: number; chunks: number } | null
+  >(null);
 
   useEffect(() => {
     if (sessionRef.current && sessionRef.current !== sessionId) {
@@ -50,20 +54,25 @@ const AISummaryTab: React.FC = () => {
         let sentFirst = false;
         for await (const ev of streamSummary(sessionId)) {
           if (ev.type === "summary_token") {
-            if (!sentFirst) { 
-              dispatch(firstSummaryToken()); 
-              sentFirst = true; 
+            if (!sentFirst) {
+              dispatch(firstSummaryToken());
+              sentFirst = true;
             }
+            setProgress(null);
             dispatch(appendSummary(ev.token));
           } else if (ev.type === "board_ocr_partial") {
             setBoardOcrPartial(true);
+          } else if (ev.type === "summary_progress") {
+            setProgress({ stage: ev.stage, chunk: ev.chunk, chunks: ev.chunks });
           } else if (ev.type === "error") {
             window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
+            setProgress(null);
             dispatch(finishSummary());
             dispatch(summaryStreamComplete());
             dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
             break;
           } else if (ev.type === "done") {
+            setProgress(null);
             dispatch(finishSummary());
             dispatch(summaryStreamComplete());
             dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
@@ -83,11 +92,39 @@ const AISummaryTab: React.FC = () => {
 
   const typed = finalText ?? streamingText;
 
+  // Each stage counts its own units, so they cannot share one label: a fold
+  // restarts the numbering, and reduce has nothing to count at all.
+  const progressLabel = (p: { stage: string; chunk: number; chunks: number }) => {
+    if (p.stage === "reduce") {
+      return t("tabs.summaryProgressReduce", {
+        defaultValue: "Writing the summary…",
+      });
+    }
+    const key = p.stage === "fold" ? "tabs.summaryProgressFold" : "tabs.summaryProgress";
+    return t(key, {
+      current: p.chunk,
+      total: p.chunks,
+      defaultValue: p.stage === "fold"
+        ? "Merging notes {{current}} of {{total}}…"
+        : "Analyzing part {{current}} of {{total}}…",
+    });
+  };
+
   return (
     <div className="summary-tab">
       {boardOcrPartial && (
         <div className="summary-board-warning" role="status">
           {t("summary.boardOcrPartial")}
+        </div>
+      )}
+      {progress && !typed && (
+        <div className="summary-progress">
+          {progressLabel(progress).replace(/(?:\u2026|\.{3})\s*$/, "")}
+          <span className="summary-progress-dots" aria-hidden="true">
+            <span>.</span>
+            <span>.</span>
+            <span>.</span>
+          </span>
         </div>
       )}
       {typed && (

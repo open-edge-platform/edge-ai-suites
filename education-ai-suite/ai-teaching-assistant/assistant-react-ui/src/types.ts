@@ -37,6 +37,7 @@ export interface FileIngestResult {
   chunks_added: number;
   status: string;
   detail?: string | null;
+  topic?: string | null;
 }
 
 export interface BatchIngestResponse {

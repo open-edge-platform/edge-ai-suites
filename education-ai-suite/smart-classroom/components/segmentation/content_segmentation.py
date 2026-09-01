@@ -1,16 +1,66 @@
 from components.base_component import PipelineComponent
-import openvino_genai as ov_genai
 import json
 import logging
 import re
 import json_repair
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from utils.config_loader import config
+from utils.prompt_loader import load_prompt
+from utils import text_chunker
+from utils.transcript_parser import parse_transcript_lines
+from components.segmentation import topic_merge
 
 logger = logging.getLogger(__name__)
 
 MIN_TOPICS = 15
 MAX_TOPICS = 25
+
+# CAUTION: "rule" and "output" open with the list numbers they occupy in
+# user.txt (5. and 3.). Renumbering that file means renumbering these.
+
+_LANGUAGE_PARTS = {
+    "en": {
+        "instruction": "All topic titles must be written in English.",
+        "rule": "5. Write all titles in English.",
+        "example": "- Example in English: 'Explaining how Newton's third law "
+                   "applies to rocket propulsion with examples'",
+    },
+    "zh": {
+        "instruction": "CRITICAL: All topic titles MUST be written in Simplified "
+                       "Chinese (简体中文). Do NOT output English. Each title must "
+                       "be a complete sentence in Chinese describing the teaching "
+                       "content.",
+        "rule": "5. WRITE ALL TITLES IN SIMPLIFIED CHINESE ONLY. No English at all.",
+        "example": "- LANGUAGE: Write ONLY in Simplified Chinese. Example: "
+                   "'解释牛顿第三定律如何应用于火箭推进及示例'",
+    },
+}
+
+_MODE_PARTS = {
+    "whole": {
+        "count": "HARD CONSTRAINT: Output EXACTLY between {min_topics} and "
+                 "{max_topics} topic objects. NEVER more than {max_topics}. "
+                 "NEVER fewer than {min_topics}.\n"
+                 "\n"
+                 "BEFORE outputting, count your segments. If count > {max_topics}, "
+                 "merge the most related adjacent segments until count ≤ {max_topics}.",
+        "request": "Segment this transcript into {min_topics}–{max_topics} topics "
+                   "(MAXIMUM {max_topics}, merge aggressively if needed).",
+        "output": "3. Output ONLY a JSON array with {min_topics}–{max_topics} "
+                  "objects. Count before you output.",
+    },
+    "window": {
+        "count": "HARD CONSTRAINT: Output EXACTLY {quota} topic object(s). "
+                 "Not more, not fewer.\n"
+                 "\n"
+                 "You are looking at ONE WINDOW of a longer lesson, covering "
+                 "{window_start}s to {window_end}s. Every start_time and end_time "
+                 "you output MUST fall inside that range.",
+        "request": "Segment this transcript window into EXACTLY {quota} topic(s).",
+        "output": "3. Output ONLY a JSON array with EXACTLY {quota} object(s), "
+                  "all timestamps between {window_start} and {window_end}.",
+    },
+}
 
 
 class Topic(BaseModel):
@@ -40,65 +90,44 @@ class ContentSegmentationComponent(PipelineComponent):
         self.session_id = session_id
         self.temperature = temperature
 
-    def _build_messages(self, transcript_text, language=None):
+    def _build_messages(self, transcript_text, language=None, *, quota=None,
+                        window_start=None, window_end=None):
+        """Build a whole-transcript or window prompt from shared templates."""
         lang = (language or getattr(config.app, "language", "en") or "en").lower()
-        use_zh = lang.startswith("zh")
-        lang_instruction = (
-            "CRITICAL: All topic titles MUST be written in Simplified Chinese (简体中文). Do NOT output English. Each title must be a complete sentence in Chinese describing the teaching content."
-            if use_zh
-            else "All topic titles must be written in English."
-        )
+        lang = "zh" if lang.startswith("zh") else "en"
+        mode = "window" if quota is not None else "whole"
+        fields = {
+            "{min_topics}": str(MIN_TOPICS),
+            "{max_topics}": str(MAX_TOPICS),
+            "{quota}": str(quota),
+            "{window_start}": "" if quota is None else f"{window_start:.0f}",
+            "{window_end}": "" if quota is None else f"{window_end:.0f}",
+        }
+
+        def fill(text):
+            # .replace, not .format: the templates hold literal JSON braces.
+            for key, value in fields.items():
+                text = text.replace(key, value)
+            return text
+
+        def part(name):
+            return fill(load_prompt("segmentation", name))
+
+        lang_parts = _LANGUAGE_PARTS[lang]
+        mode_parts = _MODE_PARTS[mode]
+
+        system = (part("system")
+                  .replace("{language_instruction}", fill(lang_parts["instruction"]))
+                  .replace("{count_constraint}", fill(mode_parts["count"]))
+                  .replace("{language_example}", fill(lang_parts["example"])))
+        user = (part("user")
+                .replace("{request}", fill(mode_parts["request"]))
+                .replace("{output_constraint}", fill(mode_parts["output"]))
+                .replace("{language_rule}", fill(lang_parts["rule"]))
+                .replace("{transcript}", transcript_text))
         return [
-            {
-                "role": "system",
-                "content": (
-                    "You are a transcript segmentation engine. Your ONLY job is to output valid JSON.\n\n"
-                    f"{lang_instruction}\n\n"
-                    "HARD CONSTRAINT: Output EXACTLY between 15 and 25 topic objects. NEVER more than 25. NEVER fewer than 15.\n\n"
-                    "BEFORE outputting, count your segments. If count > 25, merge the most related adjacent segments until count ≤ 25.\n\n"
-                    "Segmentation rules:\n"
-                    "- Each topic = one major teaching concept (think: lesson chapters, not paragraphs)\n"
-                    "- Each topic must span multiple minutes\n"
-                    "- Ignore minor explanation shifts or small tangents\n"
-                    "- Merge adjacent related segments aggressively\n"
-                    "- Do NOT split mid-sentence\n"
-                    "- Use only timestamps present in the transcript\n\n"
-                    "CRITICAL ALIGNMENT RULE:\n"
-                    "- BEFORE assigning a topic title to a time range, READ the actual text within [start_time-end_time]\n"
-                    "- The topic title MUST describe what is ACTUALLY said in that time range\n"
-                    "- Do NOT predict what 'should' be discussed — describe what IS discussed\n"
-                    "- VERIFY: Does your topic title match the actual words spoken in that segment?\n\n"
-                    "Topic title rules (IMPORTANT — titles are used for semantic search and embedding):\n"
-                    "- Each title must be a descriptive sentence of 10–15 words (or equivalent in Chinese)\n"
-                    "- The title must clearly summarize WHAT was taught in that segment\n"
-                    "- Base the title ONLY on the actual content within the timestamp range\n"
-                    "- Write as if describing the segment to someone who hasn't seen the transcript\n"
-                    + ("- LANGUAGE: Write ONLY in Simplified Chinese. Example: '解释牛顿第三定律如何应用于火箭推进及示例'\n"
-                       if use_zh
-                       else "- Example in English: 'Explaining how Newton's third law applies to rocket propulsion with examples'\n")
-                    + "- Bad: 'Newton law', 'Topic 3', 'Continued explanation'\n\n"
-                    "Output format — return ONLY this JSON, nothing else:\n"
-                    "[{\"topic\": \"<descriptive title>\", \"start_time\": <float>, \"end_time\": <float>}]\n\n"
-                    "No markdown. No explanation. No comments. No text outside the JSON array."
-                )
-            },
-            {
-                "role": "user",
-                "content": (
-                    f"Segment this transcript into 15–25 topics (MAXIMUM 25, merge aggressively if needed).\n\n"
-                    f"{transcript_text}\n\n"
-                    f"CRITICAL INSTRUCTIONS:\n"
-                    f"1. READ the actual text at each timestamp range BEFORE writing the topic title\n"
-                    f"2. Topic titles must describe what IS said, not what you think should be said\n"
-                    f"3. Output ONLY a JSON array with 15–25 objects. Count before you output.\n"
-                    f"4. Each topic title must be a descriptive 10–15 word sentence useful for semantic search.\n"
-                    + (f"5. WRITE ALL TITLES IN SIMPLIFIED CHINESE ONLY. No English at all.\n"
-                       if use_zh
-                       else "5. Write all titles in English.\n")
-                    + f"6. Topic titles are critical—they are embedded and searchable, so make them clear and complete.\n"
-                    f"7. VERIFY: For each topic, check that the title matches the actual content in that time range."
-                )
-            }
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
         ]
 
     @staticmethod
@@ -236,12 +265,13 @@ class ContentSegmentationComponent(PipelineComponent):
         logger.error("_clean_topics_output: all strategies failed. Preview: %s", raw[:200])
         raise ValueError("INVALID_TOPICS_FORMAT")
 
-    def _generate(self, messages: list) -> str:
+    def _generate(self, messages: list, max_new_tokens: int | None = None) -> str:
         try:
             return self.model.generate(
                 messages=messages,
                 stream=False,
                 enable_thinking=False,
+                max_new_tokens=max_new_tokens,
                 json_schema=_topics_json_schema(),
             )
         except TypeError:
@@ -251,12 +281,144 @@ class ContentSegmentationComponent(PipelineComponent):
                 "Constrained generation failed (%s); retrying unconstrained.", exc
             )
         return self.model.generate(
-            messages=messages, stream=False, enable_thinking=False
+            messages=messages, stream=False, enable_thinking=False,
+            max_new_tokens=max_new_tokens,
+        )
+
+    # ---------------- WINDOWED SEGMENTATION ----------------
+
+    def _seg_config(self):
+        return getattr(getattr(config.models, "text_gen", None), "segmentation", None)
+
+    def _tokenizer(self):
+        try:
+            return self.model.tokenizer
+        except Exception:  # noqa: BLE001
+            logger.debug("text_gen tokenizer unavailable; using the estimator.", exc_info=True)
+            return None
+
+    def _chunking_config(self):
+        return getattr(getattr(config.models, "text_gen", None), "chunking", None)
+
+    def _prompt_budget(self):
+        return text_chunker.budget_from_config(
+            self._chunking_config(),
+            getattr(config.models.text_gen, "device", "GPU"),
+        )
+
+    def _stage_reserve(self):
+        """Return what one *window* call spends on everything but the transcript.
+
+        A window call sends both templates and writes a shorter answer than the
+        whole-lesson call ``_call_overhead`` sizes. Measuring this component's
+        own prompts keeps a window as large as this component can afford.
+        """
+        tokenizer = self._tokenizer()
+        prompt = (text_chunker.count_tokens(load_prompt("segmentation", "system"), tokenizer)
+                  + text_chunker.count_tokens(load_prompt("segmentation", "user"), tokenizer))
+        return prompt + int(
+            getattr(self._seg_config(), "window_max_new_tokens", 1024)
+        )
+
+    def _plan_windows(self, transcript_text, language=None):
+        """Return the transcript windows, or [] to segment in a single call.
+
+        Planned over this component's own transcript. Sharing one plan with the
+        summary used to look tidier, but the two send different renderings of the
+        lesson against different reserves, so one answer fitted neither.
+        """
+        cfg = self._chunking_config()
+        if cfg is None or not bool(getattr(cfg, "enabled", True)):
+            return []
+
+        lines = parse_transcript_lines(transcript_text)
+        if not lines:
+            logger.info("Transcript carries no timestamps; segmenting in one call.")
+            return []
+
+        tokenizer = self._tokenizer()
+        device = getattr(config.models.text_gen, "device", "GPU")
+        budget = self._prompt_budget()
+        reserve = self._call_overhead(language)
+
+        total = sum(text_chunker.count_tokens(l, tokenizer) + 1
+                    for l in text_chunker.render_transcript_lines(lines))
+        if total <= text_chunker.usable_tokens(budget, reserve):
+            text_chunker.warn_if_short_of_memory(
+                total + reserve, device, what="segmentation call"
+            )
+            return []
+
+        stage_reserve = self._stage_reserve()
+        windows = text_chunker.chunk_transcript_lines(
+            lines,
+            budget_tokens=budget,
+            tokenizer=tokenizer,
+            reserve_tokens=reserve,
+            stage_reserve_tokens=stage_reserve,
+            label="window",
+        )
+
+        if len(windows) < 2:
+            # Unreachable: the text is already past what one call holds. A lone
+            # window under a per-window quota is worse than the single-call
+            # prompt, so fall back rather than trust it.
+            logger.warning("Windowing produced %d window(s); segmenting in one call.",
+                           len(windows))
+            return []
+
+        text_chunker.warn_if_short_of_memory(
+            max(w.tokens for w in windows) + stage_reserve, device,
+            what="largest segmentation window",
+        )
+        return windows
+
+    def _call_overhead(self, language=None):
+        """Return the tokens the single call spends on the template and answer.
+
+        Rendering the prompt around an empty transcript measures the
+        instructions exactly, which beats guessing at them with a ratio. This
+        sizes the whole-lesson call; a window's own overhead is smaller and
+        lives in ``_stage_reserve``.
+        """
+        try:
+            template = "".join(
+                m["content"] for m in self._build_messages("", language=language)
+            )
+            overhead = text_chunker.count_tokens(template, self._tokenizer())
+        except Exception:  # noqa: BLE001
+            logger.debug("Could not measure the segmentation prompt.", exc_info=True)
+            overhead = 0
+        return overhead + int(
+            getattr(config.models.text_gen, "max_new_tokens", 5120)
+        )
+
+    def _generate_window(self, window, quota, language, max_new_tokens):
+        """Segment one window and return its normalized topics; [] on failure."""
+        messages = self._build_messages(
+            window.text, language=language, quota=quota,
+            window_start=window.start, window_end=window.end,
+        )
+        try:
+            raw = self._generate(messages, max_new_tokens=max_new_tokens)
+            topics = json.loads(self._clean_topics_output(raw))
+        except Exception as e:  # noqa: BLE001
+            logger.warning(
+                "Window %d/%d (%.0fs-%.0fs) failed to segment: %s",
+                window.index + 1, window.total, window.start, window.end, e,
+            )
+            return []
+        return topic_merge.normalize_topics(
+            topics, window_start=window.start, window_end=window.end
         )
 
     def generate_topics(self, transcript_text, language=None):
         try:
             logger.info("Generating topic segmentation...")
+
+            windows = self._plan_windows(transcript_text, language)
+            if windows:
+                return self._generate_topics_windowed(windows, language)
 
             full_output = self._generate(
                 self._build_messages(transcript_text, language=language)
@@ -268,3 +430,35 @@ class ContentSegmentationComponent(PipelineComponent):
         except Exception as e:
             logger.error(f"Topic segmentation failed: {e}")
             raise
+
+    def _generate_topics_windowed(self, windows, language):
+        """Segment each window under its topic quota, then merge the results."""
+        seg = self._seg_config()
+        target = int(getattr(seg, "topics_target", 20))
+        min_count = int(getattr(seg, "topics_min", 15))
+        max_count = int(getattr(seg, "topics_max", 25))
+        max_new_tokens = int(getattr(seg, "window_max_new_tokens", 1024))
+
+        quotas = topic_merge.allocate_quota([w.tokens for w in windows], target)
+        logger.info(
+            "Segmenting %d windows (quotas %s) toward %d topics.",
+            len(windows), quotas, target,
+        )
+
+        collected = []
+        for window, quota in zip(windows, quotas):
+            collected.extend(
+                self._generate_window(window, quota, language, max_new_tokens)
+            )
+
+        if not collected:
+            raise ValueError("INVALID_TOPICS_FORMAT")
+
+        merged = topic_merge.merge_topics(
+            collected, min_count=min_count, max_count=max_count
+        )
+        logger.info(
+            "Topic segmentation completed: %d raw topics from %d windows -> %d merged.",
+            len(collected), len(windows), len(merged),
+        )
+        return json.dumps(merged, ensure_ascii=False)
