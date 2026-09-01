@@ -38,13 +38,14 @@ Qwen instruct model in that config for smoother performance.
 HDD is **not recommended** — model loading and inference will be slow.
 
 ### Microphone
-- **Not required** — Audio is captured through your web browser
-- If you want to use a non-default microphone, configure it in Windows Settings > Sound
+- **Required for voice input** — The assistant captures your speech through the browser, so a working microphone is needed for mic-based interaction.
+- **Optional for text-only usage** — If you use typed input and do not use voice features, a microphone is not required.
+If multiple microphones are available, choose the input device from the UI microphone selector.
 
 ## Software Dependencies
 
 ### Python
-- **Python 3.10** or **3.11** (3.12+ not yet tested)
+- **Python 3.11** or **3.12** 
 - Download from [python.org](https://www.python.org/downloads/)
 - During installation, **check "Add Python to PATH"**
 
