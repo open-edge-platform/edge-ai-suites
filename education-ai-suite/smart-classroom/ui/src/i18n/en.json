@@ -121,7 +121,10 @@
     "tabs": {
       "transcripts": "Transcripts",
       "summary": "AI Summary",
-      "mindmap":"Mind Map"
+      "mindmap":"Mind Map",
+      "summaryProgress": "Analyzing part {{current}} of {{total}}…",
+      "summaryProgressFold": "Merging notes {{current}} of {{total}}…",
+      "summaryProgressReduce": "Writing the summary…"
     },
 
     "transcript": {

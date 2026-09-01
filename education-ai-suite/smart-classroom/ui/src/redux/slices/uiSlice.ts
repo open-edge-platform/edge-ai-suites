@@ -317,6 +317,11 @@ const uiSlice = createSlice({
       state.shouldStartMindmap = true;
       state.audioStatus = 'mindmapping';
     },
+
+    mindmapLoadingStart(state) {
+      state.mindmapLoading = true;
+      state.audioStatus = 'mindmapping';
+    },
  
     mindmapSuccess(state) {
       state.mindmapLoading = false;
@@ -641,6 +646,7 @@ export const {
   firstSummaryToken,
   summaryDone,
   mindmapStart,
+  mindmapLoadingStart,
   mindmapSuccess,
   mindmapFailed,
   mindmapImageDone,
