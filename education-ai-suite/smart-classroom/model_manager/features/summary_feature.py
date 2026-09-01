@@ -25,18 +25,23 @@ async def summarize_audio(request: SummaryRequest):
 
     async def event_stream():
         warned_partial_board = False
-        for token in pipeline.run_summarizer():
+        for item in pipeline.run_summarizer():
+            # A segmented summary yields progress dicts before any token.
+            if isinstance(item, dict):
+                yield json.dumps({"token": "", "error": "", **item}) + "\n"
+                await asyncio.sleep(0)
+                continue
             if not warned_partial_board and pipeline.board_ocr_partial:
                 warned_partial_board = True
                 yield json.dumps(
                     {"token": "", "error": "", "board_ocr_partial": True}
                 ) + "\n"
-            if token.startswith("[ERROR]:"):
-                logger.error(f"Error while summarizing: {token}")
-                yield json.dumps({"token": "", "error": token}) + "\n"
+            if item.startswith("[ERROR]:"):
+                logger.error(f"Error while summarizing: {item}")
+                yield json.dumps({"token": "", "error": item}) + "\n"
                 break
             else:
-                yield json.dumps({"token": token, "error": ""}) + "\n"
+                yield json.dumps({"token": item, "error": ""}) + "\n"
             await asyncio.sleep(0)
 
     return StreamingResponse(event_stream(), media_type="application/json")

@@ -1,10 +1,23 @@
 """
-Test script for VideoAnalyticsPipelineService
+Manual driver for VideoAnalyticsPipelineService.
+
+Not a unit test: it has no assertions and needs RTSP sources live on
+127.0.0.1:8554 (start `manual_media_service.py` first). Run it by hand from the
+repo root:
+
+    python components/tests/manual_va_pipeline_service.py single
+    python components/tests/manual_va_pipeline_service.py multiple
 """
 
-from components.va import VideoAnalyticsPipelineService
-import time
+import os
 import sys
+import time
+
+_SC_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+if _SC_ROOT not in sys.path:
+    sys.path.insert(0, _SC_ROOT)
+
+from components.va.va_pipeline_service import VideoAnalyticsPipelineService
 
 
 def example_single_pipeline():
