@@ -28,4 +28,4 @@ user prefers the Geti app REST workflow instead of the library.
 - Requirements: Python env for getitune; dataset accessible locally.
 
 **Follow-on:** the resulting IR can be deployed via `model-download-user` →
-`metro-ai-apps-recipe` (offer this as the natural next step).
+`metro-ai-app-recipe` (offer this as the natural next step).
