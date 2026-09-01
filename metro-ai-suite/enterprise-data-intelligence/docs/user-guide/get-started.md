@@ -32,9 +32,23 @@ For the latest model support, you can modify the EC-RAG vLLM backend image versi
 configuration like this:
 
 ```bash
-# clone OPEA EC-RAG repo
-git clone https://github.com/opea-project/GenAIExamples.git
-cd GenAIExamples/EdgeCraftRAG
+# clone OPEA EC-RAG repo and pin to the exact commit this guide was written for,
+# so the edits below apply to the file they were written against; the partial +
+# sparse checkout only pulls the EdgeCraftRAG subtree
+git clone --filter=blob:none --sparse https://github.com/opea-project/GenAIExamples.git
+cd GenAIExamples
+git sparse-checkout set EdgeCraftRAG
+git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
+cd EdgeCraftRAG
+
+compose=docker_compose/intel/gpu/arc/compose.yaml
+
+# fail loudly if the pinned checkout no longer ships the image tag this guide
+# rewrites, instead of letting sed silently do nothing (sed exits 0 on no match)
+grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
+  echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
 
 # change the vllm image version and related config:
 sed -i \
@@ -42,7 +56,13 @@ sed -i \
   -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
   -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
   -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
-  docker_compose/intel/gpu/arc/compose.yaml
+  "$compose"
+
+# confirm the vllm image rewrite actually took effect
+grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
+  echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
 ```
 
 Below is a reference pipeline configuration:
