@@ -7,18 +7,18 @@
 **New**:
 
 - Configurable NGINX upload limit is now available (e.g. for Scenescape GLB 3D base map files).
-- GPU and NPU support with trusted compute has been integrated.
+- GPU and NPU support with Trusted Compute has been integrated.
 
 **Improved**:
 
-- Consumed latest DL Streamer Pipeline Server version 2026.2.0.
+- Consumed the latest DL Streamer Pipeline Server version 2026.2.0.
 - Consumed the latest Scenescape version 2026.2.0.
 
 ## Version 1.19.0
 
 **New**:
 
-- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Qualified on the Intel® Core™ Series 3 processor "Wildcat Lake" (WCL).
 
 **Improved**:
 

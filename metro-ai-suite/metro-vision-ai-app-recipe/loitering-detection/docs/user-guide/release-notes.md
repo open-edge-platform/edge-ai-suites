@@ -12,13 +12,13 @@
 **Improved**:
 
 - Improved the security context of Grafana and Node-RED containers.
-- Consumed latest DL Streamer version 2026.2.0.
+- Consumed the latest DL Streamer version 2026.2.0.
 
 ## Version 1.5.0
 
 **New**:
 
-- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Qualified on the Intel® Core™ Series 3 processor "Wildcat Lake" (WCL).
 - Deprecated EMF deployment packages.
 
 **Improved**:

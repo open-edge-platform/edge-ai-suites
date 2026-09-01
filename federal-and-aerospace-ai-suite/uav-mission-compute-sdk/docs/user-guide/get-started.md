@@ -55,34 +55,16 @@ docker info | grep -i gpu
 
 ### Step 0 — Configure credentials
 
-Copy the example environment file and set your own passwords/tokens before starting:
+Initialize the environment file and review the passwords and tokens before starting:
 
 ```bash
 make init
-# or manually:
-cp .env.example .env
 ```
 
-Then edit `.env` and fill in the required values before starting:
+All required credentials (`INFLUXDB_PASSWORD`, `INFLUXDB_TOKEN`, `INFLUXDB_ORG`, `GRAFANA_PASSWORD`, and `UAV_ID`) are automatically populated in `.env`. You can update them as needed.
 
-```env
-# InfluxDB admin password and API token
-INFLUXDB_PASSWORD=your-strong-password
-INFLUXDB_TOKEN=your-long-random-token
-INFLUXDB_ORG=your-org-name
-
-# Grafana admin password
-GRAFANA_PASSWORD=your-strong-password
-
-# UAV identifier used in MQTT topics
-UAV_ID=uav-1
-```
-
-> **Login username** — both Grafana and InfluxDB log in with username `admin`
-> (hardcoded in `docker-compose.yml`, not set via `.env`). Only the passwords
-> above are yours to choose.
-
-> **Note** — `.env` is gitignored and never committed. Leave these values empty until you have set them in your local copy; the stack now requires a real value instead of silently using any placeholder defaults.
+> **Login username** — both Grafana and InfluxDB use the username `admin`
+> (hardcoded in `docker-compose.yml`, not set via `.env`).
 
 ### Step 1 — Choose camera source (sim or USB)
 

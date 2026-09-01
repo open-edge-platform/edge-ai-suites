@@ -9,9 +9,9 @@
 - **Core Library support**
 
   - Functions: Decode, Postprocessing, Encode
-  - Hardware: PTL, WCL
+  - Hardware: Intel® Panther Lake (PTL), Intel® Wildcat Lake (WCL)
 
 - **Sample app**
 
-  - Video Analytic: decode + postprocessing + yolo/resnet on GPU/NPU
+  - Video Analytics: decode + postprocessing + yolo/resnet on GPU/NPU
   - decode + postprocessing + encode

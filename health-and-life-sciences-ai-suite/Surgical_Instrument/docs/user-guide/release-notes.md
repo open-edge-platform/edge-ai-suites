@@ -20,9 +20,9 @@ the edge and performs the following:
 
 **To get started**:
 
-- Run make doctor to check your system is ready.
+- Run make doctor to check that your system is ready.
 - Run make up to build and launch the app.
-- Open your browser to http://localhost:8080. On the first launch, you will see a note:
+- Open your browser to <http://localhost:8080>. On the first launch, you will see a note:
   `The first startup trains the model and takes about 20–35 minutes on an Intel Arc iGPU.
   After that, the app starts in seconds`.
 
@@ -44,4 +44,4 @@ the edge and performs the following:
 - NPU option requires an Intel NPU on the host; otherwise use GPU or CPU.
 
 For more information on the application, its system requirements and usage guides, refer to the
-[Surgical Instrument User Documentation](https://docs.openedgeplatform.intel.com/2026/edge-ai-suites/surgical-instrument/index.html)
+[Surgical Instrument User Documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/surgical-instrument/index.html)

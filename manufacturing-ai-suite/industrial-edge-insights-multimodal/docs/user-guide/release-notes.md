@@ -10,7 +10,7 @@ enabling users to initiate analysis for a selected time range. It also introduce
 LoRA adapter for vLLM-based defect explainability.
 
 The release also includes various bug fixes, security updates, performance improvements, and
-documentation enhancements.`
+documentation enhancements.
 
 **New**:
 
@@ -30,11 +30,11 @@ documentation enhancements.`
   monitoring live detection and agent-reasoning phases, and reviewing per-run results including
   policy, analysis, evidence, and ticket agent outputs.
 
-**Improved**
+**Improved**:
 
 - **DL Streamer Pipeline Server Naming**: Naming has been aligned across configs and docs to
   consistently distinguish DL Streamer from DL Streamer Pipeline Server.
-- **Configuration Cleanup**: Hostip references were replaced with localhost across configuration
+- **Configuration Cleanup**: Host IP references were replaced with localhost across configuration
   and docs, and references to the deprecated CatBoost model and the model registry were removed.
 - **Sample App Cleanup**: The standalone weld-defect-detection sample app was removed in favor of
   the unified multimodal and time-series sample apps.

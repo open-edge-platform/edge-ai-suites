@@ -10,7 +10,7 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 ## How It Works
 
-A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
+A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
 ![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.drawio.svg)
 
@@ -63,7 +63,7 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                # create .env, detect GPU
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](../../../../uav-mission-compute-sdk/README.md) - no further SDK steps are needed here because `uav-vision-analytics` runs its own inference via DL Streamer Pipeline Server.
 
 The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and all other published ports to loopback only. Since `uav-vision-analytics` runs in a separate Docker container/network, it cannot reach loopback-bound ports. Set the SDK's `.env` to bind on all interfaces before starting it:
 
@@ -71,8 +71,6 @@ The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and al
 sed -i 's|^HOST_IP=.*|HOST_IP=0.0.0.0|' .env
 make up-sim-camera        # start PX4, MQTT, RTSP server
 ```
-
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md) — no further SDK steps are needed here, since `uav-vision-analytics` runs its own inference via DLSPS.
 
 ### 2. Configure environment
 
@@ -136,7 +134,7 @@ Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
-Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
+Runs `pipeline_manager.py` inside the DL Streamer Pipeline Server container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
 `make start-rtsp` starts **one camera pipeline at a time** (default: GPU/forward camera). Pass `DEVICE=cpu|gpu|npu|all` to choose:
 

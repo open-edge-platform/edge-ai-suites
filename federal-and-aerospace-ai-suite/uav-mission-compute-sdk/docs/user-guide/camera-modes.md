@@ -21,7 +21,7 @@ graph LR
         MQTT["MQTT Broker<br/>(armed state, detections)"]
         MTX["MediaMTX<br/>(RTSP server)"]
         VP["Vision Processor<br/>(YOLOv2-tiny GPU)"]
-        APP["Dashboard & Apps<br/>(http://localhost:5002)"]
+        APP["Dashboard & Apps<br/>"]
     end
 
     SIM --> PX4
@@ -331,19 +331,7 @@ The `vision-processor-multicam` container automatically:
 3. **Publishes detections** to MQTT: `uav/uav-1/camera/{camera_id}/detections`
 4. **Publishes annotated frames** (JPEG with bounding boxes) to MQTT: `uav/uav-1/camera/{camera_id}/processed`
 
-> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, use the dashboard at http://localhost:5002 or subscribe to the MQTT topic above.
-
-### Dashboard Features
-
-**URL**: http://localhost:5002
-
-- Camera tiles: One tile per camera in `VISION_CAMERA_IDS`
-  - Sim mode: 3 tiles (nadir, forward, rear)
-  - USB mode: 1 tile (nadir)
-- Detection overlay: Real-time bounding boxes, labels, confidence scores
-- ARM/DISARM button: Controls UAV and camera inference
-- Telemetry panel: Position, altitude, battery, velocity
-- Demo mission button: Pre-programmed waypoint sequence
+> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, subscribe to the MQTT topic above.
 
 ### Troubleshooting
 
@@ -405,7 +393,6 @@ usb-camera (implies):
 > **Prerequisite**: RTSP paths only exist while the UAV is **armed**. Camera bridges kill ffmpeg on disarm and respawn on arm. Arm the UAV first:
 > ```bash
 > curl -X POST http://localhost:8080/action/arm
-> # or use the ARM button on http://localhost:5002
 > ```
 
 ### View Streams Locally
@@ -420,9 +407,7 @@ sudo apt install ffmpeg mosquitto-clients xdg-utils -y
 # View raw camera feed
 ffplay rtsp://localhost:8554/uav-1/nadir
 
-# View annotated frames with detections delivered over MQTT. The dashboard at
-# http://localhost:5002 renders these directly; the CLI equivalent grabs one
-# JPEG from the MQTT topic:
+# View annotated frames with detections delivered over MQTT.
 mosquitto_sub -h localhost -p 1884 \
   -t "uav/uav-1/camera/nadir/processed" -C 1 > frame.jpg && xdg-open frame.jpg
 

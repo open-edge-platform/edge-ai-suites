@@ -6,13 +6,13 @@
 
 This release removes the deprecated **Weld Defect Detection sample app**, adds **ViPPET
 integration** for deploying the Time Series Analytics Microservice, aligns naming for
-**DL Streamer / DL Streamer Pipeline Server** and includes **security hardening** along with
+**DL Streamer / DL Streamer Pipeline Server**, and includes **security hardening** along with
 various fixes and documentation improvements.
 
 **New**:
 
 - **ViPPET Integration**: The Time Series Analytics Microservice can now be deployed as part
-  of the Visual Pipeline and Platform Evaluation Tool (ViPPET) stack
+  of the Visual Pipeline and Platform Evaluation Tool (ViPPET) stack.
 
 **Improved**:
 

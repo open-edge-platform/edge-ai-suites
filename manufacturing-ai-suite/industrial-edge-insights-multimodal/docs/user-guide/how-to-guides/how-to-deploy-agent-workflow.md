@@ -165,7 +165,12 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 
    - The following pages appear:
      ![Multimodal Weld Defect Detection Agentic Dashboard](../_assets/agentic_dashboard_view.png)
+
+      Results of the multi-agent pipeline appear:
      ![Agentic Results for weld data](../_assets/agentic_results.png)
+
+     The detections dashboard appears:
+     ![Detections Results for weld data](../_assets/agent_detection.png)
 
 ## Stop the Stack
 
