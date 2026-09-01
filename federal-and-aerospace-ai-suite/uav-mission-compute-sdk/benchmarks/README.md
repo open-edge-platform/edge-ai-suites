@@ -6,7 +6,7 @@ SPDX-License-Identifier: Apache-2.0
 # Benchmarking Design
 
 This document describes the design and rationale for the MAVLink → MQTT
-benchmark in `benchmarks/`.
+benchmark.
 
 ---
 
@@ -109,7 +109,7 @@ For every telemetry topic published by `companion-bridge`:
   window. Checked against the per-topic rate caps configured in
   `companion-bridge` (defaults: `attitude` ≤ 30 Hz, `velocity` ≤ 20 Hz,
   `position` ≤ 20 Hz, `gps` ≤ 5 Hz — see `RATE_<TOPIC>_HZ` in
-  [docker-compose.yml](../../docker-compose.yml))​.
+  [docker-compose.yml](../docker-compose.yml))​.
 - **End-to-end latency (avg + P99)** — the bridge stamps every reader-loop
   event with `reader_ts_ns` (nanosecond UNIX epoch) at MAVSDK consumption
   time, and every outbound MQTT message with `bridge_ts_ns` at publish
@@ -188,134 +188,3 @@ change-triggered and has no `RATE_STATUS_HZ` env var.
 - **Guaranteed restore of bridge defaults.** The `--bridge-sweep` `finally`
   block runs even on Ctrl-C, so an interrupted sweep does not leak a
   stress-configured bridge into subsequent test runs.
-
----
-
-## Running the benchmarks
-
-Run the dependency setup once before any benchmark command:
-
-```bash
-make deps
-```
-
-See **[Invocation](#invocation)** for the full command reference. A one-line
-summary:
-
-| Mode | Command | Requires |
-|---|---|---|
-| Passive telemetry observation | `make deps && make bench` | Stack running |
-| End-to-end bridge stress sweep | `make deps && make bench-bridge-sweep` | Stack running + UAV armed + `docker compose` |
-
----
-
-## Interpreting results
-
-### MAVLink → MQTT
-
-| Metric | Healthy range | Action if outside |
-|---|---|---|
-| `attitude` rate | 27–30 Hz (at default cap 30) | Check `RATE_ATTITUDE_HZ` in companion-bridge env |
-| `position` rate | 18–20 Hz (at default cap 20) | Check `RATE_POSITION_HZ` |
-| `velocity` rate | 18–20 Hz (at default cap 20) | Check `RATE_VELOCITY_HZ` |
-| Avg latency | < 5 ms (loopback) | Check broker load; increase MQTT QoS 0 |
-| P99 latency | < 20 ms | Check OS scheduler / container CPU quota |
-| Jitter | < 5 ms | High jitter → bridge thread contention |
-| Rate CV (multi-client) | < 10 % | > 10 % → broker fan-out bottleneck |
-
----
-
-## Invocation
-
-All targets assume `make deps` has been run once to populate `.venv/`.
-
-### Passive telemetry observation
-
-```bash
-make bench                                     # 20 s window, 1 subscriber
-make bench ARGS="--duration 60 --clients 4"    # 60 s, fan-out to 4 subscribers
-```
-
-### Bridge stress sweep (`--bridge-sweep`)
-
-Requires the full stack (`make up-sim-camera`), the UAV providing telemetry (armed or
-producing at least one telemetry message), and `docker compose` on `PATH`.
-
-```bash
-make bench-bridge-sweep                                            # default caps: 20,50,100,200 Hz
-make bench-bridge-sweep BRIDGE_SWEEP_RATES="20,50,100,200,300" SWEEP_DURATION=15
-```
-
-Direct invocation with a non-default compose file:
-
-```bash
-.venv/bin/python benchmarks/benchmark_mavlink_mqtt.py \
-    --bridge-sweep \
-    --sweep-rates 20,50,100,200 \
-    --sweep-duration 15 \
-    --compose-file docker-compose.yml \
-    --restart-wait 45
-```
-
-### HTML report (`--html-report`)
-
-Any invocation may append `--html-report` to also write a single
-self-contained HTML file with a header (run metadata, host system specs,
-and deployment-component health) and one focused chart per mode that ran.
-Chart.js is loaded from a CDN, so open the file with network access.
-
-`PATH` is optional. With no value the report lands in the current
-directory as `mavlink_mqtt_benchmark_<UTC timestamp>.html`:
-
-```bash
-# timestamped file in the current directory
-.venv/bin/python benchmarks/benchmark_mavlink_mqtt.py \
-    --client-sweep --bridge-sweep \
-    --sweep-rates 20,50,100,200 \
-    --client-sweep-counts 1,2,5,10,25,50,100 \
-    --html-report
-
-# or pick the path explicitly
-.venv/bin/python benchmarks/benchmark_mavlink_mqtt.py \
-    --bridge-sweep --html-report /tmp/bench.html
-```
-
-The report has three top-level cards and two plot sections:
-
-| Header card | Contents |
-|---|---|
-| Run | Timestamp, broker host/port, UAV ID |
-| System | Hostname, OS, arch, CPU model + core count, memory |
-| Deployment health | Broker reachability badge, live telemetry check, list of `docker compose` containers with state badges |
-
-| Plot section | X axis | Selectable Y metrics |
-|---|---|---|
-| Client scaling | Subscriber count (1 → 100) | Per-client mean rate, aggregate rate, rate CV, avg latency, P99 latency |
-| Bridge stress sweep | Requested cap (Hz) | Observed Hz (with `y = x`), achieved %, avg latency, P99 latency — each plotted per topic |
-
-Every plot has a **Metric** dropdown above it that switches the Y axis
-without a page reload — the raw records are inlined into the page and the
-Chart.js instance is rebuilt client-side on change.  The initial metric
-matches the summary each mode is best known for (per-client mean rate and
-observed Hz respectively).
-
-Each plot is followed by its raw-data table.
-
-**Client-sweep mode.** `--client-sweep` runs passive observation at each
-count in `--client-sweep-counts` (default `1,2,5,10,25,50,100`) using
-`--sweep-duration` per tier.  Requires the stack to be running and the
-UAV providing telemetry.  Replaces the single-shot `--clients` passive
-observation for the purpose of the HTML report.
-
-### Environment overrides
-
-All modes honour these variables (also settable in `.env`):
-
-| Variable | Default | Notes |
-|---|---|---|
-| `MQTT_BROKER_HOST` | `localhost` | Broker host |
-| `MQTT_BROKER_PORT` | `1884` | Host-mapped broker port |
-| `UAV_ID` | `uav-1` | Topic prefix |
-
-Also available as CLI flags (`--host`, `--port`) which take precedence.
-
