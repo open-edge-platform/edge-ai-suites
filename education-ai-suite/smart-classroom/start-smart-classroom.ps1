@@ -986,7 +986,6 @@ function Wait-ForService {
             $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
             if (-not $listening) {
                 Write-Host ""
-                Write-Host ""
                 Write-Host "========================================" -ForegroundColor Red
                 Write-Host "  ERROR: $ServiceName EXITED" -ForegroundColor Red
                 Write-Host "========================================" -ForegroundColor Red
@@ -1003,7 +1002,6 @@ function Wait-ForService {
             foreach ($depPort in $DependentPorts) {
                 $depListening = Get-NetTCPConnection -LocalPort $depPort -State Listen -ErrorAction SilentlyContinue
                 if (-not $depListening) {
-                    Write-Host ""
                     Write-Host ""
                     Write-Host "========================================" -ForegroundColor Red
                     Write-Host "  ERROR: DEPENDENT SERVICE STOPPED" -ForegroundColor Red
@@ -1078,7 +1076,6 @@ function Wait-ForService {
                 if (-not $serviceRunning) {
                     # No matching process running and port not listening = crashed or user closed terminal
                     Write-Host ""
-                    Write-Host ""
                     Write-Host "========================================" -ForegroundColor Red
                     Write-Host "  ERROR: $ServiceName CRASHED" -ForegroundColor Red
                     Write-Host "========================================" -ForegroundColor Red
@@ -1095,14 +1092,16 @@ function Wait-ForService {
         try {
             $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
             if ($response.StatusCode -eq 200) {
-                Write-Host "`r  [$elapsed s] $ServiceName is healthy!                              " -ForegroundColor Green
+                Write-Host "  [$elapsed s] $ServiceName is healthy!" -ForegroundColor Green
                 return $true
             }
         } catch {
             # Service not ready yet, continue waiting
         }
         
-        Write-Host "`r  [$elapsed s] Waiting for $ServiceName...                    " -NoNewline -ForegroundColor Gray
+        # Newline-terminated, not an in-place `r overwrite: the Backend and
+        # Content Search share this console and would append to an open line.
+        Write-Host "  [$elapsed s] Waiting for $ServiceName..." -ForegroundColor Gray
         Start-Sleep -Seconds $IntervalSeconds
         $elapsed += $IntervalSeconds
     }
