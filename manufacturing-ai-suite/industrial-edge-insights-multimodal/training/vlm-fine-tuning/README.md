@@ -51,7 +51,7 @@ duplicated here:
 
 ## License
 
-Third-party components are used by the scripts in this directory (see
+The following are third-party components used by the scripts in this directory (see
 `requirements.txt`), each under their own upstream license:
 
 - [Unsloth Library](https://github.com/unslothai/unsloth) — Apache-2.0 license
