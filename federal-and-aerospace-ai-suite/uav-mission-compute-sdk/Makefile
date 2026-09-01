@@ -174,6 +174,7 @@ clean-all:
 	docker image prune -a -f
 
 help:
+	@# Help: Show available make targets and their descriptions
 	@printf "%-20s %s\n" "Target" "Description"
 	@printf "%-20s %s\n" "------" "-----------"
 	@make -pqR : 2>/dev/null \
@@ -181,8 +182,8 @@ help:
 	    {if ($$1 !~ "^[#.]") {print $$1}}' \
 	  | sort \
 	  | grep -Ev -e '^[^[:alnum:]]' -e '^$$' \
-	  | xargs -I _ sh -c 'printf "%-20s " _; make _ -nB 2>/dev/null \
-	    | (grep -i "^# Help:" || echo "") | tail -1 | sed "s/^# Help: //g"'
+	  | xargs -I _ sh -c 'printf "%-20s " _; (make _ -nB 2>/dev/null || true) \
+	    | (grep -i "^# Help:" || echo "") | tail -1 | sed "s/^# Help: //g"' || true
 
 # Python env for host-side scripts (benchmarks, missions)
 VENV := .venv
@@ -190,7 +191,8 @@ PY   := $(VENV)/bin/python
 PIP  := $(VENV)/bin/pip
 REQ  := requirements.txt
 
-deps: $(VENV)/.installed  ## Install Python deps into a local .venv (uv if present, else python3-venv)
+deps: $(VENV)/.installed
+	@# Help: Install Python deps into a local .venv (uv if present, else python3-venv) fro benchmarks
 	@echo ""
 	@echo "Deps installed in $(VENV)."
 
@@ -213,7 +215,8 @@ $(VENV)/.installed: $(REQ)
 	fi
 	@touch $@
 
-bench:  ## Run the MAVLink->MQTT telemetry benchmark (stack must be running); pass args with ARGS="--duration 30 --clients 4"
+bench:
+	@# Help: Run the MAVLink->MQTT telemetry benchmark (stack must be running)
 	$(PY) benchmarks/benchmark_mavlink_mqtt.py $(ARGS)
 
 # SWEEP_DURATION: measurement window per tier in seconds
@@ -221,10 +224,12 @@ SWEEP_DURATION ?= 10
 
 # BRIDGE_SWEEP_RATES: caps applied to attitude/velocity/position on each tier
 BRIDGE_SWEEP_RATES ?= 20,50,100,200
-bench-bridge-sweep:  ## End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency. Requires `make up-sim-camera` and uav armed. Tune with BRIDGE_SWEEP_RATES="20,50,100,200" SWEEP_DURATION=15
+bench-bridge-sweep:
+	@# Help: End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency
 	$(PY) benchmarks/benchmark_mavlink_mqtt.py --bridge-sweep --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION) $(ARGS)
 
-clean-venv:  ## Remove the local .venv
+clean-venv:
+	@# Help: Remove the local .venv
 	rm -rf $(VENV)
 
 .DEFAULT_GOAL := help
