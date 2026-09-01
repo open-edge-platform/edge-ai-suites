@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Skill Benchmark: metro-ai-apps-builder
+# Skill Benchmark: metro-ai-app-builder
 
 **Agents**: Copilot (`claude-opus-4.8`)  
 **Grader**: Copilot (`claude-opus-4.8`)  
@@ -19,7 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 | Agent | w/o skill | w/ skill | Lift |
 |---|---|---|---|
 | Copilot (`claude-opus-4.8`) | 2 / 6 | 6 / 6 | **+4 ↑** |
-
+s
 ### Pass rate (avg ± σ across evals)
 
 | Agent | w/o skill | w/ skill | Lift |
@@ -49,5 +49,5 @@ SPDX-License-Identifier: Apache-2.0
 | 3 | I have hundreds of recorded videos and want to type a phrase and jump ... | PASS (4/4) | FAIL (0/4) |
 | 4 | I have a labeled defect dataset and want a quantized model ready for In... | PASS (4/4) | PASS (4/4) |
 | 5 | I want to use AI with my cameras, not sure where to start. | PASS (3/3) | PASS (3/3) |
-| 6 | Run the metro-ai-apps-recipe skill to build a smart-parking stack in ./... | PASS (1/1) | FAIL (0/1) |
+| 6 | Run the metro-ai-app-recipe skill to build a smart-parking stack in ./... | PASS (1/1) | FAIL (0/1) |
 | | **Mean ±σ** | **100% ±0%** | **38% ±49%** |

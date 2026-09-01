@@ -1,6 +1,6 @@
 # Discovering & installing skills at runtime
 
-How the `metro-ai-apps-builder` orchestrator confirms the live catalog, checks
+How the `metro-ai-app-builder` orchestrator confirms the live catalog, checks
 what is already installed, and adds a delegate skill on demand. Load this in
 Step 2 only when [`SKILL_CATALOG.md`](SKILL_CATALOG.md) looks stale, a mapping is
 ambiguous, or a chosen delegate is not installed locally.
@@ -26,7 +26,7 @@ ls .github/skills 2>/dev/null                 # skills shipped in this repo
 ls ~/.copilot/skills ~/.claude/skills 2>/dev/null   # agent skill homes
 ```
 
-`metro-ai-apps-recipe` ships in **this** repo under `.github/skills/`, so it is
+`metro-ai-app-recipe` ships in **this** repo under `.github/skills/`, so it is
 always available — no install needed to delegate to it.
 
 ## 3. Refresh the live index (when the catalog may be stale)
