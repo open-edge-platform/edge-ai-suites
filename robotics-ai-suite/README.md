@@ -22,7 +22,7 @@ The types of collection are as follows:
 
 The diagram below is the single, consolidated view of the Robotics AI Suite. It shows the major software components, how perception, navigation, manipulation, Physical AI, and benchmarking relate, which parts are Intel-provided versus upstream open source, and how workloads map onto Intel® heterogeneous compute (CPU / iGPU / NPU). You should be able to understand what the suite includes — and where Intel adds value — without reading further.
 
-![Robotics AI Suite reference architecture](docs/images/architecture/Robotics-AI-Suite-Architecture.svg)
+![Robotics AI Suite reference architecture](./docs/user-guide/images/architecture/Robotics-AI-Suite-Architecture.svg)
 
 **How to read it**
 
@@ -43,13 +43,13 @@ Perception and detection run on the **NPU / iGPU**; VLA / diffusion policies and
 
 Sensor data flows through perception into the AI decision models, then to planning and real-time control, and out to the actuators — with feedback closing the loop. Each stage is annotated with the compute it targets.
 
-![Runtime data flow from sensors through models to control](docs/images/architecture/robotics-runtime-data-flow.svg)
+![Runtime data flow from sensors through models to control](docs/user-guide/images/architecture/robotics-runtime-data-flow.svg)
 
 ### Workloads mapped to Intel hardware
 
 Each collection uses Intel heterogeneous compute differently. The matrix summarizes the primary (●) and optional (○) compute target for each collection.
 
-![Collections mapped to Intel heterogeneous compute](docs/images/architecture/robotics-hardware-mapping.svg)
+![Collections mapped to Intel heterogeneous compute](./docs/user-guide/images/architecture/robotics-hardware-mapping.svg)
 
 The per-collection reference application architectures — which zoom into a representative end-to-end application — are shown on the collection pages linked in the tables below.
 
