@@ -49,7 +49,20 @@ See [System Requirements](./system-requirements.md) for the full list of softwar
 
 ### 1. Configure environment
 
-Clone the repo and Get into the directory:
+Download the compressed file and Get into the directory:
+
+```bash
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip
+```
+
+Decompress the downloaded file:
+
+```bash
+unzip uav-mission-apps.zip
+cd uav-vision-analytics
+```
+
+Or, Clone the whole repo and Get into the directory:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch release-2026.2.0

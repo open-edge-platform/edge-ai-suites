@@ -60,9 +60,7 @@ application creation (scaffolding new pymavlink or UAVSDK stacks).
 
 ### Intended Use
 
-This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object
-detection and live telemetry overlay. It is provided for reference and demonstration purposes
-only, and is not intended to be deployed as-is or for alternate use cases or applications.
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only and is not intended to be deployed as-is or for alternate use cases or applications. This reference does not support authentication, TLS, or access controls between the app and external interfaces. These security measures should be provided by the solution builder.
 
 ### Responsible Use
 
