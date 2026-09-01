@@ -17,6 +17,9 @@ final tagsProvider = StateProvider<List<String>>((ref) => const []);
 
 final serverHasFilesProvider = StateProvider<bool>((ref) => false);
 
+/// Incrementing this triggers FilesScreen to reload its file list.
+final filesRefreshProvider = StateProvider<int>((ref) => 0);
+
 // ─── Health ───────────────────────────────────────────────────────────────────
 
 /// Manages GET /api/v1/system/health state.
