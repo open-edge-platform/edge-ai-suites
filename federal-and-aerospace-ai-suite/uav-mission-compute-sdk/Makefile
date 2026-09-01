@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
+.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-client-sweep bench-bridge-sweep bench-all help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -222,11 +222,22 @@ bench:
 # SWEEP_DURATION: measurement window per tier in seconds
 SWEEP_DURATION ?= 10
 
+# CLIENT_SWEEP_COUNTS: subscriber counts for client scaling tiers
+CLIENT_SWEEP_COUNTS ?= 1,2,5,10,25,50,100
+
+bench-client-sweep:
+	@# Help: Client scaling sweep across subscriber counts; tune with CLIENT_SWEEP_COUNTS and SWEEP_DURATION
+	$(PY) benchmarks/benchmark_mavlink_mqtt.py --client-sweep $(ARGS) --client-sweep-counts $(CLIENT_SWEEP_COUNTS) --sweep-duration $(SWEEP_DURATION)
+
 # BRIDGE_SWEEP_RATES: caps applied to attitude/velocity/position on each tier
 BRIDGE_SWEEP_RATES ?= 20,50,100,200
 bench-bridge-sweep:
 	@# Help: End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency
-	$(PY) benchmarks/benchmark_mavlink_mqtt.py --bridge-sweep --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION) $(ARGS)
+	$(PY) benchmarks/benchmark_mavlink_mqtt.py --bridge-sweep $(ARGS) --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION)
+
+bench-all:
+	@# Help: Run client sweep + bridge sweep in one invocation
+	$(PY) benchmarks/benchmark_mavlink_mqtt.py --client-sweep --bridge-sweep $(ARGS) --client-sweep-counts $(CLIENT_SWEEP_COUNTS) --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION)
 
 clean-venv:
 	@# Help: Remove the local .venv

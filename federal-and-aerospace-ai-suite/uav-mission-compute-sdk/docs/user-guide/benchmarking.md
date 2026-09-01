@@ -8,8 +8,6 @@ SPDX-License-Identifier: Apache-2.0
 This guide explains how to run and read the MAVLink to MQTT benchmarks in
 `benchmarks/benchmark_mavlink_mqtt.py`.
 
----
-
 ## Prerequisites
 
 - Repository dependencies installed once:
@@ -29,17 +27,13 @@ You can also use `make up-usb-camera` or `make up-ethernet FC_IP=<IP>`.
 - For benchmark modes that consume telemetry, ensure the UAV is publishing
   telemetry (armed or otherwise active).
 
----
-
 ## Quick Start
 
-| Mode | Command | Requires |
-|---|---|---|
-| Passive telemetry observation | `make bench` | Stack running |
-| End-to-end bridge stress sweep | `make bench-bridge-sweep` | Stack running + UAV telemetry + `docker compose` |
-| Client scaling sweep | `.venv/bin/python benchmarks/benchmark_mavlink_mqtt.py --client-sweep --html-report` | Stack running + UAV telemetry |
-
----
+| Mode | Command |
+|---|---|
+| Passive telemetry observation | `make bench` |
+| End-to-end bridge stress sweep | `make bench-bridge-sweep` |
+| Client scaling sweep | `make bench-client-sweep` |
 
 ## Command Reference
 
@@ -48,8 +42,8 @@ All commands assume `make deps` has been run once.
 ### 1) Passive telemetry observation
 
 ```bash
-make bench                                      # 20s window, 1 subscriber
-make bench ARGS="--duration 60 --clients 4"    # 60s window, 4 subscribers
+make bench                                     # 20s window, 1 subscriber
+make bench ARGS="--duration 60 --clients 5"    # 60s window, 5 subscribers
 ```
 
 What it outputs per topic:
@@ -92,17 +86,22 @@ Optional compose override (repeatable):
 Use this mode to measure behavior as subscriber count increases.
 
 ```bash
-.venv/bin/python benchmarks/benchmark_mavlink_mqtt.py \
-  --client-sweep \
-  --client-sweep-counts 1,2,5,10,25,50,100 \
-  --sweep-duration 10
+make bench-client-sweep
+make bench-client-sweep CLIENT_SWEEP_COUNTS="1,2,5,10,25,50,100" SWEEP_DURATION=15
 ```
-
----
 
 ## HTML Report
 
 Any benchmark mode can write a self-contained HTML report.
+
+For make targets, pass it via `ARGS`:
+
+```bash
+make bench ARGS="--html-report"
+make bench-bridge-sweep ARGS="--html-report"
+make bench-client-sweep ARGS="--html-report"
+make bench-all ARGS="--html-report" # To run both the sweeps and create a combined report
+```
 
 ```bash
 # Auto-named file in current directory
@@ -119,8 +118,6 @@ Report includes:
 - Deployment health snapshot
 - Charts and raw tables for each mode executed
 
----
-
 ## Key Options
 
 | Option | Default | Description |
@@ -136,8 +133,6 @@ Report includes:
 | `--compose-file` | auto-detect | Compose file(s) used for bridge recreate; repeatable |
 | `--html-report [PATH]` | off | Write HTML report (auto name if PATH omitted) |
 
----
-
 ## Environment Variables
 
 These can be set in `.env` or exported in the shell.
@@ -149,8 +144,6 @@ These can be set in `.env` or exported in the shell.
 | `UAV_ID` | `uav-1` | Topic prefix |
 
 CLI flags `--host` and `--port` override env values.
-
----
 
 ## Interpreting Results
 
@@ -169,8 +162,6 @@ Suggested healthy baseline (local/loopback environments):
 | P99 latency | < 20 ms |
 | Jitter | < 5 ms |
 | Rate CV (multi-client) | < 10% |
-
----
 
 ## Troubleshooting
 
