@@ -318,7 +318,7 @@ class LiveCaptioningAnalyticsAppShim(IAnalyticsAppShim):
         """Start an LVC pipeline for one camera from VMS control values."""
         payload: dict = {
             "rtspUrl": stream_url,
-            "device": controls.get("device", "CPU"),
+            "vlmDevice": controls.get("device", "CPU"),
         }
         prompt = controls.get("prompt", "")
         if prompt:
