@@ -9,7 +9,7 @@
 2. Inputs — a folder/library of MP4s to index? [yes, provide path]
 3. Also want auto-summaries of videos, or search only? [search only]
 4. Deployment — Docker or Kubernetes? [Docker]
-5. Hardware — Intel CPU only, or GPU/vLLM available? [CPU]
+5. Hardware — Intel GPU (default), Intel CPU/NPU, or vLLM available? [Intel GPU]
 
 **Discovery (Step 2):** verb *search* + object *video library* → primary
 **`vss-deploy`** (search mode), supporting **`vdms-dataprep-user`** (ingest) and
@@ -21,9 +21,9 @@
   ingested and indexed; a working natural-language query returning ranked clips.
 - Skills (sequence): `vdms-dataprep-user` (ingest) → `vss-deploy` (`--search`) →
   `vss-search-index` (query).
-- Inferred technology: OpenVINO CPU, multimodal embeddings, VDMS vector DB.
+- Inferred technology: OpenVINO GPU, multimodal embeddings, VDMS vector DB.
 - Install (after approval):
-  `npx skills add open-edge-platform/skills --skill vss-deploy`
+  `npx skills@1.5.23 add open-edge-platform/skills --skill vss-deploy`
   (and `vdms-dataprep-user`, `vss-search-index`).
 - Requirements: Docker + Compose v2; disk for the video library + vectors.
 

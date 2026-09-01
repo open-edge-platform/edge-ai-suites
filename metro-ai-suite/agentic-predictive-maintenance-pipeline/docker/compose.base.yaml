@@ -48,8 +48,6 @@ services:
     image: eclipse-mosquitto:2.0.18
     container_name: apm-mqtt-broker
     hostname: mqtt-broker
-    ports:
-      - "${MQTT_PORT:-1883}:1883"
     volumes:
       - ../config/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
     networks:
@@ -64,7 +62,7 @@ services:
       retries: 5
 
   apm-storage:
-    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-2026.2.0-rc1}
+    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-2026.2.0-rc2}
     container_name: apm-storage
     hostname: apm-storage
     build:
@@ -79,8 +77,6 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - apm_sqlite_data:/data
-    ports:
-      - "${STORAGE_PORT:-5001}:5001"
     networks:
       - apm_network
     restart: unless-stopped
@@ -94,7 +90,7 @@ services:
       start_period: 10s
 
   dlstreamer-pipeline-server:
-    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1}
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2}
     container_name: apm-dlstreamer
     hostname: dlstreamer-pipeline-server
     environment:
@@ -107,9 +103,9 @@ services:
       REST_SERVER_PORT: ${PIPELINE_SERVER_PORT:-8554}
       MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-apm-client}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-change-me-mqtt-password}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-    ports:
-      - "${PIPELINE_SERVER_PORT:-8554}:${PIPELINE_SERVER_PORT:-8554}"
     volumes:
       - ${USE_CASE_CONFIGS_DIR:-/tmp/apm-placeholder}/pipeline-server-config.json:/home/pipeline-server/config.json:ro
       - ${USE_CASE_MODELS_DIR:-/tmp/models}:/home/pipeline-server/models:ro
@@ -132,7 +128,7 @@ services:
       - no-new-privileges
 
   model-download:
-    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.2.0-rc1}
+    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.2.0-rc2}
     container_name: apm-model-download
     hostname: model-download
     # The model-download entrypoint only accepts the plugin list via the

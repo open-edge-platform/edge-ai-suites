@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.39.2-alpine
+    image: telegraf:1.39.3-alpine
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -220,6 +220,7 @@ services:
       TS_MS_PORT: ${KAPACITOR_PORT}
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
       SIMULATION_TARGET_FPS: ${SIMULATION_TARGET_FPS}
+      SIMULATION_REPLAY_COUNT: ${SIMULATION_REPLAY_COUNT}
       LOG_LEVEL: ${LOG_LEVEL}
     volumes:
       - ./weld-data-simulator/simulation-data:/simulation-data
@@ -227,7 +228,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.31.3
+    image: nginx:1.31.4
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -383,7 +384,7 @@ services:
     - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.19.3
+    image: bluenviron/mediamtx:1.20.1
     container_name: mediamtx
     restart: unless-stopped
     read_only: true

@@ -194,8 +194,8 @@ services:
       - MQTT_PORT=1883
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},.scenescape.intel.com,influxdb2
-      - NO_PROXY=${no_proxy},.scenescape.intel.com,influxdb2
+      - no_proxy=.scenescape.intel.com,influxdb2,${no_proxy}
+      - NO_PROXY=.scenescape.intel.com,influxdb2,${no_proxy}
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
       # NPU related environment variables
@@ -234,7 +234,7 @@ services:
       start_period: 10s
 
   web:
-    image: intel/scenescape-manager:2026.2.0-rc1
+    image: intel/scenescape-manager:2026.2.0-rc2
     init: true
     networks:
       scenescape:
@@ -292,7 +292,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:2026.2.0-rc1
+    image: intel/scenescape-controller:2026.2.0-rc2
     init: true
     environment:
       - http_proxy=${http_proxy}
@@ -334,7 +334,7 @@ services:
     restart: on-failure:5
 
   analytics:
-    image: intel/scenescape-analytics:2026.2.0-rc1
+    image: intel/scenescape-analytics:2026.2.0-rc2
     init: true
     environment:
       - http_proxy=${http_proxy}

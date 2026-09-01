@@ -15,7 +15,7 @@ replicaCount: 1
 image:
   repository: intel/live-video-captioning-rag
   # Type: string
-  tag: "2026.2.0-rc1"
+  tag: "2026.2.0-rc2"
   pullPolicy: IfNotPresent
 
 service:

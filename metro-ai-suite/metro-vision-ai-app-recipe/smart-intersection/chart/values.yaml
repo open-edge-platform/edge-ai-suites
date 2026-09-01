@@ -83,7 +83,7 @@ broker:
   enableWebsockets: true
 
 nginx:
-  # Maximum allowed size for client request body (e.g. SceneScape GLB 3D base map file uploads; max 132m)
+  # Maximum allowed size for client request body (e.g. Scenescape GLB 3D base map file uploads; max 132m)
   clientMaxBodySize: 132m
 
 influxdb:
@@ -131,7 +131,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: 2026.2.0-rc1
+  tag: 2026.2.0-rc2
 
   service:
     type: ClusterIP
@@ -139,7 +139,7 @@ scene:
 
 analytics:
   repository: intel/scenescape-analytics
-  tag: 2026.2.0-rc1
+  tag: 2026.2.0-rc2
 
 pgserver:
   repository: postgres
@@ -155,7 +155,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: 2026.2.0-rc1
+    tag: 2026.2.0-rc2
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
@@ -163,7 +163,7 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2026.2.0-ubuntu24-rc1
+  tag: 2026.2.0-ubuntu24-rc2
   # Overrides the storage class name
   storageClassName: "standard"
   gpu:

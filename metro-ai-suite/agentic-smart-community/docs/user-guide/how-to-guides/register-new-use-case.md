@@ -200,16 +200,20 @@ The final chat report has three parts:
 Note the **validation status**: *registered but behaviorally unvalidated* — registration only confirms structural alignment of prompt ↔ schema ↔ rules. When you have representative footage, compare the persisted `event / severity / desc / pet_zone` values against ground truth and re-register with `overwrite=true` to refine. From this point the use case is live: pet-safety events start producing alerts on `smart-community://monitor/cam_pet_safety/alerts`.
 
 ### Step 9 — (Optional) Real-Time Alert Configuration
+
 MCP Server subscriptions can deliver alert updates directly to connected clients. Whether an MCP client receives these notifications in real time depends on its configuration. To configure real-time alert delivery:
-- First, make sure you have installed the OpenClaw adapter by following [Connect an agent host — OpenClaw](../get-started.md#realtime-alerts-notifications).
+
+- First, make sure you have installed the OpenClaw adapter by following [Connect an agent host — OpenClaw](../get-started.md#real-time-alert-notifications).
 - Then, from any OpenClaw chat session, ask OpenClaw to create a dedicated agent and configure alert notifications. For example, ask it to:
+
   ```text
-  Create an OpenClaw agent dedicated to monitoring the cam_pet_safety camera. 
+  Create an OpenClaw agent dedicated to monitoring the cam_pet_safety camera.
   Place it in the `~/.openclaw/agents` directory and register it in `openclaw.json`.
   Then configure the system to push pet camera alerts to this agent in real time.
   ```
 
   The following screenshot shows an example configuration:
+
 ![openclaw_setup_agent_and_configure_alerts](../_assets/openclaw_setup_agent_and_configure_alerts.png)
 
 - After configuration, real-time alerts appear in the dedicated agent session, as shown in the following screenshot:

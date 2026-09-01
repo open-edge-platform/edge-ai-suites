@@ -1,0 +1,8 @@
+.. |intel| replace:: Intel\ |reg|
+.. |Intel| replace:: Intel\ |reg|
+.. |realsense| replace:: RealSense\ |TM|
+.. |RealSense| replace:: RealSense\ |TM|
+.. |D4xx| replace:: `D400 Family <https://www.realsenseai.com/products/d401-d415-d430-gmsl-fakra/>`__
+.. |reg| unicode:: U+000AE .. REGISTERED SIGN
+.. |copy| unicode:: U+000A9 .. COPYRIGHT SIGN
+.. |TM| unicode:: U+2122 .. TRADEMARK SIGN

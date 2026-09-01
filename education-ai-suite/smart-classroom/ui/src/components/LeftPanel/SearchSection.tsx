@@ -78,6 +78,13 @@ const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [unsupportedImageWarning, setUnsupportedImageWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!unsupportedImageWarning) return;
+    const timer = setTimeout(() => setUnsupportedImageWarning(null), 5000);
+    return () => clearTimeout(timer);
+  }, [unsupportedImageWarning]);
 
   const [selectedTypes, setSelectedTypes] = useState<Set<SearchType>>(
     new Set(["document", "image", "video"])
@@ -190,7 +197,14 @@ const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
   const handleImageDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files).filter((f) => isAllowedImage(f.name));
+    const allFiles = Array.from(e.dataTransfer.files);
+    const files = allFiles.filter((f) => isAllowedImage(f.name));
+    const rejected = allFiles.filter((f) => !isAllowedImage(f.name));
+    if (rejected.length > 0) {
+      setUnsupportedImageWarning(
+        t("searchSection.unsupportedImageWarning", { files: rejected.map((f) => f.name).join(", ") })
+      );
+    }
     if (files.length > 0) {
       processImageFile(files[0]);
     }
@@ -199,7 +213,14 @@ const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
   const handleImageBrowse = () => imageInputRef.current?.click();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []).filter((f) => isAllowedImage(f.name));
+    const allFiles = Array.from(e.target.files ?? []);
+    const files = allFiles.filter((f) => isAllowedImage(f.name));
+    const rejected = allFiles.filter((f) => !isAllowedImage(f.name));
+    if (rejected.length > 0) {
+      setUnsupportedImageWarning(
+        t("searchSection.unsupportedImageWarning", { files: rejected.map((f) => f.name).join(", ") })
+      );
+    }
     if (files.length > 0) {
       processImageFile(files[0]);
     }
@@ -434,6 +455,17 @@ const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
                   style={{ display: "none" }}
                   onChange={handleImageChange}
                 />
+                {unsupportedImageWarning && (
+                  <div className="cs-unsupported-warning">
+                    <span className="cs-unsupported-warning__text">{unsupportedImageWarning}</span>
+                    <button
+                      className="cs-unsupported-warning__dismiss"
+                      onClick={() => setUnsupportedImageWarning(null)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 

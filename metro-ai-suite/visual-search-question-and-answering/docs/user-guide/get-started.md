@@ -87,6 +87,11 @@ Otherwise, if you would like to use your own data (images and video), make sure 
 
    > **Note:** You need to set models first.
 
+   For PRC users, set up the huggingface endpoint first:
+   ```bash
+   export HF_ENDPOINT=https://hf-mirror.com
+   ```
+
    - **Ubuntu**:
 
      ``` bash

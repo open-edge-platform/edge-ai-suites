@@ -2,17 +2,17 @@
 
 ## Version 2026.2
 
-**September 2026**
+**Release Date**: September 9, 2026
 
 This release introduces **Agentic Integration for user-triggered weld quality monitoring**,
-enabling users to initiate analysis for a selected time range. It also introduces a 
+enabling users to initiate analysis for a selected time range. It also introduces a
 **standalone Unsloth-based Qwen3.5-2B VLM fine-tuning toolkit** with a weld explainability
 LoRA adapter for vLLM-based defect explainability.
 
 The release also includes various bug fixes, security updates, performance improvements, and
-documentation enhancements.`
+documentation enhancements.
 
-**New**
+**New**:
 
 - **Agentic Integration**: The multimodal sample app now supports an agentic deployment mode,
   with new agent workflow configuration, prompts, policy fallback rules, and a dedicated
@@ -30,11 +30,11 @@ documentation enhancements.`
   monitoring live detection and agent-reasoning phases, and reviewing per-run results including
   policy, analysis, evidence, and ticket agent outputs.
 
-**Improved**
+**Improved**:
 
 - **DL Streamer Pipeline Server Naming**: Naming has been aligned across configs and docs to
   consistently distinguish DL Streamer from DL Streamer Pipeline Server.
-- **Configuration Cleanup**: Hostip references were replaced with localhost across configuration
+- **Configuration Cleanup**: Host IP references were replaced with localhost across configuration
   and docs, and references to the deprecated CatBoost model and the model registry were removed.
 - **Sample App Cleanup**: The standalone weld-defect-detection sample app was removed in favor of
   the unified multimodal and time-series sample apps.
@@ -46,16 +46,14 @@ documentation enhancements.`
   user guide.
 
 
----
-
 ## Version 2026.1
 
-**June 2026**
+**Release Date**: June 17, 2026
 
 This release introduces **GPU/NPU hardware acceleration** support for performing inference on DL Streamer Pipeline Server,
 **new Classifier ML model for weld time series data analysis enabling support on GPU**, various fixes and documentation improvements.
 
-**New**
+**New**:
 
 - **GPU and NPU Support on DL Streamer Pipeline Server**: Docker Compose and Helm deployments
   now support GPU and NPU acceleration for weld defect classification on the DL Streamer
@@ -69,7 +67,7 @@ This release introduces **GPU/NPU hardware acceleration** support for performing
 - **Functional Tests**: Comprehensive functional tests for Docker Compose and Helm deployments
   have been added.
 
-**Improved**
+**Improved**:
 
 - **New Classifier ML Model**: The weld defect detection pipeline on the Time Series Analytics
   microservice now uses a scikit-learn's (Intel-accelerated) RandomForestClassifier model, replacing
@@ -79,16 +77,14 @@ This release introduces **GPU/NPU hardware acceleration** support for performing
 - **Documentation**: Time Series vs Multimodal Weld Defect Detection
   distinction clarified and broken references fixed.
 
----
-
 ## Version 2026.0
 
-**March 24, 2026**
+**Release Date**: March 24, 2026
 
 This release introduces **S3-based frame storage**, **deployment hardening**, and
 **documentation improvements**.
 
-**New**
+**New**:
 
 - **RTP Timestamp Alignment**: Fusion Analytics now uses the RTP sender NTP timestamp
   (`metadata.rtp.sender_ntp_unix_timestamp_ns`) to match frames with the nearest metadata
@@ -99,7 +95,7 @@ This release introduces **S3-based frame storage**, **deployment hardening**, an
   InfluxDB through Fusion Analytics for improved traceability.
 - **Helm Deployment**: Helm charts for multimodal deployment are now available.
 
-**Improved**
+**Improved**:
 
 - Simulation data is now embedded directly into the container image, removing the external
   PV/PVC volume dependency and simplifying weld-data-simulator deployment.

@@ -17,7 +17,7 @@ spec:
       hostIPC: true
       containers:
       - name: {{ .Values.visualSearchQaApp.name }}
-        image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.visualSearchQaApp.image.repository }}:{{ .Values.visualSearchQaApp.image.tag }}"
+        image: "{{ .Values.visualSearchQaApp.image.repository }}:{{ .Values.visualSearchQaApp.image.tag }}"
         imagePullPolicy: {{ .Values.visualSearchQaApp.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.servicePorts.visualSearch }}

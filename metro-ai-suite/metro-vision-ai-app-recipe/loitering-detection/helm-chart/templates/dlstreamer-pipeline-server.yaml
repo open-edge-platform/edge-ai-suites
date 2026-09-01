@@ -56,10 +56,10 @@ spec:
         - -c
         - |
           mkdir -p /tmp/videos
-          curl -kL https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000101.mp4 -o /tmp/videos/VIRAT_S_000101.mp4
-          curl -kL https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000102.mp4 -o /tmp/videos/VIRAT_S_000102.mp4
-          curl -kL https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000103.mp4 -o /tmp/videos/VIRAT_S_000103.mp4
-          curl -kL https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000104.mp4 -o /tmp/videos/VIRAT_S_000104.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000101.mp4 -o /tmp/videos/VIRAT_S_000101.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000102.mp4 -o /tmp/videos/VIRAT_S_000102.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000103.mp4 -o /tmp/videos/VIRAT_S_000103.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000104.mp4 -o /tmp/videos/VIRAT_S_000104.mp4
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
@@ -71,7 +71,7 @@ spec:
         - name: videos-volume
           mountPath: /tmp/videos
       - name: model-downloader
-        image: intel/dlstreamer:2026.2.0-ubuntu24-rc1
+        image: intel/dlstreamer:2026.2.0-ubuntu24-rc2
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
@@ -86,16 +86,16 @@ spec:
         - |
           export MODELS_PATH="/tmp/models/intel"
           mkdir -p $MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/
-          curl -k -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
-          curl -k -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
-          curl -k -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" -L "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
+          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
+          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin" -L "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
+          curl -o "$MODELS_PATH/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" -L "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/master/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+          value: "{{ $.Values.env.HOST_IP }},{{ $.Values.env.no_proxy }}"
         volumeMounts:
         - name: models-volume
           mountPath: /tmp/models
@@ -157,9 +157,9 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
+          value: "{{ $.Values.env.HOST_IP }},mediamtx,otel-collector,{{ $.Values.env.no_proxy }}"
         - name: NO_PROXY
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},mediamtx,otel-collector"
+          value: "{{ $.Values.env.HOST_IP }},mediamtx,otel-collector,{{ $.Values.env.no_proxy }}"
         - name: MQTT_HOST
           value: "broker"
         - name: MQTT_PORT

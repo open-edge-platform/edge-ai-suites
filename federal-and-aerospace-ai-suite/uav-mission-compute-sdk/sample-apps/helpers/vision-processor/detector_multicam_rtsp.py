@@ -92,9 +92,10 @@ class CameraProcessorRTSP:
     def _build_pipeline(self) -> bool:
         """Build and start the GStreamer pipeline. Returns True on success.
 
-        Pipeline: RTSP in → decode → detect → watermark → tee
-          ├─ appsink (extract detection metadata, publish JSON to MQTT)
-          └─ x264enc → RTMP out to MediaMTX (annotated stream for UI)
+        Pipeline: RTSP in → decode → detect → watermark → appsink
+          appsink extracts detection metadata (JSON → MQTT ``.../detections``)
+          and re-encodes the annotated frame as JPEG (→ MQTT ``.../processed``).
+          No annotated stream is pushed back to MediaMTX.
         """
         pipeline_str = (
             f"rtspsrc location={self.rtsp_location} latency={RTSP_LATENCY} protocols=tcp name=src ! "

@@ -5,6 +5,3 @@ gunicorn==23.0.0
 #vllm dependencies
 openai==2.44.0
 pillow==12.3.0
-
-setuptools==83.0.0
-msgpack==1.2.1

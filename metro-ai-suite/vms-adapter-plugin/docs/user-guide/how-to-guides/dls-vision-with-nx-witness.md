@@ -28,28 +28,7 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 
 ## Architecture Overview
 
-```text
-Nx Witness VMS
-  Camera device ─── RTSP stream ───────────────────────────────────────►┐
-  (receives analytics       ◄─── REST push (bounding boxes) ────────────┤
-   object overlays)                                                     │
-                                                                        │
-VMS Adapter Plugin (VAP)                                                │
-  ┌──────────────────────────────────────┐                              │
-  │  ObjectDetectionAnalyticsAppShim     │                              │
-  │  ┌─────────────────────────────┐     │                              │
-  │  │  POST /pipelines/{name}     ├───────────────────────────────────►│
-  │  └─────────────────────────────┘     │  DL Streamer Pipeline Server │
-  │                                      │   (Loitering Det application)│
-  │  ┌─────────────────────────────┐     │       │                      │
-  │  │  MqttSubscriber             │◄────────────┘  MQTT inference      │
-  │  │  translate_dls_metadata()   │     │           results            │
-  │  │  NxWitnessVmsShim.push()    ├───────────────────────────────────►│
-  │  └─────────────────────────────┘     │
-  └──────────────────────────────────────┘
-                                         MQTT Broker (port 1883)
-                                         (part of `dls_vision` stack)
-```
+![Loitering Detection with Nx Witness Architecture](../_assets/VAP-DLS-Vision-with-NX-arch.drawio.svg)
 
 **Key data flows:**
 
@@ -121,8 +100,9 @@ instructions.
 After installation, verify the Nx Witness REST API is accessible:
 
 ```bash
-curl -k -s https://<NX_HOST_IP>:7001/rest/v4/info | python3 -m json.tool | grep '"name"\|"version"'
+curl -k -s -o /dev/null -w 'HTTP %{http_code}\n' https://<NX_HOST_IP>:7001/api/moduleInformation
 ```
+You should get a response- `HTTP 200` to confirm REST API is up.
 
 ### 2.2 Enable Digest Authentication for RTSP
 
@@ -190,7 +170,7 @@ look for the **Camera ID**.
 To run this test in a DL Streamer Pipeline Server container:
 
 ```bash
-docker run -it --entrypoint bash  --rm --net host  intel/dlstreamer-pipeline-server:latest
+docker run -it --entrypoint bash  --rm --net host  intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
 ```
 
 Then run the GStreamer command:

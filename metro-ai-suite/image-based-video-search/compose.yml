@@ -46,7 +46,7 @@ services:
         condition: service_healthy
 
   feature-matching:
-    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.4.0-rc1
+    image: ${DOCKER_REGISTRY}intel/feature-matching:v1.4.0-rc2
     container_name: ibvs-featurematching
     build:
       context: src/feature-matching
@@ -81,7 +81,7 @@ services:
       start_period: 10s
     restart: on-failure:5
   streaming-pipeline:
-    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.4.0-rc1
+    image: ${DOCKER_REGISTRY}intel/streaming-pipeline:v1.4.0-rc2
     build:
       context: src/streaming-pipeline
       dockerfile: Dockerfile
@@ -142,8 +142,8 @@ services:
     entrypoint: ["./run.sh"]
       # - '8554:8554'
     environment:
-      - NO_PROXY=${no_proxy},ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16
-      - no_proxy=${no_proxy},ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16
+      - NO_PROXY=ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16,${no_proxy}
+      - no_proxy=ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16,${no_proxy}
       - ENABLE_RTSP=true
       - RTSP_PORT=8554
       - ENABLE_WEBRTC=true
@@ -202,7 +202,7 @@ services:
         condition: service_started
     restart: on-failure:5
   app:
-    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.4.0-rc1
+    image: ${DOCKER_REGISTRY}intel/image-based-video-search:v1.4.0-rc2
     container_name: ibvs-app
     build:
       context: src/app

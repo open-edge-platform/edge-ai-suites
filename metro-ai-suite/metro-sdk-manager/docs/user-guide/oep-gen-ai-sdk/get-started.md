@@ -35,64 +35,35 @@ curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/he
 
 This section demonstrates a complete RAG (Retrieval-Augmented Generation) application workflow using the installed Gen AI components.
 
-### Step 1: Setup Model Download Service
-
-Configure and start the Model Download service to manage LLM and embedding model downloads:
-
-```bash
-cd $HOME/oep/edge-ai-libraries/microservices/model-download
-export REGISTRY="intel/"
-export TAG=latest
-export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
-source scripts/run_service.sh up --plugins openvino --model-path $HOME/oep/models/
-```
-
-> **Note:** Keep this terminal open while the model download service is running. Open a new terminal to continue with the next steps.
-
-Update the `<your-huggingface-token>` to your Access Token from Hugging Face. To learn more, follow this [guide](https://huggingface.co/docs/hub/en/security-tokens).
-
-### Step 2: Configure Environment and Dependencies
+### Step 1: Configure Environment and Dependencies
 
 Set up the Python virtual environment and install required dependencies:
 
 ```bash
-cd $HOME/oep/edge-ai-libraries/sample-applications/chat-question-and-answer
+cd $HOME/oep/edge-ai-libraries/sample-applications/chat-question-and-answer-core
 # Configure application environment variables
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
-export LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
-export EMBEDDING_MODEL_NAME=Alibaba-NLP/gte-large-en-v1.5
-export RERANKER_MODEL=BAAI/bge-reranker-base
-export DEVICE="CPU"
 export REGISTRY="intel/"
-export TAG=latest
-export MODEL_DOWNLOAD_HOST=localhost
-export MODEL_DOWNLOAD_PORT=8200
-source setup.sh llm=OVMS embed=OVMS
+export UI_TAG=core_2026.2.0-rc1
+export BACKEND_TAG=core_2026.2.0-rc1
+source scripts/setup_env.sh
 ```
 
-### Step 3: Deploy the Application
+### Step 2: Deploy the Application
 
 Start the complete Gen AI application stack using Docker Compose:
 
 ```bash
-export ALLOWED_HOSTS="*.intel.com,en.wikipedia.org,*.wikipedia.org,*.github.com"
-docker compose up
+docker compose -f docker/compose.yaml up
 ```
 
-### Step 4: Verify Deployment Status
 
-Run below command in another terminal to check that all application components are running correctly:
-
-```bash
-docker ps
-```
-
-### Step 5: Access the Application Interface
+### Step 3: Access the Application Interface
 
 Open a web browser and navigate to the application dashboard:
 
 ```bash
-http://localhost:8101
+http://localhost:8102
 ```
 
 ## Additional Resources

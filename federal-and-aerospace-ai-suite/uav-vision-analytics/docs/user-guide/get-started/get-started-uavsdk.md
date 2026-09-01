@@ -10,7 +10,7 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 ## How It Works
 
-A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
+A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
 ![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.drawio.svg)
 
@@ -55,13 +55,39 @@ sudo apt install -y python3.12-venv ffmpeg
 
 ### 1. Start the UAV Mission Compute SDK
 
-Clone the repo and start the SDK's core infrastructure (PX4, MQTT broker, MediaMTX RTSP server).
+There are two options available to get the application source:
+
+#### Option A — Download the ZIP (recommended)
+
+Download the compressed file and get into the directory:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip
+```
+
+Decompress the downloaded file:
+
+```bash
+unzip uav-mission-apps.zip
+cd  uav-mission-compute-sdk/
+```
+
+#### Option B — Clone the whole repository
+
+Clone the repo, get into the directory and start the SDK's core infrastructure (PX4, MQTT broker, MediaMTX RTSP server).
+
+```bash
+git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch release-2026.2.0
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+```
+
+Then, for either option, initialize the environment:
+
+```bash
 make init                # create .env, detect GPU
 ```
+
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](../../../../uav-mission-compute-sdk/README.md) - no further SDK steps are needed here because `uav-vision-analytics` runs its own inference via DL Streamer Pipeline Server.
 
 The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and all other published ports to loopback only. Since `uav-vision-analytics` runs in a separate Docker container/network, it cannot reach loopback-bound ports. Set the SDK's `.env` to bind on all interfaces before starting it:
 
@@ -70,15 +96,20 @@ sed -i 's|^HOST_IP=.*|HOST_IP=0.0.0.0|' .env
 make up-sim-camera        # start PX4, MQTT, RTSP server
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [SDK README](../../../uav-mission-compute-sdk/README.md) / [get-started guide](../../../uav-mission-compute-sdk/docs/user-guide/get-started.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
-
 ### 2. Configure environment
 
-Get into the directory:
+If Downloaded Compressed file then Get into the directory with:
+
+```bash
+cd ../uav-vision-analytics/
+```
+Or, If Cloned whole repo then Get into the directory with:
 
 ```bash
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 ```
+
+Then, for either option, initialize the environment:
 
 ```bash
 make init
@@ -115,7 +146,7 @@ make uavsdk-up
 
 > **Note:** Video streams are not available until the UAV is armed and actively on a mission.
 
-The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
+Run the simple UAV mission in a persistent terminal window to keep the simulation active. The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
@@ -128,11 +159,13 @@ curl -X POST http://localhost:8080/action/land
 
 ### 6. Start inference pipelines
 
+> Open a new terminal window and launch the inference pipeline to begin processing the video stream.
+
 Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
-Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
+Runs `pipeline_manager.py` inside the DL Streamer Pipeline Server container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
 `make start-rtsp` starts **one camera pipeline at a time** (default: GPU/forward camera). Pass `DEVICE=cpu|gpu|npu|all` to choose:
 
@@ -146,7 +179,7 @@ make start-rtsp DEVICE=all     # all three cameras simultaneously
 > `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **uav-mission-compute-sdk mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`; available after drone arms):
-```
+```text
 rtsp://localhost:8555/nadir      (nadir camera, CPU)
 rtsp://localhost:8555/forward    (forward camera, GPU)
 rtsp://localhost:8555/rear       (rear camera, NPU)

@@ -9,12 +9,12 @@ The Videostream Analytics microservice (VSA) is the standalone RTSP-processing s
 | Item | Value |
 |------|-------|
 | Service name | `videostream-analytics` |
-| Framework | FastAPI (served by uvicorn) |
-| Default bind | `0.0.0.0:8999` (`server.host` / `server.port` in `config.yaml`) |
+| Framework | FastAPI (served by uvicorn with the strict `h11` HTTP parser — malformed request lines are rejected with a single `400` and a closed connection, never reaching routing) |
+| Default bind | `127.0.0.1:8999` (`server.host` / `server.port` in `config.yaml`) |
 | Default webhook target | `http://localhost:3101/events`, overridable by the `WEBHOOK_URL` environment variable or by the `webhook_url` field in each `register_source` request |
-| Content-Type | `application/json` for all requests and responses |
+| Content-Type | `application/json` for normal API requests and responses; protocol-level parser errors may be returned directly by uvicorn |
 | Character encoding | UTF-8 |
-| Auth | None. VSA is expected to run in a trusted network segment (loopback / private LAN / reverse proxy). |
+| Auth | None. Because every endpoint (register/delete a source, rewrite `webhook_url`, change the pipeline) is unauthenticated, the default bind is loopback so the kernel refuses connections from other hosts. A cross-host deployment must set `server.host` explicitly **and** put its own authentication in front of the service. |
 
 The service is a long-running single process. Each registered source spawns background threads for the motion pipeline, an optional continuous recorder, and a shared keepalive watchdog. Multiple sources coexist in a single VSA instance.
 
@@ -25,17 +25,18 @@ The service is a long-running single process. Each registered source spawns back
 | Method | Path | Purpose | See |
 |--------|------|---------|-----|
 | `GET`    | `/health` | Liveness probe. | §3.1 |
-| `GET`    | `/sources` | List all registered sources (bare array). | §3.2 |
-| `GET`    | `/sources/{source_id}` | Get source status. | §3.3 |
-| `GET`    | `/sources/{source_id}/status` | Alias of `/sources/{source_id}`; the MCP server calls this to check for existence. | §3.3 |
-| `POST`   | `/register_source` | Register and start a new source. | §3.4 |
-| `DELETE` | `/sources/{source_id}` | Unregister a source. | §3.5 |
-| `POST`   | `/sources/{source_id}/stop` | Stop and unregister (equivalent to `DELETE`). | §3.5 |
-| `POST`   | `/sources/{source_id}/restart` | Stop and start the pipeline while preserving the bundle. | §3.6 |
-| `POST`   | `/sources/{source_id}/pause` | Pause the pipeline; keep the source registered. | §3.7 |
-| `POST`   | `/sources/{source_id}/resume` | Resume a paused pipeline. | §3.7 |
-| `POST`   | `/sources/{source_id}/keepalive` | Refresh the keepalive timestamp. | §3.8 |
-| `PUT`    | `/sources/{source_id}/pipeline` | Hot-update pipeline configuration. | §3.9 |
+| `GET`    | `/capabilities/prefilter` | Report the deployed prefilter model and available devices. | §3.2 |
+| `GET`    | `/sources` | List all registered sources (bare array). | §3.3 |
+| `GET`    | `/sources/{source_id}` | Get source status. | §3.4 |
+| `GET`    | `/sources/{source_id}/status` | Alias of `/sources/{source_id}`; the MCP server calls this to check for existence. | §3.4 |
+| `POST`   | `/register_source` | Register and start a new source. | §3.5 |
+| `DELETE` | `/sources/{source_id}` | Unregister a source. | §3.6 |
+| `POST`   | `/sources/{source_id}/stop` | Stop and unregister (equivalent to `DELETE`). | §3.6 |
+| `POST`   | `/sources/{source_id}/restart` | Stop and start the pipeline while preserving the bundle. | §3.7 |
+| `POST`   | `/sources/{source_id}/pause` | Pause the pipeline; keep the source registered. | §3.8 |
+| `POST`   | `/sources/{source_id}/resume` | Resume a paused pipeline. | §3.8 |
+| `POST`   | `/sources/{source_id}/keepalive` | Refresh the keepalive timestamp. | §3.9 |
+| `PUT`    | `/sources/{source_id}/pipeline` | Hot-update supported pipeline configuration. | §3.10 |
 
 ---
 
@@ -46,9 +47,12 @@ All responses are JSON. The service follows a small, uniform status-code convent
 | Status | Meaning |
 |--------|---------|
 | `200 OK` | The requested state change succeeded, or the idempotent no-op response (`already_running`, `not_running`) is returned. |
+| `400 Bad Request` | The request is schema-valid but cannot be honoured — a `data_dir` outside the permitted roots, a disallowed `source_url` scheme, inverted effective segment durations. See §5.3. |
 | `404 Not Found` | The referenced `source_id` is not registered. |
+| `409 Conflict` | Another request is mid-registration for the same `source_id`. Retry after that registration completes. See §5.4. |
 | `422 Unprocessable Entity` | The request body failed schema validation (missing required fields, unknown fields due to `extra="forbid"`, or wrong types). See §5.2. |
-| `500 Internal Server Error` | An unexpected server-side exception occurred. Retryable once the underlying condition is resolved. |
+| `503 Service Unavailable` | A server-side dependency is missing (currently: ffmpeg absent from `PATH`). See §5.5. |
+| `500 Internal Server Error` | Reserved for genuine defects; any request reaching this is a bug. See §5.6. |
 
 ### 3.1 `GET /health`
 
@@ -62,13 +66,36 @@ Liveness probe.
 { "status": "ok", "service": "videostream-analytics" }
 ```
 
-### 3.2 `GET /sources`
+### 3.2 `GET /capabilities/prefilter`
+
+Report the prefilter capabilities of the deployed model.
+
+**Request**: no body.
+
+**Response 200**:
+
+```json
+{
+  "enabled": true,
+  "model_path": "/models/yolo11s.xml",
+  "class_names": ["person", "car"],
+  "labels_source": "embedded",
+  "available_devices": ["CPU", "GPU"]
+}
+```
+
+`labels_source` is `embedded` when the model exposes authoritative labels. It
+may be `fallback_coco` or `unavailable`; clients must not treat those values as
+an authoritative model class list. When the configured model is unavailable,
+`class_names` is an empty array.
+
+### 3.3 `GET /sources`
 
 List all registered sources.
 
 **Request**: no body.
 
-**Response 200**: a bare JSON array of `SourceStatus` objects (see §3.3). The array is `[]` when no sources are registered.
+**Response 200**: a bare JSON array of `SourceStatus` objects (see §3.4). The array is `[]` when no sources are registered.
 
 ```json
 [
@@ -88,7 +115,7 @@ List all registered sources.
 
 > **Note:** The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
 
-### 3.3 `GET /sources/{source_id}` and `GET /sources/{source_id}/status`
+### 3.4 `GET /sources/{source_id}` and `GET /sources/{source_id}/status`
 
 Return the status of a single source. Both paths dispatch to the same handler and return identical bodies. The MCP server's `analyticsSourceExists` probe calls the `/status` variant.
 
@@ -99,9 +126,9 @@ Return the status of a single source. Both paths dispatch to the same handler an
 | Field | Type | Description |
 |-------|------|-------------|
 | `source_id` | `string` | Same as the path parameter. |
-| `source_url` | `string` | The RTSP URL supplied at registration. |
+| `source_url` | `string` | The stream URL supplied at registration. |
 | `data_dir` | `string` | Absolute path of the per-source output directory. |
-| `status` | `string` | Pipeline lifecycle state. See §3.7.1 for the full state machine. |
+| `status` | `string` | Pipeline lifecycle state. See §3.8.1 for the full state machine. |
 | `running` | `boolean` | Whether the pipeline background thread is alive. |
 | `recording_enabled` | `boolean` | Whether the continuous recorder is enabled for this source. |
 | `health` | `object` | Health sub-object; see below. |
@@ -125,7 +152,7 @@ Return the status of a single source. Both paths dispatch to the same handler an
 { "detail": "Source not found: cam_xxx" }
 ```
 
-### 3.4 `POST /register_source`
+### 3.5 `POST /register_source`
 
 Register a new source and start its pipeline. Idempotent: re-registering an id that is already running returns `{"status": "already_running"}` without changes.
 
@@ -133,10 +160,10 @@ Register a new source and start its pipeline. Idempotent: re-registering an id t
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `source_id` | `string` | ✅ | Unique identifier. |
-| `source_url` | `string` | ✅ | RTSP URL from which VSA pulls the stream. |
-| `webhook_url` | `string \| null` | Optional | Overrides the destination for this source's events. Falls back to the global `webhook.url` when omitted. |
-| `data_dir` | `string \| null` | Optional | Absolute path for this source's outputs. Falls back to `<config.data_dir>/<source_id>/` when omitted. |
+| `source_id` | `string` | ✅ | Unique identifier. Must match `^[A-Za-z0-9_-]{1,128}$` — the same pattern the dashboard applies to `monitor_id` — because it becomes a directory name under `data_dir`. |
+| `source_url` | `string` | ✅ | Stream URL from which VSA pulls. Non-empty, at most 2048 characters, no control characters. The scheme must be in `security.allowed_source_schemes` (default `rtsp`/`rtsps`/`http`/`https`; `file` only when `security.allow_file_source` is enabled) — the URL is handed to `ffmpeg -i` verbatim, and ffmpeg can otherwise be pointed at local files (`file:`/`concat:`/`subfile:`). Out-of-allowlist schemes are rejected with 400. |
+| `webhook_url` | `string \| null` | Optional | Overrides the destination for this source's events. Must be an `http`/`https` URL with a host and no embedded credentials. The current API does not restrict the host or resolved IP, so this server-side callback must only be accepted from trusted callers. Falls back to the global `webhook.url` when omitted. |
+| `data_dir` | `string \| null` | Optional | Absolute path for this source's outputs, which must resolve inside `config.data_dir` or one of `config.allowed_data_roots` (400 otherwise, including via symlink). Falls back to `<config.data_dir>/<source_id>/` when omitted. |
 | `pipeline` | `PipelineConfig` | Optional | Nested pipeline configuration; see below. |
 
 The schema is `extra="forbid"`: any field not listed above is rejected with `422`, and its name appears in the `unknown_fields` array of the error body (see §5.2).
@@ -175,8 +202,8 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `max_duration` | `float` | `10.0` | Hard ceiling on segment length, in seconds. |
-| `min_duration` | `float` | `1.0` | Cut-frequency guard: forced cuts (ROI early-split) are rejected while the running segment is younger than this. Finished segments are always emitted — short motion-end tails are never discarded. |
+| `max_duration` | `float` | `10.0` | Hard ceiling on segment length, in seconds. Must be > 0. |
+| `min_duration` | `float` | `1.0` | Cut-frequency guard: forced cuts (ROI early-split) are rejected while the running segment is younger than this. Finished segments are always emitted — short motion-end tails are never discarded. Must be ≥ 0, and must not exceed the *effective* `max_duration` after merging with the per-source defaults (otherwise 400). |
 
 ##### `StaticConfig`
 
@@ -190,39 +217,39 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `true` | Enable OpenVINO™ YOLO prefilter on motion clips. |
-| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO™ `.xml` model. |
+| `model_path` | `string` | Generated from `PREFILTER_MODEL` | Absolute path to the OpenVINO™ `.xml` model. When supplied in a request it must resolve (after symlinks) inside a permitted model root — the directory of `defaults.prefilter.model_path`, plus anything in `security.allowed_model_roots` — otherwise the request is rejected with 400. Omit it to inherit the deployment default, which is what the MCP server does; the stored value is the resolved path. |
 | `target_classes` | `array<string>` | `["person"]` | Class labels that count as a hit. |
-| `min_confidence` | `float` | `0.4` | Minimum detection confidence. |
-| `min_frames_hit` | `int` | `1` | Number of hits within a clip required for PASS. |
-| `detect_fps` | `float` | `2.0` | YOLO inference rate; inference does not run on every frame. |
+| `min_confidence` | `float` | `0.4` | Minimum detection confidence. Must be within 0–1. |
+| `min_frames_hit` | `int` | `1` | Number of hits within a clip required for PASS. Must be ≥ 1. |
+| `detect_fps` | `float` | `2.0` | YOLO inference rate; inference does not run on every frame. Must be > 0. |
 | `device` | `string` | `"NPU"` | OpenVINO™ device (`CPU`, `GPU`, `NPU`). |
-| `long_side` | `int` | `0` | Resize the frame's longest side before inference; `0` disables resizing. |
+| `long_side` | `int` | `0` | Resize the frame's longest side before inference; `0` disables resizing. Must be ≥ 0. |
 
 ##### `RoiConfig`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `false` | When enabled, prefilter PASS produces a `<clip>_input.mp4` next to the original clip, and motion payloads include `trajectory_region`. |
-| `mode` | `string` | `"crop"` | `crop` (zoom into the union bbox), `highlight` (full frame with box + dim overlay), or `crop_and_concat` (original + per-frame person crop side-by-side; requires YOLO). |
-| `expand` | `float` | `0.25` | Fractional outward expansion of the union bbox. |
-| `auto_split_area` | `float` | `0.0` | When the union bbox covers more than this fraction of the frame, the current motion segment is cut early to prevent oversize ROIs. `0` disables early-split. |
+| `mode` | `"crop" \| "highlight" \| "crop_and_concat"` | `"crop"` | `crop` (zoom into the union bbox), `highlight` (full frame with box + dim overlay), or `crop_and_concat` (original + per-frame person crop side-by-side; requires YOLO). Any other value is rejected with 422. |
+| `expand` | `float` | `0.25` | Fractional outward expansion of the union bbox. Must be ≥ 0. |
+| `auto_split_area` | `float` | `0.0` | When the union bbox covers more than this fraction of the frame, the current motion segment is cut early to prevent oversize ROIs. `0` disables early-split. Must be within 0–1. |
 
 ##### `RecordingConfig`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | `bool` | `true` | Enable the continuous recorder branch (independent of motion). |
-| `interval_seconds` (alias `interval`) | `int` | `60` | Duration of each recording segment. |
-| `fps` | `int` | `15` | Recording output frame rate. |
+| `interval_seconds` (alias `interval`) | `int` | `60` | Duration of each recording segment. Must be within 1–3600. |
+| `fps` | `int` | `15` | Recording output frame rate. Must be within 1–120. |
 
 ##### `HealthConfig`
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `max_failures` | `int` | `30` | Consecutive failure threshold that triggers the recovery strategy. |
-| `recovery_strategy` | `string` | `"retry"` | `retry` (exponential backoff reconnect), `pause` (auto-pause), or `remove` (auto-unregister). |
-| `backoff_base` | `float` | `2.0` | Base of the exponential backoff sequence, in seconds. |
-| `backoff_max` | `float` | `120.0` | Upper bound on backoff delay. |
+| `max_failures` | `int` | `30` | Consecutive failure threshold that triggers the recovery strategy. Must be ≥ 1. |
+| `recovery_strategy` | `"retry" \| "pause" \| "remove"` | `"retry"` | `retry` (exponential backoff reconnect), `pause` (auto-pause), or `remove` (auto-unregister). Any other value is rejected with 422. |
+| `backoff_base` | `float` | `2.0` | Base of the exponential backoff sequence, in seconds. Must be ≥ 1. |
+| `backoff_max` | `float` | `120.0` | Upper bound on backoff delay. Must be > 0. |
 
 ##### `KeepaliveConfig`
 
@@ -266,9 +293,11 @@ by `setup_docker.sh`. A deployment that loads a different `VIDEOSTREAM_CONFIG` i
 | Same id already running (idempotent) | `{"status": "already_running", "source_id": "..."}` |
 | Same id previously registered but not running | Fresh `started` response; the old bundle is torn down and rebuilt. |
 
+Concurrent registrations for the same id are refused rather than queued: while one registration is in flight, others receive `409` (§5.4). Re-registering a stopped source is not affected — that is a sequential operation.
+
 Validation failures return `422` with the shape described in §5.2.
 
-### 3.5 `DELETE /sources/{source_id}`, `POST /sources/{source_id}/stop`
+### 3.6 `DELETE /sources/{source_id}`, `POST /sources/{source_id}/stop`
 
 The two endpoints are semantically equivalent: stop the pipeline and the recorder, close the per-source webhook sink, and remove the bundle from the in-memory registry. **The source's `data_dir` is not deleted** — file retention is the MCP server's responsibility.
 
@@ -283,7 +312,7 @@ The two endpoints are semantically equivalent: stop the pipeline and the recorde
 
 **Response 404** when the source is not registered.
 
-### 3.6 `POST /sources/{source_id}/restart`
+### 3.7 `POST /sources/{source_id}/restart`
 
 Stop and start the pipeline (and the recorder, if present) while preserving the registration entry. The source bundle and the webhook sink are reused.
 
@@ -295,7 +324,7 @@ Stop and start the pipeline (and the recorder, if present) while preserving the 
 
 **Response 404** when the source is not registered.
 
-### 3.7 `POST /sources/{source_id}/pause` and `/resume`
+### 3.8 `POST /sources/{source_id}/pause` and `/resume`
 
 `/pause` transitions the pipeline to `paused`: frame capture continues in order to keep the RTSP connection alive, but motion detection and webhook emission are suspended. `/resume` returns the pipeline to `online`.
 
@@ -315,9 +344,9 @@ The response is idempotent: pausing a source that is `not_running` returns `{"st
 
 Both endpoints emit a `type="status"` webhook event with payload `{"status": "paused"}` or `{"status": "online"}`; see §4.4.
 
-#### 3.7.1 Source Lifecycle State Machine
+#### 3.8.1 Source Lifecycle State Machine
 
-The `status` field returned by §3.3 evolves according to the following state machine, driven by the `StreamPipeline._run()` loop and the external control endpoints.
+The `status` field returned by §3.4 evolves according to the following state machine, driven by the `StreamPipeline._run()` loop and the external control endpoints.
 
 | status | Trigger | Terminal | Exit condition |
 |--------|---------|----------|----------------|
@@ -350,7 +379,7 @@ The `status` field returned by §3.3 evolves according to the following state ma
 
 3. **`failure_count` resets to zero on a successful reconnect.** Recovery from a transient RTSP glitch therefore restarts the failure budget from scratch.
 
-To shorten the reproduction window for the `paused` transition during verification, hot-update the health block via §3.9:
+To shorten the reproduction window for the `paused` transition during verification, hot-update the health block via §3.10:
 
 ```bash
 curl -X PUT http://localhost:8999/sources/cam_demo/pipeline \
@@ -360,9 +389,9 @@ curl -X PUT http://localhost:8999/sources/cam_demo/pipeline \
 
 Kill the upstream RTSP producer afterwards; the source transitions to `paused` within roughly seven seconds and remains there.
 
-### 3.8 `POST /sources/{source_id}/keepalive`
+### 3.9 `POST /sources/{source_id}/keepalive`
 
-The MCP server calls this endpoint at a regular cadence (typically every 30 seconds) to prove liveness. VSA refreshes `last_keepalive_at` on the source; a background watchdog polls every `check_interval_seconds` and auto-pauses the source when the timestamp is older than `timeout_seconds`. Keepalive is disabled by default; the MCP server must set `pipeline.keepalive.enabled=true` at registration to activate it.
+This endpoint is intended for an MCP keepalive sender to call at a regular cadence (typically every 30 seconds) to prove liveness. VSA refreshes `last_keepalive_at` on the source; a background watchdog polls every `check_interval_seconds` and auto-pauses the source when the timestamp is older than `timeout_seconds`. Keepalive is disabled by default. The current MCP-side keepalive sender is not wired, so an external caller must send these requests and the source must have `pipeline.keepalive.enabled=true` at registration to activate the watchdog.
 
 **Request**: body is ignored (`{}`, empty body, and arbitrary JSON are all accepted).
 
@@ -381,14 +410,14 @@ The MCP server calls this endpoint at a regular cadence (typically every 30 seco
 Watchdog behaviour:
 
 - The watchdog reuses the standard `pause_source()` path. The source becomes `paused` in the VSA control plane and is visible through `GET /sources/{source_id}/status`; VSA does not emit status webhook events.
-- Watchdog-triggered pauses are terminal for the same reason `/pause` is; the MCP server must explicitly `/resume` the source. See §3.7.1.
+- Watchdog-triggered pauses are terminal for the same reason `/pause` is; the MCP server must explicitly `/resume` the source. See §3.8.1.
 - At registration, if `keepalive.enabled=true`, `last_keepalive_at` is initialised to the current time, granting a `timeout_seconds` grace period before the first heartbeat is required.
 
-### 3.9 `PUT /sources/{source_id}/pipeline`
+### 3.10 `PUT /sources/{source_id}/pipeline`
 
 Hot-update pipeline configuration without unregistering the source.
 
-The request body wraps a `PipelineConfig` object (§3.4):
+The request body wraps a `PipelineConfig` object (§3.5):
 
 ```json
 {
@@ -399,10 +428,13 @@ The request body wraps a `PipelineConfig` object (§3.4):
 }
 ```
 
-Explicit fields in each supplied sub-block are merged onto the source's current configuration;
-omitted fields and sub-blocks retain their current values. A change to `recording.enabled` creates
-or destroys the `ContinuousRecorder`; other changes are applied by stopping and restarting the
-pipeline.
+Explicit fields in the supported supplied sub-blocks are merged onto the source's current
+configuration; omitted fields and sub-blocks retain their current values. The endpoint currently
+supports `motion`, `segment`, `prefilter`, `roi`, `recording`, and `health`. Although `static` and
+`keepalive` are accepted by the shared `PipelineConfig` schema, this endpoint does not apply those
+two blocks; configure them when registering the source instead. A change to `recording.enabled`
+creates or destroys the `ContinuousRecorder`; other supported changes are applied by stopping and
+restarting the pipeline.
 
 **Response 200**:
 
@@ -501,7 +533,47 @@ Validation errors use a machine-readable response format. Unknown fields are rej
 }
 ```
 
-`unknown_fields` is populated only for `extra_forbidden` errors. Other `422` causes (missing required fields, type mismatches) populate `detail` but leave `unknown_fields` empty.
+`unknown_fields` is populated only for `extra_forbidden` errors. Other `422` causes (missing required fields, type mismatches, out-of-range numbers, values outside a closed set, a `source_id` that does not match `^[A-Za-z0-9_-]{1,128}$`, a relative `data_dir`, a non-HTTP `webhook_url`) populate `detail` but leave `unknown_fields` empty.
+
+### 5.3 `400 Bad Request`
+
+Returned when the request is schema-valid but the business layer cannot honour it — a `data_dir` outside the permitted roots, an unwritable output directory, or segment durations that are inverted once merged with the per-source defaults.
+
+```json
+{
+  "detail": {
+    "error": "invalid_request",
+    "reason": "PermissionError",
+    "operation": "register_source"
+  }
+}
+```
+
+`reason` is the exception class name only. The underlying message is written to the service log rather than the response, because it routinely contains absolute server paths and this API is unauthenticated.
+
+### 5.4 `409 Conflict`
+
+Returned only by `POST /register_source`: another request is already mid-registration for the same `source_id`. Refusing is deliberate — the alternative is queueing, which would park the caller through a potential 10–20 second teardown of the previous bundle. The client should wait for the in-flight registration to settle and retry.
+
+```json
+{ "detail": { "error": "registration_in_progress", "source_id": "cam_child" } }
+```
+
+### 5.5 `503 Service Unavailable`
+
+Returned when a server-side dependency is missing — currently only `ffmpeg` absent from `PATH`, which the `copy` recording backend requires. This is an environment defect, not a client error, so it is deliberately distinguished from `400`.
+
+```json
+{ "detail": { "error": "dependency_unavailable", "operation": "register_source" } }
+```
+
+### 5.6 `500 Internal Server Error`
+
+Reserved for genuine defects. Any request that produces a `500` is a bug: user input reaches either a deliberate `4xx` or a successful response. The body carries no server-side detail; the traceback goes to the log.
+
+```json
+{ "error": "internal_error" }
+```
 
 ---
 
@@ -531,9 +603,14 @@ Retention responsibilities:
 
 | Env / Config | Default | Purpose |
 |--------------|---------|---------|
-| `server.host` / `server.port` | `0.0.0.0:8999` | HTTP bind address. |
+| `server.host` / `server.port` | `127.0.0.1:8999` | HTTP bind address. Loopback by default because the service is unauthenticated; widen only for a cross-host deployment that adds its own authentication. |
 | `webhook.url` (or env `WEBHOOK_URL`) | `http://localhost:3101/events` | Default webhook target; the per-source `webhook_url` field takes precedence. |
-| `data_dir` | `~/.mcp-smart-community/segments` | Global segment root; the `data_dir` field in the register request takes precedence. |
+| `data_dir` | `~/.mcp-smart-community/segments` | Global segment root; the `data_dir` field in the register request takes precedence, but only if it resolves inside this root (or `allowed_data_roots`) — otherwise the request is rejected with 400. |
+| `allowed_data_roots` | `[]` (empty) | Additional roots a request-supplied `data_dir` may live under. Empty means `data_dir` is the only permitted root, which is what the standard deployment needs since MCP sends `<SMART_COMMUNITY_DATA_DIR>/segments/<monitor_id>` and `data_dir` is derived from the same variable. Set this only when the segment tree is mounted elsewhere. |
+| `security.allowed_source_schemes` | `["rtsp", "rtsps", "http", "https"]` | Schemes accepted in a register `source_url`. The URL is handed to `ffmpeg -i` verbatim, and ffmpeg can open local files and exotic inputs without this gate. |
+| `security.allow_file_source` | `false` | Also allow `file://` sources. Enable only for offline evaluation against sample clips on disk; in any shared deployment it is an arbitrary-file-read. |
+| `security.ffmpeg_protocol_whitelist` | `[file, crypto, rtp, udp, tcp, tls, rtsp, rtsps, http, https]` | Passed to ffmpeg as `-protocol_whitelist` — a second gate inside ffmpeg itself, so an input that slips past the scheme check still cannot be opened. `file` and `crypto` are required by the segment muxer's own output handling. |
+| `security.allowed_model_roots` | `[]` (empty) | Additional roots a request-supplied `prefilter.model_path` may live under, on top of the directory holding `defaults.prefilter.model_path`. Empty means that one directory is the only permitted root — enough for the standard deployment, since neither the MCP server nor the API test suite ever sends `model_path`. A request-supplied path reaches `read_model()` both during validation and in the running pipeline, so leaving it unconfined on an unauthenticated API is a file-existence oracle plus an arbitrary-file-parse primitive. Set this only for a deployment that genuinely switches models over the API. |
 | `SMART_COMMUNITY_DATA_DIR` | `~/.mcp-smart-community` | Overrides the platform data root; VSA writes under its `segments/` subdirectory. |
 | `VIDEOSTREAM_CONFIG` | `config/config.yaml` | Alternate configuration file path. |
 | `PREFILTER_MODEL` | `~/models/openvino/yolo11s/FP16/yolo11s.xml` | OpenVINO™ prefilter XML. `setup_docker.sh` validates the XML/BIN pair before startup and prepares the static YOLO11s IR automatically when it is missing. The model must be under `MODEL_DIR`, which is mounted read-only into the container. |

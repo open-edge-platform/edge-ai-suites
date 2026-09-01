@@ -1,6 +1,6 @@
 image:
   repository: intel/nvr-event-router
-  tag: 2026.2.0-rc1
+  tag: 2026.2.0-rc2
 
 replicaCount: 1
 

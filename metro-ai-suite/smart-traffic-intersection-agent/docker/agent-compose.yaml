@@ -47,7 +47,7 @@ services:
     build:
       context: ${APP_DIR:-..}/src
       dockerfile: Dockerfile
-    image: ${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-2026.2.0-rc1}
+    image: ${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-2026.2.0-rc2}
     ports:
       - "${AGENT_BACKEND_PORT:-}:8081"
       - "${AGENT_UI_PORT:-}:7860"
@@ -122,7 +122,7 @@ services:
 
   # Metrics Manager - unified service for host telemetry and custom STIA metrics
   metrics-manager:
-    image: ${METRICS_MANAGER_IMAGE:-intel/metrics-manager}:${METRICS_MANAGER_TAG:-2026.2.0-rc1}
+    image: ${METRICS_MANAGER_IMAGE:-intel/metrics-manager}:${METRICS_MANAGER_TAG:-2026.2.0-rc2}
     environment:
       no_proxy: localhost,127.0.0.1,traffic-agent,ovms-service,metrics-manager,${no_proxy:-${NO_PROXY:-}}
       NO_PROXY: localhost,127.0.0.1,traffic-agent,ovms-service,metrics-manager,${NO_PROXY:-${no_proxy:-}}

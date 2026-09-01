@@ -8,9 +8,9 @@
 #
 # Usage:   source docker/set_env.sh      # before ./setup_docker.sh / docker compose up
 
-# Auto-detect the host IP (used for no_proxy and the model-serving base URLs).
-HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
-export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding,${HOST_IP}
+# Everything in the stack is reached over loopback or by compose service name, so
+# these are the only hosts that must bypass the proxy.
+export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding
 
 # =========================================================================
 # vLLM-IPEX model serving
@@ -47,6 +47,11 @@ fi
 export TENSOR_PARALLEL_SIZE=1        # single integrated GPU on PTL
 export VLLM_SERVICE_PORT=41091
 
+# Interface the model services publish on — vllm (:41091) and multilevel (:8192),
+# which share this value. Loopback by default; neither authenticates. Uncomment to
+# serve other machines, with your own authentication in front.
+# export VLLM_BIND_HOST=0.0.0.0
+
 
 # =========================================================================
 # multilevel-video-understanding microservice
@@ -56,7 +61,9 @@ export VLLM_SERVICE_PORT=41091
 # `extends` from. No env var needed.
 export REGISTRY_URL=intel/
 export REGISTRY=${REGISTRY_URL}
-export TAG=latest
+# Image tag for the stack's service images. Pinned to the matching release on
+# this branch; export TAG before sourcing to override.
+export TAG=${TAG:-2026.2.0}
 export SERVICE_PORT=8192
 
 # Run multilevel-video-understanding as the host user

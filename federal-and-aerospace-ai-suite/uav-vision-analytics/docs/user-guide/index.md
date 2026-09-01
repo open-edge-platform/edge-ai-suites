@@ -1,15 +1,9 @@
-# UAV Vision Analytics Application
+# Uncrewed Aerial Vehicle (UAV) Vision Analytics Application
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-aalytics">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/uav-vision-analytics">
      GitHub
-  </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-aalytics/README.md">
-     Readme
-  </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/uav-vision-analytics.zip">
-     Download Package
   </a>
 </div>
 hide_directive-->
@@ -66,9 +60,7 @@ application creation (scaffolding new pymavlink or UAVSDK stacks).
 
 ### Intended Use
 
-This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object
-detection and live telemetry overlay. It is provided for reference and demonstration purposes
-only, and is not intended to be deployed as-is or for alternate use cases or applications.
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only and is not intended to be deployed as-is or for alternate use cases or applications. This reference does not support authentication, TLS, or access controls between the app and external interfaces. These security measures should be provided by the solution builder.
 
 ### Responsible Use
 
@@ -93,6 +85,6 @@ Get Started - Standalone <./get-started/get-started-standalone.md>
 Get Started - SDK <./get-started/get-started-uavsdk.md>
 User Guides <./how-to-guides.md>
 System Requirements <./get-started/system-requirements.md>
-Release Notes <./release-notes.md>
+
 :::
 hide_directive-->

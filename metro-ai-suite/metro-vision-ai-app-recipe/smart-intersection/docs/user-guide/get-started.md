@@ -108,7 +108,7 @@ instead of `localhost` for external access:
 > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
 > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
 > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
-> - SceneScape supports uploading GLB 3D base map files. The upload limit is configurable via `NGINX_CLIENT_MAX_BODY_SIZE` in the `.env` file (Docker Compose) or `nginx.clientMaxBodySize` in `chart/values.yaml` (Helm).
+> - Scenescape supports uploading GLB 3D base map files. The upload limit is configurable via `NGINX_CLIENT_MAX_BODY_SIZE` in the `.env` file (Docker Compose) or `nginx.clientMaxBodySize` in `chart/values.yaml` (Helm).
 
 - **URL**: [https://localhost](https://localhost)
 - **Log in with credentials**:

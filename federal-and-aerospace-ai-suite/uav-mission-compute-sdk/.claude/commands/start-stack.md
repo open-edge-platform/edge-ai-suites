@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Start UAV Stack
 
-Start the full UAV infrastructure and sample applications.
+Start the full UAV infrastructure stack.
 
 ## Modes
 - `sim` (default): Gazebo 3-camera bridge (`make up-sim-camera`)
@@ -42,21 +42,13 @@ docker logs usb-camera-bridge --tail 3
 ```
 Look for "Connected to PX4" and camera frame push logs.
 
-### Step 4: Start AI helpers + sample apps
-```bash
-make apps
-```
-This starts: vision-processor (AI helper) + edge-ai-showcase (demo dashboard).
-
 ## Access Points
-- **Edge AI Showcase**: http://localhost:5002
 - MQTT broker: localhost:1884
 - Companion REST API: localhost:8080
 - RTSP raw stream: rtsp://localhost:8554/uav-1/nadir
 
 ## Stop Everything
 ```bash
-make apps-down
 make down
 ```
 

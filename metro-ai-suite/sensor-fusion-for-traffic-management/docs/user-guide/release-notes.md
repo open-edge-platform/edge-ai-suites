@@ -1,12 +1,8 @@
-# Release Notes: Sensor Fusion For Traffic Management
-
-<!--## Version 2026.2.0-->
-
-<!--date TBD-->
+# Release Notes: Sensor Fusion for Traffic Management
 
 ## Version 2026.1.0
 
-**June 17, 2026**
+**Release Date**: June 17, 2026
 
 This release delivers **BEVFusion 3D object detection** enablement and
 optimization on Intel® GPUs. It provides a complete end-to-end pipeline — from
@@ -21,7 +17,7 @@ Supported Platforms:
 | Intel® Panther Lake (PTL)    | Integrated GPU |
 | Intel® Arc B580 (Battlemage) | Discrete GPU   |
 
-**New**
+**New**:
 
 - **Sparse Convolution OpenVINO™ GPU Plugin Implementation**
 
@@ -30,7 +26,7 @@ Supported Platforms:
   OpenVINO™ inference call on Intel® GPU. The `SparseConvolution` operator
   (registered under domain `org.openvinotoolkit`) covers both SparseConv3d and
   SubMConv3d variants with fused BatchNorm + optional ReLU, totaling ~21 layers
-  in the lidar sparse encoder. A custom OpenVINO™ build patch
+  in the LiDAR sparse encoder. A custom OpenVINO™ build patch
   (`custom_openvino_2026.1.0_sparse_ops.patch`, ~12K lines) integrates all GPU
   kernel implementations into the OpenVINO™ 2026.1.0 GPU plugin.
 
@@ -42,7 +38,7 @@ Supported Platforms:
 
 - **Two deployment pipelines**
   - Split (PointPillars): `./bevfusion` — 4 independent ONNX sub-graphs (camera
-    backbone, lidar PFE, fuser, detection head) + external SYCL kernels,
+    backbone, LiDAR PFE, fuser, detection head) + external SYCL kernels,
     using standard ONNX / OpenVINO™ IR.
   - Unified (Second): `./bevfusion_unified` — single unified ONNX with custom
     sparse ops executed inside the OpenVINO™ GPU plugin.
@@ -59,7 +55,7 @@ Supported Platforms:
   quantization (NNCF-based), and NVIDIA checkpoint compatibility (direct
   conversion from CUDA-V2XFusion `.pth` to Intel® GPU deploy without retraining).
 
-**Improved**
+**Improved**:
 
 - **INT8 and FP16 inference optimization**
 
@@ -83,7 +79,7 @@ Supported Platforms:
   Built-in visualization interface with BEV and camera-view overlays
   (`--save-image`, `--save-video`, `--display`).
 
-**Known Issues**
+**Known Issues**:
 
 - On Battlemage GPUs (Arc B580), the split pipeline falls back to FP16 for the
   fuser stage (`fuser.onnx`) due to a known INT8 fuser issue;

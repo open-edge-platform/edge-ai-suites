@@ -5,7 +5,7 @@
                 "name": "nadir_camera_rtsp_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "rtspsrc location=rtsp://host.docker.internal:8554/uav-1/nadir latency=100 ! rtph264depay ! h264parse ! decodebin3 ! videoconvert ! video/x-raw,format=NV12,width=416,height=416 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 ! queue ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py class=DrawDynamicText function=process_frame arg=[\"UAVSDK-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+                "pipeline": "rtspsrc location=rtsp://host.docker.internal:8554/uav-1/nadir latency=100 ! rtph264depay ! h264parse ! decodebin3 ! videoconvert ! video/x-raw,format=NV12,width=416,height=416 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! queue ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py class=DrawDynamicText function=process_frame arg=[\"UAVSDK-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
                 "parameters": {
                     "type": "object",
                     "properties": {

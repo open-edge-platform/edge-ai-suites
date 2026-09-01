@@ -90,6 +90,7 @@ bash setup_docker.sh
 > - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smart-community-mcp-server`.
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
 > - If the YOLO11s OpenVINO™ IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
+> - `docker/set_env.sh` pins the service image tag to the matching release (`TAG=2026.2.0`, e.g. `videostream-analytics:2026.2.0`). To use different images, `export TAG=<tag>` before sourcing `set_env.sh`.
 
 Confirm the model serving is ready before continuing:
 
@@ -293,6 +294,11 @@ $SMART_COMMUNITY_DATA_DIR/
 |- monitors.yaml
 |- monitors.yaml.<YYYYMMDD-HHMMSS>.bak
 |- smart-community.db
+|- use-cases/
+|  |- <use_case>/
+|  |  |- prompt.md
+|  |  `- evaluate_rules.py
+|  `- .backup/
 |- segments/
 |  `- <monitor_id>/
 |     |- latest.jpg
@@ -305,6 +311,8 @@ $SMART_COMMUNITY_DATA_DIR/
 ```
 
 The timestamped backup entries are present only after the launcher replaces a different active configuration. `config.yaml` and `monitors.yaml` are not removed by automatic data cleanup.
+
+Use-case artifacts live under `use-cases/<use_case>/`. `prompt.md` stores the compiled prompt for the use case, and `evaluate_rules.py` stores the custom alert rule when the use case uses the extended schema. When a use case is unregistered, its artifacts are archived under `use-cases/.backup/`.
 
 Automatic cleanup runs on server start and then daily at approximately 00:05 local time. It removes `.log` files older than `logging.retention_days` (default: 14 days in `config.yaml.example`) and date directories under `segments/<id>/{recordings,motion_events,queries}/` older than `storage.retention_days` (default: 2 days in `config.yaml.example`). It leaves `latest.jpg`, `smart-community.db`, and non-date directory names untouched.
 

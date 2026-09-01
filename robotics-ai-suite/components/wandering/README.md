@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/software_references/amr/simulation/wandering_sim.html).
 
 ## Overview
 
@@ -26,7 +26,7 @@ In the diagram above, kobuki robot was used, and its kobuki ROS node is used for
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html).
 
 ### Build
 
@@ -203,7 +203,7 @@ The Wandering Sample has a dedicated VS Code Copilot skill that enforces a revie
 
 **Direct invocation** — mention the skill by name in the chat to activate it explicitly:
 
-```
+```text
 @wandering-sample <describe your change and target mode: simulation, real robot, or both>
 ```
 
@@ -214,7 +214,7 @@ The skill enforces:
 2. A proposed plan and diff shown for approval before changes are applied.
 3. Changes scoped to the Wandering Sample unless you ask otherwise.
 
-The full skill definition, including the expected ASCII pipeline diagram and simulation/real-robot guidance, lives at [`.github/skills/wandering-sample/SKILL.md`](.github/skills/wandering-sample/SKILL.md).
+The full skill definition, including the expected ASCII pipeline diagram and simulation/real-robot guidance, lives at [`.github/skills/wandering-sample/SKILL.md`](../../.github/skills/wandering-sample/SKILL.md).
 
 ## License
 

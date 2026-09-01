@@ -9,7 +9,7 @@
    [yes]
 2. Inputs — a folder of PDFs/docs to ground answers on? [yes, provide path]
 3. Deployment — single-host Docker, or Kubernetes cluster? [Docker]
-4. Hardware — Intel CPU only, or Intel GPU available? [CPU]
+4. Hardware — Intel GPU (default), or Intel CPU/NPU? [Intel GPU]
 5. Interface — web chat UI, an API, or both? [web UI]
 
 **Discovery (Step 2):** verb *ask/answer* + object *documents* + Docker →
@@ -20,9 +20,9 @@
 - Deliverable: ChatQnA Core running via Docker Compose; web chat UI grounded on
   the provided document set.
 - Skill: `chatqna-docker-deploy` (must install).
-- Inferred technology: OpenVINO CPU profile, default embedding + LLM for CPU.
+- Inferred technology: OpenVINO GPU profile, default embedding + LLM for GPU.
 - Install command (run only after approval):
-  `npx skills add open-edge-platform/skills --skill chatqna-docker-deploy`
+  `npx skills@1.5.23 add open-edge-platform/skills --skill chatqna-docker-deploy`
 - Requirements: Docker + Compose v2; enough RAM for the chosen LLM.
 
 **Build (Step 5, after approval):** install then delegate to

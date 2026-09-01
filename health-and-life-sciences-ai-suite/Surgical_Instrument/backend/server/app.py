@@ -227,7 +227,7 @@ def _snapshot_full() -> dict[str, Any]:
             "name": model_cfg.get("name", "yolo11n"),
             "precision": "FP16 OpenVINO IR",
             "task": "Polyp Detection",
-            "dataset": ds_cfg.get("name", "CVC-ColonDB"),
+            "dataset": ds_cfg.get("name", "ColonDB"),
             "input_source": input_source,
             "model_input": f"{infer_size}x{infer_size}",
             "device": STATE.device,

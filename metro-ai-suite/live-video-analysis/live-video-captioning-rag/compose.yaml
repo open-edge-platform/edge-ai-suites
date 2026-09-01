@@ -81,7 +81,7 @@ services:
       - ${RENDER_GROUP_ID:-1002}
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD-SHELL', 'curl -f http://localhost:8000/health || exit 1' ]
+      test: [ "CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').getcode()==200 else 1)" ]
       interval: 10s
       timeout: 10s
       retries: 40
@@ -134,7 +134,7 @@ services:
       - rag_network
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1
+    image: intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
     hostname: dlstreamer-pipeline-server
     container_name: dlstreamer-pipeline-server
     read_only: false
@@ -321,7 +321,7 @@ services:
       - rag_network
 
   metrics-manager:
-    image: intel/metrics-manager:2026.2.0-extended-rc1
+    image: intel/metrics-manager:2026.2.0-extended-rc2
     container_name: metrics-manager
     environment:
       - no_proxy=localhost,127.0.0.1,video-caption-service,metrics-manager,${no_proxy}

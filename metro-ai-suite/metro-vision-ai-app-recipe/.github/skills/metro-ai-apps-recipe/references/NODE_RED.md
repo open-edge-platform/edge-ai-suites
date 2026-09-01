@@ -24,9 +24,9 @@ const sourceId = m[1];
 
 Set `mqtt in` **`datatype: "auto"`** (not `json`): it also receives scalar `stats/*`; `json` parse-errors on numbers and drops flow. `auto` yields Buffer/string.
 
-## Flow shape (`count>N in Ts`)
+## Flow shape (`count <op> N in Ts`, `<op>` ∈ `>`,`>=`,`<`,`<=`)
 
-Portable function node.
+Portable function node. **`DEFAULT_RULE` parses to an operator + threshold** (`^count([<>]=?)(\d+)\s+in\s+(\d+)s$`) — the flow MUST honour the parsed operator, not assume `>`. Substitute concrete `{{RULE_OP}}`, `{{RULE_N}}`, `{{RULE_WINDOW_S}}` when writing `flows.json`.
 
 0. **Coerce payload first.** `datatype: "auto"` means detection payload is **Buffer or string**, NOT parsed; otherwise `msg.payload.metadata` is `undefined` and counts stay 0:
    ```js
@@ -47,8 +47,23 @@ Portable function node.
 3. `sourceId = msg.topic.split('_')[1].split('/')[0]`.
 4. Sliding window per source in `flow.context()`; drop entries older than T.
 5. `windowMax = max(count over window)` per source.
-6. `RULE_SCOPE=per-source`: alert if any `windowMax > N`.
-   `RULE_SCOPE=aggregate`: alert if `sum(latest per source) > N`.
+6. Evaluate the parsed operator `{{RULE_OP}}` against threshold `{{RULE_N}}`.
+   Define a comparator once:
+   ```js
+   function cmp(v, n, op) {
+     switch (op) { case '>': return v > n; case '>=': return v >= n;
+                   case '<': return v < n; case '<=': return v <= n; }
+     return false;
+   }
+   ```
+   - `RULE_SCOPE=per-source`: for `>`/`>=` alert if **any** source `cmp(windowMax, N)`;
+     for `<`/`<=` alert if **any** source `cmp(windowMin, N)` (use per-source
+     `windowMin = min(count over window)` so a single starved source trips it).
+   - `RULE_SCOPE=aggregate`: let `agg = sum(latest count per source)`; alert if
+     `cmp(agg, N)`. Example — `count<1 in 15s aggregate` (PPE: no PPE seen across
+     all cameras) → `agg = Σ latest per source`, fire when `agg < 1` (i.e. `=== 0`).
+   > For `<`/`<=` rules, initialise counts so an empty/never-seen window counts as
+   > its true value (0), otherwise a low-count alert never arms.
 7. Emit alert on OFF→ON rise; increment `stats/alert_total`.
 
 ## Published topics (scalars where noted)
