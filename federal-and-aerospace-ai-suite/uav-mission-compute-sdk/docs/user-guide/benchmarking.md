@@ -92,12 +92,11 @@ make bench-client-sweep CLIENT_SWEEP_COUNTS="1,2,5,10,25,50,100" SWEEP_DURATION=
 
 ## HTML Report
 
-Any benchmark mode can write a self-contained HTML report.
+Both the client sweep and bridge sweep benchmarks can write a self-contained HTML report.
 
 For make targets, pass it via `ARGS`:
 
 ```bash
-make bench ARGS="--html-report"
 make bench-bridge-sweep ARGS="--html-report"
 make bench-client-sweep ARGS="--html-report"
 make bench-all ARGS="--html-report" # To run both the sweeps and create a combined report
@@ -162,6 +161,8 @@ Suggested healthy baseline (local/loopback environments):
 | P99 latency | < 20 ms |
 | Jitter | < 5 ms |
 | Rate CV (multi-client) | < 10% |
+
+Based on the benchmark findings, you can tune the `RATE_*_HZ` environment variables for `companion-bridge` in `docker-compose.yml` and restart the deployment to apply the updated rates.
 
 ## Troubleshooting
 
