@@ -121,7 +121,10 @@
   "tabs": {
     "transcripts": "转录",
     "summary": "AI 摘要",
-    "mindmap":"思维导图"
+    "mindmap":"思维导图",
+    "summaryProgress": "正在分析第 {{current}}/{{total}} 段…",
+    "summaryProgressFold": "正在归并笔记 {{current}}/{{total}}…",
+    "summaryProgressReduce": "正在汇总生成摘要…"
   },
 
   "transcript": {

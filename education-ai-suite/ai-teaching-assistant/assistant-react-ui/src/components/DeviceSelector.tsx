@@ -40,7 +40,7 @@ export default function DeviceSelector({ value, onChange, disabled }: Props) {
       </label>
       <div className="flex gap-2">
         <select
-          className="w-full rounded-lg border border-blue-300 bg-white px-3 py-2 text-sm text-black focus:border-intel-blue focus:outline-none disabled:opacity-50"
+          className="w-full rounded-lg border-2 border-slate-200 bg-white px-3 py-2 text-sm text-black shadow-sm focus:border-intel-blue focus:outline-none disabled:opacity-50"
           value={value ?? ""}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
@@ -56,7 +56,7 @@ export default function DeviceSelector({ value, onChange, disabled }: Props) {
           type="button"
           onClick={refresh}
           disabled={disabled}
-          className="rounded-lg border border-blue-300 px-3 py-2 text-sm text-black hover:bg-blue-50 disabled:opacity-50"
+          className="rounded-lg border-2 border-slate-200 px-3 py-2 text-sm text-black shadow-sm hover:bg-blue-50 disabled:opacity-50"
           title="Refresh device list"
         >
           ↻

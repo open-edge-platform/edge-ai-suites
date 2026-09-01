@@ -28,28 +28,7 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 
 ## Architecture Overview
 
-```text
-Nx Witness VMS
-  Camera device ─── RTSP stream ───────────────────────────────────────►┐
-  (receives analytics       ◄─── REST push (bounding boxes) ────────────┤
-   object overlays)                                                     │
-                                                                        │
-VMS Adapter Plugin (VAP)                                                │
-  ┌──────────────────────────────────────┐                              │
-  │  ObjectDetectionAnalyticsAppShim     │                              │
-  │  ┌─────────────────────────────┐     │                              │
-  │  │  POST /pipelines/{name}     ├───────────────────────────────────►│
-  │  └─────────────────────────────┘     │  DL Streamer Pipeline Server │
-  │                                      │   (Loitering Det application)│
-  │  ┌─────────────────────────────┐     │       │                      │
-  │  │  MqttSubscriber             │◄────────────┘  MQTT inference      │
-  │  │  translate_dls_metadata()   │     │           results            │
-  │  │  NxWitnessVmsShim.push()    ├───────────────────────────────────►│
-  │  └─────────────────────────────┘     │
-  └──────────────────────────────────────┘
-                                         MQTT Broker (port 1883)
-                                         (part of `dls_vision` stack)
-```
+![Loitering Detection with Nx Witness Architecture](../_assets/VAP-DLS-Vision-with-Nx-arch.svg)
 
 **Key data flows:**
 

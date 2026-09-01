@@ -80,6 +80,19 @@ models:
     concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
     queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
 
+    chunking:
+      enabled: true                  # false = summarize the whole transcript in one pass
+      max_prompt_tokens: auto        # auto = min(quality ceiling, memory ceiling); an int overrides both
+      max_content_tokens: 24000      # quality ceiling
+      gpu_memory_safety_margin: 0.6  # memory ceiling
+      map_max_new_tokens: 1536       # length cap for each per-segment note
+
+    segmentation:
+      window_max_new_tokens: 1024
+      topics_target: 20
+      topics_min: 15
+      topics_max: 25
+
 mindmap:
   min_token: 20
 
