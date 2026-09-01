@@ -90,7 +90,7 @@ respective systems and provide RTSP URLs. Analytics App shims manage run lifecyc
 delivery. The FastAPI backend coordinates between shims, persists state to a PostgreSQL database,
 and exposes a unified API consumed by the React provider dashboard.
 
-![VAP System Architecture Diagram](./_assets/VAP-System-Architecture.drawio.svg)
+![VAP System Architecture Diagram](./_assets/VAP-System-Architecture-frame.drawio.svg)
 
 To interact with the plugin, users have two dashboard options. The first option is to use the
 respective VMS UI, which integrates with VAP. The plugin provides this option by default, but it
