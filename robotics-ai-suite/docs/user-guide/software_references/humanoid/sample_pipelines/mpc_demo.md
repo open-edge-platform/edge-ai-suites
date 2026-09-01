@@ -21,7 +21,7 @@ Please refer to the [official ROS2 Jazzy installation](https://docs.ros.org/en/j
 
 ## ACT Setup
 
-First, please follow the ACT installation guide in [Imitation Learning - ACT](./imitation_learning_act.md) except `Install ACT package`. Here, we need to install ACT source code by downloading [act-sample](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/act-sample), and initialize submodules and apply patches:
+First, please follow the ACT installation guide in [Imitation Learning - ACT](./imitation_learning_act.md) except `Install ACT package`. Here, we need to install ACT source code by downloading [act-sample](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/pipelines/act-sample), and initialize submodules and apply patches:
 
 ```bash
 cd act-sample
@@ -101,7 +101,7 @@ The upstream OCS2 project already provides a ROS2 baseline. On top of it we appl
 
 3. Download ocs2 and ocs2_robotic_assets
 
-   Download [ocs2](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/ocs2) and [ocs2_robotic_assets](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets) with `git clone --recursive`. Then, initialize submodules and apply patches:
+   Download [ocs2](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/pipelines/mpc-demo/ocs2) and [ocs2_robotic_assets](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets) with `git clone --recursive`. Then, initialize submodules and apply patches:
 
    ```bash
    cd ~/ocs2_ws/src/ocs2
@@ -141,7 +141,7 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
 
 2. Download MujocoRosUtils:
 
-   Download [mujoco_ros_utils](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/mujoco_ros_utils) with `git clone --recursive`. Then, initialize submodules and apply patches:
+   Download [mujoco_ros_utils](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/pipelines/mpc-demo/mujoco_ros_utils) with `git clone --recursive`. Then, initialize submodules and apply patches:
 
    ```bash
    cd ~/ocs2_ws/src/mujoco_ros_utils

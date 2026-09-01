@@ -91,6 +91,12 @@ cd handheld-multi-modal
 ./run.sh up
 ```
 
+To deploy without Visual Pipeline and Platform Evaluation Tool, run:
+
+```bash
+./run.sh standalone
+```
+
 ## Verifying the installation
 
 After the script finishes, verify that the containers are running (sample output below):

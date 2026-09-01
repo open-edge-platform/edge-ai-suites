@@ -61,7 +61,9 @@ export VLLM_SERVICE_PORT=41091
 # `extends` from. No env var needed.
 export REGISTRY_URL=intel/
 export REGISTRY=${REGISTRY_URL}
-export TAG=latest
+# Image tag for the stack's service images. Pinned to the matching release on
+# this branch; export TAG before sourcing to override.
+export TAG=${TAG:-2026.2.0}
 export SERVICE_PORT=8192
 
 # Run multilevel-video-understanding as the host user

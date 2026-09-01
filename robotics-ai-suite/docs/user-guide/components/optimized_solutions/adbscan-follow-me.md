@@ -11,7 +11,7 @@ with one Gazebo simulation and one Clearpath Jackal deployment scenario.
 
 ## Source Code
 
-[ADBScan source code](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/adbscan)
+[ADBScan source code](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/components/adbscan)
 
 ## Intel-Optimized ADBSCAN
 

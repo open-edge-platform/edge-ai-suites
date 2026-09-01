@@ -48,7 +48,7 @@ This process is intentionally split into two concerns:
    domain-agnostic scripts in this directory:
 
 | Script | Input | Output |
-|---|---|---|
+| --- | --- | --- |
 | `train_qwen.py` | A parquet dataset (`image` + `conversation_json` columns) | LoRA adapter + tokenizer |
 | `infer_qwen.py` | Base model or adapter (from `train_qwen.py`) | Streamed model response, token-by-token |
 
@@ -59,7 +59,7 @@ any domain-specific assumptions about your dataset's content.
 
 ## Directory Layout
 
-```
+```text
 vlm-fine-tuning/
 ├── README.md                  # short pointer to this guide
 ├── requirements.txt           # pinned Python dependencies
@@ -82,7 +82,7 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
 - Python 3.12
 - ~16 GB+ RAM for data preparation (image + tabular processing), if your
   dataset-prep step is similarly memory-bound
-- Install the Intel Compute Runtime drivers - https://github.com/intel/compute-runtime/releases
+- Install the Intel Compute Runtime drivers - <https://github.com/intel/compute-runtime/releases>
 - A GPU/XPU is strongly recommended for fine-tuning and inference:
   - Intel GPU (Arc / integrated) via Intel XPU PyTorch build, or
   - CPU (functional but slow; useful only for smoke-testing the pipeline)
@@ -102,6 +102,7 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
   sudo gpasswd -a ${USER} render
   newgrp render
   ```
+
 - A dataset already prepared as parquet, in the shape described in
   [Expected Dataset Format](#expected-dataset-format)
 
@@ -119,16 +120,15 @@ pip install .[intel-gpu-torch2110]
 
 ```
 
-To validate if XPU setup is done correctly.
-```python
+To validate if XPU setup is done correctly:
 
+```python
 import torch
 print(f"PyTorch version: {torch.__version__}")
 print(f"XPU available: {torch.xpu.is_available()}")
 print(f"XPU device count: {torch.xpu.device_count()}")
 print(f"XPU device name: {torch.xpu.get_device_name(0)}")
 ```
-
 
 Unsloth auto-detects the installed PyTorch backend (XPU/CUDA/CPU) at import
 time, and `common.detect_device()` selects `xpu` > `cpu` for
@@ -140,27 +140,30 @@ At a high level, this is a generic 2-stage flow that sits on top of
 any dataset-preparation step you bring:
 
 ```mermaid
-flowchart LR
-    subgraph S0["Your Dataset Prep\n(domain-specific — bring your own,\nsee the Weld Usecase guide)"]
-        direction TB
-        A["Your raw data"] --> B["system/user/assistant\nconversations per sample"]
-        B --> C["Parquet export\n(image + conversation_json columns)"]
+---
+config: {"theme": "dark"}
+---
+flowchart TD
+    subgraph S0["Your Dataset Prep (domain-specific — bring your own, see the Weld Usecase guide)"]
+        direction LR
+        A["Your raw data"] --> B["system/user/assistant</br>conversations per sample"]
+        B --> C["Parquet export</br>(image + conversation_json columns)"]
     end
 
-    subgraph S1["Fine-Tuning\n(generic — train_qwen.py)"]
-        direction TB
-        E["Load parquet dataset"] --> F["Base VLM + LoRA adapter\n(FastVisionModel)"]
-        F --> G["SFTTrainer\n(Unsloth vision collator)"]
-        G --> H["LoRA adapter\nsaved to disk"]
+    subgraph S1["Fine-Tuning (generic — train_qwen.py)"]
+        direction LR
+        E["Load parquet dataset"] --> F["Base VLM + LoRA adapter</br>(FastVisionModel)"]
+        F --> G["SFTTrainer</br>(Unsloth vision collator)"]
+        G --> H["LoRA adapter</br>saved to disk"]
     end
 
-    subgraph S2["Inference / Serving\n(generic — infer_qwen.py)"]
-        direction TB
-        J["Load base model\n+ LoRA adapter"] --> K["Streamed model response"]
+    subgraph S2["Inference / Serving (generic — infer_qwen.py)"]
+        direction LR
+        J["Load base model</br>+ LoRA adapter"] --> K["Streamed model response"]
     end
 
-    C -->|"train_qwen.py\n--dataset-path"| E
-    H -->|"infer_qwen.py\n--model-path, or\nvLLM --enable-lora"| J
+    C -->|"train_qwen.py</br>--dataset-path"| E
+    H -->|"infer_qwen.py</br>--model-path, or</br>vLLM --enable-lora"| J
 ```
 
 Each stage is independently runnable and only depends on the previous
@@ -176,7 +179,7 @@ for a different domain.
 parquet file (or directory of per-split parquet files) with two columns:
 
 | Column | Type | Description |
-|---|---|---|
+| --- | --- | --- |
 | `image` | image (bytes, castable via `datasets.Image()`) | The image for this sample |
 | `conversation_json` | string (JSON) | A 3-turn chat conversation: `system` (persona/instructions), `user` (text + image reference), `assistant` (the target response the model should learn to produce) |
 
@@ -219,7 +222,7 @@ python train_qwen.py \
 Notable flags (all optional, defaults shown):
 
 | Flag | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `--model-name` | `unsloth/Qwen3.5-2B` | Base VLM to fine-tune |
 | `--per-device-train-batch-size` | 4 | Per-device train batch size |
 | `--per-device-eval-batch-size` | 4 | Per-device eval batch size |

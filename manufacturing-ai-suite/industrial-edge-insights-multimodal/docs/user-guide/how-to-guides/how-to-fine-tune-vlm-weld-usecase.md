@@ -12,7 +12,7 @@ Unsloth/LoRA concepts referenced below; this file only covers how those
 generic pieces are instantiated for weld data.
 
 | Generic stage | Weld-specific instance (this file) |
-|---|---|
+| --- | --- |
 | Bring-your-own dataset prep → parquet | `prepare_weld_dataset.py` — [Step 1](#step-1-input-data) & [Step 2](#step-2-prepare-the-dataset) |
 | Fine-tune with `train_qwen.py` | Weld-specific invocation — [Step 3](#step-3-fine-tune-the-model-weld-instance) |
 | Infer with `infer_qwen.py` | Weld-specific invocation — [Step 4](#step-4-run-inference-weld-instance) |
@@ -84,7 +84,7 @@ relatively small amount of LoRA fine-tuning.
    with (at minimum) these columns:
 
    | Column | Type | Description |
-   |---|---|---|
+   | --- | --- | --- |
    | `Frame_id` | string | Image filename stem used to resolve the image file under `--images-root` |
    | `output_prediction_details` | Python-dict literal (string) | Classifier output — see below |
    | `Category` | string | Canonical weld-session label used for stratified splitting (falls back to the parsed `predicted_category` if absent) |
@@ -94,7 +94,7 @@ relatively small amount of LoRA fine-tuning.
    dict shaped like the output of
    [`classification-training`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training)'s
    `WeldDefectPredictor` — see its
-   [Output Format](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training/README.md#output-format)
+   [Output Format](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/training/classification-training/README.md#output-format)
    section for the exact shape, e.g.:
 
    ```python
@@ -166,7 +166,7 @@ Useful flags:
    with a generic fallback for unseen categories.
 6. Assembles a 3-turn `system` / `user(text+image)` / `assistant`
    conversation per row.
-7. Performs a stratified train/validation/test split by canonical category, 
+7. Performs a stratified train/validation/test split by canonical category,
    so small classes still get at least one sample per
    split when possible.
 8. Writes:
@@ -183,7 +183,7 @@ Every record is a fixed 3-turn chat-format conversation
 Unsloth expect at both training and inference time:
 
 | Turn | Content | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `system` | A fixed "expert weld quality inspector and metallurgical engineer" persona, referencing AWS D1.1 / ISO 5817 | Anchors the model's domain role and output-structuring behavior consistently across every sample |
 | `user` | `{one of 7 rotating instruction templates}` + `{sensor telemetry block}` + `{image}` | The operator's question, phrased differently each time, plus the raw sensor readings inlined as text so the model attends to both modalities together |
 | `assistant` | Fixed-schema structured report (see [Data Preparation Strategy](#data-preparation-strategy)) synthesized from the classifier output + a small defect knowledge base | The learning target — what the model should learn to produce |
@@ -210,7 +210,7 @@ user turn as the image.
 because they serve different consumers:
 
 | Format | Where | Used by | Why this format |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Arrow** (`hf_dataset/`, via `DatasetDict.save_to_disk`) | On-disk memory-mapped Arrow tables | Ad-hoc exploration with `datasets.load_from_disk`, or as a base to derive further HF-native transforms | Arrow is the `datasets` library's native, memory-mapped columnar format — large image datasets can be inspected/iterated without loading everything into RAM, and it round-trips through `datasets` APIs (filters, `map`, etc.) losslessly |
 | **Parquet** (`parquet/{split}.parquet`) | One portable file per split | **`train_qwen.py`**, via `datasets.load_dataset("parquet", ...)` | Parquet is a compact, columnar, self-contained, widely-portable file format. With the `image` column cast to `datasets.Image`, image bytes are embedded directly in the parquet file, so a single file per split carries both the conversation and its image with no separate file tree to keep in sync — the format Unsloth/`datasets`/HF Hub uploads all standardize on for VLM datasets |
 | **JSONL** (`conversations/{split}.jsonl`) | One line per record, `{"messages": [...]}` | Manual inspection (`less`, `jq`, diffing) and any other chat-format SFT trainer (e.g. axolotl, LLaMA-Factory) that expects JSONL conversations | Human-readable, diffable, framework-agnostic — no binary/Arrow tooling needed to eyeball a few samples, and it's the lowest-common-denominator format most other SFT trainers already accept |
@@ -294,24 +294,27 @@ assistant-turn schema the model was fine-tuned to reproduce in Step 3.
 ## Detailed Data-Prep Flow
 
 ```mermaid
+---
+config: {"theme": "dark"}
+---
 flowchart TD
-    A["Fused CSV\n(--input-csv)"] --> B["CSV Loader and Cleaner"]
-    I["Image Root\n(--images-root)"] --> C["Image Index by Frame_id stem"]
+    A["Fused CSV</br>(--input-csv)"] --> B["CSV Loader and Cleaner"]
+    I["Image Root</br>(--images-root)"] --> C["Image Index by Frame_id stem"]
 
     B --> D["Parse output_prediction_details"]
     C --> E["Frame_id to Image Resolution"]
     D --> F["Sensor Block Builder"]
     E --> F
 
-    F --> G["Prompt Variant Sampler\n7 templates, seeded"]
+    F --> G["Prompt Variant Sampler</br>7 templates, seeded"]
     D --> H["Defect Knowledge Lookup + Fallback"]
 
-    G --> J["Assistant Response Composer\n(fixed report schema)"]
+    G --> J["Assistant Response Composer</br>(fixed report schema)"]
     H --> J
 
-    J --> K["Conversation Builder\nsystem + user(text,image) + assistant"]
-    K --> L["Record Assembler\nid, image, label, confidence, conversation_json"]
-    L --> M["Stratified Split by canonical_category\ntrain / validation / test"]
+    J --> K["Conversation Builder</br>system + user(text,image) + assistant"]
+    K --> L["Record Assembler</br>id, image, label, confidence, conversation_json"]
+    L --> M["Stratified Split by canonical_category</br>train / validation / test"]
 
     M --> N["HF DatasetDict Export (Arrow)"]
     M --> O["Parquet Export per split -> train_qwen.py"]
