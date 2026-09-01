@@ -28,7 +28,7 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 
 ## Architecture Overview
 
-![Loitering Detection with Nx Witness Architecture](../_assets/VAP-DLS-Vision-with-NX-arch.drawio.svg)
+![Loitering Detection with Nx Witness Architecture](../_assets/VAP-DLS-Vision-with-Nx-arch.svg)
 
 **Key data flows:**
 

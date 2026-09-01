@@ -25,7 +25,7 @@ At the end of this tutorial, you will have:
 
 ## Architecture Overview
 
-![Live Video Captioning with Nx Witness Architecture](../_assets/VAP-LVC-with-NX-arch.drawio.svg)
+![Live Video Captioning with Nx Witness Architecture](../_assets/VAP-LVC-with-Nx-arch.svg)
 
 **Key data flows:**
 
