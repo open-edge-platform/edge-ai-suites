@@ -5,11 +5,14 @@ from unittest.mock import patch
 from api.v1.schemas.session import WorkflowRequest
 from services.session_service import (
     SessionNotFound,
+    SessionNotRunning,
     SessionRunning,
     SessionValidationError,
+    cancel_session,
     create_process,
     delete_session,
     get_status,
+    list_running_sessions,
     list_sessions,
 )
 from services import session_service
@@ -133,3 +136,46 @@ def test_delete_removes_dir():
             assert result["deleted"] is True
             assert result["files_removed"] is True
             assert not os.path.exists(tmp)
+
+
+def test_cancel_not_found():
+    with patch.object(
+        session_service.session_store.SessionStore, "get", return_value=None
+    ):
+        _expect_raises(SessionNotFound, lambda: cancel_session("nope"))
+
+
+def test_cancel_rejects_non_running():
+    with patch.object(
+        session_service.session_store.SessionStore, "get",
+        return_value={"state": "completed"},
+    ):
+        _expect_raises(SessionNotRunning, lambda: cancel_session("s1"))
+
+
+def test_cancel_calls_request_cancel():
+    with patch.object(
+        session_service.session_store.SessionStore, "get",
+        return_value={"state": "running"},
+    ), patch.object(
+        session_service.session_store.SessionStore, "update"
+    ), patch.object(
+        session_service.orchestrator, "request_cancel",
+        return_value=True,
+    ) as mreq:
+        result = cancel_session("s1")
+        assert result == {"session_id": "s1", "cancelled": True}
+        assert mreq.called
+
+
+def test_list_running_filters_non_running():
+    with patch.object(
+        session_service.session_store.SessionStore, "list_all"
+    ) as mlist:
+        mlist.return_value = [
+            {"session_id": "r1", "state": "running"},
+            {"session_id": "d1", "state": "completed"},
+        ]
+        result = list_running_sessions()
+        assert result["total"] == 1
+        assert result["sessions"][0]["session_id"] == "r1"

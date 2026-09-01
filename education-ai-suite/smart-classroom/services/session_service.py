@@ -17,6 +17,10 @@ class SessionRunning(Exception):
     pass
 
 
+class SessionNotRunning(Exception):
+    pass
+
+
 class SessionValidationError(Exception):
     pass
 
@@ -81,6 +85,36 @@ def delete_session(session_id: str) -> dict:
             raise RuntimeError(f"record deleted but failed to remove files: {e}")
 
     return {"session_id": session_id, "deleted": True, "files_removed": files_removed}
+
+
+def cancel_session(session_id: str) -> dict:
+    state = session_store.SessionStore.get(session_id)
+    if state is None:
+        raise SessionNotFound("session not found")
+    if state.get("state") != "running":
+        raise SessionNotRunning(f"session is not running (state={state.get('state')})")
+    orchestrator.request_cancel(session_id)
+    session_store.SessionStore.update(session_id, cancel_requested=1)
+    return {"session_id": session_id, "cancelled": True}
+
+
+def list_running_sessions() -> dict:
+    sessions = []
+    for state in session_store.SessionStore.list_all():
+        if state.get("state") != "running":
+            continue
+        sessions.append(
+            {
+                "session_id": state.get("session_id"),
+                "state": state.get("state"),
+                "current_stage": state.get("current_stage"),
+                "stages": state.get("stages"),
+                "sources": state.get("sources"),
+                "started_at": state.get("started_at"),
+                "updated_at": state.get("updated_at"),
+            }
+        )
+    return {"total": len(sessions), "sessions": sessions}
 
 
 def _validate_stages(stages: list) -> None:

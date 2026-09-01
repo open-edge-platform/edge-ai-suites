@@ -45,3 +45,8 @@ class DeleteResponse(BaseModel):
     session_id: str
     deleted: bool
     files_removed: bool
+
+
+class CancelResponse(BaseModel):
+    session_id: str
+    cancelled: bool

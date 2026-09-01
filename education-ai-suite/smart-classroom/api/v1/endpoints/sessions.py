@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from api.v1.schemas.session import (
+    CancelResponse,
     DeleteResponse,
     ProcessResponse,
     SessionListResponse,
@@ -10,6 +11,7 @@ from api.v1.schemas.session import (
 from services import session_service
 from services.session_service import (
     SessionNotFound,
+    SessionNotRunning,
     SessionRunning,
     SessionValidationError,
 )
@@ -20,6 +22,11 @@ router = APIRouter()
 @router.get("", response_model=SessionListResponse)
 def list_sessions():
     return session_service.list_sessions()
+
+
+@router.get("/running", response_model=SessionListResponse)
+def list_running_sessions():
+    return session_service.list_running_sessions()
 
 
 @router.post("/process", response_model=ProcessResponse)
@@ -45,4 +52,14 @@ def delete_session(session_id: str):
     except SessionNotFound as e:
         raise HTTPException(status_code=404, detail=str(e))
     except SessionRunning as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
+@router.post("/{session_id}/cancel", response_model=CancelResponse)
+def cancel_session(session_id: str):
+    try:
+        return session_service.cancel_session(session_id)
+    except SessionNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except SessionNotRunning as e:
         raise HTTPException(status_code=409, detail=str(e))
