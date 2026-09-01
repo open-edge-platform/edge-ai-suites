@@ -55,6 +55,7 @@ downloading or loading, and inference requests will fail.
 
 | Model | Size | Notes |
 |-------|------|-------|
+| `OpenVINO/Qwen3.5-4B-int8-ov` | ~4 GB | Default deployment model; supports reasoning |
 | `OpenVINO/Phi-3.5-mini-instruct-int8-ov` | ~4 GB | Balanced quality and speed |
 | `OpenVINO/llama-3.2-3b-instruct-int8-ov` | ~3 GB | Good accuracy |
 | `OpenVINO/mistral-7b-instruct-v0.3-int8-ov` | ~7 GB | High quality, needs more VRAM |
