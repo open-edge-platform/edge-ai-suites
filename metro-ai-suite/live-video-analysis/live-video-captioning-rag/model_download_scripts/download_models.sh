@@ -44,7 +44,7 @@ EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubu
 # application image TAG (used by compose.yaml) to avoid pinning the app release
 # tag onto the model-download image, which has its own tag stream.
 IMAGE_TAG="${MODEL_DOWNLOAD_IMAGE_TAG:-latest}"
-OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
+OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.1.0}"
 EPHEMERAL_CONTAINER_NAME="${MODEL_DOWNLOAD_EPHEMERAL_CONTAINER_NAME:-model-download-ephemeral}"
 
 ensure_model_base_dir_for_current_user() {
