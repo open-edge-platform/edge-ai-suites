@@ -6,7 +6,7 @@ latency and error rates.
 
 This case exists to confirm the skill's **`DO NOT USE FOR`** boundary holds. It
 is a cloud-only, Prometheus/OpenTelemetry **metrics** deployment with no Intel
-edge hardware and no computer-vision pipeline, so the `metro-ai-apps-recipe`
+edge hardware and no computer-vision pipeline, so the `metro-ai-app-recipe`
 skill should **not** trigger. The correct response is generic
 Prometheus/OTel/Kubernetes guidance, not the Intel-hardware DLSPS + MediaMTX +
 Node-RED + Grafana CV recipe.

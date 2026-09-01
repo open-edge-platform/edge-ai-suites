@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Skill Benchmark: metro-ai-apps-recipe
+# Skill Benchmark: metro-ai-app-recipe
 
 **Agents**: Copilot (`claude-opus-4.8`)
 **Grader**: Copilot (`claude-opus-4.8`)

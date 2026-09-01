@@ -1,17 +1,17 @@
 {
-  "skill_name": "metro-ai-apps-builder",
+  "skill_name": "metro-ai-app-builder",
   "evals": [
     {
       "id": 1,
       "prompt": "I want to detect people in my camera feeds and see alerts on a dashboard. Not sure what tech to use.",
-      "expected_output": "Runs a short business-objective Q&A (outcome, inputs, deployment target, hardware, dashboard), discovers that this maps to the metro-ai-apps-recipe skill, proposes a plan (person-detection Docker stack + inferred model/device/topics) and waits for confirmation before delegating the build.",
+      "expected_output": "Runs a short business-objective Q&A (outcome, inputs, deployment target, hardware, dashboard), discovers that this maps to the metro-ai-app-recipe skill, proposes a plan (person-detection Docker stack + inferred model/device/topics) and waits for confirmation before delegating the build.",
       "should_trigger": true,
       "files": ["../example-prompts/01-vision-detection.md"],
       "expectations": [
         "Asks only business questions, never which framework/model/precision/device to use",
-        "Maps the objective to metro-ai-apps-recipe via references/SKILL_CATALOG.md",
+        "Maps the objective to metro-ai-app-recipe via references/SKILL_CATALOG.md",
         "Presents a plan with deliverable + chosen skill + inferred technology and waits for explicit confirmation",
-        "Builds nothing before approval, then delegates to metro-ai-apps-recipe rather than re-implementing the stack"
+        "Builds nothing before approval, then delegates to metro-ai-app-recipe rather than re-implementing the stack"
       ]
     },
     {
@@ -43,7 +43,7 @@
     {
       "id": 4,
       "prompt": "I have a labeled defect dataset and want a quantized model ready for Intel edge.",
-      "expected_output": "Routes to the getitune-* training pipeline (discover -> prepare -> train -> export -> optimize -> run) and offers a follow-on deploy path via model-download-user + metro-ai-apps-recipe.",
+      "expected_output": "Routes to the getitune-* training pipeline (discover -> prepare -> train -> export -> optimize -> run) and offers a follow-on deploy path via model-download-user + metro-ai-app-recipe.",
       "should_trigger": true,
       "files": ["../example-prompts/04-train-a-model.md"],
       "expectations": [
@@ -61,14 +61,14 @@
       "files": ["../example-prompts/05-ambiguous-discovery.md"],
       "expectations": [
         "Detects an under-specified objective and clarifies in business terms before routing",
-        "Uses references/SKILL_CATALOG.md to branch to metro-ai-apps-recipe, vss-*, or scenescape-setup",
+        "Uses references/SKILL_CATALOG.md to branch to metro-ai-app-recipe, vss-*, or scenescape-setup",
         "Does not fabricate skills and does not build before a clear objective is confirmed"
       ]
     },
     {
       "id": 6,
-      "prompt": "Run the metro-ai-apps-recipe skill to build a smart-parking stack in ./smart-parking-stack.",
-      "expected_output": "The user already named a concrete skill, so the orchestrator should NOT own the conversation — it defers to metro-ai-apps-recipe directly.",
+      "prompt": "Run the metro-ai-app-recipe skill to build a smart-parking stack in ./smart-parking-stack.",
+      "expected_output": "The user already named a concrete skill, so the orchestrator should NOT own the conversation — it defers to metro-ai-app-recipe directly.",
       "should_trigger": false,
       "files": [],
       "expectations": [
