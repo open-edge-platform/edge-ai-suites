@@ -15,7 +15,7 @@ To use GMSL-enabled cameras, make sure you've followed the [GMSL Setup Guide](..
 ## Source Code
 
 The source code of this component can be found here:
-[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/multicam-demo).
+[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/components/multicam-demo).
 
 ## Software Installation
 

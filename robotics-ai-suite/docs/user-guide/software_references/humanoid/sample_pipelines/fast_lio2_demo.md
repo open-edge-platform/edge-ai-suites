@@ -24,14 +24,14 @@ alternative LIO backend without forking the reference navigation stack.
 
 This work is based on the open-source
 [FAST_LIO](https://github.com/hku-mars/FAST_LIO.git) repository (`ROS2`
-branch), pinned in [.gitmodules](https://github.com/open-edge-platform/edge-ai-suites/blob/main/.gitmodules) at the upstream
+branch), pinned in [.gitmodules](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/.gitmodules) at the upstream
 commit the patch below applies to.
 
 | Patch | Change |
 | ----- | ------ |
-| [0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch) | New Avia configs; `config/velodyne_generic.yaml` — a Velodyne HDL-32E parameter set originally tuned for NCLT, with the LiDAR-IMU extrinsic derived from the NCLT dataset paper's own Table 4 sensor calibration (kept for reference/extension — the validation flow below uses the pristine upstream `config/velodyne.yaml` instead, unmodified, since it already fits UrbanLoco's own Velodyne+IMU rig); C++17 + configurable OMP thread count in the build; a preprocess crash fix for Velodyne scans missing a `time` field; and a latency-profiling CSV (below). |
-| [0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch) | Reformats `laserMapping.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
-| [0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch) | Widens the `imu_cbk`/`sync_packages` mutex lock to cover the shared buffer's full read/write window; fixes `res_last` never reaching its `-1000` sentinel (`memset` truncated the float fill argument) via `std::fill`, dropping a leftover duplicate reset; checks `mkdir()`'s return value for the log directory; wraps `main()` in a try/catch. |
+| [0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0001-Add-profiling-instrumentation-new-LiDAR-configs-and-.patch) | New Avia configs; `config/velodyne_generic.yaml` — a Velodyne HDL-32E parameter set originally tuned for NCLT, with the LiDAR-IMU extrinsic derived from the NCLT dataset paper's own Table 4 sensor calibration (kept for reference/extension — the validation flow below uses the pristine upstream `config/velodyne.yaml` instead, unmodified, since it already fits UrbanLoco's own Velodyne+IMU rig); C++17 + configurable OMP thread count in the build; a preprocess crash fix for Velodyne scans missing a `time` field; and a latency-profiling CSV (below). |
+| [0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0002-Reformat-laserMapping.cpp-to-match-the-project-s-rea.patch) | Reformats `laserMapping.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/patches/0003-Fix-IMU-buffer-locking-and-duplicate-init-in-laserMa.patch) | Widens the `imu_cbk`/`sync_packages` mutex lock to cover the shared buffer's full read/write window; fixes `res_last` never reaching its `-1000` sentinel (`memset` truncated the float fill argument) via `std::fill`, dropping a leftover duplicate reset; checks `mkdir()`'s return value for the log directory; wraps `main()` in a try/catch. |
 
 **Profiling**: built behind the `ENABLE_PROFILING` CMake option (off by
 default, matching upstream). When enabled, a lock-free ring buffer plus a
@@ -59,7 +59,7 @@ cd robotics-ai-suite/pipelines/fast-lio2-demo/scripts
 ```
 
 All paths, the ROS distro, and the dataset sequence used below are
-centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) — edit that one file to
+centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) — edit that one file to
 retarget a different workspace/sequence; nothing else needs to change.
 
 ## Validate without hardware: UrbanLoco dataset replay
@@ -92,7 +92,7 @@ at:
 UrbanLoco's public download is a ROS1 bag, not a plug-and-play ROS2 one;
 `convert_ulhk_to_bag.sh` uses the `rosbags` library's `rosbags-convert` to
 produce a standard ROS 2 bag under `BAG_DIR`
-([scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh)). It skips
+([scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh)). It skips
 this step on subsequent runs if that bag already exists and its topics look
 right (pass `FORCE_CONVERT=true` to redo it anyway) — so a colleague who has
 already converted this exact sequence once can just reuse that bag directly
@@ -136,7 +136,7 @@ not to flag outperforming the paper's own number.
 ### Rviz visualization
 
 `run_ulhk.sh` gates `rviz2` behind the `USE_RVIZ` variable in
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh), off by default so the flow stays headless
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh), off by default so the flow stays headless
 over SSH:
 
 ```bash
@@ -166,7 +166,7 @@ reusing these defaults on a different PTL SKU or platform.
 best-effort, `sudo -n chrt -f -a -p 85 <pid>` SCHED_FIFO priority-85 —
 applied to the process *after* it's already launched as the invoking
 (non-root) user, not chained into the launch itself — whenever the matching
-`CPUSET_*` variable in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) is non-empty (the
+`CPUSET_*` variable in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) is non-empty (the
 default). `rviz2` gets `taskset` pinning only, no realtime priority. If
 `sudo -n` isn't usable (no passwordless sudoers entry for `chrt`), the
 script warns and continues unprioritized rather than failing the run. To
@@ -199,10 +199,10 @@ also in `env.sh`.
 
 ### Optional: production-equivalent CycloneDDS + iceoryx shared-memory setup
 
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) already defaults `RMW_IMPLEMENTATION` to
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/env.sh) already defaults `RMW_IMPLEMENTATION` to
 `rmw_cyclonedds_cpp` and `ROS_DOMAIN_ID` to `199`, but that alone is still
 plain CycloneDDS with no iceoryx zero-copy shared-memory transport for
-same-host pub/sub. [scripts/setup_dds_shm.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/setup_dds_shm.sh) adds
+same-host pub/sub. [scripts/setup_dds_shm.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/setup_dds_shm.sh) adds
 that missing piece — the same DDS transport Bing's own benchmark harness for
 this project (`run_live_benchmark.sh`) uses on PTL/Orin, for two reasons: (1)
 `rmw_fastrtps_cpp`/plain-CycloneDDS + SHM has hit CDR deserialize failures on
@@ -483,7 +483,7 @@ paper's own number.
   it by hand; there is no automated-download fallback like the old NCLT
   flow's plain `wget` had.
 - The ground-truth parsing in
-  [scripts/extract_ulhk_gt.py](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/extract_ulhk_gt.py)
+  [scripts/extract_ulhk_gt.py](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-lio2-demo/scripts/extract_ulhk_gt.py)
   reads NovAtel INSPVAX messages directly out of the bag's sqlite3 `.db3`
   file by fixed CDR byte offset rather than deserializing through the
   `novatel_oem7_msgs` message definitions, so no extra ROS package needs to

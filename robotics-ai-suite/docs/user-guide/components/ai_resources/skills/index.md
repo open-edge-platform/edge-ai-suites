@@ -6,4 +6,4 @@ Find the right skills to accelerate your development project, from proof-of-conc
 
 | Skill | Description | Usage | Link |
 |-|-|-|-|
-| `wandering` | Review-first workflow for changes in components/wandering and tutorial packages. Use when editing Wandering launch files, docs, tests, Nav2 wiring, RTAB-Map, RealSense, or robot bring-up paths. | Deployment | [link](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/components/wandering/README.md#agent-workflow) |
+| `wandering` | Review-first workflow for changes in components/wandering and tutorial packages. Use when editing Wandering launch files, docs, tests, Nav2 wiring, RTAB-Map, RealSense, or robot bring-up paths. | Deployment | [link](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/components/wandering/README.md#agent-workflow) |

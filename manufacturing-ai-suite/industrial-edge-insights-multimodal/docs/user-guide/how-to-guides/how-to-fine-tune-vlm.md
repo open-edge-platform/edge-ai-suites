@@ -82,7 +82,7 @@ e.g. `processed_dataset/` and `qwen_3.5_2b_adapter/`.
 - Python 3.12
 - ~16 GB+ RAM for data preparation (image + tabular processing), if your
   dataset-prep step is similarly memory-bound
-- Install the Intel Compute Runtime drivers - https://github.com/intel/compute-runtime/releases
+- Install the Intel Compute Runtime drivers - <https://github.com/intel/compute-runtime/releases>
 - A GPU/XPU is strongly recommended for fine-tuning and inference:
   - Intel GPU (Arc / integrated) via Intel XPU PyTorch build, or
   - CPU (functional but slow; useful only for smoke-testing the pipeline)
