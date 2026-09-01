@@ -8,8 +8,6 @@ SPDX-License-Identifier: Apache-2.0
 This document describes the design and rationale for the MAVLink → MQTT
 benchmark.
 
----
-
 ## Goals
 
 The benchmark answers one operational question:
@@ -20,8 +18,6 @@ The benchmark answers one operational question:
 
 That path is what bounds real-time situational awareness and any downstream
 telemetry-driven feature.
-
----
 
 ## Pipeline under test (`--bridge-sweep`)
 
