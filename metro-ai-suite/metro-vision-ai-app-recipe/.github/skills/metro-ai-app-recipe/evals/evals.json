@@ -1,5 +1,5 @@
 {
-  "skill_name": "metro-ai-apps-recipe",
+  "skill_name": "metro-ai-app-recipe",
   "evals": [
     {
       "id": 1,
@@ -62,7 +62,7 @@
       "should_trigger": false,
       "files": ["../example-prompts/05-prometheus-otel-cloud-negative.md"],
       "expectations": [
-        "Does not scaffold the metro-ai-apps-recipe DLSPS/MediaMTX/Node-RED/Grafana computer-vision stack",
+        "Does not scaffold the metro-ai-app-recipe DLSPS/MediaMTX/Node-RED/Grafana computer-vision stack",
         "Recognizes this as a cloud-only, Prometheus/OpenTelemetry metrics use-case that falls under the skill's DO NOT USE FOR boundary",
         "Answers with generic Prometheus/OTel/Kubernetes guidance rather than the Intel-hardware CV recipe"
       ]

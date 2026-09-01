@@ -16,7 +16,7 @@ technology):
 
 **Discovery (Step 2):** route on the answer using
 [`../references/SKILL_CATALOG.md`](../references/SKILL_CATALOG.md):
-- spot/count/alert on live feed → **`metro-ai-apps-recipe`**
+- spot/count/alert on live feed → **`metro-ai-app-recipe`**
 - search/summarize recordings → **`vss-deploy`** (+ `vss-search-index` /
   `vss-summarize-video`)
 - cross-camera tracking → **`scenescape-setup`** via the recipe's Scenescape path
