@@ -35,21 +35,34 @@ class SessionStore:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS sessions (
-                    session_id    TEXT PRIMARY KEY,
-                    state         TEXT,
-                    current_stage TEXT,
-                    stages        TEXT,
-                    sources       TEXT,
-                    error         TEXT,
-                    started_at    TEXT,
-                    updated_at    TEXT,
-                    request       TEXT
+                    session_id      TEXT PRIMARY KEY,
+                    state           TEXT,
+                    current_stage   TEXT,
+                    stages          TEXT,
+                    sources         TEXT,
+                    error           TEXT,
+                    started_at      TEXT,
+                    updated_at      TEXT,
+                    request         TEXT,
+                    cancel_requested INTEGER DEFAULT 0,
+                    last_heartbeat  TEXT
                 )
                 """
             )
             conn.commit()
+            cls._migrate(conn)
         finally:
             conn.close()
+
+    @classmethod
+    def _migrate(cls, conn) -> None:
+        """Add columns introduced in later versions to pre-existing databases."""
+        existing = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
+        if "cancel_requested" not in existing:
+            conn.execute("ALTER TABLE sessions ADD COLUMN cancel_requested INTEGER DEFAULT 0")
+        if "last_heartbeat" not in existing:
+            conn.execute("ALTER TABLE sessions ADD COLUMN last_heartbeat TEXT")
+        conn.commit()
 
     @classmethod
     def create(cls, session_id: str, request: dict, stages: list) -> dict:
@@ -122,6 +135,10 @@ class SessionStore:
         return cls.update(session_id, state="failed", error=error)
 
     @classmethod
+    def mark_cancelled(cls, session_id: str) -> dict | None:
+        return cls.update(session_id, state="cancelled")
+
+    @classmethod
     def list_all(cls) -> list:
         with cls._lock:
             cls._init_table()
@@ -172,8 +189,9 @@ class SessionStore:
             conn.execute(
                 """
                 INSERT OR REPLACE INTO sessions
-                (session_id, state, current_stage, stages, sources, error, started_at, updated_at, request)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (session_id, state, current_stage, stages, sources, error, started_at, updated_at, request,
+                 cancel_requested, last_heartbeat)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     state["session_id"],
@@ -185,6 +203,8 @@ class SessionStore:
                     state.get("started_at"),
                     state.get("updated_at"),
                     json.dumps(state.get("request"), ensure_ascii=False),
+                    state.get("cancel_requested", 0),
+                    state.get("last_heartbeat"),
                 ),
             )
             conn.commit()
@@ -213,6 +233,8 @@ def _row_to_dict(row) -> dict:
         "started_at": row["started_at"],
         "updated_at": row["updated_at"],
         "request": json.loads(row["request"] or "{}"),
+        "cancel_requested": row["cancel_requested"] if "cancel_requested" in row.keys() else 0,
+        "last_heartbeat": row["last_heartbeat"] if "last_heartbeat" in row.keys() else None,
     }
 
 
