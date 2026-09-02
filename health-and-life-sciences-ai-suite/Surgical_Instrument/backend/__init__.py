@@ -1,1 +1,0 @@
-"""Surgical Instrument backend package."""

@@ -1,0 +1,72 @@
+# Endoscopy POC compose stack.
+#
+# Registry vs source build behavior (same idea as SWLP Makefile):
+#   make compose-up REGISTRY=true  TAG=2026.1.0-ubuntu24
+#     -> pulls ${DOCKER_REGISTRY}endoscopy-demo:${TAG}
+#   make compose-up REGISTRY=false
+#     -> builds from local source using docker/Dockerfile
+#
+# Optional runtime overrides:
+#   SOURCE=basler SOURCE_ARG=<SERIAL_NUMBER>
+#   CAMERA_TRIGGER=vsync FULLSCREEN=1 LATENCY_TRACE=1
+
+services:
+  endoscopy-poc:
+    container_name: hls-si-endoscopy
+    image: intel/hls-si-endoscopy:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
+    network_mode: host
+    environment:
+      MODEL: ${MODEL:-/models/yolo11n_polyp/best_openvino_model/best.xml}
+      DEVICE: ${DEVICE:-GPU}
+      DISPLAY: ${DISPLAY:-}
+      XDG_RUNTIME_DIR: ${XDG_RUNTIME_DIR:-}
+      SOURCE: ${SOURCE:-file}
+      SOURCE_ARG: ${SOURCE_ARG:-/videos/polyp_test.mp4}
+      THRESHOLD: ${THRESHOLD:-0.5}
+      FRAME_SKIP: ${FRAME_SKIP:-1}
+      CAMERA_TRIGGER: ${CAMERA_TRIGGER:-off}
+      VSYNC_DIVISOR: ${VSYNC_DIVISOR:-1}
+      EXPOSURE_US: ${EXPOSURE_US:-}
+      PRESENTER: ${PRESENTER:-auto}
+      FULLSCREEN: ${FULLSCREEN:-0}
+      LATENCY_TRACE: ${LATENCY_TRACE:-0}
+      HEADLESS: ${HEADLESS:-0}
+      CPU_CAPTURE: ${CPU_CAPTURE:-}
+      CPU_INFERENCE: ${CPU_INFERENCE:-}
+      CPU_DISPLAY: ${CPU_DISPLAY:-}
+      RT_PRIORITY: ${RT_PRIORITY:-0}
+    volumes:
+      - ${MODELS_DIR:-../models}:/models:ro
+      - ${VIDEOS_DIR:-../videos}:/videos:rw
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /dev/bus/usb:/dev/bus/usb
+    devices:
+      - /dev/dri:/dev/dri
+    device_cgroup_rules:
+      - "c 189:* rmw"
+    cap_add:
+      - SYS_NICE
+    ulimits:
+      rtprio: 99
+    command:
+      - --source
+      - ${SOURCE:-file}
+      - --source-arg
+      - ${SOURCE_ARG:-/videos/polyp_test.mp4}
+      - --threshold
+      - ${THRESHOLD:-0.5}
+      - --frame-skip
+      - ${FRAME_SKIP:-1}
+      - --camera-trigger
+      - ${CAMERA_TRIGGER:-off}
+      - --vsync-divisor
+      - ${VSYNC_DIVISOR:-1}
+      - --presenter
+      - ${PRESENTER:-auto}
