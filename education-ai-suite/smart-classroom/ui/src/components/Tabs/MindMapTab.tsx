@@ -6,7 +6,7 @@ import "jsmind/style/jsmind.css";
 import html2canvas from "html2canvas";
 import {
   clearMindmapStartRequest,
-  mindmapStart as uiMindmapStart,
+  mindmapLoadingStart as uiMindmapLoadingStart,
   mindmapSuccess as uiMindmapSuccess,
   mindmapFailed as uiMindmapFailed,
   mindmapImageDone as uiMindmapImageDone,
@@ -496,9 +496,11 @@ const MindMapTab: React.FC = () => {
     startTimeRef.current = performance.now();
 
     dispatch(mmStart(sessionId));
+    // Show the tab spinner while the request is in flight. Uses the
+    // loading-only action: uiMindmapStart would re-set shouldStartMindmap=true,
+    // which causes the effect to re-fire and hit the backend repeatedly.
+    dispatch(uiMindmapLoadingStart());
     // Clear the trigger flag BEFORE the async call to stop re-entry.
-    // Do NOT dispatch uiMindmapStart here — it sets shouldStartMindmap=true
-    // again, which causes the effect to re-fire and hit the backend repeatedly.
     dispatch(clearMindmapStartRequest());
 
     (async () => {

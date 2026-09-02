@@ -7,11 +7,11 @@ tags:
   - intrusion-detection
   - zone-alerting
   - computer-vision
-  - metro-ai-apps-builder
+  - metro-ai-app-builder
   - intel
 prompt: |
   I want to be alerted in real time when someone enters a restricted or after-hours area they shouldn't, so my team can respond quickly.
 
-  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
+  Use the metro-ai-app-builder skill to guide this process. Install and invoke it:
 
-  npx skills add open-edge-platform/skills --skill metro-ai-apps-builder
+  npx skills add open-edge-platform/skills --skill metro-ai-app-builder

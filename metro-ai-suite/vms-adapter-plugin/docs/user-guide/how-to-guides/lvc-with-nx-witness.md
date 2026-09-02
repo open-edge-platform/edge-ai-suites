@@ -25,29 +25,7 @@ At the end of this tutorial, you will have:
 
 ## Architecture Overview
 
-```text
-Camera (RTSP)
-  │
-  └── Nx Witness VMS (REST API v4)
-          VAP queries /rest/v4/devices for camera list
-
-          ↓ camera_id resolved to RTSP URL ↓
-
-VMS Adapter Plugin (VAP)
-  ┌─────────────────────────────────────────────────────┐
-  │  LiveCaptioningAnalyticsAppShim                     │
-  │  POST /api/runs  ──────────────────────────────────►│ LVC Backend (:4173)
-  │                                                     │ DL Streamer with VLM
-  │  GET .../results/stream  ◄──────────────────────────│ SSE captions
-  │  (SSE proxy to dashboard)                           │
-  │            MediaMTX (:8889)                         |
-  └─────────────────────────────────────────────────────┘
-           │
-  ┌────────▼─────────────────────┐
-  │  Provider Dashboard (:3443)  │
-  │  WebRTC player with captions │
-  └──────────────────────────────┘
-```
+![Live Video Captioning with Nx Witness Architecture](../_assets/VAP-LVC-with-Nx-arch.svg)
 
 **Key data flows:**
 
