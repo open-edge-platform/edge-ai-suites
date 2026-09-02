@@ -183,7 +183,7 @@ Or stop observability on an already-running stack:
 docker compose stop grafana influxdb topic-extractor metrics-manager
 ```
 
-**View live camera**: `ffplay rtsp://localhost:8554/uav-1/nadir`
+**View live camera**: `ffplay rtsp://localhost:8554/uav-1/nadir` (needs a local display). Headless alternative: `ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv`
 
 ## Notices and Disclaimers
 
