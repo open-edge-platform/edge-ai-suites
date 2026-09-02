@@ -27,7 +27,9 @@ STUDIES=(
 )
 
 ARTICLE_ID="22202866"
-API="https://api.figshare.com/v2/articles/${ARTICLE_ID}/files"
+# NOTE: figshare's /files endpoint paginates at 10 items by default; the article
+# has ~123 files. Pass page_size explicitly so we see every study in one call.
+API="https://api.figshare.com/v2/articles/${ARTICLE_ID}/files?page_size=1000"
 
 command -v curl    >/dev/null || { echo "ERROR: curl is required";    exit 1; }
 command -v python3 >/dev/null || { echo "ERROR: python3 is required"; exit 1; }

@@ -12,6 +12,9 @@
 # Runtime needs (see Makefile): /dev/dri passthrough, X11 socket for display,
 # and (for Basler) /dev/bus/usb + the USB cgroup rule.
  
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
  
 # Optional corporate proxy (leave empty for none).
