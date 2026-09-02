@@ -42,15 +42,11 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
    ![Installer](../../images/install/installer_2.png)
 
-5. Enable/Disable optional components.
-
-   ![Installer](../../images/install/installer_3.png)
-
-6. The installer will perform pre-flight checks. Ensure that all checks passed, then press ``Enter`` to continue.
+5. The installer will perform pre-flight checks. Ensure that all checks passed, then press ``Enter`` to continue.
 
    ![Installer](../../images/install/installer_4.png)
 
-7. The installer will list all the steps which will be performed. Press ``Enter`` to proceed with the installation.
+6. The installer will list all the steps which will be performed. Press ``Enter`` to proceed with the installation.
    The installation may take anywhere from 10 to 30 minutes depending on your network and system performance.
 
    > **Note:** The installer will first initialize the system by uninstalling any packages with names matching the following patterns:
@@ -60,7 +56,7 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
    ![Installer](../../images/install/installer_6.png)
 
-8. If the installation is successful, you will see a dialog similar to the following:
+7. If the installation is successful, you will see a dialog similar to the following:
 
    ![Installer](../../images/install/installer_7.png)
 
