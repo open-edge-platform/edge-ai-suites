@@ -7,7 +7,7 @@ library and the Low-Rank Adaptation (LoRA) fine-tuning method, and
 running inference with the resulting adapter.
 
 This directory is **not integrated** with the rest of
-`industrial-edge-insights-multimodal; it does not wire into the
+`industrial-edge-insights-multimodal`; it does not wire into the
 `docker-compose*.yml` stacks, `configs/`, or the vLLM serving setup in this
 repository. It is a self-contained data preparation, fine-tuning, and inference
 workflow that you run independently (e.g. on a development box or training server)
