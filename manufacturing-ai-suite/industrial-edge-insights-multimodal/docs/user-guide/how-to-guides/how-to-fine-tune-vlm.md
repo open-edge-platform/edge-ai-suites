@@ -19,7 +19,7 @@ This directory is **not integrated** with the rest of
 repository. It is a self-contained data preparation, fine-tuning, and inference
 workflow that you run independently (e.g. on a development box or training server)
 to produce a LoRA adapter. Once you have the adapter, you can serve it with the
-existing configuration in [`docker-compose-vllm.yml`](../../docker-compose-vllm.yml),
+existing configuration in [`docker-compose-vllm.yml`](../../../docker-compose-vllm.yml),
 or with any OpenAI-compatible VLM server that supports LoRA adapters.
 
 ## Table of Contents
