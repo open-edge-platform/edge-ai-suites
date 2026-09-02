@@ -86,6 +86,12 @@ If you do not have OpenClaw yet, install it from the official repository at
 <https://github.com/openclaw/openclaw>. Install `openclaw@2026.5.6`:
 
 ```bash
+# openclaw needs Node.js >= 22.14.0; Ubuntu 24.04's apt nodejs is v18, too old
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a===22&&b>=14)?0:1)' \
+  || { echo "ERROR: Node.js >= 22.14.0 required, found $(node -v)"; exit 1; }
+
 npm install -g openclaw@2026.5.6
 ```
 
