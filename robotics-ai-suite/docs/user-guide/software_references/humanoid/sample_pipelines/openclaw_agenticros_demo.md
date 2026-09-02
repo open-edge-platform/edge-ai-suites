@@ -154,7 +154,7 @@ cd ~/models
 # Pull OVMS Docker image (OVMS 2026.1 or later required for Qwen3-VL)
 docker pull openvino/model_server:latest-gpu
 
-> Note: if the image pull times out behind a corporate proxy, configure the Docker daemon proxy before retrying.
+# Note: if the image pull times out behind a corporate proxy, configure the Docker daemon proxy before retrying.
 
 # Start OVMS container
 docker run -d --rm \
@@ -435,7 +435,7 @@ sudo apt install -y \
   ros-jazzy-moveit-visual-tools \
   ros-jazzy-rviz2
 
-> Note: the launch files in this demo use Gazebo Sim through `ros_gz_sim`, so `ros-jazzy-ros-gz-sim` and `ros-jazzy-rosbridge-suite` must be installed on the validation host.
+# Note: the launch files in this demo use Gazebo Sim through `ros_gz_sim`, so `ros-jazzy-ros-gz-sim` and `ros-jazzy-rosbridge-suite` must be installed on the validation host.
 
 # Verify ROS2 installation
 source /opt/ros/jazzy/setup.bash
@@ -652,12 +652,13 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
     gazebo_launch:=gazebo_small_warehouse.launch.py \
     use_gazebo_gui:=true
 
-# Note: `use_gazebo_gui:=true` requires a graphical desktop session with a valid
-# display. In pure tty sessions, use `use_gazebo_gui:=false` (or the xvfb path
-# in Troubleshooting).
-
-# Wait for Gazebo to fully load (you should see the warehouse and robot)
 ```
+
+> **Note:** `use_gazebo_gui:=true` requires a graphical desktop session with a valid
+> display. In pure tty sessions, use `use_gazebo_gui:=false` (or the xvfb path
+> in Troubleshooting).
+>
+> Wait for Gazebo to fully load (you should see the warehouse and robot)
 
 **What this command does:**
 
@@ -720,11 +721,11 @@ OpenClaw gateway is already running as a systemd service (started during setup).
 # Terminal 2: Start OpenClaw dashboard
 cd ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/openclaw
 openclaw dashboard
-
-# Expected output will show a URL like:
-# OpenClaw dashboard running at: http://localhost:3000
-# or http://localhost:XXXX (port may vary)
 ```
+
+Expected output will show a URL like
+`OpenClaw dashboard running at: http://localhost:3000` or
+`http://localhost:XXXX`(port may vary)
 
 **Open the displayed URL in your web browser** (e.g., `http://localhost:3000`)
 
