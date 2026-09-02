@@ -70,7 +70,7 @@ cp config.yaml.example "$SMART_COMMUNITY_DATA_DIR/config.yaml"
 cp monitors.yaml.example "$SMART_COMMUNITY_DATA_DIR/monitors.yaml"
 ```
 
-Customize `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DATA_DIR/monitors.yaml` as needed, then build and start the stack:
+Customize `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DATA_DIR/monitors.yaml` as needed, then start the stack:
 
 ```bash
 # Change to mirror endpoint if you are in China and want to use the mirror site for Hugging Face.
@@ -78,12 +78,11 @@ export HF_ENDPOINT=https://hf-mirror.com
 
 source docker/set_env.sh
 
-# First time only: build the local images (multilevel + videostream-analytics + MCP server).
-bash setup_docker.sh --build
-
 # Start all four on-device services.
 bash setup_docker.sh
 ```
+
+`setup_docker.sh` pulls every image it needs, so there is nothing to build or download beforehand. To build the service images from source instead, see [Build the service images from source](#build-the-service-images-from-source).
 
 > **Note:**
 >
@@ -91,6 +90,7 @@ bash setup_docker.sh
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
 > - If the YOLO11s OpenVINO™ IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
 > - `docker/set_env.sh` pins the service image tag to the matching release (`TAG=2026.2.0`, e.g. `videostream-analytics:2026.2.0`). To use different images, `export TAG=<tag>` before sourcing `set_env.sh`.
+> - If `vllm-ipex-serving` crashes while loading weights, Docker restarts it automatically and `setup_docker.sh` waits for that retry instead of failing — up to 1 hour by default. Override with `VLLM_RETRY_TIMEOUT=<seconds> bash setup_docker.sh` (`0` fails immediately).
 
 Confirm the model serving is ready before continuing:
 
@@ -278,6 +278,29 @@ The MCP server includes these bundled use cases:
 To use a bundled use case, ask the connected agent to register a monitor with its monitor ID, RTSP URL, and use-case key: `fridge`, `child_safety`, or `elder_wakeup`.
 
 Furthermore, you can simply describe your requirements to an agent to create a customized use case without restarting the core services. See [Register a New Use Case](./how-to-guides/register-new-use-case.md) for the complete registration workflow.
+
+## Build the service images from source
+
+This is optional. By default `setup_docker.sh` pulls the prebuilt images from Docker Hub — [intel/multilevel-video-understanding](https://hub.docker.com/r/intel/multilevel-video-understanding), [intel/smart-community-mcp-server](https://hub.docker.com/r/intel/smart-community-mcp-server), and [intel/videostream-analytics](https://hub.docker.com/r/intel/videostream-analytics) — and `vllm-ipex-serving` runs from the upstream `intel/llm-scaler-vllm` image. Build locally only when you have modified the sources or need an image for a tag that is not published.
+
+```bash
+source docker/set_env.sh
+
+bash setup_docker.sh --build        # build the three images, do not start
+bash setup_docker.sh --build-prod   # build, then start the full stack
+```
+
+Building takes considerably longer than pulling. `setup_docker.sh` clones the `multilevel-video-understanding` build context from `edge-ai-libraries` on demand into `.external/edge-ai-libraries`; delete that directory to refresh it.
+
+To pre-stage the prebuilt images instead — for example on a host with restricted network access at deployment time — pull them explicitly:
+
+```bash
+docker pull intel/multilevel-video-understanding:2026.2.0
+docker pull intel/smart-community-mcp-server:2026.2.0
+docker pull intel/videostream-analytics:2026.2.0
+```
+
+> **Note:** `setup_docker.sh` resolves each image as `${REGISTRY_URL}<service>:${TAG}`, which with the defaults in [docker/set_env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/set_env.sh). Export `TAG` before sourcing `docker/set_env.sh` so it matches the tag you pulled or built.
 
 ## Data directory
 

@@ -24,6 +24,9 @@ export HF_HOME
 # Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
 mkdir -p "${HF_HOME}"
 
+# Uncomment this line to disable Hugging Face's online checks for new versions of transformers, accelerate, etc.
+# export HF_HUB_OFFLINE=1
+
 # Change to https://hf-mirror.com if you are in China and want to use the mirror site for Hugging Face.
 # export HF_ENDPOINT=https://hf-mirror.com
 export HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
@@ -59,11 +62,9 @@ export VLLM_SERVICE_PORT=41091
 # Its source (edge-ai-libraries) is not vendored here — setup_docker.sh clones it
 # into the fixed path .external/edge-ai-libraries, which docker/compose.yaml
 # `extends` from. No env var needed.
-export REGISTRY_URL=intel/
+export REGISTRY_URL=${REGISTRY_URL:-intel/}
 export REGISTRY=${REGISTRY_URL}
-# Image tag for the stack's service images. Pinned to the matching release on
-# this branch; export TAG before sourcing to override.
-export TAG=${TAG:-2026.2.0}
+export TAG=${TAG:-2026.2.0}                     # set as the latest release version
 export SERVICE_PORT=8192
 
 # Run multilevel-video-understanding as the host user
