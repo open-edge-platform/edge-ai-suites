@@ -11,6 +11,36 @@ This is a deployment guide for the Docker Compose stack:
 Before you start, refer to [System Requirements](./get-started/system-requirements.md)
 to confirm your setup compatibility.
 
+### Host tools
+
+The app runs entirely in a container, so the host only needs a small set of tools:
+
+| Tool | Required? | Why |
+|---|---|---|
+| **Docker Engine + Compose plugin** | Yes | The app runs via `make up` → `docker compose up`. |
+| **make** | Yes | `make up` is the entry point. |
+| **git** | To get the code | Needed for `git clone` (skip if you use a release archive). |
+| **python3** | No | Python runs inside the container; the host does not need it. |
+
+The easiest way to satisfy these on Ubuntu is the bundled setup script, which
+installs/verifies Docker + Compose + `make` + `git`, adds your user to the
+`docker` group, and configures a proxy only if you provide one:
+
+```bash
+# No proxy (typical):
+./scripts/setup-prerequisites.sh
+
+# Behind a corporate proxy, export it first:
+HTTP_PROXY=http://your-proxy:port HTTPS_PROXY=http://your-proxy:port \
+  ./scripts/setup-prerequisites.sh
+```
+
+Log out and back in afterward (or run `newgrp docker`) so docker-group
+membership takes effect. On non-Ubuntu hosts, install Docker manually per the
+[Docker docs](https://docs.docker.com/engine/install/).
+
+### Models and videos
+
 The application does not ship with the trained model binaries or demo videos.
 You need to place these resources under the host paths that are bind-mounted
 into the container:
