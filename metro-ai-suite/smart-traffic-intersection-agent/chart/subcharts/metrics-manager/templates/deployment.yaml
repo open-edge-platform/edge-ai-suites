@@ -44,6 +44,8 @@ spec:
     spec:
       hostPID: {{ .Values.pod.hostPID }}
       hostNetwork: {{ .Values.pod.hostNetwork }}
+      # Metrics Manager does not use the Kubernetes API, and its token folder cannot be created under read-only /run.
+      automountServiceAccountToken: false
       {{- $dnsPolicy := .Values.pod.dnsPolicy }}
       {{- if not $dnsPolicy }}
         {{- if .Values.pod.hostNetwork }}
