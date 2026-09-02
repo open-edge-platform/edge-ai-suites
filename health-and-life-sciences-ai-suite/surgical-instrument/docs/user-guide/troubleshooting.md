@@ -48,7 +48,7 @@
    - Verify host L0 stack: `make check-l0`.
    - Verify `/dev/dri` exists and your user is in the `render` group
      (`id -nG | tr ' ' '\n' | grep -E '^render$'`). Log out and back in after
-     `./setup.sh` if you were just added.
+     `make setup-prerequisites` if you were just added.
    - `torch` must be a `+xpu` build (e.g. `torch==2.7.1+xpu`) from the
      `https://download.pytorch.org/whl/xpu` index. Stock CPU or CUDA wheels
      do not expose `torch.xpu`. Recreate the venv with
@@ -56,7 +56,7 @@
 
 10. `zeInit failed` at import time
     - The Intel `libze1` / `libze-intel-gpu1` package is missing or a stale
-      OpenCL loader is masking Level Zero. Re-run `./setup.sh` and
+      OpenCL loader is masking Level Zero. Re-run `make setup-prerequisites` and
       `make check-l0`.
 
 11. Dataset auto-detect finds zero paired samples

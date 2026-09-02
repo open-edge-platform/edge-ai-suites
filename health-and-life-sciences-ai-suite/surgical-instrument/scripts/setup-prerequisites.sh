@@ -1,243 +1,249 @@
-#!/bin/bash
-
-# Prerequisite setup for the Surgical Instrument (endoscopy) demo.
+#!/usr/bin/env bash
+# Surgical Instrument — host prerequisite installer for Ubuntu 24.04 (noble).
 #
-# Verifies/installs the host dependencies needed to run `make up`:
-#   - Docker Engine + Compose plugin
-#   - membership in the `docker` group
-#   - (optional) common developer tools
+# Installs everything the Docker Compose stack and the (optional) local
+# training/bootstrap flow need:
 #
-# Proxy is OPTIONAL. Most machines need nothing here. If you are behind a
-# corporate proxy, export the standard variables BEFORE running this script:
+#   * base tools               (curl, git, python3, python3-venv, tar, make, ...)
+#   * Docker Engine + Compose  (docker-ce, docker-ce-cli, docker-compose-plugin)
+#   * Intel client GPU stack   (Level Zero + OpenCL + iHD VA-API, from the
+#                               official intel-graphics apt repo)
+#   * group membership         (render, video, docker)
 #
-#   export HTTP_PROXY=http://your-proxy:port
-#   export HTTPS_PROXY=http://your-proxy:port
-#   export NO_PROXY=localhost,127.0.0.1
-#   ./setup-prerequisites.sh
+# It is idempotent: every package/repo/group is checked before it is added.
 #
-# Nothing Intel-internal (no hardcoded proxies, certificates, or registry
-# credentials) is configured. Images are pulled from public registries.
+# Usage (from the surgical-instrument project root):
+#   make setup-prerequisites                       # or: ./scripts/setup-prerequisites.sh
+#   make setup-prerequisites SETUP_ARGS=-y         # unattended (assume-yes to apt)
+#   make setup-prerequisites SETUP_ARGS=--dry-run  # print what would be installed, change nothing
+#
+# Exit code is non-zero on any hard failure. A final [OK]/[MISSING] summary is
+# printed at the end so operators can see at a glance what still needs
+# attention (e.g. a reboot or logout to pick up new group memberships).
 
-set -e
+set -euo pipefail
 
-# ═══════════════════════════════════════════════════════════════════════════
-# CONFIGURATION - optional, read from the environment (empty = not used)
-# ═══════════════════════════════════════════════════════════════════════════
-HTTP_PROXY="${HTTP_PROXY:-${http_proxy:-}}"
-HTTPS_PROXY="${HTTPS_PROXY:-${https_proxy:-}}"
-NO_PROXY="${NO_PROXY:-${no_proxy:-localhost,127.0.0.1}}"
+DRY_RUN=0
+APT_YES=""
 
-# ═══════════════════════════════════════════════════════════════════════════
-# PRIVILEGE HANDLING
-# When already root, run privileged commands directly (sudo may be absent).
-# Otherwise require sudo up front so we fail fast with a clear message rather
-# than midway through the install.
-# ═══════════════════════════════════════════════════════════════════════════
-if [ "$(id -u)" -eq 0 ]; then
-    sudo() { "$@"; }
-elif ! command -v sudo &> /dev/null; then
-    echo "ERROR: root privileges are required but 'sudo' is not installed."
-    echo "Re-run this script as root, or install sudo and add your user to sudoers."
-    exit 1
-fi
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=1 ;;
+    -y|--yes)  APT_YES="-y" ;;
+    -h|--help)
+      sed -n '1,25p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "unknown flag: $arg" >&2
+      exit 2
+      ;;
+  esac
+done
 
-# ═══════════════════════════════════════════════════════════════════════════
-# COLORS & FORMATTING
-# ═══════════════════════════════════════════════════════════════════════════
-GREEN='\033[0;32m'
-BLUE='\033[0;34m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-CYAN='\033[0;36m'
-MAGENTA='\033[0;35m'
-BOLD='\033[1m'
-NC='\033[0m'
+# ---------------------------------------------------------------- helpers ----
 
-# ═══════════════════════════════════════════════════════════════════════════
-# HELPER FUNCTIONS
-# ═══════════════════════════════════════════════════════════════════════════
-log_info()  { echo -e "  ${GREEN}[ OK ] $1${NC}"; }
-log_step()  { echo -e "  ${CYAN}[ .. ] $1${NC}"; }
-log_warn()  { echo -e "  ${YELLOW}[WARN] $1${NC}"; }
-log_error() { echo -e "  ${RED}[FAIL] $1${NC}"; }
+log()  { printf '\n[setup] %s\n' "$*"; }
+ok()   { printf '  [OK]      %s\n' "$*"; }
+miss() { printf '  [MISSING] %s\n' "$*"; }
+info() { printf '  [INFO]    %s\n' "$*"; }
 
-log_header() {
-    echo ""
-    echo -e "${BLUE}==============================================================${NC}"
-    echo -e "${BLUE}  ${BOLD}$1${NC}"
-    echo -e "${BLUE}==============================================================${NC}"
-}
+# Track summary
+declare -a SUMMARY
 
-log_section() {
-    echo ""
-    echo -e "  ${MAGENTA}---- $1 ----${NC}"
-}
-
-# ═══════════════════════════════════════════════════════════════════════════
-# ERROR HANDLING
-# ═══════════════════════════════════════════════════════════════════════════
-handle_error() {
-    local exit_code=$?
-    local line_number=$1
-    if [ $exit_code -ne 0 ]; then
-        echo ""
-        log_error "Script failed at line $line_number (exit $exit_code)."
-        log_error "Command: ${BASH_COMMAND}"
-    fi
-}
-trap 'handle_error $LINENO' ERR
-
-# Run a command quietly; show its output only if it fails.
-exec_cmd() {
-    local output_file
-    output_file=$(mktemp)
-    if ! "$@" > "$output_file" 2>&1; then
-        echo ""
-        log_error "Command failed: $*"
-        echo -e "${YELLOW}----------------------------- output --------------------------${NC}"
-        cat "$output_file"
-        echo -e "${YELLOW}---------------------------------------------------------------${NC}"
-        rm -f "$output_file"
-        return 1
-    fi
-    rm -f "$output_file"
+run() {
+  # Log the command; execute it unless --dry-run
+  printf '    $ %s\n' "$*"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
     return 0
+  fi
+  eval "$@"
 }
 
-# ═══════════════════════════════════════════════════════════════════════════
-# MAIN
-# ═══════════════════════════════════════════════════════════════════════════
-log_header "Surgical Instrument - Prerequisite Setup"
+need_root() {
+  # Any command that touches /etc, /usr, /var, or apt needs sudo. We never
+  # store the sudo password; the user is prompted by sudo directly.
+  if [[ "$EUID" -eq 0 ]]; then
+    echo ""
+  else
+    echo "sudo"
+  fi
+}
 
-# Detect OS.
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-else
-    log_error "/etc/os-release not found. Cannot determine OS."
-    exit 1
-fi
-log_info "Detected OS: ${NAME:-unknown} (${VERSION:-?})"
+SUDO="$(need_root)"
 
-if [[ "${ID:-}" != "ubuntu" && ! "${NAME:-}" =~ [Uu]buntu ]]; then
-    log_warn "This installer is tested on Ubuntu. On other distros it will only"
-    log_warn "verify Docker and skip apt-based installs."
-fi
+apt_installed() {
+  dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q "install ok installed"
+}
 
-# ───────────────────────────────────────────────────────────────────────────
-# Optional proxy configuration (only if the user provided one)
-# ───────────────────────────────────────────────────────────────────────────
-log_section "Proxy"
-if [ -n "$HTTP_PROXY" ] || [ -n "$HTTPS_PROXY" ]; then
-    log_step "Applying proxy for this session and Docker daemon..."
-    export http_proxy="$HTTP_PROXY"  https_proxy="$HTTPS_PROXY"  no_proxy="$NO_PROXY"
-    export HTTP_PROXY HTTPS_PROXY NO_PROXY
-
-    # Docker daemon proxy (systemd drop-in).
-    if command -v systemctl &> /dev/null; then
-        sudo mkdir -p /etc/systemd/system/docker.service.d
-        sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf > /dev/null <<EOF
-[Service]
-Environment="HTTP_PROXY=$HTTP_PROXY"
-Environment="HTTPS_PROXY=$HTTPS_PROXY"
-Environment="NO_PROXY=$NO_PROXY"
-EOF
-        log_info "Docker daemon proxy configured (restart Docker to apply)."
-    fi
-else
-    log_info "No proxy set - direct internet access assumed (typical setup)."
-    log_info "Behind a corporate proxy? Re-run with HTTP_PROXY / HTTPS_PROXY exported."
-fi
-
-# ───────────────────────────────────────────────────────────────────────────
-# Docker Engine + Compose
-# ───────────────────────────────────────────────────────────────────────────
-log_section "Docker"
-if command -v docker &> /dev/null; then
-    log_info "Docker is installed: $(docker --version)"
-elif [[ "${ID:-}" == "ubuntu" || "${NAME:-}" =~ [Uu]buntu ]]; then
-    log_step "Docker not found - installing Docker Engine + Compose..."
-    exec_cmd sudo apt-get update -qq
-    exec_cmd sudo apt-get install -y -qq apt-transport-https ca-certificates curl gnupg lsb-release
-    sudo install -m 0755 -d /etc/apt/keyrings
-    exec_cmd bash -c "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
-    sudo chmod a+r /etc/apt/keyrings/docker.gpg
-    exec_cmd bash -c "echo \"deb [arch=\$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \$(. /etc/os-release && echo \"\$VERSION_CODENAME\") stable\" | sudo tee /etc/apt/sources.list.d/docker.list"
-    exec_cmd sudo apt-get update -qq
-    exec_cmd sudo apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-    log_info "Docker installed: $(docker --version)"
-else
-    log_error "Docker is not installed and auto-install is only supported on Ubuntu."
-    log_error "Please install Docker manually: https://docs.docker.com/engine/install/"
-    exit 1
-fi
-
-# Compose plugin check.
-if docker compose version &> /dev/null; then
-    log_info "Docker Compose available: $(docker compose version --short 2>/dev/null)"
-else
-    log_warn "Docker Compose plugin not found - 'make up' needs it."
-    log_warn "Install with: sudo apt-get install -y docker-compose-plugin"
-fi
-
-# docker group membership (so the user can run docker without sudo).
-CURRENT_USER=$(whoami)
-if groups "$CURRENT_USER" | grep -qw docker; then
-    log_info "User '$CURRENT_USER' is in the docker group."
-else
-    log_step "Adding '$CURRENT_USER' to the docker group..."
-    sudo usermod -aG docker "$CURRENT_USER"
-    log_warn "Log out and back in (or run 'newgrp docker') for this to take effect."
-fi
-
-# ───────────────────────────────────────────────────────────────────────────
-# Required host tools for `make up` (make + git to run/clone; curl for helpers)
-# ───────────────────────────────────────────────────────────────────────────
-if [[ "${ID:-}" == "ubuntu" || "${NAME:-}" =~ [Uu]buntu ]]; then
-    log_section "Required tools (make, git, curl)"
-    log_step "Ensuring make, git, and curl are installed..."
-    exec_cmd sudo apt-get update -qq
-    exec_cmd sudo apt-get install -y -qq make git curl
-    log_info "make: $(make --version | head -1)"
-    log_info "git:  $(git --version)"
-else
-    for t in make git curl; do
-        if command -v "$t" &> /dev/null; then
-            log_info "$t is installed."
-        else
-            log_warn "$t not found - install it before running 'make up'."
-        fi
-    done
-fi
-
-# ───────────────────────────────────────────────────────────────────────────
-# Optional developer tools
-# ───────────────────────────────────────────────────────────────────────────
-if [[ "${ID:-}" == "ubuntu" || "${NAME:-}" =~ [Uu]buntu ]]; then
-    log_section "Optional developer tools"
-    INSTALL_TOOLS=""
-    if [ -t 0 ]; then
-        read -r -p "  Install extra tools (python3, build-essential)? (y/N): " INSTALL_TOOLS || true
+apt_install() {
+  # Install any of the given packages that are not already installed. Empty
+  # list is a no-op.
+  local pending=()
+  for p in "$@"; do
+    if apt_installed "$p"; then
+      ok "package present: $p"
     else
-        log_info "Non-interactive run - skipping optional tools prompt."
+      miss "package missing: $p"
+      pending+=("$p")
     fi
-    if [[ "$INSTALL_TOOLS" =~ ^[Yy]$ ]]; then
-        log_step "Installing python3 and build-essential..."
-        exec_cmd sudo apt-get update -qq
-        exec_cmd sudo apt-get install -y -qq build-essential python3 python3-venv python3-pip
-        log_info "Optional tools installed."
-    else
-        log_info "Skipped optional developer tools (not needed to run the app)."
-    fi
+  done
+  if [[ "${#pending[@]}" -gt 0 ]]; then
+    run "$SUDO apt-get install $APT_YES ${pending[*]}"
+  fi
+}
+
+apt_update_once() {
+  # apt-get update is expensive; run at most once per invocation, and only
+  # after we've added a new source list.
+  if [[ "${APT_UPDATED:-0}" -eq 1 ]]; then
+    return 0
+  fi
+  run "$SUDO apt-get update"
+  APT_UPDATED=1
+}
+
+ensure_group() {
+  local grp="$1"
+  if ! getent group "$grp" >/dev/null 2>&1; then
+    miss "group missing: $grp"
+    run "$SUDO groupadd -r $grp"
+  else
+    ok "group exists: $grp"
+  fi
+  if id -nG "$USER" | tr ' ' '\n' | grep -qx "$grp"; then
+    ok "user '$USER' already in group '$grp'"
+  else
+    miss "user '$USER' not in group '$grp'"
+    run "$SUDO usermod -aG $grp $USER"
+    SUMMARY+=("Log out and back in for '$grp' group membership to take effect.")
+  fi
+}
+
+# ------------------------------------------------------------- checks -------
+
+log "Preflight"
+
+# We only officially support Ubuntu 24.04 (noble). The Intel graphics apt repo
+# has a per-codename URL so we key off VERSION_CODENAME.
+if [[ ! -r /etc/os-release ]]; then
+  echo "cannot read /etc/os-release; unsupported OS" >&2
+  exit 1
+fi
+# shellcheck disable=SC1091
+. /etc/os-release
+info "OS: ${PRETTY_NAME:-unknown}  (ID=${ID:-?}, CODENAME=${VERSION_CODENAME:-?})"
+
+if [[ "${ID:-}" != "ubuntu" || "${VERSION_CODENAME:-}" != "noble" ]]; then
+  info "This script is validated on Ubuntu 24.04 (noble)."
+  info "It may still work on newer Ubuntu releases if the Intel graphics repo publishes for them."
+  SUMMARY+=("Non-noble host: verify intel-graphics repo has packages for '${VERSION_CODENAME:-unknown}'.")
 fi
 
-# ───────────────────────────────────────────────────────────────────────────
-# Done
-# ───────────────────────────────────────────────────────────────────────────
-log_header "Setup complete"
-echo -e "  Next steps:"
-echo -e "    ${CYAN}cd ..${NC}                 # surgical-instrument project root"
-echo -e "    ${CYAN}make up${NC}               # start the demo (see docs/get-started.md)"
-echo ""
-if ! groups "$CURRENT_USER" | grep -qw docker; then
-    log_warn "Remember to re-login so your docker group membership applies."
+# --------------------------------------------------------- base tools -------
+
+log "Base tools"
+apt_install \
+  ca-certificates curl gnupg wget \
+  git make tar \
+  python3 python3-venv python3-pip \
+  lsb-release
+
+# ------------------------------------------------------------ Docker --------
+
+log "Docker Engine + Compose v2"
+
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  ok "docker + compose plugin already present ($(docker --version | awk '{print $3}' | tr -d ,))"
+else
+  miss "docker or compose plugin missing"
+  # Docker's official apt repo
+  run "$SUDO install -m 0755 -d /etc/apt/keyrings"
+  if [[ ! -s /etc/apt/keyrings/docker.gpg ]]; then
+    run "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | $SUDO gpg --dearmor -o /etc/apt/keyrings/docker.gpg"
+    run "$SUDO chmod a+r /etc/apt/keyrings/docker.gpg"
+  fi
+  if [[ ! -s /etc/apt/sources.list.d/docker.list ]]; then
+    run "echo 'deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu ${VERSION_CODENAME} stable' | $SUDO tee /etc/apt/sources.list.d/docker.list >/dev/null"
+    APT_UPDATED=0
+  fi
+  apt_update_once
+  apt_install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
+
+ensure_group docker
+
+# ---------------------------------------------- Intel client GPU stack ------
+
+log "Intel client GPU stack (Level Zero + OpenCL + iHD)"
+
+# Reference: https://dgpu-docs.intel.com/driver/client/overview.html
+# Repo key + list are placed under /etc/apt/keyrings and
+# /etc/apt/sources.list.d respectively. Idempotent.
+if [[ ! -s /usr/share/keyrings/intel-graphics.gpg ]]; then
+  miss "intel-graphics apt key missing"
+  run "wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | $SUDO gpg --yes --dearmor --output /usr/share/keyrings/intel-graphics.gpg"
+else
+  ok "intel-graphics apt key present"
+fi
+
+INTEL_LIST=/etc/apt/sources.list.d/intel-gpu-${VERSION_CODENAME}.list
+if [[ ! -s "$INTEL_LIST" ]]; then
+  miss "intel-graphics apt source missing"
+  run "echo 'deb [arch=amd64 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu ${VERSION_CODENAME} unified' | $SUDO tee $INTEL_LIST >/dev/null"
+  APT_UPDATED=0
+else
+  ok "intel-graphics apt source present"
+fi
+
+apt_update_once
+
+apt_install \
+  libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 \
+  intel-opencl-icd intel-media-va-driver-non-free \
+  clinfo intel-gpu-tools
+
+ensure_group render
+ensure_group video
+
+# ----------------------------------------------- device node visibility -----
+
+log "GPU device passthrough (/dev/dri)"
+
+if [[ -d /dev/dri ]]; then
+  ok "/dev/dri exists"
+  ls -l /dev/dri | sed 's/^/    /'
+else
+  miss "/dev/dri missing — kernel i915/xe module may not be loaded"
+  SUMMARY+=("No /dev/dri on host; iGPU inference will fail. Check dmesg for i915/xe.")
+fi
+
+# ------------------------------------------------------------ summary -------
+
+log "Summary"
+
+echo "  OS codename       : ${VERSION_CODENAME:-unknown}"
+echo "  Docker            : $(command -v docker >/dev/null 2>&1 && docker --version || echo 'not installed')"
+echo "  Compose plugin    : $(docker compose version 2>/dev/null | head -1 || echo 'not installed')"
+echo "  Level Zero        : $(dpkg-query -W -f='${Version}' libze1 2>/dev/null || echo 'not installed')"
+echo "  Intel iGPU driver : $(dpkg-query -W -f='${Version}' libze-intel-gpu1 2>/dev/null || echo 'not installed')"
+echo "  OpenCL runtime    : $(dpkg-query -W -f='${Version}' intel-opencl-icd 2>/dev/null || echo 'not installed')"
+
+if [[ "${#SUMMARY[@]}" -gt 0 ]]; then
+  echo
+  echo "  Follow-ups:"
+  for line in "${SUMMARY[@]}"; do
+    echo "    * $line"
+  done
+fi
+
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo
+  echo "  (dry-run: nothing was changed)"
+fi
+
+echo
+echo "Next steps:"
+echo "  * Log out and back in (or reboot) if you were newly added to a group."
+echo "  * Verify GPU access:  ls -l /dev/dri  && clinfo -l"
+echo "  * Continue with:      make check-l0 && make backend-venv && make backend-bootstrap"
