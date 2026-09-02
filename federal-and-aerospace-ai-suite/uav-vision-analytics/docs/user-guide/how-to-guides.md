@@ -22,7 +22,6 @@ Learn more about:
 :hidden:
 
 YOLOv8n-VisDrone AI Model <./how-to-guides/model.md>
-Benchmarking <./how-to-guides/benchmark.md>
 Makefile Reference <./how-to-guides/makefile.md>
 RealSense Camera <./how-to-guides/realsense-guide.md>
 QGroundControl <./how-to-guides/qgroundcontrol.md>

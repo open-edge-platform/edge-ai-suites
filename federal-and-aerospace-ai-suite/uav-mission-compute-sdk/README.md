@@ -27,6 +27,21 @@ Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO visio
 
 ---
 
+## Getting the Code
+
+This SDK lives inside the [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites) monorepo. To
+check out only this directory instead of the entire repo, use a sparse
+checkout:
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+cd federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+```
+
+---
+
 ## Prerequisites
 
 - **OS**: Ubuntu 24.04
@@ -180,3 +195,4 @@ FFmpeg is an open source project licensed under LGPL and GPL. See https://www.ff
 
 GStreamer is an open source framework licensed under LGPL. See https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html. You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.
 
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See Intel's [Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.

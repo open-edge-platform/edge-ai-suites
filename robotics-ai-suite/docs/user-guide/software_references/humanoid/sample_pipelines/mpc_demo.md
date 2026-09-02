@@ -13,9 +13,11 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 Please make sure you have finished setup steps in [Get Started](../../../platform_foundation/getting_started.md).
 
-## ROS2 Humble Setup
+## ROS2 Jazzy Setup
 
-Please refer to the [official ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
+Please refer to the [official ROS2 Jazzy installation](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html). The target platform for this release is Ubuntu 24.04.
+
+> **Note:** This release is maintained for ROS2 Jazzy only. If you need ROS2 Humble, please switch to the **2026.1** release.
 
 ## ACT Setup
 
@@ -41,37 +43,58 @@ git apply ../patches/ov/0006-add-ros2-node-and-use-fixed-cube-pose.patch
 
 Here, we adopted and modified the [open-source project OCS2](https://github.com/leggedrobotics/ocs2) as the MPC module. OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. You can go to [OCS2 official web](https://leggedrobotics.github.io/ocs2/overview.html) for more details.
 
-It should be noted that the original OCS2 project is based on ROS1 Noetic, while we migrate it to ROS2 humble and enable it on ACT Aloha.
+The upstream OCS2 project already provides a ROS2 baseline. On top of it we apply two patches: patch 001 adds the dual-arm ALOHA mobile manipulator for ACT+OCS2+MUJOCO, and patch 002 adds the non-ROS MPC (MPC-MRT) module and test pipeline.
 
 ### Install OCS2
 
 1. Install dependencies:
 
    ```bash
-   # install basic library
+   # install basic libraries
+   sudo apt update
    sudo apt-get install -y \
-     libglpk-dev \
-     libmpfr-dev \
-     libglfw3 \
-     libglfw3-dev \
-     libosmesa6 \
-     freeglut3-dev \
-     mesa-common-dev \
-     python3-pip \
-     python3-wstool \
-     wget
+     build-essential cmake git \
+     python3-colcon-common-extensions python3-rosdep \
+     python3-dev pybind11-dev \
+     libeigen3-dev libboost-all-dev libglpk-dev \
+     libgmp-dev libmpfr-dev libcgal-dev libopencv-dev libpcl-dev \
+     liburdfdom-dev \
+     libglfw3 libglfw3-dev libosmesa6 freeglut3-dev mesa-common-dev \
+     python3-pip python3-wstool wget
 
-   # install ros2 library
+   # install ROS 2 Jazzy libraries
    sudo apt-get install -y \
-     ros-humble-pinocchio \
-     ros-humble-hpp-fcl \
-     ros-humble-joint-state-publisher
+     ros-jazzy-eigen3-cmake-module \
+     ros-jazzy-hpp-fcl \
+     ros-jazzy-grid-map \
+     ros-jazzy-xacro \
+     ros-jazzy-robot-state-publisher \
+     ros-jazzy-joint-state-publisher \
+     ros-jazzy-rviz2
+   ```
+
+   On Jazzy, `rosdep` resolves `pinocchio` to `ros-jazzy-pinocchio`, which is not released. Install Pinocchio (and coal) from OpenRobots robotpkg instead:
+
+   ```bash
+   sudo apt install -y curl ca-certificates gnupg lsb-release
+   sudo install -d -m 0755 /etc/apt/keyrings
+   curl -fsSL http://robotpkg.openrobots.org/packages/debian/robotpkg.asc | sudo tee /etc/apt/keyrings/robotpkg.asc >/dev/null
+   echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(. /etc/os-release && echo $VERSION_CODENAME) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list >/dev/null
+   sudo apt update
+   sudo apt install -y robotpkg-pinocchio robotpkg-coal
+   ```
+
+   Make sure CMake and the dynamic loader can find the robotpkg installs (add these to your shell rc to persist across terminals):
+
+   ```bash
+   export CMAKE_PREFIX_PATH=/opt/openrobots:${CMAKE_PREFIX_PATH}
+   export LD_LIBRARY_PATH=/opt/openrobots/lib:${LD_LIBRARY_PATH}
    ```
 
 2. Create workspace for ocs2 and ocs2_robotic_assets:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    mkdir -p ~/ocs2_ws/src
    cd ~/ocs2_ws/src
    ```
@@ -95,11 +118,11 @@ It should be noted that the original OCS2 project is based on ROS1 Noetic, while
    ```bash
    cd ~/ocs2_ws
    # rosdep
-   rosdep update --rosdistro humble
-   rosdep install --from-paths src --ignore-src -r -y
+   rosdep update --rosdistro jazzy
+   rosdep install --from-paths src --ignore-src -r -y --skip-keys pinocchio
 
    # build
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release
    ```
 
@@ -128,7 +151,7 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
 3. Build MujocoRosUtils:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    cd ~/ocs2_ws
    colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=$HOME/.mujoco/mujoco-2.3.7
@@ -139,7 +162,7 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
 1. Open new terminal and run Mujoco:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    cd ~/.mujoco/mujoco-2.3.7/bin
    ./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
@@ -160,7 +183,7 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
 2. Open new terminal and run OCS2:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    ros2 launch ocs2_mobile_manipulator_ros manipulator_aloha_dual_arm.launch.py
    ```
@@ -177,7 +200,7 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
 
    ```bash
    # env
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    source [path to your act venv]/bin/activate
 
