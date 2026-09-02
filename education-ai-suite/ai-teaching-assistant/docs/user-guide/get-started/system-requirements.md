@@ -44,7 +44,7 @@ HDD is **not recommended** — model loading and inference will be slow.
 ## Software Dependencies
 
 ### Python
-- **Python 3.10** or **3.11** (3.12+ not yet tested)
+- **Python 3.11** or **3.12** 
 - Download from [python.org](https://www.python.org/downloads/)
 - During installation, **check "Add Python to PATH"**
 

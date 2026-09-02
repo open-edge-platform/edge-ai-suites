@@ -1,40 +1,44 @@
 # Release Notes
 
-## v1.20.0
+## Version 1.20.0
 
-**New**
+**Release Date**: September 9, 2026
 
-- Configurable NGINX upload limit is now available (e.g. for SceneScape GLB 3D base map files).
-- GPU and NPU support with trusted compute has been integrated.
+**New**:
 
-**Improved**
+- Configurable NGINX upload limit is now available (e.g. for Scenescape GLB 3D base map files).
+- GPU and NPU support with Trusted Compute has been integrated.
 
-- Consumed latest DL Streamer Pipeline Server version 2026.2.0.
+**Improved**:
+
+- Consumed the latest DL Streamer Pipeline Server version 2026.2.0.
 - Consumed the latest Scenescape version 2026.2.0.
 
-## v1.19.0
+## Version 1.19.0
 
-**New**
+**New**:
 
-- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Qualified on the Intel® Core™ Series 3 processor "Wildcat Lake" (WCL).
 
-**Improved**
+**Improved**:
 
 - Optimized the latency for GPU and NPU workloads.
 
-## v1.18.0
+## Version 1.18.0
 
-**New**
+**New**:
 
 - Qualified on the Intel® Core™ Ultra Series 3 processor.
 
-**Improved**
+**Improved**:
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
 - Consumed the latest Scenescape version 2026.0.0.
 - Optimized the latency for GPU and NPU workloads.
 
-## v1.17.0
+## Version 1.17.0
+
+**New**:
 
 - Consumed latest Scenescape version 2025.2
 - Consumed latest DL Streamer Pipeline Server version 2025.2

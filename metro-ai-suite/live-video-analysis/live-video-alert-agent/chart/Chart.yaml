@@ -5,7 +5,7 @@ apiVersion: v2
 name: live-video-alert-agent-chart
 description: A Helm chart for deploying the Live Video Alert Agent with OpenVINO VLM inference
 type: application
-version: 2026.2.0-rc1-helm
+version: 2026.2.0-rc2-helm
 appVersion: "2.0.0"
 
 dependencies:

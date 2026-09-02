@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: {{ .Values.retrieverMilvus.name }}
-        image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.retrieverMilvus.image.repository }}:{{ .Values.retrieverMilvus.image.tag }}"
+        image: "{{ .Values.retrieverMilvus.image.repository }}:{{ .Values.retrieverMilvus.image.tag }}"
         imagePullPolicy: {{ .Values.retrieverMilvus.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.servicePorts.retriever }}

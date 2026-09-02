@@ -1,10 +1,9 @@
 # Release Notes
 
-## Current Release
+## Version 2025.2.0
 
-**Version**: 2025.2.0 \
-**Helm Chart Version**: 1.0.0 \
-**Release Date**: 10 Dec 2025
+**Helm Chart Version**: 1.0.0
+**Release Date**: December 10, 2025
 
 **Features**:
 
@@ -20,7 +19,7 @@
 
   - Includes data preparation, retriever, multimodal embedding, VLM serving, and a Streamlit-based web UI.
 
-**HW used for validation**:
+**Hardware Used for Validation**:
 
 - Intel® Core™ processors (13th Gen, i7 recommended)
 - Intel® Arc™ A-Series Graphics (Intel® Arc™ A770 recommended)

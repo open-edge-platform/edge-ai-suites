@@ -8,9 +8,9 @@
 #
 # Usage:   source docker/set_env.sh      # before ./setup_docker.sh / docker compose up
 
-# Auto-detect the host IP (used for no_proxy and the model-serving base URLs).
-HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
-export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding,${HOST_IP}
+# Everything in the stack is reached over loopback or by compose service name, so
+# these are the only hosts that must bypass the proxy.
+export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding
 
 # =========================================================================
 # vLLM-IPEX model serving
@@ -23,6 +23,9 @@ HF_HOME=${HF_HOME:=~/models/huggingface}
 export HF_HOME
 # Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
 mkdir -p "${HF_HOME}"
+
+# Uncomment this line to disable Hugging Face's online checks for new versions of transformers, accelerate, etc.
+# export HF_HUB_OFFLINE=1
 
 # Change to https://hf-mirror.com if you are in China and want to use the mirror site for Hugging Face.
 # export HF_ENDPOINT=https://hf-mirror.com
@@ -47,6 +50,11 @@ fi
 export TENSOR_PARALLEL_SIZE=1        # single integrated GPU on PTL
 export VLLM_SERVICE_PORT=41091
 
+# Interface the model services publish on — vllm (:41091) and multilevel (:8192),
+# which share this value. Loopback by default; neither authenticates. Uncomment to
+# serve other machines, with your own authentication in front.
+# export VLLM_BIND_HOST=0.0.0.0
+
 
 # =========================================================================
 # multilevel-video-understanding microservice
@@ -54,9 +62,9 @@ export VLLM_SERVICE_PORT=41091
 # Its source (edge-ai-libraries) is not vendored here — setup_docker.sh clones it
 # into the fixed path .external/edge-ai-libraries, which docker/compose.yaml
 # `extends` from. No env var needed.
-export REGISTRY_URL=intel/
+export REGISTRY_URL=${REGISTRY_URL:-intel/}
 export REGISTRY=${REGISTRY_URL}
-export TAG=latest
+export TAG=${TAG:-2026.2.0}                     # set as the latest release version
 export SERVICE_PORT=8192
 
 # Run multilevel-video-understanding as the host user

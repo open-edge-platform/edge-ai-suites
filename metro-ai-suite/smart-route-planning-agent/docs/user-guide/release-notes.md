@@ -2,31 +2,31 @@
 
 ## Version 2026.2.0
 
-**August 4, 2026**
+**Release Date**: September 9, 2026
 
-**Improved**
+**Improved**:
 
-- Updated dependency specifications to use compatible-release (`~=`) versioning based on PEP 440 standard.
+- Updated dependency specifications to use compatible-release (`~=`) versioning based on the PEP 440 standard.
 - Updated all dependencies to latest compatible versions.
-- Pinned `uv` installer to semantic versioning range (>=0.9.22,<1.0.0) for reproducible docker builds.
-- Removal of unused and few transitive dependencies for cleaner dependency tree.
+- Pinned `uv` installer to semantic versioning range (>=0.9.22,<1.0.0) for reproducible Docker builds.
+- Removed unused and a few transitive dependencies for a cleaner dependency tree.
 
 ## Version 2026.1.0
 
-**May 14, 2026**
+**Release Date**: May 14, 2026
 
-**New**
+**New**:
 
 - Deployment with Helm chart.
 
-**Improved**
+**Improved**:
 
 - Introduced a websockets client based connection to multiple Smart Traffic Intersection agents.
 - Replace the previous gradio based polling logic to asyncio based non-blocking calls at regular intervals.
 
 ## Version 1.0.0
 
-**April 01, 2026**
+**Release Date**: April 1, 2026
 
 The Smart Route Planning Agent (SRPA) is a new sample application which presents the use of
 Hybrid AI in combination with the Smart Traffic Intersection Agent (STIA).
@@ -38,7 +38,7 @@ points using the live traffic data provided by the STIA, which mimics the agent 
 at the edge. A UI is provided to select two end points for the route, show recommended
 route options, and get information from edge agents.
 
-**New**
+**New**:
 
 - **Real-time Traffic Analysis**: Comprehensive directional traffic density monitoring with MQTT integration.
 - **VLM Integration**: Vision Language Model (VLM)-powered traffic scene analysis with sustained traffic detection.
@@ -52,7 +52,7 @@ route options, and get information from edge agents.
 - **Enhanced Error Handling**: Comprehensive error management across MQTT, VLM, and image services.
   - **Impact**: Improved service reliability and diagnostic capabilities.
 
-### Known Issues
+**Known Issues**:
 
 - Helm is not supported.
 - This release includes only limited testing on Standalone and Developer Node versions

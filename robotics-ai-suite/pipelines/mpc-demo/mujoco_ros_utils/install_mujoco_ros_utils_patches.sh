@@ -25,7 +25,11 @@ PATCHES_APPLIED=0
 # If patch list file is provided, use it
 if [ "$#" -eq 1 ]; then
     PATCH_LIST_FILE="$1"
-    
+
+    # Resolve to an absolute path before changing directory, so the patch-list
+    # redirection below still works after 'cd' into the submodule.
+    PATCH_LIST_FILE="$(cd "$(dirname "$PATCH_LIST_FILE")" && pwd)/$(basename "$PATCH_LIST_FILE")"
+
     cd MujocoRosUtils
     # Apply patches from file (no existence check as requested)
     while IFS= read -r PATCH_FILE; do

@@ -2,24 +2,26 @@
 
 ## Version 2026.2.0
 
-**Aug 4, 2026**
+**Release Date**: September 9, 2026
 
-- Integrate model-download microservice to manage VLM models
-- Replace live-metrics with metrics-manager
+**New**:
+
+- Integrated model-download microservice to manage VLM models.
+- Replaced live-metrics with Metrics Manager.
 - Enabled fullscreen and download actions for camera gallery images so pedestrian and traffic views can be inspected more easily.
-- Added configurable camera-feed staleness detection with a visual `STALE` badge when a frame is older than the configured threshold
-- Enable GPU with Trusted Compute
+- Added configurable camera-feed staleness detection with a visual `STALE` badge when a frame is older than the configured threshold.
+- Enabled GPU with Trusted Compute.
 
 ## Version 2026.1.0
 
-**June 17, 2026**
+**Release Date**: June 17, 2026
 
-**New**
+**New**:
 
 - Added `response_format` (JSON schema) support for structured VLM output via OVMS structured generation.
 - Added alert deduplication and short-analysis fallback for improved VLM response handling.
 
-**Improved**
+**Improved**:
 
 - Integrated Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm).
 - Updated Smart Intersection RI to the latest release version.
@@ -30,13 +32,13 @@
   `OpenVINO/InternVL2-1B-int4-ov` and `OpenVINO/Phi-3.5-vision-instruct-int8-ov` have been validated.
 - Automatic model export and conversion in Helm init container using OVMS export tooling.
 
-**Known Issues**
+**Known Issues**:
 
 - VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
 
 ## Version 1.0.0
 
-**April 01, 2026**
+**Release Date**: April 1, 2026
 
 Smart Traffic Intersection Agent (STIA) is a new addition to the Metro AI Sute. It showcases
 Hybrid AI usage in combination with the Smart Route Planning Agent (SRPA) sample application,
@@ -51,7 +53,7 @@ goal. For example, it tracks the number of vehicles at the intersection and if t
 heavy, it reports the reason. The default prompt is tuned to look for weather and accidents
 as sources of a traffic buildup.
 
-**New**
+**New**:
 
 - **Real-time Traffic Analysis**: Comprehensive directional traffic density monitoring with MQTT integration.
 - **VLM Integration**: Vision Language Model (VLM)-powered traffic scene analysis with sustained traffic detection.
@@ -63,7 +65,7 @@ as sources of a traffic buildup.
 - **Image Retention Logic**: Camera images persist with VLM analysis for consistent data correlation.
 - **Enhanced Error Handling**: Comprehensive error management across MQTT, VLM, and image services.
 
-**Known Issues**
+**Known Issues**:
 
 - This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet
   be fully validated across all scenarios.

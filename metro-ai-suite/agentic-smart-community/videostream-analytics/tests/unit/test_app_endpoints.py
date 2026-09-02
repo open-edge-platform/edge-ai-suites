@@ -138,7 +138,13 @@ class TestRegisterSource:
         assert resp.json()["status"] == "started"
 
     def test_register_accepts_roi_block(self, client, mock_mgr):
-        """pipeline.roi top-level block must be accepted."""
+        """pipeline.roi top-level block must be accepted.
+
+        No `model_path` here on purpose: this test is about the `roi` block, and
+        a request-supplied model path would drag in the containment check
+        (`TestModelPathContainment`) for no reason. Omitting it makes the
+        prefilter inherit the deployment default, which is what MCP does.
+        """
         mock_mgr.register_source.return_value = {
             "status": "started",
             "source_id": "cam_child",
@@ -150,7 +156,6 @@ class TestRegisterSource:
             "pipeline": {
                 "prefilter": {
                     "enabled": True,
-                    "model_path": "/models/yolo11s.xml",
                     "target_classes": ["person"],
                 },
                 "roi": {
@@ -333,9 +338,18 @@ class TestPrefilterCapabilities:
 
 
 class TestTargetClassesValidation:
-    def _model(self, tmp_path):
+    def _model(self, client, tmp_path):
+        """Create a model file and make its directory a permitted model root.
+
+        `AppConfig()` ships no `defaults.prefilter.model_path`, so there is no
+        model root at all by default and `validate_model_path` rejects every
+        request-supplied path with 400 (see `TestModelPathContainment`). Same
+        closure-sharing trick as `test_capabilities_embedded_labels`:
+        `app.state.config` IS the object `create_app` closed over.
+        """
         model = tmp_path / "model.xml"
         model.write_text("<net/>")
+        client.app.state.config.security.allowed_model_roots.append(str(tmp_path))
         return str(model)
 
     def test_register_rejects_unknown_target_class(self, client, mock_mgr, monkeypatch, tmp_path):
@@ -348,7 +362,7 @@ class TestTargetClassesValidation:
             "pipeline": {
                 "prefilter": {
                     "enabled": True,
-                    "model_path": self._model(tmp_path),
+                    "model_path": self._model(client, tmp_path),
                     "target_classes": ["person", "helmets"],
                 },
             },
@@ -370,7 +384,7 @@ class TestTargetClassesValidation:
             "pipeline": {
                 "prefilter": {
                     "enabled": True,
-                    "model_path": self._model(tmp_path),
+                    "model_path": self._model(client, tmp_path),
                     "target_classes": ["person", "knife"],
                 },
             },
@@ -389,7 +403,7 @@ class TestTargetClassesValidation:
             "pipeline": {
                 "prefilter": {
                     "enabled": True,
-                    "model_path": self._model(tmp_path),
+                    "model_path": self._model(client, tmp_path),
                     "target_classes": ["anything_goes"],
                 },
             },
@@ -697,15 +711,19 @@ class TestConcurrentRegistration:
         assert resp.json()["detail"]["error"] == "registration_in_progress"
 
 
-class TestModelPathStatFailure:
-    """`Path.exists()` raises (not False) for un-stat-able paths.
+class TestModelPathContainment:
+    """A request-supplied `model_path` must resolve under a permitted root.
 
-    Python's `Path.exists()` only swallows ENOENT/ENOTDIR/ELOOP; a fuzzed
-    model_path longer than NAME_MAX raises ENAMETOOLONG. That used to escape
-    `_validate_target_classes` as a bare 500 (InvalidValueChecker_500 on
-    register_source and PUT /pipeline). An un-stat-able path cannot name a
-    readable model either, so it must behave like a missing one: skip the
-    label check and let the request through.
+    The value reaches `openvino.Core().read_model()` twice — once in
+    `_validate_target_classes` via `Path(...).exists()` + `read_model_labels`,
+    and again in `rtsp_monitor._init_prefilter` on the running pipeline — and
+    the API has no authentication. Unconfined, it is a file-existence oracle
+    plus a way to have arbitrary server files parsed as an IR model
+    (CodeQL `py/path-injection`).
+
+    Permitted roots are the directory of `defaults.prefilter.model_path` plus
+    `security.allowed_model_roots`. `AppConfig()` sets neither, so the default
+    posture is "reject every request-supplied model_path".
     """
 
     def _register(self, client, model_path):
@@ -724,37 +742,185 @@ class TestModelPathStatFailure:
             },
         )
 
-    def test_overlong_model_path_does_not_500(self, client, mock_mgr):
-        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
-        resp = self._register(client, "z" * 2000)
-        assert resp.status_code == 200
-
-    def test_overlong_model_path_on_update_pipeline(self, client, mock_mgr):
-        mock_mgr.update_pipeline_config.return_value = {
-            "status": "updated",
-            "source_id": "cam1",
-        }
-        resp = client.put(
+    def _update(self, client, model_path):
+        return client.put(
             "/sources/cam1/pipeline",
             json={
                 "pipeline": {
                     "prefilter": {
                         "enabled": True,
-                        "model_path": "z" * 2000,
+                        "model_path": model_path,
                         "target_classes": ["person"],
                     },
                 },
             },
         )
+
+    @staticmethod
+    def _permit(client, root):
+        client.app.state.config.security.allowed_model_roots.append(str(root))
+
+    def test_no_root_configured_rejects_any_model_path(self, client, mock_mgr):
+        """Default posture: nothing configured -> nothing accepted."""
+        resp = self._register(client, "/etc/shadow")
+        assert resp.status_code == 400
+        assert resp.json()["detail"]["error"] == "invalid_request"
+
+    def test_path_inside_root_is_accepted(self, client, mock_mgr, tmp_path):
+        """Inside a permitted root the request goes through.
+
+        The file need not exist: containment is a path check, not an existence
+        check, and `_validate_target_classes` already treats a missing model as
+        "labels unavailable" and skips.
+        """
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        self._permit(client, tmp_path)
+        resp = self._register(client, str(tmp_path / "sub" / "model.xml"))
         assert resp.status_code == 200
 
-    def test_exists_oserror_is_treated_as_missing(self, client, mock_mgr, monkeypatch):
-        """Any OSError from exists() -> labels unavailable -> skip, not crash."""
+    def test_path_outside_root_is_rejected(self, client, mock_mgr, tmp_path):
+        self._permit(client, tmp_path / "allowed")
+        resp = self._register(client, str(tmp_path / "elsewhere" / "model.xml"))
+        assert resp.status_code == 400
+
+    def test_traversal_out_of_root_is_rejected(self, client, mock_mgr, tmp_path):
+        """`..` must not walk out — normalization happens before the check."""
+        self._permit(client, tmp_path / "allowed")
+        resp = self._register(
+            client, str(tmp_path / "allowed" / ".." / "etc" / "model.xml")
+        )
+        assert resp.status_code == 400
+
+    def test_sibling_prefix_is_not_contained(self, client, mock_mgr, tmp_path):
+        """`<root>-evil/x` shares a string prefix with `<root>` but is outside.
+
+        This is why containment appends `os.sep` before comparing.
+        """
+        root = tmp_path / "models"
+        root.mkdir()
+        (tmp_path / "models-evil").mkdir()
+        self._permit(client, root)
+        resp = self._register(client, str(tmp_path / "models-evil" / "model.xml"))
+        assert resp.status_code == 400
+
+    def test_symlink_escape_is_rejected(self, client, mock_mgr, tmp_path):
+        """A symlink inside the root pointing out of it must not smuggle access."""
+        root = tmp_path / "models"
+        root.mkdir()
+        outside = tmp_path / "secrets"
+        outside.mkdir()
+        (outside / "model.xml").write_text("<net/>")
+        (root / "link").symlink_to(outside)
+        self._permit(client, root)
+        resp = self._register(client, str(root / "link" / "model.xml"))
+        assert resp.status_code == 400
+
+    def test_resolved_path_is_substituted(self, client, mock_mgr, tmp_path):
+        """The SourceConfig must carry the RESOLVED path, not the raw request.
+
+        Substitution is what keeps the running pipeline
+        (`rtsp_monitor._init_prefilter`) from loading an unnormalized path, and
+        it is what puts the containment check on the data flow that reaches the
+        sink — a validate-and-discard helper would satisfy neither.
+        """
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        root = tmp_path / "models"
+        root.mkdir()
+        self._permit(client, root)
+        resp = self._register(client, str(root / "." / "model.xml"))
+        assert resp.status_code == 200
+        ((source_arg,), _) = mock_mgr.register_source.call_args
+        assert source_arg.prefilter.model_path == str(
+            (root / "model.xml").resolve()
+        )
+
+    def test_absent_model_path_inherits_trusted_default(self, client, mock_mgr, tmp_path):
+        """Omitting model_path must NOT be blocked by containment.
+
+        This is the MCP path — it never sends `model_path`, so every real
+        request inherits `defaults.prefilter.model_path`, which is trusted
+        config and deliberately not re-checked.
+        """
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        client.app.state.config.defaults.prefilter.model_path = str(
+            tmp_path / "deployment" / "model.xml"
+        )
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "pipeline": {"prefilter": {"enabled": True, "target_classes": ["person"]}},
+            },
+        )
+        assert resp.status_code == 200
+
+    def test_deployment_model_directory_is_a_root(self, client, mock_mgr, tmp_path):
+        """A sibling of the deployment model is accepted with no extra config.
+
+        `_model_roots` derives the root from `defaults.prefilter.model_path`, so
+        the standard deployment can switch models within its own model dir
+        without anyone setting `allowed_model_roots`.
+        """
+        mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
+        model_dir = tmp_path / "openvino" / "yolo11s" / "FP16"
+        model_dir.mkdir(parents=True)
+        client.app.state.config.defaults.prefilter.model_path = str(
+            model_dir / "yolo11s.xml"
+        )
+        resp = self._register(client, str(model_dir / "yolo11m.xml"))
+        assert resp.status_code == 200
+
+    def test_overlong_model_path_does_not_500(self, client, mock_mgr):
+        """Regression: a fuzzed over-long model_path must not reach `Path.exists()`.
+
+        History: `Path.exists()` only swallows ENOENT/ENOTDIR/ELOOP, so a
+        model_path longer than NAME_MAX raised ENAMETOOLONG and escaped
+        `_validate_target_classes` as a bare 500 (InvalidValueChecker_500 on
+        both register_source and PUT /pipeline). That was first fixed by
+        treating an un-stat-able path as missing; containment now rejects it
+        earlier and for a better reason — it is not under a permitted root —
+        so the response is a deliberate 400. What must never come back is 500.
+        """
+        resp = self._register(client, "z" * 2000)
+        assert resp.status_code == 400
+
+    def test_overlong_model_path_on_update_pipeline(self, client, mock_mgr):
+        resp = self._update(client, "z" * 2000)
+        assert resp.status_code == 400
+
+    def test_relative_model_path_is_rejected(self, client, mock_mgr, tmp_path):
+        self._permit(client, tmp_path)
+        resp = self._register(client, "models/model.xml")
+        assert resp.status_code == 400
+
+
+class TestConfiguredModelPathStatFailure:
+    """The OSError-from-`exists()` fallback now only guards the TRUSTED path.
+
+    Request-supplied paths are rejected by `validate_model_path` before they
+    reach `Path(...).exists()` (see `TestModelPathContainment`), but
+    `defaults.prefilter.model_path` is not containment-checked, so a mistyped
+    config.yaml can still land in that `except OSError` branch. It must degrade
+    to "labels unavailable, skip the check" rather than crash.
+    """
+
+    def test_exists_oserror_on_configured_default_is_treated_as_missing(
+        self, client, mock_mgr, monkeypatch
+    ):
         from pathlib import Path as _P
 
         monkeypatch.setattr(
             _P, "exists", lambda self: (_ for _ in ()).throw(OSError("boom"))
         )
         mock_mgr.register_source.return_value = {"status": "started", "source_id": "cam1"}
-        resp = self._register(client, "/some/model.xml")
+        client.app.state.config.defaults.prefilter.model_path = "/some/model.xml"
+        resp = client.post(
+            "/register_source",
+            json={
+                "source_id": "cam1",
+                "source_url": "rtsp://localhost:8554/live/x",
+                "pipeline": {"prefilter": {"enabled": True, "target_classes": ["person"]}},
+            },
+        )
         assert resp.status_code == 200
