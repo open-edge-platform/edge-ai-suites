@@ -160,3 +160,15 @@ Press **ESC** inside the display window to quit the app.
 
 For every runtime knob, CLI flag, and low-latency variant, see
 [Runtime Configuration](./runtime-configuration.md).
+
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+System Requirements <./get-started/system-requirements.md>
+Model Preparation <./get-started/model-preparation.md>
+
+:::
+hide_directive-->
