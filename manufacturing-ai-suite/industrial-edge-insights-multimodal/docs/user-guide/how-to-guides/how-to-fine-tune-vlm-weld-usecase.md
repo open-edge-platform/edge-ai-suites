@@ -91,7 +91,7 @@ objective with a relatively small amount of LoRA fine-tuning.
    with these columns at the minimum:
 
    | Column | Type | Description |
-   |---|---|---|
+   | --- | --- | --- |
    | `Frame_id` | string | Image filename stem used to resolve the image file under `--images-root` |
    | `output_prediction_details` | Python dictionary literal (string) | Classifier output — see below |
    | `Category` | string | Canonical weld-session label used for stratified splitting (falls back to the parsed `predicted_category` if absent) |
@@ -101,7 +101,7 @@ objective with a relatively small amount of LoRA fine-tuning.
    dict shaped like the output of
    [`classification-training`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training)'s
    `WeldDefectPredictor` — see its
-   [Output Format](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training/README.md#output-format)
+   [Output Format](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/training/classification-training/README.md#output-format)
    section for the exact shape, e.g.:
 
    ```python
@@ -310,24 +310,27 @@ fine-tuned to reproduce in Step 3.
 ## Detailed Data-Preparation Flow
 
 ```mermaid
+---
+config: {"theme": "dark"}
+---
 flowchart TD
-    A["Fused CSV\n(--input-csv)"] --> B["CSV Loader and Cleaner"]
-    I["Image Root\n(--images-root)"] --> C["Image Index by Frame_id stem"]
+    A["Fused CSV</br>(--input-csv)"] --> B["CSV Loader and Cleaner"]
+    I["Image Root</br>(--images-root)"] --> C["Image Index by Frame_id stem"]
 
     B --> D["Parse output_prediction_details"]
     C --> E["Frame_id to Image Resolution"]
     D --> F["Sensor Block Builder"]
     E --> F
 
-    F --> G["Prompt Variant Sampler\n7 templates, seeded"]
+    F --> G["Prompt Variant Sampler</br>7 templates, seeded"]
     D --> H["Defect Knowledge Lookup + Fallback"]
 
-    G --> J["Assistant Response Composer\n(fixed report schema)"]
+    G --> J["Assistant Response Composer</br>(fixed report schema)"]
     H --> J
 
-    J --> K["Conversation Builder\nsystem + user(text,image) + assistant"]
-    K --> L["Record Assembler\nid, image, label, confidence, conversation_json"]
-    L --> M["Stratified Split by canonical_category\ntrain / validation / test"]
+    J --> K["Conversation Builder</br>system + user(text,image) + assistant"]
+    K --> L["Record Assembler</br>id, image, label, confidence, conversation_json"]
+    L --> M["Stratified Split by canonical_category</br>train / validation / test"]
 
     M --> N["HF DatasetDict Export (Arrow)"]
     M --> O["Parquet Export per split -> train_qwen.py"]

@@ -27,7 +27,7 @@ Scenescape's evaluation framework uses the [TrackEval](https://github.com/Jonath
 scenescape/tools/tracker/evaluation/
 ```
 
-For a full reference, see the [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/tools/tracker/evaluation/README.md).
+For a full reference, see the [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/tools/tracker/evaluation/README.md).
 
 ### How the Existing Evaluation Pipeline Works
 
@@ -153,7 +153,7 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md) to use the prebuilt images.
 
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
@@ -164,7 +164,7 @@ bash usecases/scenescape-deterministic-inference/hota/scripts/setup-hota-scene.s
 
 > **Note:** If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
 
-This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the Scenescape REST API. See the [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/api-reference.md) for details.
+This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the Scenescape REST API. See the [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/api-reference.md) for details.
 
 ### 2b. Install the SEI Frame-Number Parser
 
@@ -335,13 +335,13 @@ Results are stored in timestamped subdirectories under `/tmp/tracker-evaluation/
 ## References
 
 - [HOTA Script Reference](./hota-script-reference.md)
-- [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/2026.1.0/tools/tracker/evaluation/README.md)
+- [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/release-2026.2.0/tools/tracker/evaluation/README.md)
 - [TrackEval Toolkit](https://github.com/JonathonLuiten/TrackEval)
 - [TSN Traffic Shaping Guide](../common/enable-tsn-traffic-shaping.md)
-- [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0/docs/user-guide/api-reference.md)
+- [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/api-reference.md)
 
 - Dataset files:
-  - [cam-x1-mp4](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x1_0.mp4)
-  - [cam-x2-mp4](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x2_0.mp4)
-  - [cam-x1-json](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x1_0.json)
-  - [cam-x2-json](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x2_0.json)
+  - [cam-x1-mp4](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/tests/system/metric/unity_dataset/Cam_x1_0.mp4)
+  - [cam-x2-mp4](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/tests/system/metric/unity_dataset/Cam_x2_0.mp4)
+  - [cam-x1-json](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/tests/system/metric/unity_dataset/Cam_x1_0.json)
+  - [cam-x2-json](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/tests/system/metric/unity_dataset/Cam_x2_0.json)

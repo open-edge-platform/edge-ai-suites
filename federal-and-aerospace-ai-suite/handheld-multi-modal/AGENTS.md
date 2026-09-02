@@ -41,6 +41,7 @@ The Federal and Aerospace AI Suite Application Blueprint is defined and deployed
 | `RENDER_GID`       | `make setup` (auto-detect) | GPU device group for OpenVINO model server|
 | `GRAFANA_PASSWORD` | manual / defaults `admin`  | Grafana dashboard admin password          |
 | `CDI_XE_DEVICE_0`  | manual                     | CDI device path (CDI variant only)        |
+| `HF_TOKEN`         | optional, exported shell variable | Hugging Face token passed to OVMS and Open WebUI for authenticated, potentially faster model downloads; do not store it in `.env` or version control |
 
 Run `make setup` (idempotent) to auto-populate `.env` before any `make up` variant.
 
@@ -48,11 +49,13 @@ Run `make setup` (idempotent) to auto-populate `.env` before any `make up` varia
 
 ```bash
 make setup            # detects the render group GID and writes it into the .env file (idempotent)
-make deploy           # full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
-make deploy-cdi       # full one-shot: CDI and SR-IOV variant
+make deploy           # full deployment: starts ViPPET and handheld services while their model downloads run concurrently; waits for ViPPET models to install
+make deploy-cdi       # same full deployment for CDI and SR-IOV
 make vippet-get       # does sparse-checkout of Visual Pipeline and Platform Evaluation Tool into ../vippet-fedaero (excludes docs)
 make vippet-configure # copies telegraf.conf into the Visual Pipeline and Platform Evaluation Tool and patches the tool's compose.yml file
-make vippet-up        # starts Visual Pipeline and Platform Evaluation Tool (builds images and installs models)
+make vippet-up        # starts Visual Pipeline and Platform Evaluation Tool (builds images; does not wait for model installation)
+make models-download-async # requests ViPPET model downloads in the background; logs to .work/models-download.log
+make models-status    # waits for and displays ViPPET model installation status
 make vippet-down      # stops Visual Pipeline and Platform Evaluation Tool
 make up               # starts this stack only (Visual Pipeline and Platform Evaluation Tool must already be running)
 make up-standalone    # starts without Visual Pipeline and Platform Evaluation Tool (for development or testing)

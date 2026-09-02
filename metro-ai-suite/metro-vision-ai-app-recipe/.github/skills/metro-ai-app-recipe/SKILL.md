@@ -1,5 +1,5 @@
 ---
-name: metro-ai-apps-recipe
+name: metro-ai-app-recipe
 description: >-
   Stand up a complete, ready-to-run computer-vision analytics stack on Intel
   hardware with one Docker Compose command — point it at your video sources and
@@ -19,14 +19,14 @@ compatibility: >-
   (v2026.1.0 image tags).
 ---
 
-# Metro AI Apps Recipe — DLSPS + WebRTC + Mosquitto + Node-RED + Grafana + Nginx
+# Metro AI App Recipe — DLSPS + WebRTC + Mosquitto + Node-RED + Grafana + Nginx
 
 Build an end-to-end `{{OBJECT}}`-analytics stack on Intel hardware in
 `./{{STACK_DIR}}/` with Docker Compose. **Vertical-agnostic:** the same
 seven-container topology (Nginx, DLSPS, Mosquitto, Node-RED, Grafana, MediaMTX,
 Coturn) serves any DL Streamer / OpenVINO CV pipeline — only the model, class
 filter, alert rule, dashboard, and topics differ. Follows the open-edge-platform
-[Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe)
+[Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe)
 **MediaMTX + Coturn + WebRTC** path, streamlined (**no Prometheus/OTel**).
 Scenescape is **off by default** (opt-in multi-camera analysis). Metadata flows
 DLSPS→MQTT→Node-RED→Grafana; video is decoupled (DLSPS overlays via
@@ -248,7 +248,7 @@ If available, invoke; otherwise write files from the reference templates.
 ## Reference implementation
 
 The upstream
-[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
+[`smart-parking/src/`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src)
 recipe uses the same path — consult it for `config.json`, `mosquitto.conf`,
 `nginx.conf`, `datasources.yml`, `dashboards.yml`, `flows.json` shapes; drop
 `prometheus`/`otel-collector`/`metrics-manager`.

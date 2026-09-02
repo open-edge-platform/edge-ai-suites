@@ -1,5 +1,5 @@
 ---
-name: metro-ai-apps-builder
+name: metro-ai-app-builder
 description: >-
   Conversational orchestrator that turns a plain business objective into a
   working Intel Edge AI application by asking only business questions — never
@@ -20,7 +20,7 @@ metadata:
 allowed-tools: bash git gh
 ---
 
-# Metro AI Apps Builder — business-objective orchestrator
+# Metro AI App Builder — business-objective orchestrator
 
 You are the **single owner of this conversation**. The user states a business
 outcome (e.g. *"I want to detect people in my camera feeds"*, *"I want to search
@@ -109,8 +109,8 @@ refresh the live index and check what is already installed. Routing summary:
 
 | Business objective (what the user says) | Route to |
 |---|---|
-| "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full analytics stack + dashboard | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
-| "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-apps-recipe` Scenescape path) |
+| "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full analytics stack + dashboard | **`metro-ai-app-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
+| "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-app-recipe` Scenescape path) |
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
 | "Migrate / convert / port an NVIDIA DeepStream pipeline to Intel DL Streamer" | **`dlstreamer-coding-agent`** |
 | "Chatbot / Q&A / RAG over my documents" — Docker | **`chatqna-docker-deploy`**; Kubernetes → **`chatqna-helm-deploy`** |
@@ -153,7 +153,7 @@ Present a concise plan and **stop for approval**. Include:
   than a running app (e.g. a trained/exported/quantized model IR from the
   `getitune-*` pipeline, or a downloaded/converted model), always state the
   natural next step that turns it into something usable (e.g. deploy the IR via
-  `model-download-user` → `metro-ai-apps-recipe`), offered as the obvious
+  `model-download-user` → `metro-ai-app-recipe`), offered as the obvious
   follow-on.
 - **Next action on approval** — close the plan with one explicit line naming
   what you will do the moment the user says `go`: *delegate to `<primary skill>`
@@ -182,7 +182,7 @@ Only after confirmation:
 2. **Invoke the delegate skill**, passing the parameters you inferred in Step 3.
    Let it own the build — do not re-implement its work by hand. Chain supporting
    skills in dependency order (e.g. `model-download-user` →
-   `metro-ai-apps-recipe`; `vdms-dataprep-user` → `vss-*`).
+   `metro-ai-app-recipe`; `vdms-dataprep-user` → `vss-*`).
 3. Relay only the **business-relevant** progress to the user; keep the technical
    chatter to the delegate.
 
@@ -197,7 +197,7 @@ step fails, report the failing delegate step and stop — do not loop.
 ## Examples
 
 See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
-- `01-vision-detection.md` — camera detection → `metro-ai-apps-recipe`.
+- `01-vision-detection.md` — camera detection → `metro-ai-app-recipe`.
 - `02-document-chatbot.md` — RAG over PDFs → `chatqna-docker-deploy`.
 - `03-video-search.md` — search a video archive → `vss-deploy` + `vss-search-index`.
 - `04-train-a-model.md` — train a detector → `getitune-*`.
@@ -222,8 +222,8 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 - This skill wraps the prompt library (`metro-ai-suite/prompt-library`); the minimal
   `prompts/*.yaml` files state only a business objective and hand off here.
 - The delegate that builds the end-to-end vision stack is
-  `metro-ai-apps-recipe`
-  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/`)
+  `metro-ai-app-recipe`
+  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-app-recipe/`)
   in this same repository; all other delegates live in
   `open-edge-platform/skills`.
 - Keep the catalog in [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)

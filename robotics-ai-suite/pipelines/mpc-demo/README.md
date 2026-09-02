@@ -17,9 +17,11 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/robotics-ai-suite/components/ai_resources/developer_tools/oneapi.html) to setup Intel® oneAPI packages.
 
-## ROS2 Humble Setup
+## ROS2 Jazzy Setup
 
-Please refer to the [official ROS2 Humble installation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html).
+Please refer to the [official ROS2 Jazzy installation](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html). The target platform for this release is Ubuntu 24.04.
+
+> **Note:** This release is maintained for ROS2 Jazzy only. If you need ROS2 Humble, please switch to the **2026.1** release.
 
 ## ACT Setup
 
@@ -52,42 +54,65 @@ git apply ../patches/ov/0006-add-ros2-node-and-use-fixed-cube-pose.patch
 
 The required MPC module is based on the open-source project [OCS2](https://github.com/leggedrobotics/ocs2). OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. Your can go to [OCS2 official web](https://leggedrobotics.github.io/ocs2/overview.html) for more details.
 
-It should be noted that the original OCS2 project is based on ROS1 Noetic, so the following two patches are provided to migrate OCS2 to ROS2 humble and enable it on ACT Aloha:
+The upstream OCS2 project already provides a ROS2 baseline, so the following two patches are provided to enable it on ACT Aloha:
 
-| Patch num | Enhancement                                                          |
-| --------- | -------------------------------------------------------------------- |
-|    001    | Migrate mobile manipulation packages from ROS1 Noetic to ROS2 Humble |
-|    002    | Modify for ACT dual-arm Aloha                                        |
+| Patch num | Enhancement                                              |
+| --------- | -------------------------------------------------------- |
+|    001    | Add dual-arm ALOHA mobile manipulator for ACT+OCS2+MUJOCO |
+|    002    | Add non-ROS MPC (MPC-MRT) module and test pipeline        |
 
 ### Install OCS2
 
 1. Install dependencies:
 
    ```bash
-   # install basic library
+   # install basic libraries
+   sudo apt update
    sudo apt-get install -y \
-   libglpk-dev \
-   libmpfr-dev \
-   libglfw3 \
-   libglfw3-dev \
-   libosmesa6 \
-   freeglut3-dev \
-   mesa-common-dev \
-   python3-pip \
-   python3-wstool \
-   wget
+   build-essential cmake git \
+   python3-colcon-common-extensions python3-rosdep \
+   python3-dev pybind11-dev \
+   libeigen3-dev libboost-all-dev libglpk-dev \
+   libgmp-dev libmpfr-dev libcgal-dev libopencv-dev libpcl-dev \
+   liburdfdom-dev \
+   libglfw3 libglfw3-dev libosmesa6 freeglut3-dev mesa-common-dev \
+   python3-pip python3-wstool wget
 
-   # install ros2 library
+   # install ROS 2 Jazzy libraries
    sudo apt-get install -y \
-   ros-humble-pinocchio \
-   ros-humble-hpp-fcl \
-   ros-humble-joint-state-publisher
+   ros-jazzy-eigen3-cmake-module \
+   ros-jazzy-hpp-fcl \
+   ros-jazzy-grid-map \
+   ros-jazzy-xacro \
+   ros-jazzy-robot-state-publisher \
+   ros-jazzy-joint-state-publisher \
+   ros-jazzy-rviz2
+   ```
+
+   On Jazzy, `rosdep` resolves `pinocchio` to `ros-jazzy-pinocchio`, which is not
+   released. Install Pinocchio (and coal) from OpenRobots robotpkg instead:
+
+   ```bash
+   sudo apt install -y curl ca-certificates gnupg lsb-release
+   sudo install -d -m 0755 /etc/apt/keyrings
+   curl -fsSL http://robotpkg.openrobots.org/packages/debian/robotpkg.asc | sudo tee /etc/apt/keyrings/robotpkg.asc >/dev/null
+   echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/robotpkg.asc] http://robotpkg.openrobots.org/packages/debian/pub $(. /etc/os-release && echo $VERSION_CODENAME) robotpkg" | sudo tee /etc/apt/sources.list.d/robotpkg.list >/dev/null
+   sudo apt update
+   sudo apt install -y robotpkg-pinocchio robotpkg-coal
+   ```
+
+   Make sure CMake and the dynamic loader can find the robotpkg installs (add these
+   to your shell rc to persist across terminals):
+
+   ```bash
+   export CMAKE_PREFIX_PATH=/opt/openrobots:${CMAKE_PREFIX_PATH}
+   export LD_LIBRARY_PATH=/opt/openrobots/lib:${LD_LIBRARY_PATH}
    ```
 
 2. Create workspace for ocs2 and ocs2_robotic_assets:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    mkdir -p ~/ocs2_ws/src
    cd ~/ocs2_ws/src
    ```
@@ -111,13 +136,13 @@ It should be noted that the original OCS2 project is based on ROS1 Noetic, so th
    ```bash
    cd ~/ocs2_ws/
 
-   # rosdep
+   # rosdep (Pinocchio is provided by robotpkg above, so skip it here)
    rosdep init
-   rosdep update --rosdistro humble
-   rosdep install --from-paths src --ignore-src -r -y
+   rosdep update --rosdistro jazzy
+   rosdep install --from-paths src --ignore-src -r -y --skip-keys pinocchio
 
    # build
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release
    ```
 
@@ -146,7 +171,7 @@ The required Mujoco module is based on the open-source Mujoco Plugin project [Mu
 3. Build MujocoRosUtils
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    cd ~/ocs2_ws
    colcon build --packages-select mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=RelWithDebInfo -DMUJOCO_ROOT_DIR=$HOME/.mujoco/mujoco-2.3.7
@@ -159,7 +184,7 @@ The required Mujoco module is based on the open-source Mujoco Plugin project [Mu
    Open new terminal and run the following commands:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    cd ~/.mujoco/mujoco-2.3.7/bin
    ./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
@@ -183,7 +208,7 @@ The required Mujoco module is based on the open-source Mujoco Plugin project [Mu
    Open new terminal and run the following commands:
 
    ```bash
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    ros2 launch ocs2_mobile_manipulator_ros manipulator_aloha_dual_arm.launch.py
    ```
@@ -202,7 +227,7 @@ You can download our pre-trained weights for
 
    ```bash
    # env
-   source /opt/ros/humble/setup.bash
+   source /opt/ros/jazzy/setup.bash
    source ~/ocs2_ws/install/setup.bash
    source [path to your act venv]/bin/activate
 
@@ -214,3 +239,85 @@ You can download our pre-trained weights for
    After ACT running successfully, the Mujoco UI appears as follows:
 
    ![image](README.assets/mpc-sim-transmit-cube-demo.gif)
+
+## Non-ROS MPC Module (optional)
+
+Patch 002 adds `ocs2_mobile_manipulator_nonros`, a ROS-free variant of the dual-arm
+ALOHA demo. Instead of ROS topics, the MPC/MRT nodes, the MuJoCo viewer and the test
+publisher exchange data over the ECI shared-memory transport: the nodes publish each
+arm's joint state, the publisher supplies gripper targets, and the viewer renders them.
+This lets you run and profile the MPC pipeline without a ROS graph.
+
+### Dependencies
+
+```bash
+# MuJoCo and hardened XML parsing for Python
+pip install mujoco==3.10.0 "defusedxml>=0.7.1"
+
+# shared-memory transport (libshmringbuf.so must be on LD_LIBRARY_PATH,
+# e.g. /usr/lib/x86_64-linux-gnu)
+sudo apt install -y libshmringbuf-dev plcopen-databus-dev
+```
+
+### Build
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd ~/ocs2_ws
+colcon build --packages-select ocs2_mobile_manipulator_nonros
+source install/setup.bash
+```
+
+### Run
+
+The three helpers live under the patched OCS2 source tree. In the mpc-demo layout the
+submodule is nested one level deep, so set a helper variable once:
+
+```bash
+export OCS2_SRC=~/ocs2_ws/src/ocs2/ocs2/ocs2_robotic_examples/ocs2_mobile_manipulator_nonros
+```
+
+Startup order does not matter — each shared-memory block is opened lazily, so the
+viewer can start before the nodes.
+
+1. Launch both MPC/MRT arm nodes:
+
+   ```bash
+   cd "$OCS2_SRC/scripts"
+   ./run_aloha_dual_arm.sh
+   ```
+
+   Resources are auto-discovered via `AMENT_PREFIX_PATH`; override with
+   `NODE_BIN` / `TASK_FILE` / `URDF_FILE` / `LIB_FOLDER`.
+
+2. Start the MuJoCo viewer (one window shows both `vx300s` arms and the tabletop box,
+   with full physics so the grippers can grasp and lift the box):
+
+   ```bash
+   cd "$OCS2_SRC/scripts"
+   python3 mujoco_viewer.py "$OCS2_SRC/aloha_dual_arm_viewer.xml"
+   ```
+
+   Arm-joint prefixes default to `vx300s_left` / `vx300s_right` (override with
+   `--left-prefix` / `--right-prefix`); adjust refresh rate with `--rate`.
+
+3. Stream an ACT target trajectory (14 values: both arms + both grippers) to the
+   nodes and viewer:
+
+   ```bash
+   TRAJ="$OCS2_SRC/test/target_trajectories_with_grippers.txt"
+   BIN=~/ocs2_ws/install/ocs2_mobile_manipulator_nonros/lib/ocs2_mobile_manipulator_nonros/aloha_act_publisher
+   "$BIN" --traj "$TRAJ"          # play once
+   "$BIN" --traj "$TRAJ" --loop   # loop forever
+   ```
+
+   The trajectory path must be absolute — otherwise the publisher falls back to a
+   single static pose. Confirm loading with the log line
+   `[act_publisher] playing ... trajectory points`. With `--loop`, the viewer resets
+   the box to its keyframe pose at the start of each pass. Other options:
+   `--seconds N` static run duration, `--left` / `--right` arm prefixes, and
+   positional numbers or `--qpos` to force a single static target.
+
+> **Note:** The shared-memory transport currently unlinks its segment on close
+> without distinguishing creator from opener, so restarting individual processes
+> mid-session may misbehave. Restart the whole set if you hit shared-memory errors.

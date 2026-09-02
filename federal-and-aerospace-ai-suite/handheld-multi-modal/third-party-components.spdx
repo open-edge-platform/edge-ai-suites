@@ -81,7 +81,7 @@ PackageHomePage: https://github.com/openvinotoolkit/model_server
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0
 PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>
-PackageSummary: <text>OpenVINO Model Server (OVMS) serving the Phi-3.5-mini-instruct INT4 LLM over an OpenAI-compatible REST API, executed on Intel GPU via the OpenVINO runtime.</text>
+PackageSummary: <text>OpenVINO Model Server (OVMS) serving the Qwen3.5-4B-int8 LLM over an OpenAI-compatible REST API, executed on Intel GPU via the OpenVINO runtime.</text>
 ExternalRef: PACKAGE-MANAGER purl pkg:docker/openvino/model_server@latest-gpu
 FilesAnalyzed: false
 

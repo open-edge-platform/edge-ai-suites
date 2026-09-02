@@ -164,7 +164,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
 ### `Error: [WinError 206] The filename or extension is too long`
 
-#### Description:
+#### Description
 
 When attempting to install packages using `pip` on Windows, you may encounter the following error:
 
@@ -172,7 +172,7 @@ When attempting to install packages using `pip` on Windows, you may encounter th
 ERROR: Could not install packages due to an OSError: [WinError 206] The filename or extension is too long: "...
 ```
 
-#### Solution:
+#### Solution
 
 - Modify the registry entry using Registry Editor.
 
