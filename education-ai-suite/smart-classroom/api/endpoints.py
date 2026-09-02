@@ -992,5 +992,8 @@ def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Option
 def register_routes(app: FastAPI):
     app.include_router(router)
 
+    from api.v1.api import v1_router
+    app.include_router(v1_router, prefix="/api/v1")
+
     from api.vlm_chat import router as vlm_chat_router
     app.include_router(vlm_chat_router)

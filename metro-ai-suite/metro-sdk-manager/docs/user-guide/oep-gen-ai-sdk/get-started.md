@@ -78,7 +78,7 @@ http://localhost:8102
   \- Vector database integration and document processing workflows
 - [Multimodal Embedding Serving](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/multimodal-embedding-serving/index.html)
   \- Embedding generation service architecture and API documentation
-- [Multimodal Data Preparation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/docs/user-guide/Overview.md)
+- [Multimodal Data Preparation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/docs/user-guide/index.md)
   \- Multimodal data ingestion and preparation workflows for retrieval
 - [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
   \- Complete development toolkit documentation and microservice API references

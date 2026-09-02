@@ -24,7 +24,7 @@ git am --whitespace=fix ../patches/*.patch
 
 Install the packages as prerequisites:
 ```bash
-sudo apt install -y libegl1-mesa-dev libglu1-mesa
+sudo apt install -y libegl1-mesa-dev libglu1-mesa ffmpeg
 
 ```
 
@@ -73,7 +73,7 @@ To convert the standard Gr00t n1.7 model to OpenVINO single-IR, use the `export_
 - `--device`: optional; defaults to `cpu`; this script also falls back to CPU for OV verification if the requested OV device is unavailable
 - `--llm-lang-tokens`: optional; reserve 64 language-token slots here for static-sequence export, or omit it to bake in the captured sequence length
 
-> **Notice**: Using the Gr00t n1.7 model in LeRobot will automatically download the [nvidia/Cosmos-Reason2-2B](https://huggingface.co/nvidia/Cosmos-Reason2-2B) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account.
+> **Notice**: Using the Gr00t n1.7 model will automatically download the [nvidia/Cosmos-Reason2-2B](https://huggingface.co/nvidia/Cosmos-Reason2-2B) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account.
 > If you encounter download errors, follow the [instructions](https://huggingface.co/docs/huggingface_hub/quick-start#authentication) on how to log in and authorize your account.
 
 Examples (`uv`):
