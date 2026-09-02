@@ -63,5 +63,4 @@ The following are third-party components used by the scripts in this directory (
 
 For the license of any dataset used with this toolkit, see the dataset's
 own license terms,  e.g. for the weld worked example, see the
-[Fine-Tune a VLM with Unsloth Library — Weld Usecase](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/user-guide/how-to-guides/how-to-fine-tune-vlm-weld-usecase.md#license--dataset-attribution)
-section of the guide.
+[Weld Use Case — License and Dataset Attribution](./how-to-fine-tune-vlm-weld-usecase.md#license--dataset-attribution).
