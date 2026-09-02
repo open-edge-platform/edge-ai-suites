@@ -29,15 +29,16 @@ The app runs entirely in a container, so the host only needs a small set of tool
 
 The easiest way to satisfy these on Ubuntu is the bundled setup script, which
 installs/verifies Docker + Compose + `make` + `git`, adds your user to the
-`docker` group, and configures a proxy only if you provide one:
+`docker` group, installs the Intel client GPU stack (Level Zero + OpenCL +
+iHD VA-API), and configures a proxy only if you provide one:
 
 ```bash
 # No proxy (typical):
-./scripts/setup-prerequisites.sh
+./setup.sh
 
 # Behind a corporate proxy, export it first:
 HTTP_PROXY=http://your-proxy:port HTTPS_PROXY=http://your-proxy:port \
-  ./scripts/setup-prerequisites.sh
+  ./setup.sh
 ```
 
 Log out and back in afterward (or run `newgrp docker`) so docker-group

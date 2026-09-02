@@ -76,9 +76,10 @@ make backend-venv
 
 Creates `.venv-backend/` with:
 
-- `torch>=2.12.1` with the `xpu` device backend
-- `ultralytics` (YOLO11 training)
-- `openvino` (FP16 IR export)
+- `torch==2.7.1` + `torchvision==0.22.1` (both `+xpu` builds from the
+  `pytorch/whl/xpu` index) — the Intel iGPU device backend.
+- `ultralytics==8.4.75` (YOLO11 training).
+- `openvino==2026.2.0` (FP16 IR export).
 
 The venv is host-side (not in a container) so training uses the host's Level
 Zero driver and Intel iGPU directly. Requires the L0 stack installed by

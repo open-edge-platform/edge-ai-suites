@@ -18,6 +18,7 @@ set -e
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -61,6 +62,177 @@ is_vllm_healthy() {
   curl -s --max-time 5 "$VLLM_HEALTH_URL" 2>/dev/null | grep -q '"id"'
 }
 
+# --- serving startup recovery --------------------------------------------------
+# compose.yaml gives vllm-ipex-serving `restart: always`, and multilevel/mcp-server
+# depend on it with `condition: service_healthy`. If the serving dies mid-weight-load
+# — most often the transient Intel Xe device-lost fault — compose abandons the whole
+# `up` immediately, while Docker restarts the container in the background and the
+# next attempt usually succeeds. The helpers below keep the script in step with that
+# background retry instead of exiting with a bare compose error.
+VLLM_CONTAINER="${VLLM_CONTAINER:-vllm-ipex-serving}"
+# Seconds to keep waiting for the restart policy to bring the serving back. 0 = don't wait.
+# A restart redoes the whole weight download + FP8 compile (about 30 min on a cold
+# cache), so leave roughly double that before calling it dead.
+VLLM_RETRY_TIMEOUT="${VLLM_RETRY_TIMEOUT:-3600}"
+
+vllm_inspect()  { docker inspect -f "$1" "$VLLM_CONTAINER" 2>/dev/null || true; }
+vllm_state()    { vllm_inspect '{{.State.Status}}'; }
+vllm_health()   { vllm_inspect '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}'; }
+vllm_restarts() { vllm_inspect '{{.RestartCount}}'; }
+vllm_policy()   { vllm_inspect '{{.HostConfig.RestartPolicy.Name}}'; }
+
+human_duration() {
+  if [ "$1" -ge 60 ]; then echo "$(($1 / 60)) min"; else echo "$1 s"; fi
+}
+
+vllm_is_up() {
+  case "$(vllm_health)" in
+    healthy) return 0 ;;
+    none)    is_vllm_healthy ;;
+    *)       return 1 ;;
+  esac
+}
+
+# True while Docker will still restart the container on its own.
+vllm_retry_pending() {
+  case "$(vllm_policy)" in
+    always|unless-stopped|on-failure) ;;
+    *) return 1 ;;
+  esac
+  case "$(vllm_state)" in
+    running|restarting|created|exited) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+vllm_hit_gpu_fault() {
+  docker logs --tail 400 "$VLLM_CONTAINER" 2>&1 \
+    | grep -qE 'UR_RESULT_ERROR_DEVICE_LOST|DEVICE_LOST|level_zero backend failed|exec queue reset'
+}
+
+show_vllm_logs() {
+  echo "---- docker logs --tail 40 ${VLLM_CONTAINER} ----"
+  docker logs --tail 40 "$VLLM_CONTAINER" 2>&1 | sed 's/^/  /' || true
+  echo "------------------------------------------------"
+}
+
+vllm_recovery_hints() {
+  echo
+  echo "How to recover:"
+  if vllm_hit_gpu_fault; then
+    cat <<EOF
+  The serving lost the GPU (level-zero UR_RESULT_ERROR_DEVICE_LOST) while transferring
+  weights. Confirm the driver-side reset on the host:
+      dmesg -T | grep -iE 'xe .*(exec queue reset|VM worker error)'
+  This fault is usually transient and clears on the next attempt. If it keeps repeating:
+    * Release the GPU from other users:  sudo fuser -v /dev/dri/renderD128
+    * Lower the peak memory of the transfer in docker/set_env.sh, then re-source it:
+        export GPU_MEM_UTIL=0.6       # default 0.7
+        export MAX_MODEL_LEN=32768    # default 61440
+    * Confirm at least 32 GB of swap is active ('free -h');
+      see docs/user-guide/how-to-guides/add-swap.md
+    * If the GPU stays wedged across restarts, reboot the host to reset the xe driver.
+EOF
+  else
+    cat <<EOF
+  Read the serving log above for the first error, then check the usual causes:
+    * Weights still downloading or the Hugging Face endpoint is unreachable (HF_ENDPOINT).
+    * Not enough RAM + swap for ${LLM_MODEL:-the model} — see docs/user-guide/how-to-guides/add-swap.md
+    * GPU not visible in the container: ls -l /dev/dri, and check VIDEO_GROUP_ID / RENDER_GROUP_ID.
+EOF
+  fi
+  cat <<EOF
+
+  Full serving log:          docker logs -f ${VLLM_CONTAINER}
+  Re-check readiness:        curl -fsS ${VLLM_HEALTH_URL}
+  Resume once it is warm:    bash $0 --light
+  Start over:                bash $0
+EOF
+}
+
+# Poll until the serving reports healthy, or Docker stops retrying, or we run out
+# of budget. Reports progress so a long wait does not look like a hang.
+wait_for_vllm_healthy() {
+  local started=$SECONDS
+  local deadline=$((SECONDS + VLLM_RETRY_TIMEOUT))
+  local next_report=0
+
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    vllm_is_up && return 0
+    vllm_retry_pending || return 1
+    if [ "$SECONDS" -ge "$next_report" ]; then
+      printf '  [%5ds] %s state=%s health=%s restarts=%s\n' \
+        "$((SECONDS - started))" "$VLLM_CONTAINER" \
+        "$(vllm_state)" "$(vllm_health)" "$(vllm_restarts)"
+      next_report=$((SECONDS + 30))
+    fi
+    sleep 5
+  done
+  return 1
+}
+
+# `docker compose up -d`, but recover from the serving crashing out from under a
+# `service_healthy` dependency instead of reporting a bare failure to the user.
+compose_up() {
+  local arg vllm_in_play=false
+
+  if [ "$USE_LOCAL_VLLM" = true ]; then
+    vllm_in_play=true
+    for arg in "$@"; do
+      [ "$arg" = "--no-deps" ] && vllm_in_play=false
+    done
+  fi
+
+  if $DOCKER_CMD up -d "$@"; then
+    return 0
+  fi
+
+  if [ "$vllm_in_play" != true ] || [ -z "$(vllm_state)" ]; then
+    echo -e "${RED}Error: 'docker compose up -d' failed.${NC}"
+    echo "  Service states: docker compose -f ${DOCKER_DIR}/compose.yaml ps"
+    echo "  Service logs:   docker compose -f ${DOCKER_DIR}/compose.yaml logs --tail 50"
+    return 1
+  fi
+
+  echo
+  echo -e "${YELLOW}Compose gave up waiting for '${VLLM_CONTAINER}' (state=$(vllm_state) health=$(vllm_health) restarts=$(vllm_restarts)).${NC}"
+  show_vllm_logs
+
+  if [ "$VLLM_RETRY_TIMEOUT" -le 0 ] || ! vllm_retry_pending; then
+    echo -e "${RED}'${VLLM_CONTAINER}' is not being restarted — the stack is down.${NC}"
+    vllm_recovery_hints
+    return 1
+  fi
+
+  echo
+  echo -e "${YELLOW}This is not necessarily fatal: Docker's restart policy ('$(vllm_policy)') is already${NC}"
+  echo -e "${YELLOW}retrying the serving in the background, and this crash usually clears on the retry.${NC}"
+  echo "Waiting up to $(human_duration "$VLLM_RETRY_TIMEOUT") for it to come back."
+  echo "Ctrl-C is safe — the retry continues without this script; resume with 'bash $0 --light'."
+  echo
+
+  trap 'echo; echo "Interrupted. ${VLLM_CONTAINER} keeps restarting in the background."; echo "Re-check: curl -fsS ${VLLM_HEALTH_URL}   Resume: bash $0 --light"; exit 130' INT
+  local recovered=true
+  wait_for_vllm_healthy || recovered=false
+  trap - INT
+
+  if [ "$recovered" != true ]; then
+    echo
+    echo -e "${RED}'${VLLM_CONTAINER}' did not become healthy within $(human_duration "$VLLM_RETRY_TIMEOUT").${NC}"
+    show_vllm_logs
+    vllm_recovery_hints
+    return 1
+  fi
+
+  echo -e "${GREEN}'${VLLM_CONTAINER}' recovered after $(vllm_restarts) restart(s) — starting the remaining services.${NC}"
+  if ! $DOCKER_CMD up -d "$@"; then
+    echo -e "${RED}Error: the stack still failed to start after the serving recovered.${NC}"
+    echo "  Service states: docker compose -f ${DOCKER_DIR}/compose.yaml ps"
+    echo "  Service logs:   docker compose -f ${DOCKER_DIR}/compose.yaml logs --tail 50"
+    return 1
+  fi
+}
+
 # The multilevel-video-understanding build context lives in the external
 # open-edge-platform edge-ai-libraries repo, which is NOT vendored here. Clone it
 # on demand (shallow + partial + sparse: only the one microservice, no LFS blobs)
@@ -73,20 +245,10 @@ EDGE_AI_LIBRARIES_REF="release-2026.2.0"
 MULTILEVEL_SUBPATH="microservices/multilevel-video-understanding"
 
 ensure_edge_ai_libraries() {
-  local refresh="${1:-true}"
-
   if git -C "${EDGE_AI_LIBRARIES_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
       && [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
-    if [ "$refresh" = true ]; then
-      echo "Updating edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) in ${EDGE_AI_LIBRARIES_DIR}"
-      GIT_LFS_SKIP_SMUDGE=1 git -C "${EDGE_AI_LIBRARIES_DIR}" fetch \
-        --depth 1 origin "${EDGE_AI_LIBRARIES_REF}"
-      git -C "${EDGE_AI_LIBRARIES_DIR}" reset --hard FETCH_HEAD
-      git -C "${EDGE_AI_LIBRARIES_DIR}" sparse-checkout set "${MULTILEVEL_SUBPATH}"
-      echo -e "${GREEN}edge-ai-libraries updated.${NC}"
-    else
-      echo "Using existing edge-ai-libraries for teardown: ${EDGE_AI_LIBRARIES_DIR}"
-    fi
+    echo "Using existing directory: ${EDGE_AI_LIBRARIES_DIR}"
+    echo "To use the latest version, delete: ${EDGE_AI_LIBRARIES_DIR}"
     return 0
   fi
   echo "Fetching edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) from ${EDGE_AI_LIBRARIES_REPO}"
@@ -123,6 +285,12 @@ Options:
   --light-down           Stop multilevel + videostream-analytics + smart-community-mcp-server,
                          but leave vllm-ipex-serving running (avoids its 3-20 min recompile)
   -h, --help             Show this help
+
+Environment:
+  VLLM_RETRY_TIMEOUT     Seconds to keep waiting when vllm-ipex-serving crashes during
+                         startup and Docker's restart policy is retrying it in the
+                         background (default: 3600 — a retry redoes the full ~30 min
+                         weight load). Set to 0 to fail immediately.
 
 Examples:
   source docker/set_env.sh   # optional; the script also sources it itself
@@ -230,11 +398,7 @@ DOCKER_CMD="docker compose -f compose.yaml"
 
 # compose.yaml `extends` the upstream service defs from .external/edge-ai-libraries,
 # so it must exist before ANY compose command below can even parse the file.
-if [ "$DOWN_CONTAINERS" = true ] || [ "$LIGHT_DOWN" = true ]; then
-  ensure_edge_ai_libraries false
-else
-  ensure_edge_ai_libraries true
-fi
+ensure_edge_ai_libraries
 
 # --- fetch-only ---------------------------------------------------------------
 if [ "$FETCH_ONLY" = true ]; then
@@ -252,37 +416,38 @@ fi
 if [ "$UP_CONTAINERS" = true ]; then
   prepare_videostream_config
 
-  # All locally-built images must exist before we start.
-  missing=false
+  # Compose pulls a missing image itself, and only builds from source if that pull
+  # fails — so a missing image is not fatal. But the build fallback is a long, silent
+  # detour, so name the absent images up front instead of letting it surprise anyone.
+  missing=()
   for img in "$MULTILEVEL_IMAGE" "$VSA_IMAGE" "$MCP_IMAGE"; do
-    if ! docker image inspect "$img" >/dev/null 2>&1; then
-      echo -e "${RED}Error: image '$img' not found.${NC}"
-      missing=true
-    fi
+    docker image inspect "$img" >/dev/null 2>&1 || missing+=("$img")
   done
-  if [ "$missing" = true ]; then
-    echo "Build first:  $0 --build   (or one-shot:  $0 --build-prod)"
-    exit 1
+  if [ "${#missing[@]}" -gt 0 ]; then
+    echo -e "${YELLOW}${#missing[@]} image(s) not present locally:${NC}"
+    printf '  %s\n' "${missing[@]}"
+    echo "Compose will pull them, and build from source if a pull fails (much slower)."
+    echo "Tag mismatch? TAG=${TAG:-latest}; export TAG before 'source docker/set_env.sh'."
   fi
 
   if [ "$LIGHT_MODE" = true ]; then
     # Reuse an already-warm serving; start only the app + analytics.
     if is_vllm_healthy; then
       echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smart-community-mcp-server only."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
+      compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     elif [ "$USE_LOCAL_VLLM" = true ]; then
       echo "Local vllm-ipex-serving not healthy yet — starting the full stack instead."
       echo "(first run pulls/compiles the model — this can take about 30 mins)"
-      $DOCKER_CMD up -d
+      compose_up || exit 1
     else
       echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smart-community-mcp-server anyway (they retry at runtime)."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
+      compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     fi
   else
     # End-to-end: bring up serving + app + analytics together.
     echo "Starting all three services..."
     echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take about 30 mins)"
-    $DOCKER_CMD up -d
+    compose_up || exit 1
   fi
 
   echo -e "${GREEN}==== Setup complete! ====${NC}"
@@ -290,6 +455,7 @@ if [ "$UP_CONTAINERS" = true ]; then
   echo "  videostream-analytics          : host network, POSTs to ${WEBHOOK_URL:-http://localhost:3101/events}"
   echo "  smart-community-mcp-server       : UI http://localhost:3100/  MCP http://localhost:3100/mcp  events http://localhost:3101/events"
   echo "To stop: $0 --light-down   (keep vllm warm)   |   $0 --down   (full teardown)"
+  echo "Service states: docker compose -f ${DOCKER_DIR}/compose.yaml ps"
 fi
 
 # --- down ---------------------------------------------------------------------
