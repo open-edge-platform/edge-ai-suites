@@ -245,6 +245,7 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
             output_rtsp=config.va_pipeline.output_rtsp_url,
             threshold=config.models.va.threshold,
             record=False,
+            output_stream=False,
         )
 
         launched = 0
