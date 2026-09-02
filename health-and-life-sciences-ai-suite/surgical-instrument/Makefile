@@ -8,6 +8,15 @@
 #   make down
 #   make logs
 #
+# Optional local model-prep flow (needed only if you do NOT already have a
+# trained OpenVINO IR under $(MODELS_DIR)/yolo11n_polyp/best_openvino_model/):
+#
+#   ./setup.sh                 # install host prerequisites (Docker + Intel L0 stack)
+#   make check-l0              # verify Intel Level Zero packages on the host
+#   make backend-venv          # create .venv-backend with torch+xpu + Ultralytics + OpenVINO
+#   make backend-bootstrap     # fetch dataset -> train YOLO11n -> export FP16 OpenVINO IR
+#   make doctor                # preflight: docker, /dev/dri, IR + demo video, L0 stack
+#
 SHELL := /bin/bash
 
 IMAGE        ?= endoscopy-demo:latest
@@ -165,5 +174,81 @@ clean: down ## Stop stack and remove image
 
 .PHONY: help
 help: ## List targets
-	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
-		awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
+	@grep -hE '^[a-zA-Z0-9_-]+:.*?## ' $(MAKEFILE_LIST) | \
+		awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
+
+# =============================================================================
+# Local model-prep flow (OPTIONAL) — only needed if you don't already have a
+# trained OpenVINO IR at $(MODELS_DIR)/yolo11n_polyp/best_openvino_model/best.xml.
+# The Docker Compose runtime above is independent of these targets; skip this
+# section entirely if you're pulling a prebuilt model from the registry.
+# =============================================================================
+
+# Python interpreter used to bootstrap the training venv. Override via PY=python3.12.
+PY          ?= python3
+BACKEND_VENV ?= .venv-backend
+PIP          := $(BACKEND_VENV)/bin/pip
+PYVENV       := $(BACKEND_VENV)/bin/python
+
+# Host L0 stack (mirrors what setup.sh installs). Used by check-l0 and doctor.
+L0_PACKAGES  := libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 \
+                intel-opencl-icd intel-media-va-driver-non-free
+
+.PHONY: setup
+setup: ## Install host prerequisites (Docker, Intel L0 stack) — runs setup.sh
+	@./setup.sh $(SETUP_ARGS)
+
+.PHONY: check-l0
+check-l0: ## Verify Intel Level Zero + OpenCL packages are installed on the host
+	@ok=1; \
+	for p in $(L0_PACKAGES); do \
+	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -q 'install ok installed'; then \
+	    printf '  [OK]      %s (%s)\n' "$$p" "$$(dpkg-query -W -f='$${Version}' $$p)"; \
+	  else \
+	    printf '  [MISSING] %s\n' "$$p"; ok=0; \
+	  fi; \
+	done; \
+	if [ ! -e /dev/dri ]; then printf '  [MISSING] /dev/dri (kernel i915/xe not loaded?)\n'; ok=0; \
+	else printf '  [OK]      /dev/dri present\n'; fi; \
+	if [ "$$ok" -ne 1 ]; then echo; echo 'Run ./setup.sh to install missing prerequisites.'; exit 1; fi
+
+$(BACKEND_VENV)/bin/python:
+	@echo '[backend-venv] creating $(BACKEND_VENV) with $(PY) -m venv'
+	@$(PY) -m venv $(BACKEND_VENV)
+	@$(PIP) install --upgrade pip wheel
+
+.PHONY: backend-venv
+backend-venv: $(BACKEND_VENV)/bin/python ## Create .venv-backend and install backend/requirements.txt (torch+xpu, Ultralytics, OpenVINO)
+	@echo '[backend-venv] installing backend/requirements.txt'
+	@$(PIP) install -r backend/requirements.txt
+
+.PHONY: backend-bootstrap
+backend-bootstrap: ## Fetch dataset, train YOLO11n, export FP16 OpenVINO IR (cache-first)
+	@if [ ! -x $(PYVENV) ]; then \
+	  echo 'error: $(BACKEND_VENV) not found. Run: make backend-venv'; exit 1; \
+	fi
+	@$(PYVENV) -m backend.main_bootstrap
+
+.PHONY: doctor
+doctor: ## Preflight: docker, /dev/dri, cached OpenVINO IR, demo video, L0 stack
+	@ok=1; \
+	if command -v docker >/dev/null 2>&1; then \
+	  printf '  [OK]      docker: %s\n' "$$(docker --version)"; \
+	else printf '  [MISSING] docker not installed (run ./setup.sh)\n'; ok=0; fi; \
+	if docker compose version >/dev/null 2>&1; then \
+	  printf '  [OK]      compose: %s\n' "$$(docker compose version | head -1)"; \
+	else printf '  [MISSING] docker compose plugin (run ./setup.sh)\n'; ok=0; fi; \
+	if [ -e /dev/dri ]; then printf '  [OK]      /dev/dri present\n'; \
+	else printf '  [MISSING] /dev/dri (iGPU inference will fail)\n'; ok=0; fi; \
+	IR=$(MODELS_DIR)/yolo11n_polyp/best_openvino_model/best.xml; \
+	if [ -s "$$IR" ]; then printf '  [OK]      OpenVINO IR: %s\n' "$$IR"; \
+	else printf '  [MISSING] OpenVINO IR at %s (run: make backend-bootstrap)\n' "$$IR"; ok=0; fi; \
+	VID=$(VIDEOS_DIR)/polyp_test.mp4; \
+	if [ -s "$$VID" ]; then printf '  [OK]      demo video: %s\n' "$$VID"; \
+	else printf '  [INFO]    demo video absent at %s (only needed for SOURCE=file)\n' "$$VID"; fi; \
+	for p in $(L0_PACKAGES); do \
+	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -q 'install ok installed'; then :; \
+	  else printf '  [MISSING] L0 package: %s\n' "$$p"; ok=0; fi; \
+	done; \
+	if [ "$$ok" -eq 1 ]; then echo; echo 'doctor: OK — ready for make up.'; \
+	else echo; echo 'doctor: one or more prerequisites missing.'; exit 1; fi

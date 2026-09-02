@@ -6,6 +6,11 @@ This is a deployment guide for the Docker Compose stack:
   camera, USB/V4L2 webcam, or video file; runs OpenVINO inference; and renders
   results with an OpenGL vsync presenter.
 
+> **Model required first.** The stack expects an OpenVINO IR at
+> `models/yolo11n_polyp/best_openvino_model/best.xml`. If you do not already
+> have one, follow [Model Preparation](./get-started/model-preparation.md)
+> before continuing.
+
 ## Prerequisites
 
 Before you start, refer to [System Requirements](./get-started/system-requirements.md)
@@ -54,6 +59,13 @@ videos/polyp_test.mp4
 The Makefile mounts `../models` to `/models` and `../videos` to `/videos` by
 default. Override with `MODELS_DIR` and `VIDEOS_DIR` when the host layout is
 different.
+
+A quick sanity check for all runtime prerequisites (Docker, `/dev/dri`, cached
+IR, demo video, Intel L0 stack):
+
+```bash
+make doctor
+```
 
 ---
 

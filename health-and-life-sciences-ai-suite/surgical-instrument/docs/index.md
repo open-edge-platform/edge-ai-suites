@@ -26,6 +26,10 @@ Display path:
 
 How to start:
 
+- See [Model Preparation](./get-started/model-preparation.md) if you do not
+  already have a trained OpenVINO IR under
+  `models/yolo11n_polyp/best_openvino_model/`. Skip this page when pulling a
+  prebuilt model from the registry.
 - See [Get Started](./get-started.md) for a step-by-step deployment guide.
 - See [Runtime Configuration](./runtime-configuration.md) for every knob and
   CLI option exposed by the app.
