@@ -15,7 +15,14 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
 1. Open a terminal prompt which will be used to execute the remaining steps.
 
-2. Download and execute the Robotics AI Suite Installer.
+2. Upgrade your system packages to the latest available version:
+
+   ```bash
+   sudo apt update
+   sudo apt upgrade -y
+   ```
+
+3. Download and execute the Robotics AI Suite Installer.
 
    ```bash
    wget https://amrdocs.intel.com/downloads/robotics-installer
@@ -31,13 +38,9 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
    ![Installer](../../images/install/installer_1.png)
 
-3. Select an installation profile to install.
+4. Select an installation profile to install.
 
    ![Installer](../../images/install/installer_2.png)
-
-4. Enable/Disable optional components.
-
-   ![Installer](../../images/install/installer_3.png)
 
 5. The installer will perform pre-flight checks. Ensure that all checks passed, then press ``Enter`` to continue.
 

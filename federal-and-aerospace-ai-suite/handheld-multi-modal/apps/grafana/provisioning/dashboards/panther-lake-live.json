@@ -1933,7 +1933,7 @@
                       "include": {
                         "names": [
                           "time",
-                          "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Phi-3.5-mini-instruct-int4-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
+                          "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Qwen3.5-4B-int8-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
                         ]
                       }
                     }
@@ -1984,7 +1984,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Phi-3.5-mini-instruct-int4-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
+                      "options": "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Qwen3.5-4B-int8-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
                     },
                     "properties": [
                       {
@@ -2118,7 +2118,7 @@
                       "include": {
                         "names": [
                           "time",
-                          "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Phi-3.5-mini-instruct-int4-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
+                          "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Qwen3.5-4B-int8-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
                         ]
                       }
                     }
@@ -2203,7 +2203,7 @@
                   {
                     "matcher": {
                       "id": "byName",
-                      "options": "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Phi-3.5-mini-instruct-int4-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
+                      "options": "counter {api=\"V3\", host=\"ptl\", interface=\"REST\", method=\"Stream\", name=\"OpenVINO/Qwen3.5-4B-int8-ov\", url=\"http://ovms.fedaero.intel.com:8000/metrics\"}"
                     },
                     "properties": [
                       {

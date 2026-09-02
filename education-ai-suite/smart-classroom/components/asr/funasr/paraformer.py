@@ -49,7 +49,7 @@ class Paraformer(BaseASR):
                         device=device, disable_update=True
                         )
 
-    def transcribe(self, audio_path: str, temperature=0.0) -> str:
+    def transcribe(self, audio_path: str, temperature=0.0) -> dict:
         try:
             res = self.model.generate(
                 input=audio_path,
