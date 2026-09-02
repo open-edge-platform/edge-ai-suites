@@ -47,6 +47,8 @@ langchain-chroma==1.1.0
 langchain-core==1.6.1
 chromadb==1.5.9
 
+pyarrow==23.0.1
+
 # openai + aiohttp are imported at module load by services/ (ovms_llm_service),
 # so they are required even though ATA uses the local OpenVINO backend. They are
 # pure-Python/wheels and install fine on Windows. The heavier agentic packages
