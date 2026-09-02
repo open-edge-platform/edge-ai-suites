@@ -86,7 +86,7 @@ If you do not have OpenClaw yet, install it from the official repository at
 <https://github.com/openclaw/openclaw>. Install `openclaw@2026.5.6`:
 
 ```bash
-# openclaw needs Node.js >= 22.14.0; Ubuntu 24.04's apt nodejs is v18, too old
+# openclaw needs Node.js >= 22.14.0
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a===22&&b>=14)?0:1)' \
@@ -479,6 +479,33 @@ Expected result: The UI should display a professional HTML/PDF report comparing 
 Robotics G1 Basic with other products, generated using the `competitive_analysis_PDF_generator` skill.
 
 ## 6. Use the Knowledgebase Skill
+
+First install the `knowledgebase` skill the same way as in Steps 3.3–3.4 — copy its directory
+into the workspace and register it in `openclaw.json`:
+
+```bash
+cp -r ./skills/knowledgebase ~/.openclaw/workspace/skills/
+```
+
+Add it alongside the other skill under `skills.entries` in `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "knowledgebase": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Then restart the gateway so OpenClaw picks it up:
+
+```bash
+openclaw gateway restart
+```
 
 If the Large Language Model (LLM) is not strong enough to use the knowledgebase skill
 automatically, add the following instruction to OpenClaw's `AGENTS.md`:
