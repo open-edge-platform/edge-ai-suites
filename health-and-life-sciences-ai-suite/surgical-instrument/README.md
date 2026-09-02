@@ -47,10 +47,10 @@ demo video at `videos/polyp_test.mp4`. Two ways to get there:
   FP16 OpenVINO IR:
 
 ```bash
-./setup.sh                      # install Docker + Intel L0 stack (Ubuntu 24.04)
+make setup-prerequisites                      # install Docker + Intel L0 stack (Ubuntu 24.04)
 make check-l0                   # verify host GPU stack
 make backend-venv               # create .venv-backend (torch+xpu, Ultralytics, OpenVINO)
-./download_realcolon_subset.sh  # 7-study REAL-Colon subset (~74 GB) from figshare 22202866
+make download-dataset  # 7-study REAL-Colon subset (~74 GB) from figshare 22202866
 make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-first)
 make doctor                     # preflight all runtime prerequisites
 ```
@@ -139,8 +139,6 @@ make up MODELS_DIR=/path/to/models VIDEOS_DIR=/path/to/videos SERIAL=<SERIAL_NUM
 ```text
 surgical-instrument/
 ├── Makefile
-├── setup.sh                       # host prerequisite installer (Docker + Intel L0)
-├── download_realcolon_subset.sh   # REAL-Colon 7-study subset downloader (~74 GB)
 ├── backend/                       # optional local training + OpenVINO export
 │   ├── bootstrap/                 # dataset auto-detect, train, export
 │   ├── config/model.yaml          # training + dataset config (env-var expanded)
@@ -161,6 +159,8 @@ surgical-instrument/
 │   ├── troubleshooting.md
 │   └── release-notes.md
 ├── scripts/
+│   ├── setup-prerequisites.sh        # host prerequisite installer (Docker + Intel L0)
+│   ├── download_realcolon_subset.sh  # REAL-Colon 7-study subset downloader (~74 GB)
 │   └── create_endoscopy_video.py
 └── src/
     ├── app.py
