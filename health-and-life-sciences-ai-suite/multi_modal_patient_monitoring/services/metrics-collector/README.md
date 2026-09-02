@@ -1,8 +1,8 @@
-# Metrics Service
+# Metrics Collector
 
 This service wraps the prebuilt Intel metrics collectors and exposes a simple
 HTTP API for system metrics and platform information. It is intended to be
-used by the aggregator‑service (and indirectly by the web UI).
+used by the `patient-monitoring-aggregator` (and indirectly by the web UI).
 
 Main responsibilities:
 
@@ -21,7 +21,7 @@ Main responsibilities:
 From this directory:
 
 ```bash
-docker build -t hl-metrics-service .
+docker build -t hl-metrics-collector .
 
 docker run --rm \
 	--privileged \
@@ -31,8 +31,7 @@ docker run --rm \
 	-v "$(pwd)/../../metrics:/tmp/results" \
 	-v /sys:/sys \
 	-v /dev:/dev \
-	-v /run:/run \
-	hl-metrics-service
+	hl-metrics-collector
 ```
 
 This starts the collectors (via `supervisord`) and the HTTP API on port `9000`.
@@ -40,11 +39,11 @@ This starts the collectors (via `supervisord`) and the HTTP API on port `9000`.
 ### Option 2: docker-compose (suite integration)
 
 From the top‑level suite directory, use the provided compose file which wires
-metrics‑service to the host and shares the metrics directory used by
-aggregator‑service:
+metrics‑collector to the host and shares the metrics directory used by
+`patient-monitoring-aggregator`:
 
 ```bash
-docker compose up metrics-service
+docker compose up metrics-collector
 ```
 
 ---
