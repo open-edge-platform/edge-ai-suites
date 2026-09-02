@@ -26,31 +26,47 @@ services.
 ## 2. Set Up EC-RAG
 
 To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow
-the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md).
+the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md). (Please use vLLM backend refer to ['vLLM Setup'](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md#vllm))
 
-For the latest model support, you can modify the EC-RAG vLLM backend image version and
-configuration like this:
+### a. Prepare embedding/reranker/LLM models
 
 ```bash
-# clone OPEA EC-RAG repo and pin to the exact commit this guide was written for,
-# so the edits below apply to the file they were written against; the partial +
-# sparse checkout only pulls the EdgeCraftRAG subtree
+python3 -m venv model_download_venv
+source model_download_venv/bin/activate
+# Download BAAI/bge-m3 和 BAAI/bge-reranker-large
+pip install --upgrade --upgrade-strategy eager "optimum[openvino]"
+export HF_ENDPOINT=https://hf-mirror.com
+export MODEL_PATH=${PWD}/workspace/models
+optimum-cli export openvino -m BAAI/bge-m3 ${MODEL_PATH}/BAAI/bge-m3-int8 --weight-format int8 --task sentence-similarity
+optimum-cli export openvino -m BAAI/bge-reranker-large  ${MODEL_PATH}/BAAI/bge-reranker-large-int8 --weight-format int8 --task text-classification
+# Download Qwen3.5-35B-A3B
+pip install modelscope
+export LLM_MODEL="Qwen/Qwen3.5-35B-A3B"
+modelscope download --model $LLM_MODEL --local_dir "${MODEL_PATH}/${LLM_MODEL}"
+# clean venv
+deactivate
+rm -rf model_download_venv
+```
+
+### b. Start Service
+
+```bash
+# clone OPEA EC-RAG repo with pinned commit
 git clone --filter=blob:none --sparse https://github.com/opea-project/GenAIExamples.git
 cd GenAIExamples
 git sparse-checkout set EdgeCraftRAG
 git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
 cd EdgeCraftRAG
 
+# For the latest model support, you can modify the EC-RAG vLLM backend image version and
+# configuration like this:
 compose=docker_compose/intel/gpu/arc/compose.yaml
 
-# fail loudly if the pinned checkout no longer ships the image tag this guide
-# rewrites, instead of letting sed silently do nothing (sed exits 0 on no match)
 grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
   echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
   exit 1
 }
 
-# change the vllm image version and related config:
 sed -i \
   -e '/--disable-log-requests/d' \
   -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
@@ -58,7 +74,6 @@ sed -i \
   -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
   "$compose"
 
-# confirm the vllm image rewrite actually took effect
 grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
   echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
   exit 1
@@ -76,6 +91,46 @@ Below is a reference pipeline configuration:
 - `MAX_MODEL_LEN`: `60000`
 - `QUANTIZATION`: `fp8`
 - `GPU_MEMORY_UTIL`: `0.65`
+```
+
+### c. Load Pipeline and Knowledgebase
+
+1. Prepare pipeline and knowledgebase json config file:
+
+```bash
+# fetch the example configs at the pinned commit
+COMMIT=f56422671c8bdf46f59dd758c8c9e38ca41d6555
+BASE=https://raw.githubusercontent.com/opea-project/GenAIExamples/$COMMIT/EdgeCraftRAG/tests/configs
+curl -fsSL "$BASE/test_kb.json" -o test_kb.json
+curl -fsSL "$BASE/test_pipeline_ipex_vllm.json" -o test_pipeline_ipex_vllm.json
+
+# point the configs at the models downloaded in step a
+# (embedding bge-m3-int8, reranker bge-reranker-large-int8, LLM Qwen3.5-35B-A3B)
+sed -i \
+  -e 's@"model_id": "BAAI/bge-small-en-v1.5"@"model_id": "BAAI/bge-m3"@' \
+  -e 's@"model_path": "./models/BAAI/bge-small-en-v1.5"@"model_path": "./models/BAAI/bge-m3-int8"@' \
+  -e 's@"weight": "INT4"@"weight": "INT8"@' \
+  test_kb.json
+
+sed -i \
+  -e 's@"model_path": "./models/BAAI/bge-reranker-large"@"model_path": "./models/BAAI/bge-reranker-large-int8"@' \
+  -e 's@"weight": "INT4"@"weight": "INT8"@' \
+  -e 's@"model_id": "Qwen/Qwen3-8B"@"model_id": "Qwen/Qwen3.5-35B-A3B"@' \
+  test_pipeline_ipex_vllm.json
+```
+
+2. Load pipeline:
+
+```bash
+# load knowledgebase
+export HOST_IP=<your host ip>
+curl -X POST http://${HOST_IP}:16010/v1/knowledge \
+  -H "Content-Type: application/json" \
+  -d @test_kb.json | jq '.'
+# load pipeline
+curl -X POST http://${HOST_IP}:16010/v1/settings/pipelines \
+  -H "Content-Type: application/json" \
+  -d @test_pipeline_ipex_vllm.json | jq '.'
 ```
 
 ## 3. Set Up OpenClaw
