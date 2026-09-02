@@ -174,8 +174,11 @@ PIP          := $(BACKEND_VENV)/bin/pip
 PYVENV       := $(BACKEND_VENV)/bin/python
 
 # Host L0 stack (mirrors what setup.sh installs). Used by check-l0 and doctor.
-L0_PACKAGES  := libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 \
+# NOTE: intel-igc-core-2 and libigc2 are alternative names on different Ubuntu
+# releases — either one satisfies the IGC dependency.
+L0_PACKAGES  := libze1 libze-intel-gpu1 libigdgmm12 \
                 intel-opencl-icd intel-media-va-driver-non-free
+L0_IGC_ALTS  := intel-igc-core-2 libigc2
 
 .PHONY: setup
 setup: ## Install host prerequisites (Docker, Intel L0 stack) — runs setup.sh
@@ -185,12 +188,20 @@ setup: ## Install host prerequisites (Docker, Intel L0 stack) — runs setup.sh
 check-l0: ## Verify Intel Level Zero + OpenCL packages are installed on the host
 	@ok=1; \
 	for p in $(L0_PACKAGES); do \
-	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -q 'install ok installed'; then \
+	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -qE 'ok installed'; then \
 	    printf '  [OK]      %s (%s)\n' "$$p" "$$(dpkg-query -W -f='$${Version}' $$p)"; \
 	  else \
 	    printf '  [MISSING] %s\n' "$$p"; ok=0; \
 	  fi; \
 	done; \
+	igc_ok=0; \
+	for p in $(L0_IGC_ALTS); do \
+	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -qE 'ok installed'; then \
+	    printf '  [OK]      %s (%s)  (IGC provider)\n' "$$p" "$$(dpkg-query -W -f='$${Version}' $$p)"; \
+	    igc_ok=1; break; \
+	  fi; \
+	done; \
+	if [ "$$igc_ok" -ne 1 ]; then printf '  [MISSING] no IGC package (need one of: $(L0_IGC_ALTS))\n'; ok=0; fi; \
 	if [ ! -e /dev/dri ]; then printf '  [MISSING] /dev/dri (kernel i915/xe not loaded?)\n'; ok=0; \
 	else printf '  [OK]      /dev/dri present\n'; fi; \
 	if [ "$$ok" -ne 1 ]; then echo; echo 'Run ./setup.sh to install missing prerequisites.'; exit 1; fi
@@ -201,9 +212,14 @@ $(BACKEND_VENV)/bin/python:
 	@$(PIP) install --upgrade pip wheel
 
 .PHONY: backend-venv
-backend-venv: $(BACKEND_VENV)/bin/python ## Create .venv-backend and install backend/requirements.txt (torch+xpu, Ultralytics, OpenVINO)
+backend-venv: $(BACKEND_VENV)/bin/python ## Create .venv-backend with torch+xpu, Ultralytics, OpenVINO
+	@echo '[backend-venv] installing torch+xpu (2.7.1) from pytorch xpu index'
+	@$(PIP) install --index-url https://download.pytorch.org/whl/xpu \
+	  torch==2.7.1 torchvision==0.22.1
 	@echo '[backend-venv] installing backend/requirements.txt'
 	@$(PIP) install -r backend/requirements.txt
+	@echo '[backend-venv] verifying torch.xpu is available'
+	@$(PYVENV) -c 'import torch; assert torch.xpu.is_available(), "torch.xpu not available; check L0 stack + /dev/dri"; print("[backend-venv] torch", torch.__version__, "xpu OK on", torch.xpu.get_device_name(0))'
 
 .PHONY: backend-bootstrap
 backend-bootstrap: ## Fetch dataset, train YOLO11n, export FP16 OpenVINO IR (cache-first)
@@ -230,8 +246,13 @@ doctor: ## Preflight: docker, /dev/dri, cached OpenVINO IR, demo video, L0 stack
 	if [ -s "$$VID" ]; then printf '  [OK]      demo video: %s\n' "$$VID"; \
 	else printf '  [INFO]    demo video absent at %s (only needed for SOURCE=file)\n' "$$VID"; fi; \
 	for p in $(L0_PACKAGES); do \
-	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -q 'install ok installed'; then :; \
+	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -qE 'ok installed'; then :; \
 	  else printf '  [MISSING] L0 package: %s\n' "$$p"; ok=0; fi; \
 	done; \
+	igc_ok=0; \
+	for p in $(L0_IGC_ALTS); do \
+	  if dpkg-query -W -f='$${Status}' $$p 2>/dev/null | grep -qE 'ok installed'; then igc_ok=1; break; fi; \
+	done; \
+	if [ "$$igc_ok" -ne 1 ]; then printf '  [MISSING] no IGC package (need one of: $(L0_IGC_ALTS))\n'; ok=0; fi; \
 	if [ "$$ok" -eq 1 ]; then echo; echo 'doctor: OK — ready for make up.'; \
 	else echo; echo 'doctor: one or more prerequisites missing.'; exit 1; fi
