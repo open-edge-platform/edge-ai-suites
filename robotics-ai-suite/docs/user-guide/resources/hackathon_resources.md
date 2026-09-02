@@ -4,9 +4,7 @@ orphan: true
 
 # Hack-a-thon Resources
 
-Add link to .zip download
-
-The below software stack has been pre-installed on your system. Feel free to review and launch Physical AI Studio when ready to get started. For launch instructions, see [Daily Use After Installation](#daily-use-after-installation).
+The below [software stack](https://amrdocs.intel.com/downloads/hackathon_install.zip) has been pre-installed on your system. Feel free to review and launch Physical AI Studio when ready to get started. For launch instructions, see [Daily Use After Installation](#daily-use-after-installation).
 
 # Intel Edge AI / Robotics Stack — Script-Based Installation & Verification
 
