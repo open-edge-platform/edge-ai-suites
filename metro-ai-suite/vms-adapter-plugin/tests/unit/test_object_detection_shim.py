@@ -69,24 +69,20 @@ async def test_fetch_schema_returns_object_schema():
     schema = await shim.fetch_schema()
 
     assert schema["type"] == "object"
-    assert "pipeline_name" in schema["properties"]
+    assert "device" in schema["properties"]
     assert "camera_id" in schema["properties"]
-    assert set(schema["required"]) == {"pipeline_name", "camera_id"}
+    assert set(schema["required"]) == {"device", "camera_id"}
 
 
-async def test_fetch_schema_populates_pipeline_enum():
-    """Pipeline enum uses the 'version' field, not 'name' (which is the root)."""
-    shim = _make_shim()
+async def test_fetch_schema_device_enum_reflects_configured_devices():
+    """Device enum exposes only configured pipeline devices, in UI order."""
+    shim = _make_shim(pipeline={"cpu": "pipeline_cpu", "gpu": "pipeline_gpu"})
     shim._api.list_pipelines = AsyncMock(return_value=[
-        {"name": "user_defined_pipelines", "version": "dls_vision_pipeline"},
-        {"name": "user_defined_pipelines", "version": "dls_vision_pipeline_gpu"},
+        {"name": "user_defined_pipelines", "version": "pipeline_cpu"},
+        {"name": "user_defined_pipelines", "version": "pipeline_gpu"},
     ])
     schema = await shim.fetch_schema()
-    enum = schema["properties"]["pipeline_name"]["enum"]
-    assert "dls_vision_pipeline" in enum
-    assert "dls_vision_pipeline_gpu" in enum
-    # Root name must NOT appear in the enum
-    assert "user_defined_pipelines" not in enum
+    assert schema["properties"]["device"]["enum"] == ["CPU", "GPU"]
 
 
 async def test_fetch_schema_builds_pipeline_root_map():
@@ -103,7 +99,9 @@ async def test_fetch_schema_handles_empty_pipeline_list():
     shim = _make_shim()
     shim._api.list_pipelines = AsyncMock(return_value=[])
     schema = await shim.fetch_schema()
-    assert schema["properties"]["pipeline_name"]["enum"] == []
+    # No pipeline templates available yet — root map is empty; device still exposed.
+    assert shim._pipeline_root_map == {}
+    assert schema["properties"]["device"]["enum"] == ["CPU"]
 
 
 def test_config_requires_at_least_one_pipeline():

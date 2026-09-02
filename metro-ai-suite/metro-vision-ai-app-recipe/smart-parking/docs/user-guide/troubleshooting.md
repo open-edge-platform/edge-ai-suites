@@ -86,15 +86,22 @@ to file new tickets there (after learning about the guidelines for
      count: 1
    ```
 
-   If you're deploying a GPU based pipeline (example: with VA-API elements
-   like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect`
-   in `config.json`) with Intel GPU k8s Extension on Open Edge Platform,
-   ensure to set the following details in the file `helm/values.yaml`
-   appropriately in order to utilize the underlying GPU.
+2. **`dlstreamer-pipeline-server` pod shows `CreateContainerError`**
 
-   ```sh
-   gpu:
-     enabled: true
-     type: "gpu.intel.com/i915"
-     count: 1
-   ```
+  - **Issue**: The `dlstreamer-pipeline-server` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
+  - **Check Container Runtime**: Run the following command to check which container runtime is being used:
+
+    ```bash
+    kubectl get nodes -o wide
+    ```
+
+    Inspect the `CONTAINER-RUNTIME` column to check if the node is using the `docker://` runtime.
+
+  - **Fix**: Run the following command to configure the Intel GPU device plugin for container runtime compatibility:
+
+    ```bash
+    kubectl patch ds intel-gpu-plugin -n intel-device-plugins --type='json' \
+      -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "-bypath=none"}]'
+    ```
+    Restart the Helm Deployment once this fix is implemented.
+---
