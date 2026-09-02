@@ -337,20 +337,20 @@ This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/iss
 
 ### 6. **`dlstreamer-pipeline-server` pod shows `CreateContainerError`**
 
-  - **Issue**: The `dlstreamer-pipeline-server` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
-  - **Check Container Runtime**: Run the following command to check which container runtime is being used:
+- **Issue**: The `dlstreamer-pipeline-server` pod fails to start and shows `CreateContainerError`. This issue is seen only on environments using the `docker://` container runtime.
+- **Check Container Runtime**: Run the following command to check which container runtime is being used:
 
-    ```bash
-    kubectl get nodes -o wide
-    ```
+  ```bash
+  kubectl get nodes -o wide
+  ```
 
-    Inspect the `CONTAINER-RUNTIME` column to check if the node is using the `docker://` runtime.
+  Inspect the `CONTAINER-RUNTIME` column to check if the node is using the `docker://` runtime.
 
-  - **Fix**: Run the following command to configure the Intel GPU device plugin for container runtime compatibility:
+- **Fix**: Run the following command to configure the Intel GPU device plugin for container runtime compatibility:
 
-    ```bash
-    kubectl patch ds intel-gpu-plugin -n intel-device-plugins --type='json' \
-      -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "-bypath=none"}]'
-    ```
-    Restart the Helm deployment once this fix is implemented.
----
+  ```bash
+  kubectl patch ds intel-gpu-plugin -n intel-device-plugins --type='json' \
+    -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "-bypath=none"}]'
+  ```
+
+  Restart the Helm deployment once this fix is implemented.
