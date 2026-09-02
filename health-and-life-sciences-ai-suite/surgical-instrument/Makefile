@@ -19,18 +19,14 @@
 #
 SHELL := /bin/bash
 
-IMAGE        ?= endoscopy-demo:latest
-CONTAINER    ?= endoscopy-demo
 TAG          ?= 2026.2.0-rc2
 REGISTRY     ?= true
 REGISTRY_URL ?= intel/
 
-# --- Host paths mounted into the container -----------------------------------
+# --- Host paths passed to Docker Compose -------------------------------------
 # MODELS_DIR must contain: yolo11n_polyp/best_openvino_model/best.xml
 MODELS_DIR   ?= $(abspath ./models)
 VIDEOS_DIR   ?= $(abspath ./videos)
-VIDEO        ?= /videos/polyp_test.mp4      # container-side path
-MODEL        ?= /models/yolo11n_polyp/best_openvino_model/best.xml
 
 # --- Runtime knobs -----------------------------------------------------------
 # CPU | GPU | NPU
@@ -90,21 +86,8 @@ endif
 SOURCE       ?= camera
 SOURCE_ARG   ?=
 
-# --- Host GPU/USB plumbing (auto-detected) -----------------------------------
-RENDER_GID   := $(shell getent group render | cut -d: -f3)
-VIDEO_GID    := $(shell getent group video  | cut -d: -f3)
-GROUP_ARGS   := $(if $(RENDER_GID),--group-add $(RENDER_GID)) $(if $(VIDEO_GID),--group-add $(VIDEO_GID))
-
-DRI          := $(if $(wildcard /dev/dri),--device /dev/dri:/dev/dri)
-X11          := -e DISPLAY=$(DISPLAY) -e XDG_RUNTIME_DIR=$(XDG_RUNTIME_DIR) -v /tmp/.X11-unix:/tmp/.X11-unix:rw
+# --- Host USB plumbing (used by `make list-cameras`) -------------------------
 USB          := -v /dev/bus/usb:/dev/bus/usb --device-cgroup-rule='c 189:* rmw'
-
-MOUNTS       := -v $(MODELS_DIR):/models:ro -v $(VIDEOS_DIR):/videos:rw
-# CAP_SYS_NICE + rtprio ulimit: required for --cpu-* affinity and --rt-priority
-# (SCHED_FIFO) pinning; without them the app logs "Operation not permitted".
-COMMON       := --rm --name $(CONTAINER) --net=host $(DRI) $(GROUP_ARGS) $(MOUNTS) \
-                --cap-add SYS_NICE --ulimit rtprio=99 \
-                -e MODEL=$(MODEL) -e DEVICE=$(DEVICE)
 
 .PHONY: _xhost
 _xhost:
@@ -114,7 +97,7 @@ _xhost:
 list-cameras: ## List connected Basler cameras (serial + model) -> SERIAL=
 	@python3 src/utility.py 2>/dev/null || \
 	docker run --rm $(USB) -v $(CURDIR)/src/utility.py:/tmp/utility.py:ro \
-		--entrypoint python3 $(IMAGE) /tmp/utility.py
+		--entrypoint python3 $(REGISTRY_URL)hls-si-endoscopy:$(TAG) /tmp/utility.py
 
 .PHONY: show-cores
 show-cores: ## Show P-core / E-core CPU sets for --cpu-* pinning
