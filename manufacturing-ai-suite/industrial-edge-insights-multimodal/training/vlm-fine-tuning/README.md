@@ -51,16 +51,4 @@ duplicated here:
 
 ## License
 
-The following are third-party components used by the scripts in this directory (see
-`requirements.txt`), each under their own upstream license:
-
-- [Unsloth Library](https://github.com/unslothai/unsloth) — Apache-2.0 license
-- [Hugging Face `transformers`](https://github.com/huggingface/transformers) — Apache-2.0 license
-- [Hugging Face `datasets`](https://github.com/huggingface/datasets) — Apache-2.0 license
-- [Hugging Face TRL](https://github.com/huggingface/trl) — Apache-2.0 license
-- [Hugging Face State-of-the-art Parameter-Efficient Fine-Tuning (PEFT)](https://github.com/huggingface/peft) — Apache-2.0 license
-- [PyTorch Library](https://github.com/pytorch/pytorch) — BSD-3-Clause license
-
-For the license of any dataset used with this toolkit, see the dataset's
-own license terms,  e.g. for the weld worked example, see the
-[Weld Use Case — License and Dataset Attribution](./how-to-fine-tune-vlm-weld-usecase.md#license--dataset-attribution).
+See [VLM Fine-Tuning with Unsloth Library — License](./../../docs/user-guide/how-to-guides/how-to-fine-tune-vlm.md#license).
