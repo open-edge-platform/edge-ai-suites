@@ -19,6 +19,10 @@
 
 ## Quick Test
 
+> **Language requirement:** Grading currently supports Chinese exam papers only. Before using the
+> Grading feature, make sure the `language` setting in the main program's `config.yaml` is set to
+> `zh`.
+
 ### 1. Prepare test files
 1. Copy rubric files from `./samples/rubrics` to `components/grading/rubrics`.
 2. The sample set contains some exams:
