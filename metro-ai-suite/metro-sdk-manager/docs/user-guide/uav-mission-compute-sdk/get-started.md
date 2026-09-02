@@ -75,9 +75,8 @@ curl -X POST http://localhost:8080/action/takeoff
 Record the UAV camera stream to disk with `ffmpeg`:
 
 ```bash
-ffmpeg \
-  -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir \
-  -map 0:v -c:v copy nadir.mkv
+# Records a footage for 10 seconds and saves to nadir.mkv
+ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv
 ```
 
 To preview the live stream instead of recording (if not on a headless system):
