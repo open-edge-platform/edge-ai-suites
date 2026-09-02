@@ -7,7 +7,7 @@ At the end of this tutorial, you will have:
 - LVC running and accessible from VAP
 - Cameras discovered from Nx Witness.
 - A captioning pipeline running against a live camera RTSP stream
-- AI captions displayed over a WebRTC video feed in the VAP provider dashboard
+- AI-generated captions pushed as bookmarks to the Nx Witness camera timeline
 
 ## Prerequisites
 
@@ -316,8 +316,8 @@ docker compose logs -f vms-adapter-backend
 Expected output:
 
 ```text
-[info     ] lvc_run_registered             camera_id=nx:<device-uuid> run_id=<run-id>
-[info     ] nx_pipeline_started            app_id=live_captioning device_id=<device-uuid> run_id=<run-id>
+[info] lvc_run_registered             camera_id=nx:<device-uuid> run_id=<run-id>
+[info] nx_pipeline_started            app_id=live_captioning device_id=<device-uuid> run_id=<run-id>
 ```
 
 #### 5.1.3 Stop the Pipeline
@@ -329,19 +329,14 @@ Expected output:
 Expected log output:
 
 ```text
-[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
+[info] lvc_run_stopped                run_id=<hex-instance-id>
+[info] nx_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
 ```
 
 > **Note:** To run Live Video Captioning and Loitering Detection simultaneously, see the
 > [Run Both Applications Simultaneously](./run-simultaneous-apps.md) guide.
 
 ### 5.2 Start a Captioning Run from the VAP Dashboard (Optional)
-
-<!--hide_directive
-<details>
-<summary>hide_directive-->Click to expand — how to start a captioning run from the provider dashboard
-<!--hide_directive</summary>
-hide_directive-->
 
 #### Open the Dashboard
 
@@ -351,7 +346,7 @@ Open a browser and navigate to `https://localhost:3443`.
 
 1. In the **Camera Discovery** panel, click **Discover Cameras**.
 2. VAP queries all configured VMS sources and stores results in PostgreSQL.
-3. The camera list updates Nx Witness cameras which appear as: `nx:e3e9a385-7fe0-3ba5-5482-a86cde7faf48`
+3. The camera list updates Nx Witness cameras which appear as: `nx:<device-uuid>`
 
 ```bash
 # Or via API:
@@ -377,27 +372,24 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 
 2. Fill in the configuration form:
 
-   | **Field**            | **Description**                                         | **Default**                                |
-   | -------------------- | ------------------------------------------------------- | ------------------------------------------ |
-   | **Camera**           | Dropdown of enabled cameras (Nx Witness)                | —                                          |
-   | **Enter Prompt**     | Instruction sent to the VLM for each frame              | `"Describe what you see in one sentence."` |
-   | **Select Model**     | VLM model to use (fetched live from LVC)                | `OpenGVLab/InternVL2-2B`                   |
-   | **Max New Tokens**   | Maximum caption length in tokens                        | `70`                                       |
-   | **Select Pipeline**  | DL Streamer pipeline (fetched live from LVC)            | —                                          |
-   | **Run Name**         | Display name for this run                               | —                                          |
-   | **Frame Rate**       | Frames per second sent to the VLM                       | `1`                                        |
-   | **Chunk Size**       | Frames grouped per inference call                       | `1`                                        |
-   | **Frame Resolution** | Resolution: `default`, `1280×720`, `640×480`, `480×360` | `default`                                  |
+   | **Field**        | **Description**                             |
+   | ---------------- | ------------------------------------------- |
+   | **Camera**       | Dropdown of enabled cameras (Nx Witness)    |
+   | **Device**       | Dropdown for selecting the inference device |
+   | **Enter Prompt** | Instruction sent to the VLM for each frame  |
 
-3. Example prompts:
+   > **Note:** Additional configurable fields are available in the form. This tutorial focuses on the three fields above.
+
+3. Select the target camera from the **Camera** dropdown.
+
+4. Select the inference device from the **Device** dropdown (for example, `GPU`).
+
+5. Enter the prompt for captioning the video. Example prompts:
    - `"Describe what you see in one sentence."`
    - `"Is there a person in the frame? Answer yes or no."`
    - `"What objects are visible on the warehouse floor?"`
 
-4. Click **Start Run**.
-
-<!--hide_directive
-</details>hide_directive-->
+6. Click **Start Analysis**.
 
 ### 5.3 What Happens When You Click Start
 
@@ -459,12 +451,6 @@ curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/
 
 ### 6.3 View Live Captions in the VAP Dashboard (Optional)
 
-<!--hide_directive
-<details>
-<summary>hide_directive-->Click to expand — how to view captions in the provider dashboard
-<!--hide_directive</summary>
-hide_directive-->
-
 Open a browser and navigate to `https://localhost:3443`, then open the **Live Stream** tab. It
 shows:
 
@@ -472,9 +458,6 @@ shows:
 - **Caption overlay** — the most recent AI caption displayed in real time.
 
 Captions appear within a few seconds of the pipeline starting.
-
-<!--hide_directive
-</details>hide_directive-->
 
 ## Troubleshooting
 

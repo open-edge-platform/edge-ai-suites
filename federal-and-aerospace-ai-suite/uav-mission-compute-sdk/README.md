@@ -27,6 +27,21 @@ Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO visio
 
 ---
 
+## Getting the Code
+
+This SDK lives inside the [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites) monorepo. To
+check out only this directory instead of the entire repo, use a sparse
+checkout:
+
+```bash
+git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+cd federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+```
+
+---
+
 ## Prerequisites
 
 - **OS**: Ubuntu 24.04
