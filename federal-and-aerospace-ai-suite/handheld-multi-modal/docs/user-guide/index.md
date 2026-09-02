@@ -24,7 +24,7 @@ a LLM inference server, a speech-to-text service and
 All components of the composite application share the visual pipeline solution's Docker network.
 
 The Handheld Multi-Modal application is deployed on top of the
-[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
+[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
 ## Deployment and Usage
 

@@ -11,8 +11,9 @@
 # Optional local model-prep flow (needed only if you do NOT already have a
 # trained OpenVINO IR under $(MODELS_DIR)/yolo11n_polyp/best_openvino_model/):
 #
-#   ./setup.sh                 # install host prerequisites (Docker + Intel L0 stack)
+#   make setup-prerequisites                 # install host prerequisites (Docker + Intel L0 stack)
 #   make check-l0              # verify Intel Level Zero packages on the host
+#   make download-dataset      # fetch REAL-Colon subset (~74 GB) for training
 #   make backend-venv          # create .venv-backend with torch+xpu + Ultralytics + OpenVINO
 #   make backend-bootstrap     # fetch dataset -> train YOLO11n -> export FP16 OpenVINO IR
 #   make doctor                # preflight: docker, /dev/dri, IR + demo video, L0 stack
@@ -173,16 +174,20 @@ BACKEND_VENV ?= .venv-backend
 PIP          := $(BACKEND_VENV)/bin/pip
 PYVENV       := $(BACKEND_VENV)/bin/python
 
-# Host L0 stack (mirrors what setup.sh installs). Used by check-l0 and doctor.
+# Host L0 stack (mirrors what scripts/setup-prerequisites.sh installs). Used by check-l0 and doctor.
 # NOTE: intel-igc-core-2 and libigc2 are alternative names on different Ubuntu
 # releases — either one satisfies the IGC dependency.
 L0_PACKAGES  := libze1 libze-intel-gpu1 libigdgmm12 \
                 intel-opencl-icd intel-media-va-driver-non-free
 L0_IGC_ALTS  := intel-igc-core-2 libigc2
 
-.PHONY: setup
-setup: ## Install host prerequisites (Docker, Intel L0 stack) — runs setup.sh
-	@./setup.sh $(SETUP_ARGS)
+.PHONY: setup-prerequisites
+setup-prerequisites: ## Install host prerequisites (Docker, Intel L0 stack) — runs scripts/setup-prerequisites.sh
+	@./scripts/setup-prerequisites.sh $(SETUP_ARGS)
+
+.PHONY: download-dataset
+download-dataset: ## Download the REAL-Colon subset (~74 GB) into datasets/REAL-Colon/raw
+	@./scripts/download_realcolon_subset.sh $(DATASET_DIR)
 
 .PHONY: check-l0
 check-l0: ## Verify Intel Level Zero + OpenCL packages are installed on the host
@@ -204,7 +209,7 @@ check-l0: ## Verify Intel Level Zero + OpenCL packages are installed on the host
 	if [ "$$igc_ok" -ne 1 ]; then printf '  [MISSING] no IGC package (need one of: $(L0_IGC_ALTS))\n'; ok=0; fi; \
 	if [ ! -e /dev/dri ]; then printf '  [MISSING] /dev/dri (kernel i915/xe not loaded?)\n'; ok=0; \
 	else printf '  [OK]      /dev/dri present\n'; fi; \
-	if [ "$$ok" -ne 1 ]; then echo; echo 'Run ./setup.sh to install missing prerequisites.'; exit 1; fi
+	if [ "$$ok" -ne 1 ]; then echo; echo 'Run: make setup-prerequisites   (installs missing prerequisites)'; exit 1; fi
 
 $(BACKEND_VENV)/bin/python:
 	@echo '[backend-venv] creating $(BACKEND_VENV) with $(PY) -m venv'
@@ -233,10 +238,10 @@ doctor: ## Preflight: docker, /dev/dri, cached OpenVINO IR, demo video, L0 stack
 	@ok=1; \
 	if command -v docker >/dev/null 2>&1; then \
 	  printf '  [OK]      docker: %s\n' "$$(docker --version)"; \
-	else printf '  [MISSING] docker not installed (run ./setup.sh)\n'; ok=0; fi; \
+	else printf '  [MISSING] docker not installed (run: make setup-prerequisites)\n'; ok=0; fi; \
 	if docker compose version >/dev/null 2>&1; then \
 	  printf '  [OK]      compose: %s\n' "$$(docker compose version | head -1)"; \
-	else printf '  [MISSING] docker compose plugin (run ./setup.sh)\n'; ok=0; fi; \
+	else printf '  [MISSING] docker compose plugin (run: make setup-prerequisites)\n'; ok=0; fi; \
 	if [ -e /dev/dri ]; then printf '  [OK]      /dev/dri present\n'; \
 	else printf '  [MISSING] /dev/dri (iGPU inference will fail)\n'; ok=0; fi; \
 	IR=$(MODELS_DIR)/yolo11n_polyp/best_openvino_model/best.xml; \
