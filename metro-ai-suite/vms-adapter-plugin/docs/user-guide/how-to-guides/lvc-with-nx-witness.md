@@ -7,7 +7,7 @@ At the end of this tutorial, you will have:
 - LVC running and accessible from VAP
 - Cameras discovered from Nx Witness.
 - A captioning pipeline running against a live camera RTSP stream
-- AI captions displayed over a WebRTC video feed in the VAP provider dashboard
+- AI-generated captions pushed as bookmarks to the Nx Witness camera timeline
 
 ## Prerequisites
 
@@ -316,8 +316,8 @@ docker compose logs -f vms-adapter-backend
 Expected output:
 
 ```text
-[info     ] lvc_run_registered             camera_id=nx:<device-uuid> run_id=<run-id>
-[info     ] nx_pipeline_started            app_id=live_captioning device_id=<device-uuid> run_id=<run-id>
+[info] lvc_run_registered             camera_id=nx:<device-uuid> run_id=<run-id>
+[info] nx_pipeline_started            app_id=live_captioning device_id=<device-uuid> run_id=<run-id>
 ```
 
 #### 5.1.3 Stop the Pipeline
@@ -329,77 +329,14 @@ Expected output:
 Expected log output:
 
 ```text
-[info] nx_dls_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
+[info] lvc_run_stopped                run_id=<hex-instance-id>
+[info] nx_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
 ```
 
 > **Note:** To run Live Video Captioning and Loitering Detection simultaneously, see the
 > [Run Both Applications Simultaneously](./run-simultaneous-apps.md) guide.
 
-### 5.2 Start a Captioning Run from the VAP Dashboard (Optional)
-
-<!--hide_directive
-<details>
-<summary>hide_directive-->Click to expand — how to start a captioning run from the provider dashboard
-<!--hide_directive</summary>
-hide_directive-->
-
-#### Open the Dashboard
-
-Open a browser and navigate to `https://localhost:3443`.
-
-#### Discover Cameras
-
-1. In the **Camera Discovery** panel, click **Discover Cameras**.
-2. VAP queries all configured VMS sources and stores results in PostgreSQL.
-3. The camera list updates Nx Witness cameras which appear as: `nx:e3e9a385-7fe0-3ba5-5482-a86cde7faf48`
-
-```bash
-# Or via API:
-curl -k -X POST https://localhost:3443/v1/cameras/discover
-```
-
-#### Enable a Camera
-
-In the **Camera Discovery** panel, click the toggle next to the camera you want to use. Only
-enabled cameras appear in the analytics form.
-
-```bash
-# Or via API:
-# Nx Witness camera
-curl -k -X POST https://localhost:3443/v1/cameras/enable \
-  -H "Content-Type: application/json" \
-  -d '{"camera_ids": ["nx:<device-uuid>"], "enabled": true}'
-```
-
-#### Configure and start a captioning run
-
-1. In the **Analytics Engine** panel, click **Discover Apps**. Select **Live Video Captioning**.
-
-2. Fill in the configuration form:
-
-   | **Field**            | **Description**                                         | **Default**                                |
-   | -------------------- | ------------------------------------------------------- | ------------------------------------------ |
-   | **Camera**           | Dropdown of enabled cameras (Nx Witness)                | —                                          |
-   | **Enter Prompt**     | Instruction sent to the VLM for each frame              | `"Describe what you see in one sentence."` |
-   | **Select Model**     | VLM model to use (fetched live from LVC)                | `OpenGVLab/InternVL2-2B`                   |
-   | **Max New Tokens**   | Maximum caption length in tokens                        | `70`                                       |
-   | **Select Pipeline**  | DL Streamer pipeline (fetched live from LVC)            | —                                          |
-   | **Run Name**         | Display name for this run                               | —                                          |
-   | **Frame Rate**       | Frames per second sent to the VLM                       | `1`                                        |
-   | **Chunk Size**       | Frames grouped per inference call                       | `1`                                        |
-   | **Frame Resolution** | Resolution: `default`, `1280×720`, `640×480`, `480×360` | `default`                                  |
-
-3. Example prompts:
-   - `"Describe what you see in one sentence."`
-   - `"Is there a person in the frame? Answer yes or no."`
-   - `"What objects are visible on the warehouse floor?"`
-
-4. Click **Start Run**.
-
-<!--hide_directive
-</details>hide_directive-->
-
-### 5.3 What Happens When You Click Start
+### 5.2 What Happens When You Click Start
 
 1. VAP resolves the selected `camera_id` to an RTSP URL:
    - **Nx Witness camera**: calls `GET /rest/v4/devices` on Nx; RTSP URL is `rtsp://<NX_USERNAME>:<NX_PASSWORD>@<NX_HOST>:7001/<device-uuid>?onvif_replay=true`.
@@ -409,9 +346,7 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
 5. The VLM generates captions and publishes them to an MQTT broker → LVC SSE stream.
 6. VAP proxies the SSE stream at `/v1/analytics-apps/live_captioning/results/stream`.
 
-### 5.4 Verify the Run Is Active
-
-In the **Analytics Engine** panel, the active run appears in the runs list.
+### 5.3 Verify the Run Is Active
 
 Via the API:
 
@@ -424,7 +359,7 @@ curl -k https://localhost:3443/v1/analytics-apps/live_captioning/runs | python3 
 ### 6.1 Captions as Nx Bookmarks
 
 When a captioning pipeline is running against an Nx Witness camera, VAP pushes each AI-generated
-caption as a **bookmark** on the camera's timeline. No dashboard interaction is needed.
+caption as a **bookmark** on the camera's timeline.
 
 To view captions in the Nx Witness client:
 
@@ -457,24 +392,6 @@ Or, via the API:
 curl -k -X DELETE https://localhost:3443/v1/analytics-apps/live_captioning/runs/<run_id>
 ```
 
-### 6.3 View Live Captions in the VAP Dashboard (Optional)
-
-<!--hide_directive
-<details>
-<summary>hide_directive-->Click to expand — how to view captions in the provider dashboard
-<!--hide_directive</summary>
-hide_directive-->
-
-Open a browser and navigate to `https://localhost:3443`, then open the **Live Stream** tab. It
-shows:
-
-- **WebRTC video player** — live video from the camera relayed through MediaMTX.
-- **Caption overlay** — the most recent AI caption displayed in real time.
-
-Captions appear within a few seconds of the pipeline starting.
-
-<!--hide_directive
-</details>hide_directive-->
 
 ## Troubleshooting
 
@@ -567,8 +484,7 @@ Apps**.
 | Set `LVC_BASE_URL`, `MEDIAMTX_URL`, and VMS credentials in `.env` | `metro-ai-suite/vms-adapter-plugin/.env` |
 | Configure VMS instance(s) in `config.yaml` | `config/config.yaml` |
 | Start VAP | `cd metro-ai-suite/vms-adapter-plugin` → `docker compose up -d --build` |
-| Discover cameras | Dashboard → Discover Cameras |
-| Enable cameras for analytics | Dashboard → Camera toggle |
+| Discover cameras | `curl -k -X POST https://localhost:3443/v1/cameras/discover` |
 | **Nx Witness:** Start pipeline | Camera Settings → Integrations → VAP Analytics Integration → Enable checkbox |
 | View live captions | Nx Witness client → camera Bookmarks tab (each caption is a bookmark) |
 | **Nx Witness:** Stop the run | Camera Settings → Integrations → VAP Analytics Integration → Uncheck the checkbox |
