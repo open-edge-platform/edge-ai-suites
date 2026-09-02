@@ -1,4 +1,4 @@
-# Handheld Multi-Modal Application
+# Handheld (Soldier System) Blueprint
 
 <!--hide_directive
 <div class="component_card_widget">
@@ -14,7 +14,7 @@
 </div>
 hide_directive-->
 
-The Handheld Multi-Modal application is a full-stack AI inference and observability software
+The Handheld Blueprint is a full-stack AI inference and observability software
 collection consisting of both single- and multi-modal components that are optimized for
 Intel® edge hardware in handheld deployment scenarios.
 
@@ -24,15 +24,21 @@ a LLM inference server, a speech-to-text service and
 All components of the composite application share the visual pipeline solution's Docker network.
 
 The Handheld Multi-Modal application is deployed on top of the
-[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
-Deployment of the the full solution consists of two main stages:
+[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
-1. Setting up [Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html),
-2. Installation of the composite Handheld Multi-Modal Application that makes use of the hardware accelerated compute platform.
+## Deployment and Usage
 
-## Components of the Handheld Multi-Modal Application
+Follow these steps to deploy the Handheld (Soldier System) Blueprint:
 
-The application combines a conversational agent (Chat UI) exposed as Open WebUI component
+1. [Infrastructure Setup](infrastructure-setup.md) — Build the OS image, flash it to a bootable USB, and validate the provisioned platform.
+2. [Install OEP SDKs](install-oep-sdks.md) — Verify hardware accelerators and install the OEP Vision AI SDK on the provisioned target.
+3. [Install Handheld Multi-Modal Application](deploy-applications.md) — Download and deploy the composite application stack.
+4. [Access Application User Interface](access-application.md) — Connect to the application endpoints and explore each component.
+5. [Benchmarks](benchmarks.md) — Use the bundled ViPPET tool to benchmark AI pipelines across available hardware.
+
+## Components
+
+The Handheld application combines a conversational agent (Chat UI) exposed as Open WebUI component
 backed by LLM model served through the OpenVINO Model Server platform, a speech-to-text
 transcription functionality realized by the Whisper model, and observability dashboard
 exposed via Grafana dashboard for a live view of platform utilization and application metrics.
@@ -73,16 +79,15 @@ for a live, ephemeral on-device view. Additionally, a Prometheus endpoint is exp
 `localhost:9273/metrics` address, from which data can be scraped for
 long-term persistence.
 
-## Composite Application installation
-
-Proceed to [Application Deployment](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/handheld-multi-modal-application/deploy-applications.html).
-and follow the guide to install Handheld Multi-Modal Application.
-
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-Application Deployment <deploy-applications.md>
+Infrastructure Setup <infrastructure-setup.md>
+Install OEP SDKs <install-oep-sdks.md>
+Install Handheld Multi-Modal Application <deploy-applications.md>
+Access Application User Interface <access-application.md>
+Benchmarks <benchmarks.md>
 
 :::
 hide_directive-->
