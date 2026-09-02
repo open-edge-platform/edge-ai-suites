@@ -41,3 +41,44 @@
    - Confirm the OpenVINO IR exists at
      `models/yolo11n_polyp/best_openvino_model/best.xml` on the host.
    - Confirm `/dev/dri` is passed through (check `docker exec <container> ls /dev/dri`).
+
+## Local model preparation (`make backend-bootstrap`)
+
+9. `torch.xpu not available` or `RuntimeError: XPU device init failed`
+   - Verify host L0 stack: `make check-l0`.
+   - Verify `/dev/dri` exists and your user is in the `render` group
+     (`id -nG | tr ' ' '\n' | grep -E '^render$'`). Log out and back in after
+     `./setup.sh` if you were just added.
+   - `torch` must be `>=2.12.1+xpu`; earlier versions stall in Ultralytics'
+     loss/assign kernels on Xe/Xe3 iGPUs. Recreate the venv with
+     `rm -rf .venv-backend && make backend-venv`.
+
+10. `zeInit failed` at import time
+    - The Intel `libze1` / `libze-intel-gpu1` package is missing or a stale
+      OpenCL loader is masking Level Zero. Re-run `./setup.sh` and
+      `make check-l0`.
+
+11. Dataset auto-detect finds zero paired samples
+    - REAL-Colon: confirm sibling `SSS-VVV_frames/` + `SSS-VVV_annotations/`
+      directories exist under `datasets/REAL-Colon/raw/` (extracted from the
+      `*_frames.tar.gz` / `*_annotations.tar.gz` archives). Frame stems must
+      match XML stems.
+    - Legacy mask-based drops: image stems must match mask stems (`100.png`
+      ↔ `100.png`), and `masks/` must actually contain binary masks (not
+      color-coded segmentations).
+    - Delete `datasets/*/data.yaml` and rerun `make backend-bootstrap` to
+      force re-detection.
+
+12. Reset the trained-model cache
+    - The bootstrap step is cache-first. To rebuild from scratch after a
+      dataset or config change:
+      ```bash
+      rm -rf models/yolo11n_polyp/best_openvino_model \
+             models/yolo11n_polyp/.trained_ok
+      make backend-bootstrap
+      ```
+
+13. Missing demo video for `SOURCE=file`
+    - Place any endoscopic video at `videos/polyp_test.mp4`, or generate one
+      from the REAL-Colon subset with
+      `.venv-backend/bin/python scripts/create_endoscopy_video.py`.

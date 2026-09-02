@@ -29,3 +29,14 @@ environments.
   inference, and display threads.
 - Restructured layout with `src/`, `docker/`, and `docs/` folders and a
   compose-only Makefile.
+- Optional local model-preparation flow: `./setup.sh` installs the host
+  prerequisites (Docker + Intel client GPU stack), then
+  `make backend-venv && make backend-bootstrap` fetches the dataset, trains
+  YOLO11n on the Intel iGPU, and exports a FP16 OpenVINO IR. See
+  [Model Preparation](./get-started/model-preparation.md).
+- REAL-Colon dataset support: bootstrap auto-detects the REAL-Colon
+  `*_frames/` + `*_annotations/` layout and converts Pascal VOC XML bounding
+  boxes to YOLO labels. Legacy mask-based drops (ColonDB-style images+masks)
+  remain supported as a fallback.
+- `make check-l0` and `make doctor` preflight targets for host prerequisite
+  verification.
