@@ -11,7 +11,7 @@
 #   docker run --rm hls-si-endoscopy-sources:latest        # `tree sources`
 
 ARG REGISTRY_URL=intel/
-ARG TAG=2026.2.0-rc2
+ARG TAG=latest
 
 # -------- Stage 1: Download GPL Sources --------
 FROM ${REGISTRY_URL}hls-si-endoscopy:${TAG} AS source-builder
