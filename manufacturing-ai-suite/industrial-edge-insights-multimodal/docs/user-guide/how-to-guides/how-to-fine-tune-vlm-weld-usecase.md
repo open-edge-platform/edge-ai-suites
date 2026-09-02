@@ -78,16 +78,17 @@ decision that follows:
   attends to the image can also attend to the telemetry text tokens.
 
 In short, the data-preparation stage converts an upstream classifier’s
-tabular predictions, raw sensor CSVs, and images into a dataset whose input
-and output format matches the structured-report objective. This allows a
-generic instruction-tuned VLM base model to be steered toward that
-objective with a relatively small amount of LoRA fine-tuning.
+tabular predictions, raw sensor comma-separated value (CSV) files, and
+images into a dataset whose input and output format matches the
+structured-report objective. This allows a generic instruction-tuned
+VLM base model to be steered toward that objective with a relatively
+small amount of LoRA fine-tuning.
 
 ## Step 1: Input Data
 
 `prepare_weld_dataset.py` consumes two inputs that you must provide:
 
-1. **A fused CSV** (`--input-csv`), one row per labeled weld image or sample,
+1. **A fused CSV file** (`--input-csv`), one row per labeled weld image or sample,
    with these columns at the minimum:
 
    | Column | Type | Description |
@@ -123,22 +124,22 @@ objective with a relatively small amount of LoRA fine-tuning.
    }
    ```
 
-   In practice, this CSV is produced by fusing:
+   In practice, this CSV file is produced by fusing:
    - Per-frame classifier predictions (run `classification-training`'s
      inference over your weld image and sensor dataset to get
      `output_prediction_details` per row), with
    - Raw sensor telemetry and image `Frame_id`s, aligned by timestamp.
 
    This repository does not include a fusion script. Build one for your own data
-   pipeline, or provide the CSV in the schema above directly.
+   pipeline, or provide the CSV file in the schema above directly.
 
 2. **An image root** (`--images-root`): a directory tree of weld images
    (`.jpg`/`.jpeg`/`.png`), searched recursively. Each image's
    filename stem (without extension) must match a `Frame_id` value in the
-   CSV. Sub-folder structure (e.g. per-class folders) does not matter. Only
+   CSV file. Sub-folder structure (e.g. per-class folders) does not matter. Only
    the filename stem is used for matching.
 
-You can source the underlying raw images and sensor CSVs for weld defect data from
+You can source the underlying raw images and sensor CSV files for weld defect data from
 the same public dataset used by `classification-training`:
 [IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset).
 
@@ -161,7 +162,7 @@ Useful flags:
 
 ### Dataset Preparation Script Processing Steps
 
-1. Loads and cleans the CSV by stripping the whitespace character from
+1. Loads and cleans the CSV file by stripping the whitespace character from
    headers and string fields.
 2. Builds an index that maps `Frame_id` values to image paths from
    `--images-root`.
@@ -342,7 +343,7 @@ flowchart TD
 
 - **`FileNotFoundError` or missing image errors during Step 2**: Verify
   that `--images-root` contains files whose stems exactly match `Frame_id`
-  values in the CSV, or pass `--skip-missing` to drop unmatched rows
+  values in the CSV file, or pass `--skip-missing` to drop unmatched rows
   instead of failing.
 
 - **Split ratios error** — `--train-ratio`, `--val-ratio`, and `--test-ratio`
@@ -355,7 +356,7 @@ flowchart TD
 
 ## License and Dataset Attribution
 
-You can source the raw images and sensor CSVs referenced in [Step 1](#step-1-input-data)
+You can source the raw images and sensor CSV files referenced in [Step 1](#step-1-input-data)
 from [IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset)
 (Apache-2.0) — see that dataset's card for its own license terms. The
 generic toolkit license and third-party component licenses are listed in
