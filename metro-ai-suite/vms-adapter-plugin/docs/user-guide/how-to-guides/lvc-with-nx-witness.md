@@ -7,7 +7,7 @@ At the end of this tutorial, you will have:
 - LVC running and accessible from VAP
 - Cameras discovered from Nx Witness.
 - A captioning pipeline running against a live camera RTSP stream
-- AI captions displayed over a WebRTC video feed in the VAP provider dashboard
+- AI-generated captions pushed as bookmarks to the Nx Witness camera timeline
 
 ## Prerequisites
 

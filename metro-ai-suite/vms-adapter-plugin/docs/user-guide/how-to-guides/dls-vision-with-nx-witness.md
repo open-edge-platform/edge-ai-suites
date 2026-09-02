@@ -7,7 +7,7 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 - Loitering Detection application running with its MQTT broker exposed to the host
 - Nx Witness connected to VAP and automatically registered as an analytics integration
 - Detection bounding boxes pushed from the application to Nx Witness in real time
-- Pipeline runs managed from the VAP provider dashboard
+- Pipeline runs started and stopped from the Nx Witness desktop client
 
 > **Note:** Although this tutorial demonstrates Loitering Detection as an analytics application,
 > the same instructions apply to any other DL Streamer-based vision application.
