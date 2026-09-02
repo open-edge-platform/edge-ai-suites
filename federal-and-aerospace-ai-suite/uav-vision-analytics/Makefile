@@ -9,8 +9,8 @@ endif
 COMPOSE_PYMAV  := docker-compose-pymavlink.yml
 COMPOSE_SDK := docker-compose-uavsdk.yml
 DLSPS          := dlstreamer-pipeline-server
-MODEL_DIR      := resources/models/yolov8n-visdrone
-MODEL_XML      := $(MODEL_DIR)/best_openvino_model/best.xml
+MODEL_DIR      := resources/models/yolo26n
+MODEL_XML      := $(MODEL_DIR)/yolo26n_openvino_model/yolo26n.xml
 VENV           := resources/venv
 DEVICE         ?= gpu
 
@@ -59,7 +59,7 @@ init: ## Create .env from template and auto-detect GPU/NPU device paths
 				echo "NPU_DEVICE=/dev/null" >> .env; \
 			fi; \
 		fi; \
-		        RS_DEV=$$(v4l2-ctl --list-devices 2>/dev/null | \
+                RS_DEV=$$(v4l2-ctl --list-devices 2>/dev/null | \
                         awk '/\(usb-/{usb=1;next} usb && /\/dev\/video/{print $$1} /^[^[:space:]]/{usb=0}' | \
                         while IFS= read -r dev; do \
                             v4l2-ctl -d "$$dev" --list-formats 2>/dev/null | grep -qiE 'MJPG|YUYV' \
@@ -80,36 +80,34 @@ init: ## Create .env from template and auto-detect GPU/NPU device paths
                                 echo "REALSENSE_DEVICE=/dev/null" >> .env; \
                         fi; \
                 fi; \
-        fi
+		fi
 
 # ── Pre-flight check ────────────────────────────────────────────────────────
 
 _check_model:
 	@if [ ! -f "$(MODEL_XML)" ]; then \
 		echo "❌ Model not found: $(MODEL_XML)"; \
-		echo "   Run 'make model' first to download and export the YOLOv8n-VisDrone model."; \
+		echo "   Run 'make model' first to download and export the YOLO26n model."; \
 		exit 1; \
 	fi
 
 # ── Model ────────────────────────────────────────────────────────────────────
 
-model: ## Download YOLOv8n-VisDrone and export to OpenVINO FP16
+model: ## Download YOLO26n (COCO-pretrained) and export to OpenVINO FP16
 	@echo "[model] Creating virtualenv..."
 	python3 -m venv $(VENV)
 	@echo "[model] Installing dependencies..."
 	$(VENV)/bin/pip install --quiet -r resources/requirements.txt
-	@echo "[model] Downloading checkpoint from HuggingFace..."
-	$(VENV)/bin/hf download mshamrai/yolov8n-visdrone best.pt \
-	  --local-dir ./$(MODEL_DIR)
-	@echo "[model] Exporting to OpenVINO FP16..."
-	$(VENV)/bin/yolo export \
-	  model=./$(MODEL_DIR)/best.pt \
+	@echo "[model] Downloading yolo26n.pt and exporting to OpenVINO FP16..."
+	mkdir -p $(MODEL_DIR)
+	cd $(MODEL_DIR) && $(CURDIR)/$(VENV)/bin/yolo export \
+	  model=yolo26n.pt \
 	  format=openvino \
 	  dynamic=True \
 	  opset=18 \
 	  imgsz=640 \
 	  half=True
-	@echo "[model] Done. Model at: $(MODEL_DIR)/best_openvino_model/"
+	@echo "[model] Done. Model at: $(MODEL_DIR)/yolo26n_openvino_model/"
 
 # ── pymavlink stack ───────────────────────────────────────────────────────────
 
