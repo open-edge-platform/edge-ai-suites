@@ -1,41 +1,157 @@
-<!--
-Copyright (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
+# Get Started
 
-# Enterprise Data Intelligence
-
-Demo setup steps, including OpenClaw service, EC-RAG service, Router service, compressor service, and UI service.
+This guide provides the demo setup steps for the OpenClaw service, EC-RAG service, Router
+service, Compressor service, and the UI service.
 
 ## Table of Contents
 
-- [1. Setup Router and Compressor services](#1-setup-router-and-compressor-services)
-- [2. Setup EC-RAG](#2-setup-ec-rag)
-- [3. Setup OpenClaw](#3-setup-openclaw)
-  - [3.1 Setup OpenClaw](#31-setup-openclaw)
-  - [3.2 Configure openclaw.json](#32-configure-openclawjson)
-  - [3.3 Install Repository Skills into OpenClaw Agent Directory](#33-install-repository-skills-into-openclaw-agent-directory)
+- [1. Set Up Router and Compressor Services](#1-set-up-router-and-compressor-services)
+- [2. Set Up EC-RAG](#2-set-up-ec-rag)
+- [3. Set Up OpenClaw](#3-set-up-openclaw)
+  - [3.1 Install and Onboard OpenClaw](#31-install-and-onboard-openclaw)
+  - [3.2 Configure `openclaw.json`](#32-configure-openclawjson)
+  - [3.3 Install Repository Skills into the OpenClaw Agent Directory](#33-install-repository-skills-into-the-openclaw-agent-directory)
   - [3.4 Enable the Skill in OpenClaw Configuration](#34-enable-the-skill-in-openclaw-configuration)
-- [4. Setup UI](#4-setup-ui)
+- [4. Set Up the UI](#4-set-up-the-ui)
 - [5. Test the Configuration](#5-test-the-configuration)
-- [6. How to use knowledgebase skill](#6-how-to-use-knowledgebase-skill)
+- [6. Use the Knowledgebase Skill](#6-use-the-knowledgebase-skill)
 
-## 1. Setup Router and Compressor services
+## 1. Set Up Router and Compressor Services
 
-The Router and compressor services are set up separately. See the [`inference-router`](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/microservices/inference-router) microservice for the full instructions on generating the config and starting both services.
+The Router and Compressor services are set up separately. See the
+[Inference Router](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/inference-router/index.html)
+microservice for the full instructions on generating the configuration and starting both
+services.
 
-## 2. Setup EC-RAG
+## 2. Set Up EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow the instructions in the [`agentic-rag`](https://github.com/opea-project/GenAIExamples/tree/f56422671c8bdf46f59dd758c8c9e38ca41d6555/EdgeCraftRAG) directory.
+To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow
+the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md). (Please use vLLM backend refer to ['vLLM Setup'](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md#vllm))
 
+### a. Prepare embedding/reranker/LLM models
 
-## 3. Setup OpenClaw
+```bash
+python3 -m venv model_download_venv
+source model_download_venv/bin/activate
+# Download BAAI/bge-m3 和 BAAI/bge-reranker-large
+pip install --upgrade --upgrade-strategy eager "optimum[openvino]"
+export HF_ENDPOINT=https://hf-mirror.com
+export MODEL_PATH=${PWD}/workspace/models
+optimum-cli export openvino -m BAAI/bge-m3 ${MODEL_PATH}/BAAI/bge-m3-int8 --weight-format int8 --task sentence-similarity
+optimum-cli export openvino -m BAAI/bge-reranker-large  ${MODEL_PATH}/BAAI/bge-reranker-large-int8 --weight-format int8 --task text-classification
+# Download Qwen3.5-35B-A3B
+pip install modelscope
+export LLM_MODEL="Qwen/Qwen3.5-35B-A3B"
+modelscope download --model $LLM_MODEL --local_dir "${MODEL_PATH}/${LLM_MODEL}"
+# clean venv
+deactivate
+rm -rf model_download_venv
+```
 
-### 3.1 Setup OpenClaw
+### b. Start Service
 
-If you do not have OpenClaw yet, install it from the official repository: https://github.com/openclaw/openclaw
+```bash
+# clone OPEA EC-RAG repo with pinned commit
+git clone --filter=blob:none --sparse https://github.com/opea-project/GenAIExamples.git
+cd GenAIExamples
+git sparse-checkout set EdgeCraftRAG
+git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
+cd EdgeCraftRAG
 
-Use the following choices in the onboarding wizard. Skip all online provider/channel/skill configuration for now and configure them manually in the following sections:
+# For the latest model support, you can modify the EC-RAG vLLM backend image version and
+# configuration like this:
+compose=docker_compose/intel/gpu/arc/compose.yaml
+
+grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
+  echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
+
+sed -i \
+  -e '/--disable-log-requests/d' \
+  -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
+  -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
+  -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
+  "$compose"
+
+grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
+  echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
+```
+
+Below is a reference pipeline configuration:
+
+```bash
+- `HOST_IP`: `<your_host_ip>`
+- `DOC_PATH`: `${PWD}/workspace`
+- `TMPFILE_PATH`: `${PWD}/workspace`
+- `LLM_MODEL`: `Qwen/Qwen3.5-35B-A3B`
+- `MODEL_PATH`: `<the directory you put Qwen/Qwen3.5-35B-A3B>`
+- `MAX_MODEL_LEN`: `60000`
+- `QUANTIZATION`: `fp8`
+- `GPU_MEMORY_UTIL`: `0.65`
+```
+
+### c. Load Pipeline and Knowledgebase
+
+1. Prepare pipeline and knowledgebase json config file:
+
+```bash
+# fetch the example configs at the pinned commit
+COMMIT=f56422671c8bdf46f59dd758c8c9e38ca41d6555
+BASE=https://raw.githubusercontent.com/opea-project/GenAIExamples/$COMMIT/EdgeCraftRAG/tests/configs
+curl -fsSL "$BASE/test_kb.json" -o test_kb.json
+curl -fsSL "$BASE/test_pipeline_ipex_vllm.json" -o test_pipeline_ipex_vllm.json
+
+# point the configs at the models downloaded in step a
+# (embedding bge-m3-int8, reranker bge-reranker-large-int8, LLM Qwen3.5-35B-A3B)
+sed -i \
+  -e 's@"model_id": "BAAI/bge-small-en-v1.5"@"model_id": "BAAI/bge-m3"@' \
+  -e 's@"model_path": "./models/BAAI/bge-small-en-v1.5"@"model_path": "./models/BAAI/bge-m3-int8"@' \
+  -e 's@"weight": "INT4"@"weight": "INT8"@' \
+  test_kb.json
+
+sed -i \
+  -e 's@"model_path": "./models/BAAI/bge-reranker-large"@"model_path": "./models/BAAI/bge-reranker-large-int8"@' \
+  -e 's@"weight": "INT4"@"weight": "INT8"@' \
+  -e 's@"model_id": "Qwen/Qwen3-8B"@"model_id": "Qwen/Qwen3.5-35B-A3B"@' \
+  test_pipeline_ipex_vllm.json
+```
+
+2. Load pipeline:
+
+```bash
+# load knowledgebase
+export HOST_IP=<your host ip>
+curl -X POST http://${HOST_IP}:16010/v1/knowledge \
+  -H "Content-Type: application/json" \
+  -d @test_kb.json | jq '.'
+# load pipeline
+curl -X POST http://${HOST_IP}:16010/v1/settings/pipelines \
+  -H "Content-Type: application/json" \
+  -d @test_pipeline_ipex_vllm.json | jq '.'
+```
+
+## 3. Set Up OpenClaw
+
+### 3.1 Install and Onboard OpenClaw
+
+If you do not have OpenClaw yet, install it from the official repository at
+<https://github.com/openclaw/openclaw>. Install `openclaw@2026.5.6`:
+
+```bash
+# openclaw needs Node.js >= 22.14.0
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a===22&&b>=14)?0:1)' \
+  || { echo "ERROR: Node.js >= 22.14.0 required, found $(node -v)"; exit 1; }
+
+npm install -g openclaw@2026.5.6
+```
+
+Use the following choices in the onboarding wizard. Skip all online provider/channel/skill
+configuration for now and configure them manually in the following sections:
 
 ```bash
 openclaw onboard --install-daemon
@@ -52,13 +168,14 @@ openclaw onboard --install-daemon
 | Enable hooks | **Skip for now** |
 | How do you want to hatch your bot? | **Do this later** |
 
-If you are using an internally packaged version or a preinstalled environment, make sure you can access the following:
+If you are using an internally packaged version or a preinstalled environment, make sure you
+can access the following:
 
 - OpenClaw executable
-- `openclaw.json` config file
+- `openclaw.json` configuration file
 - A usable agent workspace, for example `~/.openclaw/workspace`
 
-### 3.2 Configure openclaw.json
+### 3.2 Configure `openclaw.json`
 
 Before editing the configuration, stop the `openclaw gateway` service:
 
@@ -68,19 +185,20 @@ openclaw gateway stop
 
 Edit `~/.openclaw/openclaw.json`.
 
-The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already includes the basic skeleton such as `gateway`, `tools.profile`, and `agents.list[main]`, so **you do not need to replace the entire file**. Merge the following sections into it:
+The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already includes the
+basic skeleton such as `gateway`, `tools.profile`, and `agents.list[main]`, so **you do not need to replace the entire file**. Merge the following sections into it:
 
 - `models.providers`: add the `minimax`, `vllm`, and `proxy-101` providers
 - `tools`: append web search using `tavily`
 - `agents`:
   - configure `subagents`
-  - add `vllm/Qwen/Qwen3-Coder-30B-A3B-Instruct`, `minimax/MiniMax-M2.7`, `proxy-101/router`, and `proxy-101/Qwen/Qwen3-Coder-30B-A3B-Instruct` under `models`
+  - add `vllm/Qwen/Qwen3.5-35B-A3B`, `minimax/MiniMax-M2.7`, `proxy-101/auto`, and `proxy-101/Qwen/Qwen3.5-35B-A3B` under `models`
   - configure `model`
   - configure `llm`
 - `plugins`: add the `tavily` configuration
 - `gateway`: configure `controlUi`
 
-```jsonc
+```json
 {
   "agents": {
     "defaults": {
@@ -92,28 +210,28 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
         "maxConcurrent": 2,
         "maxSpawnDepth": 1,
         "maxChildrenPerAgent": 1,
-        "model": "proxy-101/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+        "model": "proxy-101/Qwen/Qwen3.5-35B-A3B",
         "runTimeoutSeconds": 1500
       },
       "models": {
-        "vllm/Qwen/Qwen3-Coder-30B-A3B-Instruct": {},
+        "vllm/Qwen/Qwen3.5-35B-A3B": {},
         "minimax/MiniMax-M2.7": {
           "alias": "Minimax"
         },
-        "proxy-101/router": {
+        "proxy-101/auto": {
           "alias": "Router"
         },
-        "proxy-101/Qwen/Qwen3-Coder-30B-A3B-Instruct": {
-          "alias": "Router-Qwen3-Coder-30B-A3B-Instruct"
+        "proxy-101/Qwen/Qwen3.5-35B-A3B": {
+          "alias": "Router-Qwen3.5-35B-A3B"
         },
         "minimax/MiniMax-M2.7-highspeed": {}
       },
       "model": {
-        "primary": "proxy-101/router",
+        "primary": "proxy-101/auto",
         "fallbacks": [
-          "vllm/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "vllm/Qwen/Qwen3.5-35B-A3B",
           "minimax/MiniMax-M2.7-highspeed",
-          "proxy-101/Qwen/Qwen3-Coder-30B-A3B-Instruct",
+          "proxy-101/Qwen/Qwen3.5-35B-A3B",
           "minimax/MiniMax-M2.7"
         ]
       },
@@ -126,15 +244,15 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
         "id": "main"
       },
       {
-        "id": "router",
-        "name": "router",
+        "id": "auto",
+        "name": "auto",
         "subagents": {
-          "model": "vllm/Qwen/Qwen3-Coder-30B-A3B-Instruct"
+          "model": "vllm/Qwen/Qwen3.5-35B-A3B"
         },
-        "workspace": "${HOME}/.openclaw/workspace-router",
-        "agentDir": "${HOME}/.openclaw/agents/router/agent",
+        "workspace": "${HOME}/.openclaw/workspace-auto",
+        "agentDir": "${HOME}/.openclaw/agents/auto/agent",
         "model": {
-          "primary": "proxy-101/router"
+          "primary": "proxy-101/auto"
         }
       },
       {
@@ -142,7 +260,7 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
         "name": "intro-self",
         "workspace": "/tmp/intro-self",
         "agentDir": "${HOME}/.openclaw/agents/intro-self/agent",
-        "model": "proxy-101/router"
+        "model": "proxy-101/auto"
       }
     ]
   },
@@ -202,8 +320,8 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
         "api": "openai-completions",
         "models": [
           {
-            "id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
-            "name": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+            "id": "Qwen/Qwen3.5-35B-A3B",
+            "name": "Qwen/Qwen3.5-35B-A3B",
             "reasoning": false,
             "input": [
               "text"
@@ -218,8 +336,8 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
             "maxTokens": 8192
           },
           {
-            "id": "router",
-            "name": "router",
+            "id": "auto",
+            "name": "auto",
             "reasoning": false,
             "input": [
               "text"
@@ -241,8 +359,8 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
         "apiKey": "VLLM_API_KEY",
         "models": [
           {
-            "id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
-            "name": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+            "id": "Qwen/Qwen3.5-35B-A3B",
+            "name": "Qwen/Qwen3.5-35B-A3B",
             "reasoning": false,
             "input": [
               "text"
@@ -313,11 +431,13 @@ The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already inc
 }
 ```
 
-Please remember to put `MINIMAX_API_KEY` into `${HOME}/.openclaw/.env`. Do not use `~/` in `openclaw.json`, because it is not allowed.
+Remember to put `MINIMAX_API_KEY` into `${HOME}/.openclaw/.env`. Do not use `~/` in `openclaw.json`,
+because it is not allowed.
 
-### 3.3 Install Repository Skills into OpenClaw Agent Directory
+### 3.3 Install Repository Skills into the OpenClaw Agent Directory
 
-Skill files in this repository cannot stay only in the current repo. They must be copied into the workspace of the corresponding OpenClaw agent so OpenClaw can actually load them.
+Skill files in this repository cannot remain only in the repository. They must be copied into
+the workspace of the corresponding OpenClaw agent so that OpenClaw can load them.
 
 The most common target directory is:
 
@@ -368,7 +488,7 @@ openclaw tui
 "Can you use competitive_analysis_PDF_generator?"
 ```
 
-## 4. Setup UI
+## 4. Set Up the UI
 
 Use Docker Compose to build and start the UI container:
 
@@ -410,16 +530,48 @@ After completing the setup steps above, verify the configuration as follows:
 Generate a competitive analysis report for Unitree Robotics G1 Basic and comparable products on the market.
 ```
 
-## 6. How to use knowledgebase skill
+Expected result: The UI should display a professional HTML/PDF report comparing the Unitree
+Robotics G1 Basic with other products, generated using the `competitive_analysis_PDF_generator` skill.
 
-If the LLM model is not strong enough to use knowledgebase skill automaticly , you can add below instruction in OpenClaw's AGENTS.md:
+## 6. Use the Knowledgebase Skill
+
+First install the `knowledgebase` skill the same way as in Steps 3.3–3.4 — copy its directory
+into the workspace and register it in `openclaw.json`:
+
+```bash
+cp -r ./skills/knowledgebase ~/.openclaw/workspace/skills/
+```
+
+Add it alongside the other skill under `skills.entries` in `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "knowledgebase": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Then restart the gateway so OpenClaw picks it up:
+
+```bash
+openclaw gateway restart
+```
+
+If the Large Language Model (LLM) is not strong enough to use the knowledgebase skill
+automatically, add the following instruction to OpenClaw's `AGENTS.md`:
 
 ```text
 For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
 Do not answer questions by searching for files!
 ```
 
-please insert above text into Tools chapter in $HOME/.openclaw/workspace/AGENTS.md, e.g. :
+Insert the text into the "Tools" chapter in `$HOME/.openclaw/workspace/AGENTS.md`, for example:
+
 ```md
 ## Tools
 
