@@ -73,20 +73,10 @@ EDGE_AI_LIBRARIES_REF="main"
 MULTILEVEL_SUBPATH="microservices/multilevel-video-understanding"
 
 ensure_edge_ai_libraries() {
-  local refresh="${1:-true}"
-
   if git -C "${EDGE_AI_LIBRARIES_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
       && [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
-    if [ "$refresh" = true ]; then
-      echo "Updating edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) in ${EDGE_AI_LIBRARIES_DIR}"
-      GIT_LFS_SKIP_SMUDGE=1 git -C "${EDGE_AI_LIBRARIES_DIR}" fetch \
-        --depth 1 origin "${EDGE_AI_LIBRARIES_REF}"
-      git -C "${EDGE_AI_LIBRARIES_DIR}" reset --hard FETCH_HEAD
-      git -C "${EDGE_AI_LIBRARIES_DIR}" sparse-checkout set "${MULTILEVEL_SUBPATH}"
-      echo -e "${GREEN}edge-ai-libraries updated.${NC}"
-    else
-      echo "Using existing edge-ai-libraries for teardown: ${EDGE_AI_LIBRARIES_DIR}"
-    fi
+    echo "Using existing directory: ${EDGE_AI_LIBRARIES_DIR}"
+    echo "To use the latest version, delete: ${EDGE_AI_LIBRARIES_DIR}"
     return 0
   fi
   echo "Fetching edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) from ${EDGE_AI_LIBRARIES_REPO}"
@@ -230,11 +220,7 @@ DOCKER_CMD="docker compose -f compose.yaml"
 
 # compose.yaml `extends` the upstream service defs from .external/edge-ai-libraries,
 # so it must exist before ANY compose command below can even parse the file.
-if [ "$DOWN_CONTAINERS" = true ] || [ "$LIGHT_DOWN" = true ]; then
-  ensure_edge_ai_libraries false
-else
-  ensure_edge_ai_libraries true
-fi
+ensure_edge_ai_libraries
 
 # --- fetch-only ---------------------------------------------------------------
 if [ "$FETCH_ONLY" = true ]; then

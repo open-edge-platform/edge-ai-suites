@@ -61,6 +61,8 @@ services:
     healthcheck:
       start_period: 7200s
       start_interval: 10s
+    environment:
+      VIDEO_ALLOWED_PATHS: '["${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}","/app","/tmp"]'
     volumes:
       # Identity bind mount (host X -> container X, read-only): multilevel sees the
       # data root at the SAME absolute path as the host, so the clip paths the MCP
