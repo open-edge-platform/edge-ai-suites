@@ -67,3 +67,4 @@ def test_s7_response_shape(client, tmp_path):
     assert _SESSION_ID_RE.match(data["session_id"])
     assert data["output_dir"] and __import__("os").path.isabs(data["output_dir"])
     assert data["started_at"]
+    wait_for_state(client, data["session_id"], timeout=5.0)
