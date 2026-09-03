@@ -32,27 +32,31 @@ class SessionStore:
     def _init_table(cls) -> None:
         conn = cls._conn()
         try:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS sessions (
-                    session_id      TEXT PRIMARY KEY,
-                    state           TEXT,
-                    current_stage   TEXT,
-                    stages          TEXT,
-                    sources         TEXT,
-                    error           TEXT,
-                    started_at      TEXT,
-                    updated_at      TEXT,
-                    request         TEXT,
-                    cancel_requested INTEGER DEFAULT 0,
-                    last_heartbeat  TEXT
-                )
-                """
-            )
-            conn.commit()
-            cls._migrate(conn)
+            cls._create_table(conn)
         finally:
             conn.close()
+
+    @classmethod
+    def _create_table(cls, conn) -> None:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sessions (
+                session_id      TEXT PRIMARY KEY,
+                state           TEXT,
+                current_stage   TEXT,
+                stages          TEXT,
+                sources         TEXT,
+                error           TEXT,
+                started_at      TEXT,
+                updated_at      TEXT,
+                request         TEXT,
+                cancel_requested INTEGER DEFAULT 0,
+                last_heartbeat  TEXT
+            )
+            """
+        )
+        conn.commit()
+        cls._migrate(conn)
 
     @classmethod
     def _migrate(cls, conn) -> None:
@@ -194,6 +198,7 @@ class SessionStore:
     def _upsert(cls, state: dict) -> None:
         conn = cls._conn()
         try:
+            cls._create_table(conn)
             conn.execute(
                 """
                 INSERT OR REPLACE INTO sessions
@@ -223,6 +228,7 @@ class SessionStore:
     def _select(cls, session_id: str) -> sqlite3.Row | None:
         conn = cls._conn()
         try:
+            cls._create_table(conn)
             return conn.execute(
                 "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
             ).fetchone()
