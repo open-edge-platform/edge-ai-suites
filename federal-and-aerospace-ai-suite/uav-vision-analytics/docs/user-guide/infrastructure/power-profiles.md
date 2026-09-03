@@ -67,7 +67,7 @@ across a reboot:
   these controls — verify them **before** applying a profile, or the script may
   succeed while the limits are silently ignored.
   Setting names and menu paths vary by vendor. See the **BIOS Settings**
-  sections in [set-power-profile skill](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/skills/set-power-profile/SKILL.md)
+  sections in [set-power-profile skill](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/release-2026.2.0/skills/set-power-profile/SKILL.md)
   for the full mandatory list plus optional settings (e.g. disabling firmware
   DBPM, unlocking the power-limit MSRs, and *Config Base Power* / cTDP). `sudo` access. The power scripts read/write MSRs and restart a system service,
   so they re-run themselves with `sudo`.
@@ -368,7 +368,7 @@ sudo systemctl restart intel_lpmd.service
 ## Related Agent Skills
 
 The same tools are also driven by agent skills (see
-[AI Agent Integration](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/user-guide/agent-skills.html)):
+[AI Agent Integration](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/agent-skills.html)):
 
 | Skill | Purpose |
 |---|---|

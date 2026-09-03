@@ -13,7 +13,7 @@ distros on x86_64.
 
 > Note that this path is intended for advanced users who need fine-grained control over disk
 > layout, installed packages, and package repositories. Most users can start with the simpler
-> path, [using a Standard Ubuntu 24.04 image](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/build-from-source.html#option-1-build-from-a-standard-ubuntu-24-04-image).
+> path, [using a Standard Ubuntu 24.04 image](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/build-from-source.html#option-1-build-from-a-standard-ubuntu-24-04-image).
 
 This article will show you how to:
 
@@ -186,7 +186,7 @@ Build output:
 - `usb-installation-files.tar.gz` in `infrastructure/build-artifacts/out`
 
 Once `usb-installation-files.tar.gz` is ready, continue with
-[Phase 2: Prepare Bootable USB](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/prepare-usb.html) in the global Get Started guide
+[Phase 2: Prepare Bootable USB](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/prepare-usb.html) in the global Get Started guide
 for the remaining steps: configuring the USB device, writing the artifacts, and booting the target system.
 
 ## Package curation and template customization
@@ -253,7 +253,7 @@ cp "$TEMPLATE" \
    "$(dirname "$TEMPLATE")/my-variant-template.yml"
 ```
 
-For detailed validation and build instructions, refer to [Building an Ubuntu OS Version 24.04 Image with Image Composer Tool](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/infrastructure/host-os/ict/README.md). That guide covers:
+For detailed validation and build instructions, refer to [Building an Ubuntu OS Version 24.04 Image with Image Composer Tool](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/release-2026.2.0/infrastructure/host-os/ict/README.md). That guide covers:
 
 - template validation
 - image build process
