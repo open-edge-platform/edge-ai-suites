@@ -5,6 +5,9 @@
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-analytics">
      GitHub
   </a>
+  <a class="icon_release" href="https://github.com/open-edge-platform/edge-ai-suites/releases/tag/fedaero-latest">
+    Release
+  </a>
 </div>
 hide_directive-->
 

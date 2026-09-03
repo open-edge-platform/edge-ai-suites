@@ -6,8 +6,8 @@
 # Dataset home: https://github.com/cosmoimd/real-colon-dataset
 # Figshare article: https://figshare.com/articles/dataset/REAL-Colon_dataset/22202866
 #
-# Usage:
-#   bash download_realcolon_subset.sh [target-dir]
+# Usage (from the surgical-instrument project root):
+#   make download-dataset            # or: ./scripts/download_realcolon_subset.sh [target-dir]
 #     target-dir defaults to datasets/REAL-Colon/raw
 
 set -euo pipefail

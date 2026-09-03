@@ -106,7 +106,11 @@ class SessionStore:
         with cls._lock:
             state = cls._states.get(session_id)
             if state is None:
-                return None
+                row = cls._select(session_id)
+                if row is None:
+                    return None
+                state = _row_to_dict(row)
+                cls._states[session_id] = state
             state.update(fields)
             state["updated_at"] = _now_iso()
             cls._upsert(state)
@@ -117,7 +121,11 @@ class SessionStore:
         with cls._lock:
             state = cls._states.get(session_id)
             if state is None:
-                return None
+                row = cls._select(session_id)
+                if row is None:
+                    return None
+                state = _row_to_dict(row)
+                cls._states[session_id] = state
             if stage in state["stages"]:
                 state["stages"][stage] = status
             if status in ("running", "done", "failed"):
