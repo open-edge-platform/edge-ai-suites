@@ -199,7 +199,7 @@ int main(int argc, char* argv[]) {
         VPP_DECODE_STREAM_Create(i, &attr);
 
     for (int i = 0; i < NUM_STREAMS; i++) {
-        // YOLO 缩放 stream（id = i + 200）：640x640 -> 640x640，保持 NV12
+        // YOLO 缩放 stream（id = i + 200）：1920x1088 → 640x640，保持 NV12
         VPP_POSTPROC_StreamAttr sYolo;
         memset(&sYolo, 0, sizeof(sYolo));
         sYolo.CropX       = 0;
