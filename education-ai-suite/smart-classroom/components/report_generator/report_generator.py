@@ -22,7 +22,6 @@ from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.session_paths import SessionPaths
-from utils.locks import audio_pipeline_lock
 from components.report_generator.template_manager import (
     get_template_path,
     extract_template_structure,
@@ -139,16 +138,6 @@ class ReportGenerator:
         """
         if self.model is None:
             raise RuntimeError("ReportGenerator requires a model instance.")
-
-        if audio_pipeline_lock.locked():
-            busy_msg = (
-                "当前音频处理正在进行中，请等待转录/摘要完成后再生成报告。"
-                if self.language == "zh"
-                else "Audio processing is in progress. Please wait for transcription/summary to complete."
-            )
-            logger.warning("[ReportGenerator] audio_pipeline_lock is held, refusing to start.")
-            yield {"type": "token", "content": busy_msg}
-            return
 
         start = time.perf_counter()
 

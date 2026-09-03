@@ -21,7 +21,7 @@ from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
 from dto.audiosource import AudioSource
 from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
-from utils.locks import audio_pipeline_lock, video_analytics_lock
+from utils.locks import video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from components.va.media_service import ensure_media_service_running
 from utils.session_manager import generate_session_id

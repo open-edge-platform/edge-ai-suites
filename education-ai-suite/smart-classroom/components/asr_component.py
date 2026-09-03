@@ -82,9 +82,6 @@ class ASRComponent(PipelineComponent):
         
         logger.info(f"ASRComponent using ModelManager ASR: provider={self.asr_handler.provider}, "
                    f"model={self.asr_handler.model_name}, device={self.asr_handler.device}")
-        
-        # Get the underlying processor for transcription
-        self.asr = self.asr_handler._processor
 
         # Resolved here so an unsupported combination fails when the pipeline is built.
         self.chunking = resolve_chunking()
@@ -175,7 +172,7 @@ class ASRComponent(PipelineComponent):
 
             for chunk_data in input_generator:
                 chunk_path = chunk_data["chunk_path"]
-                transcription = self.asr.transcribe(chunk_path, temperature=self.temperature)
+                transcription = self.asr_handler.transcribe(chunk_path, temperature=self.temperature)
 
                 ui_segments = []
                 transcribed_lines = []

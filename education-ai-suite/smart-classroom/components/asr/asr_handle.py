@@ -8,9 +8,11 @@ from typing import Optional
 from model_manager.capability.state import CapabilityState
 from model_manager.capability.runner import CapabilityRunner
 from utils.config_loader import config
-from utils.runtime_config_loader import RuntimeConfig
 
 logger = logging.getLogger(__name__)
+
+_ASR_MAX_CONCURRENCY = 1
+_ASR_QUEUE_MAX = 8
 
 
 class AsrHandler:
@@ -41,11 +43,17 @@ class AsrHandler:
         return concurrency
 
     def _concurrency_config(self) -> tuple[int, int]:
-        """Read max_concurrency and queue_max from runtime config."""
-        asr_cfg = RuntimeConfig.get_section("asr")
-        max_concurrency = asr_cfg.get("max_concurrency", 1)
-        queue_max = asr_cfg.get("queue_max", 8)
-        return max_concurrency, queue_max
+        """Read max_concurrency and queue_max from config.models.asr."""
+        try:
+            asr_cfg = getattr(config.models, "asr", None)
+            if asr_cfg is None:
+                return _ASR_MAX_CONCURRENCY, _ASR_QUEUE_MAX
+            return (
+                int(getattr(asr_cfg, "concurrency", _ASR_MAX_CONCURRENCY)),
+                int(getattr(asr_cfg, "queue_max", _ASR_QUEUE_MAX)),
+            )
+        except Exception:
+            return _ASR_MAX_CONCURRENCY, _ASR_QUEUE_MAX
 
     def _ensure_openvino_asr_model(self) -> None:
         """Download and convert ASR model to OpenVINO IR if not already cached.
@@ -164,11 +172,14 @@ class AsrHandler:
                 self._runner = None
                 raise
 
-    def transcribe(self, audio_path: str) -> dict:
+    def transcribe(self, audio_path: str, **kwargs) -> dict:
+        """Transcribe through the CapabilityRunner so concurrent callers queue
+        instead of entering the model together. Extra kwargs (e.g. temperature)
+        are forwarded to the underlying processor."""
         if not self.loaded:
             raise RuntimeError("ASR not loaded. Call load() first.")
-        
-        return self._runner.submit(audio_path)
+
+        return self._runner.submit(audio_path, **kwargs)
 
     def shutdown(self) -> None:
         """Unload the ASR model and release resources."""
