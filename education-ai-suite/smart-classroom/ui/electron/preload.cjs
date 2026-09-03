@@ -34,4 +34,61 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return '';
     }
   },
+
+  // Backend process supervision. Every call resolves to { ok, data } | { ok, error };
+  // `id` must be one of the ids returned by services.list().
+  services: {
+    list: () => ipcRenderer.invoke('services:list'),
+    start: (id) => ipcRenderer.invoke('services:start', id),
+    stop: (id) => ipcRenderer.invoke('services:stop', id),
+    restart: (id) => ipcRenderer.invoke('services:restart', id),
+    // Subscribe to status changes; returns an unsubscribe function.
+    onChanged: (callback) => {
+      const listener = (_event, snapshot) => callback(snapshot);
+      ipcRenderer.on('services:changed', listener);
+      return () => ipcRenderer.removeListener('services:changed', listener);
+    },
+  },
+
+  // Captured stdout/stderr of managed services.
+  logs: {
+    read: (id, options) => ipcRenderer.invoke('logs:read', id, options),
+    clear: (id) => ipcRenderer.invoke('logs:clear', id),
+    reveal: (id) => ipcRenderer.invoke('logs:reveal', id),
+    // Batches of new lines: { id, lines: [{ seq, ts, stream, text }] }.
+    onAppend: (callback) => {
+      const listener = (_event, batch) => callback(batch);
+      ipcRenderer.on('logs:append', listener);
+      return () => ipcRenderer.removeListener('logs:append', listener);
+    },
+  },
+
+  // Editable settings from config.yaml, runtime_config.yaml and .proxy-config.
+  // Only paths in the main-process schema allowlist can be read or written.
+  config: {
+    describe: () => ipcRenderer.invoke('config:describe'),
+    apply: (changes) => ipcRenderer.invoke('config:apply', changes),
+    reveal: () => ipcRenderer.invoke('config:reveal'),
+  },
+
+  // First-run setup. `id` must be one of the ids returned by setup.list().
+  setup: {
+    list: () => ipcRenderer.invoke('setup:list'),
+    check: () => ipcRenderer.invoke('setup:check'),
+    run: (stepId, actionId) => ipcRenderer.invoke('setup:run', stepId, actionId),
+    cancel: () => ipcRenderer.invoke('setup:cancel'),
+    logs: (options) => ipcRenderer.invoke('setup:logs', options),
+    clearLogs: () => ipcRenderer.invoke('setup:clearLogs'),
+    revealLogs: () => ipcRenderer.invoke('setup:revealLogs'),
+    // Subscribe to step status changes; returns an unsubscribe function.
+    onChanged: (callback) => {
+      const listener = (_event, snapshot) => callback(snapshot);
+      ipcRenderer.on('setup:changed', listener);
+      return () => ipcRenderer.removeListener('setup:changed', listener);
+    },
+  },
+
+  // Copy through the main process: navigator.clipboard needs a secure context,
+  // which a packaged build loaded over file:// is not.
+  copyText: (text) => ipcRenderer.invoke('app:copyText', text),
 });
