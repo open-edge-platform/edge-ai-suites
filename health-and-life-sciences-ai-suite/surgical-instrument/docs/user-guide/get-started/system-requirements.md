@@ -4,8 +4,8 @@
 |---|---|
 | Linux with Docker Engine ≥ 24 and `docker compose` v2 | Rootless Docker works if `/dev/dri` is accessible. |
 | Intel Arc iGPU (Meteor Lake / Lunar Lake / Arrow Lake) or discrete Arc GPU | Container inherits the host driver via `/dev/dri` passthrough. |
-| Intel client GPU stack (Level Zero + OpenCL + iHD) | `libze1`, `libze-intel-gpu1`, `intel-igc-core-2`, `libigdgmm12`, `intel-opencl-icd`, `intel-media-va-driver-non-free`. Installed by `./setup.sh`; verified by `make check-l0`. |
-| Host groups `render` and `video` exist | The Makefile auto-detects the GIDs. `./setup.sh` adds the current user if missing. |
+| Intel client GPU stack (Level Zero + OpenCL + iHD) | `libze1`, `libze-intel-gpu1`, `intel-igc-core-2`, `libigdgmm12`, `intel-opencl-icd`, `intel-media-va-driver-non-free`. Installed by `make setup-prerequisites`; verified by `make check-l0`. |
+| Host groups `render` and `video` exist | The Makefile auto-detects the GIDs. `make setup-prerequisites` adds the current user if missing. |
 | X11 display server reachable from the container | Required by the OpenGL vsync presenter and the `cv2` fallback. |
 | USB access for Basler camera (optional) | The Makefile passes `/dev/bus/usb` and the USB device cgroup rule. |
 | `pypylon` compatible Basler camera (optional) | Only required for `SOURCE=camera`. |
@@ -19,8 +19,8 @@ The following are needed only when you build the OpenVINO IR locally via
 
 | Requirement | Notes |
 |---|---|
-| Python 3.10–3.12 with `python3-venv` | Host-side training venv (`.venv-backend`). Installed by `./setup.sh`. |
-| REAL-Colon dataset subset (~74 GB) | Downloaded via `./download_realcolon_subset.sh` from figshare article `22202866`. Full 60-study, ~880 GB corpus available via `datasets/REAL-Colon/helper/download_dataset.sh`. |
+| Python 3.10–3.12 with `python3-venv` | Host-side training venv (`.venv-backend`). Installed by `make setup-prerequisites`. |
+| REAL-Colon dataset subset (~74 GB) | Downloaded via `make download-dataset` from figshare article `22202866`. Full 60-study, ~880 GB corpus available via `datasets/REAL-Colon/helper/download_dataset.sh`. |
 | Disk space | ~80 GB free for the REAL-Colon subset + derived labels + trained artifacts. Plan more for the full corpus. |
 | `torch==2.7.1+xpu` and `torchvision==0.22.1+xpu` | Installed automatically by `make backend-venv` from the `https://download.pytorch.org/whl/xpu` index. Older CPU/CUDA torch builds do not expose `torch.xpu`. |
 

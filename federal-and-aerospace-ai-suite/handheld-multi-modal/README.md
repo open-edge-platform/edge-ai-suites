@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 # Handheld Multi-Modal Application
 
 The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios, optimized for Intel® edge hardware. It is is deployed on top of the
-[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
+[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
 The application combines LLM inference capability served through the OpenVINO™ Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; it runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization, sharing its Docker network.
 
