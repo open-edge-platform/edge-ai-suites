@@ -17,15 +17,25 @@ refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 | A full **end-to-end analytics stack** (live annotated video + dashboard + alerts) for detection/classification/counting/zone-alerting on any vertical (smart city, retail, industrial, PPE, parking, healthcare…) | **`metro-ai-app-recipe`** *(this repo)* — production mode (`MODE=production`, the default) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (custom pipeline JSON) |
 | A **quick local demo / PoC** — a single lightweight app (no full stack) that just proves a model runs and emits inference: a simple DL Streamer pipeline **or** a minimal OpenVINO inference script | **`metro-ai-app-recipe`** *(this repo)* — demo/PoC mode (`MODE=demo`) | `dlstreamer-coding-agent` (DL Streamer sub-path), OpenVINO 2026 docs (OpenVINO sub-path), `model-download-user` (model IR) |
 | **Multi-camera / spatial** cross-camera tracking & scene fusion (smart-intersection style) | **`scenescape-setup`** — reached via the `metro-ai-app-recipe` Scenescape opt-in path | `metro-ai-app-recipe` for the detection front-end |
+| Vision analytics as a **managed REST microservice** the user's own software drives: start/stop/query one detection job per camera over HTTP, add a camera at runtime without redeploying, publish every detection to MQTT/OPC UA/InfluxDB/S3/ROS2, select GPU/NPU per pipeline — **no dashboard to maintain, no bespoke video code** | **`dlsps-user`** (DL Streamer Pipeline Server) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (authoring a custom pipeline definition) |
 | A **custom vision pipeline / sample app in code** (Python/C/C++/GStreamer): detection, classification, tracking, VLM, recording, custom elements | **`dlstreamer-coding-agent`** | `model-download-user` |
 | **Migrate / convert / port** an existing **NVIDIA DeepStream** (or raw GStreamer) pipeline to an equivalent **Intel DL Streamer** pipeline/app | **`dlstreamer-coding-agent`** | `model-download-user` (equivalent IR model) |
 
 Deliverable shape: *end-to-end solution* (Compose stack) for
 `metro-ai-app-recipe` in **production mode**; *quick single app / PoC* for
 `metro-ai-app-recipe` in **demo mode** (`MODE=demo`) or for
-`dlstreamer-coding-agent`; *multi-camera solution* for the Scenescape path. Map
+`dlstreamer-coding-agent`; *multi-camera solution* for the Scenescape path;
+*headless service with a REST control plane* for `dlsps-user`. Map
 the Step 1 **deployment-target** answer to the recipe mode: "quick local
 demo/POC" → `MODE=demo`; "Docker Compose end-to-end" → `MODE=production`.
+
+These rows all detect objects in camera feeds, so disambiguate on the
+**deliverable**, not the vision task. Pick `dlsps-user` when the user's own
+system (MES/SCADA/orchestrator) must drive pipelines over an API, when cameras
+are added or removed while the service keeps running, or when the output is a
+message stream rather than a screen. Pick `metro-ai-app-recipe` when the user
+wants to *look* at dashboards and live video. Pick `dlstreamer-coding-agent`
+only when the user wants source code they own and edit.
 
 ## 2. Conversational AI — chatbot / Q&A / RAG over documents
 
@@ -38,14 +48,14 @@ demo/POC" → `MODE=demo`; "Docker Compose end-to-end" → `MODE=production`.
 
 | If the user wants… | Primary skill | Supporting |
 |---|---|---|
-| Deploy the **Video Search & Summarization** app (summary / search / dual / unified) on Docker | **`vss-deploy`** | `vdms-dataprep-user` (ingest), `multimodal-embedding-serving-user` (embeddings) |
+| Deploy the **Video Search & Summarization** app (summary / search / dual / unified) on Docker | **`vss-deploy`** | `multimodal-dataprep-user` (ingest), `multimodal-embedding-serving-user` (embeddings) |
 | The same **on Kubernetes** (Helm) | **`vss-deploy-helm`** | — |
 | **Search** an indexed library with natural language ("find X", "when did Y happen") | **`vss-search-index`** | requires a search-capable VSS deploy |
 | **Summarize** an ingested video | **`vss-summarize-video`** | requires a summary-capable VSS deploy |
-| **Ingest** MP4s into a vector DB (VDMS + MinIO) | **`vdms-dataprep-user`** | feeds VSS / retrieval |
+| **Ingest** MP4s into a vector DB (VDMS + MinIO) | **`multimodal-dataprep-user`** | feeds VSS / retrieval |
 | **Embed** text/images/videos for similarity search (CLIP/SigLIP/… 19 models) | **`multimodal-embedding-serving-user`** | building block for retrieval apps |
 
-Typical pipeline: `vdms-dataprep-user` (ingest) → `vss-deploy` (bring up) →
+Typical pipeline: `multimodal-dataprep-user` (ingest) → `vss-deploy` (bring up) →
 `vss-search-index` / `vss-summarize-video` (use).
 
 ## 4. Model preparation
