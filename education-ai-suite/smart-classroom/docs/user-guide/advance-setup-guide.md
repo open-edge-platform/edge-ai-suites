@@ -260,7 +260,7 @@ Content Search runs in the same `smartclassroom` environment as the backend.
 When all services are ready:
 
 ```text
-[launcher] All 5 services are ready. (startup took XXs)
+[launcher] All 4 services are ready. (startup took XXs)
 [launcher] You can use Ctrl+C to stop all services.
 ```
 
@@ -269,6 +269,14 @@ Verify the service status:
 ```PowerShell
 Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```
+
+This endpoint aggregates every service the launcher starts (ChromaDB, video
+preprocess, file ingest, and the Content Search API itself). It answers `200`
+with `status: "ok"` only when all of them are ready, and `503` with
+`status: "degraded"` until then - the `services` map in the body names what is
+still missing. `Invoke-RestMethod` throws on the `503`, so use
+`try { ... } catch { $_.ErrorDetails.Message }` to read the detail while
+services are still coming up.
 
 > **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
 

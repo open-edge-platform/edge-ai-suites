@@ -51,8 +51,9 @@ Set `$BASE = "http://127.0.0.1:9011"` for all snippets.
    [`sc-doctor`](../sc-doctor/SKILL.md) / [`sc-up`](../sc-up/SKILL.md):
    ```powershell
    $BASE = "http://127.0.0.1:9011"
-   Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing |
-       Select-Object -ExpandProperty Content
+   # 200 = all services ready; 503 = degraded, body names the failing one
+   try   { (Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing).Content }
+   catch { $_.ErrorDetails.Message }
    ```
 
 2. **At least one file is indexed** — confirm with:
