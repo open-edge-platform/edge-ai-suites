@@ -175,11 +175,11 @@ PIP          := $(BACKEND_VENV)/bin/pip
 PYVENV       := $(BACKEND_VENV)/bin/python
 
 # Host L0 stack (mirrors what scripts/setup-prerequisites.sh installs). Used by check-l0 and doctor.
-# NOTE: intel-igc-core-2 and libigc2 are alternative names on different Ubuntu
-# releases — either one satisfies the IGC dependency.
+# NOTE: libigc2 is the IGC package on current Intel client GPU repos (Ubuntu Noble+);
+# intel-igc-core-2 is the legacy name on older releases — either satisfies the IGC dependency.
 L0_PACKAGES  := libze1 libze-intel-gpu1 libigdgmm12 \
                 intel-opencl-icd intel-media-va-driver-non-free
-L0_IGC_ALTS  := intel-igc-core-2 libigc2
+L0_IGC_ALTS  := libigc2 intel-igc-core-2
 
 .PHONY: setup-prerequisites
 setup-prerequisites: ## Install host prerequisites (Docker, Intel L0 stack) — runs scripts/setup-prerequisites.sh
