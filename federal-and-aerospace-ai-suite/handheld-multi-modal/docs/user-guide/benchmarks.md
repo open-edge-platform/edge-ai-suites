@@ -16,3 +16,17 @@ To access the benchmarking functionality:
 2. Navigate to the **Benchmarks** section.
 3. Select the pipeline and hardware combinations to evaluate.
 4. Run the benchmark and review the results, including throughput and resource utilization metrics.
+
+## Edge Workloads and Benchmarks Guide
+
+For platform-level benchmarking beyond ViPPET — vision AI inference, hardware-accelerated
+media processing, end-to-end video analytics pipelines, and generative AI — see the
+[Edge Workloads and Benchmarks Guide](./infrastructure/run-edge-benchmarks.md).
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Edge Workloads and Benchmarks Guide <./infrastructure/run-edge-benchmarks.md>
+:::
+hide_directive-->
