@@ -95,3 +95,15 @@ sudo cat /sys/kernel/debug/dri/0000:00:02.1/sriov_info
 sudo dmesg | grep xe
 sudo dmesg | grep vpu
 ```
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+System Requirements <./infrastructure/system-requirements.md>
+Advanced Image Customization <./infrastructure/advanced-image-customization.md>
+Build on macOS (x86 VM) <./infrastructure/build-on-macos-x86.md>
+Infrastructure Capabilities <./infrastructure/platform-capabilities.md>
+Troubleshooting <./infrastructure/troubleshooting.md>
+
+:::
+hide_directive-->
