@@ -1044,7 +1044,9 @@ export interface CsHealthStatus {
 
 export async function getCsHealth(): Promise<CsHealthStatus> {
   const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/health`);
-  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+  // 503 means degraded, not unreachable: the body still carries the per-service
+  // detail, so callers can name what is down instead of the generic banner.
+  if (!res.ok && res.status !== 503) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }
 

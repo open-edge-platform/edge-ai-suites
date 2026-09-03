@@ -126,7 +126,7 @@ Advanced Setup guide covers:
 | Service | Port | Health Check |
 |---------|------|--------------|
 | Backend | 8000 | <http://localhost:8000/health> |
-| Content Search | 9011 | <http://localhost:9011/api/v1/system/health> |
+| Content Search | 9011 | <http://localhost:9011/api/v1/system/health> (200 only when ChromaDB, file ingest and video preprocess are ready too; 503 while any is starting) |
 | Layout Detection | 9902 | <http://localhost:9902/health> |
 | Grading | 9012 | <http://localhost:9012/api/v1/health> |
 | Frontend | 5173 | <http://localhost:5173> |

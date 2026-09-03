@@ -309,12 +309,14 @@ Set-Location $ScriptDir
 
 $configPath = Join-Path $ScriptDir "config.yaml"
 $contentSearchEnabled = $true
+$videoSummarizationEnabled = $true
 if (Test-Path $configPath) {
     $configContent = Get-Content $configPath -Raw
     $csFlag  = $configContent -match "content_search:\s*\{\s*enabled:\s*true"
     $segFlag = $configContent -match "topic_segmentation:\s*\{\s*enabled:\s*true"
     $qaFlag  = $configContent -match "qa:\s*\{\s*enabled:\s*true"
     $contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+    $videoSummarizationEnabled = -not ($configContent -match "video_summarization_enabled:\s*false")
 }
 
 # ============================================================================
@@ -632,6 +634,24 @@ $httpsProxy = ""
 $noProxy = ""
 $proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
 
+# Python's urllib/requests/httpx split no_proxy on COMMAS only. A Windows-style
+# semicolon list - which is what .proxy-config usually holds - is then read as
+# one bogus host, so every 127.0.0.1 call in the services goes out to the
+# corporate proxy and comes back 403. Normalise the separator and always keep
+# the loopback entries, so local service-to-service calls stay local.
+function Format-NoProxy {
+    param([string]$Value)
+
+    $entries = @()
+    if ($Value) {
+        $entries = $Value -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+    }
+    foreach ($loopback in @('localhost', '127.0.0.1', '::1')) {
+        if ($entries -notcontains $loopback) { $entries += $loopback }
+    }
+    return ($entries -join ',')
+}
+
 if (-not $SkipProxy -and -not $Silent) {
     if (Test-Path $proxyConfigFile) {
         $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
@@ -818,11 +838,12 @@ if (-not $SkipProxy -and -not $Silent) {
         Write-Host "  Applied HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
     }
     
-    if ($noProxy) {
-        $env:NO_PROXY = $noProxy
-        $env:no_proxy = $noProxy
-        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
-    }
+    # Always set it, even with no saved value: the loopback entries matter
+    # whenever a proxy is configured.
+    $noProxy = Format-NoProxy $noProxy
+    $env:NO_PROXY = $noProxy
+    $env:no_proxy = $noProxy
+    Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
 } else {
     # -SkipProxy flag: load saved settings without prompting user
     Write-Host "  Loading proxy from .proxy-config (skipping prompts)..." -ForegroundColor Gray
@@ -845,12 +866,11 @@ if (-not $SkipProxy -and -not $Silent) {
             Write-Host "  Applied HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
         }
         
-        if ($noProxy) {
-            $env:NO_PROXY = $noProxy
-            $env:no_proxy = $noProxy
-            Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
-        }
-        
+        $noProxy = Format-NoProxy $noProxy
+        $env:NO_PROXY = $noProxy
+        $env:no_proxy = $noProxy
+        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
+
         if (-not $httpProxy -and -not $httpsProxy) {
             Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
             Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue | ForEach-Object {
@@ -864,6 +884,12 @@ if (-not $SkipProxy -and -not $Silent) {
             Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor DarkGray
         }
         Write-Host "  No .proxy-config file found" -ForegroundColor Gray
+
+        # An inherited proxy still applies here, so keep loopback out of it.
+        $noProxy = Format-NoProxy $env:NO_PROXY
+        $env:NO_PROXY = $noProxy
+        $env:no_proxy = $noProxy
+        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
     }
 }
 
@@ -953,7 +979,8 @@ Write-Host "------------------------" -ForegroundColor Green
 Write-Host ""
 Write-Host "Services will start with health checks:" -ForegroundColor Yellow
 Write-Host "  1. Backend (port 8000) - runs in THIS terminal, wait until healthy" -ForegroundColor White
-Write-Host "  2. Content Search (port 9011) - wait until healthy" -ForegroundColor White
+Write-Host "  2. Content Search (port 9011) - wait until healthy, including the" -ForegroundColor White
+Write-Host "     services its launcher spawns: video preprocess (8001), file ingest (9990), ChromaDB (9090)" -ForegroundColor White
 Write-Host "  3. Frontend (port 5173) - launches in a NEW terminal" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop all services and exit." -ForegroundColor DarkGray
@@ -961,6 +988,33 @@ Write-Host ""
 
 # Mark that services are being started (for Ctrl+C handler)
 $script:servicesStarted = $true
+
+function Get-HealthDetail {
+    param($ErrorRecord)
+
+    $body = $null
+    if ($ErrorRecord.ErrorDetails -and $ErrorRecord.ErrorDetails.Message) {
+        $body = $ErrorRecord.ErrorDetails.Message          # PowerShell 7
+    } elseif ($ErrorRecord.Exception.Response) {
+        try {                                              # Windows PowerShell 5.1
+            $stream = $ErrorRecord.Exception.Response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($stream)
+            $body = $reader.ReadToEnd()
+            $reader.Close()
+        } catch {}
+    }
+    if (-not $body) { return "" }
+
+    try { $json = $body | ConvertFrom-Json } catch { return "" }
+    if (-not $json.services) { return "" }
+
+    $pending = @()
+    foreach ($svc in $json.services.PSObject.Properties) {
+        if ($svc.Value -ne "healthy") { $pending += "$($svc.Name)=$($svc.Value)" }
+    }
+    if ($pending.Count -eq 0) { return "" }
+    return " - pending: $($pending -join ', ')"
+}
 
 # Health check function (no timeout - relies on crash detection)
 function Wait-ForService {
@@ -971,10 +1025,15 @@ function Wait-ForService {
         [int[]]$DependentPorts = @(),
         [string]$CommandLinePattern = "",  # Pattern to match in process command line (e.g., "main.py", "start_services.py")
         [System.Diagnostics.Process]$Process = $null,  # Launched process to watch for early exit
-        [int]$IntervalSeconds = 5
+        [int]$IntervalSeconds = 5,
+        # Ceiling for aggregate endpoints, where the port stays open (so the
+        # crash detection below never fires) while a service behind it is dead.
+        # 0 = wait forever, the default for single-process services.
+        [int]$TimeoutSeconds = 0
     )
-    
+
     $elapsed = 0
+    $lastDetail = ""
     $initialGracePeriod = 60  # 1 minute grace period before checking for crashes
     Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
     Write-Host "  Health check: $Url" -ForegroundColor DarkGray
@@ -1089,6 +1148,7 @@ function Wait-ForService {
             }
         }
         
+        $detail = ""
         try {
             $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
             if ($response.StatusCode -eq 200) {
@@ -1096,14 +1156,29 @@ function Wait-ForService {
                 return $true
             }
         } catch {
-            # Service not ready yet, continue waiting
+            # Service not ready yet, continue waiting. A 503 from an aggregate
+            # health endpoint tells us which sub-service is holding it up.
+            $detail = Get-HealthDetail -ErrorRecord $_
         }
-        
+        $lastDetail = $detail
+
         # Newline-terminated, not an in-place `r overwrite: the Backend and
         # Content Search share this console and would append to an open line.
-        Write-Host "  [$elapsed s] Waiting for $ServiceName..." -ForegroundColor Gray
+        Write-Host "  [$elapsed s] Waiting for $ServiceName...$detail" -ForegroundColor Gray
         Start-Sleep -Seconds $IntervalSeconds
         $elapsed += $IntervalSeconds
+
+        if ($TimeoutSeconds -gt 0 -and $elapsed -ge $TimeoutSeconds) {
+            Write-Host ""
+            Write-Host "========================================" -ForegroundColor Red
+            Write-Host "  ERROR: $ServiceName NOT READY" -ForegroundColor Red
+            Write-Host "========================================" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "  $ServiceName did not become healthy within ${TimeoutSeconds}s.$lastDetail" -ForegroundColor Red
+            Write-Host "  Check the output above and content_search/logs/ for error messages." -ForegroundColor Yellow
+            Write-Host ""
+            return $false
+        }
     }
 }
 
@@ -1264,8 +1339,14 @@ python main.py
     if ($contentSearchEnabled) {
         Write-Host ""
         Write-Host "Content Search is started by the backend (main.py); waiting for it to become healthy..." -ForegroundColor Yellow
+        Write-Host "File Ingest loads the embedding/reranker models - this can take a few minutes on first start." -ForegroundColor Yellow
 
-        $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
+        # One gate for the whole content-search stack: /api/v1/system/health on
+        # :9011 answers 200 only once every service start_services.py launches
+        # (chromadb 9090, video preprocess 8001, file ingest 9990, main_app
+        # itself) is ready, and 503 with the per-service detail until then. That
+        # matches "[launcher] All N services are ready" in the backend output.
+        $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py" -TimeoutSeconds 1800
         if (-not $csHealthy) {
             Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
             exit 1
@@ -1342,7 +1423,15 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Services:" -ForegroundColor Yellow
 Write-Host "  1. Backend        -> http://localhost:8000  [HEALTHY]" -ForegroundColor White
-Write-Host "  2. Content Search -> http://localhost:9011  [HEALTHY]" -ForegroundColor White
+if ($contentSearchEnabled) {
+    Write-Host "  2. Content Search -> http://localhost:9011  [HEALTHY]" -ForegroundColor White
+    Write-Host "       File Ingest  -> http://localhost:9990  [HEALTHY]" -ForegroundColor White
+    if ($videoSummarizationEnabled) {
+        Write-Host "       Preprocess   -> http://localhost:8001  [HEALTHY]" -ForegroundColor White
+    }
+} else {
+    Write-Host "  2. Content Search -> disabled in config" -ForegroundColor Gray
+}
 if ($Electron) {
     Write-Host "  3. Frontend       -> Electron desktop app (dev server http://localhost:5173)  [HEALTHY]" -ForegroundColor White
     Write-Host ""
