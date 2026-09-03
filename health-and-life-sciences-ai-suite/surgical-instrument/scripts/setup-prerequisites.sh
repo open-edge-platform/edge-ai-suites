@@ -199,7 +199,7 @@ fi
 apt_update_once
 
 apt_install \
-  libze1 libze-intel-gpu1 intel-igc-core-2 libigdgmm12 \
+  libze1 libze-intel-gpu1 libigc2 libigdgmm12 \
   intel-opencl-icd intel-media-va-driver-non-free \
   clinfo intel-gpu-tools
 
