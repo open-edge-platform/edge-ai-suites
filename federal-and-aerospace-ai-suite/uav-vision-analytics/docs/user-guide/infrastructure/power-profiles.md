@@ -368,7 +368,7 @@ sudo systemctl restart intel_lpmd.service
 ## Related Agent Skills
 
 The same tools are also driven by agent skills (see
-[AI Agent Integration](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/user-guide/agent-skills.html)):
+[AI Agent Integration](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/agent-skills.html)):
 
 | Skill | Purpose |
 |---|---|
