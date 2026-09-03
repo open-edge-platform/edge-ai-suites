@@ -44,6 +44,15 @@ class ChromaClientWrapper:
         t = threading.Thread(target=_ping, daemon=True)
         t.start()
 
+    def ping(self) -> bool:
+        """Cheap liveness probe for health endpoints."""
+        try:
+            self.client.heartbeat()
+            return True
+        except Exception as e:
+            logger.debug(f"[chroma] Ping failed: {e}")
+            return False
+
     def _reconnect(self):
         try:
             self.client = chromadb.HttpClient(host=self._host, port=self._port)

@@ -1,0 +1,330 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.setup-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 24px;
+  gap: 12px;
+  overflow: hidden;
+  font-family: var(--font-text);
+}
+
+.setup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.setup-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.setup-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.setup-subtitle {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.setup-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.setup-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: #fff;
+  color: var(--color-gray-900);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.setup-btn:hover:not(:disabled) {
+  border-color: var(--color-theme);
+  color: var(--color-theme);
+}
+
+.setup-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.setup-btn-primary {
+  border-color: var(--color-theme);
+  background: var(--color-theme);
+  color: #fff;
+}
+
+.setup-btn-primary:hover:not(:disabled) {
+  background: #005c9e;
+  color: #fff;
+}
+
+.setup-btn-danger {
+  border-color: #d9534f;
+  color: #d9534f;
+}
+
+.setup-btn-danger:hover:not(:disabled) {
+  border-color: #d9534f;
+  background: #d9534f;
+  color: #fff;
+}
+
+.setup-error {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: #fdecea;
+  color: #a33;
+  font-size: 12px;
+}
+
+.setup-banner {
+  padding: 10px 14px;
+  border: 1px solid #bcdff5;
+  border-radius: 4px;
+  background: #eff7fd;
+  color: #24506e;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* Nothing left to fix: green rather than informational blue, and it carries the
+   next action so the run does not end on a wall of log. */
+.setup-banner-done {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  border-color: #b6dfc0;
+  background: #f0f9f2;
+  color: #276b3a;
+}
+
+.setup-split {
+  display: grid;
+  grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.setup-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.setup-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-section-title {
+  margin: 0;
+  padding: 7px 12px;
+  background: #eef0f2;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #55606a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* Arrived here from Get started: fade the row back out of a highlight so the
+   eye lands on it without a jump. */
+@keyframes step-flash {
+  from { background: #fff4d2; }
+  to { background: #fafafa; }
+}
+
+.setup-step.flashed {
+  animation: step-flash 2.2s ease-out;
+}
+
+.setup-step {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid #ececec;
+  background: #fafafa;
+  font-size: 13px;
+}
+
+.setup-step:last-child {
+  border-bottom: none;
+}
+
+.setup-step.status-missing,
+.setup-step.status-failed {
+  border-left-color: #d9534f;
+  background: #fdf4f3;
+}
+
+.setup-step.status-warn {
+  border-left-color: #e6b800;
+  background: #fffbf0;
+}
+
+.setup-step.status-running {
+  border-left-color: var(--color-theme);
+  background: #f2f8fc;
+}
+
+.setup-step-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.setup-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #b0b3b8;
+}
+
+.setup-dot.status-ok {
+  background: #4caf50;
+}
+
+.setup-dot.status-warn {
+  background: #e6b800;
+}
+
+.setup-dot.status-missing,
+.setup-dot.status-failed {
+  background: #d9534f;
+}
+
+.setup-dot.status-running {
+  background: #ff9800;
+}
+
+.setup-step-label {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.setup-badge {
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #e0e6ea;
+  color: #55606a;
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.setup-step-status {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.setup-step-detail {
+  font-size: 12px;
+  color: var(--color-gray-700);
+  word-break: break-word;
+}
+
+/* Why this step's buttons are dead: a prerequisite step is not OK yet. */
+.setup-step-blocked {
+  font-size: 11.5px;
+  color: #8a6d3b;
+}
+
+.setup-step-hint {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: #eef0f2;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #55606a;
+  user-select: text;
+  word-break: break-all;
+}
+
+.setup-step-link {
+  font-size: 11px;
+  color: var(--color-theme);
+  word-break: break-all;
+}
+
+.setup-step-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.setup-output {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.setup-output-header {
+  padding: 6px 10px;
+  background: #f5f6f7;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.setup-output-body {
+  flex: 1;
+  overflow: auto;
+  padding: 6px 10px;
+  background: #1e1f22;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #d6d7da;
+}
+
+.setup-output-empty {
+  color: #8a8f98;
+}
+
+.setup-output-line {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
