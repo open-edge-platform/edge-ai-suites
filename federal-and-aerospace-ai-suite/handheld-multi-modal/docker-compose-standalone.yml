@@ -167,12 +167,12 @@ services:
     networks:
       - fedaero
     ports:
-      - "80:80"       # redirect to single pane HTTPS
-      - "443:443"     # Single pane dashboard over HTTPS
-      - "5443:5443"   # Whisper STT over HTTPS
-      - "6443:6443"   # OVMS Prometheus metrics over HTTPS
-      - "7443:7443"   # Grafana over HTTPS
-      - "8443:8443"   # Open WebUI over HTTPS
+      - "127.0.0.1:80:80"       # redirect to single pane HTTPS
+      - "127.0.0.1:443:443"     # Single pane dashboard over HTTPS
+      - "127.0.0.1:5443:5443"   # Whisper STT over HTTPS
+      - "127.0.0.1:6443:6443"   # OVMS Prometheus metrics over HTTPS
+      - "127.0.0.1:7443:7443"   # Grafana over HTTPS
+      - "127.0.0.1:8443:8443"   # Open WebUI over HTTPS
     volumes:
       - ./apps/nginx/single-pane.html:/usr/share/nginx/html/single-pane.html:ro
       - ./apps/nginx/nginx-standalone.conf:/etc/nginx/nginx.conf:ro
