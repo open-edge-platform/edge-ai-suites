@@ -9,13 +9,13 @@ class RuntimeConfig:
         path = path or RuntimeConfig.CONFIG_PATH
         if not os.path.exists(path):
             RuntimeConfig._create_default(path)
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f)
 
     @staticmethod
     def save(data: dict, path: str = None):
         path = path or RuntimeConfig.CONFIG_PATH
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             yaml.dump(data, f, default_style='"', sort_keys=False)
         
 
