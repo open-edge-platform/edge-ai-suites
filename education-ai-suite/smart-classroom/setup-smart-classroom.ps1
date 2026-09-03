@@ -1888,17 +1888,10 @@ if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
         Write-Host "  Diarization model not found locally at:" -ForegroundColor Yellow
         Write-Host "    $diarModelPath" -ForegroundColor Gray
         Write-Host ""
-        Write-Host "  [NOTE] Before Speaker Diarization will work, you must request model access on" -ForegroundColor Yellow
-        Write-Host "         Hugging Face and create an access token. Please read the setup guide:" -ForegroundColor Yellow
-        Write-Host "         https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
-        Write-Host ""
-
-        # ------------------------------------------------------------------
-        # Request Model Access
-        # ------------------------------------------------------------------
-        Write-Host "Request Model Access" -ForegroundColor Yellow
-        Write-Host "  This model is gated on Hugging Face. Please request access here:" -ForegroundColor Gray
-        Write-Host "    https://huggingface.co/$diarizationModelName" -ForegroundColor White
+        Write-Host "  [ATTENTION] Before Speaker Diarization will work, you must request model access and create an access token on" -ForegroundColor Yellow
+        Write-Host "    https://huggingface.co/$diarizationModelName " -ForegroundColor Yellow
+        Write-Host "  More details can be found in the setup guide:" -ForegroundColor Yellow
+        Write-Host "    https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
         Write-Host ""
         if (-not $Silent) {
             Read-Host "  Press Enter once you have submitted/been granted the access request"
@@ -1911,33 +1904,26 @@ if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
     # ------------------------------------------------------------------
     $hfTokenIsSet = Test-HfTokenSet -Content $configContent
     if ($diarizationJustEnabled -or -not $hfTokenIsSet) {
-        if (-not $hfTokenIsSet) {
-            Write-Host ""
-            Write-Host "  [WARNING] hf_token is None. It needs to be filled in." -ForegroundColor Yellow
-        }
         Write-Host ""
-        Write-Host "Hugging Face Token" -ForegroundColor Yellow
-        Write-Host "  Current token: $(if ($hfTokenIsSet) { 'Set' } else { 'Not set' })" -ForegroundColor Gray
+        if ($hfTokenIsSet) {
+            Write-Host "Hugging Face token: already set in config.yaml" -ForegroundColor Yellow
+        } else {
+            Write-Host "Hugging Face token: not set (hf_token: None)" -ForegroundColor Yellow
+        }
 
         if (-not $Silent) {
-            $secureHfToken = Read-Host "  Enter your Hugging Face access token (leave blank to keep current)" -AsSecureString
+            $secureHfToken = Read-Host "  Enter token (blank = keep current)" -AsSecureString
             $newHfToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
                 [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureHfToken)
             )
             if ($newHfToken) {
                 $configContent = $configContent -replace "(hf_token:\s*)\S+", "`${1}$newHfToken"
-                Write-Host "  [OK] Hugging Face token updated" -ForegroundColor Green
-            } else {
-                Write-Host "  Keeping existing Hugging Face token." -ForegroundColor Gray
+                Write-Host "  [OK] Token updated" -ForegroundColor Green
             }
-        } else {
-            Write-Host "  Silent mode: keeping existing Hugging Face token." -ForegroundColor Gray
         }
 
         if (-not (Test-HfTokenSet -Content $configContent)) {
-            Write-Host ""
-            Write-Host "  [WARNING] No Hugging Face token is set. If the model ever needs to be" -ForegroundColor Red
-            Write-Host "            (re)downloaded, it will fail until a valid hf_token is provided." -ForegroundColor Red
+            Write-Host "  [WARNING] Without a token, downloading the diarization model will fail." -ForegroundColor Red
         }
     }
 }
