@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -22,12 +23,25 @@ VALID_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff", ".webp"}
 H264_CODEC_CANDIDATES = ("avc1", "H264", "X264")
 ENCODER_CHOICES = ("auto", "opencv", "ffmpeg")
 
+# Last run of digits in a filename stem, used for natural frame ordering so
+# "001-001_2" sorts before "001-001_10" instead of lexicographically.
+_TRAILING_NUM_RE = re.compile(r"(\d+)(?!.*\d)")
+
 
 def _default_images_dir(repo_root: Path) -> Path:
-    # Accept both extract layouts the ColonDB archive ships as in the wild.
-    # `make backend-bootstrap` already tolerates either name via its
-    # autodetect walker (backend/bootstrap/dataset_fetcher.py); this script
-    # matches that behaviour so users don't have to rename folders.
+    # Primary source is the REAL-Colon subset fetched by `make download-dataset`
+    # (extracted during `make backend-bootstrap`). Its frames live in sibling
+    # `*_frames/` directories; pick the first study/video that actually holds
+    # images so the documented no-argument invocation works out of the box.
+    realcolon_raw = repo_root / "datasets" / "REAL-Colon" / "raw"
+    if realcolon_raw.is_dir():
+        for frames_dir in sorted(realcolon_raw.glob("*_frames"), key=lambda d: d.name):
+            if frames_dir.is_dir() and any(
+                p.is_file() and p.suffix.lower() in VALID_EXTS for p in frames_dir.iterdir()
+            ):
+                return frames_dir
+    # Fallback: ColonDB / mask-based drops. Accept both extract layouts the
+    # ColonDB archive ships as in the wild (matches dataset_fetcher autodetect).
     candidates = [
         repo_root / "datasets" / "ColonDB" / "raw" / "ColonDB" / "images",
         repo_root / "datasets" / "ColonDB" / "raw" / "CVC-ColonDB" / "images",
@@ -41,10 +55,13 @@ def _default_images_dir(repo_root: Path) -> Path:
 
 
 def _numeric_sort_key(path: Path):
+    # Group by the non-numeric prefix, then order by the trailing frame index so
+    # REAL-Colon frames ("SSS-VVV_<n>") and plain numeric names sort naturally.
     stem = path.stem
-    if stem.isdigit():
-        return (0, int(stem))
-    return (1, stem.lower())
+    m = _TRAILING_NUM_RE.search(stem)
+    if m:
+        return (0, stem[: m.start()].lower(), int(m.group(1)))
+    return (1, stem.lower(), 0)
 
 
 def _list_images(images_dir: Path) -> list[Path]:
@@ -290,10 +307,12 @@ def main() -> int:
     if not args.images_dir.exists():
         print(
             f"ERROR: images directory not found: {args.images_dir}\n"
-            "The ColonDB archive under datasets/ColonDB/raw/ must be extracted first.\n"
-            "  Option A: unzip datasets/ColonDB/raw/*.zip -d datasets/ColonDB/raw/\n"
-            "  Option B: run 'make backend-bootstrap' once — it extracts the archive as a side effect.\n"
-            "Both 'ColonDB/' and 'CVC-ColonDB/' extract layouts are auto-detected — no rename needed.",
+            "No input frames were found. Fetch the REAL-Colon subset first, then retry:\n"
+            "  make download-dataset     # downloads datasets/REAL-Colon/raw (*_frames/)\n"
+            "  make backend-bootstrap    # extracts the frames (also trains/exports the model)\n"
+            "Or point the generator at any folder of image frames:\n"
+            "  scripts/create_endoscopy_video.py --images-dir <dir-of-images>\n"
+            "(ColonDB 'images/' layouts under datasets/ColonDB/raw/ are also auto-detected.)",
             file=sys.stderr,
         )
         return 2
