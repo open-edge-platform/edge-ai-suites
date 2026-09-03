@@ -328,10 +328,6 @@ The `vision-processor-multicam` container automatically:
    - Subscribes to armed state via MQTT: `uav/uav-1/telemetry/status`
    - Pauses inference when disarmed (saves GPU)
    - Resumes inference when armed
-3. **Publishes detections** to MQTT: `uav/uav-1/camera/{camera_id}/detections`
-4. **Publishes annotated frames** (JPEG with bounding boxes) to MQTT: `uav/uav-1/camera/{camera_id}/processed`
-
-> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, subscribe to the MQTT topic above.
 
 ### Troubleshooting
 
@@ -404,12 +400,8 @@ usb-camera (implies):
 # `sudo add-apt-repository universe && sudo apt update`.
 sudo apt install ffmpeg mosquitto-clients xdg-utils -y
 
-# View raw camera feed
+# View raw camera feed (needs a local display)
 ffplay rtsp://localhost:8554/uav-1/nadir
-
-# View annotated frames with detections delivered over MQTT.
-mosquitto_sub -h localhost -p 1884 \
-  -t "uav/uav-1/camera/nadir/processed" -C 1 > frame.jpg && xdg-open frame.jpg
 
 # Capture one frame
 ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 frame.jpg
@@ -429,6 +421,14 @@ ssh -L 8554:localhost:8554 user@px4-host
 
 # Then locally:
 ffplay rtsp://localhost:8554/uav-1/nadir
+```
+
+Headless alternative — skip port-forwarding and record directly on the remote
+host instead of live-viewing:
+```bash
+ssh user@px4-host \
+  "ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv"
+scp user@px4-host:nadir.mkv .
 ```
 
 ---

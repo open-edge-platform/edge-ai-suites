@@ -51,6 +51,7 @@ $Ports = @{
 }
 
 $StoppedCount = 0
+$StoppedProcessIds = @()
 
 foreach ($Service in $Services) {
     $Port = $Ports[$Service]
@@ -96,6 +97,7 @@ foreach ($Service in $Services) {
                         Write-Success "$Service (PID $ProcessId) stopped"
                     }
 
+                    $StoppedProcessIds += $ProcessId
                     $StoppedCount++
                 }
                 catch {
@@ -114,6 +116,44 @@ foreach ($Service in $Services) {
 
 Write-Header "SHUTDOWN COMPLETE"
 Write-Success "Stopped $StoppedCount service(s)"
+
+# Stop-Process only signals termination; it returns before the process has fully
+# exited and released its open file handles (e.g. rag-service holding a lock on
+# chroma.sqlite3). Wait for the stopped processes to actually exit so the
+# knowledge-base cleanup below does not race against a still-closing process.
+$UniqueStoppedIds = @($StoppedProcessIds | Sort-Object -Unique)
+foreach ($StoppedId in $UniqueStoppedIds) {
+    try {
+        Wait-Process -Id $StoppedId -Timeout 15 -ErrorAction SilentlyContinue
+    }
+    catch {}
+}
+
+# Clear the ingested knowledge base so a fresh start begins with no uploaded
+# document. The React UI reconciles its persisted file list against the backend
+# context on load, so wiping the vector store here also clears the UI list.
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$VectorDb = Join-Path $ScriptDir "voice-enabled-interactions\smart-kiosk-assistant\rag-service\storage\vector_db"
+if (Test-Path $VectorDb) {
+    # The OS can hold the file lock briefly even after the process exits, so
+    # retry a few times before giving up.
+    $Cleared = $false
+    for ($Attempt = 1; $Attempt -le 5; $Attempt++) {
+        try {
+            Remove-Item -Path $VectorDb -Recurse -Force -ErrorAction Stop
+            Write-Success "Cleared ingested knowledge base"
+            $Cleared = $true
+            break
+        }
+        catch {
+            Start-Sleep -Milliseconds 500
+        }
+    }
+
+    if (-not $Cleared) {
+        Write-Error-Custom "Could not clear knowledge base at $VectorDb : file is still locked"
+    }
+}
 
 Write-Info "All services are now stopped."
 Write-Host "`nTo start again, run: powershell -ExecutionPolicy Bypass -File start_ata.ps1`n" -ForegroundColor Green

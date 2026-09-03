@@ -1,14 +1,17 @@
-# Uncrewed Aerial Vehicle (UAV) Vision Analytics Application
+# Uncrewed Aerial Vehicle (UAV) Blueprint
 
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/uav-vision-analytics">
      GitHub
   </a>
+  <a class="icon_release" href="https://github.com/open-edge-platform/edge-ai-suites/releases/tag/fedaero-latest">
+    Release
+  </a>
 </div>
 hide_directive-->
 
-UAV Vision Analytics demonstrates how AI-based object detection can be integrated with UAV
+UAV Bleuprint demonstrates how AI-based object detection can be integrated with UAV
 flight controller telemetry on a companion compute platform.
 
 Based on DL Streamer Pipeline Server, the application processes video from a UAV-mounted
@@ -47,8 +50,18 @@ Integration mode that connects to a running instance of the UAV Mission Compute 
 [Get Started — UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md)
 
 
-To learn more about the application and how to use it, see the
-[User Guides](./how-to-guides.md).
+To learn more about the application and how to use it, see
+[How to use UAV Vision Analytics Application](./how-to-guides.md).
+
+## Installation Guide
+
+Follow the steps below to set up and run the UAV Blueprint:
+
+1. [Infrastructure Setup](./get-started/infrastructure-setup.md) — Build the OS image, flash it to a bootable USB, and validate the provisioned platform.
+2. [Install OEP SDKs](./get-started/install-oep-sdks.md) — Verify hardware accelerators and install the UAV Mission Compute SDK on the provisioned target.
+3. [Install UAV Vision Analytics Application](install-uav-app.md) — Choose and follow the deployment mode that matches your setup (Standalone or UAV Mission Compute SDK).
+4. [How to use UAV Vision Analytics Application](./how-to-guides.md) — Learn how to configure models, cameras, QGroundControl, and more.
+5. [Benchmarks](./how-to-guides/benchmark.md) — Benchmark AI pipelines across CPU, GPU, and NPU using ViPPET and the included stream density tooling.
 
 ## AI Agent Skills
 
@@ -81,9 +94,11 @@ immediately.
 :::{toctree}
 :hidden:
 
-Get Started - Standalone <./get-started/get-started-standalone.md>
-Get Started - SDK <./get-started/get-started-uavsdk.md>
-User Guides <./how-to-guides.md>
+Infrastructure Setup <./get-started/infrastructure-setup.md>
+Install OEP SDKs <./get-started/install-oep-sdks.md>
+Install UAV Vision Analytics Application <install-uav-app.md>
+How to use UAV Vision Analytics Application <./how-to-guides.md>
+Benchmarks <./how-to-guides/benchmark.md>
 System Requirements <./get-started/system-requirements.md>
 
 :::
