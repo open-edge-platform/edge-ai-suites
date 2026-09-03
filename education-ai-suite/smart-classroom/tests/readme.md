@@ -44,7 +44,7 @@ python -m pytest tests/integration/test_process_validation.py
 
 ```bash
 python -m pytest tests/unit/test_session_store.py::test_create_and_update_new_columns
-python -m pytest tests/integration/test_cancel.py::test_x2_cancel_va_session
+python -m pytest tests/integration/test_cancel.py::test_cancel_va_session
 ```
 
 ### Useful flags

@@ -22,7 +22,8 @@ def _hold(client, _mock, event):
     return resp.json()["session_id"]
 
 
-def test_c1_two_concurrent_accepted(client, _mock_orchestrator):
+# Two sessions can run at once (both under the concurrency cap).
+def test_two_concurrent_accepted(client, _mock_orchestrator):
     e1, e2 = threading.Event(), threading.Event()
     s1 = _hold(client, _mock_orchestrator, e1)
     s2 = _hold(client, _mock_orchestrator, e2)
@@ -35,7 +36,8 @@ def test_c1_two_concurrent_accepted(client, _mock_orchestrator):
         wait_for_state(client, s2, timeout=5.0)
 
 
-def test_c2_third_request_returns_429(client, _mock_orchestrator):
+# A third session beyond the cap is rejected with 429.
+def test_third_request_returns_429(client, _mock_orchestrator):
     e1, e2 = threading.Event(), threading.Event()
     s1 = _hold(client, _mock_orchestrator, e1)
     s2 = _hold(client, _mock_orchestrator, e2)
@@ -50,7 +52,8 @@ def test_c2_third_request_returns_429(client, _mock_orchestrator):
         wait_for_state(client, s2, timeout=5.0)
 
 
-def test_c3_no_phantom_row_after_429(client, _mock_orchestrator):
+# A rejected 429 must not leave a phantom pending session in the DB.
+def test_no_phantom_row_after_429(client, _mock_orchestrator):
     e1, e2 = threading.Event(), threading.Event()
     s1 = _hold(client, _mock_orchestrator, e1)
     s2 = _hold(client, _mock_orchestrator, e2)
@@ -67,7 +70,8 @@ def test_c3_no_phantom_row_after_429(client, _mock_orchestrator):
         wait_for_state(client, s2, timeout=5.0)
 
 
-def test_c4_slot_released_after_completion(client):
+# Once a session completes, its concurrency slot is freed for the next one.
+def test_slot_released_after_completion(client):
     first = client.post("/api/v1/sessions/process",
                         json={"stages": ["transcribe"], "audio_path": _fake_audio()})
     assert first.status_code == 200
@@ -78,7 +82,8 @@ def test_c4_slot_released_after_completion(client):
     wait_for_state(client, second.json()["session_id"], timeout=5.0)
 
 
-def test_c5_thread_start_failure_cleans_registry(client, monkeypatch):
+# If thread start fails, the registry entry is rolled back and no DB row remains.
+def test_thread_start_failure_cleans_registry(client, monkeypatch):
     from utils import orchestrator
 
     class _FailingThread:

@@ -24,7 +24,8 @@ def _cancel(client, session_id):
     return client.post(f"/api/v1/sessions/{session_id}/cancel")
 
 
-def test_x1_cancel_audio_session(client, _mock_orchestrator):
+# Cancelling an in-flight audio session lands it in the cancelled state.
+def test_cancel_audio_session(client, _mock_orchestrator):
     event = threading.Event()
     _mock_orchestrator["pipeline"].run_transcription.side_effect = \
         lambda *a, **k: (event.wait(), iter([]))[1]
@@ -43,7 +44,8 @@ def test_x1_cancel_audio_session(client, _mock_orchestrator):
         event.set()
 
 
-def test_x2_cancel_va_session(client, _mock_orchestrator):
+# Cancelling a VA session must reach cancelled, not failed.
+def test_cancel_va_session(client, _mock_orchestrator):
     event = threading.Event()
     sid = _hold_va(client, _mock_orchestrator, event)
     try:
@@ -55,7 +57,8 @@ def test_x2_cancel_va_session(client, _mock_orchestrator):
         event.set()
 
 
-def test_x3_cancel_during_va_wait(client, _mock_orchestrator):
+# A cancel arriving inside the VA wait window still tears pipelines down.
+def test_cancel_during_va_wait(client, _mock_orchestrator):
     event = threading.Event()
     sid = _hold_va(client, _mock_orchestrator, event)
     try:
@@ -68,7 +71,8 @@ def test_x3_cancel_during_va_wait(client, _mock_orchestrator):
         event.set()
 
 
-def test_x4_double_cancel_returns_409(client, _mock_orchestrator):
+# Cancelling a session that already terminated is rejected with 409.
+def test_double_cancel_returns_409(client, _mock_orchestrator):
     event = threading.Event()
     _mock_orchestrator["pipeline"].run_transcription.side_effect = \
         lambda *a, **k: (event.wait(), iter([]))[1]
@@ -86,7 +90,8 @@ def test_x4_double_cancel_returns_409(client, _mock_orchestrator):
         event.set()
 
 
-def test_x5_cancel_completed_returns_409(client):
+# Cancelling a completed session is a 409 conflict.
+def test_cancel_completed_returns_409(client):
     resp = client.post("/api/v1/sessions/process",
                        json={"stages": ["transcribe"], "audio_path": _fake_audio()})
     sid = resp.json()["session_id"]
@@ -95,5 +100,6 @@ def test_x5_cancel_completed_returns_409(client):
     assert _cancel(client, sid).status_code == 409
 
 
-def test_x6_cancel_nonexistent_returns_404(client):
+# Cancelling a session that does not exist returns 404.
+def test_cancel_nonexistent_returns_404(client):
     assert _cancel(client, "20260903-000000-dead").status_code == 404
