@@ -12,7 +12,7 @@ features:
   board_ocr:          { enabled: true }
   content_search:     { enabled: true }
   qa:                 { enabled: true }
-  grading:            { enabled: true }
+  grading:            { enabled: false }
   report:             { enabled: true }
 
 monitoring:

@@ -42,6 +42,9 @@ def health():
     hub = ModelManager.instance().health()
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
 
+@router.get("/create-session")
+def create_session():
+    return JSONResponse(content={"session-id":  generate_session_id()}, status_code=200)
 
 @router.get("/features")
 def get_features(request: Request):
