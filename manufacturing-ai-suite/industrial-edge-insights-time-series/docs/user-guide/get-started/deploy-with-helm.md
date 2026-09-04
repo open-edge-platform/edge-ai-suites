@@ -23,15 +23,15 @@ Choose **one** of the following approaches to get the Helm charts:
 **Option A: Download the Helm charts**
 
 1. Download Helm chart:
-   
+
    ```bash
-   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.2.0-rc2
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.2.0
     ```
 
 2. Extract the Helm chart:
 
    ```bash
-   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.2.0-rc2.tgz
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.2.0.tgz
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
@@ -60,7 +60,7 @@ Choose **one** of the following approaches to get the Helm charts:
 
 1. Update the following fields in `values.yaml` file of the Helm chart
 
-   ``` sh
+   ```bash
    INFLUXDB_USERNAME:
    INFLUXDB_PASSWORD:
    VISUALIZER_GRAFANA_USER:
@@ -77,7 +77,7 @@ Choose **one** of the following approaches to get the Helm charts:
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
 >
-> 3. To deploy with GPU support for inferencing, use the following command:
+> 3. To deploy with GPU support for inference, use the following command:
 >
 >       ```bash
 >       helm install <app_name> \
@@ -156,7 +156,7 @@ To upload your own or existing model into Time Series Analytics Microservice in 
 
 ## Step 5: Activate the New UDF Deployment Package
 
-> **NOTE**: To activate the UDF inferencing on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
+> **Note:** To activate the UDF inference on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
 >
 > ```sh
 > cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config
@@ -167,7 +167,7 @@ To upload your own or existing model into Time Series Analytics Microservice in 
 > -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 > ```
 >
-> GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
+> GPU Inference is supported only for `Wind Turbine Anomaly Detection` sample app
 
 Run the following command to activate the UDF deployment package:
 

@@ -5,5 +5,5 @@ apiVersion: v2
 name: video-caption-service
 description: Live Video Caption Service — FastAPI backend + WebUI for real-time VLM captioning.
 type: application
-version: 2026.2.0-rc1-helm
+version: 2026.2.0-rc2-helm
 appVersion: "latest"

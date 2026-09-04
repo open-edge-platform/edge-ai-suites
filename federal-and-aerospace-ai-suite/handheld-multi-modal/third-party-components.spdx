@@ -2,7 +2,7 @@ SPDXVersion: SPDX-2.3
 DataLicense: CC0-1.0
 SPDXID: SPDXRef-DOCUMENT
 DocumentName: handheld-multi-modal
-DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/handheld-multi-modal
+DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal
 Creator: Organization: Intel Corporation
 Creator: Tool: manual-curation
 Created: 2026-05-27T00:00:00Z
@@ -28,7 +28,7 @@ SPDXID: SPDXRef-Package-handheld-multi-modal
 PackageVersion: 2026.1
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-suites
-PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/handheld-multi-modal
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/federal-and-aerospace-ai-suite/handheld-multi-modal
 FilesAnalyzed: false
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0
@@ -74,14 +74,14 @@ Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-gr
 
 PackageName: openvino-model-server
 SPDXID: SPDXRef-Package-ovms
-PackageVersion: latest-gpu
+PackageVersion: @sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://hub.docker.com/r/openvino/model_server
 PackageHomePage: https://github.com/openvinotoolkit/model_server
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0
 PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>
-PackageSummary: <text>OpenVINO Model Server (OVMS) serving the Phi-3.5-mini-instruct INT4 LLM over an OpenAI-compatible REST API, executed on Intel GPU via the OpenVINO runtime.</text>
+PackageSummary: <text>OpenVINO Model Server (OVMS) serving the Qwen3.5-4B-int8 LLM over an OpenAI-compatible REST API, executed on Intel GPU via the OpenVINO runtime.</text>
 ExternalRef: PACKAGE-MANAGER purl pkg:docker/openvino/model_server@latest-gpu
 FilesAnalyzed: false
 
@@ -285,7 +285,7 @@ SPDXID: SPDXRef-Package-vippet
 PackageVersion: see-VIPPET_REF-file
 PackageSupplier: Organization: Intel Corporation
 PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-libraries
-PackageHomePage: https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/visual-pipeline-and-platform-evaluation-tool
 PackageLicenseConcluded: Apache-2.0
 PackageLicenseDeclared: Apache-2.0
 PackageCopyrightText: <text>Copyright (C) Intel Corporation</text>

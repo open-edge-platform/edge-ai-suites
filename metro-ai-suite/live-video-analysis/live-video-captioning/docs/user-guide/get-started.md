@@ -12,7 +12,8 @@ This section shows how to:
 
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/engine/install/). Install the Ubuntu platform version.
-- In case the sample application is used with RTSP streams, setup of the RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files should be done separately. Reference instructions are provided [here](./get-started/simulated-rtsp-stream-guide.md).
+- In case the sample application is used with RTSP streams, setup of the RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files should be done separately. Refer to [the instructions](./get-started/simulated-rtsp-stream-guide.md)
+for more details.
 
 ## Run the Application
 
@@ -51,7 +52,7 @@ This script sets these important values:
 |----------|---------|--------|
 | `HOST_IP` | *(auto-detected)* | Host address reachable by the browser for WebRTC signaling. |
 | `REGISTRY` | `intel/` | Image registry prefix. |
-| `TAG` | `2026.2.0-rc1` | Docker image tag. |
+| `TAG` | `2026.2.0-rc2`| Docker image tag. |
 | `DASHBOARD_PORT` | `4173` | Port for the web dashboard. |
 | `EVAM_HOST_PORT` | `8040` | Port for the pipeline management REST API. |
 | `WHIP_SERVER_PORT` | `8889` | Port for WebRTC/WHIP signaling (mediamtx). |
@@ -168,9 +169,9 @@ Then:
 2. Select the device on which the VLM model will run (e.g., "CPU", "GPU", "NPU"), based on the hardware available on your host system.
 3. Select a VLM model.
 4. Set **Frame Resolution** for frames parsed by the VLM:
-  - Choose `Default` to keep the input source resolution.
-  - Choose a preset resolution to downscale or upscale before VLM inference.
-  - Choose `Custom` to set a specific width and height.
+   - Choose `Default` to keep the input source resolution.
+   - Choose a preset resolution to downscale or upscale before VLM inference.
+   - Choose `Custom` to set a specific width and height.
 5. Adjust the prompt and maximum token settings if needed.
 6. Click **Start**.
 

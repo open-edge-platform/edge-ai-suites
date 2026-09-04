@@ -20,7 +20,7 @@ docker pull intel/intel-optimized-ffmpeg:avx3
 DIRNAME=${PWD}
 SAMPLE_DATA_DIRECTORY=${DIRNAME}/sample_data
 FFMPEG_DIR="/app/data"
-FFMPEG_IMAGE="intel/intel-optimized-ffmpeg:latest"
+FFMPEG_IMAGE="intel/intel-optimized-ffmpeg:avx3"
 EXTENSION=${1:-mp4}
 PATTERN="*.${EXTENSION}"
 

@@ -10,7 +10,7 @@ Confirm your machine meets the [System Requirements](./get-started/system-requir
 ## Step 1: Prerequisites
 
 - **Git for Windows** — [Download here](https://git-scm.com/download/win)
-- **Python 3.10+** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
+- **Python 3.11 or 3.12** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
 - **Visual C++ Build Tools** — Required for some Python packages
 
 ## Step 2: Clone The Repository
@@ -83,7 +83,7 @@ Each response should be: `{"status": "ok"}`
 
 Open your browser and navigate to:
 
-```
+```text
 http://127.0.0.1:7860
 ```
 

@@ -1,10 +1,12 @@
 # Release Notes: Agentic Smart Community
 
-## 2026.2.0
+## Version 2026.2.0
 
-This initial release introduces an AI Agent-native video analysis platform designed for MCP (Model Context Protocol) integration.
+**Release Date**: September 9, 2026
 
-**New**
+This initial release introduces an AI agent-native video analysis platform designed for MCP (Model Context Protocol) integration.
+
+**New**:
 
 - **Containerized services**: deploys the `smart-community-mcp-server` and `videostream-analytics` services as containers for a consistent smart-community video-analysis runtime.
 - **MCP tools for agent conversations**: exposes 10 built-in MCP tools, including scene queries, alert retrieval, report generation, and monitor management, so any MCP-compatible agent framework can answer video-related questions and carry out monitoring workflows through conversation.

@@ -12,33 +12,35 @@ application.
 
 ## Version 1.4.0
 
-**New**
+**Release Date**: September 9, 2026
+
+**New**:
 
 - Python libraries and npm package updates.
 
-**Improved:**
+**Improved**:
 
-- Consumed latest DL Streamer version 2026.2.0.
+- Consumed the latest DL Streamer version 2026.2.0.
 
 ## Version 1.3.0
 
-**New**
+**New**:
 
-- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Qualified on the Intel® Core™ Series 3 processor "Wildcat Lake" (WCL).
 - Deprecated EMF deployment packages.
 
-**Improved**
+**Improved**:
 
 - Bug fixes to improve UI/UX.
 
 ## Version 1.2.0
 
-**New**
+**New**:
 
 - Qualified on the Intel® Core™ Ultra Series 3 processor.
 - Changed the person-vehicle-bike-detection-2004 model to the yolov11s model.
 
-**Improved**
+**Improved**:
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
 - Image-based Video Search now supports the NPU device.
@@ -51,7 +53,7 @@ application.
 
 ## Version 1.0.1
 
-**Release Date**: 2025-08-20
+**Release Date**: August 20, 2025
 
 - DL Streamer version upgraded to 2025.1.2
 - DL Streamer Pipeline Server version upgraded to 3.1.0
@@ -59,7 +61,7 @@ application.
 
 ## Version 1.0.0
 
-**Release Date**: 2025-03-31
+**Release Date**: March 31, 2025
 
 - **MediaMTX**: This third-party microservice simulates remote video cameras
   placed in various geographical locations. The service can replay videos from

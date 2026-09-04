@@ -35,7 +35,7 @@ The following steps walk through deploying the Smart Traffic Intersection Agent 
 Use the following command to pull the Helm chart:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version <version-no>
+helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version 2026.2.0-rc2-helm
 ```
 
 Refer to release notes for details on the latest version to use.
@@ -45,7 +45,7 @@ Refer to release notes for details on the latest version to use.
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-2026.2.0-rc1-helm.tgz
+tar -xvf smart-traffic-intersection-agent-2026.2.0-rc2-helm.tgz
 ```
 
 Navigate to the extracted directory:
@@ -263,7 +263,7 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
-| `image.tag` | Image tag | `2026.2.0-rc1` |
+| `image.tag` | Image tag | `2026.2.0-rc2` |
 | `service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `service.backendPort` | Backend API port | `8081` |
 | `service.uiPort` | Gradio UI port | `7860` |

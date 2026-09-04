@@ -62,7 +62,7 @@ services:
       retries: 5
 
   apm-storage:
-    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-2026.2.0-rc1}
+    image: ${REGISTRY-intel/}apm-storage-service:${TAG:-2026.2.0-rc2}
     container_name: apm-storage
     hostname: apm-storage
     build:
@@ -90,7 +90,7 @@ services:
       start_period: 10s
 
   dlstreamer-pipeline-server:
-    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1}
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE:-intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2}
     container_name: apm-dlstreamer
     hostname: dlstreamer-pipeline-server
     environment:
@@ -128,7 +128,7 @@ services:
       - no-new-privileges
 
   model-download:
-    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.2.0-rc1}
+    image: ${REGISTRY:-intel/}model-download:${MODEL_DOWNLOAD_TAG:-2026.2.0-rc2}
     container_name: apm-model-download
     hostname: model-download
     # The model-download entrypoint only accepts the plugin list via the

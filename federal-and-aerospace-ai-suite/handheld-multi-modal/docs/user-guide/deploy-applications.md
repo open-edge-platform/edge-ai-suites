@@ -91,6 +91,12 @@ cd handheld-multi-modal
 ./run.sh up
 ```
 
+To deploy without Visual Pipeline and Platform Evaluation Tool, run:
+
+```bash
+./run.sh standalone
+```
+
 ## Verifying the installation
 
 After the script finishes, verify that the containers are running (sample output below):
@@ -112,31 +118,3 @@ c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/ent
 ```
 
 > **Note**: After a system restart, run `./run up` from the `handheld-multi-modal` directory to start the applications again.
-
-## Accessing Application User Interface
-
-This composite application exposes multiple endpoints through the NGINX TLS reverse proxy.
-They are bound to localhost only and are not exposed on any external IP address.
-Since the intended use is on handheld devices, the applications do not provide authentication
-or authorization.
-
-> **Notice**:
-> The "self-signed certificate" browser warning is expected.
-> Modern browsers require HTTPS to enable microphone input used by Open WebUI and
-  Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
-  TLS transport on the `localhost` bound addresses.
-
-
-
-| Service | URL | Notes |
-|---------|-----|-------|
-| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443 | via NGINX reverse proxy |
-| Open WebUI | https://localhost:8443 | Conversational Agent backed by LLM — browser microphone enabled (via NGINX reverse proxy) |
-| Whisper speech-to-text service | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
-| Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
-
-
-
-<!--
-Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md#endpoints)
--->

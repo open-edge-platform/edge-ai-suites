@@ -1,8 +1,19 @@
 # AI Teaching Assistant
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/education-ai-suite/ai-teaching-assistant">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/education-ai-suite/ai-teaching-assistant/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 An intelligent voice-enabled teaching assistant for educational environments. This application provides interactive Q&A capabilities powered by local AI models, allowing users to ask questions about uploaded course materials and receive instant, grounded answers via voice and text.
 
-All inference runs locally on Intel CPU/GPU via OpenVINO — **no cloud dependencies, no external APIs**.
+All inference runs locally on Intel CPU/GPU via OpenVINO™ — **no cloud dependencies, no external APIs**.
 
 ## Key Features
 
@@ -14,13 +25,13 @@ All inference runs locally on Intel CPU/GPU via OpenVINO — **no cloud dependen
 
 ## Services
 
-| Service          | Port | Role                                           |
-| ---------------- | ---- | ---------------------------------------------- |
-| `audio-analyzer` | 8010 | Speech-to-text (Whisper)                       |
-| `text-to-speech` | 8011 | Speech synthesis (SpeechT5 / Qwen-TTS)          |
-| `rag-service`    | 8020 | Knowledge ingestion & retrieval-augmented generation |
-| `kiosk-core`     | 8012 | Session management & service orchestration     |
-| `ai-teaching-assistant ui` | 7860 | React browser interface              |
+| Service                    | Port | Role                                                 |
+| -------------------------- | ---- | ---------------------------------------------------- |
+| `audio-analyzer`           | 8010 | Speech-to-text (Whisper)                             |
+| `text-to-speech`           | 8011 | Speech synthesis (SpeechT5 / Qwen-TTS)               |
+| `rag-service`              | 8020 | Knowledge ingestion & retrieval-augmented generation |
+| `kiosk-core`               | 8012 | Session management & service orchestration           |
+| `ai-teaching-assistant ui` | 7860 | React browser interface                              |
 
 Model inference is distributed across `audio-analyzer`, `text-to-speech`, and `rag-service`. The `kiosk-core` and `ai-teaching-assistant ui` services handle I/O and orchestration only.
 
@@ -28,11 +39,11 @@ Model inference is distributed across `audio-analyzer`, `text-to-speech`, and `r
 
 For full setup steps, use [Get Started](./get-started.md).
 
-Note: If PowerShell blocks local scripts on your machine, run this command in the current terminal session before setup:
-
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-```
+> **Note:** If PowerShell blocks local scripts on your machine, run this command in the current terminal session before setup:
+>
+> ```powershell
+> Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+> ```
 
 High-level flow:
 

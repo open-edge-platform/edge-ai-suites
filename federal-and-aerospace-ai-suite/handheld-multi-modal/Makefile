@@ -42,9 +42,12 @@ VIPPET_DIR := $(SELF_DIR)/../vippet-fedaero
 VIPPET_CWD := $(VIPPET_DIR)/$(VIPPET_PATH)
 
 MODELS_RETRIES  ?= 50
+MODELS_STATUS_RETRIES ?= 120
 MODELS_STATUS_INTERVAL ?= 30
 MODELS_LICENSE_FILE ?= .license-accepted
 MODELS_SUPPORTED_FILE ?= $(VIPPET_CWD)/shared/models/supported_models.yaml
+MODELS_DOWNLOAD_LOG ?= $(WORK_DIR)/models-download.log
+MODELS_DOWNLOAD_PID ?= $(WORK_DIR)/models-download.pid
 
 # ---------------------------------------------------------------------------
 # Packaging config (used by 'stage' / 'vippet' targets)
@@ -61,7 +64,7 @@ TEMPLATE_DIR := $(SELF_DIR)/templates
 	build rebuild clean health test urls build-whisper \
 	stage vippet \
 	restler-build restler-stt restler-package \
-	models-license models-download models-status
+	models-license models-download models-download-async models-status
 
 help: ## Show this help
 	@awk ' \
@@ -89,8 +92,21 @@ setup: ## Detect render group and write missing vars to .env (safe to re-run)
 	fi; \
 	if [ ! -d data/nginx-certs/ ]; then \
 		sudo mkdir -p data/nginx-certs/; \
-		sudo openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout data/nginx-certs/key.pem -out data/nginx-certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1'; \
-		sudo chmod 644 ./data/nginx-certs/key.pem; \
+		sudo chown "$$(id -u)":"$$(id -g)" -R data/nginx-certs/; \
+		openssl genrsa -out data/nginx-certs/ca-key.pem 3072; \
+		openssl req -x509 -new -nodes -key data/nginx-certs/ca-key.pem -days 3650 \
+			-out data/nginx-certs/ca-cert.pem -subj '/CN=Handheld Multi-Modal Local CA'; \
+		openssl genrsa -out data/nginx-certs/key.pem 3072; \
+		openssl req -new -key data/nginx-certs/key.pem \
+			-out data/nginx-certs/server.csr -subj '/CN=localhost'; \
+		printf 'subjectAltName=DNS:localhost,IP:127.0.0.1\n' > data/nginx-certs/server.ext; \
+		openssl x509 -req -in data/nginx-certs/server.csr \
+			-CA data/nginx-certs/ca-cert.pem -CAkey data/nginx-certs/ca-key.pem -CAcreateserial \
+			-out data/nginx-certs/cert.pem -days 365 \
+			-extfile data/nginx-certs/server.ext; \
+		sudo chown 101:101 ./data/nginx-certs/key.pem ./data/nginx-certs/cert.pem; \
+		sudo cp ./data/nginx-certs/ca-cert.pem /usr/local/share/ca-certificates/handheld.crt; \
+		sudo update-ca-certificates; \
 		echo "Created self-signed TLS cert for localhost"; \
 	fi; \
 	echo "✓ .env updated  (RENDER_GID=$$RENDER_GID)"
@@ -142,7 +158,7 @@ vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vi
 	yq -i -y '.services."metrics-manager".ports = ["9090:9090"]' $(VIPPET_CWD)/compose.yml; \
 	echo "✓ vippet configured (telegraf.conf copied)"
 
-vippet-up: vippet-configure ## Start vippet (builds images, installs all models, starts stack)
+vippet-up: vippet-configure ## Start vippet (builds images and starts stack)
 	@cd $(VIPPET_CWD) && \
 	sed -i 's|^VERSION=.*|VERSION=$(VIPPET_DOCKER_TAG)|' setup_env.sh && \
 	{ [ -f .env ] || bash setup_env.sh; } && \
@@ -156,10 +172,8 @@ vippet-up: vippet-configure ## Start vippet (builds images, installs all models,
 	else \
 		echo 'METRICS_MANAGER_HOSTNAME=ptl' >> .env; \
 	fi && \
-	$(MAKE) build-onvif-discovery run && \
+	$(MAKE) build run && \
 	echo "✓ vippet running"
-	# fedaero makefile
-	@$(MAKE) models-license models-download models-status 
 
 vippet-down: ## Stop vippet
 	@cd $(VIPPET_CWD) && docker compose down
@@ -181,13 +195,22 @@ define _wait_for_network
 	done
 endef
 
-deploy: install-deps setup vippet-up ## Full deploy: setup → start vippet → start this stack
+deploy: install-deps setup vippet-up ## Full deploy: start ViPPET and handheld stack while models download
+	@$(MAKE) --no-print-directory models-license
+	@$(MAKE) --no-print-directory models-download-async
 	$(call _wait_for_network)
 	@$(MAKE) up
+	@$(MAKE) --no-print-directory models-status
 
-deploy-cdi: install-deps setup vippet-up ## Full deploy (CDI/SR-IOV): setup → start vippet → start this stack
+deploy-cdi: install-deps setup vippet-up ## Full deploy (CDI/SR-IOV) while models download
+	@$(MAKE) --no-print-directory models-license
+	@$(MAKE) --no-print-directory models-download-async
 	$(call _wait_for_network)
 	@$(MAKE) up-cdi
+	@$(MAKE) --no-print-directory models-status
+
+deploy-standalone: install-deps setup ## Full deploy (standalone, no ViPPET)
+	@$(MAKE) up-standalone
 
 # Stack lifecycle
 
@@ -200,11 +223,11 @@ build-whisper: ## Build whisper-stt image if not already present
 	fi
 
 up: build-whisper ## Start all services (standard)
-	@echo "Starting handheld-multi-modal stack (standard)..."
+	@echo "Starting handheld-multi-modal stack (standard)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE) up -d
 
 up-cdi: build-whisper ## Start all services (CDI / SR-IOV)
-	@echo "Starting handheld-multi-modal stack (CDI)..."
+	@echo "Starting handheld-multi-modal stack (CDI)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_CDI) up -d
 
 down: vippet-down ## Stop all services (standard) and vippet
@@ -214,7 +237,7 @@ down-cdi: vippet-down ## Stop all services (CDI) and vippet
 	$(COMPOSE_CDI) down
 
 up-standalone: build-whisper ## Start all services (standalone — no VIPPET required, dev/testing only)
-	@echo "Starting handheld-multi-modal stack (standalone)..."
+	@echo "Starting handheld-multi-modal stack (standalone)... OVMS will download model(s) at startup, which may take a few minutes."
 	$(COMPOSE_STANDALONE) up -d
 
 down-standalone: ## Stop all services (standalone)
@@ -235,9 +258,11 @@ rebuild: ## Rebuild images without touching volumes
 clean: ## Remove staging scratch (.work). Add CONFIRM=yes to also stop containers and wipe data dirs
 	rm -rf "$(WORK_DIR)"
 	@if [ "$(CONFIRM)" = "yes" ]; then \
-		$(COMPOSE) down -v; \
+		$(MAKE) down; \
 		docker run --rm -v "$(SELF_DIR)/data:/data" alpine \
 			sh -c "rm -rf /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs"; \
+		# script-based ENIB runs as 1001:1001, model-downloader/ICT ENIB as 1000:1000, so sudo is needed. \
+		sudo rm -rf $(VIPPET_DIR); \
 		echo "✓ Containers stopped and data directories removed"; \
 	else \
 		echo "  Tip: run  make clean CONFIRM=yes  to also stop containers and remove data dirs"; \
@@ -411,13 +436,23 @@ models-download:
 		esac; \
 		[ $$i -eq $(MODELS_RETRIES) ] && break; \
 		sleep 5; \
-    done; \
+	done; \
+	echo "✗ Model download request was not accepted after $(MODELS_RETRIES) attempts"; \
+	exit 1
+
+models-download-async: ## Request ViPPET model downloads in background; log at $(MODELS_DOWNLOAD_LOG)
+	@mkdir -p "$(dir $(MODELS_DOWNLOAD_LOG))"
+	@rm -f "$(MODELS_DOWNLOAD_PID)"; \
+	$(MAKE) --no-print-directory models-download >"$(MODELS_DOWNLOAD_LOG)" 2>&1 & \
+	echo $$! > "$(MODELS_DOWNLOAD_PID)"; \
+	PID=$$(cat "$(MODELS_DOWNLOAD_PID)"); \
+	echo "✓ Model download request started (PID $$PID; log: $(MODELS_DOWNLOAD_LOG))"
 
 models-status:
-	@for i in $$(seq 1 $(MODELS_RETRIES)); do \
+	@for i in $$(seq 1 $(MODELS_STATUS_RETRIES)); do \
 		STATUS=$$(curl -sf http://localhost:7860/api/v1/models | jq -c '[.[] | {display_name, install_status}]'); \
 		if [ -z "$$STATUS" ]; then \
-			echo "  [$$i/$(MODELS_RETRIES)] API not reachable yet..."; \
+			echo "  [$$i/$(MODELS_STATUS_RETRIES)] API not reachable yet..."; \
 		else \
 			echo "$$STATUS" | jq -r '.[] | "  \(.display_name)\t\(.install_status)"' | column -t -s "$$(printf '\t')"; \
 			if echo "$$STATUS" | jq -e 'length > 0 and all(.[]; .install_status == "installed")' >/dev/null; then \
@@ -425,11 +460,11 @@ models-status:
 				exit 0; \
 			fi; \
 		fi; \
-		[ $$i -eq $(MODELS_RETRIES) ] && break; \
-		echo "  [$$i/$(MODELS_RETRIES)] not all installed yet, retrying in $(MODELS_STATUS_INTERVAL)s..."; \
+		[ $$i -eq $(MODELS_STATUS_RETRIES) ] && break; \
+		echo "  [$$i/$(MODELS_STATUS_RETRIES)] not all installed yet, retrying in $(MODELS_STATUS_INTERVAL)s..."; \
 		sleep $(MODELS_STATUS_INTERVAL); \
 	done; \
-	echo "✗ Timeout: not all models installed after $$(( $(MODELS_RETRIES) * $(MODELS_STATUS_INTERVAL) ))s"; \
+	echo "✗ Timeout: not all models installed after $$(( $(MODELS_STATUS_RETRIES) * $(MODELS_STATUS_INTERVAL) ))s"; \
 	exit 1
 
 models-license:
@@ -456,7 +491,7 @@ install-deps:
 		echo "✓ yq already present"; \
 	else \
 		echo "yq not found — installing via apt..."; \
-		sudo apt update && sudo apt install -y yq && echo "✓ yq installed via apt"; \
+		sudo apt update && sudo apt  --fix-broken install -y && sudo apt install -y yq && echo "✓ yq installed via apt"; \
     fi; \
 	if yq --help 2>&1 | grep -q 'github.com/kislyuk/yq'; then \
 		echo "✓ yq is the kislyuk/yq (Python) implementation"; \

@@ -111,7 +111,7 @@ app:
   image:
     registry: "intel/"  # Override global.registry for this component only
     repository: live-video-alert-agent
-    tag: 2026.2.0-rc1
+    tag: 2026.2.0-rc2
   port: 9000
   service:
     type: NodePort
@@ -162,7 +162,7 @@ alert-agent-service:
   image:
     registry: intel
     repository: alert-agent-service
-    tag: 2026.2.0-rc1
+    tag: 2026.2.0-rc2
   port: 8000
   service:
     type: ClusterIP
@@ -201,7 +201,7 @@ alert-agent-service:
 metrics-manager:
   image:
     repository: "intel/metrics-manager"
-    tag: "2026.2.0-extended-rc1"
+    tag: "2026.2.0-extended-rc2"
   service:
     type: NodePort
     metricsPort: 9090

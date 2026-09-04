@@ -90,7 +90,8 @@ $SubmoduleUrl = "https://github.com/open-edge-platform/edge-ai-libraries.git"
 # Pinned commit for reproducible builds. The setup always checks out this exact
 # commit instead of the moving branch tip, so upstream changes can't break the
 # app. Bump this SHA deliberately after validating a newer upstream commit.
-$SubmodulePinnedCommit = "3e24bd03c439e1707f5105f09ba7db4c699589c6"
+# $SubmodulePinnedCommit = "152442976009c8825b3646362f0ed7c619d385b9" Last Stable commit SHA (Edge-AI-Libraries)
+$SubmodulePinnedCommit = "3ceefb6df6f66ef6f6303c29f8310160ab1e70e1"
 
 # Locate the enclosing git repository (the edge-ai-suites fork).
 $RepoRoot = $null
@@ -224,7 +225,8 @@ $VeiSubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/voice-enabled-i
 $VeiSubmoduleUrl = "https://github.com/intel-retail/voice-enabled-interactions.git"
 
 # Pinned commit for reproducible builds (see edge-ai-libraries note above).
-$VeiPinnedCommit = "cc9b25d2b28717a74380d853c762c68072e82e8b"
+# $VeiPinnedCommit = "771132c3a784fdea1f5617a5b349fc30bd1640a7" Last Stable commit SHA (Voice Enabled Interactions)
+$VeiPinnedCommit = "17dfa4c60365f0a475ef446e1e7c850fb50329bc"
 
 $VeiRepoRoot = $null
 try { $VeiRepoRoot = (git -C $ScriptDir rev-parse --show-toplevel 2>$null) } catch {}
@@ -661,9 +663,27 @@ foreach ($Service in $Services) {
         if ($LASTEXITCODE -eq 0) {
             Write-Success "Dependencies installed for $($Service.Name)"
 
-            # openwakeword pip package ships only .tflite files; download the
-            # .onnx models (melspectrogram, embedding_model, etc.) explicitly.
             if ($Service.Name -eq "kiosk-core") {
+                # openwakeword is deliberately NOT in requirements.txt: 0.6.0
+                # declares a tflite-runtime dependency that pip would resolve
+                # alongside the rest of the set. Install it with --no-deps so
+                # only its ONNX runtime path is pulled in; its real runtime deps
+                # are already pinned in requirements.txt.
+                try {
+                    Write-Info "Installing openwakeword (--no-deps)..."
+                    Invoke-NativeInstallCommand -Command "pip install --no-deps openwakeword==0.6.0" -ScriptBlock {
+                        & $PythonExe -m pip install --no-deps openwakeword==0.6.0
+                    }
+                    Write-Success "openwakeword installed"
+                }
+                catch {
+                    Write-Warning "openwakeword install failed: $_"
+                    Write-Warning "Continuing setup. Wake-word detection will not work until openwakeword is installed."
+                }
+
+                # openwakeword's pip package ships only .tflite files; download
+                # the .onnx models into its resources/models dir (the location
+                # openwakeword.Model loads from) so the ONNX inference path works.
                 Write-Info "Downloading openwakeword ONNX model assets..."
                 try {
                     Invoke-OpenWakeWordOnnxSync -PythonExe $PythonExe
@@ -885,12 +905,29 @@ foreach ($Service in $ModelServices) {
     Write-Step "Warming up models for $($Service.Name) (downloads + OpenVINO export on first run)..."
     Push-Location $Service.Path
     try {
-        $WarmupPy | & $PythonExe -
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "Models ready for $($Service.Name)"
+        # First-run model download/export can fail transiently (interrupted HF
+        # download, timeout, rate-limiting). Retry a few times; already-exported
+        # IR files are cached, so a retry only re-attempts the failed step.
+        $MaxAttempts = 3
+        $Succeeded = $false
+        for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
+            if ($Attempt -gt 1) {
+                Write-Info "Retrying model warmup for $($Service.Name) (attempt $Attempt of $MaxAttempts)..."
+                Start-Sleep -Seconds 5
+            }
+
+            $WarmupPy | & $PythonExe -
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Models ready for $($Service.Name)"
+                $Succeeded = $true
+                break
+            }
+
+            Write-Error-Custom "Model warmup attempt $Attempt failed for $($Service.Name) (exit code $LASTEXITCODE)"
         }
-        else {
-            Write-Error-Custom "Model warmup failed for $($Service.Name) (exit code $LASTEXITCODE)"
+
+        if (-not $Succeeded) {
+            Write-Error-Custom "Model warmup failed for $($Service.Name) after $MaxAttempts attempts"
             Write-Info "The service will retry the export on first startup, which may be slow."
         }
     }

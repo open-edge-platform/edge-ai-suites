@@ -10,7 +10,7 @@
 
 services:
   apm-detection:
-    image: ${REGISTRY-intel/}apm-detection-service:${TAG:-2026.2.0-rc1}
+    image: ${REGISTRY-intel/}apm-detection-service:${TAG:-2026.2.0-rc2}
     container_name: apm-detection
     hostname: apm-detection
     build:

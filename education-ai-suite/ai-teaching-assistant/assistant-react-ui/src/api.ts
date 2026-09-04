@@ -92,6 +92,25 @@ export async function stopHostSession(sessionId: string): Promise<void> {
   if (!res.ok) throw new Error(`stop session failed: HTTP ${res.status}`);
 }
 
+export async function startTextQuery(
+  text: string,
+  history: { role: string; content: string }[]
+): Promise<SessionSnapshot> {
+  const res = await fetch(`${API.kiosk}/api/v1/query/text`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      text,
+      language: "en",
+      temperature: 0.0,
+      history,
+      include_performance_metrics: true,
+      include_llm_metrics: true,
+    }),
+  });
+  return asJson<SessionSnapshot>(res);
+}
+
 export async function startStreamSession(
   sampleRate: number,
   history: { role: string; content: string }[],

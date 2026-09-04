@@ -90,6 +90,13 @@ Note: supported media types: jpg, png, mp4
     ```
 
     **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
+    
+   For PRC users, set up the huggingface endpoint first:
+   ```bash
+   export HF_ENDPOINT=https://hf-mirror.com
+   ```
+
+   - **Ubuntu**:
 
 
    You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.

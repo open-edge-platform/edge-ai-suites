@@ -159,6 +159,8 @@ The Flutter app acts as a REST API client to the Content Search backend, which d
    .\utils\flutter\setup.ps1
    ```
 
+   > **Security prompt**: A warning — *"Runs \<script\> — pulls untrusted third-party code"* — may appear when running any `.ps1` script. This is expected; click **Allow** to continue.
+
 2. **Launch**:
    ```powershell
    .\utils\flutter\start.ps1
@@ -278,26 +280,28 @@ content_search:
 > **Important — PowerShell required**
 > All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
 
+```powershell
+# Clone the repository (if not already done)
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
+cd edge-ai-suites/education-ai-suite
+```
+
 ### Traditional UI Mode
 
 ```powershell
-# 1. Clone the repository (if not already done)
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.2.0
-cd edge-ai-suites/education-ai-suite
-
-# 2. Run setup (one-time)
+# 1. Run setup (one-time)
 #    Installs Flutter deps + Python venv + minimal VLM dependencies
 #    (NOT the full Smart Classroom - only what's needed for VLM service)
 .\utils\flutter\setup.ps1
 
-# 3. Start the application
+# 2. Start the application
 #    This starts THREE services in separate windows:
 #    - Standalone VLM (port 8000): Lightweight VLM server
 #    - Content Search (port 9011): RAG backend
 #    - Flutter UI: Desktop application
 .\utils\flutter\start.ps1
 
-# 4. Use the application
+# 3. Use the application
 # VLM Service: http://127.0.0.1:8000/health
 # Content Search: http://127.0.0.1:9011/api/v1/system/health
 # Flutter: Desktop window opens automatically
@@ -479,6 +483,7 @@ For detailed request/response schemas, see `.github/skills/*/references/`.
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
+| Security warning: *"Runs \<script\> — pulls untrusted third-party code"* | VS Code/agent safety prompt when executing any `.ps1` script | This is expected — click **Allow** to proceed |
 | `flutter: command not found` | Flutter not in PATH | Install Flutter SDK and add to PATH |
 | `Connection refused on port 9011` | Backend not running | Run `.\utils\flutter\start.ps1` or `sc-up` skill |
 | `Task status: FAILED` | Model download failed / Disk space | Check `smart-classroom/content_search/logs/` for errors |

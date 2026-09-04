@@ -19,7 +19,7 @@ spec:
         fsGroup: {{ .Values.multimodalembeddingServing.videoGroupId }}
       containers:
         - name: {{ .Values.multimodalembeddingServing.name }}
-          image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.multimodalembeddingServing.image.repository }}:{{ .Values.multimodalembeddingServing.image.tag }}"
+          image: "{{ .Values.multimodalembeddingServing.image.repository }}:{{ .Values.multimodalembeddingServing.image.tag }}"
           imagePullPolicy: {{ .Values.multimodalembeddingServing.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.multimodalembeddingServing.service.targetPort }}

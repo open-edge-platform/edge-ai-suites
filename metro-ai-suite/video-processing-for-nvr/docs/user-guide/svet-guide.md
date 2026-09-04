@@ -67,7 +67,7 @@ sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 source /opt/intel/vppsdk/env.sh
 ```
 
-Assume the Video Processing Platform SDK package directory is `vppsdk` and the default install path is `/opt/intel/media/`.
+Assume the Video Processing Platform SDK package directory is `vppsdk` and the default install path is `/opt/intel/`.
 Run `vainfo` to verify the media stack is installed successfully:
 
 ```

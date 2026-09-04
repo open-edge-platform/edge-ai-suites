@@ -159,7 +159,7 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing images for Smart-Traffic-Intersection-Agent ... ${NC}"
-            docker rmi -f "${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-2026.2.0-rc1}" 2>/dev/null || true
+            docker rmi -f "${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-2026.2.0-rc2}" 2>/dev/null || true
         fi
         echo -e "${YELLOW}Removing secrets for Smart Intersection RI ... ${NC}"
         if [ -d "$RI_DIR" ]; then
@@ -268,7 +268,7 @@ fi
 # ============================================================================
 
 # Export required environment variables (HOST_IP already set above)
-export TAG=${TAG:-2026.2.0-rc1}
+export TAG=${TAG:-2026.2.0-rc2}
 # Construct registry path properly to avoid double slashes
 if [[ -n "$REGISTRY" ]]; then
     export REGISTRY="${REGISTRY%/}/"

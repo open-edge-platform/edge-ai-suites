@@ -48,7 +48,7 @@ bash demo/quick-start/start-demo.sh
 
 This one-shot launcher pushes the demo RTSP streams, writes the demo config/monitors into `$SMART_COMMUNITY_DATA_DIR`, then brings the stack up with `setup_docker.sh --light` (reusing an already-warm `vllm-ipex-serving`) and reloads the `smart-community-mcp-server` container so it picks up the demo config. No separate MCP-server start is needed — it runs as a container in the stack.
 
-The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/quick-start/config.demo.yaml) to `$SMART_COMMUNITY_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/demo/quick-start/monitors.demo.yaml) to the active streams and writes the result to `$SMART_COMMUNITY_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
+The launcher writes [config.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/quick-start/config.demo.yaml) to `$SMART_COMMUNITY_DATA_DIR/config.yaml`. It filters [monitors.demo.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/demo/quick-start/monitors.demo.yaml) to the active streams and writes the result to `$SMART_COMMUNITY_DATA_DIR/monitors.yaml`. The MCP server then starts with these two files.
 
 If either file changes, the previous version is backed up as `<filename>.YYYYMMDD-HHMMSS.bak`. Runtime configuration changes are written to the files in `$SMART_COMMUNITY_DATA_DIR`; the files under `demo/` remain unchanged.
 

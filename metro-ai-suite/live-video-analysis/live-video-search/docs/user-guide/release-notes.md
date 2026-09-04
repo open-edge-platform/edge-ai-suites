@@ -2,9 +2,9 @@
 
 ## Version 2026.2.0
 
-**Release Date:** August 4, 2026
+**Release Date**: September 9, 2026
 
-**New**
+**New**:
 
 - Replaced the legacy `vdms-dataprep` orchestration with backend-neutral `multimodal-dataprep` in Docker Compose and Helm.
 - Added an always-on Vector Retriever layer so Video Search no longer accesses a vector database directly.
@@ -17,9 +17,9 @@
 - Exposed asynchronous watcher-batch size, polling interval, and timeout settings for Search MS and Smart NVR continuous ingestion through Compose, Helm, and `setup.sh`.
 - Added a single, case-insensitive Helm `global.pullPolicy` override for all application images selected through the LVS, VSS, and Smart NVR stack tags.
 
-**Improved**
+**Improved**:
 
-- Updated LVS compose deployment to a pure per-component device model (`DATAPREP_EMBEDDING_DEVICE`, `DATAPREP_DETECTION_DEVICE`, `MME_EMBEDDING_DEVICE`; each defaults to `CPU`) and mount `/dev/accel` for NPU execution. Retired the redundant `VDMS_DATAPREP_DEVICE` baseline.
+- Updated LVS compose deployment to a pure per-component device model (`DATAPREP_EMBEDDING_DEVICE`, `DATAPREP_DETECTION_DEVICE`, `MME_EMBEDDING_DEVICE`; each defaults to `CPU`) and mounted `/dev/accel` for NPU execution. Retired the redundant `VDMS_DATAPREP_DEVICE` baseline.
 - Updated LVS Helm deployment templates and values to a pure per-component device model via `global.devices.multimodalEmbedding.*` and `global.devices.multimodalDataprep.{embedding,detection}.*` (each defaults to `CPU`), retiring the legacy `global.gpu.*` block to remove device-configuration ambiguity.
 - Removed the ambiguous `ENABLE_EMBEDDING_GPU` shortcut; indexing and query embedding devices are configured independently with `DATAPREP_EMBEDDING_DEVICE` and `MME_EMBEDDING_DEVICE`.
 - Renamed the Compose/setup model input from `EMBEDDING_MODEL_NAME` to `MULTIMODAL_EMBEDDING_MODEL`, the DataPrep variables from `VDMS_DATAPREP_*` to `MM_DATAPREP_*`, and `VDMS_PIPELINE_MANAGER_UPLOAD` to `VIDEO_UPLOAD_ENDPOINT`.
@@ -30,7 +30,7 @@
 - Removed the obsolete `vss-collector` subchart, telemetry compose overlay, Telegraf configuration, shared signal PVC, and the pod co-location constraint they required.
 - Updated LVS documentation (`get-started`, `deploy-with-helm`, `how-it-works`) with NPU usage guidance, accelerator configuration examples, and Metrics Manager deployment notes.
 
-**Fixed**
+**Fixed**:
 
 - Fixed Docker Compose backend selection so Milvus deployments do not start or depend on the VDMS service, and stale backend containers are removed when switching backends.
 - Corrected the Helm multimodal DataPrep completion-queue default to satisfy the service's minimum queue size and prevent pod startup validation failures.
@@ -42,20 +42,20 @@
 
 ## Version 2026.1.0
 
-**June 17, 2026**
+**Release Date:** June 17, 2026
 
-**New**
+**New**:
 
 - Deployment with Helm chart.
 
-**Known Issues**
+**Known Issues**:
 
 - First‑time model downloads may take several minutes.
 - Time‑range queries require the clock and timezone on the host to be accurate.
 
 ## Version 1.0.0
 
-**April 01, 2026**
+**Release Date**: April 1, 2026
 
 Live Video Search is a new sample application which implements embedding and
 visual data ingestion microservices (available in
@@ -68,13 +68,13 @@ A rich UI is provided to configure the camera used for data ingestion, enter
 the search query, and view telemetry data, currently, for CPU, GPU, and memory
 utilization. The sample application introduces camera streaming with Frigate.
 
-**New**
+**New**:
 
 - Live Video Search stack integrating Smart NVR with VSS Search.
 - Time‑range filtering in search via UI or natural‑language query parsing.
 - Telemetry visualization in VSS UI for live system performance.
 
-**Known Issues/Limitations**
+**Known Issues/Limitations**:
 
 - Deploy with Helm is not yet supported for Live Video Search.
 - First‑time model downloads may take several minutes.

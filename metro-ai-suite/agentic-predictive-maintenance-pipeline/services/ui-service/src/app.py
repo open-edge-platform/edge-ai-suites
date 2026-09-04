@@ -1108,6 +1108,7 @@ async def index(request: Request):
             "active_run": active_run,
             "videos": videos,
             "devices": _AVAILABLE_DEVICES,
+            "chat_available": _chat_available,
         },
     )
 
@@ -1256,6 +1257,7 @@ async def detections_page(
             "filter_confidence": parsed_confidence if parsed_confidence is not None else "",
             "filter_limit": limit,
             "total_count": total_count,
+            "chat_available": _chat_available,
         },
     )
 
@@ -1296,6 +1298,7 @@ async def results_page(request: Request, run_id: str):
         context={
             "use_case_id": _USE_CASE_ID, "run_id": run_id,
             "result": view["result"], "phase": view["phase"],
+            "chat_available": _chat_available,
         },
     )
 
