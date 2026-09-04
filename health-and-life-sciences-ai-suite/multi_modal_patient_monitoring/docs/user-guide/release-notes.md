@@ -1,8 +1,8 @@
 # Release Notes: Multi-Modal Patient Monitoring
 
-## Version 1.0.0
+## Version 2026.2.0
 
-**Release Date**: March 25, 2026
+**Release Date**: August 18, 2026
 
 This is the initial release of the application, therefore, it is considered a preview version.
 

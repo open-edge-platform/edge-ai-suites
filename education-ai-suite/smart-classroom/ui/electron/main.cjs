@@ -5,12 +5,20 @@
 // (which already proxies /api/v1); when packaged we serve `dist/` through the
 // embedded static + proxy micro-server (server.cjs).
 //
-// The Python backends are expected to be started separately.
+// The Python backends can either be started externally (legacy PowerShell
+// path, detected and attached to) or supervised by this process — see
+// electron/services/.
 
 const fs = require('fs');
 const path = require('path');
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const { startServer } = require('./server.cjs');
+const servicePaths = require('./services/paths.cjs');
+const serviceIpc = require('./services/ipc.cjs');
+const { LogStore } = require('./services/log-store.cjs');
+const { ServiceManager } = require('./services/process-manager.cjs');
+const { SetupRunner } = require('./services/setup-runner.cjs');
+const winEnv = require('./services/win-env.cjs');
 
 // Height (px) of the custom title bar strip. Matches the TopPanel so the
 // native Window Controls Overlay buttons align with the app header.
@@ -148,6 +156,9 @@ const DEV_SERVER_URL = process.env.ELECTRON_START_URL;
 
 let mainWindow = null;
 let serverHandle = null;
+const logStore = new LogStore(servicePaths.managerLogDir());
+const serviceManager = new ServiceManager(logStore);
+const setupRunner = new SetupRunner(logStore);
 
 async function resolveStartUrl() {
   if (DEV_SERVER_URL) return DEV_SERVER_URL;
@@ -311,8 +322,50 @@ if (!app.requestSingleInstanceLock()) {
     return result.filePaths[0];
   });
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     Menu.setApplicationMenu(buildAppMenu());
+
+    // Before anything is spawned: children inherit this process's environment,
+    // so a tool installed since the last run — or by the Setup screen in a
+    // previous session — would otherwise be invisible to the backend too.
+    await winEnv.refreshPath().catch(() => []);
+    await winEnv.applyDlStreamerEnv().catch(() => null);
+
+    serviceIpc.register({
+      manager: serviceManager,
+      logs: logStore,
+      setup: setupRunner,
+      getWindow: () => mainWindow,
+    });
+    serviceManager.start();
+
+    // Populate the Setup screen up front so a first-time user sees real statuses
+    // instead of "Not checked".
+    setupRunner.checkAll().catch(() => {});
+
+    // A backend that dies on a missing package leaves Setup insisting the
+    // environment is fine. Re-check on the transition into failed, so the two
+    // screens stop disagreeing. Edge-triggered: a service that stays failed must
+    // not re-check on every health tick.
+    let backendFailed = false;
+    serviceManager.on('changed', (snapshot) => {
+      const backend = snapshot.find((service) => service.id === 'backend');
+      const failed = backend?.status === 'failed';
+      if (failed && !backendFailed) setupRunner.checkAll().catch(() => {});
+      backendFailed = failed;
+    });
+
+    // Opt-in one-command launch (start-desktop-app.ps1). Skipped when the Python
+    // environment does not exist yet: that is a first-run state to be handled on
+    // the Setup screen, not a failure to show the user.
+    if (process.env.SC_AUTO_START_BACKEND === '1') {
+      const backend = serviceManager.snapshot().find((service) => service.id === 'backend');
+      if (backend?.runnable) {
+        serviceManager.startService('backend').catch((error) => {
+          console.error('[electron] auto-start failed:', error.message);
+        });
+      }
+    }
 
     // Open the native application menu as a popup, positioned under the
     // title-bar menu button (coordinates come from the renderer, in viewport
@@ -340,4 +393,20 @@ if (!app.requestSingleInstanceLock()) {
 app.on('window-all-closed', () => {
   if (serverHandle) serverHandle.close();
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Tear down only the processes this app started; externally started backends
+// (legacy PowerShell path) are left running.
+let shuttingDown = false;
+app.on('before-quit', (event) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  event.preventDefault();
+  serviceManager
+    .shutdown()
+    .catch(() => {})
+    .finally(() => {
+      logStore.dispose();
+      app.quit();
+    });
 });

@@ -89,22 +89,39 @@ class ContentSearchFeature:
             chroma_host, chroma_port, ingest_url, timeout,
         )
 
-        deadline = time.monotonic() + timeout
+        started = time.monotonic()
+        deadline = started + timeout
         chroma_ok = False
         ingest_ok = False
+        next_progress = started + 60
         while time.monotonic() < deadline:
             if not chroma_ok:
                 chroma_ok = _tcp_up(chroma_host, chroma_port)
             if not ingest_ok:
                 ingest_ok = _http_up(ingest_url)
             if chroma_ok and ingest_ok:
-                logger.info("ContentSearchFeature health-gate passed.")
+                logger.info(
+                    "ContentSearchFeature health-gate passed after %.0fs.",
+                    time.monotonic() - started,
+                )
                 return
+            # Without this the log goes quiet for the whole startup and the only
+            # line ever printed is the timeout, with no way to tell a slow model
+            # load from a service that is never going to answer.
+            if time.monotonic() >= next_progress:
+                logger.info(
+                    "ContentSearchFeature health-gate still waiting after %.0fs "
+                    "(chromadb=%s, ingest=%s).",
+                    time.monotonic() - started, chroma_ok, ingest_ok,
+                )
+                next_progress += 60
             time.sleep(interval)
 
         logger.warning(
-            "ContentSearchFeature health-gate timed out (chromadb=%s, ingest=%s).",
-            chroma_ok, ingest_ok,
+            "ContentSearchFeature health-gate timed out after %ss (chromadb=%s, "
+            "ingest=%s). This is observational only - the services keep starting "
+            "and may still come up; check content_search/logs/.",
+            timeout, chroma_ok, ingest_ok,
         )
 
 
@@ -116,9 +133,16 @@ def _tcp_up(host: str, port: int) -> bool:
         return False
 
 
+# Explicitly bypass any system/corporate proxy for localhost calls, as the rest
+# of the app does. NO_PROXY cannot be relied on: .proxy-config stores a
+# Windows-style semicolon list, which Python splits on commas only, so the whole
+# string reads as one bogus host and the proxy answers 403 for 127.0.0.1.
+_NO_PROXY = {"http": None, "https": None}
+
+
 def _http_up(url: str) -> bool:
     try:
-        resp = requests.get(url, timeout=5)
+        resp = requests.get(url, timeout=5, proxies=_NO_PROXY)
         return resp.status_code < 400
     except requests.RequestException:
         return False

@@ -332,6 +332,10 @@ def main() -> None:
                     "--port", _env("INGEST_PORT", "9990")],
             "cwd": CONTENT_SEARCH_DIR,
             "health": (_env("INGEST_HOST", "127.0.0.1"), int(_env("INGEST_PORT", "9990")), "/v1/dataprep/health"),
+            # Binds :9990 only after CLIP + the document embedding model are
+            # loaded and the id maps are rebuilt from ChromaDB, all at import;
+            # warm starts take ~40s, a first run that downloads the models needs
+            # the rest of this budget.
             "health_timeout": 300,
         },
         "main_app": {
@@ -339,7 +343,11 @@ def main() -> None:
                     "--host", _env("CS_HOST", "127.0.0.1"),
                     "--port", _env("CS_PORT", "9011")],
             "cwd": CONTENT_SEARCH_DIR,
-            "health": (_env("CS_HOST", "127.0.0.1"), int(_env("CS_PORT", "9011")), "/api/v1/system/health"),
+            # Liveness, not the aggregate /api/v1/system/health: that one only
+            # turns 200 once chromadb/ingest/preprocess are ready too, which is
+            # what the loop below is separately waiting for (ingest alone gets
+            # 300s). Gating main_app on it would time out on a slow ingest.
+            "health": (_env("CS_HOST", "127.0.0.1"), int(_env("CS_PORT", "9011")), "/api/v1/system/ping"),
             "health_timeout": 120,
         },
     }
