@@ -13,7 +13,7 @@ distros on x86_64.
 
 > Note that this path is intended for advanced users who need fine-grained control over disk
 > layout, installed packages, and package repositories. Most users can start with the simpler
-> path, [using a Standard Ubuntu 24.04 image](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/build-from-source.html#option-1-build-from-a-standard-ubuntu-24-04-image).
+> path, [using the standard build](../infrastructure-setup.md#step-2-build-the-os-image).
 
 This article will show you how to:
 

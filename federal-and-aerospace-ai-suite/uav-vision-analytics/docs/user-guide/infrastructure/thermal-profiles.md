@@ -10,8 +10,7 @@ SPDX-License-Identifier: Apache-2.0
 Intel® Core™ Ultra edge nodes let you control **how the platform reacts as its
 temperature rises** — when fans spin up, when the CPU frequency is capped, and
 when idle cycles are forced in as a hard limit. The Infrastructure software
-ships a local tool under `tools/power-tuning/` that configures this policy
-through the Linux thermal daemon, `thermald`:
+ships a local tool that configures this policy through the Linux thermal daemon, `thermald`:
 
 - Apply a ready-made **thermal profile** (`cool`, `warm`, `hot`, `thermal-max`).
 - Set an explicit set of **custom trip points** (Fan / Processor / powerclamp).
