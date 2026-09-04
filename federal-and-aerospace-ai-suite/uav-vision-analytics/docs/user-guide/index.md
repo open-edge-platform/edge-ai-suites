@@ -99,6 +99,7 @@ Install OEP SDKs <./get-started/install-oep-sdks.md>
 Install UAV Vision Analytics Application <install-uav-app.md>
 How to use UAV Vision Analytics Application <./how-to-guides.md>
 Benchmarks <./how-to-guides/benchmark.md>
+AI Agent Integration <./infrastructure/agent-skills.md>
 
 :::
 hide_directive-->
