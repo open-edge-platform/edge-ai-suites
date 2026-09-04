@@ -94,8 +94,9 @@ Infrastructure Setup <infrastructure-setup.md>
 Install OEP SDKs <install-oep-sdks.md>
 Install Handheld Multi-Modal Application <deploy-applications.md>
 Access Application User Interface <access-application.md>
-Benchmarks <benchmarks.md>
 AI Playground <ai-playground.md>
+Benchmarks <benchmarks.md>
+AI Agent Integration <infrastructure/agent-skills.md>
 
 :::
 hide_directive-->
