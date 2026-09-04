@@ -71,22 +71,24 @@ services:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       no_proxy: "${no_proxy},fedaero.intel.com"
+      HF_TOKEN: ${HF_TOKEN:-}
     volumes:
       - ./data/ovms-models:/models
     command: >
       --rest_port 8000
-      --source_model OpenVINO/Phi-3.5-mini-instruct-int4-ov
+      --source_model OpenVINO/Qwen3.5-4B-int8-ov
       --model_repository_path /models
       --task text_generation
       --target_device GPU
       --metrics_enable
+      --reasoning_parser qwen3
       --plugin_config '{"GPU_ENABLE_SDPA_OPTIMIZATION":"NO","KV_CACHE_PRECISION":"f16","ENABLE_MMAP":"NO"}'
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/config | grep -q 'Phi-3.5-mini-instruct-int4-ov'"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/config | grep -q 'Qwen3.5-4B-int8-ov'"]
       interval: 15s
       timeout: 5s
       retries: 20
-      start_period: 5m
+      start_period: 30m
 
   # OpenWebUI - LLM Chat Interface
   open-webui:
@@ -105,10 +107,15 @@ services:
       - WHISPER_MODEL=base
       - WHISPER_COMPUTE_TYPE=float32
       - WEBUI_AUTH=False
+      - HF_TOKEN=${HF_TOKEN:-}
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
-      - DEFAULT_MODEL_PARAMS={"max_tokens":1024}
+      - DEFAULT_MODEL_PARAMS={"max_tokens":2048, "custom_params":{"chat_template_kwargs":{"enable_thinking":false}}}
+      - TASK_MODEL_PARAMS={"max_tokens":1000,"custom_params":{"chat_template_kwargs":{"enable_thinking":false}}}
+      # Stops the model from generating follow-up questions and tags after answering a user query. Limits model usage.
+      - ENABLE_FOLLOW_UP_GENERATION=false
+      - ENABLE_TAGS_GENERATION=false
       # ONLY NEEDED IF OFFLINE MODE IS DESIRED
       # - OFFLINE_MODE=true
       # - HF_HUB_OFFLINE=1

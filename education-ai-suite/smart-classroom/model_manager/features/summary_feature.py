@@ -3,13 +3,12 @@ import json
 import logging
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
 from utils.config_loader import config
-from utils.locks import audio_pipeline_lock
 
 logger = logging.getLogger(__name__)
 
@@ -18,25 +17,27 @@ router = APIRouter()
 
 @router.post("/summarize")
 async def summarize_audio(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
         warned_partial_board = False
-        for token in pipeline.run_summarizer():
+        for item in pipeline.run_summarizer():
+            # A segmented summary yields progress dicts before any token.
+            if isinstance(item, dict):
+                yield json.dumps({"token": "", "error": "", **item}) + "\n"
+                await asyncio.sleep(0)
+                continue
             if not warned_partial_board and pipeline.board_ocr_partial:
                 warned_partial_board = True
                 yield json.dumps(
                     {"token": "", "error": "", "board_ocr_partial": True}
                 ) + "\n"
-            if token.startswith("[ERROR]:"):
-                logger.error(f"Error while summarizing: {token}")
-                yield json.dumps({"token": "", "error": token}) + "\n"
+            if item.startswith("[ERROR]:"):
+                logger.error(f"Error while summarizing: {item}")
+                yield json.dumps({"token": "", "error": item}) + "\n"
                 break
             else:
-                yield json.dumps({"token": token, "error": ""}) + "\n"
+                yield json.dumps({"token": item, "error": ""}) + "\n"
             await asyncio.sleep(0)
 
     return StreamingResponse(event_stream(), media_type="application/json")

@@ -4,7 +4,7 @@ class BaseASR:
        # Load model
        raise NotImplementedError("Must implement in subclass.")
 
-   def transcribe(self, audio_path: str) -> str:
+   def transcribe(self, audio_path: str) -> dict:
        # Abstract Method
        # Return transcribed text from .wav file
        raise NotImplementedError("Must implement in subclass.")

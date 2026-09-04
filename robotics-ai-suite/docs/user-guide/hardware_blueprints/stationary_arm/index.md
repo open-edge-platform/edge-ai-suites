@@ -48,25 +48,25 @@ vision-guided pick-and-place workflow with the identified hardware and
 software. A configuration is not a guarantee of broad compatibility, but is
 intended as a reference baseline.
 
-<!--hide_directive
-::::{grid} 2hide_directive-->
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Stationary Arm Reference Platform**
+::::{grid} 2
+
+:::{grid-item-card} **Stationary Arm Reference Platform**
 
 Intel Core Ultra Series 3 with components selected for the target arm, end
 effector, and workspace, running the Stationary Robotics Toolkit.
-<!--hide_directive:::hide_directive-->
+:::
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **UR5e Vision and Controls Deployment**
-<!--hide_directive:link: ur5e-robotiq-realsense
+:::{grid-item-card} **UR5e Vision and Controls Deployment**
+:link: ur5e-robotiq-realsense
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Intel Core Ultra Series 3 with a Universal Robots UR5e, Robotiq 2F-85 gripper,
 Intel RealSense camera, and the Stationary Robotics Toolkit.
-<!--hide_directive:::
+:::
 ::::
-hide_directive-->
+
 
 ### Selecting a Configuration
 
@@ -97,26 +97,26 @@ pick-and-place workflow before enabling physical robot motion. Then use the
 Vision and Controls Deployment Demo to deploy object detection, pose and grasp selection,
 ROS 2 task orchestration, and MoveIt 2 Servo arm control on the target robot.
 
-<!--hide_directive
-::::{grid} 2hide_directive-->
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Vision and Controls Simulation Demo**
-<!--hide_directive:link: ../../software_references/stationary_arm/simulation/rvc_sim
+::::{grid} 2
+
+:::{grid-item-card} **Vision and Controls Simulation Demo**
+:link: ../../software_references/stationary_arm/simulation/rvc_sim
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Validate the vision-guided pick-and-place workflow in simulation. This demo is in development.
-<!--hide_directive:::hide_directive-->
+:::
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Vision and Controls Deployment Demo**
-<!--hide_directive:link: ../../software_references/stationary_arm/deployment/rvc_deploy
+:::{grid-item-card} **Vision and Controls Deployment Demo**
+:link: ../../software_references/stationary_arm/deployment/rvc_deploy
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Explore the vision-guided pick-and-place workflow and its ROS 2 components.
-<!--hide_directive:::
+:::
 ::::
-hide_directive-->
+
 
 ```{toctree}
 :maxdepth: 1

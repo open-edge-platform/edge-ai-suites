@@ -40,6 +40,7 @@ class PipelineOptions:
     device: str = "NPU"  # CPU, GPU, or NPU
     output_dir: str = "outputs"  # Directory for metadata output files
     output_rtsp: str = "rtsp://127.0.0.1:8554"  # RTSP output URL
+    output_stream: bool = True  # Push video to RTSP; False = discard to fakesink
     threshold: float = 0.5  # Detection threshold for YOLO
     record: bool = False
 
@@ -242,6 +243,15 @@ class VideoAnalyticsPipelineService:
             "protocols=udp",
         ]
 
+    def _get_video_sink_elements(
+        self, options: PipelineOptions, stream_name: str
+    ) -> List[str]:
+        """Get video sink elements: RTSP sink, or a discarding fakesink when
+        streaming is disabled (options.output_stream=False)"""
+        if not options.output_stream:
+            return ["fakesink", "async=false", "sync=false"]
+        return self._get_rtsp_sink_elements(options.output_rtsp, stream_name)
+
     def _check_redistribute_latency(self, log_file: Path) -> bool:
         """Check if 'Redistribute latency' appears in log file"""
         try:
@@ -423,7 +433,7 @@ class VideoAnalyticsPipelineService:
         try:
             # Create log file for pipeline output
             log_dir = Path(options.output_dir) / "logs"
-            log_dir.mkdir(exist_ok=True)
+            log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"{pipeline_name}_{int(time.time())}.log"
             log_handle = open(log_file, "w", buffering=1)  # Line buffered
 
@@ -478,7 +488,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build front camera pipeline (Pipeline 1)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -557,7 +567,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "front_stream"),
+            *self._get_video_sink_elements(options, "front_stream"),
             # Branch 3: MobileNetv2 classification
             "t.",
             "!",
@@ -593,7 +603,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build back camera pipeline (Pipeline 2)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -636,7 +646,7 @@ class VideoAnalyticsPipelineService:
             f"file-path={output_dir.as_posix()}/back_resnet18.txt",
             "file-format=json-lines",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "back_stream"),
+            *self._get_video_sink_elements(options, "back_stream"),
         ]
         return pipeline
 
@@ -645,7 +655,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build content/file pipeline (Pipeline 3)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -672,7 +682,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "content_stream"),
+            *self._get_video_sink_elements(options, "content_stream"),
         ]
         return pipeline
 
@@ -693,7 +703,8 @@ class VideoAnalyticsPipelineService:
         Note:
             - Source can be RTSP URL (rtsp://...) or local file path
             - Input type is auto-detected from source (starts with 'rtsp://' = RTSP, else file)
-            - Video output is always pushed to RTSP server (configured via options.output_rtsp)
+            - Video output is pushed to RTSP server (configured via options.output_rtsp)
+              unless options.output_stream is False, in which case it is discarded
             - Metadata is saved to files in options.output_dir
         """
         # Validate pipeline name
@@ -754,7 +765,11 @@ class VideoAnalyticsPipelineService:
 
             self.logger.info(f"Launching pipeline '{pipeline_name}'")
             self.logger.info(f"  Source: {source} (type: {input_type})")
-            self.logger.info(f"  RTSP output: {options.output_rtsp}")
+            self.logger.info(
+                f"  RTSP output: {options.output_rtsp}"
+                if options.output_stream
+                else "  RTSP output: disabled (fakesink)"
+            )
             self.logger.info(f"  Metadata dir: {options.output_dir}")
             self.logger.info(f"Command: {' '.join(command)}")
 

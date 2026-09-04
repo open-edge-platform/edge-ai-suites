@@ -45,7 +45,7 @@ downloading or loading, and inference requests will fail.
 
 | Model | Size | Notes |
 |-------|------|-------|
-| `OpenVINO/Phi-3.5-mini-instruct-int4-ov` | ~2 GB | Default, very fast |
+| `OpenVINO/Phi-3.5-mini-instruct-int4-ov` | ~2 GB | Very fast |
 | `OpenVINO/llama-3.2-3b-instruct-int4-ov` | ~2 GB | Good general use |
 | `OpenVINO/mistral-7b-instruct-v0.3-int4-ov` | ~4 GB | Better quality |
 | `OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-ov` | ~1 GB | Tiny, fastest |
@@ -55,6 +55,7 @@ downloading or loading, and inference requests will fail.
 
 | Model | Size | Notes |
 |-------|------|-------|
+| `OpenVINO/Qwen3.5-4B-int8-ov` | ~4 GB | Default deployment model; supports reasoning |
 | `OpenVINO/Phi-3.5-mini-instruct-int8-ov` | ~4 GB | Balanced quality and speed |
 | `OpenVINO/llama-3.2-3b-instruct-int8-ov` | ~3 GB | Good accuracy |
 | `OpenVINO/mistral-7b-instruct-v0.3-int8-ov` | ~7 GB | High quality, needs more VRAM |

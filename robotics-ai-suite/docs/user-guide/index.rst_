@@ -24,7 +24,19 @@ CI/CD pipeline.
    Security <components/security/index>
    Middleware <components/middleware/index>
    Sensors <components/sensors/index>
-   AI Resources <components/ai_resources/index>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: AI Resources
+
+   Intel Powered AI <ai_resources/intel_powered_ai>
+   Gen AI <ai_resources/gen-ai/index>
+   Vision AI <ai_resources/vision-ai/index>
+   Physical AI <ai_resources/physical-ai/index>
+   OpenVINO <ai_resources/openvino/index>
+   Developer Tools <ai_resources/developer_tools/index>
+   Agentic Skills <ai_resources/skills/index>
 
 .. toctree::
    :maxdepth: 1

@@ -194,9 +194,9 @@ The solution is to enroll the distribution certificate so that the signed Shim a
 
 2. Create the distribution certificate file. Select the tab corresponding to your distribution:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Debian Distribution**
-   <!--hide_directive:sync: debianhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Debian Distribution**
+   :sync: debian
 
    Execute the following command to create the distribution certificate for Debian:
 
@@ -226,9 +226,9 @@ The solution is to enroll the distribution certificate so that the signed Shim a
    openssl x509 -inform pem -out distribution.der -outform DER
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Ubuntu Distribution**
-   <!--hide_directive:sync: ubuntuhide_directive-->
+   :::
+   :::{tab-item} **Ubuntu Distribution**
+   :sync: ubuntu
 
    Execute the following command to create the distribution certificate for Ubuntu:
 
@@ -261,8 +261,8 @@ The solution is to enroll the distribution certificate so that the signed Shim a
    openssl x509 -inform pem -out distribution.der -outform DER
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Use the `mokutil` tool to queue the distribution certificate to be enrolled as a Machine Owner Key. This will enable the signed Shim and GRUB bootloaders authenticated during the boot process. You will be prompted to `input password:`. Enter any phrase. You will need to enter this phrase later when enrolling the certificate using the UEFI key manager.
 
