@@ -94,23 +94,28 @@ The UAV climbs to the default hover altitude. When done, land it with:
 curl -X POST http://localhost:8080/action/land
 ```
 
-### Step 3.4: View an RTSP stream
+### Step 3.4: Capture the Video Stream (Optional)
 
-Open any camera feed with an RTSP player:
+Record the UAV camera stream to disk with `ffmpeg`:
 
 ```bash
-# Raw feed
-ffplay rtsp://localhost:8554/uav-1/nadir
-
-# Annotated feed with OpenVINO YOLOv2 vehicle detection overlays
-ffplay rtsp://localhost:8554/uav-1/nadir/processed
+# Records a footage for 10 seconds and saves to nadir.mkv
+ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv
 ```
 
-Available cameras: `nadir`, `forward`, `rear` (each exposes both the raw and `/processed` variants).
+To preview the live stream instead of recording (if not on a headless system):
+
+```bash
+ffplay rtsp://localhost:8554/uav-1/nadir
+```
+
+Available cameras: `nadir`, `forward`, `rear`.
 
 ### Step 3.5: Access dashboards and APIs
 
-- **Grafana dashboards:** `http://localhost:3000` (default `admin`/`admin`) — flight and platform metrics
+- **Grafana dashboards:** `http://localhost:3000` — flight and platform metrics
+  - Credentials are available in the `.env` file at `~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/`.
+  - On a headless target, Grafana is only reachable through a reverse tunnel from a machine with a GUI/browser.
 - **REST API:** `http://localhost:8080` — flight control commands (`arm`, `takeoff`, `land`)
 
 ### Step 3.6: Stop the stack
@@ -122,45 +127,13 @@ cd ~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make down
 ```
 
-## Step 4 (Optional): Install the OpenVINO Python Runtime
-
-For direct use of `benchmark_app`, model conversion (`ovc`), or Python inference outside the SDK containers, install OpenVINO into a Python virtual environment:
-
-```bash
-python3 -m venv ~/ov-env
-source ~/ov-env/bin/activate
-pip install --upgrade pip
-pip install openvino
-```
-
-To also enable LLM and VLM inference workflows:
-
-```bash
-pip install openvino-genai
-```
-
-Verify all three inference devices are visible to OpenVINO:
-
-```bash
-python3 -c "import openvino as ov; print(ov.Core().available_devices)"
-```
-
-Expected: `['CPU', 'GPU', 'NPU']` (device suffixes may include `GPU.0`).
-
-## Step 5 (Optional): Configure Hugging Face Access
-
-Some SDK extension paths and GenAI workflows pull gated models. Create a token with read scope at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens), accept the model licenses on each model's Hugging Face page with the same account, then export the token:
-
-```bash
-export HF_TOKEN=<your-hugging-face-token>
-```
-
-Add the export to `~/.bashrc` to persist it across sessions.
-
 ## Next Steps
 
-- Review the upstream [UAV Mission Compute SDK Get Started](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) for USB camera setup and advanced configuration.
-- Explore the SDK source under `~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/`.
+- Review the upstream [UAV Mission Compute SDK Get Started](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) for USB camera setup and advanced configuration.
+
+- Review the [UAV Mission Compute SDK Benchmarking Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/benchmarking.md) for telemetry and bridge performance benchmarking.
+
+- Refer to [Get Started — UAV Mission Compute SDK Mode](./get-started-uavsdk.md) for application deployment and running the vision analytics stack against the live UAV SDK services.
 
 ## Related Guides
 
