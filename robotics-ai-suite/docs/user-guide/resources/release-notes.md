@@ -28,7 +28,7 @@ This release extends humanoid support to the Intel® Core™ Ultra Series 3 "Pan
 - Added reference Intel® Core™ Ultra "Panther Lake" core-pinning and CPU frequency-locking scripts and reproducible one-command validation flows (`reproduce_all.sh`) across the new SLAM pipelines for deterministic, comparable benchmarking.
 - Refreshed the imitation-learning and VLA sample pipelines (ACT, Diffusion Policy, Improved 3D Diffusion Policy, Pi0.5 with Real-Time Chunking, Robotics Diffusion Transformer, LLM Robotics, OpenClaw + AgenticROS, ORB-SLAM3) for the 2026.2 documentation and platform references.
 
-<!--hide_directive
+
 :::{toctree}
 :hidden:
 
@@ -38,4 +38,3 @@ Release Notes 25.36 <./release-notes/release-25.36.md>
 Release Notes 25.15 <./release-notes/release-25.15.md>
 
 :::
-hide_directive-->

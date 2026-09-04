@@ -1,0 +1,431 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.config-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 24px;
+  /* The nav and the field panel scroll individually. */
+  overflow: hidden;
+  font-family: var(--font-text);
+}
+
+.config-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.config-split {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.config-nav {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.config-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border: none;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid #ececec;
+  background: #fafafa;
+  color: var(--color-gray-900);
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.config-nav-item:last-child {
+  border-bottom: none;
+}
+
+.config-nav-item:hover {
+  background: #f0f0f0;
+}
+
+.config-nav-item.active {
+  border-left-color: var(--color-theme);
+  background: #e8f4f8;
+  color: var(--color-theme);
+  font-weight: 600;
+}
+
+.config-nav-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-nav-count {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #9aa0a8;
+}
+
+/* Unsaved edits in a group the user may have navigated away from. */
+.config-nav-dirty {
+  flex-shrink: 0;
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 9px;
+  background: var(--color-theme);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Section heading: the human name, then the config.yaml node it mirrors. */
+.config-subgroup {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.config-subgroup-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.config-subgroup-node {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #9aa0a8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.config-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.config-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.config-subtitle {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.config-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.config-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.config-search-input {
+  width: 200px;
+  /* Room for the clear button. */
+  padding-right: 26px;
+}
+
+.config-search-clear {
+  position: absolute;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #9aa0a8;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.config-search-clear:hover {
+  background: #ececec;
+  color: var(--color-gray-900);
+}
+
+.config-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: #fff;
+  color: var(--color-gray-900);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.config-btn:hover:not(:disabled) {
+  border-color: var(--color-theme);
+  color: var(--color-theme);
+}
+
+.config-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.config-btn-primary {
+  border-color: var(--color-theme);
+  background: var(--color-theme);
+  color: #fff;
+}
+
+.config-btn-primary:hover:not(:disabled) {
+  background: #005c9e;
+  color: #fff;
+}
+
+.config-error {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: #fdecea;
+  color: #a33;
+  font-size: 12px;
+}
+
+.config-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #ffd68a;
+  border-radius: 4px;
+  background: #fff8e6;
+  color: #7a5b00;
+  font-size: 12.5px;
+}
+
+.config-note {
+  font-size: 12px;
+  color: #8a8f98;
+}
+
+.config-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.config-group-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.config-fields {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Toggle-only groups: cards that flow into as many columns as fit. The minimum
+   fits the longest boolean path (features.topic_segmentation.enabled). */
+.config-fields.compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 8px;
+  border: none;
+  overflow: visible;
+}
+
+.config-fields.compact .config-field {
+  border: 1px solid #e0e0e0;
+  border-left-width: 3px;
+  border-radius: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.config-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 14px;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid #ececec;
+  background: #fafafa;
+}
+
+.config-fields:not(.compact) .config-field:last-child {
+  border-bottom: none;
+}
+
+/* Deep-linked from Get started; fades back to the row's normal background. */
+@keyframes field-flash {
+  from { background: #fff4d2; }
+  to { background: #fafafa; }
+}
+
+.config-field.flashed {
+  animation: field-flash 2.2s ease-out;
+}
+
+/* Unsaved edit. */
+.config-field.dirty {
+  border-left-color: var(--color-theme);
+  background: #f2f8fc;
+}
+
+.config-field-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.config-field-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.config-field-path {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: #9aa0a8;
+  /* Truncate rather than run under the control; the full path is in the title. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-field-help {
+  font-size: 11.5px;
+  color: var(--color-gray-700);
+}
+
+.config-field-control {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.config-input {
+  width: 100%;
+  padding: 5px 10px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: #fff;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  color: var(--color-gray-900);
+  box-sizing: border-box;
+}
+
+.config-input:focus {
+  outline: none;
+  border-color: var(--control-focus-color);
+  box-shadow: var(--control-focus-ring);
+}
+
+.config-path {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+}
+
+.config-switch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.config-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.config-switch > span {
+  width: 38px;
+  height: 20px;
+  border-radius: 10px;
+  background: #c8ccd2;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.config-switch > span::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s ease;
+}
+
+.config-switch input:checked + span {
+  background: var(--color-theme);
+}
+
+.config-switch input:checked + span::after {
+  transform: translateX(18px);
+}

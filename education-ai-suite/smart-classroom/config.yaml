@@ -12,7 +12,7 @@ features:
   board_ocr:          { enabled: true }
   content_search:     { enabled: true }
   qa:                 { enabled: true }
-  grading:            { enabled: true }
+  grading:            { enabled: false }
   report:             { enabled: true }
 
 monitoring:
@@ -37,6 +37,8 @@ models:
     min_duration_sec: 0.25
     min_words: 2
     max_chars_per_segment: 0  # cap characters per merged transcript segment; set to 0 or Null to disable merging entirely
+    concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
+    queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
   
   diarization: #Only applicable when diarization is set to True for ASR
     backend: pyannote  # pyannote, or campplus for funasr/paraformer-zh
@@ -105,7 +107,7 @@ audio_preprocessing:
   chunk_output_path: chunks/
 
 audio_util:
-  max_size_mb: 300
+  max_size_mb: 800
   allowed_extensions:
     - .wav
     - .mp3

@@ -22,7 +22,7 @@ class _OrchestrationError(Exception):
     pass
 
 
-class _Cancelled(_OrchestrationError):
+class _Cancelled(Exception):
     pass
 
 
@@ -83,14 +83,19 @@ def _va_output_dir(session_id: str) -> str:
 def start_process(request: dict) -> str:
     session_id = generate_session_id()
     stages = request.get("stages", [])
-    session_store.SessionStore.create(session_id, request, stages)
     cancel_event = threading.Event()
     thread = threading.Thread(target=_run, args=(session_id, request, stages), daemon=True)
     with _RUNNING_LOCK:
         if len(_RUNNING) >= _MAX_CONCURRENT_SESSIONS:
             raise _ConcurrencyLimit("too many concurrent sessions")
         _RUNNING[session_id] = _RunningTask(thread, cancel_event)
-    thread.start()
+    try:
+        thread.start()
+    except RuntimeError:
+        with _RUNNING_LOCK:
+            _RUNNING.pop(session_id, None)
+        raise
+    session_store.SessionStore.create(session_id, request, stages)
     return session_id
 
 
@@ -117,8 +122,7 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
             )
             va_thread.start()
         _run_audio_chain(session_id, request, stages, va_thread, va_error)
-        if va_error:
-            raise _OrchestrationError(va_error[0])
+        _join_va(va_thread, va_error)
         session_store.SessionStore.mark_completed(session_id)
     except _Cancelled:
         session_store.SessionStore.mark_cancelled(session_id)
@@ -127,6 +131,9 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
     except Exception as e:
         logger.exception(f"[orchestrator] session {session_id} unexpected failure")
         session_store.SessionStore.mark_failed(session_id, f"unexpected error: {e}")
+    finally:
+        if va_thread is not None:
+            va_thread.join()
 
 
 def _touch_heartbeat(session_id: str) -> None:
@@ -144,6 +151,8 @@ def _run_va_safe(session_id: str, request: dict, stages: list, errors: list) -> 
     bind_session(session_id)
     try:
         _run_va_if_needed(session_id, request, stages)
+    except _Cancelled as e:
+        errors.append(e)
     except _OrchestrationError as e:
         errors.append(str(e))
     except Exception as e:
@@ -207,7 +216,10 @@ def _join_va(va_thread, va_error) -> None:
     if va_thread is not None:
         va_thread.join()
         if va_error:
-            raise _OrchestrationError(va_error[0])
+            first = va_error[0]
+            if isinstance(first, _Cancelled):
+                raise _Cancelled(str(first))
+            raise _OrchestrationError(first)
 
 
 def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
@@ -269,18 +281,22 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
         _start_board_ocr_if_enabled(session_id, wanted)
 
         timeout = getattr(config.va_pipeline, "completion_timeout_sec", 3600)
-        _check_cancel(session_id)
-        if not wait_for_va_completion(service, wanted, done, final_status, timeout):
-            _teardown_va(session_id, service)
-            raise _OrchestrationError("va timed out")
-        _check_cancel(session_id)
+        need_cleanup = True
+        try:
+            _check_cancel(session_id)
+            if not wait_for_va_completion(service, wanted, done, final_status, timeout):
+                raise _OrchestrationError("va timed out")
+            _check_cancel(session_id)
 
-        _stop_board_ocr_if_enabled(session_id, final_status)
+            if not _any_success(final_status, wanted):
+                raise _OrchestrationError("all va pipelines failed")
+            need_cleanup = False
+        finally:
+            if need_cleanup:
+                _teardown_va(session_id, service)
+                _stop_board_ocr_if_enabled(session_id, final_status)
 
-        if not _any_success(final_status, wanted):
-            raise _OrchestrationError("all va pipelines failed")
-
-    session_store.SessionStore.set_stage(session_id, "va", "done")
+        session_store.SessionStore.set_stage(session_id, "va", "done")
 
 
 def _teardown_va(session_id: str, service) -> None:
