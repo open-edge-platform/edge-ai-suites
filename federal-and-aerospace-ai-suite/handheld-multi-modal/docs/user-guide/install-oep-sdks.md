@@ -106,41 +106,6 @@ The video plays with detection boxes overlaid on pedestrians and vehicles. To ta
 
 Exit the container with `exit`.
 
-## Step 4 (Optional): Install the OpenVINO Python Runtime
-
-For direct use of `benchmark_app`, model conversion (`ovc`), or Python inference outside the DL Streamer container, install OpenVINO into a Python virtual environment:
-
-```bash
-python3 -m venv ~/ov-env
-source ~/ov-env/bin/activate
-pip install --upgrade pip
-pip install openvino
-```
-
-To also enable LLM and VLM inference workflows:
-
-```bash
-pip install openvino-genai
-```
-
-Verify all three inference devices are visible to OpenVINO:
-
-```bash
-python3 -c "import openvino as ov; print(ov.Core().available_devices)"
-```
-
-Expected: `['CPU', 'GPU', 'NPU']` (device suffixes may include `GPU.0`).
-
-## Step 5 (Optional): Configure Hugging Face Access
-
-Some SDK tutorials and GenAI benchmarks pull gated models (Gemma family, MiniCPM-V). Create a token with read scope at [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens), accept the model licenses on each model's Hugging Face page with the same account, then export the token:
-
-```bash
-export HF_TOKEN=<your-hugging-face-token>
-```
-
-Add the export to `~/.bashrc` to persist it across sessions.
-
 ## Next Steps
 
 Continue with the OEP Vision AI SDK tutorials to explore benchmarking, multi-stream processing, real-time detection, and profiling:
