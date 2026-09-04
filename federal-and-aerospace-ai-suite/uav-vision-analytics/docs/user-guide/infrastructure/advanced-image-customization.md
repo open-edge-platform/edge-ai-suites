@@ -183,7 +183,7 @@ Build output:
 - `usb-installation-files.tar.gz` in `infrastructure/build-artifacts/out`
 
 Once `usb-installation-files.tar.gz` is ready, continue with
-[Phase 2: Prepare Bootable USB](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/prepare-usb.html) in the global Get Started guide
+[Step 3: Prepare the bootable USB](../infrastructure-setup.md#step-3-prepare-the-bootable-usb) in the Infrastructure Setup guide
 for the remaining steps: configuring the USB device, writing the artifacts, and booting the target system.
 
 ## Package curation and template customization
