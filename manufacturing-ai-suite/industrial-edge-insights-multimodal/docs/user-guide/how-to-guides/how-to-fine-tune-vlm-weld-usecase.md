@@ -185,7 +185,7 @@ and inference:
 |---|---|---|
 | `system` | A fixed "expert weld quality inspector and metallurgical engineer" persona that references AWS D1.1 and ISO 5817 | Anchors the model's domain role and output-structuring behavior consistently across samples |
 | `user` | `{one of seven user instruction templates}`, a `{sensor telemetry block}`, and an `{image}` | The operator's question, phrased differently each time, with raw sensor readings inlined as text so the model attends to both modalities together |
-| `assistant` | A fixed-schema structured report as described in [Data Preparation Strategy](#data-preparation-strategy)), synthesized from classifier output and a small defect knowledge base | The learning target that the model is trained to produce |
+| `assistant` | A fixed-schema structured report as described in [Data Preparation Strategy](#data-preparation-strategy), synthesized from classifier output and a small defect knowledge base | The learning target that the model is trained to produce |
 
 There are seven user prompt templates instead of one fixed prompt because
 single fixed instruction risks the model overfitting to that exact wording,

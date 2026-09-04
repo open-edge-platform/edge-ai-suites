@@ -13,15 +13,6 @@ This example applies the generic flow to the weld-defect visual
 inspection dataset, including but not limited to, the input schema,
 prompt design, and the exact commands.
 
-This directory is **not integrated** with the rest of
-`industrial-edge-insights-multimodal; it does not wire into the
-`docker-compose*.yml` stacks, `configs/`, or the vLLM serving setup in this
-repository. It is a self-contained data preparation, fine-tuning, and inference
-workflow that you run independently (e.g. on a development box or training server)
-to produce a LoRA adapter. Once you have the adapter, you can serve it with the
-existing configuration in [`docker-compose-vllm.yml`](../../../docker-compose-vllm.yml),
-or with any OpenAI-compatible VLM server that supports LoRA adapters.
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -213,9 +204,9 @@ text content; your dataset-preparation step defines that content.
 
 Split the dataset into `train`, `validation`, and `test` as separate
 parquet files, or as named splits in a directory.
-train_qwen.py` consumes only `train` and `validation`.
+`train_qwen.py` consumes only `train` and `validation`.
 `infer_qwen.py` can consume any of the `train`, `validation`, and `test`
-split that you pass via `--split`.
+splits that you pass via `--split`.
 
 For a concrete example of building this format from raw domain data
 (images and tabular telemetry), including how many prompt variants to use
