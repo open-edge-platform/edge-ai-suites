@@ -4,16 +4,6 @@ This section is a concrete, **weld-defect-analysis** instance of the
 generic VLM fine-tuning flow using the Unsloth library described in
 [`VLM Fine-Tuning with Unsloth Library`](./how-to-fine-tune-vlm.md).
 
-Everything in this section, i.e. the input data schema, the
-prompt and response templates, and the actual commands run, is
-specific to the weld use case, built on top of the domain-agnostic
-scripts and concepts covered in `README.md`.
-
-Read `README.md` first for the generic pipeline, setup, and the
-Unsloth library and LoRA fine-tuning concepts referenced as follows;
-this section only covers how those generic pieces are instantiated for
-weld data.
-
 | Generic Stage | Weld-Specific Instance (This Section) |
 |---|---|
 | Bring-your-own dataset, prepared as a parquet file (or files) | `prepare_weld_dataset.py` — [Step 1](#step-1-input-data) & [Step 2](#step-2-prepare-the-dataset) |
@@ -50,8 +40,7 @@ open-ended chat. That objective directly drives every data-preparation
 decision that follows:
 
 - **Fixed response schema.** Every assistant response follows the same
-  section order: Weld Classification, Visual Observation, Sensor Analysis,
-  Model Confidence and Defect Probability, Severity, Root Cause, and
+  section order: Visual Observation, Model Confidence and Defect Probability, Severity, Root Cause, and
   Corrective Actions. Because the objective is a
   structured report, the model needs to learn the structure as reliably as
   it learns the weld domain. A consistent schema also makes downstream
@@ -170,8 +159,7 @@ Useful flags:
 4. Builds a sensor-telemetry text block and randomly picks one of seven user
    prompt templates, using --seed for reproducibility.
 5. Synthesizes a structured assistant response in the following order:
-   Weld Classification, Visual Observation, Sensor Analysis,
-   Model Confidence and Defect Probability, Severity, Root Cause, and
+   Visual Observation, Model Confidence and Defect Probability, Severity, Root Cause, and
    Corrective actions, drawing on a small built-in defect knowledge base with
    a generic fallback for unseen categories.
 6. Assembles a three-turn conversation for each row: system with text content,
@@ -249,7 +237,7 @@ expects, instead of re-deriving the dataset per consumer.
 
 `train_qwen.py` is the generic fine-tuning script that uses the Unsloth
 library and LoRA fine-tuning method described in
-[`README.md` — Step: Fine-Tune the Model](./how-to-fine-tune-vlm.md#step-fine-tune-the-model).
+[Step: Fine-Tune the Model](./how-to-fine-tune-vlm.md#step-fine-tune-the-model).
 For the weld dataset produced by Step 2 above, invoke `train_qwen.py`:
 
 ```bash
@@ -265,11 +253,11 @@ python train_qwen.py \
   `prepare_weld_dataset.py` in [Step 2](#step-2-prepare-the-dataset).
   `train_qwen.py` is not specific to weld data; it
   only needs the generic `image` and `conversation_json` column shape
-  described in `README.md`.
+  described in [how-to-fine-tune-vlm.md](./how-to-fine-tune-vlm.md).
 
 - All other flags (`--lora-r`, `--max-seq-length`,
   `--per-device-train-batch-size`, etc.) keep their generic defaults.
-  See `README.md` for the selection rationale for each default. This
+  See [how-to-fine-tune-vlm.md](./how-to-fine-tune-vlm.md) for the selection rationale for each default. This
   weld instance does not require overriding them: 2048 tokens fits the
   system turn, the sensor-block user turn, and the structured assistant
   report described in [Step 2](#step-2-prepare-the-dataset), and a
@@ -282,7 +270,7 @@ python train_qwen.py \
 ## Step 4: Run Inference (Weld Instance)
 
 `infer_qwen.py` is the generic inference script described in
-[`README.md` — Step: Run Inference](./how-to-fine-tune-vlm.md#step-run-inference).
+[Step: Run Inference](./how-to-fine-tune-vlm.md#step-run-inference).
 Configure with the weld adapter and dataset:
 
 ```bash
@@ -301,8 +289,8 @@ python infer_qwen.py \
 ```
 
 The output streamed to stdout is the structured weld-quality report
-format in the following order: Weld Classification, Visual Observation,
-Sensor Analysis Model Confidence and Defect Probability, Severity, Root Cause,
+format in the following order: Visual Observation,
+Model Confidence and Defect Probability, Severity, Root Cause,
 and Corrective Actions, as described in [Data Preparation Strategy](#data-preparation-strategy).
 The report format is the assistant-turn schema that the model was
 fine-tuned to reproduce in Step 3.
@@ -360,7 +348,7 @@ You can source the raw images and sensor CSV files referenced in [Step 1](#step-
 from [IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset)
 (Apache-2.0) — see that dataset's card for its own license terms. The
 generic toolkit license and third-party component licenses are listed in
-[`README.md` — License](./how-to-fine-tune-vlm.md#license).
+[License](./how-to-fine-tune-vlm.md#license).
 
 For fine-tuning and inference on the dataset produced here, see
-[`README.md`](./how-to-fine-tune-vlm.md).
+[how-to-fine-tune-vlm.md](./how-to-fine-tune-vlm.md).
