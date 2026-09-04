@@ -93,6 +93,7 @@ module.exports = {
   readProxyConfig,
   proxyEnv,
   describe,
+  validate,
   apply,
   SECRET_PLACEHOLDER,
   invalidate: () => cache.clear(),
@@ -163,6 +164,103 @@ function normaliseForUi(field, raw) {
   return String(raw);
 }
 
+/** Type/range check every change and group it by file. */
+function prepare(changes) {
+  if (!Array.isArray(changes)) throw new Error('No changes supplied.');
+  if (changes.length > 100) throw new Error('Too many changes in one request.');
+
+  const byFile = new Map();
+  for (const change of changes) {
+    const field = schema.get(change?.file, change?.path);
+    if (!field) throw new Error(`Setting is not editable: ${String(change?.path).slice(0, 80)}`);
+    // An untouched secret comes back as a placeholder; leave the stored value
+    // alone. It still counts as "set" once merged, because the merge starts
+    // from what is on disk.
+    if (field.type === 'secret' && change.value === SECRET_PLACEHOLDER) continue;
+
+    const value = schema.coerce(field, change.value);
+    if (!byFile.has(field.file)) byFile.set(field.file, []);
+    byFile.get(field.file).push({ path: field.path, value });
+  }
+  return byFile;
+}
+
+function setAt(target, dottedPath, value) {
+  const keys = dottedPath.split('.');
+  let node = target;
+  for (const key of keys.slice(0, -1)) {
+    if (typeof node[key] !== 'object' || node[key] === null) node[key] = {};
+    node = node[key];
+  }
+  node[keys[keys.length - 1]] = value;
+}
+
+/**
+ * asr_handle.py::_ensure_diarization_model treats the model as cached when
+ * config.yaml is present in the directory ensure_model.get_diarization_model_path()
+ * computes.
+ */
+function diarizationModelReady(cfg) {
+  const diarization = cfg?.models?.diarization;
+  const base = diarization?.models_base_path;
+  const provider = diarization?.provider;
+  const name = diarization?.name;
+  if (!base || !provider || !name) return false;
+  const dir = path.resolve(
+    paths.home(),
+    String(base),
+    String(provider),
+    String(name).split('/').join('_')
+  );
+  try {
+    return fs.existsSync(path.join(dir, 'config.yaml'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Cross-field problems `changes` would leave behind. Rules read the whole
+ * resulting document, not just the edits.
+ *
+ * A problem is `blocking` only when the edit introduces it or edits a field it
+ * names. config.yaml is also hand-editable, and the PowerShell setup script
+ * writes it too, so the file can already be in a state these rules dislike;
+ * refusing every save then would strand the user, unable to change an unrelated
+ * setting until they fixed something they never touched. Those are still
+ * returned, for the screen to show as a warning.
+ *
+ * @returns {Array<{file: string, path: string, rule: string, message: string, blocking: boolean}>}
+ */
+function problemsFor(byFile) {
+  const current = readConfig();
+  // structuredClone, because readConfig() hands back the cached object.
+  const next = structuredClone(current);
+  const entries = byFile.get(schema.CONFIG) ?? [];
+  for (const { path: dotted, value } of entries) setAt(next, dotted, value);
+
+  const check = (cfg) => schema.validate(cfg, { diarizationModelReady: diarizationModelReady(cfg) });
+  const after = check(next);
+  if (!after.length) return [];
+
+  const before = new Set(check(current).map((problem) => problem.rule));
+  const edited = new Set(entries.map((entry) => entry.path));
+  // Whole-rule, not per-path: editing the provider must also flag the model
+  // name it now contradicts, or the message would point at a field the screen
+  // is not highlighting.
+  const editedRules = new Set(after.filter((problem) => edited.has(problem.path)).map((problem) => problem.rule));
+
+  return after.map((problem) => ({
+    ...problem,
+    blocking: !before.has(problem.rule) || editedRules.has(problem.rule),
+  }));
+}
+
+/** Dry run: what saving `changes` would be rejected for. Writes nothing. */
+function validate(changes) {
+  return problemsFor(prepare(changes ?? []));
+}
+
 /**
  * Validate and persist a batch of changes.
  * @param {Array<{path: string, file: string, value: unknown}>} changes
@@ -170,18 +268,18 @@ function normaliseForUi(field, raw) {
  */
 function apply(changes) {
   if (!Array.isArray(changes) || changes.length === 0) throw new Error('No changes supplied.');
-  if (changes.length > 100) throw new Error('Too many changes in one request.');
 
-  const byFile = new Map();
-  for (const change of changes) {
-    const field = schema.get(change?.file, change?.path);
-    if (!field) throw new Error(`Setting is not editable: ${String(change?.path).slice(0, 80)}`);
-    // An untouched secret comes back as a placeholder; leave the stored value alone.
-    if (field.type === 'secret' && change.value === SECRET_PLACEHOLDER) continue;
+  const byFile = prepare(changes);
 
-    const value = schema.coerce(field, change.value);
-    if (!byFile.has(field.file)) byFile.set(field.file, []);
-    byFile.get(field.file).push({ path: field.path, value });
+  // Checked here and not only in the renderer: this is the security boundary,
+  // and the screen is not the only caller.
+  const problems = problemsFor(byFile).filter((problem) => problem.blocking);
+  if (problems.length) {
+    // One message per rule; the same message is repeated for each field it flags.
+    const unique = [...new Set(problems.map((problem) => problem.message))];
+    const error = new Error(unique.join(' '));
+    error.problems = problems;
+    throw error;
   }
 
   const written = [];

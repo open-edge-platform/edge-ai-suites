@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import '../../assets/css/Config.css';
 import '../../assets/css/GetStarted.css';
 import type { ConfigChange, ConfigField, ConfigValue } from '../../types/config';
-import { useConfig, fieldKey as keyOf } from '../../services/configManager';
+import { useConfig, useConfigProblems, NO_CHANGES, fieldKey as keyOf } from '../../services/configManager';
 import { useServices } from '../../services/serviceManager';
 import { useSetup } from '../../services/setupManager';
 import { useReadiness, type ReadinessItem } from '../../services/useReadiness';
@@ -25,15 +25,24 @@ interface GetStartedScreenProps {
 const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => {
   const { t } = useTranslation();
   const { steps, check } = useSetup();
-  const { services, busyId: serviceBusy, start, error: serviceError } = useServices();
+  const { services, busyId: serviceBusy, start, restart, error: serviceError } = useServices();
   const { description, saving, save } = useConfig();
-  const { items, ready } = useReadiness(steps, services, description);
+  // Readiness reflects the saved file, so it validates with no pending edits;
+  // the draft-based check below is what gates the Save button.
+  const { problems: savedProblems } = useConfigProblems(NO_CHANGES, description);
+  const { items, ready } = useReadiness(steps, services, description, savedProblems);
 
   const [draft, setDraft] = useState<Draft>({});
+  // Set on a successful save, so the screen can offer the restart that makes the
+  // new values take effect. Cleared once that restart is under way.
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   // A setup run started on the Setup screen is global state, so this screen has
   // to respect it even though it never starts one itself.
   const setupRunning = steps.some((step) => step.status === 'running');
   const busy = !!serviceBusy || saving || setupRunning;
+
+  const backend = services.find((service) => service.id === 'backend');
+  const backendRunning = !!backend && backend.status !== 'stopped' && backend.status !== 'failed';
 
   const commonFields = useMemo(
     () => description?.fields.filter((field) => field.wizard) ?? [],
@@ -50,12 +59,24 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => 
 
   const dirty = Object.keys(draft);
 
+  const changes: ConfigChange[] = useMemo(
+    () =>
+      commonFields
+        .filter((field) => draft[keyOf(field)] !== undefined)
+        .map((field) => ({ file: field.file, path: field.path, value: draft[keyOf(field)] })),
+    [commonFields, draft]
+  );
+
+  // The same rules the Configuration screen enforces: this screen edits the ASR
+  // provider, model, diarization flag and token, which is where they all bite.
+  const { blocking, byField, messages } = useConfigProblems(changes, description);
+
   const handleSave = async () => {
-    if (!description) return;
-    const changes: ConfigChange[] = commonFields
-      .filter((field) => draft[keyOf(field)] !== undefined)
-      .map((field) => ({ file: field.file, path: field.path, value: draft[keyOf(field)] }));
-    if (changes.length && (await save(changes))) setDraft({});
+    if (!changes.length || blocking.length) return;
+    if (await save(changes)) {
+      setDraft({});
+      setSavedAt(Date.now());
+    }
   };
 
   // This screen never runs setup work itself. So each row points at the place
@@ -80,7 +101,6 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => 
     }
 
     if (item.id === 'services') {
-      const backend = services.find((service) => service.id === 'backend');
       return (
         <button
           className="gs-btn gs-btn-primary"
@@ -144,13 +164,59 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => 
               <button className="gs-btn" disabled={busy} onClick={() => onOpenScreen('config')}>
                 {t('getStarted.allSettings', 'All settings')}
               </button>
-              <button className="gs-btn gs-btn-primary" disabled={!dirty.length || busy} onClick={handleSave}>
+              <button
+                className="gs-btn gs-btn-primary"
+                disabled={!dirty.length || busy || blocking.length > 0}
+                title={blocking.length ? t('config.blockedTitle', 'Fix the problems below first.') : undefined}
+                onClick={handleSave}
+              >
                 {saving
                   ? t('getStarted.saving', 'Saving…')
                   : t('getStarted.save', 'Save {{count}} change', { count: dirty.length })}
               </button>
             </div>
           </div>
+
+          {messages.map((problem) => (
+            <div key={problem.rule} className={problem.blocking ? 'config-error' : 'config-banner'}>
+              <span>{problem.message}</span>
+            </div>
+          ))}
+
+          {/* The backend reads config.yaml once, at startup, so saving is only
+              half the job while it is running. */}
+          {savedAt && !dirty.length && (
+            <div className="config-banner">
+              <span>
+                {backendRunning
+                  ? t('config.restartRequired', 'Saved. Restart the backend to apply changes.')
+                  : t('config.savedIdle', 'Saved. It takes effect the next time the backend starts.')}
+              </span>
+              {backendRunning && (
+                <button
+                  className="config-btn config-btn-primary"
+                  disabled={busy || backend?.external}
+                  onClick={() => {
+                    // Restarting takes a while; Services is where the logs are.
+                    void restart('backend');
+                    setSavedAt(null);
+                    onOpenScreen('services');
+                  }}
+                >
+                  {t('config.restartBackend', 'Restart backend')}
+                </button>
+              )}
+            </div>
+          )}
+
+          {backend?.external && savedAt && (
+            <div className="config-note">
+              {t(
+                'config.externalBackend',
+                'The backend was started outside this app, so it cannot be restarted from here.'
+              )}
+            </div>
+          )}
 
           {groups.map(([group, fields]) => (
             <div className="gs-group" key={group}>
@@ -161,6 +227,7 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => 
                     key={keyOf(field)}
                     field={field}
                     draft={draft}
+                    problem={byField.get(keyOf(field))}
                     onChange={(value) => setDraft((previous) => ({ ...previous, [keyOf(field)]: value }))}
                   />
                 ))}
