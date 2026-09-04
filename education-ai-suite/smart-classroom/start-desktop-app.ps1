@@ -30,7 +30,7 @@ $ErrorActionPreference = 'Stop'
 # ui/package.json engines: "^20.19.0 || >=22.12.0"
 $NodePackageId = 'OpenJS.NodeJS.LTS'
 
-$IsWindowsOS = $IsWindows -or ($PSVersionTable.PSVersion.Major -lt 6) -or ($env:OS -eq 'Windows_NT')
+$IsWindowsOS = if ($PSVersionTable.PSVersion.Major -lt 6) { $true } else { [bool]$IsWindows }
 if (-not $IsWindowsOS) {
     Write-Host 'ERROR: This script is designed for Windows only.' -ForegroundColor Red
     exit 1

@@ -29,6 +29,11 @@
   --control-focus-color: #007bff;
   --control-focus-ring: 0 0 0 2px rgba(0, 123, 255, 0.25);
   --control-placeholder-color: #999;
+  /* Drop-down arrow for a control that opens a list. Drawn rather than left to
+     the platform, so a <select> and a text field with a suggestion list can
+     carry the same one — the native select arrow cannot be reused on an
+     <input>. */
+  --control-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236A6D75' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
   --z-index-main-content: 1;
   --z-index-header: 50;

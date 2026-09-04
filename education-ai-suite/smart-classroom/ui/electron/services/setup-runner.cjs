@@ -465,7 +465,7 @@ const STEPS = [
     label: 'Node.js',
     section: 'software',
     async check() {
-      return { status: STATUS.OK, detail: `${process.versions.node} (bundled with this app; nothing to install)` };
+      return { status: STATUS.OK, detail: `${process.versions.node} (bundled with this app)` };
     },
   },
   {
