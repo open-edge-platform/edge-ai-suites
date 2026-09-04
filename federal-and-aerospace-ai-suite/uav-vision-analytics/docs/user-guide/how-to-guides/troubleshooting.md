@@ -135,7 +135,7 @@ ffmpeg -rtsp_transport tcp \
 
   ```bash
   docker exec dlstreamer-pipeline-server ls \
-    /home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/
+    /home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/
   ```
 
 - Confirm `HOST_IP` is set correctly in `.env`.

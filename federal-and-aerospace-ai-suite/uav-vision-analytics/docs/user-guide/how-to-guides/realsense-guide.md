@@ -89,7 +89,7 @@ INSTANCE_ID=$(curl -s -X POST \
     },
     "parameters": {
       "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
         "device": "<CPU|GPU|NPU>"
       }
     }
@@ -117,7 +117,7 @@ INSTANCE_ID=$(curl -s -X POST \
     },
     "parameters": {
       "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
         "device": "CPU"
       }
     }

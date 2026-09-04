@@ -70,7 +70,7 @@ nano .env   # set HOST_IP=<your-machine-IP>
 
 ### 2. Prepare the model
 
-Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
+Download and export the YOLO11s model to OpenVINO FP16 IR:
 
 ```bash
 make model
@@ -141,7 +141,7 @@ INSTANCE_ID=$(curl -s -X POST \
     },
     "parameters": {
       "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
         "device": "CPU"
       }
     }
@@ -174,7 +174,7 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ```
 
-The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
+The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, bicycle, and other classes) and a live telemetry overlay (GPS, altitude, speed, heading).
 
 ### 6. Stop all services
 

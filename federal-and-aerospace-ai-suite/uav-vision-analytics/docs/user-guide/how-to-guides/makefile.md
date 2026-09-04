@@ -15,7 +15,7 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 | Target | Description |
 | --- | --- |
 | `make init` | Create `.env` from template and auto-detect Intel GPU and NPU device paths |
-| `make model` | Download YOLOv8n-VisDrone checkpoint and export to OpenVINO FP16 |
+| `make model` | Download YOLO11s checkpoint and export to OpenVINO FP16 |
 | `make pymav-up` | Start the standalone pymavlink stack (requires model — errors if missing) |
 | `make pymav-down` | Stop and remove the pymavlink stack (includes volumes) |
 | `make uavsdk-up` | Start the uav-mission-compute-sdk stack |
@@ -51,11 +51,11 @@ this avoids the manual `.env` edit.
 ### `make model`
 
 Creates a Python virtual environment under `resources/venv/`, installs
-dependencies from `resources/requirements.txt`, downloads the `best.pt`
-checkpoint from HuggingFace, and exports it to OpenVINO FP16 IR format.
+dependencies from `resources/requirements.txt`, downloads the `yolo11s.pt`
+checkpoint from Ultralytics, and exports it to OpenVINO FP16 IR format.
 
 > **Note:** `make pymav-up` **checks for the model** before starting containers.
-> If `resources/models/yolov8n-visdrone/best_openvino_model/best.xml` is
+> If `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml` is
 > missing it prints an error and exits — run `make model` first.
 
 ```text
@@ -63,9 +63,9 @@ resources/
 ├── requirements.txt
 ├── venv/                          ← created by this target
 └── models/
-    └── yolov8n-visdrone/
-        ├── best.pt                ← downloaded checkpoint
-        └── best_openvino_model/   ← exported IR (best.xml + best.bin)
+    └── yolo11s/
+        ├── yolo11s.pt                ← downloaded checkpoint
+        └── yolo11s_openvino_model/      ← exported IR (yolo11s.xml + yolo11s.bin)
 ```
 
 > **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without
