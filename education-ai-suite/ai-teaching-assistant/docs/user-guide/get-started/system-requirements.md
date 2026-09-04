@@ -11,6 +11,7 @@ PowerShell 5.1+ (included with Windows 10/11).
 ## Hardware
 
 ### Processor
+
 - **Recommended** — Intel Core i7 or i9 (10th generation or newer)
   - 8-16 cores ideally
   - Examples: i7-10700, i9-12900, Core Ultra (Meteor Lake)
@@ -20,6 +21,7 @@ PowerShell 5.1+ (included with Windows 10/11).
   - Not required for baseline functionality
 
 ### Memory
+
 - **Minimum** — 16 GB RAM
 - **Recommended** — 32 GB RAM
 - **Optimal** — 64 GB RAM (headroom for models plus browser and OS)
@@ -29,6 +31,7 @@ The default LLM is `Qwen/Qwen3-4B-Instruct-2507` (int8) configured in
 Qwen instruct model in that config for smoother performance.
 
 ### Storage
+
 - **Minimum** — 50 GB free SSD space
   - ~30-40 GB for LLM + embedding + TTS models
   - ~5-10 GB for Chroma vector database (scales with documents)
@@ -38,6 +41,7 @@ Qwen instruct model in that config for smoother performance.
 HDD is **not recommended** — model loading and inference will be slow.
 
 ### Microphone
+
 - **Required for voice input** — The assistant captures your speech through the browser, so a working microphone is needed for mic-based interaction.
 - **Optional for text-only usage** — If you use typed input and do not use voice features, a microphone is not required.
 If multiple microphones are available, choose the input device from the UI microphone selector.
@@ -45,15 +49,18 @@ If multiple microphones are available, choose the input device from the UI micro
 ## Software Dependencies
 
 ### Python
-- **Python 3.11** or **3.12** 
+
+- **Python 3.11** or **3.12**
 - Download from [python.org](https://www.python.org/downloads/)
 - During installation, **check "Add Python to PATH"**
 
 ### Git for Windows
+
 - [Download from git-scm.com](https://git-scm.com/download/win)
 - Use default installation settings
 
 ### Visual C++ Build Tools
+
 - Required for building Python packages (e.g., `cryptography`)
 - [Download from Microsoft](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 - Or install Visual Studio Community with C++ workload
@@ -74,12 +81,14 @@ If multiple microphones are available, choose the input device from the UI micro
 ## Browser Requirements
 
 Any modern browser:
+
 - **Microsoft Edge** ✓ (recommended)
 - **Google Chrome** ✓
 - **Mozilla Firefox** ✓
 - **Safari** ✓
 
 Must have:
+
 - JavaScript enabled
 - WebAudio API support (for microphone capture)
 - Cookies enabled
@@ -90,18 +99,21 @@ Must have:
 ## Performance Tips
 
 ### For Faster Inference
+
 1. **Use a smaller Qwen instruct model** than the default `Qwen3-4B-Instruct`
 2. **Enable GPU acceleration** if you have an Intel GPU (Iris Xe or newer)
 3. **Increase system RAM** to avoid disk swapping
 4. **Use NVMe SSD** for model storage
 
 ### For Better Answers
+
 1. **Use a larger Qwen instruct model** than the default `Qwen3-4B-Instruct`
 2. **Upload more course materials** to the knowledge base
 3. **Enable reranking** in configuration (improves answer relevance)
 4. **Adjust top-K** — Retrieve more chunks for complex topics
 
 ### For Multi-User Deployment
+
 - Ensure machine has 64+ GB RAM
 - Use a modern i9 CPU
 - Consider running only `rag-service` on one machine and `audio-analyzer` + `text-to-speech` on another (advanced)
@@ -129,12 +141,11 @@ All commands should succeed.
 ## Troubleshooting Prerequisites
 
 | Issue | Solution |
-|-------|----------|
+| --- | --- |
 | "Python not found" | Add Python to PATH: Go to Settings > Environment Variables and add Python install directory |
-| "Port already in use" | Find and stop process by PID: `netstat -ano | findstr :7860` then `taskkill /PID <pid> /F` |
+| "Port already in use" | Find and stop process by PID: `netstat -ano \| findstr :7860` then `taskkill /PID <pid> /F` |
 | "Insufficient disk space" | Use an external SSD or upgrade storage |
 | "Out of memory" | Close other applications or upgrade RAM |
 | "Slow inference" | Disable background tasks (Windows Update, antivirus scans) during use |
 
 See [Troubleshooting](../troubleshooting.md) for more issues.
-

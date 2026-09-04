@@ -1,6 +1,6 @@
 # HOTA Script Reference
 
-## [mqtt_camera_capture_processor.py](../../../../../deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/mqtt_camera_capture_processor.py)
+## [mqtt_camera_capture_processor.py](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/mqtt_camera_capture_processor.py)
 
 **Location:** `deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/`
 
@@ -38,7 +38,7 @@ OUTPUT_DIRECTORY = "dataset"     # Where reconstructed JSON files are written
 
 ---
 
-## [traffic_generator.py](../../../../../deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/traffic_generator.py)
+## [traffic_generator.py](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/traffic_generator.py)
 
 **Location:** `deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/`
 
@@ -66,7 +66,7 @@ OUTPUT_DIRECTORY = "dataset"     # Where reconstructed JSON files are written
 
 ---
 
-## [sei_parser.py](../../../../../deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/gvapython/sei_parser.py)
+## [sei_parser.py](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/gvapython/sei_parser.py)
 
 **Location:** `deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/gvapython/`
 

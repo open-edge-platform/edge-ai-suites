@@ -114,7 +114,7 @@ The following VLM models are validated:
 >
 > **Note:** If you want to use newer Hugging Face models, you may need a newer OVMS/OpenVINO stack for conversion, which means updating `OVMS_RELEASE_TAG`.
 >
-> **Note:** Runtime compatibility also matters. Live Video Captioning runs models with DL Streamer, so DL Streamer/OpenVINO must also support the converted model at runtime. If you test newer stacks, you can try weekly images from [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating [compose.yaml](../../../compose.yaml) or Helm chart [values.yaml](../../../charts/subcharts/dlstreamer-pipeline-server/values.yaml). Weekly images may include stability issues.
+> **Note:** Runtime compatibility also matters. Live Video Captioning runs models with DL Streamer, so DL Streamer/OpenVINO must also support the converted model at runtime. If you test newer stacks, you can try weekly images from [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating [compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/live-video-analysis/live-video-captioning/compose.yaml) or Helm chart [values.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/live-video-analysis/live-video-captioning/charts/subcharts/dlstreamer-pipeline-server/values.yaml). Weekly images may include stability issues.
 As of the time of writing, the latest stable DL Streamer release is `2026.1.0`, built on top of `OpenVINO v2026.1`.
 
 ## Optional: Download an Object-Detection Model
