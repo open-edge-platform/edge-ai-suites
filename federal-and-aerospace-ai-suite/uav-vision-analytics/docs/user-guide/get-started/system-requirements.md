@@ -22,7 +22,7 @@ The developer system is used to build installation artifacts and prepare the boo
 
 #### Docker Setup
 
-For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](../how-to/set-up-windows-wsl.md).
+For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/release-2026.2.0/docs/user-guide/how-to/set-up-windows-wsl.md).
 
 Docker Engine is required because the build workflow uses Docker images and containers.
 
