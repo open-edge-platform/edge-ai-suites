@@ -61,59 +61,59 @@ class AsrHandler:
         Handles the full model-file lifecycle for OpenVINO provider so that
         AsrHandler is self-contained — no external ensure_model step required.
         """
-        import os
         from pathlib import Path
         from utils.ensure_model import get_asr_model_path, _download_openvino_model, _ir_exists
-        
+
         output_dir = get_asr_model_path()
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        
+
         if _ir_exists(output_dir):
             logger.info(f"OpenVINO ASR model already cached at {output_dir}")
             return
-        
+
         logger.info(f"Downloading and converting ASR model to OpenVINO IR...")
-        success, _ = _download_openvino_model(
+        _download_openvino_model(
             f"openai/{config.models.asr.name}",
             output_dir,
             weight_format=None
         )
-        if not success:
-            raise RuntimeError(f"Failed to download/convert ASR model to OpenVINO IR")
         logger.info(f"OpenVINO ASR model ready at {output_dir}")
-    
+
     def _ensure_diarization_model(self) -> None:
-        """Download diarization model and dependencies if enabled."""
+        """Download the diarization model and its sub-models if enabled. Raises on failure rather than warning"""
         if not config.models.asr.diarization:
             return
-        
+
+        from utils.pipeline_modes import resolve_diarization_backend
+        if resolve_diarization_backend() != "pyannote":
+            # CAM++ pulls its own ModelScope snapshots when the diarizer is
+            # built; there is no pyannote model to fetch here.
+            return
+
         from pathlib import Path
         from utils.ensure_model import (
             get_diarization_model_path,
             _download_hf_model,
-            _cache_diarization_dependencies_locally
+            _cache_diarization_dependencies_locally,
+            diarization_cache_complete,
         )
-        
+
         output_dir = get_diarization_model_path()
         Path(output_dir).mkdir(parents=True, exist_ok=True)
-        
-        config_path = Path(output_dir) / "config.yaml"
-        if config_path.exists():
+
+        if diarization_cache_complete(output_dir):
             logger.info(f"Diarization model already cached at {output_dir}")
             return
-        
+
         logger.info(f"Downloading diarization model...")
-        success, _ = _download_hf_model(
+        _download_hf_model(
             config.models.diarization.name,
             output_dir,
             hf_token=config.models.asr.hf_token,
             required_files=["config.yaml"]
         )
-        if success:
-            _cache_diarization_dependencies_locally(output_dir, hf_token=config.models.asr.hf_token)
-            logger.info(f"Diarization model ready at {output_dir}")
-        else:
-            logger.warning(f"Failed to download diarization model")
+        _cache_diarization_dependencies_locally(output_dir, hf_token=config.models.asr.hf_token)
+        logger.info(f"Diarization model ready at {output_dir}")
 
     def _build_processor(self):
         """Instantiate the ASR processor based on configured provider."""
