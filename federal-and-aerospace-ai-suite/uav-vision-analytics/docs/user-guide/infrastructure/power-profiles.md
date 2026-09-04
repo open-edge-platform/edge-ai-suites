@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Intel® Core™ Ultra edge nodes can be tuned to trade sustained performance
 against heat, fan noise, and energy use. The Infrastructure software ships a
-set of local power-tuning tools under `tools/power-tuning/` that let you:
+set of local power-tuning tools that let you:
 
 - Apply a ready-made **power profile** (`LowPower` … `MaxPerformance`).
 - Set an explicit **package (PkgWatt)** and optional **platform (SysWatt)** cap.

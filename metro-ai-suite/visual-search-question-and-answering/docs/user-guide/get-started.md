@@ -277,3 +277,13 @@ docker logs <container_id>
 
 -   Sometimes downloading the demo dataset can be slow. Try manually downloading it from [the source website](https://data.vision.ee.ethz.ch/csergi/share/davis/DAVIS-2017-test-dev-480p.zip), and put the zip file under your host `$HOME/data` folder.
 
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements
+./get-started/deploy-with-helm
+
+:::
+hide_directive-->
+
