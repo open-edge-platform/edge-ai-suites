@@ -27,7 +27,7 @@
 - **Documentation**: Comprehensive documentation on how to set up, configure, and run tests for the use case.
 
 
-## [Edge-Node Infrastructure Blueprint](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/releases)
+## [Edge-Node Infrastructure software](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/releases)
 
 
 <!--hide_directive

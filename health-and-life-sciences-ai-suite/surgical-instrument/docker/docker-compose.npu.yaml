@@ -1,0 +1,4 @@
+services:
+  endoscopy-poc:
+    devices:
+      - /dev/accel:/dev/accel
