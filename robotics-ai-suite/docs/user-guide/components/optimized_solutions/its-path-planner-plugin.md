@@ -58,52 +58,52 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
 Install dependencies required to run simulations:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install ros-jazzy-turtlebot3-gazebo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt install ros-humble-turtlebot3-gazebo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 Install the ITS Path Planner Deb package from the
 Intel® Autonomous Mobile Robot APT repository
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install ros-jazzy-its-planner
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt install ros-humble-its-planner
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 Run the following script to set environment variables:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -111,9 +111,9 @@ export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -121,51 +121,51 @@ export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 To launch the default ITS planner which is based on differential drive robot, run:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 ros2 launch its_planner its_differential_launch.py use_sim_time:=true
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 ros2 launch its_planner its_differential_launch.py use_sim_time:=true
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ITS Planner also supports Ackermann steering; to launch the Ackermann
 ITS planner run:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 ros2 launch its_planner its_ackermann_launch.py use_sim_time:=true
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 ros2 launch its_planner its_ackermann_launch.py use_sim_time:=true
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 > **Note**:
 >
@@ -206,9 +206,9 @@ ros2 launch its_planner its_ackermann_launch.py use_sim_time:=true
 
 ## ITS Path Planner Plugin Customization
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 The ROS 2 navigation bring-up application is started using
 the TurtleBot 3 Gazebo simulation
@@ -239,9 +239,9 @@ To use the ITS path planner plugin, the following parameters are added in
 >       n: 2
 > ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 The ROS 2 navigation bring-up application is started using
 the TurtleBot 3 Gazebo simulation
@@ -271,8 +271,8 @@ To use the ITS path planner plugin, the following parameters are added in
 >       n: 2
 > ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## ITS Path Planner Plugin Parameters
 
@@ -340,41 +340,41 @@ The minimum number of samples that is required in an area defined by `w` and `h`
 You can modify plugin parameters by editing the `planner_server` section
 in the configuration file below for the `default ITS planner`:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 /opt/ros/jazzy/share/its_planner/nav2_params_jazzy.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 /opt/ros/humble/share/its_planner/nav2_params_humble.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ### Ackermann ITS Planner
 
 You can modify plugin parameters by editing the `planner_server` section
 in the configuration file below for the `Ackermann ITS planner`:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 /opt/ros/jazzy/share/its_planner/nav2_params_dubins_jazzy.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 /opt/ros/humble/share/its_planner/nav2_params_dubins_humble.yaml

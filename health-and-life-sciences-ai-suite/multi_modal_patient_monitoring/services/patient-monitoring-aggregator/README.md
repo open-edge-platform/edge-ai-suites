@@ -1,9 +1,9 @@
 
-# Aggregator Service (Python)
+# Patient Monitoring Aggregator (Python)
 
 This service aggregates vitals and pose data from backend workloads and exposes
 them to the web UI via Server‑Sent Events (SSE). It also proxies system
-metrics from the metrics‑service.
+metrics from the metrics‑collector.
 
 Main responsibilities:
 
@@ -13,7 +13,7 @@ Main responsibilities:
 - Broadcast all events to UI clients over a single SSE endpoint.
 - Expose start/stop wrapper APIs that control backend streaming
   (currently dds‑bridge) so the UI only talks to this service.
-- Proxy platform and utilization metrics from the metrics‑service.
+- Proxy platform and utilization metrics from the metrics‑collector.
 
 ---
 
@@ -24,13 +24,13 @@ Main responsibilities:
 From this directory:
 
 ```bash
-docker build -t hl-aggregator-service .
+docker build -t hl-patient-monitoring-aggregator .
 
 docker run --rm \
   --network host \
   -e WORKLOAD_TYPE=mdpnp \
   -e METRICS_SERVICE_URL=http://localhost:9000 \
-  hl-aggregator-service
+  hl-patient-monitoring-aggregator
 ```
 
 This starts:
@@ -41,10 +41,10 @@ This starts:
 ### Option 2: docker-compose (suite integration)
 
 From the top‑level suite directory, use the provided compose file which wires
-aggregator‑service to dds‑bridge, mdpnp, ai‑ecg, and metrics‑service:
+patient-monitoring-aggregator to dds‑bridge, mdpnp, ai‑ecg, and metrics‑collector:
 
 ```bash
-docker compose up aggregator-service
+docker compose up patient-monitoring-aggregator
 ```
 
 ---
@@ -56,7 +56,7 @@ Environment variables:
 - `WORKLOAD_TYPE` (default: `mdpnp`)
   - Label used in outgoing events for the MDPnP vital workload.
 - `METRICS_SERVICE_URL` (default: `http://localhost:9000`)
-  - Base URL of the metrics‑service that aggregator proxies to.
+  - Base URL of the metrics‑collector that aggregator proxies to.
 - `DDS_BRIDGE_CONTROL_URL` (default: `http://localhost:8082`)
   - Base URL of the DDS‑Bridge control server that exposes `/start`
     and `/stop` to toggle forwarding of DDS vitals into this service.
@@ -292,7 +292,7 @@ Notes:
 
 ### `GET /metrics` — metrics summary (proxy)
 
-Proxies to `GET /metrics` on the metrics‑service and returns time‑series
+Proxies to `GET /metrics` on the metrics‑collector and returns time‑series
 utilization data.
 
 - Method: `GET`
@@ -348,7 +348,7 @@ Notes:
 }
 ```
 
-If no memory data is available from metrics‑service, this endpoint returns
+If no memory data is available from metrics‑collector, this endpoint returns
 HTTP 404.
 
 ---

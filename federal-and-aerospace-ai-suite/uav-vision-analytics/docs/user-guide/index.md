@@ -5,6 +5,9 @@
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-analytics">
      GitHub
   </a>
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip">
+    Release
+  </a>
 </div>
 hide_directive-->
 
@@ -54,7 +57,7 @@ To learn more about the application and how to use it, see
 
 Follow the steps below to set up and run the UAV Blueprint:
 
-1. [Infrastructure Setup](./get-started/infrastructure-setup.md) — Build the OS image, flash it to a bootable USB, and validate the provisioned platform.
+1. [Infrastructure Setup](./infrastructure-setup.md) — Build the OS image, flash it to a bootable USB, and validate the provisioned platform.
 2. [Install OEP SDKs](./get-started/install-oep-sdks.md) — Verify hardware accelerators and install the UAV Mission Compute SDK on the provisioned target.
 3. [Install UAV Vision Analytics Application](install-uav-app.md) — Choose and follow the deployment mode that matches your setup (Standalone or UAV Mission Compute SDK).
 4. [How to use UAV Vision Analytics Application](./how-to-guides.md) — Learn how to configure models, cameras, QGroundControl, and more.
@@ -93,12 +96,11 @@ immediately.
 :::{toctree}
 :hidden:
 
-Infrastructure Setup <./get-started/infrastructure-setup.md>
+Infrastructure Setup <./infrastructure-setup.md>
 Install OEP SDKs <./get-started/install-oep-sdks.md>
 Install UAV Vision Analytics Application <install-uav-app.md>
 How to use UAV Vision Analytics Application <./how-to-guides.md>
 Benchmarks <./how-to-guides/benchmark.md>
-System Requirements <./get-started/system-requirements.md>
 
 :::
 hide_directive-->

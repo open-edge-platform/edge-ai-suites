@@ -28,14 +28,23 @@ try {
     Write-Host "Status: $($r.StatusCode)"
     $r.Content
 } catch {
-    Write-Host "UNREACHABLE — $($_.Exception.Message)"
+    # 503 = running but degraded; the body still lists every service.
+    if ($_.Exception.Response) {
+        Write-Host "Status: $([int]$_.Exception.Response.StatusCode) (degraded)"
+        $_.ErrorDetails.Message
+    } else {
+        Write-Host "UNREACHABLE — $($_.Exception.Message)"
+    }
 }
 ```
 
-- **`{"status":"ok"}`** → backend healthy, continue to step 2.
+- **200 / `{"status":"ok"}`** → every Content Search service is ready, continue
+  to step 2.
 - **Connection refused / timeout** → nothing is running on port 9011. Use
-  [`sc-up`](../sc-up/SKILL.md) to start the backend.
-- **Non-200 status** → backend is running but unhealthy. Continue to step 3.
+  [`sc-up`](../sc-up/SKILL.md) to start the backend. `GET /api/v1/system/ping`
+  distinguishes the two: it answers 200 whenever the API process itself is up.
+- **503 / `{"status":"degraded"}`** → the API is up but a service behind it is
+  not (still loading models, or dead). Read the `services` map, then step 3.
 
 ---
 
@@ -44,12 +53,15 @@ try {
 A detailed health response includes per-service status. Parse it:
 
 ```powershell
-$health = Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing
-$health.Content | ConvertFrom-Json | ConvertTo-Json -Depth 5
+try   { $body = (Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing).Content }
+catch { $body = $_.ErrorDetails.Message }   # 503 while degraded
+$body | ConvertFrom-Json | ConvertTo-Json -Depth 5
 ```
 
-Look for any service with `"status": "error"` or `"status": "degraded"`. Common
-sub-services: vector store, LLM endpoint, object storage.
+Look for any entry in `services` that is not `"healthy"`. The keys map onto the
+services `start_services.py` launches: `main_app`/`database` (the API itself),
+`chromadb` (9090), `file_ingest` (9990), `video_preprocess` (8001, only when
+video summarization is enabled), plus `vlm` (the warm model on 8000).
 
 ---
 
