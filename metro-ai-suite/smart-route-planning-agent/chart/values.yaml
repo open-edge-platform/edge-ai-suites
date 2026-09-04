@@ -30,7 +30,7 @@ reasoning:
   modelName: ""
   image:
     repository: "openvino/model_server"
-    tag: "2026.2.1"
+    tag: "2026.3.1"
     pullPolicy: IfNotPresent
   # OVMS runs as uid/gid 5000 in its image. fsGroup makes the model volume writable.
   podSecurityContext:
@@ -38,9 +38,6 @@ reasoning:
     runAsUser: 5000
     runAsGroup: 5000
     fsGroup: 5000
-  # Number of failed readiness probes tolerated before the pod is marked unready.
-  # At 15s per probe this allows roughly 15 minutes for the first model download.
-  startupFailureThreshold: 60
   persistence:
     enabled: false
     size: 20Gi
@@ -49,6 +46,28 @@ reasoning:
   hfTokenSecret:
     name: ""
     key: "HF_TOKEN"
+  readinessProbe:
+    httpGet:
+      path: /v2/health/ready
+      port: ovms-rest
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+  livenessProbe:
+    httpGet:
+      path: /v2/health/live
+      port: ovms-rest
+    periodSeconds: 20
+    timeoutSeconds: 5
+    failureThreshold: 3
+  startupProbe:
+    httpGet:
+      path: /v2/health/ready
+      port: ovms-rest
+    # Model Download might take some, hence ~10mins of delay before considering the startup probe failed.
+    failureThreshold: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
   resources:
 
 

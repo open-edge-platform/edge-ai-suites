@@ -114,22 +114,18 @@ spec:
           volumeMounts:
             - name: ovms-models
               mountPath: /home/ovms
+          {{- with .Values.reasoning.readinessProbe }}
           readinessProbe:
-            httpGet:
-              path: /v2/health/ready
-              port: ovms-rest
-            periodSeconds: 15
-            timeoutSeconds: 5
-            # Generous, as the first start downloads and converts the model before serving.
-            failureThreshold: {{ .Values.reasoning.startupFailureThreshold }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.reasoning.livenessProbe }}
           livenessProbe:
-            httpGet:
-              path: /v2/health/live
-              port: ovms-rest
-            initialDelaySeconds: 600
-            periodSeconds: 30
-            timeoutSeconds: 10
-            failureThreshold: 3
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.reasoning.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.reasoning.resources | nindent 12 }}
       volumes:
