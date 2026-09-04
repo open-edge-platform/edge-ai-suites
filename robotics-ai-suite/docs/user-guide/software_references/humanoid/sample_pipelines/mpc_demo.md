@@ -9,6 +9,14 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 ![MPC ROS graph](assets/images/mpc-ros-graph.jpg)
 
+## Updates
+
+- **Sep, 2026: Added a ROS-free (non-ROS) MPC module.** Compared with the original
+  ROS version, the non-ROS module ([Non-ROS MPC Module](#non-ros-mpc-module-optional))
+  drives the MPC/MRT control loop over the ECI shared-memory transport with a
+  cumulative-tick scheduler, so it emits control signals at the configured target
+  frequency far more stably.
+
 ## Prerequisites
 
 Please make sure you have finished setup steps in [Get Started](../../../platform_foundation/getting_started.md).
@@ -43,7 +51,12 @@ git apply ../patches/ov/0006-add-ros2-node-and-use-fixed-cube-pose.patch
 
 Here, we adopted and modified the [open-source project OCS2](https://github.com/leggedrobotics/ocs2) as the MPC module. OCS2 is a C++ toolbox tailored for Optimal Control for Switched Systems (OCS2). It provides an efficient implementation of Continuous-time domain constrained DDP (SLQ) and many other helpful algorithms. To facilitate the application of OCS2 in robotic tasks, it provides the user with additional tools to set up the system dynamics (such as kinematic or dynamic models) and cost/constraints (such as self-collision avoidance and end-effector tracking) from a URDF model. You can go to [OCS2 official web](https://leggedrobotics.github.io/ocs2/overview.html) for more details.
 
-The upstream OCS2 project already provides a ROS2 baseline. On top of it we apply two patches: patch 001 adds the dual-arm ALOHA mobile manipulator for ACT+OCS2+MUJOCO, and patch 002 adds the non-ROS MPC (MPC-MRT) module and test pipeline.
+The upstream OCS2 project already provides a ROS2 baseline, so the following two patches are provided to enable it on ACT Aloha:
+
+| Patch num | Enhancement                                              |
+| --------- | -------------------------------------------------------- |
+|    001    | Add dual-arm ALOHA mobile manipulator for ACT+OCS2+MUJOCO |
+|    002    | Add non-ROS MPC (MPC-MRT) module and test pipeline        |
 
 ### Install OCS2
 
@@ -212,3 +225,85 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
    After ACT running successfully, the Mujoco UI appears as follows:
 
    ![MPC sim transmit cube demo](assets/images/mpc-sim-transmit-cube-demo.gif)
+
+## Non-ROS MPC Module (optional)
+
+Patch 002 adds `ocs2_mobile_manipulator_nonros`, a ROS-free variant of the dual-arm
+ALOHA demo. Instead of ROS topics, the MPC/MRT nodes, the MuJoCo viewer and the test
+publisher exchange data over the ECI shared-memory transport: the nodes publish each
+arm's joint state, the publisher supplies gripper targets, and the viewer renders them.
+This lets you run and profile the MPC pipeline without a ROS graph.
+
+### Dependencies
+
+```bash
+# MuJoCo and hardened XML parsing for Python
+pip install mujoco==3.10.0 "defusedxml>=0.7.1"
+
+# shared-memory transport (libshmringbuf.so must be on LD_LIBRARY_PATH,
+# e.g. /usr/lib/x86_64-linux-gnu)
+sudo apt install -y libshmringbuf-dev plcopen-databus-dev
+```
+
+### Build
+
+```bash
+source /opt/ros/jazzy/setup.bash
+cd ~/ocs2_ws
+colcon build --packages-select ocs2_mobile_manipulator_nonros
+source install/setup.bash
+```
+
+### Run
+
+The three helpers live under the patched OCS2 source tree. In the mpc-demo layout the
+submodule is nested one level deep, so set a helper variable once:
+
+```bash
+export OCS2_SRC=~/ocs2_ws/src/ocs2/ocs2/ocs2_robotic_examples/ocs2_mobile_manipulator_nonros
+```
+
+Startup order does not matter — each shared-memory block is opened lazily, so the
+viewer can start before the nodes.
+
+1. Launch both MPC/MRT arm nodes:
+
+   ```bash
+   cd "$OCS2_SRC/scripts"
+   ./run_aloha_dual_arm.sh
+   ```
+
+   Resources are auto-discovered via `AMENT_PREFIX_PATH`; override with
+   `NODE_BIN` / `TASK_FILE` / `URDF_FILE` / `LIB_FOLDER`.
+
+2. Start the MuJoCo viewer (one window shows both `vx300s` arms and the tabletop box,
+   with full physics so the grippers can grasp and lift the box):
+
+   ```bash
+   cd "$OCS2_SRC/scripts"
+   python3 mujoco_viewer.py "$OCS2_SRC/aloha_dual_arm_viewer.xml"
+   ```
+
+   Arm-joint prefixes default to `vx300s_left` / `vx300s_right` (override with
+   `--left-prefix` / `--right-prefix`); adjust refresh rate with `--rate`.
+
+3. Stream an ACT target trajectory (14 values: both arms + both grippers) to the
+   nodes and viewer:
+
+   ```bash
+   TRAJ="$OCS2_SRC/test/target_trajectories_with_grippers.txt"
+   BIN=~/ocs2_ws/install/ocs2_mobile_manipulator_nonros/lib/ocs2_mobile_manipulator_nonros/aloha_act_publisher
+   "$BIN" --traj "$TRAJ"          # play once
+   "$BIN" --traj "$TRAJ" --loop   # loop forever
+   ```
+
+   The trajectory path must be absolute — otherwise the publisher falls back to a
+   single static pose. Confirm loading with the log line
+   `[act_publisher] playing ... trajectory points`. With `--loop`, the viewer resets
+   the box to its keyframe pose at the start of each pass. Other options:
+   `--seconds N` static run duration, `--left` / `--right` arm prefixes, and
+   positional numbers or `--qpos` to force a single static target.
+
+> **Note:** The shared-memory transport currently unlinks its segment on close
+> without distinguishing creator from opener, so restarting individual processes
+> mid-session may misbehave. Restart the whole set if you hit shared-memory errors.
