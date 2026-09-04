@@ -64,16 +64,14 @@ Follow the instructions at [Image Composition Prerequisites](https://github.com/
 
 ### Configure the template
 
-Choose the template file to build and export it as `TEMPLATE`.
-
-Select the template for your target segment. If a segment guide directed you here, use the template path it specifies. The default template location is `$ENIB_HOME/infrastructure/host-os/ict/<your-template>.yml`.
+The default template location is `$ENIB_HOME/infrastructure/host-os/ict/generic-handheld-os-template.yml`.
 
 ```bash
-export TEMPLATE="$ENIB_HOME/infrastructure/host-os/ict/<your-template>.yml"
+export TEMPLATE="$ENIB_HOME/infrastructure/host-os/ict/generic-handheld-os-template.yml"
 ```
 
 In `$TEMPLATE`, set the values for `users.name` and `users.password` as desired.
-The password must contain a SHA-512 hash generated using the following tools:
+The password must contain a SHA-512 hash generated using one of the following tools:
 
 ```bash
 # Using openssl (requires `openssl` to be installed)
@@ -152,12 +150,11 @@ The output artefacts are written to:
 ./workspace/ubuntu-ubuntu24-x86_64/imagebuild/<config-name>/
 ```
 
-Expected artifact (one of the following, based on the template you choose):
+Expected artifact:
 
 | File                                  | Description                                |
 | ------------------------------------- | ------------------------------------------ |
 | `minimal-desktop-ubuntu-24.04.raw.gz` | Compressed raw disk image (ready to flash) |
-| `minimal-ubuntu-server-24.04.raw.gz` | Compressed raw disk image (ready to flash) |
 
 ## Package the image into artifacts
 
@@ -197,18 +194,14 @@ Use this flow when you want to build a custom image flavor (for example, debug, 
 
 ### What you are modifying
 
-The package curation flow can update one or both of the following files, resolved per segment intent:
+The package curation flow can update one or both of the following files:
 
 - The relevant curation script — consumed by the Docker-based standard image build:
-  - `infrastructure/host-os/curate-host-packages.sh` for handheld builds.
-  - `infrastructure/host-os/curate-host-packages-server.sh` for UAV / companion server builds.
+  - `infrastructure/host-os/curate-host-packages.sh`
 - The relevant ICT template — consumed by the ICT-based advanced image build:
-  - `infrastructure/host-os/ict/generic-handheld-os-template.yml` for handheld builds (default).
-  - `infrastructure/host-os/ict/generic-companion-os-server-template.yml` for UAV / companion server builds.
+  - `infrastructure/host-os/ict/generic-handheld-os-template.yml`
 
-The skill auto-resolves both files from your prompt: use words like `server`, `uav`, `companion`, or `companion server` to target the server pair; use `handheld` or `backpack` to target the handheld pair. When no intent is specified, it defaults to the handheld pair.
-
-By default, if not explicitly specified, the skill updates package intent for both the Docker-based standard build (resolved curation script) and the resolved ICT template.
+By default, if not explicitly specified, the skill updates package intent for both the Docker-based standard build and the ICT template.
 
 ### End-to-end flow
 
@@ -250,7 +243,7 @@ After package curation succeeds, create a variant template from the default temp
 
 ```bash
 cp "$TEMPLATE" \
-   "$(dirname "$TEMPLATE")/my-variant-template.yml"
+   "$(dirname "$TEMPLATE")/my-template.yml"
 ```
 
 For detailed validation and build instructions, refer to [Building an Ubuntu OS Version 24.04 Image with Image Composer Tool](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/release-2026.2.0/infrastructure/host-os/ict/README.md). That guide covers:

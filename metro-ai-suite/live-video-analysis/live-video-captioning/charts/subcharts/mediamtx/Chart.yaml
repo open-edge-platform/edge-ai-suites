@@ -5,5 +5,5 @@ apiVersion: v2
 name: mediamtx
 description: MediaMTX — WHIP/WebRTC signaling relay and media server.
 type: application
-version: 2026.2.0-rc2-helm
+version: 2026.2.0-rc3-helm
 appVersion: "1.11.3"

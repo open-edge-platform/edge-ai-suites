@@ -26,7 +26,7 @@ flowchart TD
         PX4["PX4 SITL<br/>MAVLink :14540"]
         CPAN["companion-bridge<br/>→ MQTT + REST"]
     end
-    
+
     subgraph SIM["🟦 SIM-CAMERA Profile Only"]
         GAZ["Gazebo<br/>3 cameras"]
         CAM1["Nadir @20fps"]
@@ -34,19 +34,19 @@ flowchart TD
         CAM3["Rear @20fps"]
         CB["camera-bridge<br/>→ RTSP"]
     end
-    
+
     subgraph USB["🟩 USB-CAMERA Profile Only"]
         USB_CAM["V4L2 Device<br/>/dev/video32"]
         UCB["usb-camera-bridge<br/>→ RTSP"]
     end
-    
+
     subgraph COMMON["✓ Shared Infrastructure (Both Profiles)"]
         MQTT["MQTT Broker<br/>:1884"]
         RTSP["MediaMTX<br/>:8554"]
         AI["vision-processor<br/>YOLOv2-tiny"]
         APP["edge-ai-showcase<br/>:5002"]
     end
-    
+
     subgraph OBS["📊 Observability (Both Profiles)"]
         TE["topic-extractor<br/>MQTT → InfluxDB"]
         MM["metrics-manager<br/>Telegraf<br/>:9090 :9273"]
@@ -77,7 +77,7 @@ flowchart TD
     TE -->|measurements| INFLUX
     MM -->|host metrics| INFLUX
     INFLUX -->|Flux queries| GRAF
-    
+
     style PX4_SHARED fill:#fff3e0,stroke:#e65100,stroke-width:3px
     style SIM fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style USB fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
@@ -104,29 +104,29 @@ sequenceDiagram
     participant VP as vision-processor<br/>(DL Streamer)
     participant MQTT as MQTT Broker
     participant APP as Applications
-    
+
     Note over GZ,MCB: Camera Frame Capture
     GZ->>MCB: gz topic --json-output<br/>(base64 RGB/RGBA)
     MCB->>MCB: Decode base64 → BGR
-    
+
     Note over MCB,MTX: RTSP H264 Streaming
     MCB->>MCB: ffmpeg: libx264<br/>(2000 kbps, ultrafast)
     MCB->>MTX: RTSP ANNOUNCE<br/>rtsp://mediamtx:8554/uav-1/{cam}
     MTX->>MTX: Broadcast to subscribers
-    
+
     Note over MQTT,VP: Armed State Control
     MQTT->>VP: uav/uav-1/telemetry/status<br/>(armed: true/false)
     VP->>VP: Pause/Resume inference
-    
+
     Note over MTX,VP: RTSP Consumption
     MTX->>VP: rtspsrc latency=100<br/>(H264 stream)
     VP->>VP: rtph264depay → avdec_h264
     VP->>VP: gvadetect @ GPU<br/>(YOLOv2-tiny)
-    
+
     Note over VP,APP: Detection Publishing
     VP->>MQTT: uav/uav-1/camera/{cam}/detections<br/>(JSON: bbox, label, confidence)
     MQTT->>APP: Subscribe & display
-    
+
     Note over VP,MTX: Annotated Video Output
     VP->>MTX: openh264enc → RTMP<br/>rtsp://mediamtx:8554/uav-1/{cam}/processed
 
@@ -283,8 +283,8 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 | `/uav-1/forward/processed` | Annotated forward (with bboxes) | 416x416 | ~10 | H264 (openh264) |
 | `/uav-1/rear/processed` | Annotated rear (with bboxes) | 416x416 | ~10 | H264 (openh264) |
 
-**Access**: `rtsp://localhost:8554/uav-1/{camera}`  
-**View**: `ffplay rtsp://localhost:8554/uav-1/nadir`  
+**Access**: `rtsp://localhost:8554/uav-1/{camera}`
+**View**: `ffplay rtsp://localhost:8554/uav-1/nadir`
 **Capture**: `ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 frame.jpg`
 
 ## Design Rationale
@@ -438,5 +438,5 @@ docker logs camera-bridge | grep -i error
 
 ## See Also
 
-- [CLAUDE.md](../../CLAUDE.md) - Quick reference guide
+- [CLAUDE.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/CLAUDE.md) - Quick reference guide
 - [ports.md](./ports.md) - Port mappings

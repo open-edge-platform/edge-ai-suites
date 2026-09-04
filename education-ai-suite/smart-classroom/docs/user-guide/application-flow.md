@@ -78,8 +78,21 @@ Open it from **View Report** in the top navigation menu.
 
 For details, see the [Class Report Flow](./class-report-flow.md).
 
+## Step 8: Grading
+
+Scanned exam papers can be scored automatically. You provide a paper (PDF) and a rubric, and the
+system renders the pages, splits them into question sections, and uses a Vision-Language Model to
+grade each section and produce scores with reasoning.
+
+Open it from **Grading** in the top navigation menu.
+
+![Grading Entry](./_assets/grading-entry.png)
+
+For details, see the [Grading Flow](./grading-flow.md).
+
 ## Learn More
 
 - [How It Works](./how-it-works.md): Technical architecture and design details.
 - [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.
 - [Class Report Flow](./class-report-flow.md): The flow of generating and exporting a class report.
+- [Grading Flow](./grading-flow.md): The flow of grading scanned exam papers.
