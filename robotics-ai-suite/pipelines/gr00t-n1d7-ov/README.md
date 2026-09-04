@@ -1,5 +1,5 @@
 # gr00t-n1.7
-Isaac-GR00T is NVIDIA's embodied AI foundation-model stack for robot manipulation and generalist control. It is designed for workflows involving perception, reasoning, and action generation in robotics applications.
+Isaac-GR00T is an open embodied AI foundation-model stack for robot manipulation and generalist control. It is designed for workflows involving perception, reasoning, and action generation in robotics applications.
 
 <p align="center">
   <img src="README.assets/gr00t-n1d7-model-architecture.png" alt="GR00T n1.7 Model Architecture"><br>
