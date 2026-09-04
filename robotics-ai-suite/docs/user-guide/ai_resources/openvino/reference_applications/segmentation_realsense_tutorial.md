@@ -6,28 +6,28 @@ This tutorial uses the RealSense camera image as input and performs inference on
 
 ## Prerequisites
 
-Complete the [Getting Started](../../../../platform_foundation/getting_started.md) guide before continuing.
+Complete the [Getting Started](../../../platform_foundation/getting_started.md) guide before continuing.
 
 ## Install OpenVINO™ tutorial packages
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install ros-jazzy-segmentation-realsense-tutorial
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 sudo apt install ros-humble-segmentation-realsense-tutorial
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Run Demo with RealSense Camera Topic Input
 
@@ -55,4 +55,4 @@ To exit the application, press ``Ctrl-c`` in the terminal where the launch scrip
 ### Troubleshooting
 
 For general robot issues, refer to
-the [troubleshooting guide](../../../../resources/troubleshooting).
+the [troubleshooting guide](../../../resources/troubleshooting).

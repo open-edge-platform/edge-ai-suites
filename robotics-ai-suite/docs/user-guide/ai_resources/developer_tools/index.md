@@ -2,7 +2,7 @@
 
 Intel provides a range of developer tools which cover a wide range of topics from heterogeneous computing to deep learning optimization, to help you build and optimize Humanoid Toolkit models and workflows.
 
-For Humanoid workflows, complete the [platform getting-started guide](../../../platform_foundation/getting_started.md) before installing these tools.
+For Humanoid workflows, complete the [platform getting-started guide](../../platform_foundation/getting_started.md) before installing these tools.
 
 Please get more information in the following sections:
 
@@ -14,13 +14,13 @@ Please get more information in the following sections:
 
 Also, you can find some advice for arranging heterogeneous computing through different workloads in the following section:
 
-- [Heterogeneous Computing](../../../resources/heterogeneous_computing.md)
+- [Heterogeneous Computing](../../resources/heterogeneous_computing.md)
 
 Some of the models used in Humanoid Toolkit solutions are enabled on Intel platforms; see the following tutorials:
 
 - [OpenVINO Model Guidance](../openvino/models/index.md)
 
-<!--hide_directive
+
 :::{toctree}
 :hidden:
 :maxdepth: 1
@@ -31,4 +31,4 @@ ipex-llm
 oneapi
 iopenxla
 
-:::hide_directive-->
+:::

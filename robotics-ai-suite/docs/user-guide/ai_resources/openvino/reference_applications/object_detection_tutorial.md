@@ -12,28 +12,28 @@ The source code of this component can be found here:
 
 ## Prerequisites
 
-Complete the [Getting Started](../../../../platform_foundation/getting_started.md) guide before continuing.
+Complete the [Getting Started](../../../platform_foundation/getting_started.md) guide before continuing.
 
 ## Install OpenVINO™ toolkit tutorial packages
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install ros-jazzy-object-detection-tutorial
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 sudo apt install ros-humble-object-detection-tutorial
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Run Demo with Image Input
 
@@ -65,11 +65,11 @@ Once the tutorial is started, the ``mobilenetssd`` model is downloaded, converte
 
 The RViz window will show up and the image with detected objects will be displayed, as presented below:
 
-![Object_detection](../../../../hardware_blueprints/amr/images/Object_detection.png)
+![Object_detection](../../../hardware_blueprints/amr/images/Object_detection.png)
 
 To close this application, type ``Ctrl-c`` in the terminal where you ran the launch script.
 
 ### Troubleshooting
 
 For general robot issues, refer to
-the [troubleshooting guide](../../../../resources/troubleshooting).
+the [troubleshooting guide](../../../resources/troubleshooting).

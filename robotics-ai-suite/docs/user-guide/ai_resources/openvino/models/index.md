@@ -2,7 +2,7 @@
 
 The OpenVINO™ toolkit supports most TensorFlow and PyTorch models. The following table lists deep-learning models commonly used in Humanoid Toolkit solutions, and information on how to run them on Intel® platforms:
 
-For Humanoid workflows, complete the [platform getting-started guide](../../../../platform_foundation/getting_started.md) before installing model dependencies or running these tutorials.
+For Humanoid workflows, complete the [platform getting-started guide](../../../platform_foundation/getting_started.md) before installing model dependencies or running these tutorials.
 
 | Algorithm     | Description                                                                                                                         | Link                                                                                                                                                                                                         |
 |---------------|-------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -19,14 +19,14 @@ For Humanoid workflows, complete the [platform getting-started guide](../../../.
 | CLIP          | Transformer-based image classification                                                                                              | [CLIP](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/clip-zero-shot-image-classification)                                                                                      |
 | Qwen2.5VL     | Multimodal large language model                                                                                                     | [Qwen2.5VL](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/qwen2.5-vl)                                                                                                          |
 | Whisper       | Automatic speech recognition                                                                                                        | [Whisper](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/whisper-asr-genai)                                                                                                     |
-| FunASR        | Automatic speech recognition                                                                                                        | [FunASR Setup in LLM Robotics - sample pipeline](../../../../software_references/humanoid/sample_pipelines/llm_robotics.md#funasr-setup)                                                                     |
+| FunASR        | Automatic speech recognition                                                                                                        | [FunASR Setup in LLM Robotics - sample pipeline](../../../software_references/humanoid/sample_pipelines/llm_robotics.md#funasr-setup)                                                                     |
 
 > **Attention:**
-  When following these tutorials for model conversion, ensure that the OpenVINO toolkit version used for model conversion is the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version. See details in [Troubleshooting](../../../../resources/troubleshooting.md).
+  When following these tutorials for model conversion, ensure that the OpenVINO toolkit version used for model conversion is the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version. See details in [Troubleshooting](../../../resources/troubleshooting.md).
 
 Please also find information for the models of imitation learning, grasp generation, simultaneous localization and mapping (SLAM) and bird's-eye view (BEV):
 
-<!--hide_directive
+
 :::{toctree}
 :maxdepth: 1
 
@@ -40,4 +40,4 @@ model_fastbev
 model_depthanythingv2
 model_rdt
 :::
-hide_directive-->
+

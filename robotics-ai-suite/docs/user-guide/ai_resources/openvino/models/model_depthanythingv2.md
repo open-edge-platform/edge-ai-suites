@@ -90,7 +90,7 @@ python dynamo.py export --encoder vitb --output weights/vitb.onnx --use-dynamo -
 - `--use-dynamo` : Enables the use of `torch.compile` via Dynamo for optimized tracing.
 - `-h 518 -w 518` : Specifies the height and width of the input images.
 
-> **Hint:** If you encountered a downloading error, please refer to [Troubleshooting](../../../../resources/troubleshooting.md).
+> **Hint:** If you encountered a downloading error, please refer to [Troubleshooting](../../../resources/troubleshooting.md).
 
 ### Convert ONNX to OpenVINO IR
 

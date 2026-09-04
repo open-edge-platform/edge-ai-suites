@@ -1,7 +1,40 @@
-# AI Resources
+# Intel Powered AI
 
 Here you will find guidance that covers the frameworks, models, and tools used to build and
 optimize robot perception and intelligence workloads.
+
+## AI Toolkits
+
+AI Frameworks are the runtimes and toolkits that train, optimize, deploy, and serve
+models on the development kit. Each framework targets OpenVINO, so inference runs across
+the Intel CPU, GPU, and NPU and integrates with the ROS 2 and control stack.
+
+::::{grid} 2
+
+:::{grid-item-card} **Gen AI**
+:link: gen-ai/index
+:link-type: doc
+:link-alt: clickable cards
+
+Serve large language models on the robot for natural-language command interpretation, task planning, and reasoning, offline and on-device.
+:::
+
+:::{grid-item-card} **Vision AI**
+:link: vision-ai/index
+:link-type: doc
+:link-alt: clickable cards
+
+Train, optimize, and run the perception models that let a robot detect objects, segment scenes, and inspect for defects.
+:::
+
+:::{grid-item-card} **Physical AI**
+:link: physical-ai/index
+:link-type: doc
+:link-alt: clickable cards
+
+Develop and run the robot-learning and embodied-AI policies that map perception to action.
+:::
+::::
 
 ## Developer Tools
 
@@ -17,44 +50,32 @@ validating the resulting environment.
 | [OpenVINO Physical AI Runtime](https://github.com/openvinotoolkit/physicalai) | Accelerate your OpenVINO-powered deployment with a unified API for connecting cameras, robots, and policy inference. |
 | [Intel Physical AI Studio](https://github.com/open-edge-platform/physical-ai-studio)| Train and depoy VLA models with an easy-to-use imitation learning dataset generation platform. |
 
-For performance analysis, see [Benchmarking and Profiling](../benchmarking/index.md).
+For performance analysis, see [Benchmarking and Profiling](../components/benchmarking/index.md).
 
-<!--hide_directive
-::::{grid} 2hide_directive-->
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **OpenVINO**
-<!--hide_directive:link: openvino/index
+::::{grid} 2
+
+:::{grid-item-card} **OpenVINO**
+:link: openvino/index
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Optimize and deploy deep-learning inference on available Intel compute devices.
-<!--hide_directive:::hide_directive-->
+:::
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Developer Tools**
-<!--hide_directive:link: developer_tools/index
+:::{grid-item-card} **Developer Tools**
+:link: developer_tools/index
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Install and configure OpenVINO, oneAPI, IPEX, IPEX-LLM, and OpenXLA.
-<!--hide_directive:::hide_directive-->
+:::
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Agentic Skills**
-<!--hide_directive:link: skills/index
+:::{grid-item-card} **Agentic Skills**
+:link: skills/index
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Find skills for use with the Robotics AI Suite to power AI-enabled development.
-<!--hide_directive:::
-::::
-hide_directive-->
-
-<!--hide_directive
-:::{toctree}
-:maxdepth: 1
-:hidden:
-
-OpenVINO <openvino/index>
-Developer Tools <developer_tools/index>
-Agentic Skills <skills/index>
 :::
-hide_directive-->
+::::
