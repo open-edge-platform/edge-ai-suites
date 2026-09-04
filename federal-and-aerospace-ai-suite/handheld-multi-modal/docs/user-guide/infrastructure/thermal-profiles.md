@@ -251,7 +251,7 @@ To fully revert to kernel default thermal control, run with `--disable` (see
 ## Related Agent Skills
 
 The same tool is also driven by an agent skill (see
-[AI Agent Integration](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/agent-skills.html)):
+[AI Agent Integration](agent-skills.md)):
 
 | Skill | Purpose |
 |---|---|
