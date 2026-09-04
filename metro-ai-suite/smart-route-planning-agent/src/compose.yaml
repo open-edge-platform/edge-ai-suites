@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
 
   ovms:
-    image: openvino/model_server:2026.2.1
+    image: openvino/model_server:2026.3.1
     profiles:
       - reasoning
     command:
