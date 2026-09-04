@@ -1,11 +1,12 @@
 # Troubleshooting
 
-## Startup Fails
+## 1. Startup Fails
 
-### Symptom
+**Symptom**:
+
 `start_ata.ps1` exits early or one or more services never become ready.
 
-### Checks
+**Checks**:
 
 ```powershell
 # Verify required files exist
@@ -27,10 +28,11 @@ If missing, rerun:
 
 ## Port Conflicts
 
-### Symptom
+**Symptom**:
+
 Launcher reports an existing process on required ports.
 
-### Checks
+**Checks**:
 
 ```powershell
 netstat -ano | findstr :7860
