@@ -21,6 +21,7 @@ from components.report_generator.prompts import (
 from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_paths import SessionPaths
 from utils.locks import audio_pipeline_lock
 from components.report_generator.template_manager import (
     get_template_path,
@@ -71,12 +72,8 @@ class ReportGenerator:
         self.collected_by_source = {}
 
     def _get_session_dir(self) -> str:
-        project_config = RuntimeConfig.get_section("Project")
-        return os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        """Directory holding this session's generated deliverables."""
+        return str(SessionPaths.result_dir(self.session_id))
 
     def _collect_all_data(self):
         """Deterministically collect all available session data."""
@@ -284,7 +281,7 @@ class ReportGenerator:
         )
 
         StorageManager.update_csv(
-            path=os.path.join(session_dir, "performance_metrics.csv"),
+            path=str(SessionPaths.metrics_path(self.session_id)),
             new_data={
                 "performance.report_collect_time": round(collect_time, 4),
                 "performance.report_generation_time": round(generation_time, 4),
