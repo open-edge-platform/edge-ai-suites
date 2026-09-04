@@ -1,0 +1,471 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-09-04T09:23:20.6187988+02:00",
+  "target": "ITEP-95788",
+  "mode": "dry-run",
+  "jira_modified": false,
+  "issues": [
+    {
+      "key": "ITEP-95788",
+      "snapshot_updated": "2026-08-30T14:21:02.563-07:00",
+      "final_updated": null,
+      "readiness": "NEEDS INFO",
+      "rule_evaluations": [
+        {
+          "rule_id": "BKM-01",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Project key is ITEP and project name is EdgeSW.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-02",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Issue Type is Bug.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-03",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Summary is present and states that multiple skills have High or Medium skill-spector findings.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-04",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Component/s is empty; comments state that the affected skills are owned by different teams.",
+          "required_action": "Identify the owning Component or split and link the issue scope to the appropriate component-owned bugs."
+        },
+        {
+          "rule_id": "BKM-05",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Description is present and includes an issue summary, impact, affected skills, finding counts, and a requested action.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-06",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Affects Version/s is EAL-2026.2.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-07",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Fix Version/s is EAL-2026.2.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-08",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Priority is set to the supported value P1-Stopper.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-09",
+          "verdict": "ACTION",
+          "severity": "Blocking",
+          "evidence": "The description reports High and Medium vulnerability findings from a security scanner, while Suspected Security Defect is set to No.",
+          "required_action": "Request immediate security triage and, with action-specific authorization, set Suspected Security Defect to Yes."
+        },
+        {
+          "rule_id": "BKM-10",
+          "verdict": "NEEDS INFO",
+          "severity": "Non-blocking",
+          "evidence": "Summary does not follow the Component and Area prefix format, and no single Component is currently selected.",
+          "required_action": "Confirm the owning scope and update the summary prefix without changing the issue meaning."
+        },
+        {
+          "rule_id": "BKM-11",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "The summary identifies the affected object class, scanner, and observed High or Medium findings without opening the issue.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-12",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "The summary names vulnerability findings rather than only a test ID or generic test failure.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-13",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "The summary is factual and does not assert an unverified root cause.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-14",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Issue summary section identifies skill-spector findings across several skills and states release context.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-15",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Impact section states security and release-credibility impact and says the findings must be addressed before release.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-16",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "The current Description has no Steps to reproduce section or executable numbered sequence.",
+          "required_action": "Add preconditions and numbered steps for running the identified skill-spector check against the affected skills."
+        },
+        {
+          "rule_id": "BKM-17",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "The current Description has no Expected behavior section.",
+          "required_action": "State the expected scanner result or approved quality threshold tied to the reproduction steps."
+        },
+        {
+          "rule_id": "BKM-18",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Finding counts are listed, but there is no Actual behavior section tied to a reproduction step and no exact redacted scanner identifiers or output reference.",
+          "required_action": "Add the exact observed result at the failing step with a safe, redacted report or log reference."
+        },
+        {
+          "rule_id": "BKM-19",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Description does not identify skill-spector version, execution environment, configuration, report artifact, reproduction rate, or isolation results.",
+          "required_action": "Document the relevant scanner version, environment, configuration, evidence reference, and isolation scope without sensitive details."
+        },
+        {
+          "rule_id": "BKM-20",
+          "verdict": "NEEDS INFO",
+          "severity": "Non-blocking",
+          "evidence": "Description contains no tested commit or PR. Comments reference PR 1818 for one affected skill, but durable commit data was not consolidated into the Description.",
+          "required_action": "Add tested and implementing commits or PRs for the complete issue scope to the Description."
+        },
+        {
+          "rule_id": "BKM-21",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Description reports scanner counts but does not explain the underlying unsafe behaviors or redacted finding categories for the listed skills.",
+          "required_action": "Describe the underlying finding categories and affected behavior at a safe level, using the approved security channel for sensitive details."
+        },
+        {
+          "rule_id": "BKM-22",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "The Description covers ten skills, while available fix evidence references one SceneScape PR; comments requested separate component-owned bugs, yet the issue is Done with resolution Fixed.",
+          "required_action": "Reconcile the intended issue scope, linked child bugs, implementing changes, and Fixed resolution."
+        },
+        {
+          "rule_id": "BKM-23",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Current Priority is P1, but scanner severity and a general release-risk statement do not establish system failure, unusability, or privacy, IP, or legal impact under the P1 definition.",
+          "required_action": "Provide impact, affected scope, exploit or exposure class through the approved channel, stability, and workaround evidence supporting P1."
+        },
+        {
+          "rule_id": "BKM-24",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Current Priority is P1; P2 classification is not selected and no priority change is inferred.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-25",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Current Priority is P1; P3 classification is not selected and no priority change is inferred.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-26",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Current Priority is P1; P4 classification is not selected and no priority change is inferred.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-27",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Issue does not document affected users, practical workaround, stability, exposure class, or enough scope evidence to justify P1 independently of scanner labels.",
+          "required_action": "Add the impact, scope, workaround, and reproducibility evidence used for the P1 decision."
+        },
+        {
+          "rule_id": "BKM-28",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Available evidence is insufficient to confirm that P1-Stopper aligns with the BKM definition; no downgrade is proposed.",
+          "required_action": "Have the responsible security and release owners confirm Priority after the missing impact evidence is recorded."
+        },
+        {
+          "rule_id": "BKM-29",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Pre-feature-freeze applicability is unknown; no pre-freeze SLA breach is declared and missing context is recorded under BKM-33.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-30",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Post-feature-freeze applicability is unknown; no post-freeze SLA breach is declared and missing context is recorded under BKM-33.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-31",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "P2 SLA does not apply because current Priority is P1.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-32",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "P3 SLA does not apply because current Priority is P1.",
+          "required_action": null
+        },
+        {
+          "rule_id": "BKM-33",
+          "verdict": "NEEDS INFO",
+          "severity": "Non-blocking",
+          "evidence": "Feature-freeze state, project business calendar, and pause or exclusion policy were not available in the issue snapshot.",
+          "required_action": "Release planning owner should provide the applicable freeze state, calendar, and exclusion policy before any SLA breach conclusion."
+        },
+        {
+          "rule_id": "BKM-34",
+          "verdict": "ACTION",
+          "severity": "Blocking",
+          "evidence": "High and Medium vulnerability scanner findings are security indicators, but Suspected Security Defect is No.",
+          "required_action": "Request security triage and obtain action-specific authorization before changing Suspected Security Defect from No to Yes."
+        },
+        {
+          "rule_id": "BKM-35",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Issue contains suspected-security indicators but does not show use of the approved security-defect process.",
+          "required_action": "Confirm escalation through the approved security-defect workflow without adding sensitive evidence to general comments."
+        },
+        {
+          "rule_id": "SCRUB-01",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Scanner invocation, configuration, input revision, and required preconditions are absent from the current Description.",
+          "required_action": "Document the known starting state and scanner setup required to reproduce the findings."
+        },
+        {
+          "rule_id": "SCRUB-02",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "The issue does not state whether findings reproduce consistently or across how many runs.",
+          "required_action": "State the reproduction rate and number of scanner runs."
+        },
+        {
+          "rule_id": "SCRUB-03",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "One image attachment exists and comments mention a compliance report, but attachment content was not opened and the Description does not map safe evidence to the listed findings.",
+          "required_action": "Reference a redacted report, log excerpt, or approved attachment in the Description and map it to Actual behavior."
+        },
+        {
+          "rule_id": "SCRUB-04",
+          "verdict": "NEEDS INFO",
+          "severity": "Non-blocking",
+          "evidence": "Regression status and last known good version or commit are not stated.",
+          "required_action": "State whether this is a regression and identify the last known good revision when known."
+        },
+        {
+          "rule_id": "SCRUB-05",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "No workaround or explicit statement that no workaround exists is recorded, although workaround availability affects P1 assessment.",
+          "required_action": "Document the workaround and limitations or state that none is known."
+        },
+        {
+          "rule_id": "SCRUB-06",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Expected behavior and a measurable passing scanner result are absent.",
+          "required_action": "Add acceptance and retest criteria that can verify the complete affected-skill scope."
+        },
+        {
+          "rule_id": "SCRUB-07",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Ten affected skills are named, but affected repositories or revisions, unaffected comparisons, and final split between component-owned issues are not bounded.",
+          "required_action": "Define the affected and unaffected scope and map each skill to its owner or linked child issue."
+        },
+        {
+          "rule_id": "SCRUB-08",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "An assignee is present; the issue is not currently In Progress.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-09",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Component is empty and comments explicitly state that the affected skills are owned by different teams.",
+          "required_action": "Confirm ownership and represent cross-component scope with approved Components or linked component-owned issues."
+        },
+        {
+          "rule_id": "SCRUB-10",
+          "verdict": "NEEDS INFO",
+          "severity": "Non-blocking",
+          "evidence": "Fix Version is EAL-2026.2, but the issue does not document an owner plan proving that the complete multi-skill scope was delivered in that target.",
+          "required_action": "Confirm the EAL-2026.2 target against the final scope and linked implementation plan."
+        },
+        {
+          "rule_id": "SCRUB-11",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "ITEP-95787 and one PR are referenced, but comments state that separate tickets exist for multiple component owners and those dependencies are not enumerated or linked.",
+          "required_action": "Link every component-owned child bug and implementing PR required to satisfy the all-inclusive scope."
+        },
+        {
+          "rule_id": "SCRUB-12",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "A bounded JQL search for skill-spector bugs returned four candidates. ITEP-95787 is already linked; ITEP-95786, ITEP-95700, and ITEP-95703 have related but differing scopes. No duplicate conclusion was made.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-13",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "No explicit conflict between the current assignee and another active assignee is recorded; missing component ownership is tracked separately.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-14",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Status is Done with resolution Fixed, but available evidence covers one SceneScape PR while the Description claims ten affected skills and comments requested separate owner bugs.",
+          "required_action": "Have the owner reconcile status and resolution with complete implementation and verification evidence; no automatic transition is proposed."
+        },
+        {
+          "rule_id": "SCRUB-15",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Last meaningful update was the merged-PR comment on 2026-08-26; the 2026-08-30 update only changed status and resolution. This exceeds the nominal P1 update threshold as of 2026-09-04, but the business calendar is unconfirmed.",
+          "required_action": "Add a current status and verification update for the complete scope; release planning should confirm calendar treatment."
+        },
+        {
+          "rule_id": "SCRUB-16",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Issue status is Done, not In Progress.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-17",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Issue is not in a Blocked workflow state.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-18",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Issue is not currently in a needs-information state; this dry-run drafts but does not post a consolidated request.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-19",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Changelog shows Done with Invalid on 2026-08-25 followed by Dev Done on 2026-08-26, but no comment records failed verification, tested build, or why the prior resolution was insufficient.",
+          "required_action": "Document the reopen reason, current reproduction or failed verification, tested revision, environment, and result."
+        },
+        {
+          "rule_id": "SCRUB-20",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Done and Fixed are structurally paired, but the outcome is not supported for the complete ten-skill scope by the available implementation and verification evidence.",
+          "required_action": "Confirm that Fixed is the correct resolution after reconciling scope and closure evidence."
+        },
+        {
+          "rule_id": "SCRUB-21",
+          "verdict": "PASS",
+          "severity": "-",
+          "evidence": "Comments name merged PR 1818 and Fix Version is EAL-2026.2, satisfying the minimum fix-reference check for the represented SceneScape change.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-22",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "No retest environment, tested build or commit, verification result, verifier, or automated test reference is recorded after the fix.",
+          "required_action": "Add complete post-fix verification evidence for every item retained in scope."
+        },
+        {
+          "rule_id": "SCRUB-23",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "No expected behavior or rerun result demonstrates that the original scanner findings were cleared for the complete scope.",
+          "required_action": "Rerun the original reproduction against the fixed revisions and record results against explicit acceptance criteria."
+        },
+        {
+          "rule_id": "SCRUB-24",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Current resolution is Fixed, not Duplicate.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-25",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Current resolution is not Cannot Reproduce.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-26",
+          "verdict": "N/A",
+          "severity": "-",
+          "evidence": "Current resolution is not Won't Fix or As Designed.",
+          "required_action": null
+        },
+        {
+          "rule_id": "SCRUB-27",
+          "verdict": "NEEDS INFO",
+          "severity": "Blocking",
+          "evidence": "Multiple blocking information and security-triage gaps remain while the issue is Done.",
+          "required_action": "Resolve all blocking reproduction, security, scope, and verification gaps before confirming terminal status."
+        }
+      ],
+      "draft_comment": "Security triage and bug scrub follow-up\n\nThe issue contains indicators of a potential security defect. Please confirm that the Suspected Security Defect field and the approved security-defect workflow are being used.\n\nThe current record also needs the following durable information before the Done/Fixed outcome can be confirmed:\n\n- identify the owning Component or link every component-owned child bug for the affected skills;\n- add the scanner version, tested revisions, required configuration, numbered reproduction steps, expected result, and exact redacted observed result or report reference;\n- state reproduction frequency, regression status, affected and unaffected scope, and workaround or explicitly state that none is known;\n- document the impact, scope, and workaround evidence supporting P1 without relying only on scanner severity;\n- reconcile the ten-skill Description with the implementing PRs and explain the earlier reopen from Invalid;\n- add post-fix verification for the complete retained scope, including retest environment, tested build or commit, rerun steps, result, and verifier or automated test reference.\n\nPlease keep durable reproduction and closure evidence in the Description rather than only in comments. Do not add credentials, secrets, personal data, exploit details, or other sensitive material to this general Jira issue; use the approved security channel for sensitive evidence.",
+      "proposed_actions": [
+        {
+          "risk": "Low",
+          "action": "Add one consolidated security-triage and missing-information comment",
+          "old_value": null,
+          "new_value": "Draft comment recorded in this result",
+          "evidence": "Blocking reproduction, scope, security-classification, priority, status, and verification gaps require owner input.",
+          "authorization": "Withheld in dry-run"
+        },
+        {
+          "risk": "High",
+          "action": "Set Suspected Security Defect",
+          "old_value": "No",
+          "new_value": "Yes",
+          "evidence": "Description reports multiple High and Medium vulnerability findings; scanner output is sufficient to trigger suspected-security review, not to assert exploitability.",
+          "authorization": "Withheld in dry-run; action-specific apply authorization required"
+        }
+      ],
+      "applied_actions": []
+    }
+  ]
+}
