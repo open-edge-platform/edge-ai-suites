@@ -9,8 +9,8 @@ endif
 COMPOSE_PYMAV  := docker-compose-pymavlink.yml
 COMPOSE_SDK := docker-compose-uavsdk.yml
 DLSPS          := dlstreamer-pipeline-server
-MODEL_DIR      := resources/models/yolo26n
-MODEL_XML      := $(MODEL_DIR)/yolo26n_openvino_model/yolo26n.xml
+MODEL_DIR      := resources/models/yolo11s
+MODEL_XML      := $(MODEL_DIR)/yolo11s_openvino_model/yolo11s.xml
 VENV           := resources/venv
 DEVICE         ?= gpu
 
@@ -87,27 +87,27 @@ init: ## Create .env from template and auto-detect GPU/NPU device paths
 _check_model:
 	@if [ ! -f "$(MODEL_XML)" ]; then \
 		echo "❌ Model not found: $(MODEL_XML)"; \
-		echo "   Run 'make model' first to download and export the YOLO26n model."; \
+		echo "   Run 'make model' first to download and export the YOLO11s model."; \
 		exit 1; \
 	fi
 
 # ── Model ────────────────────────────────────────────────────────────────────
 
-model: ## Download YOLO26n (COCO-pretrained) and export to OpenVINO FP16
+model: ## Download YOLO11s (COCO-pretrained) and export to OpenVINO FP16
 	@echo "[model] Creating virtualenv..."
 	python3 -m venv $(VENV)
 	@echo "[model] Installing dependencies..."
 	$(VENV)/bin/pip install --quiet -r resources/requirements.txt
-	@echo "[model] Downloading yolo26n.pt and exporting to OpenVINO FP16..."
+	@echo "[model] Downloading yolo11s.pt and exporting to OpenVINO FP16..."
 	mkdir -p $(MODEL_DIR)
 	cd $(MODEL_DIR) && $(CURDIR)/$(VENV)/bin/yolo export \
-	  model=yolo26n.pt \
+	  model=yolo11s.pt \
 	  format=openvino \
 	  dynamic=True \
 	  opset=18 \
 	  imgsz=640 \
 	  half=True
-	@echo "[model] Done. Model at: $(MODEL_DIR)/yolo26n_openvino_model/"
+	@echo "[model] Done. Model at: $(MODEL_DIR)/yolo11s_openvino_model/"
 
 # ── pymavlink stack ───────────────────────────────────────────────────────────
 
