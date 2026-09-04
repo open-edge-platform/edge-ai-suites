@@ -118,6 +118,6 @@ Continue with the OEP Vision AI SDK tutorials to explore benchmarking, multi-str
 
 ## Related Guides
 
-- [DL Streamer Pipelines Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/build-dlstreamer-pipelines.html) — pipeline reference and variants
-- [Edge Workloads and Benchmarks Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/run-edge-benchmarks.html) — reproducible benchmark suite
-- [Container Device Interface Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/configure-cdi.html) — CDI setup for GPU/NPU access from containers
+- [DL Streamer Pipelines Guide](./infrastructure/build-dlstreamer-pipelines.md) — pipeline reference and variants
+- [Edge Workloads and Benchmarks Guide](./infrastructure/run-edge-benchmarks.md) — reproducible benchmark suite
+- [Container Device Interface Guide](./infrastructure/configure-cdi.md) — CDI setup for GPU/NPU access from containers
