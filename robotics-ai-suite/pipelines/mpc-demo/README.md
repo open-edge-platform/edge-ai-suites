@@ -12,6 +12,13 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 ![image](README.assets/mpc-ros-graph.jpg)
 
+## Updates
+
+- **Sep, 2026: Added a ROS-free (non-ROS) MPC module.** Compared with the original
+  ROS version, the non-ROS module ([Non-ROS MPC Module](#non-ros-mpc-module-optional))
+  drives the MPC/MRT control loop over the ECI shared-memory transport with a
+  cumulative-tick scheduler, so it emits control signals at the configured target
+  frequency far more stably.
 
 ## Prerequisites
 
