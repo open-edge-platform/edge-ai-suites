@@ -16,6 +16,7 @@ import { getSettings, pingBackend } from './services/api';
 import { isServiceManagerAvailable, useReloadOnBackendRestart, useServices } from './services/serviceManager';
 import { useSetup } from './services/setupManager';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
+import { useAudioPipeline } from './redux/useAudioPipeline';
 import { useTranslation } from 'react-i18next';
 import { useFeatureConfig } from './hooks/useFeatureConfig';
 import { FeatureGuard } from './utils/featureGuards';
@@ -29,6 +30,9 @@ const App: React.FC = () => {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
   useVideoPipelineMonitor();
+  // Both pipelines are driven from here, not from the panels that display them,
+  // so they keep running while the user moves around the UI.
+  useAudioPipeline();
 
   // Load feature configuration
   const { guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();

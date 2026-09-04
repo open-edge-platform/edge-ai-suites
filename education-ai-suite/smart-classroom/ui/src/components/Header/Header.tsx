@@ -54,6 +54,7 @@ import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 import type { FeatureGuard } from '../../utils/featureGuards';
 import { collectPipelineErrors, isNotRunning } from '../../utils/pipelineErrors';
+import { useUploadGate, uploadBlockerTooltipKey } from '../../hooks/useUploadGate';
 
 // How long a non-fatal error stays in the notification bar before the regular
 // audio/video status takes the space back.
@@ -101,7 +102,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const isPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
   const [isUploading, setIsUploading] = useState(false);
-  
+  const { isUploadEnabled, blocker: uploadBlocker } = useUploadGate();
+
   // Check if video_analytics feature is enabled in backend
   const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
   
@@ -358,27 +360,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-    const hasAudio = Boolean(uploadedAudioPath);
-    const hasVideo = hasUploadedVideoFiles;
-
-    const isMindmapDone =
-      audioStatus === 'complete' ||
-      audioStatus === 'error';
-
-    const areStreamsStopped =
-      videoStatus === 'completed' ||
-      videoStatus === 'ready' ||
-      videoStatus === 'no-config' ||
-      videoStatus === 'failed';
-
-    const audioReady = !hasAudio || isMindmapDone;
-    const videoReady = !hasVideo || areStreamsStopped;
-
-    const isUploadButtonEnabled = audioReady && videoReady;
-
-    const isUploadDisabled =
-      isRecording ||
-      !isUploadButtonEnabled;
+    // Blocked only while something is actually running (see useUploadGate) —
+    // never on a settled state the gate forgot to list.
+    const isUploadDisabled = !isUploadEnabled;
 
     // Check if we have actual live capabilities based on enabled features
     const hasAudioCapability = hasAudioFeatures && hasAudioDevices;
@@ -818,8 +802,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
 
         <button
           className="upload-button"
-          disabled={isUploadDisabled}   
-          onClick={!isUploadDisabled ? handleOpenUploadModal : undefined} 
+          disabled={isUploadDisabled}
+          onClick={!isUploadDisabled ? handleOpenUploadModal : undefined}
+          title={t(uploadBlockerTooltipKey(uploadBlocker))}
           style={{
             opacity: isUploadDisabled ? 0.6 : 1,                           
             cursor: isUploadDisabled ? 'not-allowed' : 'pointer'            

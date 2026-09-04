@@ -2,19 +2,9 @@ import React, { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
-  appendTranscriptChunk,
-  setFinalTranscript,
-  finishTranscript,
   completeSegmentTyping,
-  setTotalDuration,
-  updateSpeakerStats,
   setDetectedLanguage
 } from "../../redux/slices/transcriptSlice";
-import {
-  startTranscription,
-  transcriptionComplete,
-} from "../../redux/slices/uiSlice";
-import { streamTranscript } from "../../services/api";
 import { typewriterStream } from "../../utils/typewriterStream";
 import { useFeatureConfig } from "../../hooks/useFeatureConfig";
 import "../../assets/css/TranscriptsTab.css";
@@ -44,21 +34,16 @@ const SPEAKER_LABELS: Record<
   },
 };
 
+// Renders the transcript the pipeline produces (see redux/useAudioPipeline):
+// groups consecutive segments per speaker and types them out. The stream itself
+// is not owned here — this tab is unmounted whenever another tab is selected.
 const TranscriptsTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const streamStartedRef = useRef(false);
-  const transcriptionStartedRef = useRef(false);
-  const finishedRef = useRef(false);
-  const teacherSpeakerRef = useRef<string | null>(null);
   const typewriterControllers = useRef<Map<number, AbortController>>(new Map());
-  const finishTimeoutRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
-  const segmentsRef = useRef<typeof segments>([]);
-  
-  // Check if summary feature is enabled in backend
+
   const { guard, loaded: featuresLoaded } = useFeatureConfig();
-  const hasSummaryFeature = featuresLoaded && guard.hasFeature('summary');
   const asrChunkingEnabled = !featuresLoaded || guard.isAsrChunkingEnabled();
 
   const [segmentDisplayTexts, setSegmentDisplayTexts] = useState<string[]>([]);
@@ -66,12 +51,9 @@ const TranscriptsTab: React.FC = () => {
 
   const { segments, currentTypingIndex, teacherSpeaker, detectedLanguage } =
     useAppSelector(s => s.transcript);
-  segmentsRef.current = segments;
-  teacherSpeakerRef.current = teacherSpeaker;
-  const { 
-    aiProcessing, 
-    uploadedAudioPath, 
-    sessionId,
+  const {
+    aiProcessing,
+    uploadedAudioPath,
     transcriptionDone,
   } = useAppSelector(s => s.ui);
 
@@ -117,19 +99,6 @@ const TranscriptsTab: React.FC = () => {
       return speaker;
     }
   }, [detectedLanguage, teacherSpeaker, segments]);
-
-  const finalizeTranscript = () => {
-    if (finishedRef.current || !mountedRef.current) return;
-    finishedRef.current = true;
-    dispatch(finishTranscript());
-    
-    setTimeout(() => {
-      if (mountedRef.current) {
-        dispatch(transcriptionComplete({ enableSummary: hasSummaryFeature }));
-      }
-    }, 150);
-    // Guards are reset only when sessionId changes (see useEffect below).
-  };
 
   useEffect(() => {
     if (segments.length > 0) {
@@ -280,156 +249,13 @@ const TranscriptsTab: React.FC = () => {
   }, [segments, currentTypingIndex]);
 
   useEffect(() => {
-    if (
-      !aiProcessing || 
-      !uploadedAudioPath || 
-      streamStartedRef.current ||
-      transcriptionDone
-    ) {
-      console.log('🎯 Transcript stream prevented:', {
-        aiProcessing,
-        uploadedAudioPath: !!uploadedAudioPath,
-        streamStartedRef: streamStartedRef.current,
-        transcriptionDone,
-      });
-      return;
-    }
-
-    console.log('🎯 Starting transcript stream for session:', sessionId);
-    streamStartedRef.current = true;
-    finishedRef.current = false;
-
-    const run = async () => {
-      try {
-        const stream = streamTranscript(uploadedAudioPath, sessionId!);
-
-        for await (const ev of stream) {
-          if (!mountedRef.current) {
-            console.log('📋 Component unmounted, stopping transcript stream');
-            return;
-          }
-
-          if (ev.type === "transcript_chunk") {
-            if (!transcriptionStartedRef.current) {
-              transcriptionStartedRef.current = true;
-              dispatch(startTranscription());
-            }
-            
-            const chunkData = ev.data;
-            if (chunkData.segments && Array.isArray(chunkData.segments)) {
-              const processedSegments = chunkData.segments.map((segment: any) => {
-                const offset = chunkData.start_time || 0;
-                const useOffset = segment.start < offset;
-
-                return {
-                  ...segment,
-                  start: useOffset ? segment.start + offset : segment.start,
-                  end: useOffset ? segment.end + offset : segment.end,
-                };
-              });
-              
-              dispatch(appendTranscriptChunk({
-                ...chunkData,
-                segments: processedSegments
-              }));
-            } else {
-              dispatch(appendTranscriptChunk(chunkData));
-            }
-          }
-
-          else if (ev.type === "transcript" && typeof ev.token === "string") {
-            if (!transcriptionStartedRef.current) {
-              transcriptionStartedRef.current = true;
-              dispatch(startTranscription());
-            }
-            dispatch(appendTranscriptChunk({ text: ev.token }));
-          }
-
-          else if (ev.type === "final") {
-            console.log('📋 Final transcript data received:', ev.data);
-            dispatch(setFinalTranscript(ev.data));
-            
-            if (ev.data.teacher_speaker) {
-              console.log('👨‍🏫 Teacher speaker identified:', ev.data.teacher_speaker);
-            }
-            
-            if (ev.data.speaker_text_stats) {
-              console.log('📊 Speaker stats received:', ev.data.speaker_text_stats);
-              dispatch(updateSpeakerStats(ev.data.speaker_text_stats));
-            }
-          }
-
-          else if (ev.type === "error") {
-            console.error("❌ Transcription error:", ev.message);
-            finalizeTranscript();
-            break;
-          }
-
-          else if (ev.type === "done") {
-            console.log("📋 Transcript stream done");
-
-            const latestSegments = segmentsRef.current;
-            if (latestSegments.length > 0) {
-              const maxEnd = Math.max(...latestSegments.map(s => s.end || 0).filter(end => end > 0));
-              if (maxEnd > 0) {
-                console.log('⏱️ Setting total duration from segments:', maxEnd);
-                dispatch(setTotalDuration(maxEnd));
-              }
-              
-              const speakerStats: { [speaker: string]: number } = {};
-              latestSegments.forEach(segment => {
-                if (segment.start !== undefined && segment.end !== undefined) {
-                  const duration = segment.end - segment.start;
-                  speakerStats[segment.speaker] = (speakerStats[segment.speaker] || 0) + duration;
-                }
-              });
-              
-              if (Object.keys(speakerStats).length > 0) {
-                dispatch(updateSpeakerStats(speakerStats));
-              }
-            }
-
-            finishTimeoutRef.current = window.setTimeout(() => {
-              if (mountedRef.current) {
-                finalizeTranscript();
-              }
-            }, teacherSpeakerRef.current ? 2500 : 3000);
-
-            break;
-          }
-        }
-      } catch (err) {
-        console.error("❌ Transcript stream failed:", err);
-        if (mountedRef.current) {
-          finalizeTranscript();
-        }
-      }
-    };
-
-    run();
-  }, [
-    aiProcessing,
-    uploadedAudioPath,
-    sessionId,
-    transcriptionDone,
-    dispatch
-  ]);
-
-  useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       typewriterControllers.current.forEach(c => c.abort());
       typewriterControllers.current.clear();
-      if (finishTimeoutRef.current) clearTimeout(finishTimeoutRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    streamStartedRef.current = false;
-    transcriptionStartedRef.current = false;
-    finishedRef.current = false;
-  }, [sessionId]);
 
   const getDisplayText = useCallback((group: GroupedSegment): string => {
     if (group.isComplete) {

@@ -5,24 +5,17 @@ import jsMind from "jsmind";
 import "jsmind/style/jsmind.css";
 import html2canvas from "html2canvas";
 import {
-  clearMindmapStartRequest,
-  mindmapLoadingStart as uiMindmapLoadingStart,
-  mindmapSuccess as uiMindmapSuccess,
   mindmapFailed as uiMindmapFailed,
   mindmapImageDone as uiMindmapImageDone,
 } from "../../redux/slices/uiSlice";
 
 import {
-  startMindmap as mmStart,
-  setMindmap,
   setRendered,
-  setSVG,
   setGenerationTime,
   setError,
-  clearMindmap,
 } from "../../redux/slices/mindmapSlice";
 
-import { fetchMindmap, uploadMindmapImage } from "../../services/api";
+import { uploadMindmapImage } from "../../services/api";
 import { useTranslation } from "react-i18next";
 import { useFeatureConfig } from "../../hooks/useFeatureConfig";
 
@@ -31,8 +24,6 @@ declare global {
     jsMind: any;
   }
 }
-
-const activeMindmapSessions = new Set<string>();
 
 const sanitizeNode = (node: any, fallbackIndex: number = 0, seen = new Set<string>()): any => {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return null;
@@ -174,37 +165,28 @@ const cleanJsMindContent = (content: string): any => {
   throw new Error("INVALID_FORMAT");
 };
 
+// Renders the mind map the pipeline fetched into the store (see
+// redux/useAudioPipeline), and — because both need the rendered DOM — takes the
+// screenshot the report embeds. The fetch is not owned here: this tab is
+// unmounted whenever another tab is selected, so a mind map may already be in
+// the store by the time it first mounts.
 const MindMapTab: React.FC = () => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { guard: featureGuard } = useFeatureConfig();
 
-  const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
-  const shouldStartMindmap = useAppSelector((s) => s.ui.shouldStartMindmap);
-  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
-  const summaryComplete = useAppSelector((s) => s.ui.summaryComplete);
 
-  const { finalText, isRendered, sessionId: mindmapSessionId } = useAppSelector((s) => s.mindmap);
+  const { finalText, isRendered, startedAt, sessionId: mindmapSessionId } = useAppSelector((s) => s.mindmap);
 
-  const startedRef = useRef(false);
-  const shouldStartRef = useRef(false);
-  const sessionRef = useRef<string | null>(null);
   const jsmindRef = useRef<HTMLDivElement>(null);
   const jsmindInstance = useRef<any>(null);
-  const startTimeRef = useRef<number | null>(null);
   const isInitializedRef = useRef(false);
   // Ensures the screenshot is captured/uploaded (and the session marked complete)
   // exactly once per session, even though renderMindmap re-runs on tab re-mounts.
   const capturedRef = useRef(false);
 
-  // Refs for values read inside the fetch effect but that must NOT be deps
-  const mindmapLoadingRef = useRef(false);
-  const finalTextRef = useRef<string | null>(null);
   const mindmapSessionIdRef = useRef<string | null>(null);
-
-  mindmapLoadingRef.current = mindmapLoading;
-  finalTextRef.current = finalText ?? null;
   mindmapSessionIdRef.current = mindmapSessionId ?? null;
 
   const cleanupJsMind = () => {
@@ -231,14 +213,6 @@ const MindMapTab: React.FC = () => {
       jsmindInstance.current = null;
     }
   };
-
-  useEffect(() => {
-    if (sessionRef.current && sessionRef.current !== sessionId) {
-      activeMindmapSessions.delete(sessionRef.current);
-      startedRef.current = false;
-    }
-    sessionRef.current = sessionId ?? null;
-  }, [sessionId]);
 
   useEffect(() => {
     if (!window.jsMind) {
@@ -325,8 +299,10 @@ const MindMapTab: React.FC = () => {
 
       isInitializedRef.current = true;
 
-      if (startTimeRef.current && !isRendered) {
-        dispatch(setGenerationTime(performance.now() - startTimeRef.current));
+      // Measured from where the fetch was kicked off (useAudioPipeline) through
+      // to this first render.
+      if (startedAt && !isRendered) {
+        dispatch(setGenerationTime(performance.now() - startedAt));
       }
 
       if (!isRendered) {
@@ -474,58 +450,8 @@ const MindMapTab: React.FC = () => {
     }
   };
 
-  // Keep a ref in sync with shouldStartMindmap so we can read it inside effects
-  // without adding it to dependency arrays (prevents the self-triggering loop).
-  useEffect(() => {
-    shouldStartRef.current = shouldStartMindmap;
-  }, [shouldStartMindmap]);
-
-  useEffect(() => {
-    if (!mindmapEnabled || !sessionId) return;
-    if (!shouldStartRef.current) return;
-    if (!summaryComplete) return;
-    // Already have result for this session (read via ref — not a dep)
-    if (mindmapSessionIdRef.current === sessionId && finalTextRef.current) return;
-    // Redux-level guard: already fetching (read via ref — not a dep)
-    if (mindmapLoadingRef.current) return;
-    // Component/module-level guards
-    if (activeMindmapSessions.has(sessionId) || startedRef.current) return;
-
-    startedRef.current = true;
-    activeMindmapSessions.add(sessionId);
-    startTimeRef.current = performance.now();
-
-    dispatch(mmStart(sessionId));
-    // Show the tab spinner while the request is in flight. Uses the
-    // loading-only action: uiMindmapStart would re-set shouldStartMindmap=true,
-    // which causes the effect to re-fire and hit the backend repeatedly.
-    dispatch(uiMindmapLoadingStart());
-    // Clear the trigger flag BEFORE the async call to stop re-entry.
-    dispatch(clearMindmapStartRequest());
-
-    (async () => {
-      try {
-        const fullMindmap = await fetchMindmap(sessionId);
-
-        if (typeof fullMindmap === "string" && fullMindmap.length > 0) {
-          dispatch(setMindmap(fullMindmap));
-          dispatch(uiMindmapSuccess());
-        } else {
-          throw new Error("Empty mindmap returned");
-        }
-      } catch (err: any) {
-        console.error("❌ Mindmap fetch error:", err);
-        dispatch(setError(err.message || "Mindmap generation failed"));
-        dispatch(uiMindmapFailed());
-      } finally {
-        dispatch(clearMindmapStartRequest());
-      }
-    })();
-  }, [mindmapEnabled, sessionId, summaryComplete, dispatch]);
-
   useEffect(() => {
     isInitializedRef.current = false;
-    startedRef.current = false;
     capturedRef.current = false;
   }, [sessionId]);
 
