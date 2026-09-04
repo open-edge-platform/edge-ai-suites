@@ -79,6 +79,13 @@ for a live, ephemeral on-device view. Additionally, a Prometheus endpoint is exp
 `localhost:9273/metrics` address, from which data can be scraped for
 long-term persistence.
 
+## AI Playground
+
+AI Playground is an optional open source generative AI application suite for offline AI chat,
+code assistance, document search, image analysis, and image and video generation, running on
+the same Edge Node Infrastructure software platform. See the
+[AI Playground — FedAero Setup Guide](ai-playground.md) for installation and setup steps.
+
 <!--hide_directive
 :::{toctree}
 :hidden:
@@ -88,6 +95,7 @@ Install OEP SDKs <install-oep-sdks.md>
 Install Handheld Multi-Modal Application <deploy-applications.md>
 Access Application User Interface <access-application.md>
 Benchmarks <benchmarks.md>
+AI Playground <ai-playground.md>
 
 :::
 hide_directive-->

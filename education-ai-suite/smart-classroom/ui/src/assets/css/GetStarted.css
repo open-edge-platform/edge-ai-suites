@@ -1,0 +1,208 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.gs-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 24px 32px;
+  overflow: auto;
+  font-family: var(--font-text);
+}
+
+.gs-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.gs-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.gs-title {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.gs-subtitle {
+  font-size: 12.5px;
+  color: var(--color-gray-700);
+}
+
+/* --- checklist --- */
+
+.gs-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.gs-item {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid #ececec;
+  background: #fafafa;
+}
+
+.gs-item:last-child {
+  border-bottom: none;
+}
+
+.gs-item.state-ok {
+  border-left-color: #4caf50;
+}
+
+.gs-item.state-blocked {
+  border-left-color: #d9534f;
+  background: #fdf4f3;
+}
+
+.gs-item.state-attention {
+  border-left-color: #e6b800;
+  background: #fffbf0;
+}
+
+.gs-item.state-pending {
+  border-left-color: #b0b3b8;
+}
+
+.gs-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #e0e6ea;
+  color: #55606a;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.gs-item.state-ok .gs-index {
+  background: #4caf50;
+  color: #fff;
+}
+
+.gs-item.state-blocked .gs-index {
+  background: #d9534f;
+  color: #fff;
+}
+
+.gs-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gs-item-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.gs-item-detail {
+  font-size: 12px;
+  color: var(--color-gray-700);
+  word-break: break-word;
+}
+
+.gs-item-action {
+  justify-self: end;
+}
+
+/* --- commonly used settings --- */
+
+.gs-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.gs-settings-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.gs-settings-title {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.gs-settings-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.gs-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gs-group-title {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #55606a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.gs-btn {
+  padding: 5px 14px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: #fff;
+  color: var(--color-gray-900);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.gs-btn:hover:not(:disabled) {
+  border-color: var(--color-theme);
+  color: var(--color-theme);
+}
+
+.gs-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.gs-btn-primary {
+  border-color: var(--color-theme);
+  background: var(--color-theme);
+  color: #fff;
+}
+
+.gs-btn-primary:hover:not(:disabled) {
+  background: #005c9e;
+  color: #fff;
+}

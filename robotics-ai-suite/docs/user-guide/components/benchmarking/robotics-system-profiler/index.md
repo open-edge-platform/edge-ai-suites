@@ -9,7 +9,7 @@ latencies, CPU/memory usage, message flow, and thread-level resource
 distribution across local and remote machines.
 
 
-<!--hide_directive
+
 :::{toctree}
 :maxdepth: 1
 
@@ -24,7 +24,7 @@ realsense2-tutorial-benchmark
 examples
 
 :::
-hide_directive-->
+
 
 
 ## Source Code

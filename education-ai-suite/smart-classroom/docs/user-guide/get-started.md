@@ -25,6 +25,11 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 > **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python
 > dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
 
+> **Prefer the desktop app?** You can skip this step entirely and run
+> [`.\start-desktop-app.ps1`](#option-b-desktop-app) instead. It installs Node.js if needed,
+> then does the prerequisite checks, Python environment and model preparation from its
+> **Setup** screen.
+
 The setup script will:
 
 1. **[1] Check System Requirements**
@@ -49,6 +54,10 @@ The setup script will:
 
 ## Step 3: Start Smart Classroom
 
+There are two ways to run the application.
+
+### Option A: Browser UI (services managed by PowerShell)
+
 After initial setup is complete, use the start script for subsequent runs or after modifying `config.yaml`:
 
 ```powershell
@@ -57,15 +66,12 @@ After initial setup is complete, use the start script for subsequent runs or aft
 
 **Optional Parameters:**
 
-- `-Electron` - Launch the UI as an Electron desktop app instead of a browser tab (the UI dev server still runs on port 5173)
+- `-Electron` - Shortcut for `.\start-desktop-app.ps1` (see Option B)
 - `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
 - `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
 - `-NoWindowsTerminal` - Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions/Ansible)
 
 ```powershell
-# Example: Launch the UI as a desktop app
-.\start-smart-classroom.ps1 -Electron
-
 # Example: Automated deployment
 .\start-smart-classroom.ps1 -Silent -NoElevate -NoWindowsTerminal
 ```
@@ -78,16 +84,38 @@ The startup script performs:
 - **Sequential Launch** - Backend -> Content Search -> Grading (if enabled) -> Frontend
 - **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
+### Option B: Desktop app
+
+```powershell
+.\start-desktop-app.ps1
+```
+
+The script only bootstraps Node, launches the UI and hands over. The app then supervises
+the Python services and starts the backend automatically.
+
+| Screen | What it does |
+|--------|--------------|
+| **Get Started** | Start here with an overview and initial guidance |
+| **Setup** | Prerequisite checks (OS, CPU, GPU/NPU drivers, Python, FFmpeg, DL Streamer) plus the Python environment and model preparation |
+| **Configuration** | Edit `config.yaml`, `runtime_config.yaml` and `.proxy-config` |
+| **Services** | Start / stop / restart the backend and watch live logs for it and every child service |
+
+**Optional Parameters:**
+
+- `-Dev` - Run the Vite dev server with hot reload
+- `-NoAutoStart` - Open the app without starting the backend automatically
+- `-SkipNodeInstall` - Fail instead of installing Node.js when it is missing
+- `-Silent` - Skip the proxy prompts and use the saved `.proxy-config`
+
+
 ## Step 4: Access the Application
 
-Once all services are running, open your browser:
+With **Option A**, open your browser once all services are running:
 
 - **Local:** <http://localhost:5173>
 - **Network:** <http://YOUR_IP:5173>
 
-> **Prefer a desktop app?** Start the script with `.\start-smart-classroom.ps1 -Electron`
-> to open the UI in an Electron desktop window instead of a browser tab. See
-> [Optional Parameters](#step-3-start-smart-classroom).
+With **Option B**, the desktop window opens on its own.
 
 ---
 
@@ -126,7 +154,7 @@ Advanced Setup guide covers:
 | Service | Port | Health Check |
 |---------|------|--------------|
 | Backend | 8000 | <http://localhost:8000/health> |
-| Content Search | 9011 | <http://localhost:9011/api/v1/system/health> |
+| Content Search | 9011 | <http://localhost:9011/api/v1/system/health> (200 only when ChromaDB, file ingest and video preprocess are ready too; 503 while any is starting) |
 | Layout Detection | 9902 | <http://localhost:9902/health> |
 | Grading | 9012 | <http://localhost:9012/api/v1/health> |
 | Frontend | 5173 | <http://localhost:5173> |

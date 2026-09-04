@@ -14,7 +14,7 @@ In this software reference, you'll use the `wandering` pipeline, to demonstrate 
 ## Next Steps
 Now that you've experimented with Robotics AI Suite in simulation, it's time to apply those to a real-world deployed robot. The [deployment learning path](../deployment/index.md) will help you set up your robot and see Robotics AI Suite in use in a production ready pipeline.
 
-<!--hide_directive
+
 :::{toctree}
 :maxdepth: 1
 :hidden:
@@ -23,4 +23,4 @@ basic_sim
 wandering_sim
 
 :::
-hide_directive-->
+

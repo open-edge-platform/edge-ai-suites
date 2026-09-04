@@ -53,6 +53,7 @@ init:
 			echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
 		fi; \
 	fi
+	@bash infra/scripts/harden-permissions.sh
 
 # ── Local simulation mode (default) ───────────────────────────────────────
 # Camera mode is controlled via .env. Each target below sets every relevant

@@ -16,7 +16,7 @@ Select the interface you are using to configure the **development kit side**:
 *   **[CAN Bus](./can.md)** — Pinout for the isolated CAN FD channels.
 *   **[GPIO](./gpio.md)** — 40-pin header exposing I2C, SPI, PWM, UART, and general purpose I/O.
 
-<!--hide_directive
+
 :::{toctree}
 :caption: Components
 :hidden:
@@ -25,4 +25,3 @@ GMSL <gmsl>
 CAN Bus <can>
 GPIO <gpio>
 :::
-hide_directive-->

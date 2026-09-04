@@ -114,24 +114,24 @@ The CPU Hotspots Analysis is carried out with the following parameters:
 
 2. Run the below command to source the ROS 2 setup files.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    source /opt/ros/jazzy/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    source /opt/ros/humble/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Run the below command to set the ROS_DOMAIN_ID.
 
@@ -151,24 +151,24 @@ The CPU Hotspots Analysis is carried out with the following parameters:
    [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
    tutorial.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    vtune -collect hotspots -knob sampling-mode=hw -knob sampling-interval=5 -knob enable-stack-collection=true -knob stack-size=2048 -duration=30 -result-dir ./vtune_results_hotspots /opt/ros/jazzy/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    vtune -collect hotspots -knob sampling-mode=hw -knob sampling-interval=5 -knob enable-stack-collection=true -knob stack-size=2048 -duration=30 -result-dir ./vtune_results_hotspots /opt/ros/humble/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 The results are collected in `vtune_results_hotspots` directory.
 
@@ -262,24 +262,24 @@ parameters:
 
 2. Run the below command to source the ROS 2 setup files.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    source /opt/ros/jazzy/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    source /opt/ros/humble/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Run the below command to set the ROS_DOMAIN_ID.
 
@@ -299,24 +299,24 @@ parameters:
    [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
    tutorial.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    vtune -collect uarch-exploration -knob sampling-interval=5 -duration=30 -result-dir=./vtune_results_uarch /opt/ros/jazzy/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    vtune -collect uarch-exploration -knob sampling-interval=5 -duration=30 -result-dir=./vtune_results_uarch /opt/ros/humble/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 The results are collected in `vtune_results_uarch` directory.
 
