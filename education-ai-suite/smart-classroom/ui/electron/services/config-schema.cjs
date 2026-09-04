@@ -164,7 +164,6 @@ const FIELDS = [
     type: 'string',
     maxLength: 128,
     wizard: true,
-    // The setup script's picks; free text stays allowed for anything else.
     suggestions: ['whisper-base', 'whisper-small', 'whisper-medium', 'whisper-large', 'paraformer-zh'],
     help: 'whisper-small is the balanced default; paraformer-zh is Chinese-optimised.',
   },
@@ -197,7 +196,7 @@ const FIELDS = [
     type: 'secret',
     maxLength: 256,
     wizard: true,
-    help: 'Required only when diarization is enabled.',
+    help: 'Required only when diarization is enabled and diarization model is not downloaded yet.',
   },
   {
     path: 'models.asr.temperature',
@@ -499,6 +498,8 @@ const FIELDS = [
     label: 'VLM model',
     type: 'string',
     maxLength: 200,
+    suggestions: ['Qwen/Qwen3-VL-8B-Instruct', 'Qwen/Qwen3.5-9B', 'Qwen/Qwen3.6-35B-A3B'],
+    help: 'These options are downloaded as pre-converted OpenVINO IR; anything else is converted on first run.',
   },
   {
     path: 'models.text_gen.device',
@@ -1167,4 +1168,125 @@ function coerce(field, value) {
   }
 }
 
-module.exports = { FIELDS, GROUPS, SUBGROUPS, CONFIG, RUNTIME, PROXY, get, coerce };
+// ---------------------------------------------------------------------------
+// Cross-field rules
+// ---------------------------------------------------------------------------
+// coerce() sees one field at a time, so it cannot catch combinations that are
+// each legal alone and broken together. Every rule below mirrors a check the
+// Python side already makes when it loads the config; the point is to fail in
+// the settings screen rather than minutes later in a backend traceback.
+//
+// A rule reads the config.yaml that saving *would* produce, so it sees pending
+// edits and untouched on-disk values alike. `context` carries the few facts the
+// document cannot answer on its own.
+
+// components/asr/asr_handle.py::_build_processor dispatches on the provider
+// paired with a substring of the model name.
+const ASR_MODEL_FAMILY = { openai: 'whisper', openvino: 'whisper', funasr: 'paraformer' };
+
+// utils/pipeline_modes.py: FunASR runs long audio natively and the CAM++
+// speaker model is Mandarin-tuned, so both features demand this exact pair.
+const FUNASR_PARAFORMER = 'ASR provider "funasr" with model "paraformer-zh"';
+
+const lower = (value) => String(value ?? '').trim().toLowerCase();
+
+// config.yaml uses YAML 1.1 booleans ("True"/"False") in places.
+const asBool = (value) => (typeof value === 'boolean' ? value : lower(value) === 'true');
+
+const isSet = (value) => {
+  const text = lower(value);
+  return text !== '' && text !== 'none' && text !== 'null';
+};
+
+function isFunasrParaformer(cfg) {
+  return lower(cfg?.models?.asr?.provider) === 'funasr' && lower(cfg?.models?.asr?.name) === 'paraformer-zh';
+}
+
+const RULES = [
+  {
+    id: 'asrProviderModel',
+    summary: 'Provider and model do not match',
+    file: CONFIG,
+    // Both halves are flagged: either one is a reasonable thing to fix.
+    paths: ['models.asr.provider', 'models.asr.name'],
+    check(cfg) {
+      const provider = lower(cfg?.models?.asr?.provider);
+      const name = lower(cfg?.models?.asr?.name);
+      const family = ASR_MODEL_FAMILY[provider];
+      // An unknown provider is the enum's problem, and an empty name is caught
+      // by the field itself; neither is this rule's to report.
+      if (!family || !name) return null;
+      if (name.includes(family)) return null;
+      return `The ${provider} provider only runs ${family} models, but the ASR model is "${cfg.models.asr.name}". Pick a ${family} model or change the provider.`;
+    },
+  },
+  {
+    id: 'diarizationToken',
+    summary: 'Needs a Hugging Face token',
+    file: CONFIG,
+    paths: ['models.asr.diarization', 'models.asr.hf_token'],
+    check(cfg, context) {
+      if (!asBool(cfg?.models?.asr?.diarization)) return null;
+      // A token is only needed for the download. Once the model is on disk the
+      // backend never asks for one again.
+      if (context.diarizationModelReady) return null;
+      if (isSet(cfg?.models?.asr?.hf_token)) return null;
+      const model = cfg?.models?.diarization?.name || 'the diarization model';
+      return `Speaker diarization needs ${model}, which is not downloaded yet, and downloading it needs a Hugging Face token. Add the token or turn diarization off.`;
+    },
+  },
+  {
+    id: 'campplusBackend',
+    summary: 'Needs funasr / paraformer-zh',
+    file: CONFIG,
+    paths: ['models.diarization.backend'],
+    check(cfg) {
+      if (lower(cfg?.models?.diarization?.backend) !== 'campplus') return null;
+      if (isFunasrParaformer(cfg)) return null;
+      return `The campplus diarization backend requires ${FUNASR_PARAFORMER}, but the ASR is ${cfg?.models?.asr?.provider}/${cfg?.models?.asr?.name}.`;
+    },
+  },
+  {
+    id: 'wholeFileChunking',
+    summary: 'Needs funasr / paraformer-zh',
+    file: CONFIG,
+    paths: ['audio_preprocessing.chunking'],
+    check(cfg) {
+      const chunking = cfg?.audio_preprocessing?.chunking;
+      // Absent means the default, which is on; only an explicit false applies.
+      if (chunking === undefined || chunking === null || asBool(chunking)) return null;
+      if (isFunasrParaformer(cfg)) return null;
+      return `Transcribing without chunking requires ${FUNASR_PARAFORMER}, but the ASR is ${cfg?.models?.asr?.provider}/${cfg?.models?.asr?.name}.`;
+    },
+  },
+];
+
+/**
+ * `message` states the whole problem and is shown once; `summary` is the short
+ * form for the field rows, which would otherwise repeat the sentence once per
+ * field the rule names.
+ *
+ * @param {object} cfg the config.yaml that saving would produce
+ * @param {{diarizationModelReady?: boolean}} context facts the document cannot answer
+ * @returns {Array<{file: string, path: string, rule: string, summary: string, message: string}>}
+ */
+function validate(cfg, context = {}) {
+  const problems = [];
+  for (const rule of RULES) {
+    let message = null;
+    try {
+      message = rule.check(cfg, context);
+    } catch {
+      // A rule must never be the reason a save fails; a malformed document is
+      // the parser's business, not this one's.
+      message = null;
+    }
+    if (!message) continue;
+    for (const path of rule.paths) {
+      problems.push({ file: rule.file, path, rule: rule.id, summary: rule.summary, message });
+    }
+  }
+  return problems;
+}
+
+module.exports = { FIELDS, GROUPS, SUBGROUPS, RULES, CONFIG, RUNTIME, PROXY, get, coerce, validate };

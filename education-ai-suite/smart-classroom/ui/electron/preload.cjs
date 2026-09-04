@@ -67,6 +67,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Only paths in the main-process schema allowlist can be read or written.
   config: {
     describe: () => ipcRenderer.invoke('config:describe'),
+    validate: (changes) => ipcRenderer.invoke('config:validate', changes),
     apply: (changes) => ipcRenderer.invoke('config:apply', changes),
     reveal: () => ipcRenderer.invoke('config:reveal'),
   },

@@ -13,7 +13,7 @@ import './App.css';
 import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
 import { getSettings, pingBackend } from './services/api';
-import { isServiceManagerAvailable, useServices } from './services/serviceManager';
+import { isServiceManagerAvailable, useReloadOnBackendRestart, useServices } from './services/serviceManager';
 import { useSetup } from './services/setupManager';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 import { useTranslation } from 'react-i18next';
@@ -91,6 +91,11 @@ const App: React.FC = () => {
   const { services: managedServices } = useServices();
   const { steps: setupSteps } = useSetup();
   const backendService = managedServices.find((service) => service.id === 'backend');
+  // Everything below — the session, the transcript, the recording flags — belongs
+  // to one backend process. Restarting it from Services, Configuration or Get
+  // started invalidates all of it, so start the page over rather than leave a
+  // session on screen that the new backend has never heard of.
+  useReloadOnBackendRestart(backendService);
   const setupChecked = setupSteps.some((step) => step.status !== 'unknown');
   const setupBlocking = setupSteps.some((step) => step.status === 'missing' || step.status === 'failed');
   const firstRunScreen =
