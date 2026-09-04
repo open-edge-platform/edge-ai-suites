@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
 ### Summary of Tools
 
 - Common tools: `bash`, `lscpu`, `lsblk`, `ip`, etc.
-- Optional tools for a more complete report: `dmidecode`, `turbostat`, `intel_gpu_top`, `vulkaninfo`, `vainfo`, `clinfo`, `fwupdmgr`
+- Optional tools for a more complete report: `dmidecode`, `turbostat`, `intel_gpu_top`, `vulkaninfo`, `vainfo`, `clinfo`, `fwupdmgr`, `intel_lpmd`, `thermald`
 - `sudo` recommended for full visibility (firmware, DMI, turbostat, dmesg)
 
 ### Running the script
@@ -95,7 +95,7 @@ The following tables describe what is expected to be present on a system that ha
 | Container runtime | Docker CE, containerd, Buildx and the Compose plugin (active when `host_type=container`) |
 | Kubernetes sever | K3s single-node server (active when `host_type=kubernetes`); traefik disabled |
 | SR-IOV | `intel-sriov-vf.service` — provisions and persists 7 GPU VFs across reboots |
-| Power monitoring and tuning | `powertop`, `pcm`; power tuning scripts (`battery`, `balanced`, `performance`, `graphical` profiles) |
+| Power monitoring and tuning | `powertop`, `pcm`, `intel_lpmd`, `thermald`; power tuning scripts (`battery`, `balanced`, `performance`, `graphical` profiles) |
 | GPU monitoring | `intel-gpu-tools 1.28` (`intel_gpu_top`) |
 | Network performance and profiling | `iperf3`, `linuxptp`, `tcpdump` |
 
