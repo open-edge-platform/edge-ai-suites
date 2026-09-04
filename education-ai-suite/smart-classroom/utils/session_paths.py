@@ -63,6 +63,10 @@ class SessionPaths:
         return SessionPaths.raw_dir(session_id) / "ocr_result.txt"
 
     @staticmethod
+    def asr_events_path(session_id: str) -> Path:
+        return SessionPaths.raw_dir(session_id) / "asr_events.jsonl"
+
+    @staticmethod
     def va_dir(session_id: str) -> Path:
         return SessionPaths.raw_dir(session_id) / "va"
 

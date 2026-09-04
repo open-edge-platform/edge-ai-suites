@@ -91,6 +91,13 @@ def test_ocr_result_path():
         )
 
 
+def test_asr_events_path():
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        assert SessionPaths.asr_events_path("s1") == (
+            Path(tmp) / "proj" / "s1" / "raw" / "asr_events.jsonl"
+        )
+
+
 def test_va_dir():
     with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
         assert SessionPaths.va_dir("s1") == Path(tmp) / "proj" / "s1" / "raw" / "va"

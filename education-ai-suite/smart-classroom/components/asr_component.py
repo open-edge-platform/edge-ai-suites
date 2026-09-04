@@ -8,6 +8,7 @@ from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.runtime_config_loader import RuntimeConfig
 from utils.session_paths import SessionPaths
+from utils.asr_events import AsrEventWriter
 from components.asr.diarization.factory import build_diarizer
 from utils.pipeline_modes import resolve_chunking
 from model_manager import ModelManager
@@ -278,11 +279,13 @@ class ASRComponent(PipelineComponent):
                 if os.path.exists(chunk_path) and DELETE_CHUNK_AFTER_USE:
                     os.remove(chunk_path)
 
-                yield {
+                chunk_result = {
                     **chunk_data,
                     "text": transcribed_text,
                     "segments": ui_segments
                 }
+                AsrEventWriter.write(self.session_id, chunk_result)
+                yield chunk_result
 
             # ===== FINAL FLUSH =====
             if self.pending_segments and self.last_known_speaker:
@@ -346,11 +349,13 @@ class ASRComponent(PipelineComponent):
                     append=False
                 )
 
-            yield {
+            final_result = {
                 "event": "final",
                 "teacher_speaker": teacher_speaker,
                 "speaker_text_stats": self.speaker_text_len
             }
+            AsrEventWriter.write(self.session_id, final_result)
+            yield final_result
 
         finally:
             if default_torch_threads is not None:
