@@ -20,7 +20,7 @@
 #
 SHELL := /bin/bash
 
-TAG          ?= latest
+TAG ?= latest
 REGISTRY     ?= true
 REGISTRY_URL ?= intel/
 
