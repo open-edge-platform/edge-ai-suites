@@ -26,23 +26,58 @@ services.
 ## 2. Set Up EC-RAG
 
 To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow
-the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md).
+the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md). (Please use vLLM backend refer to ['vLLM Setup'](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md#vllm))
 
-For the latest model support, you can modify the EC-RAG vLLM backend image version and
-configuration like this:
+### a. Prepare embedding/reranker/LLM models
 
 ```bash
-# clone OPEA EC-RAG repo
-git clone https://github.com/opea-project/GenAIExamples.git
-cd GenAIExamples/EdgeCraftRAG
+python3 -m venv model_download_venv
+source model_download_venv/bin/activate
+# Download BAAI/bge-m3 和 BAAI/bge-reranker-large
+pip install --upgrade --upgrade-strategy eager "optimum[openvino]"
+export HF_ENDPOINT=https://hf-mirror.com
+export MODEL_PATH=${PWD}/workspace/models
+optimum-cli export openvino -m BAAI/bge-m3 ${MODEL_PATH}/BAAI/bge-m3-int8 --weight-format int8 --task sentence-similarity
+optimum-cli export openvino -m BAAI/bge-reranker-large  ${MODEL_PATH}/BAAI/bge-reranker-large-int8 --weight-format int8 --task text-classification
+# Download Qwen3.5-35B-A3B
+pip install modelscope
+export LLM_MODEL="Qwen/Qwen3.5-35B-A3B"
+modelscope download --model $LLM_MODEL --local_dir "${MODEL_PATH}/${LLM_MODEL}"
+# clean venv
+deactivate
+rm -rf model_download_venv
+```
 
-# change the vllm image version and related config:
+### b. Start Service
+
+```bash
+# clone OPEA EC-RAG repo with pinned commit
+git clone --filter=blob:none --sparse https://github.com/opea-project/GenAIExamples.git
+cd GenAIExamples
+git sparse-checkout set EdgeCraftRAG
+git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
+cd EdgeCraftRAG
+
+# For the latest model support, you can modify the EC-RAG vLLM backend image version and
+# configuration like this:
+compose=docker_compose/intel/gpu/arc/compose.yaml
+
+grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
+  echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
+
 sed -i \
   -e '/--disable-log-requests/d' \
   -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
   -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
   -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
-  docker_compose/intel/gpu/arc/compose.yaml
+  "$compose"
+
+grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
+  echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
 ```
 
 Below is a reference pipeline configuration:
@@ -56,6 +91,66 @@ Below is a reference pipeline configuration:
 - `MAX_MODEL_LEN`: `60000`
 - `QUANTIZATION`: `fp8`
 - `GPU_MEMORY_UTIL`: `0.65`
+# If you have limited GPU resources, please try to increase GPU_MEMORY_UTIL and decrease MAX_MODEL_LEN
+```
+
+### c. Load Pipeline
+
+Get the host IP and send the pipeline configuration directly to EC-RAG:
+
+```bash
+HOST_IP=$(hostname -I | awk '{print $1}')
+
+curl -X POST "http://${HOST_IP}:16010/v1/settings/pipelines" \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<EOF | jq '.'
+{
+  "name": "rag_pipeline",
+  "node_parser": {
+    "chunk_size": 400,
+    "chunk_overlap": 48,
+    "parser_type": "simple"
+  },
+  "indexer": {
+    "indexer_type": "faiss_vector",
+    "embedding_model": {
+      "model_id": "BAAI/bge-m3-int8",
+      "model_path": "./models/BAAI/bge-m3-int8",
+      "device": "auto",
+      "weight": "INT8"
+    }
+  },
+  "retriever": {
+    "retriever_type": "vectorsimilarity",
+    "retrieve_topk": 30
+  },
+  "postprocessor": [
+    {
+      "processor_type": "reranker",
+      "top_n": 2,
+      "reranker_model": {
+        "model_id": "BAAI/bge-reranker-large-int8",
+        "model_path": "./models/BAAI/bge-reranker-large-int8",
+        "device": "auto",
+        "weight": "INT8"
+      }
+    }
+  ],
+  "generator": {
+    "generator_type": "chatqna",
+    "inference_type": "vllm",
+    "model": {
+      "model_id": "Qwen/Qwen3.5-35B-A3B",
+      "model_path": "",
+      "device": "",
+      "weight": ""
+    },
+    "prompt_path": "./default_prompt.txt",
+    "vllm_endpoint": "http://${HOST_IP}:8086"
+  },
+  "active": "True"
+}
+EOF
 ```
 
 ## 3. Set Up OpenClaw
@@ -66,6 +161,12 @@ If you do not have OpenClaw yet, install it from the official repository at
 <https://github.com/openclaw/openclaw>. Install `openclaw@2026.5.6`:
 
 ```bash
+# openclaw needs Node.js >= 22.14.0
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a===22&&b>=14)?0:1)' \
+  || { echo "ERROR: Node.js >= 22.14.0 required, found $(node -v)"; exit 1; }
+
 npm install -g openclaw@2026.5.6
 ```
 
@@ -453,6 +554,33 @@ Expected result: The UI should display a professional HTML/PDF report comparing 
 Robotics G1 Basic with other products, generated using the `competitive_analysis_PDF_generator` skill.
 
 ## 6. Use the Knowledgebase Skill
+
+First install the `knowledgebase` skill the same way as in Steps 3.3–3.4 — copy its directory
+into the workspace and register it in `openclaw.json`:
+
+```bash
+cp -r ./skills/knowledgebase ~/.openclaw/workspace/skills/
+```
+
+Add it alongside the other skill under `skills.entries` in `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "knowledgebase": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Then restart the gateway so OpenClaw picks it up:
+
+```bash
+openclaw gateway restart
+```
 
 If the Large Language Model (LLM) is not strong enough to use the knowledgebase skill
 automatically, add the following instruction to OpenClaw's `AGENTS.md`:

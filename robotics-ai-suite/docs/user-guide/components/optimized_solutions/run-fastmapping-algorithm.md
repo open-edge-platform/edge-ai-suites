@@ -4,7 +4,7 @@ FastMapping application is the Intel® optimized version of octomap.
 
 ## Source Code
 
-The source code of this component can be found here: [FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/fast-mapping)
+The source code of this component can be found here: [FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/components/fast-mapping)
 
 ## Prerequisites
 
@@ -90,7 +90,7 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
    Expected output:
 
-   <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/user-guide/software_references/amr/videos/fast_mapping.mp4>
+   <https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/docs/user-guide/software_references/amr/videos/fast_mapping.mp4>
 
 5. Run the FastMapping sample application using RealSense camera
    input with RTAB-Map:

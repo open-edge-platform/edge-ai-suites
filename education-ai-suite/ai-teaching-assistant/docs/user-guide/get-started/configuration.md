@@ -2,24 +2,22 @@
 
 AI Teaching Assistant uses three configuration layers:
 
-1. Launcher environment variables from `.env`
-2. Service YAML config files (`audio-analyzer`, `text-to-speech`, `rag-service`)
-3. Per-session runtime parameters from UI requests
+1. [Launcher-Level environment variables](#1-launcher-level-environment-variables) from `.env`
+2. [Service YAML config files](#2-service-yaml-files) (`audio-analyzer`, `text-to-speech`, `rag-service`)
+3. [Per-session runtime parameters](#3-ui-runtime-parameters) from UI requests
 
 This guide documents where to change each type.
 
-## 1) `.env` (Launcher-Level)
+## 1. Launcher-Level Environment Variables
 
-File:
-- [.env](../../../.env)
-
-Loaded by:
-- [start_ata.ps1](../../../start_ata.ps1)
+The
+[.env](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/education-ai-suite/ai-teaching-assistant/.env) file is loaded by
+[start_ata.ps1](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/education-ai-suite/ai-teaching-assistant/start_ata.ps1)
 
 Typical variables:
 
 | Variable | Purpose |
-|---|---|
+| --- | --- |
 | `KIOSK_CORE_ANALYZER_URL` | `kiosk-core` -> `audio-analyzer` endpoint |
 | `KIOSK_CORE_RAG_URL` | `kiosk-core` -> `rag-service` endpoint |
 | `KIOSK_CORE_TTS_URL` | `kiosk-core` -> `text-to-speech` endpoint |
@@ -37,27 +35,31 @@ Typical variables:
 
 After `.env` changes, restart services.
 
-## 2) Service YAML Files
+## 2. Service YAML Files
 
-### audio-analyzer
-Active runtime file:
-- [edge-ai-libraries/microservices/audio-analyzer/config.yaml](../../../edge-ai-libraries/microservices/audio-analyzer/config.yaml)
+- **audio-analyzer**
 
-### text-to-speech
-Active runtime file:
-- [edge-ai-libraries/microservices/text-to-speech/config.yaml](../../../edge-ai-libraries/microservices/text-to-speech/config.yaml)
+  Active runtime file:
+  [edge-ai-libraries/microservices/audio-analyzer/config.yaml](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/audio-analyzer/config.yaml)
 
-### rag-service
-Active runtime file:
-- [voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml](../../../voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml)
+- **text-to-speech**
 
-Key model fields in `rag-service/config.yaml`:
-- `models.llm.hf_id`
-- `models.embedding.hf_id`
-- `retrieval.reranker.hf_id`
-- per-model `device` and `weight_format`
+  Active runtime file:
+  [edge-ai-libraries/microservices/text-to-speech/config.yaml](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/text-to-speech/config.yaml)
 
-## 3) UI Runtime Parameters
+- **rag-service**
+
+  Active runtime file:
+  [voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml](https://github.com/intel-retail/voice-enabled-interactions/blob/release-2026.2.0/smart-kiosk-assistant/rag-service/config.yaml)
+
+  Key model fields in `rag-service/config.yaml`:
+
+  - `models.llm.hf_id`
+  - `models.embedding.hf_id`
+  - `retrieval.reranker.hf_id`
+  - per-model `device` and `weight_format`
+
+## 3. UI Runtime Parameters
 
 The React UI sends stream session options through
 `POST /api/v1/sessions/start-stream`:
@@ -68,15 +70,15 @@ The React UI sends stream session options through
 - `max_session_seconds`
 - `silence_threshold`
 
-Defaults are defined in:
-- [assistant-react-ui/src/config.ts](../../../assistant-react-ui/src/config.ts)
+Defaults are defined in
+[assistant-react-ui/src/config.ts](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/education-ai-suite/ai-teaching-assistant/assistant-react-ui/src/config.ts)
 
 ## UI Proxy Configuration
 
-The `ai-teaching-assistant ui` reverse-proxy routes are configured in:
-- [ata_ui_server.py](../../../ata_ui_server.py)
+The `ai-teaching-assistant ui` reverse-proxy routes are configured in [ata_ui_server.py](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/education-ai-suite/ai-teaching-assistant/ata_ui_server.py).
 
-Proxy env vars:
+Below are environment variables for proxy:
+
 - `KIOSK_UI_KIOSK_CORE_URL`
 - `KIOSK_UI_RAG_URL`
 - `KIOSK_UI_TTS_URL`

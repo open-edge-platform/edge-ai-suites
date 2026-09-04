@@ -5,5 +5,5 @@ apiVersion: v2
 name: coturn
 description: Coturn TURN server for WebRTC NAT traversal.
 type: application
-version: 2026.2.0-rc2-helm
+version: 2026.2.0-rc3-helm
 appVersion: "4.6.2"
