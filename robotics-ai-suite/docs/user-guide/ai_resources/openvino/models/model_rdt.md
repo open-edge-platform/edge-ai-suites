@@ -19,7 +19,7 @@ Robotics Diffusion Transformer with 1.2B parameters (RDT-1B), is a diffusion-bas
 
 ## Model Conversion
 
-RDT-1B model consists of several components, the conversion process involves exporting these components to OpenVINO™ IR format. The conversion python script and jupyter notebook are available, please refer to [Sample Pipeline - RDT Installation](../../../../software_references/humanoid/sample_pipelines/robotics_diffusion_transformer.md) to get installation and environment ready. You can download a [pre-trained RDT-1B weights](https://hf-mirror.com/robotics-diffusion-transformer/rdt-1b) from the Hugging Face Hub.
+RDT-1B model consists of several components, the conversion process involves exporting these components to OpenVINO™ IR format. The conversion python script and jupyter notebook are available, please refer to [Sample Pipeline - RDT Installation](../../../software_references/humanoid/sample_pipelines/robotics_diffusion_transformer.md) to get installation and environment ready. You can download a [pre-trained RDT-1B weights](https://hf-mirror.com/robotics-diffusion-transformer/rdt-1b) from the Hugging Face Hub.
 
 ### Convert by Script
 

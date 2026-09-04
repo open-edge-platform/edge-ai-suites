@@ -53,21 +53,21 @@ This section explains the procedure to configure the APT package manager to use 
 
 6. For the latest Intel graphics support, add the ``kobuk`` PPA. For Ubuntu 22, `kisak` is used:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
    ```bash
    sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
    ```
-   <!--hide_directive:::hide_directive-->
+   :::
 
 ## 4. Install OpenVINO™ Packages
 
@@ -81,33 +81,33 @@ The following steps will add the OpenVINO™ APT repository to your package mana
 
 2. Add the APT package sources for OpenVINO™ 2025:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu24 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    echo "deb [signed-by=/usr/share/keyrings/openvino-archive-keyring.gpg] https://apt.repos.intel.com/openvino/2025 ubuntu22 main" | sudo tee /etc/apt/sources.list.d/intel-openvino-2025.list
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Run the following commands to create the file ``/etc/apt/preferences.d/intel-openvino``.
 
    This will pin the OpenVINO™ version to 2025.3.0. Earlier versions of OpenVINO™
    might not support inferencing on the NPU of Intel® Core™ Ultra processors.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    echo -e "\nPackage: openvino-libraries-dev\nPin: version 2025.3.0*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/intel-openvino
@@ -116,9 +116,9 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    echo -e "\nPackage: ros-jazzy-openvino-node\nPin: version 2025.3.0*\nPin-Priority: 1002" | sudo tee -a /etc/apt/preferences.d/intel-openvino
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    echo -e "\nPackage: openvino-libraries-dev\nPin: version 2025.3.0*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/intel-openvino
@@ -127,8 +127,8 @@ The following steps will add the OpenVINO™ APT repository to your package mana
    echo -e "\nPackage: ros-humble-openvino-node\nPin: version 2025.3.0*\nPin-Priority: 1002" | sudo tee -a /etc/apt/preferences.d/intel-openvino
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    If you decide to use a different OpenVINO™ version, ensure that all four packages
    (``openvino-libraries-dev``, ``openvino``, ``ros-jazzy-openvino-wrapper-lib``,
@@ -158,9 +158,9 @@ The following steps will install the OpenVINO™ packages:
 
 4. Clear any previous installation configurations:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt purge ros-jazzy-openvino-node
@@ -168,9 +168,9 @@ The following steps will install the OpenVINO™ packages:
    echo PURGE | sudo debconf-communicate ros-jazzy-openvino-node
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt purge ros-humble-openvino-node
@@ -178,8 +178,8 @@ The following steps will install the OpenVINO™ packages:
    echo PURGE | sudo debconf-communicate ros-humble-openvino-node
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 5. Install the OpenVINO™ Runtime:
 
@@ -189,24 +189,24 @@ The following steps will install the OpenVINO™ packages:
 
 6. Install the ROS 2 OpenVINO™ Node:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo -E apt install ros-jazzy-openvino-node
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo -E apt install ros-humble-openvino-node
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    During the installation of the "openvino-node" package,
    you will be prompted to decide whether to install the OpenVINO™ IR
@@ -219,9 +219,9 @@ The following steps will install the OpenVINO™ packages:
 If you need to reinstall OpenVINO™ or clean your system after a failed
 installation, run the following commands:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt purge ros-jazzy-openvino-node
@@ -230,9 +230,9 @@ echo PURGE | sudo debconf-communicate ros-jazzy-openvino-node
 sudo apt install ros-jazzy-openvino-node
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt purge ros-humble-openvino-node
@@ -241,8 +241,8 @@ echo PURGE | sudo debconf-communicate ros-humble-openvino-node
 sudo -E apt install ros-humble-openvino-node
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## 5. Install RealSense Camera SDK
 
@@ -276,9 +276,9 @@ access to commonly used robotic functionality with ease.
 
 4. Install the RealSense drivers and libraries:
 
-   <!--hide_directive:::::{tab-set}hide_directive-->
-   <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install -y --allow-downgrades ros-jazzy-librealsense2
@@ -286,9 +286,9 @@ access to commonly used robotic functionality with ease.
    sudo apt install librealsense2
    ```
 
-   <!--hide_directive::::hide_directive-->
-   <!--hide_directive::::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install -y --allow-downgrades ros-humble-librealsense2
@@ -296,8 +296,8 @@ access to commonly used robotic functionality with ease.
    sudo apt install librealsense2
    ```
 
-   <!--hide_directive::::hide_directive-->
-   <!--hide_directive:::::hide_directive-->
+   ::::
+   :::::
 
 ## 6. Install Robotics AI Suite Deb packages
 
@@ -315,9 +315,9 @@ This section details steps to install Robotics AI Suite Deb packages.
 
 2. Follow the instructions to install Gazebo:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get update
@@ -329,9 +329,9 @@ This section details steps to install Robotics AI Suite Deb packages.
    sudo apt-get install gz-harmonic
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get update
@@ -343,14 +343,14 @@ This section details steps to install Robotics AI Suite Deb packages.
    sudo apt-get update
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Choose the Autonomous Mobile Robot Deb package to install.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    **ros-jazzy-robotics-sdk**
       The standard version of the Autonomous Mobile Robot. This package includes almost everything except for a handful of tutorials and bag files.
@@ -358,9 +358,9 @@ This section details steps to install Robotics AI Suite Deb packages.
    **ros-jazzy-robotics-sdk-complete**
       The complete version of the Autonomous Mobile Robot. It also includes those items excluded from the standard version. Please note that the complete SDK downloads approximately 20GB of additional files.
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    **ros-humble-robotics-sdk**
       The standard version of the Autonomous Mobile Robot. This package includes almost everything except for a handful of tutorials and bag files.
@@ -368,24 +368,24 @@ This section details steps to install Robotics AI Suite Deb packages.
    **ros-humble-robotics-sdk-complete**
       The complete version of the Autonomous Mobile Robot. It also includes those items excluded from the standard version. Please note that the complete SDK downloads approximately 20GB of additional files.
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 4. Install the Robotics AI Suite Deb package
 
    Install command example:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt install ros-jazzy-robotics-sdk
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    Intel oneAPI requires GCC >= 12:
 
@@ -395,8 +395,8 @@ This section details steps to install Robotics AI Suite Deb packages.
    sudo apt install ros-humble-robotics-sdk
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    Your installation time will vary based on network speed and chosen packages.
 
@@ -406,72 +406,72 @@ This section details steps to install Robotics AI Suite Deb packages.
 
    - Intel SSE-only CPU instruction accelerated package for Collaborative SLAM (installed by default):
 
-     <!--hide_directive:::::{tab-set}hide_directive-->
-     <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: jazzyhide_directive-->
+     :::::{tab-set}
+     ::::{tab-item} **Jazzy**
+     :sync: jazzy
 
      ```bash
      # Required for Intel® Atom® processor-based systems
      sudo apt-get install ros-jazzy-collab-slam-sse
      ```
 
-     <!--hide_directive::::hide_directive-->
-     <!--hide_directive::::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: humblehide_directive-->
+     ::::
+     ::::{tab-item} **Humble**
+     :sync: humble
 
      ```bash
      # Required for Intel® Atom® processor-based systems
      sudo apt-get install ros-humble-collab-slam-sse
      ```
 
-     <!--hide_directive::::hide_directive-->
-     <!--hide_directive:::::hide_directive-->
+     ::::
+     :::::
 
    - Intel AVX2 CPU instruction accelerated package for Collaborative SLAM:
 
-     <!--hide_directive:::::{tab-set}hide_directive-->
-     <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: jazzyhide_directive-->
+     :::::{tab-set}
+     ::::{tab-item} **Jazzy**
+     :sync: jazzy
 
      ```bash
      # Works only on Intel® Core™ processor-based systems
      sudo apt-get install ros-jazzy-collab-slam-avx2
      ```
 
-     <!--hide_directive::::hide_directive-->
-     <!--hide_directive::::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: humblehide_directive-->
+     ::::
+     ::::{tab-item} **Humble**
+     :sync: humble
 
      ```bash
      # Works only on Intel® Core™ processor-based systems
      sudo apt-get install ros-humble-collab-slam-avx2
      ```
 
-     <!--hide_directive::::hide_directive-->
-     <!--hide_directive:::::hide_directive-->
+     ::::
+     :::::
 
    - Intel GPU Level-Zero accelerated package for Collaborative SLAM:
 
-     <!--hide_directive:::::{tab-set}hide_directive-->
-     <!--hide_directive::::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: jazzyhide_directive-->
+     :::::{tab-set}
+     ::::{tab-item} **Jazzy**
+     :sync: jazzy
 
      ```bash
      # Works only on Intel® Core™ processors with Intel® Xe Integrated Graphics or Intel® UHD Graphics
      sudo apt-get install ros-jazzy-collab-slam-lze
      ```
 
-     <!--hide_directive::::hide_directive-->
-     <!--hide_directive::::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: humblehide_directive-->
+     ::::
+     ::::{tab-item} **Humble**
+     :sync: humble
 
      ```bash
      # Works only on Intel® Core™ processors with Intel® Xe Integrated Graphics or Intel® UHD Graphics
      sudo apt-get install ros-humble-collab-slam-lze
      ```
 
-     <!--hide_directive::::hide_directive-->
-     <!--hide_directive:::::hide_directive-->
+     ::::
+     :::::
 
      During the installation of the above packages, you will see a dialogue
      asking you for the GPU generation of your system:

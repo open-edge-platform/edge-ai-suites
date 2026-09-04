@@ -17,68 +17,68 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
 - Intel SSE-only CPU instruction accelerated package for Collaborative SLAM (installed by default):
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    # Required for Intel® Atom® processor-based systems
    sudo apt-get install ros-jazzy-collab-slam-sse
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    # Required for Intel® Atom® processor-based systems
    sudo apt-get install ros-humble-collab-slam-sse
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 - Intel AVX2 CPU instruction accelerated package for Collaborative SLAM:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-collab-slam-avx2
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-collab-slam-avx2
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 - Intel GPU Level-Zero accelerated package for Collaborative SLAM:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-collab-slam-lze
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-collab-slam-lze
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 The tutorials below should work for any compatible version of Collaborative Visual SLAM that is installed.
 Use the instructions above to switch between version to experiment with different accelerations.
@@ -146,24 +146,24 @@ Use the instructions above to switch between version to experiment with differen
 
 1. To download and install the tutorial run the command below:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-two-robot
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-two-robot
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    > **Note:** In this installation package, there are two substantial ROS 2
    > bag files, which are approximately 6.8 GB and 2.6 GB in size.
@@ -171,24 +171,24 @@ Use the instructions above to switch between version to experiment with differen
 2. Run the Collaborative Visual SLAM algorithm using two bags simulating two
    robots going through the same area:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-two-robot/cslam-two-robot.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-two-robot/cslam-two-robot.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    Expected result: On the server rviz2, both trackers are seen.
 
@@ -213,48 +213,48 @@ Use the instructions above to switch between version to experiment with differen
 
 1. To download and install the tutorial run the command below:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-fastmapping
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-fastmapping
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    > **Note**: In this installation package, there is a substantial ROS 2
    > bag file, which is approximately 6.8 GB in size.
 
 2. Run the collaborative visual SLAM algorithm with FastMapping enabled:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-fastmapping/cslam-fastmapping.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    Expected result: On the opened rviz2, you see the visual SLAM keypoints, the
    3D map, and the 2D map.
@@ -305,24 +305,24 @@ Use the instructions above to switch between version to experiment with differen
 
 1. To download and install the tutorial run the command below:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-multi-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-multi-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    > **Note**: In this installation package, there is a substantial ROS 2
    > bag file, which is approximately 206 MB in size.
@@ -330,24 +330,24 @@ Use the instructions above to switch between version to experiment with differen
 2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion
    using Kalman Filter:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-multi-camera/cslam-multi-camera.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-multi-camera/cslam-multi-camera.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    **Expected result:** On the opened rviz windows, you see the pose trajectory
    outputs for each camera.
@@ -365,26 +365,26 @@ Use the instructions above to switch between version to experiment with differen
 4. Afterwards, run the Python script to visualize the three trajectories
    obtained from ROS 2 topics: `univloc_tracker_0/kf_pose`, `univloc_tracker_2/kf_pose`, `/odometry/filtered`.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    cd /tmp/
    python3 /opt/ros/jazzy/share/collab-slam/tutorial-multi-camera/traj-compare.py
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    cd /tmp/
    python3 /opt/ros/humble/share/collab-slam/tutorial-multi-camera/traj-compare.py
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    Expected result: On the Python window, three trajectories are shown.
    An example image is as follows:
@@ -404,48 +404,48 @@ Use the instructions above to switch between version to experiment with differen
 
 1. To download and install the tutorial run the command below:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-2d-lidar
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-2d-lidar
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    > **Note**: In this tutorial installation, there is a substantial ROS 2
    > bag file, which is approximately 3.7 GB in size.
 
 2. Run the collaborative visual SLAM algorithm with auxiliary Lidar data input:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-2d-lidar/cslam-2d-lidar.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-2d-lidar/cslam-2d-lidar.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Use a separate terminal to debug and capture the output ROS 2 topic.
    You can check if certain topic has been published and view its messages.
@@ -487,24 +487,24 @@ Use the instructions above to switch between version to experiment with differen
 
 1. To download and install the tutorial run the command below:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-cslam-tutorial-region-remap
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-cslam-tutorial-region-remap
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    > **Note**: In this tutorial installation, there is a substantial ROS 2
    > bag file, which is approximately 2.6 GB in size.
@@ -512,24 +512,24 @@ Use the instructions above to switch between version to experiment with differen
 2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion
    using Kalman Filter:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-region-remap/cslam-region-map.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-region-remap/cslam-region-map.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    Expected result: On the opened server rviz, you see the keyframe and landmark
    constructed in mapping mode.
@@ -554,24 +554,24 @@ Use the instructions above to switch between version to experiment with differen
 4. Run the collaborative visual SLAM algorithm in remapping mode to load and
    update pre-constructed keyframe/landmark and 3D octree map:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    /opt/ros/jazzy/share/collab-slam/tutorial-region-remap/cslam-region-remap.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    /opt/ros/humble/share/collab-slam/tutorial-region-remap/cslam-region-remap.sh
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    **Expected result**: On the opened server rviz, you see the loaded pre-constructed keyframe/landmark map
    in mapping mode. Within the remapping region, corresponding map will be deleted.
