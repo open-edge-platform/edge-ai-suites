@@ -105,7 +105,7 @@ audio_preprocessing:
   chunk_output_path: chunks/
 
 audio_util:
-  max_size_mb: 300
+  max_size_mb: 800
   allowed_extensions:
     - .wav
     - .mp3

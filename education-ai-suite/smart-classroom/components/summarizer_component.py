@@ -4,6 +4,7 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
+from utils.session_paths import SessionPaths
 from utils import text_chunker
 from utils.transcript_parser import parse_transcript_lines
 from model_manager import ModelManager
@@ -113,17 +114,10 @@ class SummarizerComponent(PipelineComponent):
     # ---------------- INPUT SELECTOR ----------------
 
     def _load_input_text(self):
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
         if self.mode == "teacher":
-            path = os.path.join(project_path, "teacher_transcription.txt")
+            path = str(SessionPaths.teacher_transcript_path(self.session_id))
         else:
-            path = os.path.join(project_path, "transcription.txt")
+            path = str(SessionPaths.transcript_path(self.session_id))
 
         return StorageManager.read_text_file(path)
 
@@ -381,14 +375,7 @@ class SummarizerComponent(PipelineComponent):
             logger.info("Board OCR for session %s (%d chars); including in summary.",
                         self.session_id, len(board_text))
 
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
-        summary_path = os.path.join(project_path, "summary.md")
+        summary_path = str(SessionPaths.summary_path(self.session_id))
         StorageManager.save(summary_path, "", append=False)
 
         run = _SummaryRun()
@@ -449,7 +436,7 @@ class SummarizerComponent(PipelineComponent):
             run.output_tokens = self._count_output(raw_text)
             self._warn_about_missing_sections(raw_text, board_text, run.strategy)
             StorageManager.update_csv(
-                path=os.path.join(project_path, "performance_metrics.csv"),
+                path=str(SessionPaths.metrics_path(self.session_id)),
                 new_data=run.metrics(f"{self.provider}/{self.model_name}"),
             )
 
