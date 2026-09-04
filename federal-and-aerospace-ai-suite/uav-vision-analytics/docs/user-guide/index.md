@@ -67,7 +67,8 @@ Follow the steps below to set up and run the UAV Blueprint:
 
 This application supports AI agent skills for GitHub Copilot and compatible coding agents.
 Skills cover operational tasks (running pipelines, benchmarking, troubleshooting) and
-application creation (scaffolding new pymavlink or UAVSDK stacks).
+application creation (scaffolding new pymavlink or UAVSDK stacks). See
+[Agent SKILLs](agents.md) for details.
 
 ## Intended and Responsible Use
 
@@ -101,7 +102,7 @@ Install OEP SDKs <./get-started/install-oep-sdks.md>
 Install UAV Vision Analytics Application <install-uav-app.md>
 How to use UAV Vision Analytics Application <./how-to-guides.md>
 Benchmarks <./how-to-guides/benchmark.md>
-AI Agent Integration <./infrastructure/agent-skills.md>
+Agent SKILLs <./agents.md>
 
 :::
 hide_directive-->
