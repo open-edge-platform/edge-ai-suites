@@ -14,24 +14,24 @@ A 30-second snapshot to verify system health.
 
 1. Source your ROS2 environment:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    source /opt/ros/jazzy/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    source /opt/ros/humble/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 2. Launch your ROS2 system:
 

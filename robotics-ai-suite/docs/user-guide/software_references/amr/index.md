@@ -2,26 +2,26 @@
 
 The Autonomous Mobile Robot (AMR) Software References provide tested and expandable pipelines for building, simulating, and deploying mobile robot navigation and mapping pipelines on Intel hardware.
 
-<!--hide_directive
-::::{grid} 2hide_directive-->
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Simulation References**
-<!--hide_directive:link: simulation/index
+::::{grid} 2
+
+:::{grid-item-card} **Simulation References**
+:link: simulation/index
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Learn how to use simulation-focused tools and components provided in the toolkit, including Gazebo simulations and the Wandering autonomous exploration pipeline.
-<!--hide_directive:::hide_directive-->
+:::
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Deployment References**
-<!--hide_directive:link: deployment/index
+:::{grid-item-card} **Deployment References**
+:link: deployment/index
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Learn how to deploy robotics workloads to physical robot hardware, covering keyboard teleoperation, real-world mapping, and autonomous exploration.
-<!--hide_directive:::
+:::
 ::::
-hide_directive-->
+
 
 ## Available Software References
 
@@ -33,7 +33,7 @@ hide_directive-->
 - **[Deploy Robot Teleop Using a Keyboard](deployment/teleop_deploy.md)** — Validates motor control on a physical robot using keyboard teleoperation.
 - **[Deploying `wandering`](deployment/wandering_deploy.md)** — Deploys the autonomous exploration pipeline on physical hardware using RTAB-Map and Nav2.
 
-<!--hide_directive
+
 :::{toctree}
 :maxdepth: 1
 :hidden:
@@ -41,4 +41,4 @@ hide_directive-->
 Simulation References <simulation/index>
 Deployment References <deployment/index>
 :::
-hide_directive-->
+

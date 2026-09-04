@@ -26,7 +26,7 @@ Follow one of the setup guides below:
 | **[Step by Step](getting_started/step_by_step.md)** | Go through configuring and installing the necessary content on your system manually, one step at a time. | Recommended if you want to understand the individual setup steps. Not recommended for most deployments. |
 
 
-<!--hide_directive
+
 :::{toctree}
 :hidden:
 
@@ -35,4 +35,4 @@ Image Composer Tool Setup <getting_started/image_composer_tool>
 Step by Step Setup <getting_started/step_by_step>
 Conditional Setup <getting_started/conditional>
 :::
-hide_directive-->
+

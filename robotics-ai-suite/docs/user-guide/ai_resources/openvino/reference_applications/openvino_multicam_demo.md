@@ -8,9 +8,9 @@ This application uses an OpenVINO-optimized version of YOLOv8, available here:
 [Ultralytics YOLOv8 object detection model](https://docs.ultralytics.com/).
 
 ## Prerequisites
-To run this reference applications, make sure you've completed the [Getting Started](../../../../platform_foundation/getting_started.md) guide to onboard your device, install the relevant packages, and setup your device drivers.
+To run this reference applications, make sure you've completed the [Getting Started](../../../platform_foundation/getting_started.md) guide to onboard your device, install the relevant packages, and setup your device drivers.
 
-To use GMSL-enabled cameras, make sure you've followed the [GMSL Setup Guide](../../../sensors/cameras/gmsl/index.md).
+To use GMSL-enabled cameras, make sure you've followed the [GMSL Setup Guide](../../../components/sensors/cameras/gmsl/index.md).
 
 ## Source Code
 
@@ -40,47 +40,47 @@ The reference application is available as an additional downloadable package thr
 
 Install with the following command:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install -y ros-jazzy-pyrealsense2-ai-demo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 sudo apt install -y ros-humble-pyrealsense2-ai-demo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ### Setup `uv` Python Virtual Environment
 
 `uv` is recommended to manage the Python virtual environment.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 cd /opt/ros/humble/share/pyrealsense2-ai-demo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 
 ```bash
@@ -98,9 +98,9 @@ source .venv/bin/activate
 
 Before running the application, you need to set configure it to use the appropriate camera streams. A script called `find_cameras.sh` will scan for RGB-compatible camera streams and create a reusable config file at `.config/config_camera.json`. You can modify this file after creation to adjust model, OpenVINO inference device, input stream settings, and other parameters. After, you can run the demo:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
@@ -108,9 +108,9 @@ cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.json
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 cd /opt/ros/humble/share/pyrealsense2-ai-demo
@@ -118,11 +118,11 @@ cd /opt/ros/humble/share/pyrealsense2-ai-demo
 uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.jsony
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 After a few seconds, you will see the camera streams overlaid with inference statistics:
 
-![multicam_demo_SDK2.2_1](../../../../components/images/pyrealsense2-ai-demo-two-camera-example.png )
+![multicam_demo_SDK2.2_1](../../../components/images/pyrealsense2-ai-demo-two-camera-example.png )
 
 

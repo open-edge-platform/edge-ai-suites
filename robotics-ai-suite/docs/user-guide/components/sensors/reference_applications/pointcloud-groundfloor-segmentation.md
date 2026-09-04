@@ -28,9 +28,9 @@ Complete the [Getting Started](../../../platform_foundation/getting_started.md) 
 
 Install the `pointcloud-groundfloor-segmentation` Deb package from Intel® Autonomous Mobile Robot APT repository
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 
@@ -38,9 +38,9 @@ sudo apt update
 sudo apt install ros-jazzy-pointcloud-groundfloor-segmentation
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 
@@ -48,16 +48,16 @@ sudo apt update
 sudo apt install ros-humble-pointcloud-groundfloor-segmentation
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Run the Segmentation with RealSense Camera Input
 
 Execute the following command to run the demo using a RealSense camera input, after starting the RealSense ROS 2 node.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 
@@ -65,9 +65,9 @@ source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 
@@ -75,8 +75,8 @@ source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a terminal.
 
@@ -96,9 +96,9 @@ One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a
 The ROS 2 launch file provides additional arguments, for example to run the ROS 2 node only together with a camera,
 or with rviz. These can be activated as follows:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 Terminal 1:
 
@@ -114,9 +114,9 @@ source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True standalone:=True
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 Terminal 1:
 
@@ -132,8 +132,8 @@ source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True standalone:=True
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 The commandline option '-s' will show all available flags.
 
@@ -149,26 +149,26 @@ In case of the standalone execution, the rviz view for the filtered pointcloud s
 
 Execute the following script to run the demo if a given pointcloud, for example from a 3D LiDAR sensor should be segmented.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentation_launch.py
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation pointcloud_groundfloor_segmentation_launch.py
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a terminal.
 
@@ -198,9 +198,9 @@ Prepare the robot according to the relevant platform integration guide.
 
 Afterwards open three terminal sessions:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 Terminal 1: Run the following commands to establish a TF link between robot and camera:
 
@@ -223,9 +223,9 @@ source /opt/ros/jazzy/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 Terminal 1: Run the following commands to establish a TF link between robot and camera:
 
@@ -248,31 +248,31 @@ source /opt/ros/humble/setup.bash
 ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentation_launch.py with_rviz:=True
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Adjusting Application Parameters
 
 The ROS 2 node supports a set of parameters, that can be found under:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 /opt/ros/jazzy/share/pointcloud_groundfloor_segmentation/params/
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 /opt/ros/humble/share/pointcloud_groundfloor_segmentation/params/
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 There is one example configuration how the application's output can be used for the ROS 2 nav2 application,
 and a second file providing parameter values for the segmentation task. These include:

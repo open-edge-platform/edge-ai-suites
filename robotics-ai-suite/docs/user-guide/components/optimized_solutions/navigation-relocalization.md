@@ -25,33 +25,33 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 Install the `ros-jazzy-its-relocalization-bringup` Deb package from the
 Intel® Autonomous Mobile Robot APT repository
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install ros-jazzy-its-relocalization-bringup
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt install ros-humble-its-relocalization-bringup
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ### Run the Re-localization
 
 Run the following script to set environment variables and bring up ROS 2
 navigation, and TurtleBot3 robot in Gazebo simulation:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -60,9 +60,9 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/jazzy/share/turtlebot3_gaze
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -71,8 +71,8 @@ export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gaz
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 Set the robot **2D Pose Estimate** in rviz2:
 
@@ -87,26 +87,26 @@ Set the robot **2D Pose Estimate** in rviz2:
 Once ROS 2 navigation is running in Gazebo and the initial robot position is set,
 open a new terminal to bring up the re-localization:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch relocalization_bringup relocalization.launch.xml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 launch relocalization_bringup relocalization.launch.xml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 To simulate the re-localization package, we have developed a demo application
 that replicates a scenario in which the sensor encounters a temporary failure.
