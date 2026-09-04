@@ -19,6 +19,7 @@ make deps
 - Core stack running:
 
 ```bash
+make init
 make up-sim-camera
 ```
 
