@@ -433,7 +433,7 @@ class VideoAnalyticsPipelineService:
         try:
             # Create log file for pipeline output
             log_dir = Path(options.output_dir) / "logs"
-            log_dir.mkdir(exist_ok=True)
+            log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"{pipeline_name}_{int(time.time())}.log"
             log_handle = open(log_file, "w", buffering=1)  # Line buffered
 
@@ -488,7 +488,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build front camera pipeline (Pipeline 1)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -603,7 +603,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build back camera pipeline (Pipeline 2)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -655,7 +655,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build content/file pipeline (Pipeline 3)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
