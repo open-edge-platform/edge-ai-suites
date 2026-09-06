@@ -43,7 +43,7 @@ Configure the proxy for Docker containers:
 
 ```bash
 sudo mkdir -p /etc/systemd/system/docker.service.d
-sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf > /dev/null <<EOF
+sudo tee /etc/systemd/system/docker.service.d/proxy.conf > /dev/null <<EOF
 [Service]
 Environment="HTTP_PROXY=http://proxy-example:123"
 Environment="HTTPS_PROXY=http://proxy-example:123"
