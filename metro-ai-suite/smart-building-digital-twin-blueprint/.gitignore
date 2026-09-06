@@ -1,0 +1,24 @@
+# Generated files - never commit
+.env
+certs/
+generated/
+*.log
+
+# Runtime UUID map (machine-specific, written by setup.sh)
+config/resolved-uuids.json
+
+# Model backup files from in-place edits
+config/models/**/*.backup
+config/models/**/*.backup-*
+
+# Docker volumes
+volumes/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
+*~

@@ -1,0 +1,475 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Smart Building Digital Twin Blueprint - Automated Deployment
+# Convention-based: Scenes auto-discovered, cameras auto-configured
+
+name: scenescape
+
+networks:
+  scenescape:
+
+secrets:
+  root-cert:
+    file: ./certs/scenescape-ca.pem
+  web-cert:
+    file: ./certs/scenescape-web.crt
+  web-key:
+    file: ./certs/scenescape-web.key
+  autocalibration-cert:
+    file: ./certs/scenescape-autocalibration.crt
+  autocalibration-key:
+    file: ./certs/scenescape-autocalibration.key
+  django:
+    file: ./certs/django/secrets.py
+  controller.auth:
+    file: ./certs/controller.auth
+  browser.auth:
+    file: ./certs/browser.auth
+  calibration.auth:
+    file: ./certs/calibration.auth
+
+services:
+  # NTP Server
+  ntpserv:
+    image: dockurr/chrony:4.8
+    networks:
+      scenescape:
+    restart: unless-stopped
+    pids_limit: 1000
+
+  # PostgreSQL Database
+  pgserver:
+    image: postgres:17.11
+    environment:
+      POSTGRES_USER: scenescape
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: scenescape
+    networks:
+      - scenescape
+    volumes:
+      - vol-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+    restart: always
+    pids_limit: 1000
+
+  # MQTT Broker
+  broker:
+    image: eclipse-mosquitto:2.1.2-alpine
+    ports:
+     - "1883:1883"
+    configs:
+      - source: mosquitto-config
+        target: /mosquitto/config/mosquitto.conf
+    volumes:
+      - ./certs:/mosquitto/secrets/certs:ro
+    networks:
+      scenescape:
+        aliases:
+          - broker.scenescape.intel.com
+    user: "${UID:-1000}:${GID:-1000}"
+    restart: always
+    pids_limit: 1000
+
+  # Scenescape Web UI
+  web:
+    image: intel/scenescape-manager:${SCENESCAPE_IMAGE_TAG:-2026.2.0-rc2}
+    init: true
+    networks:
+      scenescape:
+        aliases:
+          - web.scenescape.intel.com
+    depends_on:
+      pgserver:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    ports:
+      - "443:443"
+    command: >
+      webserver
+      --dbtype postgres
+      --broker broker.scenescape.intel.com
+      --brokerauth /run/secrets/browser.auth
+      --brokerrootcert /run/secrets/certs/scenescape-ca.pem
+      --autocalibration autocalibration.scenescape.intel.com:8443
+    healthcheck:
+      test: "curl --insecure --silent --fail https://web.scenescape.intel.com:443/api/v1/database-ready | grep -Eq '\"(databaseReady|database_ready|ready)\"[[:space:]]*:[[:space:]]*(true|\"true\")|^true$'"
+      interval: 10s
+      timeout: 120s
+      retries: 10
+      start_period: 10s
+    environment:
+      - SUPASS=${SUPASS:-}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DBHOST=pgserver
+      - NO_PROXY=${NO_PROXY:-},.scenescape.intel.com
+      - no_proxy=${no_proxy:-},.scenescape.intel.com
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - /dev/fuse
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - vol-media:/workspace/media
+      - vol-migrations:/workspace/migrations
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: web-cert
+        target: certs/scenescape-web.crt
+      - source: web-key
+        target: certs/scenescape-web.key
+      - source: django
+        target: django/secrets.py
+      - controller.auth
+      - browser.auth
+      - calibration.auth
+    restart: always
+    pids_limit: 1000
+
+  autocalibration-init:
+    image: alpine:3.23.5
+    command: sh -c "chown -R 1000:1000 /data/netvlad_models /data/media /data/datasets"
+    volumes:
+      - vol-netvlad-models:/data/netvlad_models
+      - vol-media:/data/media
+      - vol-datasets:/data/datasets
+
+  autocalibration:
+    image: intel/scenescape-autocalibration:${SCENESCAPE_IMAGE_TAG:-2026.2.0-rc2}
+    init: true
+    networks:
+      scenescape:
+        aliases:
+          - autocalibration.scenescape.intel.com
+    user: "1000:1000"
+    command: >
+      --restauth /run/secrets/calibration.auth
+      --resturl https://web.scenescape.intel.com:443/api/v1
+      --restport 8443
+      --ssl-certfile /run/secrets/certs/scenescape-autocalibration.crt
+      --ssl-keyfile /run/secrets/certs/scenescape-autocalibration.key
+    depends_on:
+      autocalibration-init:
+        condition: service_completed_successfully
+      web:
+        condition: service_healthy
+      broker:
+        condition: service_started
+    environment:
+      - EGL_PLATFORM=surfaceless
+      - NETVLAD_MODEL_DIR=/usr/local/lib/python3.11/site-packages/third_party/netvlad
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-},.scenescape.intel.com
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - no_proxy=${no_proxy:-},.scenescape.intel.com
+    volumes:
+      - vol-media:/home/scenescape/Scenescape/media
+      - vol-datasets:/home/scenescape/Scenescape/datasets
+      - vol-netvlad-models:/usr/local/lib/python3.11/site-packages/third_party/netvlad
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: autocalibration-cert
+        target: certs/scenescape-autocalibration.crt
+      - source: autocalibration-key
+        target: certs/scenescape-autocalibration.key
+      - source: django
+        target: django/secrets.py
+      - calibration.auth
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-s", "https://localhost:8443/v1/status"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: always
+    pids_limit: 1000
+
+  # Scenescape Controller
+  scene:
+    image: intel/scenescape-controller:${SCENESCAPE_IMAGE_TAG:-2026.2.0-rc2}
+    init: true
+    networks:
+      scenescape:
+    depends_on:
+      web:
+        condition: service_healthy
+      broker:
+        condition: service_started
+      ntpserv:
+        condition: service_started
+    environment:
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=${NO_PROXY:-},.scenescape.intel.com
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - no_proxy=${no_proxy:-},.scenescape.intel.com
+    command: >
+      --restauth /run/secrets/controller.auth
+      --resturl https://web.scenescape.intel.com/api/v1
+      --brokerauth /run/secrets/controller.auth
+      --broker broker.scenescape.intel.com
+      --ntp ntpserv
+    configs:
+      - source: tracker-config
+        target: /home/scenescape/Scenescape/tracker-config.json
+    volumes:
+      - vol-media:/home/scenescape/Scenescape/media
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: django
+        target: django/secrets.py
+      - controller.auth
+    restart: always
+    pids_limit: 1000
+
+  # Sensor Replay (primary scene)
+  sensor-replay-showcase:
+    image: intel/scenescape-controller:${SCENESCAPE_IMAGE_TAG:-2026.2.0-rc2}
+    networks:
+      scenescape:
+    depends_on:
+      broker:
+        condition: service_started
+      showcase-cameras:
+        condition: service_started
+    entrypoint:
+      - python3
+      - /app/sensor_replay.py
+      - --sensor-file
+      - /app/sensors.json
+      - --broker
+      - broker.scenescape.intel.com
+      - --ca-cert
+      - /run/secrets/certs/scenescape-ca.pem
+      - --tls-insecure
+      - --broker-auth
+      - /run/secrets/controller.auth
+      - --light-sensor-id
+      - showcase_light
+      - --sync-camera
+      - cam-5
+      - --timestamp-offset
+      - "1"
+    volumes:
+      - ./scenes/${PRIMARY_SCENE}-sensors.json:/app/sensors.json:ro
+      - ./scripts/sensor_replay.py:/app/sensor_replay.py:ro
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - controller.auth
+    restart: unless-stopped
+    pids_limit: 1000
+
+  # RTSP Media Server
+  mediaserver:
+    image: bluenviron/mediamtx:1.20.1
+    networks:
+      scenescape:
+        aliases:
+          - mediaserver
+    ports:
+      - "8554:8554"
+    restart: always
+    pids_limit: 1000
+
+  # Video Streams (primary scene)
+  showcase-streams:
+    image: linuxserver/ffmpeg:version-9.0-cli
+    command: >
+      -nostdin
+      -re -stream_loop -1 -i /videos/cam-1.ts
+      -re -stream_loop -1 -i /videos/cam-2.ts
+      -re -stream_loop -1 -i /videos/cam-3.ts
+      -re -stream_loop -1 -i /videos/cam-4.ts
+      -re -stream_loop -1 -i /videos/cam-5.ts
+      -re -stream_loop -1 -i /videos/cam-6.ts
+      -re -stream_loop -1 -i /videos/cam-7.ts
+      -map 0:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-1
+      -map 1:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-2
+      -map 2:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-3
+      -map 3:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-4
+      -map 4:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-5
+      -map 5:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-6
+      -map 6:v -c copy -f rtsp -rtsp_transport tcp rtsp://mediaserver:8554/cam-7
+    volumes:
+      - ./datasets/${PRIMARY_DATASET}:/videos:ro
+    networks:
+      scenescape:
+    depends_on:
+      - mediaserver
+    restart: always
+    pids_limit: 1000
+
+  # DL-Streamer Cameras
+  showcase-cameras:
+    image: docker.io/intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2
+    networks:
+      scenescape:
+    tty: true
+    entrypoint: ["./run.sh"]
+    ports:
+      - "8080:8080"
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - "109"
+      - "110"
+      - "992"
+      - "993"
+    device_cgroup_rules:
+      - "c 189:* rmw"
+      - "c 209:* rmw"
+      - "a 189:* rwm"
+    depends_on:
+      broker:
+        condition: service_started
+      mediaserver:
+        condition: service_started
+      showcase-streams:
+        condition: service_started
+      ntpserv:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-I", "-s", "http://showcase-cameras:8080/pipelines"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    environment:
+      - no_proxy=mediaserver,ntpserv,.scenescape.intel.com,${no_proxy:-}
+      - NO_PROXY=mediaserver,ntpserv,.scenescape.intel.com,${NO_PROXY:-}
+      - RUN_MODE=EVA
+      - DETECTION_DEVICE=${DETECTION_DEVICE}
+      - GST_DEBUG=1
+      - ADD_UTCTIME_TO_METADATA=true
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=false
+      - MQTT_HOST=broker.scenescape.intel.com
+      - MQTT_PORT=1883
+      - REST_SERVER_PORT=8080
+      - ADDITIONAL_GST_PLUGIN_PATH=/home/sscape
+    volumes:
+      - ./config/models/${MODEL_NAME}:/models:ro
+      - ${SCENESCAPE_DIR}/dlstreamer-pipeline-server/user_scripts/gstplugins:/home/sscape/python:ro
+      - ./generated/pipelines/${PRIMARY_DATASET}.json:/home/pipeline-server/config.json:ro
+      - vol-dlstreamer-cache:/var/cache/pipeline_root:uid=1999,gid=1999
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem 
+    restart: always
+    pids_limit: 1000
+
+  # Scenescape Analytics — region/tripwire/sensor analytics (decoupled from the controller)
+  analytics:
+    image: intel/scenescape-analytics:${SCENESCAPE_IMAGE_TAG:-2026.2.0-rc2}
+    init: true
+    user: "${UID:-1000}:${GID:-1000}"
+    networks:
+      scenescape:
+    depends_on:
+      web:
+        condition: service_healthy
+      broker:
+        condition: service_started
+      ntpserv:
+        condition: service_started
+    environment:
+      - no_proxy=${no_proxy:-},.scenescape.intel.com
+      - NO_PROXY=${NO_PROXY:-},.scenescape.intel.com
+      - VISIBILITY_TOPIC=${VISIBILITY:-regulated}
+    command: >
+      --restauth /run/secrets/controller.auth
+      --brokerauth /run/secrets/controller.auth
+      --broker broker.scenescape.intel.com
+      --visibility_topic ${VISIBILITY:-regulated}
+    volumes:
+      - vol-media:/home/scenescape/Scenescape/media
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - source: django
+        target: django/secrets.py
+      - controller.auth
+    restart: always
+    pids_limit: 1000
+
+  # Scene Narrator — event narration + alerts dashboard (FastAPI/SSE UI)
+  # Uses python:3.12-slim directly; pip dependencies installed at container start
+  scene-narrator:
+    image: python:3.12-slim
+    networks:
+      scenescape:
+    depends_on:
+      broker:
+        condition: service_started
+      web:
+        condition: service_healthy
+    ports:
+      - "${DASHBOARD_PORT:-7000}:7000"
+    environment:
+      - BROKER_HOST=broker.scenescape.intel.com
+      - BROKER_PORT=1883
+      - CA_CERT=/run/secrets/certs/scenescape-ca.pem
+      - BROKER_AUTH=/run/secrets/controller.auth
+      - SNAPSHOT_INTERVAL=${SNAPSHOT_INTERVAL:-10}
+      - DASHBOARD_PORT=7000
+      - SCENE_ID=${SCENE_ID:-}
+    devices:
+      - "/dev/dri:/dev/dri"
+    cap_add:
+      - PERFMON
+    volumes:
+      - ./scripts:/app/scripts:ro
+      - ./config:/app/config:ro
+      - ./generated:/app/generated
+    secrets:
+      - source: root-cert
+        target: certs/scenescape-ca.pem
+      - controller.auth
+    command: >
+      sh -c "apt-get update -qq && apt-get install -y --no-install-recommends intel-gpu-tools &&
+             pip install --no-cache-dir fastapi 'uvicorn[standard]' httpx paho-mqtt &&
+             python3 /app/scripts/dashboard.py"
+    restart: unless-stopped
+    pids_limit: 1000
+
+configs:
+  mosquitto-config:
+    content: |
+      allow_anonymous true
+      listener 1883
+      keyfile /mosquitto/secrets/certs/scenescape-broker.key
+      certfile /mosquitto/secrets/certs/scenescape-broker.crt
+      tls_version tlsv1.3
+      listener 1884
+      cafile /mosquitto/secrets/certs/scenescape-ca.pem
+      keyfile /mosquitto/secrets/certs/scenescape-broker.key
+      certfile /mosquitto/secrets/certs/scenescape-broker.crt
+      protocol websockets
+  tracker-config:
+    file: ./config/controller/tracker-config.json
+
+volumes:
+  vol-db:
+  vol-media:
+  vol-migrations:
+  vol-datasets:
+  vol-netvlad-models:
+  vol-dlstreamer-cache:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
