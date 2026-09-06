@@ -30,11 +30,11 @@
     {
       "id": 3,
       "prompt": "I have hundreds of recorded videos and want to type a phrase and jump to matching clips.",
-      "expected_output": "Discovery sequences vdms-dataprep-user (ingest) -> vss-deploy --search -> vss-search-index (query); plan confirms the whole pipeline once before building.",
+      "expected_output": "Discovery sequences multimodal-dataprep-user (ingest) -> vss-deploy --search -> vss-search-index (query); plan confirms the whole pipeline once before building.",
       "should_trigger": true,
       "files": ["../example-prompts/03-video-search.md"],
       "expectations": [
-        "Recognizes a video-search objective and selects vss-deploy plus supporting vdms-dataprep-user and vss-search-index",
+        "Recognizes a video-search objective and selects vss-deploy plus supporting multimodal-dataprep-user and vss-search-index",
         "Chooses search mode (not summary) from the business answers",
         "Sequences supporting skills in dependency order and confirms the whole pipeline once",
         "Offers vss-deploy-helm when the target is Kubernetes"
