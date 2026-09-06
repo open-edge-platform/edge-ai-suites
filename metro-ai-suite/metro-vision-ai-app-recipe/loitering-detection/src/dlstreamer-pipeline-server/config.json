@@ -58,6 +58,25 @@
                     }
                 },
                 "auto_start": false
+            },
+            {
+                "name": "object_tracking_igpu_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw,format=NV12 ! videoconvert ! video/x-raw,format=BGR ! gvaattachroi roi=0,200,300,400 ! gvafpsthrottle target-fps=30 ! gvadetect inference-region=1 inference-interval=1 batch-size=1 nireq=1 threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU model-instance-id=instic0 name=detection ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=short-term-imageless ! gvametaconvert add-empty-results=true name=metaconvert ! appsink name=destination",
+                "description": "Object tracking with iGPU hardware decode and CPU inference",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
             }
         ]
     }
