@@ -18,7 +18,7 @@ const MAX_LINE_CHARS = 4000;
 // drowns the log view in uvicorn access lines. The main app already filters its
 // own; this covers the ones teed in from children. Only successful probes are
 // dropped, so a failing health check is still visible.
-const PROBE_NOISE = /"(?:GET|HEAD) [^"]*\/(?:health|heartbeat|metrics)[^"]*" [23]\d\d/;
+const PROBE_NOISE = /"(?:GET|HEAD) [^"]*\/(?:health|heartbeat|metrics|ping)[^"]*" [23]\d\d/;
 
 let nextSeq = 1;
 

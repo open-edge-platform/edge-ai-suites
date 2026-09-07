@@ -2,12 +2,18 @@ import { useEffect, useRef } from 'react';
 import { useAppSelector } from '../redux/hooks';
 import type { AudioStatus, VideoStatus } from '../redux/slices/uiSlice';
 
-// Statuses that mean a pipeline is still working on something. The gate below
-// blocks on exactly these instead of waiting for a whitelist of "finished"
+// Statuses that mean a pipeline is still working on something. The gates below
+// block on exactly these instead of waiting for a whitelist of "finished"
 // statuses: the audio/video state machines settle in a lot of different places
-// ('complete', 'error', 'ready', 'no-devices', 'no-config', 'idle', 'playback',
-// or wherever a stage stopped when its tab was unmounted), and a whitelist that
-// misses one leaves the upload button greyed out for the rest of the session.
+// ('complete', 'error', 'ready', 'no-devices', 'no-config', 'off', 'idle',
+// 'playback', or wherever a stage stopped when its tab was unmounted), and a
+// whitelist that misses one leaves a button greyed out for the rest of the
+// session.
+//
+// Every status here is transient by construction — videoMonitor.ts and the
+// pipeline poller in api.ts both drive 'streaming' on to 'completed'/'failed'
+// and clear the videoAnalytics* flags — so nothing in this list can strand a
+// gate closed.
 const AUDIO_BUSY_STATUSES: AudioStatus[] = [
   'processing',
   'transcribing',
@@ -19,11 +25,29 @@ const VIDEO_BUSY_STATUSES: VideoStatus[] = ['starting', 'streaming', 'stopping']
 
 export type UploadBlocker = 'recording' | 'audio' | 'video' | null;
 
+export interface PipelineGate {
+  /** An audio stage is mid-run. */
+  audioBusy: boolean;
+  /** A video-analytics run is starting, streaming or stopping. */
+  videoBusy: boolean;
+  /** Whether a new upload may start. */
+  isUploadEnabled: boolean;
+  /** Why uploading is unavailable, for the tooltip. */
+  blocker: UploadBlocker;
+}
+
 /**
- * Whether a new upload may start, and what is holding it up. Shared by the
- * header button and the video-panel placeholder button so the two can't drift.
+ * The one answer to "is a pipeline mid-run?", for every control that has to
+ * stand down while one is.
+ *
+ * Three buttons gate on this: Upload File in the header and in the video panel
+ * (via `isUploadEnabled`/`blocker`), and Start Recording (via `audioBusy` /
+ * `videoBusy` — it handles the recording case itself, since it is the button
+ * that stops one). They each used to carry their own copy of the lists above,
+ * which is how the record button came to miss 'streaming' and let a recording
+ * start on top of a video-only upload's pipelines.
  */
-export function useUploadGate(): { isUploadEnabled: boolean; blocker: UploadBlocker } {
+export function usePipelineGate(): PipelineGate {
   const isRecording = useAppSelector((s) => s.ui.isRecording);
   const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const videoStatus = useAppSelector((s) => s.ui.videoStatus);
@@ -74,7 +98,7 @@ export function useUploadGate(): { isUploadEnabled: boolean; blocker: UploadBloc
     videoAnalyticsStopping,
   ]);
 
-  return { isUploadEnabled: blocker === null, blocker };
+  return { audioBusy, videoBusy, isUploadEnabled: blocker === null, blocker };
 }
 
 /** i18n key for the tooltip explaining why uploading is unavailable. */

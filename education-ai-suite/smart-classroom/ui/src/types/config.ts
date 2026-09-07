@@ -71,7 +71,14 @@ export interface ConfigProblem {
   message: string;
   /**
    * False for a problem already in the file that this edit neither introduced
-   * nor touched: shown as a warning, but it does not stop the save.
+   * nor touched, and for a rule the backend tolerates: shown as a warning, but
+   * it does not stop the save.
    */
   blocking: boolean;
+  /**
+   * Changes that would clear this problem, when a rule can name them
+   * unambiguously. Offered as one click, and applied to the pending draft rather
+   * than to disk so it stays reviewable.
+   */
+  fix?: ConfigChange[];
 }

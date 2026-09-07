@@ -34,6 +34,9 @@ import {
   setHasUploadedVideoFiles,
   setVideoPlaybackMode,
   setRecordedVideoType,
+  setFrontCamera,
+  setBackCamera,
+  setBoardCamera,
 } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
@@ -52,9 +55,16 @@ import {
 } from '../../services/api';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
+import StartRecordingModal from '../Modals/StartRecordingModal';
+import type { CameraUrls } from '../../services/cameraStorage';
+import {
+  usesCameras,
+  usesMicrophone,
+  type RecordingSettings,
+} from '../../services/recordingSettings';
 import type { FeatureGuard } from '../../utils/featureGuards';
 import { collectPipelineErrors, isNotRunning } from '../../utils/pipelineErrors';
-import { useUploadGate, uploadBlockerTooltipKey } from '../../hooks/useUploadGate';
+import { usePipelineGate, uploadBlockerTooltipKey } from '../../hooks/usePipelineGate';
 
 // How long a non-fatal error stays in the notification bar before the regular
 // audio/video status takes the space back.
@@ -75,6 +85,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
   const dispatch = useAppDispatch();
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
@@ -94,15 +105,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const boardCameraStream = useAppSelector((s) => s.ui.boardCameraStream);
   const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const videoStatus = useAppSelector((s) => s.ui.videoStatus);
-  const reportStatus = useAppSelector((s) => s.ui.reportStatus);
   const hasAudioDevices = useAppSelector((s) => s.ui.hasAudioDevices);
   const audioDevicesLoading = useAppSelector((s) => s.ui.audioDevicesLoading);
   const isRecording = useAppSelector((s) => s.ui.isRecording);
   const justStoppedRecording = useAppSelector((s) => s.ui.justStoppedRecording);
   const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const isPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
-  const [isUploading, setIsUploading] = useState(false);
-  const { isUploadEnabled, blocker: uploadBlocker } = useUploadGate();
+  const { audioBusy, videoBusy, isUploadEnabled, blocker: uploadBlocker } = usePipelineGate();
 
   // Check if video_analytics feature is enabled in backend
   const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
@@ -263,6 +272,9 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
       case 'no-devices':
         setAudioNotification(t('notifications.noAudioDevices'));
         break;
+      case 'off':
+        setAudioNotification(t('notifications.audioOff', 'Audio not recorded'));
+        break;
       case 'ready':
         setAudioNotification(t('notifications.audioReady'));
         break;
@@ -360,65 +372,38 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   };
 
-    // Blocked only while something is actually running (see useUploadGate) —
+    // Blocked only while something is actually running (see usePipelineGate) —
     // never on a settled state the gate forgot to list.
     const isUploadDisabled = !isUploadEnabled;
 
-    // Check if we have actual live capabilities based on enabled features
-    const hasAudioCapability = hasAudioFeatures && hasAudioDevices;
-    
-    // If audio features are enabled, we need audio capability
-    // If video analytics is enabled, we need video capability
-    // If BOTH are enabled, we need BOTH capabilities
-    const hasLiveCapability = (() => {
-      const audioRequired = hasAudioFeatures;
-      const videoRequired = hasVideoAnalyticsFeature;
-      
-      if (audioRequired && videoRequired) {
-        // Both enabled: need both capabilities
-        return hasAudioCapability && hasVideoCapability;
-      } else if (audioRequired) {
-        // Only audio enabled: need audio capability
-        return hasAudioCapability;
-      } else if (videoRequired) {
-        // Only video enabled: need video capability
-        return hasVideoCapability;
-      }
-      // Neither enabled
-      return false;
-    })();
-
-    const isAudioBusy =
-      audioStatus === 'processing' ||
-      audioStatus === 'transcribing' ||
-      audioStatus === 'summarizing' ||
-      audioStatus === 'mindmapping';
-
-    const isVideoBusy =
-      videoStatus === 'starting' ||
-      videoStatus === 'stopping';
-
-    // Recording button should be enabled when recording (so user can stop)
-    // or when ready to start recording
+    // Enabled while recording so the user can stop — which is why this reads
+    // audioBusy/videoBusy rather than the gate's `blocker`, whose 'recording'
+    // case would disable the only way out.
+    //
+    // When idle it only opens the modal, so it must stay clickable with nothing
+    // configured yet — that modal is where a microphone and camera URLs are
+    // chosen, and it does the "is there anything to record with?" check on its
+    // own Start button.
     const isRecordingDisabled =
       isRecording ? false : (
         audioDevicesLoading ||
-        !hasLiveCapability ||
-        isUploading ||
-        isAudioBusy ||
-        isVideoBusy
+        audioBusy ||
+        videoBusy
       );
 
-  const startVideoAnalyticsInBackground = async (sharedSessionId: string) => {
+  // The cameras are passed in rather than read from Redux: the start path
+  // dispatches resetFlow() first, so anything read from the closure here would
+  // be a render behind whatever the user just typed in the modal.
+  const startVideoAnalyticsInBackground = async (sharedSessionId: string, cameras: CameraUrls) => {
     if (!videoAnalyticsEnabled) {
       console.log('🎥 Video analytics disabled, skipping');
       return;
     }
 
     try {
-      const currentFrontCamera = frontCamera || '';
-      const currentBackCamera = backCamera || '';
-      const currentBoardCamera = boardCamera || '';
+      const currentFrontCamera = cameras.front || '';
+      const currentBackCamera = cameras.back || '';
+      const currentBoardCamera = cameras.board || '';
 
       if (!currentFrontCamera.trim() && !currentBackCamera.trim() && !currentBoardCamera.trim()) {
         console.log('🎥 No cameras configured in settings, skipping video analytics');
@@ -457,8 +442,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
 
       if (videoResult && videoResult.results) {
         let hasSuccessfulStreams = false;
-        let successfulPipelines: any[] = [];
-        let failedPipelines: { name: any; error: any; }[] = [];
+        const successfulPipelines: any[] = [];
+        const failedPipelines: { name: any; error: any; }[] = [];
         
         console.log('📹 Video analytics response:', videoResult);
         
@@ -531,241 +516,283 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
     }
   };
 
-  const handleRecordingToggle = async () => {
+  // Pressing the button while recording stops immediately; otherwise it opens
+  // the modal, which collects the microphone and camera URLs and calls
+  // startRecording with them.
+  const handleRecordClick = () => {
     if (isRecordingDisabled) return;
-
-    const next = !isRecording;
+    if (isRecording) {
+      void stopRecording();
+      return;
+    }
     clearForNewOp();
+    setIsRecordModalOpen(true);
+  };
 
-    if (next) {
-      setTimer(0);
-      dispatch(resetFlow());
-      dispatch(resetTranscript());
-      dispatch(resetSummary());
-      dispatch(clearMindmap());
-      dispatch(setJustStoppedRecording(false));
-      dispatch(startProcessing());
-      
-      if (hasAudioDevices) {
-        dispatch(setProcessingMode('microphone'));
-        dispatch(setAudioStatus('recording'));
-        console.log('🎙️ Starting recording with microphone');
-      } else {
-        dispatch(setProcessingMode('video-only' as any));
-        dispatch(setAudioStatus('no-devices'));
-        console.log('🎥 Starting video-only recording (no audio processing)');
-      }
+  /**
+   * @param report Names the stage in flight, for the modal that stays open
+   *   until this resolves. Bringing a session up takes seconds — a monitoring
+   *   handover alone sleeps 5 — and the pipelines are not live until the last
+   *   await returns, so the modal is where that wait has to be visible.
+   */
+  const startRecording = async (settings: RecordingSettings, report: (message: string) => void) => {
+    const cameras: CameraUrls = {
+      front: settings.front,
+      back: settings.back,
+      board: settings.board,
+    };
 
-      try {
-        const sessionResponse = await createSession();
-        const sharedSessionId = sessionResponse.sessionId;
-        dispatch(setSessionId(sharedSessionId));
-        try {
-          if (monitoringActive) {
-            await stopMonitoring();
-            dispatch(setMonitoringActive(false));
-            await new Promise(res => setTimeout(res, 5000));
-          }
-          console.log('📊 Starting monitoring for new session:', sharedSessionId);
-          await startMonitoring(sharedSessionId);
-          dispatch(setMonitoringActive(true));
-        } catch (monitoringError) {
-          console.error('❌ Monitoring restart failed (non-critical):', monitoringError);
-        }
+    clearForNewOp();
+    setTimer(0);
+    dispatch(resetFlow());
+    dispatch(resetTranscript());
+    dispatch(resetSummary());
+    dispatch(clearMindmap());
+    dispatch(setJustStoppedRecording(false));
+    dispatch(startProcessing());
+    // After resetFlow, which restores the previous cameras — these are the
+    // ones the user just confirmed, so they have to land on top of it.
+    dispatch(setFrontCamera(cameras.front));
+    dispatch(setBackCamera(cameras.back));
+    dispatch(setBoardCamera(cameras.board));
 
-        if (hasAudioDevices) {
-          dispatch(setUploadedAudioPath('MICROPHONE'));
-          dispatch(startTranscription());
-          console.log('🎙️ Microphone recording started - transcription will begin automatically');
-        } else {
-          console.log('🎙️ No audio devices - skipping microphone recording');
-        }
-        
-        dispatch(setIsRecording(true));
+    // What this session actually uses, from what was confirmed in the modal —
+    // not from whether the machine happens to have a microphone. Either input
+    // alone is a valid session, so both are decided independently.
+    const withMic = usesMicrophone({ hasAudioFeatures, microphone: settings.microphone });
+    const withCameras = usesCameras({ hasVideoAnalyticsFeature, cameras });
 
-        if (hasVideoCapability) {
-          console.log('🎥 Starting video analytics with shared session ID...');
-          await startVideoAnalyticsInBackground(sharedSessionId);
-        } else {
-          console.log('🎥 No video streams configured - skipping video analytics');
-          dispatch(setVideoStatus('no-config'));
-        }
-        
-      } catch (error) {
-        console.error('Failed to start recording:', error);
-        setErrorMsg(t('errors.failedToStartRecording'));
-        dispatch(processingFailed());
-        dispatch(setIsRecording(false));
-      }
+    if (withMic) {
+      dispatch(setProcessingMode('microphone'));
+      dispatch(setAudioStatus('recording'));
+      console.log('🎙️ Starting recording with microphone');
     } else {
-      console.log('🛑 Stopping recording - checking current states...');
-      console.log('🔍 Current states:', {
-        hasAudioDevices,
-        hasVideoCapability,
-        audioStatus,
-        videoStatus,
-        videoAnalyticsActive,
-        uploadedAudioPath,
-        processingMode
-      });
+      dispatch(setProcessingMode('video-only' as any));
+      // Distinguish "this machine has no microphone" from "the user chose not to
+      // record audio"; the status bar says something different for each.
+      dispatch(setAudioStatus(hasAudioDevices ? 'off' : 'no-devices'));
+      console.log('🎥 Starting video-only recording (no audio processing)');
+    }
 
-      dispatch(setIsRecording(false));
-      dispatch(setJustStoppedRecording(true));
-      
+    try {
+      report(t('startRecording.creatingSession', 'Creating session…'));
+      const sessionResponse = await createSession();
+      const sharedSessionId = sessionResponse.sessionId;
+      dispatch(setSessionId(sharedSessionId));
       try {
-        const wasRecordingAudio = hasAudioDevices && uploadedAudioPath === 'MICROPHONE';
-        
-        if (sessionId && wasRecordingAudio) {
-          console.log('🎙️ Stopping microphone recording...');
-          const result = await stopMicrophone(sessionId);
-          console.log('🛑 Microphone stopped:', result);
-          console.log('🎙️ Audio processing may continue (transcription → summary → mindmap)');
-        } else if (!hasAudioDevices) {
-          console.log('🎙️ No audio devices - preserving audio status as no-devices');
-          dispatch(setAudioStatus('no-devices'));
-        } else {
-          console.log('🎙️ No microphone recording to stop');
-          if (audioStatus === 'recording') {
-            dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
-          }
+        // Covers the handover as a whole: the stop, the 5s settle and the start.
+        report(t('startRecording.startingMonitoring', 'Starting resource monitoring…'));
+        if (monitoringActive) {
+          await stopMonitoring();
+          dispatch(setMonitoringActive(false));
+          await new Promise(res => setTimeout(res, 5000));
         }
+        console.log('📊 Starting monitoring for new session:', sharedSessionId);
+        await startMonitoring(sharedSessionId);
+        dispatch(setMonitoringActive(true));
+      } catch (monitoringError) {
+        console.error('❌ Monitoring restart failed (non-critical):', monitoringError);
+      }
 
-        const wasVideoActive = videoAnalyticsActive && hasVideoCapability;
-        
-        if (wasVideoActive && sessionId) {
+      if (withMic) {
+        dispatch(setUploadedAudioPath('MICROPHONE'));
+        dispatch(startTranscription());
+        console.log('🎙️ Microphone recording started - transcription will begin automatically');
+      } else {
+        console.log('🎙️ Not recording audio this session - skipping microphone');
+      }
+
+      dispatch(setIsRecording(true));
+
+      // hasVideoCapability is derived from Redux and so is a render behind the
+      // values just confirmed; ask the confirmed ones instead.
+      if (withCameras) {
+        console.log('🎥 Starting video analytics with shared session ID...');
+        report(t('startRecording.startingVideo', 'Starting video analytics…'));
+        await startVideoAnalyticsInBackground(sharedSessionId, cameras);
+      } else {
+        console.log('🎥 No video streams configured - skipping video analytics');
+        dispatch(setVideoStatus('no-config'));
+      }
+
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      setErrorMsg(t('errors.failedToStartRecording'));
+      dispatch(processingFailed());
+      dispatch(setIsRecording(false));
+      // Rethrown after the cleanup: the modal is still open and covering this
+      // banner, so it is the surface that has to report the failure — and it
+      // stays open, with Start live again, rather than closing on an error.
+      throw error;
+    }
+  };
+
+  const stopRecording = async () => {
+    console.log('🛑 Stopping recording - checking current states...');
+    console.log('🔍 Current states:', {
+      hasAudioDevices,
+      hasVideoCapability,
+      audioStatus,
+      videoStatus,
+      videoAnalyticsActive,
+      uploadedAudioPath,
+      processingMode
+    });
+
+    dispatch(setIsRecording(false));
+    dispatch(setJustStoppedRecording(true));
+    
+    try {
+      // The start path sets this exactly when it opened the microphone, so it
+      // records what actually happened. hasAudioDevices only says what the
+      // machine has, which can differ — a camera-only session on a laptop with a
+      // built-in mic, or a device list that changed mid-session.
+      const wasRecordingAudio = uploadedAudioPath === 'MICROPHONE';
+
+      if (sessionId && wasRecordingAudio) {
+        console.log('🎙️ Stopping microphone recording...');
+        const result = await stopMicrophone(sessionId);
+        console.log('🛑 Microphone stopped:', result);
+        console.log('🎙️ Audio processing may continue (transcription → summary → mindmap)');
+      } else if (!hasAudioDevices) {
+        console.log('🎙️ No audio devices - preserving audio status as no-devices');
+        dispatch(setAudioStatus('no-devices'));
+      } else {
+        // Audio was left out of this session on purpose; say so rather than
+        // claiming the machine has no microphone.
+        console.log('🎙️ No microphone recording to stop');
+        if (audioStatus === 'recording') dispatch(setAudioStatus('ready'));
+      }
+
+      const wasVideoActive = videoAnalyticsActive && hasVideoCapability;
+      
+      if (wasVideoActive && sessionId) {
+        try {
+          dispatch(setVideoStatus('stopping'));
+          dispatch(setVideoAnalyticsStopping(true));
+          console.log('🎥 Stopping video analytics...');
+          
+          // Ask only for the cameras that are actually streaming; the backend
+          // answers "is not running" for the rest, which reads as a failure.
+          // Fall back to all three if no stream URL is known, so a pipeline is
+          // never left running because of stale state.
+          const streaming = [
+            frontCameraStream && { pipeline_name: 'front' },
+            backCameraStream && { pipeline_name: 'back' },
+            boardCameraStream && { pipeline_name: 'content' },
+          ].filter(Boolean) as Array<{ pipeline_name: string }>;
+
+          const videoRequests = streaming.length > 0 ? streaming : [
+            { pipeline_name: 'front' },
+            { pipeline_name: 'back' },
+            { pipeline_name: 'content' },
+          ];
+
+          console.log('🛑 Stopping video analytics with shared session:', sessionId);
+          const videoResult = await stopVideoAnalytics(videoRequests, sessionId);
+          console.log('🛑 Video analytics stopped:', videoResult);
+
+          // Like the start endpoint, failures to stop come back with HTTP 200.
+          // "Not running" is expected housekeeping, so only report the rest.
+          const stopErrors = collectPipelineErrors(
+            videoResult?.results,
+            t,
+            t('errors.failedToStopRecording'),
+            isNotRunning
+          );
+          if (stopErrors.length > 0) {
+            showTransientError(t('errors.videoPipelineStopFailed', { details: stopErrors.join('\n') }));
+          }
+
+          // Check for recorded videos and trigger playback mode if available
+          let hasRecordedVideo = false;
           try {
-            dispatch(setVideoStatus('stopping'));
-            dispatch(setVideoAnalyticsStopping(true));
-            console.log('🎥 Stopping video analytics...');
+            console.log('📹 Checking recorded videos for sessionId:', sessionId);
+            const recordedVideos = await checkRecordedVideos(sessionId);
+            console.log('📹 Recorded videos check:', recordedVideos);
             
-            // Ask only for the cameras that are actually streaming; the backend
-            // answers "is not running" for the rest, which reads as a failure.
-            // Fall back to all three if no stream URL is known, so a pipeline is
-            // never left running because of stale state.
-            const streaming = [
-              frontCameraStream && { pipeline_name: 'front' },
-              backCameraStream && { pipeline_name: 'back' },
-              boardCameraStream && { pipeline_name: 'content' },
-            ].filter(Boolean) as Array<{ pipeline_name: string }>;
-
-            const videoRequests = streaming.length > 0 ? streaming : [
-              { pipeline_name: 'front' },
-              { pipeline_name: 'back' },
-              { pipeline_name: 'content' },
-            ];
-
-            console.log('🛑 Stopping video analytics with shared session:', sessionId);
-            const videoResult = await stopVideoAnalytics(videoRequests, sessionId);
-            console.log('🛑 Video analytics stopped:', videoResult);
-
-            // Like the start endpoint, failures to stop come back with HTTP 200.
-            // "Not running" is expected housekeeping, so only report the rest.
-            const stopErrors = collectPipelineErrors(
-              videoResult?.results,
-              t,
-              t('errors.failedToStopRecording'),
-              isNotRunning
-            );
-            if (stopErrors.length > 0) {
-              showTransientError(t('errors.videoPipelineStopFailed', { details: stopErrors.join('\n') }));
-            }
-
-            // Check for recorded videos and trigger playback mode if available
-            let hasRecordedVideo = false;
-            try {
-              console.log('📹 Checking recorded videos for sessionId:', sessionId);
-              const recordedVideos = await checkRecordedVideos(sessionId);
-              console.log('📹 Recorded videos check:', recordedVideos);
-              
-              if (recordedVideos.selected_video) {
-                hasRecordedVideo = true;
-                console.log(`📹 Found recorded video: ${recordedVideos.selected_video}`);
-                console.log('📹 Dispatching setRecordedVideoType:', recordedVideos.selected_video);
-                console.log('📹 Current sessionId in dispatch:', sessionId);
-                dispatch(setVideoPlaybackMode(true));
-                dispatch(setHasUploadedVideoFiles(true));
-                dispatch(setRecordedVideoType(recordedVideos.selected_video));
-                console.log('🎬 Playback mode enabled for recorded video');
-              } else {
-                console.log('📹 No recorded videos found');
-                dispatch(setVideoPlaybackMode(false));
-                dispatch(setHasUploadedVideoFiles(false));
-                dispatch(setRecordedVideoType(null));
-              }
-            } catch (recordCheckError) {
-              console.warn('Failed to check recorded videos (non-critical):', recordCheckError);
+            if (recordedVideos.selected_video) {
+              hasRecordedVideo = true;
+              console.log(`📹 Found recorded video: ${recordedVideos.selected_video}`);
+              console.log('📹 Dispatching setRecordedVideoType:', recordedVideos.selected_video);
+              console.log('📹 Current sessionId in dispatch:', sessionId);
+              dispatch(setVideoPlaybackMode(true));
+              dispatch(setHasUploadedVideoFiles(true));
+              dispatch(setRecordedVideoType(recordedVideos.selected_video));
+              console.log('🎬 Playback mode enabled for recorded video');
+            } else {
+              console.log('📹 No recorded videos found');
               dispatch(setVideoPlaybackMode(false));
               dispatch(setHasUploadedVideoFiles(false));
               dispatch(setRecordedVideoType(null));
             }
-
-            dispatch(setFrontCameraStream(''));
-            dispatch(setBackCameraStream(''));
-            dispatch(setBoardCameraStream(''));
-            // Only reset activeStream if NOT in playback mode (so VideoStream's useEffect can set it properly)
-            if (!hasRecordedVideo) {
-              dispatch(setActiveStream(null));
-            }
-            dispatch(setVideoAnalyticsActive(false));
-            dispatch(setVideoStatus('completed'));
-            dispatch(setUploadedVideoFiles({
-              front: null,
-              back: null,
-              board: null,
-            }));
-            
-          } catch (videoError) {
-            console.warn('Failed to stop video analytics (non-critical):', videoError);
-            dispatch(setVideoAnalyticsActive(false));
-            dispatch(setVideoStatus('failed'));
-          } finally {
-            dispatch(setVideoAnalyticsStopping(false));
-            console.log('🛑 Video analytics stopping process completed');
+          } catch (recordCheckError) {
+            console.warn('Failed to check recorded videos (non-critical):', recordCheckError);
+            dispatch(setVideoPlaybackMode(false));
+            dispatch(setHasUploadedVideoFiles(false));
+            dispatch(setRecordedVideoType(null));
           }
-        } else if (!hasVideoCapability) {
-          console.log('🎥 No video capability - preserving video status as no-config');
-          dispatch(setVideoStatus('no-config'));
-        } else {
-          console.log('🎥 No active video analytics to stop');
-          dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
+
           dispatch(setFrontCameraStream(''));
           dispatch(setBackCameraStream(''));
           dispatch(setBoardCameraStream(''));
-          dispatch(setActiveStream(null));
-          dispatch(setVideoAnalyticsActive(false));
-          dispatch(setVideoPlaybackMode(false));
-        }
-        if (!wasRecordingAudio || !hasAudioDevices) {
-          dispatch(setProcessingMode(null));
-          console.log('🔄 Processing mode reset');
-        } else {
-          console.log('🔄 Keeping processing mode - audio processing may continue');
-        }
-        if (uploadedAudioPath === 'MICROPHONE') {
-          if (!wasRecordingAudio) {
-            dispatch(setUploadedAudioPath(''));
-          } else {
-            console.log('🔄 Keeping uploaded audio path - processing continues');
+          // Only reset activeStream if NOT in playback mode (so VideoStream's useEffect can set it properly)
+          if (!hasRecordedVideo) {
+            dispatch(setActiveStream(null));
           }
+          dispatch(setVideoAnalyticsActive(false));
+          dispatch(setVideoStatus('completed'));
+          dispatch(setUploadedVideoFiles({
+            front: null,
+            back: null,
+            board: null,
+          }));
+          
+        } catch (videoError) {
+          console.warn('Failed to stop video analytics (non-critical):', videoError);
+          dispatch(setVideoAnalyticsActive(false));
+          dispatch(setVideoStatus('failed'));
+        } finally {
+          dispatch(setVideoAnalyticsStopping(false));
+          console.log('🛑 Video analytics stopping process completed');
         }
-
-        console.log('✅ Recording stopped gracefully with state preservation');
-        
-      } catch (error) {
-        console.error('Failed to stop recording:', error);
-        setErrorMsg(t('errors.failedToStopRecording'));
-        dispatch(setVideoAnalyticsStopping(false));
-        dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
+      } else if (!hasVideoCapability) {
+        console.log('🎥 No video capability - preserving video status as no-config');
+        dispatch(setVideoStatus('no-config'));
+      } else {
+        console.log('🎥 No active video analytics to stop');
         dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
-        dispatch(setProcessingMode(null));
-        dispatch(setUploadedAudioPath(''));
+        dispatch(setFrontCameraStream(''));
+        dispatch(setBackCameraStream(''));
+        dispatch(setBoardCameraStream(''));
+        dispatch(setActiveStream(null));
+        dispatch(setVideoAnalyticsActive(false));
+        dispatch(setVideoPlaybackMode(false));
       }
+      // Transcription, summary and mindmap keep running after the microphone
+      // closes, so both of these stay put while that is still in flight.
+      if (wasRecordingAudio) {
+        console.log('🔄 Keeping processing mode and audio path - processing continues');
+      } else {
+        dispatch(setProcessingMode(null));
+        console.log('🔄 Processing mode reset');
+      }
+
+      console.log('✅ Recording stopped gracefully with state preservation');
+      
+    } catch (error) {
+      console.error('Failed to stop recording:', error);
+      setErrorMsg(t('errors.failedToStopRecording'));
+      dispatch(setVideoAnalyticsStopping(false));
+      dispatch(setAudioStatus(hasAudioDevices ? 'ready' : 'no-devices'));
+      dispatch(setVideoStatus(hasVideoCapability ? 'ready' : 'no-config'));
+      dispatch(setProcessingMode(null));
+      dispatch(setUploadedAudioPath(''));
     }
   };
 
   const getRecordingTooltip = () => {
     if (audioDevicesLoading) return t('tooltips.checkingAudioDevices');
-    if (!hasLiveCapability) return t('tooltips.noDevicesOrStreams');
     if (isRecordingDisabled) return t('tooltips.recordingDisabled');
     return isRecording ? t('tooltips.stopRecording') : t('tooltips.startRecording');
   };
@@ -777,7 +804,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
           src={isRecording ? recordON : recordOFF}
           alt="Record"
           className="record-icon"
-          onClick={handleRecordingToggle}
+          onClick={handleRecordClick}
           title={getRecordingTooltip()}
           style={{
             opacity: isRecordingDisabled ? 0.5 : 1,
@@ -789,7 +816,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
 
         <button
           className="text-button"
-          onClick={handleRecordingToggle}
+          onClick={handleRecordClick}
           disabled={isRecordingDisabled}
           title={getRecordingTooltip()}
           style={{
@@ -836,6 +863,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
       )}
       {isUploadModalOpen && (
         <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} featureGuard={featureGuard} />
+      )}
+      {isRecordModalOpen && (
+        <StartRecordingModal
+          isOpen={isRecordModalOpen}
+          onClose={() => setIsRecordModalOpen(false)}
+          featureGuard={featureGuard}
+          onStart={startRecording}
+        />
       )}
     </div>
   );
