@@ -12,7 +12,7 @@ and thermal tuning) to application-level pipeline generation with Intel DL Strea
 - [DL Streamer Pipelines Guide](infrastructure/build-dlstreamer-pipelines.md) — Building,
   running, and troubleshooting DL Streamer video analytics pipelines, including AI-assisted
   pipeline generation with the DL Streamer Coding Agent.
-- [AI Agent Integration and Developer Experience](infrastructure/agent-skills.md) — Available
+- [Infrastructure AI Agent Integration](infrastructure/agent-skills.md) — Available
   agent skills for building images, provisioning, and power/thermal tuning, and how to run them
   from a developer host or directly on a provisioned target.
 
@@ -21,6 +21,6 @@ and thermal tuning) to application-level pipeline generation with Intel DL Strea
 :hidden:
 
 DL Streamer Pipelines Guide <infrastructure/build-dlstreamer-pipelines.md>
-AI Agent Integration and Developer Experience <infrastructure/agent-skills.md>
+Infrastructure AI Agent Integration <infrastructure/agent-skills.md>
 :::
 hide_directive-->
