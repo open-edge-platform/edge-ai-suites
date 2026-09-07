@@ -18,6 +18,7 @@ from constants.ocr_constant import (
 from dto.ocr_dto import OCRResponse
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_paths import SessionPaths
 logger = logging.getLogger(__name__)
 
 
@@ -180,13 +181,7 @@ def ocr_extract_text(file: UploadFile, session_id: Optional[str] = None) -> OCRR
         cleanup_temp_file(temp_path)
 
 def save_output(text: str, session_id: str, filename: str = "ocr_result.txt") -> str:
-    project_config = RuntimeConfig.get_section("Project")
-    project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            session_id
-        )
-    output_path = os.path.join(project_path, filename)
+    output_path = str(SessionPaths.raw_dir(session_id) / filename)
     StorageManager.save(output_path, text, append=False)
     logger.info(f"OCR result saved to: {output_path}")
     return output_path

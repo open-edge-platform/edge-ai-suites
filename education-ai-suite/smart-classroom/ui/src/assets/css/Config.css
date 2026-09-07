@@ -235,7 +235,13 @@
   color: #fff;
 }
 
+/* Also carries a "Show setting" button when it reports a cross-field rule, so
+   it lays out like .config-banner below. */
 .config-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 8px 12px;
   border-radius: 4px;
   background: #fdecea;
@@ -331,6 +337,39 @@
   background: #f2f8fc;
 }
 
+/* Takes part in a rule this edit breaks; the save is blocked on it. */
+.config-field.invalid {
+  border-left-color: #d64545;
+  background: #fdf3f2;
+}
+
+/* The same, for a problem the file already had and this edit does not touch. */
+.config-field.questionable {
+  border-left-color: #e0a02a;
+  background: #fffaf0;
+}
+
+/* A compact status chip, not a sentence: the banner carries the full text, and
+   this repeats once per field the rule names. The whole message is in the
+   title attribute, hence the help cursor. */
+.config-field-problem {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #fbdedb;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #a33;
+  cursor: help;
+}
+
+.config-field.questionable .config-field-problem {
+  background: #fbeccd;
+  color: #7a5b00;
+}
+
 .config-field-label {
   display: flex;
   flex-direction: column;
@@ -382,10 +421,94 @@
   box-shadow: var(--control-focus-ring);
 }
 
+/* The platform arrow is dropped for the shared one so that an enum select and a
+   free-text field with suggestions look like the same control. */
+select.config-input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 26px;
+  background-image: var(--control-chevron);
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 10px 6px;
+  cursor: pointer;
+}
+
 .config-path {
   display: flex;
   gap: 6px;
   width: 100%;
+}
+
+/* Free text plus a list of suggested values. */
+.config-combo {
+  position: relative;
+  width: 100%;
+}
+
+/* Leave room for the arrow, the same gap the select keeps. */
+.config-combo .config-input {
+  padding-right: 26px;
+}
+
+/* Sits inside the input's border, so it stays clear of the focus ring. */
+.config-combo-toggle {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 25px;
+  padding: 0;
+  border: none;
+  border-radius: 0 var(--control-radius) var(--control-radius) 0;
+  background-color: transparent;
+  background-image: var(--control-chevron);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px 6px;
+  cursor: pointer;
+}
+
+/* Portalled to the body, because .config-fields clips its rows. */
+.config-combo-list {
+  position: fixed;
+  z-index: 1200;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px 0;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+}
+
+/* Same face as .config-input: an option should read as the value it becomes. */
+.config-combo-option {
+  display: block;
+  width: 100%;
+  padding: 5px 10px;
+  border: none;
+  background: none;
+  font-family: var(--font-text);
+  font-size: 12.5px;
+  font-weight: 400;
+  color: var(--color-gray-900);
+  text-align: left;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.config-combo-option:hover,
+.config-combo-option:focus-visible {
+  outline: none;
+  background: var(--color-theme);
+  color: #fff;
+}
+
+/* The value currently in the box. */
+.config-combo-option.selected {
+  font-weight: 600;
 }
 
 .config-switch {
