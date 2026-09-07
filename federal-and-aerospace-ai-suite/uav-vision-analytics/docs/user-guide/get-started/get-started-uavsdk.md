@@ -332,7 +332,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
-| [benchmark.md](../benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
 
