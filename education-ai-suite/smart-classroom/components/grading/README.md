@@ -17,43 +17,71 @@
 3. Before starting grading, confirm whether the exam page layout is single-column or two-column.
 4. For the rest of the configuration options, see [doc/config-reference.md].
 
-## Quick Test
+## How to Start the Grading Service
 
-> **Language requirement:** Grading currently supports Chinese exam papers only. Before using the
-> Grading feature, make sure the `language` setting in the main program's `config.yaml` is set to
-> `zh`.
+The grading service is a thin orchestrator. To be fully functional it needs three
+backend providers, all reachable through `config.yaml` under
+`grading.provider`. Only `grading` is provided by this component; the VLM and
+layout-detection providers are external services, and OCR is bundled in-process.
 
-### 1. Prepare test files
-1. Copy rubric files from `./samples/rubrics` to `components/grading/rubrics`.
-2. The sample set contains some exams:
-	- `zh_sample_physics_exam.txt` (Physics, single-column paper)
-	- `zh_sample_5th_grade_chinese.txt` (Chinese, single-column paper)
-	- `zh_sample_english_exam.txt` (English, two-column paper)
-	- `zh_sample_8th_grade_math.txt` (Math, two-column paper)
+```yaml
+# grading/config.yaml
+grading:
+  provider:
+    layout_detection: http://127.0.0.1:9902
+    vlm_provider:      http://127.0.0.1:8000
+    ocr_provider:      openvino_local
+```
 
+### 1. Layout-detection provider
 
-### 2. Start services and verify health
-1. Start Smart Classroom (make sure the Grading feature is enabled).
-2. Open the Grading UI home page.
-3. Check that all three status indicators are green: `grading / vlm / layout`.
-	- If all are green, all required backend services are ready.
+Splits each rendered page into layout regions (text / table / formula / title…)
+used by section splitting.
 
-### 3. Physics sample (single-column)
-1. In the `Rubric` dropdown, select `zh_sample_physics_exam.txt`.
-2. Set `paper_path` to the **absolute path** of the physics sample directory:
-	- `components/grading/samples/exam/zh_9th_grade_physics_single_column`
-3. In the right-side config panel, confirm `page_columns = 1`.
-4. Click `Start` to begin grading.
+```bash
+cd providers/layout_detection_service
+python layout_detection_server.py
+```
 
-### 4. English sample (two-column)
-1. In the `Rubric` dropdown, select `zh_sample_english_exam.txt`.
-2. Set `paper_path` to the **absolute path** of the English sample directory:
-	- `components/grading/samples/exam/zh_9th_grade_english_double_column`
-3. Before clicking `Start`, set `page_columns = 2` in the right-side config panel.
-4. Click `Start` to begin grading.
+### 2. VLM provider
 
-### 5. Check outputs
-1. Wait until task status changes from `PENDING/RUNNING` to `COMPLETED`.
-2. Results are written to `components/grading/outputs/<task_id>/`, including:
-	- `summary.json`
-	- `<student_id>/grading_result.json`
+Grades sections/text. This is an **external service**, not started by this
+component. The grading client speaks **OpenAI-compatible chat-completions** —
+see `services/vlm_client.py`. It POSTs a page image (as a base64
+`image_url`) plus the grading prompt to:
+
+```
+{vlm_provider}/v1/chat/completions
+```
+
+So `vlm_provider` must point at an OpenAI-compatible endpoint (e.g. a local
+vLLM / TGI server, or a cloud gateway exposing that route).
+
+### 3. OCR provider
+
+Reads text inside detected regions for the section-splitting step. It runs
+**in-process inside the grading service** (no separate process), over
+OpenVINO + PaddleOCR models.
+
+### 4. Grading (main program)
+
+The orchestrator that ties the pipeline together and exposes the API.
+
+```bash
+python grading_service.py
+```
+
+---
+
+## Typical flow
+
+```text
+1. GET  /api/v1/health                                confirm backends green
+2. POST /api/v1/grading/tasks                          create task -> task_id
+3. GET  /api/v1/grading/tasks/{task_id}                poll until status=COMPLETED
+4. GET  /api/v1/grading/tasks/{task_id}/summary        overall summary
+5. GET  /api/v1/grading/tasks/{task_id}/students/{slot}/result   per-student detail
+```
+
+Results are also written under `components/grading/outputs/<task_id>/`
+(`summary.json`, `<student>/grading_result.json`, and per-step intermediates).
