@@ -82,7 +82,7 @@ curl -X POST http://localhost:8080/action/arm
 
 ### Step 3.3: Take off (generate motion in the scene)
 
-Command takeoff so the UAV climbs and moves through the Gazebo world — cameras then produce meaningful frames with vehicle detections instead of a static ground view:
+Command takeoff so the UAV climbs and moves through the Gazebo world — cameras then produce meaningful frames instead of a static ground view:
 
 ```bash
 curl -X POST http://localhost:8080/action/takeoff
@@ -94,7 +94,7 @@ The UAV climbs to the default hover altitude. When done, land it with:
 curl -X POST http://localhost:8080/action/land
 ```
 
-### Step 3.4: Capture the Video Stream (Optional)
+### Step 3.4: Capture the Video Stream during flight (Optional)
 
 Record the UAV camera stream to disk with `ffmpeg`:
 
