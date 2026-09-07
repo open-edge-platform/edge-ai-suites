@@ -11,21 +11,15 @@ determines the maximum number of concurrent drone-camera video streams the
 system can process (**stream density**) while sustaining a target frame rate,
 and simultaneously collects hardware utilization and power metrics from `metrics-manager`.
 
-> **Note**: The [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
-> is also available as an optional benchmarking tool for comparing AI pipeline performance
-> across CPU, GPU, and NPU.
+> **Note**:
+> Other benchmarking optios are also offered by Open Edge Platform. Use
+  [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
+  for comparing AI pipeline performance across CPU, GPU, and NPU.
+>
+> For platform-level benchmarking, see the [Edge Workloads and Benchmarks Guide](../infrastructure/run-edge-benchmarks.md) -
+  a solution for end-to-end video analytics pipelines, vision AI inference,
+  hardware-accelerated media processing, and generative AI.
 
-> **Note**: For platform-level benchmarking beyond this application — vision AI inference,
-> hardware-accelerated media processing, end-to-end video analytics pipelines, and generative AI —
-> see the [Edge Workloads and Benchmarks Guide](../infrastructure/run-edge-benchmarks.md).
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-Edge Workloads and Benchmarks Guide <../infrastructure/run-edge-benchmarks.md>
-:::
-hide_directive-->
 
 ## Table of Contents
 
@@ -578,3 +572,15 @@ uav-vision-analytics/
 For all benchmark-related troubleshooting (missing tools, connectivity issues,
 result anomalies, GPU/NPU visibility, and power readings), see the
 [Troubleshooting guide](./troubleshooting.md#benchmark).
+
+
+
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Edge Workloads and Benchmarks Guide <./benchmarking/run-edge-benchmarks.md>
+:::
+hide_directive-->
