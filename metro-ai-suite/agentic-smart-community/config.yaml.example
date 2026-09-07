@@ -38,6 +38,12 @@
 # before POSTing /v1/summary. Drop the block entirely when both sides see the same paths.
 summary_service:
   url: http://localhost:8192
+  # From set_env.sh (MAX_MODEL_LEN / DEFAULT_MAX_TOKENS), forwarded by compose.
+  # model_context_tokens: 61440
+  # max_output_tokens: 1024
+  max_hop_ratio: 20 # compression one report call may do; raise for fewer, coarser calls
+  timeout_seconds: 600 # one clip
+  report_timeout_seconds: 600 # one whole-period report
 
 # vllm-serving-ipex (VLM for scene_query — single-frame queries)
 vlm_service:

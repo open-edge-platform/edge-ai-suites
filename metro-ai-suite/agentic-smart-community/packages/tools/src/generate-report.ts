@@ -16,7 +16,37 @@ export interface ReportConfig {
   summaryClient: VideoSummaryClient;
   filter?: Record<string, any>;
   debugDir?: string; // when set, persist SRT artifacts here
+  /** Context window of the LLM behind the summary service (its --max-model-len). */
+  modelContext?: number;
+  /** The service's DEFAULT_MAX_TOKENS — the output bandwidth of one rung. */
+  maxOutputTokens?: number;
+  /** Compression one call may be asked to do; sets the level-1 group size. */
+  maxHopRatio?: number;
+  /** Whole-report budget. One value: a period's cost is not knowable per-clip. */
+  timeoutSeconds?: number;
 }
+
+const DEFAULT_MODEL_CONTEXT = 32768;
+const DEFAULT_MAX_OUTPUT_TOKENS = 512;
+const DEFAULT_TIMEOUT_SECONDS = 3600;
+
+/** `Start time: N sec\nEnd time: M sec`, prepended to every sub-summary. */
+const SUMMARY_HEADER_TOKENS = 24;
+/** Task + system prompt wrapped around every call. */
+const PROMPT_OVERHEAD_TOKENS = 800;
+/** The root prompt carries extra instructions on top of a macro one. */
+const GLOBAL_PROMPT_EXTRA_TOKENS = 2000;
+/** Slack — estimateTokens is an approximation, not the model's tokenizer. */
+const SAFETY_TOKENS = 2000;
+/**
+ * Compression a single call is trusted to do well. Past roughly this ratio a
+ * summarizer stops condensing and starts dropping whole stretches of timeline,
+ * which is what an extra level exists to prevent. The one empirical number here,
+ * and the direct dial on group size: `group = ratio · out / perCue`.
+ */
+const DEFAULT_MAX_HOP_RATIO = 15;
+/** Refuse to build a taller tree than this; each rung is a lossy re-summarization. */
+const MAX_LEVELS = 5;
 
 // ---------------------------------------------------------------------------
 // Time range helpers
@@ -150,24 +180,66 @@ function estimateTokens(text: string): number {
   return Math.floor((cjk / 1.5 + (text.length - cjk) / 4) * 1.3);
 }
 
-function planLevels(
+/**
+ * Tokens the model will actually read. The service parses the index and
+ * `HH:MM:SS,mmm --> HH:MM:SS,mmm` lines into chunk metadata and joins only the cue
+ * text, so counting the raw file over-states a cue by ~20%.
+ */
+function estimateCueTokens(srtText: string): number {
+  let total = 0;
+  for (const block of srtText.split(/\n\s*\n/)) {
+    const lines = block.split("\n");
+    const arrow = lines.findIndex((line) => line.includes(" --> "));
+    if (arrow >= 0) total += estimateTokens(lines.slice(arrow + 1).join("\n").trim());
+  }
+  return total || estimateTokens(srtText);
+}
+
+/**
+ * Size the level plan for this particular timeline.
+ *
+ * Every rung emits at most `maxOutputTokens`, so the hierarchy is a stack of
+ * fixed-bandwidth funnels: what matters is how hard each hop has to compress, not
+ * whether the input fits. A hop's ratio is `input / out`, and the two hops measure
+ * their input differently — level 1 reads real cue text, which we can measure;
+ * every level above reads sub-summaries, whose length is unknown until the model
+ * writes them, so those are budgeted at the cap.
+ *
+ * Level 1 then takes as many cues as that ratio limit and the context allow. There
+ * is nothing to trade off: a wider group means fewer chunks, which *also* lowers
+ * the ratio of every rung above it. So saturate level 1 and roll up only as far as
+ * the root actually needs.
+ */
+export function planLevels(
   srtText: string,
   numEvents: number,
-  modelContext = 32768
+  options: { modelContext?: number; maxOutputTokens?: number; maxHopRatio?: number } = {}
 ): { levels: number; levelSizes: number[] } {
-  const safeBudget = modelContext - 800 - 2000 - 2000; // overhead + output + safety
+  const modelContext = options.modelContext ?? DEFAULT_MODEL_CONTEXT;
+  const out = options.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
   if (numEvents <= 0) return { levels: 2, levelSizes: [1, -1] };
-  const avgTokens = Math.max(100, estimateTokens(srtText) / numEvents) + 5;
-  const maxGroup = Math.min(Math.floor(safeBudget / avgTokens), 30);
-  if (numEvents <= 15) return { levels: 2, levelSizes: [1, -1] };
-  const macroSize = Math.min(5, maxGroup);
-  const numMacro = Math.ceil(numEvents / macroSize);
-  const globalInput = numMacro * 605;
-  if (globalInput <= modelContext - 800 - 4000 - 2000) {
-    return { levels: 3, levelSizes: [1, macroSize, -1] };
+
+  const perCue = Math.max(1, estimateCueTokens(srtText) / numEvents);
+  const perSummary = out + SUMMARY_HEADER_TOKENS;
+  const hopBudget = (options.maxHopRatio ?? DEFAULT_MAX_HOP_RATIO) * out;
+  const chunkBudget = Math.max(perSummary, modelContext - PROMPT_OVERHEAD_TOKENS - out - SAFETY_TOKENS);
+  const rootBudget = Math.max(perSummary, chunkBudget - GLOBAL_PROMPT_EXTRA_TOKENS);
+
+  // One call for the whole timeline, when that is not already a violent squeeze.
+  if (numEvents * perCue <= Math.min(rootBudget, hopBudget)) return { levels: 2, levelSizes: [1, -1] };
+
+  const group = Math.max(1, Math.min(numEvents, Math.floor(hopBudget / perCue), Math.floor(chunkBudget / perCue)));
+  const sizes = [1, group];
+  let remaining = Math.ceil(numEvents / group);
+
+  const rollup = Math.max(2, Math.min(Math.floor(hopBudget / perSummary), Math.floor(chunkBudget / perSummary)));
+  const rootMax = Math.max(1, Math.min(Math.floor(hopBudget / perSummary), Math.floor(rootBudget / perSummary)));
+  while (remaining > rootMax && sizes.length < MAX_LEVELS - 1) {
+    sizes.push(rollup);
+    remaining = Math.ceil(remaining / rollup);
   }
-  const l2Size = Math.min(Math.floor((modelContext - 6800) / 605), numMacro);
-  return { levels: 4, levelSizes: [1, macroSize, l2Size, -1] };
+  sizes.push(-1);
+  return { levels: sizes.length, levelSizes: sizes };
 }
 
 // ---------------------------------------------------------------------------
@@ -295,7 +367,12 @@ export async function generateReport(
   }
 
   // 4. Call multilevel-video-understanding caption-only
-  const { levels, levelSizes } = planLevels(srtText, rows.length);
+  const { levels, levelSizes } = planLevels(srtText, rows.length, {
+    modelContext: reportConfig.modelContext,
+    maxOutputTokens: reportConfig.maxOutputTokens,
+    maxHopRatio: reportConfig.maxHopRatio,
+  });
+  const timeoutMs = (reportConfig.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS) * 1000;
   const t0 = Date.now();
   let summary: string | null = null;
   let usage: { prompt_tokens?: number; completion_tokens?: number } | undefined;
@@ -305,12 +382,16 @@ export async function generateReport(
       srtText,
       task: summaryTaskName,
       processor_kwargs: { levels, level_sizes: levelSizes },
+      timeoutMs,
     });
     summary = resp.summary;
     usage = resp.usage;
     if (!summary) error = "empty summary from service";
   } catch (err: any) {
-    error = err.message;
+    // A bare "aborted due to timeout" gives an operator nothing to act on.
+    error = err?.name === "TimeoutError" || /aborted due to timeout/i.test(err?.message ?? "")
+      ? `timed out after ${timeoutMs / 1000}s (${rows.length} rows, level_sizes=[${levelSizes}])`
+      : err.message;
   }
   const latency = (Date.now() - t0) / 1000;
 
@@ -337,6 +418,7 @@ export async function generateReport(
     eventCount: rows.length,
     reportText: summary,
     latencySeconds: latency,
+    plan: { levels, levelSizes },
     ...(error ? { error } : {}),
   };
 }
