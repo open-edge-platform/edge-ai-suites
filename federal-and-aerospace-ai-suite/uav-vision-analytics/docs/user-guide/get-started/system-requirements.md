@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Developer System
 
-The developer system is used to build installation artifacts and prepare the bootable USB. The build flow has been verified on:
+The developer system is used to build installation artifacts and prepare the bootable USB.
 
 | Component | Minimum                                                          |
 | --------- | ---------------------------------------------------------------- |
@@ -22,26 +22,19 @@ The developer system is used to build installation artifacts and prepare the boo
 
 #### Docker Setup
 
-For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](../how-to/set-up-windows-wsl.md).
-
-Docker Engine is required because the build workflow uses Docker images and containers.
-
-Install Docker Engine for your Linux distribution using the official Docker documentation:
-
-- [Linux install overview](https://docs.docker.com/engine/install/)
-- [Debian](https://docs.docker.com/engine/install/debian/)
-- [Ubuntu](https://docs.docker.com/engine/install/ubuntu/)
-- [RHEL](https://docs.docker.com/engine/install/rhel/)
-- [Fedora](https://docs.docker.com/engine/install/fedora/)
+Docker Engine is required because the build workflow uses Docker images and containers. Install Docker Engine for your Ubuntu system using the official Docker documentation for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/release-2026.2.0/docs/user-guide/how-to/set-up-windows-wsl.md).
 
 Configure Docker for [non-root usage and service startup after installation](https://docs.docker.com/engine/install/linux-postinstall/).
 
 If you are behind a proxy, configure [Docker daemon proxy settings](https://docs.docker.com/config/daemon/systemd/).
 
-#### Install Make on the Development System
+#### Install Make and other tools on the Development System
+
+Install GNU Make and other utilities on your development system:
 
 ```bash
-sudo apt-get install -y make
+sudo apt update
+sudo apt-get install -y make gdisk
 ```
 
 #### Password Hash Tools
