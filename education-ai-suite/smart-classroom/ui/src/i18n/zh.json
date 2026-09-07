@@ -195,7 +195,11 @@
     "startRecording": "开始录音",
     "stopRecording": "停止录音",
     "recordingDisabled": "录音已禁用 - 正在进行其他操作",
-    "noDevicesOrStreams": "未找到音频设备，或没有配置可用于串流的视频流。"
+    "noDevicesOrStreams": "未找到音频设备，或没有配置可用于串流的视频流。",
+    "uploadFile": "上传音频和视频文件",
+    "uploadDisabledRecording": "请先停止录制，然后再上传文件",
+    "uploadDisabledAudioBusy": "音频处理仍在进行中 - 处理完成后即可上传",
+    "uploadDisabledVideoBusy": "视频分析仍在进行中 - 处理完成后即可上传"
   },
   "settings": {
     "title": "设置",

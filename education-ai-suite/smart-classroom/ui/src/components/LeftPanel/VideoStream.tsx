@@ -8,6 +8,7 @@ import HLSPlayer from "../common/HLSPlayer";
 import { useTranslation } from "react-i18next";
 import { getRecordedVideoUrl } from "../../services/api";
 import type { FeatureGuard } from "../../utils/featureGuards";
+import { useUploadGate, uploadBlockerTooltipKey } from "../../hooks/useUploadGate";
 
 interface VideoStreamProps {
   isFullScreen: boolean;
@@ -38,10 +39,9 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     sessionId,
     recordedVideoType,
   } = useAppSelector((s) => s.ui);
-  const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const mindmapState = useAppSelector((s) => s.mindmap);
-  const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
+  const { isUploadEnabled, blocker: uploadBlocker } = useUploadGate();
 
   const streams = {
     front: frontCameraStream,
@@ -56,23 +56,6 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     { pipeline: "all", label: t("accordion.allCameras") },
   ];
   
-  const hasAudio = Boolean(uploadedAudioPath);
-
-  const isMindmapDone =
-    audioStatus === "complete" ||
-    audioStatus === "error";
-
-  const areStreamsStopped =
-    videoStatus === "completed" ||
-    videoStatus === "ready" ||
-    videoStatus === "no-config" ||
-    videoStatus === "failed";
-
-  const audioReady = !hasAudio || isMindmapDone;
-  const videoReady = !hasUploadedVideoFiles || areStreamsStopped;
-
-  const isUploadEnabled = audioReady && videoReady;
-
   const isValidStream = (url?: string | null) =>
     !!url &&
     url.trim() !== "" &&
@@ -330,6 +313,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                   className="upload-file-button"
                   disabled={!isUploadEnabled}
                   onClick={isUploadEnabled ? () => setIsUploadModalOpen(true) : undefined}
+                  title={t(uploadBlockerTooltipKey(uploadBlocker))}
                   style={{
                     opacity: isUploadEnabled ? 1 : 0.6,
                     cursor: isUploadEnabled ? "pointer" : "not-allowed",
