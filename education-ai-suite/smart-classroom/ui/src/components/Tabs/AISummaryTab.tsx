@@ -1,95 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/AISummaryTab.css";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { firstSummaryToken, summaryDone, clearSummaryStartRequest, summaryStreamComplete } from "../../redux/slices/uiSlice";
-import { appendSummary, finishSummary, startSummary } from "../../redux/slices/summarySlice";
-import { streamSummary } from "../../services/api";
-import { useFeatureConfig } from "../../hooks/useFeatureConfig";
+import { useAppSelector } from "../../redux/hooks";
 
-const activeSummarySessions = new Set<string>();
-
+// Renders the summary the pipeline streams into the store (see
+// redux/useAudioPipeline). The stream is not owned here — this tab is unmounted
+// whenever another tab is selected.
 const AISummaryTab: React.FC = () => {
-  const dispatch = useAppDispatch();
   const { t } = useTranslation();
-  const summaryEnabled = useAppSelector(s => s.ui.summaryEnabled);
-  const isLoading = useAppSelector(s => s.ui.summaryLoading);
-  const { streamingText, finalText } = useAppSelector(s => s.summary);
-  const sessionId = useAppSelector(s => s.ui.sessionId);
-  const shouldStartSummary = useAppSelector(s => s.ui.shouldStartSummary);
-  const [boardOcrPartial, setBoardOcrPartial] = useState(false);
-  
-  // Check if mindmap feature is enabled in backend
-  const { guard, loaded: featuresLoaded } = useFeatureConfig();
-  const hasMindmapFeature = featuresLoaded && guard.hasFeature('mindmap');
-
-  const startedRef = useRef(false);
-  const sessionRef = useRef<string | null>(null);
-  // Only set for long sessions, where the summary is built segment by segment.
-  const [progress, setProgress] = useState<
-    { stage: string; chunk: number; chunks: number } | null
-  >(null);
-
-  useEffect(() => {
-    if (sessionRef.current && sessionRef.current !== sessionId) {
-      activeSummarySessions.delete(sessionRef.current);
-      startedRef.current = false;
-    }
-    sessionRef.current = sessionId ?? null;
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (!summaryEnabled || !sessionId || !shouldStartSummary) return;
-    if (activeSummarySessions.has(sessionId) || startedRef.current) return;
-
-    startedRef.current = true;
-    activeSummarySessions.add(sessionId);
-    dispatch(clearSummaryStartRequest());
-    dispatch(startSummary());
-    setBoardOcrPartial(false);
-
-    (async () => {
-      try {
-        let sentFirst = false;
-        for await (const ev of streamSummary(sessionId)) {
-          if (ev.type === "summary_token") {
-            if (!sentFirst) {
-              dispatch(firstSummaryToken());
-              sentFirst = true;
-            }
-            setProgress(null);
-            dispatch(appendSummary(ev.token));
-          } else if (ev.type === "board_ocr_partial") {
-            setBoardOcrPartial(true);
-          } else if (ev.type === "summary_progress") {
-            setProgress({ stage: ev.stage, chunk: ev.chunk, chunks: ev.chunks });
-          } else if (ev.type === "error") {
-            window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
-            setProgress(null);
-            dispatch(finishSummary());
-            dispatch(summaryStreamComplete());
-            dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
-            break;
-          } else if (ev.type === "done") {
-            setProgress(null);
-            dispatch(finishSummary());
-            dispatch(summaryStreamComplete());
-            dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
-            break;
-          }
-        }
-      } catch (e: any) {
-        if (e?.name !== 'AbortError') console.error('[AISummaryTab] stream error', e);
-        dispatch(finishSummary());
-        dispatch(summaryStreamComplete());
-        dispatch(summaryDone({ enableMindmap: hasMindmapFeature }));
-      } finally {
-        console.log('[AISummaryTab] stream finished', sessionId);
-      }
-    })();
-  }, [summaryEnabled, shouldStartSummary, sessionId, dispatch, hasMindmapFeature]);
-
+  const { streamingText, finalText, progress, boardOcrPartial } = useAppSelector(s => s.summary);
   const typed = finalText ?? streamingText;
 
   // Each stage counts its own units, so they cannot share one label: a fold
