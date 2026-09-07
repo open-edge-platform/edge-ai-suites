@@ -22,7 +22,7 @@ The developer system is used to build installation artifacts and prepare the boo
 
 #### Docker Setup
 
-Docker Engine is required because the build workflow uses Docker images and containers. Install Docker Engine for your Ubuntu system using the official Docker documentation for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/docs/user-guide/how-to/set-up-windows-wsl.md).
+Docker Engine is required because the build workflow uses Docker images and containers. Install Docker Engine for your Ubuntu system using the official Docker documentation for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/release-2026.2.0/docs/user-guide/how-to/set-up-windows-wsl.md).
 
 Configure Docker for [non-root usage and service startup after installation](https://docs.docker.com/engine/install/linux-postinstall/).
 
