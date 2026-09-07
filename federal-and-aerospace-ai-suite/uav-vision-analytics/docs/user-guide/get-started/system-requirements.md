@@ -11,12 +11,12 @@ The developer system is used to build installation artifacts and prepare the boo
 
 | Component | Minimum                                                          |
 | --------- | ---------------------------------------------------------------- |
-| OS        | Linux distribution or WSL environment                            |
+| OS        | Ubuntu 24.04/22.04 or WSL environment                            |
 | CPU       | Any modern x86-64 processor with virtualisation support          |
 | Memory    | 16 GiB RAM                                                       |
 | Storage   | 100 GiB free disk space (for image build workspace)              |
 | USB       | 32 GiB USB drive (for bootable installation media)               |
-| Network   | Internet access (or configured proxy) to fetch packages and ISOs |
+| Network   | Internet access to fetch packages and images                     |
 
 ### Prerequisites
 

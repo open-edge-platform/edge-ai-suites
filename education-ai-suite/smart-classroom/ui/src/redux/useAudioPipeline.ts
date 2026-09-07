@@ -52,7 +52,7 @@ const activeMindmapSessions = new Set<string>();
  * the component still being mounted), and the mind-map fetch never started if
  * its tab was never opened. audioStatus then stayed on 'transcribing' /
  * 'mindmapping' for the rest of the session, which stalled every later stage
- * and left both Upload File buttons greyed out (see useUploadGate).
+ * and left both Upload File buttons greyed out (see usePipelineGate).
  *
  * Mounted once from App, the chain always runs to completion; the tabs only
  * render what it produced.
