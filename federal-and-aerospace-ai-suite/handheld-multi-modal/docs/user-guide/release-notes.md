@@ -1,4 +1,4 @@
-# Release Notes: Handheld Multi-Modal Application
+# Release Notes: Handheld (Soldier System) Blueprint
 
 ## Version 2026.2.0
 

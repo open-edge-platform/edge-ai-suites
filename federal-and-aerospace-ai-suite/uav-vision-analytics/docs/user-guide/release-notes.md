@@ -1,4 +1,4 @@
-# Release Notes: UAV Vision Analytics
+# Release Notes: UAV Blueprint
 
 ## Version 1.0.0
 
