@@ -1,52 +1,14 @@
 from __future__ import annotations
 
-import sys
-import types
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 from PIL import Image
 
-_COMPONENT_ROOT = Path(__file__).resolve().parents[2]  # components/grading/
-_SC_ROOT = _COMPONENT_ROOT.parents[1]                   # smart-classroom/
+from services.config import get_ocr_config, resolve_model_dir
 
 _ocr_instance = None
-
-
-def _load_ocr_config() -> dict:
-    import yaml
-    cfg_path = _SC_ROOT / "config.yaml"
-    raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
-    return (raw.get("models") or {}).get("ocr") or {}
-
-
-def _inject_config_loader(ocr_cfg: dict) -> None:
-    """Inject a lightweight mock of utils.config_loader so that
-    OpenVINOOCRProcessor can resolve model sub-directory names without
-    importing the full main-app config stack."""
-    if "utils.config_loader" in sys.modules:
-        return
-
-    model_dir = str((_SC_ROOT / ocr_cfg.get("model_dir", "models/ocr")).resolve())
-
-    ocr_ns = types.SimpleNamespace(
-        det_model=ocr_cfg.get("det_model", "PP-OCRv6_small_det"),
-        rec_model=ocr_cfg.get("rec_model", "PP-OCRv6_small_rec"),
-        cls_model=ocr_cfg.get("cls_model", "PP-LCNet_x1_0_doc_ori"),
-        model_dir=model_dir,
-        device=ocr_cfg.get("device", "CPU"),
-    )
-    models_ns = types.SimpleNamespace(ocr=ocr_ns)
-    config_ns = types.SimpleNamespace(models=models_ns)
-
-    mock = types.ModuleType("utils.config_loader")
-    mock.config = config_ns
-
-    utils_mock = sys.modules.get("utils") or types.ModuleType("utils")
-    utils_mock.config_loader = mock
-    sys.modules.setdefault("utils", utils_mock)
-    sys.modules["utils.config_loader"] = mock
 
 
 def reset_ocr() -> None:
@@ -61,21 +23,19 @@ def _get_processor():
     if _ocr_instance is not None:
         return _ocr_instance
 
-    ocr_cfg = _load_ocr_config()
-    model_dir = str((_SC_ROOT / ocr_cfg.get("model_dir", "models/ocr")).resolve())
+    ocr_cfg = get_ocr_config()
+    model_dir = str(resolve_model_dir(ocr_cfg.get("model_dir", "models/ocr")))
 
-    if str(_SC_ROOT) not in sys.path:
-        sys.path.insert(0, str(_SC_ROOT))
-
-    _inject_config_loader(ocr_cfg)
-
-    from components.ocr.openvino.openvino_ocr_processor import OpenVINOOCRProcessor
+    from .vendor.openvino_ocr_processor import OpenVINOOCRProcessor
 
     _ocr_instance = OpenVINOOCRProcessor(
         lang=ocr_cfg.get("lang", "zh"),
         use_angle_cls=True,
         device=ocr_cfg.get("device", "CPU"),
         ir_models_dir=model_dir,
+        det_model=ocr_cfg.get("det_model", "PP-OCRv6_small_det"),
+        rec_model=ocr_cfg.get("rec_model", "PP-OCRv6_small_rec"),
+        cls_model=ocr_cfg.get("cls_model", "PP-LCNet_x1_0_doc_ori"),
     )
     return _ocr_instance
 

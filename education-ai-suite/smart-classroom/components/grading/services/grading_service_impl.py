@@ -1002,14 +1002,11 @@ def get_grading_config() -> dict[str, Any]:
     detection = cfg.get("detection_service") if isinstance(cfg.get("detection_service"), dict) else {}
     section_split = cfg.get("section_split") if isinstance(cfg.get("section_split"), dict) else {}
 
-    sc_config_path = _component_root().parents[1] / "config.yaml"
-    try:
-        sc_raw = yaml.safe_load(sc_config_path.read_text(encoding="utf-8")) or {}
-    except Exception:
-        sc_raw = {}
-    sc_models = sc_raw.get("models") if isinstance(sc_raw.get("models"), dict) else {}
-    sc_text_gen = sc_models.get("text_gen") if isinstance(sc_models.get("text_gen"), dict) else {}
-    sc_ocr = sc_models.get("ocr") if isinstance(sc_models.get("ocr"), dict) else {}
+    from services.config import get_ocr_config, get_provider_url
+    from services.vlm_client import fetch_model_name
+
+    ocr_cfg = get_ocr_config()
+    vlm_model = fetch_model_name(get_provider_url("vlm_provider", "")) or "VLM service"
 
     layout_model = None
     try:
@@ -1038,8 +1035,8 @@ def get_grading_config() -> dict[str, Any]:
         "expand_margin": detection.get("expand_margin"),
         "merge_overlapping": detection.get("merge_overlapping"),
         "iou_threshold": detection.get("iou_threshold"),
-        "vlm_model": sc_text_gen.get("vlm_name"),
-        "ocr_model": sc_ocr.get("rec_model"),
+        "vlm_model": vlm_model,
+        "ocr_model": ocr_cfg.get("rec_model"),
         "layout_model": layout_model,
     }
 

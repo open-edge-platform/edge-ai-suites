@@ -5,8 +5,6 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-import yaml
-
 from services.layout_detection import run_layout_detection
 from services.pdf_render import render_pdf_to_pngs, image_info
 from services.prompt_slicer import (
@@ -30,33 +28,17 @@ def _component_root() -> Path:
 
 
 def _load_component_config() -> dict[str, Any]:
-    path = _component_root() / "config.yaml"
-    try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        cfg = raw if isinstance(raw, dict) else {}
-    except Exception:
-        cfg = {}
-    root = _component_root().parents[1] / "config.yaml"
-    try:
-        root_raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
-        cfg["_language"] = str((root_raw.get("app") or {}).get("language", "en"))
-    except Exception:
-        cfg["_language"] = "en"
+    from services.config import load_config, get_language
+
+    cfg = load_config()
+    cfg["_language"] = get_language()
     return cfg
 
 
 def _load_provider_url(key: str, default: str) -> str:
-    """Read a service URL from root config: grading.provider.<key>."""
-    root = _component_root().parents[1] / "config.yaml"
-    try:
-        raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
-        provider = ((raw.get("grading") or {}).get("provider") or {})
-        url = provider.get(key)
-        if url:
-            return str(url)
-    except Exception:
-        pass
-    return default
+    from services.config import get_provider_url
+
+    return get_provider_url(key, default)
 
 
 def _outputs_dir(task_id: str, student_id: str | None) -> Path:
