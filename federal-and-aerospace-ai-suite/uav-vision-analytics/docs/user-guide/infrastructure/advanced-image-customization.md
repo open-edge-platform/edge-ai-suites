@@ -13,7 +13,7 @@ distros on x86_64.
 
 > Note that this path is intended for advanced users who need fine-grained control over disk
 > layout, installed packages, and package repositories. Most users can start with the simpler
-> path, [using a Standard Ubuntu 24.04 image](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/build-from-source.html#option-1-build-from-a-standard-ubuntu-24-04-image).
+> path, [using the standard build](../infrastructure-setup.md#step-2-build-the-os-image).
 
 This article will show you how to:
 
@@ -106,41 +106,42 @@ sudo -E ./image-composer-tool build "$TEMPLATE"
 When the build completes, expect the following output on the console with build timings:
 
 ```bash
-2026-04-09T15:10:22.705+0530    INFO    display/display.go:21   Checking for image artifacts in: /home/user/image-composer-tool/workspace/ubuntu-ubuntu24-x86_64/imagebuild/minimal
-2026-04-09T15:10:22.705+0530    INFO    display/display.go:30   Found 2 total entries in directory
-2026-04-09T15:10:22.705+0530    INFO    display/display.go:36   Checking file: minimal-ubuntu-server-24.04.raw.gz (isDir=false)
-2026-04-09T15:10:22.705+0530    INFO    display/display.go:36   Checking file: spdx_manifest_deb_minimal-ubuntu-server_20260409_150520.json (isDir=false)
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:44   Found 2 artifacts after filtering
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:52
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:53   ╔════════════════════════════════════════════════════════════════════════════╗
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:54   ║                    ✓ IMAGE CREATED SUCCESSFULLY                            ║
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:55   ╚════════════════════════════════════════════════════════════════════════════╝
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:56
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:59     Image Type:   RAW
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:60
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:61     Generated Artifacts (including SBOM):
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:79       • minimal-ubuntu-server-24.04.raw.gz (2.62 GB)
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:80         /home/user/image-composer-tool/workspace/ubuntu-ubuntu24-x86_64/imagebuild/minimal/minimal-ubuntu-server-24.04.raw.gz
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:81
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:79       • spdx_manifest_deb_minimal-ubuntu-server_20260409_150520.json (1.37 MB)
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:80         /home/user/image-composer-tool/workspace/ubuntu-ubuntu24-x86_64/imagebuild/minimal/spdx_manifest_deb_minimal-ubuntu-server_20260409_150520.json
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:81
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:84   ════════════════════════════════════════════════════════════════════════════
-2026-04-09T15:10:22.706+0530    INFO    display/display.go:85
-2026-04-09T15:10:22.877+0530    INFO    image-composer-tool/build.go:137  image build completed successfully
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:154    Build Timings:
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:155    +----------------------------------+----------------+
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:156    | Stage                            | Duration       |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:157    +----------------------------------+----------------+
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:159    | Initialization and Configuration | 16.499s        |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:159    | Package Download                 | 3m20.339s      |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:159    | Chroot Env Initialization        | 52.647s        |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:159    | Image Build                      | 8m54.777s      |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:159    | Image Conversion                 | 4m58.711s      |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:159    | Finalization and Clean Up        | 1.264s         |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:161    +----------------------------------+----------------+
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:162    | Total Time                       | 18m24.237s     |
-2026-04-09T15:10:22.877+0530    INFO    display/display.go:163    +----------------------------------+----------------+
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:21   Checking for image artifacts in: /home/user/image-composer-tool/workspace/ubuntu-ubuntu24-x86_64/imagebuild/minimal-ubuntu-server
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:30   Found 2 total entries in directory
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:36   Checking file: minimal-ubuntu-server-24.04.raw.gz (isDir=false)
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:36   Checking file: spdx_manifest_deb_minimal-ubuntu-server_20260904_123231.json (isDir=false)
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:44   Found 2 artifacts after filtering
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:52
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:53   ╔════════════════════════════════════════════════════════════════════════════╗
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:54   ║                    ✓ IMAGE CREATED SUCCESSFULLY                            ║
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:55   ╚════════════════════════════════════════════════════════════════════════════╝
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:56
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:59     Image Type:   RAW
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:60
+2026-09-04T12:38:38.143+0530    INFO    display/display.go:61     Generated Artifacts (including SBOM):
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:79       • minimal-ubuntu-server-24.04.raw.gz (2.59 GB)
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:80         /home/user/image-composer-tool/workspace/ubuntu-ubuntu24-x86_64/imagebuild/minimal-ubuntu-server/minimal-ubuntu-server-24.04.raw.gz
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:81
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:79       • spdx_manifest_deb_minimal-ubuntu-server_20260904_123231.json (0.93 MB)
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:80         /home/user/image-composer-tool/workspace/ubuntu-ubuntu24-x86_64/imagebuild/minimal-ubuntu-server/spdx_manifest_deb_minima                          l-ubuntu-server_20260904_123231.json
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:81
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:84   ════════════════════════════════════════════════════════════════════════════
+2026-09-04T12:38:38.144+0530    INFO    display/display.go:85
+2026-09-04T12:38:38.313+0530    INFO    image-composer-tool/build.go:150        image build completed successfully
+2026-09-04T12:38:38.313+0530    INFO    display/display.go:154    Build Timings:
+2026-09-04T12:38:38.313+0530    INFO    display/display.go:155    +----------------------------------+----------------+
+2026-09-04T12:38:38.313+0530    INFO    display/display.go:156    | Stage                            | Duration       |
+2026-09-04T12:38:38.313+0530    INFO    display/display.go:157    +----------------------------------+----------------+
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Initialization and Configuration | 2.53s          |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Package Download                 | 4m36.394s      |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Chroot Package Download          | 0s             |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Chroot Env Initialization        | 37.596s        |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Image Build                      | 9m23.946s      |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Image Conversion                 | 6m2.108s       |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:159    | Finalization and Clean Up        | 2.641s         |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:161    +----------------------------------+----------------+
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:162    | Total Time                       | 20m45.216s     |
+2026-09-04T12:38:38.314+0530    INFO    display/display.go:163    +----------------------------------+----------------+
 
 ```
 
@@ -183,7 +184,7 @@ Build output:
 - `usb-installation-files.tar.gz` in `infrastructure/build-artifacts/out`
 
 Once `usb-installation-files.tar.gz` is ready, continue with
-[Phase 2: Prepare Bootable USB](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/prepare-usb.html) in the global Get Started guide
+[Step 3: Prepare the bootable USB](../infrastructure-setup.md#step-3-prepare-the-bootable-usb) in the Infrastructure Setup guide
 for the remaining steps: configuring the USB device, writing the artifacts, and booting the target system.
 
 ## Package curation and template customization

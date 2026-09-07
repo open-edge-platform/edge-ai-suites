@@ -7,12 +7,12 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Collecting a Platform Report with system-info.sh
 
-`system-info.sh` is a diagnostic script for Intel® Panther Lake (PTL) systems provisioned using Infrastructure software. After provisioning, the script is available on the target system at `/opt/edge/developer/tools/system-info/`.
+`system-info.sh` is a diagnostic script for Intel® Panther Lake systems provisioned using Infrastructure software. After provisioning, the script is available on the target system at `/opt/edge/developer/tools/system-info/`.
 
 ### Summary of Tools
 
 - Common tools: `bash`, `lscpu`, `lsblk`, `ip`, etc.
-- Optional tools for a more complete report: `dmidecode`, `turbostat`, `intel_gpu_top`, `vulkaninfo`, `vainfo`, `clinfo`, `fwupdmgr`
+- Optional tools for a more complete report: `dmidecode`, `turbostat`, `intel_gpu_top`, `vulkaninfo`, `vainfo`, `clinfo`, `fwupdmgr`, `intel_lpmd`, `thermald`
 - `sudo` recommended for full visibility (firmware, DMI, turbostat, dmesg)
 
 ### Running the script
@@ -28,7 +28,7 @@ Save output to a file:
 sudo ./system-info.sh > sys-info.txt 2>&1
 ```
 
-> **Note:** If PTL is not detected (CPUID mismatch), the script still runs and reports what it finds. Some sections show "not installed" warnings when optional tools are missing.
+> **Note:** If Panther Lake is not detected (CPUID mismatch), the script still runs and reports what it finds. Some sections show "not installed" warnings when optional tools are missing.
 
 ## Output Sections Reference
 
@@ -37,7 +37,7 @@ The script produces the following sections. Use this table to navigate the outpu
 | Section | What it covers |
 |---|---|
 | **SYSTEM INFO** | Script version, hostname, kernel, OS, uptime, `hostnamectl` output |
-| **PANTHER LAKE PLATFORM CHECK** | CPUID validation (family/model/stepping), microcode, Secure Boot state, PTL-relevant firmware blobs (`xe`, `huc`, `gsc`, `vpu_50xx`) |
+| **PANTHER LAKE PLATFORM CHECK** | CPUID validation (family/model/stepping), microcode, Secure Boot state, Panther Lake-relevant firmware blobs (`xe`, `huc`, `gsc`, `vpu_50xx`) |
 | **CPU INFO** | `lscpu` full output, hybrid P/E/LP-E core topology and capacities, per-CPU frequency table, `intel_pstate` governor/HWP settings, cache hierarchy (L1/L2/L3), ISA flags (AVX, AVX-VNNI, AES, SHA, etc.), hardware vulnerability mitigations, live CPU usage, top 5 CPU-consuming processes, `turbostat` summary |
 | **MEMORY INFO** | `free -h`, key `/proc/meminfo` fields (hugepages, swap, slabs), DIMM details from `dmidecode` (type, speed, manufacturer, part number), NUMA topology |
 | **STORAGE INFO** | `lsblk` block device tree with filesystem and mount points, `df -h` disk usage, NVMe device info (`nvme-cli`), SMART data |
@@ -50,7 +50,7 @@ The script produces the following sections. Use this table to navigate the outpu
 | **FIRMWARE / BIOS / SECURITY** | SMBIOS CPU and board details (`dmidecode`), UEFI boot confirmation, TPM state, `fwupd` firmware versions for CPU microcode, display controller, NVMe SSD, system firmware, BootGuard |
 | **PCI / USB DEVICE SUMMARY** | Full Intel® PCI device list (BDF, class, device ID), all PCI devices, USB bus/device topology |
 | **DMESG: LAST 30 INTEL-RELATED LINES** | Filtered dmesg lines for `xe`, `intel_vpu`, and related Intel driver messages |
-| **RECOMMENDED PACKAGES FOR INTEL PTL** | `apt install` commands grouped by: kernel/firmware, core diagnostics, GPU/media, OpenCL/Level Zero, NPU/OpenVINO, useful extras |
+| **RECOMMENDED PACKAGES FOR PANTHER LAKE** | `apt install` commands grouped by: kernel/firmware, core diagnostics, GPU/media, OpenCL/Level Zero, NPU/OpenVINO, useful extras |
 
 ## Provisioned System Profile
 
@@ -95,7 +95,7 @@ The following tables describe what is expected to be present on a system that ha
 | Container runtime | Docker CE, containerd, Buildx and the Compose plugin (active when `host_type=container`) |
 | Kubernetes sever | K3s single-node server (active when `host_type=kubernetes`); traefik disabled |
 | SR-IOV | `intel-sriov-vf.service` — provisions and persists 7 GPU VFs across reboots |
-| Power monitoring and tuning | `powertop`, `pcm`; power tuning scripts (`battery`, `balanced`, `performance`, `graphical` profiles) |
+| Power monitoring and tuning | `powertop`, `pcm`, `intel_lpmd`, `thermald`; power tuning scripts (`battery`, `balanced`, `performance`, `graphical` profiles) |
 | GPU monitoring | `intel-gpu-tools 1.28` (`intel_gpu_top`) |
 | Network performance and profiling | `iperf3`, `linuxptp`, `tcpdump` |
 

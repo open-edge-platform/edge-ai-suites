@@ -76,15 +76,14 @@ services:
       - ./data/ovms-models:/models
     command: >
       --rest_port 8000
-      --source_model OpenVINO/Qwen3.5-4B-int8-ov
+      --source_model OpenVINO/Mistral-7B-Instruct-v0.3-int8-ov
       --model_repository_path /models
       --task text_generation
       --target_device GPU
       --metrics_enable
-      --reasoning_parser qwen3
       --plugin_config '{"GPU_ENABLE_SDPA_OPTIMIZATION":"NO","KV_CACHE_PRECISION":"f16","ENABLE_MMAP":"NO"}'
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/config | grep -q 'Qwen3.5-4B-int8-ov'"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/v1/config | grep -q 'Mistral-7B-Instruct-v0.3-int8-ov'"]
       interval: 15s
       timeout: 5s
       retries: 20
@@ -111,8 +110,7 @@ services:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=${no_proxy},fedaero.intel.com
-      - DEFAULT_MODEL_PARAMS={"max_tokens":2048, "custom_params":{"chat_template_kwargs":{"enable_thinking":false}}}
-      - TASK_MODEL_PARAMS={"max_tokens":1000,"custom_params":{"chat_template_kwargs":{"enable_thinking":false}}}
+      - DEFAULT_MODEL_PARAMS={"max_tokens":2048}
       # Stops the model from generating follow-up questions and tags after answering a user query. Limits model usage.
       - ENABLE_FOLLOW_UP_GENERATION=false
       - ENABLE_TAGS_GENERATION=false

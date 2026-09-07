@@ -8,8 +8,7 @@
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
-import type { ConfigDescription } from '../types/config';
+import type { ConfigDescription, ConfigProblem } from '../types/config';
 import type { ServiceSnapshot } from '../types/services';
 import type { SetupStep } from '../types/setup';
 
@@ -37,41 +36,32 @@ const isWarn = (step: SetupStep) => step.status === 'warn';
 // lists and the item claims to be ready while the work is still running.
 const isRunning = (step: SetupStep) => step.status === 'running';
 
-function valueOf(description: ConfigDescription | null, path: string) {
-  return description?.fields.find((field) => field.path === path);
+/**
+ * Config is always structurally valid, so "reviewed" is not derivable. Only
+ * genuine contradictions are reported, and those come from the rule set in
+ * config-schema.cjs.
+ *
+ * One entry per rule, so a rule spanning two fields is not reported twice.
+ */
+function ruleProblems(problems: ConfigProblem[]): ConfigProblem[] {
+  const seen = new Set<string>();
+  return problems.filter((problem) => {
+    if (seen.has(problem.rule)) return false;
+    seen.add(problem.rule);
+    return true;
+  });
 }
 
 /**
- * Config is always structurally valid, so "reviewed" is not derivable. Only
- * genuine contradictions are reported — the same one the setup script warns
- * about.
+ * @param problems cross-field problems in the *saved* config. Pending edits are
+ *   deliberately excluded: this drives whether the machine is ready to run, and
+ *   a half-typed value is not the state of the system.
  */
-function settingsProblems(
-  description: ConfigDescription | null,
-  t: TFunction
-): { text: string; path: string }[] {
-  if (!description) return [];
-  const problems: { text: string; path: string }[] = [];
-
-  const diarization = valueOf(description, 'models.asr.diarization');
-  const token = valueOf(description, 'models.asr.hf_token');
-  if (diarization?.value === true && token && !token.isSet) {
-    problems.push({
-      text: t(
-        'getStarted.details.noHfToken',
-        'Speaker diarization is on but no Hugging Face token is set.'
-      ),
-      path: 'models.asr.hf_token',
-    });
-  }
-
-  return problems;
-}
-
 export function useReadiness(
   steps: SetupStep[],
   services: ServiceSnapshot[],
-  description: ConfigDescription | null
+  description: ConfigDescription | null,
+  configProblems: ConfigProblem[] = []
 ): { items: ReadinessItem[]; ready: boolean; blocked: boolean } {
   const { t } = useTranslation();
 
@@ -80,7 +70,7 @@ export function useReadiness(
     const environment = steps.filter((step) => ENVIRONMENT_STEPS.includes(step.id));
     const prerequisites = steps.filter((step) => !ENVIRONMENT_STEPS.includes(step.id));
     const backend = services.find((service) => service.id === 'backend');
-    const problems = settingsProblems(description, t);
+    const problems = ruleProblems(configProblems);
 
     const prerequisiteBad = prerequisites.filter(isBad);
     const prerequisiteWarn = prerequisites.filter(isWarn);
@@ -146,7 +136,7 @@ export function useReadiness(
         detail: !description
           ? t('getStarted.details.loading', 'Loading…')
           : problems.length
-            ? problems.map((problem) => problem.text).join(' ')
+            ? problems.map((problem) => problem.message).join(' ')
             : t('getStarted.details.settingsOk', 'Review the commonly used settings'),
         steps: [],
         focus: problems[0]?.path,
@@ -178,5 +168,5 @@ export function useReadiness(
       ready: items.every((item) => item.state === 'ok'),
       blocked: items.some((item) => item.state === 'blocked' || item.state === 'attention'),
     };
-  }, [steps, services, description, t]);
+  }, [steps, services, description, configProblems, t]);
 }

@@ -86,6 +86,13 @@ code assistance, document search, image analysis, and image and video generation
 the same Edge Node Infrastructure software platform. See the
 [AI Playground — FedAero Setup Guide](ai-playground.md) for installation and setup steps.
 
+## AI Agent SKILLs
+
+The Handheld Blueprint supports AI agent skills for GitHub Copilot and Claude Code, covering
+both platform-level automation (image build, provisioning, power and thermal tuning) and
+application-level pipeline generation with Intel DL Streamer. See
+[AI Agent SKILLs](agents.md) for the available skills and how to use them.
+
 <!--hide_directive
 :::{toctree}
 :hidden:
@@ -94,8 +101,9 @@ Infrastructure Setup <infrastructure-setup.md>
 Install OEP SDKs <install-oep-sdks.md>
 Install Handheld Multi-Modal Application <deploy-applications.md>
 Access Application User Interface <access-application.md>
-Benchmarks <benchmarks.md>
 AI Playground <ai-playground.md>
+Benchmarks <benchmarks.md>
+AI Agent SKILLs <agents.md>
 
 :::
 hide_directive-->

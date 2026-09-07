@@ -1,5 +1,9 @@
 # Grading Flow
 
+> **Language requirement:** Grading currently supports Chinese exam papers only. Before using the
+> Grading feature, make sure the `language` setting in the main program's `config.yaml` is set to
+> `zh`.
+
 The Grading feature automatically scores scanned exam papers. You provide a paper (PDF) and a
 rubric, and the system renders the pages, splits them into sections, and uses a Vision-Language
 Model (VLM) to grade each section and produce a structured result with scores and reasoning.
