@@ -39,7 +39,7 @@ Expected: `card0`/`renderD128` under `/dev/dri`, `accel0` under `/dev/accel`, an
 Run the official UAV Mission Compute SDK installer on the target. It configures Docker, pulls the SDK images, and builds the full simulation stack:
 
 ```bash
-curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash
+curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash
 ```
 
 The installer sets up:
@@ -129,9 +129,9 @@ make down
 
 ## Next Steps
 
-- Review the upstream [UAV Mission Compute SDK Get Started](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) for USB camera setup and advanced configuration.
+- Review the upstream [UAV Mission Compute SDK Get Started](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) for USB camera setup and advanced configuration.
 
-- Review the [UAV Mission Compute SDK Benchmarking Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/benchmarking.md) for telemetry and bridge performance benchmarking.
+- Review the [UAV Mission Compute SDK Benchmarking Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/benchmarking.md) for telemetry and bridge performance benchmarking.
 
 - Refer to [Get Started — UAV Mission Compute SDK Mode](./get-started-uavsdk.md) for application deployment and running the vision analytics stack against the live UAV SDK services.
 

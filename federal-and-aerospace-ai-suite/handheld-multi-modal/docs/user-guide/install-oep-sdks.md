@@ -38,7 +38,7 @@ Expected: `card0`/`renderD128` under `/dev/dri`, `accel0` under `/dev/accel`, an
 Run the official OEP Vision AI SDK installer on the target. It configures Docker, pulls the DL Streamer image, and installs the OpenVINO tooling and sample content:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
 ```
 
 The installer sets up:
@@ -76,7 +76,7 @@ wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-
   "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
 
 wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" \
-  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
+  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/v2026.2.0/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
 ```
 
 Start the DL Streamer container with display forwarding:
