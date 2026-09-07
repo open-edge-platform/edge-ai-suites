@@ -20,7 +20,7 @@ import sys
 import yaml
 
 # Pipelines that depend on models removed (huggingface).
-# video-summarization-vlm/viddeo-captioning-vlm depends on the gemma3 huggingface model.
+# video-summarization-vlm/video-captioning-vlm depend on the gemma3 huggingface model.
 REMOVE_PIPELINES = {"video-summarization-vlm.yaml","video-captioning-vlm.yaml"}
 
 
