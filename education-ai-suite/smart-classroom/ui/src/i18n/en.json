@@ -200,7 +200,11 @@
       "startRecording": "Start recording",
       "stopRecording": "Stop recording",
       "recordingDisabled": "Recording disabled - another operation in progress",
-      "noDevicesOrStreams": "No audio devices or video streams are configured for streaming"
+      "noDevicesOrStreams": "No audio devices or video streams are configured for streaming",
+      "uploadFile": "Upload audio and video files",
+      "uploadDisabledRecording": "Stop the recording before uploading files",
+      "uploadDisabledAudioBusy": "Audio processing is still running - upload is available when it finishes",
+      "uploadDisabledVideoBusy": "Video analytics is still running - upload is available when it finishes"
     },
     "settings": {
       "title": "Settings",
