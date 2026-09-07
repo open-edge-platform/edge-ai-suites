@@ -3,21 +3,21 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# AI Model — YOLOv8n-VisDrone
+# AI Model — YOLO11s
 
-The UAV Vision Analytics application uses **YOLOv8n-VisDrone**, an object detection model
-fine-tuned on the [VisDrone dataset](https://github.com/VisDrone/VisDrone-Dataset) for
-detecting objects commonly seen in drone-view imagery.
+The UAV Vision Analytics application uses **YOLO11s**, Ultralytics' stock
+COCO-pretrained object detection model.
+
 
 ## Model Details
 
 | Property | Value |
 | --- | --- |
-| Model | YOLOv8n-VisDrone |
-| Source | [mshamrai/yolov8n-visdrone](https://huggingface.co/mshamrai/yolov8n-visdrone) |
+| Model | YOLO11s |
+| Source | Ultralytics (downloaded by the `yolo` CLI) |
 | Precision | FP16 (OpenVINO IR) |
 | Input resolution | 640 × 640 |
-| Detection classes | pedestrian, people, bicycle, car, van, truck, tricycle, awning-tricycle, bus, motor |
+| Detection classes | 80 classes (person, car, truck, bus, bicycle, motorcycle, ...) |
 | Ultralytics version | 8.4.67 (pinned — see `resources/requirements.txt`) |
 
 > **Important:** `ultralytics` **is pinned to** `8.4.67`. Newer releases
@@ -30,7 +30,7 @@ detecting objects commonly seen in drone-view imagery.
 ## Prerequisites
 
 - **Python 3.10 or later** with `python3-venv` support
-- **Internet access** to reach Hugging Face and PyPI (configure proxy if behind a corporate firewall)
+- **Internet access** to reach Ultralytics' release assets and PyPI (configure proxy if behind a corporate firewall)
 
 ### Install `python3-venv` (if missing)
 
@@ -50,7 +50,7 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 make model
 ```
 
-This creates `resources/venv/`, installs all dependencies, downloads `best.pt` from Hugging Face, and exports to OpenVINO FP16 IR.
+This creates `resources/venv/`, installs all dependencies, downloads `yolo11s.pt` from Ultralytics, and exports to OpenVINO FP16 IR.
 
 **Behind a proxy?** Set proxy variables before running:
 
@@ -68,15 +68,41 @@ After export, the model files are at:
 ```text
 resources/
 └── models/
-    └── yolov8n-visdrone/
-        ├── best.pt                      ← downloaded PyTorch checkpoint
-        └── best_openvino_model/
-            ├── best.xml                 ← OpenVINO IR model definition
-            └── best.bin                 ← model weights
+    └── yolo11s/
+        ├── yolo11s.pt                     ← downloaded PyTorch checkpoint
+        └── yolo11s_openvino_model/
+            ├── yolo11s.xml                ← OpenVINO IR model definition
+            └── yolo11s.bin                ← model weights
 ```
 
 The inference pipelines reference the model at the container-internal path:
 
 ```text
-/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml
+/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml
 ```
+
+## Using a Different Ultralytics Model
+
+To try a different size/variant (e.g. `yolo11n`, `yolo11m`, or `yolov8n`),
+edit the `model=` value in the `model` target of the `Makefile` (it accepts
+any Ultralytics model name and auto-downloads the matching checkpoint), then
+update the model path in every file that references it:
+
+- `Makefile` (`MODEL_DIR`, `MODEL_XML`)
+- `scripts/mavlink_pipeline_manager.py` (`MODEL_PATH`)
+- `scripts/uavsdk_pipeline_manager.py` (`MODEL_PATH`)
+- `benchmark/benchmark_app_payload.json` (all `model` fields)
+
+## Using a Custom / Fine-Tuned Model
+
+To substitute a custom-trained OpenVINO IR model (e.g. a model fine-tuned on
+aerial imagery):
+
+1. Place `model.xml` + `model.bin` under `resources/models/{{MODEL_NAME}}/`
+2. Update the model path in the files listed above
+3. Re-verify `threshold` (default `0.4`) is appropriate for the new model's
+   confidence distribution
+
+**Note:** Only OpenVINO IR format (`.xml` + `.bin`) is supported by
+`gvadetect`. ONNX models must be converted first with `mo` (OpenVINO Model
+Optimizer) or `openvino.convert_model()`.

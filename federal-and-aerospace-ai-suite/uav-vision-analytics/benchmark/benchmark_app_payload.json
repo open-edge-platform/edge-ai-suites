@@ -21,7 +21,7 @@
       "parameters": {
         "detection-properties": {
           "device": "CPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+          "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml"
         }
       }
     }
@@ -48,7 +48,7 @@
       "parameters": {
         "detection-properties": {
           "device": "GPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+          "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml"
         }
       }
     }
@@ -75,7 +75,7 @@
       "parameters": {
         "detection-properties": {
           "device": "NPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+          "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
           "nireq": 4
         }
       }
@@ -98,7 +98,7 @@
       "parameters": {
         "detection-properties": {
           "device": "CPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+          "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml"
         }
       }
     }
@@ -120,7 +120,7 @@
       "parameters": {
         "detection-properties": {
           "device": "GPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+          "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml"
         }
       }
     }
@@ -142,7 +142,7 @@
       "parameters": {
         "detection-properties": {
           "device": "NPU",
-          "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+          "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
           "nireq": 4
         }
       }

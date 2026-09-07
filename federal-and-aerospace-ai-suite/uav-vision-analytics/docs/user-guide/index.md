@@ -15,10 +15,8 @@ UAV Bleuprint demonstrates how AI-based object detection can be integrated with 
 flight controller telemetry on a companion compute platform.
 
 Based on DL Streamer Pipeline Server, the application processes video from a UAV-mounted
-camera or a simulated video file, detects objects across ten object classes, and outputs an
-RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). The stream is
-consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
-It runs the YOLOv8n-VisDrone, a model designed to recognize imagery typical for drone video.
+camera or a simulated video file, detects common object across 80 classes (person, car, truck, bus, bicycle, motorcycle, and more), and outputs an RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). The stream is consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
+It runs the YOLO11s, Ultralytics' pretrained small object detection model.
 
 
 The application supports two deployment modes depending on whether an external SDK is available.
@@ -29,7 +27,7 @@ The application supports two deployment modes depending on whether an external S
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | RTSP / Video File / Live Camera Streams        | Input video source — UAV camera feed, a recorded video file, or a simulated RTSP stream                 |
 | MAVLink UAV Telemetry                          | Telemetry input — GPS, altitude, speed, and heading received from the flight controller over UDP        |
-| DL Streamer Pipeline Server (CPU / GPU / NPU)  | Core inference engine — runs YOLOv8n-VisDrone object detection and renders the telemetry overlay on each frame |
+| DL Streamer Pipeline Server (CPU / GPU / NPU)  | Core inference engine — runs YOLO11s object detection and renders the telemetry overlay on each frame |
 | RTSP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP   |
 
 

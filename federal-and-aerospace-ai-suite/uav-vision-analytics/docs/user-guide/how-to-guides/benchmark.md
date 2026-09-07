@@ -56,7 +56,7 @@ running. See [index.md](../index.md) for full setup instructions.
 The model must exist at:
 
 ```text
-resources/models/yolov8n-visdrone/best_openvino_model/best.xml
+resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml
 ```
 
 Run `make model` if it is missing (Deployment will fail with an error if the model is absent).
@@ -244,8 +244,8 @@ must be physically attached and accessible inside the container.
 | `uav_realsense_gpu` | GPU | RealSense (v4l2) |
 | `uav_realsense_npu` | NPU | RealSense (v4l2) |
 
-All pipelines use the **YOLOv8n-VisDrone** model (FP16 OpenVINO IR) at 640×640
-resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, motor, etc.).
+All pipelines use the **YOLO11s** model (FP16 OpenVINO IR) at 640×640
+resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, etc.).
 
 List pipeline names available in the payload file at any time:
 
