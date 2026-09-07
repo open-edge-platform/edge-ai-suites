@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-UAV Bleuprint demonstrates how AI-based object detection can be integrated with UAV
+UAV Blueprint demonstrates how AI-based object detection can be integrated with UAV
 flight controller telemetry on a companion compute platform.
 
 Based on DL Streamer Pipeline Server, the application processes video from a UAV-mounted
@@ -87,8 +87,6 @@ regardless of severity, notify
 [Ethics Reporting Portal](https://www.intel.com/content/www/us/en/corporate-responsibility/ethics-and-compliance.html)
 immediately.
 
-
-
 <!--hide_directive
 :::{toctree}
 :hidden:
@@ -99,6 +97,7 @@ Install UAV Vision Analytics Application <install-uav-app.md>
 How to use UAV Vision Analytics Application <./how-to-guides.md>
 Benchmarks <./how-to-guides/benchmark.md>
 Agent SKILLs <./agents.md>
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->
