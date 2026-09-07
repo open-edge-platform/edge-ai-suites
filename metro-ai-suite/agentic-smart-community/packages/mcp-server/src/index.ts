@@ -137,7 +137,11 @@ async function main() {
     }
   };
 
-  const summaryClient = new VideoSummaryClient(config.summaryService.url, config.summaryService.pathRemap);
+  const summaryClient = new VideoSummaryClient(
+    config.summaryService.url,
+    config.summaryService.pathRemap,
+    config.summaryService.timeoutSeconds * 1000,
+  );
   const workerService = new WorkerService(config, db, summaryClient, onAlert);
   const liveStreams = new LiveStreamManager();
   const chatCredentials = new ChatCredentialStore(loadDashboardIntegrationConfig());
