@@ -99,7 +99,9 @@ the GET response (excluding the read-only `vlm_model` / `ocr_model` /
 **Notes:**
 
 - `force_regrade` and `debug_mode` are not exposed here (live in `config.yaml`).
-- `page_columns` / `column_split_ratio` must match the actual scanner paper layout.
+- `page_columns` accepts `1`, `2`, or `auto`. With `auto` the layout is inferred
+  per task from layout detection, and `column_split_ratio` is only used as a
+  fallback when inference cannot decide.
 
 ---
 

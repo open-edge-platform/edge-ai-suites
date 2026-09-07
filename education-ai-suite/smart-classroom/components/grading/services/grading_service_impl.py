@@ -865,7 +865,7 @@ def read_task_log(task_id: str, tail: int = 50) -> dict[str, Any]:
 
 def update_grading_config(
     dpi: int | None = None,
-    page_columns: int | None = None,
+    page_columns: int | str | None = None,
     column_split_ratio: float | None = None,
     force_split: bool | None = None,
     force_split_pairs: list[list[int]] | None = None,
@@ -940,7 +940,10 @@ def update_grading_config(
     if dpi is not None:
         text = replace_scalar(text, "dpi", str(int(dpi)))
     if page_columns is not None:
-        text = replace_scalar(text, "page_columns", str(int(page_columns)))
+        if str(page_columns).strip().lower() == "auto":
+            text = replace_scalar(text, "page_columns", "auto")
+        else:
+            text = replace_scalar(text, "page_columns", str(int(page_columns)))
     if column_split_ratio is not None:
         text = replace_scalar(text, "column_split_ratio", str(float(column_split_ratio)))
     if force_split is not None:
