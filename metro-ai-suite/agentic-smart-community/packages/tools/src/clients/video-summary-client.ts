@@ -74,11 +74,22 @@ export interface SubtitleSummarizeRequest {
   method?: SummaryMethod;
   /** Overrides — defaults to {process_fps: 0, levels, level_sizes} computed by caller. */
   processor_kwargs?: ProcessorKwargs;
+  /**
+   * Per-request timeout override. Caption-only aggregation cost scales with the
+   * number of macro chunks in the level plan, so generate-report derives this
+   * from its own plan rather than sharing the clip-mode default below.
+   */
+  timeoutMs?: number;
 }
 
 import { Agent } from "undici";
 
-/** Default request timeout. Caption-only over long SRT can take minutes. */
+/**
+ * Default request timeout — sized for *clip* mode (one recorded segment through
+ * the VLM→LLM pipeline). Caption-only report aggregation runs one LLM call per
+ * macro chunk and routinely exceeds this on weekly/monthly periods; those
+ * callers pass an explicit `timeoutMs` instead of inheriting this.
+ */
 const DEFAULT_TIMEOUT_MS = 600_000;
 
 /** Strip `<think>...</think>` blocks some LLMs prefix the response with. */
@@ -90,18 +101,29 @@ export class VideoSummaryClient {
   private baseUrl: string;
   private pathRemap?: PathRemap;
   private timeoutMs: number;
-  private dispatcher: Agent;
+  private dispatchers = new Map<number, Agent>();
 
   constructor(baseUrl: string, pathRemap?: PathRemap, timeoutMs: number = DEFAULT_TIMEOUT_MS) {
     this.baseUrl = baseUrl;
     this.pathRemap = pathRemap;
     this.timeoutMs = timeoutMs;
-    // Node's global fetch (undici) defaults to a 300s headersTimeout on the
-    // shared dispatcher, which would fire BEFORE AbortSignal.timeout(timeoutMs)
-    // whenever the service holds the request open >5min (long VLM runs) —
-    // surfacing as a bare "fetch failed". Give this client its own Agent whose
-    // header/body timeouts match timeoutMs so the configured timeout wins.
-    this.dispatcher = new Agent({ headersTimeout: timeoutMs, bodyTimeout: timeoutMs });
+  }
+
+  /**
+   * Node's global fetch (undici) defaults to a 300s headersTimeout on the shared
+   * dispatcher, which would fire BEFORE AbortSignal.timeout(timeoutMs) whenever
+   * the service holds the request open >5min (long VLM / multi-level LLM runs) —
+   * surfacing as a bare "fetch failed". Each distinct timeout therefore gets its
+   * own Agent whose header/body timeouts match, so the requested timeout wins.
+   * Cached because a report and a clip request use different values.
+   */
+  private dispatcherFor(timeoutMs: number): Agent {
+    let agent = this.dispatchers.get(timeoutMs);
+    if (!agent) {
+      agent = new Agent({ headersTimeout: timeoutMs, bodyTimeout: timeoutMs });
+      this.dispatchers.set(timeoutMs, agent);
+    }
+    return agent;
   }
 
   private remapVideoPath(path: string): string {
@@ -118,13 +140,14 @@ export class VideoSummaryClient {
    * and strip any `<think>` prologue from the returned summary. Shared by both
    * video-file mode and caption-only mode.
    */
-  private async post(payload: Record<string, unknown>): Promise<SummaryResponse> {
+  private async post(payload: Record<string, unknown>, timeoutMs?: number): Promise<SummaryResponse> {
+    const effectiveTimeout = timeoutMs && timeoutMs > 0 ? timeoutMs : this.timeoutMs;
     const response = await fetch(`${this.baseUrl}/v1/summary`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(this.timeoutMs),
-      dispatcher: this.dispatcher,
+      signal: AbortSignal.timeout(effectiveTimeout),
+      dispatcher: this.dispatcherFor(effectiveTimeout),
     } as RequestInit);
 
     if (!response.ok) {
@@ -165,6 +188,6 @@ export class VideoSummaryClient {
       prompt: req.prompt,
       method: req.method ?? "USE_ALL_T-1",
       processor_kwargs: { process_fps: 0, ...(req.processor_kwargs ?? {}) },
-    });
+    }, req.timeoutMs);
   }
 }

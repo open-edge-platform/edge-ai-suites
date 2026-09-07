@@ -5,7 +5,7 @@ import { Router, type Request, type Response } from "express";
 import { z } from "zod";
 import type { SmartCommunityDB } from "@smart-community-video/db";
 import { generateReport, type VideoSummaryClient } from "@smart-community-video/tools";
-import type { ServerConfig } from "../config.js";
+import { reportTuning, type ServerConfig } from "../config.js";
 import { loadDashboardIntegrationConfig } from "./integration-env.js";
 import { LiveStreamManager } from "./live-stream.js";
 import { resolveMonitorMp4, sendMp4, sendSnapshot } from "./media.js";
@@ -113,6 +113,7 @@ export function createDashboardRouter(
         filter: reports?.filter,
         summaryClient,
         debugDir: config.reportsLogsDir,
+        ...reportTuning(config),
       }, body);
       res.json(result);
     } catch (error) {
