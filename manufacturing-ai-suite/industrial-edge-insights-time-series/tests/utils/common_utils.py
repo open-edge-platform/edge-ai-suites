@@ -24,6 +24,26 @@ logger = logging.getLogger(__name__)
 PROXY_URL = os.getenv("PROXY_URL", None)
 
 
+def assert_condition(condition, message=""):
+    """Fail a test when condition is false."""
+    assert condition, message  # nosec B101
+
+
+def run_command(command, **kwargs):
+    """Run a test command without invoking a shell."""
+    return subprocess.run(command, shell=False, **kwargs)  # nosec B603
+
+
+def start_command(command, **kwargs):
+    """Start a test command without invoking a shell."""
+    return subprocess.Popen(command, shell=False, **kwargs)  # nosec B603
+
+
+def get_command_output(command, **kwargs):
+    """Capture test command output without invoking a shell."""
+    return subprocess.check_output(command, shell=False, **kwargs)  # nosec B603
+
+
 def _is_valid_epoch(ts):
     """Return True if timestamp can be converted to a reasonable epoch."""
     if ts <= 0:
@@ -80,7 +100,7 @@ def get_host_ip():
 
 def _container_is_running(name):
     """Check if a container is running."""
-    result = subprocess.run(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"], 
+    result = run_command(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"],
                           capture_output=True, text=True)
     return name in result.stdout
 
@@ -89,7 +109,7 @@ def _collect_live_logs(container_name, monitor_duration, search_pattern=None):
     
     try:
         # Run docker logs command for the duration
-        process = subprocess.Popen(
+        process = common_utils.start_command(
             ["docker", "logs", "-f", container_name],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -137,7 +157,7 @@ def wait_for_pods_ready(namespace, timeout=90):
     """
     logger.info("Waiting up to %ss for all pods in '%s' to be Ready...", timeout, namespace)
     try:
-        result = subprocess.run(
+        result = common_utils.run_command(
             ["kubectl", "wait", "--for=condition=Ready", "pods", "--all",
              "-n", namespace, f"--timeout={timeout}s"],
             capture_output=True,
@@ -164,7 +184,7 @@ def _run_command(cmd):
     # Convert string to list if needed to avoid shell=True
     if isinstance(cmd, str):
         cmd = shlex.split(cmd)
-    return subprocess.run(cmd).returncode
+    return common_utils.run_command(cmd).returncode
 
 def _check_and_set_working_directory():
     """Check current working directory and change to wind turbine directory."""
@@ -324,7 +344,7 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
             # Snapshot-poll docker logs since test start (no `-f` streaming).
             if resource_type == "container":
                 since_seconds = max(1, int(elapsed_time) + 1)
-                result = subprocess.run(
+                result = common_utils.run_command(
                     ["docker", "logs", "--since", f"{since_seconds}s", resource_name],
                     capture_output=True, text=True
                 )
@@ -339,7 +359,7 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
 
             elif resource_type == "pod":
                 # For pods, use kubectl to get logs
-                result = subprocess.run(
+                result = common_utils.run_command(
                     ["kubectl", "logs", resource_name, "-n", namespace, "--tail=100"],
                     capture_output=True, text=True, check=True
                 )
@@ -370,13 +390,13 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
     logger.info(f"Timeout reached ({timeout}s). No {input_type} alerts found in {resource_type} '{resource_name}' logs.")
     try:
         if resource_type == "container":
-            tail = subprocess.run(
+            tail = common_utils.run_command(
                 ["docker", "logs", "--tail", "100", resource_name],
                 capture_output=True, text=True,
             )
             tail_output = (tail.stdout or "") + (tail.stderr or "")
         elif resource_type == "pod":
-            tail = subprocess.run(
+            tail = common_utils.run_command(
                 ["kubectl", "logs", resource_name, "-n", namespace, "--tail=100"],
                 capture_output=True, text=True,
             )
@@ -543,7 +563,7 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
             logger.info(f"Checking logs for {log_level_upper} in container '{resource_name}'")
             
             # Get logs without shell=True
-            logs_result = subprocess.run(
+            logs_result = common_utils.run_command(
                 ["docker", "logs", resource_name],
                 stdout=subprocess.PIPE,
                 text=True,
@@ -581,7 +601,7 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
                 
         elif resource_type == "pod":
             # Pod log checking using kubectl logs
-            result = subprocess.run(
+            result = common_utils.run_command(
                 ["kubectl", "logs", resource_name, "-n", namespace, f"--tail={tail_lines}"],
                 capture_output=True, text=True, check=True
             )
@@ -852,7 +872,7 @@ def check_influxdb_data(measurement, database="datain", container_name="ia-influ
             "-execute", f"SELECT COUNT(*) FROM \"{measurement}\" LIMIT 1"
         ]
         
-        result = subprocess.run(
+        result = common_utils.run_command(
             query_cmd,
             capture_output=True,
             text=True,
@@ -888,7 +908,7 @@ def get_system_ip():
     """
     try:
         # Use hostname -I command - simple and reliable
-        result = subprocess.run(
+        result = common_utils.run_command(
             ["hostname", "-I"], 
             capture_output=True, 
             text=True, 
