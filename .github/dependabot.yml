@@ -25,3 +25,99 @@ updates:
       other-python:
         patterns:
           - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/vlm-fine-tuning"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/ui-service"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/insights-workbench"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-multimodal/tests"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-multimodal-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-time-series"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-time-series-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-time-series-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-time-series/simulator/opcua-server"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-time-series-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-time-series/simulator/mqtt-publisher"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-time-series-python:
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "manufacturing-ai-suite/industrial-edge-insights-time-series/tests"
+    schedule:
+      interval: "monthly"
+    groups:
+      industrial-edge-insights-time-series-python:
+        patterns:
+          - "*"
