@@ -1,0 +1,7 @@
+
+model_dir: ../../models/ocr
+det_model: PP-OCRv6_small_det
+rec_model: PP-OCRv6_small_rec
+cls_model: PP-LCNet_x1_0_doc_ori
+device: CPU
+lang: zh

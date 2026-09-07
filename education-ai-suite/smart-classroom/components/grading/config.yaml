@@ -1,3 +1,17 @@
+# self-only/parent-override
+config_source: parent-override
+
+app:
+  language: zh   # en or zh
+
+grading:
+  force_regrade: true
+  debug_mode: false
+  provider:
+    layout_detection: http://127.0.0.1:9902
+    vlm_provider: http://127.0.0.1:9900
+    ocr_provider: openvino_local
+
 image:
   dpi: 40
   contrast_enhance: true
@@ -11,10 +25,6 @@ vlm:
   max_tokens: 4096
   temperature: 0.2
   max_image_pixels: 2000000
-
-grading:
-  force_regrade: true
-  debug_mode: false
 
 watch:
   poll_interval: 5

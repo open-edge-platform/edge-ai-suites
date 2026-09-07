@@ -8,8 +8,10 @@ from pathlib import Path
 import yaml
 
 _HERE = Path(__file__).resolve().parent          # layout_detection_service/
+_COMPONENT_ROOT = _HERE.parents[1]
 _SC_ROOT = _HERE.parents[3]                      # smart-classroom/
 _LAYOUT_CONFIG = _HERE / "config.yaml"
+_COMPONENT_CONFIG = _COMPONENT_ROOT / "config.yaml"
 _MAIN_CONFIG = _SC_ROOT / "config.yaml"
 
 INPUT_SIZE = 800
@@ -21,17 +23,39 @@ def _load_layout_cfg() -> dict:
     return raw.get("layout_detection") or {}
 
 
-def _load_main_hub() -> str:
+def _read_yaml(path: Path) -> dict:
     try:
-        raw = yaml.safe_load(_MAIN_CONFIG.read_text(encoding="utf-8")) or {}
-        return str((raw.get("models") or {}).get("model_hub", "huggingface"))
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     except Exception:
-        return "huggingface"
+        return {}
+
+
+def _config_source() -> str:
+    raw = _read_yaml(_COMPONENT_CONFIG)
+    return str(raw.get("config_source", "parent-override")).strip().lower()
+
+
+def _load_main_hub() -> str:
+    component = _read_yaml(_COMPONENT_CONFIG)
+    hub = str(((component.get("models") or {}).get("model_hub")) or "huggingface")
+    if _config_source() == "parent-override":
+        parent_hub = (_read_yaml(_MAIN_CONFIG).get("models") or {}).get("model_hub")
+        if parent_hub:
+            hub = str(parent_hub)
+    return hub
 
 
 def _resolve(p: str) -> Path:
     path = Path(p)
-    return path if path.is_absolute() else (_SC_ROOT / path).resolve()
+    if path.is_absolute():
+        return path
+    component_rel = (_COMPONENT_ROOT / path).resolve()
+    if component_rel.exists():
+        return component_rel
+    parent_rel = (_SC_ROOT / path).resolve()
+    if parent_rel.exists():
+        return parent_rel
+    return component_rel
 
 
 def _ir_exists(model_dir: Path, precision: str) -> bool:
@@ -184,11 +208,6 @@ def _convert(download_dir: Path, model_dir: Path, precision: str,
 
 
 def ensure_layout_model() -> Path:
-    """Ensure the PP-DocLayout OpenVINO IR model is ready.
-
-    Returns the model directory (model_dir/precision) that the detection
-    service should load from.
-    """
     cfg = _load_layout_cfg()
     source = _load_main_hub()
     repo_id = cfg["repo_id"]
