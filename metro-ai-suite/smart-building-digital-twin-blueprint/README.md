@@ -2,24 +2,24 @@
 
 Smart Building Digital Twin blueprint is a complete smart-building monitoring simulation that includes the end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
 
-The blueprint uses synchronized cameras, AI models, and sensors to watch a building for:
+The blueprint uses synchronized cameras, YOLOX-S model variants, and sensors to watch a building for:
 
 - People, luggage, and doors
-- Replayed sensor events of badge, face ID, and ambient-light changes
-- Falls and unusual movement
+- Replayed sensor events of badge, FaceID, and ambient-light changes
+- Possible falls and luggage-related events
 - Abandoned, stolen, or exchanged luggage
-- Door and room activity
-- Computer and GPU performance
+- Door states and region occupancy
+- System telemetry, including CPU, GPU, memory, storage, and CPU SKU
 
-The system runs with Docker platform and Scenescape. Camera videos and sensor data are replayed in synchronization, processed through Message Queuing Telemetry Transport (MQTT) protocol, and analyzed by Python programs.
+The system runs with Docker Engine and Docker Compose tool, and Scenescape. Camera videos and sensor data are replayed in synchronization. Camera detections, tracking data, and sensor events are exchanged through the Message Queuing Telemetry Transport (MQTT) protocol and analyzed by Python programs.
 
-An AI analytics web dashboard shows simulated building activity, alerts, camera snapshots, and system health. The setup.sh script downloads required images and plugins, configures the deployment, and starts the services, while configuration files control the cameras, AI models, scenes, and tracking behavior.
+An AI analytics web dashboard shows simulated building activity, alerts, camera snapshots, and system health. The setup.sh script downloads required images and plugins, configures the deployment, and starts the services, while configuration files control the cameras, YOLOX-S model variants, scenes, and tracking behavior.
 
 ## Overview
 
 - Seven-camera scene with looping RTSP video streams
 - YOLOX-S detection model in INT8 (default for both GPU and CPU; override `MODEL_NAME` to `smartbuilding-fp16` if needed)
-- Badge and Face ID sensor replay synchronized to video loops via raw camera metadata
+- Badge and FaceID sensor replay synchronized to video loops via raw camera metadata
 - Ambient-light sensor values change to reflect dark and live states as the camera video loops.
 - Analytics dashboard at the configured `DASHBOARD_URL` with live scene narration
 
@@ -78,9 +78,9 @@ flowchart BT
 
 | Alert | Description |
 |---|---|
-| No credentials at `Checkpoint` | Person enters an inbound zone without a badge or face ID |
-| Badge switch | An inbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the one learned by the badge earlier in the loop |
-| Possible badge switch | An outbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the one learned by the badge earlier in the loop |
+| No credentials at `Checkpoint` | Person enters an inbound zone without a badge or FaceID |
+| Badge switch | An inbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the face previously associated with the badge during the loop |
+| Possible badge switch | An outbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the face previously associated with the badge during the loop |
 | Possible fall | Person in a horizontal posture outside a furniture region |
 | Luggage abandoned | Owner walks ≥ 4 m away from their luggage while still moving — fires immediately, captures snapshots of both person and bag |
 | Unattended luggage | Luggage has had no companion for more than 30 seconds — covers cases where the owner has left the scene entirely |
