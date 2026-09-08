@@ -130,3 +130,15 @@ User-space tools sourced from the Intel® Linux overlay (`linux-tools/`) and ali
 | NPU accelerated containers | CDI NPU generator and Intel® NPU device plugin for workload scheduling to NPU |
 | Provisioning scripts | `/opt/edge/scripts/` — `kubernetes-provision.sh`, `container-provision.sh`, `setup-kernel-depended-pkgs.sh` |
 
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Container Device Interface Guide <./configure-cdi.md>
+GPU and NPU Device Plugins <./configure-device-plugins.md>
+Power Profiles User Guide <./power-profiles.md>
+Thermal Profiles User Guide <./thermal-profiles.md>
+Power and Thermal Profiles Co-working Guide <./power-and-thermal-profiles.md>
+
+:::
+hide_directive-->
