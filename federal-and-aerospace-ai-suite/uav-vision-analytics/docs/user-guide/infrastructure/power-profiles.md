@@ -45,7 +45,7 @@ across a reboot:
 
 ## Prerequisites
 
-- An Intel `x86_64` host (Core Ultra / Panther Lake recommended).
+- An Intel `x86_64` host (Panther Lake recommended).
 - A CPU frequency governor can conflict with `intel_lpmd`. The `performance` and
   `ondemand` governors override the daemon's low-power intent, so either switch
   to `powersave` — which cooperates with `intel_lpmd` — or disable the governor
@@ -62,7 +62,6 @@ across a reboot:
 - Linux ships several competing power-management daemons. Stop and disable any
   that are running — for example `tlp`, `tuned`, `cpufreqd`, or `ondemand` — so
   they will conflict with `intel_lpmd` for control of CPU power and frequency.
-  -
 - BIOS settings that hand CPU power/frequency control to the OS. The power
   limits and EPP/EPB tuning only take effect when the OS (not firmware) owns
   these controls — verify them **before** applying a profile, or the script may
