@@ -2,7 +2,7 @@
 
 Smart Building Digital Twin blueprint is a complete smart-building monitoring simulation that includes the end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
 
-The blueprint uses synchronized cameras, YOLOX-S model variants, and sensors to watch a building for:
+The blueprint uses synchronized cameras, YOLOX-S and ATSS-MobileNetV2 model variants, and sensors to watch a building for:
 
 - People, luggage, and doors
 - Replayed sensor events of badge, FaceID, and ambient-light changes
@@ -13,12 +13,12 @@ The blueprint uses synchronized cameras, YOLOX-S model variants, and sensors to 
 
 The system runs with Docker Engine and Docker Compose tool, and Scenescape. Camera videos and sensor data are replayed in synchronization. Camera detections, tracking data, and sensor events are exchanged through the Message Queuing Telemetry Transport (MQTT) protocol and analyzed by Python programs.
 
-An AI analytics web dashboard shows simulated building activity, alerts, camera snapshots, and system health. The setup.sh script downloads required images and plugins, configures the deployment, and starts the services, while configuration files control the cameras, YOLOX-S model variants, scenes, and tracking behavior.
+An AI analytics web dashboard shows simulated building activity, alerts, camera snapshots, and system health. The setup.sh script downloads required images and plugins, configures the deployment, and starts the services, while configuration files control the cameras, YOLOX-S and ATSS-MobileNetV2 model variants, scenes, and tracking behavior.
 
 ## Overview
 
 - Seven-camera scene with looping RTSP video streams
-- YOLOX-S detection model in INT8 (default for both GPU and CPU; override `MODEL_NAME` to `smartbuilding-fp16` if needed)
+- ATSS-MobileNetV2 detection model in INT8 (default for both GPU and CPU; override `MODEL_NAME` to `smartbuilding-fp16` if needed that uses YOLOX-S detection model)
 - Badge and FaceID sensor replay synchronized to video loops via raw camera metadata
 - Ambient-light sensor values change to reflect dark and live states as the camera video loops.
 - Analytics dashboard at the configured `DASHBOARD_URL` with live scene narration
@@ -35,7 +35,7 @@ flowchart BT
     subgraph ss["Scenescape"]
         direction BT
         MTX["MediaMTX<br/>RTSP server"]
-        DLS["DLStreamer<br/>YOLOX-S detection"]
+        DLS["DLStreamer<br/>YOLOX-S or ATSS-MobileNetV2 detection"]
         CTRL["scene controller<br/>track fusion"]
         BROKER["MQTT broker"]
         MTX --> DLS -->|detections| BROKER
