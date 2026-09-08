@@ -16,8 +16,8 @@ Controls PDF-to-image rendering (the first pipeline step).
 | `dpi` | int | 50 | Render resolution. Higher = sharper but slower and larger images. |
 | `contrast_enhance` | bool | true | Apply contrast enhancement to rendered pages. |
 | `contrast_factor` | float | 1.5 | Contrast multiplier when `contrast_enhance` is on. |
-| `page_columns` | int | 1 | Page layout: `1` = single column, `2` = two columns. When `2`, each page is cut vertically into left/right, emitted as consecutive pages (left then right). |
-| `column_split_ratio` | float | 0.55 | For `page_columns=2`, the left-column width fraction. `0.5` = split at the middle; `0.4` = left 40% / right 60%. |
+| `page_columns` | int \| str | auto | Page layout: `1` = single column, `2` = two columns, `auto` = infer from layout detection. When the effective value is `2`, each page is cut vertically into left/right, emitted as consecutive pages (left then right). |
+| `column_split_ratio` | float | 0.55 | Left-column width fraction. Used directly when `page_columns=2`, and as the fallback when `auto` inference cannot decide. `0.5` = split at the middle; `0.4` = left 40% / right 60%. |
 
 Read by `services/vlm_grading_pipeline.py` → `pdf_render.py`.
 

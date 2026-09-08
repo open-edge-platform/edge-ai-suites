@@ -26,6 +26,9 @@ from utils.gstreamer_env import (
     ensure_gst_registry,
 )
 
+MAX_INPUT_FRAMERATE = "30/1"
+CLASSIFY_FRAMERATE = "1/1"
+
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
 
@@ -108,6 +111,11 @@ class VideoAnalyticsPipelineService:
         self.center_dist_threshold = getattr(ps, "center_dist_threshold", 0.1) if ps else 0.1
         self.unidentified_max = getattr(ps, "unidentified_max", 50) if ps else 50
         self.stale_unidentified_threshold = getattr(ps, "stale_unidentified_threshold", 30) if ps else 30
+
+        # Upper bound on the framerate the pipeline runs inference at. Protects against high-framerate cameras.
+        self.max_input_framerate = MAX_INPUT_FRAMERATE
+        # Framerate the classification branches run at.
+        self.classify_framerate = CLASSIFY_FRAMERATE
 
         # Settle the GStreamer environment before the first GStreamer process
         # runs, so every process this service spawns shares one registry cache.
@@ -251,6 +259,33 @@ class VideoAnalyticsPipelineService:
         if not options.output_stream:
             return ["fakesink", "async=false", "sync=false"]
         return self._get_rtsp_sink_elements(options.output_rtsp, stream_name)
+
+    def _get_input_framerate_cap_elements(self) -> List[str]:
+        """Get elements capping the framerate ahead of gvadetect.
+        It exists so a 50/60fps camera cannot push the pose model past the rate the
+        NPU can serve.
+        """
+        if not self.max_input_framerate:
+            return []
+        return [
+            "videorate",
+            "drop-only=true",
+            "!",
+            f"video/x-raw(memory:D3D11Memory),framerate=[0/1,{self.max_input_framerate}]",
+            "!",
+        ]
+
+    def _get_classify_decimation_elements(self) -> List[str]:
+        """Get elements dropping a classification branch to classify_framerate."""
+        if not self.classify_framerate:
+            return []
+        return [
+            "videorate",
+            "drop-only=true",
+            "!",
+            f"video/x-raw(memory:D3D11Memory),framerate={self.classify_framerate}",
+            "!",
+        ]
 
     def _check_redistribute_latency(self, log_file: Path) -> bool:
         """Check if 'Redistribute latency' appears in log file"""
@@ -492,6 +527,9 @@ class VideoAnalyticsPipelineService:
 
         pipeline = [
             *self._get_source_elements(source, input_type),
+            "gvafpscounter",
+            "!",
+            *self._get_input_framerate_cap_elements(),
             # YOLO detection
             "gvadetect",
             f"model={self._get_model_path('front-pose')}",
@@ -511,6 +549,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "queue",
             "!",
+            *self._get_classify_decimation_elements(),
             "gvaroifilter",
             "max-rois-num=10",
             "!",
@@ -521,8 +560,6 @@ class VideoAnalyticsPipelineService:
             "batch-size=1",
             "inference-region=1",
             "model-instance-id=resnet18-0",
-            "!",
-            "gvafpscounter",
             "!",
             "gvametaconvert",
             "!",
@@ -557,8 +594,6 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvaroifilter",
             "!",
-            "gvafpscounter",
-            "!",
             "gvametaconvert",
             "!",
             "gvametapublish",
@@ -573,6 +608,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "queue",
             "!",
+            *self._get_classify_decimation_elements(),
             "gvaroifilter",
             "max-rois-num=50",
             "!",
@@ -583,8 +619,6 @@ class VideoAnalyticsPipelineService:
             "batch-size=1",
             "inference-region=1",
             "model-instance-id=mobilenetv2-0",
-            "!",
-            "gvafpscounter",
             "!",
             "gvametaconvert",
             "!",
@@ -607,6 +641,9 @@ class VideoAnalyticsPipelineService:
 
         pipeline = [
             *self._get_source_elements(source, input_type),
+            "gvafpscounter",
+            "!",
+            *self._get_input_framerate_cap_elements(),
             # YOLO detection
             "gvadetect",
             f"model={self._get_model_path('back-pose')}",
@@ -627,9 +664,22 @@ class VideoAnalyticsPipelineService:
             f"file-path={output_dir.as_posix()}/back_posture.txt",
             "file-format=json-lines",
             "!",
+            "tee",
+            "name=t",
+            # Branch 1: video output, kept at the source framerate. Split off ahead
+            # of the classification decimation so the stream is not thinned too;
+            # gvawatermark already ran, and it only draws the pose detections.
+            "t.",
+            "!",
             "queue",
             "!",
-            # ResNet18 classification
+            *self._get_video_sink_elements(options, "back_stream"),
+            # Branch 2: ResNet18 classification
+            "t.",
+            "!",
+            "queue",
+            "!",
+            *self._get_classify_decimation_elements(),
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",
@@ -638,15 +688,15 @@ class VideoAnalyticsPipelineService:
             "inference-region=1",
             "model-instance-id=resnet18-0",
             "!",
-            "gvafpscounter",
-            "!",
             "gvametaconvert",
             "!",
             "gvametapublish",
             f"file-path={output_dir.as_posix()}/back_resnet18.txt",
             "file-format=json-lines",
             "!",
-            *self._get_video_sink_elements(options, "back_stream"),
+            "fakesink",
+            "async=false",
+            "sync=false",
         ]
         return pipeline
 

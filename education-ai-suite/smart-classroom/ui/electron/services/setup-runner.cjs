@@ -465,7 +465,7 @@ const STEPS = [
     label: 'Node.js',
     section: 'software',
     async check() {
-      return { status: STATUS.OK, detail: `${process.versions.node} (bundled with this app; nothing to install)` };
+      return { status: STATUS.OK, detail: `${process.versions.node} (bundled with this app)` };
     },
   },
   {
@@ -738,8 +738,7 @@ class SetupRunner extends EventEmitter {
     try {
       const added = await winEnv.refreshPath();
       if (added.length) this.log(`PATH refreshed from the registry: ${added.join(', ')}`);
-      const dls = await winEnv.applyDlStreamerEnv();
-      if (dls) this.log(`DL Streamer environment applied from ${dls.installDir}`);
+      await winEnv.applyDlStreamerEnv();
     } catch (error) {
       // Detection still runs with the environment we already have.
       this.log(`Could not refresh the environment: ${error.message}`);

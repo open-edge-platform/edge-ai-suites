@@ -47,6 +47,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
     activeScreen === 'config' ||
     activeScreen === 'setup' ||
     activeScreen === 'ready';
+  const showSettingsGear = !isToolScreen && !hasServiceManager;
   // Show Content Search UI if either content_search OR qa feature is enabled
   const hasContentSearchFeatures = featureGuard.hasFeature('content_search') || featureGuard.hasFeature('qa');
   const hasGradingFeature = featureGuard.hasFeature('grading');
@@ -243,7 +244,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
       </div>
       <div className="action-slot">
         <LanguageSwitcher />
-        {!isToolScreen && (
+        {showSettingsGear && (
           <img
             src={menu}
             alt="Menu Icon"
@@ -253,13 +254,12 @@ const TopPanel: React.FC<TopPanelProps> = ({
           />
         )}
       </div>
-      {!isToolScreen && (
+      {showSettingsGear && (
         <SettingsModal
           isOpen={isSettingsOpen}
           onClose={closeSettings}
           projectName={projectName}
           setProjectName={setProjectName}
-          featureGuard={featureGuard}
         />
       )}
     </header>

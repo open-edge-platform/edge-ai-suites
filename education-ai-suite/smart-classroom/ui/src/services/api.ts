@@ -1631,7 +1631,7 @@ export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<Grad
 
 export interface GradingConfig {
   dpi: number | null;
-  page_columns: number | null;
+  page_columns: number | 'auto' | null;
   column_split_ratio: number | null;
   force_split: boolean | null;
   force_split_pairs: number[][] | null;

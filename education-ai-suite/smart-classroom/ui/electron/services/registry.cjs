@@ -42,10 +42,12 @@ const SERVICES = [
     id: 'content-search',
     label: 'Content Search',
     port: 9011,
-    healthUrl: `http://${HOST}:9011/api/v1/system/health`,
-    // This endpoint fans out to the DB and every downstream service, so it is
-    // far slower to answer than a plain liveness probe.
-    healthTimeoutMs: 8000,
+    // Liveness of this process only, not /api/v1/system/health: that one is an
+    // aggregate that 503s until chroma, ingest, preprocess and the backend's VLM
+    // are all ready. Those have their own rows below, so gating this one on them
+    // would report a live launcher as Stopped for the minutes ingest takes to
+    // load its models.
+    healthUrl: `http://${HOST}:9011/api/v1/system/ping`,
     managed: false,
     ownedBy: 'backend',
     logTags: ['main_app', 'launcher'],

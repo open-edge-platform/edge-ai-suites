@@ -15,7 +15,7 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc3
  
 # Optional corporate proxy (leave empty for none).
 ARG HTTP_PROXY=
@@ -50,11 +50,9 @@ RUN python3 -c "import pypylon" 2>/dev/null || pip install --no-cache-dir pypylo
 WORKDIR /app
 COPY src/app.py src/detector.py src/sources.py src/config.py src/display.py src/vsync.py /app/
  
-# Sensible container defaults; override with `docker run -e ...` or Makefile.
-ENV MODEL=/models/yolo11n_polyp/best_openvino_model/best.xml \
-    DEVICE=GPU \
-    SOURCE=file \
-    SOURCE_ARG=/videos/polyp_test.mp4
+# Runtime config (MODEL / DEVICE / SOURCE / SOURCE_ARG / ...) is NOT baked in:
+# defaults live in src/config.py and are supplied at run time by the Makefile /
+# docker-compose (environment + CLI flags). Override with `docker run -e ...`.
  
 ENTRYPOINT ["python3", "app.py"]
  

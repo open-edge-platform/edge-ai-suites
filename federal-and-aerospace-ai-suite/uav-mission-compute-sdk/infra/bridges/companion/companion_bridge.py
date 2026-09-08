@@ -302,8 +302,17 @@ def rest_health():
 @rest_app.route("/action/<action>", methods=["POST"])
 def rest_action(action: str):
     log.info("REST command: %s", action)
-    body = request.get_json(silent=True) or {}
-    ok, msg = _dispatch(action, **body)
+    body = request.get_json(silent=True)
+    if body is None:
+        body = {}
+    elif not isinstance(body, dict):
+        # get_json() may return a non-mapping top-level JSON value (list/str/number/bool);
+        # only a mapping can be splatted into _dispatch()'s kwargs.
+        return jsonify({"success": False, "error": "Request body must be a JSON object"}), 400
+    try:
+        ok, msg = _dispatch(action, **body)
+    except TypeError as e:
+        return jsonify({"success": False, "error": f"Invalid parameters: {e}"}), 400
     return jsonify({"success": ok, "error": msg if not ok else None}), (200 if ok else 500)
 
 

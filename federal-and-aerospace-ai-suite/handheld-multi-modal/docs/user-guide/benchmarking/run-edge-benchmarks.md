@@ -196,6 +196,6 @@ make clean-all        # Remove all generated content (models, media, results)
 - [Edge Workloads and Benchmarks Repository](https://github.com/open-edge-platform/edge-workloads-and-benchmarks)
 - [OpenVINO Toolkit](https://docs.openvino.ai/)
 - [DL Streamer Documentation](https://github.com/open-edge-platform/dlstreamer)
-- [Container Device Interface Guide](./configure-cdi.md) — CDI setup for GPU/NPU access
-- [DL Streamer Pipelines Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/build-dlstreamer-pipelines.html) — Building custom pipelines
-- [Platform Capabilities](./platform-capabilities.md) — Hardware and software stack details
+- [Container Device Interface Guide](../infrastructure/configure-cdi.md) — CDI setup for GPU/NPU access
+- [DL Streamer Pipelines Guide](../infrastructure/build-dlstreamer-pipelines.md) — Building custom pipelines
+- [Platform Capabilities](../infrastructure/platform-capabilities.md) — Hardware and software stack details

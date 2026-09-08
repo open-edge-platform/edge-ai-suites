@@ -56,3 +56,29 @@ export interface ConfigChange {
   path: string;
   value: ConfigValue;
 }
+
+/**
+ * A combination of settings the backend would reject. Reported per field, so
+ * one rule spanning two fields appears twice with the same `rule` and message.
+ */
+export interface ConfigProblem {
+  file: string;
+  path: string;
+  /** Rule id, stable across the fields one rule flags. */
+  rule: string;
+  /** Short form for a field row, where the full message would repeat per field. */
+  summary: string;
+  message: string;
+  /**
+   * False for a problem already in the file that this edit neither introduced
+   * nor touched, and for a rule the backend tolerates: shown as a warning, but
+   * it does not stop the save.
+   */
+  blocking: boolean;
+  /**
+   * Changes that would clear this problem, when a rule can name them
+   * unambiguously. Offered as one click, and applied to the pending draft rather
+   * than to disk so it stays reviewable.
+   */
+  fix?: ConfigChange[];
+}
