@@ -103,7 +103,7 @@ Once the UAV is in flight, verify the state before capturing video streams:
 
 ```bash
 curl -X GET http://localhost:8080/state
-# Expect: "armed": true
+# Expect: "armed": true; Retry arm and takeoff if false
 ```
 
 Now, record the UAV camera stream to disk with `ffmpeg`:
