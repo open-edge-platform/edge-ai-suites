@@ -28,6 +28,12 @@ containerPortName: agent-uiport
 # Leave modelName empty to use rule based planning. No OVMS workload is then created.
 reasoning:
   modelName: ""
+  # Reasoning model HTTP request timeout in seconds. Increase for larger models
+  # (e.g. 60-120s for 14B-class models on CPU) to avoid premature client-side cancellation.
+  timeoutSeconds: 8.0
+  # OVMS KV-cache size in GB. Increase for larger reasoning models so requests aren't
+  # starved of cache (undersized cache causes requests to stall/be cancelled).
+  cacheSizeGb: 10
   image:
     repository: "openvino/model_server"
     tag: "2026.2.1"
