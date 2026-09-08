@@ -1,19 +1,12 @@
 # VLM Fine-Tuning LORA Adapter - Welding Dataset
 
-This document is a concrete, **weld-defect-analysis** instance of the
-generic Unsloth VLM fine-tuning flow described in
-[`Fine Tune a VLM`](./how-to-fine-tune-vlm.md). Everything here — the input data schema, the
-prompt/response templates, and the actual commands run — is specific to
-this weld use case, built on top of the domain-agnostic scripts and
-concepts covered in `README.md`.
+This section is a concrete, **weld-defect-analysis** instance of the
+generic VLM fine-tuning flow using the Unsloth library described in
+[`VLM Fine-Tuning with Unsloth Library`](./how-to-fine-tune-vlm.md).
 
-Read `README.md` first for the generic pipeline, setup, and the
-Unsloth/LoRA concepts referenced below; this file only covers how those
-generic pieces are instantiated for weld data.
-
-| Generic stage | Weld-specific instance (this file) |
-| --- | --- |
-| Bring-your-own dataset prep → parquet | `prepare_weld_dataset.py` — [Step 1](#step-1-input-data) & [Step 2](#step-2-prepare-the-dataset) |
+| Generic Stage | Weld-Specific Instance (This Section) |
+|---|---|
+| Bring-your-own dataset, prepared as a parquet file (or files) | `prepare_weld_dataset.py` — [Step 1](#step-1-input-data) & [Step 2](#step-2-prepare-the-dataset) |
 | Fine-tune with `train_qwen.py` | Weld-specific invocation — [Step 3](#step-3-fine-tune-the-model-weld-instance) |
 | Infer with `infer_qwen.py` | Weld-specific invocation — [Step 4](#step-4-run-inference-weld-instance) |
 
@@ -24,69 +17,73 @@ generic pieces are instantiated for weld data.
 - [Step 2: Prepare the Dataset](#step-2-prepare-the-dataset)
 - [Step 3: Fine-Tune the Model (Weld Instance)](#step-3-fine-tune-the-model-weld-instance)
 - [Step 4: Run Inference (Weld Instance)](#step-4-run-inference-weld-instance)
-- [Detailed Data-Prep Flow](#detailed-data-prep-flow)
-- [Data-Prep Troubleshooting](#data-prep-troubleshooting)
-- [License / Dataset Attribution](#license--dataset-attribution)
+- [Detailed Data-Preparation Flow](#detailed-data-prep-flow)
+- [Data-Preparation Troubleshooting](#data-prep-troubleshooting)
+- [License and Dataset Attribution](#license--dataset-attribution)
 
 ## Data Preparation Strategy
 
-### What are we training the model to do? (the training objective)
+### Training Objective
 
 The fine-tuning objective is **not** "describe this image" — it is:
 
 > Given a weld image **and** its corresponding sensor telemetry, produce a
 > structured, multi-section quality report: classification (good weld vs.
 > one of 11 defect types), a visual observation grounded in the image,
-> a sensor-evidence analysis grounded in the telemetry, a confidence /
+> a sensor-evidence analysis grounded in the telemetry, a confidence and
 > defect-probability estimate, a severity rating, a root cause, and
 > corrective actions.
 
-This is a **multimodal, structured-output** objective (image + numeric
+This is a **multimodal, structured-output** objective (image and numeric
 telemetry in, a fixed-schema text report out), not free-form captioning or
 open-ended chat. That objective directly drives every data-preparation
-decision below:
+decision that follows:
 
 - **Fixed response schema.** Every assistant response follows the same
-  section order (`Weld Classification` → `Visual Observation` →
-  `Sensor Analysis` → `Confidence`/`Defect Probability` → `Severity` →
-  `Root Cause` → `Corrective Actions`). Because the objective is a
-  structured report, the model needs to learn *that
-  structure* as reliably as it learns the weld domain — a consistent
-  schema also makes downstream parsing of model output trivial.
-- **Prompt diversity, response consistency.** The *user* turn is
-  intentionally varied across 7 rotating phrasings (see
-  [Step 2](#step-2-prepare-the-dataset)) so the model generalizes to
+  section order: Visual Observation, Model Confidence and Defect Probability, Severity, Root Cause, and
+  Corrective Actions. Because the objective is a
+  structured report, the model needs to learn the structure as reliably as
+  it learns the weld domain. A consistent schema also makes downstream
+  parsing of model output straightforward.
+
+- **Prompt diversity, response consistency.** The user prompt text is
+  varied across seven phrasings (see
+  [Step 2](#step-2-prepare-the-dataset)) so that the model generalizes to
   differently-worded operator questions instead of memorizing one exact
-  prompt string, while the *assistant* turn's structure stays fixed so the
-  output schema is stable regardless of how the question was phrased.
-- **Class-balanced splits.** Defect categories are naturally imbalanced
-  (far more good welds than, say, burn-through). Because the objective
-  includes correctly classifying rare defect types, splitting is
-  stratified by category (with guardrails for small classes) instead of
-  a plain random split, so validation/test sets still exercise every
+  prompt string, while the assistant response structure stays fixed so
+  that the output schema is stable regardless of how the question is
+  phrased.
+
+- **Class-balanced splits.** Defect categories are naturally imbalanced,
+  with far more good welds than, for example, burn-through. Because the
+  objective includes correctly classifying rare defect types, splitting is
+  stratified by category, with guardrails for small classes, instead of
+  a plain random split, so validation and test sets still exercise every
   defect type.
+
 - **Multimodal alignment.** Because the model must reason jointly over
   pixels and sensor numbers, sensor readings are rendered into the text
-  prompt itself (not passed out-of-band), so the same forward pass that
+  prompt itself, not passed out of band, so the same forward pass that
   attends to the image can also attend to the telemetry text tokens.
 
-In short: the data-prep stage exists to turn an upstream classifier's
-tabular predictions + raw sensor CSVs + images into a dataset whose
-input/output shape *is* the structured-report objective, so that a
-generic instruction-tuned VLM base model can be steered toward it with a
-relatively small amount of LoRA fine-tuning.
+In short, the data-preparation stage converts an upstream classifier’s
+tabular predictions, raw sensor comma-separated value (CSV) files, and
+images into a dataset whose input and output format matches the
+structured-report objective. This allows a generic instruction-tuned
+VLM base model to be steered toward that objective with a relatively
+small amount of LoRA fine-tuning.
 
 ## Step 1: Input Data
 
 `prepare_weld_dataset.py` consumes two inputs that you must provide:
 
-1. **A fused CSV** (`--input-csv`), one row per labeled weld image/sample,
-   with (at minimum) these columns:
+1. **A fused CSV file** (`--input-csv`), one row per labeled weld image or sample,
+   with these columns at the minimum:
 
    | Column | Type | Description |
    | --- | --- | --- |
    | `Frame_id` | string | Image filename stem used to resolve the image file under `--images-root` |
-   | `output_prediction_details` | Python-dict literal (string) | Classifier output — see below |
+   | `output_prediction_details` | Python dictionary literal (string) | Classifier output — see below |
    | `Category` | string | Canonical weld-session label used for stratified splitting (falls back to the parsed `predicted_category` if absent) |
    | `Primary Weld Current`, `Secondary Weld Voltage`, `Pressure`, `CO2 Weld Flow`, `Feed`, `Wire Consumed` | numeric | Sensor telemetry injected into the prompt |
 
@@ -116,23 +113,23 @@ relatively small amount of LoRA fine-tuning.
    }
    ```
 
-   In practice, this CSV is produced by fusing:
+   In practice, this CSV file is produced by fusing:
    - Per-frame classifier predictions (run `classification-training`'s
-     inference over your weld image/sensor dataset to get
+     inference over your weld image and sensor dataset to get
      `output_prediction_details` per row), with
    - Raw sensor telemetry and image `Frame_id`s, aligned by timestamp.
 
-   This repo does not include a fusion script — build one for your own data
-   pipeline, or provide the CSV in the schema above directly.
+   This repository does not include a fusion script. Build one for your own data
+   pipeline, or provide the CSV file in the schema above directly.
 
 2. **An image root** (`--images-root`): a directory tree of weld images
    (`.jpg`/`.jpeg`/`.png`), searched recursively. Each image's
    filename stem (without extension) must match a `Frame_id` value in the
-   CSV. Sub-folder structure (e.g. per-class folders) does not matter — only
+   CSV file. Sub-folder structure (e.g. per-class folders) does not matter. Only
    the filename stem is used for matching.
 
-The underlying raw images and sensor CSVs for weld defect data can be
-sourced from the same public dataset used by `classification-training`:
+You can source the underlying raw images and sensor CSV files for weld defect data from
+the same public dataset used by `classification-training`:
 [IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset).
 
 ## Step 2: Prepare the Dataset
@@ -152,92 +149,96 @@ Useful flags:
 - `--skip-missing` — drop rows whose image cannot be resolved instead of
   raising an error (default: strict, raises on the first missing image).
 
-### What it does
+### Dataset Preparation Script Processing Steps
 
-1. Loads and cleans the CSV (strips whitespace from headers and string
-   fields).
-2. Builds an index of `Frame_id → image path` from `--images-root`.
+1. Loads and cleans the CSV file by stripping the whitespace character from
+   headers and string fields.
+2. Builds an index that maps `Frame_id` values to image paths from
+   `--images-root`.
 3. Parses `output_prediction_details` per row.
-4. Builds a sensor-telemetry text block and picks one of 7 rotating user
-   prompt templates (deterministic given `--seed`).
-5. Synthesizes a structured assistant response (classification, visual
-   observation, sensor analysis, confidence, severity, root cause,
-   corrective actions), drawing on a small built-in defect knowledge base
-   with a generic fallback for unseen categories.
-6. Assembles a 3-turn `system` / `user(text+image)` / `assistant`
-   conversation per row.
-7. Performs a stratified train/validation/test split by canonical category,
+4. Builds a sensor-telemetry text block and randomly picks one of seven user
+   prompt templates, using --seed for reproducibility.
+5. Synthesizes a structured assistant response in the following order:
+   Visual Observation, Model Confidence and Defect Probability, Severity, Root Cause, and
+   Corrective actions, drawing on a small built-in defect knowledge base with
+   a generic fallback for unseen categories.
+6. Assembles a three-turn conversation for each row: system with text content,
+   user with text and image content, and assistant with text content.
+7. Performs a stratified train, validation, and test split by canonical category, 
    so small classes still get at least one sample per
    split when possible.
 8. Writes:
-   - `hf_dataset/` — HF `DatasetDict`, image column castable to PIL
-   - `parquet/{train,validation,test}.parquet` — used by `train_qwen.py`
-   - `conversations/{train,validation,test}.jsonl` — raw messages, useful
+   - `hf_dataset/`: an HF `DatasetDict`, with an image column cast to PIL
+   - `parquet/{train,validation,test}.parquet`: used by `train_qwen.py`
+   - `conversations/{train,validation,test}.jsonl`: raw messages, useful
      for manual inspection or use with other trainers
-   - `summary.json` — row counts, missing-image count, output paths
+   - `summary.json`: row counts, missing-image count, and output paths
 
-### The conversation / prompt template
+### Conversation and Prompt Template
 
-Every record is a fixed 3-turn chat-format conversation
-(`system` → `user` → `assistant`), matching the chat template Qwen-VL /
-Unsloth expect at both training and inference time:
+Every record is a fixed three-turn chat-format conversation in the order
+of `system`, `user`, and `assistant`, matching the chat template expected
+by the Qwen-VL model and the Unsloth fine-tuning library during training
+and inference:
 
 | Turn | Content | Purpose |
-| --- | --- | --- |
-| `system` | A fixed "expert weld quality inspector and metallurgical engineer" persona, referencing AWS D1.1 / ISO 5817 | Anchors the model's domain role and output-structuring behavior consistently across every sample |
-| `user` | `{one of 7 rotating instruction templates}` + `{sensor telemetry block}` + `{image}` | The operator's question, phrased differently each time, plus the raw sensor readings inlined as text so the model attends to both modalities together |
-| `assistant` | Fixed-schema structured report (see [Data Preparation Strategy](#data-preparation-strategy)) synthesized from the classifier output + a small defect knowledge base | The learning target — what the model should learn to produce |
+|---|---|---|
+| `system` | A fixed "expert weld quality inspector and metallurgical engineer" persona that references AWS D1.1 and ISO 5817 | Anchors the model's domain role and output-structuring behavior consistently across samples |
+| `user` | `{one of seven user instruction templates}`, a `{sensor telemetry block}`, and an `{image}` | The operator's question, phrased differently each time, with raw sensor readings inlined as text so the model attends to both modalities together |
+| `assistant` | A fixed-schema structured report as described in [Data Preparation Strategy](#data-preparation-strategy), synthesized from classifier output and a small defect knowledge base | The learning target that the model is trained to produce |
 
-Why 7 rotating user-prompt templates instead of one fixed prompt? A single
-fixed instruction risks the model overfitting to that exact wording (i.e.
-it "keys" its structured-report behavior off matching text rather than off
-the actual image + sensor content). Rotating through 7 semantically
-equivalent but differently worded prompts — deterministically, via
-`--seed`, so runs are reproducible — teaches the model that the same
-structured analysis is expected regardless of how the user asks.
+There are seven user prompt templates instead of one fixed prompt because
+single fixed instruction risks the model overfitting to that exact wording,
+meaning that it associates its structured-report behavior with matching
+text rather than the actual image and sensor content. Randomly selecting
+from seven semantically equivalent but differently worded prompts using
+`--seed` for reproducible runs teaches the model that the same structured
+analysis is expected regardless of how the user asks.
 
-Why is the sensor block inlined into the user's *text*, rather than passed
-as separate structured input? Qwen-VL (like most current VLMs) only has two
-native input channels: image tokens and text tokens. Since the objective
-explicitly requires reasoning that correlates image content with sensor
-readings, the telemetry has to be visible to the same forward pass as the
-image, so it is rendered as a small `Sensor Data:` text block in the same
-user turn as the image.
+The sensor block is inlined into the user text rather than passed as
+separate structured input because the Qwen-VL model, like most current VLMs,
+has two native input channels: image tokens and text tokens. Because the
+objective requires reasoning that correlates image content with sensor
+readings, the telemetry is included in the same forward pass as the image.
+The telemetry is rendered as a `Sensor Data:` text block in the same user
+turn as the image.
 
-### Why parquet / Arrow / JSONL — and which one Unsloth actually uses
+### Parquet, Arrow, and JSONL Formats and the Format Used by train_qwen.py
 
-`prepare_weld_dataset.py` emits the *same* dataset in three formats,
-because they serve different consumers:
+`prepare_weld_dataset.py` emits the **same** dataset in the following three
+formats, because they serve different consumers:
 
-| Format | Where | Used by | Why this format |
-| --- | --- | --- | --- |
-| **Arrow** (`hf_dataset/`, via `DatasetDict.save_to_disk`) | On-disk memory-mapped Arrow tables | Ad-hoc exploration with `datasets.load_from_disk`, or as a base to derive further HF-native transforms | Arrow is the `datasets` library's native, memory-mapped columnar format — large image datasets can be inspected/iterated without loading everything into RAM, and it round-trips through `datasets` APIs (filters, `map`, etc.) losslessly |
-| **Parquet** (`parquet/{split}.parquet`) | One portable file per split | **`train_qwen.py`**, via `datasets.load_dataset("parquet", ...)` | Parquet is a compact, columnar, self-contained, widely-portable file format. With the `image` column cast to `datasets.Image`, image bytes are embedded directly in the parquet file, so a single file per split carries both the conversation and its image with no separate file tree to keep in sync — the format Unsloth/`datasets`/HF Hub uploads all standardize on for VLM datasets |
-| **JSONL** (`conversations/{split}.jsonl`) | One line per record, `{"messages": [...]}` | Manual inspection (`less`, `jq`, diffing) and any other chat-format SFT trainer (e.g. axolotl, LLaMA-Factory) that expects JSONL conversations | Human-readable, diffable, framework-agnostic — no binary/Arrow tooling needed to eyeball a few samples, and it's the lowest-common-denominator format most other SFT trainers already accept |
+| Format | Location | Used by | Purpose |
+|---|---|---|---|
+| **Arrow** (`hf_dataset/`, written through `DatasetDict.save_to_disk`) | On-disk memory-mapped Arrow tables | Ad-hoc exploration with `datasets.load_from_disk`, or as a base to derive further Hugging Face-native transforms | Arrow is the `datasets` library's native, memory-mapped columnar format. Large image datasets can be inspected and iterated without loading everything into RAM, and the Arrow dataset round-trips through `datasets` APIs (filters, `map`, etc.) losslessly |
+| **Parquet** (`parquet/{split}.parquet`) | One portable file per split | **`train_qwen.py`**, via `datasets.load_dataset("parquet", ...)` | Parquet is a compact, columnar, self-contained, widely-portable file format. With the `image` column cast to `datasets.Image`, image bytes are embedded directly in the parquet file, so a single file per split carries both the conversation and its image with no separate file tree to keep in synchronization. Parquet is the standard format used by the Unsloth library, the datasets library, and Hugging Face Hub for VLM datasets. |
+| **JSONL** (`conversations/{split}.jsonl`) | One line per record, `{"messages": [...]}` | Manual inspection (`less`, `jq`, diffing) and any other chat-format supervised fine-tuning (SFT) trainer (e.g. axolotl, LLaMA-Factory) that expects JSONL conversations | Human-readable, diffable, and framework-agnostic. No binary or Arrow tooling is needed to inspect a few samples, and it is the lowest-common-denominator format most other SFT trainers already accept. |
 
-**`train_qwen.py` loads the parquet split** (`--dataset-path
-./processed_dataset/parquet`) because Unsloth's vision fine-tuning path
-just needs `datasets.load_dataset` to hand it rows with an `image` column
-(auto-decoded to PIL) and a `conversation_json` column it converts via
-`common.convert_to_conversation`. Parquet gives it that in one
-self-contained, easily-shareable file per split — Arrow/`hf_dataset/` would
-work too (same underlying data) but isn't as easy to move around as a
-single file, and JSONL alone can't carry the embedded image bytes.
+**`train_qwen.py` loads the train and validation splits** from the
+parquet dataset directory specified by
+`--dataset-path ./processed_dataset/parquet`. It uses
+`datasets.load_dataset` to provide rows with an `image` column and
+a `conversation_json` column, which `common.convert_to_conversation`
+converts for training. The Parquet files contain these data in one
+file per split. The Arrow dataset in `hf_dataset/` contains the
+same processed record fields, while the JSONL export contains only
+conversation messages and does not contain image data.
 
-### Motivation summary
+### Motivation Summary
 
 The overall motivation for producing three formats instead of one is:
-*author once, consume anywhere* — the same 3-turn conversation, sensor
-block, and structured response are computed a single time in
+**author once, consume anywhere**, where the same three-turn conversation,
+sensor block, and structured response are computed a single time in
 `prepare_weld_dataset.py`, then serialized to whichever format each
 downstream consumer (trainer, debugger, or another framework) natively
 expects, instead of re-deriving the dataset per consumer.
 
 ## Step 3: Fine-Tune the Model (Weld Instance)
 
-`train_qwen.py` is the generic Unsloth + LoRA fine-tuning script described
-in [`README.md` — Step: Fine-Tune the Model](./how-to-fine-tune-vlm.md#step-fine-tune-the-model).
-For the weld dataset produced by Step 2 above, it is invoked as:
+`train_qwen.py` is the generic fine-tuning script that uses the Unsloth
+library and LoRA fine-tuning method described in
+[Step: Fine-Tune the Model](./how-to-fine-tune-vlm.md#step-fine-tune-the-model).
+For the weld dataset produced by Step 2 above, invoke `train_qwen.py`:
 
 ```bash
 python train_qwen.py \
@@ -249,29 +250,31 @@ python train_qwen.py \
 ```
 
 - `--dataset-path` points at the `parquet/` directory produced by
-  `prepare_weld_dataset.py` in [Step 2](#step-2-prepare-the-dataset) —
-  `train_qwen.py` does not know or care that the data is weld-specific; it
-  only needs the generic `image` + `conversation_json` column shape
-  described in `README.md`.
+  `prepare_weld_dataset.py` in [Step 2](#step-2-prepare-the-dataset).
+  `train_qwen.py` is not specific to weld data; it
+  only needs the generic `image` and `conversation_json` column shape
+  described in [how-to-fine-tune-vlm.md](./how-to-fine-tune-vlm.md).
+
 - All other flags (`--lora-r`, `--max-seq-length`,
-  `--per-device-train-batch-size`, etc.) keep their generic defaults —
-  see `README.md` for why each default was chosen. Nothing about this weld
-  instance required overriding them: 2048 tokens comfortably fits the
-  system + sensor-block user turn + structured assistant report described
-  in [Step 2](#step-2-prepare-the-dataset), and a moderately sized weld
-  dataset trains well at rank 16 / 2 epochs.
-- Output: a LoRA adapter + tokenizer saved to `./qwen_3.5_2b_weld_adapter`,
+  `--per-device-train-batch-size`, etc.) keep their generic defaults.
+  See [how-to-fine-tune-vlm.md](./how-to-fine-tune-vlm.md) for the selection rationale for each default. This
+  weld instance does not require overriding them: 2048 tokens fits the
+  system turn, the sensor-block user turn, and the structured assistant
+  report described in [Step 2](#step-2-prepare-the-dataset), and a
+  moderately sized weld dataset trains well with rank 16 for two epochs.
+
+- Output: a LoRA adapter and tokenizer saved to `./qwen_3.5_2b_weld_adapter`,
   specialized to produce the weld-quality report schema from
   [Data Preparation Strategy](#data-preparation-strategy).
 
 ## Step 4: Run Inference (Weld Instance)
 
 `infer_qwen.py` is the generic inference script described in
-[`README.md` — Step: Run Inference](./how-to-fine-tune-vlm.md#step-run-inference). Pointed
-at the weld adapter and dataset:
+[Step: Run Inference](./how-to-fine-tune-vlm.md#step-run-inference).
+Configure with the weld adapter and dataset:
 
 ```bash
-# Against the first 5 test-split samples, using the fine-tuned weld adapter
+# Against the first five test-split samples, using the fine-tuned weld adapter
 python infer_qwen.py \
   --model-path ./qwen_3.5_2b_weld_adapter \
   --dataset-path ./processed_dataset/parquet \
@@ -286,12 +289,14 @@ python infer_qwen.py \
 ```
 
 The output streamed to stdout is the structured weld-quality report
-(classification, visual observation, sensor analysis, confidence, severity,
-root cause, corrective actions) described in
-[Data Preparation Strategy](#data-preparation-strategy) — this is the
-assistant-turn schema the model was fine-tuned to reproduce in Step 3.
+format in the following order: Visual Observation,
+Model Confidence and Defect Probability, Severity, Root Cause,
+and Corrective Actions, as described in [Data Preparation Strategy](#data-preparation-strategy).
+The report format is the assistant-turn schema that the model was
+fine-tuned to reproduce in Step 3.
 
-## Detailed Data-Prep Flow
+
+## Detailed Data-Preparation Flow
 
 ```mermaid
 ---
@@ -322,27 +327,28 @@ flowchart TD
     M --> Q["summary.json"]
 ```
 
-## Data-Prep Troubleshooting
+## Data-Preparation Troubleshooting
 
-- **`FileNotFoundError` / missing image errors during Step 2** — verify
-  `--images-root` contains files whose stem exactly matches `Frame_id`
-  values in the CSV, or pass `--skip-missing` to drop unmatched rows
+- **`FileNotFoundError` or missing image errors during Step 2**: Verify
+  that `--images-root` contains files whose stems exactly match `Frame_id`
+  values in the CSV file, or pass `--skip-missing` to drop unmatched rows
   instead of failing.
-- **Split ratios error** — `--train-ratio` + `--val-ratio` + `--test-ratio`
+
+- **Split ratios error** — `--train-ratio`, `--val-ratio`, and `--test-ratio`
   must sum to exactly `1.0`.
-- **A rare defect class is missing from validation/test** — check
-  `summary.json` for per-split counts; classes with fewer than 3 total
+
+- **A rare defect class is missing from validation or test** — Check
+  `summary.json` for per-split counts. Classes with fewer than three total
   samples may not get a guaranteed sample in every split. Collect more
-  data for that category, or accept train-only coverage for it.
+  data for that category or accept train-only coverage.
 
-## License / Dataset Attribution
+## License and Dataset Attribution
 
-The raw images and sensor CSVs referenced in [Step 1](#step-1-input-data)
-can be sourced from
-[IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset)
+You can source the raw images and sensor CSV files referenced in [Step 1](#step-1-input-data)
+from [IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset)
 (Apache-2.0) — see that dataset's card for its own license terms. The
 generic toolkit license and third-party component licenses are listed in
-[`README.md` — License](./how-to-fine-tune-vlm.md#license).
+[License](./how-to-fine-tune-vlm.md#license).
 
 For fine-tuning and inference on the dataset produced here, see
-[`README.md`](./how-to-fine-tune-vlm.md).
+[how-to-fine-tune-vlm.md](./how-to-fine-tune-vlm.md).

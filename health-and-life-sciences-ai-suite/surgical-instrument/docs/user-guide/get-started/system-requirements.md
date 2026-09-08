@@ -4,7 +4,7 @@
 |---|---|
 | Linux with Docker Engine ≥ 24 and `docker compose` v2 | Rootless Docker works if `/dev/dri` is accessible. |
 | Intel Arc iGPU (Meteor Lake / Lunar Lake / Arrow Lake) or discrete Arc GPU | Container inherits the host driver via `/dev/dri` passthrough. |
-| Intel client GPU stack (Level Zero + OpenCL + iHD) | `libze1`, `libze-intel-gpu1`, `intel-igc-core-2`, `libigdgmm12`, `intel-opencl-icd`, `intel-media-va-driver-non-free`. Installed by `make setup-prerequisites`; verified by `make check-l0`. |
+| Intel client GPU stack (Level Zero + OpenCL + iHD) | `libze1`, `libze-intel-gpu1`, `libigc2`, `libigdgmm12`, `intel-opencl-icd`, `intel-media-va-driver-non-free`. Installed by `make setup-prerequisites`; verified by `make check-l0`. |
 | Host groups `render` and `video` exist | The Makefile auto-detects the GIDs. `make setup-prerequisites` adds the current user if missing. |
 | X11 display server reachable from the container | Required by the OpenGL vsync presenter and the `cv2` fallback. |
 | USB access for Basler camera (optional) | The Makefile passes `/dev/bus/usb` and the USB device cgroup rule. |

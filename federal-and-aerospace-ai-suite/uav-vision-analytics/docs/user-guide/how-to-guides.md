@@ -3,7 +3,7 @@
 This section provides information on how to use and adjust the application.
 Learn more about:
 
-- [YOLOv8n-VisDrone AI Model](./how-to-guides/model.md) — YOLOv8n-VisDrone model
+- [YOLO11s AI Model](./how-to-guides/model.md) — YOLO11s model
   details, `make model` usage
 - [Benchmarking](./how-to-guides/benchmark.md) — Measure stream density and
   hardware utilization using `calc_stream_density.sh`
@@ -21,7 +21,8 @@ Learn more about:
 :::{toctree}
 :hidden:
 
-YOLOv8n-VisDrone AI Model <./how-to-guides/model.md>
+YOLO11s AI Model <./how-to-guides/model.md>
+Benchmarking <./how-to-guides/benchmark.md>
 Makefile Reference <./how-to-guides/makefile.md>
 RealSense Camera <./how-to-guides/realsense-guide.md>
 QGroundControl <./how-to-guides/qgroundcontrol.md>

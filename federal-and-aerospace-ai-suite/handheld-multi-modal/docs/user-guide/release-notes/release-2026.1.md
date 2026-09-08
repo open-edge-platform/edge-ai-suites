@@ -1,16 +1,14 @@
-# Federal And Aerospace AI Suite 2026.1
+# Release Notes: Handheld Multi-Modal Application
 
-**Release Date**: 2026-06-25
+**Release Date**: June 17, 2026
 
-## Handheld Multi-Modal Application
-
-### Version 2026.1.2
+## Version 2026.1.2
 
 Initial release (preview) version of the application and the Infrastructure blueprint.
 The application is optimized for AI inference on portable devices, focusing on SWaP-C
 compliance (Size, Weight, Power, and Cost).
 
-**New**
+**New**:
 
 The application introduces the following features:
 
@@ -20,7 +18,7 @@ The application introduces the following features:
 - Visual modality support through [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 - Insight into application and platform metrics through the Observability Dashboard
 
-**Known issues and limitations**
+**Known issues and limitations**:
 
 - When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
 - The version of Visual Pipeline and Platform Evaluation Tool used in the Handheld Multi-Modal Application does not fully support pipelines that utilize Hugging Face models requiring access approval and downloading via an access token. As a result the Video Summarization VLM pipeline is not available in the preview release.

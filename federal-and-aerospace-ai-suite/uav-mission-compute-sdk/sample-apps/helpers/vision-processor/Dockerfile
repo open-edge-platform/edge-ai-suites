@@ -28,7 +28,9 @@ COPY detector_multicam.py .
 COPY detector_multicam_rtsp.py .
 COPY entrypoint.sh .
 COPY yolov8.json /models/
-RUN chmod +x entrypoint.sh
+# Absolute chmod (not `+x`) so this doesn't depend on the host source file's
+# permission bits — `dlstreamer` (non-root) needs read+execute to run this shebang script.
+RUN chmod 755 entrypoint.sh
 
 # Restore DL Streamer environment
 ENV GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/

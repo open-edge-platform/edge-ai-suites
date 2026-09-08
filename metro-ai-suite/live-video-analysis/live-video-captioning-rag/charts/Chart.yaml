@@ -7,7 +7,7 @@ description: >
   Parent chart for Live Video Captioning RAG deployment.
   This chart composes the Live Video Captioning stack and enables RAG components.
 type: application
-version: 2026.2.0-rc2-helm
+version: 2026.2.0-rc3-helm
 appVersion: "2026.0.0"
 
 keywords:
@@ -19,14 +19,14 @@ keywords:
 
 dependencies:
   - name: live-video-captioning
-    version: "2026.2.0-rc2-helm"
+    version: "2026.2.0-rc3-helm"
     repository: "file://../../live-video-captioning/charts"
   - name: multimodal-embedding
-    version: "2026.2.0-rc2-helm"
+    version: "2026.2.0-rc3-helm"
     repository: "file://subcharts/multimodal-embedding"
   - name: vdmsvectordb
-    version: "2026.2.0-rc2-helm"
+    version: "2026.2.0-rc3-helm"
     repository: "file://subcharts/vdms-vectordb"
   - name: live-video-captioning-rag
-    version: "2026.2.0-rc2-helm"
+    version: "2026.2.0-rc3-helm"
     repository: "file://subcharts/live-video-captioning-rag"

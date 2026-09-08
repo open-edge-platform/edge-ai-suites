@@ -91,46 +91,66 @@ Below is a reference pipeline configuration:
 - `MAX_MODEL_LEN`: `60000`
 - `QUANTIZATION`: `fp8`
 - `GPU_MEMORY_UTIL`: `0.65`
+# If you have limited GPU resources, please try to increase GPU_MEMORY_UTIL and decrease MAX_MODEL_LEN
 ```
 
-### c. Load Pipeline and Knowledgebase
+### c. Load Pipeline
 
-1. Prepare pipeline and knowledgebase json config file:
-
-```bash
-# fetch the example configs at the pinned commit
-COMMIT=f56422671c8bdf46f59dd758c8c9e38ca41d6555
-BASE=https://raw.githubusercontent.com/opea-project/GenAIExamples/$COMMIT/EdgeCraftRAG/tests/configs
-curl -fsSL "$BASE/test_kb.json" -o test_kb.json
-curl -fsSL "$BASE/test_pipeline_ipex_vllm.json" -o test_pipeline_ipex_vllm.json
-
-# point the configs at the models downloaded in step a
-# (embedding bge-m3-int8, reranker bge-reranker-large-int8, LLM Qwen3.5-35B-A3B)
-sed -i \
-  -e 's@"model_id": "BAAI/bge-small-en-v1.5"@"model_id": "BAAI/bge-m3"@' \
-  -e 's@"model_path": "./models/BAAI/bge-small-en-v1.5"@"model_path": "./models/BAAI/bge-m3-int8"@' \
-  -e 's@"weight": "INT4"@"weight": "INT8"@' \
-  test_kb.json
-
-sed -i \
-  -e 's@"model_path": "./models/BAAI/bge-reranker-large"@"model_path": "./models/BAAI/bge-reranker-large-int8"@' \
-  -e 's@"weight": "INT4"@"weight": "INT8"@' \
-  -e 's@"model_id": "Qwen/Qwen3-8B"@"model_id": "Qwen/Qwen3.5-35B-A3B"@' \
-  test_pipeline_ipex_vllm.json
-```
-
-2. Load pipeline:
+Get the host IP and send the pipeline configuration directly to EC-RAG:
 
 ```bash
-# load knowledgebase
-export HOST_IP=<your host ip>
-curl -X POST http://${HOST_IP}:16010/v1/knowledge \
+HOST_IP=$(hostname -I | awk '{print $1}')
+
+curl -X POST "http://${HOST_IP}:16010/v1/settings/pipelines" \
   -H "Content-Type: application/json" \
-  -d @test_kb.json | jq '.'
-# load pipeline
-curl -X POST http://${HOST_IP}:16010/v1/settings/pipelines \
-  -H "Content-Type: application/json" \
-  -d @test_pipeline_ipex_vllm.json | jq '.'
+  --data-binary @- <<EOF | jq '.'
+{
+  "name": "rag_pipeline",
+  "node_parser": {
+    "chunk_size": 400,
+    "chunk_overlap": 48,
+    "parser_type": "simple"
+  },
+  "indexer": {
+    "indexer_type": "faiss_vector",
+    "embedding_model": {
+      "model_id": "BAAI/bge-m3-int8",
+      "model_path": "./models/BAAI/bge-m3-int8",
+      "device": "auto",
+      "weight": "INT8"
+    }
+  },
+  "retriever": {
+    "retriever_type": "vectorsimilarity",
+    "retrieve_topk": 30
+  },
+  "postprocessor": [
+    {
+      "processor_type": "reranker",
+      "top_n": 2,
+      "reranker_model": {
+        "model_id": "BAAI/bge-reranker-large-int8",
+        "model_path": "./models/BAAI/bge-reranker-large-int8",
+        "device": "auto",
+        "weight": "INT8"
+      }
+    }
+  ],
+  "generator": {
+    "generator_type": "chatqna",
+    "inference_type": "vllm",
+    "model": {
+      "model_id": "Qwen/Qwen3.5-35B-A3B",
+      "model_path": "",
+      "device": "",
+      "weight": ""
+    },
+    "prompt_path": "./default_prompt.txt",
+    "vllm_endpoint": "http://${HOST_IP}:8086"
+  },
+  "active": "True"
+}
+EOF
 ```
 
 ## 3. Set Up OpenClaw
