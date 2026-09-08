@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
@@ -60,6 +60,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   const [baseDirectory, setBaseDirectory] = useState(() => sessionStorage.getItem('baseDirectory') || "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // The same fact as `loading`, kept where handleApply can trust it. `disabled`
+  // on the button is not enough on its own: two clicks landing in one render
+  // both read `loading` from that render's closure, and a second run here means
+  // a second session and a second audio upload.
+  const loadingRef = useRef(false);
+  /** The stage in flight, or the closing summary once it has finished. */
   const [notification, setNotification] = useState('');
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
@@ -256,6 +262,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   };
 
   const handleApply = async () => {
+    if (loadingRef.current) return;
     const hasAudioFile = audioFile !== null;
     const hasVideoFiles = frontCameraPath !== null || rearCameraPath !== null || boardCameraPath !== null;
 
@@ -305,6 +312,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       console.log('🎯 Audio status set to ready - no audio file selected');
     }
 
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -316,6 +324,8 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       dispatch(setSessionId(sessionId));
 
       try {
+        // Covers the handover as a whole: the stop, the 5s settle and the start.
+        setNotification(t('uploadFiles.startingMonitoring'));
         if (monitoringActive) {
           await stopMonitoring();
           dispatch(setMonitoringActive(false));
@@ -328,11 +338,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
         console.error('❌ Monitoring restart failed:', monitoringError);
       }
 
-      let audioPath = '';
       if (hasAudioFile) {
+        setNotification(t('uploadFiles.uploadingAudio'));
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
-        audioPath = audioResponse.path;
         console.log('✅ Audio uploaded successfully:', audioResponse);
 
         // Extract and store audio duration
@@ -430,6 +439,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       let videoAnalyticsStarted = false;
       let videoErrors: string[] = [];
       if (hasValidVideo && hasVideoAnalyticsFeature) {
+        setNotification(t('uploadFiles.startingVideo'));
         ({ started: videoAnalyticsStarted, errors: videoErrors } =
           await startVideoAnalyticsWithSession(sessionId, validPipelines));
         if (videoAnalyticsStarted) {
@@ -456,6 +466,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
         finalMessage: finalNotification
       });
 
+      loadingRef.current = false;
       setLoading(false);
 
       // Show the reasons and keep the modal open. Whatever did start
@@ -471,6 +482,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       setError(describeError(err));
       setNotification('');
       dispatch(processingFailed());
+      loadingRef.current = false;
       setLoading(false);
     }
   };
@@ -586,7 +598,15 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
             </div>
           )}
           {error && <div className="error-message">{error}</div>}
-          {notification && <div className="notification-message">{notification}</div>}
+          {/* Same row for both, because it is the same line of text moving on:
+              the spinner is what distinguishes a stage still running from the
+              summary left behind once it finished. */}
+          {notification && (
+            <div className="modal-progress" role="status">
+              {loading && <span className="modal-spinner" aria-hidden="true" />}
+              {notification}
+            </div>
+          )}
         </div>
         <div className="modal-actions">
           <button

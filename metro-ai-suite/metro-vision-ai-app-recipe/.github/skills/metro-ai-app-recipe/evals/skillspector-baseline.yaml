@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# SkillSpector baseline — findings listed here are suppressed on future scans.
+# Edit 'reason' fields and add glob 'rules' as needed. See docs/SUPPRESSION.md.
+#
+# Glob 'rules' are used (not exact 'fingerprints') so suppression stays valid
+# across scanner versions and future edits to the referenced docs.
+version: 2
+rules:
+  - id: "RP1"
+    path: "*SKILL.md"
+    reason: "Reviewed: Docker images in SKILL.md are intentionally pinned to specific
+      version tags (e.g. eclipse-mosquitto:2.1.2-alpine), never :latest, and are
+      documented as intentional pins. Tag pins are the deliberate policy for this
+      recipe skill; digest pinning is not required."
+  - id: "RP1"
+    path: "*INSTALL.md"
+    reason: "Reviewed: Docker images in references/INSTALL.md are intentionally pinned
+      to specific version tags (e.g. intel/dlstreamer:2026.1.0-ubuntu24), never
+      :latest, and are documented as intentional pins. Tag pins are the deliberate
+      policy for this recipe skill; digest pinning is not required."
+fingerprints: []

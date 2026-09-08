@@ -28,6 +28,7 @@ from pipeline import Pipeline
 from dto.report_dto import ReportRequest, ReportReselectRequest
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_paths import SessionPaths
 
 logger = logging.getLogger(__name__)
 
@@ -53,18 +54,13 @@ def _ensure_docx_report(session_id: str) -> tuple[str, str]:
     """
     from components.report_generator.docx_export import markdown_to_docx
 
-    project_config = RuntimeConfig.get_section("Project")
-    session_dir = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
+    session_dir = str(SessionPaths.result_dir(session_id))
 
-    docx_path = os.path.join(session_dir, "class_report.docx")
+    docx_path = str(SessionPaths.report_docx_path(session_id))
     if os.path.exists(docx_path):
         return session_dir, docx_path
 
-    report_md_path = os.path.join(session_dir, "class_report.md")
+    report_md_path = str(SessionPaths.report_md_path(session_id))
     if not os.path.exists(report_md_path):
         raise HTTPException(
             status_code=404,
@@ -72,7 +68,7 @@ def _ensure_docx_report(session_id: str) -> tuple[str, str]:
         )
 
     report_content = StorageManager.read_text_file(report_md_path)
-    mindmap_path = os.path.join(session_dir, "mindmap_report.png")
+    mindmap_path = str(SessionPaths.mindmap_png_path(session_id))
     markdown_to_docx(
         report_content,
         docx_path,
@@ -151,14 +147,8 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
     ``mindmap_report.png`` in the session dir — the exact path
     ReportGenerator picks up as the ``mindmap`` image field.
     """
-    project_config = RuntimeConfig.get_section("Project")
-    session_dir = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
-    os.makedirs(session_dir, exist_ok=True)
-    out_path = os.path.join(session_dir, "mindmap_report.png")
+    out_path = str(SessionPaths.mindmap_png_path(session_id))
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
     try:
         content = await file.read()
@@ -179,13 +169,7 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
 @router.get("/report/{session_id}/mindmap-image")
 def get_mindmap_image(session_id: str):
     """Return the previously uploaded mind-map PNG for inline report preview."""
-    project_config = RuntimeConfig.get_section("Project")
-    image_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "mindmap_report.png",
-    )
+    image_path = str(SessionPaths.mindmap_png_path(session_id))
 
     if not os.path.exists(image_path):
         raise HTTPException(
@@ -205,13 +189,7 @@ def get_mindmap_image(session_id: str):
 @router.get("/report/{session_id}")
 def get_report(session_id: str):
     """Retrieve a previously generated class report for a session."""
-    project_config = RuntimeConfig.get_section("Project")
-    report_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "class_report.md",
-    )
+    report_path = str(SessionPaths.report_md_path(session_id))
 
     if not os.path.exists(report_path):
         raise HTTPException(
@@ -283,7 +261,7 @@ def download_report(
         logger.error("PDF conversion failed for session %s: %s", session_id, err)
         raise HTTPException(status_code=500, detail="Failed to convert report to PDF.")
 
-    default_pdf = os.path.join(session_dir, "class_report.pdf")
+    default_pdf = str(SessionPaths.report_pdf_path(session_id))
     if os.path.exists(default_pdf) and default_pdf != pdf_path:
         try:
             os.replace(default_pdf, pdf_path)

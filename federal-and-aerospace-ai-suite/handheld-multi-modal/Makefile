@@ -42,9 +42,12 @@ VIPPET_DIR := $(SELF_DIR)/../vippet-fedaero
 VIPPET_CWD := $(VIPPET_DIR)/$(VIPPET_PATH)
 
 MODELS_RETRIES  ?= 50
+MODELS_STATUS_RETRIES ?= 120
 MODELS_STATUS_INTERVAL ?= 30
 MODELS_LICENSE_FILE ?= .license-accepted
 MODELS_SUPPORTED_FILE ?= $(VIPPET_CWD)/shared/models/supported_models.yaml
+MODELS_DOWNLOAD_LOG ?= $(WORK_DIR)/models-download.log
+MODELS_DOWNLOAD_PID ?= $(WORK_DIR)/models-download.pid
 
 # ---------------------------------------------------------------------------
 # Packaging config (used by 'stage' / 'vippet' targets)
@@ -61,7 +64,7 @@ TEMPLATE_DIR := $(SELF_DIR)/templates
 	build rebuild clean health test urls build-whisper \
 	stage vippet \
 	restler-build restler-stt restler-package \
-	models-license models-download models-status
+	models-license models-download models-download-async models-status
 
 help: ## Show this help
 	@awk ' \
@@ -155,7 +158,7 @@ vippet-configure: vippet-get ## Copy telegraf config and inject env vars into vi
 	yq -i -y '.services."metrics-manager".ports = ["9090:9090"]' $(VIPPET_CWD)/compose.yml; \
 	echo "✓ vippet configured (telegraf.conf copied)"
 
-vippet-up: vippet-configure ## Start vippet (builds images, installs all models, starts stack)
+vippet-up: vippet-configure ## Start vippet (builds images and starts stack)
 	@cd $(VIPPET_CWD) && \
 	sed -i 's|^VERSION=.*|VERSION=$(VIPPET_DOCKER_TAG)|' setup_env.sh && \
 	{ [ -f .env ] || bash setup_env.sh; } && \
@@ -171,8 +174,6 @@ vippet-up: vippet-configure ## Start vippet (builds images, installs all models,
 	fi && \
 	$(MAKE) build run && \
 	echo "✓ vippet running"
-	# fedaero makefile
-	@$(MAKE) models-license models-download models-status 
 
 vippet-down: ## Stop vippet
 	@cd $(VIPPET_CWD) && docker compose down
@@ -194,13 +195,22 @@ define _wait_for_network
 	done
 endef
 
-deploy: install-deps setup vippet-up ## Full deploy: setup → start vippet → start this stack
+deploy: install-deps setup vippet-up ## Full deploy: start ViPPET and handheld stack while models download
+	@$(MAKE) --no-print-directory models-license
+	@$(MAKE) --no-print-directory models-download-async
 	$(call _wait_for_network)
 	@$(MAKE) up
+	@$(MAKE) --no-print-directory models-status
 
-deploy-cdi: install-deps setup vippet-up ## Full deploy (CDI/SR-IOV): setup → start vippet → start this stack
+deploy-cdi: install-deps setup vippet-up ## Full deploy (CDI/SR-IOV) while models download
+	@$(MAKE) --no-print-directory models-license
+	@$(MAKE) --no-print-directory models-download-async
 	$(call _wait_for_network)
 	@$(MAKE) up-cdi
+	@$(MAKE) --no-print-directory models-status
+
+deploy-standalone: install-deps setup ## Full deploy (standalone, no ViPPET)
+	@$(MAKE) up-standalone
 
 # Stack lifecycle
 
@@ -426,13 +436,23 @@ models-download:
 		esac; \
 		[ $$i -eq $(MODELS_RETRIES) ] && break; \
 		sleep 5; \
-    done; \
+	done; \
+	echo "✗ Model download request was not accepted after $(MODELS_RETRIES) attempts"; \
+	exit 1
+
+models-download-async: ## Request ViPPET model downloads in background; log at $(MODELS_DOWNLOAD_LOG)
+	@mkdir -p "$(dir $(MODELS_DOWNLOAD_LOG))"
+	@rm -f "$(MODELS_DOWNLOAD_PID)"; \
+	$(MAKE) --no-print-directory models-download >"$(MODELS_DOWNLOAD_LOG)" 2>&1 & \
+	echo $$! > "$(MODELS_DOWNLOAD_PID)"; \
+	PID=$$(cat "$(MODELS_DOWNLOAD_PID)"); \
+	echo "✓ Model download request started (PID $$PID; log: $(MODELS_DOWNLOAD_LOG))"
 
 models-status:
-	@for i in $$(seq 1 $(MODELS_RETRIES)); do \
+	@for i in $$(seq 1 $(MODELS_STATUS_RETRIES)); do \
 		STATUS=$$(curl -sf http://localhost:7860/api/v1/models | jq -c '[.[] | {display_name, install_status}]'); \
 		if [ -z "$$STATUS" ]; then \
-			echo "  [$$i/$(MODELS_RETRIES)] API not reachable yet..."; \
+			echo "  [$$i/$(MODELS_STATUS_RETRIES)] API not reachable yet..."; \
 		else \
 			echo "$$STATUS" | jq -r '.[] | "  \(.display_name)\t\(.install_status)"' | column -t -s "$$(printf '\t')"; \
 			if echo "$$STATUS" | jq -e 'length > 0 and all(.[]; .install_status == "installed")' >/dev/null; then \
@@ -440,11 +460,11 @@ models-status:
 				exit 0; \
 			fi; \
 		fi; \
-		[ $$i -eq $(MODELS_RETRIES) ] && break; \
-		echo "  [$$i/$(MODELS_RETRIES)] not all installed yet, retrying in $(MODELS_STATUS_INTERVAL)s..."; \
+		[ $$i -eq $(MODELS_STATUS_RETRIES) ] && break; \
+		echo "  [$$i/$(MODELS_STATUS_RETRIES)] not all installed yet, retrying in $(MODELS_STATUS_INTERVAL)s..."; \
 		sleep $(MODELS_STATUS_INTERVAL); \
 	done; \
-	echo "✗ Timeout: not all models installed after $$(( $(MODELS_RETRIES) * $(MODELS_STATUS_INTERVAL) ))s"; \
+	echo "✗ Timeout: not all models installed after $$(( $(MODELS_STATUS_RETRIES) * $(MODELS_STATUS_INTERVAL) ))s"; \
 	exit 1
 
 models-license:

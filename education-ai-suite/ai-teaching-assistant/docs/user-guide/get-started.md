@@ -10,7 +10,7 @@ Confirm your machine meets the [System Requirements](./get-started/system-requir
 ## Step 1: Prerequisites
 
 - **Git for Windows** — [Download here](https://git-scm.com/download/win)
-- **Python 3.10+** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
+- **Python 3.11 or 3.12** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
 - **Visual C++ Build Tools** — Required for some Python packages
 
 ## Step 2: Clone The Repository
@@ -142,6 +142,7 @@ To reinstall later, re-run `.\setup_windows.ps1` — it will recreate the virtua
 
 ## Next Steps
 
+- [Application Flow](./application-flow.md) — UI walkthrough and element reference
 - [How It Works](./how-it-works.md) — Understand the architecture
 - [Configuration](./get-started/configuration.md) — Adjust models, temperature, and settings
 - [Troubleshooting](./troubleshooting.md) — Debug common issues

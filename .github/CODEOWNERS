@@ -7,7 +7,7 @@ LICENSE            @xwu2intel
 CONTRIBUTING.md    @xwu2intel
 CODE_OF_CONDUCT.md @xwu2intel
 SECURITY.md        @xwu2intel
-README.md          @xwu2intel
+README.md          @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 
 # ============================================================================
@@ -97,11 +97,14 @@ README.md          @xwu2intel
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/                  @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
-# this may need to be confirmed:
+
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/                  @rrajore @vagheshp @xwu2intel @ajagadi1
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
 
+/metro-ai-suite/prompt-library/                                            @rrajore @vagheshp @xwu2intel
+/metro-ai-suite/prompt-library/docs/                                       @rrajore @vagheshp @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/prompt-library/README.md                                   @rrajore @vagheshp @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 /metro-ai-suite/sensor-fusion-for-traffic-management/                                  @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
 /metro-ai-suite/sensor-fusion-for-traffic-management/docs/                             @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
@@ -134,7 +137,7 @@ README.md          @xwu2intel
 /metro-ai-suite/agentic-smart-community/docs/       @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/agentic-smart-community/README.md   @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @llin60 @xwu2intel 
+/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @llin60 @xwu2intel
 /metro-ai-suite/enterprise-data-intelligence/docs/       @Yongbozzz @myqi @llin60 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/enterprise-data-intelligence/README.md   @Yongbozzz @myqi @llin60 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 

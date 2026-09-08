@@ -73,6 +73,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             );
             return;
           }
+          if (i == 2) {
+            ref.read(filesRefreshProvider.notifier).update((n) => n + 1);
+          }
           setState(() => _index = i);
         },
         destinations: [

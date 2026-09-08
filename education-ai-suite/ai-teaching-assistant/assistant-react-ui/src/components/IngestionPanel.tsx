@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ALLOWED_EXTENSIONS, MAX_UPLOAD_BYTES } from "../config";
 import { clearContext, ingestFiles } from "../api";
 
@@ -12,8 +12,12 @@ export interface IngestStatus {
 interface Props {
   files: File[];
   onFilesSelected: (files: File[]) => void;
-  onIngested: () => void;
+  onIngested: (topic?: string) => void;
+  onBusyChange?: (busy: boolean) => void;
   disabled?: boolean;
+  // Status restored from a previous session (e.g. the ingested chunk count)
+  // shown until the user ingests again.
+  initialMessage?: string;
 }
 
 // Upload + ingest + reingest. Picking one or more valid files uploads and
@@ -24,11 +28,22 @@ export default function IngestionPanel({
   files,
   onFilesSelected,
   onIngested,
+  onBusyChange,
   disabled,
+  initialMessage,
 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, setState] = useState<IngestState>("idle");
   const [message, setMessage] = useState<string>("");
+
+  // Seed the status line from a restored session once, without clobbering a
+  // message produced by a later ingest in this session.
+  useEffect(() => {
+    if (initialMessage) {
+      setState((s) => (s === "idle" ? "success" : s));
+      setMessage((m) => (m === "" ? initialMessage : m));
+    }
+  }, [initialMessage]);
 
   const validate = (f: File): string | null => {
     const ext = "." + (f.name.toLowerCase().split(".").pop() ?? "");
@@ -46,6 +61,7 @@ export default function IngestionPanel({
   const ingestAll = async (batch: File[]) => {
     setState("ingesting");
     setMessage("");
+    onBusyChange?.(true);
     try {
       await clearContext();
       const result = await ingestFiles(batch);
@@ -64,10 +80,13 @@ export default function IngestionPanel({
           `${result.files_succeeded} file(s) ingested \u00b7 ${result.total_chunks_added} chunks`
         );
       }
-      onIngested();
+      const topic = result.results.find((r) => r.status === "ok" && r.topic)?.topic ?? undefined;
+      onIngested(topic ?? undefined);
     } catch (err) {
       setState("error");
       setMessage(`Ingestion failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      onBusyChange?.(false);
     }
   };
 
@@ -115,15 +134,29 @@ export default function IngestionPanel({
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={busy}
-          className="flex-1 rounded-lg bg-intel-blue px-3 py-2 text-sm font-medium text-white hover:bg-intel-dark disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg bg-intel-blue px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-intel-dark disabled:opacity-50"
         >
-          📄 Upload & ingest
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 shrink-0"
+            aria-hidden="true"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Upload &amp; Ingest
         </button>
         <button
           type="button"
           onClick={runIngest}
           disabled={busy || files.length === 0}
-          className="flex-1 rounded-lg border border-intel-blue px-3 py-2 text-sm font-medium text-intel-blue hover:bg-intel-light disabled:opacity-50"
+          className="flex-1 rounded-lg border border-intel-blue px-3 py-2 text-sm font-medium text-intel-blue shadow-sm hover:bg-intel-light disabled:opacity-50"
           title={files.length > 0 ? `Re-ingest ${files.length} file(s)` : "Select files first"}
         >
           {state === "ingesting" ? "Ingesting…" : "♻ Re-ingest"}

@@ -22,7 +22,7 @@ The types of collection are as follows:
 
 The diagram below is the single, consolidated view of the Robotics AI Suite. It shows the major software components, how perception, navigation, manipulation, Physical AI, and benchmarking relate, which parts are Intel-provided versus upstream open source, and how workloads map onto Intel® heterogeneous compute (CPU / iGPU / NPU). You should be able to understand what the suite includes — and where Intel adds value — without reading further.
 
-![Robotics AI Suite reference architecture](docs/images/architecture/Robotics-AI-Suite-Architecture.svg)
+![Robotics AI Suite reference architecture](./docs/user-guide/images/architecture/Robotics-AI-Suite-Architecture.svg)
 
 **How to read it**
 
@@ -43,13 +43,13 @@ Perception and detection run on the **NPU / iGPU**; VLA / diffusion policies and
 
 Sensor data flows through perception into the AI decision models, then to planning and real-time control, and out to the actuators — with feedback closing the loop. Each stage is annotated with the compute it targets.
 
-![Runtime data flow from sensors through models to control](docs/images/architecture/robotics-runtime-data-flow.svg)
+![Runtime data flow from sensors through models to control](docs/user-guide/images/architecture/robotics-runtime-data-flow.svg)
 
 ### Workloads mapped to Intel hardware
 
 Each collection uses Intel heterogeneous compute differently. The matrix summarizes the primary (●) and optional (○) compute target for each collection.
 
-![Collections mapped to Intel heterogeneous compute](docs/images/architecture/robotics-hardware-mapping.svg)
+![Collections mapped to Intel heterogeneous compute](./docs/user-guide/images/architecture/robotics-hardware-mapping.svg)
 
 The per-collection reference application architectures — which zoom into a representative end-to-end application — are shown on the collection pages linked in the tables below.
 
@@ -64,6 +64,8 @@ The per-collection reference application architectures — which zoom into a rep
 | [Pi0.5 with Real-Time Chunking (OpenVINO Toolkit)](pipelines/pi05-rtc-ov) | [Pi0.5 with Real-Time Chunking (OpenVINO Toolkit)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/pi05_with_rtc.html) | Implementation of Pi0.5 VLA model with Real-Time Chunking (RTC) optimized with the OpenVINO toolkit |
 | [Robotics Diffusion Transformer (OpenVINO Toolkit)](pipelines/rdt-ov) | [Robotics Diffusion Transformer (OpenVINO Toolkit)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/robotics_diffusion_transformer.html) | Robotics Diffusion Transformer implementation optimized with OpenVINO toolkit |
 | [VSLAM: ORB-SLAM3](pipelines/orb-slam3-sample) | [VSLAM: ORB-SLAM3](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/ORB_VSLAM.html) | One of the popular real-time feature-based SLAM libraries that can perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fish-eye lens models |
+| [Gr00t n1.7 (OpenVINO Toolkit)](pipelines/gr00t-n1d7-ov) | [Gr00t n1.7 (OpenVINO Toolkit)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/gr00t_n1d7_ov.html) | Implementation of Gr00t n1.7 VLA model optimized with the OpenVINO toolkit |
+| [GR00T-WholeBodyControl (OpenVINO Toolkit)](pipelines/gr00t-wbc) | [GR00T-WholeBodyControl (OpenVINO Toolkit)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/gr00t_wbc.html) | Implementation of GR00T-WholeBodyControl pipeline on Intel PLT platform optimized with the OpenVINO toolkit |
 
 **Autonomous Mobile Robot:**
 

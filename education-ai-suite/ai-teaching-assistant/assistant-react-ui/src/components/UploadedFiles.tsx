@@ -10,19 +10,19 @@ interface Props {
 export default function UploadedFiles({ files, onRemove, disabled }: Props) {
   if (files.length === 0) {
     return (
-      <div className="flex h-full min-h-[240px] items-center justify-center rounded-xl border border-dashed border-blue-300 bg-white text-sm text-black/60">
+      <div className="flex aspect-square w-full items-center justify-center rounded-xl border border-dashed border-blue-300 bg-white text-sm text-black/60 shadow-xl">
         No files uploaded yet.
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-blue-200 bg-white">
+    <div className="flex flex-col rounded-xl border border-blue-200 bg-white shadow-xl">
       <div className="flex items-center justify-between border-b border-blue-100 px-4 py-2">
         <span className="text-sm font-medium text-black">Uploaded files</span>
         <span className="ml-2 shrink-0 text-xs text-black/60">{files.length}</span>
       </div>
-      <ul className="min-h-[240px] flex-1 divide-y divide-blue-50 overflow-auto p-2">
+      <ul className="max-h-[360px] divide-y divide-blue-50 overflow-auto p-2">
         {files.map((file, index) => {
           const sizeKb = (file.size / 1024).toFixed(1);
           return (

@@ -21,19 +21,27 @@
 using namespace cv;
 using namespace ov::preprocess;
 
-const int NUM_STREAMS        = 16;
-const int NUM_STREAMS_INFER  = 8;
+// Define ENABLE_CLASSIFICATION to include the ResNet classification pipeline.
+// #define ENABLE_CLASSIFICATION
+
+const int NUM_STREAMS        = 50;
+const int NUM_STREAMS_INFER  = 50;
 const size_t ORIGIN_HEIGHT   = 1088;
 const size_t ORIGIN_WIDTH    = 1920;
 const int DET_INPUT_SIZE     = 640;
+#ifdef ENABLE_CLASSIFICATION
 const int MAX_ROI_PER_FRAME  = 1;
 const std::string LABEL_PATH = "/opt/intel/vppsdk/example/VA_example/imagenet_2012.txt";
+#endif
 
 const int SKIP_FRAMES = 3;
-const int SKIP_FRAMES_CLS = 3;
+#ifdef ENABLE_CLASSIFICATION
+const int SKIP_FRAMES_CLS = 1000;
+#endif
 const bool SAVE_JSON = false;
 const bool IFRAME_ONLY = false;
 
+#ifdef ENABLE_CLASSIFICATION
 // --- 辅助函数：加载 Label ---
 std::vector<std::string> load_labels(const std::string& path) {
     std::vector<std::string> labels;
@@ -48,6 +56,7 @@ std::vector<std::string> load_labels(const std::string& path) {
         for (int i = 0; i < 1000; i++) labels.push_back("Class_" + std::to_string(i));
     return labels;
 }
+#endif
 
 // --- 模型配置：检测模型 (YOLOv8) ---
 // 输入：NV12 双平面 VA surface，OpenVINO GPU 内部完成 NV12→RGB + 归一化
@@ -67,6 +76,7 @@ std::shared_ptr<ov::Model> setupDetModel(ov::Core& core, const std::string& path
     return ppp.build();
 }
 
+#ifdef ENABLE_CLASSIFICATION
 // --- 模型配置：分类模型 (ResNet) ---
 // 输入：NV12 双平面 VA surface，OpenVINO GPU 内部完成 NV12→RGB + ImageNet 归一化
 std::shared_ptr<ov::Model> setupClsModel(ov::Core& core, const std::string& path) {
@@ -90,6 +100,7 @@ std::shared_ptr<ov::Model> setupClsModel(ov::Core& core, const std::string& path
     ppp.output().tensor().set_element_type(ov::element::f32);
     return ppp.build();
 }
+#endif
 
 // --- 后处理：YOLOv8（仅处理推理输出的小数组，在 CPU 上，数据量极小）---
 std::pair<std::vector<Rect>, std::vector<int>> postprocess(const ov::Tensor& output, float sx, float sy) {
@@ -116,10 +127,17 @@ std::pair<std::vector<Rect>, std::vector<int>> postprocess(const ov::Tensor& out
 }
 
 int main(int argc, char* argv[]) {
+#ifdef ENABLE_CLASSIFICATION
     if (argc < 3) {
         printf("Usage: %s <det_xml> <cls_xml>\n", argv[0]);
         return -1;
     }
+#else
+    if (argc < 2) {
+        printf("Usage: %s <det_xml>\n", argv[0]);
+        return -1;
+    }
+#endif
 
     // 0. 设置 VA-API 驱动路径（等效于 source /opt/intel/vppsdk/env.sh）
     setenv("LIBVA_DRIVERS_PATH", "/opt/intel/media/lib64", 0);
@@ -132,7 +150,7 @@ int main(int argc, char* argv[]) {
 
     VPP_DECODE_STREAM_Attr attr;
     memset(&attr, 0, sizeof(attr));
-    attr.CodecStandard = VPP_CODEC_STANDARD_H264;
+    attr.CodecStandard = VPP_CODEC_STANDARD_H265;
     attr.OutputFormat  = VPP_PIXEL_FORMAT_NV12;
     attr.InputMode     = VPP_DECODE_INPUT_MODE_STREAM;
 
@@ -141,7 +159,7 @@ int main(int argc, char* argv[]) {
     VPP_DECODE_STREAM_Create(0, &attr);
     VPP_DECODE_STREAM_Start(0);
 
-    FILE*    fp         = fopen("/opt/video/car_1080p.h264", "rb");
+    FILE*    fp         = fopen("/opt/video/car_1080p.h265", "rb");
     uint8_t* stream_buf = (uint8_t*)malloc(1024 * 1024);
 
     VADisplay va_display = nullptr;
@@ -166,10 +184,14 @@ int main(int argc, char* argv[]) {
     ov::Core core;
     auto va_context   = ov::intel_gpu::ocl::VAContext(core, va_display);
     auto det_m        = setupDetModel(core, argv[1]);
+#ifdef ENABLE_CLASSIFICATION
     auto cls_m        = setupClsModel(core, argv[2]);
     auto cls_labels   = load_labels(LABEL_PATH);
+#endif
     auto compiled_det = core.compile_model(det_m, va_context);
+#ifdef ENABLE_CLASSIFICATION
     auto compiled_cls = core.compile_model(cls_m, va_context);
+#endif
     printf("Models compiled on GPU successfully\n");
 
     // 4. 创建剩余解码 stream 及全部 POSTPROC stream
@@ -190,6 +212,7 @@ int main(int argc, char* argv[]) {
         sYolo.Depth       = 3;
         VPP_POSTPROC_STREAM_Create(i + 200, &sYolo);
 
+#ifdef ENABLE_CLASSIFICATION
         // ROI 抠图 stream 池（id = i * MAX_ROI_PER_FRAME + r + 400）
         // 每路视频预建 MAX_ROI_PER_FRAME 个 stream，检测后动态更新裁剪坐标
         for (int r = 0; r < MAX_ROI_PER_FRAME; r++) {
@@ -205,6 +228,7 @@ int main(int argc, char* argv[]) {
             sRoi.Depth       = 2;
             VPP_POSTPROC_STREAM_Create(i * MAX_ROI_PER_FRAME + r + 400, &sRoi);
         }
+#endif
     }
 
     // 5. 启动所有 stream（stream 0 已启动，其余逐一启动）
@@ -212,14 +236,18 @@ int main(int argc, char* argv[]) {
         VPP_DECODE_STREAM_Start(i);
     for (int i = 0; i < NUM_STREAMS; i++) {
         VPP_POSTPROC_STREAM_Start(i + 200);
+#ifdef ENABLE_CLASSIFICATION
         for (int r = 0; r < MAX_ROI_PER_FRAME; r++)
             VPP_POSTPROC_STREAM_Start(i * MAX_ROI_PER_FRAME + r + 400);
+#endif
     }
 
     // 6. 每路视频一个推理工作线程
     auto worker = [&](int id) {
         auto req_det = compiled_det.create_infer_request();
+#ifdef ENABLE_CLASSIFICATION
         auto req_cls = compiled_cls.create_infer_request();
+#endif
         int  frame_count  = 0;
         const int32_t yolo_id = id + 200;
 
@@ -291,6 +319,7 @@ int main(int argc, char* argv[]) {
                     json_file.close();
                 }
 
+#ifdef ENABLE_CLASSIFICATION
                 // --- Step 6: 对每个 bounding box，GPU 抠图 + 缩放 + ResNet 推理 ---
                 int roi_count = 0;
                 for (size_t k = 0; k < det_res.second.size() && roi_count < MAX_ROI_PER_FRAME && frame_count % SKIP_FRAMES_CLS == 0; k++) {
@@ -363,6 +392,7 @@ int main(int argc, char* argv[]) {
                     VPP_POSTPROC_STREAM_ReleaseFrame(roi_id, &hdl_roi);
                     roi_count++;
                 }
+#endif
             }
 
             // --- Step 7: 释放原始帧 ---
@@ -406,7 +436,7 @@ int main(int argc, char* argv[]) {
             bool is_iframe = false;
             if (nal_header < len) {
                 uint8_t nal_unit_type = stream_buf[nal_header] & 0x1F;
-                // 0x05 is IDR (I-frame) for H.264
+                // 0x05 is IDR (I-frame) for H.265
                 if (nal_unit_type == 0x05)
                     is_iframe = true;
             }

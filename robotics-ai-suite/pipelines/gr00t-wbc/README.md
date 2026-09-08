@@ -2,25 +2,28 @@
 
 SONIC is a humanoid behavior foundation model that gives robots a core set of motor skills learned from large-scale human motion data. Rather than building a separate controller for each predefined motion, SONIC treats motion tracking as a scalable training task, enabling a single unified policy to produce natural, whole-body movement and to support a wide range of behaviors — from walking and crawling to teleoperation and multi-modal control.
 
-This repository implements a comprehensive optimization of the SONIC whole-body-control (WBC) inference pipeline on the Intel Core Ultra "Panther Lake" (PTL) platform, including OpenVINO inference acceleration, a real-time control thread design, and priority-based NPU scheduling. It demonstrates that the PTL platform can meet SONIC WBC's determinism requirements while achieving substantial power savings compared to GPU execution.
+This repository extends the open-source [GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl.git) project and implements a comprehensive optimization of the SONIC whole-body-control (WBC) inference pipeline on the Intel Core Ultra "Panther Lake" (PTL) platform, including OpenVINO inference acceleration, a real-time control thread design, and priority-based NPU scheduling. It demonstrates that the PTL platform can meet SONIC WBC's determinism requirements while achieving substantial power savings compared to GPU execution.
 
 ## Prerequisites
 
-- Follow the [Embodied AI Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) to set up the base system.
-- NPU driver (> 1.32.0)
+- Follow the [Getting Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) to set up the base system.
+- NPU driver (> v1.32.0)
 - Ubuntu 24.04 RT release
 - OpenVINO 2026.3, ROS2 Jazzy
+
+For optimal NPU inference performance, it is recommended to use the latest NPU driver(e.g. v1.35.0) available from the [linux-npu-driver](https://github.com/intel/linux-npu-driver/releases) repository.
 
 For OpenVINO, this project recommends installing from the archive file. Follow [Install OpenVINO from an Archive File (Linux)](https://docs.openvino.ai/2026/get-started/install-openvino/install-openvino-archive-linux.html), download the latest OpenVINO package, and extract it to the `/opt/intel/<openvino_version>` folder, e.g. `/opt/intel/openvino_2026.3.0`.
 
 ## Installation
 
-This project extends the open-source [GR00T-WholeBodyControl](https://github.com/NVlabs/GR00T-WholeBodyControl.git) project to add OpenVINO acceleration and SONIC WBC pipeline optimizations for the Intel Core Ultra Panther Lake platform. Set up the environment with the following steps.
+This project extends the open-source GR00T-WholeBodyControl project to add OpenVINO acceleration and SONIC WBC pipeline optimizations for the Intel Core Ultra Panther Lake platform. Set up the environment with the following steps.
 
 ### 1. Initialize and patch the submodule
 ```bash
 git submodule update --init <GR00T-WholeBodyControl>
 cd <GR00T-WholeBodyControl>
+git lfs pull          # make sure all large files are fetched
 ```
 
 ### 2. Apply the patches
@@ -46,6 +49,10 @@ This downloads the default deployment models — planner, encoder, and decoder �
 Set up the build environment and build the project:
 
 ```bash
+cd gear_sonic_deploy
+chmod +x scripts/install_deps.sh
+./scripts/install_deps.sh
+
 source gear_sonic_deploy/scripts/setup_env.sh
 cd gear_sonic_deploy
 just build

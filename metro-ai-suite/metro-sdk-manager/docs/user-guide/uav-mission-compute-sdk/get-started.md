@@ -61,17 +61,25 @@ cd ~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 docker compose ps px4
 ```
 
-### Step 2: Arm the UAV (Activate Cameras)
+### Step 2: Arm the UAV (Activate Cameras) and takeoff
 
 Cameras only stream when the UAV is armed. Arm it via the REST API:
 
 ```bash
 curl -X POST http://localhost:8080/action/arm
+curl -X POST http://localhost:8080/action/takeoff
 ```
 
-### Step 3: View RTSP Streams (Optional)
+### Step 3: Capture the Video Stream (Optional)
 
-View any camera feed using an RTSP player:
+Record the UAV camera stream to disk with `ffmpeg`:
+
+```bash
+# Records a footage for 10 seconds and saves to nadir.mkv
+ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv
+```
+
+To preview the live stream instead of recording (if not on a headless system):
 
 ```bash
 ffplay rtsp://localhost:8554/uav-1/nadir

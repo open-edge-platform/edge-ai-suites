@@ -8,6 +8,7 @@ import json
 import socket
 from utils.config import DEFAULT_VLM_MODEL
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from utils.database import get_db
@@ -53,11 +54,37 @@ def _check_tcp(host: str, port: int, timeout: float = 3.0) -> str:
         return "unavailable"
 
 
+@router.get("/ping")
+async def ping():
+    """Liveness of this API process only.
+
+    Deliberately checks nothing else: start_services.py uses this to mark
+    main_app ready without waiting on the sibling services it supervises in
+    parallel (each of those has its own readiness gate and timeout).
+    """
+    return {"status": "alive", "timestamp": time.time()}
+
+
 @router.get("/health")
 async def health_check(db: Session = Depends(get_db)):
+    """Aggregate readiness of every service start_services.py launches.
+
+    Service map (launcher name -> key below):
+        main_app   -> main_app / database (this process and its SQLite DB)
+        chromadb   -> chromadb
+        ingest     -> file_ingest
+        preprocess -> video_preprocess   (only when video summarization is on)
+
+    Plus `vlm`, the warm model hosted by the main app on :8000, which
+    content search depends on but does not own.
+
+    Answers 200 only when everything is ready and 503 while anything is still
+    starting or broken, so a caller can gate on the status code alone; the body
+    always carries the per-service detail.
+    """
     vs_enabled = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
 
-    # Database
+    # Database (this process)
     db_status = "healthy"
     try:
         db.execute(text("SELECT 1"))
@@ -75,6 +102,7 @@ async def health_check(db: Session = Depends(get_db)):
     ingest_status = await _check_http_health(f"http://{ingest_host}:{ingest_port}/v1/dataprep/health")
 
     services = {
+        "main_app": "healthy",
         "database": db_status,
         "chromadb": chromadb_status,
         "file_ingest": ingest_status,
@@ -95,12 +123,15 @@ async def health_check(db: Session = Depends(get_db)):
 
     all_healthy = all(v == "healthy" for v in services.values())
 
-    return {
-        "status": "ok" if all_healthy else "degraded",
-        "timestamp": time.time(),
-        "video_summarization_enabled": vs_enabled,
-        "services": services,
-    }
+    return JSONResponse(
+        content={
+            "status": "ok" if all_healthy else "degraded",
+            "timestamp": time.time(),
+            "video_summarization_enabled": vs_enabled,
+            "services": services,
+        },
+        status_code=200 if all_healthy else 503,
+    )
 
 @router.post("/reconcile")
 async def reconcile_storage_data(

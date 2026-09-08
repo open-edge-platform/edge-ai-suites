@@ -8,7 +8,7 @@ This package contains:
 
 - `handheld-multi-modal/` — Federal and Aerospace AI Suite's Handheld Multi-Modal application (Docker Compose stack).
 - `vippet-fedaero/`       — Visual Pipeline and Platform Evaluation Tool, pre-checked-out at the pinned revision.
-- `run.sh`                — Convenience wrapper around `make deploy` and `make down`.
+- `run.sh`                — Convenience wrapper around the deployment and shutdown targets.
 
 ## Prerequisites
 
@@ -19,6 +19,7 @@ This package contains:
 
 ```bash
 ./run.sh up      # Deploy Visual Pipeline and Platform Evaluation Tool and HandHeld Multi-Modal stack (default)
+./run.sh standalone # Deploy HandHeld Multi-Modal without Visual Pipeline and Platform Evaluation Tool
 ./run.sh down    # Stop both stacks
 ./run.sh logs    # Tail logs from the HandHeld Multi-Modal stack
 ```
@@ -29,6 +30,7 @@ Or invoke `make` directly:
 cd handheld-multi-modal
 make deploy        # standard GPU
 make deploy-cdi    # CDI and SR-IOV
+make deploy-standalone # standalone deployment without Visual Pipeline and Platform Evaluation Tool
 make down          # stop everything
 ```
 

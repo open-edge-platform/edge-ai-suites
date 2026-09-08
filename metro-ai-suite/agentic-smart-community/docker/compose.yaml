@@ -26,6 +26,8 @@ services:
 
   # Inherit upstream's on-device model serving, then confine its published port.
   vllm-ipex-serving:
+    container_name: vllm-ipex-serving
+    image: ${VLLM_IMAGE:-intel/llm-scaler-vllm:0.14.0-b8.3.2}
     extends:
       file: ../.external/edge-ai-libraries/microservices/multilevel-video-understanding/docker/compose.yaml
       service: vllm-ipex-serving
@@ -48,6 +50,8 @@ services:
   # writes its own cache there; it only READS the clips (identity mount is :ro, files
   # are world-readable), so it does not need to be the host user.
   multilevel-video-understanding:
+    container_name: multilevel-video-understanding
+    image: ${REGISTRY:-}multilevel-video-understanding:${TAG:-latest}
     extends:
       file: ../.external/edge-ai-libraries/microservices/multilevel-video-understanding/docker/compose.yaml
       service: multilevel-video-understanding
@@ -61,6 +65,8 @@ services:
     healthcheck:
       start_period: 7200s
       start_interval: 10s
+    environment:
+      VIDEO_ALLOWED_PATHS: '["${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}","/app","/tmp"]'
     volumes:
       # Identity bind mount (host X -> container X, read-only): multilevel sees the
       # data root at the SAME absolute path as the host, so the clip paths the MCP
@@ -71,6 +77,8 @@ services:
   # Inherit the videostream-analytics service verbatim from its own compose file
   # (host network, NPU passthrough; POSTs events to the MCP webhook on :3101).
   videostream-analytics:
+    container_name: videostream-analytics
+    image: ${REGISTRY:-}videostream-analytics:${TAG:-latest}
     extends:
       file: ../videostream-analytics/docker/docker-compose.yaml
       service: videostream-analytics
@@ -79,6 +87,8 @@ services:
   # ONLY the depends_on (extends does not copy it, so it is restated here — same as
   # multilevel's depends_on: vllm-ipex-serving above).
   smart-community-mcp-server:
+    container_name: smart-community-mcp-server
+    image: ${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}
     extends:
       file: mcp-server/docker-compose.yaml
       service: smart-community-mcp-server

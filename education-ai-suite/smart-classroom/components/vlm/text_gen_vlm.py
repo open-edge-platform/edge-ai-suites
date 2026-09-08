@@ -17,6 +17,7 @@ from transformers import AutoTokenizer
 
 from utils.chat_prompt import render_chat_prompt
 from utils.markdown_cleaner import StreamThinkFilter, strip_think_tokens
+from utils.model_paths import openvino_model_dir
 from utils.ov_genai_util import YieldingTextStreamer
 
 logger = logging.getLogger(__name__)
@@ -85,8 +86,7 @@ class VLMTextGen:
 
     def _model_dir(self) -> Path:
         """Return the shared IR directory ``models/openvino/<name>/<weight>``."""
-        short_name = self._model_name.split("/")[-1]
-        return _SC_ROOT / "models" / "openvino" / short_name / self._weight_format
+        return openvino_model_dir(self._model_name, self._weight_format)
 
     def _ov_config(self) -> dict:
         """Runtime config for the pipeline; large allocations help on GPU."""

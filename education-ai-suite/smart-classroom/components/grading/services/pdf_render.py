@@ -58,6 +58,37 @@ def render_pdf_to_pngs(
     return paths
 
 
+def split_pages_into_columns(
+    page_images: list[Path],
+    out_dir: Path,
+    column_split_ratio: float = 0.5,
+) -> list[Path]:
+    """Cut each page in ``page_images`` vertically at ``column_split_ratio``.
+
+    Emits ``out_dir/page_N.png`` with left and right halves as consecutive
+    pages, so downstream reading order is left-then-right.
+    """
+    from PIL import Image
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+    page_no = 0
+    for src in page_images:
+        with Image.open(src) as img:
+            img = img.convert("RGB")
+            split_x = int(img.width * column_split_ratio)
+            halves = [
+                img.crop((0, 0, split_x, img.height)),
+                img.crop((split_x, 0, img.width, img.height)),
+            ]
+        for half in halves:
+            page_no += 1
+            page_path = out_dir / f"page_{page_no}.png"
+            half.save(str(page_path))
+            paths.append(page_path)
+    return paths
+
+
 def image_info(path: Path) -> dict[str, Any]:
     """Return {width, height, megapixels, file_kb} for a page image.
 

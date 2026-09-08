@@ -5,7 +5,7 @@
 # Convenience wrapper for the Federal Aerospace handheld multi-modal stack.
 # vippet is included in this package; make deploy handles the full deployment.
 #
-# Usage: ./run.sh [up|down|logs]
+# Usage: ./run.sh [up|standalone|down|logs]
 
 set -euo pipefail
 
@@ -18,6 +18,9 @@ case "${action}" in
   up)
     make -C "${APP_DIR}" deploy
     ;;
+  standalone)
+    make -C "${APP_DIR}" deploy-standalone
+    ;;
   down)
     make -C "${APP_DIR}" down
     ;;
@@ -25,7 +28,7 @@ case "${action}" in
     docker compose -f "${APP_DIR}/docker-compose.yml" logs -f --tail=100
     ;;
   *)
-    echo "usage: $0 [up|down|logs]" >&2
+    echo "usage: $0 [up|standalone|down|logs]" >&2
     exit 2
     ;;
 esac

@@ -26,6 +26,9 @@ from utils.gstreamer_env import (
     ensure_gst_registry,
 )
 
+MAX_INPUT_FRAMERATE = "30/1"
+CLASSIFY_FRAMERATE = "1/1"
+
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
 
@@ -40,6 +43,7 @@ class PipelineOptions:
     device: str = "NPU"  # CPU, GPU, or NPU
     output_dir: str = "outputs"  # Directory for metadata output files
     output_rtsp: str = "rtsp://127.0.0.1:8554"  # RTSP output URL
+    output_stream: bool = True  # Push video to RTSP; False = discard to fakesink
     threshold: float = 0.5  # Detection threshold for YOLO
     record: bool = False
 
@@ -107,6 +111,11 @@ class VideoAnalyticsPipelineService:
         self.center_dist_threshold = getattr(ps, "center_dist_threshold", 0.1) if ps else 0.1
         self.unidentified_max = getattr(ps, "unidentified_max", 50) if ps else 50
         self.stale_unidentified_threshold = getattr(ps, "stale_unidentified_threshold", 30) if ps else 30
+
+        # Upper bound on the framerate the pipeline runs inference at. Protects against high-framerate cameras.
+        self.max_input_framerate = MAX_INPUT_FRAMERATE
+        # Framerate the classification branches run at.
+        self.classify_framerate = CLASSIFY_FRAMERATE
 
         # Settle the GStreamer environment before the first GStreamer process
         # runs, so every process this service spawns shares one registry cache.
@@ -240,6 +249,42 @@ class VideoAnalyticsPipelineService:
             "rtspclientsink",
             f"location={rtsp_url}/{pipeline_name}",
             "protocols=udp",
+        ]
+
+    def _get_video_sink_elements(
+        self, options: PipelineOptions, stream_name: str
+    ) -> List[str]:
+        """Get video sink elements: RTSP sink, or a discarding fakesink when
+        streaming is disabled (options.output_stream=False)"""
+        if not options.output_stream:
+            return ["fakesink", "async=false", "sync=false"]
+        return self._get_rtsp_sink_elements(options.output_rtsp, stream_name)
+
+    def _get_input_framerate_cap_elements(self) -> List[str]:
+        """Get elements capping the framerate ahead of gvadetect.
+        It exists so a 50/60fps camera cannot push the pose model past the rate the
+        NPU can serve.
+        """
+        if not self.max_input_framerate:
+            return []
+        return [
+            "videorate",
+            "drop-only=true",
+            "!",
+            f"video/x-raw(memory:D3D11Memory),framerate=[0/1,{self.max_input_framerate}]",
+            "!",
+        ]
+
+    def _get_classify_decimation_elements(self) -> List[str]:
+        """Get elements dropping a classification branch to classify_framerate."""
+        if not self.classify_framerate:
+            return []
+        return [
+            "videorate",
+            "drop-only=true",
+            "!",
+            f"video/x-raw(memory:D3D11Memory),framerate={self.classify_framerate}",
+            "!",
         ]
 
     def _check_redistribute_latency(self, log_file: Path) -> bool:
@@ -423,7 +468,7 @@ class VideoAnalyticsPipelineService:
         try:
             # Create log file for pipeline output
             log_dir = Path(options.output_dir) / "logs"
-            log_dir.mkdir(exist_ok=True)
+            log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"{pipeline_name}_{int(time.time())}.log"
             log_handle = open(log_file, "w", buffering=1)  # Line buffered
 
@@ -478,10 +523,13 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build front camera pipeline (Pipeline 1)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
+            "gvafpscounter",
+            "!",
+            *self._get_input_framerate_cap_elements(),
             # YOLO detection
             "gvadetect",
             f"model={self._get_model_path('front-pose')}",
@@ -501,6 +549,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "queue",
             "!",
+            *self._get_classify_decimation_elements(),
             "gvaroifilter",
             "max-rois-num=10",
             "!",
@@ -511,8 +560,6 @@ class VideoAnalyticsPipelineService:
             "batch-size=1",
             "inference-region=1",
             "model-instance-id=resnet18-0",
-            "!",
-            "gvafpscounter",
             "!",
             "gvametaconvert",
             "!",
@@ -547,8 +594,6 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvaroifilter",
             "!",
-            "gvafpscounter",
-            "!",
             "gvametaconvert",
             "!",
             "gvametapublish",
@@ -557,12 +602,13 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "front_stream"),
+            *self._get_video_sink_elements(options, "front_stream"),
             # Branch 3: MobileNetv2 classification
             "t.",
             "!",
             "queue",
             "!",
+            *self._get_classify_decimation_elements(),
             "gvaroifilter",
             "max-rois-num=50",
             "!",
@@ -573,8 +619,6 @@ class VideoAnalyticsPipelineService:
             "batch-size=1",
             "inference-region=1",
             "model-instance-id=mobilenetv2-0",
-            "!",
-            "gvafpscounter",
             "!",
             "gvametaconvert",
             "!",
@@ -593,10 +637,13 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build back camera pipeline (Pipeline 2)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
+            "gvafpscounter",
+            "!",
+            *self._get_input_framerate_cap_elements(),
             # YOLO detection
             "gvadetect",
             f"model={self._get_model_path('back-pose')}",
@@ -617,9 +664,22 @@ class VideoAnalyticsPipelineService:
             f"file-path={output_dir.as_posix()}/back_posture.txt",
             "file-format=json-lines",
             "!",
+            "tee",
+            "name=t",
+            # Branch 1: video output, kept at the source framerate. Split off ahead
+            # of the classification decimation so the stream is not thinned too;
+            # gvawatermark already ran, and it only draws the pose detections.
+            "t.",
+            "!",
             "queue",
             "!",
-            # ResNet18 classification
+            *self._get_video_sink_elements(options, "back_stream"),
+            # Branch 2: ResNet18 classification
+            "t.",
+            "!",
+            "queue",
+            "!",
+            *self._get_classify_decimation_elements(),
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",
@@ -628,15 +688,15 @@ class VideoAnalyticsPipelineService:
             "inference-region=1",
             "model-instance-id=resnet18-0",
             "!",
-            "gvafpscounter",
-            "!",
             "gvametaconvert",
             "!",
             "gvametapublish",
             f"file-path={output_dir.as_posix()}/back_resnet18.txt",
             "file-format=json-lines",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "back_stream"),
+            "fakesink",
+            "async=false",
+            "sync=false",
         ]
         return pipeline
 
@@ -645,7 +705,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build content/file pipeline (Pipeline 3)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -672,7 +732,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "content_stream"),
+            *self._get_video_sink_elements(options, "content_stream"),
         ]
         return pipeline
 
@@ -693,7 +753,8 @@ class VideoAnalyticsPipelineService:
         Note:
             - Source can be RTSP URL (rtsp://...) or local file path
             - Input type is auto-detected from source (starts with 'rtsp://' = RTSP, else file)
-            - Video output is always pushed to RTSP server (configured via options.output_rtsp)
+            - Video output is pushed to RTSP server (configured via options.output_rtsp)
+              unless options.output_stream is False, in which case it is discarded
             - Metadata is saved to files in options.output_dir
         """
         # Validate pipeline name
@@ -754,7 +815,11 @@ class VideoAnalyticsPipelineService:
 
             self.logger.info(f"Launching pipeline '{pipeline_name}'")
             self.logger.info(f"  Source: {source} (type: {input_type})")
-            self.logger.info(f"  RTSP output: {options.output_rtsp}")
+            self.logger.info(
+                f"  RTSP output: {options.output_rtsp}"
+                if options.output_stream
+                else "  RTSP output: disabled (fakesink)"
+            )
             self.logger.info(f"  Metadata dir: {options.output_dir}")
             self.logger.info(f"Command: {' '.join(command)}")
 

@@ -59,7 +59,8 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 
 | Purpose | Endpoint |
 |---|---|
-| Health check | `GET /api/v1/system/health` |
+| Health check | `GET /api/v1/system/health` (200 = all services ready, 503 = degraded) |
+| Liveness only | `GET /api/v1/system/ping` |
 | Upload + ingest | `POST /api/v1/object/upload-ingest` (multipart) |
 | Task status | `GET /api/v1/task/query/{task_id}` |
 | Cleanup task | `DELETE /api/v1/object/cleanup-task/{task_id}` |
@@ -141,5 +142,7 @@ the relevant skill, then read that skill's `SKILL.md`.
   documented in each skill file rather than executing unrelated workflows
 - **Agent: execute skill instructions** by running the PowerShell scripts and
   relaying the output to the user
-- Probe `GET /api/v1/system/health` before any API workflow. If the backend is
-  unreachable, use `sc-doctor` or `sc-up`
+- Probe `GET /api/v1/system/health` before any API workflow. It returns 200 only
+  when every Content Search service is ready and 503 (with a per-service
+  `services` map) otherwise. If the backend is unreachable or degraded, use
+  `sc-doctor` or `sc-up`

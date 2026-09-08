@@ -17,10 +17,13 @@ A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manag
 **Telemetry flow:**
 
 ```mermaid
+---
+config: {"theme": "dark"}
+---
 sequenceDiagram
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
-    participant OVL as gvapython (MavlinkReceiver)
+    participant OVL as gvapython MavlinkReceiver
     participant Frame as Video Frame
 
     PX4->>RTR: MAVLink stream (UDP :14550)
@@ -238,6 +241,6 @@ Intel RealSense camera setup and pipelines details are provided in the [RealSens
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide  |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |

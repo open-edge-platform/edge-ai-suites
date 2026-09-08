@@ -6,11 +6,11 @@ tags:
   - object-detection
   - smart-city
   - computer-vision
-  - metro-ai-apps-builder
+  - metro-ai-app-builder
   - intel
 prompt: |
   I want to detect objects of interest across my smart-city camera feeds, understand what is happening, and receive notifications when relevant objects appear.
 
-  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
+  Use the metro-ai-app-builder skill to guide this process. Install and invoke it:
 
-  npx skills add open-edge-platform/skills --skill metro-ai-apps-builder
+  npx skills add open-edge-platform/skills --skill metro-ai-app-builder

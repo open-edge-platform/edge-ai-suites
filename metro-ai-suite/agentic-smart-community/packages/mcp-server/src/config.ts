@@ -81,6 +81,24 @@ export interface ServerConfig {
      * before POSTing. Leave undefined when both sides see the same paths.
      */
     pathRemap?: { hostPrefix: string; containerPrefix: string };
+    /** Timeout for one *clip* summarization (video-worker). */
+    timeoutSeconds: number;
+    /** Timeout for a whole caption-only report — a period costs far more than a clip. */
+    reportTimeoutSeconds: number;
+    /**
+     * The service's `MAX_MODEL_LEN` and `DEFAULT_MAX_TOKENS` (both set in
+     * docker/set_env.sh). Report chunking sizes its groups from these two plus the
+     * measured timeline, so a stale value here silently mis-sizes every report —
+     * `max_output_tokens` especially, since it is the per-rung output bandwidth.
+     */
+    modelContextTokens: number;
+    maxOutputTokens: number;
+    /**
+     * Compression one report call may be asked to do. The direct dial on group
+     * size (`group = ratio · max_output_tokens / tokens-per-cue`): raise it for
+     * fewer, coarser calls; lower it if reports start dropping events.
+     */
+    maxHopRatio: number;
   };
   vlmService: {
     url: string;
@@ -165,6 +183,23 @@ function resolveDataDir(): string {
  */
 export const BIND_HOST = "127.0.0.1";
 
+function numFromEnv(name: string): number | undefined {
+  const raw = process.env[name];
+  if (!raw) return undefined;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/** Report knobs, shared by the MCP tool and the dashboard's /reports/generate route. */
+export function reportTuning(config: ServerConfig) {
+  return {
+    modelContext: config.summaryService.modelContextTokens,
+    maxOutputTokens: config.summaryService.maxOutputTokens,
+    maxHopRatio: config.summaryService.maxHopRatio,
+    timeoutSeconds: config.summaryService.reportTimeoutSeconds,
+  };
+}
+
 export function loadConfig(configPath?: string): ServerConfig {
   const dataDir = resolveDataDir();
 
@@ -195,6 +230,15 @@ export function loadConfig(configPath?: string): ServerConfig {
             containerPrefix: parsed.summary_service.path_remap.container_prefix,
           }
         : undefined,
+      timeoutSeconds: parsed?.summary_service?.timeout_seconds ?? 600,
+      reportTimeoutSeconds: parsed?.summary_service?.report_timeout_seconds ?? 3600,
+      // Fall back to the env the summary service itself reads, so sourcing
+      // docker/set_env.sh keeps both sides in step without a second edit here.
+      modelContextTokens:
+        parsed?.summary_service?.model_context_tokens ?? numFromEnv("MAX_MODEL_LEN") ?? 32768,
+      maxOutputTokens:
+        parsed?.summary_service?.max_output_tokens ?? numFromEnv("DEFAULT_MAX_TOKENS") ?? 512,
+      maxHopRatio: parsed?.summary_service?.max_hop_ratio ?? 10,
     },
     vlmService: {
       url: parsed?.vlm_service?.url ?? "http://localhost:41091/v1",

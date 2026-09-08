@@ -198,6 +198,13 @@ class LvcSchemaManager:
                 "x-hidden": True,
             }
 
+        if "vlmDevice" in properties:
+            properties["vlmDevice"] = {
+                **properties["vlmDevice"],
+                "title": "Device",
+                "enum": ["CPU", "GPU", "NPU"],
+            }
+
         if "maxNewTokens" in properties:
             properties["maxNewTokens"] = {
                 **properties["maxNewTokens"],

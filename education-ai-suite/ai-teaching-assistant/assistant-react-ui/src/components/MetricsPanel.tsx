@@ -94,7 +94,7 @@ function MetricCard({
   color: string;
 }) {
   return (
-    <div className="space-y-1 rounded-lg border border-blue-200 bg-white p-2 shadow-sm">
+    <div className="space-y-1 rounded-lg border border-blue-200 bg-white p-2 shadow-md">
       <div className="flex items-center justify-between gap-2 text-xs">
         <span className="text-black/70">{label}</span>
         <span className="font-semibold text-black">{value}</span>
@@ -115,62 +115,68 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 
 export default function MetricsPanel({ metrics, sessionPerf }: Props) {
   return (
-    <section className="h-full min-h-0 overflow-y-auto rounded-xl border border-blue-200 bg-white p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-black">Performance Metrics</h2>
-        {metrics.error && <span className="text-[11px] text-black/60">{metrics.error}</span>}
-      </div>
-
-      <div className="space-y-2">
-        <div className="text-xs font-medium text-black/80">Hardware</div>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
-          <MetricCard
-            label="CPU Usage"
-            value={formatPct(metrics.current.cpu)}
-            values={metrics.hardware.cpu}
-            color="#1d4ed8"
-          />
-          <MetricCard
-            label="GPU Usage"
-            value={formatPct(metrics.current.gpu)}
-            values={metrics.hardware.gpu}
-            color="#dc2626"
-          />
-          <MetricCard
-            label="NPU Usage"
-            value={formatPct(metrics.current.npu)}
-            values={metrics.hardware.npu}
-            color="#16a34a"
-          />
-          <MetricCard
-            label="Memory Usage"
-            value={formatPct(metrics.current.memoryPct)}
-            values={metrics.hardware.memoryPct}
-            color="#eab308"
-          />
+    <div className="flex h-full min-h-0 flex-col gap-2 overflow-y-auto">
+      {/* Tile 1: Performance Metrics */}
+      <section className="rounded-xl border border-blue-200 bg-white p-4 shadow-xl">
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-black">Performance Metrics</h2>
+          {metrics.error && <span className="text-[11px] text-black/60">{metrics.error}</span>}
         </div>
-      </div>
 
-      <div className="mt-4 space-y-2">
-        <div className="text-xs font-medium text-black/80">Service Latency</div>
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-2">
-          <InfoRow label="ASR Latency" value={formatMs(metrics.current.asrMs)} />
-          <InfoRow label="RAG Retrieval" value={formatMs(metrics.current.retrievalMs)} />
-          <InfoRow label="RAG LLM" value={formatMs(metrics.current.llmMs)} />
-          <InfoRow label="RAG TTFT" value={formatMs(metrics.current.ttftMs)} />
-          <InfoRow label="TTS Latency" value={formatMs(metrics.current.ttsMs)} />
-          <InfoRow label="Tokens/sec" value={formatRate(metrics.current.tokensPerSec)} />
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-black/80">Hardware</div>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
+            <MetricCard
+              label="CPU Usage"
+              value={formatPct(metrics.current.cpu)}
+              values={metrics.hardware.cpu}
+              color="#1d4ed8"
+            />
+            <MetricCard
+              label="GPU Usage"
+              value={formatPct(metrics.current.gpu)}
+              values={metrics.hardware.gpu}
+              color="#dc2626"
+            />
+            <MetricCard
+              label="NPU Usage"
+              value={formatPct(metrics.current.npu)}
+              values={metrics.hardware.npu}
+              color="#16a34a"
+            />
+            <MetricCard
+              label="Memory Usage"
+              value={formatPct(metrics.current.memoryPct)}
+              values={metrics.hardware.memoryPct}
+              color="#eab308"
+            />
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div className="mt-4 space-y-2">
-        <div className="text-xs font-medium text-black/80">Session Timing</div>
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-2">
-          <InfoRow label="TTST" value={formatMs(sessionPerf.ttstMs)} />
-          <InfoRow label="End-to-End" value={formatMs(sessionPerf.endToEndMs)} />
-          <InfoRow label="RTF" value={sessionPerf.rtf === null ? "--" : sessionPerf.rtf.toFixed(3)} />
+      {/* Tile 2: Service Latency + Session Timing */}
+      <section className="rounded-xl border border-blue-200 bg-white p-4 shadow-xl">
+        <div className="space-y-2">
+          <div className="text-xs font-medium text-black/80">Service Latency</div>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 shadow-sm">
+            <InfoRow label="ASR Latency" value={formatMs(metrics.current.asrMs)} />
+            <InfoRow label="RAG Retrieval" value={formatMs(metrics.current.retrievalMs)} />
+            <InfoRow label="RAG LLM" value={formatMs(metrics.current.llmMs)} />
+            <InfoRow label="RAG TTFT" value={formatMs(metrics.current.ttftMs)} />
+            <InfoRow label="TTS Latency" value={formatMs(metrics.current.ttsMs)} />
+            <InfoRow label="Tokens/sec" value={formatRate(metrics.current.tokensPerSec)} />
+          </div>
         </div>
-      </div>
-    </section>
+
+        <div className="mt-4 space-y-2">
+          <div className="text-xs font-medium text-black/80">Session Timing</div>
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-2 shadow-sm">
+            <InfoRow label="TTST" value={formatMs(sessionPerf.ttstMs)} />
+            <InfoRow label="End-to-End" value={formatMs(sessionPerf.endToEndMs)} />
+            <InfoRow label="RTF" value={sessionPerf.rtf === null ? "--" : sessionPerf.rtf.toFixed(3)} />
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
