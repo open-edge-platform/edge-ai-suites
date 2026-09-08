@@ -12,9 +12,6 @@ from utils import constants
 from utils import common_utils
 import time
 import logging
-from pathlib import Path
-import sys
-sys.path.append(str(Path(__file__).resolve().parents[3] / "industrial-edge-insights-time-series/tests/utils"))
 from common_utils import assert_condition
 
 
