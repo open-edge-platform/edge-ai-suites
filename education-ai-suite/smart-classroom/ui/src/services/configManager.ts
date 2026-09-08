@@ -4,11 +4,20 @@
 // Typed bridge to the schema-guarded settings editor in the main process.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ConfigChange, ConfigDescription, ConfigField, ConfigProblem } from '../types/config';
+import type { ConfigChange, ConfigDescription, ConfigField, ConfigProblem, ConfigValue } from '../types/config';
 import { toMessage, unwrap } from './ipcResult';
 
 /** Draft key for one field; a path alone is ambiguous across the three files. */
 export const fieldKey = (field: ConfigField) => `${field.file}:${field.path}`;
+
+/**
+ * A rule's one-click fix, merged into the pending draft — not written straight
+ * to disk, so it shows up in the save count and Discard undoes it.
+ */
+export const withFix = (draft: Record<string, ConfigValue>, fix: ConfigChange[]) => ({
+  ...draft,
+  ...Object.fromEntries(fix.map((change) => [`${change.file}:${change.path}`, change.value])),
+});
 
 export const isConfigManagerAvailable = (): boolean => !!window.electronAPI?.config;
 

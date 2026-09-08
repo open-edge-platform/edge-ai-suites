@@ -262,6 +262,14 @@
   font-size: 12.5px;
 }
 
+/* A banner can carry both "Apply fix" and "Show setting". Kept from shrinking,
+   so a long message wraps rather than squeezing the buttons. */
+.config-banner-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
 .config-note {
   font-size: 12px;
   color: #8a8f98;

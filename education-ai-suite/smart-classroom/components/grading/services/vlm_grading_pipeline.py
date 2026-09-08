@@ -5,10 +5,9 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-import yaml
-
+from services.column_inference import infer_columns
 from services.layout_detection import run_layout_detection
-from services.pdf_render import render_pdf_to_pngs, image_info
+from services.pdf_render import render_pdf_to_pngs, split_pages_into_columns, image_info
 from services.prompt_slicer import (
     append_common_output_suffix_if_missing,
     extract_header_block,
@@ -30,33 +29,17 @@ def _component_root() -> Path:
 
 
 def _load_component_config() -> dict[str, Any]:
-    path = _component_root() / "config.yaml"
-    try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        cfg = raw if isinstance(raw, dict) else {}
-    except Exception:
-        cfg = {}
-    root = _component_root().parents[1] / "config.yaml"
-    try:
-        root_raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
-        cfg["_language"] = str((root_raw.get("app") or {}).get("language", "en"))
-    except Exception:
-        cfg["_language"] = "en"
+    from services.config import load_config, get_language
+
+    cfg = load_config()
+    cfg["_language"] = get_language()
     return cfg
 
 
 def _load_provider_url(key: str, default: str) -> str:
-    """Read a service URL from root config: grading.provider.<key>."""
-    root = _component_root().parents[1] / "config.yaml"
-    try:
-        raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
-        provider = ((raw.get("grading") or {}).get("provider") or {})
-        url = provider.get(key)
-        if url:
-            return str(url)
-    except Exception:
-        pass
-    return default
+    from services.config import get_provider_url
+
+    return get_provider_url(key, default)
 
 
 def _outputs_dir(task_id: str, student_id: str | None) -> Path:
@@ -113,8 +96,9 @@ def run_vlm_grading_pipeline(
     dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
     contrast_enhance = bool(cfg_image.get("contrast_enhance", False))
     contrast_factor = float(cfg_image.get("contrast_factor", 1.5))
-    page_columns = int(cfg_image.get("page_columns", 1))
-    column_split_ratio = float(cfg_image.get("column_split_ratio", 0.5))
+    page_columns_setting = str(cfg_image.get("page_columns", 1)).strip().lower()
+    fallback_columns = 1 if page_columns_setting == "auto" else int(page_columns_setting)
+    fallback_split_ratio = float(cfg_image.get("column_split_ratio", 0.5))
     debug_mode = bool(cfg_grading.get("debug_mode", False))
     max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
     temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
@@ -149,27 +133,68 @@ def run_vlm_grading_pipeline(
         raise RuntimeError(f"VLM service unreachable at {vlm_url}: {exc}")
 
     _pipeline_start = time.perf_counter()
-    update_progress("render", 20)
+    update_progress("render", 15)
     _t = _step_start("render")
-    images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi,
-                                contrast_enhance=contrast_enhance,
-                                contrast_factor=contrast_factor,
-                                page_columns=page_columns,
-                                column_split_ratio=column_split_ratio)
-    _step_done("render", _t, f"pages={len(images)} dpi={dpi} columns={page_columns}")
-    if not images:
+    full_pages = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi,
+                                   contrast_enhance=contrast_enhance,
+                                   contrast_factor=contrast_factor,
+                                   page_columns=1)
+    _step_done("render", _t, f"pages={len(full_pages)} dpi={dpi}")
+    if not full_pages:
         raise RuntimeError("PDF produced no pages")
 
     if check_checkpoint("after_render"):
         _log("checkpoint stop after_render")
         return {"stopped": True}
 
+    update_progress("column_inference", 25)
+    _t = _step_start("column_inference")
+    step1_dir = out_dir / "step1_column_inference"
+    if page_columns_setting == "auto":
+        inference = infer_columns(
+            page_images=full_pages,
+            step_dir=step1_dir,
+            detection_url=layout_url,
+            config=cfg,
+            fallback_columns=fallback_columns,
+            fallback_split_ratio=fallback_split_ratio,
+            save_visualizations=debug_mode,
+        )
+    else:
+        step1_dir.mkdir(parents=True, exist_ok=True)
+        inference = {
+            "columns": fallback_columns,
+            "split_ratio": fallback_split_ratio,
+            "source": "config",
+            "reason": f"page_columns={page_columns_setting} set explicitly",
+        }
+        (step1_dir / "column_inference.json").write_text(
+            json.dumps(inference, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    page_columns = int(inference["columns"])
+    column_split_ratio = float(inference["split_ratio"] or fallback_split_ratio)
+    _step_done("column_inference", _t,
+               f"columns={page_columns} split_ratio={column_split_ratio} "
+               f"source={inference['source']}")
+    _log(f"column inference: {inference['reason']}")
+
+    if page_columns == 2:
+        images = split_pages_into_columns(full_pages, out_dir / "pages_split",
+                                          column_split_ratio=column_split_ratio)
+        _log(f"split {len(full_pages)} pages into {len(images)} columns")
+    else:
+        images = full_pages
+
+    if check_checkpoint("after_column_inference"):
+        _log("checkpoint stop after_column_inference")
+        return {"stopped": True}
+
     update_progress("layout_detection", 40)
     _t = _step_start("layout_detection")
-    step1_dir = out_dir / "step1_layout_detection"
+    step2_dir = out_dir / "step2_layout_detection"
     det_summary = run_layout_detection(
         page_images=images,
-        step1_dir=step1_dir,
+        step1_dir=step2_dir,
         detection_url=layout_url,
         config=cfg,
         save_visualizations=debug_mode,
@@ -184,12 +209,12 @@ def run_vlm_grading_pipeline(
 
     update_progress("section_split", 45)
     _t = _step_start("section_split")
-    step2_dir = out_dir / "step2_section_split"
+    step3_dir = out_dir / "step3_section_split"
     from providers.ocr_service import ocr_region
     section_summary = split_sections(
         page_images=images,
-        step1_dir=step1_dir,
-        step2_dir=step2_dir,
+        step1_dir=step2_dir,
+        step2_dir=step3_dir,
         ocr_region=ocr_region,
         config=cfg,
         debug_mode=debug_mode,
@@ -239,7 +264,7 @@ def run_vlm_grading_pipeline(
     _t = _step_start("vlm_grading")
     unit_score_dicts: list[dict[str, dict]] = []
     total = len(units)
-    replies_dir = out_dir / "step3_vlm_grading"
+    replies_dir = out_dir / "step4_vlm_grading"
     replies_dir.mkdir(parents=True, exist_ok=True)
 
     paper_meta: dict[str, Any] = {"paper_title": None, "subject": None}
@@ -287,7 +312,7 @@ def run_vlm_grading_pipeline(
             image_pil = None
             if compress:
                 image_pil = _stitch_compressed(
-                    raw_strips, step1_dir, images,
+                    raw_strips, step2_dir, images,
                     int(stitch_cfg.get("gap_threshold", 120)),
                     int(stitch_cfg.get("keep_margin", 50)),
                     int(stitch_cfg.get("content_pad", 20)),
@@ -295,7 +320,7 @@ def run_vlm_grading_pipeline(
             if image_pil is None:
                 image_pil = _stitch(raw_strips, images, stitch_cfg.get("direction", "vertical"))
             if debug_mode:
-                dbg_path = step2_dir / f"{tag}.png"
+                dbg_path = step3_dir / f"{tag}.png"
                 image_pil.save(dbg_path)
         else:
             image_pil = images[idx - 1]

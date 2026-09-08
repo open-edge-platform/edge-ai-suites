@@ -230,6 +230,10 @@ function diarizationModelReady(cfg) {
  * setting until they fixed something they never touched. Those are still
  * returned, for the screen to show as a warning.
  *
+ * An `advisory` rule is never blocking however it arose: the backend accepts
+ * that config and works around it, so refusing the save would be this screen
+ * inventing a restriction the backend does not have.
+ *
  * @returns {Array<{file: string, path: string, rule: string, message: string, blocking: boolean}>}
  */
 function problemsFor(byFile) {
@@ -250,9 +254,12 @@ function problemsFor(byFile) {
   // is not highlighting.
   const editedRules = new Set(after.filter((problem) => edited.has(problem.path)).map((problem) => problem.rule));
 
-  return after.map((problem) => ({
+  // `advisory` is consumed here rather than sent on: the renderer decides what
+  // to show from `blocking`, and a second severity flag beside it would only
+  // invite the two to disagree.
+  return after.map(({ advisory, ...problem }) => ({
     ...problem,
-    blocking: !before.has(problem.rule) || editedRules.has(problem.rule),
+    blocking: !advisory && (!before.has(problem.rule) || editedRules.has(problem.rule)),
   }));
 }
 

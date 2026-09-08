@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../../assets/css/Config.css';
 import type { ConfigChange, ConfigField, ConfigSubgroup, ConfigValue } from '../../types/config';
-import { revealConfig, useConfig, useConfigProblems, fieldKey as keyOf } from '../../services/configManager';
+import { revealConfig, useConfig, useConfigProblems, withFix, fieldKey as keyOf } from '../../services/configManager';
 import { useServices } from '../../services/serviceManager';
 import ConfigFieldControl from './ConfigFieldControl';
 
@@ -227,27 +227,37 @@ const ConfigScreen: React.FC<ConfigScreenProps> = ({ onOpenScreen, focusPath }) 
         {messages.map((problem) => (
           <div key={problem.rule} className={problem.blocking ? 'config-error' : 'config-banner'}>
             <span>{problem.message}</span>
-            <button
-              className="config-btn"
-              onClick={() => {
-                const field = description?.fields.find(
-                  (entry) => entry.file === problem.file && entry.path === problem.path
-                );
-                if (!field) return;
-                setQuery('');
-                setSelectedGroup(field.group);
-                setFlashed(keyOf(field));
-                requestAnimationFrame(() => {
-                  document
-                    .getElementById(`config-field-${keyOf(field)}`)
-                    ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                });
-                // Matches the flash animation, so clicking again re-runs it.
-                setTimeout(() => setFlashed(null), 2200);
-              }}
-            >
-              {t('config.showSetting', 'Show setting')}
-            </button>
+            <div className="config-banner-actions">
+              {!!problem.fix?.length && (
+                <button
+                  className="config-btn config-btn-primary"
+                  onClick={() => setDraft((previous) => withFix(previous, problem.fix!))}
+                >
+                  {t('config.applyFix', 'Apply fix')}
+                </button>
+              )}
+              <button
+                className="config-btn"
+                onClick={() => {
+                  const field = description?.fields.find(
+                    (entry) => entry.file === problem.file && entry.path === problem.path
+                  );
+                  if (!field) return;
+                  setQuery('');
+                  setSelectedGroup(field.group);
+                  setFlashed(keyOf(field));
+                  requestAnimationFrame(() => {
+                    document
+                      .getElementById(`config-field-${keyOf(field)}`)
+                      ?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  });
+                  // Matches the flash animation, so clicking again re-runs it.
+                  setTimeout(() => setFlashed(null), 2200);
+                }}
+              >
+                {t('config.showSetting', 'Show setting')}
+              </button>
+            </div>
           </div>
         ))}
 
