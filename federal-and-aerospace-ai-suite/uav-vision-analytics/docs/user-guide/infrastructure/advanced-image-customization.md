@@ -91,7 +91,7 @@ build (fast, no root required):
 ```bash
 ./image-composer-tool validate "$TEMPLATE"
 ```
----
+
 ### Build the image
 
 Run the build with elevated privileges so that the tool can manage loop devices

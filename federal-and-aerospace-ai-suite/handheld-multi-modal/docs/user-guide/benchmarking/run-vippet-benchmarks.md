@@ -22,4 +22,3 @@ To access the benchmarking functionality:
 For platform-level benchmarking beyond ViPPET — vision AI inference, hardware-accelerated
 media processing, end-to-end video analytics pipelines, and generative AI — see the
 [Edge Workloads and Benchmarks Guide](./run-edge-benchmarks.md).
-
