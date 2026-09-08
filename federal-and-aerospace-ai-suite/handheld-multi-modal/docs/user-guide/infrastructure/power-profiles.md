@@ -382,29 +382,14 @@ To drive them by natural language on a provisioned node, install an agent CLI on
 the target host and open it in the developer source tree (`/opt/edge/developer`),
 where the `skills/` directory and `tools/power-tuning/` scripts already live.
 
-### Install the Claude Code CLI on the Target Host (Ubuntu)
+### Using the skill on the Target Host
 
-```bash
-# Install Claude Code
-curl -fsSL https://claude.ai/install.sh | sh
-
-# If Node.js is already installed, you can instead use npm:
-# npm install -g @anthropic-ai/claude-code
-
-# Ensure the install location is on PATH (add to ~/.bashrc to persist)
-export PATH="$HOME/.local/bin:$PATH"
-
-# Verify
-claude --version
-```
-Sign in to your Claude account on first launch to use the latest models.
-
-Then launch the agent from the developer source tree so it can discover the
+Launch the agent from the developer source tree so it can discover the
 skills and scripts:
 
 ```bash
 cd /opt/edge/developer
-claude
+copilot # or any other agent CLI which you installed and logged-in
 ```
 
 From there, prompt in natural language — e.g. *"switch this node to the
