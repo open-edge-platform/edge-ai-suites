@@ -5,8 +5,6 @@ assistance, document search, image analysis, and image and video generation. All
 powered by your PC’s Intel® Core™ Ultra with built-in Intel® Arc™ GPU or discrete Intel® Arc™
 GPU Series A or B with 8GB+ of vRAM.
 
-
-
 **Edge Node Infrastructure software (ENIs)** images ship with GPU, NPU, and compute-runtime
 drivers pre-installed. This guide covers how to install and run AI Playground on an ENIs
 system.
@@ -15,7 +13,6 @@ For more information about AI Playground features, see
 [`AI Playground Documentation`](https://github.com/intel/AI-Playground/blob/main/readme.md).
 For GPU driver requirements on standalone Ubuntu, see
 [`Ubuntu GPU driver installation`](https://github.com/intel/AI-Playground/blob/main/docs/linux-intel-gpu-setup.md).
-
 
 ## Contents
 
@@ -26,8 +23,6 @@ For GPU driver requirements on standalone Ubuntu, see
 5. [Verify GPU and NPU are detected](#5-verify-gpu-and-npu-are-detected)
 6. [Known ENIs-specific issues and fixes](#6-known-enis-specific-issues-and-fixes)
 7. [Uninstall](#7-uninstall)
-
----
 
 ## 1. Prerequisites and hardware
 
@@ -51,8 +46,6 @@ AI Playground UI on first run.
 - Ubuntu 24.04 (Noble)
 - 32 GB system RAM recommended (16 GB minimum for CPU-only LLM)
 - ≥ 100 GB free disk space for models and Python venvs
-
-
 
 ## 2. Proxy configuration
 
@@ -92,10 +85,10 @@ EOF
 
 ### Re-login and verify
 
-**Note:** Changes to `/etc/environment` only take effect after a **logout and re-login**.
-The GNOME desktop launcher reads the PAM session environment set at login time — it does not
-inherit variables exported in a terminal. Skipping the re-login is the most common cause of
-backend install failures on ENIs.
+> **Note:** Changes to `/etc/environment` only take effect after a **logout and re-login**.
+> The GNOME desktop launcher reads the PAM session environment set at login time — it does not
+> inherit variables exported in a terminal. Skipping the re-login is the most common cause of
+> backend install failures on ENIs.
 
 After re-login, confirm all proxy vars are present and contain no quote characters:
 
@@ -104,13 +97,12 @@ printenv | grep -i proxy
 # Expected: http_proxy, https_proxy, UV_HTTP_PROXY, UV_HTTPS_PROXY
 ```
 
-
-
 ## 3. Download and install AI Playground
 
 ### Download the installer
 
 **AI Playground 3.1.2-beta-hf2:**
+
 - [Release Notes](https://github.com/intel/AI-Playground/releases/tag/v3.2.0-beta-rc2)
 - [Linux Installer (.deb)](https://github.com/intel/AI-Playground/releases/download/v3.2.0-beta-rc2/AI-Playground-installer.deb)
 
@@ -144,8 +136,6 @@ Group changes require a re-login to take effect:
 groups | tr ' ' '\n' | grep -E 'render|video'
 ```
 
-
-
 ## 4. First run and backend setup
 
 ### Launch AI Playground
@@ -174,8 +164,6 @@ For each backend (AI-Backend / OVMS, ComfyUI, LlamaCPP, Home-Agent):
 
 If any install fails with a network error, confirm proxy settings (§2) and retry from within
 the app. Do not reinstall the `.deb`.
-
-
 
 ## 5. Verify GPU and NPU are detected
 
@@ -281,7 +269,6 @@ cat /sys/class/drm/card0/device/tile0/gt0/freq0/cur_freq   # current GPU MHz
 cat /sys/class/drm/card0/device/tile0/gt0/freq0/max_freq
 ```
 
-
 ## 7. Uninstall
 
 ```bash
@@ -297,5 +284,3 @@ rm -rf ~/.cache/uv
 # Remove UV proxy vars added in §2b (if desired):
 sudo sed -i '/UV_HTTP_PROXY\|UV_HTTPS_PROXY/d' /etc/environment
 ```
-
-

@@ -58,6 +58,7 @@ across a reboot:
   # Option 2: disable the governor service
   sudo systemctl disable --now powersave.service
   ```
+
 - Linux ships several competing power-management daemons. Stop and disable any
   that are running — for example `tlp`, `tuned`, `cpufreqd`, or `ondemand` — so
   they will conflict with `intel_lpmd` for control of CPU power and frequency.
