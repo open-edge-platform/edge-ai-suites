@@ -27,9 +27,6 @@ import pytest
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import docker_utils
 from utils import constants
-from pathlib import Path
-import sys
-sys.path.append(str(Path(__file__).resolve().parents[3] / "industrial-edge-insights-time-series/tests/utils"))
 from common_utils import assert_condition
 
 

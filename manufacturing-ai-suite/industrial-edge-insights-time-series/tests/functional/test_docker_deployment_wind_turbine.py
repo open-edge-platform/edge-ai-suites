@@ -405,7 +405,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
 
     # Snapshot container state for triage
     try:
-        ps_out = common_utils.run_command(
+        ps_out = common_utils.exec_command(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True, text=True, timeout=15,
         ).stdout.strip()
@@ -424,7 +424,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
 
         # Re-snapshot container state (something may have crashed / restarted)
         try:
-            ps_out = common_utils.run_command(
+            ps_out = common_utils.exec_command(
                 ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
@@ -436,7 +436,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
         # alert pipeline.  We use --tail to bound output size in CI logs.
         for cname in (tsam_name, mqtt_broker_name, mqtt_publisher_name, telegraf_name):
             try:
-                logs_out = common_utils.run_command(
+                logs_out = common_utils.exec_command(
                     ["docker", "logs", "--tail", "120", cname],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -511,7 +511,7 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
 
     # Snapshot container state for triage
     try:
-        ps_out = common_utils.run_command(
+        ps_out = common_utils.exec_command(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True, text=True, timeout=15,
         ).stdout.strip()
@@ -530,7 +530,7 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
 
         # Re-snapshot container state (something may have crashed / restarted)
         try:
-            ps_out = common_utils.run_command(
+            ps_out = common_utils.exec_command(
                 ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
@@ -542,7 +542,7 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
         # alert pipeline.  We use --tail to bound output size in CI logs.
         for cname in (tsam_name, opcua_name, constants.CONTAINERS["telegraf"]["name"]):
             try:
-                logs_out = common_utils.run_command(
+                logs_out = common_utils.exec_command(
                     ["docker", "logs", "--tail", "120", cname],
                     capture_output=True, text=True, timeout=15,
                 )

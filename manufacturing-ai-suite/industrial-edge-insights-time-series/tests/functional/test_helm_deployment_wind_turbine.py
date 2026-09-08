@@ -564,7 +564,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
         while time.time() < deadline:
             elapsed = int(time.time() - start)
             try:
-                probe = common_utils.run_command(
+                probe = common_utils.exec_command(
                     ["kubectl", "exec", "-n", namespace, tsam_pod, "--",
                      "sh", "-c", probe_sh],
                     capture_output=True, text=True, timeout=20,
@@ -592,7 +592,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
             logger.error(f"Last probe stdout/stderr: {last_body!r}")
             # Capture last-80 lines of TSAM log to make CI triage one-shot.
             try:
-                tsam_logs = common_utils.run_command(
+                tsam_logs = common_utils.exec_command(
                     ["kubectl", "logs", "-n", namespace, tsam_pod, "--tail", "80"],
                     capture_output=True, text=True, timeout=15,
                 ).stdout.strip()

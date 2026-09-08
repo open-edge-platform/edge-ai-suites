@@ -127,7 +127,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     logger.info("IMPORTANT: Test will FAIL if username OR password is found in logs")
     logger.info("=" * 80)
     try:
-        influxdb_pod_name = common_utils.run_command(
+        influxdb_pod_name = common_utils.exec_command(
             ["kubectl", "get", "pods", "-n", namespace, "-l", "app=influxdb",
              "-o", "jsonpath={.items[0].metadata.name}"],
             capture_output=True, text=True, check=False
@@ -135,7 +135,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
         
         if influxdb_pod_name:
             logger.info(f"InfluxDB pod name: {influxdb_pod_name}")
-            influxdb_logs = common_utils.run_command(
+            influxdb_logs = common_utils.exec_command(
                 ["kubectl", "logs", "-n", namespace, influxdb_pod_name, "--tail=50"],
                 capture_output=True, text=True, check=False
             ).stdout
@@ -171,7 +171,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     logger.info("DEBUG: Fetching Grafana pod logs to verify credential presence/absence")
     logger.info("=" * 80)
     try:
-        grafana_pod_name = common_utils.run_command(
+        grafana_pod_name = common_utils.exec_command(
             ["kubectl", "get", "pods", "-n", namespace, "-l", "app=ia-grafana",
              "-o", "jsonpath={.items[0].metadata.name}"],
             capture_output=True, text=True, check=False
@@ -179,7 +179,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
         
         if grafana_pod_name:
             logger.info(f"Grafana pod name: {grafana_pod_name}")
-            grafana_logs = common_utils.run_command(
+            grafana_logs = common_utils.exec_command(
                 ["kubectl", "logs", "-n", namespace, grafana_pod_name, "--tail=50"],
                 capture_output=True, text=True, check=False
             ).stdout

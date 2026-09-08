@@ -63,10 +63,10 @@ def run_command(cmd, capture_output=False):
         cmd = shlex.split(cmd)
 
     if capture_output:
-        proc = common_utils.run_command(cmd, capture_output=True, text=True)
+        proc = common_utils.exec_command(cmd, capture_output=True, text=True)
         return proc.returncode, proc.stdout + proc.stderr
     else:
-        proc = common_utils.run_command(cmd)
+        proc = common_utils.exec_command(cmd)
         return proc.returncode
 
 def get_container_logs(container_name, tail=None):
@@ -74,22 +74,22 @@ def get_container_logs(container_name, tail=None):
     if tail:
         cmd.extend(["--tail", str(tail)])
     cmd.append(container_name)
-    return common_utils.get_command_output(cmd).decode()
+    return common_utils.exec_command(cmd, capture_output=True).stdout
 
 def container_is_running(name):
-    result = common_utils.run_command(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
+    result = common_utils.exec_command(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
     return name in result.stdout
 
 def container_exists(name):
-    result = common_utils.run_command(["docker", "ps", "-a", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
+    result = common_utils.exec_command(["docker", "ps", "-a", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
     return name in result.stdout
 
 def stop_container(name):
-    result = common_utils.run_command(["docker", "stop", name])
+    result = common_utils.exec_command(["docker", "stop", name])
     return result.returncode
 
 def remove_container(name):
-    result = common_utils.run_command(["docker", "rm", name])
+    result = common_utils.exec_command(["docker", "rm", name])
     return result.returncode
 
 def get_docker_env_values():
@@ -240,11 +240,11 @@ def deploy_containers(context, deploy_type="opcua"):
         raise ValueError(f"Unsupported deploy_type: {deploy_type}. Use 'opcua' or 'mqtt'.")
 
 def start_container(name):
-    result = common_utils.run_command(["docker", "start", name])
+    result = common_utils.exec_command(["docker", "start", name])
     return result.returncode
 
 def restart_container(name):
-    result = common_utils.run_command(["docker", "restart", name])
+    result = common_utils.exec_command(["docker", "restart", name])
     return result.returncode
 
 def get_images_from_docker_compose(compose_file_path=None):
@@ -300,11 +300,11 @@ def get_images_from_docker_compose(compose_file_path=None):
     return unique_images
 
 def build_image(dockerfile_path, image_name):
-    result = common_utils.run_command(["docker", "build", "-t", image_name, "-f", dockerfile_path, "."])
+    result = common_utils.exec_command(["docker", "build", "-t", image_name, "-f", dockerfile_path, "."])
     return result.returncode
 
 def get_image_id(image):
-    result = common_utils.run_command(["docker", "images", "--filter", f"reference={image}", "--format", "{{.ID}}"], capture_output=True, text=True)
+    result = common_utils.exec_command(["docker", "images", "--filter", f"reference={image}", "--format", "{{.ID}}"], capture_output=True, text=True)
     return result.stdout.strip() if result.stdout else None
 
 def get_image_size(image):
@@ -317,7 +317,7 @@ def get_image_size(image):
         float: Image size in MB, or None if image not found
     """
     try:
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             ["docker", "images", "--filter", f"reference={image}", "--format", "{{.Size}}"],
             capture_output=True,
             text=True
@@ -393,7 +393,7 @@ def count_running_containers_with_prefix(prefix):
         int: Count of running containers whose name begins with the prefix.
     """
     try:
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             ["docker", "ps", "--filter", f"name=^{prefix}", "--format", "{{.Names}}"],
             capture_output=True, text=True, check=False,
         )
@@ -467,7 +467,7 @@ def wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIME
             time.sleep(poll_interval)
             continue
         try:
-            result = common_utils.run_command(
+            result = common_utils.exec_command(
                 ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}",
                  "https://localhost:3000/ts-api/health"],
                 capture_output=True, text=True, timeout=constants.WIND_TURBINE_CURL_TIMEOUT
@@ -815,13 +815,13 @@ def update_env_file(file_path=None, values=None):
 
         for parameter_name, value in values.items():
             # Check whether the key already exists in the file
-            grep_result = common_utils.run_command(
+            grep_result = common_utils.exec_command(
                 ["grep", "-q", f"^{parameter_name}=", expanded_path],
                 capture_output=True
             )
             if grep_result.returncode == 0:
                 # Key exists — update it with sed
-                sed_result = common_utils.run_command(
+                sed_result = common_utils.exec_command(
                     ["sed", "-i", f"s|^{parameter_name}=.*|{parameter_name}={value}|g", expanded_path],
                     capture_output=True, text=True
                 )
@@ -830,7 +830,7 @@ def update_env_file(file_path=None, values=None):
                     return False
             else:
                 # Key missing — append it using printf via shell
-                append_result = common_utils.run_command(
+                append_result = common_utils.exec_command(
                     ["bash", "-c", f"printf '%s\\n' '{parameter_name}={value}' >> {expanded_path}"],
                     capture_output=True, text=True
                 )
@@ -874,7 +874,7 @@ def get_the_deployed_containers():
         # This is the exact command used in the Makefile's status target
         logger.info("Extracting containers using docker ps with filters")
 
-        result = common_utils.run_command([
+        result = common_utils.exec_command([
             "docker", "ps", "-a",
             "--filter", "name=^ia-",
             "--filter", "name=mr_",
@@ -910,7 +910,7 @@ def get_container_image_sizes():
     image_sizes = {}
     try:
         # Get container names and their images
-        result = common_utils.run_command([
+        result = common_utils.exec_command([
             "docker", "ps", "-a",
             "--filter", "name=^ia-",
             "--filter", "name=mr_",
@@ -1410,7 +1410,7 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
         # 30s is generous for a `docker logs --since Ns` snapshot.
         cli_timeout = min(30, max(5, int(remaining)))
         try:
-            result = common_utils.run_command(
+            result = common_utils.exec_command(
                 ["docker", "logs", "--since", f"{since_seconds}s", container_name],
                 capture_output=True, text=True, timeout=cli_timeout,
             )
@@ -1446,7 +1446,7 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
 
     logger.info(f"Timeout reached ({timeout}s). No {pattern_display} found in logs for container {container_name}.")
     try:
-        tail = common_utils.run_command(
+        tail = common_utils.exec_command(
             ["docker", "logs", "--tail", "100", container_name],
             capture_output=True, text=True, timeout=15,
         )
@@ -1566,7 +1566,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 "-X", "POST", upload_endpoint,
                 "-F", f"file=@{tar_path}",
             ]
-            result = common_utils.run_command(curl_command, capture_output=True, text=True, timeout=60)
+            result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=60)
             if result.returncode == 0:
                 http_code = result.stdout.strip()
                 if http_code == "200":
@@ -1628,7 +1628,7 @@ def update_config_file(ingestion_type="opcua"):
         max_retries = 12  # Up to 120 seconds total: initial 60s wait + (5s * 12 retries)
         for attempt in range(max_retries):
             try:
-                test_result = common_utils.run_command(
+                test_result = common_utils.exec_command(
                     ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}",
                      "https://localhost:3000/ts-api/health"],
                     capture_output=True, text=True, timeout=10
@@ -1668,7 +1668,7 @@ def update_config_file(ingestion_type="opcua"):
 
         # Step 5: Create the directory and copy files
         os.makedirs('windturbine_anomaly_detector', exist_ok=True)
-        result = common_utils.run_command(['cp', '-r', 'models', 'tick_scripts', 'udfs', 'windturbine_anomaly_detector/.'], check=True)
+        result = common_utils.exec_command(['cp', '-r', 'models', 'tick_scripts', 'udfs', 'windturbine_anomaly_detector/.'], check=True)
         if result.stdout:
             logger.info("Files copied successfully to 'windturbine_anomaly_detector' directory.")
         elif result.stderr:
@@ -1726,7 +1726,7 @@ def update_config_file(ingestion_type="opcua"):
         for retry in range(max_curl_retries):
             try:
                 logger.info(f"Attempting curl command (attempt {retry + 1}/{max_curl_retries})...")
-                result = common_utils.run_command(curl_command, capture_output=True, text=True, timeout=30)
+                result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
                 if result.returncode == 0:
                     logger.info("Curl command executed successfully. Response:")
                     logger.info(result.stdout)
@@ -1816,7 +1816,7 @@ def execute_gpu_config_curl(device="gpu", sample_app=constants.WIND_SAMPLE_APP):
             "-d", gpu_config_json
         ]
 
-        result = common_utils.run_command(curl_command, capture_output=True, text=True, timeout=30)
+        result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             logger.info(f"{device.upper()} configuration POST via curl command succeeded")
@@ -1848,7 +1848,7 @@ def _kapacitor_task_alert_mode_matches(alert_mode):
         return False
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
     try:
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             ["docker", "exec", tsam_name,
              "curl", "-s", "http://localhost:9092/kapacitor/v1/tasks/windturbine_anomaly_detector"],
             capture_output=True, text=True, timeout=15,
@@ -2060,7 +2060,7 @@ def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
         ]
         logger.info(f"Executing command: 'SHOW MEASUREMENTS; {query_part}' inside {container_name} container with redacted credentials.")
 
-        result = common_utils.run_command(exec_command, capture_output=True, text=True)
+        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Command failed with return code {result.returncode}")
@@ -2116,7 +2116,7 @@ def verify_influxdb_retention_docker(response=None, container_name=constants.CON
             "-database", "datain", "-execute", influx_execute
         ]
         logger.info(f"Executing InfluxDB query inside container '{container_name}': '{influx_execute}' with redacted credentials.")
-        result = common_utils.run_command(exec_command, capture_output=True, text=True)
+        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Command failed with return code {result.returncode}")
@@ -2333,7 +2333,7 @@ def _check_deployed_container_sizes(size_threshold):
         try:
             # Get the image name for this container
             inspect_cmd = ['docker', 'inspect', '--format', '{{.Config.Image}}', container_name]
-            inspect_result = common_utils.run_command(inspect_cmd, capture_output=True, text=True, check=True)
+            inspect_result = common_utils.exec_command(inspect_cmd, capture_output=True, text=True, check=True)
             image_name = inspect_result.stdout.strip()
 
             if not image_name:
@@ -2398,7 +2398,7 @@ def _check_built_image_sizes(size_threshold):
         try:
             # Get image size using docker inspect
             cmd = ['docker', 'image', 'inspect', image, '--format={{.Size}}']
-            result = common_utils.run_command(cmd, capture_output=True, text=True, check=True)
+            result = common_utils.exec_command(cmd, capture_output=True, text=True, check=True)
 
             # Convert size from bytes to MB
             size_bytes = int(result.stdout.strip())
@@ -2717,7 +2717,7 @@ def deploy_from_docker_hub(app_name, ingestion_type="mqtt", wait_time=90):
 
         # Step 6: Verify images are from Docker Hub (not from custom registry)
         logger.info("Step 6: Verifying images are from Docker Hub...")
-        result = common_utils.run_command(['docker', 'ps', '--format', '{{.Image}}'],
+        result = common_utils.exec_command(['docker', 'ps', '--format', '{{.Image}}'],
                               capture_output=True, text=True)
         images = result.stdout.strip().split('\n')
 
@@ -2758,7 +2758,7 @@ def get_resource_usage():
     # Use docker stats --no-stream for a snapshot
     cmd_args = ["docker", "stats", "--no-stream", "--format", "{{.Name}}:{{.CPUPerc}}:{{.MemUsage}}"] + containers
     try:
-        result = common_utils.run_command(cmd_args, capture_output=True, text=True)
+        result = common_utils.exec_command(cmd_args, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error(f"Failed to get docker stats: {result.stderr}")
             return usage
@@ -2928,7 +2928,7 @@ def invoke_make_up(measure_time=False):
         start_time = time.time() if measure_time else None
 
         # Run make up
-        result = common_utils.run_command(["make", "up"], capture_output=True, text=True, timeout=600)
+        result = common_utils.exec_command(["make", "up"], capture_output=True, text=True, timeout=600)
 
         if measure_time:
             execution_time = time.time() - start_time
@@ -2961,7 +2961,7 @@ def get_container_stats(container_name):
     """
     try:
         # Run docker stats command for a single sample
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             ["docker", "stats", "--no-stream", "--format", "table {{.Container}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.MemUsage}}", container_name],
             capture_output=True,
             text=True,
@@ -3111,7 +3111,7 @@ def invoke_make_down_in_current_dir():
         if result != 0:  # Command failed
             logger.error(f"make down failed with exit code: {result}")
             # Get more detailed error information
-            error_result = common_utils.run_command(
+            error_result = common_utils.exec_command(
                 ["make", "down"],
                 capture_output=True,
                 text=True,
@@ -3809,7 +3809,7 @@ def check_influxdb_data_with_auth(measurement, database="datain", container_name
             "-execute", f"SELECT COUNT(*) FROM \"{measurement}\" LIMIT 1"
         ]
 
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             query_cmd,
             capture_output=True,
             text=True,
@@ -3874,7 +3874,7 @@ def query_influxdb_measurement_with_auth(
             "-execute", query,
         ]
 
-        result = common_utils.run_command(cmd, capture_output=True, text=True, timeout=timeout)
+        result = common_utils.exec_command(cmd, capture_output=True, text=True, timeout=timeout)
         query_result["raw_output"] = result.stdout.strip()
 
         if result.returncode != 0:
@@ -4161,7 +4161,7 @@ def execute_multimodal_gpu_config_curl(config, device="gpu"):
         ]
 
         # Execute curl command
-        result = common_utils.run_command(curl_command, capture_output=True, text=True, timeout=30)
+        result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             logger.info(f"✓ Multimodal {device.upper()} configuration posted successfully")
@@ -4193,7 +4193,7 @@ def check_system_gpu_devices():
 
         # Method 1: Check for Intel GPU devices
         try:
-            result = common_utils.run_command(
+            result = common_utils.exec_command(
                 ["lspci"],
                 capture_output=True,
                 text=True,
@@ -4219,7 +4219,7 @@ def check_system_gpu_devices():
 
         # Method 3: Check for GPU in Docker containers
         try:
-            result = common_utils.run_command(
+            result = common_utils.exec_command(
                 ["docker", "run", "--rm", "--device=/dev/dri", "hello-world"],
                 capture_output=True,
                 text=True,
@@ -4253,7 +4253,7 @@ def monitor_gpu_utilization(duration=30):
 
         # Try to use intel_gpu_top if available
         try:
-            result = common_utils.run_command(
+            result = common_utils.exec_command(
                 ["timeout", str(duration), "intel_gpu_top", "-o", "-"],
                 capture_output=True,
                 text=True,
@@ -4420,7 +4420,7 @@ def verify_nginx_container_health(container_name):
         # Check if nginx process is running inside container
         try:
             # Use readlink on /proc/1/exe to check if main process is nginx
-            process_check = common_utils.run_command(
+            process_check = common_utils.exec_command(
                 ["docker", "exec", container_name, "readlink", "/proc/1/exe"],
                 capture_output=True,
                 text=True,
@@ -4467,7 +4467,7 @@ def verify_nginx_port_mappings(container_name, expected_ports):
         }
 
         # Get container port mappings
-        port_check_result = common_utils.run_command(
+        port_check_result = common_utils.exec_command(
             ["docker", "port", container_name],
             capture_output=True,
             text=True,
@@ -4538,7 +4538,7 @@ def verify_nginx_ssl_certificates(container_name, cert_path, cert_files):
 
         for attempt in range(max_retries):
             # Check SSL certificate files
-            cert_check = common_utils.run_command(
+            cert_check = common_utils.exec_command(
                 ["docker", "exec", container_name, "ls", "-la", cert_path],
                 capture_output=True,
                 text=True,
@@ -4566,7 +4566,7 @@ def verify_nginx_ssl_certificates(container_name, cert_path, cert_files):
                 continue
 
         # Final check after retry loop
-        cert_check = common_utils.run_command(
+        cert_check = common_utils.exec_command(
             ["docker", "exec", container_name, "ls", "-la", cert_path],
             capture_output=True,
             text=True,
@@ -4589,7 +4589,7 @@ def verify_nginx_ssl_certificates(container_name, cert_path, cert_files):
         # Verify nginx configuration syntax (with retry for config validation)
         config_valid = False
         for attempt in range(3):  # 3 attempts for config validation
-            config_test = common_utils.run_command(
+            config_test = common_utils.exec_command(
                 ["docker", "exec", container_name, "nginx", "-t"],
                 capture_output=True,
                 text=True,
@@ -4653,7 +4653,7 @@ def verify_nginx_backend_connectivity(container_name, backend_services):
                 connectivity_results["missing_services"].append(service)
 
         # Verify nginx network connectivity
-        network_check = common_utils.run_command(
+        network_check = common_utils.exec_command(
             ["docker", "inspect", container_name, "-f", "{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}"],
             capture_output=True,
             text=True,
@@ -4707,7 +4707,7 @@ def test_nginx_proxy_endpoint(container_name, endpoint_url, timeout=30):
         }
 
         # Test HTTP/HTTPS connection from HOST
-        curl_test = common_utils.run_command(
+        curl_test = common_utils.exec_command(
             ["curl", "-k", "-I", endpoint_url],
             capture_output=True,
             text=True,
@@ -4783,7 +4783,7 @@ def test_service_direct_access(container_name, service_url, timeout=30):
             test_url = service_url
 
         # Test direct service access
-        direct_test = common_utils.run_command(
+        direct_test = common_utils.exec_command(
             ["docker", "exec", container_name, "curl", "-I", "-s", test_url],
             capture_output=True,
             text=True,
@@ -5072,13 +5072,13 @@ def container_exists_and_running(container_name):
     """
     try:
         # Check if container exists
-        result = common_utils.run_command(['docker', 'inspect', container_name],
+        result = common_utils.exec_command(['docker', 'inspect', container_name],
                               capture_output=True, text=True, check=False)
         if result.returncode != 0:
             return False
 
         # Check if container is running
-        result = common_utils.run_command(['docker', 'inspect', '-f', '{{.State.Running}}', container_name],
+        result = common_utils.exec_command(['docker', 'inspect', '-f', '{{.State.Running}}', container_name],
                               capture_output=True, text=True, check=False)
         return result.returncode == 0 and result.stdout.strip() == 'true'
     except Exception as e:
@@ -5099,7 +5099,7 @@ def extract_img_handles_from_influxdb(measurement, database, container_name, use
             "influx", "-username", username, "-password", password,
             "-database", database, "-execute", query, "-format", "csv"
         ]
-        result = common_utils.run_command(cmd, capture_output=True, text=True)
+        result = common_utils.exec_command(cmd, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.error(f"InfluxDB query failed: {result.stderr}")
@@ -5253,7 +5253,7 @@ def check_s3_image_file_size(img_filename, bucket_path=None):
         logger.info(f"Checking file size for: {file_url}")
 
         # Run curl command
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             curl_command,
             capture_output=True,
             text=True,
@@ -5400,7 +5400,7 @@ def get_seaweedfs_bucket_files(bucket_url):
         logger.info(f"Executing curl command: {' '.join(curl_command)}")
 
         # Run curl command
-        result = common_utils.run_command(
+        result = common_utils.exec_command(
             curl_command,
             capture_output=True,
             text=True,
@@ -5531,7 +5531,7 @@ def execute_dlstreamer_pipeline_activation(device="GPU",
         ]
 
         logger.info(f"Executing DL Streamer activation: {' '.join(curl_command)}")
-        result = common_utils.run_command(curl_command, capture_output=True, text=True, timeout=30)
+        result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             logger.info(f"✓ DL Streamer pipeline '{pipeline_name}' activated successfully on {device_value}")
@@ -5640,7 +5640,7 @@ def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database=
             f"(measurements: {analytics_measurement}, {vision_measurement}) with redacted credentials."
         )
 
-        result = common_utils.run_command(exec_command, capture_output=True, text=True)
+        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Multimodal InfluxDB command failed with return code {result.returncode}")
