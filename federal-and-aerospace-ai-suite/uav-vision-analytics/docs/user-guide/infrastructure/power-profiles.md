@@ -381,7 +381,17 @@ To drive them by natural language on a provisioned node, install an agent CLI on
 the target host and open it in the developer source tree (`/opt/edge/developer`),
 where the `skills/` directory and `tools/power-tuning/` scripts already live.
 
-From AI agent CLI, prompt in natural language — e.g. *"switch this node to the
+### Using the skill on the Target Host
+
+Launch the agent from the developer source tree so it can discover the
+skills and scripts:
+
+```bash
+cd /opt/edge/developer
+copilot # or any other agent CLI which you installed and logged-in
+```
+
+From there, prompt in natural language — e.g. *"switch this node to the
 Performance power profile"* or *"stress all CPUs for 3 minutes and monitor
 power"* — and the agent runs the matching skill against the local
 `tools/power-tuning/` scripts.
