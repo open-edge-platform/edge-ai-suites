@@ -10,7 +10,7 @@ replicaCount: 1
 image:
   repository: intel/video-caption-service
   # Type: string
-  tag: "2026.2.0-rc2"
+  tag: "2026.2.0-rc3"
   pullPolicy: IfNotPresent
 
 service:

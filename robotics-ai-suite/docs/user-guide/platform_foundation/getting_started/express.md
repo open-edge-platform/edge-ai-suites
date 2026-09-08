@@ -15,7 +15,14 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
 1. Open a terminal prompt which will be used to execute the remaining steps.
 
-2. Download and execute the Robotics AI Suite Installer.
+2. Upgrade your system packages to the latest available version:
+
+   ```bash
+   sudo apt update
+   sudo apt upgrade -y
+   ```
+
+3. Download and execute the Robotics AI Suite Installer.
 
    ```bash
    wget https://amrdocs.intel.com/downloads/robotics-installer
@@ -31,31 +38,26 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
    ![Installer](../../images/install/installer_1.png)
 
-3. Select an installation profile to install.
+4. Select an installation profile to install. The `complete` profile is recommended for most users.
 
    ![Installer](../../images/install/installer_2.png)
 
-4. Enable/Disable optional components.
-
-   ![Installer](../../images/install/installer_3.png)
-
-5. The installer will perform pre-flight checks. Ensure that all checks passed, then press ``Enter`` to continue.
-
-   ![Installer](../../images/install/installer_4.png)
-
-6. The installer will list all the steps which will be performed. Press ``Enter`` to proceed with the installation.
-   The installation may take anywhere from 10 to 30 minutes depending on your network and system performance.
+5. The installer will list all the steps which will be performed. 
 
    > **Note:** The installer will first initialize the system by uninstalling any packages with names matching the following patterns:
    > ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
 
-   ![Installer](../../images/install/installer_5.png)
+   ![Installer](../../images/install/installer_3.png)
 
-   ![Installer](../../images/install/installer_6.png)
+6. The installer will perform pre-flight checks. Ensure that all checks passed, Press ``Enter`` to proceed with the installation.
+   The installation may take anywhere from 10 to 30 minutes depending on your network and system performance.then press ``Enter`` to continue.
+
+   ![Installer](../../images/install/installer_4.png)
+   ![Installer](../../images/install/installer_5.png)
 
 7. If the installation is successful, you will see a dialog similar to the following:
 
-   ![Installer](../../images/install/installer_7.png)
+   ![Installer](../../images/install/installer_6.png)
 
 ## 3. Prepare your ROS 2 Environment
 

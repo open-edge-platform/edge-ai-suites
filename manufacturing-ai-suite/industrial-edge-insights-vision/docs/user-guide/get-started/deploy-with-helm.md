@@ -114,7 +114,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.8.0-rc2
+         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.8.0-rc3
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -122,7 +122,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.4.0-rc2
+         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.4.0-rc3
          ```
 
          <!--hide_directive
@@ -137,7 +137,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         tar -xvf pallet-defect-detection-reference-implementation-2.8.0-rc2.tgz
+         tar -xvf pallet-defect-detection-reference-implementation-2.8.0-rc3.tgz
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -145,7 +145,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         tar -xvf pcb-anomaly-detection-1.4.0-rc2.tgz
+         tar -xvf pcb-anomaly-detection-1.4.0-rc3.tgz
          ```
 
          <!--hide_directive

@@ -8,7 +8,7 @@ AI-enabled applications and supporting components for aerospace and defense edge
 
 The Handheld Multi-Modal application is a full-stack AI inference and observability
 platform for handheld scenarios. It is deployed on top of the
-[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html)
+[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html)
 \- an edge computing platform, which enables hardware acceleration capabilities.
 
 The application combines LLM inference capability served through the OpenVINO

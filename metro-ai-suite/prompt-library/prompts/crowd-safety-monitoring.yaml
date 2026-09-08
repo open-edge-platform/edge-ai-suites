@@ -7,11 +7,11 @@ tags:
   - crowd-safety
   - people-counting
   - computer-vision
-  - metro-ai-apps-builder
+  - metro-ai-app-builder
   - intel
 prompt: |
   I want to detect and keep track of people across my public-space and transit camera feeds for occupancy, crowd safety, or after-hours awareness and be notified when someone appears.
 
-  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
+  Use the metro-ai-app-builder skill to guide this process. Install and invoke it:
 
-  npx skills add open-edge-platform/skills --skill metro-ai-apps-builder
+  npx skills add open-edge-platform/skills --skill metro-ai-app-builder

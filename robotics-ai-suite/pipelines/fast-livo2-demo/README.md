@@ -27,23 +27,23 @@ alternative SLAM backend without forking the reference navigation stack.
 
 This work is based on the open-source
 [FAST-LIVO2](https://github.com/hku-mars/FAST-LIVO2.git) repository, pinned in
-[.gitmodules](https://github.com/open-edge-platform/edge-ai-suites/blob/main/.gitmodules) at the upstream commit the patches below
+[.gitmodules](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/.gitmodules) at the upstream commit the patches below
 apply to.
 
 | Patch | Enhancement |
 | ----- | ----------- |
-| [0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch) | Removes a LiDAR-buffer precondition that gated every VIO update even though the VIO step never reads the LiDAR queue. Measured: ~30 ms of gate wait removed per VIO update at 10 Hz LiDAR input ([src/LIVMapper.cpp](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/src/LIVMapper.cpp)). |
-| [0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch) | Ports the codebase and launch files from ROS1/catkin to ROS2/ament (validated on Humble and Jazzy, see [FAST-LIVO2/README_ROS2.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/README_ROS2.md)); adds a Livox Mid-360 + RealSense D415 sensor profile; adds an optional per-frame LIO/VIO timing CSV export gated behind `-DENABLE_PERFRAME_TIMING=ON` (off by default) for latency analysis; fixes a DDS parameter-discovery race and an inverted Mid-360 mount orientation. |
-| [0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch) | Sizes the LIO/VIO OMP thread count from the process's actual CPU affinity at startup (`sched_getaffinity`) instead of the build-time total host core count, so pinning `fast_livo2` to a smaller cpu set via `taskset -c` (`CPUSET_ALGO` in `scripts/env.sh`) no longer oversubscribes the pinned cores with more OMP threads than they can run. Falls back to the original `ProcessorCount`-based build-time default when the process isn't affinity-restricted. |
-| [0004-Reformat-sources-to-the-real-clang-format-style.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0004-Reformat-sources-to-the-real-clang-format-style.patch) | Reformats `IMU_Processing.cpp`, `LIVMapper.cpp`, `main.cpp`, `preprocess.cpp`, and `vio.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
-| [0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch) | Wraps `main()` in a try/catch so a startup exception logs via `RCLCPP_FATAL` instead of taking the node down unhandled; reorders null-pointer checks to test-before-dereference and repositions two mutex locks so the shared state they guard is actually covered; guards three VIO score/residual computations and `plane_judge` against division by zero; frees a leaked scratch patch buffer in `updateVisualMapPoints`; replaces an internal lab IP address in a camera-intrinsics config comment with a generic rig description (a BDBA information-leakage finding); lists the ROS2-port maintainer in `package.xml`. |
+| [0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0001-Stop-VIO-waiting-on-the-LiDAR-buffer-in-LIVO-mode.patch) | Removes a LiDAR-buffer precondition that gated every VIO update even though the VIO step never reads the LiDAR queue. Measured: ~30 ms of gate wait removed per VIO update at 10 Hz LiDAR input ([src/LIVMapper.cpp](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/src/LIVMapper.cpp)). |
+| [0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0002-Port-to-ROS2-and-bring-up-Mid-360-D415-on-A2W.patch) | Ports the codebase and launch files from ROS1/catkin to ROS2/ament (validated on Humble and Jazzy, see [FAST-LIVO2/README_ROS2.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/README_ROS2.md)); adds a Livox Mid-360 + RealSense D415 sensor profile; adds an optional per-frame LIO/VIO timing CSV export gated behind `-DENABLE_PERFRAME_TIMING=ON` (off by default) for latency analysis; fixes a DDS parameter-discovery race and an inverted Mid-360 mount orientation. |
+| [0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0003-Size-OMP-thread-count-from-runtime-CPU-affinity.patch) | Sizes the LIO/VIO OMP thread count from the process's actual CPU affinity at startup (`sched_getaffinity`) instead of the build-time total host core count, so pinning `fast_livo2` to a smaller cpu set via `taskset -c` (`CPUSET_ALGO` in `scripts/env.sh`) no longer oversubscribes the pinned cores with more OMP threads than they can run. Falls back to the original `ProcessorCount`-based build-time default when the process isn't affinity-restricted. |
+| [0004-Reformat-sources-to-the-real-clang-format-style.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0004-Reformat-sources-to-the-real-clang-format-style.patch) | Reformats `IMU_Processing.cpp`, `LIVMapper.cpp`, `main.cpp`, `preprocess.cpp`, and `vio.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/patches/0005-Fix-crash-race-risks-and-an-info-leak-in-the-ROS2-no.patch) | Wraps `main()` in a try/catch so a startup exception logs via `RCLCPP_FATAL` instead of taking the node down unhandled; reorders null-pointer checks to test-before-dereference and repositions two mutex locks so the shared state they guard is actually covered; guards three VIO score/residual computations and `plane_judge` against division by zero; frees a leaked scratch patch buffer in `updateVisualMapPoints`; replaces an internal lab IP address in a camera-intrinsics config comment with a generic rig description (a BDBA information-leakage finding); lists the ROS2-port maintainer in `package.xml`. |
 
 ## Environment setup (Ubuntu 24.04 / ROS 2 Jazzy, Intel Core Ultra / PTL)
 
 Full one-time host prerequisites (system packages, Livox-SDK2, Sophus,
 vikit_common) are documented once in
 [FAST-LIVO2/README_ROS2.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/README_ROS2.md) — the steps below just
-automate exactly those commands via [scripts](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts):
+automate exactly those commands via [scripts](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts):
 
 ```bash
 # 1. Fetch the pristine upstream submodule
@@ -62,7 +62,7 @@ cd robotics-ai-suite/pipelines/fast-livo2-demo/scripts
 ```
 
 All paths, the ROS distro, and the dataset sequence used below are
-centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) — edit that one file to
+centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) — edit that one file to
 retarget a different workspace/sequence; nothing else needs to change.
 
 ## Validate without hardware: NTU VIRAL dataset replay
@@ -90,13 +90,13 @@ comparison already checked into
 For `eee_01`, the documented baseline is **2.71 cm**; the script passes when
 the freshly measured RMSE does not exceed that baseline by more than
 `RMSE_TOLERANCE_PCT` (20% by default, see
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)) — not a specific
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)) — not a specific
 improvement claim.
 
 ### Rviz visualization
 
 `run_ntu_viral.sh` gates `rviz2` behind the `USE_RVIZ` variable in
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh), off by default so the flow stays headless
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh), off by default so the flow stays headless
 over SSH:
 
 ```bash
@@ -141,7 +141,7 @@ place on the target machine.
 `sudo -n chrt -f -a -p 85 <pid>` SCHED_FIFO priority-85 — applied to the
 process *after* it's already launched as the invoking (non-root) user, not
 chained into the launch itself — whenever the matching `CPUSET_*` variable
-in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) is non-empty (the default). `rviz2`
+in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) is non-empty (the default). `rviz2`
 gets `taskset` pinning only, no realtime priority — GUI rendering work
 shouldn't run SCHED_FIFO. If `sudo -n` isn't usable (no passwordless
 sudoers entry for `chrt`), the script warns and continues unprioritized
@@ -181,10 +181,10 @@ the governor/min/max/current frequency actually applied. Its targets
 
 ### Optional: production-equivalent CycloneDDS + iceoryx shared-memory setup
 
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) already defaults `RMW_IMPLEMENTATION` to
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) already defaults `RMW_IMPLEMENTATION` to
 `rmw_cyclonedds_cpp` and `ROS_DOMAIN_ID` to `199`, but that alone is still
 plain CycloneDDS with no iceoryx zero-copy shared-memory transport for
-same-host pub/sub. [scripts/setup_dds_shm.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/setup_dds_shm.sh) adds
+same-host pub/sub. [scripts/setup_dds_shm.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/setup_dds_shm.sh) adds
 that missing piece — the same DDS transport Bing's own benchmark harness for
 this project (`run_live_benchmark.sh`) uses on PTL/Orin, for two reasons: (1)
 `rmw_fastrtps_cpp`/plain-CycloneDDS + SHM has hit CDR deserialize failures on
@@ -228,7 +228,7 @@ relative paths are relative to that directory).
 
 Full system-package/Livox-SDK2/Sophus/vikit_common prerequisites are
 documented in [FAST-LIVO2/README_ROS2.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/README_ROS2.md) —
-[scripts/install_deps.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/install_deps.sh) automates exactly those
+[scripts/install_deps.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/install_deps.sh) automates exactly those
 commands; run it once (needs sudo, safe to re-run):
 
 ```bash
@@ -265,7 +265,7 @@ cd -
 ```
 
 If you don't already have `livox_ros_driver2`/`vikit_ros` built elsewhere,
-point `UNDERLAY_SETUP` in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) at an existing
+point `UNDERLAY_SETUP` in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh) at an existing
 install space, or let `scripts/build.sh` build them from scratch instead of
 doing so by hand here.
 
@@ -297,7 +297,7 @@ sed -i 's#type: livox_ros_driver/msg/CustomMsg#type: livox_ros_driver2/msg/Custo
 ```
 
 (Other sequences' Dataverse file ids are listed in
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)'s `ntu_viral_datafile_id()`; or just run
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)'s `ntu_viral_datafile_id()`; or just run
 `./scripts/fetch_ntu_viral.sh`, which automates this whole step.)
 
 ### 5. Run `fast_livo2` against the bag
@@ -447,7 +447,7 @@ against the documented `eee_01` baseline of **2.71 cm**
 ([FAST-LIVO2/Log/result/ntu_viral/README.md](https://github.com/hku-mars/FAST-LIVO2/blob/0d2c0346107b75b59934975adec9a6eeeb913c64/Log/result/ntu_viral/README.md)).
 A fresh measurement that does not exceed the baseline by more than
 `RMSE_TOLERANCE_PCT` (20% by default,
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)) is an expected pass — the check
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/fast-livo2-demo/scripts/env.sh)) is an expected pass — the check
 exists to catch regressions, not to require beating the paper's own number.
 
 ## Limitations / non-goals

@@ -23,7 +23,7 @@ export const AUDIO = {
   silenceThreshold: 80,
   // Frontend auto-stop: after speech has started, stop recording when this
   // much near-silence is observed continuously.
-  autoStopPauseMs: 3000,
+  autoStopPauseMs: 2000,
   // Normalized mic level threshold [0..1] treated as speech for auto-stop.
   autoStopSpeechLevel: 0.06,
 } as const;

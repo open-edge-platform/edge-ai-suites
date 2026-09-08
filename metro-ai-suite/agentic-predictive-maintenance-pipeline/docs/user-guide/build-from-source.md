@@ -53,7 +53,7 @@ The build targets use the Dockerfiles located in `services/<service-name>/Docker
 The reasoning agent (`apm-agent`) is no longer built from this repo — it is
 an external image (Intel EAL's `agent-quality-handler` microservice) pulled
 via `docker/compose.agents.yaml`. See the [agent-service integration
-guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/agent-quality-handler/docs/user-guide/agent-service-integration-guide.md) for its contract.
+guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/agent-quality-handler/docs/user-guide/agent-service-integration-guide.md) for its contract.
 
 ### 4. Verify the Build
 

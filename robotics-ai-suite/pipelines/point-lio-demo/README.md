@@ -23,14 +23,14 @@ alternative LIO backend without forking the reference navigation stack.
 This work is based on the open-source
 [Point-LIO](https://github.com/hku-mars/Point-LIO.git) repository
 (`point-lio-with-grid-map` branch), pinned in
-[.gitmodules](https://github.com/open-edge-platform/edge-ai-suites/blob/main/.gitmodules) at the upstream commit the patch below
+[.gitmodules](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/.gitmodules) at the upstream commit the patch below
 applies to.
 
 | Patch | Change |
 | ----- | ------ |
-| [0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch) | Full ROS1/catkin → ROS2/ament_cmake port (rclcpp, `livox_ros_driver2`, a ROS2 launch file); new `avia_ros2.yaml`/`mid360_ros2.yaml`/`velodyne_urbanloco.yaml` configs — the last one is the UrbanLoco `ulhk_4` config used for validation below; opt-in latency-profiling CSV (below); `MP_PROC_NUM_CPUSET` CMake option to pin OpenMP thread count to the algorithm's cpuset; a segfault fix for point clouds without a `time` field; and alignment of Avia point filtering with FAST-LIO2 for fair benchmarking. |
-| [0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch) | Reformats `laserMapping.cpp` and `preprocess.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
-| [0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/patches/0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch) | Drops a stray `break` in the first-frame IMU-init block (both `kf_input`/`kf_output` paths) that silently skipped queued IMU messages; fixes a `disA`/`disB` typo in `Preprocess`'s constructor; guards `plane_judge` against a zero-area divide and an out-of-bounds distance-array read; checks `mkdir()`'s return value; wraps `main()` in a try/catch. |
+| [0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/patches/0001-Port-Point-LIO-to-ROS2-and-add-benchmarking-instrume.patch) | Full ROS1/catkin → ROS2/ament_cmake port (rclcpp, `livox_ros_driver2`, a ROS2 launch file); new `avia_ros2.yaml`/`mid360_ros2.yaml`/`velodyne_urbanloco.yaml` configs — the last one is the UrbanLoco `ulhk_4` config used for validation below; opt-in latency-profiling CSV (below); `MP_PROC_NUM_CPUSET` CMake option to pin OpenMP thread count to the algorithm's cpuset; a segfault fix for point clouds without a `time` field; and alignment of Avia point filtering with FAST-LIO2 for fair benchmarking. |
+| [0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/patches/0002-Reformat-sources-to-match-the-project-s-real-clang-f.patch) | Reformats `laserMapping.cpp` and `preprocess.cpp` to the Google-based clang-format style used elsewhere in this fork; no logic changes. |
+| [0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/patches/0003-Fix-early-loop-exit-and-a-distance-threshold-typo.patch) | Drops a stray `break` in the first-frame IMU-init block (both `kf_input`/`kf_output` paths) that silently skipped queued IMU messages; fixes a `disA`/`disB` typo in `Preprocess`'s constructor; guards `plane_judge` against a zero-area divide and an out-of-bounds distance-array read; checks `mkdir()`'s return value; wraps `main()` in a try/catch. |
 
 **Profiling**: built behind the `ENABLE_PROFILING` CMake option (off by
 default, matching upstream). When enabled, a lock-free ring buffer plus a
@@ -57,7 +57,7 @@ cd robotics-ai-suite/pipelines/point-lio-demo/scripts
 ```
 
 All paths, the ROS distro, and the dataset sequence used below are
-centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh) — edit that one file to
+centralized in [scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh) — edit that one file to
 retarget a different workspace/sequence; nothing else needs to change.
 
 ## Validate without hardware: UrbanLoco dataset replay
@@ -114,7 +114,7 @@ regressions, not to flag outperforming the paper's own number.
 ### Rviz visualization
 
 `run_ulhk.sh` gates `rviz2` behind the `USE_RVIZ` variable in
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh), off by default so the flow stays headless
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh), off by default so the flow stays headless
 over SSH:
 
 ```bash
@@ -146,7 +146,7 @@ applied to the process *after* it's already launched as the invoking
 (non-root) user, not chained into the launch itself, so it inherits this
 script's own exported environment (`ROS_DOMAIN_ID`/`RMW_IMPLEMENTATION`/
 `CYCLONEDDS_URI`) unchanged — whenever the matching `CPUSET_*` variable in
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh) is non-empty (the default). Since `ros2
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh) is non-empty (the default). Since `ros2
 run` (used to launch the algorithm) `subprocess.Popen()`s the actual
 `pointlio_mapping` binary as a separate child rather than exec()'ing into
 it, `chrt` is applied to that whole process tree, not just the top PID —
@@ -185,10 +185,10 @@ also in `env.sh`.
 
 ### Optional: production-equivalent CycloneDDS + iceoryx shared-memory setup
 
-[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh) already defaults `RMW_IMPLEMENTATION` to
+[scripts/env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/scripts/env.sh) already defaults `RMW_IMPLEMENTATION` to
 `rmw_cyclonedds_cpp` and `ROS_DOMAIN_ID` to `200`, but that alone is still
 plain CycloneDDS with no iceoryx zero-copy shared-memory transport for
-same-host pub/sub. [scripts/setup_dds_shm.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/pipelines/point-lio-demo/scripts/setup_dds_shm.sh) adds
+same-host pub/sub. [scripts/setup_dds_shm.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/robotics-ai-suite/pipelines/point-lio-demo/scripts/setup_dds_shm.sh) adds
 that missing piece — the same DDS transport Bing's own benchmark harness for
 this project (`run_live_benchmark.sh`) uses on PTL/Orin, for two reasons:
 (1) `rmw_fastrtps_cpp`/plain-CycloneDDS + SHM has hit CDR deserialize

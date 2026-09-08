@@ -28,7 +28,7 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Serve with nginx
-FROM nginx:1.31.4-trixie
+FROM nginx:1.31.5-trixie
 
 ARG COPYLEFT_SOURCES=false
 

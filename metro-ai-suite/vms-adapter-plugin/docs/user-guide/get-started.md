@@ -4,8 +4,7 @@
 
 The **VMS Adapter Plugin (VAP)** bridges Video Management Systems (VMS), such as Nx Witness,
 Genetec, and Milestone VMS platforms, with AI Analytics Applications, such as Live Video Captioning (LVC),
-DL Streamer vision analytics applications like Loitering Detection. It also provides a unified provider
-dashboard, built with the React library, for managing cameras and analytics runs. This guide
+DL Streamer vision analytics applications like Loitering Detection. This guide
 shows how to deploy the full stack with the Docker Compose tool and run your first analytics
 session.
 
@@ -14,7 +13,7 @@ This guide shows how to:
 - **Set up prerequisites**: Start LVC or DL Streamer vision analytics (Loitering Detection) before VAP,
   since VAP fetches their schemas at startup.
 - **Configure the environment**: Point VAP at your VMS and Analytics App services.
-- **Run the provider dashboard (Optional)**: Discover cameras, enable streams, and start analytics runs.
+- **Start analytics**: Discover cameras and start pipelines from the Nx Witness client.
 
 ## Quick Start
 
@@ -74,7 +73,7 @@ Loitering Detection is a user-provided application based on the DL Streamer Pipe
 Verify the DL Streamer Pipeline Server is reachable:
 
 ```bash
-curl -k https://<LOITERING_DETECTION_HOST>:443/pipelines
+curl http://<LOITERING_DETECTION_HOST>:8080/pipelines
 ```
 
 ## Step 3 — Clone VAP and Create the `.env` File
@@ -99,9 +98,8 @@ Open `.env` and update the variables for your environment. Variables are grouped
 
 | **Variable**                         | **Description**                                                          | **Required?** |
 |--------------------------------------|--------------------------------------------------------------------------|---------------|
-| `LVC_HOST` / `LVC_BASE_URL`          | LVC backend host and base URL, e.g., `http://<lvc-host>:4173`            | Mandatory     |
+| `LVC_BASE_URL`                       | URL of the running LVC backend, e.g., `http://<lvc-host>:4173`           | Mandatory     |
 | `MEDIAMTX_URL`                       | URL of the MediaMTX WebRTC server, e.g., `http://<lvc-host>:8889`        | Mandatory     |
-| `MQTT_BROKER_HOST` / `MQTT_BROKER_PORT` | LVC MQTT broker host and port that VAP subscribes to for captions (default port: `1883`) | Mandatory |
 | `MQTT_BROKER_TLS_ENABLED` / `MQTT_BROKER_CA_BUNDLE` / `MQTT_BROKER_CLIENT_CERT` / `MQTT_BROKER_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the LVC broker subscriber | Optional |
 
 **DL Streamer Vision (`dls_vision` — Loitering Detection):**
@@ -109,7 +107,6 @@ Open `.env` and update the variables for your environment. Variables are grouped
 | **Variable**                         | **Description**                                                          | **Required?** |
 |--------------------------------------|--------------------------------------------------------------------------|---------------|
 | `DLS_VISION_HOST` / `DLS_VISION_PORT` | DL Streamer Pipeline Server host and port for Loitering Detection app (default port: `443`) | Mandatory |
-| `DLS_PIPELINE_CPU` / `DLS_PIPELINE_GPU` / `DLS_PIPELINE_NPU` | Device-specific DL Streamer pipeline names; at least one must be set     | Mandatory     |
 | `MQTT_HOST` / `MQTT_PORT`            | MQTT broker host and port for `dls_vision` metadata (default: `1883`)             | Mandatory     |
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DL Streamer TLS verification toggle and optional CA bundle path (default: `false`) | Optional |
 | `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber | Optional |
@@ -141,24 +138,52 @@ vms-adapter-ui                Up
 vms-adapter-postgres          Up (healthy)
 ```
 
-Verify the backend is up:
+Verify the dockers are up and running:
 
 ```bash
-curl -k https://localhost:3443/v1/health
+docker ps
 ```
 
-## Step 5 - Run analytics from Nx Witness UI
-The steps above creates an 'Nx REST Integration'. Applications configured with VMS Adapter Plugin are registered as part of Nx Integration and are available in Nx Client UI across cameras with analytics ready to be trigerred by the user.
+## Step 5 — Discover Cameras
 
+Trigger camera discovery once after VAP starts. VAP queries Nx Witness and persists the
+results to PostgreSQL:
 
-1. In the Nx Witness desktop client, close any open camera visualizer window.
-2. Navigate to the left panel, and under the server, find the camera you wish to run analytics on and right-click to open context menu.
-3. Select **Camera Settings**.
-4. Go to the **Integrations** tab.
-5. Click **VAP Analytics Integration** to expand the per-camera settings.
-6. The available options are present as per the application configured. Check the application check-box, select or fill the application configurations as desired, and click **Apply** to run the analytics.
+```bash
+curl -k -X POST https://localhost:3443/v1/cameras/discover
+```
 
-To stop the same, unselect the application and click **Apply**
+## Step 6 — Start Analytics from the Nx Witness Client
+
+The recommended way to start and stop pipelines is directly from the **Nx Witness desktop
+client**. VAP polls Nx Witness every 5 seconds and reacts to per-camera settings changes
+automatically.
+
+1. In the Nx Witness desktop client, right-click a camera → **Camera Settings**.
+2. Go to the **Integrations** tab and expand **VAP Analytics Integration**.
+3. Configure the fields and enable the pipeline.
+
+### Live Video Captioning
+
+| **Field**                                 | **Type**   | **Description**                                  |
+| ----------------------------------------- | ---------- | ------------------------------------------------ |
+| **Enable Live Video Captioning Pipeline** | Checkbox   | Starts or stops the LVC pipeline for this camera |
+| **Device**                                | Dropdown   | Inference device: `CPU`, `GPU`, or `NPU`         |
+| **Prompt**                                | Text field | Custom prompt sent to the VLM                    |
+
+Live captions are pushed to Nx Witness as **bookmarks** on the camera timeline. Open the
+**Bookmarks** tab (Ctrl+B) in the Nx Witness client to view them.
+
+### Loitering Detection
+
+| **Field**                               | **Type** | **Description**                                  |
+| --------------------------------------- | -------- | ------------------------------------------------ |
+| **Enable Loitering Detection Pipeline** | Checkbox | Starts or stops the pipeline for this camera     |
+| **Device**                              | Dropdown | Inference device: `CPU`, `GPU`, or `NPU`         |
+
+Detection results are pushed to Nx Witness as analytics objects (bounding boxes with labels).
+Use the **Object Search** panel (Alt+O) in the Nx Witness client to view detections overlaid
+on the camera feed.
 
 ## Stop the Stack
 

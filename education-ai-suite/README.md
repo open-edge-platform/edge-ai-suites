@@ -34,4 +34,4 @@ The suite is built with modularity and extensibility in mind. It is designed as 
 understand the AI workload patterns and hardware requirements for educational edge AI systems.
 
 For full documentation, refer to the
-[Open Edge Platform documentation website](https://docs.openedgeplatform.intel.com/dev/ai-suite-education.html).
+[Open Edge Platform documentation website](https://docs.openedgeplatform.intel.com/2026.2/ai-suite-education.html).

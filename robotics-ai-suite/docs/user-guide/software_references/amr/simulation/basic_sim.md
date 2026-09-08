@@ -6,7 +6,7 @@ This software reference will walk you through setting up and using Gazebo to giv
 
 ## Source Code
 
-The [Simulations source code](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/simulations)
+The [Simulations source code](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/robotics-ai-suite/components/simulations)
 is available with the Robotics AI Suite.
 
 ## PicknPlace Simulation
