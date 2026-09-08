@@ -25,3 +25,147 @@ updates:
       other-python:
         patterns:
           - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/vlm-fine-tuning"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/ui-service"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/insights-workbench"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-multimodal/tests"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-multimodal-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-time-series-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-time-series-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-time-series/simulator/opcua-server"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-time-series-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-time-series/simulator/mqtt-publisher"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-time-series-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+  - package-ecosystem: "pip"
+    directory: "/manufacturing-ai-suite/industrial-edge-insights-time-series/tests"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      industrial-edge-insights-time-series-python:
+        applies-to: version-updates
+        patterns:
+          - "*"

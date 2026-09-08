@@ -25,7 +25,7 @@ Folds together:
  .../scripts/mujoco_viewer.py                  | 461 ++++++++++++
  .../scripts/run_aloha_dual_arm.sh             | 195 +++++
  .../src/AlohaReferenceConverter.cpp           |  79 ++
- .../src/MobileManipulatorMpcMrtNode.cpp       | 320 ++++++++
+ .../src/MobileManipulatorMpcMrtNode.cpp       | 355 ++++++++
  .../src/ShmTransport.cpp                      | 142 ++++
  .../test/aloha_act_publisher.cpp              | 351 +++++++++
  .../test/aloha_converter_test.cpp             | 115 +++
@@ -2137,10 +2137,10 @@ index 000000000..76f94f345
 +}  // namespace ocs2
 diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_nonros/src/MobileManipulatorMpcMrtNode.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator_nonros/src/MobileManipulatorMpcMrtNode.cpp
 new file mode 100644
-index 000000000..f67b923dd
+index 000000000..94e414a80
 --- /dev/null
 +++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_nonros/src/MobileManipulatorMpcMrtNode.cpp
-@@ -0,0 +1,320 @@
+@@ -0,0 +1,355 @@
 +/******************************************************************************
 +Copyright (c) 2026, Intel Corporation. All rights reserved.
 +******************************************************************************/
@@ -2234,7 +2234,7 @@ index 000000000..f67b923dd
 +vector_t mpcTrackingController(const SystemObservation& currentObservation, MPC_MRT_Interface& mpcMrtInterface) {
 +  mpcMrtInterface.setCurrentObservation(currentObservation);
 +  if (mpcMrtInterface.updatePolicy()) {
-+    std::cout << "<<< New MPC policy received at " << currentObservation.time << std::endl;
++    // std::cout << "<<< New MPC policy received at " << currentObservation.time << std::endl;
 +  }
 +  vector_t optimizedState;
 +  vector_t optimizedInput;
@@ -2379,68 +2379,103 @@ index 000000000..f67b923dd
 +  // --- MRT thread: rollout -> FK -> publish state ---
 +  auto mrtThread = std::thread([&]() {
 +    pthread_setname_np(pthread_self(), "mrt_thread");
++    // Achieved-rate benchmark: every `kRateReportEvery` cycles, print the actual
++    // loop frequency (measured against steady_clock) so it can be compared to the
++    // configured mrtDesiredFrequency_ (e.g. 1000 Hz). Measures the loop itself, so
++    // it is independent of the shm transport.
++    constexpr long kRateReportEvery = 1000;
++    auto rateWindowStart = std::chrono::steady_clock::now();
++    long rateCounter = 0;
++
++    // Cumulative-tick scheduling: sleep to an ABSOLUTE deadline grid (sleepTill += period)
++    // instead of re-anchoring each cycle. A constant scheduler wakeup latency is then
++    // absorbed by the grid rather than added to every period, so the long-run rate tracks
++    // mrtDesiredFrequency_ instead of 1/(period + latency). Overruns are NOT interrupted;
++    // if we fall more than one period behind, the grid resyncs to now to avoid a
++    // zero-sleep burst-catch-up (see executeAtRate in ExecuteAndSleep.h for the pattern).
++    using loopClock = std::chrono::high_resolution_clock;
++    const auto period = std::chrono::duration_cast<loopClock::duration>(
++        std::chrono::duration<double>(1.0 / manipulatorInterface.mpcSettings().mrtDesiredFrequency_));
++    auto sleepTill = loopClock::now() + period;
++
 +    while (mpcRunning.load() && g_running.load()) {
 +      try {
-+        executeAndSleep(
-+            [&]() {
-+              const auto systemInput = mpcTrackingController(currentObservation, mpcMrtInterface);
++        const auto systemInput = mpcTrackingController(currentObservation, mpcMrtInterface);
 +
-+              const double dt = 1.0 / manipulatorInterface.mpcSettings().mrtDesiredFrequency_;
-+              SystemObservation nextObservation;
-+              nextObservation.time = currentObservation.time + dt;
-+              if (mpcMrtInterface.isRolloutSet()) {
-+                mpcMrtInterface.rolloutPolicy(currentObservation.time, currentObservation.state, dt,
-+                                              nextObservation.state, nextObservation.input,
-+                                              nextObservation.mode);
-+              } else {
-+                mpcMrtInterface.evaluatePolicy(currentObservation.time + dt, currentObservation.state,
-+                                               nextObservation.state, nextObservation.input,
-+                                               nextObservation.mode);
-+              }
++        const double dt = 1.0 / manipulatorInterface.mpcSettings().mrtDesiredFrequency_;
++        SystemObservation nextObservation;
++        nextObservation.time = currentObservation.time + dt;
++        if (mpcMrtInterface.isRolloutSet()) {
++          mpcMrtInterface.rolloutPolicy(currentObservation.time, currentObservation.state, dt,
++                                        nextObservation.state, nextObservation.input,
++                                        nextObservation.mode);
++        } else {
++          mpcMrtInterface.evaluatePolicy(currentObservation.time + dt, currentObservation.state,
++                                         nextObservation.state, nextObservation.input,
++                                         nextObservation.mode);
++        }
 +
-+              // Publish end-effector state.
-+              const auto eePose = getEndEffectorPose(manipulatorInterface, currentObservation.state, eeFrame);
-+              const Eigen::Quaterniond quat(eePose.rotation());
-+              EndEffectorStateMsg eeMsg{};
-+              eeMsg.time = currentObservation.time;
-+              eeMsg.position[0] = eePose.translation().x();
-+              eeMsg.position[1] = eePose.translation().y();
-+              eeMsg.position[2] = eePose.translation().z();
-+              eeMsg.orientation[0] = quat.x();
-+              eeMsg.orientation[1] = quat.y();
-+              eeMsg.orientation[2] = quat.z();
-+              eeMsg.orientation[3] = quat.w();
-+              pubEe->publish(eeMsg);
++        // Publish end-effector state.
++        const auto eePose = getEndEffectorPose(manipulatorInterface, currentObservation.state, eeFrame);
++        const Eigen::Quaterniond quat(eePose.rotation());
++        EndEffectorStateMsg eeMsg{};
++        eeMsg.time = currentObservation.time;
++        eeMsg.position[0] = eePose.translation().x();
++        eeMsg.position[1] = eePose.translation().y();
++        eeMsg.position[2] = eePose.translation().z();
++        eeMsg.orientation[0] = quat.x();
++        eeMsg.orientation[1] = quat.y();
++        eeMsg.orientation[2] = quat.z();
++        eeMsg.orientation[3] = quat.w();
++        pubEe->publish(eeMsg);
 +
-+              // Publish joint state.
-+              std::vector<double> jointPositions, jointVelocities, baseState;
-+              getJointInfo(manipulatorInterface, currentObservation.state, systemInput, jointPositions,
-+                           jointVelocities, baseState);
-+              JointStateMsg jointMsg{};
-+              jointMsg.time = currentObservation.time;
-+              jointMsg.dof = static_cast<int32_t>(jointPositions.size());
-+              const size_t nJoint = std::min<size_t>(jointPositions.size(), 32);
-+              for (size_t i = 0; i < nJoint; ++i) {
-+                jointMsg.positions[i] = jointPositions[i];
-+                jointMsg.velocities[i] = jointVelocities[i];
-+              }
-+              pubJoint->publish(jointMsg);
++        // Publish joint state.
++        std::vector<double> jointPositions, jointVelocities, baseState;
++        getJointInfo(manipulatorInterface, currentObservation.state, systemInput, jointPositions,
++                     jointVelocities, baseState);
++        JointStateMsg jointMsg{};
++        jointMsg.time = currentObservation.time;
++        jointMsg.dof = static_cast<int32_t>(jointPositions.size());
++        const size_t nJoint = std::min<size_t>(jointPositions.size(), 32);
++        for (size_t i = 0; i < nJoint; ++i) {
++          jointMsg.positions[i] = jointPositions[i];
++          jointMsg.velocities[i] = jointVelocities[i];
++        }
++        pubJoint->publish(jointMsg);
 +
-+              // Publish base state (ALOHA: fixed base, all zero).
-+              BaseStateMsg baseMsg{};
-+              baseMsg.time = currentObservation.time;
-+              baseMsg.x = baseState[0];
-+              baseMsg.y = baseState[1];
-+              baseMsg.yaw = baseState[2];
-+              pubBase->publish(baseMsg);
++        // Publish base state (ALOHA: fixed base, all zero).
++        BaseStateMsg baseMsg{};
++        baseMsg.time = currentObservation.time;
++        baseMsg.x = baseState[0];
++        baseMsg.y = baseState[1];
++        baseMsg.yaw = baseState[2];
++        pubBase->publish(baseMsg);
 +
-+              // "state estimation": advance to the simulated next observation.
-+              currentObservation = nextObservation;
-+            },
-+            manipulatorInterface.mpcSettings().mrtDesiredFrequency_);
++        // "state estimation": advance to the simulated next observation.
++        currentObservation = nextObservation;
++
++        // Report achieved MRT loop frequency once per window.
++        if (++rateCounter >= kRateReportEvery) {
++          const auto now = std::chrono::steady_clock::now();
++          const double elapsed = std::chrono::duration<double>(now - rateWindowStart).count();
++          const double achievedHz = rateCounter / elapsed;
++          std::cerr << "[nonros MRT " << prefix << "] achieved " << achievedHz << " Hz (target "
++                    << manipulatorInterface.mpcSettings().mrtDesiredFrequency_ << " Hz)" << std::endl;
++          rateCounter = 0;
++          rateWindowStart = now;
++        }
 +      } catch (const std::exception& e) {
 +        mpcRunning = false;
 +        std::cerr << "[nonros MRT thread] Error: " << e.what() << std::endl;
++        break;
++      }
++
++      // Sleep to the absolute grid, then advance it. Resync if we have fallen behind.
++      std::this_thread::sleep_until(sleepTill);
++      sleepTill += period;
++      const auto nowTick = loopClock::now();
++      if (sleepTill < nowTick) {
++        sleepTill = nowTick + period;
 +      }
 +    }
 +  });

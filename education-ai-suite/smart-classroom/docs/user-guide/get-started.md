@@ -3,7 +3,20 @@
 > **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
 > PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
 
-## Step 1: Clone the Repository
+There are two ways to run Smart Classroom. Both use the same services, models and
+configurations.
+
+| | [Desktop app](#desktop-app) (recommended) | [PowerShell scripts](#alternative-powershell-scripts-and-the-browser-ui) |
+|---|---|---|
+| Commands to run | `.\start-desktop-app.ps1` | `.\setup-smart-classroom.ps1`, then `.\start-smart-classroom.ps1` |
+| Prerequisites and installs | **Setup** screen, one item at a time | One scripted pass through everything |
+| Settings | **Configuration** screen | Console prompts, then editing `config.yaml` by hand |
+| Services | **Services** screen: start, stop, restart, live logs | Separate console windows |
+| Where the UI runs | Its own desktop window | Browser at <http://localhost:5173> |
+
+Whichever you pick, start by cloning the repository.
+
+## Clone the Repository
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -16,19 +29,88 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
   cd education-ai-suite/smart-classroom
 ```
 
-## Step 2: Run the Setup Script (First-Time Only)
+---
+
+## Desktop App
+
+The desktop app covers setup, configuration and running the services in one window.
+
+### Step 1: Launch the App
+
+```powershell
+.\start-desktop-app.ps1
+```
+
+The script asks for your proxy settings, installs Node.js through winget if it is
+missing, builds the UI and hands over. The app then supervises the Python services
+itself.
+
+**Optional parameters:**
+
+- `-Dev` — Run the Vite dev server with hot reload
+- `-NoAutoStart` — Open the app without starting the backend automatically
+- `-SkipNodeInstall` — Fail instead of installing Node.js when it is missing
+- `-Silent` — Skip the proxy prompts and use the saved `.proxy-config`
+
+### Step 2: Work Through the Setup Screen
+
+**Get started** opens first and lists what is still missing. Follow its links, or open
+**Setup** directly, and work down the list:
+
+| Section | Covers |
+|---------|--------|
+| **System and drivers** | Operating system, processor, memory, free disk space, Intel GPU and NPU drivers, Windows long paths |
+| **Software and environment** | Python 3.12, Node.js, FFmpeg, DL Streamer, the Python environment, and the grading conversion environment and layout detection model |
+
+Each row shows what was found and what it blocks. Rows the app can fix have a button:
+**Install** for Python, FFmpeg and DL Streamer, **Create** for the Python environment,
+**Prepare** for the layout detection model. **Fix _n_ items** at the top runs everything
+outstanding in order. Progress appears in the **Output** pane below, and **Copy
+diagnostics** puts the whole list on the clipboard for a bug report.
+
+> **Note:** Creating the Python environment downloads several gigabytes, and preparing
+> the layout detection model downloads and converts it. Both take a while on a first run.
+
+The backend cannot start until the Python environment exists.
+
+### Step 3: Review the Settings
+
+**Get started** shows the settings most people change. The **Configuration** screen has
+the full list from `config.yaml`, `runtime_config.yaml` and `.proxy-config`, grouped and
+searchable. Saving a change while the services are running offers a restart.
+
+> **Note:** Speaker diarization (identifying who is speaking) is optional and requires a
+> one-time Hugging Face access token. The **Get started** screen flags this when
+> diarization is enabled without a token; set it under **Configuration**, or see
+> [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional).
+
+### Step 4: Use the App
+
+The backend starts automatically once setup is complete, unless you passed
+`-NoAutoStart`.
+
+| Screen | What it does |
+|--------|--------------|
+| **Get started** | Overview of what is ready, what is missing, and the settings most people change |
+| **Setup** | Prerequisite checks plus the Python environment and model preparation |
+| **Configuration** | Edit `config.yaml`, `runtime_config.yaml` and `.proxy-config` |
+| **Services** | Start / stop / restart the backend and watch live logs for it and every child service |
+
+---
+
+## Alternative: PowerShell Scripts and the Browser UI
+
+Use this path for unattended installs or when you want the services in visible console
+windows.
+
+### Step 1: Run the Setup Script (First-Time Only)
 
 ```powershell
 .\setup-smart-classroom.ps1
 ```
 
 > **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python
-> dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
-
-> **Prefer the desktop app?** You can skip this step entirely and run
-> [`.\start-desktop-app.ps1`](#option-b-desktop-app) instead. It installs Node.js if needed,
-> then does the prerequisite checks, Python environment and model preparation from its
-> **Setup** screen.
+> dependencies), you can skip setup and go straight to `.\start-smart-classroom.ps1`.
 
 The setup script will:
 
@@ -52,21 +134,17 @@ The setup script will:
 > Hugging Face access token setup if enabled — see
 > [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional).
 
-## Step 3: Start Smart Classroom
+### Step 2: Start the Services
 
-There are two ways to run the application.
-
-### Option A: Browser UI (services managed by PowerShell)
-
-After initial setup is complete, use the start script for subsequent runs or after modifying `config.yaml`:
+Use the start script for subsequent runs, or after modifying `config.yaml`:
 
 ```powershell
 .\start-smart-classroom.ps1
 ```
 
-**Optional Parameters:**
+**Optional parameters:**
 
-- `-Electron` - Shortcut for `.\start-desktop-app.ps1` (see Option B)
+- `-Electron` - Shortcut for `.\start-desktop-app.ps1` (see [Desktop App](#desktop-app))
 - `-Silent` - Unattended mode for CI/Ansible (skips all prompts, auto-restarts services)
 - `-NoElevate` - Skip admin privilege elevation (use when already running as administrator)
 - `-NoWindowsTerminal` - Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions/Ansible)
@@ -84,38 +162,12 @@ The startup script performs:
 - **Sequential Launch** - Backend -> Content Search -> Grading (if enabled) -> Frontend
 - **Graceful Shutdown** - `Q` to stop all, `E` to keep running (auto-exits in `-Silent` mode)
 
-### Option B: Desktop app
+### Step 3: Open the UI
 
-```powershell
-.\start-desktop-app.ps1
-```
-
-The script only bootstraps Node, launches the UI and hands over. The app then supervises
-the Python services and starts the backend automatically.
-
-| Screen | What it does |
-|--------|--------------|
-| **Get Started** | Start here with an overview and initial guidance |
-| **Setup** | Prerequisite checks (OS, CPU, GPU/NPU drivers, Python, FFmpeg, DL Streamer) plus the Python environment and model preparation |
-| **Configuration** | Edit `config.yaml`, `runtime_config.yaml` and `.proxy-config` |
-| **Services** | Start / stop / restart the backend and watch live logs for it and every child service |
-
-**Optional Parameters:**
-
-- `-Dev` - Run the Vite dev server with hot reload
-- `-NoAutoStart` - Open the app without starting the backend automatically
-- `-SkipNodeInstall` - Fail instead of installing Node.js when it is missing
-- `-Silent` - Skip the proxy prompts and use the saved `.proxy-config`
-
-
-## Step 4: Access the Application
-
-With **Option A**, open your browser once all services are running:
+Once all services are running, open your browser:
 
 - **Local:** <http://localhost:5173>
 - **Network:** <http://YOUR_IP:5173>
-
-With **Option B**, the desktop window opens on its own.
 
 ---
 
@@ -130,7 +182,7 @@ If you encounter issues during automated setup, refer to the manual steps below:
 | DL Streamer download fails | See [Manual Step 1B](advance-setup-guide.md#b-install-dl-streamer) |
 | Python dependencies fail | See [Manual Step 1D](advance-setup-guide.md#d-install-python-dependencies) |
 | Content Search fails | See [Manual Step 4](advance-setup-guide.md#step-4-set-up-content-search) |
-| Frontend fails to start | See [Manual Step 5](advance-setup-guide.md#step-5-bring-up-the-frontend) |
+| Frontend fails to start | See [Manual Step 6](advance-setup-guide.md#step-6-bring-up-the-frontend) |
 
 ---
 
@@ -160,6 +212,7 @@ Advanced Setup guide covers:
 | Frontend | 5173 | <http://localhost:5173> |
 
 > **Note:** Layout Detection and Grading services only start when `grading.enabled: true` in `config.yaml`.
+> The desktop app is its own frontend and does not use port 5173.
 
 ## Learn More
 

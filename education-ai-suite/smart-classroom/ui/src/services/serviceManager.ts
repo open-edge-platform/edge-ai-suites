@@ -66,6 +66,51 @@ export function useServices() {
   };
 }
 
+/**
+ * Reload the window once a *new* backend process is healthy.
+ *
+ * The backend holds the session in memory, so restarting it invalidates
+ * everything the renderer is showing: sessionId, the recording flags, a
+ * half-streamed transcript. None of that is persisted, so a reload is the whole
+ * reset — resetting each slice by hand would still leave component-local state
+ * and the metric and monitor timers running against a process that has
+ * forgotten them.
+ *
+ * startedAt is stamped per spawn, so it names the process generation. The first
+ * generation this page sees is recorded rather than acted on: a first start has
+ * nothing stale to clear, and reloading there would throw the user off the logs
+ * they are watching it boot in. Waiting for `healthy` rather than firing at
+ * spawn means the reloaded page finds a backend that answers.
+ */
+export function useReloadOnBackendRestart(backend: ServiceSnapshot | undefined): void {
+  // undefined until the first snapshot arrives, which is not the same as the
+  // null this holds while the backend is stopped.
+  const generation = useRef<number | null | undefined>(undefined);
+
+  const startedAt = backend?.startedAt ?? null;
+  const status = backend?.status;
+
+  useEffect(() => {
+    if (startedAt === null) {
+      // Stopped, or attached to a backend started outside the app. Either way
+      // there is no generation to compare a successor against.
+      if (generation.current === undefined) generation.current = null;
+      return;
+    }
+    // First live backend this page has seen: nothing on screen predates it.
+    if (generation.current === undefined || generation.current === null) {
+      generation.current = startedAt;
+      return;
+    }
+    if (generation.current === startedAt) return;
+    // A successor is booting. Leave the old generation recorded so this fires
+    // on the healthy tick, and not at all if the start fails.
+    if (status !== 'healthy') return;
+    generation.current = startedAt;
+    window.location.reload();
+  }, [startedAt, status]);
+}
+
 const MAX_CLIENT_LINES = 2000;
 
 /** Buffered log lines for one service, seeded from the main-process ring buffer. */

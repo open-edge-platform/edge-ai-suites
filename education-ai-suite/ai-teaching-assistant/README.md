@@ -62,6 +62,7 @@ This arms detection and opens a normal voice session after the wake word is dete
 
 - Overview: [docs/user-guide/index.md](docs/user-guide/index.md)
 - Setup: [docs/user-guide/get-started.md](docs/user-guide/get-started.md)
+- Application flow (UI walkthrough): [docs/user-guide/application-flow.md](docs/user-guide/application-flow.md)
 - Architecture: [docs/user-guide/how-it-works.md](docs/user-guide/how-it-works.md)
 - API: [docs/user-guide/api-reference.md](docs/user-guide/api-reference.md)
 - Configuration: [docs/user-guide/get-started/configuration.md](docs/user-guide/get-started/configuration.md)

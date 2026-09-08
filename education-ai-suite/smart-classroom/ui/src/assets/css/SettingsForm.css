@@ -48,44 +48,6 @@
   }
 }
 
-.camera-row {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 16px;
-}
-
-/* Responsive camera row for larger screens */
-@media (min-width: 768px) {
-  .camera-row {
-    flex-direction: row;
-    justify-content: space-between;
-  }
-  
-  .camera-row > div {
-    flex: 1;
-  }
-}
-
-.camera-row > div {
-  width: 100%;
-}
-
-.camera-row label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: bold;
-}
-
-.camera-row select {
-  width: 100%;
-  padding: clamp(6px, 2vw, 8px);
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #f8f8f8;
-  box-sizing: border-box;
-}
-
 .settings-body input[type="text"],
 .settings-body select {
   width: 100%;
@@ -172,26 +134,3 @@
   margin-top: 4px;
 }
 
-.no-devices-message {
-  width: 100%;
-  padding: clamp(8px, 2vw, 10px);
-  border: 1px solid #ccc;
-  border-radius: 0px;
-  font-family: "IntelOne Text", system-ui, sans-serif;
-  font-size: clamp(12px, 3vw, 14px);
-  font-weight: 400;
-  color: #6A6D75;
-  line-height: clamp(14px, 3.5vw, 16px);
-  box-sizing: border-box;
-  background: #f7f7f7;
-}
-
-.debug-info {
-  font-family: "IntelOne Text", system-ui, sans-serif;
-  font-size: clamp(10px, 2.5vw, 12px);
-  font-weight: 400;
-  color: #6A6D75;
-  line-height: clamp(12px, 3vw, 14px);
-  margin-top: 4px;
-  word-break: break-word;
-}
