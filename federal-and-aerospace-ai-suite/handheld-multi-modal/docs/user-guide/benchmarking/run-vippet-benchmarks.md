@@ -23,11 +23,3 @@ For platform-level benchmarking beyond ViPPET — vision AI inference, hardware-
 media processing, end-to-end video analytics pipelines, and generative AI — see the
 [Edge Workloads and Benchmarks Guide](./infrastructure/run-edge-benchmarks.md).
 
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-Edge Workloads and Benchmarks Guide <./infrastructure/run-edge-benchmarks.md>
-:::
-hide_directive-->
-
