@@ -16,7 +16,7 @@ and simultaneously collects hardware utilization and power metrics from `metrics
   [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
   for comparing AI pipeline performance across CPU, GPU, and NPU.
 >
-> For platform-level benchmarking, see the [Edge Workloads and Benchmarks Guide](../infrastructure/run-edge-benchmarks.md) -
+> For platform-level benchmarking, see the [Edge Workloads and Benchmarks Guide](./run-edge-benchmarks.md) -
   a solution for end-to-end video analytics pipelines, vision AI inference,
   hardware-accelerated media processing, and generative AI.
 
@@ -38,7 +38,7 @@ and simultaneously collects hardware utilization and power metrics from `metrics
    - [Terminal Summary](#terminal-summary)
    - [kpi.txt Format](#kpitxt-format)
    - [Output Directory Structure](#output-directory-structure)
-7. [Troubleshooting](./troubleshooting.md#benchmark)
+7. [Troubleshooting](../how-to-guides/troubleshooting.md#benchmark)
 
 ## Prerequisites
 
@@ -571,6 +571,6 @@ uav-vision-analytics/
 
 For all benchmark-related troubleshooting (missing tools, connectivity issues,
 result anomalies, GPU/NPU visibility, and power readings), see the
-[Troubleshooting guide](./troubleshooting.md#benchmark).
+[Troubleshooting guide](../how-to-guides/troubleshooting.md#benchmark).
 
 
