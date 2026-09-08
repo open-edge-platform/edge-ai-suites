@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Advanced Image Customization (Using Image Composer Tool)
 
-The [Image Composer Tool (ICT)](https://github.com/open-edge-platform/image-composer-tool/tree/ICT_Release_2026.2)
+The [Image Composer Tool (ICT)](https://github.com/open-edge-platform/image-composer-tool/tree/main)
 is a command-line tool for building custom Linux images from pre-built packages.
 To get a bootable RAW or ISO image, you define the target OS, packages, kernel, and disk layout.
 ICT supports multiple distributions including Ubuntu, Azure Linux, and Red Hat compatible
@@ -28,8 +28,8 @@ This article will show you how to:
 
 ```bash
 # If edge-node-infrastructure-blueprint is not already cloned, uncomment the line below
-# git clone -b release-2026.2.0 https://github.com/open-edge-platform/edge-node-infrastructure-blueprint.git
-git clone -b ICT_Release_2026.2 https://github.com/open-edge-platform/image-composer-tool.git
+# git clone -b main https://github.com/open-edge-platform/edge-node-infrastructure-blueprint.git
+git clone -b main https://github.com/open-edge-platform/image-composer-tool.git
 ```
 
 Now, you should have the source code available in `edge-node-infrastructure-blueprint` and `image-composer-tool` directories in your workspace (for example, `/home/user`).
@@ -56,7 +56,7 @@ These packages are required before composing any image:
 sudo apt install systemd-ukify mmdebstrap
 ```
 
-Follow the instructions at [Image Composition Prerequisites](https://github.com/open-edge-platform/image-composer-tool/blob/ICT_Release_2026.2/docs/tutorial/installation.md#image-composition-prerequisites) if you face issues installing packages using apt.
+Follow the instructions at [Image Composition Prerequisites](https://github.com/open-edge-platform/image-composer-tool/blob/main/docs/user-guide/get-started/installation.md#image-composition-prerequisites) if you face issues installing packages using apt.
 
 > **Note:** `mmdebstrap` version 0.8.x (shipped with Ubuntu OS version 22.04) has known
 > issues. Ensure you have version 1.4.3 or later. On Ubuntu OS version 23.04 or later, the

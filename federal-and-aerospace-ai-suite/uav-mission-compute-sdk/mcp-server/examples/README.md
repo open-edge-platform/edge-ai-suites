@@ -52,6 +52,20 @@ Analyze recorded videos with object detection
 "Process inspection_video.mp4 with DLStreamer, generate report"
 ```
 
+### 6. [Computer Vision Application Development](02-computer-vision-application-development.md)
+Design a custom DLStreamer detect/track app on a live camera stream
+```
+"Build a computer vision application that detects and tracks vehicles in the
+uav-1/nadir RTSP stream and publishes counts to MQTT"
+```
+
+### 7. [Time Series Processing Application Development](06-time-series-processing-application.md)
+Design a custom telemetry ingestion/processing/visualization pipeline
+```
+"Build a time series processing app that computes a rolling vibration score
+from attitude telemetry and adds a Grafana panel for it"
+```
+
 ## Tool Workflow
 
 ```mermaid
