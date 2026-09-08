@@ -500,8 +500,10 @@ paper's own number.
   with an account, from more than one network. `fetch_ulhk.sh` only checks
   for the file and prints the Dropbox/Baidu Netdisk links to download it by
   hand instead.
-- UrbanLoco's terms of use should be checked on the
-  [dataset's own page](https://advdataset2019.wixsite.com/urbanloco/hong-kong)
-  before redistributing any downloaded data.
+- UrbanLoco's [home page](https://advdataset2019.wixsite.com/urbanloco)
+  states: "This work is licensed under a Creative Commons
+  Attribution-NonCommercial-ShareAlike 4.0 International License and is
+  provided for non-commercial but academic use." Check that page before
+  redistributing any downloaded data.
 - BSD-3-Clause licensing (see callout above) applies to the upstream code
   as-is; this integration does not change that.

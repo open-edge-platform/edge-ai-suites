@@ -250,12 +250,20 @@ body.electron .top-panel select {
   pointer-events: none;
 }
 
-/* Electron only: native application menu entry, separated from the
-   navigation items above since it opens an OS menu rather than a screen. */
+/* Electron only: tooling entries (service manager, native application menu),
+   separated from the navigation items above since they do not open an app screen. */
+.nav-menu-list li.nav-menu-tools,
 .nav-menu-list li.nav-menu-app-menu {
   margin-top: 0.5rem;
   border-top: 1px solid #e5e5e5;
   padding-top: 0.875rem;
+}
+
+/* One divider for the whole group. */
+.nav-menu-list li.nav-menu-tools + li.nav-menu-app-menu {
+  margin-top: 0;
+  border-top: none;
+  padding-top: 8px;
 }
 
 body.electron .nav-menu-toggle {

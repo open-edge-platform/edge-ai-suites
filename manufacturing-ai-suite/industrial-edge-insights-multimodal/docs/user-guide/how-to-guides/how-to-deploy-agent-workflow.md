@@ -6,21 +6,7 @@ This section shows how to deploy the multimodal sample application with the agen
 
 The agentic workflow is implemented as a **LangGraph framework-based, sequential multi-agent pipeline**. The `apm-agent`, which is the meta-agent, acts as the orchestrator that triggers the workflow when new fusion results arrive and coordinates the execution of specialized agents, each responsible for a distinct stage of reasoning. Each agent consumes the shared execution context together with outputs from previous stages and produces traceable intermediate artifacts and a final maintenance recommendation.
 
-
-```
-Vision (DL Streamer Pipeline Server)──┐
-                                      ├─► Fusion Analytics ──► MQTT (Trigger batch request)
-        Time-Series Analytics       ──┘                           │
-                                                                  ▼
-                                                          agent (LangGraph)
-                                                                  │
-                                                     ┌────────────┼────────────┐
-                                                   Policy     Analysis      Evidence
-                                                                  │
-                                                          Maintenance Ticket
-                                                                  │
-                                                            UI (Dashboard)
-```
+![Agentic Workflow Architecture Diagram](../_assets/IEI-Multi-Agentic-Workflow-Arch.drawio.svg)
 
 | Agent | Input | Output |
 |--------|-------|--------|
@@ -161,7 +147,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 4. Check the output in Grafana dashboard:
 
    - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
-   
+
    - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD` values
      from the `.env` file:
 

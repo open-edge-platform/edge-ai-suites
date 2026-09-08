@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 # Handheld Multi-Modal Application
 
 The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios, optimized for Intel® edge hardware. It is is deployed on top of the
-[Edge Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
+[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
 The application combines LLM inference capability served through the OpenVINO™ Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; it runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization, sharing its Docker network.
 
@@ -50,6 +50,17 @@ All services share the `fedaero` Docker network and are defined in [`docker-comp
 
 Run `make setup` after cloning to auto-detect the `render` group GID and write the `.env`.
 
+### Optional Hugging Face Token
+
+OVMS and Open WebUI download models from Hugging Face or OpenVINO Hub on first start. For authenticated or gated model access, and potentially faster Hugging Face downloads, export `HF_TOKEN` before deploying. The default public model does not require a token.
+
+```bash
+export HF_TOKEN=hf_...
+make deploy
+```
+
+Do not add the token to `.env` or commit it to version control.
+
 ## Quick Start
 
 > **Recommended — use `make deploy`.**
@@ -57,7 +68,7 @@ Run `make setup` after cloning to auto-detect the `render` group GID and write t
 > ```text
 > network visual-pipeline-and-platform-evaluation-tool_default declared as external, but could not be found
 > ```
-> `make deploy` handles everything — it fetches Visual Pipeline and Platform Evaluation Tool, starts it, waits for the network, then brings up this stack.
+> `make deploy` handles everything — it fetches and starts Visual Pipeline and Platform Evaluation Tool, requests its model downloads, waits for the shared network, then starts this stack. ViPPET and OpenVINO Model Server model downloads run concurrently; the command completes after ViPPET models are installed.
 
 ```bash
 cd handheld-multi-modal
@@ -87,8 +98,10 @@ Open WebUI, Grafana dashboard, and Whisper speech-to-text service are only acces
 ## Make Targets
 
 ```text
-make deploy           # full one-shot deployment: sets runtime environment variables for the stack, tailors Visual Pipeline and Platform Evaluation Tool installation (metrics-manager and supported models) and brings up the stack components in the correct order
-make deploy-cdi        The same for CDI and SR-IOV environments
+make deploy           # full deployment: starts ViPPET and handheld services while their model downloads run concurrently; waits for ViPPET models to install
+make deploy-cdi       # same full deployment for CDI and SR-IOV
+make models-download-async  # request ViPPET models in the background; view .work/models-download.log for request diagnostics
+make models-status     # wait for and show ViPPET model installation progress
 make up                Start this stack (standard, requires Visual Pipeline and Platform Evaluation Tool network)
 make up-cdi            Start this stack (CDI, requires Visual Pipeline and Platform Evaluation Tool network)
 make up-standalone     Start this stack without Visual Pipeline and Platform Evaluation Tool (development or testing only)

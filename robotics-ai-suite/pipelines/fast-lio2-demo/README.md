@@ -497,9 +497,10 @@ paper's own number.
   This is non-fatal — FAST-LIO2 falls back to a scan-rate-based per-point
   time estimate — and the measured RMSE already reflects this; it is not a
   config bug to fix.
-- UrbanLoco's license (Creative Commons Attribution-NonCommercial-ShareAlike
-  4.0, non-commercial/academic use) should be checked on the
-  [dataset's own GitHub page](https://github.com/weisongwen/UrbanLoco)
-  before redistributing any downloaded data.
+- UrbanLoco's [home page](https://advdataset2019.wixsite.com/urbanloco)
+  states: "This work is licensed under a Creative Commons
+  Attribution-NonCommercial-ShareAlike 4.0 International License and is
+  provided for non-commercial but academic use." Check that page before
+  redistributing any downloaded data.
 - GPLv2 licensing (see callout above) applies to the upstream code as-is;
   this integration does not change that.

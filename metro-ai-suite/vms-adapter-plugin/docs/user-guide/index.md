@@ -53,7 +53,7 @@ Application requires only a new shim class — no route changes are needed.
 
 ## Sequence Diagram
 
-![VAP Sequence Diagram](./_assets/vap-sequence-diagram.svg)
+![VAP Sequence Diagram](./_assets/VAP-sequence-diagram.svg)
 
 The VMS Adapter Plugin lifecycle consists of two phases: manual setup and a continuous
 processing loop.
@@ -90,30 +90,7 @@ respective systems and provide RTSP URLs. Analytics App shims manage run lifecyc
 delivery. The FastAPI backend coordinates between shims, persists state to a PostgreSQL database,
 and exposes a unified API consumed by the React provider dashboard.
 
-```text
-VMS Systems
-  ┌──────────┐   RTSP / REST    ┌───────────────────────────────────────────┐
-  │ Any VMS  ├─────────────────►│                                           │
-  └──────────┘                  │           VMS Adapter Plugin              │
-  ┌──────────┐   RTSP / REST    │                                           │
-  │Nx Witness├─────────────────►│  FastAPI Backend    ┌───────────────────┐ │
-  └──────────┘                  │  ─────────────      │  PostgreSQL DB    │ │
-                                │  Orchestrator   ◄──►│  (cameras,        │ │
-                                │  Camera sync        │   sessions,       │ │
-                                │  Schema fetch       │   events)         │ │
-                                │                     └───────────────────┘ │
-                                └────────┬─────────────────────┬────────────┘
-                                         │                     │
-                          ┌──────────────▼──────┐   ┌─────────▼────────────────┐
-                          │  Live Video         │   │  Loitering Detection     │
-                          │  Captioning (LVC)   │   │ (DL Streamer Vision) App │
-                          └──────────┬──────────┘   └────────────┬─────────────┘
-                                     │                           │
-                          ┌──────────▼───────────────────────────▼─────────┐
-                          │              Provider Dashboard (React)        │
-                          │   Camera list | Run controls | Live stream     │
-                          └────────────────────────────────────────────────┘
-```
+![VAP System Architecture Diagram](./_assets/VAP-System-Architecture-frame.svg)
 
 To interact with the plugin, users have two dashboard options. The first option is to use the
 respective VMS UI, which integrates with VAP. The plugin provides this option by default, but it

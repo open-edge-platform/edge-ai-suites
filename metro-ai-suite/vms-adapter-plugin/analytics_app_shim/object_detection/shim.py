@@ -122,7 +122,6 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
         pipelines = await self._api.list_pipelines()
 
         self._pipeline_root_map = {}
-        pipeline_names: list[str] = []
         for p in pipelines:
             if not isinstance(p, dict):
                 continue
@@ -130,46 +129,35 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
             version = p.get("version", "")
             if version:
                 self._pipeline_root_map[version] = root
-                pipeline_names.append(version)
+
+        device_options = self._config.configured_pipeline_devices()
 
         schema: dict[str, Any] = {
             "type": "object",
             "title": f"{self.display_name} Start Parameters",
-            "required": ["pipeline_name", "camera_id"],
+            "required": ["camera_id", "device"],
             "properties": {
-                "pipeline_name": {
-                    "type": "string",
-                    "title": "Pipeline",
-                    "description": "Pipeline template to run",
-                    "enum": pipeline_names or [],
-                    "x-vms-source": "pipeline",
-                },
                 "camera_id": {
                     "type": "string",
                     "title": "Camera",
                     "description": "Camera to process (RTSP URL resolved automatically)",
                     "x-vms-source": "camera-id",
                 },
-                "parameters": {
-                    "type": "object",
-                    "title": "Pipeline parameters",
-                    "description": (
-                        "Extra parameters forwarded to the Pipeline Server payload. "
-                        "E.g. {\"detection-properties\": {\"device\": \"CPU\"}}"
-                    ),
-                    "default": {},
-                    "additionalProperties": True,
-                    "x-format": "textarea",
+                "device": {
+                    "type": "string",
+                    "title": "Device",
+                    "description": "Inference device mapped to a configured pipeline",
+                    "enum": device_options,
+                    "default": device_options[0] if device_options else "CPU",
                 },
             },
         }
 
         self._param_model = create_model(
             "OdStartParams",
-            pipeline_name=(str, ...),
             camera_id=(str, ...),
             camera_id_ref=(str, ""),   # original camera_id before RTSP resolution (e.g. "nx:abc123")
-            parameters=(dict, {}),
+            device=(str, ""),
         )
 
         return schema
@@ -213,11 +201,22 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
         stream_url: str = data.get("camera_id", "")
         extra_params: dict = data.get("parameters", {}) or {}
         camera_id_ref: str = data.get("camera_id_ref", "")
+        device: str = str(data.get("device", "") or "").strip().upper()
+
+        if not stream_url:
+            raise ValueError("camera_id / stream URL is required")
+
+        # Device-driven selection: map the chosen device → configured pipeline and
+        # hardcode the DL Streamer detection-properties device (same as the Nx UI flow).
+        if device:
+            configured = self._config.configured_pipeline_devices()
+            if device not in configured:
+                device = configured[0] if configured else device
+            pipeline_name = self._config.pipeline_for_device(device)
+            extra_params = {"detection-properties": {"device": device}}
 
         if not pipeline_name:
             raise ValueError("pipeline_name is required")
-        if not stream_url:
-            raise ValueError("camera_id / stream URL is required")
 
         pipeline_root = self._pipeline_root_map.get(pipeline_name, "user_defined_pipelines")
 
@@ -296,41 +295,21 @@ class ObjectDetectionAnalyticsAppShim(IAnalyticsAppShim):
         return self._config.control_params()
 
     async def start_for_camera(self, camera_id: str, stream_url: str, controls: dict) -> str | None:
-        """Start a DL Streamer pipeline for one camera from VMS control values."""
-        configured_devices = self._config.configured_pipeline_devices()
-        if not configured_devices:
-            logger.error("od_pipeline_not_configured", app_id=self.app_id)
-            return None
+        """Start a DL Streamer pipeline for one camera from VMS control values.
+
+        Device → pipeline mapping and hardcoded detection params are handled by
+        :meth:`start`, so the Nx UI and the dashboard minimal form share one path.
+        """
         # _param_model is bare BaseModel until fetch_schema() runs; guard against
         # the unlikely race where the polling task fires before schema fetch completes.
         if not self._pipeline_root_map:
             logger.warning("od_schema_not_ready", app_id=self.app_id)
             return None
 
-        selected_device = str(controls.get("device", "")).upper() or configured_devices[0]
-        if selected_device not in configured_devices:
-            logger.warning(
-                "od_invalid_device_selected",
-                app_id=self.app_id,
-                selected_device=selected_device,
-                fallback_device=configured_devices[0],
-            )
-            selected_device = configured_devices[0]
-
-        pipeline_name = self._config.pipeline_for_device(selected_device)
-        if not pipeline_name:
-            logger.error(
-                "od_pipeline_not_found_for_device",
-                app_id=self.app_id,
-                device=selected_device,
-            )
-            return None
-
         params = self._param_model.model_validate({
-            "pipeline_name": pipeline_name,
             "camera_id": stream_url,
             "camera_id_ref": camera_id,
-            "parameters": {"detection-properties": {"device": selected_device}},
+            "device": str(controls.get("device", "")),
         })
         try:
             result = await self.start(params)

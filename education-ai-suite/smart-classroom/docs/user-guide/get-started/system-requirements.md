@@ -14,23 +14,24 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **Python**: 3.12
 - **Node.js**: v18+ (for frontend)
 
-## Audio Pipeline Supported Models  
+## Audio Pipeline Supported Models
 
-### ASR (Automatic Speech Recognition)  
+### ASR (Automatic Speech Recognition)
 
-- **Whisper (all models supported)**  
-  - Recommended: `whisper-small` or lower for CPU efficiency  
-  - Runs on **CPU** (Whisper is CPU-centric)  
-- **FunASR (Paraformer)**  
+- **Whisper (all models supported)**
+  - Recommended: `whisper-small` or lower for CPU efficiency
+  - Runs on **CPU** (Whisper is CPU-centric)
+- **FunASR (Paraformer)**
   - Recommended for **Chinese transcription** (`paraformer-zh`)
--  Supports transcription of .mp3/.wav audio files up to 45 minutes long.
+- Supports transcription of .mp3/.wav audio files up to 45 minutes long.
 
-###  Summarization (LLMs)  
-- **Qwen Models (OpenVINO)**  
-  - `Qwen3-VL-8B-Instruct` (default, shared vision-language model)  
+### Summarization (LLMs)
+
+- **Qwen Models (OpenVINO™)**
+  - `Qwen3-VL-8B-Instruct` (default, shared vision-language model)
   - `Qwen3.5-9B`
--  Summarization supports up to 5,120 tokens on GPU
--  Run summarization on **GPU** (Intel® iGPU / Arc GPU) for faster performance.
+- Summarization supports up to 5,120 tokens on GPU
+- Run summarization on **GPU** (Intel® iGPU / Arc GPU) for faster performance.
 
 ### Content Segmentation and Topic Search
 
@@ -38,10 +39,11 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **Vector Store**: ChromaDB
 - **Content segmentation**: uses the shared vision-language model (`Qwen3-VL-8B-Instruct` by default)
 
-###  Supported Weight Formats  
-- **int4** → Recommended default (fast + memory-efficient on GPU)  
-- **int8** → Higher accuracy, larger memory footprint  
-- **fp16** → Full precision (use only if sufficient memory available)  
+### Supported Weight Formats
+
+- **int4** → Recommended default (fast + memory-efficient on GPU)
+- **int8** → Higher accuracy, larger memory footprint
+- **fp16** → Full precision (use only if sufficient memory available)
 
 ## Video Analytics Pipeline
 
@@ -55,15 +57,15 @@ For pipeline architecture and processing stages, see [How It Works](../how-it-wo
 
 | Model | Format | Used In | Purpose |
 | ----- | ------ | ------- | ------- |
-| **YOLOv8m-pose** (default) | OpenVINO IR | Front pipeline | Person detection + 17-keypoint pose estimation |
-| **YOLOv8s-pose** (default) | OpenVINO IR | Back pipeline | Lightweight person detection + pose estimation |
-| **YOLO11m/s-pose** | OpenVINO IR | Front / Back pipeline | Alternative pose model |
-| **YOLO26m/s-pose** | OpenVINO IR | Front / Back pipeline | Alternative pose model |
-| **ResNet-18** | OpenVINO IR | Front, Back, Content | Activity/action classification |
-| **MobileNet-V2** | OpenVINO IR | Front pipeline | Lightweight classification |
-| **Person-ReID-retail-0288** | OpenVINO IR | Front pipeline | Person re-identification and tracking |
+| **YOLOv8m-pose** (default) | OpenVINO™ IR | Front pipeline | Person detection + 17-keypoint pose estimation |
+| **YOLOv8s-pose** (default) | OpenVINO™ IR | Back pipeline | Lightweight person detection + pose estimation |
+| **YOLO11m/s-pose** | OpenVINO™ IR | Front / Back pipeline | Alternative pose model |
+| **YOLO26m/s-pose** | OpenVINO™ IR | Front / Back pipeline | Alternative pose model |
+| **ResNet-18** | OpenVINO™ IR | Front, Back, Content | Activity/action classification |
+| **MobileNet-V2** | OpenVINO™ IR | Front pipeline | Lightweight classification |
+| **Person-ReID-retail-0288** | OpenVINO™ IR | Front pipeline | Person re-identification and tracking |
 
-- All models run in OpenVINO Intermediate Representation (IR) format
+- All models run in OpenVINO™ Intermediate Representation (IR) format
 - Inference supported on **CPU**, **GPU**, and **NPU** (configurable per pipeline)
 - Default inference device: **NPU** (recommended for best performance on Intel® Core Ultra)
 

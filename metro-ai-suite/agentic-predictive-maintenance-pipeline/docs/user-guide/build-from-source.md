@@ -17,8 +17,8 @@ images from source code.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git
-cd edge-ai-libraries/sample-applications/agentic-predictive-maintenance
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/metro-ai-suite/agentic-predictive-maintenance-pipeline
 ```
 
 ### 2. Configure the Build
@@ -53,7 +53,7 @@ The build targets use the Dockerfiles located in `services/<service-name>/Docker
 The reasoning agent (`apm-agent`) is no longer built from this repo — it is
 an external image (Intel EAL's `agent-quality-handler` microservice) pulled
 via `docker/compose.agents.yaml`. See the [agent-service integration
-guide](agent-service-integration-guide.md) for its contract.
+guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/agent-quality-handler/docs/user-guide/agent-service-integration-guide.md) for its contract.
 
 ### 4. Verify the Build
 
@@ -80,8 +80,8 @@ The following microservices are reused from the `edge-ai-libraries` microservice
 | Microservice | Image |
 |---|---|
 | DL Streamer Pipeline Server | `intel/dlstreamer-pipeline-server` |
-| VLM OpenVINO Serving | `intel/vlm-openvino-serving` |
 | OpenVINO Model Server (OVMS) | `openvino/model_server` |
 | Model Download | `intel/model-download` |
+| Agent Quality Handler (agent-service) | `intel/agent-quality-handler` |
 
 To customize these microservices, refer to their respective source directories under `microservices/` in the `edge-ai-libraries` repository.

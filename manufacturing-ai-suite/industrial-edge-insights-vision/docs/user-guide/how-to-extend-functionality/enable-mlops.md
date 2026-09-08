@@ -8,7 +8,7 @@ With this feature, during runtime, you can download a new model using the micros
 ### Prerequisites
 
 This guide assumes that Model Download service has already downloaded the model to be updated to `/tmp/models`.
-To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#start-with-setup-script).
+Make sure to [set up Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#start-with-setup-script) first.
 
 If not available, you can simulate this by downloading the appropriate sample model from the Edge AI Resources repository by using the link from the tabs below. Once downloaded, extract to `/tmp/models` directory.
 

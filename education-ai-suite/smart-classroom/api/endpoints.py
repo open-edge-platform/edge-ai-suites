@@ -14,13 +14,14 @@ import subprocess, re
 from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_paths import SessionPaths
 from utils.platform_info import get_platform_and_model_info
 from dto.project_settings import ProjectSettings
 from monitoring.monitor import start_monitoring, stop_monitoring, get_metrics
 from dto.audiosource import AudioSource
 from components.ffmpeg import audio_preprocessing
 from utils.audio_util import save_audio_file
-from utils.locks import audio_pipeline_lock, video_analytics_lock
+from utils.locks import video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from components.va.media_service import ensure_media_service_running
 from utils.session_manager import generate_session_id
@@ -30,16 +31,11 @@ from dto.ocr_dto import OCRExtractRequest, OCRResponse
 from components.ocr.ocr_pipeline import ocr_detect_file, ocr_extract_text
 from utils.telegram_sender import get_sender
 from utils.scp_sender import get_scp_sender
-from utils import session_store, orchestrator
 
 import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
-@router.get("/create-session")
-def create_session():
-    return JSONResponse(content={"session-id":  generate_session_id()}, status_code=200)
 
 @router.get("/health")
 def health():
@@ -47,115 +43,9 @@ def health():
     hub = ModelManager.instance().health()
     return JSONResponse(content={"status": "ok", "hub": hub}, status_code=200)
 
-
-def _session_dir(session_id: str) -> str:
-    proj = RuntimeConfig.get_section("Project")
-    return os.path.join(proj.get("location"), proj.get("name"), session_id)
-
-
-@router.get("/sessions")
-def list_sessions():
-    sessions = []
-    for state in session_store.SessionStore.list_all():
-        sessions.append(
-            {
-                "session_id": state.get("session_id"),
-                "state": state.get("state"),
-                "current_stage": state.get("current_stage"),
-                "stages": state.get("stages"),
-                "sources": state.get("sources"),
-                "started_at": state.get("started_at"),
-                "updated_at": state.get("updated_at"),
-            }
-        )
-    return JSONResponse(content={"total": len(sessions), "sessions": sessions}, status_code=200)
-
-
-@router.post("/sessions/process")
-def process_session(payload: dict):
-    stages = payload.get("stages") or []
-    if not stages:
-        raise HTTPException(status_code=400, detail="stages required")
-    _validate_stages(stages)
-    session_id = orchestrator.start_process(payload)
-    state = session_store.SessionStore.get(session_id)
-    return JSONResponse(
-        content={
-            "session_id": session_id,
-            "stages": state.get("stages") if state else stages,
-            "output_dir": os.path.abspath(_session_dir(session_id)),
-            "started_at": state.get("started_at") if state else None,
-        },
-        status_code=200,
-    )
-
-
-@router.get("/sessions/{session_id}/status")
-def get_session_progress(session_id: str):
-    state = session_store.SessionStore.get(session_id)
-    if state is None:
-        raise HTTPException(status_code=404, detail="session not found")
-    return JSONResponse(content=_status_response(state), status_code=200)
-
-
-@router.delete("/sessions/{session_id}")
-def delete_session(session_id: str):
-    import shutil
-
-    state = session_store.SessionStore.get(session_id)
-    if state is None:
-        raise HTTPException(status_code=404, detail="session not found")
-    if state.get("state") == "running":
-        raise HTTPException(
-            status_code=409,
-            detail="session is running; cannot delete until it finishes",
-        )
-
-    session_store.SessionStore.delete(session_id)
-
-    session_dir = _session_dir(session_id)
-    files_removed = False
-    if os.path.isdir(session_dir):
-        try:
-            shutil.rmtree(session_dir)
-            files_removed = True
-        except OSError as e:
-            logger.error(f"failed to remove session dir {session_dir}: {e}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"record deleted but failed to remove files: {e}",
-            )
-
-    return JSONResponse(
-        content={
-            "session_id": session_id,
-            "deleted": True,
-            "files_removed": files_removed,
-        },
-        status_code=200,
-    )
-
-
-def _validate_stages(stages: list) -> None:
-    from utils.session_store import _ALL_STAGES
-    for s in stages:
-        if s not in _ALL_STAGES:
-            raise HTTPException(status_code=400, detail=f"unknown stage: {s}")
-
-
-def _status_response(state: dict) -> dict:
-    return {
-        "session_id": state.get("session_id"),
-        "state": state.get("state"),
-        "current_stage": state.get("current_stage"),
-        "stages": state.get("stages"),
-        "sources": state.get("sources"),
-        "output_dir": os.path.abspath(_session_dir(state.get("session_id"))),
-        "error": state.get("error"),
-        "started_at": state.get("started_at"),
-        "updated_at": state.get("updated_at"),
-    }
-
+@router.get("/create-session")
+def create_session():
+    return JSONResponse(content={"session-id":  generate_session_id()}, status_code=200)
 
 @router.get("/features")
 def get_features(request: Request):
@@ -229,16 +119,14 @@ def update_project_config(payload: ProjectSettings):
 
 @router.post("/start-monitoring")
 def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None)):
-    project_config = RuntimeConfig.get_section("Project")
-    start_monitoring(os.path.join(project_config.get("location"), project_config.get("name"), x_session_id, "utilization_logs"))
+    start_monitoring(str(SessionPaths.utilization_logs_dir(x_session_id)))
     return JSONResponse(content={"status": "success", "message": "Monitoring started"})
 
 @router.get("/metrics")
 def get_metrics_endpoint(x_session_id: Optional[str] = Header(None)):
     if x_session_id is None or "":
         return ""
-    project_config = RuntimeConfig.get_section("Project")
-    return get_metrics(os.path.join(project_config.get("location"), project_config.get("name"), x_session_id, "utilization_logs"))
+    return get_metrics(str(SessionPaths.utilization_logs_dir(x_session_id)))
 
 @router.get("/platform-info")
 def get_platform_info():
@@ -267,10 +155,13 @@ def start_video_analytics_pipeline(
     Start one or more video analytics pipelines
 
     Args:
-        requests: List of VideoAnalyticsRequest with pipeline_name, source
+        requests: List of VideoAnalyticsRequest with pipeline_name, source,
+            output_stream. When output_stream is False, that pipeline's video
+            is discarded and no stream URL is returned for it.
 
     Returns:
         JSON array with HLS/WebRTC stream addresses for each pipeline
+        (stream addresses omitted when output_stream is False)
     """
     if not x_session_id:
         raise HTTPException(
@@ -308,7 +199,7 @@ def start_video_analytics_pipeline(
                 location = project_config.get("location", "outputs")
                 name = project_config.get("name", "default")
 
-                output_dir = os.path.join(location, name, x_session_id, "va")
+                output_dir = str(SessionPaths.va_dir(x_session_id))
                 os.makedirs(output_dir, exist_ok=True)
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
@@ -323,8 +214,8 @@ def start_video_analytics_pipeline(
                     from utils.scp_sender import write_engagement_reports, get_scp_sender
                     from utils.telegram_sender import get_sender
                     try:
-                        _session_dir     = os.path.join(_loc, _n, session_id)
-                        _front_posture   = os.path.join(_loc, _n, session_id, "va", "front_posture.txt")
+                        _session_dir     = str(SessionPaths.session_dir(session_id))
+                        _front_posture   = str(SessionPaths.va_dir(session_id) / "front_posture.txt")
                         # Use the same engine as the /class-statistics UI endpoint
                         va_stats, _ = _svc.get_pose_stats(_front_posture)
 
@@ -339,7 +230,7 @@ def start_video_analytics_pipeline(
                         logger.info(f"[VA done] Final stats for {session_id}: {va_stats}")
 
                         try:
-                            _stats_path = os.path.join(_session_dir, "va", "class_statistics.json")
+                            _stats_path = str(SessionPaths.class_statistics_path(session_id))
                             os.makedirs(os.path.dirname(_stats_path), exist_ok=True)
                             with open(_stats_path, "w", encoding="utf-8") as _fh:
                                 json.dump(va_stats, _fh, indent=2, ensure_ascii=False)
@@ -386,7 +277,7 @@ def start_video_analytics_pipeline(
             project_config = RuntimeConfig.get_section("Project")
             location = project_config.get("location", "outputs")
             name = project_config.get("name", "default")
-            output_dir = os.path.join(location, name, x_session_id, "va")
+            output_dir = str(SessionPaths.va_dir(x_session_id))
 
             options = PipelineOptions(
                 output_dir=output_dir,
@@ -412,6 +303,7 @@ def start_video_analytics_pipeline(
                     pipe_options = PipelineOptions(
                         output_dir=options.output_dir,
                         output_rtsp=options.output_rtsp,
+                        output_stream=req.output_stream,
                         threshold=options.threshold,
                         record=record,
                     )
@@ -430,18 +322,21 @@ def start_video_analytics_pipeline(
                             "error": f"Failed to start pipeline '{req.pipeline_name}'",
                         }
                     else:
-                        if config.va_pipeline.stream_protocol == "webrtc":
-                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
-                        else:
-                            stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
-                        return {
+                        result = {
                             "status": "success",
                             "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "stream_url": stream_url,
-                            "stream_protocol": config.va_pipeline.stream_protocol,
-                            "overlays_embedded": True,
+                            "output_stream": req.output_stream,
                         }
+                        if req.output_stream:
+                            if config.va_pipeline.stream_protocol == "webrtc":
+                                stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
+                            else:
+                                stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
+                            result["stream_url"] = stream_url
+                            result["stream_protocol"] = config.va_pipeline.stream_protocol
+                            result["overlays_embedded"] = True
+                        return result
                 except Exception as e:
                     logger.error(f"Error starting pipeline '{req.pipeline_name}': {e}")
                     return {
@@ -589,8 +484,8 @@ def stop_video_analytics_pipeline(
             project_config = RuntimeConfig.get_section("Project")
             location = project_config.get("location", "outputs")
             name     = project_config.get("name", "default")
-            session_dir     = os.path.join(location, name, x_session_id)
-            va_posture_file = os.path.join(location, name, x_session_id, "va", "front_posture.txt")
+            session_dir     = str(SessionPaths.session_dir(x_session_id))
+            va_posture_file = str(SessionPaths.va_dir(x_session_id) / "front_posture.txt")
             sender = get_sender()
             if sender:
                 sender.send_engagement_package_async(
@@ -672,8 +567,8 @@ async def get_class_statistics(x_session_id: Optional[str] = Header(None)):
     project_config = RuntimeConfig.get_section("Project")
     location = project_config.get("location", "outputs")
     name = project_config.get("name", "default")
-    output_dir = os.path.join(location, name, x_session_id, "va")
-    front_posture_file = os.path.join(output_dir, "front_posture.txt")
+    output_dir = str(SessionPaths.va_dir(x_session_id))
+    front_posture_file = str(SessionPaths.va_dir(x_session_id) / "front_posture.txt")
 
     async def stream_statistics():
         stats_state = None  # Will hold the state for incremental processing
@@ -984,6 +879,9 @@ def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Option
 
 def register_routes(app: FastAPI):
     app.include_router(router)
+
+    from api.v1.api import v1_router
+    app.include_router(v1_router, prefix="/api/v1")
 
     from api.vlm_chat import router as vlm_chat_router
     app.include_router(vlm_chat_router)

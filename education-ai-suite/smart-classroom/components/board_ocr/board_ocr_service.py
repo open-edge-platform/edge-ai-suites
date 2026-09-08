@@ -8,6 +8,7 @@ from typing import Optional, Tuple
 
 from fastapi import HTTPException
 from utils.runtime_config_loader import RuntimeConfig
+from utils.session_paths import SessionPaths
 
 logger = logging.getLogger(__name__)
 
@@ -44,14 +45,7 @@ def read_board_ocr(session_id: Optional[str]) -> dict:
             detail=f"No board OCR result found for session {session_id}",
         )
 
-    project_config = RuntimeConfig.get_section("Project")
-    ocr_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "board_ocr",
-        "board_ocr.txt",
-    )
+    ocr_path = str(SessionPaths.board_ocr_dir(session_id) / "board_ocr.txt")
     results = []
     if os.path.exists(ocr_path):
         try:

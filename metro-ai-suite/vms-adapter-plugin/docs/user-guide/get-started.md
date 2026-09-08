@@ -4,8 +4,7 @@
 
 The **VMS Adapter Plugin (VAP)** bridges Video Management Systems (VMS), such as Nx Witness,
 Genetec, and Milestone VMS platforms, with AI Analytics Applications, such as Live Video Captioning (LVC),
-DL Streamer vision analytics applications like Loitering Detection, and provides a unified provider
-dashboard, built with the React library, for managing cameras and analytics runs. This guide
+DL Streamer vision analytics applications like Loitering Detection. This guide
 shows how to deploy the full stack with the Docker Compose tool and run your first analytics
 session.
 
@@ -14,7 +13,7 @@ This guide shows how to:
 - **Set up prerequisites**: Start LVC or DL Streamer vision analytics (Loitering Detection) before VAP,
   since VAP fetches their schemas at startup.
 - **Configure the environment**: Point VAP at your VMS and Analytics App services.
-- **Run the provider dashboard**: Discover cameras, enable streams, and start analytics runs.
+- **Start analytics**: Discover cameras and start pipelines from the Nx Witness client.
 
 ## Quick Start
 
@@ -139,81 +138,52 @@ vms-adapter-ui                Up
 vms-adapter-postgres          Up (healthy)
 ```
 
-Verify the backend is up:
+Verify the dockers are up and running:
 
 ```bash
-curl -k https://localhost:3443/v1/health
+docker ps
 ```
 
-## Step 5 — Open the Provider Dashboard
+## Step 5 — Discover Cameras
 
-| **Service**                | **URL**                               |
-| -------------------------- | ------------------------------------- |
-| Provider Dashboard (HTTPS) | `https://localhost:3443`              |
-| API Docs (Swagger UI)      | `https://localhost:3443/docs`         |
-| OpenAPI JSON               | `https://localhost:3443/openapi.json` |
-
-> **Note:** The dashboard uses HTTPS by default with a self-signed certificate. Your browser
-> will show a security warning on first access — this is expected. To use your own certificate,
-> copy `docker-compose.tls.yml` to `docker-compose.override.yml` and place `cert.pem` and
-> `key.pem` in `./certs/ui/`.
-
-> **Swagger Docs**: VAP serves API docs through the UI nginx proxy. Open
-> `https://localhost:3443/docs` to browse endpoints and `https://localhost:3443/openapi.json`
-> for the raw OpenAPI schema.
-
-## Step 6 — Discover Cameras
-
-In the dashboard, click **Discover Cameras** to sync cameras from all connected VMS systems.
-You can also trigger discovery via the API:
+Trigger camera discovery once after VAP starts. VAP queries Nx Witness and persists the
+results to PostgreSQL:
 
 ```bash
 curl -k -X POST https://localhost:3443/v1/cameras/discover
 ```
 
-The backend queries all configured VMS shims (Nx Witness in our case) and persists discovered cameras to PostgreSQL.
+## Step 6 — Start Analytics from the Nx Witness Client
 
-## Step 7 — Enable Cameras and Start Analytics
+The recommended way to start and stop pipelines is directly from the **Nx Witness desktop
+client**. VAP polls Nx Witness every 5 seconds and reacts to per-camera settings changes
+automatically.
 
-1. In the **Camera Discovery** panel, enable the cameras you want to use for analytics.
-2. In the **Analytics Engine** panel, select an Analytics Application (for example, **Live Video
-   Captioning** or **Loitering Detection**).
-3. Configure the analytics parameters (model, prompt, pipeline, and so on) and click
-   **Start Run**.
-4. View live captions or detection results in the **Live Stream** and **Analysis Results**
-   panels.
+1. In the Nx Witness desktop client, right-click a camera → **Camera Settings**.
+2. Go to the **Integrations** tab and expand **VAP Analytics Integration**.
+3. Configure the fields and enable the pipeline.
 
 ### Live Video Captioning
 
-Configure the following fields in the dashboard:
+| **Field**                                 | **Type**   | **Description**                                  |
+| ----------------------------------------- | ---------- | ------------------------------------------------ |
+| **Enable Live Video Captioning Pipeline** | Checkbox   | Starts or stops the LVC pipeline for this camera |
+| **Device**                                | Dropdown   | Inference device: `CPU`, `GPU`, or `NPU`         |
+| **Prompt**                                | Text field | Custom prompt sent to the VLM                    |
 
-| **Field**        | **Description**                      | **Default**                              |
-| ---------------- | ------------------------------------ | ---------------------------------------- |
-| Camera           | Dropdown of enabled cameras          | —                                        |
-| Enter Prompt     | VLM prompt for captioning            | "Describe what you see in one sentence." |
-| Select Model     | VLM model from LVC                   | OpenGVLab/InternVL2-2B                   |
-| Max New Tokens   | Maximum caption length               | 70                                       |
-| Select Pipeline  | DL Streamer pipeline configuration   | —                                        |
-| Run Name         | Display name for this run            | —                                        |
-| Frame Rate       | Frames per second sent for inference | 1                                        |
-| Chunk Size       | Number of frames per inference chunk | 1                                        |
-| Frame Resolution | Resolution preset sent to LVC        | default                                  |
+Live captions are pushed to Nx Witness as **bookmarks** on the camera timeline. Open the
+**Bookmarks** tab (Ctrl+B) in the Nx Witness client to view them.
 
-Live captions are streamed via Server-Sent Events (SSE) and displayed in the dashboard caption
-overlay on the WebRTC video player.
+### Loitering Detection
 
-### Loitering Detection (DL Streamer Vision based app)
+| **Field**                               | **Type** | **Description**                                  |
+| --------------------------------------- | -------- | ------------------------------------------------ |
+| **Enable Loitering Detection Pipeline** | Checkbox | Starts or stops the pipeline for this camera     |
+| **Device**                              | Dropdown | Inference device: `CPU`, `GPU`, or `NPU`         |
 
-Configure the following fields in the dashboard:
-
-| **Field**        | **Description**                                  |
-| ---------------- | ------------------------------------------------ |
-| Camera           | Dropdown of enabled cameras (Nx Witness cameras) |
-| Pipeline Name    | DL Streamer pipeline template to use             |
-| Pipeline Version | Version of the pipeline template                 |
-
-Detection results are pushed directly back to Nx Witness as analytics objects (bounding boxes
-with labels). Use the Nx Witness client to view detections overlaid on the camera feed.
+Detection results are pushed to Nx Witness as analytics objects (bounding boxes with labels).
+Use the **Object Search** panel (Alt+O) in the Nx Witness client to view detections overlaid
+on the camera feed.
 
 ## Stop the Stack
 

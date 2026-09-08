@@ -31,6 +31,9 @@ The application runs locally on Intel hardware using OpenVINO-backed services.
 
 See [docs/user-guide/get-started.md](docs/user-guide/get-started.md) for the complete flow.
 
+> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
+
 At a high level:
 
 ```powershell
@@ -59,6 +62,7 @@ This arms detection and opens a normal voice session after the wake word is dete
 
 - Overview: [docs/user-guide/index.md](docs/user-guide/index.md)
 - Setup: [docs/user-guide/get-started.md](docs/user-guide/get-started.md)
+- Application flow (UI walkthrough): [docs/user-guide/application-flow.md](docs/user-guide/application-flow.md)
 - Architecture: [docs/user-guide/how-it-works.md](docs/user-guide/how-it-works.md)
 - API: [docs/user-guide/api-reference.md](docs/user-guide/api-reference.md)
 - Configuration: [docs/user-guide/get-started/configuration.md](docs/user-guide/get-started/configuration.md)

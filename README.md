@@ -45,11 +45,6 @@ The **Edge AI Suites** project is licensed under the [APACHE 2.0](LICENSE), exce
 |:----------------------------------------------------------------------------------|:-------------------------|
 |[Smart Intersection](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection) | [LIMITED EDGE SOFTWARE DISTRIBUTION LICENSE AGREEMENT](metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/LICENSE.txt) |
 
-Unless otherwise stated, the Edge AI Suites software is provided for demonstration
-and reference purposes. It is not intended for use in production environments.
-For more information, refer to [Notes on Usage](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html).
-
-
 ## Third-Party
 
 Applications in this repository which are based on third-party content are:
@@ -59,3 +54,13 @@ Applications in this repository which are based on third-party content are:
 |[ACT Sample](robotics-ai-suite/pipelines/act-sample)             | [ACT](https://github.com/tonyzhaozh/act)                 |
 |[ORB-SLAM3 Sample](robotics-ai-suite/pipelines/orb-slam3-sample) | [ORB-SLAM3](https://github.com/UZ-SLAMLab/ORB_SLAM3.git) |
 
+## Intended Use
+
+Applications developed in this repository, unless stated otherwise, are intended for reference
+and demonstration purposes, not for production environments.
+Certain features, such as authentication, TLS termination, and external access controls are
+assumed to be covered at the infrastructure level.
+
+For more information, refer to the
+[Notes on Usage](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html)
+document.

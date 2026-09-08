@@ -26,8 +26,11 @@ import threading
 from datetime import datetime
 
 import socks
-from telethon import TelegramClient
-from telethon.sessions import StringSession
+
+logging.getLogger("telethon.crypto.libssl").setLevel(logging.WARNING)
+
+from telethon import TelegramClient  # noqa: E402
+from telethon.sessions import StringSession  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

@@ -23,11 +23,12 @@ Backend must be reachable — probe first:
 
 ```powershell
 $BASE = "http://127.0.0.1:9011"
-Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing |
-    Select-Object -ExpandProperty Content
+# 200 = all services ready; 503 = degraded, body names the failing one
+try   { (Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing).Content }
+catch { $_.ErrorDetails.Message }
 ```
 
-If unreachable, use [`sc-doctor`](../sc-doctor/SKILL.md) / [`sc-up`](../sc-up/SKILL.md).
+If unreachable or degraded, use [`sc-doctor`](../sc-doctor/SKILL.md) / [`sc-up`](../sc-up/SKILL.md).
 
 ---
 

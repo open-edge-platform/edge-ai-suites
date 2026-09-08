@@ -2,7 +2,8 @@
 param(
     [switch]$Help,
     [switch]$NoElevate,
-    [switch]$Silent
+    [switch]$Silent,
+    [switch]$NoWindowsTerminal
 )
 
 # ============================================================================
@@ -15,6 +16,39 @@ if (-not $IsWindowsOS) {
     exit 1
 }
 
+# Disable QuickEdit Mode on conhost to prevent the process from hanging
+function Disable-ConsoleQuickEdit {
+    try {
+        if (-not ('SmartClassroom.ConsoleMode' -as [type])) {
+            Add-Type -Namespace SmartClassroom -Name ConsoleMode -MemberDefinition @'
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern IntPtr GetStdHandle(int nStdHandle);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+'@ -ErrorAction Stop
+        }
+
+        $handle = [SmartClassroom.ConsoleMode]::GetStdHandle(-10)  # STD_INPUT_HANDLE
+        if ($handle -eq [IntPtr]::Zero -or $handle -eq [IntPtr](-1)) { return }
+
+        $mode = [uint32]0
+        if (-not [SmartClassroom.ConsoleMode]::GetConsoleMode($handle, [ref]$mode)) { return }
+
+        # ENABLE_EXTENDED_FLAGS (0x0080) must be set for the console to honour
+        # a cleared ENABLE_QUICK_EDIT_MODE (0x0040).
+        $newMode = [uint32](($mode -band (-bnot 0x0040)) -bor 0x0080)
+        if ($newMode -ne $mode) {
+            [void][SmartClassroom.ConsoleMode]::SetConsoleMode($handle, $newMode)
+        }
+    } catch {
+        # No real console attached (redirected output, ISE, ...)
+    }
+}
+
+if (-not $env:WT_SESSION) { Disable-ConsoleQuickEdit }
+
 # ============================================================================
 # AUTO-ELEVATE TO ADMINISTRATOR
 # ============================================================================
@@ -24,20 +58,48 @@ if (-not $NoElevate) {
     if (-not $isAdmin) {
         Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
 
-        $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        if ($Help) { $argList += " -Help" }
-        if ($Silent) { $argList += " -Silent" }
-        $argList += " -NoElevate"  # Prevent infinite elevation loop
+        $relaunchArgs = @()
+        if ($Help) { $relaunchArgs += "-Help" }
+        if ($Silent) { $relaunchArgs += "-Silent" }
+        if ($NoWindowsTerminal) { $relaunchArgs += "-NoWindowsTerminal" }
+        $relaunchArgs += "-NoElevate"  # Prevent infinite elevation loop
 
-        try {
-            Start-Process powershell -Verb RunAs -ArgumentList $argList
-            Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
-            exit 0
-        } catch {
-            Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
-            Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
-            exit 1
+        # Set-Location first so the -NoExit prompt stays in the script folder:
+        # after a failure the user can just re-run .\setup-smart-classroom.ps1 there.
+        $relaunchDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $PSCommandPath }
+
+        # Encoded rather than -File "<path>": wt treats ';' as its own delimiter
+        # and mangles nested quotes.
+        $relaunchCommand = "Set-Location '" + $relaunchDir.Replace("'", "''") + "'; & '" + $PSCommandPath.Replace("'", "''") + "' " + ($relaunchArgs -join ' ')
+        $relaunchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($relaunchCommand))
+        $psArgs = "-NoExit -ExecutionPolicy Bypass -EncodedCommand $relaunchEncoded"
+
+        $wtCmd = if ($NoWindowsTerminal) { $null } else { Get-Command wt.exe -ErrorAction SilentlyContinue }
+
+        $elevated = $false
+        if ($wtCmd) {
+            # '-w SmartClassroom' also makes the start script's tabs join this window.
+            try {
+                Start-Process $wtCmd.Source -Verb RunAs -ArgumentList "-w SmartClassroom new-tab --title `"Smart Classroom Setup`" powershell.exe $psArgs"
+                $elevated = $true
+            } catch {
+                Write-Host "  Windows Terminal launch failed; falling back to powershell.exe..." -ForegroundColor DarkYellow
+            }
         }
+
+        if (-not $elevated) {
+            try {
+                Start-Process powershell -Verb RunAs -ArgumentList $psArgs
+                $elevated = $true
+            } catch {
+                Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
+                Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
+                exit 1
+            }
+        }
+
+        Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
+        exit 0
     }
 }
 
@@ -45,12 +107,13 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Setup Script
 
-Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate] [-Silent]
+Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate] [-Silent] [-NoWindowsTerminal]
 
 Options:
-    -Help       Show this help message
-    -NoElevate  Skip auto-elevation to Administrator (Windows)
-    -Silent     Unattended mode - auto-install dependencies, no prompts
+    -Help               Show this help message
+    -NoElevate          Skip auto-elevation to Administrator (Windows)
+    -Silent             Unattended mode - auto-install dependencies, no prompts
+    -NoWindowsTerminal  Elevate into a plain powershell.exe window instead of Windows Terminal
 
 System Requirements:
   - OS: Windows 11
@@ -95,6 +158,9 @@ Write-Host ""
 # ============================================================================
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 if (-not $ScriptDir) { $ScriptDir = Get-Location }
+
+# Anchor the shell here so a re-run after an early exit works without any cd
+Set-Location $ScriptDir
 
 Write-Host "Script location: $ScriptDir" -ForegroundColor Gray
 Write-Host ""
@@ -1888,17 +1954,10 @@ if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
         Write-Host "  Diarization model not found locally at:" -ForegroundColor Yellow
         Write-Host "    $diarModelPath" -ForegroundColor Gray
         Write-Host ""
-        Write-Host "  [NOTE] Before Speaker Diarization will work, you must request model access on" -ForegroundColor Yellow
-        Write-Host "         Hugging Face and create an access token. Please read the setup guide:" -ForegroundColor Yellow
-        Write-Host "         https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
-        Write-Host ""
-
-        # ------------------------------------------------------------------
-        # Request Model Access
-        # ------------------------------------------------------------------
-        Write-Host "Request Model Access" -ForegroundColor Yellow
-        Write-Host "  This model is gated on Hugging Face. Please request access here:" -ForegroundColor Gray
-        Write-Host "    https://huggingface.co/$diarizationModelName" -ForegroundColor White
+        Write-Host "  [ATTENTION] Before Speaker Diarization will work, you must request model access and create an access token on" -ForegroundColor Yellow
+        Write-Host "    https://huggingface.co/$diarizationModelName " -ForegroundColor Yellow
+        Write-Host "  More details can be found in the setup guide:" -ForegroundColor Yellow
+        Write-Host "    https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
         Write-Host ""
         if (-not $Silent) {
             Read-Host "  Press Enter once you have submitted/been granted the access request"
@@ -1911,33 +1970,26 @@ if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
     # ------------------------------------------------------------------
     $hfTokenIsSet = Test-HfTokenSet -Content $configContent
     if ($diarizationJustEnabled -or -not $hfTokenIsSet) {
-        if (-not $hfTokenIsSet) {
-            Write-Host ""
-            Write-Host "  [WARNING] hf_token is None. It needs to be filled in." -ForegroundColor Yellow
-        }
         Write-Host ""
-        Write-Host "Hugging Face Token" -ForegroundColor Yellow
-        Write-Host "  Current token: $(if ($hfTokenIsSet) { 'Set' } else { 'Not set' })" -ForegroundColor Gray
+        if ($hfTokenIsSet) {
+            Write-Host "Hugging Face token: already set in config.yaml" -ForegroundColor Yellow
+        } else {
+            Write-Host "Hugging Face token: not set (hf_token: None)" -ForegroundColor Yellow
+        }
 
         if (-not $Silent) {
-            $secureHfToken = Read-Host "  Enter your Hugging Face access token (leave blank to keep current)" -AsSecureString
+            $secureHfToken = Read-Host "  Enter token (blank = keep current)" -AsSecureString
             $newHfToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
                 [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureHfToken)
             )
             if ($newHfToken) {
                 $configContent = $configContent -replace "(hf_token:\s*)\S+", "`${1}$newHfToken"
-                Write-Host "  [OK] Hugging Face token updated" -ForegroundColor Green
-            } else {
-                Write-Host "  Keeping existing Hugging Face token." -ForegroundColor Gray
+                Write-Host "  [OK] Token updated" -ForegroundColor Green
             }
-        } else {
-            Write-Host "  Silent mode: keeping existing Hugging Face token." -ForegroundColor Gray
         }
 
         if (-not (Test-HfTokenSet -Content $configContent)) {
-            Write-Host ""
-            Write-Host "  [WARNING] No Hugging Face token is set. If the model ever needs to be" -ForegroundColor Red
-            Write-Host "            (re)downloaded, it will fail until a valid hf_token is provided." -ForegroundColor Red
+            Write-Host "  [WARNING] Without a token, downloading the diarization model will fail." -ForegroundColor Red
         }
     }
 }

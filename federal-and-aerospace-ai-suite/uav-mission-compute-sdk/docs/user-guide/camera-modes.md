@@ -21,7 +21,7 @@ graph LR
         MQTT["MQTT Broker<br/>(armed state, detections)"]
         MTX["MediaMTX<br/>(RTSP server)"]
         VP["Vision Processor<br/>(YOLOv2-tiny GPU)"]
-        APP["Dashboard & Apps<br/>(http://localhost:5002)"]
+        APP["Dashboard & Apps<br/>"]
     end
 
     SIM --> PX4
@@ -328,22 +328,6 @@ The `vision-processor-multicam` container automatically:
    - Subscribes to armed state via MQTT: `uav/uav-1/telemetry/status`
    - Pauses inference when disarmed (saves GPU)
    - Resumes inference when armed
-3. **Publishes detections** to MQTT: `uav/uav-1/camera/{camera_id}/detections`
-4. **Publishes annotated frames** (JPEG with bounding boxes) to MQTT: `uav/uav-1/camera/{camera_id}/processed`
-
-> **Note**: Annotated frames are published only over MQTT — MediaMTX does **not** host a `/processed` RTSP path. To view detections, use the dashboard at http://localhost:5002 or subscribe to the MQTT topic above.
-
-### Dashboard Features
-
-**URL**: http://localhost:5002
-
-- Camera tiles: One tile per camera in `VISION_CAMERA_IDS`
-  - Sim mode: 3 tiles (nadir, forward, rear)
-  - USB mode: 1 tile (nadir)
-- Detection overlay: Real-time bounding boxes, labels, confidence scores
-- ARM/DISARM button: Controls UAV and camera inference
-- Telemetry panel: Position, altitude, battery, velocity
-- Demo mission button: Pre-programmed waypoint sequence
 
 ### Troubleshooting
 
@@ -405,7 +389,6 @@ usb-camera (implies):
 > **Prerequisite**: RTSP paths only exist while the UAV is **armed**. Camera bridges kill ffmpeg on disarm and respawn on arm. Arm the UAV first:
 > ```bash
 > curl -X POST http://localhost:8080/action/arm
-> # or use the ARM button on http://localhost:5002
 > ```
 
 ### View Streams Locally
@@ -417,14 +400,8 @@ usb-camera (implies):
 # `sudo add-apt-repository universe && sudo apt update`.
 sudo apt install ffmpeg mosquitto-clients xdg-utils -y
 
-# View raw camera feed
+# View raw camera feed (needs a local display)
 ffplay rtsp://localhost:8554/uav-1/nadir
-
-# View annotated frames with detections delivered over MQTT. The dashboard at
-# http://localhost:5002 renders these directly; the CLI equivalent grabs one
-# JPEG from the MQTT topic:
-mosquitto_sub -h localhost -p 1884 \
-  -t "uav/uav-1/camera/nadir/processed" -C 1 > frame.jpg && xdg-open frame.jpg
 
 # Capture one frame
 ffmpeg -i rtsp://localhost:8554/uav-1/nadir -frames:v 1 frame.jpg
@@ -444,6 +421,14 @@ ssh -L 8554:localhost:8554 user@px4-host
 
 # Then locally:
 ffplay rtsp://localhost:8554/uav-1/nadir
+```
+
+Headless alternative — skip port-forwarding and record directly on the remote
+host instead of live-viewing:
+```bash
+ssh user@px4-host \
+  "ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv"
+scp user@px4-host:nadir.mkv .
 ```
 
 ---
@@ -535,7 +520,7 @@ Start here: Which camera source?
 
 ### Add a New Camera (Sim Mode)
 
-1. **Add to Gazebo world** ([infra/px4-sim/worlds/baylands_multicam.sdf](../../infra/px4-sim/worlds/baylands_multicam.sdf)):
+1. **Add to Gazebo world** ([infra/px4-sim/worlds/baylands_multicam.sdf](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/infra/px4-sim/worlds/baylands_multicam.sdf)):
    ```xml
    <model name="left">
      <pose>0 0.5 0.3 0 45 0</pose>
@@ -684,7 +669,7 @@ aravis-tool -l
 
 ### Docker Image Extension
 
-To use industrial cameras in the `usb-camera-bridge` container, extend [../../infra/bridges/usb-camera/Dockerfile](../../infra/bridges/usb-camera/Dockerfile):
+To use industrial cameras in the `usb-camera-bridge` container, extend [../../infra/bridges/usb-camera/Dockerfile](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/infra/bridges/usb-camera/Dockerfile):
 
 ```dockerfile
 # Add to existing Dockerfile

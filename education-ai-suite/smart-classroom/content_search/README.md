@@ -39,7 +39,7 @@ For installation and setup instructions, see [Get Started](../docs/user-guide/ge
 - **Microservice APIs**:
   - [File Ingest & Retrieve](../docs/dev-guide/content-search/file_ingest_and_retrieve/API_GUIDE.md)
   - [Video Preprocess](../docs/dev-guide/content-search/video_preprocess/API_GUIDE.md)
-  - [VLM OpenVINO Serving](../docs/dev-guide/content-search/vlm_openvino_serving/API_GUIDE.md)
+  - [VLM OpenVINO™ Serving](../docs/dev-guide/content-search/vlm_openvino_serving/API_GUIDE.md)
 - **Design Docs**:
   - [Document Parser](../docs/dev-guide/content-search/file_ingest_and_retrieve/document_parser.md)
   - [Reranker / PostProcessor](../docs/dev-guide/content-search/file_ingest_and_retrieve/reranker.md)

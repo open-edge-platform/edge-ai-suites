@@ -12,7 +12,6 @@ from dto.transcription_dto import TranscriptionRequest
 from pipeline import Pipeline
 from utils.audio_util import save_audio_file
 from utils.config_loader import config
-from utils.locks import audio_pipeline_lock
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +21,6 @@ router = APIRouter()
 @router.post("/upload-audio")
 def upload_audio(file: UploadFile = File(...)):
     status_code = status.HTTP_201_CREATED
-
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
 
     try:
         filename, filepath = save_audio_file(file)
@@ -55,9 +51,6 @@ def transcribe_audio(
     request: TranscriptionRequest,
     x_session_id: Optional[str] = Header(None)
 ):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-
     pipeline = Pipeline(x_session_id)
 
     def stream_transcription():

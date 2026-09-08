@@ -17,10 +17,13 @@ A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manag
 **Telemetry flow:**
 
 ```mermaid
+---
+config: {"theme": "dark"}
+---
 sequenceDiagram
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
-    participant OVL as gvapython (MavlinkReceiver)
+    participant OVL as gvapython MavlinkReceiver
     participant Frame as Video Frame
 
     PX4->>RTR: MAVLink stream (UDP :14550)

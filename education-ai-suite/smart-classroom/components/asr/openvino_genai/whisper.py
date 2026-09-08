@@ -14,7 +14,7 @@ class Whisper(BaseASR):
         config = {"INFERENCE_NUM_THREADS": str(threads_limit)} if threads_limit and threads_limit > 0 else {}
         self.model = ov_genai.WhisperPipeline( self.model_path, device=device,config=config)
  
-   def transcribe(self, audio_path: str, temperature: float) -> str:
+   def transcribe(self, audio_path: str, temperature: float) -> dict:
         audio, sr = self._load_wav_mono_16k(audio_path)
         result = self.model.generate(audio, return_timestamps=True)
         segments = []

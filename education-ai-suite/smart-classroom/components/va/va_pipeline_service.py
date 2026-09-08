@@ -40,6 +40,7 @@ class PipelineOptions:
     device: str = "NPU"  # CPU, GPU, or NPU
     output_dir: str = "outputs"  # Directory for metadata output files
     output_rtsp: str = "rtsp://127.0.0.1:8554"  # RTSP output URL
+    output_stream: bool = True  # Push video to RTSP; False = discard to fakesink
     threshold: float = 0.5  # Detection threshold for YOLO
     record: bool = False
 
@@ -242,6 +243,15 @@ class VideoAnalyticsPipelineService:
             "protocols=udp",
         ]
 
+    def _get_video_sink_elements(
+        self, options: PipelineOptions, stream_name: str
+    ) -> List[str]:
+        """Get video sink elements: RTSP sink, or a discarding fakesink when
+        streaming is disabled (options.output_stream=False)"""
+        if not options.output_stream:
+            return ["fakesink", "async=false", "sync=false"]
+        return self._get_rtsp_sink_elements(options.output_rtsp, stream_name)
+
     def _check_redistribute_latency(self, log_file: Path) -> bool:
         """Check if 'Redistribute latency' appears in log file"""
         try:
@@ -302,13 +312,21 @@ class VideoAnalyticsPipelineService:
             if process.poll() is not None:
                 # Process has exited
                 log_file = self.pipeline_logs.get(pipeline_name)
+                normal_exit = bool(log_file) and self._check_normal_exit(log_file)
+                self.logger.info(
+                    f"[VA][monitor] pipeline '{pipeline_name}' exited rc={process.returncode} "
+                    f"normal_exit={normal_exit} log={log_file}"
+                )
 
-                if log_file and self._check_normal_exit(log_file):
+                if normal_exit:
                     # Normal exit with EOS
                     self.logger.info(
                         f"Pipeline '{pipeline_name}' exited normally (EOS received)"
                     )
                     self.pipeline_final_status[pipeline_name] = "eos"
+                    self.logger.info(
+                        f"[VA][monitor] marking '{pipeline_name}' eos; firing done callback"
+                    )
                     self._fire_done_callback_if_all_finished()
                     break
                 else:
@@ -343,9 +361,16 @@ class VideoAnalyticsPipelineService:
                         # Restart pipeline using saved parameters
                         params = self.pipeline_params.get(pipeline_name)
                         if params:
-                            self._launch_pipeline_internal(
-                                pipeline_name, params["options"], params["command"]
-                            )
+                            try:
+                                self._launch_pipeline_internal(
+                                    pipeline_name, params["options"], params["command"]
+                                )
+                            except Exception as e:
+                                self.logger.error(
+                                    f"[VA][monitor] restart of pipeline '{pipeline_name}' raised: {e}",
+                                    exc_info=True,
+                                )
+                                break
                         else:
                             self.logger.error(
                                 f"Cannot restart pipeline '{pipeline_name}': parameters not found"
@@ -367,22 +392,29 @@ class VideoAnalyticsPipelineService:
 
     def _fire_done_callback_if_all_finished(self):
         """Fire on_all_pipelines_done once when no pipeline processes remain running."""
-        if self._reports_generated or not self._any_pipeline_ran:
+        if self._reports_generated:
+            self.logger.info("[VA][done] skip: _reports_generated already set")
+            return
+        if not self._any_pipeline_ran:
+            self.logger.info("[VA][done] skip: _any_pipeline_ran is False")
             return
         still_running = [
             name for name, proc in self.pipelines.items()
             if proc.poll() is None
         ]
         if still_running:
-            self.logger.debug(f"[VA] Pipelines still running: {still_running} — reports deferred.")
+            self.logger.info(f"[VA][done] deferring, still running: {still_running}")
             return
         self._reports_generated = True
         self.logger.info("[VA] All pipelines finished — triggering engagement report generation.")
         if callable(self.on_all_pipelines_done):
             try:
                 self.on_all_pipelines_done(getattr(self, "x_session_id", None))
+                self.logger.info("[VA][done] callback returned")
             except Exception as exc:
                 self.logger.error(f"[VA] on_all_pipelines_done callback raised: {exc}", exc_info=True)
+        else:
+            self.logger.warning("[VA][done] no on_all_pipelines_done callback configured")
 
     def _launch_pipeline_internal(
         self, pipeline_name: str, options: PipelineOptions, command: List[str]
@@ -401,7 +433,7 @@ class VideoAnalyticsPipelineService:
         try:
             # Create log file for pipeline output
             log_dir = Path(options.output_dir) / "logs"
-            log_dir.mkdir(exist_ok=True)
+            log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"{pipeline_name}_{int(time.time())}.log"
             log_handle = open(log_file, "w", buffering=1)  # Line buffered
 
@@ -456,7 +488,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build front camera pipeline (Pipeline 1)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -535,7 +567,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "front_stream"),
+            *self._get_video_sink_elements(options, "front_stream"),
             # Branch 3: MobileNetv2 classification
             "t.",
             "!",
@@ -571,7 +603,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build back camera pipeline (Pipeline 2)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -614,7 +646,7 @@ class VideoAnalyticsPipelineService:
             f"file-path={output_dir.as_posix()}/back_resnet18.txt",
             "file-format=json-lines",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "back_stream"),
+            *self._get_video_sink_elements(options, "back_stream"),
         ]
         return pipeline
 
@@ -623,7 +655,7 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build content/file pipeline (Pipeline 3)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
@@ -650,7 +682,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "content_stream"),
+            *self._get_video_sink_elements(options, "content_stream"),
         ]
         return pipeline
 
@@ -671,7 +703,8 @@ class VideoAnalyticsPipelineService:
         Note:
             - Source can be RTSP URL (rtsp://...) or local file path
             - Input type is auto-detected from source (starts with 'rtsp://' = RTSP, else file)
-            - Video output is always pushed to RTSP server (configured via options.output_rtsp)
+            - Video output is pushed to RTSP server (configured via options.output_rtsp)
+              unless options.output_stream is False, in which case it is discarded
             - Metadata is saved to files in options.output_dir
         """
         # Validate pipeline name
@@ -732,7 +765,11 @@ class VideoAnalyticsPipelineService:
 
             self.logger.info(f"Launching pipeline '{pipeline_name}'")
             self.logger.info(f"  Source: {source} (type: {input_type})")
-            self.logger.info(f"  RTSP output: {options.output_rtsp}")
+            self.logger.info(
+                f"  RTSP output: {options.output_rtsp}"
+                if options.output_stream
+                else "  RTSP output: disabled (fakesink)"
+            )
             self.logger.info(f"  Metadata dir: {options.output_dir}")
             self.logger.info(f"Command: {' '.join(command)}")
 
