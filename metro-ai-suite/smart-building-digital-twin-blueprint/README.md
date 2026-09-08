@@ -1,13 +1,26 @@
 # Smart Building Digital Twin Blueprint
 
-Intel Scenescape deployment for smart building monitoring — person, door, and luggage detection across multiple synchronized cameras, with an AI analytics dashboard that narrates scene activity in real time.
+Smart Building Digital Twin blueprint is a complete smart-building monitoring simulation that includes the end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
+
+The blueprint uses synchronized cameras, YOLOX-S model variants, and sensors to watch a building for:
+
+- People, luggage, and doors
+- Replayed sensor events of badge, FaceID, and ambient-light changes
+- Possible falls and luggage-related events
+- Abandoned, stolen, or exchanged luggage
+- Door states and region occupancy
+- System telemetry, including CPU, GPU, memory, storage, and CPU SKU
+
+The system runs with Docker Engine and Docker Compose tool, and Scenescape. Camera videos and sensor data are replayed in synchronization. Camera detections, tracking data, and sensor events are exchanged through the Message Queuing Telemetry Transport (MQTT) protocol and analyzed by Python programs.
+
+An AI analytics web dashboard shows simulated building activity, alerts, camera snapshots, and system health. The setup.sh script downloads required images and plugins, configures the deployment, and starts the services, while configuration files control the cameras, YOLOX-S model variants, scenes, and tracking behavior.
 
 ## Overview
 
-- 7-camera scene with looping RTSP video streams
+- Seven-camera scene with looping RTSP video streams
 - YOLOX-S detection model in INT8 (default for both GPU and CPU; override `MODEL_NAME` to `smartbuilding-fp16` if needed)
 - Badge and FaceID sensor replay synchronized to video loops via raw camera metadata
-- Ambient light sensor driven by loop dark/live transitions
+- Ambient-light sensor values change to reflect dark and live states as the camera video loops.
 - Analytics dashboard at the configured `DASHBOARD_URL` with live scene narration
 
 ## Architecture
@@ -65,26 +78,26 @@ flowchart BT
 
 | Alert | Description |
 |---|---|
-| No credentials at Checkpoint | Person enters inbound zone without badge or face ID |
-| Badge switch | An inbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the badge learned earlier in the loop |
-| Possible badge switch | An outbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the badge learned earlier in the loop |
-| Possible fall | Person in horizontal posture outside a furniture region |
+| No credentials at `Checkpoint` | Person enters an inbound zone without a badge or FaceID |
+| Badge switch | An inbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the face previously associated with the badge during the loop |
+| Possible badge switch | An outbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the face previously associated with the badge during the loop |
+| Possible fall | Person in a horizontal posture outside a furniture region |
 | Luggage abandoned | Owner walks ≥ 4 m away from their luggage while still moving — fires immediately, captures snapshots of both person and bag |
 | Unattended luggage | Luggage has had no companion for more than 30 seconds — covers cases where the owner has left the scene entirely |
 | Luggage stolen | A single bag's companion changes to a different person; the dashboard captures both handoff-time and alert-time images for evidence |
-| Luggage switch | Two bags coordinately swap companions (bag A: person 1 → person 2, bag B: person 2 → person 1) |
+| Luggage switch | Two bags swap companions coordinately (bag A: person 1 → person 2, bag B: person 2 → person 1) |
 
-**dashboard.py** (FastAPI) exposes two SSE endpoints — `/stream/narrator` for rolling scene events and `/stream/scene-state` for live object counts, door states, and region occupancy — and serves the web UI.
+**dashboard.py**, a web UI created and served by the FastAPI framework, exposes two Server-Sent Events (SSE) endpoints: `/stream/narrator` for rolling scene events and `/stream/scene-state` for live object counts, door states, and region occupancy.
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- Python 3, OpenSSL, jq
-- Intel GPU recommended (CPU fallback supported)
+- Docker Engine and Docker Compose tool
+- Python 3 programming language, OpenSSL toolkit, jq tool
+- Intel® GPU recommended; CPU fallback supported
 - For Panther Lake `xe` GPU telemetry, install `xpu-smi` on the host before running `./setup.sh`
-- Host install example on Ubuntu 24.04 when the Intel graphics repo or PPA is already configured: `sudo apt install xpu-smi`
-- If the GPU name still appears as a raw PCI ID after host package install, refresh the host PCI ID database with `sudo update-pciids`
-- Git LFS — must be installed **before** cloning (video files are stored in LFS):
+- Host install example on Ubuntu OS version 24.04 when the Intel graphics repository or PPA is already configured: `sudo apt install xpu-smi`
+- If the GPU name still appears as a raw Peripheral Component Interconnect (PCI) ID after host package install, refresh the host PCI ID database with `sudo update-pciids`
+- Install the Git Large File Storage (LFS) extension **before** cloning, for video file storage:
   ```bash
   # Ubuntu/Debian
   sudo apt install git-lfs
@@ -103,11 +116,11 @@ Scenescape images are pulled automatically from Docker Hub by `./setup.sh` — n
 | `intel/scenescape-analytics` | `2026.2.0-rc2` |
 | `intel/dlstreamer-pipeline-server` | `2026.2.0-ubuntu24-rc2` |
 
-The DLStreamer GST plugin scripts (`gstplugins/`) are fetched automatically by `setup.sh` via a sparse shallow clone of the Scenescape repository — only that subdirectory is downloaded, no full clone or image build is needed.
+`setup.sh` automatically downloads the GStreamer plugin scripts (`gstplugins/`) used by the Deep Learning Streamer (DL Streamer), from the Scenescape repository using a sparse shallow clone. Only the `gstplugins/` directory is downloaded; a full repository clone and local image build are not required.
 
 ## Setup
 
-Clone the repo (Git LFS required for video and model files), then run:
+Clone the repository (Git LFS extension is required for video and model files), then run:
 
 ```bash
 ./setup.sh
@@ -115,11 +128,11 @@ Clone the repo (Git LFS required for video and model files), then run:
 
 The script prompts for an admin password (`SUPASS`) and a database password (`DATABASE_PASSWORD`), generates TLS certificates, starts all services, waits for the API, imports the included Showcase scene automatically, and then performs a best-effort telemetry check.
 
-This branch does not require Ollama and does not download a Qwen model during setup.
+This branch does not require the Ollama service and does not download the Qwen model during setup.
 
 If `xpu-smi` is already installed on the host, `./setup.sh` also grants the needed host access for `xpu-smi`, starts the host GPU telemetry bridge, and verifies that the analytics service can read telemetry. If you install `xpu-smi` after the initial deployment, rerun `./setup.sh`.
 
-The analytics service also defers `SideDoorEntry` baseline learning until after the first completed replay loop, so a mid-loop startup does not poison the door-state baseline.
+The analytics service learns the `SideDoorEntry` door-state baseline only after the first complete replay loop, preventing partial data from a mid-loop startup from affecting the baseline.
 
 After setup:
 - Scenescape web UI: `SCENESCAPE_UI_URL` from `.env` (accept the self-signed certificate)
@@ -128,19 +141,19 @@ After setup:
 ## Project Structure
 
 ```
-config/          Model files and pipeline/tracker configuration
+config/          Model files, and pipeline and tracker configuration
 datasets/        Looping video files per scene (Git LFS)
 scenes/          Scene zip bundles and sensor event data
 scripts/
-  narrator.py        Converts MQTT tracks to rolling scene narrative + alerts
+  narrator.py        Converts MQTT tracks to rolling scene narrative and alerts
   dashboard.py       FastAPI server — SSE streams and web UI
-  sensor_replay.py   Replays sensor events (badge, FaceID, ambient light) in sync with video loops
-  export-config.sh   Exports object class definitions and scene configs from the live API
+  sensor_replay.py   Replays sensor events (badge, FaceID, and ambient light) in synchronization with video loops
+  export-config.sh   Exports object class definitions and scene configurations from the live API
   restore-assets.sh  Restores object class definitions to a fresh Scenescape instance
   static/
-    index.html       3-column analytics dashboard (scene state | narrator feed | event detail)
+    index.html       Three-column analytics dashboard (scene state | narrator feed | event detail)
 config/
-  object-classes.json   Backed-up object class definitions (person, luggage, door)
+  object-classes.json   Backed-up object class definitions (person, luggage, and door)
   scenes/               Scene configuration snapshots exported from the API
 docker-compose.yml
 setup.sh
@@ -148,11 +161,11 @@ setup.sh
 
 ## Analytics Dashboard
 
-Open the analytics dashboard URL from `.env` in a browser. The dashboard has three columns:
+Get the analytics dashboard URL from the `.env` file and enter the URL in a browser. The dashboard opens with three columns:
 
-- **Scene State** (left) — live counts of people, bags, and doors; region occupancy updated each tick. State persists across page reloads via `localStorage`.
+- **Scene State** (left) — live counts of people, bags, doors, and region occupancy updated each tick. The state persists across page reloads via the `localStorage` API.
 - **System Telemetry** (left, below Region Occupancy) — CPU SKU plus current CPU, GPU, memory, and storage usage sampled with each dashboard snapshot.
-- **Scene Narrator** (center) — rolling 10-minute feed of scene events and camera snapshots, updated every 10 seconds (configurable via `SNAPSHOT_INTERVAL` in `.env`). Security alerts are highlighted in red. Feed persists across page reloads via `localStorage`.
+- **Scene Narrator** (center) — a rolling 10-minute feed of scene events and camera snapshots, updated every 10 seconds. You can configure the update interval via `SNAPSHOT_INTERVAL` in the `.env` file. Security alerts are highlighted in red. Feed persists across page reloads via the `localStorage` API.
 - **Event Detail** (right) — expanded view of the selected narrator entry.
 
 For `luggage stolen` events, the detail view shows `handoff ...` images before `alert ...` images so the evidence appears in chronological order.
@@ -168,13 +181,13 @@ For `luggage stolen` events, the detail view shows `handoff ...` images before `
 
 ## Configuration
 
-Key variables in `.env`:
+Key variables in the `.env` file:
 
 | Variable | Default | Description |
 |---|---|---|
-| `PUBLIC_HOSTNAME` | detected from `hostname` | Hostname used to build the default web/API URLs and TLS certificate SANs |
-| `API_BASE_URL` | `https://localhost/api/v1` | Host-local Scenescape API base URL used by setup and helper scripts; override this when running the helper scripts from another machine |
-| `SCENESCAPE_UI_URL` | `https://$PUBLIC_HOSTNAME` | Scenescape web UI URL printed by setup |
+| `PUBLIC_HOSTNAME` | Detected from the `hostname` | The hostname used to build the default web and API URLs, and TLS certificate Subject Alternative Names (SANs) |
+| `API_BASE_URL` | `https://localhost/api/v1` | Host-local Scenescape API base URL used by the setup and helper scripts; override this when running the helper scripts from another machine |
+| `SCENESCAPE_UI_URL` | `https://$PUBLIC_HOSTNAME` | Scenescape web UI URL printed by the setup |
 | `DASHBOARD_URL` | `http://$PUBLIC_HOSTNAME:$DASHBOARD_PORT` | Browser URL for the analytics dashboard |
 | `SNAPSHOT_INTERVAL` | `10` | Seconds between narrator snapshots |
 | `DASHBOARD_PORT` | `7000` | Host port for the analytics dashboard |
@@ -184,32 +197,32 @@ Key variables in `.env`:
 ## Adding a New Scene
 
 1. Add `scenes/{SceneName}.zip` and `datasets/{scene-name}/cam-*.ts`
-2. Optionally add `scenes/{SceneName}-sensors.json` for sensor replay
+2. (Optional) Add `scenes/{SceneName}-sensors.json` for sensor replay. If present, the project’s sensor replay process can replay those events in synchronization with the scene’s looping camera videos. 
 3. Run `./setup.sh`
 
 ## Exporting Configuration
 
-After making changes in the Scenescape UI (editing object classes, adjusting camera transforms, updating regions), run the export script to capture the new state:
+After making changes in the Scenescape UI, for example, editing object classes, adjusting camera transforms, and updating regions, run the export script to capture the new state:
 
 ```bash
 PASSWORD=<admin-password> ./scripts/export-config.sh
 ```
 
 This writes:
-- `config/object-classes.json` — current object class definitions (person, luggage, door, etc.)
-- `config/scenes/{Name}.json` — full scene configuration (cameras, intrinsics, transforms, regions)
+- `config/object-classes.json` — current object class definitions, i.e. person, luggage, and door.
+- `config/scenes/{Name}.json` — full scene configuration, e.g. cameras, intrinsics, transforms, and regions.
 
-Commit the updated files to keep the repo in sync with the live instance.
+Commit the updated files to keep the repository in synchronization with the live instance.
 
 ## Copilot Workspace Files
 
-This repo now includes shared Copilot customization files to help with cross-system tuning and deployment debugging:
+This repository includes shared Copilot customization files to help with cross-system tuning and deployment debugging:
 
 - `.github/copilot-instructions.md` — always-on project guidance for preserving the Scenescape networking model, localhost setup behavior, and tuning workflow
 - `.github/skills/tune-other-systems/SKILL.md` — on-demand skill for investigating why another machine behaves differently from the reference system
 - `.github/skills/tune-other-systems/assets/system-delta-template.md` — checklist for capturing machine, environment, service, and scene differences before making changes
 
-Use the tuning skill before changing analytics logic on another system. In most cases, the important first comparisons are `.env`, GPU/CPU mode, service health, `config/resolved-uuids.json`, and exported scene/object-class configuration.
+Use the tuning skill before changing analytics logic on another system. In most cases, the important first comparisons are `.env`, GPU and CPU mode, service health, `config/resolved-uuids.json`, and exported scene and object-class configuration.
 
 ## Useful Commands
 
@@ -218,7 +231,7 @@ docker compose up -d                    # start all services
 docker compose down                     # stop all services
 docker compose ps                       # check service status
 docker compose logs -f analytics        # stream analytics logs
-docker compose logs -f scene-narrator   # stream dashboard/narrator logs
+docker compose logs -f scene-narrator   # stream dashboard and narrator logs
 ./cleanup.sh                            # stop services and remove all generated files and volumes
 ```
 
