@@ -93,6 +93,12 @@ export AI_ROUTE_PLANNER_PORT=${AI_ROUTE_PLANNER_PORT:-7864}
 
 # Reasoning Model Configuration (optional)
 export REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}
+# Timeout (seconds) for the reasoning model HTTP request. Increase for larger models
+# (e.g. 60-120s for 14B-class models on CPU) to avoid premature client-side cancellation.
+export REASONING_TIMEOUT_SEC=${REASONING_TIMEOUT_SEC:-8.0}
+# OVMS KV-cache size in GB. Increase for larger reasoning models so requests aren't
+# starved of cache (undersized cache causes requests to stall/be cancelled).
+export OVMS_CACHE_SIZE=${OVMS_CACHE_SIZE:-10}
 if [[ -n "$REASONING_MODEL_NAME" ]]; then
     export COMPOSE_PROFILES="reasoning"
 else
@@ -124,6 +130,8 @@ start_service() {
     if [[ -n "$REASONING_MODEL_NAME" ]]; then
         echo -e "  Route planning mode: ${YELLOW}AI reasoning${NC}"
         echo -e "  REASONING_MODEL_NAME: ${YELLOW}$REASONING_MODEL_NAME${NC}"
+        echo -e "  REASONING_TIMEOUT_SEC: ${YELLOW}$REASONING_TIMEOUT_SEC${NC}"
+        echo -e "  OVMS_CACHE_SIZE: ${YELLOW}${OVMS_CACHE_SIZE} GB${NC}"
         echo -e "${YELLOW}Note: Model is downloaded if not already present/cached and can take several minutes.${NC}"
     else
         echo -e "  Route planning mode: ${YELLOW}rule based${NC}"
