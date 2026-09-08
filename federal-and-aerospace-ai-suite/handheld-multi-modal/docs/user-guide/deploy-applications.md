@@ -91,7 +91,7 @@ cd handheld-multi-modal
 ./run.sh up
 ```
 
-For development purposes, it is possible to deploy lightweight version without Visual Pipeline and Platform Evaluation Tool, however full version is recommended for end-user. To deploy it, run:
+For development purposes, it is possible to deploy a lightweight version without the Visual Pipeline and Platform Evaluation Tool, however, the full version is recommended for end users. To deploy it, run:
 
 ```bash
 ./run.sh standalone
