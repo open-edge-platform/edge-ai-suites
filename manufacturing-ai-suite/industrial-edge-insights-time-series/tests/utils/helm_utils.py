@@ -2285,11 +2285,11 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
                 '-c', 'dlstreamer-pipeline-server', '-n', namespace
             ]
             logger.info(f"Copying DL Streamer models: {' '.join(kubectl_cp_dlstreamer)}")
-            result = common_utils.exec_command(kubectl_cp_dlstreamer, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            result = common_utils.exec_command(kubectl_cp_dlstreamer, capture_output=True)
             if result.returncode == 0:
                 logger.info("DL Streamer models copied successfully.")
             else:
-                logger.error(f"Error copying DL Streamer models: {result.stderr.decode('utf-8')}")
+                logger.error(f"Error copying DL Streamer models: {result.stderr}")
                 return False
         else:
             logger.warning("DL Streamer models directory not found, skipping...")
@@ -2324,11 +2324,11 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
             f'{ts_pod}:/tmp/', '-n', namespace
         ]
         logger.info(f"Copying Time Series UDF package: {' '.join(kubectl_cp_ts)}")
-        result = common_utils.exec_command(kubectl_cp_ts, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = common_utils.exec_command(kubectl_cp_ts, capture_output=True)
         if result.returncode == 0:
             logger.info("Time Series UDF package copied successfully.")
         else:
-            logger.error(f"Error copying Time Series UDF package: {result.stderr.decode('utf-8')}")
+            logger.error(f"Error copying Time Series UDF package: {result.stderr}")
             return False
 
         logger.info("Step 3: Activating Time Series Analytics UDF")
@@ -2467,9 +2467,9 @@ def copy_dlstreamer_models_to_pod(chart_path, namespace):
             "-c", "dlstreamer-pipeline-server", "-n", namespace,
         ]
         logger.info(f"Copying DL Streamer models: {' '.join(kubectl_cp)}")
-        result = common_utils.exec_command(kubectl_cp, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        result = common_utils.exec_command(kubectl_cp, capture_output=True)
         if result.returncode != 0:
-            logger.error(f"Error copying DL Streamer models: {result.stderr.decode('utf-8')}")
+            logger.error(f"Error copying DL Streamer models: {result.stderr}")
             return False
         logger.info("✓ DL Streamer models copied successfully.")
         return True

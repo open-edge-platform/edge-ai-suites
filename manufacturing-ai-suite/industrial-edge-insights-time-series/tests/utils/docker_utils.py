@@ -74,7 +74,7 @@ def get_container_logs(container_name, tail=None):
     if tail:
         cmd.extend(["--tail", str(tail)])
     cmd.append(container_name)
-    return common_utils.exec_command(cmd, capture_output=True).stdout
+    return common_utils.exec_command(cmd, capture_output=True, check=True).stdout
 
 def container_is_running(name):
     result = common_utils.exec_command(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
@@ -829,14 +829,8 @@ def update_env_file(file_path=None, values=None):
                     logger.error(f"sed failed: {sed_result.stderr}")
                     return False
             else:
-                # Key missing — append it using printf via shell
-                append_result = common_utils.exec_command(
-                    ["bash", "-c", f"printf '%s\\n' '{parameter_name}={value}' >> {expanded_path}"],
-                    capture_output=True, text=True
-                )
-                if append_result.returncode != 0:
-                    logger.error(f"Failed while appending to .env file: {append_result.stderr}")
-                    return False
+                with open(expanded_path, "a", encoding="utf-8") as env_file:
+                    env_file.write(f"{parameter_name}={value}\n")
 
         logger.debug(f"Successfully updated .env file with {len(values)} environment variables")
         return True
