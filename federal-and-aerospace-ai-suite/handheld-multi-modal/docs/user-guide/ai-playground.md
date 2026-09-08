@@ -111,13 +111,13 @@ printenv | grep -i proxy
 ### Download the installer
 
 **AI Playground 3.1.2-beta-hf2:**
-- [Release Notes](https://github.com/intel/AI-Playground/releases/tag/v3.1.2-beta_hf2)
-- [Linux Installer (.deb)](https://github.com/intel/AI-Playground/releases/download/v3.1.2-beta_hf2/AI-Playground-installer.deb)
+- [Release Notes](https://github.com/intel/AI-Playground/releases/tag/v3.2.0-beta-rc2)
+- [Linux Installer (.deb)](https://github.com/intel/AI-Playground/releases/download/v3.2.0-beta-rc2/AI-Playground-installer.deb)
 
 ```bash
 curl -fL --proxy "$http_proxy" \
   -o ~/AI-Playground.deb \
-  "https://github.com/intel/AI-Playground/releases/download/v3.1.2-beta_hf2/AI-Playground-installer.deb"
+  "https://github.com/intel/AI-Playground/releases/download/v3.2.0-beta-rc2/AI-Playground-installer.deb"
 ```
 
 ### Install the .deb
