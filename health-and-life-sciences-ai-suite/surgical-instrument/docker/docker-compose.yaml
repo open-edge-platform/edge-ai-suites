@@ -13,7 +13,7 @@
 services:
   endoscopy-poc:
     container_name: hls-si-endoscopy
-    image: intel/hls-si-endoscopy:${TAG:-latest}
+    image: intel/hls-si-endoscopy:${TAG}
     build:
       context: .
       dockerfile: docker/Dockerfile

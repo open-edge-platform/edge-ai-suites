@@ -139,7 +139,7 @@ $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 
 ### Download a Model
 
-If you want to download YOLO models, you can refer to the [DL Streamer download scripts](https://github.com/open-edge-platform/dlstreamer/tree/main/scripts/download_models).
+If you want to download YOLO models, you can refer to the [DL Streamer download scripts](https://github.com/open-edge-platform/dlstreamer/tree/v2026.2.0/scripts/download_models).
 
 ```powershell
 pip install ultralytics

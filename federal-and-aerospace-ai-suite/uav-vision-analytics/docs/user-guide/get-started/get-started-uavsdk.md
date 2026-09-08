@@ -125,7 +125,7 @@ nano .env   # set HOST_IP=<your-machine-IP>
 
 ### 3. Prepare the model
 
-Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
+Download and export the YOLO11s model to OpenVINO FP16 IR:
 
 ```bash
 make model
@@ -212,7 +212,7 @@ INSTANCE_ID=$(curl -s -X POST \
     },
     "parameters": {
       "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
         "device": "CPU"
       }
     }
@@ -261,7 +261,7 @@ ffmpeg \
   -map 2:v -c:v copy rear.mkv
 ```
 
-The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
+The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, bicycle, and other classes) and a live telemetry overlay (GPS, altitude, speed, heading).
 
 ### 8. Stop all services
 
@@ -332,7 +332,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
-| [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
 
