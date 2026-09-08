@@ -45,6 +45,29 @@ Log out and back in afterward (or run `newgrp docker`) so docker-group
 membership takes effect. On non-Ubuntu hosts, install Docker manually per the
 [Docker docs](https://docs.docker.com/engine/install/).
 
+## Model Preparation
+
+The stack expects an OpenVINO IR at
+`models/yolo11n_polyp/best_openvino_model/best.xml` and (for `SOURCE=file`) a
+demo video at `videos/polyp_test.mp4`. There are two ways to get there:
+
+- **Pull a prebuilt image from the registry** — the default `make up` flow.
+  Skip the training steps below.
+- **Build the model locally** — install host prerequisites, download the
+  REAL-Colon dataset subset, train YOLO11n on the Intel iGPU, and export a
+  FP16 OpenVINO IR:
+
+```bash
+make check-l0                   # verify host GPU stack
+make backend-venv               # create .venv-backend (torch+xpu, Ultralytics, OpenVINO)
+make download-dataset           # 7-study REAL-Colon subset (~74 GB) from figshare 22202866
+make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-first)
+make doctor                     # preflight all runtime prerequisites
+```
+
+See [Model Preparation](./get-started/model-preparation.md) for the full
+end-to-end walkthrough, dataset options, and cache-reset instructions.
+
 ### Models and videos
 
 The application does not ship with the trained model binaries or demo videos.
