@@ -146,6 +146,11 @@ function buildContextMenu(params, lang = currentLanguage) {
       { type: 'separator' },
       { role: 'selectAll', label: L.selectAll, enabled: editFlags.canSelectAll }
     );
+  } else {
+    template.push(
+      { role: 'reload', label: L.reload },
+      { role: 'toggleDevTools', label: L.toggleDevTools }
+    );
   }
 
   return template.length ? Menu.buildFromTemplate(template) : null;
@@ -219,9 +224,8 @@ async function createWindow() {
       type: 'error',
       title: 'Smart Classroom',
       message: 'The interface process stopped unexpectedly.',
-      detail: `Reason: ${details.reason}${
-        Number.isInteger(details.exitCode) ? ` (exit code ${details.exitCode})` : ''
-      }\n\nBackend services are unaffected and keep running.`,
+      detail: `Reason: ${details.reason}${Number.isInteger(details.exitCode) ? ` (exit code ${details.exitCode})` : ''
+        }\n\nBackend services are unaffected and keep running.`,
       buttons: ['Reload', 'Quit'],
       defaultId: 0,
       cancelId: 1,
@@ -341,7 +345,7 @@ if (!app.requestSingleInstanceLock()) {
 
     // Populate the Setup screen up front so a first-time user sees real statuses
     // instead of "Not checked".
-    setupRunner.checkAll().catch(() => {});
+    setupRunner.checkAll().catch(() => { });
 
     // A backend that dies on a missing package leaves Setup insisting the
     // environment is fine. Re-check on the transition into failed, so the two
@@ -351,7 +355,7 @@ if (!app.requestSingleInstanceLock()) {
     serviceManager.on('changed', (snapshot) => {
       const backend = snapshot.find((service) => service.id === 'backend');
       const failed = backend?.status === 'failed';
-      if (failed && !backendFailed) setupRunner.checkAll().catch(() => {});
+      if (failed && !backendFailed) setupRunner.checkAll().catch(() => { });
       backendFailed = failed;
     });
 
@@ -404,7 +408,7 @@ app.on('before-quit', (event) => {
   event.preventDefault();
   serviceManager
     .shutdown()
-    .catch(() => {})
+    .catch(() => { })
     .finally(() => {
       logStore.dispose();
       app.quit();

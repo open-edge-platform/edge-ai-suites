@@ -26,23 +26,35 @@ const CONFIG = 'config'; // config.yaml
 const RUNTIME = 'runtime'; // runtime_config.yaml
 const PROXY = 'proxy'; // .proxy-config (JSON)
 
-const FEATURE_LABELS = {
-  asr: 'Speech recognition',
-  summary: 'Summary',
-  mindmap: 'Mind map',
-  topic_segmentation: 'Topic segmentation',
-  video_analytics: 'Video analytics',
-  board_ocr: 'Board OCR',
-  content_search: 'Content search',
-  qa: 'Question answering',
-  grading: 'Grading',
-  report: 'Report',
+// The features in config.yaml's `features:` block, in the order their toggles
+// render.
+//
+// `dependsOn` mirrors `depends_on` in model_manager/features/*_feature.py.
+// features/resolver.py walks that graph at startup and silently enables anything
+// a live feature needs, so a toggle left off here is not necessarily off at run
+// time — which is what the featureDependencies rule below reports. Label and
+// graph share one table so the two cannot drift from each other, and
+// tests/unit/test_feature_dependencies.py parses this table out of this file and
+// fails if it drifts from the Python.
+const FEATURES = {
+  asr: { label: 'Speech recognition', dependsOn: [] },
+  summary: { label: 'Summary', dependsOn: ['asr'] },
+  mindmap: { label: 'Mind map', dependsOn: ['summary'] },
+  topic_segmentation: { label: 'Topic segmentation', dependsOn: ['asr', 'content_search'] },
+  video_analytics: { label: 'Video analytics', dependsOn: [] },
+  board_ocr: { label: 'Board OCR', dependsOn: ['video_analytics'] },
+  content_search: { label: 'Content search', dependsOn: [] },
+  qa: { label: 'Question answering', dependsOn: ['content_search'] },
+  grading: { label: 'Grading', dependsOn: [] },
+  report: { label: 'Report', dependsOn: ['summary', 'mindmap', 'topic_segmentation', 'video_analytics'] },
 };
+
+const featurePath = (id) => `features.${id}.enabled`;
 
 // The "Get started" screen shows `wizard: true` only; the full editor still
 // shows everything.
-const featureFields = Object.entries(FEATURE_LABELS).map(([id, label]) => ({
-  path: `features.${id}.enabled`,
+const featureFields = Object.entries(FEATURES).map(([id, { label }]) => ({
+  path: featurePath(id),
   file: CONFIG,
   group: 'features',
   label,
@@ -1202,6 +1214,48 @@ function isFunasrParaformer(cfg) {
   return lower(cfg?.models?.asr?.provider) === 'funasr' && lower(cfg?.models?.asr?.name) === 'paraformer-zh';
 }
 
+/** "a", "a and b", "a, b and c" — messages below list two to six features. */
+function listOf(labels) {
+  if (labels.length < 3) return labels.join(' and ');
+  return `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`;
+}
+
+const labelsOf = (ids) => listOf(ids.map((id) => FEATURES[id].label));
+
+/**
+ * Which features config.yaml switches on, read the way
+ * model_manager/feature_bootstrap.py::_feature_flags reads it: `{enabled: bool}`
+ * or a bare bool, and an id the file never mentions is off, because it never
+ * reaches the resolver's `enabled` set.
+ *
+ * Null when there is no `features:` block at all — resolver.py treats that as
+ * "enable everything" for backward compatibility, so it is not an all-off config.
+ */
+function enabledFeatures(cfg) {
+  const block = cfg?.features;
+  if (!block || typeof block !== 'object') return null;
+  return Object.keys(FEATURES).filter((id) => {
+    const spec = block[id];
+    if (spec === undefined || spec === null) return false;
+    if (typeof spec === 'object') return asBool(spec.enabled ?? true);
+    return asBool(spec);
+  });
+}
+
+/**
+ * Every feature `id` needs, however deep. `seen` doubles as the cycle guard: the
+ * table should be acyclic and resolver.py raises if it is not, but a rule must
+ * never be the reason the settings screen hangs.
+ */
+function dependencyClosure(id, seen = new Set()) {
+  for (const dep of FEATURES[id]?.dependsOn ?? []) {
+    if (seen.has(dep)) continue;
+    seen.add(dep);
+    dependencyClosure(dep, seen);
+  }
+  return seen;
+}
+
 const RULES = [
   {
     id: 'asrProviderModel',
@@ -1259,6 +1313,69 @@ const RULES = [
       return `Transcribing without chunking requires ${FUNASR_PARAFORMER}, but the ASR is ${cfg?.models?.asr?.provider}/${cfg?.models?.asr?.name}.`;
     },
   },
+  {
+    id: 'featuresNoneEnabled',
+    summary: 'Nothing is enabled',
+    file: CONFIG,
+    // Any one of the ten is the fix, so all ten are offered — the same reasoning
+    // asrProviderModel uses for flagging both halves of its pair.
+    paths: Object.keys(FEATURES).map(featurePath),
+    check(cfg) {
+      const enabled = enabledFeatures(cfg);
+      // No `features:` block means "enable everything", not "enable nothing".
+      if (enabled === null || enabled.length) return null;
+      // model_manager/feature_bootstrap.py::startup raises NO_FEATURES_MESSAGE.
+      return 'No features are enabled, so the backend refuses to start. Turn on at least one.';
+    },
+  },
+  {
+    id: 'featureDependencies',
+    // Only a warning: the backend runs this config perfectly well, it just runs
+    // more than the file says. Blocking the save would be the settings screen
+    // inventing a restriction the backend does not have, and config.yaml is
+    // hand-editable, so a file that already trips this would strand the user.
+    severity: 'warning',
+    file: CONFIG,
+    paths: [],
+    check(cfg) {
+      const enabled = enabledFeatures(cfg);
+      if (!enabled?.length) return null;
+
+      const explicit = new Set(enabled);
+      // Missing feature id -> the enabled features that drag it back in.
+      const requiredBy = new Map();
+      for (const id of enabled) {
+        for (const dep of dependencyClosure(id)) {
+          if (explicit.has(dep)) continue;
+          if (!requiredBy.has(dep)) requiredBy.set(dep, new Set());
+          requiredBy.get(dep).add(id);
+        }
+      }
+      if (!requiredBy.size) return null;
+
+      // Table order throughout, so the message, the chips and the fix all name
+      // the features in the order their toggles appear.
+      const order = Object.keys(FEATURES);
+      const missing = order.filter((id) => requiredBy.has(id));
+      const drivers = order.filter((id) => [...requiredBy.values()].some((set) => set.has(id)));
+      const them = missing.length > 1 ? 'them' : 'it';
+
+      return {
+        message:
+          `${labelsOf(missing)} ${missing.length > 1 ? 'are' : 'is'} switched off, but ` +
+          `${labelsOf(drivers)} need${drivers.length > 1 ? '' : 's'} ${them}, so the backend ` +
+          `turns ${them} on at startup. Turn ${them} on here to match what actually runs, ` +
+          `or switch ${labelsOf(drivers)} off.`,
+        // Opposite ends of one rule, so the chips have to differ: one toggle is
+        // being overridden, the other is what overrides it.
+        paths: [
+          ...missing.map((id) => ({ path: featurePath(id), summary: 'Turned on anyway' })),
+          ...drivers.map((id) => ({ path: featurePath(id), summary: 'Needs features that are off' })),
+        ],
+        fix: missing.map((id) => ({ file: CONFIG, path: featurePath(id), value: true })),
+      };
+    },
+  },
 ];
 
 /**
@@ -1266,27 +1383,55 @@ const RULES = [
  * form for the field rows, which would otherwise repeat the sentence once per
  * field the rule names.
  *
+ * A `check` returns null, that message as a string, or — when the fields it
+ * flags are only known at check time — an object:
+ *
+ *   {
+ *     message,            // required
+ *     summary,            // overrides the rule's, for the whole finding
+ *     paths,              // string, or {path, summary} to vary the chip per field
+ *     fix,                // changes that would clear it, offered as one click
+ *   }
+ *
+ * `advisory` marks a rule the backend tolerates: reported, never blocking. See
+ * config-store.cjs::problemsFor, which is what acts on it.
+ *
  * @param {object} cfg the config.yaml that saving would produce
  * @param {{diarizationModelReady?: boolean}} context facts the document cannot answer
- * @returns {Array<{file: string, path: string, rule: string, summary: string, message: string}>}
+ * @returns {Array<{file: string, path: string, rule: string, summary: string, message: string,
+ *                  advisory: boolean, fix?: Array<{file: string, path: string, value: unknown}>}>}
  */
 function validate(cfg, context = {}) {
   const problems = [];
   for (const rule of RULES) {
-    let message = null;
+    let found = null;
     try {
-      message = rule.check(cfg, context);
+      found = rule.check(cfg, context);
     } catch {
       // A rule must never be the reason a save fails; a malformed document is
       // the parser's business, not this one's.
-      message = null;
+      found = null;
     }
+    if (!found) continue;
+
+    const detail = typeof found === 'string' ? {} : found;
+    const message = typeof found === 'string' ? found : found.message;
     if (!message) continue;
-    for (const path of rule.paths) {
-      problems.push({ file: rule.file, path, rule: rule.id, summary: rule.summary, message });
+
+    for (const entry of detail.paths ?? rule.paths) {
+      const path = typeof entry === 'string' ? entry : entry.path;
+      problems.push({
+        file: rule.file,
+        path,
+        rule: rule.id,
+        summary: (typeof entry === 'string' ? null : entry.summary) ?? detail.summary ?? rule.summary,
+        message,
+        advisory: rule.severity === 'warning',
+        ...(detail.fix ? { fix: detail.fix } : {}),
+      });
     }
   }
   return problems;
 }
 
-module.exports = { FIELDS, GROUPS, SUBGROUPS, RULES, CONFIG, RUNTIME, PROXY, get, coerce, validate };
+module.exports = { FEATURES, FIELDS, GROUPS, SUBGROUPS, RULES, CONFIG, RUNTIME, PROXY, get, coerce, validate };

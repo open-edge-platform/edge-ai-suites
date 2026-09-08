@@ -8,7 +8,7 @@ import HLSPlayer from "../common/HLSPlayer";
 import { useTranslation } from "react-i18next";
 import { getRecordedVideoUrl } from "../../services/api";
 import type { FeatureGuard } from "../../utils/featureGuards";
-import { useUploadGate, uploadBlockerTooltipKey } from "../../hooks/useUploadGate";
+import { usePipelineGate, uploadBlockerTooltipKey } from "../../hooks/usePipelineGate";
 
 interface VideoStreamProps {
   isFullScreen: boolean;
@@ -41,7 +41,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
   } = useAppSelector((s) => s.ui);
   const mindmapState = useAppSelector((s) => s.mindmap);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
-  const { isUploadEnabled, blocker: uploadBlocker } = useUploadGate();
+  const { isUploadEnabled, blocker: uploadBlocker } = usePipelineGate();
 
   const streams = {
     front: frontCameraStream,

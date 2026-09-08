@@ -104,6 +104,7 @@ Access Application User Interface <access-application.md>
 AI Playground <ai-playground.md>
 Benchmarks <benchmarks.md>
 AI Agent SKILLs <agents.md>
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->
