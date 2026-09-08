@@ -119,5 +119,5 @@ Continue with the OEP Vision AI SDK tutorials to explore benchmarking, multi-str
 ## Related Guides
 
 - [DL Streamer Pipelines Guide](./infrastructure/build-dlstreamer-pipelines.md) — pipeline reference and variants
-- [Edge Workloads and Benchmarks Guide](./infrastructure/run-edge-benchmarks.md) — reproducible benchmark suite
+- [Edge Workloads and Benchmarks Guide](./benchmarking/run-edge-benchmarks.md) — reproducible benchmark suite
 - [Container Device Interface Guide](./infrastructure/configure-cdi.md) — CDI setup for GPU/NPU access from containers
