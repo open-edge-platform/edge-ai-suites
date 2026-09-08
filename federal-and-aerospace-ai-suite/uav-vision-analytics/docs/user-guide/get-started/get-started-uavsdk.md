@@ -266,7 +266,10 @@ ffmpeg \
   -map 2:v -c:v copy rear.mkv
 ```
 
-The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, bicycle, and other classes) and a live telemetry overlay (GPS, altitude, speed, heading).
+The annotated stream includes bounding boxes for detected objects
+(person, car, bus, truck, bicycle, and other classes)
+and a live telemetry overlay (GPS, altitude, speed, heading).
+You can use VLC Player to handle the streams.
 
 ### 8. Stop all services
 

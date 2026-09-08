@@ -126,12 +126,6 @@ make start-rtsp DEVICE=npu     # NPU only
 make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 ```
 
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the selected pipeline and serve annotated RTSP streams.
->
-> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
->
-> Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
-
 
 **pymavlink mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`):
 ```
@@ -198,7 +192,20 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ```
 
-The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, bicycle, and other classes) and a live telemetry overlay (GPS, altitude, speed, heading).
+The annotated stream includes bounding boxes for detected objects
+(person, car, bus, truck, bicycle, and other classes)
+and a live telemetry overlay (GPS, altitude, speed, heading).
+You can use VLC Player to handle the streams.
+
+
+
+> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the selected pipeline and serve annotated RTSP streams.
+>
+> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
+>
+> Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
+
+
 
 ### 6. Stop all services
 
