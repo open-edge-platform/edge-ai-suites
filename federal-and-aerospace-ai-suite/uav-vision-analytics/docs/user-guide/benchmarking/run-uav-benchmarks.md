@@ -574,13 +574,3 @@ result anomalies, GPU/NPU visibility, and power readings), see the
 [Troubleshooting guide](./troubleshooting.md#benchmark).
 
 
-
-
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-Edge Workloads and Benchmarks Guide <./benchmarking/run-edge-benchmarks.md>
-:::
-hide_directive-->
