@@ -214,6 +214,56 @@ This writes:
 
 Commit the updated files to keep the repository in synchronization with the live instance.
 
+## Troubleshooting
+
+- **Scene import fails with `No JSON found in scenes/*.zip`** — Git LFS was not installed, or `git lfs pull` did not run, so the scene bundle is still a small LFS pointer file instead of the real binary.
+
+  Confirm it, then fix it:
+  ```bash
+  $ file scenes/Showcase.zip
+  scenes/Showcase.zip: ASCII text          # should be "Zip archive data", not text
+
+  $ head -c 60 scenes/Showcase.zip
+  version https://git-lfs.github.com/spec/v1              # confirms it's an LFS pointer
+
+  $ sudo apt install git-lfs
+  $ git lfs install
+  $ git lfs pull
+  $ file scenes/Showcase.zip
+  scenes/Showcase.zip: Zip archive data, at least v2.0 to extract   # fixed
+  ```
+  Re-run `./setup.sh` afterward.
+
+- **`setup.sh` succeeds but `SCENESCAPE_UI_URL` or `DASHBOARD_URL` is unreachable from the browser** — this is almost always host DNS/proxy configuration rather than a service problem. First confirm the stack is healthy and reachable locally:
+  ```bash
+  docker compose ps
+  curl -k https://localhost/api/v1/database-ready
+  ```
+  If those succeed but `$PUBLIC_HOSTNAME` does not, walk through both checks below. (`my-host.example.com` below stands in for your own `$PUBLIC_HOSTNAME`, and `10.1.2.50` stands in for this machine's own IP — substitute your actual values.)
+
+  **Check 1 — stale DNS.** `getent hosts $PUBLIC_HOSTNAME` should resolve to this machine's own IP (compare with `hostname -I`):
+  ```bash
+  $ getent hosts my-host.example.com
+  10.1.2.200      my-host.example.com        # wrong — not this machine's IP
+
+  $ hostname -I
+  10.1.2.50 172.17.0.1 ...                   # this machine is actually 10.1.2.50
+  ```
+  Fix by adding a corrected entry to `/etc/hosts` (needs sudo):
+  ```bash
+  echo "10.1.2.50 my-host.example.com" | sudo tee -a /etc/hosts
+  ```
+
+  **Check 2 — proxy swallowing the hostname.** With `HTTP_PROXY`/`HTTPS_PROXY` set, requests to `$PUBLIC_HOSTNAME` can still be routed through the corporate proxy and time out (HTTP 504), even after DNS is fixed, because `no_proxy` only lists the raw IP and not the hostname/domain:
+  ```bash
+  $ curl -sk -o /dev/null -w "%{http_code}\n" https://my-host.example.com/api/v1/database-ready
+  504                                                       # proxy can't reach the private IP
+
+  $ curl -sk --noproxy '*' -o /dev/null -w "%{http_code}\n" https://my-host.example.com/api/v1/database-ready
+  200                                                       # works once the proxy is bypassed — confirms the proxy is the cause
+  ```
+  Add the internal domain to `no_proxy`/`NO_PROXY` (e.g. ` .example.com`), and check that nothing later in `~/.bashrc` or other shell startup files re-exports `no_proxy`/`NO_PROXY` without it — a later `export no_proxy=...` silently overwrites rather than appends to an earlier one. Restart the browser afterward so it picks up the change.
+
 ## Copilot Workspace Files
 
 This repository includes shared Copilot customization files to help with cross-system tuning and deployment debugging:

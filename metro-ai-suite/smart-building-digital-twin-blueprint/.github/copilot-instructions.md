@@ -32,6 +32,7 @@ Differences across machines are expected. When tuning on another system:
 - Treat scene UUIDs as deployment-specific. `setup.sh` should resolve them from the API and write `config/resolved-uuids.json`; avoid hardcoding UUIDs in source.
 - Keep browser-facing values (`PUBLIC_HOSTNAME`, `SCENESCAPE_UI_URL`, `DASHBOARD_URL`) separate from host-local setup values (`API_BASE_URL`).
 - If behavior differs, inspect `.env`, `docker compose ps`, `docker compose logs`, `config/resolved-uuids.json`, and exported scene/object-class configuration before changing analytics logic.
+- If the browser cannot reach `PUBLIC_HOSTNAME` even though services are healthy, treat it as host DNS/proxy drift, not a code bug: check `getent hosts $PUBLIC_HOSTNAME` against `hostname -I`, and confirm `no_proxy`/`NO_PROXY` includes the internal domain (shell startup files can silently overwrite an inherited proxy exception list).
 
 ## Configuration Changes
 - Prefer updating exported configuration snapshots over adding environment-specific logic when the issue is scene calibration, regions, or object classes.

@@ -31,6 +31,7 @@ Use this skill when the blueprint behaves differently on another workstation, NU
    - Loopback API calls should bypass proxies.
    - Internal container networking should continue using the fixed Scenescape FQDN aliases.
    - Confirm `web`, `scene`, `broker`, `autocalibration`, and `analytics` are running before assuming an analytics regression.
+   - If the browser can't reach `PUBLIC_HOSTNAME` even though `docker compose ps` and a `localhost` curl are healthy, suspect host DNS/proxy drift rather than the stack: compare `getent hosts $PUBLIC_HOSTNAME` against `hostname -I`, and check that `no_proxy`/`NO_PROXY` includes the internal domain (a later block in shell startup files can silently overwrite an inherited proxy exception list).
 
 4. Confirm the deployment-specific scene wiring.
    - Check whether `setup.sh` resolved the live scene UUID and wrote `config/resolved-uuids.json`.
