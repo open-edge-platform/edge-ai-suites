@@ -30,7 +30,8 @@
   gap: 8px;
 }
 
-.upload-files-modal input[type="text"] {
+.upload-files-modal input[type="text"],
+.upload-files-modal select {
   width: 100%;
   padding: var(--control-padding);
   border: 1px solid var(--control-border-color);
@@ -43,7 +44,8 @@
   box-sizing: border-box;
 }
 
-.upload-files-modal input[type="text"]:focus {
+.upload-files-modal input[type="text"]:focus,
+.upload-files-modal select:focus {
   outline: none;
   border-color: var(--control-focus-color);
   box-shadow: var(--control-focus-ring);
@@ -109,6 +111,67 @@
   /* One reason per line, and long file paths wrap instead of overflowing. */
   white-space: pre-line;
   overflow-wrap: anywhere;
+}
+
+/* A feature is switched off, so the fields it would need are not shown. Also
+   used inline by UploadFilesModal, which predates this rule. */
+.upload-files-modal .modal-info-message {
+  margin: 8px 0;
+  padding: 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #666;
+}
+
+/* Stands in for the microphone dropdown when the machine reports no devices. */
+.upload-files-modal .no-devices-message {
+  margin-top: 4px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+  font-size: 14px;
+  color: #6A6D75;
+  box-sizing: border-box;
+}
+
+.upload-files-modal .modal-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6A6D75;
+}
+
+/* The stage a start is on, shared by both modals that use this stylesheet. The
+   spinner is rendered only while something is actually running, so the same row
+   can hold the summary that is left behind afterwards. */
+.upload-files-modal .modal-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: #2B2C30;
+}
+
+.upload-files-modal .modal-spinner {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  border: 2px solid #d4d5d9;
+  border-top-color: #0071c5;
+  border-radius: 50%;
+  animation: modal-spin 0.7s linear infinite;
+}
+
+@keyframes modal-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Respect a reduced-motion preference: the text alone still says it is working. */
+@media (prefers-reduced-motion: reduce) {
+  .upload-files-modal .modal-spinner {
+    animation: none;
+  }
 }
 
 .modal-body {

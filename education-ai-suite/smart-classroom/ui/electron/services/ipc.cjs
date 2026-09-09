@@ -69,6 +69,9 @@ function register({ manager, logs, setup, getWindow }) {
 
   // config-store validates every path against the schema allowlist.
   handle('config:describe', () => config.describe());
+  // Dry run for the settings screen, so it can gate Save before the write is
+  // attempted. apply() re-checks; this is convenience, not the enforcement.
+  handle('config:validate', (changes) => config.validate(changes));
   handle('config:apply', (changes) => config.apply(changes));
   handle('config:reveal', () => {
     shell.showItemInFolder(paths.configFile());

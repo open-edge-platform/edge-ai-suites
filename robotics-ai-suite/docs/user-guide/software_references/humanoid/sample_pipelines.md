@@ -103,14 +103,6 @@ Build and run high-performance lidar-inertial odometry and mapping.
 
 Explore whole-body control for GROOT-based humanoid robotics.
 :::
-
-:::{grid-item-card} gr00t-n1.7
-:link: sample_pipelines/gr00t_n1d7_ov
-:link-type: doc
-:link-alt: clickable cards
-
-Optimize and deploy the GR00T N1.7 model with OpenVINO.
-:::
 ::::
 
 
@@ -130,7 +122,6 @@ sample_pipelines/openclaw_agenticros_demo
 sample_pipelines/fast_livo2_demo
 sample_pipelines/fast_lio2_demo
 sample_pipelines/gr00t_wbc
-sample_pipelines/gr00t_n1d7_ov
 
 :::
 

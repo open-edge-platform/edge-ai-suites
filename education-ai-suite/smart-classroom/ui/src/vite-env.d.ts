@@ -54,6 +54,10 @@ interface ElectronAPI {
   /** Schema-guarded settings editor. Absent in the plain web app. */
   config?: {
     describe: () => Promise<import('./types/services').IpcResult<import('./types/config').ConfigDescription>>;
+    /** Dry run: the cross-field problems these changes would leave behind. */
+    validate: (
+      changes: import('./types/config').ConfigChange[]
+    ) => Promise<import('./types/services').IpcResult<import('./types/config').ConfigProblem[]>>;
     apply: (
       changes: import('./types/config').ConfigChange[]
     ) => Promise<import('./types/services').IpcResult<{ written: string[]; skipped: number }>>;
