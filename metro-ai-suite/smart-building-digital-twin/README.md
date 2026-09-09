@@ -1,8 +1,8 @@
-# Smart Building Digital Twin Blueprint
+# Smart Building Digital Twin
 
-Smart Building Digital Twin blueprint is a complete smart-building monitoring simulation that includes the end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
+Smart Building Digital Twin sample application is a complete smart-building monitoring simulation that includes the end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
 
-The blueprint uses synchronized cameras, YOLOX-S and ATSS-MobileNetV2 model variants, and sensors to watch a building for:
+The sample application uses synchronized cameras, YOLOX-S and ATSS-MobileNetV2 model variants, and sensors to watch a building for:
 
 - People, luggage, and doors
 - Replayed sensor events of badge, FaceID, and ambient-light changes

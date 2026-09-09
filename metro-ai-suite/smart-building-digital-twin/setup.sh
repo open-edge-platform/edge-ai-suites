@@ -3,13 +3,13 @@
 # SPDX-License-Identifier: Apache-2.0
 set -e
 
-# Smart Building Digital Twin Blueprint - Setup Script
+# Smart Building Digital Twin - Setup Script
 # Automates deployment of Scenescape with custom models and scenes
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-echo "Smart Building Digital Twin Blueprint - Setup"
+echo "Smart Building Digital Twin - Setup"
 echo "----------------------------------------------"
 echo ""
 

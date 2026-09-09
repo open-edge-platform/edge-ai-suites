@@ -1,12 +1,12 @@
 ---
 name: tune-other-systems
-description: 'Tune or debug this Scenescape blueprint on another machine. Use when results differ across systems, when setup works locally but not on a target host, or when analytics behavior changes due to GPU/CPU mode, CPU or platform performance differences, scene UUIDs, exported configuration, hostnames, proxies, or service health.'
+description: 'Tune or debug this Smart Building Digital Twin application on another machine. Use when results differ across systems, when setup works locally but not on a target host, or when analytics behavior changes due to GPU/CPU mode, CPU or platform performance differences, scene UUIDs, exported configuration, hostnames, proxies, or service health.'
 argument-hint: 'Describe the target system difference or tuning goal'
 ---
 
 # Tune Other Systems
 
-Use this skill when the blueprint behaves differently on another workstation, NUC, or lab system.
+Use this skill when the Smart Building Digital Twin application behaves differently on another workstation, NUC, or lab system.
 
 ## Focus Areas
 - Deployment differences: GPU present vs absent, container health, proxy environment, hostname resolution

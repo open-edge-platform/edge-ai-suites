@@ -1,4 +1,4 @@
-# Smart Building Digital Twin Blueprint Guidelines
+# Smart Building Digital Twin Guidelines
 
 ## Architecture
 This repo layers analytics and setup automation on top of a Scenescape deployment. Preserve the distinction between host-side access and container-internal networking.
@@ -17,7 +17,7 @@ This repo layers analytics and setup automation on top of a Scenescape deploymen
 ## Setup And Runtime
 When working on setup, preserve these behaviors unless the task explicitly requires a change.
 
-- `setup.sh` should bring up the full stack needed for the blueprint, including `scene`, `autocalibration`, `analytics`, and `scene-narrator`.
+- `setup.sh` should bring up the full stack needed for the project, including `scene`, `autocalibration`, `analytics`, and `scene-narrator`.
 - API readiness is not just container startup; prefer web health plus auth/API validation over fixed sleeps.
 - Scene import must tolerate short readiness races and report HTTP/body diagnostics instead of raw parser failures.
 - `cleanup.sh` should remain consistent with generated certs, UUID files, and Docker volumes used by setup.

@@ -34,7 +34,7 @@ stop_xpu_smi_bridge() {
     rm -f "$XPU_SMI_BRIDGE_PID_FILE"
 }
 
-echo "Smart Building Digital Twin Blueprint - Cleanup"
+echo "Smart Building Digital Twin - Cleanup"
 echo "------------------------------------------------"
 echo ""
 

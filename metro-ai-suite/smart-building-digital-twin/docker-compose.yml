@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-# Smart Building Digital Twin Blueprint - Automated Deployment
+# Smart Building Digital Twin - Automated Deployment
 # Convention-based: Scenes auto-discovered, cameras auto-configured
 
 name: scenescape
