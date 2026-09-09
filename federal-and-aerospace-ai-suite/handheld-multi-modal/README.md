@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios, optimized for Intel® edge hardware. It is is deployed on top of the
 [Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
-The application combines LLM inference capability served through the OpenVINO™ Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; it runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization, sharing its Docker network.
+The application combines LLM inference capability served through the OpenVINO™ Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; it runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.2.0/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization, sharing its Docker network. In the initial step models and dependencies are downloaded from Internet. After deployment all actions and inferences are performed locally on the device and data doesn't leave the device.
 
 ## Project Structure
 
@@ -89,11 +89,11 @@ Open WebUI, Grafana dashboard, and Whisper speech-to-text service are only acces
 | Service                                         | URL                             | Notes                                                                 |
 |-------------------------------------------------|---------------------------------|-----------------------------------------------------------------------|
 | Single pane page                                | https://localhost:443           | via NGINX reverse proxy                                               |
-| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:1443          | via NGINX reverse proxy                                               |
-| Whisper speech-to-text service                  | https://localhost:5443          | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
-| OVMS metrics                                    | https://localhost:6443/metrics  | Prometheus metrics (via NGINX reverse proxy)                          |
-| Grafana dashboard                               | https://localhost:7443          | Pre-provisioned dashboards (via NGINX reverse proxy)                  |
-| Open WebUI                                      | https://localhost:8443          | LLM chat UI — browser microphone enabled (via NGINX reverse proxy)    |
+| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:1443          | Runs pipelines on any combination of devices (CPU, GPU, NPU)          |
+| Whisper speech-to-text service                  | https://localhost:5443          | Speech-to-text with browser microphone enabled that runs STT on CPU   |
+| OVMS metrics                                    | https://localhost:6443/metrics  | Prometheus metrics endpoints                                          |
+| Grafana dashboard                               | https://localhost:7443          | Pre-provisioned dashboards                                            |
+| Open WebUI                                      | https://localhost:8443          | LLM chat UI with browser microphone enabled that runs models on GPU   |
 
 ## Make Targets
 
