@@ -63,6 +63,25 @@ extract them yourself or let the bootstrap step do it — it auto-extracts any
 `.zip`, `.tar`, `.tar.gz`, or `.tgz` under `datasets/REAL-Colon/raw/` on first
 run.
 
+> **Keep only the studies you need.** The full subset is large. To shorten
+> local training time for the demo flow, keep only studies `001-001` and
+> `001-002`. After the download completes, keep only the folders and
+> `.tar.gz` archives in `datasets/REAL-Colon/raw/` whose names start with
+> `001-001` or `001-002`, and delete the rest to reclaim disk:
+>
+> ```text
+> datasets/REAL-Colon/raw/
+> ├── 001-001_annotations/
+> ├── 001-001_frames/
+> ├── 001-002_annotations/
+> ├── 001-002_frames/
+> ├── 001-001_annotations.tar.gz
+> ├── 001-001_frames.tar.gz
+> ├── 001-002_annotations.tar.gz
+> └── 001-002_frames.tar.gz
+> ```
+
+
 Legacy mask-based drops (e.g. CVC-ColonDB with `images/` + `masks/`) are also
 auto-detected as a fallback and converted via OpenCV connected-components.
 
@@ -119,14 +138,18 @@ Or edit `backend/config/model.yaml` directly (e.g. change `train.epochs`,
 
 ---
 
-## 4. (Optional) Generate a demo video
+## 4. Generate the demo video (required)
 
-For `SOURCE=file` runs, place any endoscopic video at `videos/polyp_test.mp4`.
-A minimal generator that stitches frames from the REAL-Colon subset into a
-demo clip is provided:
+Fresh clones do not include `videos/polyp_test.mp4`. Generate it before running
+`make doctor` / `make up`. The generator stitches frames from the REAL-Colon
+subset into an H.264 demo clip:
 
 ```bash
-.venv-backend/bin/python scripts/create_endoscopy_video.py
+cd /home/intel/sachin/edge-ai-suites/health-and-life-sciences-ai-suite/surgical-instrument
+.venv-backend/bin/python scripts/create_endoscopy_video.py \
+  --images-dir datasets/REAL-Colon/raw/001-001_frames \
+  --output videos/polyp_test.mp4 \
+  --seconds 60 --fps 60 --width 1920 --height 1080
 ```
 
 ---
