@@ -39,6 +39,18 @@ class PyannoteDiarizer(GlobalSpeakerDiarizer):
                 token=hf_token
             )
 
+        # from_pretrained returns None (rather than raising) when the hub
+        # checkpoint cannot be resolved; without this the failure surfaces as an
+        # opaque AttributeError on the next line.
+        if self.pipeline is None:
+            raise RuntimeError(
+                f"pyannote could not load a diarization pipeline from "
+                f"{pipeline_source!r}. If this is a hub id, the repo is gated: "
+                f"accept the conditions at https://hf.co/{config.models.diarization.name} "
+                "and set models.asr.hf_token in config.yaml, or set "
+                "models.asr.diarization=false."
+            )
+
         self.device = torch.device(device)
         self.pipeline.to(self.device)
 

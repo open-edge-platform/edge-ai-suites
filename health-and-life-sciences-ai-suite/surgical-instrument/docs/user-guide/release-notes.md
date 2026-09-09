@@ -29,7 +29,7 @@ environments.
   inference, and display threads.
 - Restructured layout with `src/`, `docker/`, and `docs/` folders and a
   compose-only Makefile.
-- Optional local model-preparation flow: `./setup.sh` installs the host
+- Optional local model-preparation flow: `make setup-prerequisites` installs the host
   prerequisites (Docker + Intel client GPU stack), then
   `make backend-venv && make backend-bootstrap` fetches the dataset, trains
   YOLO11n on the Intel iGPU, and exports a FP16 OpenVINO IR. See

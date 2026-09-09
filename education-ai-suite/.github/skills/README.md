@@ -45,7 +45,7 @@ A skill is a directory containing:
   entire point of these skill files is that the agent drives the workflow
   autonomously. Only hand a command to the user when a skill step explicitly
   requires their interactive shell (e.g. typing a secret).
-- Probe before acting. Hit `GET /api/v1/system/health` before any API workflow; if it fails, route to `sc-up` or `sc-doctor`.
+- Probe before acting. Hit `GET /api/v1/system/health` before any API workflow. It returns 200 only when every Content Search service is ready, and 503 with a per-service `services` map otherwise; if it fails either way, route to `sc-up` or `sc-doctor`.
 - The backend API base URL is `http://127.0.0.1:9011` (or whatever `CONTENT_SEARCH_API_URL` is set to in `utils/flutter/assets/.env`).
 - Run repo-local commands from the repository root (`education-ai-suite/`) unless a skill says otherwise.
 - Run Flutter commands from `utils/flutter/`.

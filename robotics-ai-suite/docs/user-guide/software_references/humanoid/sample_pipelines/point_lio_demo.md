@@ -7,7 +7,7 @@ tolerates IMU saturation during aggressive motion.
 
 ![Point-LIO system overview](https://github.com/hku-mars/Point-LIO/raw/master/image/toc4.png)
 
-- Paper: [Point-LIO: Robust High-Bandwidth Light Detection and Ranging Inertial Odometry](https://doi.org/10.1002/aisy.202200459) (He, Xu, Chen, Kong, Yuan, Zhang — *Advanced Intelligent Systems*, 2023, DOI 10.1002/aisy.202200459)
+- Paper: [Point-LIO: Robust High-Bandwidth Light Detection and Ranging Inertial Odometry](https://advanced.onlinelibrary.wiley.com/doi/10.1002/aisy.202200459) (He, Xu, Chen, Kong, Yuan, Zhang — *Advanced Intelligent Systems*, 2023, DOI 10.1002/aisy.202200459)
 - Upstream: [hku-mars/Point-LIO](https://github.com/hku-mars/Point-LIO) (`point-lio-with-grid-map` branch)
 
 In Robotics AI Suite, the upstream tree is a pristine git submodule and Intel

@@ -142,6 +142,7 @@ To reinstall later, re-run `.\setup_windows.ps1` — it will recreate the virtua
 
 ## Next Steps
 
+- [Application Flow](./application-flow.md) — UI walkthrough and element reference
 - [How It Works](./how-it-works.md) — Understand the architecture
 - [Configuration](./get-started/configuration.md) — Adjust models, temperature, and settings
 - [Troubleshooting](./troubleshooting.md) — Debug common issues

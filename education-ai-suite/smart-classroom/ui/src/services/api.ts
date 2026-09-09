@@ -26,8 +26,6 @@ export type Settings = {
 };
 
 export type SessionMode = 'record' | 'upload';
-export type StartSessionRequest = { projectName: string; projectLocation: string; microphone: string; mode: SessionMode };
-export type StartSessionResponse = { sessionId: string };
 
 export interface SearchRequest {
   session_id: string;
@@ -257,32 +255,6 @@ export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
     });
     if (!res.ok) throw new Error(`Failed to save project config: ${res.status}`);
     return (await res.json()) as ProjectConfig;
-  });
-}
-
-// Compatibility aliases (use getSettings/saveSettings internally)
-export async function getProjectConfig(): Promise<ProjectConfig> {
-  return safeApiCall(async () => {
-    const s = await getSettings();
-    return { name: s.projectName, location: s.projectLocation, microphone: s.microphone };
-  });
-}
-
-export async function updateProjectConfig(config: ProjectConfig): Promise<ProjectConfig> {
-  return safeApiCall(async () => {
-    return saveSettings({ projectName: config.name, projectLocation: config.location, microphone: config.microphone });
-  });
-}
-
-export async function startSession(req: StartSessionRequest): Promise<StartSessionResponse> {
-  return safeApiCall(async () => {
-    const res = await fetch(`${BASE_URL}/session/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req),
-    });
-    if (!res.ok) throw new Error('Failed to start session');
-    return (await res.json()) as StartSessionResponse;
   });
 }
 
@@ -1044,7 +1016,9 @@ export interface CsHealthStatus {
 
 export async function getCsHealth(): Promise<CsHealthStatus> {
   const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/health`);
-  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+  // 503 means degraded, not unreachable: the body still carries the per-service
+  // detail, so callers can name what is down instead of the generic banner.
+  if (!res.ok && res.status !== 503) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }
 
@@ -1629,7 +1603,7 @@ export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<Grad
 
 export interface GradingConfig {
   dpi: number | null;
-  page_columns: number | null;
+  page_columns: number | 'auto' | null;
   column_split_ratio: number | null;
   force_split: boolean | null;
   force_split_pairs: number[][] | null;

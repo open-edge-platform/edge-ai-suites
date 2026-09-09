@@ -14,46 +14,46 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
 1. Install dependencies:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-rtabmap-ros
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-rtabmap-ros
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 2. To download and install the FastMapping standalone sample application run
    the command below:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get install ros-jazzy-fast-mapping
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get install ros-humble-fast-mapping
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    > **Note**:
    >
@@ -63,24 +63,24 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
 3. Set up your ROS 2 environment
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    source /opt/ros/jazzy/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
 
    ```bash
    source /opt/ros/humble/setup.bash
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 4. Run the FastMapping sample application using a ROS 2 bag of a robot spinning:
 

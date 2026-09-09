@@ -1,6 +1,6 @@
-# Metro App Builder
+# Metro Application Builder
 
-The Metro AI Suite **Metro App Builder** is a collection of reusable,
+The Metro AI Suite **Metro Application Builder** is a collection of reusable,
 business-objective prompts that turn a plain-language goal (for example,
 "I want to detect people in my camera feeds") into a running Intel® Edge AI
 application. Each prompt states **only a business outcome**; no framework, model,
@@ -12,9 +12,9 @@ hardware.
 
 ---
 
-## How prompt-driven app development works
+## How prompt-driven application development works
 
-A Metro AI App development prompt is intentionally minimal. Instead of encoding
+A Metro AI Application development prompt is intentionally minimal. Instead of encoding
 technology choices, it describes *what you want to achieve* and delegates every
 technical decision to the orchestrator skill.
 
@@ -66,4 +66,3 @@ Copilot or your AI agent tool. Each tile is loaded from a prompt file in the
   <p class="prompt-catalog-loading">Loading prompts…</p>
 </div>
 <script src="../../_static/prompt-library-files/prompt-catalog.js"></script>
-

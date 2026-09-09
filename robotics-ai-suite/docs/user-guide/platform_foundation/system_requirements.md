@@ -49,10 +49,10 @@ Bring your own system and continue to the Getting Started guide:
 
 - **[Getting Started](getting_started.md)** — setup your system for the Robotics AI Suite.
 
-<!--hide_directive
+
 :::{toctree}
 :hidden:
 
 Development Kits <development_kits/index>
 :::
-hide_directive-->
+

@@ -81,7 +81,7 @@ for you to install an operating system.
 
 For product details, see the [manufacturer website](https://www.aaeon.com/en/article/detail/accelerate-robotics-development-aaeon-intel).
 
-<!--hide_directive
+
 :::{toctree}
 :caption: Components
 :hidden:
@@ -90,4 +90,3 @@ BIOS Configuration <bios-configuration>
 Supported Operating Systems <supported-operating-systems>
 Interfaces <interfaces/index>
 :::
-hide_directive-->

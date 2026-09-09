@@ -1,42 +1,33 @@
 import React, { useRef, useState, useEffect } from 'react';
 import '../../assets/css/TopPanel.css';
 import BrandSlot from '../../assets/images/BrandSlot.svg';
-import menu from '../../assets/images/settings.svg';
 import LanguageSwitcher from '../LanguageSwitcher';
-import SettingsModal from '../Menu/SettingsButton';
 import { useTranslation } from 'react-i18next';
+import { isServiceManagerAvailable } from '../../services/serviceManager';
 import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface TopPanelProps {
-  projectName: string;
-  setProjectName: (name: string) => void;
-  isSettingsOpen: boolean;
-  setIsSettingsOpen: (isOpen: boolean) => void;
-  activeScreen: 'main' | 'content-search' | 'grading';
-  setActiveScreen: (screen: 'main' | 'content-search' | 'grading') => void;
+  activeScreen: 'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready';
+  setActiveScreen: (screen: 'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready') => void;
   featureGuard: FeatureGuard;
   hasMainFeatures: boolean;
   onViewReport: () => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ 
-  projectName, 
-  setProjectName, 
-  isSettingsOpen, 
-  setIsSettingsOpen, 
-  activeScreen, 
+const TopPanel: React.FC<TopPanelProps> = ({
+  activeScreen,
   setActiveScreen,
   featureGuard,
   hasMainFeatures,
   onViewReport
 }) => {
-  const menuIconRef = useRef<HTMLImageElement>(null);
   const navMenuRef = useRef<HTMLDivElement>(null);
   const navToggleRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
   const [isNavMenuOpen, setIsNavMenuOpen] = useState(false);
 
   const isElectron = !!window.electronAPI?.isElectron;
+  const hasServiceManager = isServiceManagerAvailable();
   // Show Content Search UI if either content_search OR qa feature is enabled
   const hasContentSearchFeatures = featureGuard.hasFeature('content_search') || featureGuard.hasFeature('qa');
   const hasGradingFeature = featureGuard.hasFeature('grading');
@@ -76,14 +67,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
     window.electronAPI?.popupMenu(
       rect ? { x: rect.left, y: rect.bottom + 8 } : undefined
     );
-  };
-
-  const openSettings = () => {
-    setIsSettingsOpen(true);
-  };
-
-  const closeSettings = () => {
-    setIsSettingsOpen(false);
   };
 
   // Reusable navigation menu component
@@ -136,6 +119,45 @@ const TopPanel: React.FC<TopPanelProps> = ({
               <span className="menu-icon">📊</span>
               <span className={!hasReportFeature ? 'disabled' : ''}>{t('reportPanel.title', 'View Report')}</span>
             </li>
+            {/* Electron only: supervision of the Python backend processes */}
+            {hasServiceManager && (
+              <li
+                className={`nav-menu-tools${activeScreen === 'ready' ? ' active' : ''}`}
+                onClick={() => handleNavItemClick(() => setActiveScreen('ready'))}
+              >
+                <span className="menu-icon">🧭</span>
+                <span>{t('getStarted.title', 'Get started')}</span>
+              </li>
+            )}
+            {/* Electron only: prerequisite checks and environment preparation */}
+            {hasServiceManager && (
+              <li
+                className={activeScreen === 'setup' ? 'active' : ''}
+                onClick={() => handleNavItemClick(() => setActiveScreen('setup'))}
+              >
+                <span className="menu-icon">🧰</span>
+                <span>{t('setup.title', 'Setup')}</span>
+              </li>
+            )}
+            {/* Electron only: schema-guarded editor for config.yaml and friends */}
+            {hasServiceManager && (
+              <li
+                className={activeScreen === 'config' ? 'active' : ''}
+                onClick={() => handleNavItemClick(() => setActiveScreen('config'))}
+              >
+                <span className="menu-icon">🔧</span>
+                <span>{t('config.title', 'Configuration')}</span>
+              </li>
+            )}
+            {hasServiceManager && (
+              <li
+                className={activeScreen === 'services' ? 'active' : ''}
+                onClick={() => handleNavItemClick(() => setActiveScreen('services'))}
+              >
+                <span className="menu-icon">🖥️</span>
+                <span>{t('services.title', 'Services')}</span>
+              </li>
+            )}
             {/* Electron only: the native application menu (File/Edit/View/Window) */}
             {isElectron && (
               <li
@@ -194,21 +216,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
       </div>
       <div className="action-slot">
         <LanguageSwitcher />
-        <img
-          src={menu}
-          alt="Menu Icon"
-          className="menu-icon"
-          onClick={openSettings}
-          ref={menuIconRef}
-        />
       </div>
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={closeSettings}
-        projectName={projectName}
-        setProjectName={setProjectName}
-        featureGuard={featureGuard}
-      />
     </header>
   );
 };

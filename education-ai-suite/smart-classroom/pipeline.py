@@ -12,6 +12,7 @@ from model_manager import ModelManager
 from components.report_generator.report_generator import ReportGenerator
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_paths import SessionPaths
 from utils.markdown_cleaner import markdown_to_plain
 from monitoring import monitor
 from pathlib import Path
@@ -61,7 +62,6 @@ class Pipeline:
         return any(getattr(c, "board_ocr_partial", False) for c in self.summarizer_pipeline)
 
     def run_transcription(self, input):
-        project_config = RuntimeConfig.get_section("Project")
         input_gen = ({"input": input} for _ in range(1))
 
         for component in self.transcription_pipeline:
@@ -76,8 +76,7 @@ class Pipeline:
     
     def run_summarizer(self):
 
-        project_config = RuntimeConfig.get_section("Project")
-        transcription_path = os.path.join(project_config.get("location"), project_config.get("name"), self.session_id, "transcription.txt")
+        transcription_path = str(SessionPaths.transcript_path(self.session_id))
 
         try:
             input = StorageManager.read_text_file(transcription_path)
@@ -102,13 +101,7 @@ class Pipeline:
 
     def run_mindmap(self):
 
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-        summary_path = os.path.join(session_dir, "summary.md")
+        summary_path = str(SessionPaths.summary_path(self.session_id))
         min_tokens = config.mindmap.min_token
 
         try:
@@ -173,7 +166,7 @@ class Pipeline:
             import json
             insufficient_mindmap_json = json.dumps(insufficient_mindmap, indent=2)
             
-            mindmap_path = os.path.join(session_dir, "mindmap.mmd")
+            mindmap_path = str(SessionPaths.mindmap_path(self.session_id))
             StorageManager.save(mindmap_path, insufficient_mindmap_json, append=False)
             return insufficient_mindmap_json
 
@@ -193,14 +186,7 @@ class Pipeline:
 
     def run_content_segmentation(self):
 
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
-        transcription_path = os.path.join(session_dir, "content_segmentation_transcription.txt")
+        transcription_path = str(SessionPaths.segmentation_transcript_path(self.session_id))
 
         session_state = SessionState.get_session_state(self.session_id)
         # VALIDATION: Check media duration match before processing
@@ -250,7 +236,7 @@ class Pipeline:
             )
 
             # 🔹 Save raw JSON string
-            topic_path = os.path.join(session_dir, "topics.json")
+            topic_path = str(SessionPaths.topics_path(self.session_id))
             StorageManager.save(topic_path, topic_json_str, append=False)
 
             # 🔥 Convert to Python object (CRITICAL FIX)
@@ -295,12 +281,7 @@ class Pipeline:
         the whole catalog); ``manual_fields`` are teacher-typed basic-info values.
         Template filling lives entirely inside ReportGenerator.
         """
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        session_dir = str(SessionPaths.session_dir(self.session_id))
 
         if not os.path.exists(session_dir):
             raise HTTPException(
@@ -335,12 +316,7 @@ class Pipeline:
         applying any updated ``manual_fields`` (basic info). See
         ReportGenerator.reapply_selection. Returns {session_id, report}.
         """
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        session_dir = str(SessionPaths.session_dir(self.session_id))
         if not os.path.exists(session_dir):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

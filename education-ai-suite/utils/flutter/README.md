@@ -463,7 +463,8 @@ The Content Search backend exposes the following REST API (base URL: `http://127
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `GET` | `/api/v1/system/health` | Health check (returns `{"status":"ok"}`) |
+| `GET` | `/api/v1/system/health` | Aggregate health: 200 + `{"status":"ok"}` when every service is ready, 503 + `{"status":"degraded", "services": {...}}` otherwise |
+| `GET` | `/api/v1/system/ping` | Liveness of the API process only (always 200 while it is serving) |
 | `POST` | `/api/v1/object/upload-ingest` | Upload file + start ingestion (multipart/form-data) |
 | `GET` | `/api/v1/task/query/{task_id}` | Check ingestion task status |
 | `DELETE` | `/api/v1/object/cleanup-task/{task_id}` | Cleanup failed/duplicate task |

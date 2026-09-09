@@ -32,27 +32,31 @@ class SessionStore:
     def _init_table(cls) -> None:
         conn = cls._conn()
         try:
-            conn.execute(
-                """
-                CREATE TABLE IF NOT EXISTS sessions (
-                    session_id      TEXT PRIMARY KEY,
-                    state           TEXT,
-                    current_stage   TEXT,
-                    stages          TEXT,
-                    sources         TEXT,
-                    error           TEXT,
-                    started_at      TEXT,
-                    updated_at      TEXT,
-                    request         TEXT,
-                    cancel_requested INTEGER DEFAULT 0,
-                    last_heartbeat  TEXT
-                )
-                """
-            )
-            conn.commit()
-            cls._migrate(conn)
+            cls._create_table(conn)
         finally:
             conn.close()
+
+    @classmethod
+    def _create_table(cls, conn) -> None:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS sessions (
+                session_id      TEXT PRIMARY KEY,
+                state           TEXT,
+                current_stage   TEXT,
+                stages          TEXT,
+                sources         TEXT,
+                error           TEXT,
+                started_at      TEXT,
+                updated_at      TEXT,
+                request         TEXT,
+                cancel_requested INTEGER DEFAULT 0,
+                last_heartbeat  TEXT
+            )
+            """
+        )
+        conn.commit()
+        cls._migrate(conn)
 
     @classmethod
     def _migrate(cls, conn) -> None:
@@ -106,7 +110,11 @@ class SessionStore:
         with cls._lock:
             state = cls._states.get(session_id)
             if state is None:
-                return None
+                row = cls._select(session_id)
+                if row is None:
+                    return None
+                state = _row_to_dict(row)
+                cls._states[session_id] = state
             state.update(fields)
             state["updated_at"] = _now_iso()
             cls._upsert(state)
@@ -117,7 +125,11 @@ class SessionStore:
         with cls._lock:
             state = cls._states.get(session_id)
             if state is None:
-                return None
+                row = cls._select(session_id)
+                if row is None:
+                    return None
+                state = _row_to_dict(row)
+                cls._states[session_id] = state
             if stage in state["stages"]:
                 state["stages"][stage] = status
             if status in ("running", "done", "failed"):
@@ -186,6 +198,7 @@ class SessionStore:
     def _upsert(cls, state: dict) -> None:
         conn = cls._conn()
         try:
+            cls._create_table(conn)
             conn.execute(
                 """
                 INSERT OR REPLACE INTO sessions
@@ -215,6 +228,7 @@ class SessionStore:
     def _select(cls, session_id: str) -> sqlite3.Row | None:
         conn = cls._conn()
         try:
+            cls._create_table(conn)
             return conn.execute(
                 "SELECT * FROM sessions WHERE session_id = ?", (session_id,)
             ).fetchone()

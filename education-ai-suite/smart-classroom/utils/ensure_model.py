@@ -1,5 +1,4 @@
-import logging, os, subprocess
-from typing import Tuple
+import logging, os
 import yaml
 from utils.config_loader import config
 from utils.cli_utils import run_cli
@@ -9,8 +8,40 @@ from model_manager.feature_bootstrap import resolve_effective_features
 
 logger = logging.getLogger(__name__)
 from huggingface_hub import snapshot_download
+from huggingface_hub.errors import GatedRepoError, RepositoryNotFoundError
 
 HF_PYTORCH_WEIGHTS_NAME = "pytorch_model.bin"
+
+
+class ModelDownloadError(RuntimeError):
+    """A model could not be fetched or prepared locally.
+
+    Raised instead of returning a failure flag so a missing model aborts
+    whatever was being loaded (and, at warmup, startup itself) with the real
+    cause attached, rather than leaving the service up with a capability that
+    dies on every request.
+    """
+
+
+def normalize_hf_token(hf_token) -> str | None:
+    """Map a blank/absent config token to None.
+
+    An empty string is not "no token" to huggingface_hub — it builds an
+    ``Authorization: Bearer `` header and fails with an opaque "Illegal header
+    value" instead of the gated-repo error that says what to actually do.
+    """
+    token = str(hf_token).strip() if hf_token is not None else ""
+    return token or None
+
+
+def _hf_auth_hint(model_name: str) -> str:
+    return (
+        f"'{model_name}' is gated or private. Accept the model conditions at "
+        f"https://hf.co/{model_name}, create a token at "
+        "https://hf.co/settings/tokens, and set models.asr.hf_token in config.yaml "
+        "(or disable models.asr.diarization)."
+    )
+
 
 def _download_hf_model(
     model_name: str,
@@ -18,8 +49,12 @@ def _download_hf_model(
     hf_token: str = None,
     force: bool = False,
     required_files: list[str] | None = None
-) -> Tuple[bool, str]:
-    """Download a HuggingFace model locally (full snapshot, offline usable)."""
+) -> str:
+    """Download a HuggingFace model locally (full snapshot, offline usable).
+
+    Returns the local directory; raises ModelDownloadError if the snapshot
+    could not be fetched.
+    """
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -32,7 +67,7 @@ def _download_hf_model(
     # If already downloaded and not forcing, reuse
     if not force and os.listdir(output_dir) and has_required_files:
         logger.info(f"⚡ Using cached HF model at {output_dir}")
-        return True, output_dir
+        return output_dir
 
     if os.listdir(output_dir) and not has_required_files:
         logger.warning(f"Incomplete HF model cache detected at {output_dir}. Re-downloading snapshot.")
@@ -45,16 +80,34 @@ def _download_hf_model(
         snapshot_download(
             repo_id=model_name,
             local_dir=output_dir,
-            local_dir_use_symlinks=False,   # important for portability (Docker etc.)
-            token=hf_token
+            token=normalize_hf_token(hf_token)
         )
+    except (GatedRepoError, RepositoryNotFoundError) as e:
+        # 401/403/404 all surface here when the token is missing, expired, or
+        # has not accepted the model conditions — the actionable case.
+        raise ModelDownloadError(
+            f"Failed to download HF model {model_name} -> {output_dir}: {e}\n"
+            f"{_hf_auth_hint(model_name)}"
+        ) from e
     except Exception as e:
-        logger.error(f"❌ HF download failed: {e}")
-        return False, output_dir
+        raise ModelDownloadError(
+            f"Failed to download HF model {model_name} -> {output_dir}: {e}"
+        ) from e
 
-    success = len(os.listdir(output_dir)) > 0
-    logger.info("✅ Download successful" if success else "❌ Download incomplete")
-    return success, output_dir
+    if not os.listdir(output_dir):
+        raise ModelDownloadError(
+            f"Download of HF model {model_name} left {output_dir} empty."
+        )
+
+    missing = [f for f in required_files if not os.path.exists(os.path.join(output_dir, f))]
+    if missing:
+        raise ModelDownloadError(
+            f"HF model {model_name} downloaded to {output_dir} but is missing "
+            f"required file(s): {', '.join(missing)}"
+        )
+
+    logger.info("✅ Download successful")
+    return output_dir
 
 def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = None) -> None:
     config_path = os.path.join(pipeline_dir, "config.yaml")
@@ -90,14 +143,14 @@ def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = N
             continue
 
         dependency_dir = os.path.join(pipeline_dir, "dependencies", model_ref.replace("/", "_"))
-        success, _ = _download_hf_model(
+        # Not swallowed: a sub-model that never lands leaves the pipeline config
+        # pointing at the hub, which only fails much later at diarize() time.
+        _download_hf_model(
             model_ref,
             dependency_dir,
             hf_token=hf_token,
             required_files=[HF_PYTORCH_WEIGHTS_NAME, "config.yaml"]
         )
-        if not success:
-            continue
 
         checkpoint_path = os.path.join(dependency_dir, HF_PYTORCH_WEIGHTS_NAME)
         if os.path.exists(checkpoint_path):
@@ -107,6 +160,40 @@ def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = N
     if changed:
         with open(config_path, "w", encoding="utf-8") as handle:
             yaml.safe_dump(pipeline_config, handle, sort_keys=False)
+
+
+def diarization_cache_complete(pipeline_dir: str) -> bool:
+    """True when the cached pipeline is actually usable offline.
+
+    ``config.yaml`` alone is not enough: it is written by the snapshot download,
+    while the sub-models it points at are fetched afterwards by
+    ``_cache_diarization_dependencies_locally``. If that second step was
+    interrupted, the config still carries hub identifiers (or unexpanded
+    ``$model/...`` refs) and the pipeline only fails when a session runs.
+    """
+    config_path = os.path.join(pipeline_dir, "config.yaml")
+    if not os.path.exists(config_path):
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            pipeline_config = yaml.safe_load(handle) or {}
+    except (OSError, yaml.YAMLError) as e:
+        logger.warning(f"Unreadable diarization pipeline config at {config_path}: {e}")
+        return False
+
+    pipeline_params = pipeline_config.get("pipeline", {}).get("params", {})
+    for key in ("segmentation", "embedding", "plda"):
+        model_ref = pipeline_params.get(key)
+        if not isinstance(model_ref, str):
+            continue
+        if not (os.path.isfile(model_ref) or os.path.isdir(model_ref)):
+            logger.warning(
+                f"Diarization cache at {pipeline_dir} is incomplete: "
+                f"{key}={model_ref!r} does not resolve locally."
+            )
+            return False
+    return True
 
 def _ir_exists(output_dir: str) -> bool:
     """Check if exported OpenVINO IR files exist."""
@@ -123,13 +210,17 @@ def _download_openvino_model(
     output_dir: str,
     weight_format: str,
     force: bool = False
-) -> Tuple[bool, str]:
-    """Export a HuggingFace model to OpenVINO IR using optimum-cli."""
+) -> str:
+    """Export a HuggingFace model to OpenVINO IR using optimum-cli.
+
+    Returns the output directory; raises ModelDownloadError if the export
+    failed or produced no IR.
+    """
     os.makedirs(output_dir, exist_ok=True)
 
     if not force and _ir_exists(output_dir):
         logger.info(f"⚡ Using cached export at {output_dir}")
-        return True, output_dir
+        return output_dir
 
     cmd = [
         "optimum-cli", "export", "openvino",
@@ -144,12 +235,19 @@ def _download_openvino_model(
 
     return_code = run_cli(cmd=cmd, log_fn=logger.info)
     if return_code != 0:
-        logger.error(f"❌ Export failed: {return_code}")
-        return False, output_dir
+        raise ModelDownloadError(
+            f"optimum-cli export of {model_name} -> {output_dir} failed with exit "
+            f"code {return_code}. See the export log above for the cause."
+        )
 
-    success = _ir_exists(output_dir)
-    logger.info("✅ Export successful" if success else "❌ Export incomplete")
-    return success, output_dir
+    if not _ir_exists(output_dir):
+        raise ModelDownloadError(
+            f"optimum-cli export of {model_name} reported success but no "
+            f"OpenVINO IR was written to {output_dir}."
+        )
+
+    logger.info("✅ Export successful")
+    return output_dir
 
 def ensure_model():
     # NOTE: Core capabilities (text_gen VLM, ASR, OCR) handle model download/

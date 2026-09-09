@@ -261,8 +261,10 @@ make down && make up-sim-camera
 **View RTSP streams directly**:
 ```bash
 # Install ffmpeg if needed: sudo apt install ffmpeg
-ffplay rtsp://localhost:8554/uav-1/nadir           # Raw feed
-ffplay rtsp://localhost:8554/uav-1/nadir/processed # Annotated with detections
+ffplay rtsp://localhost:8554/uav-1/nadir           # Raw feed (needs a local display)
+
+# Headless alternative — record N seconds to a file instead of live-viewing
+ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv
 ```
 
 **Monitor system in real-time**:
@@ -277,10 +279,10 @@ docker compose ps            # Check container status
 |------|---------|
 | [camera-modes.md](camera-modes.md) | Complete camera modes guide (sim vs USB) |
 | [how-it-works.md](how-it-works.md) | System design, data flows, component details |
-| [../../Makefile](../../Makefile) | Build targets and task automation |
-| [../../docker-compose.yml](../../docker-compose.yml) | Infrastructure services, profiles, networking |
-| [../../sample-apps/docker-compose.yml](../../sample-apps/docker-compose.yml) | AI helper + dashboard services |
-| [../../.env.example](../../.env.example) | All configurable environment variables |
-| [../../infra/bridges/camera/](../../infra/bridges/camera/) | Gazebo camera source code (sim mode) |
-| [../../infra/bridges/usb-camera/](../../infra/bridges/usb-camera/) | USB camera source code (real hardware) |
-| [../../mcp-server/](../../mcp-server/) | Model Context Protocol server for integrations |
+| [../../Makefile](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/Makefile) | Build targets and task automation |
+| [../../docker-compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docker-compose.yml) | Infrastructure services, profiles, networking |
+| [../../sample-apps/docker-compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/sample-apps/docker-compose.yml) | AI helper + dashboard services |
+| [../../.env.example](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/.env.example) | All configurable environment variables |
+| [../../infra/bridges/camera/](https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/infra/bridges/camera) | Gazebo camera source code (sim mode) |
+| [../../infra/bridges/usb-camera/](https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/infra/bridges/usb-camera) | USB camera source code (real hardware) |
+| [../../mcp-server/](https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/mcp-server) | Model Context Protocol server for integrations |

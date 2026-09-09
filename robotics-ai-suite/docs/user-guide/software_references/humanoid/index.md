@@ -2,26 +2,26 @@
 
 The Humanoid Toolkit sample pipelines demonstrate end-to-end AI workflows optimized for Intel platforms. Review the [validated hardware configuration](../../hardware_blueprints/humanoid/index.md#validated-configuration) before running a pipeline.
 
-<!--hide_directive
-::::{grid} 3hide_directive-->
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Sample Pipelines**
-<!--hide_directive:link: sample_pipelines
+::::{grid} 3
+
+:::{grid-item-card} **Sample Pipelines**
+:link: sample_pipelines
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 End-to-end reference pipelines demonstrating imitation learning, vision-based manipulation, SLAM, and LLM-guided task execution.
-<!--hide_directive:::hide_directive-->
+:::
 
-<!--hide_directive:::{grid-item-card}hide_directive--> **Package Reference**
-<!--hide_directive:link: packages_list
+:::{grid-item-card} **Package Reference**
+:link: packages_list
 :link-type: doc
-:link-alt: clickable cardshide_directive-->
+:link-alt: clickable cards
 
 Find supported Humanoid runtime, middleware, sensor, and pipeline packages.
-<!--hide_directive:::
+:::
 ::::
-hide_directive-->
+
 
 ## Sample Pipelines Overview
 
@@ -39,13 +39,13 @@ hide_directive-->
 | **[Fast-LIVO2 Demo](sample_pipelines/fast_livo2_demo.md)** | LiDAR, Visual SLAM | Fast LiDAR-inertial-visual odometry package. |
 | **[Point-LIO Demo](sample_pipelines/point_lio_demo.md)** | LiDAR, SLAM | Robust LiDAR-inertial odometry via point-by-point integration. |
 | **[GR00T Whole-Body Control](sample_pipelines/gr00t_wbc.md)** | Control, Manipulation | Whole-body control pipeline for humanoid robotics. |
-| **[GR00T N1D7 OpenVINO](sample_pipelines/gr00t_n1d7_ov.md)** | AI Inference | OpenVINO-accelerated GR00T foundation model deployment. |
+| **[GR00T N1D7 OpenVINO](../../ai_resources/openvino/models/model_gr00t_n1d7.md)** | AI Inference | OpenVINO-accelerated GR00T foundation model deployment. |
 
-<!--hide_directive
+
 :::{toctree}
 :maxdepth: 2
 :hidden:
 Humanoid Packages <packages_list>
 Sample Pipelines <sample_pipelines>
 :::
-hide_directive-->
+

@@ -30,9 +30,9 @@ Enter `Link options`  to update the ACPI GMSL settings for your sensor.
 
 Modify these values according to the information below. Your settings may vary depending on sensor manufacturer.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **RealSense D457**
-<!--hide_directive:sync: realsensehide_directive-->
+::::{tab-set}
+:::{tab-item} **RealSense D457**
+:sync: realsense
 
 This table is a validated example of ACPI GMSL settings for the [RealSense D457](https://www.realsenseai.com/products/d457-gmsl-fakra/)
 
@@ -64,9 +64,9 @@ Here, 4 individual cameras are setup, split across both FAKRA connectors. This e
 | Device1 I2C Address  | 42               | 44               | 42               | 44               |
 | Device2 I2C Address  | 27               | 27               | 27               | 27               |
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **D3CMCXXX-106-084**
-<!--hide_directive:sync: d3cmc106hide_directive-->
+:::
+:::{tab-item}  **D3CMCXXX-106-084**
+:sync: d3cmc106
 
 This table is a validated configuration of ACPI GMSL settings for the [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/) GMSL2 camera module.
 
@@ -99,8 +99,8 @@ When using the D3 GMSL2 series camera, set the ACPI GMSL settings according to t
 | Device2 I2C Address  | 54               | 54               |
 
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 The active mini-FAKRA port is determined by the rotation value.
 Below is a table showing the default rotation per port location.

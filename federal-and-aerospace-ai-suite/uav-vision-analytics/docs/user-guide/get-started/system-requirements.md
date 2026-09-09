@@ -1,15 +1,64 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # System Requirements
 
-This page provides detailed hardware, software, and platform requirements to
-help you set up and run the application efficiently.
+## Developer System
 
-## Supported Platforms
+The developer system is used to build installation artifacts and prepare the bootable USB.
 
-**Operating Systems**
+| Component | Minimum                                                          |
+| --------- | ---------------------------------------------------------------- |
+| OS        | Ubuntu 24.04/22.04 or WSL environment                            |
+| CPU       | Any modern x86-64 processor with virtualisation support          |
+| Memory    | 16 GiB RAM                                                       |
+| Storage   | 100 GiB free disk space (for image build workspace)              |
+| USB       | 32 GiB USB drive (for bootable installation media)               |
+| Network   | Internet access to fetch packages and images                     |
+
+### Prerequisites
+
+#### Docker Setup
+
+Docker Engine is required because the build workflow uses Docker images and containers. Install Docker Engine for your Ubuntu system using the official Docker documentation for [Ubuntu](https://docs.docker.com/engine/install/ubuntu/). For Windows Subsystem for Linux (WSL), follow the steps in the [Windows WSL Guide](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/docs/user-guide/how-to/set-up-windows-wsl.md).
+
+Configure Docker for [non-root usage and service startup after installation](https://docs.docker.com/engine/install/linux-postinstall/).
+
+If you are behind a proxy, configure [Docker daemon proxy settings](https://docs.docker.com/config/daemon/systemd/).
+
+#### Install Make and other tools on the Development System
+
+Install GNU Make and other utilities on your development system:
+
+```bash
+sudo apt update
+sudo apt-get install -y make gdisk
+```
+
+#### Password Hash Tools
+
+The build requires a SHA-512 password hash for the image credentials. Install at least one of the following:
+
+```bash
+# Option 1: openssl
+sudo apt-get install -y openssl
+
+# Option 2: mkpasswd (whois package)
+sudo apt-get install -y whois
+```
+
+## Target (Host) System
+
+The target system is the Intel edge node on which the provisioned OS and workloads will run. The following section provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
+
+### Operating Systems
 
 - Ubuntu 24.04 LTS
 
-## Minimum Requirements
+### Minimum Requirements
+
 | **Component**       | **Minimum Requirement**   |
 |---------------------|---------------------------|
 | **Memory**          | 16 GB                     |
@@ -21,11 +70,10 @@ help you set up and run the application efficiently.
 |----------------------|-----------|------------|-----------|
 | Intel® Core™ Ultra Processors Series 3 | ✓         | ✓          | ✓         |
 
-
 > **Note:** Users can also create apps tailored to their use case using models supported by DL Streamer.
-Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
+> Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
-## Software Requirements
+### Software Requirements
 
 **Required Software**:
 
@@ -44,7 +92,7 @@ Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev
 - GPU optimizations require Intel® integrated graphics or compatible accelerators.
 -->
 
-## Validation
+### Validation
 
 - Ensure all dependencies are installed and configured before proceeding to
   [Get Started Standalone](./get-started-standalone.md)

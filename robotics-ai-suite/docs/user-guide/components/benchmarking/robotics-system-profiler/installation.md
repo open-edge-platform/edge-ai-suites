@@ -22,26 +22,26 @@ Follow the installation steps in each tutorial before running benchmarks:
 
 Install the Robotics System Profiler package for your ROS distribution:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-benchmark-framework
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-benchmark-framework
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 This installs the Robotics System Profiler tools and all required system dependencies.
 
@@ -57,26 +57,26 @@ Then restart your shell (or open a new terminal) so that `uv` is on your `PATH`.
 
 From the benchmarking directory, install Python dependencies:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 cd /opt/ros/jazzy/benchmarking
 uv sync
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 cd /opt/ros/humble/benchmarking
 uv sync
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## 5. Set Up Passwordless SSH (Remote Monitoring)
 

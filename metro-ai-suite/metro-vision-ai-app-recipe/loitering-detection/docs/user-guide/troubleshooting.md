@@ -154,4 +154,3 @@ to file new tickets there (after learning about the guidelines for
     ```
     Restart the Helm deployment once this fix is implemented.
 
----

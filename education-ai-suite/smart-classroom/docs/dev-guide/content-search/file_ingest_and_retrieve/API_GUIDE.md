@@ -34,7 +34,9 @@ Base URL: `http://<host>:9990`
 
 ### GET /v1/dataprep/health
 
-Check that the data preparation service is running.
+Readiness of the data preparation service: embedding models, local storage and
+the ChromaDB connection. Returns `200` only when all of them are up and `503`
+otherwise, so callers can gate on the status code alone.
 
 **Request**
 
@@ -44,9 +46,26 @@ curl http://localhost:9990/v1/dataprep/health
 
 #### Response
 
+`200 OK`
+
 ```json
-{ "status": "healthy" }
+{
+  "status": "healthy",
+  "checks": {
+    "visual_embedding_model": "healthy",
+    "document_embedding_model": "healthy",
+    "storage": "healthy",
+    "chromadb": "healthy"
+  },
+  "collections": { "visual_db_inited": true, "document_db_inited": true }
+}
 ```
+
+`503 Service Unavailable` — same shape, with `status: "unhealthy"` and the
+failing entries in `checks` (e.g. `"chromadb": "unavailable"`).
+
+`collections` is informational: collections are created lazily on the first
+ingest, so `false` on a fresh install does not make the service unhealthy.
 
 ---
 

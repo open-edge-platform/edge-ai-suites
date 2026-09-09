@@ -1,0 +1,313 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+.services-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px 24px;
+  gap: 12px;
+  /* The panes scroll individually, so the screen itself must not. */
+  overflow: hidden;
+  font-family: var(--font-text);
+}
+
+.services-split {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.services-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.services-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.services-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+
+.services-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.services-subtitle {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.services-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: auto;
+  min-height: 0;
+}
+
+.services-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid #ececec;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.services-row:last-child {
+  border-bottom: none;
+}
+
+.services-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.services-row:hover {
+  background: #f0f0f0;
+}
+
+.services-row.selected {
+  border-left-color: var(--color-theme);
+  background: #e8f4f8;
+}
+
+.services-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #b0b3b8;
+}
+
+.services-dot.status-healthy {
+  background: #4caf50;
+}
+
+.services-dot.status-starting,
+.services-dot.status-stopping {
+  background: #ff9800;
+}
+
+.services-dot.status-degraded {
+  background: #e6b800;
+}
+
+.services-dot.status-failed {
+  background: #d9534f;
+}
+
+.services-row-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.services-row-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.services-tree-branch {
+  color: #b8bcc2;
+  font-family: var(--font-mono);
+  line-height: 1;
+}
+
+.services-badge {
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #e0e6ea;
+  color: #55606a;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.services-row-status {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--color-gray-700);
+  white-space: nowrap;
+}
+
+.services-row-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #9aa0a8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Clears the tree branch glyph so it lines up under the service name. */
+  margin-left: 16px;
+}
+
+.services-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.services-actions-label {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.services-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: #fff;
+  color: var(--color-gray-900);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.services-btn:hover:not(:disabled) {
+  border-color: var(--color-theme);
+  color: var(--color-theme);
+}
+
+.services-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.services-error {
+  padding: 8px 12px;
+  border-radius: 4px;
+  background: #fdecea;
+  color: #a33;
+  font-size: 12px;
+}
+
+.services-banner {
+  padding: 10px 14px;
+  border: 1px solid #bcdff5;
+  border-radius: 4px;
+  background: #eff7fd;
+  color: #24506e;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.services-disabled-note {
+  font-size: 11px;
+  color: #8a8f98;
+}
+
+/* --- log viewer --- */
+
+.services-logs {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.services-logs-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  background: #f5f6f7;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.services-logs-title {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.services-logs-filter {
+  width: 160px;
+  padding: 3px 8px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  font-size: 12px;
+}
+
+.services-logs-follow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--color-gray-700);
+  white-space: nowrap;
+}
+
+.services-logs-body {
+  flex: 1;
+  overflow: auto;
+  padding: 6px 10px;
+  background: #1e1f22;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.services-logs-empty {
+  color: #8a8f98;
+}
+
+.services-log-line {
+  display: flex;
+  gap: 10px;
+  color: #d6d7da;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.services-log-line.stream-stderr {
+  color: #f0a9a4;
+}
+
+.services-log-line.stream-manager {
+  color: #7fb7e8;
+}
+
+.services-log-time {
+  flex-shrink: 0;
+  color: #6f757d;
+}
