@@ -50,12 +50,44 @@ demo video at `videos/polyp_test.mp4`. Two ways to get there:
 make setup-prerequisites                      # install Docker + Intel L0 stack (Ubuntu 24.04)
 make check-l0                   # verify host GPU stack
 make backend-venv               # create .venv-backend (torch+xpu, Ultralytics, OpenVINO)
-make download-dataset  # 7-study REAL-Colon subset (~74 GB) from figshare 22202866
+make download-dataset  # 7-study REAL-Colon subset (~45 GB) from figshare 22202866
+```
+
+> **Trim the dataset for faster demo training (optional).** To shorten local
+> training time, keep only studies `001-001` and `001-002` and delete the rest.
+>
+> ```text
+> datasets/REAL-Colon/raw/
+> ├── 001-001_annotations/
+> ├── 001-001_frames/
+> ├── 001-002_annotations/
+> ├── 001-002_frames/
+> ├── 001-001_annotations.tar.gz
+> ├── 001-001_frames.tar.gz
+> ├── 001-002_annotations.tar.gz
+> └── 001-002_frames.tar.gz
+> ```
+
+```bash
 make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-first)
+```
+
+**Generate the demo video (required).** Fresh clones do not include
+`videos/polyp_test.mp4`. Generate it before running `make doctor` / `make up`:
+
+```bash
+cd /home/intel/sachin/edge-ai-suites/health-and-life-sciences-ai-suite/surgical-instrument
+.venv-backend/bin/python scripts/create_endoscopy_video.py \
+  --images-dir datasets/REAL-Colon/raw/001-001_frames \
+  --output videos/polyp_test.mp4 \
+  --seconds 60 --fps 60 --width 1920 --height 1080
+```
+
+```bash
 make doctor                     # preflight all runtime prerequisites
 ```
 
-See [Model Preparation](docs/get-started/model-preparation.md) for the full
+See [Model Preparation](docs/user-guide/get-started/model-preparation.md) for the full
 end-to-end walkthrough, dataset options, and cache-reset instructions.
 
 ## Quickstart
@@ -126,13 +158,13 @@ make up MODELS_DIR=/path/to/models VIDEOS_DIR=/path/to/videos SERIAL=<SERIAL_NUM
 
 ## Documentation
 
-- [Overview](docs/index.md)
-- [Model preparation (optional local training)](docs/get-started/model-preparation.md)
-- [Get started](docs/get-started.md)
-- [System requirements](docs/get-started/system-requirements.md)
-- [Runtime configuration](docs/runtime-configuration.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Release notes](docs/release-notes.md)
+- [Overview](docs/user-guide/index.md)
+- [Model preparation (optional local training)](docs/user-guide/get-started/model-preparation.md)
+- [Get started](docs/user-guide/get-started.md)
+- [System requirements](docs/user-guide/get-started/system-requirements.md)
+- [Runtime configuration](docs/user-guide/runtime-configuration.md)
+- [Troubleshooting](docs/user-guide/troubleshooting.md)
+- [Release notes](docs/user-guide/release-notes.md)
 
 ## Repo Layout
 

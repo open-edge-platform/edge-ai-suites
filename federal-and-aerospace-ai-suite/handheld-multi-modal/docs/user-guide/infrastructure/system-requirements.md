@@ -73,7 +73,7 @@ The target system is the Intel edge node on which the provisioned OS and workloa
 > **Note:** Users can also create apps tailored to their use case using models supported by DL Streamer.
 > Check [the list of supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
-## Software Requirements
+### Software Requirements
 
 **Required Software**:
 
@@ -86,7 +86,7 @@ The target system is the Intel edge node on which the provisioned OS and workloa
 > `python3.12-venv` is required by `make model` to create a Python virtual environment.
 > `ffmpeg` provides `ffplay` for viewing the RTSP output stream and `ffmpeg` for recording.
 
-## Validation
+### Validation
 
 - Ensure all dependencies are installed and configured before proceeding to
   [Infrastructure Setup](../infrastructure-setup.md)

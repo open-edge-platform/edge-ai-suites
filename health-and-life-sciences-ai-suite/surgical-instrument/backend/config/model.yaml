@@ -58,7 +58,9 @@ train:
   device: xpu
   epochs: 50
   imgsz: 640
-  batch: 8
+  batch: 32
+  cache: disk           # decode once to .npy on disk (safe with py3.14 forkserver)
+  fraction: 0.1         # train on 10%% of the data for a fast smoke test
   workers: 4
   optimizer: AdamW
   lr0: 0.001
@@ -77,12 +79,12 @@ train:
   translate: 0.1
   scale: 0.2
   fliplr: 0.5
-  mosaic: 1.0
-  mixup: 0.05
+  mosaic: 0.0
+  mixup: 0.0
   close_mosaic: 10
   patience: 0            # disable early-stop — deterministic full-epoch runs
   save_period: 10
-  amp: false             # XPU + Ultralytics check_amp incompatibility
+  amp: true             # XPU + Ultralytics check_amp incompatibility
 
 export:
   format: openvino

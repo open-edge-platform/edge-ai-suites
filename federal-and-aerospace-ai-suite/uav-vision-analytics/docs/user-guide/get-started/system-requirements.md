@@ -70,9 +70,8 @@ The target system is the Intel edge node on which the provisioned OS and workloa
 |----------------------|-----------|------------|-----------|
 | Intel® Core™ Ultra Processors Series 3 | ✓         | ✓          | ✓         |
 
-
 > **Note:** Users can also create apps tailored to their use case using models supported by DL Streamer.
-Check [the list of supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
+> Check [the list of supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
 ### Software Requirements
 

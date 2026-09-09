@@ -14,8 +14,6 @@ CDI uses predefined YAML specification files in `/etc/cdi/` to describe the devi
 | `intel.com/gpu` | `intel.com-gpu.yaml` | `card0`, `card1`, … | Intel® GPU devices [Physical Function (PF) and SR-IOV Virtual Functions (VFs)] |
 | `intel.com/npu` | `intel.com-npu.yaml` | `npu0`   | Intel® NPU accelerator device |
 
----
-
 ## Prerequisites
 
 - Edge Node Infrastructure software image deployed
@@ -23,8 +21,6 @@ CDI uses predefined YAML specification files in `/etc/cdi/` to describe the devi
 - Intel GPU with SR-IOV VFs enabled
 - Intel NPU hardware present (optional)
 - `sudo` access
-
----
 
 ## Step 1: CDI Specification Generation (Automatic on First Boot)
 
@@ -72,8 +68,6 @@ sudo /opt/edge/scripts/cdi/intel-cdi-specs-generator-gpu --cdi-dir /etc/cdi gpu
 sudo bash /opt/edge/scripts/cdi/intel-cdi-npu-generator.sh --cdi-dir /etc/cdi
 ```
 
----
-
 ## Step 2: Configure Docker Daemon for CDI
 
 Check `/etc/docker/daemon.json`:
@@ -92,8 +86,6 @@ Restart Docker daemon after any changes:
 ```bash
 sudo systemctl restart docker
 ```
-
----
 
 ## Step 3: Run Containers with CDI Devices
 
@@ -146,8 +138,6 @@ docker run --rm \
   ubuntu:24.04 ls /dev/dri/
 ```
 
----
-
 ## Step 4: Use CDI Devices with Docker Compose
 
 Reference CDI device names directly in your Docker Compose file:
@@ -176,8 +166,6 @@ services:
     devices:
       - intel.com/gpu=card1
 ```
-
----
 
 ## CDI Specification Format Reference
 
@@ -220,8 +208,6 @@ devices:
           hostPath: /dev/accel/accel0
           type: c
 ```
-
----
 
 ## Troubleshooting
 
@@ -288,8 +274,6 @@ ls /dev/dri/renderD*
 ```
 
 If the VFs are not created, enable them first, then regenerate the CDI specifications.
-
----
 
 ## References
 
