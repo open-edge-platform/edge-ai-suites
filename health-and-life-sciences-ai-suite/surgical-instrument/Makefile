@@ -20,7 +20,7 @@
 #
 SHELL := /bin/bash
 
-TAG ?= 2026.2.0-rc3
+TAG ?= 2026.2.0
 REGISTRY     ?= true
 REGISTRY_URL ?= intel/
 
