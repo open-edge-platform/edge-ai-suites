@@ -10,7 +10,7 @@
 This guide describes how to set up the AAEON UP Nexus WCL Edge (UPN-WCL01-SYS) development
 kit hardware and confirm that it powers on and boots correctly.
 
-The kit is powered by an **Intel® Core™ 7 processor 350** or **Intel® Core™ 5 processor
+The kit is powered by an **Intel® Core™ 7 processor 360** or **Intel® Core™ 5 processor
 320** (Wildcat Lake). It ships as a single, fanless, wall-mountable unit with onboard
 LPDDR5 memory and UFS storage, dual 2.5GbE networking, and a 134 × 105 × 53 mm footprint.
 
