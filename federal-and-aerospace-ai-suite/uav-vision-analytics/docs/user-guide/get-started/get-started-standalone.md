@@ -262,6 +262,6 @@ Intel RealSense camera setup and pipelines details are provided in the [RealSens
 | Document | Description |
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide  |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |

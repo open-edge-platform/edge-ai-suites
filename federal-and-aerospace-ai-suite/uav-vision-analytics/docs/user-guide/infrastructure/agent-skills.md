@@ -12,7 +12,7 @@ Some skills are meant to run from the developer host, while others are meant to 
 ## Available Skills
 
 | Skill | What it does | Execution target |
-|---|---|---|
+| --- | --- | --- |
 | `create-image` | Builds a host OS image using the Image Composer Tool or ISO based curation | Developer host |
 | `create-usb-installation-files` | Packages a complete bootable USB artifact (`usb-installation-files.tar.gz`), optionally running `create-image` first | Developer host |
 | `validate-platform-config` | Validates a provisioned edge node — checks k3s pod health, binary paths, cloud-init state, network/proxy settings, and device readiness (GPU VFs, NPU) | Provisioned host |

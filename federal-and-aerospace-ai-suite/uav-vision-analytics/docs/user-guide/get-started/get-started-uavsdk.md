@@ -18,6 +18,9 @@ A minimal single-container stack. Telemetry is received via MQTT from the `uav-m
 **Telemetry / pipeline lifecycle flow:**
 
 ```mermaid
+---
+config: {"theme": "dark"}
+---
 sequenceDiagram
     participant SDK as uav-mission-compute-sdk
     participant OVL as gvapython (MavlinkReceiver)
@@ -103,6 +106,7 @@ If Downloaded Compressed file then Get into the directory with:
 ```bash
 cd ../uav-vision-analytics/
 ```
+
 Or, If Cloned whole repo then Get into the directory with:
 
 ```bash
@@ -179,6 +183,7 @@ make start-rtsp DEVICE=all     # all three cameras simultaneously
 > `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **uav-mission-compute-sdk mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`; available after drone arms):
+
 ```text
 rtsp://localhost:8555/nadir      (nadir camera, CPU)
 rtsp://localhost:8555/forward    (forward camera, GPU)
@@ -332,7 +337,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
-| [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
 
