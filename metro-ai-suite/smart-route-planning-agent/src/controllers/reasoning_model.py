@@ -182,7 +182,15 @@ class ReasoningModelController:
             )
             logger.debug(f"Raw reasoning model payload: {payload}")
 
-            return payload["choices"][0]["message"]["content"]
+            payload_message: dict = payload["choices"][0]["message"]
+            if payload_message.get("reasoning_content"):
+                return payload_message["reasoning_content"]
+            elif payload_message.get("content"):
+                return payload_message["content"]
+            else:
+                logger.error(
+                    "Reasoning model response does not contain 'reasoning_content' or 'content' field."
+                )
 
         except httpx.TimeoutException:
             logger.error(
