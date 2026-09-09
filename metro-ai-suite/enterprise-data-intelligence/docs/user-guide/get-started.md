@@ -39,9 +39,6 @@ services.
 
 ## 2. Set Up EC-RAG
 
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow
-the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md). (Please use vLLM backend refer to ['vLLM Setup'](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md#vllm))
-
 ### a. Prepare embedding/reranker/LLM models
 
 ```bash
@@ -72,9 +69,15 @@ git sparse-checkout set EdgeCraftRAG
 git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
 cd EdgeCraftRAG
 
-# For the latest model support, you can modify the EC-RAG vLLM backend image version and
-# configuration like this:
+# Pin the EC-RAG server image and update the vLLM backend image and configuration:
 compose=docker_compose/intel/gpu/arc/compose.yaml
+server_image_template='${REGISTRY:-opea}/edgecraftrag-server:${TAG:-latest}'
+server_image='opea/edgecraftrag-server@sha256:8f8fe1dbdf813567e44b41c237f20862c65240bfc888808e4694bf396b2434da'
+
+grep -Fq "$server_image_template" "$compose" || {
+  echo "ERROR: expected EC-RAG server image not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
 
 grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
   echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
@@ -86,7 +89,13 @@ sed -i \
   -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
   -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
   -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
+  -e "s|$server_image_template|$server_image|g" \
   "$compose"
+
+grep -Fq "$server_image" "$compose" || {
+  echo "ERROR: EC-RAG server image digest rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
 
 grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
   echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
@@ -94,18 +103,27 @@ grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
 }
 ```
 
-Below is a reference pipeline configuration:
+Then you can launch service:
+
+> **Note:** `LLM_MODEL` and `MODEL_PATH` were set in [Prepare embedding/reranker/LLM models](#a-prepare-embeddingrerankerllm-models). Ensure both remain exported in the current shell.
 
 ```bash
-- `HOST_IP`: `<your_host_ip>`
-- `DOC_PATH`: `${PWD}/workspace`
-- `TMPFILE_PATH`: `${PWD}/workspace`
-- `LLM_MODEL`: `Qwen/Qwen3.5-35B-A3B`
-- `MODEL_PATH`: `<the directory you put Qwen/Qwen3.5-35B-A3B>`
-- `MAX_MODEL_LEN`: `60000`
-- `QUANTIZATION`: `fp8`
-- `GPU_MEMORY_UTIL`: `0.65`
-# If you have limited GPU resources, please try to increase GPU_MEMORY_UTIL and decrease MAX_MODEL_LEN
+ip_address=$(hostname -I | awk '{print $1}')
+export HOST_IP=$ip_address # Your host ip
+export VIDEOGROUPID=$(getent group video | cut -d: -f3)
+export RENDERGROUPID=$(getent group render | cut -d: -f3)
+export no_proxy=${no_proxy},${HOST_IP},edgecraftrag,edgecraftrag-server
+export NO_PROXY=${NO_PROXY},${HOST_IP},edgecraftrag,edgecraftrag-server
+# If you have a HF mirror configured, it will be imported to the container
+export HF_ENDPOINT=https://hf-mirror.com # your HF mirror endpoint"
+# Make sure all 3 folders have 1000:1000 permission
+export DOC_PATH=${PWD}/workspace
+export TMPFILE_PATH=${PWD}/workspace
+sudo chown 1000:1000 ${MODEL_PATH} ${DOC_PATH} ${TMPFILE_PATH}
+sudo chown 1000:1000 -R $HOME/.cache
+# b60 flag also fit for PTL Xe3 Arch
+docker compose --profile b60 -f docker_compose/intel/gpu/arc/compose.yaml up -d
+
 ```
 
 ### c. Load Pipeline
@@ -165,6 +183,16 @@ curl -X POST "http://${HOST_IP}:16010/v1/settings/pipelines" \
   "active": "True"
 }
 EOF
+```
+
+### d. Add Text
+
+Add text to the EC-RAG knowledge base:
+
+```bash
+curl -X POST "http://${HOST_IP}:16010/v1/data" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Intel Core Ultra X7 358H is a mobile processor designed for high-performance laptops. It combines CPU, integrated Intel graphics, and NPU capabilities to support productivity, content creation, and AI workloads."}' | jq '.'
 ```
 
 ## 3. Set Up OpenClaw
