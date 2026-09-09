@@ -60,13 +60,9 @@ demo video at `videos/polyp_test.mp4`. There are two ways to get there:
 
 ```bash
 make check-l0                   # verify host GPU stack
-
 make backend-venv               # create .venv-backend (torch+xpu, Ultralytics, OpenVINO)
-
 make download-dataset           # 7-study REAL-Colon subset (~67 GB) from figshare 22202866
-
 make prepare-dataset MAX_POS_PER_VIDEO=800 # take maximum 800 positive frames per video
-
 make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-first)
 ```
 
