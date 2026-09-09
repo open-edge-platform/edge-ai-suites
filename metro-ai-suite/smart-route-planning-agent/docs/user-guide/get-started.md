@@ -51,7 +51,7 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 3. **Set the required environment variables :**
 
     ```bash
-    export REASONING_MODEL_NAME=<model-name>    # e.g. OpenVINO/Qwen2.5-1.5B-Instruct-int4-ov
+    export REASONING_MODEL_NAME=<model-name>    # e.g. OpenVINO/Qwen3.6-35B-A3B-int4-ov, OpenVINO/Qwen3.5-9B-int8-ov, OpenVINO/Qwen2.5-14B-Instruct-int4-ov
     export TAG=latest   # Make sure TAG is set to latest to pull the latest image.
     ```
 
@@ -87,15 +87,16 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 
 ### Validated AI Models
 
-The following models were measured on a general purpose x86 CPU:
+The following models were measured on Intel® Xeon® 5th Gen CPU:
 
-| Model | Precision | Suitability |
-| --- | --- | --- |
-| `OpenVINO/Qwen2.5-1.5B-Instruct-int4-ov` | INT4 | Comfortably within budget, and it supports schema constrained output. |
-| `OpenVINO/Qwen2.5-1.5B-Instruct-int8-ov` | INT8 | It supports schema constrained output. Requires comparatively more storage and inference time. |
+| Model | Precision | Size | Suitability |
+| --- | --- | --- | --- |
+| `OpenVINO/Qwen3.5-9B-int8-ov` | INT8 | 9GB | Dense INT8 model, suitable for basic reasoning on moderate compute environments. |
+| `OpenVINO/Qwen3.6-35B-A3B-int4-ov` | INT4 | 20GB | MoE Sparse Model, Requires less compute for the performance delivered by models with similar number of parameters. |
+| `OpenVINO/Qwen2.5-14B-Instruct-int4-ov` | INT4 | 15GB | Dense, considerably large number of parameters. Might require tweaking `OVMS_CACHE_SIZE` and `REASONING_TIMEOUT_SEC`. |
 
 
-On slower hardware prefer a smaller INT4 model.
+> **IMPORTANT**: On slower hardware prefer a smaller model or consider increasing the value of REASONING_TIMEOUT_SEC or OVMS_CACHE_SIZE. See [Environment Variables Guide](./get-started/environment-variables.md)
 
 > **Note**: Before adopting a model that is not listed above, please validate it for the map updates in the UI without the fallback notice. If the OVMS container restarts repeatedly, the model is most likely not compatible.
 

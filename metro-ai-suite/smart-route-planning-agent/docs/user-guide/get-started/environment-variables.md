@@ -20,13 +20,20 @@ This section explains the environment variables used to configure the Smart Rout
 |----------|---------|-------------|
 | `AI_ROUTE_PLANNER_PORT` | `7864` | Port on which the Smart Route Planning Agent UI is accessible. |
 
-## Application Settings
+## Reasoning Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TRAFFIC_BUFFER_DURATION` | `60` | Duration in seconds for traffic data buffering. |
-| `LOG_LEVEL` | `INFO` | Logging level for the application. Options: `DEBUG`, `INFO`, `WARNING`, `ERROR`. |
-| `DATA_RETENTION_HOURS` | `24` | Number of hours to retain traffic data. |
+| `OVMS_CACHE_SIZE` | `10` | Value for KV cache in GiB. Increase this value for better performance. |
+| `REASONING_TIMEOUT_SEC` | `15.0` | Timeout in seconds for the reasoning model. Increase this value for larger models or slower hardware. |
+
+#### Example:
+
+```bash
+export OVMS_CACHE_SIZE=20
+export REASONING_TIMEOUT_SEC=30.0
+```
+
 
 ## Proxy Settings
 
