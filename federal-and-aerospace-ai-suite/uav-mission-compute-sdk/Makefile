@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-client-sweep bench-bridge-sweep bench-all help
+.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps stats apps apps-down apps-logs clean clean-all deps clean-venv bench bench-client-sweep bench-bridge-sweep bench-all help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -127,6 +127,10 @@ logs:
 ps:
 	@# Help: Show service status (core infra)
 	$(COMPOSE_LOCAL) ps
+
+stats:
+	@# Help: On-demand CPU/memory per container + host GPU/NPU/power snapshot (terminal, Grafana optional)
+	@bash infra/scripts/stats.sh
 
 # ── Sample apps + AI helpers ──────────────────────────────────────────────
 apps:

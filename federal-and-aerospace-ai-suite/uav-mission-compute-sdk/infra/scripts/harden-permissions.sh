@@ -14,6 +14,7 @@ chmod 750 \
     infra/px4-sim/start_px4_multicam.sh \
     infra/scripts/deploy_remote.sh \
     infra/scripts/test_api.sh \
+    infra/scripts/stats.sh \
     mcp-server/setup.sh \
     sample-apps/edge-ai-showcase/run-local.sh \
     sample-apps/helpers/vision-processor/entrypoint.sh
