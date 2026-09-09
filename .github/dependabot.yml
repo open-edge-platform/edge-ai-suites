@@ -21,6 +21,8 @@ updates:
     directory: "metro-ai-suite/interactive-digital-avatar"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 3
     groups:
       other-python:
         patterns:

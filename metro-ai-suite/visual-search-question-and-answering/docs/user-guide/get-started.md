@@ -62,11 +62,12 @@ export TAG="latest"
 
 ### Step 2: Prepare host directories for models and data
 
-```sh
+```bash
 mkdir -p $HOME/data
 ```
 
-If you would like to test the application with a demo dataset, please continue and follow the instructions in the [Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
+If you would like to test the application with a demo dataset, please continue and follow the instructions in the
+[Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
 
 Otherwise, if you would like to use your own data (images and video), make sure to put them all in the created data directory (`$HOME/data` in the example commands above) and make sure the created path matches with the `HOST_DATA_PATH` variable in `deployment/docker-compose/env.sh` BEFORE deploying the services.
 
@@ -157,7 +158,7 @@ Refer to [Deploy with helm](./get-started/deploy-with-helm.md) for details.
 
 Create a `prepare_demo_dataset.sh` script as following
 
-```text
+```bash
 CONTAINER_IDS=$(docker ps -a --filter "status=running" -q | xargs -r docker inspect --format '{{.Config.Image}} {{.Id}}' | grep "dataprep-visualdata-milvus" | awk '{print $2}')
 
 # Check if any containers were found

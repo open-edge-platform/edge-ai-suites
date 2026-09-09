@@ -84,14 +84,14 @@ unzip handheld-multi-modal.zip
 Run the script that installs all dependencies, downloads models, and starts applications.
 During installation, a single prompt asking to accept licenses of models will appear.
 Depending on network bandwidth, it takes around 10-15 minutes. If an error occurs during
-installation, see the [proxy configuration step](#optional-configure-the-proxy):
+installation, see the [proxy configuration step](#optional-configuring-the-proxy):
 
 ```bash
 cd handheld-multi-modal
 ./run.sh up
 ```
 
-To deploy without Visual Pipeline and Platform Evaluation Tool, run:
+For development purposes, it is possible to deploy a lightweight version without the Visual Pipeline and Platform Evaluation Tool, however, the full version is recommended for end users. To deploy it, run:
 
 ```bash
 ./run.sh standalone

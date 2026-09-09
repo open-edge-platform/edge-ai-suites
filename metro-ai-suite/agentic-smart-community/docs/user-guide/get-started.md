@@ -89,7 +89,7 @@ bash setup_docker.sh
 > - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smart-community-mcp-server`.
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
 > - If the YOLO11s OpenVINO™ IR is missing, `setup_docker.sh` automatically downloads the model and converts it before starting `videostream-analytics`.
-> - If `vllm-ipex-serving` crashes while loading weights, Docker restarts it automatically and `setup_docker.sh` waits for that retry instead of failing — up to 1 hour by default. Override with `VLLM_RETRY_TIMEOUT=<seconds> bash setup_docker.sh` (`0` fails immediately).
+> - If `vllm-ipex-serving` crashes while loading weights, Docker restarts it and `setup_docker.sh` waits up to one hour. Set `VLLM_RETRY_TIMEOUT=<seconds>` to change this; `0` stops immediately. On failure, the script reports the likely cause and stops all containers, but preserves volumes and cached model weights.
 
 Confirm the model serving is ready before continuing:
 

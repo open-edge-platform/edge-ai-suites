@@ -14,7 +14,7 @@ Use this guide after provisioning an edge node with the Infrastructure software 
 ## Benchmark Categories
 
 | Category | What It Measures | Devices | Backend |
-|----------|-----------------|---------|---------|
+| -------- | ---------------- | ------- | ------- |
 | **Vision Benchmarks** | AI model inference (detection, classification) | CPU, GPU, NPU | OpenVINO benchmark_app |
 | **Media Benchmarks** | Hardware video decode throughput and stream density | GPU (VA-API) | GStreamer + VA-API |
 | **Edge AI Pipelines** | End-to-end video analytics (decode + detect + track + classify) | GPU, NPU, GPU+NPU | DL Streamer |
@@ -22,7 +22,7 @@ Use this guide after provisioning an edge node with the Infrastructure software 
 
 ## Prerequisites
 
-- [Edge Node Infrastructure software](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint) deployed.
+- [Edge Node Infrastructure software](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/tree/release-2026.2.0) deployed.
 - During target system installation, set `host_type=container` in the `config-file`.
 - Network connectivity for model and media downloads.
 
@@ -63,7 +63,7 @@ make check
 The `make collateral` step downloads AI models and media files. Key variables:
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+| -------- | ------- | ----------- |
 | `INCLUDE_GPU` | `True` | Install GPU compute drivers |
 | `INCLUDE_NPU` | `True` | Install NPU drivers |
 | `INCLUDE_VISION` | `True` | Download vision models (YOLOv11, ResNet-50, MobileNet-v2) |
@@ -131,7 +131,7 @@ Key metrics: 1st token latency (ms), 2nd token throughput (tokens/s), power cons
 Common parameters available across all workload categories:
 
 | Parameter | Description |
-|-----------|-------------|
+| --------- | ----------- |
 | `DRY_RUN=True` | List all test configurations without executing |
 | `RESUME=True` | Skip tests that already have results |
 | `DURATION=<seconds>` | Set test duration (default: 60-120s) |
@@ -182,7 +182,7 @@ make clean-all        # Remove all generated content (models, media, results)
 ## Troubleshooting
 
 | Problem | Solution |
-|---------|----------|
+| ------- | -------- |
 | `make check` reports missing GPU | Verify drivers: `sudo apt install intel-opencl-icd intel-media-va-driver-non-free` |
 | NPU not detected | Check kernel module: `lsmod \| grep intel_vpu` and device nodes: `ls /dev/accel/` |
 | GenAI download fails | Verify `HF_TOKEN` is set and has access to gated models |
@@ -195,7 +195,7 @@ make clean-all        # Remove all generated content (models, media, results)
 
 - [Edge Workloads and Benchmarks Repository](https://github.com/open-edge-platform/edge-workloads-and-benchmarks)
 - [OpenVINO Toolkit](https://docs.openvino.ai/)
-- [DL Streamer Documentation](https://github.com/open-edge-platform/dlstreamer)
-- [Container Device Interface Guide](./configure-cdi.md) — CDI setup for GPU/NPU access
-- [DL Streamer Pipelines Guide](./build-dlstreamer-pipelines.md) — Building custom pipelines
-- [Platform Capabilities](./platform-capabilities.md) — Hardware and software stack details
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
+- [Container Device Interface Guide](../infrastructure/configure-cdi.md) — CDI setup for GPU/NPU access
+- [DL Streamer Pipelines Guide](../infrastructure/build-dlstreamer-pipelines.md) — Building custom pipelines
+- [Platform Capabilities](../infrastructure/platform-capabilities.md) — Hardware and software stack details

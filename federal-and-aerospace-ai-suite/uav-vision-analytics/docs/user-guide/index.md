@@ -5,8 +5,11 @@
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-vision-analytics">
      GitHub
   </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-vision-analytics/README.md">
+     Readme
+  </a>
   <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip">
-    Release
+     Download Package
   </a>
 </div>
 hide_directive-->

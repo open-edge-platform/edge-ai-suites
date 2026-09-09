@@ -36,15 +36,23 @@ Expected: `card0`/`renderD128` under `/dev/dri`, `accel0` under `/dev/accel`, an
 
 ## Step 2: Install the UAV Mission Compute SDK
 
-Run the official UAV Mission Compute SDK installer on the target. It configures Docker, pulls the SDK images, and builds the full simulation stack:
+Get the UAV Mission Compute SDK source on the target and start the simulation stack.
 
 ```bash
-curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/uav-mission-compute-sdk.sh | bash
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip
+unzip uav-mission-apps.zip
+cd uav-mission-compute-sdk/
 ```
 
-The installer sets up:
+Then, initialize and start the SDK:
 
-- Docker containerization platform
+```bash
+make init
+make up-sim-camera
+```
+
+This startup flow brings up:
+
 - PX4 autopilot simulation with Gazebo Harmonic
 - Multi-camera bridge (nadir, forward, rear at 416×416 @20 fps)
 - Companion telemetry bridge (MAVLink → MQTT)
@@ -53,20 +61,19 @@ The installer sets up:
 - Metrics manager for host platform monitoring
 - OpenVINO-based vision processor (YOLOv2 vehicle detection on Intel GPU)
 
-Once the script completes, the full stack is built and running under `~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/`.
+The initial image build typically takes 10-15 minutes. After startup completes, the full stack is running from the `uav-mission-compute-sdk` directory.
 
-For full details, see the [UAV Mission Compute SDK Get Started guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/uav-mission-compute-sdk/get-started.html).
+For details on deployment options and restart procedures, see the [UAV Mission Compute SDK Get Started guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md).
 
 ## Step 3: Validate the Running Stack
 
-The installer starts the simulation stack automatically. Follow these steps to arm the UAV and confirm live camera streams with inference.
+After the stack is running, follow these steps to arm the UAV and confirm live camera streams.
 
 ### Step 3.1: Wait for PX4 to be healthy
 
 First boot takes ~60–90 seconds:
 
 ```bash
-cd ~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 docker compose ps px4
 ```
 
@@ -88,15 +95,18 @@ Command takeoff so the UAV climbs and moves through the Gazebo world — cameras
 curl -X POST http://localhost:8080/action/takeoff
 ```
 
-The UAV climbs to the default hover altitude. When done, land it with:
-
-```bash
-curl -X POST http://localhost:8080/action/land
-```
+The UAV climbs to the default hover altitude.
 
 ### Step 3.4: Capture the Video Stream during flight (Optional)
 
-Record the UAV camera stream to disk with `ffmpeg`:
+Once the UAV is in flight, verify the state before capturing video streams:
+
+```bash
+curl -X GET http://localhost:8080/state
+# Expect: "armed": true; Retry arm and takeoff if false
+```
+
+Now, record the UAV camera stream to disk with `ffmpeg`:
 
 ```bash
 # Records a footage for 10 seconds and saves to nadir.mkv
@@ -114,16 +124,21 @@ Available cameras: `nadir`, `forward`, `rear`.
 ### Step 3.5: Access dashboards and APIs
 
 - **Grafana dashboards:** `http://localhost:3000` — flight and platform metrics
-  - Credentials are available in the `.env` file at `~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/`.
+  - Credentials are available in the `.env` file.
   - On a headless target, Grafana is only reachable through a reverse tunnel from a machine with a GUI/browser.
 - **REST API:** `http://localhost:8080` — flight control commands (`arm`, `takeoff`, `land`)
 
 ### Step 3.6: Stop the stack
 
+When done, land the UAV with:
+
+```bash
+curl -X POST http://localhost:8080/action/land
+```
+
 To stop the entire infrastructure stack:
 
 ```bash
-cd ~/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make down
 ```
 

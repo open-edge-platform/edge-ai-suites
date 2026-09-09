@@ -34,7 +34,7 @@ check out only this directory instead of the entire repo, use a sparse
 checkout:
 
 ```bash
-git clone --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git
+git clone -b main --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 cd federal-and-aerospace-ai-suite/uav-mission-compute-sdk
@@ -85,7 +85,7 @@ flowchart LR
     MQTT[MQTT Broker<br/>:1884]
     AI[Intel Edge AI<br/>YOLOv2 GPU]
     APPS[Applications<br/>Dashboards]
-    
+
     SIM -->|MAVLink| BRIDGE
     SIM -->|gz frames| BRIDGE
     BRIDGE -->|telemetry| MQTT
@@ -94,7 +94,7 @@ flowchart LR
     AI -->|detections| MQTT
     MQTT --> APPS
     RTSP -.->|"optional<br/>viewing"| APPS
-    
+
     style SIM fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style BRIDGE fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
     style RTSP fill:#ffe0b2,stroke:#e65100,stroke-width:3px
