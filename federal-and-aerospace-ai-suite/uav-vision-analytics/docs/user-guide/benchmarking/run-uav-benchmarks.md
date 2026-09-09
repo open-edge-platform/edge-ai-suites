@@ -83,32 +83,7 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 | `jq` | JSON parsing of DLSPS status responses | `sudo apt-get install -y jq` |
 | `ffmpeg` | Creating looped video files (optional) | `sudo apt-get install -y ffmpeg` |
 
-> **Note:** If **`jq` is not available without root**, create a zero-dependency `docker exec` wrapper:
->
-> ```bash
-> mkdir -p ~/.local/bin
-> cat > ~/.local/bin/jq << 'EOF'
-> #!/usr/bin/env bash
-> CONTAINER="dlstreamer-pipeline-server"
-> args=()
-> for arg in "$@"; do
->   if [[ -f "$arg" ]]; then
->     set -- "$@"          # file arg: pipe content as stdin instead
->     cat "$arg" | docker exec -i "$CONTAINER" jq "${args[@]}"
->     exit $?
->   else
->     args+=("$arg")
->   fi
-> done
-> docker exec -i "$CONTAINER" jq "${args[@]}"
-> EOF
-> chmod +x ~/.local/bin/jq
-> export PATH="$HOME/.local/bin:$PATH"
-> # To make permanent:
-> echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-> ```
->
-> The benchmark script automatically adds `~/.local/bin` to `PATH` at startup.
+
 
 ### 4. Verify services are reachable
 

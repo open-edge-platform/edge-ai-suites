@@ -9,7 +9,7 @@ determine the maximum number of concurrent drone-camera video streams the system
 (**stream density**) while sustaining a target frame rate, and simultaneously collects hardware
 utilization and power metrics from `metrics-manager`.
 
-[Edge Workloads and Benchmarks Guide](../infrastructure/run-edge-benchmarks.md) describes
+[Edge Workloads and Benchmarks Guide](./benchmarking//run-edge-benchmarks.md) describes
 the more general, platform-level benchmarking process, a solution for end-to-end video
 analytics pipelines, vision AI inference, hardware-accelerated media processing, and
 generative AI.

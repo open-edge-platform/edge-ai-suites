@@ -3,6 +3,20 @@
 This guide provides the demo setup steps for the OpenClaw service, EC-RAG service, Router
 service, Compressor service, and the UI service.
 
+## Prerequisites
+
+Before you begin, ensure the following:
+
+- **System Requirements:** Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **GPU Driver Installed:** This guide assumes that the target machine already has the Intel GPU driver. Otherwise, follow the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide.
+- **Docker Installed:** Install Docker by following [Get Docker](https://docs.docker.com/get-docker/).
+- **Core command-line tools:** All services — including the MCP server — run as containers, so the host only needs `git` to clone the repo and `curl` / `jq` for the setup script and health checks:
+
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y git curl jq
+  ```
+
 ## Table of Contents
 
 - [1. Set Up Router and Compressor Services](#1-set-up-router-and-compressor-services)
@@ -24,9 +38,6 @@ microservice for the full instructions on generating the configuration and start
 services.
 
 ## 2. Set Up EC-RAG
-
-To install and launch EC-RAG, set up the EC-RAG pipeline, and build the knowledge base, follow
-the instructions in [`OPEA EC-RAG Setup Guide`](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md). (Please use vLLM backend refer to ['vLLM Setup'](https://github.com/opea-project/GenAIExamples/blob/main/EdgeCraftRAG/docs/Advanced_Setup.md#vllm))
 
 ### a. Prepare embedding/reranker/LLM models
 
@@ -58,9 +69,15 @@ git sparse-checkout set EdgeCraftRAG
 git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
 cd EdgeCraftRAG
 
-# For the latest model support, you can modify the EC-RAG vLLM backend image version and
-# configuration like this:
+# Pin the EC-RAG server image and update the vLLM backend image and configuration:
 compose=docker_compose/intel/gpu/arc/compose.yaml
+server_image_template='${REGISTRY:-opea}/edgecraftrag-server:${TAG:-latest}'
+server_image='opea/edgecraftrag-server@sha256:8f8fe1dbdf813567e44b41c237f20862c65240bfc888808e4694bf396b2434da'
+
+grep -Fq "$server_image_template" "$compose" || {
+  echo "ERROR: expected EC-RAG server image not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
 
 grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
   echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
@@ -72,7 +89,13 @@ sed -i \
   -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
   -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
   -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
+  -e "s|$server_image_template|$server_image|g" \
   "$compose"
+
+grep -Fq "$server_image" "$compose" || {
+  echo "ERROR: EC-RAG server image digest rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
 
 grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
   echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
@@ -80,57 +103,96 @@ grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
 }
 ```
 
-Below is a reference pipeline configuration:
+Then you can launch service:
+
+> **Note:** `LLM_MODEL` and `MODEL_PATH` were set in [Prepare embedding/reranker/LLM models](#a-prepare-embeddingrerankerllm-models). Ensure both remain exported in the current shell.
 
 ```bash
-- `HOST_IP`: `<your_host_ip>`
-- `DOC_PATH`: `${PWD}/workspace`
-- `TMPFILE_PATH`: `${PWD}/workspace`
-- `LLM_MODEL`: `Qwen/Qwen3.5-35B-A3B`
-- `MODEL_PATH`: `<the directory you put Qwen/Qwen3.5-35B-A3B>`
-- `MAX_MODEL_LEN`: `60000`
-- `QUANTIZATION`: `fp8`
-- `GPU_MEMORY_UTIL`: `0.65`
+ip_address=$(hostname -I | awk '{print $1}')
+export HOST_IP=$ip_address # Your host ip
+export VIDEOGROUPID=$(getent group video | cut -d: -f3)
+export RENDERGROUPID=$(getent group render | cut -d: -f3)
+export no_proxy=${no_proxy},${HOST_IP},edgecraftrag,edgecraftrag-server
+export NO_PROXY=${NO_PROXY},${HOST_IP},edgecraftrag,edgecraftrag-server
+# If you have a HF mirror configured, it will be imported to the container
+export HF_ENDPOINT=https://hf-mirror.com # your HF mirror endpoint"
+# Make sure all 3 folders have 1000:1000 permission
+export DOC_PATH=${PWD}/workspace
+export TMPFILE_PATH=${PWD}/workspace
+sudo chown 1000:1000 ${MODEL_PATH} ${DOC_PATH} ${TMPFILE_PATH}
+sudo chown 1000:1000 -R $HOME/.cache
+# b60 flag also fit for PTL Xe3 Arch
+docker compose --profile b60 -f docker_compose/intel/gpu/arc/compose.yaml up -d
+
 ```
 
-### c. Load Pipeline and Knowledgebase
+### c. Load Pipeline
 
-1. Prepare pipeline and knowledgebase json config file:
+Get the host IP and send the pipeline configuration directly to EC-RAG:
 
 ```bash
-# fetch the example configs at the pinned commit
-COMMIT=f56422671c8bdf46f59dd758c8c9e38ca41d6555
-BASE=https://raw.githubusercontent.com/opea-project/GenAIExamples/$COMMIT/EdgeCraftRAG/tests/configs
-curl -fsSL "$BASE/test_kb.json" -o test_kb.json
-curl -fsSL "$BASE/test_pipeline_ipex_vllm.json" -o test_pipeline_ipex_vllm.json
+HOST_IP=$(hostname -I | awk '{print $1}')
 
-# point the configs at the models downloaded in step a
-# (embedding bge-m3-int8, reranker bge-reranker-large-int8, LLM Qwen3.5-35B-A3B)
-sed -i \
-  -e 's@"model_id": "BAAI/bge-small-en-v1.5"@"model_id": "BAAI/bge-m3"@' \
-  -e 's@"model_path": "./models/BAAI/bge-small-en-v1.5"@"model_path": "./models/BAAI/bge-m3-int8"@' \
-  -e 's@"weight": "INT4"@"weight": "INT8"@' \
-  test_kb.json
-
-sed -i \
-  -e 's@"model_path": "./models/BAAI/bge-reranker-large"@"model_path": "./models/BAAI/bge-reranker-large-int8"@' \
-  -e 's@"weight": "INT4"@"weight": "INT8"@' \
-  -e 's@"model_id": "Qwen/Qwen3-8B"@"model_id": "Qwen/Qwen3.5-35B-A3B"@' \
-  test_pipeline_ipex_vllm.json
+curl -X POST "http://${HOST_IP}:16010/v1/settings/pipelines" \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<EOF | jq '.'
+{
+  "name": "rag_pipeline",
+  "node_parser": {
+    "chunk_size": 400,
+    "chunk_overlap": 48,
+    "parser_type": "simple"
+  },
+  "indexer": {
+    "indexer_type": "faiss_vector",
+    "embedding_model": {
+      "model_id": "BAAI/bge-m3-int8",
+      "model_path": "./models/BAAI/bge-m3-int8",
+      "device": "auto",
+      "weight": "INT8"
+    }
+  },
+  "retriever": {
+    "retriever_type": "vectorsimilarity",
+    "retrieve_topk": 30
+  },
+  "postprocessor": [
+    {
+      "processor_type": "reranker",
+      "top_n": 2,
+      "reranker_model": {
+        "model_id": "BAAI/bge-reranker-large-int8",
+        "model_path": "./models/BAAI/bge-reranker-large-int8",
+        "device": "auto",
+        "weight": "INT8"
+      }
+    }
+  ],
+  "generator": {
+    "generator_type": "chatqna",
+    "inference_type": "vllm",
+    "model": {
+      "model_id": "Qwen/Qwen3.5-35B-A3B",
+      "model_path": "",
+      "device": "",
+      "weight": ""
+    },
+    "prompt_path": "./default_prompt.txt",
+    "vllm_endpoint": "http://${HOST_IP}:8086"
+  },
+  "active": "True"
+}
+EOF
 ```
 
-2. Load pipeline:
+### d. Add Text
+
+Add text to the EC-RAG knowledge base:
 
 ```bash
-# load knowledgebase
-export HOST_IP=<your host ip>
-curl -X POST http://${HOST_IP}:16010/v1/knowledge \
+curl -X POST "http://${HOST_IP}:16010/v1/data" \
   -H "Content-Type: application/json" \
-  -d @test_kb.json | jq '.'
-# load pipeline
-curl -X POST http://${HOST_IP}:16010/v1/settings/pipelines \
-  -H "Content-Type: application/json" \
-  -d @test_pipeline_ipex_vllm.json | jq '.'
+  -d '{"text":"Intel Core Ultra X7 358H is a mobile processor designed for high-performance laptops. It combines CPU, integrated Intel graphics, and NPU capabilities to support productivity, content creation, and AI workloads."}' | jq '.'
 ```
 
 ## 3. Set Up OpenClaw
@@ -489,6 +551,8 @@ openclaw tui
 ```
 
 ## 4. Set Up the UI
+
+> **Note:** OpenClaw must be configured and running before you use the UI. Standalone UI-only mode is not supported; without OpenClaw, the UI starts and serves HTTP on port 7000 but reports backend connection errors.
 
 Use Docker Compose to build and start the UI container:
 

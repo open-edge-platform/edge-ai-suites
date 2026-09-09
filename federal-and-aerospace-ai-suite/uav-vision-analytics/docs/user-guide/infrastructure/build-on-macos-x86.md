@@ -16,28 +16,22 @@ using a Ubuntu 24.04 x86_64 virtual machine in UTM.
 > The build will complete correctly but will be **3–5× slower** than on native x86
 > hardware. On Intel Macs, QEMU can use HVF acceleration and runs at near-native speed.
 
----
-
 ## Prerequisites
 
 | What | Where |
-|------|-------|
+| ---- | ----- |
 | macBook (any chip — Apple Silicon or Intel) | — |
 | macOS Ventura or later | — |
-| UTM (free VM app) | https://mac.getutm.app |
-| Ubuntu 24.04 **Server** amd64 ISO | https://releases.ubuntu.com/24.04/ |
+| UTM (free VM app) | <https://mac.getutm.app> |
+| Ubuntu 24.04 **Server** amd64 ISO | <https://releases.ubuntu.com/24.04/> |
 | 64 GB free disk space | For VM + build output |
 | 12 GB RAM free | 8 GB assigned to VM minimum |
 
----
-
 ## Step 1 — Install UTM
 
-1. Go to **https://mac.getutm.app** and click **Download**.
+1. Go to **<https://mac.getutm.app>** and click **Download**.
 2. Open the downloaded `.dmg` and drag **UTM** to your Applications folder.
 3. Open UTM. If macOS blocks it: right-click → **Open** → **Open** again.
-
----
 
 ## Step 2 — Download Ubuntu 24.04 Server amd64
 
@@ -53,8 +47,6 @@ File: `ubuntu-24.04.4-live-server-amd64.iso` (3.2 GB)
 > containers. No desktop environment is needed, and the server ISO is half the
 > size and installs in roughly a third of the time.
 
----
-
 ## Step 3 — Create the Ubuntu VM in UTM
 
 1. Open UTM → click **Create a New Virtual Machine**.
@@ -69,8 +61,6 @@ File: `ubuntu-24.04.4-live-server-amd64.iso` (3.2 GB)
    - **Storage**: 64 GB
 6. Click **Save**.
 
----
-
 ## Step 4 — Install Ubuntu in the VM
 
 1. Click **▶ Play** in UTM to start the VM.
@@ -81,8 +71,6 @@ File: `ubuntu-24.04.4-live-server-amd64.iso` (3.2 GB)
 3. When prompted, select **Install OpenSSH server** (optional but useful).
 4. Let the install complete (~8–12 min under emulation) and reboot into the VM.
 5. Log in with your username and password at the terminal prompt.
-
----
 
 ## Step 5 — Install Prerequisites Inside the VM
 
@@ -123,16 +111,12 @@ docker run --rm hello-world
 sudo apt install -y make git
 ```
 
----
-
 ## Step 6 — Clone the Repository
 
 ```bash
 git clone -b main https://github.com/open-edge-platform/edge-node-infrastructure-blueprint.git
 cd edge-node-infrastructure-blueprint
 ```
-
----
 
 ## Step 7 — Configure Proxy (corporate networks only)
 
@@ -155,8 +139,6 @@ no_proxy="localhost,127.0.0.0/8"
 
 On a home or open network, leave all values empty — the build will prompt and
 you can confirm to proceed without a proxy.
-
----
 
 ## Step 8 — Build the USB Artifacts
 
@@ -187,8 +169,6 @@ Build output appears at:
 ```
 infrastructure/build-artifacts/out/usb-installation-files.tar.gz
 ```
-
----
 
 ## Step 9 — Prepare the Bootable USB
 
@@ -224,8 +204,6 @@ After the script completes:
 2. Safely eject it from macOS.
 3. Connect the USB to the target edge node.
 4. Enter the BIOS/UEFI boot menu and boot from the USB.
-
----
 
 ## Troubleshooting
 
