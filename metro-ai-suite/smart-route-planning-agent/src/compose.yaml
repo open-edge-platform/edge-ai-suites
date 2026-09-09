@@ -18,7 +18,7 @@ services:
       - HTTPS_PROXY=${https_proxy}
       - NO_PROXY=${no_proxy},${HOST_IP},ovms
       - REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}  # Optional. When empty, rule based planning is used.
-      - REASONING_TIMEOUT_SEC=${REASONING_TIMEOUT_SEC:-8.0}  # Increase for larger reasoning models (e.g. 60-120s for 14B on CPU).
+      - REASONING_TIMEOUT_SEC=${REASONING_TIMEOUT_SEC:-15.0}  # Increase for larger reasoning models (e.g. 60-120s for 14B on CPU).
     volumes:
       - ./data/config.json:/app/data/config.json:ro
     networks:
