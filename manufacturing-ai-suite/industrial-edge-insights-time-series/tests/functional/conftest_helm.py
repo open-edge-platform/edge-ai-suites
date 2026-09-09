@@ -12,8 +12,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import helm_utils
 from utils import constants
 import time
-from pathlib import Path
-import sys
 from common_utils import assert_condition
 
 

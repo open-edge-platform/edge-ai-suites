@@ -14,8 +14,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import docker_utils
 from utils import constants
 from utils import common_utils
-from pathlib import Path
-import sys
 from common_utils import assert_condition
 
 

@@ -16,8 +16,6 @@ import subprocess
 import time
 import logging
 import asyncio
-from pathlib import Path
-import sys
 from common_utils import assert_condition
 import common_utils
 

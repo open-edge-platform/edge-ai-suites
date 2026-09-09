@@ -603,7 +603,7 @@ def test_seaweed_s3_stored_images_access_multimodal():
 
         logger.info(f"Final validation: pod_check success={pod_check['success']}, s3_check success={s3_check['success']}")
         assert_condition(pod_check["success"], f"Essential pods not running: {pod_check['missing_pods']}")
-        assert_condition(s3_check["success"], f"SeaweedFS S3 API not accessible: {s3_check['error']}")
+        assert_condition(s3_check["success"], f"SeaweedFS S3 API not accessible: {s3_check.get('error')}")
 
         logger.info("=====================================================")
         logger.info("✓ SEAWEEDFS S3 VALIDATION COMPLETED SUCCESSFULLY")

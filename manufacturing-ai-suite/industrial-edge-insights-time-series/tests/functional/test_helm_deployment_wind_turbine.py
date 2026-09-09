@@ -13,8 +13,6 @@ import constants
 import subprocess
 import time
 import logging
-from pathlib import Path
-import sys
 from common_utils import assert_condition
 import common_utils
 

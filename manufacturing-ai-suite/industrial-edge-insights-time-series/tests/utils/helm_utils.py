@@ -3320,7 +3320,8 @@ def execute_seaweedfs_bucket_query_helm(namespace):
                     "success": True,
                     "jpg_files": jpg_files,
                     "total_files": len(entries),
-                    "bucket_url": bucket_url
+                    "bucket_url": bucket_url,
+                    "error": None
                 }
             else:
                 return {"success": False, "error": "Invalid bucket response format"}

@@ -15,8 +15,6 @@ import subprocess
 import time
 import logging
 import conftest_helm
-from pathlib import Path
-import sys
 from common_utils import assert_condition
 
 # Set up logger

@@ -39,8 +39,6 @@ from constants import (
 )
 import common_utils
 from common_utils import cross_verify_img_handle_with_s3
-from pathlib import Path
-import sys
 from common_utils import assert_condition
 
 # Try to import security_utils, but make it optional for multimodal tests
