@@ -29,12 +29,3 @@ This page provides detailed hardware, software, and platform requirements to hel
 ## Validation
 
 - Ensure all required software is installed and configured before proceeding to [Get Started](../get-started.md).
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-./get-started/system-requirements.md
-
-:::
-hide_directive-->

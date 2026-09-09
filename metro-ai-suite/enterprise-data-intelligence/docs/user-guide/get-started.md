@@ -644,3 +644,12 @@ Skills provide your tools. When you need one, check its `SKILL.md`. Keep local n
 For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
 Do not answer questions by searching for files!
 ```
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements.md
+
+:::
+hide_directive-->
