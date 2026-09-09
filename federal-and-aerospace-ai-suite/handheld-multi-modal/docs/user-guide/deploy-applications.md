@@ -75,10 +75,11 @@ Download the compressed file:
 curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/handheld-multi-modal.zip
 ```
 
-Decompress the downloaded file:
+Decompress the downloaded file and enter the working directory:
 
 ```bash
 unzip handheld-multi-modal.zip
+cd handheld-multi-modal/handheld-multi-modal
 ```
 
 Run the script that installs all dependencies, downloads models, and starts applications.
@@ -87,15 +88,10 @@ Depending on network bandwidth, it takes around 10-15 minutes. If an error occur
 installation, see the [proxy configuration step](#optional-configuring-the-proxy):
 
 ```bash
-cd handheld-multi-modal/handheld-multi-modal
 make deploy
 ```
 
-For development purposes, it is possible to deploy a lightweight version without the Visual Pipeline and Platform Evaluation Tool, however, the full version is recommended for end users. To deploy it, run:
-
-```bash
-make deploy-standalone
-```
+> Alternatively a [Development Mode](#development-mode) deployment can also be used.
 
 ## Verifying the installation
 
@@ -115,4 +111,12 @@ d1ec3f394245   intel/vippet-app:2026.1.0-20260512-weekly               "./entryp
 76d9c62a039b   intel/vippet-onvif-discovery:2026.1.0-20260512-weekly   "/bin/sh -c 'python …"   34 seconds ago   Up 33 seconds                                                                                                                                                              onvif-discovery
 f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypoint.sh"         34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp, 8186/tcp, 0.0.0.0:9273->9273/tcp, [::]:9273->9273/tcp                                      metrics-manager
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
+```
+
+## Development Mode
+
+For development purposes it is possible to run a lightweight version without the Visual Pipeline and Platform Evaluation Tool, however, the full version is recommended for end users. To use it, run:
+
+```bash
+make deploy-standalone
 ```
