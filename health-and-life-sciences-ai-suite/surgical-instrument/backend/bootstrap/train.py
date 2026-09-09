@@ -81,7 +81,6 @@ def train_model(
         device=dev,
         amp=train_cfg["amp"],
         cache=train_cfg.get("cache", False),
-        fraction=train_cfg.get("fraction", 1.0),
         optimizer=train_cfg["optimizer"],
         lr0=train_cfg["lr0"],
         lrf=train_cfg["lrf"],

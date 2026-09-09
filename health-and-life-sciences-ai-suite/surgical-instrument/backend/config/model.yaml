@@ -56,12 +56,11 @@ train:
   # Requires torch>=2.12.1+xpu — earlier torch-xpu versions stall in
   # Ultralytics' loss/assign kernels on Xe3.
   device: xpu
-  epochs: 50
+  epochs: 30
   imgsz: 640
   batch: 32
-  cache: disk           # decode once to .npy on disk (safe with py3.14 forkserver)
-  fraction: 0.1         # train on 10%% of the data for a fast smoke test
-  workers: 4
+  cache: disk           # decode once to .npy on disk (safe with py3.14 forkserver) 
+  workers: 8
   optimizer: AdamW
   lr0: 0.001
   lrf: 0.01

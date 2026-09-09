@@ -60,26 +60,13 @@ demo video at `videos/polyp_test.mp4`. There are two ways to get there:
 
 ```bash
 make check-l0                   # verify host GPU stack
+
 make backend-venv               # create .venv-backend (torch+xpu, Ultralytics, OpenVINO)
-make download-dataset           # 7-study REAL-Colon subset (~45 GB) from figshare 22202866
-```
 
-> **Trim the dataset for faster demo training (optional).** To shorten local
-> training time, keep only studies `001-001` and `001-002` and delete the rest.
->
-> ```text
-> datasets/REAL-Colon/raw/
-> ├── 001-001_annotations/
-> ├── 001-001_frames/
-> ├── 001-002_annotations/
-> ├── 001-002_frames/
-> ├── 001-001_annotations.tar.gz
-> ├── 001-001_frames.tar.gz
-> ├── 001-002_annotations.tar.gz
-> └── 001-002_frames.tar.gz
-> ```
+make download-dataset           # 7-study REAL-Colon subset (~67 GB) from figshare 22202866
 
-```bash
+make prepare-dataset MAX_POS_PER_VIDEO=800 # take maximum 800 positive frames per video
+
 make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-first)
 ```
 

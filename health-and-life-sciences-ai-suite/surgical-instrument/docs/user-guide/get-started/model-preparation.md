@@ -45,45 +45,14 @@ Log out and back in (or reboot) if `make setup-prerequisites` newly added your u
 
 The application is validated on **REAL-Colon** (Cosmo Intelligent Medical
 Devices, figshare article `22202866`). The full corpus is 60 studies (~880 GB).
-The training subset we use is 7 studies (~45 GB).
+The training subset we use is 4 studies (~67 GB).
 
 ```bash
-make download-dataset    # 7 studies, ~45 GB, to datasets/REAL-Colon/raw/
+make download-dataset    # 4 studies, ~67 GB, to datasets/REAL-Colon/raw/
+
+make prepare-dataset MAX_POS_PER_VIDEO=800 # take maximum 800 positive frames per video
+
 ```
-
-For the full corpus, use the vendor script instead:
-
-```bash
-bash datasets/REAL-Colon/helper/download_dataset.sh
-```
-
-The downloaded studies land as sibling `SSS-VVV_frames.tar.gz` +
-`SSS-VVV_annotations.tar.gz` archives (JPGs + Pascal VOC XML). You can either
-extract them yourself or let the bootstrap step do it — it auto-extracts any
-`.zip`, `.tar`, `.tar.gz`, or `.tgz` under `datasets/REAL-Colon/raw/` on first
-run.
-
-> **Keep only the studies you need.** The full subset is large. To shorten
-> local training time for the demo flow, keep only studies `001-001` and
-> `001-002`. After the download completes, keep only the folders and
-> `.tar.gz` archives in `datasets/REAL-Colon/raw/` whose names start with
-> `001-001` or `001-002`, and delete the rest to reclaim disk:
->
-> ```text
-> datasets/REAL-Colon/raw/
-> ├── 001-001_annotations/
-> ├── 001-001_frames/
-> ├── 001-002_annotations/
-> ├── 001-002_frames/
-> ├── 001-001_annotations.tar.gz
-> ├── 001-001_frames.tar.gz
-> ├── 001-002_annotations.tar.gz
-> └── 001-002_frames.tar.gz
-> ```
-
-
-Legacy mask-based drops (e.g. CVC-ColonDB with `images/` + `masks/`) are also
-auto-detected as a fallback and converted via OpenCV connected-components.
 
 ---
 
