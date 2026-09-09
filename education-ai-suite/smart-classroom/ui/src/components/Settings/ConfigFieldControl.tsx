@@ -193,28 +193,6 @@ const ConfigFieldControl: React.FC<ConfigFieldControlProps> = ({ field, draft, o
       );
     }
 
-    if (field.type === 'path') {
-      return (
-        <div className="config-path">
-          <input
-            className="config-input"
-            type="text"
-            value={String(value)}
-            onChange={(event) => onChange(event.target.value)}
-          />
-          <button
-            className="config-btn"
-            onClick={async () => {
-              const picked = await window.electronAPI?.pickDirectory(String(value));
-              if (picked) onChange(picked);
-            }}
-          >
-            {t('config.browse', 'Browse…')}
-          </button>
-        </div>
-      );
-    }
-
     // Suggestions offer the documented choices without forbidding others.
     if (field.suggestions?.length) {
       return <SuggestionInput value={String(value)} suggestions={field.suggestions} onChange={onChange} />;

@@ -442,12 +442,6 @@ select.config-input {
   cursor: pointer;
 }
 
-.config-path {
-  display: flex;
-  gap: 6px;
-  width: 100%;
-}
-
 /* Free text plus a list of suggested values. */
 .config-combo {
   position: relative;

@@ -73,13 +73,12 @@
     },
     "config": {
       "title": "Configuration",
-      "subtitle": "Edits are written to config.yaml, runtime_config.yaml and .proxy-config.",
+      "subtitle": "Edits are written to config.yaml and .proxy-config.",
       "save": "Save {{count}} change",
       "save_other": "Save {{count}} changes",
       "saving": "Saving…",
       "discard": "Discard",
       "reveal": "Show file",
-      "browse": "Browse…",
       "showOptions": "Show options",
       "blockedTitle": "Fix the problems below first.",
       "showSetting": "Show setting",
@@ -101,7 +100,6 @@
         "videoAnalytics": "Video analytics",
         "contentSearch": "Content search",
         "report": "Report",
-        "project": "Project",
         "proxy": "Proxy"
       },
       "subgroups": {
@@ -208,13 +206,7 @@
       "uploadDisabledVideoBusy": "Video analytics is still running - upload is available when it finishes"
     },
     "settings": {
-      "title": "Settings",
-      "projectName": "Project Name",
-      "projectLocation": "Project Location",
       "microphone": "Microphone",
-      "ok": "OK",
-      "projectNamePlaceholder": "Enter project name",
-      "projectLocationPlaceholder": "Select project folder",
       "frontCamera": "Front Camera",
       "backCamera": "Back Camera",
       "boardCamera": "Board Camera",
@@ -360,10 +352,8 @@
   "errors": {
       "videoPipelineFailed": "Video analytics could not start:\n{{details}}",
       "videoPipelineStopFailed": "Video analytics could not stop:\n{{details}}",
-      "projectNameRequired": "Project name is required",
       "failedToStartRecording": "Failed to start recording",
       "failedToStopRecording": "Failed to stop recording",
-      "failedToCopyPath": "Failed to copy path",
       "anErrorOccurred": "An error occurred"
     },
     "summary": {

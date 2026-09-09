@@ -14,6 +14,13 @@
 // model identifiers resolved against a hub, and the telegram / scp_sender
 // integration blocks.
 //
+// runtime_config.yaml is excluded outright, which is why no field names it. Its
+// `Project` block (name / location / microphone) is owned by the backend's
+// `POST /project`: `<location>/<name>` prefixes both the session output tree and
+// the SQLite path utils/session_store.py derives, so editing it here would move
+// the store out from under recorded history. The microphone is picked from
+// enumerated devices in the Start recording dialog instead of typed as text.
+//
 // A field belongs to a GROUP, which is the feature a user would go looking
 // under, and to a SUBGROUP, which names the exact config.yaml node it lives in.
 // Subgroups are what keep the two structures honest: if a field's path does not
@@ -23,7 +30,6 @@
 // technical config paths, and the path itself is shown next to each control.
 
 const CONFIG = 'config'; // config.yaml
-const RUNTIME = 'runtime'; // runtime_config.yaml
 const PROXY = 'proxy'; // .proxy-config (JSON)
 
 // The features in config.yaml's `features:` block, in the order their toggles
@@ -72,13 +78,12 @@ const GROUPS = [
   { id: 'videoAnalytics', label: 'Video analytics' },
   { id: 'contentSearch', label: 'Content search' },
   { id: 'report', label: 'Report' },
-  { id: 'project', label: 'Project' },
   { id: 'proxy', label: 'Proxy' },
 ];
 
 // `node` is the config.yaml path the subgroup mirrors, shown under the heading.
 // Order here is the order the sections render in. Groups whose fields all come
-// from one node (features, report, project, proxy) have no subgroup at all.
+// from one node (features, report, proxy) have no subgroup at all.
 const SUBGROUPS = [
   { id: 'asrRecognition', group: 'asr', label: 'Recognition', node: 'models.asr' },
   { id: 'asrDiarization', group: 'asr', label: 'Speaker diarization', node: 'models.diarization' },
@@ -1086,20 +1091,8 @@ const FIELDS = [
   },
 
   // -------------------------------------------------------------------------
-  // Project (runtime_config.yaml) and proxy (.proxy-config)
+  // Proxy (.proxy-config)
   // -------------------------------------------------------------------------
-  { path: 'Project.name', file: RUNTIME, group: 'project', label: 'Project name', type: 'string', maxLength: 128 },
-  { path: 'Project.location', file: RUNTIME, group: 'project', label: 'Storage location', type: 'path' },
-  {
-    path: 'Project.microphone',
-    file: RUNTIME,
-    group: 'project',
-    label: 'Microphone',
-    type: 'string',
-    maxLength: 256,
-    help: 'Leave empty to use the system default.',
-  },
-
   { path: 'httpProxy', file: PROXY, group: 'proxy', label: 'HTTP_PROXY', type: 'url', maxLength: 512, wizard: true },
   { path: 'httpsProxy', file: PROXY, group: 'proxy', label: 'HTTPS_PROXY', type: 'url', maxLength: 512, wizard: true },
   {
@@ -1161,7 +1154,6 @@ function coerce(field, value) {
       return trimmed;
     }
 
-    case 'path':
     case 'string':
     case 'secret': {
       if (typeof value !== 'string') throw new Error(`${field.label} must be text.`);
@@ -1434,4 +1426,4 @@ function validate(cfg, context = {}) {
   return problems;
 }
 
-module.exports = { FEATURES, FIELDS, GROUPS, SUBGROUPS, RULES, CONFIG, RUNTIME, PROXY, get, coerce, validate };
+module.exports = { FEATURES, FIELDS, GROUPS, SUBGROUPS, RULES, CONFIG, PROXY, get, coerce, validate };

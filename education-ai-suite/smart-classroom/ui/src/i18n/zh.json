@@ -70,12 +70,11 @@
   },
   "config": {
     "title": "配置",
-    "subtitle": "修改将写入 config.yaml、runtime_config.yaml 和 .proxy-config。",
+    "subtitle": "修改将写入 config.yaml 和 .proxy-config。",
     "save": "保存 {{count}} 项修改",
     "saving": "保存中…",
     "discard": "放弃",
     "reveal": "打开文件",
-    "browse": "浏览…",
     "showOptions": "显示选项",
     "blockedTitle": "请先修正下方的问题。",
     "showSetting": "查看设置",
@@ -97,7 +96,6 @@
       "videoAnalytics": "视频分析",
       "contentSearch": "内容搜索",
       "report": "报告",
-      "project": "项目",
       "proxy": "代理"
     },
     "subgroups": {
@@ -203,13 +201,7 @@
     "uploadDisabledVideoBusy": "视频分析仍在进行中 - 处理完成后即可上传"
   },
   "settings": {
-    "title": "设置",
-    "projectName": "项目名称",
-    "projectLocation": "项目位置",
     "microphone": "麦克风",
-    "ok": "确定",
-    "projectNamePlaceholder": "请输入项目名称",
-    "projectLocationPlaceholder": "选择项目文件夹",
     "frontCamera": "前置摄像头",
     "backCamera": "后置摄像头",
     "boardCamera": "黑板摄像头",
@@ -355,10 +347,8 @@
   "errors": {
     "videoPipelineFailed": "视频分析无法启动：\n{{details}}",
     "videoPipelineStopFailed": "视频分析无法停止：\n{{details}}",
-    "projectNameRequired": "项目名称为必填项",
     "failedToStartRecording": "开始录音失败",
     "failedToStopRecording": "停止录音失败",
-    "failedToCopyPath": "复制路径失败",
     "anErrorOccurred": "发生了错误"
   },
   "summary": {

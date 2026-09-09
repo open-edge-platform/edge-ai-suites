@@ -40,14 +40,6 @@
   align-items: center;
 }
 
-.menu-icon {
-  width: 2rem;
-  height: 2rem;
-  cursor: pointer;
-  filter: brightness(0) invert(1);
-  transform: translateX(8px); 
-}
-
 .content-search-btn {
   background: transparent;
   border: 1.5px solid rgba(255, 255, 255, 0.7);
@@ -117,7 +109,6 @@ body.electron .top-panel {
 }
 
 body.electron .top-panel .action-slot,
-body.electron .top-panel .menu-icon,
 body.electron .top-panel .content-search-btn,
 body.electron .top-panel .content-search-back-btn,
 body.electron .top-panel button,

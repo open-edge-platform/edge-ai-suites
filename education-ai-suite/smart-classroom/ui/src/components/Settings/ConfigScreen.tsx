@@ -177,7 +177,7 @@ const ConfigScreen: React.FC<ConfigScreenProps> = ({ onOpenScreen, focusPath }) 
           <div className="config-heading">
             <h3 className="config-title">{t('config.title', 'Configuration')}</h3>
             <span className="config-subtitle">
-              {t('config.subtitle', 'Edits are written to config.yaml, runtime_config.yaml and .proxy-config.')}
+              {t('config.subtitle', 'Edits are written to config.yaml and .proxy-config.')}
             </span>
           </div>
           <div className="config-actions">

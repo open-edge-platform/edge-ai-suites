@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import NotificationsDisplay from '../Display/NotificationsDisplay';
-import ProjectNameDisplay from '../Display/ProjectNameDisplay';
 import '../../assets/css/HeaderBar.css';
 import recordON from '../../assets/images/recording-on.svg';
 import recordOFF from '../../assets/images/recording-off.svg';
@@ -53,7 +52,6 @@ import {
   startPipelineMonitoring,
   checkRecordedVideos,
 } from '../../services/api';
-import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 import StartRecordingModal from '../Modals/StartRecordingModal';
 import type { CameraUrls } from '../../services/cameraStorage';
@@ -71,13 +69,10 @@ import { usePipelineGate, uploadBlockerTooltipKey } from '../../hooks/usePipelin
 const TRANSIENT_ERROR_MS = 15000;
 
 interface HeaderBarProps {
-  projectName: string;
-  setProjectName: (name: string) => void;
   featureGuard: FeatureGuard;
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
-  const [showToast, setShowToast] = useState(false);
+const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
   const [audioNotification, setAudioNotification] = useState('');
   const [videoNotification, setVideoNotification] = useState('');
   const { t } = useTranslation();
@@ -92,7 +87,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
-  const projectLocation = useAppSelector((s) => s.ui.projectLocation);
   const mindmapState = useAppSelector((s) => s.mindmap);
   const processingMode = useAppSelector((s) => s.ui.processingMode);
   const uploadedAudioPath = useAppSelector((s) => s.ui.uploadedAudioPath);
@@ -200,18 +194,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
       TRANSIENT_ERROR_MS
     );
   };
-  
-  const handleCopy = async () => {
-    try {
-      const location = `${projectLocation}/${projectName}/${sessionId}`;
-      await navigator.clipboard.writeText(location);
-      setShowToast(true);
-    } catch {
-      setErrorMsg(t('errors.failedToCopyPath'));
-    }
-  };
-
-  const handleClose = () => setShowToast(false);
 
   useEffect(() => {
     let interval: number | undefined;
@@ -850,17 +832,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName, featureGuard }) => {
         />
       </div>
 
-      <div className="navbar-right">
-        <ProjectNameDisplay projectName={projectName} />
-      </div>
-
-      {showToast && (
-        <Toast
-          message={`Copied path: ${projectLocation}/${projectName}/${sessionId}`}
-          onClose={handleClose}
-          onCopy={handleCopy}
-        />
-      )}
       {isUploadModalOpen && (
         <UploadFilesModal isOpen={isUploadModalOpen} onClose={handleCloseUploadModal} featureGuard={featureGuard} />
       )}

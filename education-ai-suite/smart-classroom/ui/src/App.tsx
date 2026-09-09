@@ -12,7 +12,7 @@ import GetStartedScreen from './components/Settings/GetStartedScreen';
 import './App.css';
 import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
-import { getSettings, pingBackend } from './services/api';
+import { pingBackend } from './services/api';
 import { isServiceManagerAvailable, useReloadOnBackendRestart, useServices } from './services/serviceManager';
 import { useSetup } from './services/setupManager';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
@@ -23,8 +23,6 @@ import { FeatureGuard } from './utils/featureGuards';
   
 const App: React.FC = () => {
   const { t } = useTranslation();
-  const [projectName, setProjectName] = useState<string>('');
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready'>('main');
   const [isReportOpen, setIsReportOpen] = useState(false);
@@ -105,24 +103,14 @@ const App: React.FC = () => {
   const firstRunScreen =
     setupChecked && !setupBlocking && backendService?.runnable !== false ? 'services' : 'ready';
 
-  // Both are memoised so the effects below can depend on them by name without
-  // re-running on every render.
-  const loadSettings = useCallback(async () => {
-    try {
-      const settings = await getSettings();
-      if (settings.projectName) setProjectName(settings.projectName);
-    } catch {
-      console.warn('Failed to fetch project settings');
-    }
-  }, []);
-
+  // Memoised so the effects below can depend on it by name without re-running on
+  // every render.
   const checkBackendHealth = useCallback(async () => {
     try {
       const isHealthy = await pingBackend();
 
       if (isHealthy) {
         setBackendStatus('available');
-        loadSettings();
         return;
       }
 
@@ -130,7 +118,7 @@ const App: React.FC = () => {
     } catch {
       setBackendStatus('unavailable');
     }
-  }, [loadSettings]);
+  }, []);
 
   useEffect(() => {
     checkBackendHealth();
@@ -189,10 +177,6 @@ const App: React.FC = () => {
       return (
         <div className="app">
           <TopPanel
-            projectName={projectName}
-            setProjectName={setProjectName}
-            isSettingsOpen={isSettingsOpen}
-            setIsSettingsOpen={setIsSettingsOpen}
             activeScreen={screen}
             setActiveScreen={openScreen}
             // No features are known until the backend answers, so every
@@ -249,10 +233,6 @@ const App: React.FC = () => {
     <div className="app">
       <MetricsPoller />
       <TopPanel
-        projectName={projectName}
-        setProjectName={setProjectName}
-        isSettingsOpen={isSettingsOpen}
-        setIsSettingsOpen={setIsSettingsOpen}
         activeScreen={activeScreen}
         setActiveScreen={openScreen}
         featureGuard={guard}
@@ -260,7 +240,7 @@ const App: React.FC = () => {
         onViewReport={() => setIsReportOpen(true)}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
-        <HeaderBar projectName={projectName} setProjectName={setProjectName} featureGuard={guard} />
+        <HeaderBar featureGuard={guard} />
       </div>
       {activeScreen === 'content-search' && (
         <div className="content-search-subheader">
@@ -269,7 +249,7 @@ const App: React.FC = () => {
       )}
       <div style={{ display: activeScreen === 'grading' || isToolScreen ? 'none' : 'contents' }}>
         <div className="main-content">
-          <Body isModalOpen={isSettingsOpen} activeScreen={isToolScreen ? 'main' : activeScreen} featureGuard={guard} hasMainFeatures={hasMainFeatures} />
+          <Body activeScreen={isToolScreen ? 'main' : activeScreen} featureGuard={guard} hasMainFeatures={hasMainFeatures} />
         </div>
       </div>
       {activeScreen === 'grading' && (

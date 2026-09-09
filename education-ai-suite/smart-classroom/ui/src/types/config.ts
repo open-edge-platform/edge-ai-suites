@@ -5,13 +5,13 @@
 // electron/services/config-schema.cjs.
 
 // autoNumber is the literal "auto" or a whole number; it renders as a text box.
-export type ConfigFieldType = 'boolean' | 'enum' | 'number' | 'autoNumber' | 'string' | 'secret' | 'url' | 'path';
+export type ConfigFieldType = 'boolean' | 'enum' | 'number' | 'autoNumber' | 'string' | 'secret' | 'url';
 
 export type ConfigValue = string | number | boolean;
 
 export interface ConfigField {
   path: string;
-  /** 'config' (config.yaml), 'runtime' (runtime_config.yaml) or 'proxy' (.proxy-config). */
+  /** 'config' (config.yaml) or 'proxy' (.proxy-config). */
   file: string;
   group: string;
   /** Id of the ConfigGroup subgroup this field sits under; null when the group has none. */
