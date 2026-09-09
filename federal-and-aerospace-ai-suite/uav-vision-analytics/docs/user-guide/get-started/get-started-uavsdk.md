@@ -302,6 +302,8 @@ make down
 > Set a different value in `.env` if your SDK project uses a different vehicle ID.
 > Also update the RTSP input URLs in `config-uavsdk.json` if you change the UAV ID.
 
+> **Note — Using different or your own aerial footage:** The bundled video `uav_sample.avi` is a placeholder. To see detection on real aerial footage, replace `resources/videos/uav_sample.avi` with your own video containing vehicles/pedestrians (keep the same filename), then start the stack, so the pipeline picks up the new file. If the stack is already running with the old video, a restart is required (`make pymav-down && make pymav-up`, followed by inference pipelines start) — the file is only read when a pipeline starts.
+
 All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp DEVICE=cpu|gpu|npu|all`) or the REST API directly.
 
 REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{name}`

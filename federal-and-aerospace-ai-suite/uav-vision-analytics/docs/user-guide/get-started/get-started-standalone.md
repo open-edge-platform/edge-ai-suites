@@ -230,6 +230,8 @@ make pymav-down
 | `uav_realsense_gpu` | GPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_npu` | NPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 
+> **Note — Using different or your own aerial footage:** The bundled video `uav_sample.avi` is a placeholder. To see detection on real aerial footage, replace `resources/videos/uav_sample.avi` with your own video containing vehicles/pedestrians (keep the same filename), then start the stack, so the pipeline picks up the new file. If the stack is already running with the old video, a restart is required (`make pymav-down && make pymav-up`, followed by inference pipelines start) — the file is only read when a pipeline starts.
+
 ---
 
 ## Telemetry Overlay Fields
