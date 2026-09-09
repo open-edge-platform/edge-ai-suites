@@ -43,7 +43,6 @@ const paths = {
   venvPython,
   layoutServiceDir,
   configFile: () => path.join(home(), 'config.yaml'),
-  runtimeConfigFile: () => path.join(home(), 'runtime_config.yaml'),
   proxyConfigFile: () => path.join(home(), '.proxy-config'),
   requirementsFile: () => path.join(home(), 'requirements.txt'),
   dlStreamerScript: () => path.join(home(), 'Scripts', 'check_dlstreamer.ps1'),

@@ -38,6 +38,12 @@ services:
       # Writable home for the non-root container user.
       HOME: /tmp
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # The summary service's own limits, forwarded from set_env.sh. Report
+      # chunking solves its level plan against these, so they must describe the
+      # model actually serving multilevel — a stale value silently mis-sizes every
+      # report. config.yaml's summary_service keys override when present.
+      MAX_MODEL_LEN: ${MAX_MODEL_LEN:-}
+      DEFAULT_MAX_TOKENS: ${DEFAULT_MAX_TOKENS:-}
       # Timezone for the container
       TZ: ${TZ:-Asia/Shanghai}
     volumes:

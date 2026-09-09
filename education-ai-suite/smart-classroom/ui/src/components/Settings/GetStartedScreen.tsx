@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import '../../assets/css/Config.css';
 import '../../assets/css/GetStarted.css';
 import type { ConfigChange, ConfigField, ConfigValue } from '../../types/config';
-import { useConfig, useConfigProblems, NO_CHANGES, fieldKey as keyOf } from '../../services/configManager';
+import { useConfig, useConfigProblems, withFix, NO_CHANGES, fieldKey as keyOf } from '../../services/configManager';
 import { useServices } from '../../services/serviceManager';
 import { useSetup } from '../../services/setupManager';
 import { useReadiness, type ReadinessItem } from '../../services/useReadiness';
@@ -70,6 +70,15 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => 
   // The same rules the Configuration screen enforces: this screen edits the ASR
   // provider, model, diarization flag and token, which is where they all bite.
   const { blocking, byField, messages } = useConfigProblems(changes, description);
+
+  /**
+   * A rule may name a field this screen does not show, and `changes` is built
+   * from the visible ones only — so a partly-applicable fix would land in the
+   * draft, inflate the save count and then not be saved. All or nothing; the
+   * full Configuration screen can always apply it.
+   */
+  const canApply = (fix: ConfigChange[]) =>
+    fix.every((change) => commonFields.some((field) => field.file === change.file && field.path === change.path));
 
   const handleSave = async () => {
     if (!changes.length || blocking.length) return;
@@ -180,6 +189,17 @@ const GetStartedScreen: React.FC<GetStartedScreenProps> = ({ onOpenScreen }) => 
           {messages.map((problem) => (
             <div key={problem.rule} className={problem.blocking ? 'config-error' : 'config-banner'}>
               <span>{problem.message}</span>
+              {!!problem.fix?.length && canApply(problem.fix) && (
+                <div className="config-banner-actions">
+                  <button
+                    className="config-btn config-btn-primary"
+                    disabled={busy}
+                    onClick={() => setDraft((previous) => withFix(previous, problem.fix!))}
+                  >
+                    {t('config.applyFix', 'Apply fix')}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 

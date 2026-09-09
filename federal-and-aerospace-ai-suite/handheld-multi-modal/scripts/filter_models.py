@@ -19,15 +19,9 @@ import os
 import sys
 import yaml
 
-# Pallet defect detection model is broken in this downloader,
-# needs a newer version of DLSPS - which means a newer version of ViPPET, with newer model-downloader service
-# TODO: remove this exclusion once ViPPET is released and updated in this stack.
-BROKEN = {"pallet_defect_detection"}
-
-# Pipelines that depend on models removed above (huggingface / broken).
-# defect-detection depends on pallet_defect_detection; video-summarization-vlm
-# depends on the gemma3 huggingface model.
-REMOVE_PIPELINES = {"defect-detection.yaml", "video-summarization-vlm.yaml"}
+# Pipelines that depend on models removed (huggingface).
+# video-summarization-vlm/video-captioning-vlm depend on the gemma3 huggingface model.
+REMOVE_PIPELINES = {"video-summarization-vlm.yaml","video-captioning-vlm.yaml"}
 
 
 def filter_pipelines(pipelines_dir: str) -> None:
@@ -48,13 +42,12 @@ def main(src: str) -> None:
     filtered = [
         m for m in models
         if m.get("source") != "huggingface"
-        and m.get("name") not in BROKEN
     ]
     yaml.dump(filtered, open(src, "w"), default_flow_style=False, allow_unicode=True)
     print(
         f"✓ supported_models.yaml filtered "
         f"({len(filtered)}/{len(models)} models kept, "
-        f"huggingface and broken models excluded)"
+        f"huggingface models excluded)"
     )
 
 

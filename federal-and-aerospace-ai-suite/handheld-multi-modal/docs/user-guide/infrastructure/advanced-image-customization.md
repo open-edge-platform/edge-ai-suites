@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Advanced Image Customization (Using Image Composer Tool)
 
-The [Image Composer Tool (ICT)](https://github.com/open-edge-platform/image-composer-tool/tree/2026.1-Release)
+The [Image Composer Tool (ICT)](https://github.com/open-edge-platform/image-composer-tool/tree/main)
 is a command-line tool for building custom Linux images from pre-built packages.
 To get a bootable RAW or ISO image, you define the target OS, packages, kernel, and disk layout.
 ICT supports multiple distributions including Ubuntu, Azure Linux, and Red Hat compatible
@@ -13,7 +13,7 @@ distros on x86_64.
 
 > Note that this path is intended for advanced users who need fine-grained control over disk
 > layout, installed packages, and package repositories. Most users can start with the simpler
-> path, [using a Standard Ubuntu 24.04 image](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/build-from-source.html#option-1-build-from-a-standard-ubuntu-24-04-image).
+> path, [using the standard build](../infrastructure-setup.md#step-2-build-the-os-image).
 
 This article will show you how to:
 
@@ -28,8 +28,8 @@ This article will show you how to:
 
 ```bash
 # If edge-node-infrastructure-blueprint is not already cloned, uncomment the line below
-# git clone https://github.com/open-edge-platform/edge-node-infrastructure-blueprint.git
-git clone --branch 2026.1-Release https://github.com/open-edge-platform/image-composer-tool.git
+# git clone -b main https://github.com/open-edge-platform/edge-node-infrastructure-blueprint.git
+git clone -b main https://github.com/open-edge-platform/image-composer-tool.git
 ```
 
 Now, you should have the source code available in `edge-node-infrastructure-blueprint` and `image-composer-tool` directories in your workspace (for example, `/home/user`).
@@ -56,7 +56,7 @@ These packages are required before composing any image:
 sudo apt install systemd-ukify mmdebstrap
 ```
 
-Follow the instructions at [Image Composition Prerequisites](https://github.com/open-edge-platform/image-composer-tool/blob/2026.1-Release/docs/tutorial/installation.md#image-composition-prerequisites) if you face issues installing packages using apt.
+Follow the instructions at [Image Composition Prerequisites](https://github.com/open-edge-platform/image-composer-tool/blob/main/docs/user-guide/get-started/installation.md#image-composition-prerequisites) if you face issues installing packages using apt.
 
 > **Note:** `mmdebstrap` version 0.8.x (shipped with Ubuntu OS version 22.04) has known
 > issues. Ensure you have version 1.4.3 or later. On Ubuntu OS version 23.04 or later, the
@@ -91,7 +91,7 @@ build (fast, no root required):
 ```bash
 ./image-composer-tool validate "$TEMPLATE"
 ```
----
+
 ### Build the image
 
 Run the build with elevated privileges so that the tool can manage loop devices
@@ -183,7 +183,7 @@ Build output:
 - `usb-installation-files.tar.gz` in `infrastructure/build-artifacts/out`
 
 Once `usb-installation-files.tar.gz` is ready, continue with
-[Phase 2: Prepare Bootable USB](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/get-started/prepare-usb.html) in the global Get Started guide
+[Step 3: Prepare the bootable USB](../infrastructure-setup.md#step-3-prepare-the-bootable-usb) in the Infrastructure Setup guide
 for the remaining steps: configuring the USB device, writing the artifacts, and booting the target system.
 
 ## Package curation and template customization

@@ -27,27 +27,27 @@ and manages the Smart Route Planning Agent.
    cd metro-ai-suite/smart-route-planning-agent
    ```
 
-2. Run the complete setup:
+2. Run the application:
 
-   The setup script provides several options. For a complete setup (recommended for first-time
+   The setup script provides several options. For running the service by pulling the official image (recommended for first-time
    users):
 
    ```bash
-   source setup.sh --setup
+   source setup.sh --run
    ```
 
-3. Run alternative setup options
+3. **Alternative setup options :**
 
-   For a more granular control, run these commands:
+   For a more granular control, run these commands as per your requirement:
 
    ```bash
-   # Build service images only (without starting containers)
+   # Build application image only (without starting containers)
    source setup.sh --build
 
-   # Start services only (after build)
-   source setup.sh --run
+   # Build application image locally and run the services
+   source setup.sh --setup
 
-   # Stop services
+   # Stop all services
    source setup.sh --stop
 
    # Restart services

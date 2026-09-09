@@ -153,19 +153,6 @@ button.text-button[disabled] {
   text-overflow: ellipsis;
 }
 
-.project-name-display {
-  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #2B2C30;
-  line-height: 20px;
-  background: none;
-  margin-left: 16px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .navbar-center {
   flex: 1;
   display: flex;
@@ -173,13 +160,6 @@ button.text-button[disabled] {
   align-items: center;
   min-width: 0;
   overflow: hidden;
-}
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  min-width: 0;
 }
 
 /* Large Desktop (1200px and up) */
@@ -206,10 +186,6 @@ button.text-button[disabled] {
     font-size: 14px;
   }
   
-  .project-name-display {
-    font-size: 16px;
-    margin-left: 24px;
-  }
 }
 
 /* Desktop (992px to 1199px) */
@@ -222,9 +198,6 @@ button.text-button[disabled] {
     gap: 10px;
   }
   
-  .project-name-display {
-    margin-left: 12px;
-  }
 }
 
 /* Tablet (768px to 991px) */
@@ -257,11 +230,6 @@ button.text-button[disabled] {
     font-size: 11px;
   }
   
-  .project-name-display {
-    font-size: 13px;
-    margin-left: 8px;
-  }
-  
   .record-icon,
   .side-record-icon {
     width: 20px;
@@ -291,12 +259,6 @@ button.text-button[disabled] {
     justify-content: flex-start;
   }
   
-  .navbar-right {
-    flex-shrink: 1;
-    min-width: 0;
-    max-width: 40%;
-  }
-  
   button.text-button,
   .upload-button {
     font-size: 12px;
@@ -312,12 +274,6 @@ button.text-button[disabled] {
   .notifications-display {
     font-size: 10px;
     gap: 4px;
-  }
-  
-  .project-name-display {
-    font-size: 12px;
-    margin-left: 6px;
-    max-width: 150px;
   }
   
   .record-icon,
@@ -347,10 +303,6 @@ button.text-button[disabled] {
     justify-content: flex-start;
   }
   
-  .navbar-right {
-    max-width: 35%;
-  }
-  
   button.text-button,
   .upload-button {
     font-size: 11px;
@@ -366,12 +318,6 @@ button.text-button[disabled] {
   .notifications-display {
     font-size: 9px;
     gap: 2px;
-  }
-  
-  .project-name-display {
-    font-size: 11px;
-    margin-left: 4px;
-    max-width: 120px;
   }
   
   .record-icon,
@@ -403,12 +349,6 @@ button.text-button[disabled] {
     justify-content: center;
   }
   
-  .navbar-right {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-  }
-  
   button.text-button,
   .upload-button {
     font-size: 10px;
@@ -427,13 +367,6 @@ button.text-button[disabled] {
     font-size: 8px;
     gap: 2px;
     text-align: center;
-  }
-  
-  .project-name-display {
-    font-size: 10px;
-    margin-left: 0;
-    text-align: center;
-    max-width: 100%;
   }
   
   .record-icon,
@@ -465,10 +398,6 @@ button.text-button[disabled] {
     font-size: 7px;
   }
   
-  .project-name-display {
-    font-size: 9px;
-  }
-  
   .record-icon,
   .side-record-icon {
     width: 12px;
@@ -490,8 +419,7 @@ button.text-button[disabled] {
     flex: 1;
   }
   
-  .navbar-left,
-  .navbar-right {
+  .navbar-left {
     flex-shrink: 1;
   }
   
@@ -527,8 +455,7 @@ button.text-button[disabled] {
   }
   
   .timer,
-  .notifications-display,
-  .project-name-display {
+  .notifications-display {
     color: #e0e0e0;
   }
   

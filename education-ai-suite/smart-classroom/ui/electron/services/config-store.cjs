@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-// Read and write access to the app's on-disk configuration.
+// Read and write access to the app's on-disk configuration: config.yaml and
+// .proxy-config.
 //
 // Writes go through config-schema.cjs, which allowlists the editable paths, and
 // edit the parsed YAML *document* rather than re-serialising a plain object, so
@@ -41,10 +42,6 @@ function readYaml(file) {
 
 function readConfig() {
   return readYaml(paths.configFile());
-}
-
-function readRuntimeConfig() {
-  return readYaml(paths.runtimeConfigFile());
 }
 
 function featureEnabled(name, fallback = true) {
@@ -88,7 +85,6 @@ function proxyEnv() {
 
 module.exports = {
   readConfig,
-  readRuntimeConfig,
   featureEnabled,
   readProxyConfig,
   proxyEnv,
@@ -105,7 +101,6 @@ module.exports = {
 
 function fileFor(id) {
   if (id === schema.CONFIG) return paths.configFile();
-  if (id === schema.RUNTIME) return paths.runtimeConfigFile();
   if (id === schema.PROXY) return paths.proxyConfigFile();
   throw new Error(`Unknown config file: ${id}`);
 }
@@ -118,7 +113,6 @@ function valueAt(source, dottedPath) {
 function describe() {
   const sources = {
     [schema.CONFIG]: readConfig(),
-    [schema.RUNTIME]: readRuntimeConfig(),
     [schema.PROXY]: readProxyConfig(),
   };
 
@@ -230,6 +224,10 @@ function diarizationModelReady(cfg) {
  * setting until they fixed something they never touched. Those are still
  * returned, for the screen to show as a warning.
  *
+ * An `advisory` rule is never blocking however it arose: the backend accepts
+ * that config and works around it, so refusing the save would be this screen
+ * inventing a restriction the backend does not have.
+ *
  * @returns {Array<{file: string, path: string, rule: string, message: string, blocking: boolean}>}
  */
 function problemsFor(byFile) {
@@ -250,9 +248,12 @@ function problemsFor(byFile) {
   // is not highlighting.
   const editedRules = new Set(after.filter((problem) => edited.has(problem.path)).map((problem) => problem.rule));
 
-  return after.map((problem) => ({
+  // `advisory` is consumed here rather than sent on: the renderer decides what
+  // to show from `blocking`, and a second severity flag beside it would only
+  // invite the two to disagree.
+  return after.map(({ advisory, ...problem }) => ({
     ...problem,
-    blocking: !before.has(problem.rule) || editedRules.has(problem.rule),
+    blocking: !advisory && (!before.has(problem.rule) || editedRules.has(problem.rule)),
   }));
 }
 

@@ -19,8 +19,7 @@
   --footer-height: 48px;
 
   /* Form controls — the shared look for text inputs and selects inside a form.
-     Consumed by the settings form (SettingsForm.css) and the upload modal
-     (UploadFilesModal.css). */
+     Consumed by the upload and start-recording modals (UploadFilesModal.css). */
   --control-padding: 8px 12px;
   --control-radius: 4px;
   --control-font-size: 14px;

@@ -5,8 +5,6 @@ Learn more about:
 
 - [YOLO11s AI Model](./how-to-guides/model.md) — YOLO11s model
   details, `make model` usage
-- [Benchmarking](./how-to-guides/benchmark.md) — Measure stream density and
-  hardware utilization using `calc_stream_density.sh`
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for
   model setup, stack management, and pipeline control
 - [Intel RealSense Camera](./how-to-guides/realsense-guide.md) — Connect and
