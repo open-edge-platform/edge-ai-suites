@@ -3,13 +3,12 @@ import json
 import logging
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
 from utils.config_loader import config
-from utils.locks import audio_pipeline_lock
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +17,6 @@ router = APIRouter()
 
 @router.post("/summarize")
 async def summarize_audio(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():

@@ -61,6 +61,7 @@ Open `http://127.0.0.1:7860` in your browser.
 ## Next Steps
 
 - [Get Started](./get-started.md) — Full setup guide
+- [Application Flow](./application-flow.md) — UI walkthrough and element reference
 - [How It Works](./how-it-works.md) — Architecture and data flow
 - [System Requirements](./get-started/system-requirements.md) — Hardware and OS requirements
 - [Configuration](./get-started/configuration.md) — Model selection and tuning
@@ -72,6 +73,7 @@ Open `http://127.0.0.1:7860` in your browser.
 :hidden:
 
 ./get-started.md
+./application-flow.md
 ./how-it-works.md
 ./api-reference.md
 ./troubleshooting.md

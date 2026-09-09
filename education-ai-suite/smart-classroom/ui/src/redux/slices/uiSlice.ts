@@ -1,8 +1,16 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
- 
+import { readCameras } from '../../services/cameraStorage';
+
+// Read once, at module load, so the stored cameras are already in place on the
+// first render and loadCameraSettingsFromStorage derives the right videoStatus.
+// Later edits go through setFrontCamera/etc; this snapshot is only the seed.
+const storedCameras = readCameras();
+
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
-export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
+// 'no-devices' means the machine has no microphone; 'off' means it has one but
+// this session was started without audio (a camera-only recording).
+export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices' | 'off';
 
 export type ReportStatus = 'idle' | 'generating' | 'done' | 'error';
 export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
@@ -41,7 +49,6 @@ export interface UIState {
   reportStatus: ReportStatus;
   reportError: string | null;
   shouldStartReport: boolean;
-  projectLocation: string;
   frontCamera: string;
   backCamera: string;
   boardCamera: string;
@@ -111,11 +118,10 @@ const initialState: UIState = {
   shouldStartReport: false,
   shouldStartMindmap: false,
   transcriptionDone: false,
-  projectLocation: 'storage/',
   activeStream: null,
-  frontCamera: '',
-  backCamera: '',
-  boardCamera: '',
+  frontCamera: storedCameras.front,
+  backCamera: storedCameras.back,
+  boardCamera: storedCameras.board,
   frontCameraStream: '',
   backCameraStream: '',
   boardCameraStream: '',
@@ -348,10 +354,6 @@ const uiSlice = createSlice({
  
     setActiveTab(state, action: PayloadAction<Tab>) {
       state.activeTab = action.payload;
-    },
-    
-    setProjectLocation(state, action: PayloadAction<string>) {
-      state.projectLocation = action.payload;
     },
     
     setFrontCamera(state, action: PayloadAction<string>) {
@@ -611,7 +613,16 @@ const uiSlice = createSlice({
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
       const preservedCsHasUploads = state.csHasUploads;
       const preservedCsUploadsComplete = state.csUploadsComplete;
+      // Which cameras exist is a setting, not flow state. Preserved by hand
+      // rather than left to initialState, which froze the values as they were at
+      // page load and would undo anything entered since.
+      const preservedFrontCamera = state.frontCamera;
+      const preservedBackCamera = state.backCamera;
+      const preservedBoardCamera = state.boardCamera;
       Object.assign(state, initialState);
+      state.frontCamera = preservedFrontCamera;
+      state.backCamera = preservedBackCamera;
+      state.boardCamera = preservedBoardCamera;
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
       state.csHasUploads = preservedCsHasUploads;
@@ -652,7 +663,6 @@ export const {
   mindmapImageDone,
   clearMindmapStartRequest,
   setActiveTab,
-  setProjectLocation,
   resetFlow,
   setFrontCamera, 
   setBackCamera, 

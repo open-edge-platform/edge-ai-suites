@@ -39,47 +39,47 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 Install the following package with ROS 2 bag files in order to publish point
 cloud data from LIDAR and RealSense camera:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install ros-jazzy-bagfile-laser-pointcloud
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt install ros-humble-bagfile-laser-pointcloud
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 Run the following commands in a terminal:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 bag play --loop /opt/ros/jazzy/share/bagfiles/laser-pointcloud
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 bag play --loop /opt/ros/humble/share/bagfiles/laser-pointcloud
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 This command will launch the ROS 2 bag file and publish the recorded point
 cloud data to respective topics. You will view the following screen output:
@@ -95,49 +95,49 @@ include `/scan` (point cloud from 2D LIDAR) and `/camera/depth/color/points`
 Install `ros-jazzy-adbscan-oneapi` Deb package from Intel® Autonomous Mobile
 Robot APT repository:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-adbscan-oneapi
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-adbscan-oneapi
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 Run the following command in a terminal:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2/config/adbscan_sub_RS.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/humble/share/adbscan_ros2/config/adbscan_sub_RS.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 This will print tables with the benchmarking data as showed below:
 
@@ -152,49 +152,49 @@ which PCL library is being used.
 Install `ros-jazzy-adbscan-ros2` Deb package from Intel® Autonomous Mobile
 Robot APT repository
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-adbscan-ros2
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-adbscan-ros2
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 Run the following command in a terminal
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2/config/adbscan_sub_RS.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/humble/share/adbscan_ros2/config/adbscan_sub_RS.yaml
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 This will print a similar table with the benchmarking data.
 
@@ -221,24 +221,24 @@ For example, you can use the following command to run the optimized ADBSCAN
 with `oneapi_octree` library and display the benchmarking data for
 an average of 5 frames:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2/config/adbscan_sub_RS.yaml  -p benchmark_number_of_frames:=5 -p oneapi_library:=oneapi_octree
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/humble/share/adbscan_ros2/config/adbscan_sub_RS.yaml  -p benchmark_number_of_frames:=5 -p oneapi_library:=oneapi_octree
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 A complete list of the reconfigurable parameters is given below:
 
@@ -340,26 +340,26 @@ utilize the `taskset` command to set the process's CPU affinity. For example,
 you can direct `adbscan_ros2` to run on CPU core 0 which is
 a performance-core (P-core).
 
-  <!--hide_directive::::{tab-set}hide_directive-->
-  <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-  <!--hide_directive:sync: jazzyhide_directive-->
+  ::::{tab-set}
+  :::{tab-item} **Jazzy**
+  :sync: jazzy
 
   ```bash
   source /opt/ros/jazzy/setup.bash
   taskset -c 0 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2/config/adbscan_sub_RS.yaml
   ```
 
-  <!--hide_directive:::hide_directive-->
-  <!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-  <!--hide_directive:sync: humblehide_directive-->
+  :::
+  :::{tab-item}  **Humble**
+  :sync: humble
 
   ```bash
   source /opt/ros/humble/setup.bash
   taskset -c 0 ros2 run adbscan_ros2 adbscan_sub --ros-args --params-file /opt/ros/humble/share/adbscan_ros2/config/adbscan_sub_RS.yaml
   ```
 
-  <!--hide_directive:::hide_directive-->
-  <!--hide_directive::::hide_directive-->
+  :::
+  ::::
 
 ## Simulate Follow-me in Gazebo
 
@@ -385,26 +385,26 @@ Install `ros-jazzy-followme-turtlebot3-gazebo` Deb package from Intel®
 Autonomous Mobile Robot APT repository. This is the wrapper package which will
 launch all of the dependencies in the backend.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-followme-turtlebot3-gazebo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-followme-turtlebot3-gazebo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 #### Activate Python Virtual Environment
 
@@ -422,9 +422,9 @@ This application uses
 for hand gesture recognition. Install the following modules as a prerequisite
 for the framework:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 pip3 install --upgrade pip
@@ -432,9 +432,9 @@ pip3 install pyyaml
 pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirements_jazzy.txt
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 pip3 install --upgrade pip
@@ -442,33 +442,33 @@ pip3 install pyyaml
 pip3 install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirements_humble.txt
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ### Run Demo with 2D Lidar
 
 Run the following script to launch `Gazebo` simulator and ROS 2 rviz2.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo chmod +x /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
 /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
 /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 You will see two panels side-by-side: `Gazebo` GUI on the left and ROS 2 rviz
 display on the right.
@@ -511,26 +511,26 @@ the following conditions are true:
 
 Run the following script to launch `Gazebo` simulator and ROS 2 rviz2.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo chmod +x /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
 /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
 /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 In this demo, RealSense camera of the TurtleBot3 robot is selected as
 the input point cloud sensor. After running all of the above commands,
@@ -663,52 +663,52 @@ before continuing.
 Install the `ros-jazzy-follow-me-tutorial` Deb package from the Autonomous
 Mobile Robot APT repository.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt update
 sudo apt install ros-jazzy-follow-me-tutorial
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 sudo apt update
 sudo apt install ros-humble-follow-me-tutorial
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ### Run Demo
 
 To launch the Follow-me application tutorial on the Jackal robot, use the
 following ROS 2 launch file.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 ros2 launch tutorial_follow_me jackal_followme_launch.py
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item}  **Humble**
+:sync: humble
 
 ```bash
 source /opt/ros/humble/setup.bash
 ros2 launch tutorial_follow_me jackal_followme_launch.py
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 After starting the script, the robot should begin searching for trackable
 objects in its initial detection radius (defaulting to around 0.5m), and then

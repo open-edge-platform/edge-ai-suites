@@ -15,8 +15,8 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
   Modify as many configurations as possible.
   :::
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> Real-time Optimization
+   ::::{tab-set}
+   :::{tab-item} Real-time Optimization
 
    | Setting Name | Option | Setting Menu |
    |---|---|---|
@@ -42,8 +42,8 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
    | Native ASPM | Disabled | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Enabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> Generic (non-real-time)
+   :::
+   :::{tab-item} Generic (non-real-time)
 
    | Setting Name | Option | Setting Menu |
    |---|---|---|
@@ -69,8 +69,8 @@ To achieve real-time determinism and utilize the available Intel® silicon featu
    | Native ASPM | Auto | Intel Advanced Menu ⟶ ACPI Settings |
    | Legacy IO Low Latency | Disabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    **Note<sup>*</sup>**: Active SOC-North Efficient-cores can be enabled **all** on Intel® Core™ Ultra Series 3 (Panther Lake) processor, while still **0** on Intel® Core™ Ultra Series 2 (Arrow Lake) processor under Real-time Optimization.
 
@@ -82,9 +82,9 @@ To modify default boot parameters, edit `/etc/grub.d/10_eci_experimental`.
 Modify `eci_cmdline_exp` in `/etc/grub.d/10_eci_experimental` for a better real-time performance and power consumption:
 :::
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Ubuntu 24.04**
+:sync: jazzy
 
 ```bash
 # Modify default cmdline parameters to enable cstate/pstate
@@ -105,9 +105,9 @@ sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt "/' /etc/grub.d/10_eci_experimen
 sudo update-grub
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Ubuntu 22.04**
+:sync: humble
 
 ```bash
 # Modify default cmdline parameters to enable cstate/pstate
@@ -123,8 +123,8 @@ sudo sed -i '/^eci_cmdline_exp=/ s/"$/ iommu=pt"/' /etc/grub.d/10_eci_experiment
 sudo update-grub
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
 
@@ -135,20 +135,20 @@ The following command line parameters are used for real-time optimization. You c
 
 To achieve optimum real-time performance on a target system, specific runtime configurations and optimizations are recommended. This section provides a foundation for enabling real-time capable workloads.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Ubuntu 24.04**
+:sync: jazzy
 
-![PTL RT setup diagram](../../components/ai_resources/developer_tools/assets/images/ptl_rt_setup.png)
+![PTL RT setup diagram](../../ai_resources/developer_tools/assets/images/ptl_rt_setup.png)
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Ubuntu 22.04**
+:sync: humble
 
-![ARL RT setup diagram](../../components/ai_resources/developer_tools/assets/images/arl_rt_setup.png)
+![ARL RT setup diagram](../../ai_resources/developer_tools/assets/images/arl_rt_setup.png)
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Use Cache Allocation Technology
 
@@ -164,9 +164,9 @@ For more information about CAT, refer to the following resources:
 
 Below is an example script to partition the Last Level Cache (LLC) and L2 Cache, assigning an exclusive portion to real-time tasks. Ensure you have installed the Linux `msr-tools` to test it according to your configuration:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Ubuntu 24.04**
+:sync: jazzy
 
 (e.g. core 11 as isolated core)
 
@@ -187,9 +187,9 @@ wrmsr -p11 0xd11 0xff00   # real-time mask
 wrmsr -p11 0xc8f 0x100000000
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Ubuntu 22.04**
+:sync: humble
 
 (e.g. core 13 as isolated core)
 
@@ -210,8 +210,8 @@ wrmsr -p13 0xd11 0xff00   # real-time mask
 wrmsr -p13 0xc8f 0x100000000
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Use Dynamic Voltage and Frequency
 
@@ -232,9 +232,9 @@ expectations of the CPU and should be used with careful consideration.
 
 Below is an example to boost the real-time core to 3GHz, with the Energy Performance Preference (EPP) set to performance to ensure Quality of Service (QoS) in case of power limit throttling:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 24.04**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Ubuntu 24.04**
+:sync: jazzy
 
 (e.g. core 11 as isolated core on Intel® Core™ Ultra Processors 358H)
 
@@ -272,9 +272,9 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
   wrmsr 0x774 -p 15 0x80002101
   ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Ubuntu 22.04**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Ubuntu 22.04**
+:sync: humble
 
 (e.g. core 13 as isolated core on Intel® Core™ Ultra Processors 255H)
 
@@ -310,8 +310,8 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
   wrmsr 0x774 -p 13 0x00002a2a
   ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 :::{attention}
 On current Intel platforms, the P-state of performance (P) cores can be selected
@@ -359,7 +359,7 @@ Combine the adjustment of P-states, C-states, and Turbo Boost. Use the
 
 The resulting configuration resembles the following:
 
-![cpupower tool output diagram](../ai_resources/developer_tools/assets/images/cpupower_tool_output.png)
+![cpupower tool output diagram](../../ai_resources/developer_tools/assets/images/cpupower_tool_output.png)
 :::
 
 ## Timer Migration Disable
@@ -409,8 +409,8 @@ The Intel integrated graphics engine manages power and frequency, which impacts 
 
 Intel® Graphics Render Standby Technology (Intel® GRST), RC6, or RC6+ adjusts the integrated graphics engine's voltage very low, or close to zero, when the system is asleep. In some cases, RC6 has caused latency spikes in real-time workloads. Therefore, RC6 should be disabled to improve real-time performance.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **i915**
+::::{tab-set}
+:::{tab-item} **i915**
 
 Because of the way the Linux i915 graphics driver handles RC6, this feature must be disabled in both the BIOS and in the i915 Linux graphics driver. Refer to Table 5, which describes RC6 disabling in the BIOS. The Linux command-line interface command used to disable RC6 are shown below:
 
@@ -423,8 +423,8 @@ i915.enable_rc6=0
 echo 0 > /sys/class/drm/card0/gt_rc6_enable
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive-->  **Xe**
+:::
+:::{tab-item}  **Xe**
 
 As the Xe driver does not support disabling RC6, there is no parameter for it. Try below methods to hold forcewake so that GT will always ON. Keep the debugfs file descriptor by letting a long‑lived shell process hold it open. Either method works as follows (replace PATH with the real forcewake_all path, e.g., /sys/kernel/debug/dri/0/forcewake_all):
 
@@ -444,8 +444,8 @@ As the Xe driver does not support disabling RC6, there is no parameter for it. T
    kill -9 pid
    ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 ## Verify Benchmark Performance
 

@@ -6,6 +6,8 @@ from typing import Union, List, Dict, Tuple
 from pathlib import Path
 import logging
 
+from utils.session_paths import SessionPaths
+
 logger = logging.getLogger(__name__)
 
 _inflight_lock = Lock()
@@ -122,7 +124,7 @@ class StorageManager:
             
     @staticmethod
     def read_performance_metrics(project_location: str, project_name: str, session_id: str) -> dict:
-        metrics_csv = os.path.join(project_location, project_name, session_id, "performance_metrics.csv")
+        metrics_csv = str(SessionPaths.metrics_path(session_id))
 
         if not os.path.exists(metrics_csv):
             return {}

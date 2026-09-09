@@ -31,7 +31,7 @@ make setup-prerequisites SETUP_ARGS=--dry-run
 Then verify:
 
 ```bash
-make check-l0       # dpkg check for libze1, libze-intel-gpu1, intel-igc-core-2,
+make check-l0       # dpkg check for libze1, libze-intel-gpu1, libigc2,
                     # libigdgmm12, intel-opencl-icd, intel-media-va-driver-non-free
                     # and /dev/dri device node
 ```

@@ -20,26 +20,26 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
 3. Ensure the `ros2-amr-interface` Deb package is installed:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt update
    sudo apt install ros-jazzy-aaeon-ros2-amr-interface
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    sudo apt update
    sudo apt install ros-humble-aaeon-ros2-amr-interface
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 4. Open a terminal or establish a new SSH connection to your robot system in order to initiate your control node.
 
@@ -58,30 +58,30 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
    * Ensure the AAEON node configuration file has the proper USB device configured as value of  ``port_name``.
 
-     <!--hide_directive::::{tab-set}hide_directive-->
-     <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: jazzyhide_directive-->
+     ::::{tab-set}
+     :::{tab-item} **Jazzy**
+     :sync: jazzy
 
      ```bash
      vi /opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
      ```
 
-     <!--hide_directive:::hide_directive-->
-     <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: humblehide_directive-->
+     :::
+     :::{tab-item} **Humble**
+     :sync: humble
 
      ```bash
      vi /opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
      ```
 
-     <!--hide_directive:::hide_directive-->
-     <!--hide_directive::::hide_directive-->
+     :::
+     ::::
 
    * Start the motor control node
 
-     <!--hide_directive::::{tab-set}hide_directive-->
-     <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-     <!--hide_directive:sync: jazzyhide_directive-->
+     ::::{tab-set}
+     :::{tab-item} **Jazzy**
+     :sync: jazzy
 
      ```bash
      AAEON_NODE_CONFIG_FILE=/opt/ros/jazzy/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -93,9 +93,9 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
         --remap /amr/battery:=/sensors/battery_state
      ```
 
-     <!--hide_directive:::hide_directive-->
-     <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-     <!--hide_directive:sync: humblehide_directive-->
+     :::
+     :::{tab-item} **Humble**
+     :sync: humble
 
      ```bash
      AAEON_NODE_CONFIG_FILE=/opt/ros/humble/share/ros2_amr_interface/params/aaeon_node_params.yaml
@@ -107,8 +107,8 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
         --remap /amr/battery:=/sensors/battery_state
      ```
 
-     <!--hide_directive:::hide_directive-->
-     <!--hide_directive::::hide_directive-->
+     :::
+     ::::
 
 5. [Only for ROS Jazzy] Install required packages if not yet installed:
 
@@ -118,24 +118,24 @@ You have a robot and a keyboard or an SSH/VNC connection to the robot.
 
 6. On another terminal or new SSH connection, start the teleop keyboard:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    ros2 run teleop_twist_keyboard teleop_twist_keyboard
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    TURTLEBOT3_MODEL=aaeon ros2 run turtlebot3_teleop teleop_keyboard
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    When the node starts running, it will display a list of the available keyboard commands to control the robot.
    The available commands depend on the selected robot model.

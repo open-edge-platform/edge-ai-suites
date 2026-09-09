@@ -51,24 +51,24 @@ Select the appropriate deserializer based on the your system's IPU below. Unlist
 ### Step 3: Bind GMSL camera
 First, load the IPU driver:
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **IPU7**
-<!--hide_directive:sync: ipu7hide_directive-->
+::::{tab-set}
+:::{tab-item} **IPU7**
+:sync: ipu7
 
 ```sh
 sudo modprobe intel-ipu7-isys
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **IPU6**
-<!--hide_directive:sync: ipu6hide_directive-->
+:::
+:::{tab-item} **IPU6**
+:sync: ipu6
 
 ```sh
 sudo modprobe intel-ipu6-isys
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 
   Camera binding involves using `mediactl` to correctly setup the GMSL cameras, and create a symbolic link.
@@ -83,9 +83,9 @@ sudo modprobe intel-ipu6-isys
 If you are configuring both D3 and RealSense cameras on the same system, you must bind the D3 cameras **before** the RealSense cameras. Failure to bind the cameras in the correct order will result in missing media devices.
 ```
 
-  <!--hide_directive::::{tab-set}hide_directive-->
-  <!--hide_directive:::{tab-item}hide_directive--> **RealSense**
-  <!--hide_directive:sync: realsensehide_directive-->
+  ::::{tab-set}
+  :::{tab-item} **RealSense**
+  :sync: realsense
 
 
   The following scripts are used for Realsense D457.
@@ -145,23 +145,23 @@ If you are configuring both D3 and RealSense cameras on the same system, you mus
   i2c    c-2     d4xx    Firmware        /dev/d4xx-dfu-c-2       /dev/d4xx-dfu-10
   ```
 
-  <!--hide_directive:::hide_directive-->
-  <!--hide_directive:::{tab-item}hide_directive--> **D3 Embedded**
-  <!--hide_directive:sync: d3embeddedhide_directive-->
+  :::
+  :::{tab-item} **D3 Embedded**
+  :sync: d3embedded
 
   Execute the following script for D3 and other cameras:
 
   ```sh
   sudo /usr/share/camera/ipu_max9x_bind.sh
   ```
-  <!--hide_directive:::hide_directive-->
-  <!--hide_directive::::hide_directive-->
+  :::
+  ::::
 
 ### Step 4: Verify Camera
 
-  <!--hide_directive::::{tab-set}hide_directive-->
-  <!--hide_directive:::{tab-item}hide_directive--> **RealSense**
-  <!--hide_directive:sync: realsensehide_directive-->
+  ::::{tab-set}
+  :::{tab-item} **RealSense**
+  :sync: realsense
 
   Verify the camera(s) are available in `/dev/video`:
 
@@ -178,9 +178,9 @@ If you are configuring both D3 and RealSense cameras on the same system, you mus
   lrwxrwxrwx 1 root root 12 Aug 10 16:39 /dev/video-rs-ir-10 -> /dev/video44
   ```
 
-  <!--hide_directive:::hide_directive-->
-  <!--hide_directive:::{tab-item}hide_directive--> **D3 Embedded**
-  <!--hide_directive:sync: d3embeddedhide_directive-->
+  :::
+  :::{tab-item} **D3 Embedded**
+  :sync: d3embedded
 
   Verify the camera(s) are available in `/dev/video`:
 
@@ -194,31 +194,31 @@ If you are configuring both D3 and RealSense cameras on the same system, you mus
   lrwxrwxrwx  1 root root      11 Jul 14 15:23 /dev/video-isx031-a-0 -> /dev/video0
   ```
 
-  <!--hide_directive:::hide_directive-->
-  <!--hide_directive::::hide_directive-->
+  :::
+  ::::
 
 ### Step 5: Test Camera Data
 
   Confirm that you can query camera capabilities using `v4l2-ctl`, and stream frame data. Your bound device might use a different label then what is shown:
 
- <!--hide_directive::::{tab-set}hide_directive-->
- <!--hide_directive:::{tab-item}hide_directive--> **RealSense**
- <!--hide_directive:sync: realsensehide_directive-->
+ ::::{tab-set}
+ :::{tab-item} **RealSense**
+ :sync: realsense
 
   ```bash
   sudo v4l2-ctl -d /dev/video-rs-color-10 --stream-mmap --verbose
   ```
 
- <!--hide_directive:::hide_directive-->
- <!--hide_directive:::{tab-item}hide_directive--> **D3 Embedded**
- <!--hide_directive:sync: d3embeddedhide_directive-->
+ :::
+ :::{tab-item} **D3 Embedded**
+ :sync: d3embedded
   
   ```bash
   sudo v4l2-ctl -d /dev/video-isx031-1-0 --stream-mmap --verbose
   ```
 
- <!--hide_directive:::hide_directive-->
- <!--hide_directive::::hide_directive-->
+ :::
+ ::::
 
   You should see output similar to:
 
@@ -252,9 +252,9 @@ If you are configuring both D3 and RealSense cameras on the same system, you mus
 Your camera is now setup. This is a good chance to fetch a live image from your camera. You can use `ffmpeg` to fetch a frame or display a live vide.
 
 
- <!--hide_directive::::{tab-set}hide_directive-->
- <!--hide_directive:::{tab-item}hide_directive--> **RealSense**
- <!--hide_directive:sync: realsensehide_directive-->
+ ::::{tab-set}
+ :::{tab-item} **RealSense**
+ :sync: realsense
 
   Capture a single frame with `ffmpeg` and view it:
 
@@ -268,9 +268,9 @@ Your camera is now setup. This is a good chance to fetch a live image from your 
   ```bash
   ffplay -f v4l2 -i /dev/video-rs-color-10
   ```
- <!--hide_directive:::hide_directive-->
- <!--hide_directive:::{tab-item}hide_directive--> **D3 Embedded**
- <!--hide_directive:sync: d3embeddedhide_directive-->
+ :::
+ :::{tab-item} **D3 Embedded**
+ :sync: d3embedded
   Alternatively, capture a single frame with `ffmpeg` and view it:
 
   ```bash
@@ -283,8 +283,8 @@ Your camera is now setup. This is a good chance to fetch a live image from your 
   ```bash
   ffplay -f v4l2 -i /dev/video-isx031-a-0
   ```
- <!--hide_directive:::hide_directive-->
- <!--hide_directive::::hide_directive-->
+ :::
+ ::::
 
 ### Next Steps
 

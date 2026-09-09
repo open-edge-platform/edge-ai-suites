@@ -52,6 +52,47 @@ public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
 
 if (-not $env:WT_SESSION) { Disable-ConsoleQuickEdit }
 
+if ($Help) {
+    Write-Host @"
+Smart Classroom Startup Script
+
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Electron] [-Help]
+
+Options:
+    -SkipProxy           Skip proxy configuration prompts
+    -Restart             Kill existing services and restart (no prompt)
+    -Silent              Unattended mode - auto-restart, skip all prompts
+    -NoElevate           Skip auto-elevation to Administrator (Windows)
+    -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
+    -Electron            Shortcut for ./start-desktop-app.ps1 - launches the desktop app, which
+                         manages the Python services itself. Never elevates.
+    -Help                Show this help message
+
+Note: without -Electron the script starts every service itself and requests
+      Administrator privileges. -Electron never elevates.
+
+Services Launched (in order):
+    1. Backend (port 8000)     - Main Python pipeline service, runs in THIS terminal (with paddleocr if OCR enabled)
+    2. Content Search (9011)   - RAG, video summarization, semantic search
+    3. Grading (9902 + 9012)   - Layout detection + VLM grading service (if grading.enabled)
+    4. Frontend (port 5173)    - React UI in a browser tab, launched in a NEW terminal
+
+"@ -ForegroundColor Cyan
+    exit 0
+}
+
+# ============================================================================
+# DESKTOP APP MODE (-Electron)
+# ============================================================================
+# The Electron app supervises the Python services itself, so -Electron just
+# delegates. Kept before the elevation block on purpose: the desktop app must
+# not run as Administrator.
+if ($Electron) {
+    $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+    & (Join-Path $ScriptDir "start-desktop-app.ps1")
+    exit $LASTEXITCODE
+}
+
 # ============================================================================
 # AUTO-ELEVATE TO ADMINISTRATOR
 # ============================================================================
@@ -67,7 +108,7 @@ if (-not $NoElevate) {
         if ($Help) { $relaunchArgs += "-Help" }
         if ($Silent) { $relaunchArgs += "-Silent" }
         if ($NoWindowsTerminal) { $relaunchArgs += "-NoWindowsTerminal" }
-        if ($Electron) { $relaunchArgs += "-Electron" }
+        # No -Electron: desktop-app mode exits above and never elevates.
         $relaunchArgs += "-NoElevate"  # Prevent infinite elevation loop
 
         # Encoded rather than -File "<path>": wt treats ';' as its own delimiter
@@ -103,34 +144,6 @@ if (-not $NoElevate) {
         Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
         exit 0
     }
-}
-
-if ($Help) {
-    Write-Host @"
-Smart Classroom Startup Script
-
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-Silent] [-NoElevate] [-NoWindowsTerminal] [-Electron] [-Help]
-
-Options:
-    -SkipProxy           Skip proxy configuration prompts
-    -Restart             Kill existing services and restart (no prompt)
-    -Silent              Unattended mode - auto-restart, skip all prompts
-    -NoElevate           Skip auto-elevation to Administrator (Windows)
-    -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
-    -Electron            Launch the UI as an Electron desktop app instead of a browser tab
-    -Help                Show this help message
-
-Note: On Windows, the script automatically requests Administrator privileges.
-
-Services Launched (in order):
-    1. Backend (port 8000)     - Main Python pipeline service, runs in THIS terminal (with paddleocr if OCR enabled)
-    2. Content Search (9011)   - RAG, video summarization, semantic search
-    3. Grading (9902 + 9012)   - Layout detection + VLM grading service (if grading.enabled)
-    4. Frontend (port 5173)    - React UI, launches in a NEW terminal (opens as an Electron desktop window when -Electron is set;
-                                 the dev server still runs on port 5173)
-
-"@ -ForegroundColor Cyan
-    exit 0
 }
 
 # ============================================================================
@@ -1195,32 +1208,15 @@ if ($noProxy) {
 }
 
 # ============================================================================
-# FRONTEND LAUNCH MODE (browser dev server vs Electron desktop app)
+# FRONTEND LAUNCH MODE
 # ============================================================================
-# In Electron mode the frontend terminal runs `npm run electron:dev`, which
-# starts the Vite dev server on 5173 and opens the Electron window pointed at
-# it. The runtime binary is downloaded lazily the first time `electron` runs,
-# and that download uses @electron/get's own proxy vars. We set them for the
-# whole frontend terminal so both npm and the first-launch download go through
-# the proxy.
+# Desktop-app mode exits long before this point, so the browser dev server is
+# the only frontend this path starts.
 $frontendProxyCommands = ""
-if ($Electron) {
-    $frontendStartCommand = "npm run electron:dev"
-    $frontendHeader = "FRONTEND UI (ELECTRON DESKTOP APP)"
-    $frontendStartMsg = "Starting Electron desktop app (dev server on port 5173)..."
-    $frontendTitle = "Electron"
-
-    $electronProxy = if ($httpsProxy) { $httpsProxy } elseif ($httpProxy) { $httpProxy } else { "" }
-    if ($electronProxy) {
-        $frontendProxyCommands = $proxyCommands +
-            "`$env:ELECTRON_GET_USE_PROXY='true'; `$env:GLOBAL_AGENT_HTTPS_PROXY='$electronProxy'; `$env:GLOBAL_AGENT_HTTP_PROXY='$electronProxy'; "
-    }
-} else {
-    $frontendStartCommand = "npm run dev -- --host 0.0.0.0 --port 5173"
-    $frontendHeader = "FRONTEND UI"
-    $frontendStartMsg = "Starting Frontend (port 5173)..."
-    $frontendTitle = "Frontend"
-}
+$frontendStartCommand = "npm run dev -- --host 0.0.0.0 --port 5173"
+$frontendHeader = "FRONTEND UI"
+$frontendStartMsg = "Starting Frontend (port 5173)..."
+$frontendTitle = "Frontend"
 
 if ($IsWindowsOS) {
     $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
@@ -1432,16 +1428,9 @@ if ($contentSearchEnabled) {
 } else {
     Write-Host "  2. Content Search -> disabled in config" -ForegroundColor Gray
 }
-if ($Electron) {
-    Write-Host "  3. Frontend       -> Electron desktop app (dev server http://localhost:5173)  [HEALTHY]" -ForegroundColor White
-    Write-Host ""
-    Write-Host "The Smart Classroom Electron window should now be open." -ForegroundColor Cyan
-    Write-Host "(You can also open http://localhost:5173 in a browser.)" -ForegroundColor DarkGray
-} else {
-    Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
-    Write-Host ""
-    Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
-}
+Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
+Write-Host ""
+Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
 Write-Host ""
 
 if ($Silent) {

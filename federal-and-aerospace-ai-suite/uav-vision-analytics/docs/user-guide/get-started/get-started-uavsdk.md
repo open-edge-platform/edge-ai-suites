@@ -18,6 +18,9 @@ A minimal single-container stack. Telemetry is received via MQTT from the `uav-m
 **Telemetry / pipeline lifecycle flow:**
 
 ```mermaid
+---
+config: {"theme": "dark"}
+---
 sequenceDiagram
     participant SDK as uav-mission-compute-sdk
     participant OVL as gvapython (MavlinkReceiver)
@@ -63,7 +66,7 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 make init                # create .env, detect GPU
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](../../../../uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](../../../../uav-mission-compute-sdk/README.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
 
 The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and all other published ports to loopback only. Since `uav-vision-analytics` runs in a separate Docker container/network, it cannot reach loopback-bound ports. Set the SDK's `.env` to bind on all interfaces before starting it:
 
@@ -74,7 +77,13 @@ make up-sim-camera        # start PX4, MQTT, RTSP server
 
 ### 2. Configure environment
 
-Get into the directory:
+If Downloaded Compressed file then Get into the directory with:
+
+```bash
+cd ../uav-vision-analytics/
+```
+
+Or, If Cloned whole repo then Get into the directory with:
 
 ```bash
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
@@ -148,6 +157,7 @@ make start-rtsp DEVICE=all     # all three cameras simultaneously
 > `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **uav-mission-compute-sdk mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`; available after drone arms):
+
 ```text
 rtsp://localhost:8555/nadir      (nadir camera, CPU)
 rtsp://localhost:8555/forward    (forward camera, GPU)
@@ -230,7 +240,10 @@ ffmpeg \
   -map 2:v -c:v copy rear.mkv
 ```
 
-The annotated stream includes bounding boxes for detected objects (person, car, bus, truck, van, bicycle, tricycle, awning-tricycle, motor, others) and a live telemetry overlay (GPS, altitude, speed, heading).
+The annotated stream includes bounding boxes for detected objects
+(person, car, bus, truck, bicycle, and other classes)
+and a live telemetry overlay (GPS, altitude, speed, heading).
+You can use VLC Player to handle the streams.
 
 ### 8. Stop all services
 
@@ -301,7 +314,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 |---|---|
 | [index.md](../index.md) | Application overview and component block diagrams |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
-| [benchmark.md](../how-to-guides/benchmark.md) | Performance benchmarking guide (`calc_stream_density.sh`) |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
 

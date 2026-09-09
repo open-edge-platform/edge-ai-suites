@@ -7,9 +7,6 @@ SPDX-License-Identifier: Apache-2.0
 
 Covers building the OS image, flashing it to a bootable USB, and validating the provisioned platform for the Handheld (Soldier System) Blueprint.
 
-> **Note**: The full installation guide for the Edge Node Infrastructure Software is available at
-> [Edge-Node Infrastructure Software — Open Edge Platform Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html).
-
 ## Step 1: Clone the repository
 
 ```bash
@@ -32,7 +29,7 @@ make build MODE=standard-image
 **Output:** `infrastructure/build-artifacts/out/usb-installation-files.tar.gz`
 
 > For a customized handheld image using the Image Composer Tool, see
-> [Advanced Image Customization](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/advanced-image-customization.html) and use the
+> [Advanced Image Customization](./infrastructure/advanced-image-customization.md) and use the
 > handheld template: `infrastructure/host-os/ict/generic-handheld-os-template.yml`
 
 ## Step 3: Prepare the bootable USB
@@ -40,6 +37,7 @@ make build MODE=standard-image
 On the developer system, extract the artifacts:
 
 ```bash
+cd infrastructure/build-artifacts/out
 sudo tar -xzf usb-installation-files.tar.gz
 ```
 
@@ -49,8 +47,10 @@ Edit `config-file` and set:
 
 - `ssh_key` — SSH public key for passwordless access to the target
 - `host_type` — `container` (default) or `kubernetes`
-- `SRIOV` — enable or disable SR-IOV
+- `SRIOV` — enable or disable Single Root I/O Virtualization (SRIOV)
 - Proxy values — if required on your network
+- Additional system parameters
+- Debug Mode (`false`)
 
 Identify the USB device with `lsblk`, then flash:
 
@@ -95,3 +95,15 @@ sudo cat /sys/kernel/debug/dri/0000:00:02.1/sriov_info
 sudo dmesg | grep xe
 sudo dmesg | grep vpu
 ```
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+System Requirements <./infrastructure/system-requirements.md>
+Advanced Image Customization <./infrastructure/advanced-image-customization.md>
+Build on macOS (x86 VM) <./infrastructure/build-on-macos-x86.md>
+Infrastructure Capabilities <./infrastructure/platform-capabilities.md>
+Troubleshooting <./infrastructure/troubleshooting.md>
+
+:::
+hide_directive-->

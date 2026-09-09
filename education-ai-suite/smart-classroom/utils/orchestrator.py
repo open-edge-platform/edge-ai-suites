@@ -122,11 +122,7 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
             )
             va_thread.start()
         _run_audio_chain(session_id, request, stages, va_thread, va_error)
-        if va_error:
-            first = va_error[0]
-            if isinstance(first, _Cancelled):
-                raise _Cancelled(str(first))
-            raise _OrchestrationError(first)
+        _join_va(va_thread, va_error)
         session_store.SessionStore.mark_completed(session_id)
     except _Cancelled:
         session_store.SessionStore.mark_cancelled(session_id)
@@ -136,7 +132,8 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
         logger.exception(f"[orchestrator] session {session_id} unexpected failure")
         session_store.SessionStore.mark_failed(session_id, f"unexpected error: {e}")
     finally:
-        _join_va(va_thread, va_error)
+        if va_thread is not None:
+            va_thread.join()
 
 
 def _touch_heartbeat(session_id: str) -> None:

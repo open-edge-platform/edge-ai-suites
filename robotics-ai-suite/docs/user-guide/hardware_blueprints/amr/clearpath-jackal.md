@@ -242,24 +242,24 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 1. If not already installed, install the ROS2 TF2 Tools:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt install ros-jazzy-tf2-tools
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    sudo apt install ros-humble-tf2-tools
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 2. Verify that the robot state publisher communicates the correct TF2 tree:
 
@@ -382,48 +382,48 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 3. To see the installed package version on your board, run:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    apt show ros-jazzy-realsense2-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    apt show ros-humble-realsense2-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
    The following table shows how the names of the camera-related topics
    depend on the package version.
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    |Version of ``ros-jazzy-realsense2-camera``|Camera-related topics start with|
    |---|---|
    |4.55|``/sensors/camera_0/camera/``|
    |4.54|``/sensors/camera_0/``|
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    |Version of ``ros-humble-realsense2-camera``|Camera-related topics start with|
    |---|---|
    |4.55|``/sensors/camera_0/camera/``|
    |4.54|``/sensors/camera_0/``|
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 ### Jackal Troubleshooting
 
@@ -511,26 +511,26 @@ Log in as the ``administrator`` to run the following steps:
 
 2. Install the `teleop-twist-keyboard` ROS 2 package:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
 
    ```bash
    sudo apt-get update
    sudo apt-get install ros-jazzy-teleop-twist-keyboard
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+   :::
+   :::{tab-item} **Humble**
+   :sync: humble
 
    ```bash
    sudo apt-get update
    sudo apt-get install ros-humble-teleop-twist-keyboard
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
+   :::
+   ::::
 
 3. Start the ``teleop_twist_keyboard`` command-line tool:
 

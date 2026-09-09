@@ -7,13 +7,12 @@ import { usePanelDividerX } from "../../hooks/usePanelDividerX";
 import type { FeatureGuard } from "../../utils/featureGuards";
 
 interface BodyProps {
-  isModalOpen: boolean;
   activeScreen: 'main' | 'content-search' | 'grading';
   featureGuard: FeatureGuard;
   hasMainFeatures: boolean;
 }
 
-const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen, featureGuard, hasMainFeatures }) => {
+const Body: React.FC<BodyProps> = ({ activeScreen, featureGuard, hasMainFeatures }) => {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const toggleRightPanel = () => setIsRightPanelCollapsed(!isRightPanelCollapsed);
   const { containerRef, panelRef, arrowLeft, arrowTransition } =
@@ -41,22 +40,20 @@ const Body: React.FC<BodyProps> = ({ isModalOpen, activeScreen, featureGuard, ha
       >
         <RightPanel activeScreen={activeScreen} featureGuard={featureGuard} />
       </div>
-      {!isModalOpen && (
-        <div
-          className={`arrow${isRightPanelCollapsed ? ' collapsed' : ''}`}
-          style={{
-            // When collapsed the divider is the container's own right edge, so
-            // let `.arrow.collapsed` park the toggle just inside it instead.
-            left: isRightPanelCollapsed ? undefined : arrowLeft,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            transition: arrowTransition
-          }}
-          onClick={toggleRightPanel}
-        >
-          {isRightPanelCollapsed ? "◀" : "▶"}
-        </div>
-      )}
+      <div
+        className={`arrow${isRightPanelCollapsed ? ' collapsed' : ''}`}
+        style={{
+          // When collapsed the divider is the container's own right edge, so
+          // let `.arrow.collapsed` park the toggle just inside it instead.
+          left: isRightPanelCollapsed ? undefined : arrowLeft,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          transition: arrowTransition
+        }}
+        onClick={toggleRightPanel}
+      >
+        {isRightPanelCollapsed ? "◀" : "▶"}
+      </div>
     </div>
   );
 };

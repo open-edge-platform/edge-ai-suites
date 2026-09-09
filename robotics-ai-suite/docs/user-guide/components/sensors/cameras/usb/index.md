@@ -13,10 +13,9 @@ Some USB cameras require vendor-specific drivers to take full advantage, such as
 ```{include} fragment_camera_table_usb.md
 ```
 
-<!--hide_directive
+
 :::{toctree}
 :hidden:
 
 RealSense <realsense>
 :::
-hide_directive-->

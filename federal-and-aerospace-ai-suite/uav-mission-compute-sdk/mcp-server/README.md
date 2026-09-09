@@ -81,7 +81,17 @@ claude
 
 # Deploy application
 "Deploy worker safety monitoring app"
+
+# Develop a computer vision application
+"Build a computer vision application that detects and tracks vehicles in the
+uav-1/nadir RTSP stream and publishes counts to MQTT"
+
+# Develop a time series processing application
+"Build a time series processing app that computes a rolling vibration score
+from attitude telemetry and adds a Grafana panel for it"
 ```
+
+See [examples/](examples/README.md) for full walkthroughs.
 
 ## Architecture
 
