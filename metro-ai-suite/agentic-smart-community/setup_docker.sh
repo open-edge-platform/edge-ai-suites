@@ -110,44 +110,41 @@ vllm_hit_gpu_fault() {
     | grep -qE 'UR_RESULT_ERROR_DEVICE_LOST|DEVICE_LOST|level_zero backend failed|exec queue reset'
 }
 
+vllm_failure_description() {
+  local logs
+  logs="$(docker logs --tail 400 "$VLLM_CONTAINER" 2>&1 || true)"
+
+  if grep -qiE 'UR_RESULT_ERROR_DEVICE_LOST|DEVICE_LOST|level_zero backend failed|exec queue reset' <<<"$logs"; then
+    echo "The serving lost access to the GPU. Release other GPU users or reset the xe driver."
+  elif grep -qiE 'out of memory|OOM|Cannot allocate memory|Killed' <<<"$logs"; then
+    echo "Model loading ran out of memory. Add swap or lower GPU_MEM_UTIL and MAX_MODEL_LEN."
+  elif grep -qiE 'RepositoryNotFound|GatedRepoError|401 Client Error|403 Client Error|authentication.*failed|Invalid username or password' <<<"$logs"; then
+    echo "Model download was denied. Check LLM_MODEL and any required Hugging Face access token."
+  elif grep -qiE 'not a local folder and is not a valid model identifier|Incorrect path_or_model_id|Invalid.*model|model.*not found' <<<"$logs"; then
+    echo "Model configuration is invalid. Check LLM_MODEL in docker/set_env.sh."
+  elif grep -qiE 'Couldn.t connect|ConnectionError|ConnectTimeout|ReadTimeout|Max retries exceeded|Network is unreachable|Name or service not known|Temporary failure in name resolution|offline mode.*local files' <<<"$logs"; then
+    echo "Model download is unavailable. Check network access and HF_ENDPOINT, or pre-populate the Hugging Face cache."
+  else
+    echo "The model serving process did not become healthy. Review the vLLM log excerpt below for the first error."
+  fi
+}
+
+cleanup_failed_stack() {
+  echo "Stopping the failed stack to prevent further vLLM restart attempts..."
+  if ! $DOCKER_CMD down --remove-orphans; then
+    echo -e "${YELLOW}Warning: failed to fully clean up the stack; run '$0 --down' manually.${NC}"
+  fi
+}
+
 show_vllm_logs() {
   echo "---- docker logs --tail 40 ${VLLM_CONTAINER} ----"
   docker logs --tail 40 "$VLLM_CONTAINER" 2>&1 | sed 's/^/  /' || true
   echo "------------------------------------------------"
 }
 
-vllm_recovery_hints() {
+show_vllm_failure() {
   echo
-  echo "How to recover:"
-  if vllm_hit_gpu_fault; then
-    cat <<EOF
-  The serving lost the GPU (level-zero UR_RESULT_ERROR_DEVICE_LOST) while transferring
-  weights. Confirm the driver-side reset on the host:
-      dmesg -T | grep -iE 'xe .*(exec queue reset|VM worker error)'
-  This fault is usually transient and clears on the next attempt. If it keeps repeating:
-    * Release the GPU from other users:  sudo fuser -v /dev/dri/renderD128
-    * Lower the peak memory of the transfer in docker/set_env.sh, then re-source it:
-        export GPU_MEM_UTIL=0.6       # default 0.7
-        export MAX_MODEL_LEN=32768    # default 61440
-    * Confirm at least 32 GB of swap is active ('free -h');
-      see docs/user-guide/how-to-guides/add-swap.md
-    * If the GPU stays wedged across restarts, reboot the host to reset the xe driver.
-EOF
-  else
-    cat <<EOF
-  Read the serving log above for the first error, then check the usual causes:
-    * Weights still downloading or the Hugging Face endpoint is unreachable (HF_ENDPOINT).
-    * Not enough RAM + swap for ${LLM_MODEL:-the model} — see docs/user-guide/how-to-guides/add-swap.md
-    * GPU not visible in the container: ls -l /dev/dri, and check VIDEO_GROUP_ID / RENDER_GROUP_ID.
-EOF
-  fi
-  cat <<EOF
-
-  Full serving log:          docker logs -f ${VLLM_CONTAINER}
-  Re-check readiness:        curl -fsS ${VLLM_HEALTH_URL}
-  Resume once it is warm:    bash $0 --light
-  Start over:                bash $0
-EOF
+  echo -e "${RED}Failure: $(vllm_failure_description)${NC}"
 }
 
 # Poll until the serving reports healthy, or Docker stops retrying, or we run out
@@ -199,8 +196,9 @@ compose_up() {
   show_vllm_logs
 
   if [ "$VLLM_RETRY_TIMEOUT" -le 0 ] || ! vllm_retry_pending; then
-    echo -e "${RED}'${VLLM_CONTAINER}' is not being restarted — the stack is down.${NC}"
-    vllm_recovery_hints
+    echo -e "${RED}Giving up on '${VLLM_CONTAINER}'.${NC}"
+    show_vllm_failure
+    cleanup_failed_stack
     return 1
   fi
 
@@ -220,7 +218,8 @@ compose_up() {
     echo
     echo -e "${RED}'${VLLM_CONTAINER}' did not become healthy within $(human_duration "$VLLM_RETRY_TIMEOUT").${NC}"
     show_vllm_logs
-    vllm_recovery_hints
+    show_vllm_failure
+    cleanup_failed_stack
     return 1
   fi
 
