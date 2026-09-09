@@ -95,7 +95,7 @@ export AI_ROUTE_PLANNER_PORT=${AI_ROUTE_PLANNER_PORT:-7864}
 export REASONING_MODEL_NAME=${REASONING_MODEL_NAME:-}
 # Timeout (seconds) for the reasoning model HTTP request. Increase for larger models
 # (e.g. 60-120s for 14B-class models on CPU) to avoid premature client-side cancellation.
-export REASONING_TIMEOUT_SEC=${REASONING_TIMEOUT_SEC:-8.0}
+export REASONING_TIMEOUT_SEC=${REASONING_TIMEOUT_SEC:-15.0}
 # OVMS KV-cache size in GB. Increase for larger reasoning models so requests aren't
 # starved of cache (undersized cache causes requests to stall/be cancelled).
 export OVMS_CACHE_SIZE=${OVMS_CACHE_SIZE:-10}
