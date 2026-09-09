@@ -1,7 +1,7 @@
 # Model Preparation
 
-> Optional — skip this page entirely if you are pulling a prebuilt OpenVINO IR
-> from the registry. This page covers the **local training + export** flow that
+> Skip this page if you already have a compatible pre-trained model exported to OpenVINO IR.
+> This page covers the **local training + export** flow that
 > produces the model artifact under `models/yolo11n_polyp/best_openvino_model/`.
 
 The Docker Compose runtime described in [Get Started](../get-started.md) expects
@@ -45,10 +45,10 @@ Log out and back in (or reboot) if `make setup-prerequisites` newly added your u
 
 The application is validated on **REAL-Colon** (Cosmo Intelligent Medical
 Devices, figshare article `22202866`). The full corpus is 60 studies (~880 GB).
-The training subset we use is 7 studies (~74 GB).
+The training subset we use is 7 studies (~45 GB).
 
 ```bash
-make download-dataset    # 7 studies, ~74 GB, to datasets/REAL-Colon/raw/
+make download-dataset    # 7 studies, ~45 GB, to datasets/REAL-Colon/raw/
 ```
 
 For the full corpus, use the vendor script instead:
@@ -140,12 +140,11 @@ Or edit `backend/config/model.yaml` directly (e.g. change `train.epochs`,
 
 ## 4. Generate the demo video (required)
 
-Fresh clones do not include `videos/polyp_test.mp4`. Generate it before running
-`make doctor` / `make up`. The generator stitches frames from the REAL-Colon
-subset into an H.264 demo clip:
+Fresh clones do not include `videos/polyp_test.mp4`. Generate it from the
+`surgical-instrument/` workdir before running `make doctor` / `make up`. The
+generator stitches frames from the REAL-Colon subset into an H.264 demo clip:
 
 ```bash
-cd /home/intel/sachin/edge-ai-suites/health-and-life-sciences-ai-suite/surgical-instrument
 .venv-backend/bin/python scripts/create_endoscopy_video.py \
   --images-dir datasets/REAL-Colon/raw/001-001_frames \
   --output videos/polyp_test.mp4 \

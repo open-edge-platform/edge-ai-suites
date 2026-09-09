@@ -52,7 +52,8 @@ The stack expects an OpenVINO IR at
 demo video at `videos/polyp_test.mp4`. There are two ways to get there:
 
 - **Pull a prebuilt image from the registry** — the default `make up` flow.
-  Skip the training steps below.
+  You can skip local training and export, but for `SOURCE=file` runs you still
+  need `make download-dataset` to assemble the demo video below.
 - **Build the model locally** — install host prerequisites, download the
   REAL-Colon dataset subset, train YOLO11n on the Intel iGPU, and export a
   FP16 OpenVINO IR:
@@ -83,10 +84,10 @@ make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-fi
 ```
 
 **Generate the demo video (required).** Fresh clones do not include
-`videos/polyp_test.mp4`. Generate it before running `make doctor` / `make up`:
+`videos/polyp_test.mp4`. Generate it from the `surgical-instrument/` workdir
+before running `make doctor` / `make up`:
 
 ```bash
-cd /home/intel/sachin/edge-ai-suites/health-and-life-sciences-ai-suite/surgical-instrument
 .venv-backend/bin/python scripts/create_endoscopy_video.py \
   --images-dir datasets/REAL-Colon/raw/001-001_frames \
   --output videos/polyp_test.mp4 \
