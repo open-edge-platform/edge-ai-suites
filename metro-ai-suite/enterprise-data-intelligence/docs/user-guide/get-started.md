@@ -552,6 +552,8 @@ openclaw tui
 
 ## 4. Set Up the UI
 
+> **Note:** OpenClaw must be configured and running before you use the UI. Standalone UI-only mode is not supported; without OpenClaw, the UI starts and serves HTTP on port 7000 but reports backend connection errors.
+
 Use Docker Compose to build and start the UI container:
 
 ```bash
