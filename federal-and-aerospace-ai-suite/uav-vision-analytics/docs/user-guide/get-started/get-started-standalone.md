@@ -126,17 +126,7 @@ make start-rtsp DEVICE=npu     # NPU only
 make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 ```
 
-> To arm the drone and trigger streaming, connect with QGroundControl (QGC) and press takeoff — see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md) for setup and connection details.
-
-
-**pymavlink mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`):
-```
-rtsp://<HOST_IP>:8555/uav-mavlink-cpu    (CPU pipeline)
-rtsp://<HOST_IP>:8555/uav-mavlink-gpu    (GPU pipeline)
-rtsp://<HOST_IP>:8555/uav-mavlink-npu    (NPU pipeline) # If NPU Device is available
-```
-
-**File-source pipelines** (started via REST API or benchmark script) — output path is set in the POST request body (e.g. `uav-mavlink-cpu` for the `uav_object_detection_cpu` pipeline).
+> To arm the drone and trigger streaming, connect with QGroundControl (QGC) and press takeoff — see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md) for setup and connection details. Only the selected `DEVICE` pipeline is active (unless `DEVICE=all`) — see [Step 5 — View the output stream](#5-view-the-output-stream) for the RTSP URLs.
 
 #### Option B — Manual REST API
 
@@ -174,21 +164,15 @@ Change following **three values** to switch between CPU / GPU / NPU:
 2. **RTSP path** in the request body (`uav-mavlink-cpu` → `uav-mavlink-gpu` / `uav-mavlink-npu`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
 
-View the annotated stream immediately after posting:
-
-```bash
-ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # or uav-mavlink-gpu / uav-mavlink-npu
-```
-
-Stop a pipeline:
-```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
-```
-
 ### 5. View the output stream
 
+#### View with ffplay
+
+Install ffmpeg first if not present using `sudo apt install ffmpeg`.
+
+Any of the annotated streams can be viewed with `ffplay <RTSP_PATH>`:
+
 ```bash
-# Install ffmpeg if not present, then view any device stream
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # CPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
@@ -197,16 +181,19 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
-You can leverage versatile streaming media players such as VLC Player
-to seamlessly handle, manage, and playback the incoming streams with ease 
-and efficiency.
 
-
-> **Note:** Connect QGroundControl (QGC) to the RTSP stream and press takeoff to arm the UAV — see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for connection details. If the UAV is armed without a takeoff command, PX4 SITL automatically disarms it again after a few seconds. Once armed, the pipeline manager automatically starts the selected pipeline and serves the annotated RTSP stream.
+> **Note — Other ways to view the stream:**
+> - Leverage versatile streaming media players such as VLC Player to seamlessly handle, manage, and playback the incoming streams with ease and efficiency.
 >
-> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
+> - **QGroundControl (QGC)** — connect and view the stream directly in its video panel; see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for connection details. For the [Step 4](#4-start-inference-pipelines)-Option A flow, connecting QGC and pressing takeoff is arms the drone and triggers the pipeline manager to starts the selected pipeline and serves the RTSP stream once the UAV is armed. If the UAV is armed without a takeoff command, PX4 SITL automatically disarms it again after a few seconds.
+>
+> - `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
+**Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 4](#4-start-inference-pipelines)):
 
+```bash
+curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+```
 
 ### 6. Stop all services
 
