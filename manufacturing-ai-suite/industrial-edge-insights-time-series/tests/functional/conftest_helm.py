@@ -12,6 +12,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import helm_utils
 from utils import constants
 import time
+from common_utils import assert_condition
+
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -33,8 +35,8 @@ FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_pa
 def setup_helm_environment(request):
     """Setup Helm environment before running tests."""
     logger.debug("Checking if Helm release exists...")
-    assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
-    assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
+    assert_condition(helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists.")
+    assert_condition(helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists.")
 
     # Wait for pods from the previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
@@ -42,7 +44,7 @@ def setup_helm_environment(request):
     if not cleanup_ok:
         logger.warning("Some pods are still present after the standard wait. Triggering forced cleanup before installation.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Failed to clean up lingering pods before Helm install."
+        assert_condition(helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Failed to clean up lingering pods before Helm install.")
 
     # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
     logger.debug(f"Waiting for services in namespace '{namespace}' to be deleted...")
@@ -50,12 +52,12 @@ def setup_helm_environment(request):
     if not services_cleanup_ok:
         logger.warning("Some services are still present after the standard wait. Triggering forced cleanup before installation.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install."
+        assert_condition(helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install.")
 
     case = helm_utils.password_test_cases["test_case_4"]
     # Resolve relative path from pytest.ini to absolute path
     values_yaml_path = os.path.abspath(os.path.expandvars(os.path.join(os.path.dirname(__file__), chart_path, 'values.yaml')))
-    assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
+    assert_condition(helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml.")
 
     # Get telegraf_input_plugin from test parameters if available
     telegraf_input_plugin = getattr(request, 'param', None) or "opcua"  # default to opcua
@@ -76,7 +78,7 @@ def setup_helm_environment(request):
     if not install_result:
         logger.error(f"Helm install failed for release '{release_name}'")
         helm_utils.dump_pod_diagnostics(namespace)
-        assert False, f"Failed to install Helm release '{release_name}'. Check logs for details."
+        assert_condition(False, f"Failed to install Helm release '{release_name}'. Check logs for details.")
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
@@ -84,29 +86,29 @@ def setup_helm_environment(request):
     if not pods_ready:
         logger.error(f"Pods failed to become ready in namespace '{namespace}' within {constants.PODS_VERIFY_TIMEOUT}s")
         helm_utils.dump_pod_diagnostics(namespace)
-        assert False, f"Failed to verify pods are running after installation in namespace '{namespace}'. Check logs for diagnostics."
+        assert_condition(False, f"Failed to verify pods are running after installation in namespace '{namespace}'. Check logs for diagnostics.")
     
     yield
     # Stop helm releases
-    assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
+    assert_condition(helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists.")
     cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
         logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
+        assert_condition(helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup.")
 
     services_cleanup_result = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
     if not services_cleanup_result:
         logger.warning("Services still present after teardown wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup."
+        assert_condition(helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup.")
 
 @pytest.fixture(scope="function")
 def setup_helm_weld_environment(request):
     """Setup Helm environment before running tests."""
     logger.debug("Checking if Helm release exists...")
-    assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
-    assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
+    assert_condition(helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists.")
+    assert_condition(helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists.")
 
     # Wait for pods from the previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
@@ -114,7 +116,7 @@ def setup_helm_weld_environment(request):
     if not cleanup_ok:
         logger.warning("Some pods are still present after the standard wait. Triggering forced cleanup before installation.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Failed to clean up lingering pods before Helm install."
+        assert_condition(helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Failed to clean up lingering pods before Helm install.")
 
     # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
     logger.debug(f"Waiting for services in namespace '{namespace}' to be deleted...")
@@ -122,11 +124,11 @@ def setup_helm_weld_environment(request):
     if not services_cleanup_ok:
         logger.warning("Some services are still present after the standard wait. Triggering forced cleanup before installation.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install."
+        assert_condition(helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install.")
 
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
-    assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
+    assert_condition(helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml.")
 
     # Get telegraf_input_plugin from test parameters if available
     telegraf_input_plugin = getattr(request, 'param', None) or "opcua"  # default to opcua
@@ -147,7 +149,7 @@ def setup_helm_weld_environment(request):
     if not install_result:
         logger.error(f"Helm install failed for release '{release_name_weld}'")
         helm_utils.dump_pod_diagnostics(namespace)
-        assert False, f"Failed to install Helm release '{release_name_weld}'. Check logs for details."
+        assert_condition(False, f"Failed to install Helm release '{release_name_weld}'. Check logs for details.")
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
@@ -155,28 +157,28 @@ def setup_helm_weld_environment(request):
     if not pods_ready:
         logger.error(f"Pods failed to become ready in namespace '{namespace}' within {constants.PODS_VERIFY_TIMEOUT}s")
         helm_utils.dump_pod_diagnostics(namespace)
-        assert False, f"Failed to verify pods are running after installation in namespace '{namespace}'. Check logs for diagnostics."
+        assert_condition(False, f"Failed to verify pods are running after installation in namespace '{namespace}'. Check logs for diagnostics.")
     
     yield
     # Stop helm releases
-    assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
+    assert_condition(helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists.")
     cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
         logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
+        assert_condition(helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup.")
 
     services_cleanup_result = helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
     if not services_cleanup_result:
         logger.warning("Services still present after teardown wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace)
-        assert helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup."
+        assert_condition(helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup.")
 
 @pytest.fixture(scope="function")
 def setup_multimodal_helm_environment():
     """Install and tear down the multimodal Helm chart for tests that require it."""
     logger.debug("Ensuring multimodal Helm release is not present before installation...")
-    assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
+    assert_condition(helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists.")
 
     # Wait for pods from previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace_multi}' to terminate...")
@@ -184,7 +186,7 @@ def setup_multimodal_helm_environment():
     if not cleanup_ok:
         logger.warning("Some pods are still present after the standard wait. Triggering forced cleanup before installation.")
         helm_utils.force_cleanup_namespace(namespace_multi)
-        assert helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Failed to clean up lingering pods before Helm install."
+        assert_condition(helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Failed to clean up lingering pods before Helm install.")
 
     # Wait for services (especially NodePort) to be fully deleted to avoid port allocation conflicts
     logger.debug(f"Waiting for services in namespace '{namespace_multi}' to be deleted...")
@@ -192,11 +194,11 @@ def setup_multimodal_helm_environment():
     if not services_cleanup_ok:
         logger.warning("Some services are still present after the standard wait. Triggering forced cleanup before installation.")
         helm_utils.force_cleanup_namespace(namespace_multi)
-        assert helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install."
+        assert_condition(helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Failed to clean up lingering services before Helm install.")
 
     case = helm_utils.password_test_cases["test_case_3"]
     values_yaml_path = os.path.expandvars(chart_path_multi + '/values.yaml')
-    assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update multimodal values.yaml."
+    assert_condition(helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update multimodal values.yaml.")
 
     logger.debug(
         f"Installing multimodal Helm release... Release Name: {release_name_multi}, Chart Path: {chart_path_multi}, Namespace: {namespace_multi}"
@@ -205,7 +207,7 @@ def setup_multimodal_helm_environment():
     if not install_result:
         logger.error(f"Helm install failed for multimodal release '{release_name_multi}'")
         helm_utils.dump_pod_diagnostics(namespace_multi)
-        assert False, f"Failed to install multimodal Helm release '{release_name_multi}'. Check logs for details."
+        assert_condition(False, f"Failed to install multimodal Helm release '{release_name_multi}'. Check logs for details.")
     
     # Wait for pods to be ready
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace_multi}'...")
@@ -214,18 +216,18 @@ def setup_multimodal_helm_environment():
     if not pods_ready:
         logger.error(f"Pods failed to become ready in namespace '{namespace_multi}' within {constants.PODS_VERIFY_TIMEOUT}s")
         helm_utils.dump_pod_diagnostics(namespace_multi)
-        assert False, f"Failed to verify multimodal pods are running after installation. Check logs for diagnostics."
+        assert_condition(False, f"Failed to verify multimodal pods are running after installation. Check logs for diagnostics.")
     
     yield
-    assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
+    assert_condition(helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists.")
     cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI)
     if not cleanup_result:
         logger.warning("Pods still present after standard cleanup wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace_multi)
-        assert helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup."
+        assert_condition(helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT) == True, "Pods are still running after teardown cleanup.")
 
     services_cleanup_result = helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT)
     if not services_cleanup_result:
         logger.warning("Services still present after teardown wait. Triggering forced cleanup before failing.")
         helm_utils.force_cleanup_namespace(namespace_multi)
-        assert helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup."
+        assert_condition(helm_utils.check_services(namespace_multi, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup.")
