@@ -22,8 +22,6 @@ input source ! decode ! inference ! post-processing ! output sink
 - Intel GPU and/or NPU hardware present
 - Network connectivity for pulling images and sample videos
 
----
-
 ## Setup
 
 ### Pull the DL Streamer Image
@@ -65,8 +63,6 @@ docker run --rm \
 Available models include: `yolox-tiny`, `yolox_s`, `yolov7`, `yolov8s`, `yolov9c`, `yolov10s`, `yolo11s`, `yolo11s-seg`, `yolo11s-pose`, and others. Pass `all` for everything.
 
 Models are saved to `models/public/<model_name>/<precision>/` (containing `.xml` and `.bin` files).
-
----
 
 ## Running Pipelines
 
@@ -174,12 +170,10 @@ docker run --rm \
       ! fakesink async=false"
 ```
 
----
-
 ## Key Elements Reference
 
 | Element | Purpose | Devices |
-|---------|---------|---------|
+| ------- | ------- | ------- |
 | `gvadetect` | Object detection (YOLO, SSD, etc.) | CPU, GPU, NPU |
 | `gvaclassify` | Classification, segmentation, pose | CPU, GPU, NPU |
 | `gvainference` | Raw model inference | CPU, GPU, NPU |
@@ -195,7 +189,7 @@ docker run --rm \
 ### Sources
 
 | Use case | Element |
-|----------|---------|
+| -------- | ------- |
 | Remote video | `urisourcebin buffer-size=4096 uri=<URL>` |
 | Local file | `filesrc location=<path>` |
 | USB camera | `v4l2src device=/dev/video0` |
@@ -204,7 +198,7 @@ docker run --rm \
 ### Device + Pre-process Combinations
 
 | Device | `pre-process-backend` | Notes |
-|--------|----------------------|-------|
+| ------ | --------------------- | ----- |
 | `CPU` | `opencv` | No GPU needed |
 | `GPU` | `va-surface-sharing` | Zero-copy decode → inference |
 | `NPU` | `va` | VA-API pre-processing |
@@ -212,13 +206,11 @@ docker run --rm \
 ### Output Sinks
 
 | Output | Elements |
-|--------|----------|
+| ------ | -------- |
 | FPS only | `gvafpscounter ! fakesink async=false` |
 | JSON file | `gvametaconvert ! gvametapublish file-format=json-lines file-path=out.json ! fakesink async=false` |
 | Display | `vapostproc ! gvawatermark ! videoconvert ! autovideosink sync=false` |
 | MP4 file | `vapostproc ! gvawatermark ! vah264enc ! h264parse ! mp4mux ! filesink location=out.mp4` |
-
----
 
 ## Running in Kubernetes
 
@@ -264,18 +256,14 @@ kubectl wait pod/dlstreamer-gpu --for=jsonpath='{.status.phase}'=Succeeded --tim
 kubectl logs dlstreamer-gpu
 ```
 
----
-
 ## Troubleshooting
 
 | Problem | Solution |
-|---------|----------|
+| ------- | -------- |
 | "No such element 'gvadetect'" | Run `gst-inspect-1.0 gvadetect` inside the container to verify plugins are loaded |
 | GPU not available in container | Check CDI: `ls /etc/cdi/intel.com-gpu.yaml` |
 | "Could not initialize element" | Model file missing — re-run download script |
 | Low FPS on GPU | Set `pre-process-backend=va-surface-sharing` for zero-copy |
-
----
 
 ## Advanced: AI-Assisted Pipeline Generation
 
@@ -283,14 +271,12 @@ For complex pipelines, you can use the **DL Streamer Coding Agent** — a Claude
 
 See the [DL Streamer Coding Agent Guide](./use-dlstreamer-coding-agent.md) for usage details, example prompts, and supported use cases.
 
----
-
 ## References
 
 - [DL Streamer Repository](https://github.com/open-edge-platform/dlstreamer)
 - [DL Streamer Docker Hub](https://hub.docker.com/r/intel/dlstreamer)
-- [DL Streamer Elements Reference](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/elements/elements.md)
-- [DL Streamer Samples](https://github.com/open-edge-platform/dlstreamer/tree/main/samples)
+- [DL Streamer Elements Reference](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/elements/elements.html)
+- [DL Streamer Samples Reference](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/samples.html)
 - [Container Device Interface Guide](./configure-cdi.md) — CDI setup for GPU/NPU access
 
 <!--hide_directive

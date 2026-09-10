@@ -49,7 +49,6 @@ export interface UIState {
   reportStatus: ReportStatus;
   reportError: string | null;
   shouldStartReport: boolean;
-  projectLocation: string;
   frontCamera: string;
   backCamera: string;
   boardCamera: string;
@@ -119,7 +118,6 @@ const initialState: UIState = {
   shouldStartReport: false,
   shouldStartMindmap: false,
   transcriptionDone: false,
-  projectLocation: 'storage/',
   activeStream: null,
   frontCamera: storedCameras.front,
   backCamera: storedCameras.back,
@@ -356,10 +354,6 @@ const uiSlice = createSlice({
  
     setActiveTab(state, action: PayloadAction<Tab>) {
       state.activeTab = action.payload;
-    },
-    
-    setProjectLocation(state, action: PayloadAction<string>) {
-      state.projectLocation = action.payload;
     },
     
     setFrontCamera(state, action: PayloadAction<string>) {
@@ -669,7 +663,6 @@ export const {
   mindmapImageDone,
   clearMindmapStartRequest,
   setActiveTab,
-  setProjectLocation,
   resetFlow,
   setFrontCamera, 
   setBackCamera, 

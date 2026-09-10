@@ -39,7 +39,7 @@ Find supported Humanoid runtime, middleware, sensor, and pipeline packages.
 | **[Fast-LIVO2 Demo](sample_pipelines/fast_livo2_demo.md)** | LiDAR, Visual SLAM | Fast LiDAR-inertial-visual odometry package. |
 | **[Point-LIO Demo](sample_pipelines/point_lio_demo.md)** | LiDAR, SLAM | Robust LiDAR-inertial odometry via point-by-point integration. |
 | **[GR00T Whole-Body Control](sample_pipelines/gr00t_wbc.md)** | Control, Manipulation | Whole-body control pipeline for humanoid robotics. |
-| **[GR00T N1D7 OpenVINO](sample_pipelines/gr00t_n1d7_ov.md)** | AI Inference | OpenVINO-accelerated GR00T foundation model deployment. |
+| **[GR00T N1D7 OpenVINO](../../ai_resources/openvino/models/model_gr00t_n1d7.md)** | AI Inference | OpenVINO-accelerated GR00T foundation model deployment. |
 
 
 :::{toctree}

@@ -1,0 +1,128 @@
+[
+  {
+    "uid": "1",
+    "name": "person",
+    "x_size": 0.5,
+    "y_size": 0.5,
+    "z_size": 1.7,
+    "tracking_radius": 2.0,
+    "shift_type": 1,
+    "mark_color": "#00AA00",
+    "scale": 1.0,
+    "project_to_map": false,
+    "rotation_from_velocity": true,
+    "rotation_x": 0.0,
+    "rotation_y": 0.0,
+    "rotation_z": 0.0,
+    "translation_x": 0.0,
+    "translation_y": 0.0,
+    "translation_z": 0.0,
+    "x_buffer_size": 0.0,
+    "y_buffer_size": 0.0,
+    "z_buffer_size": 0.0,
+    "geometric_center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mass": 1.0,
+    "center_of_mass": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "is_static": false,
+    "ttl": 0.0,
+    "linear_damping": 0.05,
+    "angular_damping": 0.05,
+    "coefficient_of_restitution": 0.5,
+    "friction_coefficients": [
+      0.5,
+      0.4
+    ]
+  },
+  {
+    "uid": "2",
+    "name": "luggage",
+    "x_size": 0.4,
+    "y_size": 0.4,
+    "z_size": 0.6,
+    "tracking_radius": 2.0,
+    "shift_type": 1,
+    "mark_color": "#999999",
+    "scale": 1.0,
+    "project_to_map": false,
+    "rotation_from_velocity": false,
+    "rotation_x": 0.0,
+    "rotation_y": 0.0,
+    "rotation_z": 0.0,
+    "translation_x": 0.0,
+    "translation_y": 0.0,
+    "translation_z": 0.0,
+    "x_buffer_size": 0.0,
+    "y_buffer_size": 0.0,
+    "z_buffer_size": 0.0,
+    "geometric_center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mass": 1.0,
+    "center_of_mass": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "is_static": false,
+    "ttl": 0.0,
+    "linear_damping": 0.05,
+    "angular_damping": 0.05,
+    "coefficient_of_restitution": 0.5,
+    "friction_coefficients": [
+      0.5,
+      0.4
+    ]
+  },
+  {
+    "uid": "3",
+    "name": "door",
+    "x_size": 1.0,
+    "y_size": 1.0,
+    "z_size": 1.9,
+    "tracking_radius": 2.0,
+    "shift_type": 1,
+    "mark_color": "#888888",
+    "scale": 1.0,
+    "project_to_map": false,
+    "rotation_from_velocity": false,
+    "rotation_x": 0.0,
+    "rotation_y": 0.0,
+    "rotation_z": 0.0,
+    "translation_x": 0.0,
+    "translation_y": 0.0,
+    "translation_z": 0.0,
+    "x_buffer_size": 0.0,
+    "y_buffer_size": 0.0,
+    "z_buffer_size": 0.0,
+    "geometric_center": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "mass": 1.0,
+    "center_of_mass": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "is_static": false,
+    "ttl": 0.0,
+    "linear_damping": 0.05,
+    "angular_damping": 0.05,
+    "coefficient_of_restitution": 0.5,
+    "friction_coefficients": [
+      0.5,
+      0.4
+    ]
+  }
+]

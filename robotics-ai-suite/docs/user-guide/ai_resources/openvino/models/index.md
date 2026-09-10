@@ -39,5 +39,6 @@ model_lightglue
 model_fastbev
 model_depthanythingv2
 model_rdt
+model_gr00t_n1d7
 :::
 

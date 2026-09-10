@@ -1,18 +1,12 @@
 import React, { useRef, useState, useEffect } from 'react';
 import '../../assets/css/TopPanel.css';
 import BrandSlot from '../../assets/images/BrandSlot.svg';
-import menu from '../../assets/images/settings.svg';
 import LanguageSwitcher from '../LanguageSwitcher';
-import SettingsModal from '../Menu/SettingsButton';
 import { useTranslation } from 'react-i18next';
 import { isServiceManagerAvailable } from '../../services/serviceManager';
 import type { FeatureGuard } from '../../utils/featureGuards';
 
 interface TopPanelProps {
-  projectName: string;
-  setProjectName: (name: string) => void;
-  isSettingsOpen: boolean;
-  setIsSettingsOpen: (isOpen: boolean) => void;
   activeScreen: 'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready';
   setActiveScreen: (screen: 'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready') => void;
   featureGuard: FeatureGuard;
@@ -21,17 +15,12 @@ interface TopPanelProps {
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
-  projectName,
-  setProjectName,
-  isSettingsOpen,
-  setIsSettingsOpen,
   activeScreen,
   setActiveScreen,
   featureGuard,
   hasMainFeatures,
   onViewReport
 }) => {
-  const menuIconRef = useRef<HTMLImageElement>(null);
   const navMenuRef = useRef<HTMLDivElement>(null);
   const navToggleRef = useRef<HTMLButtonElement>(null);
   const { t } = useTranslation();
@@ -39,15 +28,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
 
   const isElectron = !!window.electronAPI?.isElectron;
   const hasServiceManager = isServiceManagerAvailable();
-  // The gear edits session settings over the backend API. The tool screens are
-  // where that is either redundant (Configuration) or impossible: App renders
-  // them whenever the backend is unreachable.
-  const isToolScreen =
-    activeScreen === 'services' ||
-    activeScreen === 'config' ||
-    activeScreen === 'setup' ||
-    activeScreen === 'ready';
-  const showSettingsGear = !isToolScreen && !hasServiceManager;
   // Show Content Search UI if either content_search OR qa feature is enabled
   const hasContentSearchFeatures = featureGuard.hasFeature('content_search') || featureGuard.hasFeature('qa');
   const hasGradingFeature = featureGuard.hasFeature('grading');
@@ -87,14 +67,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
     window.electronAPI?.popupMenu(
       rect ? { x: rect.left, y: rect.bottom + 8 } : undefined
     );
-  };
-
-  const openSettings = () => {
-    setIsSettingsOpen(true);
-  };
-
-  const closeSettings = () => {
-    setIsSettingsOpen(false);
   };
 
   // Reusable navigation menu component
@@ -244,24 +216,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
       </div>
       <div className="action-slot">
         <LanguageSwitcher />
-        {showSettingsGear && (
-          <img
-            src={menu}
-            alt="Menu Icon"
-            className="menu-icon"
-            onClick={openSettings}
-            ref={menuIconRef}
-          />
-        )}
       </div>
-      {showSettingsGear && (
-        <SettingsModal
-          isOpen={isSettingsOpen}
-          onClose={closeSettings}
-          projectName={projectName}
-          setProjectName={setProjectName}
-        />
-      )}
     </header>
   );
 };

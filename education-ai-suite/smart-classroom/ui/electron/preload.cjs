@@ -63,7 +63,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
   },
 
-  // Editable settings from config.yaml, runtime_config.yaml and .proxy-config.
+  // Editable settings from config.yaml and .proxy-config.
   // Only paths in the main-process schema allowlist can be read or written.
   config: {
     describe: () => ipcRenderer.invoke('config:describe'),

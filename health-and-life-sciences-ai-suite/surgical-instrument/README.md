@@ -55,7 +55,7 @@ make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-fi
 make doctor                     # preflight all runtime prerequisites
 ```
 
-See [Model Preparation](docs/get-started/model-preparation.md) for the full
+See [Model Preparation](docs/user-guide/get-started/model-preparation.md) for the full
 end-to-end walkthrough, dataset options, and cache-reset instructions.
 
 ## Quickstart
@@ -126,13 +126,13 @@ make up MODELS_DIR=/path/to/models VIDEOS_DIR=/path/to/videos SERIAL=<SERIAL_NUM
 
 ## Documentation
 
-- [Overview](docs/index.md)
-- [Model preparation (optional local training)](docs/get-started/model-preparation.md)
-- [Get started](docs/get-started.md)
-- [System requirements](docs/get-started/system-requirements.md)
-- [Runtime configuration](docs/runtime-configuration.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Release notes](docs/release-notes.md)
+- [Overview](docs/user-guide/index.md)
+- [Model preparation (optional local training)](docs/user-guide/get-started/model-preparation.md)
+- [Get started](docs/user-guide/get-started.md)
+- [System requirements](docs/user-guide/get-started/system-requirements.md)
+- [Runtime configuration](docs/user-guide/runtime-configuration.md)
+- [Troubleshooting](docs/user-guide/troubleshooting.md)
+- [Release notes](docs/user-guide/release-notes.md)
 
 ## Repo Layout
 

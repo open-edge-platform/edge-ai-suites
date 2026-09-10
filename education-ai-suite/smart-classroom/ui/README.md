@@ -27,7 +27,7 @@ That script bootstraps Node (installing it via `winget` when missing), rebuilds
 | Screen | Backed by |
 |--------|-----------|
 | **Setup** | [`electron/services/setup-runner.cjs`](electron/services/setup-runner.cjs) — prerequisite checks, Python environment, model preparation |
-| **Configuration** | [`electron/services/config-store.cjs`](electron/services/config-store.cjs) — comment-preserving writes to `config.yaml`, `runtime_config.yaml`, `.proxy-config` |
+| **Configuration** | [`electron/services/config-store.cjs`](electron/services/config-store.cjs) — comment-preserving writes to `config.yaml`, `.proxy-config` |
 | **Services** | [`electron/services/process-manager.cjs`](electron/services/process-manager.cjs) — spawns `main.py`, health-polls it and every service it starts, stops the tree |
 
 How it reaches the backends: the main API (8000) is CORS-enabled, so calls go to
