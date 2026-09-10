@@ -591,6 +591,27 @@ Write-Host ""
 Write-Host "[1/4] PROXY CONFIGURATION" -ForegroundColor Green
 Write-Host "-------------------------" -ForegroundColor Green
 
+# A proxy that is set but doesn't exempt localhost routes every 127.0.0.1
+# call (health checks, the main backend's own :8000, content-search's
+# :9011) through it. Most corporate proxies can't reach localhost, so this
+# manifests as requests hanging/timing out rather than failing fast.
+# content_search/start_services.py already forces this for its own
+# subprocess env; this does the same for the main process/child terminals
+# so an operator who only fills in HTTP_PROXY doesn't have to know to also
+# type NO_PROXY.
+function Add-LocalNoProxyDefaults {
+    param([string] $NoProxy)
+    $locals = @("127.0.0.1", "localhost", "::1")
+    $existing = @()
+    if ($NoProxy) {
+        $existing = $NoProxy -split "," | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+    }
+    foreach ($local in $locals) {
+        if ($existing -notcontains $local) { $existing += $local }
+    }
+    return ($existing -join ",")
+}
+
 $httpProxy = ""
 $httpsProxy = ""
 $noProxy = ""
@@ -769,13 +790,17 @@ if (-not $SkipProxy -and -not $Silent) {
             }
         }
     }
-    
+
+    if ($httpProxy -or $httpsProxy) {
+        $noProxy = Add-LocalNoProxyDefaults -NoProxy $noProxy
+    }
+
     if ($httpProxy) {
         $env:HTTP_PROXY = $httpProxy
         $env:http_proxy = $httpProxy
         Write-Host "  Applied HTTP_PROXY=$httpProxy" -ForegroundColor Gray
     }
-    
+
     if ($httpsProxy) {
         $env:HTTPS_PROXY = $httpsProxy
         $env:https_proxy = $httpsProxy
@@ -796,7 +821,11 @@ if (-not $SkipProxy -and -not $Silent) {
         $httpProxy = $proxyConfig.httpProxy
         $httpsProxy = $proxyConfig.httpsProxy
         $noProxy = $proxyConfig.noProxy
-        
+
+        if ($httpProxy -or $httpsProxy) {
+            $noProxy = Add-LocalNoProxyDefaults -NoProxy $noProxy
+        }
+
         if ($httpProxy) {
             $env:HTTP_PROXY = $httpProxy
             $env:http_proxy = $httpProxy
