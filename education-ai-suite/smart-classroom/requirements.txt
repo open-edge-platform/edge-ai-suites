@@ -85,6 +85,9 @@ sentencepiece
 # Vision / detection
 ultralytics==8.4.39
 
+# GStreamer Python bindings for the video analytics pipeline runner.
+gstreamer-python==1.28.2; sys_platform == "win32"
+
 # OCR / document parsing
 paddleocr==3.7.0
 pyclipper
