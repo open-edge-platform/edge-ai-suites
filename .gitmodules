@@ -1,4 +1,4 @@
-[submodule "retail-ai-suite/lose-prevention"]
+[submodule "retail-ai-suite/loss-prevention"]
 	path = retail-ai-suite/loss-prevention
 	url = https://github.com/intel-retail/loss-prevention.git
 	branch = release-2026.2.0
