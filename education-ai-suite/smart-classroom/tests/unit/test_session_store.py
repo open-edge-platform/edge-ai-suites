@@ -50,3 +50,82 @@ def test_migration_adds_columns_to_existing_db():
         conn.close()
         assert "cancel_requested" in cols
         assert "last_heartbeat" in cols
+
+# ----- derived terminal state -----
+#
+# A session registered through POST /sessions/register has no single call that
+# owns its lifetime, so completion is derived from the stages themselves.
+
+def _register(stages):
+    SessionStore.create("s1", {"stages": stages}, stages)
+    SessionStore.update("s1", state="running")
+
+
+def test_stays_running_until_every_declared_stage_settles():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        _register(["transcribe", "summarize"])
+        SessionStore.set_stage("s1", "transcribe", "done")
+        assert SessionStore.get("s1")["state"] == "running"
+        SessionStore.set_stage("s1", "summarize", "done")
+        assert SessionStore.get("s1")["state"] == "completed"
+
+
+def test_skipped_stages_do_not_hold_a_session_open():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        _register(["transcribe"])  # the other five are marked skipped
+        SessionStore.set_stage("s1", "transcribe", "done")
+        assert SessionStore.get("s1")["state"] == "completed"
+
+
+def test_a_failed_stage_fails_the_session_without_waiting():
+    """A broken stage usually stops the ones after it from ever starting, so the
+    session must not sit waiting for stages that will stay pending forever."""
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        _register(["transcribe", "summarize"])
+        SessionStore.set_stage("s1", "transcribe", "failed")
+        state = SessionStore.get("s1")
+        assert state["state"] == "failed"
+        assert "transcribe" in state["error"]
+        assert state["stages"]["summarize"] == "pending"
+
+
+def test_an_interrupted_stage_fails_the_session_and_says_so():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        _register(["transcribe"])
+        SessionStore.set_stage("s1", "transcribe", "interrupted")
+        state = SessionStore.get("s1")
+        assert state["state"] == "failed"
+        # A client that hung up is a different story from a stage that broke.
+        assert state["error"] == "stage interrupted: transcribe"
+
+
+def test_regenerating_a_stage_does_not_reopen_a_finished_session():
+    """Report regeneration writes running/done onto a completed session; it must
+    not drag the session back to running."""
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        _register(["transcribe"])
+        SessionStore.set_stage("s1", "transcribe", "done")
+        assert SessionStore.get("s1")["state"] == "completed"
+        SessionStore.set_stage("s1", "report", "running")
+        assert SessionStore.get("s1")["state"] == "completed"
+        SessionStore.set_stage("s1", "report", "done")
+        assert SessionStore.get("s1")["state"] == "completed"
+
+
+def test_pending_sessions_are_not_derived():
+    """create() leaves a session pending; only register/orchestrator promote it
+    to running, and only a running session is ever derived."""
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        SessionStore.create("s1", {"stages": ["transcribe"]}, ["transcribe"])
+        SessionStore.set_stage("s1", "transcribe", "done")
+        assert SessionStore.get("s1")["state"] == "pending"
+
+
+def test_orchestrator_owned_sessions_end_themselves():
+    """_run_inner() already marks the run completed/failed and knows about
+    failures between stages; deriving here would race it."""
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        _register(["transcribe"])
+        with patch("utils.orchestrator.running_session_ids", return_value=["s1"]):
+            SessionStore.set_stage("s1", "transcribe", "done")
+            assert SessionStore.get("s1")["state"] == "running"

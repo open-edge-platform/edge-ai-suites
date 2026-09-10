@@ -47,11 +47,13 @@ import {
   startVideoAnalytics,
   stopVideoAnalytics,
   createSession,
-  startMonitoring,  
+  registerSession,
+  startMonitoring,
   stopMonitoring,
   startPipelineMonitoring,
   checkRecordedVideos,
 } from '../../services/api';
+import { declaredStages } from '../../utils/sessionStages';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 import StartRecordingModal from '../Modals/StartRecordingModal';
 import type { CameraUrls } from '../../services/cameraStorage';
@@ -561,6 +563,13 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
       const sessionResponse = await createSession();
       const sharedSessionId = sessionResponse.sessionId;
       dispatch(setSessionId(sharedSessionId));
+      // Put it in the session history. Declares what this session will run so
+      // the backend can tell when it is finished; best-effort, so a session
+      // still records and plays back normally if the call does not land.
+      await registerSession(
+        sharedSessionId,
+        declaredStages(featureGuard, { hasAudio: withMic, hasVideo: withCameras }),
+      );
       try {
         // Covers the handover as a whole: the stop, the 5s settle and the start.
         report(t('startRecording.startingMonitoring', 'Starting resource monitoring…'));

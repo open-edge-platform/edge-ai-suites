@@ -37,6 +37,20 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+def _set_va_stage(session_id, status: str) -> None:
+    """Record the video-analytics stage on the session row."""
+    if not session_id:
+        return
+    try:
+        from utils.session_store import SessionStore
+        SessionStore.set_stage(session_id, "va", status)
+    except Exception:
+        logger.warning(
+            f"[stage] {session_id} va: failed to record '{status}'", exc_info=True
+        )
+
+
 @router.get("/health")
 def health():
     from model_manager import ModelManager
@@ -213,6 +227,12 @@ def start_video_analytics_pipeline(
                                            _loc=_location, _n=_pname):
                     from utils.scp_sender import write_engagement_reports, get_scp_sender
                     from utils.telegram_sender import get_sender
+                    # "stopped" is the teacher ending the recording and "eos" is
+                    # a file source running out - both are normal ends. Only
+                    # every pipeline failing makes the stage a failure.
+                    _statuses = list((_svc.pipeline_final_status or {}).values())
+                    _finished_ok = any(s in ("eos", "stopped") for s in _statuses)
+                    _set_va_stage(session_id, "done" if _finished_ok else "failed")
                     try:
                         _session_dir     = str(SessionPaths.session_dir(session_id))
                         _front_posture   = str(SessionPaths.va_dir(session_id) / "front_posture.txt")
@@ -358,6 +378,15 @@ def start_video_analytics_pipeline(
                     for i, req in enumerate(requests)
                 ]
                 results = [f.result() for f in futures]
+
+            # VA is the one stage stage_tracker cannot wrap: it spans two
+            # endpoints rather than one call. Mark it here, and mark it finished
+            # from on_all_pipelines_done above - the single point every exit
+            # route converges on, whether the pipelines hit EOS or were stopped.
+            if any(r.get("status") == "success" for r in results):
+                _set_va_stage(x_session_id, "running")
+            else:
+                _set_va_stage(x_session_id, "failed")
 
             # Board OCR: bring up the twin pipeline for the content source.
             # It reads the source directly, so start it even if the VA content

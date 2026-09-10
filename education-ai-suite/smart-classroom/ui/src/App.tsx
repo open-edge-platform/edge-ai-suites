@@ -17,6 +17,7 @@ import { isServiceManagerAvailable, useReloadOnBackendRestart, useServices } fro
 import { useSetup } from './services/setupManager';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 import { useAudioPipeline } from './redux/useAudioPipeline';
+import { useSessionAbortBeacon } from './redux/useSessionAbortBeacon';
 import { useTranslation } from 'react-i18next';
 import { useFeatureConfig } from './hooks/useFeatureConfig';
 import { FeatureGuard } from './utils/featureGuards';
@@ -31,6 +32,8 @@ const App: React.FC = () => {
   // Both pipelines are driven from here, not from the panels that display them,
   // so they keep running while the user moves around the UI.
   useAudioPipeline();
+  // Closes out the session in the history if the page goes away mid-run.
+  useSessionAbortBeacon();
 
   // Load feature configuration
   const { guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();

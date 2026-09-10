@@ -7,11 +7,13 @@ import {
   uploadAudio,
   storeAudioDuration,
   createSession,
+  registerSession,
   startMonitoring,
   stopMonitoring,
   startPipelineMonitoring,
   BACKEND_UNAVAILABLE_MESSAGE
 } from '../../services/api';
+import { declaredStages } from '../../utils/sessionStages';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
   setUploadedAudioPath,
@@ -322,6 +324,13 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
       dispatch(setSessionId(sessionId));
+      // Same declaration Start recording makes, from the same helper, so the two
+      // entry points cannot drift apart. Best-effort: an unrecorded session
+      // still uploads and processes normally.
+      await registerSession(
+        sessionId,
+        declaredStages(featureGuard, { hasAudio: hasAudioFile, hasVideo: hasVideoFiles }),
+      );
 
       try {
         // Covers the handover as a whole: the stop, the 5s settle and the start.

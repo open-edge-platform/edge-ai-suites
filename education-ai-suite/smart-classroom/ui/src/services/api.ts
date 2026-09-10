@@ -1055,6 +1055,105 @@ export async function createSession(): Promise<{ sessionId: string }> {
   });
 }
 
+/** The pipeline stages the session API knows about. */
+export type SessionStage =
+  | 'transcribe'
+  | 'summarize'
+  | 'mindmap'
+  | 'va'
+  | 'segmentation'
+  | 'report';
+
+/**
+ * Put a session on the books so it shows up in the history.
+ *
+ * Nothing is started here — the app goes on driving /transcribe, /summarize and
+ * the rest itself. `stages` declares what this session intends to run; the
+ * backend marks it completed once all of them settle, so declaring a stage that
+ * will never run would leave the session open forever.
+ *
+ * Best-effort: a failure here must not stop a recording from starting, so it is
+ * logged and swallowed. The session simply goes unrecorded.
+ */
+export async function registerSession(
+  sessionId: string,
+  stages: SessionStage[],
+  sources?: { audio_path?: string; video_sources?: Record<string, string> },
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, stages, ...sources }),
+    });
+    if (!res.ok) {
+      console.warn('⚠️ Session not registered:', await errorDetail(res, `${res.status}`));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('⚠️ Session not registered:', e);
+    return false;
+  }
+}
+
+/**
+ * Close out a registered session. Normal completion is derived by the backend
+ * from the stages, so this is for the outcomes it cannot see — chiefly the
+ * browser going away mid-run. Best-effort, like registerSession.
+ */
+export async function finalizeSession(
+  sessionId: string,
+  outcome: 'completed' | 'aborted' | 'failed',
+  error?: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/finalize`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome, error: error ?? null }),
+      },
+    );
+    return res.ok;
+  } catch (e) {
+    console.warn('⚠️ Session not finalized:', e);
+    return false;
+  }
+}
+
+/**
+ * Report a session as aborted while the page is going away.
+ *
+ * sendBeacon rather than fetch: the browser keeps a beacon in flight after the
+ * document is gone, where a normal request would be cancelled. The trade-offs
+ * are that the response is unreadable and delivery is not guaranteed — a hard
+ * crash or a lost network still leaves the row running, which is what the
+ * backend's recover_after_restart() is for.
+ */
+export function beaconAbortSession(sessionId: string): void {
+  const url = `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/finalize`;
+  const body = new Blob(
+    [JSON.stringify({ outcome: 'aborted', error: null })],
+    { type: 'application/json' },
+  );
+  try {
+    if (!navigator.sendBeacon?.(url, body)) {
+      // Queueing can fail (payload limits, or no beacon support at all). keepalive
+      // gets the same "outlives the page" guarantee out of fetch.
+      void fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome: 'aborted', error: null }),
+        keepalive: true,
+      }).catch(() => { /* the page is going away; nothing to report to */ });
+    }
+  } catch {
+    /* the page is going away; nothing to report to */
+  }
+}
+
 export async function startMonitoring(sessionId: string): Promise<{ status: string; message: string }> {
   return safeApiCall(async () => {
     console.log('📊 Starting monitoring for session:', sessionId);

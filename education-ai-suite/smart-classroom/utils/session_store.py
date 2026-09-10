@@ -135,8 +135,39 @@ class SessionStore:
             if status in ("running", "done", "failed"):
                 state["current_stage"] = stage
             state["updated_at"] = _now_iso()
+            cls._apply_derived_state(state)
             cls._upsert(state)
             return dict(state)
+
+    @classmethod
+    def _apply_derived_state(cls, state: dict) -> None:
+        """Close out a client-driven session once every declared stage settles."""
+        if state.get("state") != "running":
+            return
+        from utils import orchestrator
+        if state.get("session_id") in orchestrator.running_session_ids():
+            return
+
+        stages = state.get("stages") or {}
+        declared = [s for s in stages.values() if s != "skipped"]
+        if not declared:
+            return
+
+        failed = sorted(s for s, st in stages.items() if st == "failed")
+        interrupted = sorted(s for s, st in stages.items() if st == "interrupted")
+        if failed or interrupted:
+            reasons = []
+            if failed:
+                reasons.append(f"stage failed: {', '.join(failed)}")
+            if interrupted:
+                reasons.append(f"stage interrupted: {', '.join(interrupted)}")
+            state["state"] = "failed"
+            state["error"] = state.get("error") or "; ".join(reasons)
+            return
+
+        if any(s in ("pending", "running") for s in declared):
+            return
+        state["state"] = "completed"
 
     @classmethod
     def mark_completed(cls, session_id: str) -> dict | None:
