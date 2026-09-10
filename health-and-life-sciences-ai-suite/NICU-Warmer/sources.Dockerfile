@@ -29,9 +29,9 @@ RUN if [ -f /etc/apt/sources.list ]; then \
     done
 
 # -------- Final Stage --------
-FROM intel/hl-ai-nicu-backend:2026.1.0-rc1 AS final
+FROM intel/hl-ai-nicu-backend:2026.1.0 AS final
 
-LABEL description="Source redistribution image for GPL-licensed packages in intel/hl-ai-nicu-backend:2026.1.0-rc1"
+LABEL description="Source redistribution image for GPL-licensed packages in intel/hl-ai-nicu-backend:2026.1.0"
 
 USER root
 
