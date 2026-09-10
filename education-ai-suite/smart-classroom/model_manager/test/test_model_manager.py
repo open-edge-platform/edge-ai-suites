@@ -401,13 +401,14 @@ def test_text_gen_handler_reads_concurrency_from_config():
     handler = TextGenHandler()
 
     with patch.object(handler, "_build_vlm", return_value=_mock_vlm()):
-        with patch.object(handler, "_concurrency_config", return_value=(2, 12)):
+        with patch.object(handler, "_concurrency_config", return_value=(2, 12, 30)):
             handler.load()
 
     # handler surfaces the config-driven concurrency, and the runner was built
-    # with the config-driven queue_max
+    # with the config-driven queue_max / queue_timeout_s
     assert handler.max_concurrency == 2
     assert handler._runner._queue_max == 12
+    assert handler._runner._timeout_s == 30
 
     handler.shutdown()
 

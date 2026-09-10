@@ -52,6 +52,15 @@ class VLMTextGen:
         self._weight_format: Optional[str] = None
         self._max_new_tokens: int = _DEFAULT_MAX_NEW_TOKENS
         self._reasoning_effort: Optional[str] = None
+        # Guards every call into the underlying ov_genai pipe. The
+        # ContinuousBatchingPipeline aborts the whole process-level pipe if
+        # generate() is invoked while a previous generate() has not returned
+        # (e.g. a streaming request whose CapabilityRunner slot was freed
+        # early because the client disconnected, while the worker thread is
+        # still inside self._pipe.generate()). This lock turns that race into
+        # a clean, logged rejection instead of a native crash.
+        self._generate_lock = threading.Lock()
+        self._generate_started_at: Optional[float] = None
         self._load_config()
         self._load()
 
@@ -209,9 +218,51 @@ class VLMTextGen:
             return self._generate_stream(prompt, config, images)
         if images:
             return str(
-                self._pipe.generate(prompt, images=images, generation_config=config)
+                self._pipe_generate(prompt, images=images, generation_config=config)
             )
-        return str(self._pipe.generate(prompt, generation_config=config))
+        return str(self._pipe_generate(prompt, generation_config=config))
+
+    def _pipe_generate(self, *args, **kwargs):
+        """Serialize every call into the warm pipe; reject overlap instead of crashing.
+
+        Non-blocking acquire: a caller that finds the pipe busy fails fast
+        with a RuntimeError (surfaced to clients as a 503 via OomError) rather
+        than racing the C++ ContinuousBatchingPipeline, which aborts the
+        entire process on concurrent generate() calls.
+        """
+        if not self._generate_lock.acquire(blocking=False):
+            busy_for = (
+                time.perf_counter() - self._generate_started_at
+                if self._generate_started_at is not None
+                else -1.0
+            )
+            logger.error(
+                "VLM pipe.generate() rejected: another generate() call has "
+                "been running for %.1fs (thread=%s). Refusing to start a "
+                "second call to avoid corrupting the ContinuousBatchingPipeline.",
+                busy_for,
+                threading.current_thread().name,
+            )
+            raise RuntimeError(
+                "VLM pipeline is busy with a previous generate() call; try again shortly."
+            )
+        start = time.perf_counter()
+        self._generate_started_at = start
+        logger.info(
+            "VLM pipe.generate() start (thread=%s, images=%s)",
+            threading.current_thread().name,
+            bool(kwargs.get("images")),
+        )
+        try:
+            return self._pipe.generate(*args, **kwargs)
+        finally:
+            self._generate_started_at = None
+            logger.info(
+                "VLM pipe.generate() end (thread=%s, elapsed=%.1fs)",
+                threading.current_thread().name,
+                time.perf_counter() - start,
+            )
+            self._generate_lock.release()
 
     def _template_kwargs(self, enable_thinking: Optional[bool]) -> dict:
         """Chat-template kwargs for this request.
@@ -316,14 +367,14 @@ class VLMTextGen:
             try:
                 streamer.generation_start_time = time.perf_counter()
                 if images:
-                    self._pipe.generate(
+                    self._pipe_generate(
                         prompt,
                         images=images,
                         generation_config=config,
                         streamer=streamer,
                     )
                 else:
-                    self._pipe.generate(
+                    self._pipe_generate(
                         prompt, generation_config=config, streamer=streamer
                     )
             except Exception as exc:  # noqa: BLE001 - re-raised in the consumer

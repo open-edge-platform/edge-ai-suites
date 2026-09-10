@@ -14,8 +14,9 @@ except ImportError:
     from model_manager.capability import CapabilityState
 
 
-_TEXT_GEN_MAX_CONCURRENCY = 1  
-_TEXT_GEN_QUEUE_MAX = 8        
+_TEXT_GEN_MAX_CONCURRENCY = 1
+_TEXT_GEN_QUEUE_MAX = 8
+_TEXT_GEN_QUEUE_TIMEOUT_S = 180  # bound worst-case wait so a stuck pipe 503s instead of hanging forever
 
 
 def _process_memory_mb() -> Optional[float]:
@@ -100,6 +101,7 @@ class TextGenHandler:
         with self._lock:
             if self._state == CapabilityState.READY:
                 self._state = CapabilityState.EVICTING
+                logger.info("text_gen: shutting down warm VLM (state -> EVICTING)")
             if self._vlm is not None:
                 try:
                     self._vlm.release()
@@ -117,9 +119,10 @@ class TextGenHandler:
         with self._lock:
             if self._runner is None:
                 self._state = CapabilityState.LOADING
+                logger.info("text_gen: building warm VLM (state -> LOADING)")
                 try:
                     vlm = self._build_vlm()
-                    max_concurrency, queue_max = self._concurrency_config()
+                    max_concurrency, queue_max, queue_timeout_s = self._concurrency_config()
                     self._max_concurrency = max_concurrency
                     try:
                         from model_manager.capability.runner import CapabilityRunner
@@ -129,10 +132,17 @@ class TextGenHandler:
                         vlm.generate,
                         max_concurrency=max_concurrency,
                         queue_max=queue_max,
+                        timeout_s=queue_timeout_s,
                     )
                     self._state = CapabilityState.READY
+                    logger.info(
+                        "text_gen: warm VLM ready (state -> READY, device=%s, "
+                        "max_concurrency=%d, queue_max=%d, queue_timeout_s=%s)",
+                        self._device, max_concurrency, queue_max, queue_timeout_s,
+                    )
                 except Exception:
                     self._state = CapabilityState.UNLOADED
+                    logger.error("text_gen: failed to build warm VLM (state -> UNLOADED)", exc_info=True)
                     raise
         return self._runner
 
@@ -141,13 +151,14 @@ class TextGenHandler:
             from utils.config_loader import config
             text_gen = getattr(config.models, "text_gen", None)
             if text_gen is None:
-                return _TEXT_GEN_MAX_CONCURRENCY, _TEXT_GEN_QUEUE_MAX
+                return _TEXT_GEN_MAX_CONCURRENCY, _TEXT_GEN_QUEUE_MAX, _TEXT_GEN_QUEUE_TIMEOUT_S
             return (
                 int(getattr(text_gen, "concurrency", _TEXT_GEN_MAX_CONCURRENCY)),
                 int(getattr(text_gen, "queue_max", _TEXT_GEN_QUEUE_MAX)),
+                int(getattr(text_gen, "queue_timeout_s", _TEXT_GEN_QUEUE_TIMEOUT_S)),
             )
         except Exception:
-            return _TEXT_GEN_MAX_CONCURRENCY, _TEXT_GEN_QUEUE_MAX
+            return _TEXT_GEN_MAX_CONCURRENCY, _TEXT_GEN_QUEUE_MAX, _TEXT_GEN_QUEUE_TIMEOUT_S
 
     def _build_vlm(self):
         from components.vlm.text_gen_vlm import VLMTextGen

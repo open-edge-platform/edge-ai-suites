@@ -1,5 +1,9 @@
+import logging
+import time
 from threading import Semaphore, Lock
 from typing import Callable, Any, Iterator
+
+logger = logging.getLogger(__name__)
 
 
 class QueueFullError(Exception):
@@ -30,12 +34,15 @@ class CapabilityRunner:
         self._semaphore.release()
         with self._lock:
             self._current_queue -= 1
+            depth = self._current_queue
+        logger.info("CapabilityRunner slot released (queue depth=%d)", depth)
 
     def _wrap_stream(self, iterator: Iterator) -> Iterator:
         try:
             for item in iterator:
                 yield item
         except (RuntimeError, MemoryError) as exc:
+            logger.error("CapabilityRunner stream failed: %s", exc)
             raise OomError(str(exc)) from exc
         finally:
             self._release_slot()
@@ -43,14 +50,28 @@ class CapabilityRunner:
     def submit(self, *args, **kwargs) -> Any:
         with self._lock:
             if self._current_queue >= self._queue_max:
+                logger.error(
+                    "CapabilityRunner queue full (%d/%d); rejecting request",
+                    self._current_queue, self._queue_max,
+                )
                 raise QueueFullError(f"Queue full ({self._queue_max})")
             self._current_queue += 1
+            depth = self._current_queue
+        logger.info("CapabilityRunner request queued (queue depth=%d)", depth)
 
+        wait_start = time.perf_counter()
         acquired = self._semaphore.acquire(timeout=self._timeout_s)
+        wait_s = time.perf_counter() - wait_start
         if not acquired:
             with self._lock:
                 self._current_queue -= 1
+            logger.error(
+                "CapabilityRunner timed out acquiring capacity after %.1fs (limit=%s)",
+                wait_s, self._timeout_s,
+            )
             raise QueueFullError(f"Timed out acquiring capacity after {self._timeout_s}s")
+        if wait_s > 1.0:
+            logger.info("CapabilityRunner acquired slot after waiting %.1fs", wait_s)
 
         released = False
         try:
@@ -62,6 +83,7 @@ class CapabilityRunner:
                 return self._wrap_stream(result)
             return result
         except (RuntimeError, MemoryError) as exc:
+            logger.error("CapabilityRunner call failed: %s", exc)
             raise OomError(str(exc)) from exc
         finally:
             if not released:

@@ -1,4 +1,5 @@
 import sys
+import time
 import warnings
 warnings.filterwarnings("ignore", message=r"[\s\S]*torchcodec is not installed correctly")
 
@@ -59,6 +60,31 @@ app.add_middleware(
 )
 
 register_routes(app)
+
+
+@app.middleware("http")
+async def _log_requests(request: Request, call_next):
+    """Log every request's start/end so a hang or crash on :8000 shows exactly
+    which request was in flight and how long it ran before things went quiet.
+    """
+    start = time.perf_counter()
+    logger.info("--> %s %s", request.method, request.url.path)
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.error(
+            "<-- %s %s failed after %.1fs",
+            request.method, request.url.path, time.perf_counter() - start,
+            exc_info=True,
+        )
+        raise
+    elapsed = time.perf_counter() - start
+    log = logger.warning if elapsed > 5.0 else logger.info
+    log(
+        "<-- %s %s %d (%.1fs)",
+        request.method, request.url.path, response.status_code, elapsed,
+    )
+    return response
 
 
 @app.exception_handler(QueueFullError)

@@ -37,7 +37,7 @@ models:
     name: paraformer-zh  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
-    diarization: True # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional
+    diarization: False # requires manual HF token setup, see docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional
     hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
@@ -367,7 +367,7 @@ models:
   text_gen:
     enabled: true
     provider: vlm
-    vlm_name: Qwen/Qwen3.8-27B
+    vlm_name: Qwen/Qwen3.6-35B-A3B
     # Switch between Qwen3.8 and Qwen3.6 by changing only vlm_name. The shared
     # device: GPU and weight_format: int8 settings below are valid for both.
     # Qwen/Qwen3.8-27B, Qwen/Qwen3.6-35B-A3B and Qwen/Qwen3.5-9B are also
@@ -411,8 +411,9 @@ models:
     # non-thinking: grading, and topic segmentation (its decode is constrained
     # to a JSON schema from the first token, leaving no room to reason).
     reasoning_effort: Null
-    concurrency: 1    # CapabilityRunner max_concurrency (single warm pipe)
-    queue_max: 8      # CapabilityRunner queue depth before 503 backpressure
+    concurrency: 1        # CapabilityRunner max_concurrency (single warm pipe)
+    queue_max: 8          # CapabilityRunner queue depth before 503 backpressure
+    queue_timeout_s: 180  # max wait for the warm pipe before 503 (bounds a stuck/killed request)
 
 mindmap:
   system_prompt:

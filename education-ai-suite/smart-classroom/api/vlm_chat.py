@@ -177,13 +177,29 @@ def _sse_stream(token_iter: Iterator[str], model_name: str) -> Iterator[str]:
         }
         return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
 
-    # First chunk announces the assistant role (OpenAI convention).
-    yield _chunk({"role": "assistant"})
-    for token in token_iter:
-        if token:
-            yield _chunk({"content": token})
-    yield _chunk({}, finish_reason="stop")
-    yield "data: [DONE]\n\n"
+    completed = False
+    try:
+        # First chunk announces the assistant role (OpenAI convention).
+        yield _chunk({"role": "assistant"})
+        for token in token_iter:
+            if token:
+                yield _chunk({"content": token})
+        yield _chunk({}, finish_reason="stop")
+        yield "data: [DONE]\n\n"
+        completed = True
+    finally:
+        if not completed:
+            # Reached only if the consumer stops reading early (client
+            # disconnect/kill) -- the underlying generate() call keeps
+            # running on its worker thread regardless; logged here so a
+            # subsequent "pipe busy" rejection is easy to correlate.
+            logger.warning(
+                "chatcmpl-%s: client disconnected before stream completed",
+                completion_id,
+            )
+        close = getattr(token_iter, "close", None)
+        if callable(close):
+            close()
 
 
 @router.post("/v1/chat/completions")
@@ -213,15 +229,28 @@ async def chat_completions(request: Request):
     model_name = _model_name(chat_req.model)
     handler = ModelManager.instance().text_gen()
 
+    logger.info(
+        "chat_completions: stream=%s model=%s prompt_len=%d images=%d",
+        chat_req.stream, model_name, len(prompt), len(image_urls),
+    )
+
     if chat_req.stream:
-        token_iter = handler.generate(
-            prompt,
-            images=image_tensors,
-            stream=True,
-            max_new_tokens=chat_req.max_completion_tokens,
-            temperature=chat_req.temperature,
-            enable_thinking=chat_req.enable_thinking,
-        )
+        # handler.generate() can block (CapabilityRunner semaphore wait) --
+        # run it off the event loop thread, otherwise a busy/stuck pipe
+        # freezes the whole ASGI server (including /health) until it clears.
+        try:
+            token_iter = await run_in_threadpool(
+                handler.generate,
+                prompt,
+                images=image_tensors,
+                stream=True,
+                max_new_tokens=chat_req.max_completion_tokens,
+                temperature=chat_req.temperature,
+                enable_thinking=chat_req.enable_thinking,
+            )
+        except Exception:
+            logger.error("chat_completions: failed to start stream", exc_info=True)
+            raise
         return StreamingResponse(
             _sse_stream(token_iter, model_name),
             media_type="text/event-stream",
@@ -248,11 +277,15 @@ async def chat_completions(request: Request):
     else:
         generation_kwargs["enable_thinking"] = chat_req.enable_thinking
 
-    output = await run_in_threadpool(
-        handler.generate,
-        generation_prompt,
-        **generation_kwargs,
-    )
+    try:
+        output = await run_in_threadpool(
+            handler.generate,
+            generation_prompt,
+            **generation_kwargs,
+        )
+    except Exception:
+        logger.error("chat_completions: non-streaming generate failed", exc_info=True)
+        raise
     content, tool_calls = (
         _parse_tool_response(str(output))
         if tools
