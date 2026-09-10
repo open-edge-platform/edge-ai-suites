@@ -7,6 +7,7 @@ The guides below are conditional based on your hardware and software requirement
 | [Enabling Intel® Silicon on Ubuntu 22.04](#enabling-intel-graphics-on-ubuntu-2204) | You are running Ubuntu 22.04 and need to use Intel® GPU hardware. | Install a newer Linux kernel, firmware, and GPU drivers to enable Intel® silicon on Ubuntu 22.04. |
 | [Enabling Real-time Linux kernel](#enabling-real-time-linux-kernel) | Your workload requires deterministic, low-latency real-time performance. | Install and boot a real-time Linux kernel for deterministic, low-latency performance. |
 | [Enabling GMSL Cameras](#enabling-gmsl-cameras) | You are using cameras connected to the GMSL ports. | Configure ACPI tables and install drivers to use cameras connected to the GMSL ports. |
+| [Enabling KVM Virtualization](#enabling-kvm-virtualization) | Your workload requires KVM virtualization to isolate resources | Set up the KVM environment, launch a guest VM, and debug and manage VMs. |
 
 ## Enabling Intel® Graphics on Ubuntu 22.04
 
@@ -72,3 +73,7 @@ Follow the [Real-time Linux](../../components/realtime_determinism/realtime_linu
 ## Enabling GMSL Cameras
 
 GMSL on supported systems requires additional setup. See [GMSL Cameras](../../components/sensors/cameras/gmsl/index.md) for a step-by-step guide.
+
+## Enabling KVM virtualization
+
+Follow the [KVM Guide](../../components/virtualization/kvm_guide.md) to set up the KVM environment, launch a guest VM, and debug and manage VMs.
