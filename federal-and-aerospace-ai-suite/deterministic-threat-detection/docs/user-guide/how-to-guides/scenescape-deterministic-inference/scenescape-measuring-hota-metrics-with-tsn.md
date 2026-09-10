@@ -153,7 +153,7 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md) to use the prebuilt images.
+> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://docs.openedgeplatform.intel.com/2026.2/scenescape/how-to-guides/deploy-scenescape-using-prebuilt-containers.html) to use the prebuilt images.
 
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
@@ -164,7 +164,7 @@ bash usecases/scenescape-deterministic-inference/hota/scripts/setup-hota-scene.s
 
 > **Note:** If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
 
-This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the Scenescape REST API. See the [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/api-reference.md) for details.
+This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the Scenescape REST API. See the [Scenescape API Reference](https://docs.openedgeplatform.intel.com/2026.2/scenescape/api-reference.html) for details.
 
 ### 2b. Install the SEI Frame-Number Parser
 
@@ -338,7 +338,7 @@ Results are stored in timestamped subdirectories under `/tmp/tracker-evaluation/
 - [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/release-2026.2.0/tools/tracker/evaluation/README.md)
 - [TrackEval Toolkit](https://github.com/JonathonLuiten/TrackEval)
 - [TSN Traffic Shaping Guide](../common/enable-tsn-traffic-shaping.md)
-- [Scenescape API Reference](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/docs/user-guide/api-reference.md)
+- [Scenescape API Reference](https://docs.openedgeplatform.intel.com/2026.2/scenescape/api-reference.html)
 
 - Dataset files:
   - [cam-x1-mp4](https://github.com/open-edge-platform/scenescape/blob/release-2026.2.0/tests/system/metric/unity_dataset/Cam_x1_0.mp4)
