@@ -94,7 +94,7 @@ Note: supported media types: jpg, png, mp4
    ```
 
    **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
-   [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
+   [multimodal-embedding-serving's supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
 
    For PRC users, set up the huggingface endpoint first:
 
