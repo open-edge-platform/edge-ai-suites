@@ -12,9 +12,14 @@ PX4 SITL + Gazebo multi-camera UAV simulation with Intel Edge AI vision processi
 ```text
 infra/                     Core simulation + messaging (root compose)
 ├── px4-sim/               PX4 + Gazebo + 3 cameras (nadir, forward, rear)
-├── bridges/               MAVLink ↔ MQTT + Gazebo → RTSP + REST API (port 8080)
+├── bridges/               MAVLink ↔ MQTT + camera → RTSP + REST API (port 8080)
+│   ├── companion/         MAVLink ↔ MQTT + REST (all camera profiles)
+│   ├── camera/            Gazebo → RTSP (sim-camera profile)
+│   ├── usb-camera/        V4L2 webcam → RTSP (usb-camera profile)
+│   └── realsense-camera/  Intel RealSense D400 → RTSP, IR + depth (realsense-camera profile)
 ├── mediamtx/              RTSP server (port 8554) for camera streams
-└── mosquitto/             MQTT broker (host port 1884) for telemetry + detections
+├── mosquitto/             MQTT broker (host port 1884) for telemetry + detections
+└── metrics-manager/       CPU/mem/GPU/NPU/power → InfluxDB + Grafana (observability profile)
 
 sample-apps/               AI helper + demo app (sample-apps/docker-compose.yml)
 ├── helpers/
@@ -33,16 +38,26 @@ mcp-server/                MCP server for AI agent integration
 - `docker-compose.ethernet.yml` — override for remote FC
 - `sample-apps/docker-compose.yml` — AI helper (vision-processor) + edge-ai-showcase (decoupled from infra)
 
-**Makefile targets**: `make up` (core infra), `make apps` (helpers + apps), `make down`, `make apps-down`, `make up-ethernet FC_IP=x.x.x.x`
+**Makefile targets**: `make up-sim-camera` (Gazebo, 3 cams), `make up-usb-camera` (real V4L2 webcam, 1 cam),
+`make up-realsense-camera` (Intel RealSense D400, IR + depth), each with a `-lean` variant that skips the
+observability stack; `make apps` (helpers + apps), `make down`, `make apps-down`, `make up-ethernet FC_IP=x.x.x.x`,
+`make stats` (per-container CPU/mem snapshot, no Grafana needed)
 
-**Camera mode** (`.env`): defaults to multi-cam (3 cameras). Switch to single-cam by toggling vars in `.env`.
+**Camera mode** (`.env`): defaults to multi-cam (3 cameras). Switch to single-cam, USB, or RealSense by using the
+corresponding `make up-*` target (each rewrites the relevant `.env` vars).
 
-**Video Architecture**: Gazebo → camera-bridge → MediaMTX (RTSP raw) → vision-processor → MQTT (detections JSON + annotated JPEG frames)
+**Video Architecture**: Gazebo/USB/RealSense → camera bridge → MediaMTX (RTSP raw) → vision-processor → MQTT (detections JSON + annotated JPEG frames)
 
 ## RTSP Streams (MediaMTX)
-- `rtsp://localhost:8554/uav-1/nadir` — Raw nadir camera (downward)
-- `rtsp://localhost:8554/uav-1/forward` — Raw forward camera
-- `rtsp://localhost:8554/uav-1/rear` — Raw rear camera
+- `rtsp://localhost:8554/uav-1/nadir` — Raw nadir camera (downward) — sim (Gazebo) and USB modes
+- `rtsp://localhost:8554/uav-1/forward` — Raw forward camera — sim mode only
+- `rtsp://localhost:8554/uav-1/rear` — Raw rear camera — sim mode only
+- `rtsp://localhost:8554/uav-1/ir` — Active-IR stereo stream — RealSense mode only
+- `rtsp://localhost:8554/uav-1/depth` — Colorized depth stream — RealSense mode only
+
+Note: `realsense_camera_bridge.py` only wires up IR + depth today. Color/IMU (Gyro/Accel)/Pose are additional
+`librealsense2` streams the camera hardware may support (model-dependent) but are not currently captured —
+enabling them would require extending the bridge with the corresponding `rs.stream.*` config.
 
 ## MQTT Topics
 All topics use the pattern `uav/{uav_id}/...` (default `uav_id` = `uav-1`) on broker `localhost:1884`.
@@ -74,9 +89,10 @@ mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/telemetry/#" -v
 
 ## Commands
 - `/start-stack` — Start UAV + apps
-- `/switch-camera-mode` — Switch between `sim` and `usb` camera profiles
+- `/switch-camera-mode` — Switch between `sim`, `usb`, and `realsense` camera profiles
 - `/validate-infra` — Check PX4, MQTT, cameras
 - `/capture-camera` — Grab frames for debug
+- `/cleanup-stack` — Stop and clean up running Docker resources
 
 ## Startup Order
 1. `make up-sim-camera` — Core infra (PX4 sim → bridges → MQTT/RTSP → observability)

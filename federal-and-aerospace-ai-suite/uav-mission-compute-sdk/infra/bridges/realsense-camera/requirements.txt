@@ -1,0 +1,4 @@
+pyrealsense2>=2.55
+opencv-python-headless>=4.8.0
+numpy>=1.24.0
+paho-mqtt>=2.0.0
