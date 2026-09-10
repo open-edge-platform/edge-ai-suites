@@ -23,6 +23,10 @@ a LLM inference server, a speech-to-text service and
 [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 All components of the composite application share the visual pipeline solution's Docker network.
 
+The diagram below shows how these components are layered on top of the Edge Node Infrastructure software stack.
+
+![Handheld system stack](./_assets/fedaero-system-stack.drawio.svg)
+
 The Handheld Multi-Modal application is deployed on top of the
 [Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 

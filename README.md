@@ -28,6 +28,8 @@ The suites will help you develop your custom AI solutions, offering:
 
 * [The Health And Life Sciences AI Suite](health-and-life-sciences-ai-suite) is a solution for supporting the healthcare field with AI software tools covering a wide range of monitoring and analysis features.
 
+* [The Federal and Aerospace AI Suite](federal-and-aerospace-ai-suite) is a cpmprehensive set of resources designed to accelerate the development and deployment of edge AI solutions across federal and aerospace domains.
+
 
 ## Contribute
 
