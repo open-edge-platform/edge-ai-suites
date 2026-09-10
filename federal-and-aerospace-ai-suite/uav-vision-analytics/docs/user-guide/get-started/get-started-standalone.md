@@ -59,7 +59,7 @@ There are two options available to get the application source:
 Download the compressed file and get into the directory:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/uav-mission-apps.zip
 ```
 
 Decompress the downloaded file:
@@ -125,6 +125,8 @@ make start-rtsp DEVICE=cpu     # CPU only
 make start-rtsp DEVICE=npu     # NPU only
 make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 ```
+
+> To arm the drone and trigger streaming, connect with QGroundControl (QGC) and press takeoff — see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md) for setup and connection details.
 
 
 **pymavlink mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`):
@@ -195,15 +197,14 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
-You can use VLC Player to handle the streams.
+You can leverage versatile streaming media players such as VLC Player
+to seamlessly handle, manage, and playback the incoming streams with ease 
+and efficiency.
 
 
-
-> **Note:** Open QGroundControl (QGC) to connect and press takeoff, which arms the UAV (Only arming will automatically disarm the UAV after a few seconds). The pipeline manager will automatically start the selected pipeline and serve annotated RTSP streams.
+> **Note:** Connect QGroundControl (QGC) to the RTSP stream and press takeoff to arm the UAV — see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for connection details. If the UAV is armed without a takeoff command, PX4 SITL automatically disarms it again after a few seconds. Once armed, the pipeline manager automatically starts the selected pipeline and serves the annotated RTSP stream.
 >
 > `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
->
-> Refer to the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for instructions on connecting to the RTSP stream.
 
 
 
@@ -230,7 +231,7 @@ make pymav-down
 | `uav_realsense_gpu` | GPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 | `uav_realsense_npu` | NPU | Intel RealSense camera (v4l2src) | RTSP `:8555` |
 
-> **Note — Using different or your own aerial footage:** The bundled video `uav_sample.avi` is a placeholder. To see detection on real aerial footage, replace `resources/videos/uav_sample.avi` with your own video containing vehicles/pedestrians (keep the same filename), then start the stack, so the pipeline picks up the new file. If the stack is already running with the old video, a restart is required (`make pymav-down && make pymav-up`, followed by inference pipelines start) — the file is only read when a pipeline starts.
+> **Note — Using different or your own aerial footage:** The bundled video `uav_sample.avi` is a placeholder. To see detection on a different aerial footage, replace `uav-vision-analytics/resources/videos/uav_sample.avi` with your own video containing vehicles/pedestrians (keep the same filename) in `yuv420p` pixel format. If the stack is already running with the old video, run [Step 6 — Stop all services](#6-stop-all-services), then restart from [Step 3 — Standalone mode (pymavlink)](#3-standalone-mode-pymavlink) and [Step 4 — Start inference pipelines](#4-start-inference-pipelines) — the file is only read when a pipeline starts.
 
 ---
 

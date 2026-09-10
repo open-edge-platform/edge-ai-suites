@@ -5,6 +5,8 @@ SPDX-License-Identifier: Apache-2.0
 
 # Benchmark — UAV Vision Analytics
 
+> **Scope:** This benchmarking guide applies to **Standalone Mode (pymavlink)** only. UAV Mission Compute SDK mode is not covered by this guide.
+
 This document explains how to measure the performance of the UAV Vision Analytics
 application using the `calc_stream_density.sh` benchmarking script. The script
 determines the maximum number of concurrent drone-camera video streams the

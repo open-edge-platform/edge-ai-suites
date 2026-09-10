@@ -65,7 +65,7 @@ There are two options available to get the application source:
 Download the compressed file and get into the directory:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/uav-mission-apps.zip
 ```
 
 Decompress the downloaded file:
@@ -269,7 +269,9 @@ ffmpeg \
 The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
-You can use VLC Player to handle the streams.
+You can leverage versatile streaming media players such as VLC Player
+to seamlessly handle, manage, and playback the incoming streams with ease 
+and efficiency.
 
 ### 8. Stop all services
 
@@ -301,8 +303,6 @@ make down
 > `uav-1` in the source URL is the value of the `UAV_ID` environment variable (default: `uav-1`).
 > Set a different value in `.env` if your SDK project uses a different vehicle ID.
 > Also update the RTSP input URLs in `config-uavsdk.json` if you change the UAV ID.
-
-> **Note — Using different or your own aerial footage:** The bundled video `uav_sample.avi` is a placeholder. To see detection on real aerial footage, replace `resources/videos/uav_sample.avi` with your own video containing vehicles/pedestrians (keep the same filename), then start the stack, so the pipeline picks up the new file. If the stack is already running with the old video, a restart is required (`make pymav-down && make pymav-up`, followed by inference pipelines start) — the file is only read when a pipeline starts.
 
 All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp DEVICE=cpu|gpu|npu|all`) or the REST API directly.
 
