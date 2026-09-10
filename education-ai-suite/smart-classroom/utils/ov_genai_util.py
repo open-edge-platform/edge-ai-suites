@@ -1,4 +1,5 @@
 import queue
+import threading
 import openvino_genai as ov_genai
 
 class YieldingTextStreamer(ov_genai.StreamerBase):
@@ -11,13 +12,32 @@ class YieldingTextStreamer(ov_genai.StreamerBase):
         self.generation_start_time = None
         self._token_cache = []
         self._print_len = 0
+        self._stop = threading.Event()
+
+    def request_stop(self):
+        """Ask the running generation to stop at the next token boundary.
+
+        Called when the consumer abandons the stream (client disconnect / early
+        close). The next ``write()`` then returns ``StreamingStatus.STOP`` so the
+        ov_genai pipe leaves ``generate()`` promptly instead of running to
+        ``max_new_tokens`` while nobody reads the output -- which would keep the
+        process-wide warm pipe (and its ``_generate_lock``) busy and 503 the next
+        request with "pipe busy".
+        """
+        self._stop.set()
 
     def get_stop_flag(self):
         """Check whether generation should be stopped."""
+        if self._stop.is_set():
+            return ov_genai.StreamingStatus.STOP
         return ov_genai.StreamingStatus.RUNNING
 
     def write(self, token) -> ov_genai.StreamingStatus:
         """Process token(s) and manage the decoding buffer."""
+        # A consumer that walked away (client disconnect) asks us to stop; bail
+        # before decoding so generation ends within one token step.
+        if self._stop.is_set():
+            return ov_genai.StreamingStatus.STOP
         # Handle both single token and list of tokens
         if isinstance(token, list):
             self._token_cache.extend(token)

@@ -136,6 +136,33 @@ def test_memory_error_wrapped_as_oom():
     assert runner._current_queue == 0
 
 
+def test_early_close_propagates_and_releases_slot():
+    """Abandoning a stream early must close the inner iterator (so the
+    generation worker can be cancelled) and free the concurrency slot."""
+    closed = threading.Event()
+
+    def stream():
+        try:
+            for i in range(1000):
+                yield i
+        except GeneratorExit:
+            # Mirrors VLMTextGen._iterator: signal cancellation on abandonment.
+            closed.set()
+            raise
+
+    runner = CapabilityRunner(stream, max_concurrency=1, queue_max=4)
+    it = runner.submit()
+    assert next(it) == 0
+
+    # Client disconnect: the SSE layer closes the wrapped iterator.
+    it.close()
+
+    assert closed.is_set(), "inner iterator was not closed on early abandonment"
+    assert runner._current_queue == 0, "slot not released after early close"
+    # Slot is free again: a fresh request proceeds.
+    assert next(runner.submit()) == 0
+
+
 def test_oom_in_stream_releases_slot():
     """OOM mid-stream raises OomError and releases the slot."""
     def oom_stream():

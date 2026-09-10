@@ -29,6 +29,13 @@ _CONTENT_SEARCH_DIR = _SC_ROOT / "content_search"
 
 _DEFAULT_MAX_NEW_TOKENS = 5120
 
+# Grace period a new generate() waits for the warm pipe to free up before it
+# gives up with a "busy" 503. An abandoned stream cancels within ~one token step
+# (see YieldingTextStreamer.request_stop), so this turns that brief residual
+# overlap into a short wait instead of a spurious rejection; a truly stuck pipe
+# still 503s once the grace elapses.
+_PIPE_BUSY_GRACE_S = 10.0
+
 
 def _import_convert_helpers():
     if str(_CONTENT_SEARCH_DIR) not in sys.path:
@@ -225,12 +232,14 @@ class VLMTextGen:
     def _pipe_generate(self, *args, **kwargs):
         """Serialize every call into the warm pipe; reject overlap instead of crashing.
 
-        Non-blocking acquire: a caller that finds the pipe busy fails fast
-        with a RuntimeError (surfaced to clients as a 503 via OomError) rather
-        than racing the C++ ContinuousBatchingPipeline, which aborts the
-        entire process on concurrent generate() calls.
+        Bounded-wait acquire: a caller that finds the pipe busy waits up to
+        ``_PIPE_BUSY_GRACE_S`` for the in-flight call to finish (an abandoned
+        stream cancels almost immediately), then fails with a RuntimeError
+        (surfaced to clients as a 503 via OomError) rather than racing the C++
+        ContinuousBatchingPipeline, which aborts the entire process on
+        concurrent generate() calls.
         """
-        if not self._generate_lock.acquire(blocking=False):
+        if not self._generate_lock.acquire(timeout=_PIPE_BUSY_GRACE_S):
             busy_for = (
                 time.perf_counter() - self._generate_started_at
                 if self._generate_started_at is not None
@@ -386,8 +395,17 @@ class VLMTextGen:
         threading.Thread(target=run_generation, daemon=True).start()
 
         def _iterator() -> Iterator[str]:
-            for token in streamer:
-                yield token
+            try:
+                for token in streamer:
+                    yield token
+            except GeneratorExit:
+                # Consumer abandoned the stream (client disconnect / early
+                # close). Signal the worker thread to stop generating so the
+                # warm pipe -- and its _generate_lock -- frees up promptly
+                # instead of running to completion and 503-ing the next
+                # request with "pipe busy".
+                streamer.request_stop()
+                raise
             if error:
                 raise error[0]
 

@@ -45,6 +45,12 @@ class CapabilityRunner:
             logger.error("CapabilityRunner stream failed: %s", exc)
             raise OomError(str(exc)) from exc
         finally:
+            # Close the wrapped iterator before freeing the slot so an abandoned
+            # stream (client disconnect) deterministically propagates down to the
+            # generation worker and cancels it, rather than relying on GC timing.
+            close = getattr(iterator, "close", None)
+            if callable(close):
+                close()
             self._release_slot()
 
     def submit(self, *args, **kwargs) -> Any:
