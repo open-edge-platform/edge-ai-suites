@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Example 3: Battery Health Prediction
+# Example 4: Battery Health Prediction
 
 ## Use Case
 Predict battery degradation and estimate remaining cycles before replacement needed.

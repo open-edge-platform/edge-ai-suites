@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Example 5: Quick Status and Location Check
+# Example 1: Quick Status and Location Check
 
 ## Use Case
 Fast pre-flight verification - check UAV is ready and know where it is.

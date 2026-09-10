@@ -221,6 +221,8 @@ For a concrete implementation of this shape, see [UAV Vision Analytics Get Start
 
 Use [SDK Agent Commands and MCP Tools](../infrastructure/uav-sdk-apps-skill.md) once the manual loop above is working, to shorten common cycles:
 
+For prompt-driven workflows, review the [MCP server examples](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/mcp-server/examples/README.md) (quick status, real-time monitoring, anomaly detection, battery prediction, video processing, and full application-development patterns for computer vision and time-series pipelines). These examples show that you can describe requirements in natural language and have the tooling compose and wire a complete app workflow from a single prompt, then refine it iteratively with additional prompts.
+
 - Slash commands for stack lifecycle (start, validate, capture a frame, switch camera mode, cleanup).
 - MCP tools for pipeline composition, telemetry queries, and app deployment actions.
 
@@ -228,7 +230,7 @@ Use [SDK Agent Commands and MCP Tools](../infrastructure/uav-sdk-apps-skill.md) 
 
 Treat tuning as a measured loop, not one-off tweaks.
 
-**App-level tuning** — driven by the [UAV Mission Compute SDK Benchmarking Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/benchmarking.md):
+**App-level tuning** — driven by the [UAV Mission Compute SDK Benchmarking Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/benchmarking.md):
 
 1. Capture a baseline with `make bench` (passive), `make bench-bridge-sweep` (publish-rate sweep), and `make bench-client-sweep` (subscriber fan-out).
 2. Correlate against your app's own metrics: end-to-end latency, dropped frames, inference FPS, memory/GPU headroom.

@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Video File Processing
+# Example 5: Video File Processing
 
 Analyze recorded video files with DLStreamer object detection → HTML report.
 
