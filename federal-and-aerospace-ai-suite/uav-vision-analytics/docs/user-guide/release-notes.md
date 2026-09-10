@@ -14,6 +14,7 @@
   - **Observability stack included by default** (InfluxDB + Grafana + telemetry extractors), with lean startup targets available for reduced memory usage.
   - **Remote PX4 over Ethernet evaluation workflow** is available for testing companion compute with a separate flight-controller host.
   - **Benchmarking workflows** for passive telemetry, bridge stress sweep, and client scaling sweep, including optional HTML reports.
+  - **Agent Commands and MCP Tools** for SDK usability and assistance in application development.
 - **UAV Vision Analytics application** is now available as a standalone application and integrates with MAVLink telemetry provided by the UAV Mission Compute SDK.
 - **Use Case Implementation**: Includes the necessary code to test both the standalone application and the UAV Mission Compute SDK use case.
 - **Documentation**: Comprehensive documentation on how to set up, configure, and run tests for the use case.

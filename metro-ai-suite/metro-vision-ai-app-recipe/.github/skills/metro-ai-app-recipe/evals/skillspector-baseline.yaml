@@ -17,7 +17,7 @@ rules:
   - id: "RP1"
     path: "*INSTALL.md"
     reason: "Reviewed: Docker images in references/INSTALL.md are intentionally pinned
-      to specific version tags (e.g. intel/dlstreamer:2026.1.0-ubuntu24), never
+      to specific version tags (e.g. intel/dlstreamer:2026.2.0-ubuntu24), never
       :latest, and are documented as intentional pins. Tag pins are the deliberate
       policy for this recipe skill; digest pinning is not required."
 fingerprints: []
