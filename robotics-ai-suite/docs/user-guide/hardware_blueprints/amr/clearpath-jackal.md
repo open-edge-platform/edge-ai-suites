@@ -6,15 +6,39 @@ configuration with a RealSense D435i camera.
 - [Jackal Unmanned Ground Vehicle](https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/)
 - [Jackal User Manual](https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/)
 
+## Overview
+
+This Blueprint's validated configuration replaces the Jackal's stock onboard
+computer with an **AAEON UP Nexus WCL Edge** board. That board ships with a
+pre-installed Canonical Ubuntu 24.04 LTS OS, ROS 2 Jazzy Jalisco distribution,
+and the Clearpath Robotics software packages. This guide shows how to install
+the Autonomous Mobile Robot on top of that pre-installed software and validate
+the robot with a RealSense D435i camera.
+
+:::{warning}
+Intel has only validated this Blueprint with the Jackal's onboard computer
+swapped for the AAEON UP Nexus WCL Edge board listed below. Running this guide
+on the Jackal's original stock onboard computer, or any other board, is
+**use at your own risk** — steps, package versions, and behavior are not
+validated on unlisted hardware.
+:::
+
+### Hardware Bill of Materials
+
+| Component | Model / Specification | Purpose |
+| --- | --- | --- |
+| Robot Base | Clearpath Robotics Jackal (J100) | Unmanned ground vehicle base, motor control, and chassis |
+| Onboard Compute | [AAEON UP Nexus WCL Edge](../../platform_foundation/development_kits/up-nexus-wcl-edge/index.md) (Wildcat Lake) | Validated replacement for the stock onboard computer; runs ROS 2 Jazzy, the Clearpath Robotics services, and the Autonomous Mobile Robot perception pipeline |
+| Camera | Intel RealSense D435i | RGB-D perception input for SLAM, navigation, and follow-me workflows |
+
 ## Set Up the Jackal
 
 This section shows how to install the Autonomous Mobile Robot with the
 ROS 2 middleware and the Clearpath Robotics ecosystem, on
 the Clearpath Robotics Jackal robot's onboard computer.
 
-The Jackal robot is equipped with an onboard
-computer that has a pre-installed Canonical Ubuntu 22.04 LTS OS,
-ROS 2 Humble distribution, and the Clearpath Robotics software packages.
+Before continuing, swap the Jackal's stock onboard computer for the
+**AAEON UP Nexus WCL Edge** board listed in the [Hardware Bill of Materials](#hardware-bill-of-materials).
 
 Intel recommends using the pre-installed software for the initial bring-up
 of your Jackal robot. During the initial bring-up, you must update
@@ -45,7 +69,7 @@ as follows:
 
 Install the ROS 2 development tools, which comprises the compilers
 and other tools to build ROS 2 packages. See the official
-[ROS 2 Installation Instructions](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html):
+[ROS 2 Installation Instructions](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html):
 
    ```bash
    sudo apt-get install ros-dev-tools
@@ -72,7 +96,9 @@ steps.
 You need to include the serial number of the RealSense camera to the
 ``robot.yaml`` file.
 
-> **Note:** Do not run ``lsusb -v`` to get the serial number because the serial number displayed might differ from the true serial number.
+:::{note}
+Do not run ``lsusb -v`` to get the serial number because the serial number displayed might differ from the true serial number.
+:::
 
 1. To get the serial number, connect the camera
    to the onboard computer of the Jackal robot and run:
@@ -217,10 +243,12 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
      has been set to ``[0.21, 0.0, 0.19]``. This means that the camera sits above
      the front fender of the Jackal robot as shown in the following figure:
 
-   ![jackal_with_camera2](images/jackal_with_camera2.png)
+   :::{figure} images/jackal_with_camera2.png
+   :alt: RealSense D435i camera mounted above the Jackal's front fender in rviz2
+   :width: 500px
 
-     This figure is rendered through the rviz2 tool using the TF data
-     published by the Clearpath Robotics services running on the robot.
+   Rendered through the rviz2 tool using the TF data published by the Clearpath Robotics services running on the robot.
+   :::
 
    - The ``device_type`` has been set to ``d435i``.
 
@@ -242,24 +270,9 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 1. If not already installed, install the ROS2 TF2 Tools:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
    ```bash
    sudo apt install ros-jazzy-tf2-tools
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   sudo apt install ros-humble-tf2-tools
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 2. Verify that the robot state publisher communicates the correct TF2 tree:
 
@@ -270,16 +283,23 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
    This command listens to the frames that are broadcast over the ROS 2
    middleware, and generates a PDF file that shows how the robot's frames are connected.
    Open the PDF file and verify that the TF2 tree contains the ``camera_0_link``
-   and its children, as shown in the following figures:
+   and its children, as shown in the following figure:
 
-   ![frames_jackal_2024-02-28](images/frames_jackal_2024-02-28.png)
+   :::{figure} images/frames_jackal_2024-02-28.png
+   :alt: TF2 tree showing the camera_0_link frame published by the Jackal robot
+   :width: 600px
+   :::
 
 3. Complete TF2 tree of the Jackal robot with RealSense camera.
    To increase the figure, right-click on the image and open the image
-   in a new browser tab. The following figure shows the TF2 tree of the Jackal robot,
-   with a detailed view on the camera_0_link:
+   in a new browser tab.
 
-   ![frames_jackal_camera_2024-02-28](images/frames_jackal_camera_2024-02-28.png)
+   :::{figure} images/frames_jackal_camera_2024-02-28.png
+   :alt: Detailed view of the camera_0_link frame in the Jackal robot's TF2 tree
+   :width: 600px
+
+   Complete TF2 tree of the Jackal robot, with a detailed view on the camera_0_link.
+   :::
 
 #### Verify the ROS 2 Topics
 
@@ -291,9 +311,11 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 2. Verify that the required ROS 2 topics are published:
 
-   > **Note:** The names of the camera-related topics depend on the version of the
-   > ``ros-humble-realsense2-camera`` package on your system. The following list was
-   > created on a system with package version 4.55.
+   :::{note}
+   The names of the camera-related topics depend on the version of the
+   ``ros-jazzy-realsense2-camera`` package on your system. The following list was
+   created on a system with package version 4.55.
+   :::
 
    ```console
    /cmd_vel
@@ -382,48 +404,17 @@ You need to define a camera in the ``sensors`` section of your robot.yaml file.
 
 3. To see the installed package version on your board, run:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
    ```bash
    apt show ros-jazzy-realsense2-camera
    ```
 
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   apt show ros-humble-realsense2-camera
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
-
    The following table shows how the names of the camera-related topics
    depend on the package version.
-
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
 
    |Version of ``ros-jazzy-realsense2-camera``|Camera-related topics start with|
    |---|---|
    |4.55|``/sensors/camera_0/camera/``|
    |4.54|``/sensors/camera_0/``|
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   |Version of ``ros-humble-realsense2-camera``|Camera-related topics start with|
-   |---|---|
-   |4.55|``/sensors/camera_0/camera/``|
-   |4.54|``/sensors/camera_0/``|
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 ### Jackal Troubleshooting
 
@@ -452,12 +443,6 @@ the systemd journal shows any error messages:
 ```bash
 sudo journalctl -b | grep clearpath
 ```
-
-### References
-
-- [Clearpath Robotics - Jackal Unmanned Ground Vehicle Overview](https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/)
-- [Clearpath Robotics - Jackal Unmanned Ground Vehicle User Manual](https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/)
-- [Clearpath Robotics - Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)
 
 ## Validate Motor Control
 
@@ -511,26 +496,10 @@ Log in as the ``administrator`` to run the following steps:
 
 2. Install the `teleop-twist-keyboard` ROS 2 package:
 
-   <!--hide_directive::::{tab-set}hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
    ```bash
    sudo apt-get update
    sudo apt-get install ros-jazzy-teleop-twist-keyboard
    ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive:::{tab-item}hide_directive--> **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   sudo apt-get update
-   sudo apt-get install ros-humble-teleop-twist-keyboard
-   ```
-
-   <!--hide_directive:::hide_directive-->
-   <!--hide_directive::::hide_directive-->
 
 3. Start the ``teleop_twist_keyboard`` command-line tool:
 
@@ -568,3 +537,9 @@ Follow the [Wandering deployment tutorial](../../software_references/amr/deploym
 ## Follow-me Tutorials
 
 Use the shared [ADBSCAN Follow-me](../../components/optimized_solutions/adbscan-follow-me.md) guide for the supported simulation and deployment workflows.
+
+## References
+
+- [Clearpath Robotics - Jackal Unmanned Ground Vehicle Overview](https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/)
+- [Clearpath Robotics - Jackal Unmanned Ground Vehicle User Manual](https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/)
+- [Clearpath Robotics - Robot Installation](https://docs.clearpathrobotics.com/docs/ros/installation/robot/)

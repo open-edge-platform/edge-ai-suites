@@ -26,7 +26,7 @@ PIPELINE_BASE_URL   = "http://localhost:8081/pipelines/user_defined_pipelines"
 PIPELINE_DELETE_URL = "http://localhost:8081/pipelines/{instance_id}"
 MODEL_PATH          = (
     "/home/pipeline-server/resources/models/"
-    "yolov8n-visdrone/best_openvino_model/best.xml"
+    "yolo11s/yolo11s_openvino_model/yolo11s.xml"
 )
 # Passed via make start-rtsp DEVICE=cpu|gpu|npu|all; default is gpu.
 PIPELINE_DEVICE = os.getenv("PIPELINE_DEVICE", "gpu").lower()

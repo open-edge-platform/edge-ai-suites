@@ -321,7 +321,7 @@ services:
       - rag_network
 
   metrics-manager:
-    image: intel/metrics-manager:2026.2.0-extended-rc2
+    image: intel/metrics-manager:2026.2.0-extended-rc3
     container_name: metrics-manager
     environment:
       - no_proxy=localhost,127.0.0.1,video-caption-service,metrics-manager,${no_proxy}

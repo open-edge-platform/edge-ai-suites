@@ -16,7 +16,7 @@ compatibility: >-
   host; WebRTC also publishes MediaMTX port 8189 (tcp+udp) for ICE, with
   signalling proxied via Nginx. Tested
   with the open-edge-platform Metro Vision AI App Recipe reference
-  (v2026.1.0 image tags).
+  (v2026.2.0 image tags).
 ---
 
 # Metro AI App Recipe — DLSPS + WebRTC + Mosquitto + Node-RED + Grafana + Nginx
@@ -179,14 +179,14 @@ the repo's `tags` API with `ordering=last_updated`), pin it, and ignore
 `*-weekly` pre-releases. **Grafana is the one exception:** keep it pinned to
 `11.5.4` (the MQTT datasource plugin only works on that tag).
 
-- `intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24`
+- `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24`
 - `eclipse-mosquitto:2.1.2-alpine`
 - `nodered/node-red:5.0.4`
 - `nginx:1.31.3-alpine`
 - `bluenviron/mediamtx:1.20.0` (WebRTC: WHIP in, WHEP out)
 - `coturn/coturn:4.17.0` (ICE/TURN)
 - `grafana/grafana:11.5.4` (**pinned — do not upgrade**) with `GF_INSTALL_PLUGINS="grafana-mqtt-datasource 1.3.3,yesoreyeram-infinity-datasource 3.11.1"` — a bad plugin version kills the container → Nginx 502
-- `intel/dlstreamer:2026.1.0-ubuntu24` (one-shot in `install.sh`: model download + INT8 quantize + TLS cert)
+- `intel/dlstreamer:2026.2.0-ubuntu24` (one-shot in `install.sh`: model download + INT8 quantize + TLS cert)
 
 ## Layout (flat)
 

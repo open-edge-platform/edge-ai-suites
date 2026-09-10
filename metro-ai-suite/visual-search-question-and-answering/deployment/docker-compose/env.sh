@@ -25,7 +25,8 @@ export DATA_INGEST_WITH_DETECT=true
 # huggingface mirror 
 # export HF_ENDPOINT=https://hf-mirror.com
 
-export VLM_DEVICE="${VLM_DEVICE:-GPU.1}"
+export DEVICE="GPU.1"
+export VLM_DEVICE="GPU.1"
 export HOST_DATA_PATH="$HOME/data"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
 
@@ -34,7 +35,8 @@ export DEFAULT_CLIP_DURATION=-1  # -1 means take the video till end
 export DEFAULT_NUM_FRAMES=64
 
 # OpenVINO configuration
-export EMBEDDING_DEVICE="${EMBEDDING_DEVICE:-GPU.1}"
+export EMBEDDING_USE_OV=false
+export EMBEDDING_DEVICE="GPU.1"
 export OV_PERFORMANCE_MODE=${OV_PERFORMANCE_MODE:-LATENCY}
 export EMBEDDING_USE_OV=true
 
@@ -44,7 +46,7 @@ export WORKERS=1
 export VLM_SEED=42
 export VLM_SERVICE_PORT=9764
 export DATAPREP_SERVICE_PORT=9990
-export RETRIEVER_SERVICE_PORT=6008
+export RETRIEVER_SERVICE_PORT=7770
 export VISUAL_SEARCH_QA_UI_PORT=17580
 export BACKEND_VQA_BASE_URL="http://${host_ip}:${VLM_SERVICE_PORT}"
 export BACKEND_SEARCH_BASE_URL="http://${host_ip}:${RETRIEVER_SERVICE_PORT}"
