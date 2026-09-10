@@ -82,7 +82,7 @@ unzip handheld-multi-modal.zip
 cd handheld-multi-modal/handheld-multi-modal
 ```
 
-Run the script that installs all dependencies, downloads models, and starts applications.
+Run the makefile target that installs all dependencies, downloads models, and starts applications.
 During installation, a single prompt asking to accept licenses of models will appear.
 Depending on network bandwidth, it takes around 10-15 minutes. If an error occurs during
 installation, see the [proxy configuration step](#optional-configuring-the-proxy):
