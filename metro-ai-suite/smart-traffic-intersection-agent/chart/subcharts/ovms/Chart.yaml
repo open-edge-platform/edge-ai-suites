@@ -6,4 +6,4 @@ name: ovms
 description: OpenVINO Model Server (OVMS) subchart for Smart Traffic Intersection Agent
 type: application
 version: 2026.2.0-helm
-appVersion: "2026.1"
+appVersion: "2026.2"
