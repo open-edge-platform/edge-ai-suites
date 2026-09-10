@@ -23,10 +23,10 @@ if [ -f sample-apps/docker-compose.yml ]; then
     docker compose --env-file .env -f sample-apps/docker-compose.yml down --remove-orphans 2>/dev/null || true
 fi
 
-# Stop core infra (both camera profiles)
+# Stop core infra (all camera profiles + observability)
 if [ -f docker-compose.yml ]; then
     echo "Stopping core infra..."
-    docker compose -f docker-compose.yml --profile sim-camera --profile usb-camera down --remove-orphans
+    docker compose -f docker-compose.yml --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans
 fi
 
 echo "Running Makefile cleanup target..."
