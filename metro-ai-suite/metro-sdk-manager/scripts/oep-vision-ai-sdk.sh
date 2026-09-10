@@ -20,7 +20,7 @@
 repositories=(
   "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.2.0|edge-ai-libraries"
   "https://github.com/open-edge-platform/edge-ai-suites|release-2026.2.0|edge-ai-suites"
-  "https://github.com/open-edge-platform/scenescape|main|scenescape"
+  "https://github.com/open-edge-platform/scenescape|release-2026.2.0|scenescape"
 )
 
 images=(

@@ -4,7 +4,7 @@
 global:
   # Image registry and tags
   registry: ''
-  tag: '2026.2.0-rc1'
+  tag: '2026.2.0'
   vssStackTag: ''
   smartNvrStackTag: ''
   # Single pull-policy override for the LVS, VSS, and Smart NVR application
