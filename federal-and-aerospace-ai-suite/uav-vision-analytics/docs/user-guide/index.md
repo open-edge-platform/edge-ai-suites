@@ -23,6 +23,7 @@ RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). Th
 consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
 It runs the YOLOv8n-VisDrone, a model designed to recognize imagery typical for drone video.
 
+![UAV drone](./_assets/fedaero-drone.drawio.svg)
 
 The application supports two deployment modes depending on whether an external SDK is available.
 
