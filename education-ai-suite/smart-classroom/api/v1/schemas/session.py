@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -5,6 +7,39 @@ class WorkflowRequest(BaseModel):
     stages: list[str]
     audio_path: str | None = None
     video_sources: dict[str, str] | None = None
+
+
+class RegisterRequest(BaseModel):
+    """A session the caller drives stage by stage, as opposed to WorkflowRequest,
+    which hands the whole run to the orchestrator."""
+
+    session_id: str
+    stages: list[str]
+    audio_path: str | None = None
+    video_sources: dict[str, str] | None = None
+
+
+class RegisterResponse(BaseModel):
+    session_id: str
+    state: str | None = None
+    stages: dict | None = None
+    output_dir: str | None = None
+    started_at: str | None = None
+    # True when the session was already on file and this call changed nothing.
+    already_registered: bool = False
+
+
+class FinalizeRequest(BaseModel):
+    # "aborted" is what the browser's unload beacon sends: the page went away
+    # mid-run, so the session is over but it did not succeed.
+    outcome: Literal["completed", "aborted", "failed"] = "completed"
+    error: str | None = None
+
+
+class FinalizeResponse(BaseModel):
+    session_id: str
+    state: str | None = None
+    error: str | None = None
 
 
 class SessionSummary(BaseModel):

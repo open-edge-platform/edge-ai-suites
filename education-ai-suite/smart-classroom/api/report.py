@@ -29,6 +29,7 @@ from dto.report_dto import ReportRequest, ReportReselectRequest
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.session_paths import SessionPaths
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -87,30 +88,34 @@ async def generate_report(request: ReportRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
-        try:
-            for event in pipeline.run_report_generator(
-                selected_fields=request.selected_fields,
-                manual_fields=request.manual_fields,
-            ):
-                if isinstance(event, dict):
-                    etype = event["type"]
-                    if etype in ("partial_report", "report"):
-                        yield json.dumps({"type": etype, "content": event.get("content", "")}) + "\n"
-                    elif etype == "report_ready":
-                        yield json.dumps({"type": "report_ready", "session_id": event.get("session_id", request.session_id)}) + "\n"
-                    elif etype == "token":
-                        content = event["content"]
-                        if content.startswith("[ERROR]:"):
-                            yield json.dumps({"token": "", "error": content}) + "\n"
-                            break
-                        yield json.dumps({"token": content, "error": ""}) + "\n"
-                await asyncio.sleep(0)
-        except HTTPException as e:
-            detail = e.detail if isinstance(e.detail, str) else str(e.detail)
-            yield json.dumps({"token": "", "error": f"[ERROR]: {detail}"}) + "\n"
-        except Exception as e:
-            logger.exception("Unexpected error while streaming report for session %s", request.session_id)
-            yield json.dumps({"token": "", "error": f"[ERROR]: Report generation failed: {e}"}) + "\n"
+        with stage_tracker(pipeline.session_id, "report") as stage:
+            try:
+                for event in pipeline.run_report_generator(
+                    selected_fields=request.selected_fields,
+                    manual_fields=request.manual_fields,
+                ):
+                    if isinstance(event, dict):
+                        etype = event["type"]
+                        if etype in ("partial_report", "report"):
+                            yield json.dumps({"type": etype, "content": event.get("content", "")}) + "\n"
+                        elif etype == "report_ready":
+                            yield json.dumps({"type": "report_ready", "session_id": event.get("session_id", request.session_id)}) + "\n"
+                        elif etype == "token":
+                            content = event["content"]
+                            if content.startswith("[ERROR]:"):
+                                stage.fail(RuntimeError(content))
+                                yield json.dumps({"token": "", "error": content}) + "\n"
+                                break
+                            yield json.dumps({"token": content, "error": ""}) + "\n"
+                    await asyncio.sleep(0)
+            except HTTPException as e:
+                detail = e.detail if isinstance(e.detail, str) else str(e.detail)
+                stage.fail(e)
+                yield json.dumps({"token": "", "error": f"[ERROR]: {detail}"}) + "\n"
+            except Exception as e:
+                logger.exception("Unexpected error while streaming report for session %s", request.session_id)
+                stage.fail(e)
+                yield json.dumps({"token": "", "error": f"[ERROR]: Report generation failed: {e}"}) + "\n"
 
     return StreamingResponse(event_stream(), media_type="application/json")
 

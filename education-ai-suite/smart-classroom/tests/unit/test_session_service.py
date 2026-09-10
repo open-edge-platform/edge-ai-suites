@@ -2,9 +2,10 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from api.v1.schemas.session import WorkflowRequest
+from api.v1.schemas.session import RegisterRequest, WorkflowRequest
 from services.session_service import (
     ConcurrencyLimitError,
+    SessionNotCancellable,
     SessionNotFound,
     SessionNotRunning,
     SessionRunning,
@@ -12,11 +13,14 @@ from services.session_service import (
     cancel_session,
     create_process,
     delete_session,
+    finalize_session,
     get_status,
     list_running_sessions,
     list_sessions,
+    register_session,
 )
 from services import session_service
+from utils.session_manager import generate_session_id
 
 
 def _expect_raises(exc, fn):
@@ -179,6 +183,112 @@ def test_cancel_calls_request_cancel():
         result = cancel_session("s1")
         assert result == {"session_id": "s1", "cancelled": True}
         assert mreq.called
+
+
+def test_cancel_rejects_a_session_the_orchestrator_does_not_own():
+    """A UI-driven session has no cancel flag and no thread polling one. Saying
+    'cancelled: true' would be a lie: nothing would stop."""
+    with patch.object(
+        session_service.session_store.SessionStore, "get",
+        return_value={"state": "running"},
+    ), patch.object(
+        session_service.orchestrator, "request_cancel", return_value=False
+    ):
+        _expect_raises(SessionNotCancellable, lambda: cancel_session("s1"))
+
+
+# ----- register -----
+
+def _reg(**kw):
+    defaults = {"session_id": generate_session_id(), "stages": ["transcribe"]}
+    defaults.update(kw)
+    return RegisterRequest(**defaults)
+
+
+def test_register_rejects_a_client_invented_id():
+    for bogus in ("../../etc", "s1", "", "20260909-143012-XYZQ"):
+        _expect_raises(
+            SessionValidationError, lambda b=bogus: register_session(_reg(session_id=b))
+        )
+
+
+def test_register_rejects_empty_and_unknown_stages():
+    _expect_raises(SessionValidationError, lambda: register_session(_reg(stages=[])))
+    _expect_raises(SessionValidationError, lambda: register_session(_reg(stages=["bogus"])))
+
+
+def test_register_creates_a_running_session():
+    req = _reg(stages=["transcribe", "summarize"])
+    result = register_session(req)
+    assert result["session_id"] == req.session_id
+    assert result["state"] == "running"
+    assert result["already_registered"] is False
+    assert result["stages"]["transcribe"] == "pending"
+    # Stages that were not asked for are marked skipped, as with create_process.
+    assert result["stages"]["report"] == "skipped"
+
+
+def test_register_is_idempotent():
+    req = _reg()
+    register_session(req)
+    session_service.session_store.SessionStore.set_stage(
+        req.session_id, "transcribe", "done"
+    )
+    again = register_session(req)
+    assert again["already_registered"] is True
+    # A retried POST must not rewind a session already underway.
+    assert again["stages"]["transcribe"] == "done"
+
+
+# ----- finalize -----
+
+def test_finalize_not_found():
+    _expect_raises(SessionNotFound, lambda: finalize_session("nope", "completed"))
+
+
+def test_finalize_marks_completed():
+    req = _reg()
+    register_session(req)
+    result = finalize_session(req.session_id, "completed")
+    assert result["state"] == "completed"
+
+
+def test_finalize_aborted_records_a_reason():
+    """What the browser's unload beacon sends."""
+    req = _reg()
+    register_session(req)
+    result = finalize_session(req.session_id, "aborted")
+    assert result["state"] == "failed"
+    assert "interrupted" in result["error"]
+
+
+def test_finalize_is_idempotent_and_does_not_overwrite():
+    req = _reg()
+    register_session(req)
+    finalize_session(req.session_id, "completed")
+    # A late beacon arriving after a clean finish must not turn it into a failure.
+    again = finalize_session(req.session_id, "aborted")
+    assert again["state"] == "completed"
+    assert again["error"] is None
+
+
+def test_finalize_refuses_orchestrator_owned_sessions():
+    req = _reg()
+    register_session(req)
+    with patch.object(
+        session_service.orchestrator, "running_session_ids",
+        return_value=[req.session_id],
+    ):
+        _expect_raises(
+            SessionRunning, lambda: finalize_session(req.session_id, "completed")
+        )
+
+
+def test_registered_session_shows_up_in_the_history():
+    req = _reg()
+    register_session(req)
+    listing = list_sessions()
+    assert req.session_id in [s["session_id"] for s in listing["sessions"]]
 
 
 def test_list_running_filters_non_running():
