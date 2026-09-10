@@ -29,17 +29,17 @@ There are 2 options to get the charts in your workspace:
 Use the following command to pull the Helm chart from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-search --version 2026.2.0-rc1-helm
+helm pull oci://registry-1.docker.io/intel/live-video-search --version 2026.2.0-helm
 ```
 
-Use chart version `2026.2.0-rc1-helm` for this release workflow.
+Use chart version `2026.2.0-helm` for this release workflow.
 
 ##### Step 2: Extract the `.tgz` file
 
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf live-video-search-2026.2.0-rc1-helm.tgz
+tar -xvf live-video-search-2026.2.0-helm.tgz
 ```
 
 This creates a directory named `live-video-search` containing chart files. Navigate to the extracted directory:
@@ -83,14 +83,14 @@ Common optional values:
 | Key | Description | Example Value |
 | --- | ----------- | ------------- |
 | `global.registry` | Optional image registry override | `intel` |
-| `global.tag` | Shared image tag | `2026.2.0-rc1` |
-| `global.vssStackTag` | Override tag for VSS stack services | `2026.2.0-rc1` |
-| `global.smartNvrStackTag` | Override tag for Smart NVR services | `2026.2.0-rc1` |
+| `global.tag` | Shared image tag | `2026.2.0` |
+| `global.vssStackTag` | Override tag for VSS stack services | `2026.2.0` |
+| `global.smartNvrStackTag` | Override tag for Smart NVR services | `2026.2.0` |
 | `global.pullPolicy` | Pull-policy override for application images selected by the shared or stack-specific tags | `Always`, `IfNotPresent`, or `Never` |
 | `global.vectordbBackend` | Vector database used by Multimodal DataPrep and Vector Retriever | `vdms` (default) or `milvus` |
 | `global.metricsManager.enabled` | Deploy Metrics Manager and enable live system/DataPrep metrics | `true` (default) or `false` |
 | `metrics-manager.image.repository` | Metrics Manager image repository | `intel/metrics-manager` |
-| `metrics-manager.image.tag` | Metrics Manager image tag | `2026.2.0-rc1` |
+| `metrics-manager.image.tag` | Metrics Manager image tag | `2026.2.0` |
 | `global.proxy.httpProxy` | HTTP proxy | `http://proxy-example.com:000` |
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |
