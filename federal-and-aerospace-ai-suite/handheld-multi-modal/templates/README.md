@@ -17,21 +17,22 @@ This package contains:
 
 ## Running
 
-```bash
-./run.sh up      # Deploy Visual Pipeline and Platform Evaluation Tool and HandHeld Multi-Modal stack (default)
-./run.sh standalone # Deploy HandHeld Multi-Modal without Visual Pipeline and Platform Evaluation Tool
-./run.sh down    # Stop both stacks
-./run.sh logs    # Tail logs from the HandHeld Multi-Modal stack
-```
-
-Or invoke `make` directly:
+`make deploy` configures Visual Pipeline and Platform Evaluation Tool, starts it, waits for the Docker network, and then brings up the HandHeld Multi-Modal stack. The pinned Visual Pipeline and Platform Evaluation Tool revision is recorded in `vippet/.vippet-ref`.
 
 ```bash
 cd handheld-multi-modal
-make deploy        # standard GPU
-make deploy-cdi    # CDI and SR-IOV
+make deploy            # standard GPU
+make deploy-cdi        # CDI and SR-IOV
 make deploy-standalone # standalone deployment without Visual Pipeline and Platform Evaluation Tool
-make down          # stop everything
+make down              # stop applications from `make deploy`
+make down-cdi          # stop applications from `make deploy-cdi`
+make down-standalone   # stop applications from `make deploy-standalone`
 ```
 
-`make deploy` configures Visual Pipeline and Platform Evaluation Tool, starts it, waits for the Docker network, and then brings up the HandHeld Multi-Modal stack. The pinned Visual Pipeline and Platform Evaluation Tool revision is recorded in `vippet/.vippet-ref`.
+Alternatively, if you don't know which version of application you want to deploy, you can run helper script that will deploy version recommended for end-user.
+
+```bash
+./run.sh up         # Deploy Visual Pipeline and Platform Evaluation Tool and HandHeld Multi-Modal stack (default)
+./run.sh down       # Stop both stacks
+./run.sh logs       # Tail logs from the HandHeld Multi-Modal stack
+```

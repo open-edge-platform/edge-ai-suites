@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "./logger.js";
-import type { ServerConfig } from "./config.js";
+import { reportTuning, type ServerConfig } from "./config.js";
 import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { VideoSummaryClient } from "@smart-community-video/tools";
 import type { WorkerService } from "./video-worker/index.js";
@@ -112,6 +112,7 @@ export function registerTools(
         summaryClient,
         filter: (params.filter ?? ucReports?.filter) as Record<string, any> | undefined,
         debugDir: config.reportsLogsDir,
+        ...reportTuning(config),
       };
       const reportParams = {
         monitor_id: params.monitor_id,

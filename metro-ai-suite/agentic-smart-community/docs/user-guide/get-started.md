@@ -300,7 +300,7 @@ docker pull intel/smart-community-mcp-server:2026.2.0
 docker pull intel/videostream-analytics:2026.2.0
 ```
 
-> **Note:** `setup_docker.sh` resolves each image as `${REGISTRY_URL}<service>:${TAG}`, which with the defaults in [docker/set_env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/set_env.sh). Export `TAG` before sourcing `docker/set_env.sh` so it matches the tag you pulled or built.
+> **Note:** `setup_docker.sh` resolves each image as `${REGISTRY_URL}<service>:${TAG}`, which with the defaults in [docker/set_env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/metro-ai-suite/agentic-smart-community/docker/set_env.sh). Export `TAG` before sourcing `docker/set_env.sh` so it matches the tag you pulled or built.
 
 ## Data directory
 

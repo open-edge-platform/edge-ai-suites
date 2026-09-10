@@ -89,7 +89,7 @@ small amount of LoRA fine-tuning.
 
    `output_prediction_details` must parse (via `ast.literal_eval`) into a
    dict shaped like the output of
-   [`classification-training`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/classification-training)'s
+   [`classification-training`](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/training/classification-training)'s
    `WeldDefectPredictor` — see its
    [Output Format](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/training/classification-training/README.md#output-format)
    section for the exact shape, e.g.:
@@ -164,7 +164,7 @@ Useful flags:
    a generic fallback for unseen categories.
 6. Assembles a three-turn conversation for each row: system with text content,
    user with text and image content, and assistant with text content.
-7. Performs a stratified train, validation, and test split by canonical category, 
+7. Performs a stratified train, validation, and test split by canonical category,
    so small classes still get at least one sample per
    split when possible.
 8. Writes:

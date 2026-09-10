@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# AI Agent Integration and Developer Experience
+# Infrastructure AI Agent Integration
 
 The Edge Node Infrastructure software ships a set of agent skills that let you run platform workflows through natural language, using GitHub Copilot or Claude Code. Instead of manually running scripts and commands, describe the outcome you want and the agent takes care of the rest.
 
@@ -12,7 +12,7 @@ Some skills are meant to run from the developer host, while others are meant to 
 ## Available Skills
 
 | Skill | What it does | Execution target |
-|---|---|---|
+| --- | --- | --- |
 | `create-image` | Builds a host OS image using the Image Composer Tool or ISO based curation | Developer host |
 | `create-usb-installation-files` | Packages a complete bootable USB artifact (`usb-installation-files.tar.gz`), optionally running `create-image` first | Developer host |
 | `validate-platform-config` | Validates a provisioned edge node — checks k3s pod health, binary paths, cloud-init state, network/proxy settings, and device readiness (GPU VFs, NPU) | Provisioned host |
@@ -30,16 +30,14 @@ Open GitHub Copilot Chat or Claude Code in the repository workspace and describe
 
 For skills marked as **Provisioned host**, run the agent CLI directly on the provisioned host after installing and authenticating it. The repository code and skill scripts are available on provisioned systems at `/opt/edge/developer`.
 
-Brief example (Claude CLI on target host):
+Quick setup example (GitHub Copilot CLI on target host):
 
 ```bash
-# 1) Install Claude CLI on the provisioned host
-curl -fsSL https://claude.ai/install.sh | sh
-
-# 2) Configure credentials/authentication before running skills
-export PATH="$HOME/.local/bin:$PATH"
-claude --version
-claude auth login
+curl -fsSL https://gh.io/copilot-install | sudo bash
+copilot --version
+# Login with github credentials
+copilot
+# then run /login
 ```
 
 ### Example Prompts

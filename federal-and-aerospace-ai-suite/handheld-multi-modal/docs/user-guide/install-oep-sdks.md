@@ -38,7 +38,7 @@ Expected: `card0`/`renderD128` under `/dev/dri`, `accel0` under `/dev/accel`, an
 Run the official OEP Vision AI SDK installer on the target. It configures Docker, pulls the DL Streamer image, and installs the OpenVINO tooling and sample content:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.2.0/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
 ```
 
 The installer sets up:
@@ -76,7 +76,7 @@ wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-
   "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
 
 wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" \
-  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
+  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/v2026.2.0/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
 ```
 
 Start the DL Streamer container with display forwarding:
@@ -118,6 +118,6 @@ Continue with the OEP Vision AI SDK tutorials to explore benchmarking, multi-str
 
 ## Related Guides
 
-- [DL Streamer Pipelines Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/build-dlstreamer-pipelines.html) — pipeline reference and variants
-- [Edge Workloads and Benchmarks Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/run-edge-benchmarks.html) — reproducible benchmark suite
-- [Container Device Interface Guide](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/how-to/configure-cdi.html) — CDI setup for GPU/NPU access from containers
+- [DL Streamer Pipelines Guide](./infrastructure/build-dlstreamer-pipelines.md) — pipeline reference and variants
+- [Edge Workloads and Benchmarks Guide](./benchmarking/run-edge-benchmarks.md) — reproducible benchmark suite
+- [Container Device Interface Guide](./infrastructure/configure-cdi.md) — CDI setup for GPU/NPU access from containers
