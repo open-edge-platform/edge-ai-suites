@@ -23,13 +23,13 @@ repositories=(
 )
 
 images=(
-  "intel/audio-analyzer:2026.2.0-rc2"
-  "intel/document-ingestion:2026.2.0-rc2"
-  "intel/multimodal-embedding-serving:2026.2.0-rc2"
-  "intel/multimodal-dataprep:2026.2.0-rc2"
-  "intel/model-download:2026.2.0-rc2"
-  "intel/chatqna:core_2026.2.0-rc2"
-  "intel/chatqna-ui:core_2026.2.0-rc2"
+  "intel/audio-analyzer:2026.2.0"
+  "intel/document-ingestion:2026.2.0"
+  "intel/multimodal-embedding-serving:2026.2.0"
+  "intel/multimodal-dataprep:2026.2.0"
+  "intel/model-download:2026.2.0"
+  "intel/chatqna:core_2026.2.0"
+  "intel/chatqna-ui:core_2026.2.0"
 )
 NAME="OEP Gen AI SDK"
 
