@@ -14,6 +14,8 @@ from pathlib import Path
 sys.path.append(os.path.join(os.path.dirname(__file__), '../utils'))
 import docker_utils
 import constants
+from common_utils import assert_condition
+
 
 # Import the fixture directly from conftest_docker.py
 pytest_plugins = ["conftest_docker"]
@@ -46,13 +48,12 @@ def test_long_run_stability_one_hour(setup_docker_environment):
     # Compare stats and assert no significant leaks (define your own threshold)
     leak_check = docker_utils.check_resource_leak(initial_stats, final_stats, memory_leak_threshold_mb=200)
     logger.info(f"Resource leak check result: {leak_check}, initial: {initial_stats}, final: {final_stats}")
-    assert leak_check, \
-    "Significant CPU or memory leak detected after 1 hour run."
+    assert_condition(leak_check, "Significant CPU or memory leak detected after 1 hour run.")
 
     # Assert all containers are still running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Containers found after 1 hour run: {len(containers) if containers else 0}")
-    assert containers, "No containers found after 1 hour run."
+    assert_condition(containers, "No containers found after 1 hour run.")
     logger.info("Long run test completed successfully.")
 
 
@@ -80,11 +81,10 @@ def test_long_run_stability_one_hour_opcua(setup_docker_environment):
     # Compare stats and assert no significant leaks (define your own threshold)
     leak_check = docker_utils.check_resource_leak(initial_stats, final_stats, memory_leak_threshold_mb=200)
     logger.info(f"Resource leak check result: {leak_check}, initial: {initial_stats}, final: {final_stats}")
-    assert leak_check, \
-        "Significant CPU or memory leak detected after 1 hour run (OPCUA)."
+    assert_condition(leak_check, "Significant CPU or memory leak detected after 1 hour run (OPCUA).")
 
     # Assert all containers are still running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Containers found after 1 hour run (OPCUA): {len(containers) if containers else 0}")
-    assert containers, "No containers found after 1 hour run (OPCUA)."
+    assert_condition(containers, "No containers found after 1 hour run (OPCUA).")
     logger.info("Long run test (OPCUA) completed successfully.")
