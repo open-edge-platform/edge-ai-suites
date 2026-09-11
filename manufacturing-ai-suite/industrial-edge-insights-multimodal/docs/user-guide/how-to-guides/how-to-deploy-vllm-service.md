@@ -29,27 +29,27 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
 
 2. Go to the root folder of the multimodal sample app:
 
-```bash
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
-```
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   ```
 
 3. Download the model and adapter:
 
-```bash
-mkdir -p configs/vllm/huggingface configs/vllm/models && \
-cd configs/vllm/ && \
-rm -rf .modelenv && \
-python3 -m venv .modelenv && \
-source .modelenv/bin/activate && \
-pip3 install huggingface_hub==1.23.0 && \
-rm -rf huggingface models && \
-hf download unsloth/Qwen3.5-2B \
-    --local-dir ./huggingface/Qwen3.5-2B && \
-hf download Intel/qwen3.5-2b-vlm-weld-explainability-lora \
-    --local-dir ./models/qwen3.5-2b-vlm-weld-explainability-lora && \
-deactivate && \
-cd ../..
-```
+   ```bash
+   mkdir -p configs/vllm/huggingface configs/vllm/models && \
+   cd configs/vllm/ && \
+   rm -rf .modelenv && \
+   python3 -m venv .modelenv && \
+   source .modelenv/bin/activate && \
+   pip3 install huggingface_hub==1.23.0 && \
+   rm -rf huggingface models && \
+   hf download unsloth/Qwen3.5-2B \
+       --local-dir ./huggingface/Qwen3.5-2B && \
+   hf download Intel/qwen3.5-2b-vlm-weld-explainability-lora \
+       --local-dir ./models/qwen3.5-2b-vlm-weld-explainability-lora && \
+   deactivate && \
+   cd ../..
+   ```
 
 ## Deploy the vLLM Service
 
