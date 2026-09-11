@@ -341,6 +341,10 @@ def update_values_yaml(file_path, values):
         # Expand environment variables in the file path
         expanded_path = os.path.expandvars(file_path)
 
+        if not os.path.exists(expanded_path):
+            logger.error(f"values.yaml not found at: {expanded_path}")
+            return False
+
         ryaml = YAML()
         ryaml.preserve_quotes = True
 
