@@ -1666,6 +1666,7 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
         # edits with no extra -f override needed.
         helm_command = [
             "helm", "install", release_name, chart_path,
+            "--set", f"privileged_access_required={val}",
             "--set", f"env.privileged_access_required={val}",
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin}",
             "--set", f"env.CONTINUOUS_SIMULATOR_INGESTION={continuous_simulator_ingestion}",

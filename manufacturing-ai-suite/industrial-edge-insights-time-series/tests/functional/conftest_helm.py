@@ -67,6 +67,8 @@ def setup_helm_environment(request):
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
 
+    privileged_access_required = "true" if request.node.get_closest_marker("gpu") else "false"
+
     logger.debug(
         f"Installing Helm release... "
         f"Release Name: {release_name}, "
@@ -74,7 +76,14 @@ def setup_helm_environment(request):
         f"Namespace: {namespace}, "
         f"Telegraf Input Plugin: {telegraf_input_plugin}"
     )
-    install_result = helm_utils.helm_install(release_name, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app)
+    install_result = helm_utils.helm_install(
+        release_name,
+        chart_path,
+        namespace,
+        telegraf_input_plugin,
+        val=privileged_access_required,
+        sample_app=sample_app,
+    )
     if not install_result:
         logger.error(f"Helm install failed for release '{release_name}'")
         helm_utils.dump_pod_diagnostics(namespace)
@@ -138,6 +147,8 @@ def setup_helm_weld_environment(request):
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-defect-detection"
 
+    privileged_access_required = "true" if request.node.get_closest_marker("gpu") else "false"
+
     logger.debug(
         f"Installing Helm release... "
         f"Release Name: {release_name_weld}, "
@@ -145,7 +156,14 @@ def setup_helm_weld_environment(request):
         f"Namespace: {namespace}, "
         f"Telegraf Input Plugin: {telegraf_input_plugin}"
     )
-    install_result = helm_utils.helm_install(release_name_weld, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app)
+    install_result = helm_utils.helm_install(
+        release_name_weld,
+        chart_path,
+        namespace,
+        telegraf_input_plugin,
+        val=privileged_access_required,
+        sample_app=sample_app,
+    )
     if not install_result:
         logger.error(f"Helm install failed for release '{release_name_weld}'")
         helm_utils.dump_pod_diagnostics(namespace)
@@ -175,7 +193,7 @@ def setup_helm_weld_environment(request):
         assert_condition(helm_utils.check_services(namespace, timeout=constants.SERVICE_TERMINATION_TIMEOUT) == True, "Services are still present after teardown cleanup.")
 
 @pytest.fixture(scope="function")
-def setup_multimodal_helm_environment():
+def setup_multimodal_helm_environment(request):
     """Install and tear down the multimodal Helm chart for tests that require it."""
     logger.debug("Ensuring multimodal Helm release is not present before installation...")
     assert_condition(helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists.")
@@ -200,10 +218,20 @@ def setup_multimodal_helm_environment():
     values_yaml_path = os.path.expandvars(chart_path_multi + '/values.yaml')
     assert_condition(helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update multimodal values.yaml.")
 
+    privileged_access_required = "true" if (
+        request.node.get_closest_marker("gpu") or request.node.get_closest_marker("npu")
+    ) else "false"
+
     logger.debug(
         f"Installing multimodal Helm release... Release Name: {release_name_multi}, Chart Path: {chart_path_multi}, Namespace: {namespace_multi}"
     )
-    install_result = helm_utils.helm_install(release_name_multi, chart_path_multi, namespace_multi, constants.TELEGRAF_MQTT_PLUGIN)
+    install_result = helm_utils.helm_install(
+        release_name_multi,
+        chart_path_multi,
+        namespace_multi,
+        constants.TELEGRAF_MQTT_PLUGIN,
+        val=privileged_access_required,
+    )
     if not install_result:
         logger.error(f"Helm install failed for multimodal release '{release_name_multi}'")
         helm_utils.dump_pod_diagnostics(namespace_multi)
