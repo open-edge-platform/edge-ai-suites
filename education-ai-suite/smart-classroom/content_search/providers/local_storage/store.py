@@ -74,6 +74,50 @@ def _is_within(base: pathlib.Path, candidate: pathlib.Path) -> bool:
     return candidate_resolved == base_resolved or candidate_resolved.is_relative_to(base_resolved)
 
 
+# Names Windows resolves to devices rather than files, with or without a suffix.
+_WINDOWS_RESERVED_NAMES = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{i}" for i in range(1, 10)}
+    | {f"LPT{i}" for i in range(1, 10)}
+)
+
+_ILLEGAL_FILENAME_CHARS = '<>:"/\\|?*'
+
+# Leaves room for the "runs/<uuid>/raw/<type>/<id>/" prefix inside Windows' path limit.
+_MAX_FILENAME_LENGTH = 180
+
+
+def safe_filename(filename: Any, *, fallback: str = "unnamed") -> str:
+    """Reduce a client-supplied filename to one safe path component.
+
+    The basename is taken for both separator conventions because an upload may be
+    sent by any client, and this service runs on Windows where ``\\`` separates
+    directories. The extension is preserved: downstream validation and content-type
+    routing key off it.
+    """
+    raw = "" if filename is None else str(filename)
+    base = raw.replace("\\", "/").rsplit("/", 1)[-1]
+    cleaned = "".join(
+        "_" if ch in _ILLEGAL_FILENAME_CHARS or ord(ch) < 32 or ord(ch) == 127 else ch
+        for ch in base
+    ).rstrip(". ")
+    if cleaned in ("", ".", ".."):
+        return fallback
+
+    if cleaned.partition(".")[0].upper() in _WINDOWS_RESERVED_NAMES:
+        cleaned = f"_{cleaned}"
+
+    if len(cleaned) > _MAX_FILENAME_LENGTH:
+        stem, dot, ext = cleaned.rpartition(".")
+        if not dot or len(ext) > 20:
+            stem, ext = cleaned, ""
+        stem = stem[: max(1, _MAX_FILENAME_LENGTH - len(ext) - 1)].rstrip(". ")
+        if not stem:
+            return fallback
+        cleaned = f"{stem}.{ext}" if ext else stem
+    return cleaned
+
+
 class LocalStore:
     """Local-filesystem object store.
 
@@ -250,22 +294,39 @@ class LocalStore:
             count += 1
         return count
 
-    # ---- key builders (unchanged) -----------------------------------------
+    # ---- key builders -----------------------------------------------------
+
+    def run_path(self, run_id: str, *, bucket_name: Optional[str] = None) -> pathlib.Path:
+        """Return the directory holding every object of one run.
+
+        Callers delete this directory recursively, so the ``run_id`` must never be
+        able to point outside the bucket; building the path here keeps that check
+        in the same place as every other path this store hands out.
+        """
+        run_id = _validate_segment(str(run_id), kind="run id")
+        return self._object_path(f"runs/{run_id}", bucket=bucket_name)
 
     @staticmethod
     def build_raw_object_key(run_id: str, asset_type: str, asset_id: str, filename: str) -> str:
-        return (
-            pathlib.PurePosixPath("runs") / str(run_id) / "raw"
-            / str(asset_type) / str(asset_id) / pathlib.PurePosixPath(str(filename)).name
-        ).as_posix()
+        return "/".join([
+            "runs",
+            _validate_segment(str(run_id), kind="run id"),
+            "raw",
+            _validate_segment(str(asset_type), kind="asset type"),
+            _validate_segment(str(asset_id), kind="asset id"),
+            safe_filename(filename),
+        ])
 
     @staticmethod
     def build_derived_object_key(run_id: str, asset_type: str, asset_id: str,
                                   relative_path: Union[str, pathlib.PurePosixPath]) -> str:
-        rel = pathlib.PurePosixPath(str(relative_path))
-        if rel.is_absolute():
-            rel = pathlib.PurePosixPath(*rel.parts[1:])
-        return (
-            pathlib.PurePosixPath("runs") / str(run_id) / "derived"
-            / str(asset_type) / str(asset_id) / rel
-        ).as_posix()
+        # Validates every segment and rejects "..", absolute and Windows-style paths.
+        rel = _normalize_object_name(relative_path)
+        return "/".join([
+            "runs",
+            _validate_segment(str(run_id), kind="run id"),
+            "derived",
+            _validate_segment(str(asset_type), kind="asset type"),
+            _validate_segment(str(asset_id), kind="asset id"),
+            rel,
+        ])
