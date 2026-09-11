@@ -2,6 +2,7 @@ import logging
 import time
 from contextlib import contextmanager
 from datetime import datetime, timezone
+from threading import Lock
 
 from utils.session_store import SessionStore
 from utils.stage_events import StageEventWriter
@@ -92,4 +93,32 @@ def _finish(session_id, stage, status, started_at, t0, exc) -> None:
                 f"[stage] {session_id} {stage} interrupted after {duration}s "
                 f"({type(exc).__name__})"
             )
+    _store_stage(session_id, stage, status)
+
+
+_MANUAL_STARTS: dict[tuple, tuple] = {}
+_MANUAL_LOCK = Lock()
+
+
+def stage_started(session_id, stage) -> None:
+    """Open a stage whose start and end land in different requests."""
+    with _MANUAL_LOCK:
+        _MANUAL_STARTS[(session_id, stage)] = (_now_iso(), time.monotonic())
+    logger.info(f"[stage] {session_id} {stage} start")
+    _store_stage(session_id, stage, "running")
+
+
+def stage_finished(session_id, stage, status, error_class=None, error_detail=None) -> None:
+    """Close out a stage opened with stage_started()."""
+    with _MANUAL_LOCK:
+        started_at, t0 = _MANUAL_STARTS.pop((session_id, stage), (None, None))
+    duration = round(time.monotonic() - t0, 3) if t0 is not None else None
+    StageEventWriter.write(
+        session_id, stage, status, started_at, _now_iso(), duration,
+        error_class=error_class, error_detail=error_detail,
+    )
+    logger.info(
+        f"[stage] {session_id} {stage} {status}"
+        + (f" in {duration}s" if duration is not None else "")
+    )
     _store_stage(session_id, stage, status)

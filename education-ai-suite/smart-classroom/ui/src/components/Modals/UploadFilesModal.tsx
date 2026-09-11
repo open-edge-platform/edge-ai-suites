@@ -327,9 +327,23 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       // Same declaration Start recording makes, from the same helper, so the two
       // entry points cannot drift apart. Best-effort: an unrecorded session
       // still uploads and processes normally.
+      //
+      // File names, not the paths uploaded further down: this is what the
+      // history lists a session by, and the browser's File objects have no
+      // trustworthy path anyway. The backend basenames whatever it gets, so a
+      // bare name arrives unchanged. Only /sessions/process validates that the
+      // sources exist on disk; register does not.
+      const registeredVideoSources: Record<string, string> = {};
+      if (frontCameraPath) registeredVideoSources.front = frontCameraPath.name;
+      if (rearCameraPath) registeredVideoSources.back = rearCameraPath.name;
+      if (boardCameraPath) registeredVideoSources.board = boardCameraPath.name;
       await registerSession(
         sessionId,
         declaredStages(featureGuard, { hasAudio: hasAudioFile, hasVideo: hasVideoFiles }),
+        {
+          audio_path: audioFile?.name,
+          video_sources: registeredVideoSources,
+        },
       );
 
       try {

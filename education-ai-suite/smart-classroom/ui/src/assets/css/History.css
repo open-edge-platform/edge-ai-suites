@@ -217,16 +217,31 @@
   margin-left: auto;
 }
 
-/* One pip per stage, in pipeline order — the whole run at a glance. */
+/* One pip per stage, in pipeline order — the whole run at a glance.
+   Filled means the stage has an outcome; outlined means it does not. Two shades
+   of grey were not enough: "declared but never ran" and "not part of this
+   session" looked identical, so a row of six pips with four green ones read as
+   two pips too many rather than as two stages left undone. */
 .history-pip {
   width: 12px;
   height: 6px;
   border-radius: 3px;
-  background: #e0e0e0;
+  background: #bdbdbd;
 }
 
-.history-pip.stage-pending { background: #e0e0e0; }
-.history-pip.stage-skipped { background: #f2f2f2; }
+/* Declared and still waiting: outlined, so it reads as an empty slot. */
+.history-pip.stage-pending {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px #9e9e9e;
+}
+
+/* Not part of this session at all: the faintest thing still visible, so the
+   pips stay positional (stage 4 is always VA) without claiming anything. */
+.history-pip.stage-skipped {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px #e8e8e8;
+}
+
 .history-pip.stage-running { background: var(--color-theme); }
 .history-pip.stage-done { background: #27ae60; }
 .history-pip.stage-failed { background: #c0392b; }

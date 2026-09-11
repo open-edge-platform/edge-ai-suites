@@ -38,13 +38,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _set_va_stage(session_id, status: str) -> None:
-    """Record the video-analytics stage on the session row."""
+def _set_va_stage(session_id, status: str, detail: str | None = None) -> None:
+    """Record the video-analytics stage, both on the session row and as an event."""
     if not session_id:
         return
     try:
-        from utils.session_store import SessionStore
-        SessionStore.set_stage(session_id, "va", status)
+        from utils.stage_tracker import stage_finished, stage_started
+        if status == "running":
+            stage_started(session_id, "va")
+        else:
+            stage_finished(
+                session_id, "va", status,
+                error_class="VideoAnalyticsError" if detail else None,
+                error_detail=detail,
+            )
     except Exception:
         logger.warning(
             f"[stage] {session_id} va: failed to record '{status}'", exc_info=True
@@ -232,7 +239,12 @@ def start_video_analytics_pipeline(
                     # every pipeline failing makes the stage a failure.
                     _statuses = list((_svc.pipeline_final_status or {}).values())
                     _finished_ok = any(s in ("eos", "stopped") for s in _statuses)
-                    _set_va_stage(session_id, "done" if _finished_ok else "failed")
+                    _set_va_stage(
+                        session_id,
+                        "done" if _finished_ok else "failed",
+                        None if _finished_ok
+                        else f"no pipeline ended normally; final statuses: {_statuses}",
+                    )
                     try:
                         _session_dir     = str(SessionPaths.session_dir(session_id))
                         _front_posture   = str(SessionPaths.va_dir(session_id) / "front_posture.txt")
@@ -386,7 +398,9 @@ def start_video_analytics_pipeline(
             if any(r.get("status") == "success" for r in results):
                 _set_va_stage(x_session_id, "running")
             else:
-                _set_va_stage(x_session_id, "failed")
+                _set_va_stage(
+                    x_session_id, "failed", "no video-analytics pipeline could be launched"
+                )
 
             # Board OCR: bring up the twin pipeline for the content source.
             # It reads the source directly, so start it even if the VA content
