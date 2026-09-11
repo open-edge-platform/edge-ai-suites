@@ -748,6 +748,8 @@ jobs:
     name: CodeQL Scan - Time Series Python
     if: ${{ ((inputs.target == 'codeql-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'time-series') || (inputs.application == 'both')) }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Code
@@ -840,6 +842,8 @@ jobs:
     name: CodeQL Scan - Multimodal Python
     if: ${{ ((inputs.target == 'codeql-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'multimodal') || (inputs.application == 'both')) }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Code
