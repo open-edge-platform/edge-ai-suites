@@ -341,6 +341,10 @@ def update_values_yaml(file_path, values):
         # Expand environment variables in the file path
         expanded_path = os.path.expandvars(file_path)
 
+        if not os.path.exists(expanded_path):
+            logger.error(f"values.yaml not found at: {expanded_path}")
+            return False
+
         ryaml = YAML()
         ryaml.preserve_quotes = True
 
@@ -1583,11 +1587,11 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     then extracts that .tgz directly into chart_path so tests can read/edit
     chart_path/values.yaml etc. without any further indirection.
 
-    If chart_path already contains an extracted chart (Chart.yaml present --
+    If chart_path already contains an extracted chart (Chart.yaml and values.yaml present --
     e.g. generated/pulled and extracted by the CI workflow before tests
     started), generation is skipped entirely.
     """
-    if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
+    if os.path.isfile(os.path.join(chart_path, "Chart.yaml")) and os.path.isfile(os.path.join(chart_path, "values.yaml")):
         logger.info(
             "Chart already extracted in '%s' (generated/pulled by CI workflow); skipping regeneration.",
             chart_path,
@@ -1666,6 +1670,7 @@ def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, con
         # edits with no extra -f override needed.
         helm_command = [
             "helm", "install", release_name, chart_path,
+            "--set", f"privileged_access_required={val}",
             "--set", f"env.privileged_access_required={val}",
             "--set", f"env.TELEGRAF_INPUT_PLUGIN={telegraf_input_plugin}",
             "--set", f"env.CONTINUOUS_SIMULATOR_INGESTION={continuous_simulator_ingestion}",
@@ -1965,9 +1970,10 @@ def _post_ts_api_config(
 
     # Build curl command to run from test machine (NOT inside pod)
     curl_command = [
-        'curl', '-k', '-X', http_method, target_endpoint,
+        'curl', '-k', '-s', '-X', http_method, target_endpoint,
         '-H', 'accept: application/json',
-        '-H', 'Content-Type: application/json'
+        '-H', 'Content-Type: application/json',
+        '-w', '\n%{http_code}',
     ]
 
     if payload and http_method in {"POST", "PUT", "PATCH", "DELETE"}:
@@ -1985,11 +1991,15 @@ def _post_ts_api_config(
         return False
 
     if result and result.returncode == 0:
-        logger.info("ts-api request completed successfully. Response:")
-        logger.info(result.stdout.strip())
-        logger.info("Waiting 5 seconds for configuration to be processed...")
-        time.sleep(5)
-        return True
+        *body_lines, http_code = result.stdout.strip().splitlines() or [""]
+        if http_code == "200":
+            logger.info("ts-api request completed successfully. Response:")
+            logger.info("\n".join(body_lines))
+            logger.info("Waiting 5 seconds for configuration to be processed...")
+            time.sleep(5)
+            return True
+        logger.error(f"ts-api request rejected by server (HTTP {http_code}). Response: {chr(10).join(body_lines)}")
+        return False
 
     logger.error("ts-api request failed.")
     if result:
@@ -2079,6 +2089,8 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
 
     try:
         config_path = Path(config_dir)
+        app_cfg = constants.get_app_config(sample_app) or {}
+        upload_name = app_cfg.get("udf", sample_app)
         required_folders = ("udfs", "tick_scripts")
         for folder in required_folders:
             source = config_path / folder
@@ -2144,7 +2156,7 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", f"file=@{tar_path}",
+                "-F", f"file=@{tar_path};filename={upload_name}.tar",
             ]
             try:
                 result = common_utils.exec_command(
@@ -3037,6 +3049,15 @@ def execute_gpu_config_curl_helm(
             logger.info(
                 f"{device.upper()} configuration POST via kubectl exec succeeded for app '{sample_app}'"
             )
+            if not _restart_ts_api_config(target_namespace=namespace, pod_name=pod_name):
+                logger.error(
+                    f"Failed to restart ts-api configuration after {device.upper()} update "
+                    f"for app '{sample_app}'"
+                )
+                return False
+            if not _wait_for_ts_api_ready(timeout=180, interval=5):
+                logger.error("ts-api endpoint did not become ready after configuration restart")
+                return False
             return True
         else:
             logger.error(
@@ -3056,73 +3077,105 @@ def execute_gpu_config_curl_helm(
         return False
 
 
-def check_log_gpu_helm(namespace, timeout=300, interval=10):
-    """
-    Check Kubernetes pod logs for GPU-related messages with a timeout.
+SKLEARNEX_SUCCESS_TEMPLATE = "running accelerated version on {device}"
+SKLEARNEX_FAILURE_SIGNATURES = [
+    "syclqueuecreationerror",
+    "sycl device",
+    "could not be created",
+    "fallback to original scikit-learn",
+]
 
-    Args:
-        namespace (str): Kubernetes namespace to check pods in
-        timeout (int): Maximum time to wait in seconds
-        interval (int): Time between checks in seconds
 
-    Returns:
-        bool: True if GPU keywords found, False otherwise
-    """
+def verify_sklearnex_device_offload_helm(namespace, device, timeout=300, interval=10):
+    """Verify the TS Analytics pod logs show sklearnex using the requested device."""
+    device_upper = str(device).upper()
+    success_pattern = SKLEARNEX_SUCCESS_TEMPLATE.format(device=device_upper)
+    logger.info(f"Verifying sklearnex ran accelerated inference on {device_upper} for namespace {namespace}...")
+
     try:
-        logger.info(f"Checking for GPU keywords in {namespace} namespace logs...")
-
-        # Get time-series analytics pod name
         result = common_utils.exec_command(
-            ["kubectl", "get", "pods", "-n", namespace, "-l", "app=ia-time-series-analytics-microservice",
-             "-o", "jsonpath={.items[0].metadata.name}"],
-            capture_output=True, text=True, timeout=30
+            [
+                "kubectl", "get", "pods", "-n", namespace,
+                "-l", "app=ia-time-series-analytics-microservice",
+                "-o", "jsonpath={.items[0].metadata.name}",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
-
         if result.returncode != 0 or not result.stdout.strip():
             logger.error(f"Failed to get time-series analytics pod name: {result.stderr}")
             return False
 
         pod_name = result.stdout.strip()
         logger.info(f"Checking logs for pod: {pod_name}")
-
         start_time = time.time()
-        gpu_pattern = re.compile(r'gpu|GPU', re.IGNORECASE)
+        lower_success = success_pattern.lower()
+        failure_patterns = [p.lower() for p in SKLEARNEX_FAILURE_SIGNATURES]
 
         while time.time() - start_time < timeout:
+            elapsed = time.time() - start_time
+            remaining = timeout - elapsed
             try:
-                # Get recent logs from the pod
-                result = common_utils.exec_command(
-                    ["kubectl", "logs", "-n", namespace, pod_name, "--tail=1000"],
-                    capture_output=True, text=True, timeout=10
+                log_result = common_utils.exec_command(
+                    [
+                        "kubectl", "logs", "-n", namespace, pod_name,
+                        "--since", f"{timeout}s",
+                        "--tail=2000",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=15,
                 )
-
-                if result.returncode == 0:
-                    logs = result.stdout
-
-                    # Search for GPU keywords
-                    gpu_matches = gpu_pattern.findall(logs)
-
-                    if gpu_matches:
-                        gpu_count = len(gpu_matches)
-                        logger.info(f"✓ Found 'GPU' in pod logs ({gpu_count} occurrences)")
-                        logger.info(f"✓ GPU pattern found in logs for pod {pod_name}")
-                        return True
-                else:
-                    logger.warning(f"Failed to get logs from pod {pod_name}: {result.stderr}")
-
             except subprocess.TimeoutExpired:
                 logger.warning("Timeout getting pod logs, retrying...")
-            except Exception as e:
-                logger.warning(f"Error getting logs: {str(e)}")
+                time.sleep(min(interval, max(0, remaining)))
+                continue
 
-            # Wait before next check
-            time.sleep(interval)
+            if log_result.returncode != 0:
+                logger.warning(f"Failed to get logs for pod {pod_name}: {log_result.stderr}")
+                time.sleep(min(interval, max(0, remaining)))
+                continue
 
-        logger.warning(f"GPU keywords not found in pod logs after {timeout} seconds")
+            logs = (log_result.stdout or "") + (log_result.stderr or "")
+            lower_logs = logs.lower()
+            for failure in failure_patterns:
+                if failure in lower_logs:
+                    for line in logs.splitlines():
+                        if failure in line.lower():
+                            logger.error(f"[FAIL] {line.strip()}")
+                    logger.error(
+                        f"✗ sklearnex did not succeed on {device_upper}; a known failure signature was found in pod {pod_name} logs"
+                    )
+                    return False
+
+            if lower_success in lower_logs:
+                for line in logs.splitlines():
+                    if lower_success in line.lower():
+                        logger.info(f"[MATCH] {line.strip()}")
+                logger.info(f"✓ sklearnex confirmed accelerated {device_upper} execution in pod {pod_name} logs")
+                return True
+
+            time.sleep(min(interval, max(0, remaining)))
+
+        logger.warning(f"sklearnex success pattern not found in pod logs after {timeout} seconds")
+        try:
+            tail_result = common_utils.exec_command(
+                ["kubectl", "logs", "-n", namespace, pod_name, "--tail=100"],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if tail_result.returncode == 0:
+                logger.info("---- Last 100 log lines for %s ----", pod_name)
+                for line in (tail_result.stdout or "").splitlines():
+                    logger.info(f"[TAIL] {line}")
+        except Exception as exc:
+            logger.warning(f"Could not fetch final log tail for pod {pod_name}: {exc}")
         return False
 
-    except Exception as e:
-        logger.error(f"Exception during GPU log check: {str(e)}")
+    except Exception as exc:
+        logger.error(f"Exception during sklearnex log check for pod in namespace {namespace}: {exc}")
         return False
 
 

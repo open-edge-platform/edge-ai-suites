@@ -26,6 +26,15 @@ sys.path.append(os.path.dirname(__file__))
 # Configure logger
 logger = logging.getLogger(__name__)
 
+# Literal sklearnex success line: substring checks for 'gpu' can false-positive on config echoes/errors.
+SKLEARNEX_SUCCESS_TEMPLATE = "running accelerated version on {device}"
+SKLEARNEX_FAILURE_SIGNATURES = [
+    "syclqueuecreationerror",
+    "sycl device",
+    "could not be created",
+    "fallback to original scikit-learn",
+]
+
 import constants
 from constants import (
     CONTAINERS,
@@ -1344,41 +1353,22 @@ def check_and_update_tick_script(script_path=None, setup=None):
         return None
 
 
-def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=10, custom_pattern=None):
-    """
-    Check container logs for specific patterns with a timeout.
-
-    Snapshot-polls ``docker logs --since <elapsed>s`` on each iteration (no ``-f``
-    streaming), so the call always returns within ``timeout`` even when the
-    container is silent. On timeout, the last 100 log lines are dumped to aid
-    triage.
-
-    Args:
-        container_name (str): Name of the container to monitor
-        pattern_type (str): Type of pattern to search for ('mqtt', 'opcua', 'gpu')
-        timeout (int): Maximum time to wait for pattern (default: 300 seconds)
-        interval (int): Check interval in seconds (default: 10 seconds)
-        custom_pattern (str): Custom pattern to search for (takes precedence over pattern_type)
-
-    Returns:
-        bool: True if pattern found, False if timeout reached
-    """
-    # Define predefined patterns
+def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=10, custom_pattern=None,
+                          failure_patterns=None, case_sensitive=True):
+    """Check container logs for a pattern while failing fast on known error signatures."""
     predefined_patterns = {
         "mqtt": "ALERT alerts/wind_turbine Anomaly detected for wind speed",
         "opcua": "ALERT sent to OPC UA server: Anomaly detected for wind speed",
-        "gpu": "GPU"
+        "gpu": "GPU",
     }
 
     logger.info(f"Checking {container_name} container logs for {pattern_type} pattern...")
     logger.info(f"Timeout: {timeout} seconds, Check interval: {interval} seconds")
 
-    # First check if container is running
     if not container_is_running(container_name):
         logger.error(f"✗ Container {container_name} is not running")
         return False
 
-    # Use custom pattern if provided, otherwise use predefined pattern
     if custom_pattern:
         search_pattern = custom_pattern
         pattern_display = f"custom pattern '{custom_pattern}'"
@@ -1390,7 +1380,10 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
             return False
         pattern_display = f"{pattern_type.upper()} pattern"
 
-    # Snapshot-poll docker logs since function start (no `-f` streaming).
+    if not case_sensitive:
+        search_pattern = search_pattern.lower()
+        failure_patterns = [p.lower() for p in (failure_patterns or [])]
+
     start_time = time.time()
     while time.time() - start_time < timeout:
         elapsed = time.time() - start_time
@@ -1398,8 +1391,6 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
         logger.info(f"Monitoring... (elapsed: {elapsed:.1f}s, remaining: {remaining:.1f}s)")
 
         since_seconds = max(1, int(elapsed) + 1)
-        # Cap each docker CLI call so a hung daemon can't stall the whole loop.
-        # 30s is generous for a `docker logs --since Ns` snapshot.
         cli_timeout = min(30, max(5, int(remaining)))
         try:
             result = common_utils.exec_command(
@@ -1427,9 +1418,23 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
             continue
 
         combined = (result.stdout or "") + (result.stderr or "")
-        if search_pattern in combined:
+        if not case_sensitive:
+            combined_for_search = combined.lower()
+        else:
+            combined_for_search = combined
+
+        for failure_pattern in failure_patterns or []:
+            fp = failure_pattern if case_sensitive else failure_pattern.lower()
+            if fp in combined_for_search:
+                for line in combined.splitlines():
+                    if fp in (line if case_sensitive else line.lower()):
+                        logger.error(f"[FAIL] {line.strip()}")
+                logger.error(f"✗ {pattern_display} failed because a known error signature was found in logs for {container_name}")
+                return False
+
+        if search_pattern in combined_for_search:
             for line in combined.splitlines():
-                if search_pattern in line:
+                if search_pattern in (line if case_sensitive else line.lower()):
                     logger.info(f"[MATCH] {line.strip()}")
             logger.info(f"✓ {pattern_display} found in logs for container {container_name}")
             return True
@@ -1459,6 +1464,22 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
     return False
 
 
+def verify_sklearnex_device_offload(container_name, device, timeout=300, interval=10):
+    """Verify sklearnex actually executed inference on the requested device."""
+    device_upper = device.upper()
+    success_pattern = SKLEARNEX_SUCCESS_TEMPLATE.format(device=device_upper)
+    logger.info(f"Verifying sklearnex ran accelerated inference on {device_upper} for container {container_name}...")
+    return check_logs_for_pattern(
+        container_name,
+        device_upper.lower(),
+        timeout=timeout,
+        interval=interval,
+        custom_pattern=success_pattern,
+        failure_patterns=SKLEARNEX_FAILURE_SIGNATURES,
+        case_sensitive=False,
+    )
+
+
 def check_logs_for_alerts(container_name, input, timeout=300, interval=10):
     """
     Check container logs for specific alert messages with a timeout.
@@ -1467,16 +1488,6 @@ def check_logs_for_alerts(container_name, input, timeout=300, interval=10):
     Consider calling ``check_logs_for_pattern`` directly in new code.
     """
     return check_logs_for_pattern(container_name, input, timeout, interval)
-
-
-def check_log_gpu(container_name, timeout=300, interval=10):
-    """
-    Check container logs for GPU-related messages with a timeout.
-
-    Thin wrapper around ``check_logs_for_pattern(..., 'gpu')`` kept for backward
-    compatibility. Consider calling ``check_logs_for_pattern`` directly in new code.
-    """
-    return check_logs_for_pattern(container_name, "gpu", timeout, interval)
 
 
 def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
@@ -1526,7 +1537,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 )
                 return False
 
-        tar_name = f"{sample_app}.tar"
+        upload_name = app_cfg.get("udf", sample_app)
         with _tempfile.NamedTemporaryFile(
             suffix=".tar", delete=False, prefix=f"{sample_app}_udf_"
         ) as tmp_file:
@@ -1556,7 +1567,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", f"file=@{tar_path}",
+                "-F", f"file=@{tar_path};filename={upload_name}.tar",
             ]
             result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=60)
             if result.returncode == 0:
@@ -4145,19 +4156,25 @@ def execute_multimodal_gpu_config_curl(config, device="gpu"):
         # Construct curl command for multimodal deployment using external API endpoint
         # as documented in get-started.md
         curl_command = [
-            "curl", "-k", "-X", "POST",
+            "curl", "-k", "-s", "-X", "POST",
             f"{constants.DOCKER_TSA_API_BASE_URL}/config",
             "-H", "accept: application/json",
             "-H", "Content-Type: application/json",
-            "-d", gpu_config_json
+            "-d", gpu_config_json,
+            "-w", "\n%{http_code}",
         ]
 
         # Execute curl command
         result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
+            *body_lines, http_code = result.stdout.strip().splitlines() or [""]
+            if http_code != "200":
+                logger.error(f"✗ Multimodal {device.upper()} configuration rejected with HTTP {http_code}")
+                logger.error(f"Response: {chr(10).join(body_lines)}")
+                return False
             logger.info(f"✓ Multimodal {device.upper()} configuration posted successfully")
-            logger.debug(f"Response: {result.stdout}")
+            logger.debug(f"Response: {chr(10).join(body_lines)}")
             return True
         else:
             logger.error(f"✗ Failed to post multimodal {device.upper()} configuration")
