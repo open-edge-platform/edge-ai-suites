@@ -117,7 +117,7 @@ make run REGISTRY=false
 To pull a specific release tag:
 
 ```bash
-make run TAG=2026.1.0-rc2
+make run TAG=2026.1.0
 ```
 
 This pulls and starts 5 containers:

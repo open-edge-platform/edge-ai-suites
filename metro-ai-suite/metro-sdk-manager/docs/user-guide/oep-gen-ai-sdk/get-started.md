@@ -44,8 +44,8 @@ cd $HOME/oep/edge-ai-libraries/sample-applications/chat-question-and-answer-core
 # Configure application environment variables
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 export REGISTRY="intel/"
-export UI_TAG=core_2026.2.0-rc1
-export BACKEND_TAG=core_2026.2.0-rc1
+export UI_TAG=core_2026.2.0
+export BACKEND_TAG=core_2026.2.0
 source scripts/setup_env.sh
 ```
 
@@ -78,7 +78,7 @@ http://localhost:8102
   \- Vector database integration and document processing workflows
 - [Multimodal Embedding Serving](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/index.html)
   \- Embedding generation service architecture and API documentation
-- [Multimodal Data Preparation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/visual-data-preparation-for-retrieval/multimodal-dataprep/docs/user-guide/Overview.md)
+- [Multimodal Data Preparation](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-data-preparation/index.html)
   \- Multimodal data ingestion and preparation workflows for retrieval
 - [Edge AI Libraries](https://docs.openedgeplatform.intel.com/2026.2/ai-libraries.html)
   \- Complete development toolkit documentation and microservice API references

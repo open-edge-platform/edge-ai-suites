@@ -77,7 +77,7 @@ wget -O models/intel/human-pose-estimation-0001/FP32/human-pose-estimation-0001.
   "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/human-pose-estimation-0001/FP32/human-pose-estimation-0001.bin"
 
 wget -O models/intel/human-pose-estimation-0001/human-pose-estimation-0001.json \
-  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/main/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
+  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/v2026.2.0/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
 ```
 
 ### Step 2: Understand Human Pose Estimation Model
@@ -120,7 +120,7 @@ docker run -it --rm --net=host \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
   --group-add $RENDER_GROUP_ID \
   --device=/dev/dri \
-  intel/dlstreamer:2026.2.0-ubuntu24-rc2 \
+  intel/dlstreamer:2026.2.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer/data/models && \
            /opt/intel/dlstreamer/samples/gstreamer/gst_launch/human_pose_estimation/human_pose_estimation.sh \
            /home/dlstreamer/data/face-demographics-walking.mp4"

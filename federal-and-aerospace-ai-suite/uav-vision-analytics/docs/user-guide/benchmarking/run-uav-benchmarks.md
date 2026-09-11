@@ -5,27 +5,23 @@ SPDX-License-Identifier: Apache-2.0
 
 # Benchmark — UAV Vision Analytics
 
+> **Scope:** This benchmarking guide applies to **Standalone Mode (pymavlink)** only. It does not cover the UAV Mission Compute SDK mode.
+
 This document explains how to measure the performance of the UAV Vision Analytics
 application using the `calc_stream_density.sh` benchmarking script. The script
 determines the maximum number of concurrent drone-camera video streams the
 system can process (**stream density**) while sustaining a target frame rate,
 and simultaneously collects hardware utilization and power metrics from `metrics-manager`.
 
-> **Note**: The [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
-> is also available as an optional benchmarking tool for comparing AI pipeline performance
-> across CPU, GPU, and NPU.
+> **Note**:
+> Other benchmarking optios are also offered by Open Edge Platform. Use
+  [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
+  for comparing AI pipeline performance across CPU, GPU, and NPU.
+>
+> For platform-level benchmarking, see the [Edge Workloads and Benchmarks Guide](./run-edge-benchmarks.md) -
+  a solution for end-to-end video analytics pipelines, vision AI inference,
+  hardware-accelerated media processing, and generative AI.
 
-> **Note**: For platform-level benchmarking beyond this application — vision AI inference,
-> hardware-accelerated media processing, end-to-end video analytics pipelines, and generative AI —
-> see the [Edge Workloads and Benchmarks Guide](../infrastructure/run-edge-benchmarks.md).
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-Edge Workloads and Benchmarks Guide <../infrastructure/run-edge-benchmarks.md>
-:::
-hide_directive-->
 
 ## Table of Contents
 
@@ -44,7 +40,7 @@ hide_directive-->
    - [Terminal Summary](#terminal-summary)
    - [kpi.txt Format](#kpitxt-format)
    - [Output Directory Structure](#output-directory-structure)
-7. [Troubleshooting](./troubleshooting.md#benchmark)
+7. [Troubleshooting](../how-to-guides/troubleshooting.md#benchmark)
 
 ## Prerequisites
 
@@ -56,7 +52,7 @@ running. See [index.md](../index.md) for full setup instructions.
 The model must exist at:
 
 ```text
-resources/models/yolov8n-visdrone/best_openvino_model/best.xml
+resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml
 ```
 
 Run `make model` if it is missing (Deployment will fail with an error if the model is absent).
@@ -89,32 +85,7 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 | `jq` | JSON parsing of DLSPS status responses | `sudo apt-get install -y jq` |
 | `ffmpeg` | Creating looped video files (optional) | `sudo apt-get install -y ffmpeg` |
 
-> **Note:** If **`jq` is not available without root**, create a zero-dependency `docker exec` wrapper:
->
-> ```bash
-> mkdir -p ~/.local/bin
-> cat > ~/.local/bin/jq << 'EOF'
-> #!/usr/bin/env bash
-> CONTAINER="dlstreamer-pipeline-server"
-> args=()
-> for arg in "$@"; do
->   if [[ -f "$arg" ]]; then
->     set -- "$@"          # file arg: pipe content as stdin instead
->     cat "$arg" | docker exec -i "$CONTAINER" jq "${args[@]}"
->     exit $?
->   else
->     args+=("$arg")
->   fi
-> done
-> docker exec -i "$CONTAINER" jq "${args[@]}"
-> EOF
-> chmod +x ~/.local/bin/jq
-> export PATH="$HOME/.local/bin:$PATH"
-> # To make permanent:
-> echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-> ```
->
-> The benchmark script automatically adds `~/.local/bin` to `PATH` at startup.
+
 
 ### 4. Verify services are reachable
 
@@ -244,8 +215,8 @@ must be physically attached and accessible inside the container.
 | `uav_realsense_gpu` | GPU | RealSense (v4l2) |
 | `uav_realsense_npu` | NPU | RealSense (v4l2) |
 
-All pipelines use the **YOLOv8n-VisDrone** model (FP16 OpenVINO IR) at 640×640
-resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, motor, etc.).
+All pipelines use the **YOLO11s** model (FP16 OpenVINO IR) at 640×640
+resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, etc.).
 
 List pipeline names available in the payload file at any time:
 
@@ -577,4 +548,6 @@ uav-vision-analytics/
 
 For all benchmark-related troubleshooting (missing tools, connectivity issues,
 result anomalies, GPU/NPU visibility, and power readings), see the
-[Troubleshooting guide](./troubleshooting.md#benchmark).
+[Troubleshooting guide](../how-to-guides/troubleshooting.md#benchmark).
+
+

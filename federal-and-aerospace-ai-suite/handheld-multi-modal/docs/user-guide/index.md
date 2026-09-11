@@ -23,6 +23,10 @@ a LLM inference server, a speech-to-text service and
 [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 All components of the composite application share the visual pipeline solution's Docker network.
 
+The diagram below shows how these components are layered on top of the Edge Node Infrastructure software stack.
+
+![Handheld system stack](./_assets/fedaero-system-stack.drawio.svg)
+
 The Handheld Multi-Modal application is deployed on top of the
 [Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
 
@@ -86,6 +90,13 @@ code assistance, document search, image analysis, and image and video generation
 the same Edge Node Infrastructure software platform. See the
 [AI Playground — FedAero Setup Guide](ai-playground.md) for installation and setup steps.
 
+## AI Agent SKILLs
+
+The Handheld Blueprint supports AI agent skills for GitHub Copilot and Claude Code, covering
+both platform-level automation (image build, provisioning, power and thermal tuning) and
+application-level pipeline generation with Intel DL Streamer. See
+[AI Agent SKILLs](agents.md) for the available skills and how to use them.
+
 <!--hide_directive
 :::{toctree}
 :hidden:
@@ -94,8 +105,10 @@ Infrastructure Setup <infrastructure-setup.md>
 Install OEP SDKs <install-oep-sdks.md>
 Install Handheld Multi-Modal Application <deploy-applications.md>
 Access Application User Interface <access-application.md>
-Benchmarks <benchmarks.md>
 AI Playground <ai-playground.md>
+Benchmarks <benchmarks.md>
+AI Agent SKILLs <agents.md>
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

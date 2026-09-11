@@ -45,6 +45,45 @@ Log out and back in afterward (or run `newgrp docker`) so docker-group
 membership takes effect. On non-Ubuntu hosts, install Docker manually per the
 [Docker docs](https://docs.docker.com/engine/install/).
 
+## Model Preparation
+
+The stack expects an OpenVINO IR at
+`models/yolo11n_polyp/best_openvino_model/best.xml` and (for `SOURCE=file`) a
+demo video at `videos/polyp_test.mp4`. There are two ways to get there:
+
+- **Pull a prebuilt image from the registry** — the default `make up` flow.
+  You can skip local training and export, but for `SOURCE=file` runs you still
+  need `make download-dataset` to assemble the demo video below.
+- **Build the model locally** — install host prerequisites, download the
+  REAL-Colon dataset subset, train YOLO11n on the Intel iGPU, and export a
+  FP16 OpenVINO IR:
+
+```bash
+make check-l0                   # verify host GPU stack
+make backend-venv               # create .venv-backend (torch+xpu, Ultralytics, OpenVINO)
+make download-dataset           # 7-study REAL-Colon subset (~67 GB) from figshare 22202866
+make prepare-dataset MAX_POS_PER_VIDEO=800 # take maximum 800 positive frames per video
+make backend-bootstrap          # dataset -> train -> FP16 OpenVINO IR (cache-first)
+```
+
+**Generate the demo video (required).** Fresh clones do not include
+`videos/polyp_test.mp4`. Generate it from the `surgical-instrument/` workdir
+before running `make doctor` / `make up`:
+
+```bash
+.venv-backend/bin/python scripts/create_endoscopy_video.py \
+  --images-dir datasets/REAL-Colon/raw/001-001_frames \
+  --output videos/polyp_test.mp4 \
+  --seconds 60 --fps 60 --width 1920 --height 1080
+```
+
+```bash
+make doctor                     # preflight all runtime prerequisites
+```
+
+See [Model Preparation](./get-started/model-preparation.md) for the full
+end-to-end walkthrough, dataset options, and cache-reset instructions.
+
 ### Models and videos
 
 The application does not ship with the trained model binaries or demo videos.

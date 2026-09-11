@@ -247,4 +247,4 @@ delete an existing configuration merely to approximate a reset.
 
 - [Power Profiles User Guide](power-profiles.md)
 - [Thermal Profiles User Guide](thermal-profiles.md)
-- [Agent Skills](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/agent-skills.html)
+- [Agent Skills](agent-skills.md)

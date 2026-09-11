@@ -22,7 +22,7 @@ Clone and enter the application directory as shown in
 
 Start each service in a dedicated PowerShell terminal.
 
-### 1) metrics-collector (Port 9000)
+### 1. metrics-collector (Port 9000)
 
 ```powershell
 cd metrics_collector\windows
@@ -30,23 +30,26 @@ cd metrics_collector\windows
 ```
 
 Health check:
+
 ```powershell
 curl http://127.0.0.1:9000/health
 ```
 
-### 2) text-to-speech (Port 8011)
+### 2. text-to-speech (Port 8011)
 
 ```powershell
+
 cd edge-ai-libraries\microservices\text-to-speech
 .\venv\Scripts\python.exe main.py
 ```
 
 Health check:
+
 ```powershell
 curl http://127.0.0.1:8011/health
 ```
 
-### 3) audio-analyzer (Port 8010)
+### 3. audio-analyzer (Port 8010)
 
 ```powershell
 cd edge-ai-libraries\microservices\audio-analyzer
@@ -54,11 +57,12 @@ cd edge-ai-libraries\microservices\audio-analyzer
 ```
 
 Health check:
+
 ```powershell
 curl http://127.0.0.1:8010/health
 ```
 
-### 4) rag-service (Port 8020)
+### 4. rag-service (Port 8020)
 
 ```powershell
 cd voice-enabled-interactions\smart-kiosk-assistant\rag-service
@@ -66,11 +70,12 @@ cd voice-enabled-interactions\smart-kiosk-assistant\rag-service
 ```
 
 Health check:
+
 ```powershell
 curl http://127.0.0.1:8020/health
 ```
 
-### 5) kiosk-core (Port 8012)
+### 5. kiosk-core (Port 8012)
 
 ```powershell
 cd voice-enabled-interactions\smart-kiosk-assistant
@@ -78,11 +83,12 @@ cd voice-enabled-interactions\smart-kiosk-assistant
 ```
 
 Health check:
+
 ```powershell
 curl http://127.0.0.1:8012/health
 ```
 
-### 6) ai-teaching-assistant ui proxy server (Port 7860)
+### 6. ai-teaching-assistant ui proxy server (Port 7860)
 
 ```powershell
 cd .
@@ -90,11 +96,13 @@ voice-enabled-interactions\smart-kiosk-assistant\venv\Scripts\python.exe ata_ui_
 ```
 
 Health check:
+
 ```powershell
 curl http://127.0.0.1:7860/healthz
 ```
 
 Open:
+
 ```text
 http://127.0.0.1:7860
 ```
@@ -127,8 +135,8 @@ Or use:
 .\stop_ata.ps1
 ```
 
-## Notes
-
-- The launcher flow (`start_ata.ps1`) is the supported default.
-- Manual mode is primarily for debugging service-level behavior.
-- Response audio clips are written under `generated_audio/` in the kiosk-core area.
+> **Note:**
+>
+> - The launcher flow (`start_ata.ps1`) is the supported default.
+> - Manual mode is primarily for debugging service-level behavior.
+> - Response audio clips are written under `generated_audio/` in the kiosk-core area.

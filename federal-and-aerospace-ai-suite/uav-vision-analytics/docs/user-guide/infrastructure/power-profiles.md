@@ -9,7 +9,7 @@ SPDX-License-Identifier: Apache-2.0
 
 Intel® Core™ Ultra edge nodes can be tuned to trade sustained performance
 against heat, fan noise, and energy use. The Infrastructure software ships a
-set of local power-tuning tools under `tools/power-tuning/` that let you:
+set of local power-tuning tools that let you:
 
 - Apply a ready-made **power profile** (`LowPower` … `MaxPerformance`).
 - Set an explicit **package (PkgWatt)** and optional **platform (SysWatt)** cap.
@@ -45,7 +45,7 @@ across a reboot:
 
 ## Prerequisites
 
-- An Intel `x86_64` host (Core Ultra / Panther Lake recommended).
+- An Intel `x86_64` host (Panther Lake recommended).
 - A CPU frequency governor can conflict with `intel_lpmd`. The `performance` and
   `ondemand` governors override the daemon's low-power intent, so either switch
   to `powersave` — which cooperates with `intel_lpmd` — or disable the governor
@@ -58,10 +58,10 @@ across a reboot:
   # Option 2: disable the governor service
   sudo systemctl disable --now powersave.service
   ```
+
 - Linux ships several competing power-management daemons. Stop and disable any
   that are running — for example `tlp`, `tuned`, `cpufreqd`, or `ondemand` — so
   they will conflict with `intel_lpmd` for control of CPU power and frequency.
-  -
 - BIOS settings that hand CPU power/frequency control to the OS. The power
   limits and EPP/EPB tuning only take effect when the OS (not firmware) owns
   these controls — verify them **before** applying a profile, or the script may
@@ -368,7 +368,7 @@ sudo systemctl restart intel_lpmd.service
 ## Related Agent Skills
 
 The same tools are also driven by agent skills (see
-[AI Agent Integration](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/agent-skills.html)):
+[AI Agent Integration](agent-skills.md)):
 
 | Skill | Purpose |
 |---|---|
@@ -382,29 +382,14 @@ To drive them by natural language on a provisioned node, install an agent CLI on
 the target host and open it in the developer source tree (`/opt/edge/developer`),
 where the `skills/` directory and `tools/power-tuning/` scripts already live.
 
-### Install the Claude Code CLI on the Target Host (Ubuntu)
+### Using the skill on the Target Host
 
-```bash
-# Install Claude Code
-curl -fsSL https://claude.ai/install.sh | sh
-
-# If Node.js is already installed, you can instead use npm:
-# npm install -g @anthropic-ai/claude-code
-
-# Ensure the install location is on PATH (add to ~/.bashrc to persist)
-export PATH="$HOME/.local/bin:$PATH"
-
-# Verify
-claude --version
-```
-Sign in to your Claude account on first launch to use the latest models.
-
-Then launch the agent from the developer source tree so it can discover the
+Launch the agent from the developer source tree so it can discover the
 skills and scripts:
 
 ```bash
 cd /opt/edge/developer
-claude
+copilot # or any other agent CLI which you installed and logged-in
 ```
 
 From there, prompt in natural language — e.g. *"switch this node to the

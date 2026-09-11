@@ -19,7 +19,7 @@
 4. `resolve : lstat /home/.../docker: no such file or directory` during build
    - The compose build context is misconfigured. It must point at the app root
      with `dockerfile: docker/Dockerfile`. Re-check
-     [docker/docker-compose.yaml](../../docker/docker-compose.yaml).
+    [docker/docker-compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/health-and-life-sciences-ai-suite/surgical-instrument/docker/docker-compose.yaml).
 
 5. `make up` says `\: command not found`
    - A stray double backslash (`\\`) is present in the `up` recipe. Ensure

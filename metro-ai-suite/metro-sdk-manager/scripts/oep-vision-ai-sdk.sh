@@ -20,17 +20,17 @@
 repositories=(
   "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.2.0|edge-ai-libraries"
   "https://github.com/open-edge-platform/edge-ai-suites|release-2026.2.0|edge-ai-suites"
-  "https://github.com/open-edge-platform/scenescape|main|scenescape"
+  "https://github.com/open-edge-platform/scenescape|release-2026.2.0|scenescape"
 )
 
 images=(
   "openvino/model_server:2026.3"
   "openvino/ubuntu24_dev:2026.3.0"
-  "intel/dlstreamer:2026.2.0-ubuntu24-rc2"
-  "intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2"
-  "intel/scenescape-manager:2026.2.0-rc2"
-  "intel/scenescape-controller:2026.2.0-rc2"
-  "intel/scenescape-autocalibration:2026.2.0-rc2"
+  "intel/dlstreamer:2026.2.0-ubuntu24"
+  "intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24"
+  "intel/scenescape-manager:2026.2.0"
+  "intel/scenescape-controller:2026.2.0"
+  "intel/scenescape-autocalibration:2026.2.0"
 )
 
 NAME="OEP Vision AI SDK"
