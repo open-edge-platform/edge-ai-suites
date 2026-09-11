@@ -28,6 +28,12 @@ from components.va.runner_client import PipelineRunnerClient
 MAX_INPUT_FRAMERATE = "30/1"
 CLASSIFY_FRAMERATE = "1/1"
 
+# Keyframe cadence of the RTSP output, in seconds. A WebRTC or HLS client cannot
+# render anything until an IDR arrives, so this bounds how long a viewer waits
+# after opening a stream. 0.5s matches what the 30fps pipelines produced with
+# the previous fixed gop-size=15.
+RTSP_KEYFRAME_INTERVAL_SEC = 0.5
+
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
 
@@ -236,14 +242,37 @@ class VideoAnalyticsPipelineService:
         else:
             raise ValueError(f"Unknown input type: {input_type}")
 
-    def _get_rtsp_sink_elements(self, rtsp_url: str, pipeline_name: str) -> List[str]:
+    @staticmethod
+    def _framerate_to_fps(framerate: Optional[str]) -> float:
+        """Convert a GStreamer 'num/den' framerate to fps. Falls back to 30."""
+        if not framerate:
+            return 30.0
+        num, _, den = str(framerate).partition("/")
+        try:
+            fps = float(num) / float(den or 1)
+        except (TypeError, ValueError, ZeroDivisionError):
+            return 30.0
+        return fps if fps > 0 else 30.0
+
+    def _gop_size(self, sink_framerate: Optional[str]) -> int:
+        """Keyframe interval in frames, for a pipeline running at sink_framerate.
+
+        mfh264enc's gop-size counts *pictures*, not seconds. Deriving it from the
+        framerate keeps the keyframe cadence constant in wall-clock time.
+        """
+        fps = self._framerate_to_fps(sink_framerate)
+        return max(1, round(fps * RTSP_KEYFRAME_INTERVAL_SEC))
+
+    def _get_rtsp_sink_elements(
+        self, rtsp_url: str, pipeline_name: str, sink_framerate: Optional[str] = None
+    ) -> List[str]:
         """Get RTSP sink elements for pushing to RTSP server"""
         return [
             "d3d11convert",
             "!",
             "mfh264enc",
             "bitrate=3000",
-            "gop-size=15",
+            f"gop-size={self._gop_size(sink_framerate)}",
             "low-latency=true",
             "bframes=0",
             "rc-mode=cbr",
@@ -259,13 +288,23 @@ class VideoAnalyticsPipelineService:
         ]
 
     def _get_video_sink_elements(
-        self, options: PipelineOptions, stream_name: str
+        self,
+        options: PipelineOptions,
+        stream_name: str,
+        sink_framerate: Optional[str] = None,
     ) -> List[str]:
         """Get video sink elements: RTSP sink, or a discarding fakesink when
-        streaming is disabled (options.output_stream=False)"""
+        streaming is disabled (options.output_stream=False)
+
+        Args:
+            sink_framerate: the framerate actually reaching this sink, as
+                'num/den'. Sets the keyframe interval; see _gop_size.
+        """
         if not options.output_stream:
             return ["fakesink", "async=false", "sync=false"]
-        return self._get_rtsp_sink_elements(options.output_rtsp, stream_name)
+        return self._get_rtsp_sink_elements(
+            options.output_rtsp, stream_name, sink_framerate
+        )
 
     def _get_input_framerate_cap_elements(self) -> List[str]:
         """Get elements capping the framerate ahead of gvadetect.
@@ -584,7 +623,10 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_video_sink_elements(options, "front_stream"),
+            # Not on a decimated branch, so this sink runs at the capped source rate.
+            *self._get_video_sink_elements(
+                options, "front_stream", self.max_input_framerate
+            ),
             # Branch 3: MobileNetv2 classification
             "t.",
             "!",
@@ -655,7 +697,9 @@ class VideoAnalyticsPipelineService:
             "!",
             "queue",
             "!",
-            *self._get_video_sink_elements(options, "back_stream"),
+            *self._get_video_sink_elements(
+                options, "back_stream", self.max_input_framerate
+            ),
             # Branch 2: ResNet18 classification
             "t.",
             "!",
@@ -691,10 +735,12 @@ class VideoAnalyticsPipelineService:
 
         pipeline = [
             *self._get_source_elements(source, input_type),
-            # Branch 1: ResNet18 classification
+            # Branch 1: ResNet18 classification. Unlike front/back this rate
+            # applies to the whole pipeline, video output included, so the sink
+            # below is told the same framerate.
             "videorate",
             "!",
-            "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            f"video/x-raw(memory:D3D11Memory),framerate={self.classify_framerate}",
             "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
@@ -714,7 +760,9 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_video_sink_elements(options, "content_stream"),
+            *self._get_video_sink_elements(
+                options, "content_stream", self.classify_framerate
+            ),
         ]
         return pipeline
 

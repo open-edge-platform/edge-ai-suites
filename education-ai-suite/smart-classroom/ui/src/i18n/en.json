@@ -376,6 +376,8 @@
     "videoFailed":"Video Failed",
     "continuingAudioOnly":"Continuing with audio-only processing",
     "loadingvideo": "Loading video stream",
+    "connectingStream": "Connecting to stream",
+    "streamTimeout": "Stream is taking longer than usual",
     "browserNotSupported": "Your browser does not support video playback.",
     "noVideoConfigured": "No video configured"
   },
