@@ -103,7 +103,7 @@ nano .env   # set HOST_IP=<your-machine-IP>
 
 ### 3. Prepare the model
 
-Download and export the YOLOv8n-VisDrone model to OpenVINO FP16 IR:
+Download and export the YOLO11s model to OpenVINO FP16 IR:
 
 ```bash
 make model
@@ -183,7 +183,7 @@ INSTANCE_ID=$(curl -s -X POST \
     },
     "parameters": {
       "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
         "device": "CPU"
       }
     }

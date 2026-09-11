@@ -3,7 +3,7 @@
 This section provides information on how to use and adjust the application.
 Learn more about:
 
-- [YOLOv8n-VisDrone AI Model](./how-to-guides/model.md) — YOLOv8n-VisDrone model
+- [YOLO11s AI Model](./how-to-guides/model.md) — YOLO11s model
   details, `make model` usage
 - [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for
   model setup, stack management, and pipeline control
