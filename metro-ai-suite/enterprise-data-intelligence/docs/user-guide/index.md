@@ -53,30 +53,7 @@ The platform is built around a UI service that talks to the OpenClaw agent runti
 orchestrates work through Skills. A Skill retrieves grounded facts from the EC-RAG knowledge
 base, while an LLM router (with a prompt compressor) fronts local and cloud models.
 
-```text
-                 user
-                  │
-                  ▼
-          ┌───────────────┐
-          │      UI       │  :7000
-          └───────┬───────┘
-                  │
-                  ▼
-          ┌───────────────┐        Skills (competitive_analysis_PDF_generator)
-          │   OpenClaw    │  :18789
-          │   agent       │ ◄──────────────┐
-          └───┬───────┬───┘                │ query_rag.sh
-              │       │                     ▼
-   model calls│       │            ┌────────────────┐
-              ▼       │            │  EC-RAG        │  :16011
-      ┌──────────────┐│            │  (retrieval +  │
-      │  Router +    ││            │   vLLM answer) │
-      │  compressor  ││ :8000/:8001└────────────────┘
-      └──────┬───────┘│
-             ▼        ▼
-      local vLLM   cloud models
-      :8086        (MiniMax, …)
-```
+![Architecture Diagram](./_assets/EDI-architecture.svg)
 
 ### Components
 
