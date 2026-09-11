@@ -31,7 +31,7 @@ def test_mark_cancelled():
 
 
 def test_migration_adds_columns_to_existing_db():
-    # Simulate an old DB without the new columns, then have _init_table migrate it.
+    # Simulate an old DB without the new columns, then touch the store.
     with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
         db = str(Path(tmp) / "sessions.db")
         conn = sqlite3.connect(db)
@@ -43,7 +43,10 @@ def test_migration_adds_columns_to_existing_db():
         conn.commit()
         conn.close()
 
-        SessionStore._init_table()
+        # Any entry point will do — they all create/migrate the schema on the
+        # connection they open. Going through a public one proves the migration
+        # reaches a real caller, not just a helper written for this test.
+        SessionStore.count()
 
         conn = sqlite3.connect(db)
         cols = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
@@ -129,3 +132,46 @@ def test_orchestrator_owned_sessions_end_themselves():
         with patch("utils.orchestrator.running_session_ids", return_value=["s1"]):
             SessionStore.set_stage("s1", "transcribe", "done")
             assert SessionStore.get("s1")["state"] == "running"
+
+
+# ----- listing -----
+
+def test_list_all_is_newest_first():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        for sid, started in (("old", "2026-09-01T10:00:00"), ("new", "2026-09-09T10:00:00")):
+            SessionStore.create(sid, {}, ["transcribe"])
+            SessionStore.update(sid, started_at=started)
+        assert [s["session_id"] for s in SessionStore.list_all()] == ["new", "old"]
+
+
+def test_list_all_pages():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        for i in range(5):
+            SessionStore.create(f"s{i}", {}, ["transcribe"])
+            SessionStore.update(f"s{i}", started_at=f"2026-09-0{i + 1}T10:00:00")
+        page = SessionStore.list_all(limit=2, offset=1)
+        assert [s["session_id"] for s in page] == ["s3", "s2"]
+        assert SessionStore.count() == 5
+
+
+def test_mutating_a_missing_session_returns_none():
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        assert SessionStore.update("nope", state="running") is None
+        assert SessionStore.set_stage("nope", "transcribe", "done") is None
+
+
+def test_a_write_that_raises_leaves_the_row_untouched():
+    """The read-modify-write is a transaction, so a half-applied change must not
+    reach disk."""
+    with tempfile.TemporaryDirectory() as tmp, _patch_db(tmp):
+        SessionStore.create("s1", {}, ["transcribe"])
+
+        def boom(state):
+            state["state"] = "running"
+            raise RuntimeError("boom")
+
+        try:
+            SessionStore._mutate("s1", boom)
+        except RuntimeError:
+            pass
+        assert SessionStore.get("s1")["state"] == "pending"

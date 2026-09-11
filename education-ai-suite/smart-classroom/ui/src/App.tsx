@@ -9,6 +9,7 @@ import ServicesScreen from './components/Services/ServicesScreen';
 import ConfigScreen from './components/Settings/ConfigScreen';
 import SetupScreen from './components/Settings/SetupScreen';
 import GetStartedScreen from './components/Settings/GetStartedScreen';
+import HistoryPanel from './components/History/HistoryPanel';
 import './App.css';
 import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
@@ -27,6 +28,9 @@ const App: React.FC = () => {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready'>('main');
   const [isReportOpen, setIsReportOpen] = useState(false);
+  // Both slide over the workspace rather than replacing it, so looking up last
+  // week's class does not take the teacher away from the one recording now.
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
   useVideoPipelineMonitor();
   // Both pipelines are driven from here, not from the panels that display them,
@@ -188,7 +192,10 @@ const App: React.FC = () => {
             // feature-gated nav entry renders disabled.
             featureGuard={new FeatureGuard([])}
             hasMainFeatures={false}
+            // Both panels read from the backend that is not up yet, so the
+            // buttons render but do nothing until it answers.
             onViewReport={() => {}}
+            onViewHistory={() => {}}
           />
           <div className="main-content">{renderToolScreen(screen)}</div>
           <Footer />
@@ -243,6 +250,7 @@ const App: React.FC = () => {
         featureGuard={guard}
         hasMainFeatures={hasMainFeatures}
         onViewReport={() => setIsReportOpen(true)}
+        onViewHistory={() => setIsHistoryOpen(true)}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
         <HeaderBar featureGuard={guard} />
@@ -273,6 +281,9 @@ const App: React.FC = () => {
         onClose={() => setIsReportOpen(false)}
         featureGuard={guard}
       />
+
+      {/* Session history — same slide-over surface as the report panel. */}
+      <HistoryPanel isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
     </div>
   );
 };

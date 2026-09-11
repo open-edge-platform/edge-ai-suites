@@ -38,6 +38,52 @@
 .action-slot {
   display: flex;
   align-items: center;
+  gap: 0.5rem;
+}
+
+/* Report and Session history. Borderless where .content-search-btn is outlined:
+   three controls sit side by side here, and three boxes on the blue bar reads
+   as a toolbar rather than a couple of shortcuts. */
+.top-panel-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.875rem;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+  white-space: nowrap;
+}
+
+.top-panel-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.top-panel-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.top-panel-action-btn .action-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Below ~900px the status text in the header needs the room more than these
+   labels do; the icon plus its title attribute still identifies the button. */
+@media (max-width: 900px) {
+  .top-panel-action-btn .action-label {
+    display: none;
+  }
+
+  .top-panel-action-btn {
+    padding: 0.35rem 0.45rem;
+  }
 }
 
 .content-search-btn {

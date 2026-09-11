@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, HTTPException, Query
 
 from api.v1.schemas.session import (
     CancelResponse,
@@ -9,6 +11,7 @@ from api.v1.schemas.session import (
     RegisterRequest,
     RegisterResponse,
     SessionListResponse,
+    StageEventsResponse,
     StatusResponse,
     WorkflowRequest,
 )
@@ -26,8 +29,12 @@ router = APIRouter()
 
 
 @router.get("", response_model=SessionListResponse)
-def list_sessions():
-    return session_service.list_sessions()
+def list_sessions(
+    limit: Annotated[int | None, Query(ge=1, le=200)] = None,
+    offset: Annotated[int, Query(ge=0)] = 0,
+):
+    """Newest first. Omit `limit` for the whole table."""
+    return session_service.list_sessions(limit=limit, offset=offset)
 
 
 @router.get("/running", response_model=SessionListResponse)
@@ -68,6 +75,15 @@ def finalize_session(session_id: str, req: FinalizeRequest):
 def get_session_progress(session_id: str):
     try:
         return session_service.get_status(session_id)
+    except SessionNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{session_id}/events", response_model=StageEventsResponse)
+def get_session_events(session_id: str):
+    """Per-stage timings, for the history detail view."""
+    try:
+        return session_service.get_stage_events(session_id)
     except SessionNotFound as e:
         raise HTTPException(status_code=404, detail=str(e))
 

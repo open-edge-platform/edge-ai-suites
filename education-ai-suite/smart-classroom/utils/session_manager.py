@@ -10,7 +10,8 @@ _GENERATED_RE = re.compile(r"^\d{8}-\d{6}-[0-9a-f]{4}$")
 # A deliberately wider net for anything that ends up in a filesystem path. It
 # only has to guarantee the id is a single, relative path segment: no separator,
 # no drive letter, and no leading dot so "." and ".." cannot slip through.
-_PATH_SAFE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
+PATH_SAFE_SESSION_ID = r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"
+_PATH_SAFE_RE = re.compile(PATH_SAFE_SESSION_ID)
 
 
 def generate_session_id():

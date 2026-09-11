@@ -24,7 +24,7 @@ from utils.audio_util import save_audio_file
 from utils.locks import video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from components.va.media_service import ensure_media_service_running
-from utils.session_manager import generate_session_id
+from utils.session_manager import PATH_SAFE_SESSION_ID, generate_session_id
 from dto.search_dto import SearchRequest
 from utils.session_state_manager import SessionState
 from dto.ocr_dto import OCRExtractRequest, OCRResponse
@@ -132,12 +132,12 @@ def update_project_config(payload: ProjectSettings):
     return RuntimeConfig.update_section("Project", updates)
 
 @router.post("/start-monitoring")
-def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None)):
+def start_monitoring_endpoint( x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)):
     start_monitoring(str(SessionPaths.utilization_logs_dir(x_session_id)))
     return JSONResponse(content={"status": "success", "message": "Monitoring started"})
 
 @router.get("/metrics")
-def get_metrics_endpoint(x_session_id: Optional[str] = Header(None)):
+def get_metrics_endpoint(x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)):
     if x_session_id is None or "":
         return ""
     return get_metrics(str(SessionPaths.utilization_logs_dir(x_session_id)))
@@ -163,7 +163,7 @@ va_services = {}  # {session_id: VideoAnalyticsPipelineService}
 def start_video_analytics_pipeline(
     http_request: Request,
     requests: list[VideoAnalyticsRequest],
-    x_session_id: Optional[str] = Header(None),
+    x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID),
 ):
     """
     Start one or more video analytics pipelines
@@ -414,7 +414,7 @@ def start_video_analytics_pipeline(
 
 @router.post("/stop-video-analytics-pipeline")
 def stop_video_analytics_pipeline(
-    requests: list[VideoAnalyticsRequest], x_session_id: Optional[str] = Header(None)
+    requests: list[VideoAnalyticsRequest], x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)
 ):
     """
     Stop one or more video analytics pipelines
@@ -533,7 +533,7 @@ def stop_video_analytics_pipeline(
 
 @router.get("/monitor-video-analytics-pipeline")
 async def monitor_video_analytics_pipeline_status(
-    x_session_id: Optional[str] = Header(None)
+    x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)
 ):
     """
     Monitor all video analytics pipelines status with streaming response
@@ -564,7 +564,7 @@ async def monitor_video_analytics_pipeline_status(
     return StreamingResponse(stream_status(), media_type="application/json")
 
 @router.get("/class-statistics")
-async def get_class_statistics(x_session_id: Optional[str] = Header(None)):
+async def get_class_statistics(x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)):
     """
     Get class statistics with real-time streaming updates
 
@@ -767,7 +767,7 @@ def search_content(request: SearchRequest):
         )
 
 @router.get("/check-recorded-videos")
-def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
+def check_recorded_videos(x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)):
     """
     Check which video files were saved for a session after RTSP recording.
     Returns the priority-ordered available video (back > board > front).
@@ -844,7 +844,7 @@ def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/recorded-video/{videoType}")
-def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None), session_id: Optional[str] = None):
+def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID), session_id: Optional[str] = None):
     """
     Stream a recorded video file (back.mp4, board.mp4, or front.mp4).
 
@@ -903,7 +903,7 @@ def ocr_detect_file_endpoint(file: UploadFile = File(...)):
 
 
 @router.post("/ocr/extract-text", response_model=OCRResponse)
-def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None)):
+def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None, pattern=PATH_SAFE_SESSION_ID)):
     return ocr_extract_text(file, x_session_id)
 
 def register_routes(app: FastAPI):

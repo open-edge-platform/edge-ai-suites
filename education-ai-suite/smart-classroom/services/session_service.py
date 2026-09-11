@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import shutil
@@ -37,21 +38,12 @@ class ConcurrencyLimitError(Exception):
     pass
 
 
-def list_sessions() -> dict:
-    sessions = []
-    for state in session_store.SessionStore.list_all():
-        sessions.append(
-            {
-                "session_id": state.get("session_id"),
-                "state": state.get("state"),
-                "current_stage": state.get("current_stage"),
-                "stages": state.get("stages"),
-                "sources": state.get("sources"),
-                "started_at": state.get("started_at"),
-                "updated_at": state.get("updated_at"),
-            }
-        )
-    return {"total": len(sessions), "sessions": sessions}
+def list_sessions(limit: int | None = None, offset: int = 0) -> dict:
+    """Newest first. `total` is the whole table, not the page, so the history
+    screen can page through it."""
+    states = session_store.SessionStore.list_all(limit=limit, offset=offset)
+    total = session_store.SessionStore.count() if limit is not None else len(states)
+    return {"total": total, "sessions": [_summary(s) for s in states]}
 
 
 def create_process(req: WorkflowRequest) -> dict:
@@ -177,22 +169,53 @@ def cancel_session(session_id: str) -> dict:
 
 
 def list_running_sessions() -> dict:
-    sessions = []
-    for state in session_store.SessionStore.list_all():
-        if state.get("state") != "running":
-            continue
-        sessions.append(
-            {
-                "session_id": state.get("session_id"),
-                "state": state.get("state"),
-                "current_stage": state.get("current_stage"),
-                "stages": state.get("stages"),
-                "sources": state.get("sources"),
-                "started_at": state.get("started_at"),
-                "updated_at": state.get("updated_at"),
-            }
-        )
-    return {"total": len(sessions), "sessions": sessions}
+    running = [
+        s for s in session_store.SessionStore.list_all()
+        if s.get("state") == "running"
+    ]
+    return {"total": len(running), "sessions": [_summary(s) for s in running]}
+
+
+def get_stage_events(session_id: str) -> dict:
+    """The per-stage timings behind a session, read back from its
+    stage_events.jsonl. Timings are not in the database - the row carries the
+    current status of each stage, this carries how long each one took and what
+    it said when it broke."""
+    state = session_store.SessionStore.get(session_id)
+    if state is None:
+        raise SessionNotFound("session not found")
+
+    path = SessionPaths.stage_events_path(session_id)
+    events = []
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        events.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        # A crash mid-append can leave a partial last line.
+                        logger.warning(f"skipping malformed stage event in {path}")
+        except OSError as e:
+            logger.error(f"failed to read stage events for {session_id}: {e}")
+
+    return {"session_id": session_id, "events": events}
+
+
+def _summary(state: dict) -> dict:
+    return {
+        "session_id": state.get("session_id"),
+        "state": state.get("state"),
+        "current_stage": state.get("current_stage"),
+        "stages": state.get("stages"),
+        "sources": state.get("sources"),
+        "error": state.get("error"),
+        "started_at": state.get("started_at"),
+        "updated_at": state.get("updated_at"),
+    }
 
 
 def _validate_stages(stages: list) -> None:

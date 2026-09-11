@@ -1154,6 +1154,65 @@ export function beaconAbortSession(sessionId: string): void {
   }
 }
 
+export type SessionState = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface SessionSummary {
+  session_id: string;
+  state: SessionState | null;
+  current_stage: string | null;
+  /** Every stage in the vocabulary, including the ones marked 'skipped'. */
+  stages: Record<string, string> | null;
+  sources: { audio?: string; video?: Record<string, string> } | null;
+  error: string | null;
+  started_at: string | null;
+  updated_at: string | null;
+}
+
+export interface StageEvent {
+  stage: string | null;
+  status: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_sec: number | null;
+  error_class: string | null;
+  error_detail: string | null;
+}
+
+/** One page of session history, newest first. `total` is the whole table. */
+export async function listSessions(
+  limit: number,
+  offset = 0,
+): Promise<{ total: number; sessions: SessionSummary[] }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions?limit=${limit}&offset=${offset}`);
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load sessions (${res.status})`));
+    return res.json();
+  });
+}
+
+/**
+ * Per-stage timings for one session, read back from its stage_events.jsonl.
+ * The session row carries each stage's current status; this carries how long it
+ * took and what it said when it broke.
+ */
+export async function getSessionEvents(sessionId: string): Promise<StageEvent[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/events`);
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load stage events (${res.status})`));
+    return (await res.json()).events ?? [];
+  });
+}
+
+/** Delete a session record and everything it wrote to disk. */
+export async function deleteSession(sessionId: string): Promise<void> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to delete session (${res.status})`));
+  });
+}
+
 export async function startMonitoring(sessionId: string): Promise<{ status: string; message: string }> {
   return safeApiCall(async () => {
     console.log('📊 Starting monitoring for session:', sessionId);

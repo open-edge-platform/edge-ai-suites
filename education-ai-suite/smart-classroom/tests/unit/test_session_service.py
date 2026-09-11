@@ -14,6 +14,7 @@ from services.session_service import (
     create_process,
     delete_session,
     finalize_session,
+    get_stage_events,
     get_status,
     list_running_sessions,
     list_sessions,
@@ -302,3 +303,51 @@ def test_list_running_filters_non_running():
         result = list_running_sessions()
         assert result["total"] == 1
         assert result["sessions"][0]["session_id"] == "r1"
+
+
+# ----- history -----
+
+def test_list_sessions_reports_the_whole_table_not_the_page():
+    """The history pages through `total`, so it must not be the page length."""
+    for _ in range(3):
+        register_session(_reg())
+    page = list_sessions(limit=2, offset=0)
+    assert len(page["sessions"]) == 2
+    assert page["total"] == 3
+
+
+def test_list_sessions_includes_the_error_so_the_row_can_explain_itself():
+    req = _reg()
+    register_session(req)
+    finalize_session(req.session_id, "aborted")
+    row = next(s for s in list_sessions()["sessions"] if s["session_id"] == req.session_id)
+    assert row["state"] == "failed"
+    assert "interrupted" in row["error"]
+
+
+def test_stage_events_not_found():
+    _expect_raises(SessionNotFound, lambda: get_stage_events("20260101-000000-abcd"))
+
+
+def test_stage_events_are_empty_when_nothing_was_recorded():
+    req = _reg()
+    register_session(req)
+    assert get_stage_events(req.session_id) == {"session_id": req.session_id, "events": []}
+
+
+def test_stage_events_survive_a_truncated_last_line():
+    """A crash mid-append leaves a partial JSON line; the rest must still load."""
+    from utils.session_paths import SessionPaths
+
+    req = _reg()
+    register_session(req)
+    path = SessionPaths.stage_events_path(req.session_id)
+    os.makedirs(path.parent, exist_ok=True)
+    path.write_text(
+        '{"stage": "transcribe", "status": "done", "duration_sec": 1.5}\n'
+        '{"stage": "summarize", "status": "don',
+        encoding="utf-8",
+    )
+    events = get_stage_events(req.session_id)["events"]
+    assert len(events) == 1
+    assert events[0]["stage"] == "transcribe"

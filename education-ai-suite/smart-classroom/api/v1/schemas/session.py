@@ -48,13 +48,31 @@ class SessionSummary(BaseModel):
     current_stage: str | None = None
     stages: dict | None = None
     sources: dict | None = None
+    error: str | None = None
     started_at: str | None = None
     updated_at: str | None = None
 
 
 class SessionListResponse(BaseModel):
+    # The whole table, not the page — the history screen pages through it.
     total: int
     sessions: list[SessionSummary]
+
+
+class StageEvent(BaseModel):
+    session_id: str | None = None
+    stage: str | None = None
+    status: str | None = None
+    started_at: str | None = None
+    ended_at: str | None = None
+    duration_sec: float | None = None
+    error_class: str | None = None
+    error_detail: str | None = None
+
+
+class StageEventsResponse(BaseModel):
+    session_id: str
+    events: list[StageEvent]
 
 
 class ProcessResponse(BaseModel):

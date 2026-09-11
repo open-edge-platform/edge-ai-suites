@@ -12,6 +12,7 @@ interface TopPanelProps {
   featureGuard: FeatureGuard;
   hasMainFeatures: boolean;
   onViewReport: () => void;
+  onViewHistory: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
@@ -19,7 +20,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
   setActiveScreen,
   featureGuard,
   hasMainFeatures,
-  onViewReport
+  onViewReport,
+  onViewHistory
 }) => {
   const navMenuRef = useRef<HTMLDivElement>(null);
   const navToggleRef = useRef<HTMLButtonElement>(null);
@@ -112,13 +114,9 @@ const TopPanel: React.FC<TopPanelProps> = ({
               <span className="menu-icon">📝</span>
               <span className={!hasGradingFeature ? 'disabled' : ''}>{t('grading.title', 'Grading')}</span>
             </li>
-            <li
-              className={!hasReportFeature ? 'no-click' : ''}
-              onClick={() => hasReportFeature && handleNavItemClick(onViewReport)}
-            >
-              <span className="menu-icon">📊</span>
-              <span className={!hasReportFeature ? 'disabled' : ''}>{t('reportPanel.title', 'View Report')}</span>
-            </li>
+            {/* Report and Session history are not here: they open slide-over
+                panels rather than navigating, so they sit in the action slot as
+                direct buttons. */}
             {/* Electron only: supervision of the Python backend processes */}
             {hasServiceManager && (
               <li
@@ -177,6 +175,36 @@ const TopPanel: React.FC<TopPanelProps> = ({
     </div>
   );
 
+  // The right-hand controls, shared by all three layouts below. Report and
+  // history live here rather than in the nav menu because they open a panel
+  // over the current screen instead of navigating away from it — and unlike the
+  // header bar, which App only renders on the main screen, this slot is present
+  // everywhere, so they stay reachable from Content Search and Grading too.
+  const renderActionSlot = () => (
+    <div className="action-slot">
+      <button
+        className="top-panel-action-btn"
+        disabled={!hasReportFeature}
+        onClick={onViewReport}
+        title={t('reportPanel.title', 'View Report')}
+      >
+        <span className="action-icon">📊</span>
+        <span className="action-label">{t('reportPanel.short', 'Report')}</span>
+      </button>
+      {/* Not gated on hasServiceManager: the history comes from the backend, so
+          the browser build has one too. */}
+      <button
+        className="top-panel-action-btn"
+        onClick={onViewHistory}
+        title={t('history.title', 'Session history')}
+      >
+        <span className="action-icon">🕘</span>
+        <span className="action-label">{t('history.short', 'History')}</span>
+      </button>
+      <LanguageSwitcher />
+    </div>
+  );
+
   if (activeScreen === 'grading') {
     return (
       <header className="top-panel">
@@ -185,9 +213,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('grading.title', 'Grading')}</span>
         </div>
-        <div className="action-slot">
-          <LanguageSwitcher />
-        </div>
+        {renderActionSlot()}
       </header>
     );
   }
@@ -200,9 +226,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('contentSearch.title', 'Content Search')}</span>
         </div>
-        <div className="action-slot">
-          <LanguageSwitcher />
-        </div>
+        {renderActionSlot()}
       </header>
     );
   }
@@ -214,9 +238,7 @@ const TopPanel: React.FC<TopPanelProps> = ({
         <img src={BrandSlot} alt="Intel Logo" className="logo" />
         <span className="app-title">{t('header.title')}</span>
       </div>
-      <div className="action-slot">
-        <LanguageSwitcher />
-      </div>
+      {renderActionSlot()}
     </header>
   );
 };

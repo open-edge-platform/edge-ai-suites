@@ -19,21 +19,24 @@ import os
 import logging
 import shutil
 import subprocess
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, Query
+from fastapi import APIRouter, File, HTTPException, Path, UploadFile, Query
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 
 from pipeline import Pipeline
 from dto.report_dto import ReportRequest, ReportReselectRequest
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_manager import PATH_SAFE_SESSION_ID
 from utils.session_paths import SessionPaths
 from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+SessionIdPath = Annotated[str, Path(pattern=PATH_SAFE_SESSION_ID)]
 
 
 def _pdf_export_available() -> bool:
@@ -143,7 +146,7 @@ def get_report_capabilities():
 
 
 @router.post("/report/{session_id}/mindmap-image")
-async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
+async def upload_mindmap_image(session_id: SessionIdPath, file: UploadFile = File(...)):
     """Store a mind-map PNG that the UI captured (html2canvas) from the live
     jsMind view, to be embedded in the class report.
 
@@ -172,7 +175,7 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
 
 
 @router.get("/report/{session_id}/mindmap-image")
-def get_mindmap_image(session_id: str):
+def get_mindmap_image(session_id: SessionIdPath):
     """Return the previously uploaded mind-map PNG for inline report preview."""
     image_path = str(SessionPaths.mindmap_png_path(session_id))
 
@@ -192,7 +195,7 @@ def get_mindmap_image(session_id: str):
 # Parametrized report routes — defined AFTER the literal /report/template-fields
 # route above so that literal is matched first.
 @router.get("/report/{session_id}")
-def get_report(session_id: str):
+def get_report(session_id: SessionIdPath):
     """Retrieve a previously generated class report for a session."""
     report_path = str(SessionPaths.report_md_path(session_id))
 
@@ -211,7 +214,7 @@ def get_report(session_id: str):
 
 @router.get("/report/{session_id}/download")
 def download_report(
-    session_id: str,
+    session_id: SessionIdPath,
     format: Literal["docx", "pdf"] = Query("docx", description="Download format: docx or pdf"),
 ):
     """Download the class report in the requested format.
@@ -284,7 +287,7 @@ def download_report(
 
 
 @router.post("/report/{session_id}/reselect")
-def reselect_report(session_id: str, request: ReportReselectRequest):
+def reselect_report(session_id: SessionIdPath, request: ReportReselectRequest):
     """Re-render an existing report for a new checkbox selection — NO LLM.
 
     Re-projects the session's cached full-catalog fields onto the template,
