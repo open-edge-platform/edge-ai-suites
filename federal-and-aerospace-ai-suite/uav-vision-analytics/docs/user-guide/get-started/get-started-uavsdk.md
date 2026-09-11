@@ -154,15 +154,7 @@ make start-rtsp DEVICE=npu     # NPU/rear only
 make start-rtsp DEVICE=all     # all three cameras simultaneously
 ```
 
-> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
-
-**uav-mission-compute-sdk mode** — output streams (only the selected `DEVICE` is active, unless `DEVICE=all`; available after drone arms):
-
-```text
-rtsp://localhost:8555/nadir      (nadir camera, CPU)
-rtsp://localhost:8555/forward    (forward camera, GPU)
-rtsp://localhost:8555/rear       (rear camera, NPU)
-```
+> `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise. Only the selected `DEVICE` camera pipeline is active (unless `DEVICE=all`), and streams are available only after the drone arms — see [Step 7 — View the output stream](#7-view-the-output-stream) for the RTSP URLs.
 
 #### Option B — Manual REST API
 
@@ -211,20 +203,18 @@ Change following **three values** to switch between CPU / GPU / NPU:
 2. **RTSP path** in the request body (`nadir` → `forward` / `rear`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
 
-Stop a pipeline:
-```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
-```
-
 ### 7. View the output stream
 
 #### View with ffplay
 
+Install ffmpeg first if not present using `sudo apt install ffmpeg`.
+
+Any of the annotated streams can be viewed with `ffplay <RTSP_PATH>`:
+
 ```bash
-# View annotated RTSP output (install ffmpeg first if not present)
-ffplay rtsp://localhost:8555/nadir               # nadir camera
-ffplay rtsp://localhost:8555/forward               # forward camera
-ffplay rtsp://localhost:8555/rear               # rearcamera
+ffplay rtsp://<HOST_IP>:8555/nadir               # nadir camera
+ffplay rtsp://<HOST_IP>:8555/forward               # forward camera
+ffplay rtsp://<HOST_IP>:8555/rear               # rearcamera
 ```
 
 #### Capture all the video streams
@@ -232,9 +222,9 @@ Record all three streams to disk with `ffmpeg`:
 
 ```bash
 ffmpeg \
-  -rtsp_transport tcp -i rtsp://localhost:8555/nadir \
-  -rtsp_transport tcp -i rtsp://localhost:8555/forward \
-  -rtsp_transport tcp -i rtsp://localhost:8555/rear \
+  -rtsp_transport tcp -i rtsp://<HOST_IP>:8555/nadir \
+  -rtsp_transport tcp -i rtsp://<HOST_IP>:8555/forward \
+  -rtsp_transport tcp -i rtsp://<HOST_IP>:8555/rear \
   -map 0:v -c:v copy nadir.mkv \
   -map 1:v -c:v copy forward.mkv \
   -map 2:v -c:v copy rear.mkv
@@ -243,7 +233,15 @@ ffmpeg \
 The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
-You can use VLC Player to handle the streams.
+
+> **Note — Other ways to view the stream:**
+> - Leverage versatile streaming media players such as VLC Player to seamlessly handle, manage, and playback the incoming streams with ease and efficiency.
+
+**Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 6](#6-start-inference-pipelines)):
+
+```bash
+curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+```
 
 ### 8. Stop all services
 
