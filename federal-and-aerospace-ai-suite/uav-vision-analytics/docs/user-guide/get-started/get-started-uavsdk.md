@@ -80,7 +80,7 @@ cd  uav-mission-compute-sdk/
 Clone the repo, get into the directory and start the SDK's core infrastructure (PX4, MQTT broker, MediaMTX RTSP server).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch release-2026.2.0
+git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch main
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
 ```
 
