@@ -56,7 +56,7 @@ If you want to clone a specific release branch, replace `main` with the desired 
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set manufacturing-ai-suite
 cd manufacturing-ai-suite/industrial-edge-insights-time-series
@@ -108,11 +108,9 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
 
 ### Running User Defined Function(UDF) inference on GPU
 
-By default, UDF for both the sample apps is configured to run on `CPU`.
+By default, UDF for `Wind Turbine Anomaly Detection` sample app is configured to run on `CPU`.
 
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
-
-- **For Wind Turbine Anomaly Detection**:
 
 ```sh
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config
@@ -162,7 +160,7 @@ curl -k -X 'POST' \
 
    - Use link `https://localhost:3000/` to launch Grafana from browser (preferably Chrome browser)
 
-     > **Note:**: 
+     > **Note:**:
      > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
      > - If you are accessing the UI remotely, replace `localhost` with the host system IP address.
 

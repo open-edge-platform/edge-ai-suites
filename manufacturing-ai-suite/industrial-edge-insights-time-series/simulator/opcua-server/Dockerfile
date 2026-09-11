@@ -8,7 +8,8 @@ FROM python:3.13-slim
 WORKDIR /app
 COPY opcua-server/requirements.txt .
 RUN pip install --upgrade pip
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    python -m pip uninstall -y pip
 
 ARG TIMESERIES_UID
 ARG TIMESERIES_USER_NAME

@@ -392,7 +392,6 @@ async def results_page(request: Request, run_id: str):
 @app.post("/run")
 async def trigger_run(
     request: Request,
-    device: str = Form("CPU"),
     time_range: str = Form(""),
 ):
     """Trigger a new detect-then-reason run by starting the detection layer.
@@ -402,7 +401,7 @@ async def trigger_run(
     If a detection run is already in progress, redirect to its results page
     instead of erroring — only one run can be in flight at a time.
     """
-    payload: dict = {"device": device}
+    payload: dict = {}
     if time_range:
         payload["time_range"] = time_range
 
@@ -414,7 +413,7 @@ async def trigger_run(
     trigger_payload = {
         "run_id": run_id,
         "status": "completed",
-        "device": device,
+        "device": "dummy",
         "video_filename": "welding",
         "start_id": time_start,
         "end_id": time_end,

@@ -8,7 +8,9 @@ FROM python:3.13-slim
 
 COPY mqtt-publisher/requirements.txt /
 RUN pip install --upgrade pip
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    python -m pip uninstall -y pip
+    
 COPY mqtt-publisher/publisher.py /
 
 ARG TIMESERIES_UID

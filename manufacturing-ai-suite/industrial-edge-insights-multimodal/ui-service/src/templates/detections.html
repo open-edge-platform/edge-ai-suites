@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Detections — {{ use_case_id }}</title>
+  <title>Classifications</title>
   {% set root = request.scope.get("root_path", "") %}
   <link rel="stylesheet" href="{{ root }}/static/css/style.css">
 </head>
@@ -11,7 +11,6 @@
     <div class="header-inner">
       <span class="logo">&#9632; Intel</span>
       <h1>Agentic Weld Quality Analysis</h1>
-      <span class="use-case-badge">{{ use_case_id }}</span>
     </div>
   </header>
   <nav>
@@ -43,7 +42,7 @@
       </h2>
       {% if detections %}
       <table>
-        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th><th>BBox (x,y,w,h)</th><th>Timestamp</th></tr></thead>
+        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th></tr></thead>
         <tbody>
           {% for d in detections %}
           <tr>
@@ -56,8 +55,6 @@
               </span>
               {{ "%.3f"|format(d.confidence) }}
             </td>
-            <td>({{ d.x }}, {{ d.y }}, {{ d.width }}, {{ d.height }})</td>
-            <td class="timestamp">{{ d.timestamp or "—" }}</td>
           </tr>
           {% endfor %}
         </tbody>

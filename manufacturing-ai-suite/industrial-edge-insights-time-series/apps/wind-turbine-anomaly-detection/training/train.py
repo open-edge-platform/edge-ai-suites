@@ -8,7 +8,7 @@
 
 import argparse
 import logging
-import pickle
+import pickle  # nosec B403 - used to serialize the locally trained model, not to load untrusted input
 from contextlib import nullcontext
 from pathlib import Path
 

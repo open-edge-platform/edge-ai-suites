@@ -57,7 +57,8 @@ RUN apt-get remove --purge -y --allow-remove-essential perl-base
 
 COPY requirements.txt /
 RUN pip install --upgrade pip
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    python -m pip uninstall -y pip
 COPY simulation-data /simulation-data
 COPY publisher.py /
 

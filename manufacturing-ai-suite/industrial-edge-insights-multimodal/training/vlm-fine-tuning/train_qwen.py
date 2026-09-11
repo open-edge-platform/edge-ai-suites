@@ -31,6 +31,11 @@ from __future__ import annotations
 import argparse
 
 from datasets import load_dataset
+# Redundant by mandatorily import unsloth before importing trl
+# EOS token default changes if trl imported before unsloth
+# causing an exception in SFTTrainer
+import unsloth
+
 from trl import SFTConfig
 from trl import SFTTrainer
 

@@ -6,16 +6,7 @@
 # install for your accelerator (Intel XPU / CUDA / CPU) — see README.md
 # "Install PyTorch for your device" before installing this file.
 
-# --- Data preparation (prepare_weld_dataset.py) ---
-pandas==2.3.3
-datasets==5.0.0
-pyarrow==22.0.0
-pillow==12.0.0
 
 # --- Fine-tuning & inference (train_qwen.py / infer_qwen.py) ---
-transformers==4.57.1
-trl==0.24.0
-peft==0.19.1
-accelerate==1.11.0
-unsloth==2025.11.9
-unsloth_zoo==2025.11.10
+transformers==5.5.0
+

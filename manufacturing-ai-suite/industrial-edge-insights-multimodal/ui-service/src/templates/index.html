@@ -10,20 +10,27 @@
 </head>
 <body data-root-path="{{ root }}">
   <header>
-    <div class="header-inner">
-      <span class="logo">&#9632; Intel</span>
-      <h1>Agentic Weld Quality Analysis </h1>
-      <span class="use-case-badge">{{ use_case_id }}</span>
-      <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
-        <span class="live-dot"></span>
-        <span id="pipeline-live-text">{{ 'Pipeline: RUNNING (' ~ active_run.phase ~ ')' if active_run else 'Pipeline: IDLE' }}</span>
-      </span>
+    <div class="header-wrapper">
+      <div class="header-inner">
+        <span class="logo">&#9632; Intel</span>
+        <h1>Agentic Weld Quality Analysis </h1>
+        <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
+          <span class="live-dot"></span>
+          <span id="pipeline-live-text">
+            {% if active_run %}
+              {{ 'Inspection: RUNNING (' ~ active_run.phase ~ ')' if active_run.phase else 'Inspection: RUNNING' }}
+            {% else %}Inspection: IDLE{% endif %}
+          </span>
+        </span>
+      </div>
     </div>
   </header>
 
   <nav>
-    <a href="{{ root }}/" class="active">Dashboard</a>
-    <a href="{{ root }}/detections">Detections</a>
+    <div class="nav-wrapper">
+      <a href="{{ root }}/" class="active">Dashboard</a>
+      <a href="{{ root }}/detections">Detections</a>
+    </div>
   </nav>
 
   <div class="layout-wrapper">
@@ -83,14 +90,6 @@
             <option value="5m" selected>Last 5 minutes</option>
             <option value="10m">Last 10 minutes</option>
             <option value="30m">Last 30 minutes</option>
-          </select>
-        </label>
-        <label class="config-field">
-          <span>Device</span>
-          <select name="device">
-            <option value="CPU" selected>CPU</option>
-            <option value="GPU">GPU</option>
-            <option value="NPU">NPU</option>
           </select>
         </label>
         <button type="submit" class="btn-primary" id="run-pipeline-btn" {{ 'disabled' if active_run else '' }}>
@@ -162,6 +161,11 @@
         </div>
       </div>
       <canvas id="metrics-chart" height="160"></canvas>
+      <section class="system-info-section">
+        <h2>System Info</h2>
+        <div id="systemCapabilityCards" class="system-capability-cards" role="list"
+          aria-label="System compute devices" aria-live="polite" hidden></div>
+      </section>
     </div>
   </aside>
   </div>
@@ -173,5 +177,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="{{ root }}/static/js/live-status.js"></script>
   <script src="{{ root }}/static/js/metrics.js"></script>
+  <script src="{{ root }}/static/js/system-capabilities.js"></script>
 </body>
 </html>
