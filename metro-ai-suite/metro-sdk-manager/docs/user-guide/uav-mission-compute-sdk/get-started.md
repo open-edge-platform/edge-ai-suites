@@ -17,7 +17,7 @@ Upon completion of this guide, you will be able to:
 
 Verify that your development environment meets the following specifications:
 
-- Operating System: Ubuntu 24.04 LTS (provisioned using [Edge-Node Infrastructure Blueprint](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html))
+- Operating System: Ubuntu 24.04 LTS (provisioned using [Edge-Node Infrastructure Blueprint](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/README.md))
 - Memory: Minimum 16GB RAM (32GB recommended)
 - Storage: 100GB available disk space
 - Network: Active internet connection for package downloads
