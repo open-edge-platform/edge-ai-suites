@@ -45,7 +45,7 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection
 Download and extract the standalone application package:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2.0/deterministic-threat-detection.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/deterministic-threat-detection.zip
 unzip deterministic-threat-detection.zip
 cd deterministic-threat-detection
 ```
