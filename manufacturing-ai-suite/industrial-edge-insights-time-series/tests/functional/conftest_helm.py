@@ -207,6 +207,11 @@ def setup_multimodal_helm_environment(request):
 
     case = helm_utils.password_test_cases["test_case_3"]
     values_yaml_path = os.path.expandvars(chart_path_multi + '/values.yaml')
+    if not os.path.exists(values_yaml_path):
+        assert_condition(
+            helm_utils.generate_helm_chart_targz(chart_path_multi, constants.MULTIMODAL_SAMPLE_APP) == True,
+            "Failed to generate multimodal Helm chart.",
+        )
     assert_condition(helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update multimodal values.yaml.")
 
     privileged_access_required = "true" if (

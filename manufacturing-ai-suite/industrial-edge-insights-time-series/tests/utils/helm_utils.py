@@ -1587,11 +1587,11 @@ def generate_helm_chart_targz(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     then extracts that .tgz directly into chart_path so tests can read/edit
     chart_path/values.yaml etc. without any further indirection.
 
-    If chart_path already contains an extracted chart (Chart.yaml present --
+    If chart_path already contains an extracted chart (Chart.yaml and values.yaml present --
     e.g. generated/pulled and extracted by the CI workflow before tests
     started), generation is skipped entirely.
     """
-    if os.path.isfile(os.path.join(chart_path, "Chart.yaml")):
+    if os.path.isfile(os.path.join(chart_path, "Chart.yaml")) and os.path.isfile(os.path.join(chart_path, "values.yaml")):
         logger.info(
             "Chart already extracted in '%s' (generated/pulled by CI workflow); skipping regeneration.",
             chart_path,
