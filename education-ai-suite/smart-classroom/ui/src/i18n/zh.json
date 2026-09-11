@@ -371,6 +371,8 @@
     "videoFailed":"视频获取失败",
     "continuingAudioOnly":"继续进行纯音频处理",
     "loadingvideo": "正在加载视频流",
+    "connectingStream": "正在连接视频流",
+    "streamTimeout": "视频流连接时间超出预期",
     "browserNotSupported": "您的浏览器不支持视频播放。",
     "noVideoConfigured": "未配置视频"
   },
