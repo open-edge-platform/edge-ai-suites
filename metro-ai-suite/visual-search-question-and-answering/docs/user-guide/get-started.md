@@ -96,7 +96,7 @@ Note: supported media types: jpg, png, mp4
    > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
     **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
-    
+
    For PRC users, set up the huggingface endpoint first:
 
    ```bash
@@ -370,3 +370,14 @@ docker logs <container_id>
 
 -   Sometimes downloading the demo dataset can be slow. Try manually downloading it from [the source website](https://data.vision.ee.ethz.ch/csergi/share/davis/DAVIS-2017-test-dev-480p.zip), and put the zip file under your host `$HOME/data` folder.
 
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements
+./get-started/deploy-with-helm
+
+:::
+hide_directive-->
