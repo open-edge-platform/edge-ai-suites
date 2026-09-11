@@ -99,9 +99,11 @@ const App: React.FC = () => {
   // session on screen that the new backend has never heard of.
   useReloadOnBackendRestart(backendService);
   const setupChecked = setupSteps.some((step) => step.status !== 'unknown');
-  const setupBlocking = setupSteps.some((step) => step.status === 'missing' || step.status === 'failed');
+  const setupNeedsAttention = setupSteps.some((step) =>
+    ['missing', 'failed', 'outdated'].includes(step.status)
+  );
   const firstRunScreen =
-    setupChecked && !setupBlocking && backendService?.runnable !== false ? 'services' : 'ready';
+    setupChecked && !setupNeedsAttention && backendService?.runnable !== false ? 'services' : 'ready';
 
   // Memoised so the effects below can depend on it by name without re-running on
   // every render.
