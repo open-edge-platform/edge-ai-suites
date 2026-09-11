@@ -3042,6 +3042,15 @@ def execute_gpu_config_curl_helm(
             logger.info(
                 f"{device.upper()} configuration POST via kubectl exec succeeded for app '{sample_app}'"
             )
+            if not _restart_ts_api_config(target_namespace=namespace, pod_name=pod_name):
+                logger.error(
+                    f"Failed to restart ts-api configuration after {device.upper()} update "
+                    f"for app '{sample_app}'"
+                )
+                return False
+            if not _wait_for_ts_api_ready(timeout=180, interval=5):
+                logger.error("ts-api endpoint did not become ready after configuration restart")
+                return False
             return True
         else:
             logger.error(
@@ -3100,12 +3109,11 @@ def verify_sklearnex_device_offload_helm(namespace, device, timeout=300, interva
         while time.time() - start_time < timeout:
             elapsed = time.time() - start_time
             remaining = timeout - elapsed
-            since_seconds = max(1, int(elapsed) + 1)
             try:
                 log_result = common_utils.exec_command(
                     [
                         "kubectl", "logs", "-n", namespace, pod_name,
-                        "--since", f"{since_seconds}s",
+                        "--since", f"{timeout}s",
                         "--tail=2000",
                     ],
                     capture_output=True,

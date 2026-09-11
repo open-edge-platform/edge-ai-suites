@@ -231,6 +231,9 @@ jobs:
           cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/"
           echo "Generating Helm charts for multimodal..."
           make gen_helm_charts
+          rm -rf helm-packages
+          mkdir -p helm-packages
+          cp -a helm/. helm-packages/
 
       - name: Building Time Series Sample App images
         if: ${{ (env.BUILD_NORMALIZED || 'yes') == 'yes' }}
