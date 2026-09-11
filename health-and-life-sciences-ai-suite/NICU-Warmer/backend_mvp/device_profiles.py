@@ -28,7 +28,7 @@ DEVICE_SETTINGS: dict[str, dict] = {
     "NPU": {
         "decode": "decodebin3",
         "pre_process": "pre-process-backend=ie",
-        "inference_options": "",
+        "inference_options": "ie-config=NPU_THROUGHPUT_STREAMS=1 nireq=2",
         "precision": "FP32",
     },
 }
