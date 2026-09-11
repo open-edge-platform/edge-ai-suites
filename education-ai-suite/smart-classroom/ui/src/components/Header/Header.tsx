@@ -72,9 +72,11 @@ const TRANSIENT_ERROR_MS = 15000;
 
 interface HeaderBarProps {
   featureGuard: FeatureGuard;
+  onViewReport: () => void;
+  onViewHistory: () => void;
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
+const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onViewHistory }) => {
   const [audioNotification, setAudioNotification] = useState('');
   const [videoNotification, setVideoNotification] = useState('');
   const { t } = useTranslation();
@@ -111,6 +113,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
 
   // Check if video_analytics feature is enabled in backend
   const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasReportFeature = featureGuard.hasFeature('report');
   
   // Check if audio features are enabled
   const hasAudioFeatures = featureGuard.hasFeature('asr') ||
@@ -834,11 +837,35 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
       </div>
 
       <div className="navbar-center">
-        <NotificationsDisplay 
-          audioNotification={audioNotification} 
-          videoNotification={videoNotification} 
-          error={errorMsg} 
+        <NotificationsDisplay
+          audioNotification={audioNotification}
+          videoNotification={videoNotification}
+          error={errorMsg}
         />
+      </div>
+
+      {/* Both open a slide-over rather than navigating, and both are about the
+          session this bar is reporting on — so they sit beside the audio/video
+          status rather than in the navigation menu. Only the main screen renders
+          this bar, which is the intent: they belong to this workflow. */}
+      <div className="navbar-right">
+        <button
+          className="navbar-action-btn"
+          disabled={!hasReportFeature}
+          onClick={onViewReport}
+          title={t('reportPanel.title', 'View Report')}
+        >
+          <span className="action-icon">📊</span>
+          <span className="action-label">{t('reportPanel.short', 'Report')}</span>
+        </button>
+        <button
+          className="navbar-action-btn"
+          onClick={onViewHistory}
+          title={t('history.title', 'Session history')}
+        >
+          <span className="action-icon">🕘</span>
+          <span className="action-label">{t('history.short', 'History')}</span>
+        </button>
       </div>
 
       {isUploadModalOpen && (

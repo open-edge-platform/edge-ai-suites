@@ -11,17 +11,13 @@ interface TopPanelProps {
   setActiveScreen: (screen: 'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready') => void;
   featureGuard: FeatureGuard;
   hasMainFeatures: boolean;
-  onViewReport: () => void;
-  onViewHistory: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
   activeScreen,
   setActiveScreen,
   featureGuard,
-  hasMainFeatures,
-  onViewReport,
-  onViewHistory
+  hasMainFeatures
 }) => {
   const navMenuRef = useRef<HTMLDivElement>(null);
   const navToggleRef = useRef<HTMLButtonElement>(null);
@@ -33,7 +29,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
   // Show Content Search UI if either content_search OR qa feature is enabled
   const hasContentSearchFeatures = featureGuard.hasFeature('content_search') || featureGuard.hasFeature('qa');
   const hasGradingFeature = featureGuard.hasFeature('grading');
-  const hasReportFeature = featureGuard.hasFeature('report');
 
   // Close nav menu when clicking outside
   useEffect(() => {
@@ -115,8 +110,8 @@ const TopPanel: React.FC<TopPanelProps> = ({
               <span className={!hasGradingFeature ? 'disabled' : ''}>{t('grading.title', 'Grading')}</span>
             </li>
             {/* Report and Session history are not here: they open slide-over
-                panels rather than navigating, so they sit in the action slot as
-                direct buttons. */}
+                panels rather than navigating, so they are buttons on the header
+                bar, next to the audio/video status they belong with. */}
             {/* Electron only: supervision of the Python backend processes */}
             {hasServiceManager && (
               <li
@@ -175,36 +170,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
     </div>
   );
 
-  // The right-hand controls, shared by all three layouts below. Report and
-  // history live here rather than in the nav menu because they open a panel
-  // over the current screen instead of navigating away from it — and unlike the
-  // header bar, which App only renders on the main screen, this slot is present
-  // everywhere, so they stay reachable from Content Search and Grading too.
-  const renderActionSlot = () => (
-    <div className="action-slot">
-      <button
-        className="top-panel-action-btn"
-        disabled={!hasReportFeature}
-        onClick={onViewReport}
-        title={t('reportPanel.title', 'View Report')}
-      >
-        <span className="action-icon">📊</span>
-        <span className="action-label">{t('reportPanel.short', 'Report')}</span>
-      </button>
-      {/* Not gated on hasServiceManager: the history comes from the backend, so
-          the browser build has one too. */}
-      <button
-        className="top-panel-action-btn"
-        onClick={onViewHistory}
-        title={t('history.title', 'Session history')}
-      >
-        <span className="action-icon">🕘</span>
-        <span className="action-label">{t('history.short', 'History')}</span>
-      </button>
-      <LanguageSwitcher />
-    </div>
-  );
-
   if (activeScreen === 'grading') {
     return (
       <header className="top-panel">
@@ -213,7 +178,9 @@ const TopPanel: React.FC<TopPanelProps> = ({
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('grading.title', 'Grading')}</span>
         </div>
-        {renderActionSlot()}
+        <div className="action-slot">
+          <LanguageSwitcher />
+        </div>
       </header>
     );
   }
@@ -226,7 +193,9 @@ const TopPanel: React.FC<TopPanelProps> = ({
           <img src={BrandSlot} alt="Intel Logo" className="logo" />
           <span className="app-title">{t('contentSearch.title', 'Content Search')}</span>
         </div>
-        {renderActionSlot()}
+        <div className="action-slot">
+          <LanguageSwitcher />
+        </div>
       </header>
     );
   }
@@ -238,7 +207,9 @@ const TopPanel: React.FC<TopPanelProps> = ({
         <img src={BrandSlot} alt="Intel Logo" className="logo" />
         <span className="app-title">{t('header.title')}</span>
       </div>
-      {renderActionSlot()}
+      <div className="action-slot">
+        <LanguageSwitcher />
+      </div>
     </header>
   );
 };

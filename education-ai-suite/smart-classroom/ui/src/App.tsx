@@ -192,10 +192,6 @@ const App: React.FC = () => {
             // feature-gated nav entry renders disabled.
             featureGuard={new FeatureGuard([])}
             hasMainFeatures={false}
-            // Both panels read from the backend that is not up yet, so the
-            // buttons render but do nothing until it answers.
-            onViewReport={() => {}}
-            onViewHistory={() => {}}
           />
           <div className="main-content">{renderToolScreen(screen)}</div>
           <Footer />
@@ -249,11 +245,13 @@ const App: React.FC = () => {
         setActiveScreen={openScreen}
         featureGuard={guard}
         hasMainFeatures={hasMainFeatures}
-        onViewReport={() => setIsReportOpen(true)}
-        onViewHistory={() => setIsHistoryOpen(true)}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
-        <HeaderBar featureGuard={guard} />
+        <HeaderBar
+          featureGuard={guard}
+          onViewReport={() => setIsReportOpen(true)}
+          onViewHistory={() => setIsHistoryOpen(true)}
+        />
       </div>
       {activeScreen === 'content-search' && (
         <div className="content-search-subheader">

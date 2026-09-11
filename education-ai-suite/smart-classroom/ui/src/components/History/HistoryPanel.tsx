@@ -64,7 +64,9 @@ interface HistoryPanelProps {
  */
 const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  useTitleBarTheme(isOpen, 'light');
+  // The panel sits below the caption strip, so what covers it is the dim
+  // backdrop rather than the panel's own white sheet.
+  useTitleBarTheme(isOpen, 'dimmed');
 
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [total, setTotal] = useState(0);

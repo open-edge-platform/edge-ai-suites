@@ -51,11 +51,6 @@
   min-width: 0;
 }
 
-/* Keep the header clear of the Windows caption buttons. */
-body.electron .history-panel-header {
-  padding-right: calc(24px + (100vw - env(titlebar-area-width, 100vw)));
-}
-
 .history-panel-header > div {
   min-width: 0;
 }

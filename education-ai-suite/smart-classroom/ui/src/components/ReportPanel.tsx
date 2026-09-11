@@ -58,7 +58,9 @@ interface ReportPanelProps {
 }
 
 const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard }) => {
-  useTitleBarTheme(isOpen, 'light');
+  // The panel sits below the caption strip, so what covers it is the dim
+  // backdrop rather than the panel's own white sheet.
+  useTitleBarTheme(isOpen, 'dimmed');
 
   const dispatch = useAppDispatch();
   const { i18n, t } = useTranslation();
