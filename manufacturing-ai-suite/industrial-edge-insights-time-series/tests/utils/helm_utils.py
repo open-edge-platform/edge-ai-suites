@@ -2089,6 +2089,8 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
 
     try:
         config_path = Path(config_dir)
+        app_cfg = constants.get_app_config(sample_app) or {}
+        upload_name = app_cfg.get("udf", sample_app)
         required_folders = ("udfs", "tick_scripts")
         for folder in required_folders:
             source = config_path / folder
@@ -2154,7 +2156,7 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", f"file=@{tar_path}",
+                "-F", f"file=@{tar_path};filename={upload_name}.tar",
             ]
             try:
                 result = common_utils.exec_command(

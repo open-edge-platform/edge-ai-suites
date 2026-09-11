@@ -1537,7 +1537,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 )
                 return False
 
-        tar_name = f"{sample_app}.tar"
+        upload_name = app_cfg.get("udf", sample_app)
         with _tempfile.NamedTemporaryFile(
             suffix=".tar", delete=False, prefix=f"{sample_app}_udf_"
         ) as tmp_file:
@@ -1567,7 +1567,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", f"file=@{tar_path}",
+                "-F", f"file=@{tar_path};filename={upload_name}.tar",
             ]
             result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=60)
             if result.returncode == 0:
@@ -4156,19 +4156,25 @@ def execute_multimodal_gpu_config_curl(config, device="gpu"):
         # Construct curl command for multimodal deployment using external API endpoint
         # as documented in get-started.md
         curl_command = [
-            "curl", "-k", "-X", "POST",
+            "curl", "-k", "-s", "-X", "POST",
             f"{constants.DOCKER_TSA_API_BASE_URL}/config",
             "-H", "accept: application/json",
             "-H", "Content-Type: application/json",
-            "-d", gpu_config_json
+            "-d", gpu_config_json,
+            "-w", "\n%{http_code}",
         ]
 
         # Execute curl command
         result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
+            *body_lines, http_code = result.stdout.strip().splitlines() or [""]
+            if http_code != "200":
+                logger.error(f"✗ Multimodal {device.upper()} configuration rejected with HTTP {http_code}")
+                logger.error(f"Response: {chr(10).join(body_lines)}")
+                return False
             logger.info(f"✓ Multimodal {device.upper()} configuration posted successfully")
-            logger.debug(f"Response: {result.stdout}")
+            logger.debug(f"Response: {chr(10).join(body_lines)}")
             return True
         else:
             logger.error(f"✗ Failed to post multimodal {device.upper()} configuration")
