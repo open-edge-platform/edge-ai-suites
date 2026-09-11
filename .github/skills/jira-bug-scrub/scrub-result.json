@@ -1,0 +1,454 @@
+{
+  "schema_version": "1.0",
+  "timestamp": "2026-09-04T09:02:20.1681640+02:00",
+  "target": "ITEP-95788",
+  "mode": "dry-run",
+  "jira_modified": false,
+  "issues": [
+    {
+      "key": "ITEP-95788",
+      "snapshot_updated": "2026-09-04T09:02:20.1681640+02:00",
+      "final_updated": null,
+      "readiness": "BLOCKED",
+      "rule_evaluations": [
+        {
+          "rule_id": "BKM-01",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; project data could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-02",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; issue type could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-03",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; summary could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-04",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; Component data could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-05",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; description could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-06",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; Affects Version data could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-07",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; Fix Version data could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-08",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; Priority could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-09",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; security classification could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-10",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; summary format could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-11",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; summary clarity could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-12",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; summary content could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-13",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; summary neutrality could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-14",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; issue-summary description section could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-15",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; impact evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-16",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; reproduction steps could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-17",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; expected behavior could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-18",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; actual behavior could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-19",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; characterization and isolation evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-20",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; commit evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-21",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; underlying issue explanation could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-22",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; issue consistency could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-23",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; P1 applicability could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-24",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; P2 applicability could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-25",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; P3 applicability could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-26",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; P4 applicability could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-27",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; priority evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-28",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; priority alignment could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-29",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability or feature-freeze calendar context was available; pre-freeze P1 SLA could not be evaluated.",
+          "required_action": "Configure or restore authorized Jira read access and provide the applicable freeze/calendar policy, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-30",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability or feature-freeze calendar context was available; post-freeze P1 SLA could not be evaluated.",
+          "required_action": "Configure or restore authorized Jira read access and provide the applicable freeze/calendar policy, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-31",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability or business calendar was available; P2 SLA could not be evaluated.",
+          "required_action": "Configure or restore authorized Jira read access and provide the applicable calendar policy, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-32",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability or business calendar was available; P3 SLA could not be evaluated.",
+          "required_action": "Configure or restore authorized Jira read access and provide the applicable calendar policy, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-33",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "Feature-freeze state, business calendar, pause policy, and Jira timestamps were unavailable.",
+          "required_action": "Provide authorized Jira read access and the applicable release calendar and exclusion policy."
+        },
+        {
+          "rule_id": "BKM-34",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; suspected-security indicators and field value could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "BKM-35",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; applicability of security escalation could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub without copying sensitive details."
+        },
+        {
+          "rule_id": "SCRUB-01",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; reproduction preconditions could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-02",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; reproduction frequency could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-03",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; attachment metadata and quoted evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-04",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; regression status could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-05",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; workaround evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-06",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; acceptance and retest criteria could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-07",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; affected scope could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-08",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; assignee could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-09",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability or component metadata was available; component ownership could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration with field metadata access, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-10",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; fix-target credibility could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-11",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; issue links and dependencies could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-12",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira JQL search capability or issue evidence was available; a bounded duplicate search could not be performed.",
+          "required_action": "Configure or restore authorized Jira issue-read and JQL-search capabilities, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-13",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; ownership conflicts could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-14",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; status and supporting evidence could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-15",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available; comments, changelog, Priority, and last meaningful update could not be evaluated.",
+          "required_action": "Configure or restore authorized Jira read access including comments and changelog, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-16",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; in-progress update quality could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-17",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; blocked-state evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-18",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available; existing information requests and workflow transitions could not be evaluated.",
+          "required_action": "Configure or restore authorized Jira read access including comments and transitions, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-19",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; reopened status and rationale could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-20",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; status and resolution could not be retrieved.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-21",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; fix references could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-22",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; verification evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-23",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; acceptance evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-24",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; duplicate resolution and canonical links could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-25",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; cannot-reproduce evidence could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-26",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; won't-fix or as-designed rationale could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        },
+        {
+          "rule_id": "SCRUB-27",
+          "verdict": "BLOCKED",
+          "severity": "Blocking",
+          "evidence": "No configured Jira read capability was available during the snapshot attempt; unresolved blockers and transition eligibility could not be evaluated.",
+          "required_action": "Configure or restore an authorized Jira read integration, then rerun the scrub."
+        }
+      ],
+      "draft_comment": null,
+      "proposed_actions": [],
+      "applied_actions": []
+    }
+  ]
+}
