@@ -147,8 +147,6 @@ def setup_helm_weld_environment(request):
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-defect-detection"
 
-    privileged_access_required = "true" if request.node.get_closest_marker("gpu") else "false"
-
     logger.debug(
         f"Installing Helm release... "
         f"Release Name: {release_name_weld}, "
@@ -156,14 +154,7 @@ def setup_helm_weld_environment(request):
         f"Namespace: {namespace}, "
         f"Telegraf Input Plugin: {telegraf_input_plugin}"
     )
-    install_result = helm_utils.helm_install(
-        release_name_weld,
-        chart_path,
-        namespace,
-        telegraf_input_plugin,
-        val=privileged_access_required,
-        sample_app=sample_app,
-    )
+    install_result = helm_utils.helm_install(release_name_weld, chart_path, namespace, telegraf_input_plugin, sample_app=sample_app)
     if not install_result:
         logger.error(f"Helm install failed for release '{release_name_weld}'")
         helm_utils.dump_pod_diagnostics(namespace)
