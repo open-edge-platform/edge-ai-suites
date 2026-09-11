@@ -35,6 +35,14 @@ class FileValidator:
         ".png": "image/png",
     }
 
+    # Text formats the ingest pipeline parses but that have no single content-type
+    # to cross-check against (providers/file_ingest_and_retrieve/server.py).
+    EXTRA_ALLOWED_EXTENSIONS = {".html", ".htm", ".xml", ".md"}
+
+    # Upload allowlist. Anything outside this set is rejected rather than stored
+    # unchecked, so executable and script types never reach the object store.
+    ALLOWED_EXTENSIONS = frozenset(EXTENSION_TO_CONTENT_TYPE) | EXTRA_ALLOWED_EXTENSIONS
+
     MAGIC_NUMBERS = {
         ".pdf": [b"%PDF"],
         ".doc": [b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"],
@@ -79,14 +87,21 @@ class FileValidator:
 
         name_lower = filename.lower()
         ext = None
-        for possible_ext in FileValidator.EXTENSION_TO_CONTENT_TYPE.keys():
+        # Longest first so a suffix never shadows a longer extension.
+        for possible_ext in sorted(FileValidator.ALLOWED_EXTENSIONS, key=len, reverse=True):
             if name_lower.endswith(possible_ext):
                 ext = possible_ext
                 break
 
+        # Default-deny: anything outside the supported set (".py", ".bat", ".ps1", ...)
+        # is rejected instead of being stored unchecked.
         if not ext:
-            logger.warning(f"Unknown file extension for: {filename}")
-            return True, None
+            error_msg = (
+                f"Unsupported file type for: {filename}. Allowed extensions: "
+                f"{', '.join(sorted(FileValidator.ALLOWED_EXTENSIONS))}"
+            )
+            logger.warning(error_msg)
+            return False, error_msg
 
         if not content_type:
             return True, None
