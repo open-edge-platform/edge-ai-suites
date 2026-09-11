@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Flight Anomaly Detection
+# Example 3: Flight Anomaly Detection
 
 Detect abnormal behavior in UAV flight data to catch issues before crashes.
 

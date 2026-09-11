@@ -62,7 +62,7 @@ To learn more about the application and how to use it, see
 Follow the steps below to set up and run the UAV Blueprint:
 
 1. [Infrastructure Setup](./infrastructure-setup.md) — Build the OS image, flash it to a bootable USB, and validate the provisioned platform.
-2. [Install OEP SDKs](./get-started/install-oep-sdks.md) — Verify hardware accelerators and install the UAV Mission Compute SDK on the provisioned target.
+2. [Install OEP SDK and Usage](./get-started/install-oep-sdks.md) — Verify hardware accelerators and install the UAV Mission Compute SDK on the provisioned target.
 3. [Install UAV Vision Analytics Application](install-uav-app.md) — Choose and follow the deployment mode that matches your setup (Standalone or UAV Mission Compute SDK).
 4. [How to use UAV Vision Analytics Application](./how-to-guides.md) — Learn how to configure models, cameras, QGroundControl, and more.
 5. [Benchmarks](./benchmark.md) — Measure stream density and hardware utilization.
@@ -101,7 +101,7 @@ immediately.
 :hidden:
 
 Infrastructure Setup <./infrastructure-setup.md>
-Install OEP SDKs <./get-started/install-oep-sdks.md>
+Install OEP SDK and Usage <./get-started/install-oep-sdks.md>
 Install UAV Vision Analytics Application <install-uav-app.md>
 How to use UAV Vision Analytics Application <./how-to-guides.md>
 Benchmarks <./benchmark.md>
