@@ -59,7 +59,7 @@ There are two options available to get the application source:
 Download the compressed file and get into the directory:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/uav-mission-apps.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2/uav-mission-apps.zip
 ```
 
 Decompress the downloaded file:
@@ -74,7 +74,7 @@ cd uav-vision-analytics
 Clone the repo and get into the directory:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch fedaero-latest
+git clone https://github.com/open-edge-platform/edge-ai-suites.git --branch release-2026.2.0
 cd edge-ai-suites/federal-and-aerospace-ai-suite/uav-vision-analytics
 ```
 
