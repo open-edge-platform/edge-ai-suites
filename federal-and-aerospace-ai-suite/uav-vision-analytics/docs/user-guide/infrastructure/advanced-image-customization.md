@@ -249,11 +249,7 @@ cp "$TEMPLATE" \
    "$(dirname "$TEMPLATE")/my-template.yml"
 ```
 
-For detailed validation and build instructions, refer to [Building an Ubuntu OS Version 24.04 Image with Image Composer Tool](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/infrastructure/host-os/ict/README.md). That guide covers:
-
-- template validation
-- image build process
-- troubleshooting and build output artifacts
+Validate and build this variant using the same commands as the default template (see [Validate the template](#validate-the-template) and [Build the image](#build-the-image) above), substituting `my-template.yml` for `$TEMPLATE`. See [Troubleshoot](#troubleshoot) below if you run into issues.
 
 Expected output artifact type:
 
