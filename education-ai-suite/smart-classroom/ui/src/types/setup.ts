@@ -4,7 +4,7 @@
 // Shapes returned by the Electron setup IPC bridge. Kept in sync with
 // electron/services/setup-runner.cjs.
 
-export type SetupStatus = 'unknown' | 'ok' | 'warn' | 'missing' | 'running' | 'failed';
+export type SetupStatus = 'unknown' | 'ok' | 'warn' | 'outdated' | 'missing' | 'running' | 'failed';
 
 export interface SetupAction {
   id: string;
@@ -28,6 +28,8 @@ export interface SetupStep {
   actions: SetupAction[];
   status: SetupStatus;
   detail: string;
+  /** The action that clears this status. */
+  repair: string | null;
   /** A command or link the user can use when the app cannot fix it. */
   hint: string | null;
 }
