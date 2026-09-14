@@ -57,6 +57,7 @@ extensions = [
     "sphinxcontrib.openapi",
     "sphinxcontrib.spelling",
     "sphinxcontrib.video",
+    "sphinxcontrib.mermaid",
     "sphinx_tabs.tabs",
     "myst_parser",
     "breathe",

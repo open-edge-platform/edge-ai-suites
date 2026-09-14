@@ -13,7 +13,6 @@
 **Known issues and limitations**:
 
 - When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
-- After running `./run.sh down` for `./run.sh standalone`, `metrics-manager` container stays deployed and must be removed manually by running `docker stop metrics-manager && docker rm metrics-manager`. Without manual removal, deployment of full version `./run.sh up` will fail because `metrics-manager` container is already present.
 
 ## [Edge-Node Infrastructure software](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/releases)
 

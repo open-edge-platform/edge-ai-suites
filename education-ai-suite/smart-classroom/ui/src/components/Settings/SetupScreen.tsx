@@ -15,16 +15,23 @@ const STATUS_LABELS: Record<string, string> = {
   unknown: 'setup.status.unknown',
   ok: 'setup.status.ok',
   warn: 'setup.status.warn',
+  outdated: 'setup.status.outdated',
   missing: 'setup.status.missing',
   running: 'setup.status.running',
   failed: 'setup.status.failed',
 };
 
-/** The action a bulk "fix" run would use: the first non-destructive one. */
+/** Statuses that stand between the machine and being ready to run. */
+const NEEDS_WORK = ['missing', 'failed', 'outdated'];
+
+/**
+ * The action a bulk "fix" run would use. The step names it — only the check
+ * knows which action addresses what it found — and a destructive one is dropped,
+ * because deleting an environment must stay a deliberate click with its own
+ * confirmation rather than one item in a queue.
+ */
 const repairAction = (step: SetupStep) =>
-  step.status === 'missing' || step.status === 'failed'
-    ? step.actions.find((action) => !action.destructive)
-    : undefined;
+  step.repair ? step.actions.find((action) => action.id === step.repair && !action.destructive) : undefined;
 
 interface SetupScreenProps {
   /** Where to hand over once there is nothing left to fix. */
@@ -73,24 +80,42 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onOpenScreen, focusStepId }) 
 
   // "Nothing left to fix", not "a run finished": a fully prepared machine gets
   // the same confirmation the first time it opens this screen.
+  //
+  // Measured against what still needs work rather than against `pending`, which
+  // counts only what the Fix button can run. An outdated environment whose one
+  // cure is Recreate is not in `pending`, and settling over it is exactly the
+  // "nothing left to fix" beside a live button that this split is here to end.
   const checked = steps.some((step) => step.status !== 'unknown');
   const working = busy || checking || steps.some((step) => step.status === 'running');
-  const settled = checked && !working && !pending.length;
+  const needsWork = useMemo(() => steps.filter((step) => NEEDS_WORK.includes(step.status)), [steps]);
+  const settled = checked && !working && !needsWork.length;
 
-  // Warnings do not block anything, so they must not block the handover — but
-  // claiming "everything is ready" while one stands would be a lie.
+  // Rows that need work but that the Fix button will not touch, because their
+  // repair is destructive. Named in the banner so the one click they do need is
+  // not left to be discovered.
+  const manual = useMemo(() => needsWork.filter((step) => !repairAction(step)), [needsWork]);
+
+  // Advisory only, now that anything actionable is `outdated`: no NPU, too
+  // little memory, a driver this app cannot update. Worth showing, never worth
+  // counting, and not a reason to withhold "everything is ready".
   const warnings = steps.filter((step) => step.status === 'warn');
 
   // Steps that cannot run yet because something they need is not OK. Without
   // this the buttons are live and fail with "Create the Python environment
   // first" only after being clicked.
+  //
+  // Neither a warning nor an outdated row is one of those things. Both mean the
+  // step below works but is not ideal.
   const blockedBy = useMemo(() => {
     const byId = new Map(steps.map((step) => [step.id, step]));
     const map: Record<string, string[]> = {};
     for (const step of steps) {
       const unmet = step.requires
         .map((id) => byId.get(id))
-        .filter((required): required is SetupStep => !!required && required.status !== 'ok')
+        .filter(
+          (required): required is SetupStep =>
+            !!required && !['ok', 'warn', 'outdated'].includes(required.status)
+        )
         .map((required) => required.label);
       if (unmet.length) map[step.id] = unmet;
     }
@@ -171,6 +196,18 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onOpenScreen, focusStepId }) 
           {t(
             'setup.firstRun',
             'The Python environment is missing, so the backend cannot start. Select Fix to create it — the first run downloads several gigabytes.'
+          )}
+        </div>
+      )}
+
+      {/* Rows the Fix button skips. Without this they read as amber with no
+          explanation of why the count above does not include them. */}
+      {!working && manual.length > 0 && (
+        <div className="setup-banner">
+          {t(
+            'setup.manualFix',
+            '{{items}} cannot be brought up to date automatically. Use the button on that row — it rebuilds from scratch, so it asks for confirmation first.',
+            { items: manual.map((step) => step.label).join(', ') }
           )}
         </div>
       )}

@@ -80,6 +80,7 @@ def train_model(
         workers=train_cfg["workers"],
         device=dev,
         amp=train_cfg["amp"],
+        cache=train_cfg.get("cache", False),
         optimizer=train_cfg["optimizer"],
         lr0=train_cfg["lr0"],
         lrf=train_cfg["lrf"],

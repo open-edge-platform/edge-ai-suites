@@ -39,6 +39,8 @@ from constants import (
 )
 import common_utils
 from common_utils import cross_verify_img_handle_with_s3
+from common_utils import assert_condition
+
 # Try to import security_utils, but make it optional for multimodal tests
 try:
     import security_utils
@@ -59,10 +61,10 @@ def run_command(cmd, capture_output=False):
         cmd = shlex.split(cmd)
 
     if capture_output:
-        proc = subprocess.run(cmd, capture_output=True, text=True)
+        proc = common_utils.exec_command(cmd, capture_output=True, text=True)
         return proc.returncode, proc.stdout + proc.stderr
     else:
-        proc = subprocess.run(cmd)
+        proc = common_utils.exec_command(cmd)
         return proc.returncode
 
 def get_container_logs(container_name, tail=None):
@@ -70,22 +72,22 @@ def get_container_logs(container_name, tail=None):
     if tail:
         cmd.extend(["--tail", str(tail)])
     cmd.append(container_name)
-    return subprocess.check_output(cmd).decode()
+    return common_utils.exec_command(cmd, capture_output=True, check=True).stdout
 
 def container_is_running(name):
-    result = subprocess.run(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
+    result = common_utils.exec_command(["docker", "ps", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
     return name in result.stdout
 
 def container_exists(name):
-    result = subprocess.run(["docker", "ps", "-a", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
+    result = common_utils.exec_command(["docker", "ps", "-a", "--filter", f"name={name}", "--format", "{{.Names}}"], capture_output=True, text=True)
     return name in result.stdout
 
 def stop_container(name):
-    result = subprocess.run(["docker", "stop", name])
+    result = common_utils.exec_command(["docker", "stop", name])
     return result.returncode
 
 def remove_container(name):
-    result = subprocess.run(["docker", "rm", name])
+    result = common_utils.exec_command(["docker", "rm", name])
     return result.returncode
 
 def get_docker_env_values():
@@ -161,7 +163,7 @@ def deploy_and_verify(context, deploy_type="opcua", include_nmap=True):
 
     # Deploy containers based on type
     if deploy_type.lower() == "opcua":
-        assert context["deploy_opcua"]() == True, "Failed to deploy Docker containers with OPC-UA ingestion."
+        assert_condition(context["deploy_opcua"]() == True, "Failed to deploy Docker containers with OPC-UA ingestion.")
         logger.info(f"Docker containers deployed with OPC-UA ingestion and waiting for {context['docker_wait_time']} seconds for containers to stabilize")
         expected_containers = [
             constants.CONTAINERS["influxdb"]["name"],
@@ -171,7 +173,7 @@ def deploy_and_verify(context, deploy_type="opcua", include_nmap=True):
             constants.CONTAINERS["opcua_server"]["name"]
         ]
     elif deploy_type.lower() == "mqtt":
-        assert context["deploy_mqtt"]() == True, "Failed to deploy Docker containers with MQTT ingestion."
+        assert_condition(context["deploy_mqtt"]() == True, "Failed to deploy Docker containers with MQTT ingestion.")
         logger.info(f"Docker containers deployed with MQTT ingestion and waiting for {context['docker_wait_time']} seconds for containers to stabilize")
         expected_containers = [
             constants.CONTAINERS["influxdb"]["name"],
@@ -188,14 +190,14 @@ def deploy_and_verify(context, deploy_type="opcua", include_nmap=True):
 
     # Verify that containers are running
     deployed_containers = get_the_deployed_containers()
-    assert len(deployed_containers) > 0, "Failed to verify running Docker containers."
+    assert_condition(len(deployed_containers) > 0, "Failed to verify running Docker containers.")
     logger.info(f"Verified {len(deployed_containers)} Docker containers are running: {deployed_containers}")
 
     # Verify container logs for proper initialization
     for container in expected_containers:
         if container in deployed_containers:
             logs = get_container_logs(container)
-            assert logs is not None, f"Failed to retrieve logs for container {container}."
+            assert_condition(logs is not None, f"Failed to retrieve logs for container {container}.")
             logger.info(f"Successfully retrieved logs for container: {container}")
 
     # Prepare results
@@ -208,7 +210,7 @@ def deploy_and_verify(context, deploy_type="opcua", include_nmap=True):
     # Optional: Find exposed ports and run nmap scan
     if include_nmap and SECURITY_UTILS_AVAILABLE:
         exposed_ports = security_utils.find_exposed_ports_docker()
-        assert security_utils.check_nmap_docker(context["docker_target"], exposed_ports) == True, "Failed to find open ports on the target using nmap."
+        assert_condition(security_utils.check_nmap_docker(context["docker_target"], exposed_ports) == True, "Failed to find open ports on the target using nmap.")
         logger.info("Successfully completed nmap scan on Docker exposed ports.")
         results["exposed_ports"] = exposed_ports
 
@@ -236,11 +238,11 @@ def deploy_containers(context, deploy_type="opcua"):
         raise ValueError(f"Unsupported deploy_type: {deploy_type}. Use 'opcua' or 'mqtt'.")
 
 def start_container(name):
-    result = subprocess.run(["docker", "start", name])
+    result = common_utils.exec_command(["docker", "start", name])
     return result.returncode
 
 def restart_container(name):
-    result = subprocess.run(["docker", "restart", name])
+    result = common_utils.exec_command(["docker", "restart", name])
     return result.returncode
 
 def get_images_from_docker_compose(compose_file_path=None):
@@ -296,11 +298,11 @@ def get_images_from_docker_compose(compose_file_path=None):
     return unique_images
 
 def build_image(dockerfile_path, image_name):
-    result = subprocess.run(["docker", "build", "-t", image_name, "-f", dockerfile_path, "."])
+    result = common_utils.exec_command(["docker", "build", "-t", image_name, "-f", dockerfile_path, "."])
     return result.returncode
 
 def get_image_id(image):
-    result = subprocess.run(["docker", "images", "--filter", f"reference={image}", "--format", "{{.ID}}"], capture_output=True, text=True)
+    result = common_utils.exec_command(["docker", "images", "--filter", f"reference={image}", "--format", "{{.ID}}"], capture_output=True, text=True)
     return result.stdout.strip() if result.stdout else None
 
 def get_image_size(image):
@@ -313,7 +315,7 @@ def get_image_size(image):
         float: Image size in MB, or None if image not found
     """
     try:
-        result = subprocess.run(
+        result = common_utils.exec_command(
             ["docker", "images", "--filter", f"reference={image}", "--format", "{{.Size}}"],
             capture_output=True,
             text=True
@@ -389,7 +391,7 @@ def count_running_containers_with_prefix(prefix):
         int: Count of running containers whose name begins with the prefix.
     """
     try:
-        result = subprocess.run(
+        result = common_utils.exec_command(
             ["docker", "ps", "--filter", f"name=^{prefix}", "--format", "{{.Names}}"],
             capture_output=True, text=True, check=False,
         )
@@ -463,7 +465,7 @@ def wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIME
             time.sleep(poll_interval)
             continue
         try:
-            result = subprocess.run(
+            result = common_utils.exec_command(
                 ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}",
                  "https://localhost:3000/ts-api/health"],
                 capture_output=True, text=True, timeout=constants.WIND_TURBINE_CURL_TIMEOUT
@@ -811,13 +813,13 @@ def update_env_file(file_path=None, values=None):
 
         for parameter_name, value in values.items():
             # Check whether the key already exists in the file
-            grep_result = subprocess.run(
+            grep_result = common_utils.exec_command(
                 ["grep", "-q", f"^{parameter_name}=", expanded_path],
                 capture_output=True
             )
             if grep_result.returncode == 0:
                 # Key exists — update it with sed
-                sed_result = subprocess.run(
+                sed_result = common_utils.exec_command(
                     ["sed", "-i", f"s|^{parameter_name}=.*|{parameter_name}={value}|g", expanded_path],
                     capture_output=True, text=True
                 )
@@ -825,14 +827,8 @@ def update_env_file(file_path=None, values=None):
                     logger.error(f"sed failed: {sed_result.stderr}")
                     return False
             else:
-                # Key missing — append it using printf via shell
-                append_result = subprocess.run(
-                    ["bash", "-c", f"printf '%s\\n' '{parameter_name}={value}' >> {expanded_path}"],
-                    capture_output=True, text=True
-                )
-                if append_result.returncode != 0:
-                    logger.error(f"Failed while appending to .env file: {append_result.stderr}")
-                    return False
+                with open(expanded_path, "a", encoding="utf-8") as env_file:
+                    env_file.write(f"{parameter_name}={value}\n")
 
         logger.debug(f"Successfully updated .env file with {len(values)} environment variables")
         return True
@@ -870,7 +866,7 @@ def get_the_deployed_containers():
         # This is the exact command used in the Makefile's status target
         logger.info("Extracting containers using docker ps with filters")
 
-        result = subprocess.run([
+        result = common_utils.exec_command([
             "docker", "ps", "-a",
             "--filter", "name=^ia-",
             "--filter", "name=mr_",
@@ -906,7 +902,7 @@ def get_container_image_sizes():
     image_sizes = {}
     try:
         # Get container names and their images
-        result = subprocess.run([
+        result = common_utils.exec_command([
             "docker", "ps", "-a",
             "--filter", "name=^ia-",
             "--filter", "name=mr_",
@@ -1406,7 +1402,7 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
         # 30s is generous for a `docker logs --since Ns` snapshot.
         cli_timeout = min(30, max(5, int(remaining)))
         try:
-            result = subprocess.run(
+            result = common_utils.exec_command(
                 ["docker", "logs", "--since", f"{since_seconds}s", container_name],
                 capture_output=True, text=True, timeout=cli_timeout,
             )
@@ -1442,7 +1438,7 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
 
     logger.info(f"Timeout reached ({timeout}s). No {pattern_display} found in logs for container {container_name}.")
     try:
-        tail = subprocess.run(
+        tail = common_utils.exec_command(
             ["docker", "logs", "--tail", "100", container_name],
             capture_output=True, text=True, timeout=15,
         )
@@ -1562,7 +1558,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 "-X", "POST", upload_endpoint,
                 "-F", f"file=@{tar_path}",
             ]
-            result = subprocess.run(curl_command, capture_output=True, text=True, timeout=60)
+            result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=60)
             if result.returncode == 0:
                 http_code = result.stdout.strip()
                 if http_code == "200":
@@ -1624,7 +1620,7 @@ def update_config_file(ingestion_type="opcua"):
         max_retries = 12  # Up to 120 seconds total: initial 60s wait + (5s * 12 retries)
         for attempt in range(max_retries):
             try:
-                test_result = subprocess.run(
+                test_result = common_utils.exec_command(
                     ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}",
                      "https://localhost:3000/ts-api/health"],
                     capture_output=True, text=True, timeout=10
@@ -1664,7 +1660,7 @@ def update_config_file(ingestion_type="opcua"):
 
         # Step 5: Create the directory and copy files
         os.makedirs('windturbine_anomaly_detector', exist_ok=True)
-        result = subprocess.run(['cp', '-r', 'models', 'tick_scripts', 'udfs', 'windturbine_anomaly_detector/.'], check=True)
+        result = common_utils.exec_command(['cp', '-r', 'models', 'tick_scripts', 'udfs', 'windturbine_anomaly_detector/.'], check=True)
         if result.stdout:
             logger.info("Files copied successfully to 'windturbine_anomaly_detector' directory.")
         elif result.stderr:
@@ -1722,7 +1718,7 @@ def update_config_file(ingestion_type="opcua"):
         for retry in range(max_curl_retries):
             try:
                 logger.info(f"Attempting curl command (attempt {retry + 1}/{max_curl_retries})...")
-                result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+                result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
                 if result.returncode == 0:
                     logger.info("Curl command executed successfully. Response:")
                     logger.info(result.stdout)
@@ -1812,7 +1808,7 @@ def execute_gpu_config_curl(device="gpu", sample_app=constants.WIND_SAMPLE_APP):
             "-d", gpu_config_json
         ]
 
-        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+        result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             logger.info(f"{device.upper()} configuration POST via curl command succeeded")
@@ -1844,7 +1840,7 @@ def _kapacitor_task_alert_mode_matches(alert_mode):
         return False
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
     try:
-        result = subprocess.run(
+        result = common_utils.exec_command(
             ["docker", "exec", tsam_name,
              "curl", "-s", "http://localhost:9092/kapacitor/v1/tasks/windturbine_anomaly_detector"],
             capture_output=True, text=True, timeout=15,
@@ -2056,7 +2052,7 @@ def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
         ]
         logger.info(f"Executing command: 'SHOW MEASUREMENTS; {query_part}' inside {container_name} container with redacted credentials.")
 
-        result = subprocess.run(exec_command, capture_output=True, text=True)
+        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Command failed with return code {result.returncode}")
@@ -2112,7 +2108,7 @@ def verify_influxdb_retention_docker(response=None, container_name=constants.CON
             "-database", "datain", "-execute", influx_execute
         ]
         logger.info(f"Executing InfluxDB query inside container '{container_name}': '{influx_execute}' with redacted credentials.")
-        result = subprocess.run(exec_command, capture_output=True, text=True)
+        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Command failed with return code {result.returncode}")
@@ -2329,7 +2325,7 @@ def _check_deployed_container_sizes(size_threshold):
         try:
             # Get the image name for this container
             inspect_cmd = ['docker', 'inspect', '--format', '{{.Config.Image}}', container_name]
-            inspect_result = subprocess.run(inspect_cmd, capture_output=True, text=True, check=True)
+            inspect_result = common_utils.exec_command(inspect_cmd, capture_output=True, text=True, check=True)
             image_name = inspect_result.stdout.strip()
 
             if not image_name:
@@ -2394,7 +2390,7 @@ def _check_built_image_sizes(size_threshold):
         try:
             # Get image size using docker inspect
             cmd = ['docker', 'image', 'inspect', image, '--format={{.Size}}']
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = common_utils.exec_command(cmd, capture_output=True, text=True, check=True)
 
             # Convert size from bytes to MB
             size_bytes = int(result.stdout.strip())
@@ -2713,7 +2709,7 @@ def deploy_from_docker_hub(app_name, ingestion_type="mqtt", wait_time=90):
 
         # Step 6: Verify images are from Docker Hub (not from custom registry)
         logger.info("Step 6: Verifying images are from Docker Hub...")
-        result = subprocess.run(['docker', 'ps', '--format', '{{.Image}}'],
+        result = common_utils.exec_command(['docker', 'ps', '--format', '{{.Image}}'],
                               capture_output=True, text=True)
         images = result.stdout.strip().split('\n')
 
@@ -2754,7 +2750,7 @@ def get_resource_usage():
     # Use docker stats --no-stream for a snapshot
     cmd_args = ["docker", "stats", "--no-stream", "--format", "{{.Name}}:{{.CPUPerc}}:{{.MemUsage}}"] + containers
     try:
-        result = subprocess.run(cmd_args, capture_output=True, text=True)
+        result = common_utils.exec_command(cmd_args, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error(f"Failed to get docker stats: {result.stderr}")
             return usage
@@ -2924,7 +2920,7 @@ def invoke_make_up(measure_time=False):
         start_time = time.time() if measure_time else None
 
         # Run make up
-        result = subprocess.run(["make", "up"], capture_output=True, text=True, timeout=600)
+        result = common_utils.exec_command(["make", "up"], capture_output=True, text=True, timeout=600)
 
         if measure_time:
             execution_time = time.time() - start_time
@@ -2957,7 +2953,7 @@ def get_container_stats(container_name):
     """
     try:
         # Run docker stats command for a single sample
-        result = subprocess.run(
+        result = common_utils.exec_command(
             ["docker", "stats", "--no-stream", "--format", "table {{.Container}}\t{{.CPUPerc}}\t{{.MemPerc}}\t{{.MemUsage}}", container_name],
             capture_output=True,
             text=True,
@@ -3107,7 +3103,7 @@ def invoke_make_down_in_current_dir():
         if result != 0:  # Command failed
             logger.error(f"make down failed with exit code: {result}")
             # Get more detailed error information
-            error_result = subprocess.run(
+            error_result = common_utils.exec_command(
                 ["make", "down"],
                 capture_output=True,
                 text=True,
@@ -3805,7 +3801,7 @@ def check_influxdb_data_with_auth(measurement, database="datain", container_name
             "-execute", f"SELECT COUNT(*) FROM \"{measurement}\" LIMIT 1"
         ]
 
-        result = subprocess.run(
+        result = common_utils.exec_command(
             query_cmd,
             capture_output=True,
             text=True,
@@ -3870,7 +3866,7 @@ def query_influxdb_measurement_with_auth(
             "-execute", query,
         ]
 
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        result = common_utils.exec_command(cmd, capture_output=True, text=True, timeout=timeout)
         query_result["raw_output"] = result.stdout.strip()
 
         if result.returncode != 0:
@@ -4157,7 +4153,7 @@ def execute_multimodal_gpu_config_curl(config, device="gpu"):
         ]
 
         # Execute curl command
-        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+        result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             logger.info(f"✓ Multimodal {device.upper()} configuration posted successfully")
@@ -4189,7 +4185,7 @@ def check_system_gpu_devices():
 
         # Method 1: Check for Intel GPU devices
         try:
-            result = subprocess.run(
+            result = common_utils.exec_command(
                 ["lspci"],
                 capture_output=True,
                 text=True,
@@ -4215,7 +4211,7 @@ def check_system_gpu_devices():
 
         # Method 3: Check for GPU in Docker containers
         try:
-            result = subprocess.run(
+            result = common_utils.exec_command(
                 ["docker", "run", "--rm", "--device=/dev/dri", "hello-world"],
                 capture_output=True,
                 text=True,
@@ -4249,7 +4245,7 @@ def monitor_gpu_utilization(duration=30):
 
         # Try to use intel_gpu_top if available
         try:
-            result = subprocess.run(
+            result = common_utils.exec_command(
                 ["timeout", str(duration), "intel_gpu_top", "-o", "-"],
                 capture_output=True,
                 text=True,
@@ -4416,7 +4412,7 @@ def verify_nginx_container_health(container_name):
         # Check if nginx process is running inside container
         try:
             # Use readlink on /proc/1/exe to check if main process is nginx
-            process_check = subprocess.run(
+            process_check = common_utils.exec_command(
                 ["docker", "exec", container_name, "readlink", "/proc/1/exe"],
                 capture_output=True,
                 text=True,
@@ -4463,7 +4459,7 @@ def verify_nginx_port_mappings(container_name, expected_ports):
         }
 
         # Get container port mappings
-        port_check_result = subprocess.run(
+        port_check_result = common_utils.exec_command(
             ["docker", "port", container_name],
             capture_output=True,
             text=True,
@@ -4534,7 +4530,7 @@ def verify_nginx_ssl_certificates(container_name, cert_path, cert_files):
 
         for attempt in range(max_retries):
             # Check SSL certificate files
-            cert_check = subprocess.run(
+            cert_check = common_utils.exec_command(
                 ["docker", "exec", container_name, "ls", "-la", cert_path],
                 capture_output=True,
                 text=True,
@@ -4562,7 +4558,7 @@ def verify_nginx_ssl_certificates(container_name, cert_path, cert_files):
                 continue
 
         # Final check after retry loop
-        cert_check = subprocess.run(
+        cert_check = common_utils.exec_command(
             ["docker", "exec", container_name, "ls", "-la", cert_path],
             capture_output=True,
             text=True,
@@ -4585,7 +4581,7 @@ def verify_nginx_ssl_certificates(container_name, cert_path, cert_files):
         # Verify nginx configuration syntax (with retry for config validation)
         config_valid = False
         for attempt in range(3):  # 3 attempts for config validation
-            config_test = subprocess.run(
+            config_test = common_utils.exec_command(
                 ["docker", "exec", container_name, "nginx", "-t"],
                 capture_output=True,
                 text=True,
@@ -4649,7 +4645,7 @@ def verify_nginx_backend_connectivity(container_name, backend_services):
                 connectivity_results["missing_services"].append(service)
 
         # Verify nginx network connectivity
-        network_check = subprocess.run(
+        network_check = common_utils.exec_command(
             ["docker", "inspect", container_name, "-f", "{{range .NetworkSettings.Networks}}{{.NetworkID}}{{end}}"],
             capture_output=True,
             text=True,
@@ -4703,7 +4699,7 @@ def test_nginx_proxy_endpoint(container_name, endpoint_url, timeout=30):
         }
 
         # Test HTTP/HTTPS connection from HOST
-        curl_test = subprocess.run(
+        curl_test = common_utils.exec_command(
             ["curl", "-k", "-I", endpoint_url],
             capture_output=True,
             text=True,
@@ -4779,7 +4775,7 @@ def test_service_direct_access(container_name, service_url, timeout=30):
             test_url = service_url
 
         # Test direct service access
-        direct_test = subprocess.run(
+        direct_test = common_utils.exec_command(
             ["docker", "exec", container_name, "curl", "-I", "-s", test_url],
             capture_output=True,
             text=True,
@@ -5068,13 +5064,13 @@ def container_exists_and_running(container_name):
     """
     try:
         # Check if container exists
-        result = subprocess.run(['docker', 'inspect', container_name],
+        result = common_utils.exec_command(['docker', 'inspect', container_name],
                               capture_output=True, text=True, check=False)
         if result.returncode != 0:
             return False
 
         # Check if container is running
-        result = subprocess.run(['docker', 'inspect', '-f', '{{.State.Running}}', container_name],
+        result = common_utils.exec_command(['docker', 'inspect', '-f', '{{.State.Running}}', container_name],
                               capture_output=True, text=True, check=False)
         return result.returncode == 0 and result.stdout.strip() == 'true'
     except Exception as e:
@@ -5095,7 +5091,7 @@ def extract_img_handles_from_influxdb(measurement, database, container_name, use
             "influx", "-username", username, "-password", password,
             "-database", database, "-execute", query, "-format", "csv"
         ]
-        result = subprocess.run(cmd, capture_output=True, text=True)
+        result = common_utils.exec_command(cmd, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.error(f"InfluxDB query failed: {result.stderr}")
@@ -5249,7 +5245,7 @@ def check_s3_image_file_size(img_filename, bucket_path=None):
         logger.info(f"Checking file size for: {file_url}")
 
         # Run curl command
-        result = subprocess.run(
+        result = common_utils.exec_command(
             curl_command,
             capture_output=True,
             text=True,
@@ -5396,7 +5392,7 @@ def get_seaweedfs_bucket_files(bucket_url):
         logger.info(f"Executing curl command: {' '.join(curl_command)}")
 
         # Run curl command
-        result = subprocess.run(
+        result = common_utils.exec_command(
             curl_command,
             capture_output=True,
             text=True,
@@ -5527,7 +5523,7 @@ def execute_dlstreamer_pipeline_activation(device="GPU",
         ]
 
         logger.info(f"Executing DL Streamer activation: {' '.join(curl_command)}")
-        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+        result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=30)
 
         if result.returncode == 0:
             logger.info(f"✓ DL Streamer pipeline '{pipeline_name}' activated successfully on {device_value}")
@@ -5636,7 +5632,7 @@ def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database=
             f"(measurements: {analytics_measurement}, {vision_measurement}) with redacted credentials."
         )
 
-        result = subprocess.run(exec_command, capture_output=True, text=True)
+        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Multimodal InfluxDB command failed with return code {result.returncode}")

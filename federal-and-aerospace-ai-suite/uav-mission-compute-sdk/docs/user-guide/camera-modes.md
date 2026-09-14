@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Camera Modes
 
-This document describes the two camera input modes available in the uav-mission-compute-sdk: **simulated cameras** (Gazebo) and **USB cameras** (real hardware).
+This document describes the three camera input modes available in the uav-mission-compute-sdk: **simulated cameras** (Gazebo), **USB cameras** (real hardware), and **Intel RealSense** depth cameras (real hardware, beyond-visual-spectrum IR + depth).
 
 ## Overview
 
@@ -14,6 +14,7 @@ graph LR
     subgraph MODES["Camera Input Modes"]
         SIM["🟦 SIM-CAMERA Profile<br/>Gazebo 3-camera world"]
         USB["🟩 USB-CAMERA Profile<br/>Real V4L2 device"]
+        RS["🟪 REALSENSE-CAMERA Profile<br/>IR + depth, beyond visual spectrum"]
     end
 
     subgraph COMMON["Shared Infrastructure"]
@@ -26,6 +27,7 @@ graph LR
 
     SIM --> PX4
     USB --> PX4
+    RS --> PX4
     PX4 --> MQTT
     MQTT --> VP
     MTX --> VP
@@ -33,6 +35,7 @@ graph LR
 
     style SIM fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style USB fill:#c8e6c9,stroke:#388e3c,stroke-width:2px
+    style RS fill:#9c27b0,stroke:#6a1b9a,stroke-width:2px,color:#fff
     style COMMON fill:#f9f9f9,stroke:#666,stroke-width:1px
 ```
 
@@ -257,11 +260,148 @@ make up-usb-camera
 
 ---
 
-## 3. Switching Between Modes
+## 3. RealSense Camera (Beyond Visual Spectrum)
+
+**Profile**: `realsense-camera`
+**Command**: `make up-realsense-camera`
+
+Adds support for **Intel RealSense** depth cameras (D400 series, e.g. D435/D435i),
+using the RealSense SDK (`librealsense2` / `pyrealsense2`) instead of a plain
+UVC/V4L2 webcam. This unlocks sensing **beyond the visible spectrum**:
+
+- **Infrared (IR) stereo pair** — the D400 series projects an 850nm active-IR
+  pattern and captures it with a stereo IR pair, so it can "see" in low light
+  or complete darkness, not just visible RGB.
+- **Depth stream** — computed from the IR stereo pair; each pixel is a
+  distance in meters rather than a color/light value.
+
+### Architecture
+
+```mermaid
+flowchart LR
+    RS["📷 Intel RealSense D400<br/>Active-IR stereo pair<br/>+ derived depth"]
+
+    subgraph RSB["realsense-camera-bridge"]
+        SDK["pyrealsense2<br/>pipeline"]
+        IR["IR frame (Y8)<br/>→ BGR"]
+        DEPTH["Depth frame (Z16)<br/>→ colorized BGR<br/>+ min/max/mean (m)"]
+        ENC["ffmpeg libx264<br/>H264 encode"]
+    end
+
+    MTX["MediaMTX<br/>RTSP :8554"]
+    MQTT["MQTT Broker<br/>depth_stats JSON"]
+
+    RS -->|"USB (librealsense2)"| SDK
+    SDK --> IR --> ENC
+    SDK --> DEPTH --> ENC
+    ENC -->|"RTSP ANNOUNCE<br/>/uav-1/ir, /uav-1/depth"| MTX
+    DEPTH -.->|"distance in meters"| MQTT
+
+    style RS fill:#9c27b0,stroke:#6a1b9a,color:#fff
+    style RSB fill:#f1f8e9,stroke:#558b2f
+    style MTX fill:#ffe0b2,stroke:#e65100
+    style MQTT fill:#fff4e1,stroke:#f57c00
+```
+
+> **Note**: this bridge only captures IR + depth. Depending on the specific D400 model, the camera hardware
+> may also support a Color/RGB stream and, on IMU-equipped models (e.g. D435i, D455), Gyro/Accel motion
+> streams. Enabling any of these would require extending `realsense_camera_bridge.py` with the corresponding
+> `rs.stream.*` config — they are not wired up today.
+
+### Verify the RealSense SDK Is Installed
+
+```bash
+# SDK version + attached device (needs the device plugged into the host)
+rs-enumerate-devices --short
+
+# Python bindings (used by the bridge)
+python3 -c "import pyrealsense2; print(pyrealsense2.__version__)"
+```
+
+### Configuration
+
+Run `make init` after plugging in the camera — it auto-detects the RealSense's
+V4L2 device nodes (`RS_VIDEO0..7` / `RS_MEDIA0..3`) via `v4l2-ctl --list-devices`
+and writes them to `.env`. These are enumeration-order dependent (not stable
+across reboots/hotplug or across different host/camera combinations), so
+re-run `make init` if you replug the camera or move to a different host.
+
+**Other options in `.env`**:
+
+```bash
+# Optional — pin to a specific device serial when several RealSense cameras
+# are attached. Leave empty to auto-select the first one.
+RS_SERIAL=
+RS_WIDTH=640
+RS_HEIGHT=480
+RS_FPS=30
+RS_ENABLE_IR=true
+RS_ENABLE_DEPTH=true
+
+# RTSP camera_ids: rtsp://localhost:8554/uav-1/<id>
+RS_CAMERA_ID_IR=ir
+RS_CAMERA_ID_DEPTH=depth
+```
+
+### RTSP Streams
+
+| Path | Resolution | FPS | Description |
+|------|-----------|-----|-------------|
+| `/uav-1/ir` | 640×480 | 30 | Active-infrared stereo (grayscale, beyond visible spectrum) |
+| `/uav-1/depth` | 640×480 | 30 | Colorized depth (distance in meters) |
+
+### Depth Metrics (MQTT)
+
+In addition to video, live depth statistics are published as JSON so depth
+can be consumed as data, not just as an image:
+
+```bash
+mosquitto_sub -h localhost -p 1884 -t "uav/uav-1/camera/depth/depth_stats"
+# {"seq": 128, "min_m": 0.412, "max_m": 6.981, "mean_m": 2.35, "valid_pixels": 289112}
+```
+
+### realsense-camera-bridge Container
+
+**Image**: Built from `infra/bridges/realsense-camera/Dockerfile`
+**Dependencies**: `pyrealsense2` (bundles `librealsense2` natively), FFmpeg
+**Device mapping**: `/dev/bus/usb:/dev/bus/usb` (control) + `/dev/video0..7`/`/dev/media0..3`
+(streaming, via the uvcvideo kernel driver) — sourced from `RS_VIDEO*`/`RS_MEDIA*`
+in `.env` (auto-detected by `make init`), unused slots default to `/dev/null`.
+
+### Startup
+
+```bash
+cd ~/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+
+# 1. Confirm the camera is attached and the SDK sees it
+rs-enumerate-devices --short
+
+# 2. Detect its V4L2 device nodes into .env (also detects GPU, sets credentials)
+make init
+
+# 3. (Optional) pin to a specific serial if more than one camera is attached
+echo "RS_SERIAL=346222072594" >> .env
+
+# 4. Start core infrastructure with the RealSense camera profile
+make up-realsense-camera
+```
+
+### View Streams
+
+```bash
+# MediaMTX is configured TCP-only (rtspTransports: [tcp]) — ffplay defaults to
+# UDP and fails with "461 Unsupported Transport" without this flag.
+ffplay -rtsp_transport tcp rtsp://localhost:8554/uav-1/ir      # active-infrared (beyond visible spectrum)
+ffplay -rtsp_transport tcp rtsp://localhost:8554/uav-1/depth   # colorized depth
+```
+
+---
+
+## 4. Switching Between Modes
 
 ### Mutual Exclusion (Docker Compose Profiles)
 
-Both camera bridges **cannot run simultaneously**. Docker Compose profiles enforce this:
+The camera bridges **cannot run simultaneously**. Docker Compose profiles enforce this:
 
 ```yaml
 # docker-compose.yml
@@ -271,6 +411,9 @@ services:
 
   usb-camera-bridge:
     profiles: ["usb-camera"]        # Only runs with --profile usb-camera
+
+  realsense-camera-bridge:
+    profiles: ["realsense-camera"]  # Only runs with --profile realsense-camera
 ```
 
 ### From Sim to USB
@@ -305,18 +448,20 @@ make up-sim-camera
 
 ### Environment Variable Checklist
 
-| Variable | Sim Mode | Sim Mode (mono) | USB Mode | Set by |
-|----------|----------|-----------------|----------|--------|
-| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | `nadir` | auto (`make up-*`) |
-| `GZ_WORLD` | `baylands_multicam` | `baylands_detection` | `baylands_multicam` | auto (`make up-*`) |
-| `PX4_MODEL_DIR` | `multi_cam` | `mono_cam` | `multi_cam` | auto (`make up-*`) |
-| `USB_VIDEO_DEVICE` | — | — | `/dev/video32` (your device) | `.env` manually |
-| `USB_CAMERA_ID` | — | — | `nadir` | `.env` |
-| `USB_CAPTURE_FORMAT` | — | — | `mjpeg` or `raw` | `.env` |
+| Variable | Sim Mode | Sim Mode (mono) | USB Mode | RealSense Mode | Set by |
+|----------|----------|-----------------|----------|-----------------|--------|
+| `VISION_CAMERA_IDS` | `nadir,forward,rear` | `nadir` | `nadir` | — (not fed to vision-processor) | auto (`make up-*`) |
+| `GZ_WORLD` | `baylands_multicam` | `baylands_detection` | `baylands_multicam` | — | auto (`make up-*`) |
+| `PX4_MODEL_DIR` | `multi_cam` | `mono_cam` | `multi_cam` | — | auto (`make up-*`) |
+| `USB_VIDEO_DEVICE` | — | — | `/dev/video32` (your device) | — | `.env` manually |
+| `USB_CAMERA_ID` | — | — | `nadir` | — | `.env` |
+| `USB_CAPTURE_FORMAT` | — | — | `mjpeg` or `raw` | — | `.env` |
+| `RS_SERIAL` | — | — | — | empty (auto-select) or device serial | `.env` optional |
+| `RS_ENABLE_IR` / `RS_ENABLE_DEPTH` | — | — | — | `true` / `true` | `.env` optional |
 
 ---
 
-## 4. Dashboard & Vision Processing
+## 5. Dashboard & Vision Processing
 
 ### Vision Processor Behavior
 
@@ -344,7 +489,7 @@ The `vision-processor-multicam` container automatically:
 
 ---
 
-## 5. Docker Compose Profiles
+## 6. Docker Compose Profiles
 
 ### Available Profiles
 
@@ -355,14 +500,18 @@ docker compose --profile sim-camera up -d
 # USB camera (1x real)
 docker compose --profile usb-camera up -d
 
-# Both profiles at shutdown (cleans both)
-docker compose --profile sim-camera --profile usb-camera down
+# Intel RealSense camera (IR + depth, beyond visual spectrum)
+docker compose --profile realsense-camera up -d
+
+# All profiles at shutdown (cleans all)
+docker compose --profile sim-camera --profile usb-camera --profile realsense-camera down
 
 # Helper targets
 make up-sim-camera              # sim-camera (3x nadir, forward, rear)
 make up-sim-camera-mono         # sim-camera (1x nadir — use if system is resource-constrained)
 make up-usb-camera   # usb-camera
-make down            # both
+make up-realsense-camera   # realsense-camera (IR + depth)
+make down            # all
 ```
 
 ### Profile Dependencies
@@ -375,16 +524,23 @@ sim-camera (implies):
   └─ camera-bridge depends on px4
 
 usb-camera (implies):
-  └─ px4
+  └─ px4-sih
   └─ mediamtx
   └─ mosquitto
-  └─ usb-camera-bridge depends on px4
+  └─ usb-camera-bridge depends on px4-sih
      └─ device: ${USB_VIDEO_DEVICE}
+
+realsense-camera (implies):
+  └─ px4-sih
+  └─ mediamtx
+  └─ mosquitto
+  └─ realsense-camera-bridge depends on px4-sih
+     └─ device: /dev/bus/usb
 ```
 
 ---
 
-## 6. RTSP Stream Access
+## 7. RTSP Stream Access
 
 > **Prerequisite**: RTSP paths only exist while the UAV is **armed**. Camera bridges kill ffmpeg on disarm and respawn on arm. Arm the UAV first:
 > ```bash
@@ -433,15 +589,15 @@ scp user@px4-host:nadir.mkv .
 
 ---
 
-## 7. Environment Variables Reference
+## 8. Environment Variables Reference
 
 ### PX4 & Gazebo
 
-| Var | Default | Sim | USB |
-|-----|---------|-----|-----|
-| `GZ_WORLD` | `baylands_multicam` | 3-camera world | 3-camera world (not used) |
-| `PX4_MODEL_DIR` | `multi_cam` | 3-camera model | 3-camera model (not used) |
-| `UAV_ID` | `uav-1` | ✓ | ✓ |
+| Var | Default | Sim | USB | RealSense |
+|-----|---------|-----|-----|-----------|
+| `GZ_WORLD` | `baylands_multicam` | 3-camera world | 3-camera world (not used) | not used |
+| `PX4_MODEL_DIR` | `multi_cam` | 3-camera model | 3-camera model (not used) | not used |
+| `UAV_ID` | `uav-1` | ✓ | ✓ | ✓ |
 
 ### USB Camera Bridge
 
@@ -453,6 +609,17 @@ scp user@px4-host:nadir.mkv .
 | `USB_CAPTURE_HEIGHT` | `720` | Optional |
 | `USB_SENSOR_FPS` | `30` | Optional |
 | `USB_CAPTURE_FORMAT` | `mjpeg` | Optional |
+
+### RealSense Camera Bridge
+
+| Var | Default | Required |
+|-----|---------|----------|
+| `RS_SERIAL` | *(empty — auto-select)* | Optional |
+| `RS_WIDTH` / `RS_HEIGHT` / `RS_FPS` | `640` / `480` / `30` | Optional |
+| `RS_ENABLE_IR` | `true` | Optional |
+| `RS_ENABLE_DEPTH` | `true` | Optional |
+| `RS_CAMERA_ID_IR` | `ir` | Optional |
+| `RS_CAMERA_ID_DEPTH` | `depth` | Optional |
 
 ### Vision Processor
 
@@ -473,7 +640,7 @@ scp user@px4-host:nadir.mkv .
 
 ---
 
-## 8. Makefile Targets
+## 9. Makefile Targets
 
 ```makefile
 make init                # Initialize .env with auto-detected GPU
@@ -481,6 +648,7 @@ make build               # Build all images (cache)
 make build-nc            # Build all images (no-cache)
 make up-sim-camera                  # Start PX4 + Gazebo + sim cameras
 make up-usb-camera       # Start PX4 + USB camera bridge
+make up-realsense-camera # Start PX4 + RealSense camera bridge (IR + depth)
 make down                # Stop all containers
 make logs-infra          # Tail infrastructure logs
 make clean               # Remove all containers, networks, volumes
@@ -488,12 +656,26 @@ make clean               # Remove all containers, networks, volumes
 
 ---
 
-## 9. Quick Reference: Decision Tree
+## 10. Quick Reference: Decision Tree
 
 ```text
 Start here: Which camera source?
 
 ┌─────────────────────────────────────────────────────────────┐
+│ Do you have an Intel RealSense camera (D400 series)?         │
+│ (run: rs-enumerate-devices --short)                          │
+└─────────────────────┬───────────────────────────────────────┘
+                      │
+                     YES ──► RealSense Mode
+                             ══════════════
+                             1. rs-enumerate-devices --short
+                             2. make init (auto-detects V4L2 nodes)
+                             3. (optional) RS_SERIAL=<serial> in .env
+                             4. make up-realsense-camera
+                      │
+                      NO
+                      │
+┌─────────────────────▼───────────────────────────────────────┐
 │ Do you have a USB camera?                                   │
 │ (run: v4l2-ctl --list-devices)                             │
 └─────────────────────┬───────────────────────────────────────┘
@@ -516,7 +698,7 @@ Start here: Which camera source?
 
 ---
 
-## 10. Development Workflow
+## 11. Development Workflow
 
 ### Add a New Camera (Sim Mode)
 
@@ -569,7 +751,7 @@ USB_SENSOR_FPS=60
 
 ---
 
-## 11. Extending to Industrial Cameras (GenICam)
+## 12. Extending to Industrial Cameras (GenICam)
 
 **Status**: Not tested with current hardware. For developers extending to industrial imaging sensors.
 

@@ -31,8 +31,8 @@ benchmark/                    Stream density benchmarking tooling (`calc_stream_
 | `broker` | `eclipse-mosquitto:2.0.22` | MQTT broker for telemetry and pipeline events |
 | `px4` | `px4io/px4-sitl:latest` | PX4 SITL flight controller simulation |
 | `mavlink-router` | Built from `uav-mission-compute-sdk/infra/px4-sim/mavlink-router` | Routes MAVLink telemetry between PX4 and the pipeline server |
-| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc3` (+ `pymavlink`) | Core inference engine — YOLO11s detection and telemetry overlay |
-| `metrics-manager` | `intel/metrics-manager:2026.2.0-rc3` | Host platform (CPU/GPU) metrics, exposed on port 9090 |
+| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24` (+ `pymavlink`) | Core inference engine — YOLO11s detection and telemetry overlay |
+| `metrics-manager` | `intel/metrics-manager:2026.2.0` | Host platform (CPU/GPU) metrics, exposed on port 9090 |
 
 All services share the `app_network` Docker network and are defined in [`docker-compose-pymavlink.yml`](docker-compose-pymavlink.yml).
 
@@ -40,7 +40,7 @@ All services share the `app_network` Docker network and are defined in [`docker-
 
 | Service | Image | Role |
 |---------|-------|------|
-| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc3` | Core inference engine — YOLO11s detection and telemetry overlay; connects to an externally running UAV Mission Compute SDK stack |
+| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24` | Core inference engine — YOLO11s detection and telemetry overlay; connects to an externally running UAV Mission Compute SDK stack |
 
 Defined in [`docker-compose-uavsdk.yml`](docker-compose-uavsdk.yml). Requires the
 `edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk` stack to be running first.

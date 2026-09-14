@@ -1,10 +1,9 @@
 # Install UAV Vision Analytics Application
 
-The UAV Vision Analytics application supports two deployment modes. Choose the one that
-matches your setup:
+The UAV Vision Analytics application supports two deployment modes:
 
-- [Standalone Mode (pymavlink)](./get-started/get-started-standalone.md) — Self-contained deployment using PX4 SITL simulation and pymavlink for MAVLink communication. No external dependencies required.
-- [UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md) — Integration mode that connects to a running instance of the UAV Mission Compute SDK, enabling full mission control and multi-camera pipeline management.
+- **[Standalone Mode (pymavlink)](./get-started/get-started-standalone.md)** — Use this if you want to try the application on its own, with no other services required. It runs a self-contained PX4 SITL flight simulation and reads telemetry directly over pymavlink, using a single sample/looped video (or a RealSense camera) as the source. Best for first-time evaluation, demos, and quick testing.
+- **[UAV Mission Compute SDK Mode](./get-started/get-started-uavsdk.md)** — Use this if you already have the UAV Mission Compute SDK running (with a real drone or its own simulation) and want to attach multi-camera (nadir/forward/rear) AI inference and mission-aware pipeline control to it. Requires the SDK stack to be started first.
 
 <!--hide_directive
 :::{toctree}

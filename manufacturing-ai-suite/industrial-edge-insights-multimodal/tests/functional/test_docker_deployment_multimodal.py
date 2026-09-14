@@ -15,6 +15,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import docker_utils
 from utils import constants
 from utils import common_utils
+from common_utils import assert_condition
+
 
 # Import the fixture directly from conftest_docker.py
 pytest_plugins = ["conftest_docker"]
@@ -42,7 +44,7 @@ def test_blank_values():
 
     result = docker_utils.invoke_make_check_env_variables_in_current_dir()
     logger.info(f"make check env variables result with blank values: {result}")
-    assert result == False  # nosec B101
+    assert_condition(result == False, "Assertion failed")
 
 def test_invalid_values():
     """TC_002: Testing invalid values in .env file for multimodal deployment"""
@@ -57,7 +59,7 @@ def test_invalid_values():
 
     result = docker_utils.invoke_make_check_env_variables_in_current_dir()
     logger.info(f"make check env variables result with invalid values: {result}")
-    assert result == False  # nosec B101
+    assert_condition(result == False, "Assertion failed")
 
 def test_valid_values():
     """TC_003: Testing valid values in .env file for multimodal deployment"""
@@ -93,7 +95,7 @@ def test_valid_values():
 
     result = docker_utils.invoke_make_check_env_variables_in_current_dir()
     logger.info(f"make check env variables result with valid values: {result}")
-    assert result == True  # nosec B101
+    assert_condition(result == True, "Assertion failed")
 
 def test_multimodal_make_up():
     """TC_004: Testing multimodal make up command with valid values in .env file"""
@@ -131,7 +133,7 @@ def test_multimodal_make_up():
     logger.info("Executing 'make up' for multimodal deployment")
     result = docker_utils.invoke_make_up_in_current_dir()
     logger.info(f"make up result: {result}")
-    assert result == True, "Multimodal 'make up' command failed"  # nosec B101
+    assert_condition(result == True, "Multimodal 'make up' command failed")
 
     # Verify containers are running using multimodal app config
     multimodal_containers = multimodal_config.get("containers", [])
@@ -139,7 +141,7 @@ def test_multimodal_make_up():
     for container in multimodal_containers:
         is_running = docker_utils.container_is_running(container)
         logger.info(f"Container {container} running status: {is_running}")
-        assert is_running, f"Container {container} is not running"  # nosec B101
+        assert_condition(is_running, f"Container {container} is not running")
         logger.info(f"✓ Container {container} is running")
 
     logger.info(f"✓ Multimodal deployment successful - all {len(multimodal_containers)} containers running")
@@ -164,7 +166,7 @@ def test_multimodal_make_down(setup_multimodal_environment):
     for container in multimodal_containers:
         is_running = docker_utils.container_is_running(container)
         logger.info(f"Container {container} running status before teardown: {is_running}")
-        assert is_running, f"Container {container} is not running. Cannot test teardown."  # nosec B101
+        assert_condition(is_running, f"Container {container} is not running. Cannot test teardown.")
 
     # Set working directory to multimodal application
     docker_utils.check_and_set_working_directory_multimodal()
@@ -173,7 +175,7 @@ def test_multimodal_make_down(setup_multimodal_environment):
     logger.info("Executing 'make down' for multimodal teardown")
     result = docker_utils.invoke_make_down_in_current_dir()
     logger.info(f"make down result: {result}")
-    assert result == True, "Multimodal 'make down' command failed"  # nosec B101
+    assert_condition(result == True, "Multimodal 'make down' command failed")
 
     # Verify containers are stopped
     logger.info("Verifying multimodal containers are stopped")
@@ -186,7 +188,7 @@ def test_multimodal_make_down(setup_multimodal_environment):
             logger.error(f"Container {container} is still running after make down")
 
     # Fail the test if any containers are still running after make down
-    assert len(running_containers) == 0, f"Make down failed to stop all containers. Still running: {running_containers}"  # nosec B101
+    assert_condition(len(running_containers) == 0, f"Make down failed to stop all containers. Still running: {running_containers}")
 
     logger.info(f"✓ Multimodal teardown completed successfully - all {len(multimodal_containers)} containers stopped")
 
@@ -206,7 +208,7 @@ def test_time_series_ingested_data(setup_multimodal_environment):
     for container in required_containers:
         is_running = docker_utils.container_is_running(container)
         logger.info(f"Container {container} running status: {is_running}")
-        assert is_running, f"{container} container is not running. Deploy multimodal stack first."  # nosec B101
+        assert_condition(is_running, f"{container} container is not running. Deploy multimodal stack first.")
 
     logger.info("✓ Both InfluxDB and Telegraf containers are running")
 
@@ -222,7 +224,7 @@ def test_time_series_ingested_data(setup_multimodal_environment):
     password = credentials.get("INFLUXDB_PASSWORD", "")
 
     logger.info(f"InfluxDB credentials found: username={'[SET]' if username else '[EMPTY]'}, password={'[SET]' if password else '[EMPTY]'}")
-    assert username and password, "InfluxDB credentials not found in environment"  # nosec B101
+    assert_condition(username and password, "InfluxDB credentials not found in environment")
 
     # Use authenticated InfluxDB query with multimodal app config
     ingested_topic = multimodal_config.get("ingested_topic")
@@ -237,7 +239,7 @@ def test_time_series_ingested_data(setup_multimodal_environment):
 
     if not result:
         logger.error(f"No data found in InfluxDB measurement: {ingested_topic}")
-        assert result == True, f"Time series data ingestion failed - no data found in InfluxDB measurement: {ingested_topic}"  # nosec B101
+        assert_condition(result == True, f"Time series data ingestion failed - no data found in InfluxDB measurement: {ingested_topic}")
     else:
         logger.info("✓ Time series data ingestion via Telegraf verified")
 
@@ -257,7 +259,7 @@ def test_time_series_analytics_processing(setup_multimodal_environment):
     for container in required_containers:
         is_running = docker_utils.container_is_running(container)
         logger.info(f"Container {container} running status: {is_running}")
-        assert is_running, f"{container} is not running. Deploy multimodal stack first."  # nosec B101
+        assert_condition(is_running, f"{container} is not running. Deploy multimodal stack first.")
 
     # Wait for processing to complete
     time.sleep(constants.TEST_DATA_PROCESSING_DELAY * 2)
@@ -276,7 +278,7 @@ def test_time_series_analytics_processing(setup_multimodal_environment):
 
     if not result:
         logger.error(f"No processed data found in InfluxDB measurement: {analytics_topic}")
-        assert result == True, f"Time series analytics processing failed - no processed data found in InfluxDB measurement: {analytics_topic}"  # nosec B101
+        assert_condition(result == True, f"Time series analytics processing failed - no processed data found in InfluxDB measurement: {analytics_topic}")
     else:
         logger.info("✓ Time series analytics processing verified")
 
@@ -295,7 +297,7 @@ def test_vision_analytics_mqtt_publish(setup_multimodal_environment):
     logger.info("Verifying DL Streamer pipeline server is running")
     is_running = docker_utils.container_is_running(constants.CONTAINERS["dlstreamer"]["name"])
     logger.info(f"DL Streamer container running status: {is_running}")
-    assert is_running, "DL Streamer container is not running. Deploy multimodal stack first."  # nosec B101
+    assert_condition(is_running, "DL Streamer container is not running. Deploy multimodal stack first.")
 
     # Check if vision analytics data is being published to MQTT using multimodal app config
     vision_topic = multimodal_config.get("vision_topic")
@@ -354,14 +356,14 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
     # Verify InfluxDB container is running
     is_running = docker_utils.container_is_running(constants.CONTAINERS["influxdb"]["name"])
     logger.info(f"InfluxDB container running status: {is_running}")
-    assert is_running, "InfluxDB container not running"  # nosec B101
+    assert_condition(is_running, "InfluxDB container not running")
 
     # Get credentials
     credentials = context["credentials"]
     username = credentials.get("INFLUXDB_USERNAME", "")
     password = credentials.get("INFLUXDB_PASSWORD", "")
     logger.info(f"InfluxDB credentials found: username={'[SET]' if username else '[EMPTY]'}, password={'[SET]' if password else '[EMPTY]'}")
-    assert username and password, "InfluxDB credentials not found"  # nosec B101
+    assert_condition(username and password, "InfluxDB credentials not found")
 
     # Test data storage for all multimodal measurements
     measurements_to_check = [
@@ -387,10 +389,10 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
 
     # Verify at least ingested data and analytics data are stored
     logger.info(f"Stored measurements: {stored_measurements}")
-    assert multimodal_config.get("ingested_topic") in stored_measurements, "Raw sensor data not stored in InfluxDB"  # nosec B101
-    assert multimodal_config.get("analytics_topic") in stored_measurements, "Analytics results not stored in InfluxDB"  # nosec B101
-    assert multimodal_config.get("vision_measurement") in stored_measurements, "Vision analytics results not stored in InfluxDB"  # nosec B101
-    assert multimodal_config.get("fusion_measurement") in stored_measurements, "Fusion decision results not stored in InfluxDB"  # nosec B101
+    assert_condition(multimodal_config.get("ingested_topic") in stored_measurements, "Raw sensor data not stored in InfluxDB")
+    assert_condition(multimodal_config.get("analytics_topic") in stored_measurements, "Analytics results not stored in InfluxDB")
+    assert_condition(multimodal_config.get("vision_measurement") in stored_measurements, "Vision analytics results not stored in InfluxDB")
+    assert_condition(multimodal_config.get("fusion_measurement") in stored_measurements, "Fusion decision results not stored in InfluxDB")
 
     logger.info(f"✓ InfluxDB data storage validated - {len(stored_measurements)}/{len(measurements_to_check)} measurements stored")
 
@@ -419,7 +421,7 @@ def test_rtsp_streaming(setup_multimodal_environment):
     # Check if MediaMTX container is running using constants
     is_running = docker_utils.container_is_running(constants.MEDIAMTX_CONTAINER)
     logger.info(f"MediaMTX container running status: {is_running}")
-    assert is_running, "MediaMTX container is not running. Deploy multimodal stack first."  # nosec B101
+    assert_condition(is_running, "MediaMTX container is not running. Deploy multimodal stack first.")
 
     # Check if MediaMTX streaming is accessible via nginx proxy
     logger.info("Verifying MediaMTX streaming via nginx proxy")
@@ -439,7 +441,7 @@ def test_webrtc_functionality(setup_multimodal_environment):
     # Check if COTURN container is running using constants
     is_running = docker_utils.container_is_running(constants.COTURN_CONTAINER)
     logger.info(f"COTURN container running status: {is_running}")
-    assert is_running, "COTURN container is not running. Deploy multimodal stack first."  # nosec B101
+    assert_condition(is_running, "COTURN container is not running. Deploy multimodal stack first.")
 
     # Verify WebRTC signaling server (via nginx proxy)
     logger.info("Checking WebRTC signaling server accessibility via nginx proxy")
@@ -474,10 +476,10 @@ def test_container_logs_multimodal(setup_multimodal_environment):
     if "skip_reason" in logs_results:
         logger.error(logs_results["skip_reason"])
         logger.info(f"logs_results: {logs_results}")
-        assert False, f"Critical containers are not running after deployment: {logs_results['skip_reason']}"  # nosec B101
+        assert_condition(False, f"Critical containers are not running after deployment: {logs_results['skip_reason']}")
 
     logger.info(f"Container logs validation success: {logs_results['success']}, critical_errors: {logs_results.get('critical_errors')}")
-    assert logs_results["success"], f"Critical containers have errors: {logs_results['critical_errors']}"  # nosec B101
+    assert_condition(logs_results["success"], f"Critical containers have errors: {logs_results['critical_errors']}")
 
     logger.info("✓ Container logs check completed")
 
@@ -492,32 +494,32 @@ def test_fusion_decision_making_logic_validation(setup_multimodal_environment):
     # Verify fusion analytics container is running
     is_running = docker_utils.container_is_running(constants.CONTAINERS["fusion_analytics"]["name"])
     logger.info(f"Fusion analytics container running status: {is_running}")
-    assert is_running, "Fusion analytics container is not running. Deploy multimodal stack first."  # nosec B101
+    assert_condition(is_running, "Fusion analytics container is not running. Deploy multimodal stack first.")
 
     # Execute fusion decision validation using docker_utils
     validation_results = docker_utils.validate_fusion_decision_making_logic()
 
     # Assert overall validation success
     logger.info(f"Fusion validation results: success={validation_results['success']}, error={validation_results.get('error')}")
-    assert validation_results["success"], f"Fusion decision-making logic validation failed: {validation_results.get('error', 'Unknown error')}"  # nosec B101
+    assert_condition(validation_results["success"], f"Fusion decision-making logic validation failed: {validation_results.get('error', 'Unknown error')}")
 
     # Additional assertions for key metrics
-    assert validation_results["total_decisions"] >= 10, f"Insufficient decisions analyzed: {validation_results['total_decisions']}"  # nosec B101
-    assert validation_results["consistency_percentage"] >= 100.0, f"Logic consistency below threshold: {validation_results['consistency_percentage']}%"  # nosec B101
-    assert validation_results["unique_defect_types"] >= 5, f"Insufficient defect type diversity: {validation_results['unique_defect_types']}"  # nosec B101
+    assert_condition(validation_results["total_decisions"] >= 10, f"Insufficient decisions analyzed: {validation_results['total_decisions']}")
+    assert_condition(validation_results["consistency_percentage"] >= 100.0, f"Logic consistency below threshold: {validation_results['consistency_percentage']}%")
+    assert_condition(validation_results["unique_defect_types"] >= 5, f"Insufficient defect type diversity: {validation_results['unique_defect_types']}")
 
     # Verify both systems are contributing
     logger.info(f"Vision anomalies: {validation_results['vision_anomalies']}, TS anomalies: {validation_results['ts_anomalies']}")
-    assert validation_results["vision_anomalies"] > 0, "Vision analytics should detect at least some anomalies"  # nosec B101
-    assert validation_results["ts_anomalies"] > 0, "Time series analytics should detect at least some anomalies"  # nosec B101
+    assert_condition(validation_results["vision_anomalies"] > 0, "Vision analytics should detect at least some anomalies")
+    assert_condition(validation_results["ts_anomalies"] > 0, "Time series analytics should detect at least some anomalies")
 
     # Verify all decision categories are represented
     categorized = validation_results["categorized_cases"]
     logger.info(f"Categorized cases: {categorized}")
-    assert categorized["both_anomaly"] > 0, "Should have cases where both systems detect anomalies"  # nosec B101
-    assert categorized["vision_only"] > 0, "Should have vision-only detection cases"  # nosec B101
-    assert categorized["ts_only"] > 0, "Should have TS-only detection cases"  # nosec B101
-    assert categorized["no_anomaly"] > 0, "Should have no-anomaly cases"  # nosec B101
+    assert_condition(categorized["both_anomaly"] > 0, "Should have cases where both systems detect anomalies")
+    assert_condition(categorized["vision_only"] > 0, "Should have vision-only detection cases")
+    assert_condition(categorized["ts_only"] > 0, "Should have TS-only detection cases")
+    assert_condition(categorized["no_anomaly"] > 0, "Should have no-anomaly cases")
 
     # Wait for system to be active
     common_utils.wait_for_stability(constants.MULTIMODAL_DOCKER_FUSION_READY_WAIT)
@@ -541,7 +543,7 @@ def test_system_resources_multimodal():
     )
 
     logger.info(f"Resource validation results: success={resource_results['success']}, problematic_containers={resource_results.get('problematic_containers')}")
-    assert resource_results["success"], f"Containers with excessive resource usage: {resource_results['problematic_containers']}"  # nosec B101
+    assert_condition(resource_results["success"], f"Containers with excessive resource usage: {resource_results['problematic_containers']}")
 
     logger.info("✓ System resource usage is within acceptable limits")
 
@@ -558,21 +560,21 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
     # Verify nginx container health
     health_results = docker_utils.verify_nginx_container_health(constants.NGINX_CONTAINER)
     logger.info(f"Nginx container health: container_running={health_results['container_running']}, process_running={health_results['process_running']}")
-    assert health_results["container_running"], f"Nginx container not running"  # nosec B101
-    assert health_results["process_running"], "Nginx process not found"  # nosec B101
+    assert_condition(health_results["container_running"], f"Nginx container not running")
+    assert_condition(health_results["process_running"], "Nginx process not found")
 
     # Verify port mappings
     port_results = docker_utils.verify_nginx_port_mappings(constants.NGINX_CONTAINER, constants.NGINX_EXPECTED_PORTS)
     logger.info(f"Nginx port mapping results: success={port_results['success']}, errors={port_results.get('errors')}")
-    assert port_results["success"], f"Port mapping failed: {port_results['errors']}"  # nosec B101
+    assert_condition(port_results["success"], f"Port mapping failed: {port_results['errors']}")
 
     # Verify backend services
     grafana_running = docker_utils.container_is_running(constants.CONTAINERS["grafana"]["name"])
     logger.info(f"Grafana container running status: {grafana_running}")
-    assert grafana_running, "Grafana container not running"  # nosec B101
+    assert_condition(grafana_running, "Grafana container not running")
     ts_analytics_running = docker_utils.container_is_running(constants.CONTAINERS["time_series_analytics"]["name"])
     logger.info(f"TS Analytics container running status: {ts_analytics_running}")
-    assert ts_analytics_running, "TS Analytics container not running"  # nosec B101
+    assert_condition(ts_analytics_running, "TS Analytics container not running")
 
     # Test proxy endpoints
     grafana_results = docker_utils.test_nginx_proxy_endpoint(
@@ -581,7 +583,7 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
         constants.TEST_CURL_TIMEOUT
     )
     logger.info(f"Grafana proxy results: success={grafana_results['success']}, errors={grafana_results.get('errors')}")
-    assert grafana_results["success"], f"Grafana proxy failed: {grafana_results['errors']}"  # nosec B101
+    assert_condition(grafana_results["success"], f"Grafana proxy failed: {grafana_results['errors']}")
 
     api_results = docker_utils.test_nginx_proxy_endpoint(
         constants.NGINX_CONTAINER,
@@ -589,7 +591,7 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
         constants.TEST_CURL_TIMEOUT
     )
     logger.info(f"TS API proxy results: success={api_results['success']}, errors={api_results.get('errors')}")
-    assert api_results["success"], f"TS API proxy failed: {api_results['errors']}"  # nosec B101
+    assert_condition(api_results["success"], f"TS API proxy failed: {api_results['errors']}")
 
     # Validate all critical endpoints using CONTAINERS dictionary
     critical_endpoints = {
@@ -599,7 +601,7 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
     }
     endpoint_results = docker_utils.verify_critical_user_endpoints(critical_endpoints)
     logger.info(f"Critical endpoint results: success={endpoint_results['success']}, critical_failures={endpoint_results.get('critical_failures')}")
-    assert endpoint_results["success"], f"Endpoint validation failed: {endpoint_results['critical_failures']}"  # nosec B101
+    assert_condition(endpoint_results["success"], f"Endpoint validation failed: {endpoint_results['critical_failures']}")
 
     logger.info("✓ Nginx reverse proxy integration validated successfully")
 
@@ -625,7 +627,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     if not container_check["success"]:
         missing = container_check["missing_containers"]
         logger.info(f"Container check results: success={container_check['success']}, missing={missing}")
-        assert False, f"Essential containers not running: {missing}"  # nosec B101
+        assert_condition(False, f"Essential containers not running: {missing}")
 
     logger.info(f"✓ All {container_check['total_checked']} essential containers are running")
 
@@ -635,7 +637,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
 
     if not influx_check["success"]:
         logger.info(f"InfluxDB img_handle check results: success={influx_check['success']}, error={influx_check.get('error')}")
-        assert False, f"No img_handle data available from InfluxDB: {influx_check['error']}"  # nosec B101
+        assert_condition(False, f"No img_handle data available from InfluxDB: {influx_check['error']}")
 
     logger.info(f"✓ Found {influx_check['total_handles']} img_handle values from vision analytics")
     logger.info(f"Selected random IMG_HANDLE for testing: {influx_check['selected_handle']}")
@@ -647,7 +649,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     if not s3_check["success"]:
         logger.error(f"Failed to retrieve S3 bucket contents: {s3_check['error']}")
         logger.info(f"S3 check results: success={s3_check['success']}, error={s3_check.get('error')}")
-        assert False, f"SeaweedFS S3 API not accessible: {s3_check['error']}"  # nosec B101
+        assert_condition(False, f"SeaweedFS S3 API not accessible: {s3_check['error']}")
 
     logger.info(f"✓ SeaweedFS S3 API accessible - Found {len(s3_check['jpg_files'])} .jpg files out of {s3_check['total_files']} total")
     logger.info(f"Bucket URL used: {s3_check['bucket_url']}")
@@ -663,7 +665,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
             logger.info(f"  {i+1}. {jpg_file}")
     else:
         logger.info(f"No jpg files found in S3 storage, jpg_files count: {len(jpg_files)}")
-        assert False, "No .jpg files found in S3 storage. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, images must be present."  # nosec B101
+        assert_condition(False, "No .jpg files found in S3 storage. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, images must be present.")
 
     time.sleep(90)  # Wait before cross-verification to allow S3 to be fully populated
 
@@ -680,7 +682,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
             logger.info(f"  Matched file: {matched_file}")
     else:
         logger.info(f"Cross-verify results: img_handle_found={cross_verify_check['img_handle_found']}, selected_handle={cross_verify_check['selected_handle']}")
-        assert False, f"img_handle '{cross_verify_check['selected_handle']}' not found in S3 image store. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, this handle must be present."  # nosec B101
+        assert_condition(False, f"img_handle '{cross_verify_check['selected_handle']}' not found in S3 image store. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, this handle must be present.")
 
     # Step 6: Validate that matched image files have actual content (not empty)
     logger.info("Step 6: Validating that matched image files have content (not empty)")
@@ -700,15 +702,15 @@ def test_s3_stored_images_access(setup_multimodal_environment):
                 logger.info(f"  ✓ {file_check['filename']}: {file_check['size_human']}")
             else:
                 logger.info(f"File check failed: filename={file_check['filename']}, success={file_check['success']}, is_empty={file_check.get('is_empty')}")
-                assert False, f"File '{file_check['filename']}' is empty or inaccessible in S3 storage."  # nosec B101
+                assert_condition(False, f"File '{file_check['filename']}' is empty or inaccessible in S3 storage.")
     else:
         logger.info(f"Content validation failed: success={content_validation['success']}, empty_count={content_validation.get('empty_count')}")
-        assert False, f"File content validation failed - {content_validation['empty_count']} empty files found in S3 storage."  # nosec B101
+        assert_condition(False, f"File content validation failed - {content_validation['empty_count']} empty files found in S3 storage.")
 
     # Final validation assertions
     logger.info(f"Final validation: container_check success={container_check['success']}, s3_check success={s3_check['success']}")
-    assert container_check["success"], f"Essential containers not running: {container_check['missing_containers']}"  # nosec B101
-    assert s3_check["success"], f"SeaweedFS S3 API not accessible: {s3_check['error']}"  # nosec B101
+    assert_condition(container_check["success"], f"Essential containers not running: {container_check['missing_containers']}")
+    assert_condition(s3_check["success"], f"SeaweedFS S3 API not accessible: {s3_check['error']}")
 
     logger.info("✓ S3 stored images infrastructure validation completed")
     logger.info("✓ SeaweedFS S3 storage integration with DL Streamer verified")
@@ -723,7 +725,7 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
 
     is_running = docker_utils.container_is_running(constants.CONTAINERS["influxdb"]["name"])
     logger.info(f"InfluxDB container running status: {is_running}")
-    assert is_running, "InfluxDB container is not running"  # nosec B101
+    assert_condition(is_running, "InfluxDB container is not running")
 
     logger.info("Waiting for vision metadata to be written to InfluxDB")
     time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
@@ -732,7 +734,7 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     username = credentials.get("INFLUXDB_USERNAME")
     password = credentials.get("INFLUXDB_PASSWORD")
     logger.info(f"InfluxDB credentials found: username={'[SET]' if username else '[EMPTY]'}, password={'[SET]' if password else '[EMPTY]'}")
-    assert username and password, "InfluxDB credentials missing from test context"  # nosec B101
+    assert_condition(username and password, "InfluxDB credentials missing from test context")
 
     vision_measurement = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get(
         "vision_measurement", "vision-weld-classification-results"
@@ -749,8 +751,8 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     )
 
     logger.info(f"InfluxDB query result: success={query_result['success']}, records_count={len(query_result.get('records', []))}, error={query_result.get('error')}")
-    assert query_result["success"], f"Failed to query InfluxDB measurement {vision_measurement}: {query_result['error']}"  # nosec B101
-    assert query_result["records"], f"No records returned from measurement {vision_measurement}"  # nosec B101
+    assert_condition(query_result["success"], f"Failed to query InfluxDB measurement {vision_measurement}: {query_result['error']}")
+    assert_condition(query_result["records"], f"No records returned from measurement {vision_measurement}")
 
     metadata_values = [record.get("metadata") for record in query_result["records"]]
     timestamps = common_utils.extract_sender_ntp_timestamps(metadata_values)
@@ -759,10 +761,10 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
         logger.error("No RTP timestamps in metadata sample: %s", metadata_values)
 
     logger.info(f"Extracted RTP timestamps count: {len(timestamps)}, values: {timestamps}")
-    assert timestamps, "No RTP sender timestamps found in vision metadata entries"  # nosec B101
+    assert_condition(timestamps, "No RTP sender timestamps found in vision metadata entries")
     all_positive = all(ts > 0 for ts in timestamps)
     logger.info(f"All timestamps positive: {all_positive}")
-    assert all_positive, "Invalid RTP sender timestamp values detected"  # nosec B101
+    assert_condition(all_positive, "Invalid RTP sender timestamp values detected")
 
     logger.info("✓ Found RTP sender timestamps for %d vision records", len(timestamps))
 

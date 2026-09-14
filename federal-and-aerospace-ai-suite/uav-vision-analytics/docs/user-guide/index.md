@@ -23,6 +23,7 @@ RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). Th
 consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
 It runs the YOLOv8n-VisDrone, a model designed to recognize imagery typical for drone video.
 
+![UAV drone](./_assets/fedaero-drone.drawio.svg)
 
 The application supports two deployment modes depending on whether an external SDK is available.
 
@@ -78,9 +79,7 @@ application creation (scaffolding new pymavlink or UAVSDK stacks). See
 
 ### Intended Use
 
-This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object
-detection and live telemetry overlay. It is provided for reference and demonstration purposes
-only, and is not intended to be deployed as-is or for alternate use cases or applications.
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only and is not intended to be deployed as-is or for alternate use cases or applications. This reference does not support authentication, TLS, or access controls between the app and external interfaces. These security measures should be provided by the solution builder.
 
 ### Responsible Use
 

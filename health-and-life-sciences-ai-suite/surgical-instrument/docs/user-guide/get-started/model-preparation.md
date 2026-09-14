@@ -1,7 +1,7 @@
 # Model Preparation
 
-> Optional — skip this page entirely if you are pulling a prebuilt OpenVINO IR
-> from the registry. This page covers the **local training + export** flow that
+> Skip this page if you already have a compatible pre-trained model exported to OpenVINO IR.
+> This page covers the **local training + export** flow that
 > produces the model artifact under `models/yolo11n_polyp/best_openvino_model/`.
 
 The Docker Compose runtime described in [Get Started](../get-started.md) expects
@@ -45,26 +45,14 @@ Log out and back in (or reboot) if `make setup-prerequisites` newly added your u
 
 The application is validated on **REAL-Colon** (Cosmo Intelligent Medical
 Devices, figshare article `22202866`). The full corpus is 60 studies (~880 GB).
-The training subset we use is 7 studies (~74 GB).
+The training subset we use is 4 studies (~67 GB).
 
 ```bash
-make download-dataset    # 7 studies, ~74 GB, to datasets/REAL-Colon/raw/
+make download-dataset    # 4 studies, ~67 GB, to datasets/REAL-Colon/raw/
+
+make prepare-dataset MAX_POS_PER_VIDEO=800 # take maximum 800 positive frames per video
+
 ```
-
-For the full corpus, use the vendor script instead:
-
-```bash
-bash datasets/REAL-Colon/helper/download_dataset.sh
-```
-
-The downloaded studies land as sibling `SSS-VVV_frames.tar.gz` +
-`SSS-VVV_annotations.tar.gz` archives (JPGs + Pascal VOC XML). You can either
-extract them yourself or let the bootstrap step do it — it auto-extracts any
-`.zip`, `.tar`, `.tar.gz`, or `.tgz` under `datasets/REAL-Colon/raw/` on first
-run.
-
-Legacy mask-based drops (e.g. CVC-ColonDB with `images/` + `masks/`) are also
-auto-detected as a fallback and converted via OpenCV connected-components.
 
 ---
 
@@ -119,14 +107,17 @@ Or edit `backend/config/model.yaml` directly (e.g. change `train.epochs`,
 
 ---
 
-## 4. (Optional) Generate a demo video
+## 4. Generate the demo video (required)
 
-For `SOURCE=file` runs, place any endoscopic video at `videos/polyp_test.mp4`.
-A minimal generator that stitches frames from the REAL-Colon subset into a
-demo clip is provided:
+Fresh clones do not include `videos/polyp_test.mp4`. Generate it from the
+`surgical-instrument/` workdir before running `make doctor` / `make up`. The
+generator stitches frames from the REAL-Colon subset into an H.264 demo clip:
 
 ```bash
-.venv-backend/bin/python scripts/create_endoscopy_video.py
+.venv-backend/bin/python scripts/create_endoscopy_video.py \
+  --images-dir datasets/REAL-Colon/raw/001-001_frames \
+  --output videos/polyp_test.mp4 \
+  --seconds 60 --fps 60 --width 1920 --height 1080
 ```
 
 ---

@@ -56,10 +56,11 @@ train:
   # Requires torch>=2.12.1+xpu — earlier torch-xpu versions stall in
   # Ultralytics' loss/assign kernels on Xe3.
   device: xpu
-  epochs: 50
+  epochs: 30
   imgsz: 640
-  batch: 8
-  workers: 4
+  batch: 32
+  cache: disk           # decode once to .npy on disk (safe with py3.14 forkserver) 
+  workers: 8
   optimizer: AdamW
   lr0: 0.001
   lrf: 0.01
@@ -77,12 +78,12 @@ train:
   translate: 0.1
   scale: 0.2
   fliplr: 0.5
-  mosaic: 1.0
-  mixup: 0.05
+  mosaic: 0.0
+  mixup: 0.0
   close_mosaic: 10
   patience: 0            # disable early-stop — deterministic full-epoch runs
   save_period: 10
-  amp: false             # XPU + Ultralytics check_amp incompatibility
+  amp: true             # XPU + Ultralytics check_amp incompatibility
 
 export:
   format: openvino

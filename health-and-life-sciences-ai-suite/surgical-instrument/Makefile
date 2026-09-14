@@ -15,6 +15,7 @@
 #   make check-l0              # verify Intel Level Zero packages on the host
 #   make download-dataset      # fetch REAL-Colon subset (~74 GB) for training
 #   make backend-venv          # create .venv-backend with torch+xpu + Ultralytics + OpenVINO
+#   make prepare-dataset       # (optional) small video-level-split dataset for fast training
 #   make backend-bootstrap     # fetch dataset -> train YOLO11n -> export FP16 OpenVINO IR
 #   make doctor                # preflight: docker, /dev/dri, IR + demo video, L0 stack
 #
@@ -188,6 +189,19 @@ setup-prerequisites: ## Install host prerequisites (Docker, Intel L0 stack) — 
 .PHONY: download-dataset
 download-dataset: ## Download the REAL-Colon subset (~74 GB) into datasets/REAL-Colon/raw
 	@./scripts/download_realcolon_subset.sh $(DATASET_DIR)
+
+# Cap positives per video and split BY VIDEO for a fast, leakage-free dataset.
+# Override e.g.: make prepare-dataset MAX_POS_PER_VIDEO=400 NEG_PER_VIDEO=100
+MAX_POS_PER_VIDEO ?= 800
+NEG_PER_VIDEO     ?= 0
+PREPARE_ARGS      ?=
+.PHONY: prepare-dataset
+prepare-dataset: ## Build a small video-level-split REAL-Colon YOLO dataset (cache-hit by backend-bootstrap)
+	@if [ ! -x $(PYVENV) ]; then \
+	  echo 'error: $(BACKEND_VENV) not found. Run: make backend-venv'; exit 1; \
+	fi
+	@$(PYVENV) scripts/realcolon_prepare_yolo.py \
+	  --max-pos-per-video $(MAX_POS_PER_VIDEO) --neg-per-video $(NEG_PER_VIDEO) $(PREPARE_ARGS)
 
 .PHONY: check-l0
 check-l0: ## Verify Intel Level Zero + OpenCL packages are installed on the host

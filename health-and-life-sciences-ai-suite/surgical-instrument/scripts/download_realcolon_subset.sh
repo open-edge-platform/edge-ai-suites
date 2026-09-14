@@ -18,12 +18,9 @@ mkdir -p "$DIR"
 # 7 studies (~74 GB total). Adjust this list if you want more or fewer.
 STUDIES=(
   "001-001"
-  "001-002"
   "001-005"
   "001-007"
   "002-008"
-  "002-010"
-  "004-008"
 )
 
 ARTICLE_ID="22202866"
