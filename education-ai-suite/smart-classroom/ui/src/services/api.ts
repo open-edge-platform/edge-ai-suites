@@ -1,10 +1,4 @@
 import type { StreamEvent, StreamOptions } from './streamSimulator';
-import { store } from "../redux/store";
-import {
-  setVideoStatus,
-  setVideoAnalyticsActive,
-  setVideoPlaybackMode
-} from "../redux/slices/uiSlice";
 import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
 
 export type ProjectConfig = {
@@ -129,52 +123,6 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-export async function startPipelineMonitoring(sessionId: string) {
-  const controller = new AbortController();
-  try {
-    for await (const event of monitorVideoAnalyticsPipelines(
-      sessionId,
-      controller.signal
-    )) {
-      if (!event?.pipelines) continue;
-      let anyRunning = false;
-      let allCompleted = true;
-
-      for (const pipeline of event.pipelines) {
-
-        if (pipeline.status === "running") {
-          anyRunning = true;
-        }
-
-        if (
-          pipeline.status !== "completed" &&
-          pipeline.status !== "stopped"
-        ) {
-          allCompleted = false;
-        }
-      }
-
-      if (anyRunning) {
-        store.dispatch(setVideoAnalyticsActive(true));
-        store.dispatch(setVideoStatus("streaming"));
-        store.dispatch(setVideoPlaybackMode(false));
-      }
-
-      if (allCompleted && !anyRunning) {
-        console.log("✅ All pipelines completed");
-        store.dispatch(setVideoAnalyticsActive(false));
-        store.dispatch(setVideoStatus("completed"));
-        store.dispatch(setVideoPlaybackMode(true));
-        break;
-      }
-    }
-
-  }
-  catch (err) {
-    console.error("Monitor error:", err);
-  }
-  return controller;
-}
 
 export async function pingBackend(): Promise<boolean> {
   try {

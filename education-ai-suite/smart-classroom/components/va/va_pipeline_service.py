@@ -214,7 +214,7 @@ class VideoAnalyticsPipelineService:
                 "!",
                 "h264parse",
                 "!",
-                "d3d11h264dec",
+                "d3d12h264dec",
                 "!",
             ]
         elif input_type == "rtsp" and config.va_pipeline.rtsp_codec == "h265":
@@ -228,7 +228,7 @@ class VideoAnalyticsPipelineService:
                 "!",
                 "h265parse",
                 "!",
-                "d3d11h265dec",
+                "d3d12h265dec",
                 "!",
             ]
         elif input_type == "file":
@@ -424,6 +424,12 @@ class VideoAnalyticsPipelineService:
                                 self.pipeline_log_handles[pipeline_name].close()
                             except:
                                 pass
+
+                        if stop_flag.is_set():
+                            self.logger.info(
+                                f"[VA][monitor] '{pipeline_name}' is being stopped; skipping restart"
+                            )
+                            break
 
                         # Restart pipeline using saved parameters
                         params = self.pipeline_params.get(pipeline_name)
@@ -969,6 +975,10 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
 
+        # Retire the monitor before anything touches the process.
+        if pipeline_name in self.monitor_stop_flags:
+            self.monitor_stop_flags[pipeline_name].set()
+
         stop_rtsp_recording(f"{pipeline_name}_recorder")
         process = self.pipelines[pipeline_name]
 
@@ -1012,10 +1022,6 @@ class VideoAnalyticsPipelineService:
 
             del self.pipelines[pipeline_name]
             self._finalize_pipeline(pipeline_name, "stopped")
-
-            # Stop monitoring thread
-            if pipeline_name in self.monitor_stop_flags:
-                self.monitor_stop_flags[pipeline_name].set()
 
             if pipeline_name in self.monitor_threads:
                 monitor_thread = self.monitor_threads[pipeline_name]
@@ -1100,16 +1106,21 @@ class VideoAnalyticsPipelineService:
         try:
             while True:
                 pipeline_statuses = []
-                all_stopped = True
+                any_live = False
+                any_awaiting_restart = False
 
                 for pipeline_name in all_pipeline_names:
                     pipeline_name_lower = pipeline_name.lower()
+                    # Set by _finalize_pipeline, and the only authority on "this
+                    # one is never coming back": "eos", "failed" or "stopped".
+                    final_status = self.pipeline_final_status.get(pipeline_name_lower)
 
                     # Check if pipeline is registered
                     if pipeline_name_lower not in self.pipelines:
                         pipeline_statuses.append({
                             "pipeline_name": pipeline_name,
                             "status": "not_found",
+                            "final_status": final_status,
                             "message": f"Pipeline '{pipeline_name}' not found",
                         })
                         continue
@@ -1122,10 +1133,11 @@ class VideoAnalyticsPipelineService:
 
                     # Pipeline is running
                     if return_code is None:
-                        all_stopped = False
+                        any_live = True
                         status_entry = {
                             "pipeline_name": pipeline_name,
                             "status": "running",
+                            "final_status": final_status,
                             "pid": process.pid,
                         }
                         if errors:
@@ -1134,11 +1146,19 @@ class VideoAnalyticsPipelineService:
 
                     # Pipeline has stopped
                     else:
+                        # Dead but not finalised means the monitor thread is
+                        # between a crash and its relaunch. Reported as such so
+                        # the client shows "retrying" rather than "failed", and
+                        # counted so this stream stays open across the gap.
+                        if final_status is None:
+                            any_awaiting_restart = True
+
                         # Normal-vs-error comes from the runner's bus events.
                         if process.exited_normally():
                             pipeline_statuses.append({
                                 "pipeline_name": pipeline_name,
                                 "status": "stopped_normal",
+                                "final_status": final_status,
                                 "return_code": return_code,
                                 "message": "Pipeline exited normally (EOS received)",
                             })
@@ -1151,6 +1171,7 @@ class VideoAnalyticsPipelineService:
                             pipeline_statuses.append({
                                 "pipeline_name": pipeline_name,
                                 "status": "stopped_error",
+                                "final_status": final_status,
                                 "return_code": return_code,
                                 "message": "Pipeline exited unexpectedly.",
                                 "errors": errors,
@@ -1158,6 +1179,13 @@ class VideoAnalyticsPipelineService:
 
                 # Yield combined status
                 yield {"pipelines": pipeline_statuses}
+
+                # Close the stream once there is nothing left to report.
+                if self._any_pipeline_ran and not any_live and not any_awaiting_restart:
+                    self.logger.info(
+                        "[VA][status] all pipelines settled; ending status stream"
+                    )
+                    return
 
                 await asyncio.sleep(check_interval)
 

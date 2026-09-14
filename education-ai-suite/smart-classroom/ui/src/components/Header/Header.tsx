@@ -50,7 +50,6 @@ import {
   registerSession,
   startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring,
   checkRecordedVideos,
 } from '../../services/api';
 import { declaredStages } from '../../utils/sessionStages';
@@ -354,6 +353,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
     return () => window.removeEventListener('global-error', handler as EventListener);
   }, [t]);
 
+  /**
+   * Lets whoever raised an error take it back once the condition clears 
+   */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      setErrorMsg((current) => (current === detail ? null : current));
+    };
+    window.addEventListener('global-error-withdraw', handler as EventListener);
+    return () => window.removeEventListener('global-error-withdraw', handler as EventListener);
+  }, []);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -423,10 +434,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
       dispatch(setVideoStatus('starting'));
       
       const videoResult = await startVideoAnalytics(videoRequests, sharedSessionId);
-      
-      // Start pipeline monitoring for video analytics
-      startPipelineMonitoring(sharedSessionId);
-      console.log('📹 Video pipeline monitoring started for session:', sharedSessionId);
+
 
       if (videoResult && videoResult.results) {
         let hasSuccessfulStreams = false;

@@ -354,6 +354,7 @@
   },
   "errors": {
       "videoPipelineFailed": "Video analytics could not start:\n{{details}}",
+      "videoPipelineRetrying": "Video analytics problem, retrying:\n{{details}}",
       "videoPipelineStopFailed": "Video analytics could not stop:\n{{details}}",
       "failedToStartRecording": "Failed to start recording",
       "failedToStopRecording": "Failed to stop recording",

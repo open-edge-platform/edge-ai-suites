@@ -349,6 +349,7 @@
   },
   "errors": {
     "videoPipelineFailed": "视频分析无法启动：\n{{details}}",
+    "videoPipelineRetrying": "视频分析出现问题，正在重试：\n{{details}}",
     "videoPipelineStopFailed": "视频分析无法停止：\n{{details}}",
     "failedToStartRecording": "开始录音失败",
     "failedToStopRecording": "停止录音失败",

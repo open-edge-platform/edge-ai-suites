@@ -10,7 +10,6 @@ import {
   registerSession,
   startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring,
   BACKEND_UNAVAILABLE_MESSAGE
 } from '../../services/api';
 import { declaredStages } from '../../utils/sessionStages';
@@ -199,7 +198,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       dispatch(setVideoStatus('starting')); // This will change from 'processed' to 'starting'
 
       const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
-      startPipelineMonitoring(sessionId);
       let hasSuccessfulStreams = false;
 
       videoResponse.results.forEach((result: any) => {

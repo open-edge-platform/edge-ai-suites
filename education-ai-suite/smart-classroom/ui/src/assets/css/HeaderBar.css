@@ -139,10 +139,18 @@ button.text-button[disabled] {
   cursor: not-allowed;
 }
 
+/* Monospaced and reserving its own width: the digits change every second, and
+   in the proportional text face each change nudged the Stop Recording button
+   sideways. 5ch is exactly "00:00" in a mono face, and it is a min-width rather
+   than a width so a class running past 99 minutes still shows in full instead
+   of being clipped. It scales with font-size, so the breakpoints need nothing. */
 .timer {
-  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-family: var(--font-mono);
   font-size: 14px;
+  font-variant-numeric: tabular-nums;
   color: #2B2C30;
+  min-width: 5ch;
+  text-align: center;
   margin-right: 12px;
   vertical-align: middle;
   flex-shrink: 0;
