@@ -199,8 +199,6 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 > **Note:** You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
 >
 > **Note:** If `NPU` is selected in `global.models[].device` for VLM models, `weightFormat` is automatically forced to `int4`.
->
-> **Note:** LLM models in the Live-Video-Captioning-RAG application currently do not support NPU inference.
 
 #### Optional: Proxy configuration
 

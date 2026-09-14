@@ -99,7 +99,7 @@ By default, conversion runs on CPU. To target another device:
 	--device <CPU|GPU|NPU>
 ```
 
-> **Note:** NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`. Additionally, LLM model support for NPU is not yet available in Live-Video-Captioning-RAG.
+> **Note:** NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`.
 
 ---
 
