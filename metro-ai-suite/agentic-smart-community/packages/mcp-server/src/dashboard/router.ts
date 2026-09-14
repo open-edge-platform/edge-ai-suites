@@ -33,10 +33,24 @@ type RouterMetrics = {
   };
 };
 
-function adaptRouterMetrics(metrics: RouterMetrics) {
+type RouterProvider = {
+  name?: unknown;
+  metadata?: { labels?: unknown };
+};
+
+function adaptRouterMetrics(metrics: RouterMetrics, providers: RouterProvider[]) {
   const byProvider = metrics.token_metrics?.by_provider ?? {};
-  const totalTokensFor = (provider: string) => Object.entries(byProvider)
-    .filter(([key]) => key.split("/", 1)[0] === provider)
+  const labelsByProvider = new Map(
+    providers.flatMap((provider) => {
+      if (typeof provider.name !== "string" || !Array.isArray(provider.metadata?.labels)) return [];
+      return [[provider.name, new Set(provider.metadata.labels.filter((label): label is string => typeof label === "string"))]];
+    }),
+  );
+  const totalTokensFor = (label: string) => Object.entries(byProvider)
+    .filter(([key]) => {
+      const providerName = key.split("/", 1)[0];
+      return providerName === label || labelsByProvider.get(providerName)?.has(label);
+    })
     .reduce((total, [, value]) => {
       const tokens = Number(value.total_tokens);
       return total + (Number.isFinite(tokens) ? tokens : 0);
@@ -165,10 +179,28 @@ export function createDashboardRouter(
       const baseUrl = new URL(integrations.routerUrl);
       baseUrl.pathname = `${baseUrl.pathname.replace(/\/v1\/?$/, "").replace(/\/$/, "")}/`;
       const target = new URL(reset ? "v1/metrics/reset" : "v1/metrics", baseUrl);
-      const upstream = await fetch(target, { method: reset ? "POST" : "GET", signal: AbortSignal.timeout(3_000) });
+      const providersTarget = new URL("v1/providers", baseUrl);
+      const [upstream, providersResponse] = await Promise.all([
+        fetch(target, { method: reset ? "POST" : "GET", signal: AbortSignal.timeout(3_000) }),
+        reset
+          ? Promise.resolve(undefined)
+          : fetch(providersTarget, { signal: AbortSignal.timeout(3_000) }),
+      ]);
       if (!upstream.ok) throw new Error(`Router returned HTTP ${upstream.status}`);
       const data = await upstream.json();
-      res.json({ status: "configured", data: reset ? data : adaptRouterMetrics(data as RouterMetrics) });
+      if (providersResponse && !providersResponse.ok) {
+        throw new Error(`Router returned HTTP ${providersResponse.status}`);
+      }
+      const providers = providersResponse
+        ? ((await providersResponse.json() as { data?: unknown }).data ?? [])
+        : [];
+      res.json({
+        status: "configured",
+        data: reset ? data : adaptRouterMetrics(
+          data as RouterMetrics,
+          Array.isArray(providers) ? providers as RouterProvider[] : [],
+        ),
+      });
     } catch {
       res.status(503).json({ status: "unavailable" });
     }

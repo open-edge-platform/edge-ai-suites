@@ -28,7 +28,7 @@ The diagram below shows how these components are layered on top of the Edge Node
 ![Handheld system stack](./_assets/fedaero-system-stack.drawio.svg)
 
 The Handheld Multi-Modal application is deployed on top of the
-[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
+Edge Node Infrastructure software - an edge computing platform, which enables hardware acceleration capabilities. See [Infrastructure Setup](infrastructure-setup.md) for build and provisioning steps.
 
 ## Deployment and Usage
 

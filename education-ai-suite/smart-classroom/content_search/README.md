@@ -12,7 +12,7 @@ Content Search is a multimodal service for smart classroom environments. It enab
 
 ## Quick Start
 
-For installation and setup instructions, see [Get Started](../docs/user-guide/get-started.md#step-4-set-up-content-search).
+For installation and setup instructions, see [Get Started](../docs/user-guide/get-started.md).
 
 ## API Endpoints
 
@@ -34,7 +34,7 @@ For installation and setup instructions, see [Get Started](../docs/user-guide/ge
 
 ## Documentation
 
-- **User Guide**: [Get Started](../docs/user-guide/get-started.md#step-4-set-up-content-search-optional)
+- **User Guide**: [Get Started](../docs/user-guide/get-started.md)
 - **Dev Guide**: [Content Search API Reference](../docs/dev-guide/content-search/Content_search_API.md)
 - **Microservice APIs**:
   - [File Ingest & Retrieve](../docs/dev-guide/content-search/file_ingest_and_retrieve/API_GUIDE.md)
