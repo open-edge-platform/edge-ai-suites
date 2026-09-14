@@ -42,7 +42,7 @@ asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["backend", "main"]
-omit = ["tests/*"]
+omit = ["tests/*", "backend/integrations/ov_genai/*"]
 
 [tool.coverage.report]
 show_missing = true
