@@ -93,7 +93,7 @@ When `{{CLASSIFIER}} != none` (e.g. PPE compliant/non-compliant), wire a second 
   const isTarget = tens.some(t =>
     t.label === '{{OBJECT}}' || {{CLASS_FILTER_IDS}}.indexOf(t.label_id) !== -1);
   ```
-  Populate `{{CLASS_FILTER_IDS}}` with the concrete attribute class IDs the prompt names (e.g. hardhat/vest IDs); `[]` keeps all. For a `count<1` "no-PPE" rule, count the **compliant** class and alert when it drops below the threshold (see [`references/NODE_RED.md`](references/NODE_RED.md) step 6).
+  Populate `{{CLASS_FILTER_IDS}}` with the concrete attribute class IDs the prompt names (e.g. hardhat/vest IDs); `[]` keeps all. For a `count<1` "no-PPE" rule, count the **compliant** class and alert when it drops below the threshold (see [`NODE_RED.md`](NODE_RED.md) step 6).
 
 ## Starting pipelines (per source, via REST through Nginx)
 
