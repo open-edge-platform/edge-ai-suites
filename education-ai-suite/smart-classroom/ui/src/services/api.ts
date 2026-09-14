@@ -1191,6 +1191,26 @@ export async function listSessions(
 }
 
 /**
+ * The live stage table for one session.
+ *
+ * Returns null when the session has no row — it was never registered, or the
+ * history panel deleted it. That is a different outcome from the request
+ * failing, and the caller needs to tell them apart: a missing row means stop
+ * asking, a failed request means the backend is momentarily away. So 404 comes
+ * back as null while everything else throws.
+ */
+export async function getSessionStatus(sessionId: string): Promise<SessionSummary | null> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/status`,
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load status (${res.status})`));
+    return res.json();
+  });
+}
+
+/**
  * Per-stage timings for one session, read back from its stage_events.jsonl.
  * The session row carries each stage's current status; this carries how long it
  * took and what it said when it broke.

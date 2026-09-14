@@ -3,7 +3,6 @@ import NotificationsDisplay from '../Display/NotificationsDisplay';
 import '../../assets/css/HeaderBar.css';
 import recordON from '../../assets/images/recording-on.svg';
 import recordOFF from '../../assets/images/recording-off.svg';
-import sideRecordIcon from '../../assets/images/sideRecord.svg';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { 
   resetFlow, 
@@ -20,6 +19,7 @@ import {
   startStream,
   setProcessingMode,
   setSessionId,
+  setSessionRegistered,
   setHasAudioDevices,
   setAudioDevicesLoading,
   setIsRecording,
@@ -80,7 +80,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
   const [audioNotification, setAudioNotification] = useState('');
   const [videoNotification, setVideoNotification] = useState('');
   const { t } = useTranslation();
-  const [timer, setTimer] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -200,24 +200,25 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
     );
   };
 
+  /**
+   * Elapsed recording time, measured against a start timestamp rather than
+   * counted in ticks: browsers throttle a background tab's interval to roughly
+   * once a minute, which would under-report a class-length recording by
+   * minutes. The clock only exists while `isRecording`, so it restarts from
+   * zero with each session and nothing stale is ever on screen.
+   */
   useEffect(() => {
-    let interval: number | undefined;
-    const shouldRunTimer = isRecording;
+    if (!isRecording) return;
 
-    if (shouldRunTimer) {
-      interval = window.setInterval(() => setTimer((t) => t + 1), 1000);
-    } else if (interval) {
-      clearInterval(interval);
-    }
+    const startedAt = Date.now();
+    setElapsed(0);
+    const interval = window.setInterval(
+      () => setElapsed(Math.floor((Date.now() - startedAt) / 1000)),
+      1000
+    );
 
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, [isRecording]);
-
-  useEffect(() => {
-    if (processingMode && processingMode !== 'microphone') {
-      setTimer(0);
-    }
-  }, [processingMode]);
 
   const hasVideoCapability = useMemo(() => {
     // Video capability requires BOTH backend feature AND config/uploads
@@ -530,7 +531,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
     };
 
     clearForNewOp();
-    setTimer(0);
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
@@ -569,10 +569,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
       // Put it in the session history. Declares what this session will run so
       // the backend can tell when it is finished; best-effort, so a session
       // still records and plays back normally if the call does not land.
-      await registerSession(
+      const registered = await registerSession(
         sharedSessionId,
         declaredStages(featureGuard, { hasAudio: withMic, hasVideo: withCameras }),
       );
+      dispatch(setSessionRegistered(registered));
       try {
         // Covers the handover as a whole: the stop, the 5s settle and the start.
         report(t('startRecording.startingMonitoring', 'Starting resource monitoring…'));
@@ -794,19 +795,22 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
   return (
     <div className="header-bar">
       <div className="navbar-left">
+        {/* Status only — the button beside it is the control. Two hit targets
+            for one action meant a keyboard user could reach the button but not
+            the icon, and the two disabled looks never quite matched. */}
         <img
           src={isRecording ? recordON : recordOFF}
-          alt="Record"
-          className="record-icon"
-          onClick={handleRecordClick}
-          title={getRecordingTooltip()}
-          style={{
-            opacity: isRecordingDisabled ? 0.5 : 1,
-            cursor: isRecordingDisabled ? 'not-allowed' : 'pointer'
-          }}
+          alt=""
+          aria-hidden="true"
+          className={`record-icon${isRecording ? ' is-recording' : ''}`}
         />
-        <img src={sideRecordIcon} alt="Side Record" className="side-record-icon" />
-        <span className="timer">{formatTime(timer)}</span>
+        {/* Only while live: a permanently visible 00:00 read as a recording
+            paused at zero, and leaving it frozen after the stop put a dead
+            clock on screen for the whole transcribe → summary → mindmap run.
+            The final duration is in the session history and the report. */}
+        {isRecording && (
+          <span className="timer" role="timer">{formatTime(elapsed)}</span>
+        )}
 
         <button
           className="text-button"

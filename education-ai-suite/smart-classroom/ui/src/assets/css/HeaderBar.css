@@ -7,7 +7,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
   height: var(--header-bar-height);
   width: 100%;
   background-color: #fff;
@@ -39,8 +39,7 @@ button.text-button {
   flex-shrink: 0;
 }
 
-.record-icon,
-.side-record-icon {
+.record-icon {
   width: 24px;
   height: 24px;
   display: inline-block;
@@ -48,6 +47,17 @@ button.text-button {
   margin: 0;
   padding: 0;
   flex-shrink: 0;
+}
+
+/* The one cue that a recording is live, alongside the button label and the
+   elapsed clock. Opacity only, so it cannot shift the header's layout. */
+.record-icon.is-recording {
+  animation: record-pulse 2s ease-in-out infinite;
+}
+
+@keyframes record-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
 }
 
 button.text-button:hover {
@@ -220,10 +230,6 @@ button.text-button[disabled] {
   :root {
     --header-bar-height: 64px;
   }
-
-  .header-bar {
-    padding: 0 3rem;
-  }
   
   button.text-button,
   .upload-button {
@@ -243,10 +249,6 @@ button.text-button[disabled] {
 
 /* Desktop (992px to 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
-  .header-bar {
-    padding: 0 1.5rem;
-  }
-  
   .navbar-left {
     gap: 10px;
   }
@@ -283,8 +285,7 @@ button.text-button[disabled] {
     font-size: 11px;
   }
   
-  .record-icon,
-  .side-record-icon {
+  .record-icon {
     width: 20px;
     height: 20px;
   }
@@ -329,8 +330,7 @@ button.text-button[disabled] {
     gap: 4px;
   }
   
-  .record-icon,
-  .side-record-icon {
+  .record-icon {
     width: 18px;
     height: 18px;
   }
@@ -373,8 +373,7 @@ button.text-button[disabled] {
     gap: 2px;
   }
   
-  .record-icon,
-  .side-record-icon {
+  .record-icon {
     width: 16px;
     height: 16px;
   }
@@ -422,8 +421,7 @@ button.text-button[disabled] {
     text-align: center;
   }
   
-  .record-icon,
-  .side-record-icon {
+  .record-icon {
     width: 14px;
     height: 14px;
   }
@@ -451,8 +449,7 @@ button.text-button[disabled] {
     font-size: 7px;
   }
   
-  .record-icon,
-  .side-record-icon {
+  .record-icon {
     width: 12px;
     height: 12px;
   }
@@ -485,8 +482,7 @@ button.text-button[disabled] {
 
 /* High DPI displays */
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-  .record-icon,
-  .side-record-icon {
+  .record-icon {
     image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
   }
@@ -497,6 +493,11 @@ button.text-button[disabled] {
   button.text-button,
   .upload-button {
     transition: none;
+  }
+
+  /* The red dot still distinguishes live from idle without the pulse. */
+  .record-icon.is-recording {
+    animation: none;
   }
 }
 

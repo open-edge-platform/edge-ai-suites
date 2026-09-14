@@ -21,6 +21,7 @@ import {
   processingFailed,
   resetFlow,
   setSessionId,
+  setSessionRegistered,
   setActiveStream,
   startStream,
   setFrontCameraStream,
@@ -337,7 +338,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       if (frontCameraPath) registeredVideoSources.front = frontCameraPath.name;
       if (rearCameraPath) registeredVideoSources.back = rearCameraPath.name;
       if (boardCameraPath) registeredVideoSources.board = boardCameraPath.name;
-      await registerSession(
+      const registered = await registerSession(
         sessionId,
         declaredStages(featureGuard, { hasAudio: hasAudioFile, hasVideo: hasVideoFiles }),
         {
@@ -345,6 +346,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
           video_sources: registeredVideoSources,
         },
       );
+      dispatch(setSessionRegistered(registered));
 
       try {
         // Covers the handover as a whole: the stop, the 5s settle and the start.

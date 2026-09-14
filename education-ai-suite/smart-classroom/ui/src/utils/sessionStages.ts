@@ -11,7 +11,7 @@ import type { SessionStage } from '../services/api';
  * session is called finished while work is still going.
  *
  * The chain being mirrored lives in useAudioPipeline (transcript -> summary ->
- * mind map) and useContentSegmentation (-> segmentation -> report). Its first
+ * mind map) and useStageDrivenChain (-> segmentation -> report). Its first
  * condition is that audio exists, which is why a video-only session declares
  * nothing but video analytics.
  *
@@ -28,10 +28,11 @@ export function declaredStages(
     if (guard.hasFeature('asr')) stages.push('transcribe');
     if (guard.hasFeature('summary')) stages.push('summarize');
     if (guard.hasFeature('mindmap')) stages.push('mindmap');
-    // Segmentation follows the mind map automatically, and its success in turn
-    // auto-starts the report. With video in the mix segmentation also waits on
-    // the user opening playback mode - still declared, because a session where
-    // that never happens genuinely did not finish.
+    // Both are started by useStageDrivenChain off this very table: segmentation
+    // once every other declared stage has settled, then the report. Declaring
+    // them is therefore self-fulfilling, which is the point - the previous
+    // trigger lived in Redux and could stall without ever saying so, leaving
+    // the session on 'running' for good.
     if (guard.hasFeature('topic_segmentation')) stages.push('segmentation');
     if (guard.hasFeature('report')) stages.push('report');
   }

@@ -19,6 +19,7 @@ import { useSetup } from './services/setupManager';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 import { useAudioPipeline } from './redux/useAudioPipeline';
 import { useSessionAbortBeacon } from './redux/useSessionAbortBeacon';
+import { useStageDrivenChain } from './redux/useStageDrivenChain';
 import { useTranslation } from 'react-i18next';
 import { useFeatureConfig } from './hooks/useFeatureConfig';
 import { FeatureGuard } from './utils/featureGuards';
@@ -41,6 +42,11 @@ const App: React.FC = () => {
 
   // Load feature configuration
   const { guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();
+
+  // Starts segmentation and then the report off the backend's stage table.
+  // Here rather than in LeftPanel, where the old trigger lived, because the
+  // chain has to keep running whatever the user is looking at.
+  useStageDrivenChain(guard);
 
   // Check if any main features are enabled
   const hasMainFeatures = featuresLoaded && guard ? 

@@ -244,7 +244,7 @@ const StartRecordingModal: React.FC<StartRecordingModalProps> = ({
                   value={cameras.front}
                   onChange={setCamera('front')}
                   disabled={starting}
-                  placeholder="rtsp://127.0.0.1:9554/front"
+                  placeholder="rtsp://127.0.0.1:8554/front"
                 />
               </div>
 
@@ -256,7 +256,7 @@ const StartRecordingModal: React.FC<StartRecordingModalProps> = ({
                   value={cameras.back}
                   onChange={setCamera('back')}
                   disabled={starting}
-                  placeholder="rtsp://127.0.0.1:9554/back"
+                  placeholder="rtsp://127.0.0.1:8554/back"
                 />
               </div>
 
@@ -268,7 +268,7 @@ const StartRecordingModal: React.FC<StartRecordingModalProps> = ({
                   value={cameras.board}
                   onChange={setCamera('board')}
                   disabled={starting}
-                  placeholder="rtsp://127.0.0.1:9554/content"
+                  placeholder="rtsp://127.0.0.1:8554/content"
                 />
               </div>
             </>
