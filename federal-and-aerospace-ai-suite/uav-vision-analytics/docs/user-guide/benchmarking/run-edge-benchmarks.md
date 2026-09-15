@@ -22,7 +22,7 @@ Use this guide after provisioning an edge node with the Infrastructure software 
 
 ## Prerequisites
 
-- [Edge Node Infrastructure software](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/tree/release-2026.2.0) deployed.
+- [Edge Node Infrastructure software](../infrastructure-setup.md) deployed.
 - During target system installation, set `host_type=container` in the `config-file`.
 - Network connectivity for model and media downloads.
 
