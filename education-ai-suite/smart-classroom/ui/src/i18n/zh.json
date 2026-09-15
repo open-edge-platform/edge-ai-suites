@@ -349,6 +349,7 @@
   },
   "errors": {
     "videoPipelineFailed": "视频分析无法启动：\n{{details}}",
+    "videoPipelineRetrying": "视频分析出现问题，正在重试：\n{{details}}",
     "videoPipelineStopFailed": "视频分析无法停止：\n{{details}}",
     "failedToStartRecording": "开始录音失败",
     "failedToStopRecording": "停止录音失败",
@@ -703,6 +704,8 @@
   },
   "reportPanel": {
     "title": "查看报告",
+
+    "short": "报告",
     "classReport": "课堂报告",
     "noSessionActive": "当前无会话",
     "reportFields": "报告字段",
@@ -767,5 +770,37 @@
     "previewUnavailableType": "此文件类型不支持预览。",
     "download": "下载 {{name}}",
     "closePreview": "关闭预览"
+  },
+  "history": {
+    "title": "历史记录",
+
+    "short": "历史",
+    "subtitle": "本机录制过的课程，最新的在前。",
+    "refresh": "刷新",
+    "empty": "暂无记录。从现在起的录制和上传都会出现在这里。",
+    "started": "开始时间",
+    "sources": "来源",
+    "stages": "阶段",
+    "stateLabel": "状态",
+    "stage": "阶段",
+    "status": "状态",
+    "duration": "耗时",
+    "detail": "详情",
+    "loading": "加载中…",
+    "noEvents": "该记录没有阶段耗时数据。",
+    "delete": "删除",
+    "confirmDelete": "删除这条记录及其产生的全部文件？此操作不可撤销。",
+    "markFailed": "标记为失败",
+    "markedByUser": "由用户标记为失败",
+    "prev": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {{page}} / {{pages}} 页",
+    "state": {
+      "pending": "等待中",
+      "running": "进行中",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    }
   }
 }

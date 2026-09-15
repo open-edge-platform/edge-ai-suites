@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from utils.runtime_config_loader import RuntimeConfig
+from utils.session_manager import is_path_safe_session_id
 
 
 class SessionPaths:
@@ -13,6 +14,8 @@ class SessionPaths:
     @staticmethod
     def session_dir(session_id: str) -> Path:
         """<location>/<name>/<session_id> - root directory for one session's artifacts."""
+        if not is_path_safe_session_id(session_id):
+            raise ValueError(f"unsafe session id: {session_id!r}")
         return SessionPaths.base_dir() / session_id
 
     @staticmethod

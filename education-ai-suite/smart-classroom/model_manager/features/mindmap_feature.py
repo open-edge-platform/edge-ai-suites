@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,8 @@ router = APIRouter()
 async def generate_mindmap(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
     try:
-        mindmap_text = pipeline.run_mindmap()
+        with stage_tracker(pipeline.session_id, "mindmap"):
+            mindmap_text = pipeline.run_mindmap()
         logger.info("Mindmap generated successfully.")
         return {"mindmap": mindmap_text, "error": ""}
     except HTTPException as http_exc:

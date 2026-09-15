@@ -3,7 +3,6 @@ import NotificationsDisplay from '../Display/NotificationsDisplay';
 import '../../assets/css/HeaderBar.css';
 import recordON from '../../assets/images/recording-on.svg';
 import recordOFF from '../../assets/images/recording-off.svg';
-import sideRecordIcon from '../../assets/images/sideRecord.svg';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { 
   resetFlow, 
@@ -20,6 +19,7 @@ import {
   startStream,
   setProcessingMode,
   setSessionId,
+  setSessionRegistered,
   setHasAudioDevices,
   setAudioDevicesLoading,
   setIsRecording,
@@ -47,11 +47,12 @@ import {
   startVideoAnalytics,
   stopVideoAnalytics,
   createSession,
-  startMonitoring,  
+  registerSession,
+  startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring,
   checkRecordedVideos,
 } from '../../services/api';
+import { declaredStages } from '../../utils/sessionStages';
 import UploadFilesModal from '../Modals/UploadFilesModal';
 import StartRecordingModal from '../Modals/StartRecordingModal';
 import type { CameraUrls } from '../../services/cameraStorage';
@@ -70,13 +71,15 @@ const TRANSIENT_ERROR_MS = 15000;
 
 interface HeaderBarProps {
   featureGuard: FeatureGuard;
+  onViewReport: () => void;
+  onViewHistory: () => void;
 }
 
-const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
+const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onViewHistory }) => {
   const [audioNotification, setAudioNotification] = useState('');
   const [videoNotification, setVideoNotification] = useState('');
   const { t } = useTranslation();
-  const [timer, setTimer] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -109,6 +112,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
 
   // Check if video_analytics feature is enabled in backend
   const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasReportFeature = featureGuard.hasFeature('report');
   
   // Check if audio features are enabled
   const hasAudioFeatures = featureGuard.hasFeature('asr') ||
@@ -195,24 +199,25 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
     );
   };
 
+  /**
+   * Elapsed recording time, measured against a start timestamp rather than
+   * counted in ticks: browsers throttle a background tab's interval to roughly
+   * once a minute, which would under-report a class-length recording by
+   * minutes. The clock only exists while `isRecording`, so it restarts from
+   * zero with each session and nothing stale is ever on screen.
+   */
   useEffect(() => {
-    let interval: number | undefined;
-    const shouldRunTimer = isRecording;
+    if (!isRecording) return;
 
-    if (shouldRunTimer) {
-      interval = window.setInterval(() => setTimer((t) => t + 1), 1000);
-    } else if (interval) {
-      clearInterval(interval);
-    }
+    const startedAt = Date.now();
+    setElapsed(0);
+    const interval = window.setInterval(
+      () => setElapsed(Math.floor((Date.now() - startedAt) / 1000)),
+      1000
+    );
 
-    return () => clearInterval(interval);
+    return () => window.clearInterval(interval);
   }, [isRecording]);
-
-  useEffect(() => {
-    if (processingMode && processingMode !== 'microphone') {
-      setTimer(0);
-    }
-  }, [processingMode]);
 
   const hasVideoCapability = useMemo(() => {
     // Video capability requires BOTH backend feature AND config/uploads
@@ -348,6 +353,18 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
     return () => window.removeEventListener('global-error', handler as EventListener);
   }, [t]);
 
+  /**
+   * Lets whoever raised an error take it back once the condition clears 
+   */
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      setErrorMsg((current) => (current === detail ? null : current));
+    };
+    window.addEventListener('global-error-withdraw', handler as EventListener);
+    return () => window.removeEventListener('global-error-withdraw', handler as EventListener);
+  }, []);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -417,10 +434,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
       dispatch(setVideoStatus('starting'));
       
       const videoResult = await startVideoAnalytics(videoRequests, sharedSessionId);
-      
-      // Start pipeline monitoring for video analytics
-      startPipelineMonitoring(sharedSessionId);
-      console.log('📹 Video pipeline monitoring started for session:', sharedSessionId);
+
 
       if (videoResult && videoResult.results) {
         let hasSuccessfulStreams = false;
@@ -525,7 +539,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
     };
 
     clearForNewOp();
-    setTimer(0);
     dispatch(resetFlow());
     dispatch(resetTranscript());
     dispatch(resetSummary());
@@ -561,6 +574,14 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
       const sessionResponse = await createSession();
       const sharedSessionId = sessionResponse.sessionId;
       dispatch(setSessionId(sharedSessionId));
+      // Put it in the session history. Declares what this session will run so
+      // the backend can tell when it is finished; best-effort, so a session
+      // still records and plays back normally if the call does not land.
+      const registered = await registerSession(
+        sharedSessionId,
+        declaredStages(featureGuard, { hasAudio: withMic, hasVideo: withCameras }),
+      );
+      dispatch(setSessionRegistered(registered));
       try {
         // Covers the handover as a whole: the stop, the 5s settle and the start.
         report(t('startRecording.startingMonitoring', 'Starting resource monitoring…'));
@@ -782,19 +803,22 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
   return (
     <div className="header-bar">
       <div className="navbar-left">
+        {/* Status only — the button beside it is the control. Two hit targets
+            for one action meant a keyboard user could reach the button but not
+            the icon, and the two disabled looks never quite matched. */}
         <img
           src={isRecording ? recordON : recordOFF}
-          alt="Record"
-          className="record-icon"
-          onClick={handleRecordClick}
-          title={getRecordingTooltip()}
-          style={{
-            opacity: isRecordingDisabled ? 0.5 : 1,
-            cursor: isRecordingDisabled ? 'not-allowed' : 'pointer'
-          }}
+          alt=""
+          aria-hidden="true"
+          className={`record-icon${isRecording ? ' is-recording' : ''}`}
         />
-        <img src={sideRecordIcon} alt="Side Record" className="side-record-icon" />
-        <span className="timer">{formatTime(timer)}</span>
+        {/* Only while live: a permanently visible 00:00 read as a recording
+            paused at zero, and leaving it frozen after the stop put a dead
+            clock on screen for the whole transcribe → summary → mindmap run.
+            The final duration is in the session history and the report. */}
+        {isRecording && (
+          <span className="timer" role="timer">{formatTime(elapsed)}</span>
+        )}
 
         <button
           className="text-button"
@@ -825,11 +849,35 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard }) => {
       </div>
 
       <div className="navbar-center">
-        <NotificationsDisplay 
-          audioNotification={audioNotification} 
-          videoNotification={videoNotification} 
-          error={errorMsg} 
+        <NotificationsDisplay
+          audioNotification={audioNotification}
+          videoNotification={videoNotification}
+          error={errorMsg}
         />
+      </div>
+
+      {/* Both open a slide-over rather than navigating, and both are about the
+          session this bar is reporting on — so they sit beside the audio/video
+          status rather than in the navigation menu. Only the main screen renders
+          this bar, which is the intent: they belong to this workflow. */}
+      <div className="navbar-right">
+        <button
+          className="navbar-action-btn"
+          disabled={!hasReportFeature}
+          onClick={onViewReport}
+          title={t('reportPanel.title', 'View Report')}
+        >
+          <span className="action-icon">📊</span>
+          <span className="action-label">{t('reportPanel.short', 'Report')}</span>
+        </button>
+        <button
+          className="navbar-action-btn"
+          onClick={onViewHistory}
+          title={t('history.title', 'Session history')}
+        >
+          <span className="action-icon">🕘</span>
+          <span className="action-label">{t('history.short', 'History')}</span>
+        </button>
       </div>
 
       {isUploadModalOpen && (

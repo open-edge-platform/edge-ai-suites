@@ -19,20 +19,24 @@ import os
 import logging
 import shutil
 import subprocess
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, Query
+from fastapi import APIRouter, File, HTTPException, Path, UploadFile, Query
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 
 from pipeline import Pipeline
 from dto.report_dto import ReportRequest, ReportReselectRequest
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_manager import PATH_SAFE_SESSION_ID
 from utils.session_paths import SessionPaths
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+SessionIdPath = Annotated[str, Path(pattern=PATH_SAFE_SESSION_ID)]
 
 
 def _pdf_export_available() -> bool:
@@ -87,30 +91,34 @@ async def generate_report(request: ReportRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
-        try:
-            for event in pipeline.run_report_generator(
-                selected_fields=request.selected_fields,
-                manual_fields=request.manual_fields,
-            ):
-                if isinstance(event, dict):
-                    etype = event["type"]
-                    if etype in ("partial_report", "report"):
-                        yield json.dumps({"type": etype, "content": event.get("content", "")}) + "\n"
-                    elif etype == "report_ready":
-                        yield json.dumps({"type": "report_ready", "session_id": event.get("session_id", request.session_id)}) + "\n"
-                    elif etype == "token":
-                        content = event["content"]
-                        if content.startswith("[ERROR]:"):
-                            yield json.dumps({"token": "", "error": content}) + "\n"
-                            break
-                        yield json.dumps({"token": content, "error": ""}) + "\n"
-                await asyncio.sleep(0)
-        except HTTPException as e:
-            detail = e.detail if isinstance(e.detail, str) else str(e.detail)
-            yield json.dumps({"token": "", "error": f"[ERROR]: {detail}"}) + "\n"
-        except Exception as e:
-            logger.exception("Unexpected error while streaming report for session %s", request.session_id)
-            yield json.dumps({"token": "", "error": f"[ERROR]: Report generation failed: {e}"}) + "\n"
+        with stage_tracker(pipeline.session_id, "report") as stage:
+            try:
+                for event in pipeline.run_report_generator(
+                    selected_fields=request.selected_fields,
+                    manual_fields=request.manual_fields,
+                ):
+                    if isinstance(event, dict):
+                        etype = event["type"]
+                        if etype in ("partial_report", "report"):
+                            yield json.dumps({"type": etype, "content": event.get("content", "")}) + "\n"
+                        elif etype == "report_ready":
+                            yield json.dumps({"type": "report_ready", "session_id": event.get("session_id", request.session_id)}) + "\n"
+                        elif etype == "token":
+                            content = event["content"]
+                            if content.startswith("[ERROR]:"):
+                                stage.fail(RuntimeError(content))
+                                yield json.dumps({"token": "", "error": content}) + "\n"
+                                break
+                            yield json.dumps({"token": content, "error": ""}) + "\n"
+                    await asyncio.sleep(0)
+            except HTTPException as e:
+                detail = e.detail if isinstance(e.detail, str) else str(e.detail)
+                stage.fail(e)
+                yield json.dumps({"token": "", "error": f"[ERROR]: {detail}"}) + "\n"
+            except Exception as e:
+                logger.exception("Unexpected error while streaming report for session %s", request.session_id)
+                stage.fail(e)
+                yield json.dumps({"token": "", "error": f"[ERROR]: Report generation failed: {e}"}) + "\n"
 
     return StreamingResponse(event_stream(), media_type="application/json")
 
@@ -138,7 +146,7 @@ def get_report_capabilities():
 
 
 @router.post("/report/{session_id}/mindmap-image")
-async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
+async def upload_mindmap_image(session_id: SessionIdPath, file: UploadFile = File(...)):
     """Store a mind-map PNG that the UI captured (html2canvas) from the live
     jsMind view, to be embedded in the class report.
 
@@ -167,7 +175,7 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
 
 
 @router.get("/report/{session_id}/mindmap-image")
-def get_mindmap_image(session_id: str):
+def get_mindmap_image(session_id: SessionIdPath):
     """Return the previously uploaded mind-map PNG for inline report preview."""
     image_path = str(SessionPaths.mindmap_png_path(session_id))
 
@@ -187,7 +195,7 @@ def get_mindmap_image(session_id: str):
 # Parametrized report routes — defined AFTER the literal /report/template-fields
 # route above so that literal is matched first.
 @router.get("/report/{session_id}")
-def get_report(session_id: str):
+def get_report(session_id: SessionIdPath):
     """Retrieve a previously generated class report for a session."""
     report_path = str(SessionPaths.report_md_path(session_id))
 
@@ -206,7 +214,7 @@ def get_report(session_id: str):
 
 @router.get("/report/{session_id}/download")
 def download_report(
-    session_id: str,
+    session_id: SessionIdPath,
     format: Literal["docx", "pdf"] = Query("docx", description="Download format: docx or pdf"),
 ):
     """Download the class report in the requested format.
@@ -279,7 +287,7 @@ def download_report(
 
 
 @router.post("/report/{session_id}/reselect")
-def reselect_report(session_id: str, request: ReportReselectRequest):
+def reselect_report(session_id: SessionIdPath, request: ReportReselectRequest):
     """Re-render an existing report for a new checkbox selection — NO LLM.
 
     Re-projects the session's cached full-catalog fields onto the template,
