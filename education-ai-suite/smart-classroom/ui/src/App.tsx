@@ -9,6 +9,7 @@ import ServicesScreen from './components/Services/ServicesScreen';
 import ConfigScreen from './components/Settings/ConfigScreen';
 import SetupScreen from './components/Settings/SetupScreen';
 import GetStartedScreen from './components/Settings/GetStartedScreen';
+import HistoryPanel from './components/History/HistoryPanel';
 import './App.css';
 import './assets/css/HeaderBar.css';
 import MetricsPoller from './components/common/MetricsPoller';
@@ -17,6 +18,8 @@ import { isServiceManagerAvailable, useReloadOnBackendRestart, useServices } fro
 import { useSetup } from './services/setupManager';
 import { useVideoPipelineMonitor } from "../src/redux/videoMonitor";
 import { useAudioPipeline } from './redux/useAudioPipeline';
+import { useSessionAbortBeacon } from './redux/useSessionAbortBeacon';
+import { useStageDrivenChain } from './redux/useStageDrivenChain';
 import { useTranslation } from 'react-i18next';
 import { useFeatureConfig } from './hooks/useFeatureConfig';
 import { FeatureGuard } from './utils/featureGuards';
@@ -26,14 +29,24 @@ const App: React.FC = () => {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'available' | 'unavailable'>('checking');
   const [activeScreen, setActiveScreen] = useState<'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready'>('main');
   const [isReportOpen, setIsReportOpen] = useState(false);
+  // Both slide over the workspace rather than replacing it, so looking up last
+  // week's class does not take the teacher away from the one recording now.
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
   useVideoPipelineMonitor();
   // Both pipelines are driven from here, not from the panels that display them,
   // so they keep running while the user moves around the UI.
   useAudioPipeline();
+  // Closes out the session in the history if the page goes away mid-run.
+  useSessionAbortBeacon();
 
   // Load feature configuration
   const { guard, loaded: featuresLoaded, loading: featuresLoading, error: featuresError } = useFeatureConfig();
+
+  // Starts segmentation and then the report off the backend's stage table.
+  // Here rather than in LeftPanel, where the old trigger lived, because the
+  // chain has to keep running whatever the user is looking at.
+  useStageDrivenChain(guard);
 
   // Check if any main features are enabled
   const hasMainFeatures = featuresLoaded && guard ? 
@@ -185,7 +198,6 @@ const App: React.FC = () => {
             // feature-gated nav entry renders disabled.
             featureGuard={new FeatureGuard([])}
             hasMainFeatures={false}
-            onViewReport={() => {}}
           />
           <div className="main-content">{renderToolScreen(screen)}</div>
           <Footer />
@@ -239,10 +251,13 @@ const App: React.FC = () => {
         setActiveScreen={openScreen}
         featureGuard={guard}
         hasMainFeatures={hasMainFeatures}
-        onViewReport={() => setIsReportOpen(true)}
       />
       <div style={{ display: activeScreen === 'main' ? 'contents' : 'none' }}>
-        <HeaderBar featureGuard={guard} />
+        <HeaderBar
+          featureGuard={guard}
+          onViewReport={() => setIsReportOpen(true)}
+          onViewHistory={() => setIsHistoryOpen(true)}
+        />
       </div>
       {activeScreen === 'content-search' && (
         <div className="content-search-subheader">
@@ -270,6 +285,9 @@ const App: React.FC = () => {
         onClose={() => setIsReportOpen(false)}
         featureGuard={guard}
       />
+
+      {/* Session history — same slide-over surface as the report panel. */}
+      <HistoryPanel isOpen={isHistoryOpen} onClose={() => setIsHistoryOpen(false)} />
     </div>
   );
 };

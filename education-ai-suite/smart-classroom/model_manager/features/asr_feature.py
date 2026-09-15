@@ -12,6 +12,7 @@ from dto.transcription_dto import TranscriptionRequest
 from pipeline import Pipeline
 from utils.audio_util import save_audio_file
 from utils.config_loader import config
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -54,8 +55,9 @@ def transcribe_audio(
     pipeline = Pipeline(x_session_id)
 
     def stream_transcription():
-        for chunk_data in pipeline.run_transcription(request):
-            yield json.dumps(chunk_data) + "\n"
+        with stage_tracker(pipeline.session_id, "transcribe"):
+            for chunk_data in pipeline.run_transcription(request):
+                yield json.dumps(chunk_data) + "\n"
 
     response = StreamingResponse(stream_transcription(), media_type="application/json")
     response.headers["X-Session-ID"] = pipeline.session_id

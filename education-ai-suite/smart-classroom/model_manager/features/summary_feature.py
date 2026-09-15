@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
 from utils.config_loader import config
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -20,25 +21,28 @@ async def summarize_audio(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
-        warned_partial_board = False
-        for item in pipeline.run_summarizer():
-            # A segmented summary yields progress dicts before any token.
-            if isinstance(item, dict):
-                yield json.dumps({"token": "", "error": "", **item}) + "\n"
+        with stage_tracker(pipeline.session_id, "summarize") as stage:
+            warned_partial_board = False
+            for item in pipeline.run_summarizer():
+                # A segmented summary yields progress dicts before any token.
+                if isinstance(item, dict):
+                    yield json.dumps({"token": "", "error": "", **item}) + "\n"
+                    await asyncio.sleep(0)
+                    continue
+                if not warned_partial_board and pipeline.board_ocr_partial:
+                    warned_partial_board = True
+                    yield json.dumps(
+                        {"token": "", "error": "", "board_ocr_partial": True}
+                    ) + "\n"
+                if item.startswith("[ERROR]:"):
+                    logger.error(f"Error while summarizing: {item}")
+                    # Reported in-band rather than raised, so tell the tracker.
+                    stage.fail(RuntimeError(item))
+                    yield json.dumps({"token": "", "error": item}) + "\n"
+                    break
+                else:
+                    yield json.dumps({"token": item, "error": ""}) + "\n"
                 await asyncio.sleep(0)
-                continue
-            if not warned_partial_board and pipeline.board_ocr_partial:
-                warned_partial_board = True
-                yield json.dumps(
-                    {"token": "", "error": "", "board_ocr_partial": True}
-                ) + "\n"
-            if item.startswith("[ERROR]:"):
-                logger.error(f"Error while summarizing: {item}")
-                yield json.dumps({"token": "", "error": item}) + "\n"
-                break
-            else:
-                yield json.dumps({"token": item, "error": ""}) + "\n"
-            await asyncio.sleep(0)
 
     return StreamingResponse(event_stream(), media_type="application/json")
 
