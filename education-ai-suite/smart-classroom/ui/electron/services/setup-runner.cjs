@@ -35,10 +35,15 @@ const STATUS = {
   UNKNOWN: 'unknown',
   OK: 'ok',
   WARN: 'warn',
+  OUTDATED: 'outdated',
   MISSING: 'missing',
   RUNNING: 'running',
   FAILED: 'failed',
 };
+
+// Statuses with something to run. OUTDATED belongs here and WARN does not: that
+// is the whole distinction between them.
+const REPAIRABLE = [STATUS.MISSING, STATUS.FAILED, STATUS.OUTDATED];
 
 const SECTIONS = [
   { id: 'system', label: 'System and drivers' },
@@ -48,6 +53,22 @@ const SECTIONS = [
 // Most actions install or create something, so they are pointless once the step
 // is satisfied. Actions that stay useful afterwards override this.
 const visibleUnlessOk = (status) => status !== STATUS.OK;
+
+/**
+ * The action that clears this result, which the screen offers as one click and
+ * bulk-runs from its "Fix" button.
+ *
+ * A check can name its own, because the condition it found decides the cure: a
+ * venv whose packages have drifted is upgraded, but one built on the wrong
+ * interpreter can only be rebuilt, and upgrading it would run pip for minutes
+ * and change nothing. Checks that name nothing keep the old rule — a broken
+ * step is repaired by its first non-destructive action.
+ */
+function repairFor(step, result) {
+  if (result.repair !== undefined) return result.repair;
+  if (!REPAIRABLE.includes(result.status)) return null;
+  return (step.actions ?? []).find((action) => !action.destructive)?.id ?? null;
+}
 
 function run(file, args, timeout = 20000) {
   return new Promise((resolve) => {
@@ -183,6 +204,108 @@ function importFailure(stderr) {
   return text.length > 140 ? `${text.slice(0, 139)}…` : text;
 }
 
+/**
+ * Compare requirements.txt against what the environment actually has, printing
+ * one JSON object: `{checked, missing, mismatched}`.
+ *
+ * Run by the venv's own interpreter with the requirements file as argv[1], so
+ * the versions read are the ones the backend will import.
+ *
+ * Top-level lines only. What an extra or a transitive dependency drags in is
+ * pip's business; this answers the narrower question of whether the file has
+ * moved on without the environment.
+ */
+const REQUIREMENTS_PROBE = `
+import importlib.metadata as metadata
+import json
+import re
+import sys
+
+try:
+    from packaging.requirements import Requirement
+except Exception:
+    # An environment too bare to parse its own requirements; the caller reports
+    # that through the import check instead of guessing here.
+    print(json.dumps({"checked": 0, "missing": [], "mismatched": []}))
+    raise SystemExit(0)
+
+BACKSLASH = chr(92)
+
+entries = []
+pending = ""
+with open(sys.argv[1], encoding="utf-8") as handle:
+    for raw in handle:
+        # The leading space makes one pattern strip a trailing comment and a
+        # whole-line one alike, and matches pip's rule that an inline comment
+        # must be preceded by whitespace.
+        text = pending + re.sub(r"\\s#.*$", "", " " + raw.strip()).strip()
+        if text.endswith(BACKSLASH):
+            pending = text[:-1]
+            continue
+        pending = ""
+        if text:
+            entries.append(text)
+if pending.strip():
+    entries.append(pending.strip())
+
+checked = 0
+missing = []
+mismatched = []
+for text in entries:
+    # -r, --index-url and friends: pip's to act on, not ours to verify.
+    if text.startswith("-"):
+        continue
+    try:
+        requirement = Requirement(text)
+    except Exception:
+        continue
+    if requirement.marker and not requirement.marker.evaluate():
+        continue
+    checked += 1
+    try:
+        installed = metadata.version(requirement.name)
+    except metadata.PackageNotFoundError:
+        missing.append(requirement.name)
+        continue
+    if requirement.specifier and not requirement.specifier.contains(installed, prereleases=True):
+        mismatched.append({
+            "name": requirement.name,
+            "installed": installed,
+            "wanted": str(requirement.specifier),
+        })
+
+print(json.dumps({"checked": checked, "missing": missing, "mismatched": mismatched}))
+`;
+
+/**
+ * What the environment is missing or has at the wrong version, or null when the
+ * comparison could not be made — no requirements file, an interpreter that will
+ * not run it, or nothing parseable in it. Null means "unknown", never "clean":
+ * the caller must not report a match it did not verify.
+ */
+async function requirementsDrift(exe, requirements) {
+  if (!fs.existsSync(requirements)) return null;
+  const result = await run(exe, ['-c', REQUIREMENTS_PROBE, requirements], 60000);
+  if (!result.ok) return null;
+  try {
+    const report = JSON.parse(result.stdout);
+    return report.checked > 0 ? report : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Name the drift for the step detail, listing a few and counting the rest. */
+function describeDrift({ missing, mismatched }, limit = 3) {
+  const items = [
+    ...missing.map((name) => `${name} is not installed`),
+    ...mismatched.map((entry) => `${entry.name} is ${entry.installed}, not ${entry.wanted}`),
+  ];
+  const shown = items.slice(0, limit).join('; ');
+  const rest = items.length - limit;
+  return rest > 0 ? `${shown}; and ${rest} more` : shown;
+}
+
 function freeDiskGb(target) {
   try {
     const stat = fs.statfsSync(target);
@@ -273,6 +396,8 @@ function venvActions({ dir, requirements, cwd, interpreter }) {
       id: 'create',
       label: 'Create',
       requiresBackendStopped: true,
+      // Only while there is nothing to create.
+      visible: () => !fs.existsSync(paths.venvPython(dir())),
       async run(emit) {
         const options = await target();
         await ensureVenv(emit, options);
@@ -293,6 +418,8 @@ function venvActions({ dir, requirements, cwd, interpreter }) {
       label: 'Recreate',
       destructive: true,
       requiresBackendStopped: true,
+      // What the confirmation prompt has to name.
+      deletes: () => dir(),
       visible: () => fs.existsSync(dir()),
       async run(emit) {
         const options = await target();
@@ -444,7 +571,7 @@ const STEPS = [
       return found.exact
         ? { status: STATUS.OK, detail: `${found.version} (${found.exe})` }
         : {
-            status: STATUS.WARN,
+            status: STATUS.OUTDATED,
             detail: `${found.version} (${found.exe}); 3.12.x is the verified version, others may fail to build the environment`,
             hint: 'winget install -e --id Python.Python.3.12 --source winget',
           };
@@ -523,7 +650,7 @@ const STEPS = [
       return compareVersions(version, REQUIRED_DLSTREAMER) >= 0
         ? { status: STATUS.OK, detail: `${version} (${installDir})` }
         : {
-            status: STATUS.WARN,
+            status: STATUS.OUTDATED,
             detail: `${version} (${installDir}); ${REQUIRED_DLSTREAMER} is required for video pipelines`,
             hint: DLSTREAMER_URL,
           };
@@ -591,13 +718,44 @@ const STEPS = [
       const version = await pythonVersion(exe);
       if (!version) return { status: STATUS.FAILED, detail: `Its interpreter does not run; select Recreate (${dir})` };
 
+      // Import rather than metadata: a package can be recorded as installed and
+      // still not load, which on Windows is the openvino DLL case above.
       const imports = await run(exe, ['-c', 'import fastapi, uvicorn, openvino; print("ok")'], 60000);
-      return imports.ok
-        ? { status: STATUS.OK, detail: `Python ${version} with the core packages (${dir})` }
-        : {
-            status: STATUS.MISSING,
-            detail: `Python ${version}; ${importFailure(imports.stderr)} — select Create to install the requirements`,
-          };
+      if (!imports.ok) {
+        return {
+          status: STATUS.MISSING,
+          detail: `Python ${version}; ${importFailure(imports.stderr)} — select Create to install the requirements`,
+        };
+      }
+
+      // Before the packages, because no amount of pip fixes this one and the
+      // detail should name the problem that has to be solved first.
+      const [major, minor] = version.split('.').map(Number);
+      if (major !== PYTHON_TARGET[0] || minor !== PYTHON_TARGET[1]) {
+        return {
+          status: STATUS.OUTDATED,
+          // Recreate, not Upgrade: an environment's interpreter is fixed when it
+          // is built, so the only way to change it is to build it again.
+          repair: 'recreate',
+          detail: `Built with Python ${version}; ${PYTHON_TARGET.join('.')}.x is the verified version — select Recreate to rebuild it (${dir})`,
+        };
+      }
+
+      // Those three loading proves the environment exists, not that it is the
+      // one requirements.txt now describes. The file is edited far more often
+      // than the venv is rebuilt, and nothing else notices when they part.
+      const drift = await requirementsDrift(exe, paths.requirementsFile());
+      if (!drift) return { status: STATUS.OK, detail: `Python ${version} with the core packages (${dir})` };
+      if (!drift.missing.length && !drift.mismatched.length) {
+        return { status: STATUS.OK, detail: `Python ${version}, ${drift.checked} packages matching requirements.txt (${dir})` };
+      }
+      // Outdated, not missing: the backend does start against a drifted
+      // environment, so the red "cannot start" treatment would overstate it.
+      return {
+        status: STATUS.OUTDATED,
+        repair: 'upgrade',
+        detail: `Python ${version}; ${describeDrift(drift)} — select Upgrade to match requirements.txt`,
+      };
     },
     actions: venvActions({
       dir: () => paths.venvDir(),
@@ -688,8 +846,22 @@ class SetupRunner extends EventEmitter {
     this.state = new Map();
     this.busy = false;
     for (const step of STEPS) {
-      this.state.set(step.id, { status: STATUS.UNKNOWN, detail: '', hint: null });
+      this.record(step, { status: STATUS.UNKNOWN, detail: '' });
     }
+  }
+
+  /**
+   * One state entry. Every status change goes through here so the repair the
+   * screen offers is always derived from the result that produced it, rather
+   * than left over from the one before.
+   */
+  record(step, result) {
+    this.state.set(step.id, {
+      status: result.status,
+      detail: result.detail ?? '',
+      hint: result.hint ?? null,
+      repair: repairFor(step, result),
+    });
   }
 
   snapshot() {
@@ -753,13 +925,12 @@ class SetupRunner extends EventEmitter {
 
     for (const step of STEPS) {
       if (step.enabled && !step.enabled()) continue;
-      this.state.set(step.id, { ...this.state.get(step.id), status: STATUS.RUNNING });
+      this.record(step, { ...this.state.get(step.id), status: STATUS.RUNNING, repair: null });
       this.emitChanged();
       try {
-        const result = await step.check();
-        this.state.set(step.id, { status: result.status, detail: result.detail, hint: result.hint ?? null });
+        this.record(step, await step.check());
       } catch (error) {
-        this.state.set(step.id, { status: STATUS.FAILED, detail: error.message, hint: null });
+        this.record(step, { status: STATUS.FAILED, detail: error.message });
       }
       this.emitChanged();
     }
@@ -789,7 +960,7 @@ class SetupRunner extends EventEmitter {
 
     this.busy = true;
     this.logs.openSink(LOG_ID);
-    this.state.set(step.id, { status: STATUS.RUNNING, detail: `${action.label}…`, hint: null });
+    this.record(step, { status: STATUS.RUNNING, detail: `${action.label}…` });
     this.emitChanged();
 
     const emit = (line) => this.log(line);
@@ -800,10 +971,10 @@ class SetupRunner extends EventEmitter {
       // shells out and would otherwise still be looking at the old one.
       await this.refreshEnvironment();
       const result = await step.check();
-      this.state.set(step.id, { status: result.status, detail: result.detail, hint: result.hint ?? null });
+      this.record(step, result);
       this.log(`=== ${step.label}: ${result.status} ===`);
     } catch (error) {
-      this.state.set(step.id, { status: STATUS.FAILED, detail: error.message, hint: null });
+      this.record(step, { status: STATUS.FAILED, detail: error.message });
       this.log(`=== ${step.label} failed: ${error.message} ===`);
       throw error;
     } finally {

@@ -41,3 +41,5 @@ paths:
   uav-1/nadir: {}
   uav-1/forward: {}
   uav-1/rear: {}
+  uav-1/ir: {}
+  uav-1/depth: {}

@@ -8,7 +8,7 @@
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md">
      Readme
   </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.1/handheld-multi-modal.zip">
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/handheld-multi-modal.zip">
      Download Package
   </a>
 </div>
@@ -23,8 +23,12 @@ a LLM inference server, a speech-to-text service and
 [Visual Pipeline and Platform Evaluation Tool](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html).
 All components of the composite application share the visual pipeline solution's Docker network.
 
+The diagram below shows how these components are layered on top of the Edge Node Infrastructure software stack.
+
+![Handheld system stack](./_assets/fedaero-system-stack.drawio.svg)
+
 The Handheld Multi-Modal application is deployed on top of the
-[Edge Node Infrastructure software](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-federal-and-aerospace/edge-node-infrastructure-blueprint/index.html) - an edge computing platform, which enables hardware acceleration capabilities.
+Edge Node Infrastructure software - an edge computing platform, which enables hardware acceleration capabilities. See [Infrastructure Setup](infrastructure-setup.md) for build and provisioning steps.
 
 ## Deployment and Usage
 

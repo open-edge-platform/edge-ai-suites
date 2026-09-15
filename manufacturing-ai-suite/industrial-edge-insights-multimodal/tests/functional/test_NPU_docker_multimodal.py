@@ -27,6 +27,8 @@ import pytest
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import docker_utils
 from utils import constants
+from common_utils import assert_condition
+
 
 pytest_plugins = ["conftest_docker"]
 
@@ -76,13 +78,13 @@ def _run_multimodal_npu_flow(context, device):
     tsa_config = _load_multimodal_tsa_config()
     tsa_result = docker_utils.execute_multimodal_gpu_config_curl(tsa_config, device=device_upper)
     logger.info(f"TSA {device_upper} config result: {tsa_result}")
-    assert tsa_result, f"Failed to post Time Series Analytics {device_upper} configuration"  # nosec B101
+    assert_condition(tsa_result, f"Failed to post Time Series Analytics {device_upper} configuration")
 
     # Step 3: Activate DL Streamer Pipeline Server pipeline on GPU/NPU
     logger.info(f"Step 3: Activating DL Streamer pipeline with device='{device_upper}'")
     dlsps_result = docker_utils.execute_dlstreamer_pipeline_activation(device=device_upper)
     logger.info(f"DL Streamer pipeline activation result: {dlsps_result}")
-    assert dlsps_result, f"Failed to activate DL Streamer pipeline on {device_upper}"  # nosec B101
+    assert_condition(dlsps_result, f"Failed to activate DL Streamer pipeline on {device_upper}")
 
     # Allow processed data (TSA + DLSPS) to land in InfluxDB
     logger.info(
@@ -100,13 +102,9 @@ def _run_multimodal_npu_flow(context, device):
     
     influx_response = docker_utils.execute_influxdb_commands_multimodal()
     logger.info(f"Multimodal InfluxDB response (truncated): {str(influx_response)[:500]}")
-    assert influx_response, "InfluxDB query for multimodal measurements returned no response"  # nosec B101
-    assert sensor_measurement in influx_response, (  # nosec B101
-        f"Time Series Analytics measurement '{sensor_measurement}' missing from InfluxDB"
-    )
-    assert vision_measurement in influx_response, (  # nosec B101
-        f"DL Streamer measurement '{vision_measurement}' missing from InfluxDB"
-    )
+    assert_condition(influx_response, "InfluxDB query for multimodal measurements returned no response")
+    assert_condition(sensor_measurement in influx_response, f"Time Series Analytics measurement '{sensor_measurement}' missing from InfluxDB")
+    assert_condition(vision_measurement in influx_response, f"DL Streamer measurement '{vision_measurement}' missing from InfluxDB")
 
 
 @pytest.mark.npu

@@ -14,6 +14,7 @@ To revert to MQTT mode, set `USE_RTSP=false` in docker-compose.yml.
 Specify which camera to capture:
 - Sim mode: `nadir`, `forward`, `rear`
 - USB mode: usually `nadir`
+- RealSense mode: `ir`, `depth`
 
 ## Prerequisite (RTSP mode)
 RTSP paths are published only while UAV is armed.
@@ -55,8 +56,9 @@ ffplay rtsp://localhost:8554/uav-1/nadir
 
 If you still get 404, camera publisher is not active yet:
 ```bash
-docker logs camera-bridge --tail 20      # sim mode
-docker logs usb-camera-bridge --tail 20  # usb mode
+docker logs camera-bridge --tail 20            # sim mode
+docker logs usb-camera-bridge --tail 20        # usb mode
+docker logs realsense-camera-bridge --tail 20  # realsense mode
 ```
 
 ## Capture from MQTT (Legacy Mode)

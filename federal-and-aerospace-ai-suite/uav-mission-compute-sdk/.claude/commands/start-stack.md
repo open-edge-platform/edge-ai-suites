@@ -10,9 +10,9 @@ Start the full UAV infrastructure stack.
 ## Modes
 - `sim` (default): Gazebo 3-camera bridge (`make up-sim-camera`)
 - `usb`: USB camera bridge (`make up-usb-camera`)
+- `realsense`: Intel RealSense D400 IR + depth bridge (`make up-realsense-camera`)
 
-When using `usb` mode, the `.env` is updated automatically by `make up-usb-camera`.
-When using `sim` mode, the `.env` is updated automatically by `make up-sim-camera`.
+Each mode's `.env` vars are updated automatically by the corresponding `make up-*` target.
 
 ## Start Order (dependencies matter)
 
@@ -24,11 +24,15 @@ make up-sim-camera
 # USB mode
 make up-usb-camera
 
+# RealSense mode (run `make init` after plugging in the camera to detect RS_VIDEO*/RS_MEDIA* nodes)
+make up-realsense-camera
+
 # Lean variants — omit Grafana/InfluxDB/metrics-manager (~300 MB RAM saved)
 make up-sim-camera-lean
 make up-usb-camera-lean
+make up-realsense-camera-lean
 ```
-This starts: mosquitto -> mediamtx -> px4 -> companion-bridge + one camera bridge + observability (lean skips observability)
+This starts: mosquitto -> mediamtx -> px4/px4-sih -> companion-bridge + one camera bridge + observability (lean skips observability)
 
 ### Step 2: Verify bridges connected
 ```bash
@@ -39,6 +43,9 @@ docker logs camera-bridge --tail 3
 
 # USB mode
 docker logs usb-camera-bridge --tail 3
+
+# RealSense mode
+docker logs realsense-camera-bridge --tail 3
 ```
 Look for "Connected to PX4" and camera frame push logs.
 
