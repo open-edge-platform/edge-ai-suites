@@ -21,7 +21,7 @@
 #
 SHELL := /bin/bash
 
-TAG ?= latest
+TAG ?= 2026.2.0
 REGISTRY     ?= true
 REGISTRY_URL ?= intel/
 
