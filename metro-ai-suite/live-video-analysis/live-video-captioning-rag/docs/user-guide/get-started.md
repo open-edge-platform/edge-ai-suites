@@ -66,7 +66,7 @@ This script sets the following important values:
 | `HUGGINGFACEHUB_API_TOKEN` | *(empty)* | Required for downloading gated Hugging Face models. |
 | `MODEL_CACHE_PATH` | `<repo>/llm_models` | Host path used for cached/downloaded model artifacts. |
 | `EMBEDDING_MODEL_NAME` | `QwenText/qwen3-embedding-0.6b` | Embedding model identifier used by embedding service configuration. |
-| `EMBEDDING_DEVICE` | `CPU` | Target device for embedding inference runtime (for example `CPU`, `GPU`, or `NPU`). |
+| `EMBEDDING_DEVICE` | `CPU` | Target device for embedding inference runtime (for example `CPU`, `GPU`). |
 | `LLM_MODEL_ID` | `microsoft/Phi-3.5-mini-instruct` | LLM model identifier used for RAG response generation. |
 | `LLM_DEVICE` | `CPU` | Target device for LLM inference runtime (for example `CPU`, `GPU`, or `NPU`). |
 | `MAX_TOKENS` | `1024` | Maximum number of generated output tokens per response. |
