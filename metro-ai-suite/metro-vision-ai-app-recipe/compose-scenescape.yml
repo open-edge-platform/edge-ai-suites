@@ -64,6 +64,8 @@ services:
       - node-red-node-modules:/usr/src/node-red/node_modules
     secrets:
       - influxdb2-admin-token
+      - nodered-admin-username
+      - nodered-admin-password-hash
       - root-cert
       - broker-cert
       - broker-key
@@ -76,7 +78,9 @@ services:
         "/bin/bash",
         "-e",
         "-c",
-        "cp /tmp/flows_cred.json /data/flows_cred.json && \
+        "export NODE_RED_ADMIN_USERNAME=$(cat /run/secrets/nodered-admin-username) && \
+        export NODE_RED_ADMIN_PASSWORD_HASH=$(cat /run/secrets/nodered-admin-password-hash) && \
+        cp /tmp/flows_cred.json /data/flows_cred.json && \
         sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /data/flows_cred.json && \
         bash /data/install_package.sh && \
         /usr/src/node-red/entrypoint.sh",
@@ -412,6 +416,10 @@ secrets:
     file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-password
   influxdb2-admin-token:
     file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-token
+  nodered-admin-username:
+    file: ./${SAMPLE_APP}/src/secrets/nodered/nodered-admin-username
+  nodered-admin-password-hash:
+    file: ./${SAMPLE_APP}/src/secrets/nodered/nodered-admin-password-hash
   django:
     file: ./${SAMPLE_APP}/src/secrets/django
   browser.auth:

@@ -329,6 +329,9 @@ Open a browser and go to the following endpoints to access the application. Use 
 ### NodeRED UI
 
 - **URL**: [https://localhost/nodered/](https://localhost/nodered/)
+- **Log in with credentials**:
+  - **Username**: `<your_nodered_username>` (Check `./smart-intersection/src/secrets/nodered/nodered-admin-username`)
+  - **Password**: `<your_nodered_password>` (Check `./smart-intersection/src/secrets/nodered/nodered-admin-password`).
 
 ### DL Streamer Pipeline Server
 
