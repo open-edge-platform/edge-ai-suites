@@ -135,7 +135,6 @@ start_service() {
         echo -e "${YELLOW}Note: Model is downloaded if not already present/cached and can take several minutes.${NC}"
     else
         echo -e "  Route planning mode: ${YELLOW}rule based${NC}"
-        echo -e "${BLUE}Tip: export REASONING_MODEL_NAME=<hf-org/model> before sourcing this script to enable AI reasoning.${NC}"
     fi
 
     if docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" up -d; then
