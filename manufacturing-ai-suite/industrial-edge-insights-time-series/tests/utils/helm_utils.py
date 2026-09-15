@@ -2132,6 +2132,10 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 logger.debug("Skipping absent/empty optional folder 'models'.")
 
         logger.info("Created UDF tar archive at '%s'.", tar_path)
+        upload_file = f"file=@{tar_path}"
+        if sample_app == constants.MULTIMODAL_SAMPLE_APP:
+            udf_name = constants.get_app_config(sample_app)["udf"]
+            upload_file = f"file=@{tar_path};filename={udf_name}.tar"
 
         # Wait for nginx + ts-api to actually accept connections on NodePort 30001
         # before attempting upload (avoids transient curl rc=7 connection refused).
@@ -2154,7 +2158,7 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", f"file=@{tar_path}",
+                "-F", upload_file,
             ]
             try:
                 result = common_utils.exec_command(
