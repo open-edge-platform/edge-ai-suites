@@ -10,10 +10,9 @@ Tests cover:
 - Environment variable handling
 """
 
-import asyncio
 import os
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -68,45 +67,45 @@ class TestCreateApp:
         assert "Single intersection monitoring" in app.description
 
     def test_create_app_includes_router(self):
-        """Test app includes API router with correct prefix."""
+        """Test app exposes API routes under /api/v1 prefix."""
         from main import create_app
         
         app = create_app()
-        
-        # Check that routes are registered
-        routes = [route.path for route in app.routes]
-        assert any("/api/v1" in route for route in routes)
+        openapi_paths = app.openapi().get("paths", {})
+        assert "/api/v1/traffic/current" in openapi_paths
 
 
 class TestHealthEndpoint:
     """Tests for health check endpoint."""
 
-    def test_health_check_returns_healthy(self):
-        """Test health endpoint returns healthy status."""
-        from main import create_app
-        
-        app = create_app()
-        # Create test client without lifespan to avoid startup errors
-        with patch.object(app, 'router'):
-            client = TestClient(app, raise_server_exceptions=False)
-            
-            response = client.get("/health")
-            
-            # May fail if lifespan has issues, but we test the concept
-            if response.status_code == 200:
-                data = response.json()
-                assert data["status"] == "healthy"
-                assert data["service"] == "traffic-intersection-agent"
+    @pytest.fixture
+    def app_without_lifespan(self):
+        """Create app with no-op lifespan for deterministic endpoint tests."""
+        @asynccontextmanager
+        async def _noop_lifespan(_app):
+            yield
 
-    def test_health_check_includes_timestamp(self):
+        with patch("main.lifespan", _noop_lifespan):
+            from main import create_app
+            yield create_app()
+
+    def test_health_check_returns_healthy(self, app_without_lifespan):
+        """Test health endpoint returns healthy status."""
+        with TestClient(app_without_lifespan) as client:
+            response = client.get("/health")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "healthy"
+        assert data["service"] == "traffic-intersection-agent"
+        assert "timestamp" in data
+
+    def test_health_check_includes_timestamp(self, app_without_lifespan):
         """Test health endpoint includes timestamp."""
-        from main import create_app
-        
-        app = create_app()
-        
-        # Test that health endpoint is registered
-        health_routes = [r for r in app.routes if hasattr(r, 'path') and r.path == "/health"]
-        assert len(health_routes) == 1
+        with TestClient(app_without_lifespan) as client:
+            response = client.get("/health")
+        assert response.status_code == 200
+        timestamp = response.json().get("timestamp")
+        assert isinstance(timestamp, str)
 
 
 class TestLifespan:
@@ -338,7 +337,7 @@ class TestMainFunction:
     def test_main_uses_default_port(self):
         """Test main uses default port when not set."""
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("TRAFFIC_INTERSECTION_AGENT_PORT", None)
+            os.environ.pop("AGENT_BACKEND_HOSTPORT", None)
             
             with patch('main.create_app') as mock_create_app, \
                  patch('main.uvicorn.run') as mock_run:
@@ -370,7 +369,7 @@ class TestMainFunction:
     def test_main_uses_default_host(self):
         """Test main uses default host when not set."""
         with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("TRAFFIC_INTERSECTION_AGENT_HOST", None)
+            os.environ.pop("AGENT_BACKEND_HOST", None)
             
             with patch('main.create_app') as mock_create_app, \
                  patch('main.uvicorn.run') as mock_run:
@@ -530,8 +529,8 @@ class TestEnvironmentVariables:
         env_vars_to_clear = [
             "API_NAME",
             "LOG_LEVEL", 
-            "TRAFFIC_INTERSECTION_AGENT_PORT",
-            "TRAFFIC_INTERSECTION_AGENT_HOST"
+            "AGENT_BACKEND_HOSTPORT",
+            "AGENT_BACKEND_HOST"
         ]
         
         with patch.dict(os.environ, {}, clear=False):

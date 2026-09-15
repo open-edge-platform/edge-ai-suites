@@ -1,6 +1,6 @@
 """Integration tests: error handling scenarios.
 
-Phase 7: register body uses nested `pipeline` wrapper and `source_url`.
+Register body uses the nested `pipeline` wrapper and `source_url`.
 """
 
 import time
@@ -53,9 +53,7 @@ class TestErrorHandling:
 
     def test_unregister_nonexistent_returns_404(self, http_client, analytics_url):
         """Unregistering a source that doesn't exist should return 404."""
-        resp = http_client.request("DELETE", f"{analytics_url}/unregister_source", json={
-            "source_id": "ghost_cam",
-        })
+        resp = http_client.delete(f"{analytics_url}/sources/ghost_cam")
         assert resp.status_code == 404
 
     def test_service_healthy_after_errors(self, http_client, analytics_url, rtsp_url):

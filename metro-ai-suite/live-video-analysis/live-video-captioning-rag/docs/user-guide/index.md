@@ -13,7 +13,7 @@ hide_directive-->
 
 Live Video Captioning RAG sample application uses the Retrieval-Augmentation Generation technique, which transforms live video captions into a knowledge base. The sample application ingests captions from the Live Video Captioning sample application, generates semantic embeddings, and uses LLMs optimized through the OpenVINO™ toolkit to deliver AI-powered chatbot responses grounded in the video context. The sample application builds searchable caption embeddings and interacts with the video content through natural language queries.
 
-![Live Video Captioning RAG](./_assets/live-captioning-rag.gif "live video captioning rag demo")
+![Live Video Captioning RAG](./_assets/live-video-captioning-rag.gif "live video captioning rag demo")
 
 ## Key Features
 
@@ -43,10 +43,16 @@ Live Video Captioning RAG sample application uses the Retrieval-Augmentation Gen
 
 - **Intelligent Security and Safety**: Deploy RAG-backed chatbots for security monitoring workflows to answer questions about events, activities, and anomalies detected in surveillance video streams.
 
+## Next Steps
+
+- [Quick Start Guide](./quick-start-guide.md) - a quick start path using Docker Compose.
+- [Get Started Guide](./get-started.md) - a complete setup guide with advanced configuration.
+
 <!--hide_directive
 :::{toctree}
 :hidden:
 
+Quick Start Guide <./quick-start-guide.md>
 ./get-started.md
 ./how-it-works.md
 ./api-reference.md

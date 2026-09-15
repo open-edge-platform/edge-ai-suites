@@ -78,7 +78,9 @@ def get_platform_and_model_info():
         info['asr_model'] = "--"
 
     try:
-        info['summarizer_model'] = f"{config.models.summarizer.provider}/{config.models.summarizer.name}"
+        text_gen = config.models.text_gen
+        if getattr(text_gen, 'provider', None) == 'vlm':
+            info['summarizer_model'] = getattr(text_gen, 'vlm_name', '--')
     except Exception:
         info['summarizer_model'] = "--"
 

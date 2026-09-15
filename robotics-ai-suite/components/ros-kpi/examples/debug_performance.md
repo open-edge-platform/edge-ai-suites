@@ -64,7 +64,7 @@ Open and analyze:
 cat monitoring_sessions/debug_session_1/graph_timing.csv
 
 # Check resource usage patterns
-tail -100 monitoring_sessions/debug_session_1/resource_usage.log
+tail -100 monitoring_sessions/debug_session_1/resource_usage.json
 ```
 
 ## Common Issues and Solutions

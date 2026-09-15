@@ -7,7 +7,7 @@
                 "queue_maxsize": 50,
                 "payload": {
                     "source": {
-                        "uri": "file:///home/pipeline-server/resources/videos/sample.mp4",
+                        "uri": "file:///home/pipeline-server/resources/videos/datastream.mp4",
                         "type": "uri"
                     },
                     "destination": {
@@ -37,7 +37,7 @@
                 "queue_maxsize": 50,
                 "payload": {
                     "source": {
-                        "uri": "file:///home/pipeline-server/resources/videos/sample.mp4",
+                        "uri": "file:///home/pipeline-server/resources/videos/datastream.mp4",
                         "type": "uri"
                     },
                     "destination": {
@@ -67,7 +67,7 @@
                 "queue_maxsize": 50,
                 "payload": {
                     "source": {
-                        "uri": "file:///home/pipeline-server/resources/videos/sample.mp4",
+                        "uri": "file:///home/pipeline-server/resources/videos/datastream.mp4",
                         "type": "uri"
                     },
                     "destination": {

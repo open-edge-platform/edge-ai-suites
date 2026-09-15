@@ -58,33 +58,6 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "lvs.shared.fullname" . }}-collector-signals
-  {{- if .Values.global.keepPvc }}
-  annotations:
-    helm.sh/resource-policy: keep
-  {{- end }}
-  labels:
-    {{- include "lvs.shared.labels" . | nindent 4 }}
-spec:
-  {{- if .Values.global.persistence.rwxEnabled }}
-  accessModes: ["ReadWriteMany"]
-  {{- else if .Values.persistence.collectorSignals.accessModes }}
-  accessModes:
-    {{- toYaml .Values.persistence.collectorSignals.accessModes | nindent 4 }}
-  {{- else }}
-  accessModes: ["ReadWriteOnce"]
-  {{- end }}
-  {{- $collectorSignalsStorageClass := .Values.global.persistence.storageClassName | default .Values.persistence.collectorSignals.storageClassName | default .Values.persistence.storageClassName }}
-  {{- if $collectorSignalsStorageClass }}
-  storageClassName: {{ $collectorSignalsStorageClass }}
-  {{- end }}
-  resources:
-    requests:
-      storage: {{ .Values.persistence.collectorSignals.size }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
   name: {{ include "lvs.shared.fullname" . }}-frigate-recordings
   {{- if .Values.global.keepPvc }}
   annotations:

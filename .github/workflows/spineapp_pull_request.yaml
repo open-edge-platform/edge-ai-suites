@@ -148,7 +148,6 @@ jobs:
     uses: ./.github/workflows/spineapp_sanity.yaml
     with:
       branch:  ${{ github.head_ref }}
-    secrets: inherit            
     permissions:
       contents: read           
       packages: write

@@ -1,9 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { gradingListTasks } from '../../services/api';
 import type { GradingTask } from '../../services/api';
 import TaskDetail from './TaskDetail';
-import { shortId, formatElapsed } from './gradingUtils';
+import { shortId, formatDateTime, formatElapsed, isTerminalStatus, toErrorMessage } from './gradingUtils';
 
 interface TaskListProps {
   refreshSignal: number;
@@ -23,18 +23,6 @@ const STATUS_LABELS: Record<string, string> = {
   FAILED: 'grading.status.failed',
 };
 
-const TERMINAL = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
-
-const formatTime = (iso: string): string => {
-  try {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch {
-    return iso;
-  }
-};
-
 const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => {
   const { t } = useTranslation();
 
@@ -45,6 +33,8 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
   const [error, setError] = useState<string>('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [now, setNow] = useState<number>(Date.now());
+  const [newTaskIds, setNewTaskIds] = useState<Set<string>>(new Set());
+  const seenTaskIds = useRef<Set<string> | null>(null);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -54,9 +44,36 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
   // null = show all; otherwise filter by this status (server-side).
   const [filter, setFilter] = useState<string | null>(null);
 
+  // Reset the "seen" baseline on filter change so a filtered reload does not
+  // flash the whole result set as newly-inserted.
+  useEffect(() => {
+    seenTaskIds.current = null;
+    setNewTaskIds(new Set());
+  }, [filter]);
+
   const fetchOnce = useCallback(async () => {
     const res = await gradingListTasks(filter ?? undefined);
-    setTasks(res.tasks || []);
+    const tasks = res.tasks || [];
+    const ids = new Set(tasks.map((tk) => tk.task_id));
+    // Skip the first load: everything is "new" then, and we only want to
+    // highlight tasks that appear after the list has already been seen.
+    if (seenTaskIds.current !== null) {
+      const fresh = tasks.filter((tk) => !seenTaskIds.current!.has(tk.task_id)).map((tk) => tk.task_id);
+      if (fresh.length > 0) {
+        setNewTaskIds((prev) => new Set([...prev, ...fresh]));
+        fresh.forEach((id) =>
+          window.setTimeout(() => {
+            setNewTaskIds((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            });
+          }, 2000),
+        );
+      }
+    }
+    seenTaskIds.current = ids;
+    setTasks(tasks);
     setStatusCounts(res.status_counts || {});
     setTotal(res.total || 0);
     setError('');
@@ -153,13 +170,13 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
           const expanded = expandedId === task.task_id;
           const statusKey = STATUS_LABELS[task.status] || task.status;
           return (
-            <div key={task.task_id} className="grading-row-wrap">
+            <div key={task.task_id} className={`grading-row-wrap${newTaskIds.has(task.task_id) ? ' grading-row-new' : ''}`}>
               <div
                 className="grading-row"
                 onClick={() => setExpandedId(expanded ? null : task.task_id)}
               >
                 <span className={`grading-dot status-${task.status}`} />
-                <span className="grading-row-time">{task.created_at ? formatTime(task.created_at) : '—'}</span>
+                <span className="grading-row-time">{task.created_at ? formatDateTime(task.created_at) : '—'}</span>
                 <span className="grading-row-status">{t(statusKey, task.status)}</span>
                 <span className="grading-row-counts">
                   {task.dir_info
@@ -172,7 +189,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
                 </span>
                 <span className="grading-row-elapsed">
                   {task.created_at
-                    ? formatElapsed(task.created_at, TERMINAL.has(task.status) ? task.updated_at : null, now)
+                    ? formatElapsed(task.created_at, isTerminalStatus(task.status) ? task.updated_at : null, now)
                     : '—'}
                 </span>
                 <span className="grading-row-arrow">{expanded ? '▾' : '▸'}</span>

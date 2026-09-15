@@ -5,11 +5,15 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-import yaml
-
+from services.column_inference import infer_columns
 from services.layout_detection import run_layout_detection
-from services.pdf_render import render_pdf_to_pngs, image_info
-from services.prompt_slicer import extract_header_block, slice_prompt_for_section
+from services.pdf_render import render_pdf_to_pngs, split_pages_into_columns, image_info
+from services.prompt_slicer import (
+    append_common_output_suffix_if_missing,
+    extract_header_block,
+    prepend_common_prefix_if_missing,
+    slice_prompt_for_section,
+)
 from services.reporter import build_result
 from services.section_split import split_sections, _stitch, _stitch_compressed
 from services.result_parser import merge_page_scores, parse_header_info, parse_scores
@@ -21,33 +25,21 @@ LogCallback = Callable[[str], None]
 
 
 def _component_root() -> Path:
-    # services/vlm_grading_pipeline.py -> components/grading
     return Path(__file__).resolve().parents[1]
 
 
 def _load_component_config() -> dict[str, Any]:
-    """Grading component defaults (image quality, vlm gen params, prompt path)."""
-    path = _component_root() / "config.yaml"
-    try:
-        raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        return raw if isinstance(raw, dict) else {}
-    except Exception:
-        return {}
+    from services.config import load_config, get_language
+
+    cfg = load_config()
+    cfg["_language"] = get_language()
+    return cfg
 
 
 def _load_provider_url(key: str, default: str) -> str:
-    """Read a service URL from root config: grading.provider.<key>."""
-    # components/grading -> smart-classroom/config.yaml
-    root = _component_root().parents[1] / "config.yaml"
-    try:
-        raw = yaml.safe_load(root.read_text(encoding="utf-8")) or {}
-        provider = ((raw.get("grading") or {}).get("provider") or {})
-        url = provider.get(key)
-        if url:
-            return str(url)
-    except Exception:
-        pass
-    return default
+    from services.config import get_provider_url
+
+    return get_provider_url(key, default)
 
 
 def _outputs_dir(task_id: str, student_id: str | None) -> Path:
@@ -84,9 +76,6 @@ def run_vlm_grading_pipeline(
             _log(f"  {step:<18} {elapsed:>7.2f}s  {pct:>5.1f}%")
         _log(f"  {'TOTAL':<18} {total:>7.2f}s  100.0%")
 
-    # ---- inputs -----------------------------------------------------------
-    # Resolution order for each setting: request options > component config.yaml
-    # > built-in default. The VLM URL always comes from the root config.
     cfg = _load_component_config()
     cfg_image = cfg.get("image", {}) if isinstance(cfg.get("image"), dict) else {}
     cfg_vlm = cfg.get("vlm", {}) if isinstance(cfg.get("vlm"), dict) else {}
@@ -99,7 +88,6 @@ def run_vlm_grading_pipeline(
     paper_path = Path(str(request_payload["paper_path"])).resolve()
     student_id = request_payload.get("student_id")
 
-    # rubric_path: task value, else component config default_prompt_path.
     rubric_path = request_payload.get("rubric_path")
     if not rubric_path:
         raise ValueError("rubric_path is required")
@@ -108,6 +96,9 @@ def run_vlm_grading_pipeline(
     dpi = int(options.get("dpi", cfg_image.get("dpi", 300)))
     contrast_enhance = bool(cfg_image.get("contrast_enhance", False))
     contrast_factor = float(cfg_image.get("contrast_factor", 1.5))
+    page_columns_setting = str(cfg_image.get("page_columns", 1)).strip().lower()
+    fallback_columns = 1 if page_columns_setting == "auto" else int(page_columns_setting)
+    fallback_split_ratio = float(cfg_image.get("column_split_ratio", 0.5))
     debug_mode = bool(cfg_grading.get("debug_mode", False))
     max_tokens = int(options.get("max_tokens", cfg_vlm.get("max_tokens", 4096)))
     temperature = float(options.get("temperature", cfg_vlm.get("temperature", 0.1)))
@@ -122,13 +113,19 @@ def run_vlm_grading_pipeline(
         raise FileNotFoundError(f"grading prompt not found: {prompt_path}")
 
     user_prompt = prompt_path.read_text(encoding="utf-8")
+    shared_rubrics_dir = _component_root() / "rubrics"
+    prompt_with_prefix = prepend_common_prefix_if_missing(
+        full_prompt=user_prompt,
+        cfg=cfg.get("section_split", {}),
+        language=cfg.get("_language", "en"),
+        rubrics_dir=shared_rubrics_dir,
+    )
 
     out_dir = _outputs_dir(task_id, student_id)
     pages_dir = out_dir / "pages"
     pages_dir.mkdir(parents=True, exist_ok=True)
     _log(f"output base_dir={out_dir}")
 
-    # health check up front so failures surface early
     try:
         health = check_health(vlm_url)
         _log(f"vlm health ok model={health.get('model')} device={health.get('device')}")
@@ -136,26 +133,68 @@ def run_vlm_grading_pipeline(
         raise RuntimeError(f"VLM service unreachable at {vlm_url}: {exc}")
 
     _pipeline_start = time.perf_counter()
-    update_progress("render", 20)
+    update_progress("render", 15)
     _t = _step_start("render")
-    images = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi,
-                                contrast_enhance=contrast_enhance,
-                                contrast_factor=contrast_factor)
-    _step_done("render", _t, f"pages={len(images)} dpi={dpi}")
-    if not images:
+    full_pages = render_pdf_to_pngs(paper_path, pages_dir, dpi=dpi,
+                                   contrast_enhance=contrast_enhance,
+                                   contrast_factor=contrast_factor,
+                                   page_columns=1)
+    _step_done("render", _t, f"pages={len(full_pages)} dpi={dpi}")
+    if not full_pages:
         raise RuntimeError("PDF produced no pages")
 
     if check_checkpoint("after_render"):
         _log("checkpoint stop after_render")
         return {"stopped": True}
 
-    # ---- step: layout_detection (auxiliary; saved only, not fed to VLM) ---
+    update_progress("column_inference", 25)
+    _t = _step_start("column_inference")
+    step1_dir = out_dir / "step1_column_inference"
+    if page_columns_setting == "auto":
+        inference = infer_columns(
+            page_images=full_pages,
+            step_dir=step1_dir,
+            detection_url=layout_url,
+            config=cfg,
+            fallback_columns=fallback_columns,
+            fallback_split_ratio=fallback_split_ratio,
+            save_visualizations=debug_mode,
+        )
+    else:
+        step1_dir.mkdir(parents=True, exist_ok=True)
+        inference = {
+            "columns": fallback_columns,
+            "split_ratio": fallback_split_ratio,
+            "source": "config",
+            "reason": f"page_columns={page_columns_setting} set explicitly",
+        }
+        (step1_dir / "column_inference.json").write_text(
+            json.dumps(inference, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    page_columns = int(inference["columns"])
+    column_split_ratio = float(inference["split_ratio"] or fallback_split_ratio)
+    _step_done("column_inference", _t,
+               f"columns={page_columns} split_ratio={column_split_ratio} "
+               f"source={inference['source']}")
+    _log(f"column inference: {inference['reason']}")
+
+    if page_columns == 2:
+        images = split_pages_into_columns(full_pages, out_dir / "pages_split",
+                                          column_split_ratio=column_split_ratio)
+        _log(f"split {len(full_pages)} pages into {len(images)} columns")
+    else:
+        images = full_pages
+
+    if check_checkpoint("after_column_inference"):
+        _log("checkpoint stop after_column_inference")
+        return {"stopped": True}
+
     update_progress("layout_detection", 40)
     _t = _step_start("layout_detection")
-    step1_dir = out_dir / "step1_layout_detection"
+    step2_dir = out_dir / "step2_layout_detection"
     det_summary = run_layout_detection(
         page_images=images,
-        step1_dir=step1_dir,
+        step1_dir=step2_dir,
         detection_url=layout_url,
         config=cfg,
         save_visualizations=debug_mode,
@@ -168,18 +207,14 @@ def run_vlm_grading_pipeline(
         _log("checkpoint stop after_layout_detection")
         return {"stopped": True}
 
-    # ---- step: section_split ---------------------------------------------
-    # OCR the paragraph_title regions from step1, match section-heading patterns
-    # (from config), and cut the paper into sections (choice / fill-in / essay
-    # areas), stitching cross-page sections into one tall image each.
     update_progress("section_split", 45)
     _t = _step_start("section_split")
-    step2_dir = out_dir / "step2_section_split"
-    from providers.ocr_service import ocr_region  # local OCR for heading text
+    step3_dir = out_dir / "step3_section_split"
+    from providers.ocr_service import ocr_region
     section_summary = split_sections(
         page_images=images,
-        step1_dir=step1_dir,
-        step2_dir=step2_dir,
+        step1_dir=step2_dir,
+        step2_dir=step3_dir,
         ocr_region=ocr_region,
         config=cfg,
         debug_mode=debug_mode,
@@ -191,16 +226,35 @@ def run_vlm_grading_pipeline(
         _log("checkpoint stop after_section_split")
         return {"stopped": True}
 
-    # ---- step: vlm_grading (per section) ---------------------------------
-    # Grade one stitched section image at a time. If section_split produced no
-    # sections (e.g. headings not detected), fall back to grading each page.
     sections = section_summary.get("sections", [])
     stitch_cfg = section_summary.get("stitch_config", {})
     if sections:
-        units = [
-            (f"section_{s['index']}", s["strips"], s.get("title", ""))
-            for s in sections
-        ]
+        units = []
+        force_split_enabled = bool(stitch_cfg.get("force_split", False))
+        for s in sections:
+            section_index = s.get("index")
+            section_title = s.get("title", "")
+            section_strips = s.get("strips", [])
+            sub_sections = s.get("sub_sections") if isinstance(s.get("sub_sections"), list) else []
+
+            if force_split_enabled and sub_sections:
+                if len(sub_sections) == 1:
+                    sub = sub_sections[0]
+                    units.append((
+                        f"section_{section_index}",
+                        sub.get("strips", section_strips),
+                        section_title,
+                    ))
+                else:
+                    for sub in sub_sections:
+                        sub_index = sub.get("sub_section_index")
+                        units.append((
+                            f"section_{section_index}_{sub_index}",
+                            sub.get("strips", section_strips),
+                            section_title,
+                        ))
+            else:
+                units.append((f"section_{section_index}", section_strips, section_title))
         unit_kind = "section"
     else:
         _log("no sections found; falling back to per-page grading")
@@ -210,17 +264,16 @@ def run_vlm_grading_pipeline(
     _t = _step_start("vlm_grading")
     unit_score_dicts: list[dict[str, dict]] = []
     total = len(units)
-    replies_dir = out_dir / "step3_vlm_grading"
+    replies_dir = out_dir / "step4_vlm_grading"
     replies_dir.mkdir(parents=True, exist_ok=True)
 
-    # ---- header extraction (part of step3; a VLM call) --------------------
-    # Read the paper header (first page) once to recover paper metadata and the
-    # candidate's identity. The extraction spec comes from the rubric's header
-    # block; if the rubric has no header block, extraction is skipped. Best-effort:
-    # any failure degrades to empty fields and never blocks grading.
     paper_meta: dict[str, Any] = {"paper_title": None, "subject": None}
     student_meta: dict[str, Any] = {"student_name": None, "class_name": None, "exam_number": None}
-    header_instruction = extract_header_block(user_prompt, cfg.get("section_split", {}))
+    header_instruction = extract_header_block(
+        prompt_with_prefix,
+        cfg.get("section_split", {}),
+        cfg.get("_language", "en"),
+    )
     if header_instruction is None:
         _log("header_extract skipped (no header block in rubric)")
     else:
@@ -259,7 +312,7 @@ def run_vlm_grading_pipeline(
             image_pil = None
             if compress:
                 image_pil = _stitch_compressed(
-                    raw_strips, step1_dir, images,
+                    raw_strips, step2_dir, images,
                     int(stitch_cfg.get("gap_threshold", 120)),
                     int(stitch_cfg.get("keep_margin", 50)),
                     int(stitch_cfg.get("content_pad", 20)),
@@ -267,7 +320,7 @@ def run_vlm_grading_pipeline(
             if image_pil is None:
                 image_pil = _stitch(raw_strips, images, stitch_cfg.get("direction", "vertical"))
             if debug_mode:
-                dbg_path = step2_dir / f"{tag}.png"
+                dbg_path = step3_dir / f"{tag}.png"
                 image_pil.save(dbg_path)
         else:
             image_pil = images[idx - 1]
@@ -277,14 +330,23 @@ def run_vlm_grading_pipeline(
         mp = (w * h) / 1_000_000
         _log(f"vlm {unit_kind} {idx}/{total} {tag} {w}x{h}px ({mp:.2f} MP)")
 
-        # For a section, use just its slice of the rubric prompt; for a page
-        # fallback, use the full prompt. Slicing config lives under section_split.
         prompt_for_unit = (
-            slice_prompt_for_section(user_prompt, title, cfg.get("section_split", {}))
-            if title else user_prompt
+            slice_prompt_for_section(
+                prompt_with_prefix,
+                title,
+                cfg.get("section_split", {}),
+                cfg.get("_language", "en"),
+            )
+            if title else prompt_with_prefix
         )
 
-        # save the prompt before the call (survives a timeout/crash)
+        prompt_for_unit = append_common_output_suffix_if_missing(
+            full_prompt=prompt_for_unit,
+            cfg=cfg.get("section_split", {}),
+            language=cfg.get("_language", "en"),
+            rubrics_dir=shared_rubrics_dir,
+        )
+
         (replies_dir / f"{tag}_prompt.txt").write_text(prompt_for_unit, encoding="utf-8")
 
         result = grade_page(
@@ -314,7 +376,6 @@ def run_vlm_grading_pipeline(
                 f"questions={len(unit_scores)} finish={result.get('finish_reason')}"
             )
 
-        # progress climbs 50 -> 90 across units
         update_progress("vlm_grading", 50 + int(40 * idx / total))
         if check_checkpoint(f"after_{unit_kind}_{idx}"):
             _log(f"checkpoint stop after_{unit_kind}_{idx}")
@@ -326,7 +387,6 @@ def run_vlm_grading_pipeline(
     update_progress("merge", 95)
     _t = _step_start("merge")
 
-    # The grading prompt is the sole basis; scores come only from the VLM.
     result_data = build_result(scores)
     result_data["task_id"] = task_id
     result_data["paper_meta"] = paper_meta

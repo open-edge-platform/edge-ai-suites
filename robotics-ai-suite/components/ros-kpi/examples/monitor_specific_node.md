@@ -51,7 +51,7 @@ uv run python src/monitor_stack.py --node /slam_toolbox --session slam_analysis
 
 The session folder will contain:
 - Raw timing data (`graph_timing.csv`)
-- Raw resource data (`resource_usage.log`)
+- Raw resource data (`resource_usage.json`)
 - Session metadata (`session_info.txt`)
 - Visualizations (auto-generated PNG files)
 

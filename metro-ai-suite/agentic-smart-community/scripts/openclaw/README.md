@@ -8,11 +8,15 @@ You add your own models yourself — during onboarding (step 3) or later (step 4
 ### 1. Pre-requisites
 
 ```bash
-# Configure npm previledge
-mkdir -p ~/.npm-global 
-npm config set prefix '~/.npm-global'
+# Configure a user-owned npm install location.
+mkdir -p "$HOME/.npm-global"
+npm config set prefix "$HOME/.npm-global"
+export PATH="$HOME/.npm-global/bin:$PATH"
+grep -qxF 'export PATH="$HOME/.npm-global/bin:$PATH"' "$HOME/.bashrc" || \
+	echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
 
-# Node.js >= 24
+# OpenClaw 2026.7.1 supports Node.js >=22.22.3 <23, >=24.15.0 <25, or >=25.9.0.
+# This recipe installs the supported 22.x line.
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 ```
@@ -63,6 +67,24 @@ model, or API key later — rerun the guided config:
 openclaw configure
 ```
 
+
+## Proxy Configuration
+
+The gateway runs as a systemd **user service**, so it does not inherit the proxy
+variables from your login shell. Without them `web_search` / `web_fetch` fail
+with `request timed out` even though Tavily is configured correctly.
+
+```bash
+bash configure_proxy.sh              # menu: configure / clear / status
+bash configure_proxy.sh configure    # reuse http_proxy/https_proxy/no_proxy from the shell, else ask
+bash configure_proxy.sh clear        # remove the proxy from the gateway only
+bash configure_proxy.sh status       # show the drop-in + the running gateway's env
+```
+
+Writes a systemd drop-in at `~/.config/systemd/user/openclaw-gateway.service.d/proxy.conf`
+and restarts the gateway. `localhost,127.0.0.1,::1` is always appended to
+`no_proxy` so the local model and MCP endpoints stay direct. The system / shell
+proxy configuration is never modified.
 
 ## Uninstall
 

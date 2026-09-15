@@ -8,9 +8,9 @@
 #
 # Usage:   source docker/set_env.sh      # before ./setup_docker.sh / docker compose up
 
-# Auto-detect the host IP (used for no_proxy and the model-serving base URLs).
-HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
-export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding,${HOST_IP}
+# Everything in the stack is reached over loopback or by compose service name, so
+# these are the only hosts that must bypass the proxy.
+export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding
 
 # =========================================================================
 # vLLM-IPEX model serving
@@ -21,6 +21,15 @@ export RENDER_GROUP_ID=$(getent group render | awk -F: '{print $3}')
 # Host directory that caches downloaded Hugging Face weights.
 HF_HOME=${HF_HOME:=~/models/huggingface}
 export HF_HOME
+# Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
+mkdir -p "${HF_HOME}"
+
+# Uncomment this line to disable Hugging Face's online checks for new versions of transformers, accelerate, etc.
+# export HF_HUB_OFFLINE=1
+
+# Change to https://hf-mirror.com if you are in China and want to use the mirror site for Hugging Face.
+# export HF_ENDPOINT=https://hf-mirror.com
+export HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
 
 # llm-scaler image
 export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2
@@ -41,6 +50,11 @@ fi
 export TENSOR_PARALLEL_SIZE=1        # single integrated GPU on PTL
 export VLLM_SERVICE_PORT=41091
 
+# Interface the model services publish on — vllm (:41091) and multilevel (:8192),
+# which share this value. Loopback by default; neither authenticates. Uncomment to
+# serve other machines, with your own authentication in front.
+# export VLLM_BIND_HOST=0.0.0.0
+
 
 # =========================================================================
 # multilevel-video-understanding microservice
@@ -48,9 +62,9 @@ export VLLM_SERVICE_PORT=41091
 # Its source (edge-ai-libraries) is not vendored here — setup_docker.sh clones it
 # into the fixed path .external/edge-ai-libraries, which docker/compose.yaml
 # `extends` from. No env var needed.
-export REGISTRY_URL=intel/
+export REGISTRY_URL=${REGISTRY_URL:-intel/}
 export REGISTRY=${REGISTRY_URL}
-export TAG=latest
+export TAG=${TAG:-2026.2.0}                     # set as the latest release version
 export SERVICE_PORT=8192
 
 # Run multilevel-video-understanding as the host user
@@ -65,7 +79,7 @@ export VLM_MODEL_NAME=${LLM_MODEL}
 export LLM_MODEL_NAME=${LLM_MODEL}
 
 export MAX_CONCURRENT_REQUESTS=4
-export DEFAULT_MAX_TOKENS=512
+export DEFAULT_MAX_TOKENS=1024
 export ENABLE_THINKING=false
 export VIDEO_FRAME_HEIGHT=378
 export VIDEO_FRAME_WIDTH=504
@@ -77,21 +91,40 @@ export VIDEO_SUMMARY_CACHE_HOST=${VIDEO_SUMMARY_CACHE_HOST:-${HOME}/.cache/.mult
 mkdir -p "${VIDEO_SUMMARY_CACHE_HOST}/tasks"
 
 # =========================================================================
-# integrate with SmartBuilding MCP Server
+# integrate with Smart Community MCP Server
 # =========================================================================
 
 # Host directory bind-mounted into the container at /data (read-only).
-# Defaults to the SmartBuilding MCP data root; override via env to point at any host dir.
-# multilevel itself doesn't know about SmartBuilding's layout — MCP server's
+# Defaults to the Smart Community MCP data root; override via env to point at any host dir.
+# multilevel itself doesn't know about Smart Community's layout — MCP server's
 # summary_service.path_remap rewrites paths from this host prefix to /data.
-export SMARTBUILDING_DATA_DIR=${SMARTBUILDING_DATA_DIR:-${HOME}/.mcp-smartbuilding}
+export SMART_COMMUNITY_DATA_DIR=${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
+mkdir -p "${SMART_COMMUNITY_DATA_DIR}"
+
+# Run smart-community-mcp-server and videostream-analytics as the host user
+export HOST_UID=$(id -u)
+export HOST_GID=$(id -g)
+
+# Host timezone, passed into the MCP server container so SQLite's
+# datetime('now','localtime') (used for every event/alert created_at) matches host
+# local time instead of defaulting to UTC. Prefer /etc/timezone, fall back to the
+# /etc/localtime symlink target; leave unset if neither is resolvable (the image's
+# ENV TZ default and the /etc/localtime bind mount then apply).
+if [ -z "${TZ:-}" ]; then
+  if [ -r /etc/timezone ]; then
+    TZ=$(cat /etc/timezone)
+  elif [ -L /etc/localtime ]; then
+    TZ=$(readlink -f /etc/localtime | sed 's#.*/zoneinfo/##')
+  fi
+  [ -n "${TZ:-}" ] && export TZ
+fi
 
 # =========================================================================
 # videostream-analytics (RTSP capture + NPU YOLO prefilter)
 # =========================================================================
-# Runs on the host network, so it reaches the MCP server's EventsEndpoint (a host
-# process on localhost:3101 — see scripts/mcp-server/). Override only if the MCP
-# server listens elsewhere.
+# Runs on the host network, so it reaches the MCP server's EventsEndpoint (the
+# smart-community-mcp-server container, also on the host network, at localhost:3101 —
+# see docker/mcp-server/). Override only if the MCP server listens elsewhere.
 export WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:3101/events}
 
 # OpenVINO prefilter model, e.g., yolo11s. Preserve an explicitly supplied

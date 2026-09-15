@@ -37,6 +37,10 @@ from typing import List, Optional
 
 import matplotlib
 import matplotlib.pyplot as plt
+
+from log_config import get_logger
+
+logger = get_logger(__name__)
 try:
     from ._accel import np  # type: ignore[import-not-found]
 except ImportError:  # running as a script (e.g., `python src/visualize_npu.py`)
@@ -61,7 +65,7 @@ def load_npu_log(path: str) -> List[dict]:
                 except json.JSONDecodeError:
                     pass
     except FileNotFoundError:
-        print(f'[Error] File not found: {path}', file=sys.stderr)
+        logger.error(f'File not found: {path}')
     return records
 
 
@@ -90,27 +94,27 @@ def _fmt_xaxis(ax, times):
 
 def print_summary(records: List[dict]):
     if not records:
-        print('No NPU data records found.')
+        logger.warning('No NPU data records found.')
         return
 
     busy   = [r.get('busy_pct', 0.0) for r in records]
     freq   = [r.get('cur_freq_mhz', 0) for r in records]
     mem    = [r.get('memory_used_mb', 0.0) for r in records]
 
-    print(f'\n── Intel NPU Summary ({len(records)} samples) ──')
-    print(f'  {"Metric":<25} {"Mean":>8}  {"Max":>8}  {"Min":>8}')
-    print(f'  {"-"*55}')
+    logger.info(f'\n── Intel NPU Summary ({len(records)} samples) ──')
+    logger.info(f'  {"Metric":<25} {"Mean":>8}  {"Max":>8}  {"Min":>8}')
+    logger.info(f'  {"-"*55}')
 
     def _row(label, vals):
         v = [x for x in vals if x is not None]
         if not v:
             return
-        print(f'  {label:<25} {np.mean(v):>8.1f}  {np.max(v):>8.1f}  {np.min(v):>8.1f}')
+        logger.info(f'  {label:<25} {np.mean(v):>8.1f}  {np.max(v):>8.1f}  {np.min(v):>8.1f}')
 
     _row('NPU Busy (%)',     busy)
     _row('Frequency (MHz)',  freq)
     _row('Memory Used (MB)', mem)
-    print()
+    logger.info("")
 
 
 # ── Legend interactivity ──────────────────────────────────────────────────────
@@ -198,7 +202,7 @@ def plot_npu_full(records: List[dict],
                   title_suffix: str = '') -> Optional[str]:
     """Generate the 3-panel NPU dashboard.  Returns save path if saved."""
     if not records:
-        print('[NPU Viz] No data records to plot.')
+        logger.warning('[NPU Viz] No data records to plot.')
         return None
 
     if not show:
@@ -222,11 +226,11 @@ def plot_npu_full(records: List[dict],
     saved = None
     if save_path:
         fig.savefig(save_path, dpi=120, bbox_inches='tight')
-        print(f'  Saved: {save_path}')
+        logger.info(f'  Saved: {save_path}')
         saved = save_path
 
     if show:
-        print('  Showing NPU dashboard – close window to continue.')
+        logger.info('  Showing NPU dashboard – close window to continue.')
         plt.show()
 
     plt.close(fig)
@@ -276,20 +280,18 @@ def main():
                 log_path = candidate
                 break
         if log_path is None:
-            print(f'[Error] Could not find npu_usage.log for session {args.session!r}',
-                  file=sys.stderr)
+            logger.error(f'Could not find npu_usage.log for session {args.session!r}')
             sys.exit(1)
     else:
         log_path = _latest_npu_log()
         if log_path is None:
-            print('[Error] No npu_usage.log found. Run monitoring with --npu first.',
-                  file=sys.stderr)
+            logger.error('No npu_usage.log found. Run monitoring with --npu first.')
             sys.exit(1)
-        print(f'Using latest NPU log: {log_path}')
+        logger.info(f'Using latest NPU log: {log_path}')
 
     records = load_npu_log(str(log_path))
     if not records:
-        print('[Error] No NPU data found in log.', file=sys.stderr)
+        logger.error('No NPU data found in log.')
         sys.exit(1)
 
     print_summary(records)
@@ -300,14 +302,14 @@ def main():
     save_path = None if args.no_save else str(out_dir / 'npu_dashboard.png')
     show      = not args.no_show
 
-    print('Generating NPU dashboard...')
+    logger.info('Generating NPU dashboard...')
     plot_npu_full(
         records,
         save_path=save_path,
         show=show,
         title_suffix=log_path.parent.name,
     )
-    print('Done.')
+    logger.info('Done.')
 
 
 if __name__ == '__main__':

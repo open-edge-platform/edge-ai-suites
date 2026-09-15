@@ -1,0 +1,46 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Build context is the repo root only for docker/mcp-server/Dockerfile. Keep the
+# context small and force an in-image `npm ci` (never ship the host-built native
+# modules such as better-sqlite3).
+
+# Node / build output — rebuilt inside the image. Both a bare and a `**/` form are
+# needed: dockerignore uses filepath.Match, where `*` does NOT cross `/`, so a
+# root-only `*.tsbuildinfo` would let the nested packages/*/tsconfig.tsbuildinfo
+# leak in — and a stale buildinfo without its dist makes `tsc -b` skip emit,
+# producing an image with no dist/index.js.
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# Python venvs (host-path baked)
+.venv/
+**/.venv/
+
+# External sources cloned on demand by setup_docker.sh (huge)
+.external/
+
+# Sibling service with its own build context
+videostream-analytics/
+
+# Heavy demo media (prompts under demo/ are still copied explicitly by the Dockerfile)
+demo/videos/
+
+# Generated runtime config / caches
+.docker/
+.pytest_cache/
+
+# VCS + editor
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Docs and ad-hoc artifacts not needed at runtime
+docs/
+*.mp4
+*.log

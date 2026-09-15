@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseDocument, isMap, Scalar } from "yaml";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 
 /** Wrap a string so yaml emits it double-quoted (matches the hand-written monitors.yaml style). */
 function quoted(value: string): Scalar {
@@ -16,7 +16,7 @@ export interface IWorkerService {
 }
 
 export interface MonitorCtlParams {
-  action: "start" | "stop" | "register_source" | "unregister" | "status" | "list";
+  action: "start" | "stop" | "register_source" | "unregister" | "status" | "list" | "prefilter_options";
   monitor_id?: string;
   source_url?: string;
   name?: string;
@@ -43,7 +43,8 @@ export interface MonitorCtlParams {
   /**
    * When true, mirror the mutation to `monitors_path` on disk (comment-preserving
    * via yaml.Document): register_source → write the monitor's declaration block,
-   * unregister → delete it. Requires `monitors_path` to be set. Failure writing
+   * unregister → delete it, stop → flip its `enabled` to false, start → flip it
+   * back to true. Requires `monitors_path` to be set. Failure writing
    * does NOT fail the whole call — it is surfaced as `monitors_yaml: "skipped"`
    * plus a warning, so the in-memory + DB registration still stands. Mirrors the
    * `persist` semantics of use_case_register writing back to config.yaml.
@@ -59,7 +60,7 @@ export interface MonitorCtlParams {
 
 /** Fields mirrored back to monitors.yaml — matches MonitorDeclaration in monitors-compose.ts. */
 interface PersistOutcome {
-  monitors_yaml?: "written" | "removed" | "skipped";
+  monitors_yaml?: "written" | "removed" | "enabled" | "disabled" | "skipped";
   persist_warnings?: string[];
 }
 
@@ -87,7 +88,11 @@ function persistMonitorEntry(
     const doc = parseDocument(raw);
     const existing = doc.get("monitors");
     if (!existing || !isMap(existing)) {
-      doc.set("monitors", doc.createNode({}));
+      const monitors = doc.createNode({});
+      if (isMap(monitors)) monitors.flow = false;
+      doc.set("monitors", monitors);
+    } else {
+      existing.flow = false;
     }
     if (decl === null) {
       doc.deleteIn(["monitors", monitorId]);
@@ -98,6 +103,44 @@ function persistMonitorEntry(
     }
     writeFileSync(monitorsPath, doc.toString(), "utf-8");
     return { monitors_yaml: decl === null ? "removed" : "written" };
+  } catch (err: any) {
+    return {
+      monitors_yaml: "skipped",
+      persist_warnings: [`persist to ${monitorsPath} failed: ${err.message}`],
+    };
+  }
+}
+
+/**
+ * Flip the `enabled` field of an existing monitors.yaml entry (comment-preserving).
+ * Used by stop/start with persist=true: stop → enabled: false, start → enabled: true.
+ * No new schema field is introduced — if the entry has no explicit `enabled` key
+ * (absent means enabled at bootstrap), the key is added with the new value.
+ * Entry absent from the file → "skipped" + warning, never creates an entry.
+ */
+function persistMonitorEnabled(
+  monitorsPath: string | undefined,
+  monitorId: string,
+  enabled: boolean,
+): PersistOutcome {
+  if (!monitorsPath) {
+    return {
+      monitors_yaml: "skipped",
+      persist_warnings: ["persist requested but monitors_path is unset (server booted without --monitors?); skipped"],
+    };
+  }
+  try {
+    const raw = readFileSync(monitorsPath, "utf-8");
+    const doc = parseDocument(raw);
+    if (!doc.hasIn(["monitors", monitorId])) {
+      return {
+        monitors_yaml: "skipped",
+        persist_warnings: [`monitor "${monitorId}" has no entry in ${monitorsPath}; nothing to flip`],
+      };
+    }
+    doc.setIn(["monitors", monitorId, "enabled"], enabled);
+    writeFileSync(monitorsPath, doc.toString(), "utf-8");
+    return { monitors_yaml: enabled ? "enabled" : "disabled" };
   } catch (err: any) {
     return {
       monitors_yaml: "skipped",
@@ -120,6 +163,24 @@ async function analyticsSourceExists(analyticsUrl: string, monitorId: string): P
     if (err.message?.includes("returned HTTP")) throw err;
     throw new Error(`videostream-analytics (${analyticsUrl}) unreachable: ${err.message}`);
   }
+}
+
+/**
+ * Fetch the prefilter model's capabilities (selectable `target_classes`) from
+ * videostream-analytics. Returns the raw JSON: `{ enabled, model_path,
+ * class_names, labels_source, available_devices }`. `labels_source` is
+ * `embedded | fallback_coco | unavailable` — only `embedded` names are
+ * authoritative; otherwise the list is a COCO guess the caller must confirm.
+ */
+async function analyticsPrefilterOptions(analyticsUrl: string): Promise<unknown> {
+  const resp = await fetch(`${analyticsUrl}/capabilities/prefilter`, {
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => "");
+    throw new Error(`analytics GET /capabilities/prefilter failed HTTP ${resp.status}: ${t.slice(0, 200)}`);
+  }
+  return resp.json();
 }
 
 async function analyticsDelete(analyticsUrl: string, monitorId: string): Promise<void> {
@@ -186,7 +247,7 @@ async function analyticsRegister(
  * Manage monitor lifecycle as an atomic operation across DB, videostream-analytics, and video-worker.
  */
 export async function monitorCtl(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: MonitorCtlParams
@@ -229,7 +290,7 @@ export async function monitorCtl(
           `Use the cam_<use_case> convention (e.g. cam_${params.use_case ?? "<use_case>"}).`,
         );
       }
-      if (!params.webhook_url) throw new Error("webhook_url is required for register_source");
+      if (!params.webhook_url) throw new Error("webhook_url missing for register_source — it must be derived from config eventsWebhook.port by the caller (not supplied by the agent)");
       const webhookUrl = params.webhook_url;
       const dataDir = params.data_dir;
 
@@ -336,7 +397,12 @@ export async function monitorCtl(
       }).catch(() => {});
       db.updateMonitorStatus(monitorId, "online");
       workerService.start(monitorId);
-      return { success: true, monitor_id: monitorId, status: "online" };
+
+      let persistOutcome: PersistOutcome = {};
+      if (params.persist) {
+        persistOutcome = persistMonitorEnabled(params.monitors_path, monitorId, true);
+      }
+      return { success: true, monitor_id: monitorId, status: "online", ...persistOutcome };
     }
 
     // -----------------------------------------------------------------------
@@ -349,7 +415,12 @@ export async function monitorCtl(
         signal: AbortSignal.timeout(10_000),
       }).catch(() => {});
       db.updateMonitorStatus(monitorId, "offline");
-      return { success: true, monitor_id: monitorId, status: "offline" };
+
+      let persistOutcome: PersistOutcome = {};
+      if (params.persist) {
+        persistOutcome = persistMonitorEnabled(params.monitors_path, monitorId, false);
+      }
+      return { success: true, monitor_id: monitorId, status: "offline", ...persistOutcome };
     }
 
     // -----------------------------------------------------------------------
@@ -367,6 +438,12 @@ export async function monitorCtl(
     }
 
     // -----------------------------------------------------------------------
+    case "prefilter_options": {
+      // Read-only capability query — no monitor_id / DB / worker involvement.
+      return await analyticsPrefilterOptions(analyticsUrl);
+    }
+
+    // -----------------------------------------------------------------------
     default:
       throw new Error(`Unknown action: ${(params as any).action}`);
   }
@@ -374,25 +451,30 @@ export async function monitorCtl(
 
 /**
  * Detach a single monitor WITHOUT deleting its DB history — the "stop stream +
- * strip from monitors.yaml, keep history" primitive used by the
- * use_case_register unregister cascade. Steps: stop worker → delete VSA source
- * (non-fatal) → mark the DB row offline (row + alerts/tasks/events/recordings
- * kept) → strip the monitor from monitors.yaml when `persist`. Unlike
- * `monitorCtl action=unregister`, it never calls db.deleteMonitor, so it won't
- * trip FK constraints or destroy history.
+ * strip from monitors.yaml, keep history" primitive. Steps: stop worker →
+ * delete VSA source (non-fatal) → mark the DB row offline (row +
+ * alerts/tasks/events/recordings kept) → strip the monitor from monitors.yaml
+ * when `persist`. Unlike `monitorCtl action=unregister`, it never calls
+ * db.deleteMonitor, so it won't trip FK constraints or destroy history.
  */
 export async function detachMonitor(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsBaseUrl: string,
   workerService: IWorkerService,
   params: { monitor_id: string; monitors_path?: string; persist?: boolean },
-): Promise<{ monitor_id: string; detached: boolean } & PersistOutcome> {
+): Promise<{
+  monitor_id: string;
+  detached: boolean;
+  analytics_source: "deleted_or_absent" | "failed";
+  analytics_error?: string;
+} & PersistOutcome> {
   const monitorId = params.monitor_id;
   if (workerService.workers.has(monitorId)) {
     await workerService.stop(monitorId);
   }
-  await analyticsDelete(analyticsBaseUrl, monitorId).catch(() => {
-    /* non-fatal: VSA unreachable / already gone — cleanup still proceeds */
+  let analyticsError: string | undefined;
+  await analyticsDelete(analyticsBaseUrl, monitorId).catch((err: unknown) => {
+    analyticsError = err instanceof Error ? err.message : String(err);
   });
   if (db.getMonitor(monitorId)) {
     db.updateMonitorStatus(monitorId, "offline");
@@ -401,5 +483,11 @@ export async function detachMonitor(
   if (params.persist) {
     persistOutcome = persistMonitorEntry(params.monitors_path, monitorId, null);
   }
-  return { monitor_id: monitorId, detached: true, ...persistOutcome };
+  return {
+    monitor_id: monitorId,
+    detached: true,
+    analytics_source: analyticsError ? "failed" : "deleted_or_absent",
+    ...(analyticsError ? { analytics_error: analyticsError } : {}),
+    ...persistOutcome,
+  };
 }

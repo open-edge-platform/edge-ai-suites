@@ -12,15 +12,21 @@ Covers:
   find_trigger(out_ts, in_times)   — binary-search for most-recent prior timestamp
   build_performance_kpi            — Level 1 KPI construction, including wandering
                                      goal-calc latency integration and schema validation
+  _find_latency_spikes             — correlating latency outliers with resource usage (#59)
 """
 
+import json
 import tempfile
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from analyze_trigger_latency import (
+    _find_latency_spikes,
     _is_internal,
+    _load_resource_samples,
+    _nearest_sample_index,
     build_performance_kpi,
     find_trigger,
     validate_kpi_json,
@@ -258,6 +264,135 @@ def test_build_performance_kpi_with_grl_schema_validates(monkeypatch):
 
         payload = build_performance_kpi([_MINIMAL_RESULT], session_dir, {})
 
+    errors = validate_kpi_json(payload)
+    assert errors == [], f'Schema validation errors: {errors}'
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  _find_latency_spikes — correlate latency outliers with resource usage (#59)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _write_resource_usage(session_dir, samples, ros2_node_map=None):
+    doc = {'num_cpus': 4, 'ros2_node_map': ros2_node_map or {}, 'samples': samples}
+    (session_dir / 'resource_usage.json').write_text(json.dumps(doc))
+
+
+def test_nearest_sample_index():
+    ts = [0.0, 10.0, 20.0, 30.0]
+    assert _nearest_sample_index(ts, -5.0) == 0
+    assert _nearest_sample_index(ts, 100.0) == 3
+    assert _nearest_sample_index(ts, 21.0) == 2
+    assert _nearest_sample_index(ts, 24.9) == 2
+    assert _nearest_sample_index(ts, 25.1) == 3
+
+
+def test_load_resource_samples_missing_file_returns_none():
+    with tempfile.TemporaryDirectory() as tmp:
+        session_dir = Path(tmp) / 'sess'
+        session_dir.mkdir()
+        assert _load_resource_samples(session_dir) is None
+
+
+def test_find_latency_spikes_identifies_outlier_and_top_consumer():
+    """An event at/above its pair's p99_ms is flagged and joined to the nearest sample."""
+    base = datetime(2026, 1, 1, 0, 0, 0)
+    base_epoch = base.timestamp()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        session_dir = Path(tmp) / 'sess'
+        session_dir.mkdir()
+        samples = [
+            {
+                'ts': (base + timedelta(seconds=i)).isoformat(),
+                'processes': [
+                    {'pid': 111, 'cpu_pct': 10.0 * i},  # ramps up, busiest at i=4
+                    {'pid': 222, 'cpu_pct': 5.0},
+                ],
+            }
+            for i in range(5)
+        ]
+        _write_resource_usage(session_dir, samples, ros2_node_map={'111': 'busy_node'})
+
+        pair_result = {
+            'node': 'controller_server', 'input': '/cmd_vel', 'output': '/odom',
+            'p99_ms': 50.0,
+            'events': [
+                {'out_ts': base_epoch + 1.0, 'all_inputs': {'/cmd_vel': (base_epoch + 0.9, 20.0)}},
+                {'out_ts': base_epoch + 4.0, 'all_inputs': {'/cmd_vel': (base_epoch + 3.9, 80.0)}},
+            ],
+        }
+
+        spikes = _find_latency_spikes([pair_result], session_dir, max_spikes=5)
+
+    assert len(spikes) == 1
+    spike = spikes[0]
+    assert spike['node'] == 'controller_server'
+    assert spike['latency_ms'] == 80.0
+    assert spike['top_consumers'][0]['pid'] == 111
+    assert spike['top_consumers'][0]['node'] == 'busy_node'
+    assert spike['time_delta_sec'] < 1.0
+
+
+def test_find_latency_spikes_caps_to_max_spikes():
+    """Spikes are sorted by latency descending and truncated to max_spikes."""
+    base = datetime(2026, 1, 1, 0, 0, 0)
+    base_epoch = base.timestamp()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        session_dir = Path(tmp) / 'sess'
+        session_dir.mkdir()
+        _write_resource_usage(session_dir, [{'ts': base.isoformat(),
+                                              'processes': [{'pid': 1, 'cpu_pct': 5.0}]}])
+
+        pair_result = {
+            'node': 'n', 'input': '/in', 'output': '/out', 'p99_ms': 10.0,
+            'events': [
+                {'out_ts': base_epoch + i, 'all_inputs': {'/in': (base_epoch, 20.0 + i)}}
+                for i in range(10)
+            ],
+        }
+
+        spikes = _find_latency_spikes([pair_result], session_dir, max_spikes=3)
+
+    assert len(spikes) == 3
+    assert spikes[0]['latency_ms'] > spikes[1]['latency_ms'] > spikes[2]['latency_ms']
+
+
+def test_find_latency_spikes_no_resource_usage_returns_empty():
+    """No resource_usage.json → empty list, not an error."""
+    with tempfile.TemporaryDirectory() as tmp:
+        session_dir = Path(tmp) / 'sess'
+        session_dir.mkdir()
+        pair_result = {
+            'node': 'n', 'input': '/in', 'output': '/out', 'p99_ms': 10.0,
+            'events': [{'out_ts': 0.0, 'all_inputs': {'/in': (0.0, 50.0)}}],
+        }
+        assert not _find_latency_spikes([pair_result], session_dir)
+
+
+def test_build_performance_kpi_includes_latency_spikes_and_validates():
+    """KPI payload surfaces latency_spikes from resource_usage.json and passes schema validation."""
+    base = datetime(2026, 1, 1, 0, 0, 0)
+    base_epoch = base.timestamp()
+
+    with tempfile.TemporaryDirectory() as tmp:
+        session_dir = Path(tmp) / '20260101_120000'
+        session_dir.mkdir()
+        samples = [
+            {'ts': (base + timedelta(seconds=i)).isoformat(), 'processes': [{'pid': 111, 'cpu_pct': 90.0}]}
+            for i in range(3)
+        ]
+        _write_resource_usage(session_dir, samples, ros2_node_map={'111': 'busy_node'})
+
+        result = dict(_MINIMAL_RESULT)  # p99_ms=30.0 already set
+        result['events'] = [
+            {'out_ts': base_epoch + 1.0, 'all_inputs': {result['input']: (base_epoch + 0.9, 40.0)}},
+        ]
+
+        payload = build_performance_kpi([result], session_dir, {})
+
+    assert len(payload['latency_spikes']) == 1
+    assert payload['latency_spikes'][0]['top_consumers'][0]['node'] == 'busy_node'
     errors = validate_kpi_json(payload)
     assert errors == [], f'Schema validation errors: {errors}'
 

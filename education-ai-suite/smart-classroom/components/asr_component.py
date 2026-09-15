@@ -7,7 +7,10 @@ import unicodedata
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
 from utils.runtime_config_loader import RuntimeConfig
-from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
+from utils.session_paths import SessionPaths
+from utils.asr_events import AsrEventWriter
+from components.asr.diarization.factory import build_diarizer
+from utils.pipeline_modes import resolve_chunking
 from model_manager import ModelManager
 import logging
 logger = logging.getLogger(__name__)
@@ -79,15 +82,11 @@ class ASRComponent(PipelineComponent):
         
         logger.info(f"ASRComponent using ModelManager ASR: provider={self.asr_handler.provider}, "
                    f"model={self.asr_handler.model_name}, device={self.asr_handler.device}")
-        
-        # Get the underlying processor for transcription
-        self.asr = self.asr_handler._processor
 
-        self.pyannote_diarizer = None
-        if self.enable_diarization:
-            self.pyannote_diarizer = PyannoteDiarizer(
-                hf_token=config.models.asr.hf_token
-            )
+        # Resolved here so an unsupported combination fails when the pipeline is built.
+        self.chunking = resolve_chunking()
+
+        self.diarizer = build_diarizer() if self.enable_diarization else None
             
     @staticmethod
     def _meaningful_char_count(text: str) -> int:
@@ -159,14 +158,7 @@ class ASRComponent(PipelineComponent):
     
     def process(self, input_generator):
 
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
-        transcript_path = os.path.join(project_path, "transcription.txt")
+        transcript_path = str(SessionPaths.transcript_path(self.session_id))
         StorageManager.save(transcript_path, "", append=False)
 
         start_time = time.perf_counter()
@@ -180,13 +172,13 @@ class ASRComponent(PipelineComponent):
 
             for chunk_data in input_generator:
                 chunk_path = chunk_data["chunk_path"]
-                transcription = self.asr.transcribe(chunk_path, temperature=self.temperature)
+                transcription = self.asr_handler.transcribe(chunk_path, temperature=self.temperature)
 
                 ui_segments = []
                 transcribed_lines = []
 
                 if self.enable_diarization and transcription.get("segments"):
-                    speaker_turns = self.pyannote_diarizer.diarize(chunk_path)
+                    speaker_turns = self.diarizer.diarize(chunk_path)
 
                     for sent in transcription["segments"]:
                         if not sent["text"].strip():
@@ -284,11 +276,13 @@ class ASRComponent(PipelineComponent):
                 if os.path.exists(chunk_path) and DELETE_CHUNK_AFTER_USE:
                     os.remove(chunk_path)
 
-                yield {
+                chunk_result = {
                     **chunk_data,
                     "text": transcribed_text,
                     "segments": ui_segments
                 }
+                AsrEventWriter.write(self.session_id, chunk_result)
+                yield chunk_result
 
             # ===== FINAL FLUSH =====
             if self.pending_segments and self.last_known_speaker:
@@ -341,22 +335,24 @@ class ASRComponent(PipelineComponent):
                 )
 
                 StorageManager.save(
-                    os.path.join(project_path, "content_segmentation_transcription.txt"),
+                    str(SessionPaths.segmentation_transcript_path(self.session_id)),
                     "\n".join(full_timestamped_lines) + "\n",
                     append=False
                 )
 
                 StorageManager.save(
-                    os.path.join(project_path, "teacher_transcription.txt"),
+                    str(SessionPaths.teacher_transcript_path(self.session_id)),
                     "\n".join(teacher_lines) + "\n",
                     append=False
                 )
 
-            yield {
+            final_result = {
                 "event": "final",
                 "teacher_speaker": teacher_speaker,
                 "speaker_text_stats": self.speaker_text_len
             }
+            AsrEventWriter.write(self.session_id, final_result)
+            yield final_result
 
         finally:
             if default_torch_threads is not None:
@@ -366,9 +362,11 @@ class ASRComponent(PipelineComponent):
             transcription_time = end_time - start_time
 
             StorageManager.update_csv(
-                path=os.path.join(project_path, "performance_metrics.csv"),
+                path=str(SessionPaths.metrics_path(self.session_id)),
                 new_data={
                     "configuration.asr_model": f"{self.asr_handler.provider}/{self.asr_handler.model_name}",
+                    "configuration.chunking": self.chunking,
+                    "configuration.diarization": config.models.diarization.backend if self.enable_diarization else "off",
                     "performance.transcription_time": round(transcription_time, 4)
                 }
             )

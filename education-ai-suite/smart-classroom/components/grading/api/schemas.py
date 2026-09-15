@@ -183,10 +183,23 @@ class FsListResponse(BaseModel):
 
 class GradingConfigResponse(BaseModel):
     dpi: int | None = None
+    page_columns: int | str | None = None
+    column_split_ratio: float | None = None
+    force_split: bool | None = None
+    force_split_pairs: list[list[int]] | None = None
+    contrast_enhance: bool | None = None
+    contrast_factor: float | None = None
+    max_tokens: int | None = None
     vlm_temperature: float | None = None
+    max_image_pixels: int | None = None
     poll_interval: int | None = None
     stable_checks: int | None = None
     idle_timeout: int | None = None
+    min_score: float | None = None
+    sort_boxes: bool | None = None
+    expand_margin: int | None = None
+    merge_overlapping: bool | None = None
+    iou_threshold: float | None = None
     vlm_model: str | None = None
     ocr_model: str | None = None
     layout_model: str | None = None
@@ -194,10 +207,23 @@ class GradingConfigResponse(BaseModel):
 
 class GradingConfigUpdateRequest(BaseModel):
     dpi: int | None = None
+    page_columns: int | str | None = None
+    column_split_ratio: float | None = None
+    force_split: bool | None = None
+    force_split_pairs: list[list[int]] | None = None
+    contrast_enhance: bool | None = None
+    contrast_factor: float | None = None
+    max_tokens: int | None = None
     vlm_temperature: float | None = None
+    max_image_pixels: int | None = None
     poll_interval: int | None = None
     stable_checks: int | None = None
     idle_timeout: int | None = None
+    min_score: float | None = None
+    sort_boxes: bool | None = None
+    expand_margin: int | None = None
+    merge_overlapping: bool | None = None
+    iou_threshold: float | None = None
 
 
 class RubricContentResponse(BaseModel):

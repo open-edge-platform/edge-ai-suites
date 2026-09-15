@@ -120,7 +120,9 @@ configured Kubernetes cluster.
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
-   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
+   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 4. Install prerequisites for all instances:
 
@@ -715,7 +717,7 @@ configured Kubernetes cluster.
 
 Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
-## Storing frames to S3 storage
+## Store frames to S3 storage
 
 Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
@@ -824,7 +826,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
       "destination": {
          "frame": {
             "type": "webrtc",
-            "peer-id": "pdds3"
+            "peer-id": "pdds3",
+             "overlay-properties": {
+                 "font-scale": 1.0,
+                 "draw-txt-bg": false
+             }
          }
       },
       "parameters": {
@@ -849,7 +855,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
      "destination": {
        "frame": {
             "type": "webrtc",
-            "peer-id": "anomaly_s3"
+            "peer-id": "anomaly_s3",
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
+           }
        }
      },
      "parameters": {
@@ -937,7 +947,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -967,7 +981,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "anomaly"
+              "peer-id": "anomaly",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -1079,7 +1097,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -1109,7 +1131,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "anomaly"
+              "peer-id": "anomaly",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {

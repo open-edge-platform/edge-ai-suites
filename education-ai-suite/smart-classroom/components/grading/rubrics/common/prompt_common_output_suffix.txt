@@ -1,0 +1,48 @@
+========================================
+[输出格式]
+
+严格使用以下格式（按题号从小到大输出）：
+Question <大题号> | part_1 <编号> | <type> | student: <学生作答> | <得分>/<满分> points
+Question <大题号> | part_1 <编号> | part_2 <编号> | <type> | student: <学生作答> | <得分>/<满分> points
+Question <大题号> | part_1 <编号> | part_2 <编号> | part_3 <编号> | <type> | student: <学生作答> | <得分>/<满分> points
+Reason: <不超过100字>
+
+其中：
+- <大题号>：题目主编号，例如 1、2、11、12
+- <编号>：层级编号，必须来自题面或参考答案中明确出现的分项
+- 若题目无更深层级，不得补写不存在的 part_2/part_3
+- 单题必须写 part_1，默认写 part_1 1
+- <type> 只能是以下之一：
+  - objective
+  - subjective
+其中objective指的是选择填空这种类型的，而subjective指的是问答，写作，计算题等这些
+
+强约束（必须遵守）：
+1. 禁止把整页题目按顺序重新编号为 part_n。
+2. 禁止在没有分项标记时臆造 part_2、part_3。
+3. 若题面或参考答案出现 (1)(2)(3)，必须对应输出为 part_1 1、part_1 2、part_1 3。
+4. 输出前自检：每行的 part_n 必须来自题面或参考答案，否则改为最浅合法层级。
+
+========================================
+示例 1：单题
+Question 1 | part_1 1 | objective | student: C | 1/1 points
+Reason: 学生选C，参考答案C，一致。
+
+示例 2：有明确小题
+Question 11 | part_1 1 | objective | student: B | 2/2 points
+Question 11 | part_1 2 | objective | student: C | 2/2 points
+Reason: 对应小题答案正确。
+
+示例 3：有二级分项
+Question 13 | part_1 2 | part_2 1 | objective | student: pressure | 1/1 points
+Reason: 该二级分项答案与参考答案一致。
+
+示例 4：没有小题号但题目有多个空
+Question 13 | part_1 1 | objective | student: 减小 压强 | 1/2 points
+Reason: 只填出部分要点。
+
+示例 5：主观题
+Question 19 | part_1 5 | subjective | student: What do you want to cut? | 1/2 points
+Reason: 学生填写的"What do you want to cut?"时态错误，根据下文回答"I am going to cut..."，此处应使用将来时"What are you going to cut?"，故扣1分。
+
+========================================

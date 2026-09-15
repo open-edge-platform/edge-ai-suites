@@ -10,7 +10,7 @@ Intel-operated generative artificial intelligence solutions.
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/kpi_monitoring/index.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/components/benchmarking/robotics-system-profiler/index.html).
 
 ## Overview
 
@@ -47,7 +47,7 @@ uv run python src/monitor_stack.py --duration 30    # Quick 30-second health che
 
 - Real-time ROS2 graph monitoring: nodes, topics, message rates, processing delays
 - Automatic **per-node** input→output processing delay for every node in the graph (no `--node` flag required)
-- CPU, memory, and I/O monitoring via `pidstat` (thread-level or PID-only)
+- CPU, memory, and I/O monitoring via a lightweight `psutil`-based sampler (system-wide, with per-PID/per-node ROS2 attribution)
 - Cross-machine monitoring via `--remote-ip` (DDS peer discovery + SSH)
 - Interactive visualizations: heatmaps, timelines, core utilization, scatter plots
 - ROS bag analysis with latency tracking and CPU-cycle estimation
@@ -59,9 +59,9 @@ uv run python src/monitor_stack.py --duration 30    # Quick 30-second health che
 
 | Requirement | Install |
 |-------------|---------|
-| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
+| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) |
 | Python 3.8+ | included with Ubuntu 22.04 |
-| `uv`, `pidstat`, `psutil`, `matplotlib`, `numpy` | installed automatically by `make install` |
+| `uv`, `psutil`, `matplotlib`, `numpy` | installed automatically by `make install` |
 
 ---
 
@@ -80,7 +80,7 @@ sudo apt-get install ros-humble-benchmark-framework
 Then install Python and optional dependencies:
 
 ```bash
-cd /opt/ros/$ROS_DISTRO/share/benchmark-framework
+cd /opt/ros/$ROS_DISTRO/benchmarking
 make install
 ```
 
@@ -106,6 +106,8 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--graph-only` | Skip resource monitoring |
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
+| `--io` | Include per-process disk I/O (read/write bytes since last tick) |
+| `--ctx-switches` | Include per-process voluntary/involuntary context-switch counts since last tick |
 | `--no-visualize` | Skip auto-visualization on exit |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
@@ -155,7 +157,11 @@ Processing delay is computed for each node automatically: when a topic fires, th
 
 ### monitor_resources.py — CPU / Memory / I/O Monitor
 
-Detects ROS2 processes and runs `pidstat` to sample CPU, memory, and I/O statistics.
+Samples system-wide CPU/memory via a minimal `psutil`-based probe (`_psutil_probe.py`), then
+classifies each process as ROS2-related or not (and attributes it to a node name via
+`ros2_node_map`) post-hoc. Writes `resource_usage.json` (all processes) plus a ROS2-filtered
+`resource_usage_ros2.json` sidecar — both single, pretty-printed JSON documents rewritten
+atomically after every sample.
 
 ```bash
 ./src/monitor_resources.py [OPTIONS]
@@ -164,18 +170,22 @@ Detects ROS2 processes and runs `pidstat` to sample CPU, memory, and I/O statist
 | Option | Description |
 |--------|-------------|
 | `-l, --list` | List detected ROS2 processes and exit |
-| `-i, --interval SECS` | Sampling interval, integer >= 1 (default: 1) |
+| `-i, --interval SECS` | Sampling interval in seconds (default: 1) |
 | `-c, --count N` | Number of samples (default: 0 = infinite) |
 | `-m, --memory` | Include memory statistics |
-| `-d, --io` | Include I/O statistics |
+| `-d, --io` | Include per-process disk I/O (read/write bytes since last tick) |
+| `-x, --ctx-switches` | Include per-process voluntary/involuntary context-switch counts since last tick (involuntary spikes indicate CPU contention) |
 | `-t, --threads` | Per-thread statistics |
-| `--continuous` | Auto-refresh process list (not compatible with `--log`) |
-| `--log FILE` | Append output to log file |
-| `--remote-ip IP` | Run `ps`/`pidstat` on remote host via SSH |
+| `--continuous` | Interactive console mode using the psutil probe, auto-refreshing the ROS2 process list (not compatible with `--log`) |
+| `--log FILE` | Write `resource_usage.json` (+ `_ros2.json` sidecar) |
+| `--remote-ip IP` | Run the probe on a remote host via SSH |
 | `--remote-user USER` | SSH user (default: ubuntu) |
+| `--remote-probe-path PATH` | Path to `_psutil_probe.py` already deployed on the remote host (e.g. via `scp`) |
+| `--root-pid PID` | Classify ROS2 processes by process-tree ancestry instead of name/arg matching |
+| `--check-hw` | Probe GPU/NPU monitoring availability and exit |
 
 ```bash
-./src/monitor_resources.py --memory --threads --log ros2.log
+./src/monitor_resources.py --memory --threads --log ros2.json
 ./src/monitor_resources.py --remote-ip 192.168.1.100 --memory --threads
 ```
 
@@ -185,7 +195,9 @@ Detects ROS2 processes and runs `pidstat` to sample CPU, memory, and I/O statist
 
 Parses `monitor_resources.py` log files and generates CPU/memory plots, heatmaps, and thread-core mapping.
 
-> **CPU% scale**: `pidstat` reports 100% = 1 full core. On a 20-core system the max is 2000%. The summary table includes an **Avg Cores** column and a context note, and plots include a dashed reference line at the 100% (= 1 core) mark.
+> **CPU% scale**: 100% = 1 full core (standard `psutil`/`ps` convention). On a 20-core system the max is 2000%. The summary table includes an **Avg Cores** column and a context note, and plots include a dashed reference line at the 100% (= 1 core) mark.
+>
+> A **PER-NODE ATTRIBUTION** table is printed automatically alongside the per-PID summary (no flag needed) when `ros2_node_map` is present in the log; older sessions without it just skip that section.
 
 ```bash
 ./src/visualize_resources.py LOG_FILE [OPTIONS]
@@ -197,9 +209,14 @@ Parses `monitor_resources.py` log files and generates CPU/memory plots, heatmaps
 | `--pids` | CPU utilization per PID/thread (top N) |
 | `--heatmap` | Core utilization heatmap |
 | `--mapping` | Thread-to-core scatter plot |
+| `--core-nodes` | Per-core CPU stacked by ROS2 node (top busiest cores), if `ros2_node_map` is present |
+| `--disk-io` | Per-process disk I/O (read/write) plot, if collected via `--io`/`-d` |
+| `--ctx-switches` | Per-process context-switch (voluntary/involuntary) plot, if collected via `--ctx-switches`/`-x` |
 | `--top N` | Number of top threads to show (default: 10) |
 | `--output-dir DIR` | Save plots as PNG (omit to display interactively) |
 | `--summary` | Print statistics only, no plots |
+
+> A stack dominated by a single node on `--core-nodes` signals affinity/scheduling contention on that core; an even mix signals generally CPU-heavy load. PIDs absent from `ros2_node_map` are grouped as `(non-ROS2)`; less-busy nodes per core are summed into `(other)`.
 
 ```bash
 ./src/visualize_resources.py ros2.log --cores --heatmap --top 20 --output-dir ./plots/
@@ -294,7 +311,7 @@ Results land in `monitoring_sessions/picknplace/<timestamp>/` and can be visuali
 
 ```bash
 uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
-uv run python src/visualize_resources.py <session>/resource_usage.log --cores --heatmap --show
+uv run python src/visualize_resources.py <session>/resource_usage.json --cores --heatmap --show
 uv run python src/visualize_graph.py <session>/graph_timing.csv --show
 ```
 
@@ -385,7 +402,7 @@ Monitor a ROS2 pipeline running on a **separate machine**.
 | Component | Mechanism |
 |-----------|-----------|
 | Graph monitor | DDS peer discovery via `CYCLONEDDS_URI` / `ROS_STATIC_PEERS` |
-| Resource monitor | Runs `ps` and `pidstat` over SSH |
+| Resource monitor | Runs `_psutil_probe.py` over SSH (must be pre-deployed on the remote host, e.g. via `scp`, with `psutil` installed there) |
 
 ```bash
 uv run python src/monitor_stack.py --remote-ip 192.168.1.100
@@ -465,7 +482,6 @@ uv run python src/gpu_pid_analyzer.py --csv gpu.csv    # CSV logging
 | `power_gpu_w` / `power_pkg_w` | GPU / package power via RAPL (W) |
 | `temp_c` | GPU temperature from hwmon sysfs (°C) |
 | `vram_used_mb` / `smem_used_mb` | VRAM and shared memory usage (MB) |
-| `throttled` | True when any throttle reason is active |
 | `engines` | Per-class busy %: Render/3D, Blitter, Compute, Video, VE |
 | `clients` | Per-PID: pid, name, total busy %, per-engine busy % |
 | `drv_name` | DRM driver (`xe` or `i915`) |
@@ -548,62 +564,6 @@ found — NPU monitoring skipped.` and continues normally.
 
 ---
 
-## ⚡ Intel RAPL CPU Package Power Monitoring
-
-CPU package power is sampled in the background via the Linux **powercap RAPL**
-sysfs interface — **no root, no special capabilities required**.  Available on
-Intel bare-metal systems running kernel ≥ 3.13 with `CONFIG_INTEL_RAPL`.
-Returns `null` on WSL2 and ARM.
-
-### RAPL quick start
-
-```bash
-# Standalone — CPU power only
-uv run python src/monitor_resources.py --power
-
-# Combined with CPU/memory/NPU resource monitoring
-uv run python src/monitor_resources.py --memory --npu --power
-
-# Check whether RAPL is available on this machine
-uv run python src/monitor_resources.py --check-hw
-```
-
-`monitor_stack.py` **auto-enables** RAPL power monitoring when the sysfs path
-is readable — no flag needed for normal benchmark sessions.
-
-### How RAPL works
-
-`monitor_resources.py --power` launches a daemon thread that:
-
-1. Reads `/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj` (µJ counter).
-2. Computes `power_w = Δenergy_µJ / Δtime_s / 1_000_000`, handling counter
-   wraparound using `max_energy_range_uj`.
-3. Appends a JSON-line `{"ts": <epoch>, "power_w": <float>}` to `cpu_power.log`
-   each interval.
-
-### RAPL logged fields
-
-`cpu_power.log` (JSON-lines) in each session directory:
-
-| Field | Description |
-|-------|-------------|
-| `ts` | Unix timestamp of the sample |
-| `power_w` | CPU package power in watts |
-
-`analyze_trigger_latency.py` reads `cpu_power.log` and stores the **mean** as
-`cpu_pkg_power_w` in the Level 1 KPI `thermal` section.
-
-### Verifying RAPL availability
-
-```bash
-uv run python src/monitor_resources.py --check-hw
-# [PWR] RAPL path     : /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj
-# [PWR] Status        : ✅ AVAILABLE
-# [PWR] Detail        : Intel RAPL accessible at /sys/class/...
-```
-
----
-
 ## JSON Output Schema Reference
 
 Benchmark runs may produce the following JSON result files validated against versioned
@@ -616,7 +576,7 @@ schemas in [`schemas/`](schemas/):
 | `kpi_level2_traced.json` | `kpi_level2_v1` | `analyze_bag_e2e.py` |
 
 Fields typed `number | null` are `null` when the relevant monitor (resource
-monitor, thermal, GPU) was not active during the session.
+monitor, GPU) was not active during the session.
 
 ---
 
@@ -629,13 +589,15 @@ Top-level fields:
 | `schema_version` | string | ✅ | — | Always `"level1_v1"` |
 | `throughput_hz` | number\|null | ✅ | Hz | System-level throughput derived from the dominant (highest trigger-count) node pair |
 | `mean_latency_ms` | number\|null | ✅ | ms | Mean processing latency for the dominant pair |
+| `min_latency_ms` | number\|null | ✅ | ms | Minimum processing latency for the dominant pair |
+| `max_latency_ms` | number\|null | ✅ | ms | Maximum processing latency for the dominant pair |
 | `max_jitter_ms` | number\|null | ✅ | ms | Maximum jitter across all node pairs |
 | `min_jitter_ms` | number\|null | ✅ | ms | Minimum jitter across all node pairs |
 | `mean_jitter_ms` | number\|null | ✅ | ms | Mean jitter for the dominant pair |
 | `jitter_stdev_ms` | number\|null | ✅ | ms | Standard deviation of per-node mean jitter values |
-| `cpu_mean_pct` | number\|null | ✅ | % | Mean CPU utilization (`pidstat`); null when resource monitor was not run |
+| `cpu_mean_pct` | number\|null | ✅ | % | Mean CPU utilization (ROS2 processes, via `resource_usage.json`); null when resource monitor was not run |
 | `cpu_max_pct` | number\|null | ✅ | % | Peak CPU utilization; null when resource monitor was not run |
-| `thermal` | object\|null | — | — | Session-level thermal summary (see below); null when not collected |
+| `latency_spikes` | array | ✅ | — | Latency outliers (≥ that pair's own p99) cross-referenced against the nearest `resource_usage.json` sample; capped to `--max-latency-spikes` (default 5). Empty when resource monitor was not run or no outliers found (see below) |
 | `per_node` | object | ✅ | — | Per-node summary keyed by fully-qualified node name (see below) |
 | `pairs` | array | ✅ | — | Full scalar statistics for every de-duplicated (node, input, output) pair |
 | `metadata` | object | ✅ | — | Session provenance (see below) |
@@ -648,12 +610,29 @@ Each key is a fully-qualified ROS 2 node name (e.g. `/controller_server`):
 |-------|------|------|-------------|
 | `throughput_hz` | number\|null | Hz | Output publish rate for this node |
 | `mean_latency_ms` | number | ms | Mean input→output processing latency |
+| `min_latency_ms` | number | ms | Minimum observed input→output processing latency |
+| `max_latency_ms` | number | ms | Maximum observed input→output processing latency |
 | `mean_jitter_ms` | number | ms | Mean inter-message jitter |
 | `max_jitter_ms` | number | ms | Maximum inter-message jitter |
 | `num_samples` | integer | — | Trigger sample count |
 | `primary_input` | string | — | Topic used as the latency trigger input |
 | `primary_output` | string | — | Topic used as the latency trigger output |
 | `pipeline_stage` | string | — | Classified stage: `Sensor` / `Perception` / `Planning` / `Control` / `Other` |
+
+#### `latency_spikes` entry fields
+
+One entry per cross-referenced latency outlier, sorted by `latency_ms` descending:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `node` / `input` / `output` | string | The (node, input, output) pair this outlier belongs to |
+| `out_ts` | number | Epoch-seconds timestamp of the outlier output message |
+| `latency_ms` | number | Observed latency for this event |
+| `resource_sample_ts` | number\|null | Epoch-seconds timestamp of the nearest `resource_usage.json` sample |
+| `time_delta_sec` | number\|null | Absolute time gap between `out_ts` and the matched resource sample |
+| `top_consumers` | array | Top 3 CPU-consuming processes at that sample: `{pid, node (nullable), cpu_pct}` |
+
+> **Known limitation**: `out_ts` is wall-clock/bag-recorded epoch seconds, while `resource_usage.json`'s `ts` is always the resource probe's wall clock. If the session used `--use-sim-time`, `out_ts` may be simulated time and diverge from the probe's wall-clock samples, making the correlation unreliable.
 
 #### `metadata` fields (Level 1 & 2 shared)
 
@@ -830,7 +809,7 @@ monitoring_sessions/
 │   ├── session_info.txt
 │   ├── graph_timing.csv
 │   ├── graph_topology.json
-│   ├── resource_usage.log
+│   ├── resource_usage.json
 │   ├── gpu_usage.log              # present when --gpu / remote monitoring
 │   ├── npu_usage.log              # present when --npu
 │   └── visualizations/
@@ -917,12 +896,12 @@ See [docs/GRAFANA_SETUP.md](docs/GRAFANA_SETUP.md) for:
 | Problem | Fix |
 |---------|-----|
 | No ROS2 processes found | Verify with `ros2 node list`; source your ROS2 setup |
-| `pidstat` not found | `sudo apt-get install sysstat` |
+| `ModuleNotFoundError: psutil` | `uv sync` (or `pip install psutil`) |
 | Matplotlib display error | `export MPLBACKEND=Agg` for headless systems |
 | Permission denied | `chmod +x src/*.py monitor_stack.py` |
 | Remote: no data | Check SSH key auth and matching `ROS_DOMAIN_ID`; verify with `make check-domain REMOTE_IP=<ip>` |
 | Visualizations not generated | `uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show` |
-| CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 full core. See the **Avg Cores** column in the summary report. |
+| CPU shows e.g. "563%" | Normal — 100% = 1 full core. See the **Avg Cores** column in the summary report. |
 | `grafana-export` port in use | Port 9092 conflict: `fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir <session>` |
 | Graph click popup does nothing | Requires TkAgg backend; don't use `--no-show` flag for interactive mode |
 

@@ -22,6 +22,7 @@ Built with developer productivity in mind, it handles cross-platform builds, mai
 OEP Vision AI SDK <oep-vision-ai-sdk/get-started>
 OEP Gen AI SDK <oep-gen-ai-sdk/get-started>
 Visual AI Demo Kit <visual-ai-demo-kit/get-started.md>
+UAV Mission Compute SDK <uav-mission-compute-sdk/get-started>
 release-notes
 
 :::

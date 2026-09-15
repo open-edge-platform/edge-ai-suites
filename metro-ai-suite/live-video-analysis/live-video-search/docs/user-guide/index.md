@@ -31,7 +31,7 @@ Live Video Search combines two existing stacks:
   - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/index.html)
 
 - **VSS Search Mode** (Edge AI Libraries sample app)
-  - Search‑MS + VDMS DataPrep + VDMS VectorDB + Pipeline Manager.
+  - Search‑MS + Multimodal DataPrep + Vector Retriever + VDMS or Milvus VectorDB + Pipeline Manager.
   - VSS UI for semantic queries and clip playback.
   - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html)
 
@@ -45,7 +45,7 @@ Live Video Search combines two existing stacks:
 
 - **Smart NVR‑initiated ingestion** sends selected clips directly to VSS Search.
 - **Time‑range filters** reduce search scope and improve relevance.
-- **Telemetry** provides real‑time system metrics in the VSS UI.
+- **Metrics Manager** provides real-time system and DataPrep throughput metrics in the VSS UI.
 
 ## Documentation
 

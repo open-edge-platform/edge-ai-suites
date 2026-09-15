@@ -15,6 +15,8 @@ import pytest
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import docker_utils
 from utils import constants
+from common_utils import assert_condition
+
 
 pytest_plugins = ["conftest_docker"]
 
@@ -41,7 +43,7 @@ def _run_gpu_config_test(context, ingestion_type):
         device="gpu", sample_app=constants.WIND_SAMPLE_APP
     )
     logger.info(f"GPU configuration curl result: {curl_result}")
-    assert curl_result, "GPU configuration test via REST API failed"
+    assert_condition(curl_result, "GPU configuration test via REST API failed")
 
     logger.info("Waiting for service to restart and apply GPU configuration...")
     docker_utils.wait_until_service_ready(
@@ -58,7 +60,7 @@ def _run_gpu_config_test(context, ingestion_type):
         interval=10,
     )
     logger.info(f"GPU log check result: {gpu_result}")
-    assert gpu_result is True, "GPU keywords not found in logs"
+    assert_condition(gpu_result is True, "GPU keywords not found in logs")
 
 
 @pytest.mark.gpu

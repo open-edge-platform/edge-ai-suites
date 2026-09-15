@@ -2,23 +2,30 @@
 # Build stage - includes build dependencies
 FROM python:3.12-slim AS builder
 
+# Bring in the pinned uv binary for reproducible dependency management
+COPY --from=ghcr.io/astral-sh/uv:0.8.12 /uv /uvx /usr/local/bin/
+
 # Set environment variables for build stage
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/opt/venv
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY requirements.txt /app/requirements.txt
+# Copy the lockfile and manifest first so the dependency layer caches independently of source
+COPY pyproject.toml uv.lock /app/
 
-# Install dependencies in virtual environment
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+# Install runtime dependencies into /opt/venv straight from the lockfile.
+# --frozen: never update the lock; --no-dev: exclude test deps from the runtime image;
+# --no-install-project: the app itself is copied into the production stage, not pip-installed.
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Install all dependencies
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r /app/requirements.txt
+# Seed pip into the venv: the optional COPYLEFT_SOURCES compliance step below relies on
+# pip3 freeze / pip3 download being available inside /opt/venv.
+RUN uv pip install --python /opt/venv/bin/python pip
 
 # Production stage - minimal runtime image
 FROM python:3.12-slim AS production
@@ -42,11 +49,6 @@ RUN groupadd -g ${USER_GROUP_ID} appuser && useradd -m -s /bin/bash -u ${USER_ID
 
 # Set working directory
 WORKDIR /app
-
-# Install only runtime dependencies (curl for healthchecks)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy virtual environment from builder stage
 COPY --from=builder /opt/venv /opt/venv

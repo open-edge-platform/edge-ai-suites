@@ -1,0 +1,655 @@
+# Get Started
+
+This guide provides the demo setup steps for the OpenClaw service, EC-RAG service, Router
+service, Compressor service, and the UI service.
+
+## Prerequisites
+
+Before you begin, ensure the following:
+
+- **System Requirements:** Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
+- **GPU Driver Installed:** This guide assumes that the target machine already has the Intel GPU driver. Otherwise, follow the official [Installing Packages from the Intel PPA](https://dgpu-docs.intel.com/installation-guides/installing-packages-from-the-intel-ppa.html) guide.
+- **Docker Installed:** Install Docker by following [Get Docker](https://docs.docker.com/get-docker/).
+- **Core command-line tools:** All services — including the MCP server — run as containers, so the host only needs `git` to clone the repo and `curl` / `jq` for the setup script and health checks:
+
+  ```bash
+  sudo apt-get update
+  sudo apt-get install -y git curl jq
+  ```
+
+## Table of Contents
+
+- [1. Set Up Router and Compressor Services](#1-set-up-router-and-compressor-services)
+- [2. Set Up EC-RAG](#2-set-up-ec-rag)
+- [3. Set Up OpenClaw](#3-set-up-openclaw)
+  - [3.1 Install and Onboard OpenClaw](#31-install-and-onboard-openclaw)
+  - [3.2 Configure `openclaw.json`](#32-configure-openclawjson)
+  - [3.3 Install Repository Skills into the OpenClaw Agent Directory](#33-install-repository-skills-into-the-openclaw-agent-directory)
+  - [3.4 Enable the Skill in OpenClaw Configuration](#34-enable-the-skill-in-openclaw-configuration)
+- [4. Set Up the UI](#4-set-up-the-ui)
+- [5. Test the Configuration](#5-test-the-configuration)
+- [6. Use the Knowledgebase Skill](#6-use-the-knowledgebase-skill)
+
+## 1. Set Up Router and Compressor Services
+
+The Router and Compressor services are set up separately. See the
+[Inference Router](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/inference-router/index.html)
+microservice for the full instructions on generating the configuration and starting both
+services.
+
+## 2. Set Up EC-RAG
+
+### a. Prepare embedding/reranker/LLM models
+
+```bash
+python3 -m venv model_download_venv
+source model_download_venv/bin/activate
+# Download BAAI/bge-m3 和 BAAI/bge-reranker-large
+pip install --upgrade --upgrade-strategy eager "optimum[openvino]"
+export HF_ENDPOINT=https://hf-mirror.com
+export MODEL_PATH=${PWD}/workspace/models
+optimum-cli export openvino -m BAAI/bge-m3 ${MODEL_PATH}/BAAI/bge-m3-int8 --weight-format int8 --task sentence-similarity
+optimum-cli export openvino -m BAAI/bge-reranker-large  ${MODEL_PATH}/BAAI/bge-reranker-large-int8 --weight-format int8 --task text-classification
+# Download Qwen3.5-35B-A3B
+pip install modelscope
+export LLM_MODEL="Qwen/Qwen3.5-35B-A3B"
+modelscope download --model $LLM_MODEL --local_dir "${MODEL_PATH}/${LLM_MODEL}"
+# clean venv
+deactivate
+rm -rf model_download_venv
+```
+
+### b. Start Service
+
+```bash
+# clone OPEA EC-RAG repo with pinned commit
+git clone --filter=blob:none --sparse https://github.com/opea-project/GenAIExamples.git
+cd GenAIExamples
+git sparse-checkout set EdgeCraftRAG
+git checkout f56422671c8bdf46f59dd758c8c9e38ca41d6555
+cd EdgeCraftRAG
+
+# Pin the EC-RAG server image and update the vLLM backend image and configuration:
+compose=docker_compose/intel/gpu/arc/compose.yaml
+server_image_template='${REGISTRY:-opea}/edgecraftrag-server:${TAG:-latest}'
+server_image='opea/edgecraftrag-server@sha256:8f8fe1dbdf813567e44b41c237f20862c65240bfc888808e4694bf396b2434da'
+
+grep -Fq "$server_image_template" "$compose" || {
+  echo "ERROR: expected EC-RAG server image not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
+
+grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
+  echo "ERROR: expected image tag not found in $compose; the pinned commit changed, update this guide" >&2
+  exit 1
+}
+
+sed -i \
+  -e '/--disable-log-requests/d' \
+  -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
+  -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
+  -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
+  -e "s|$server_image_template|$server_image|g" \
+  "$compose"
+
+grep -Fq "$server_image" "$compose" || {
+  echo "ERROR: EC-RAG server image digest rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
+
+grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
+  echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
+  exit 1
+}
+```
+
+Then you can launch service:
+
+> **Note:** `LLM_MODEL` and `MODEL_PATH` were set in [Prepare embedding/reranker/LLM models](#a-prepare-embeddingrerankerllm-models). Ensure both remain exported in the current shell.
+
+```bash
+ip_address=$(hostname -I | awk '{print $1}')
+export HOST_IP=$ip_address # Your host ip
+export VIDEOGROUPID=$(getent group video | cut -d: -f3)
+export RENDERGROUPID=$(getent group render | cut -d: -f3)
+export no_proxy=${no_proxy},${HOST_IP},edgecraftrag,edgecraftrag-server
+export NO_PROXY=${NO_PROXY},${HOST_IP},edgecraftrag,edgecraftrag-server
+# If you have a HF mirror configured, it will be imported to the container
+export HF_ENDPOINT=https://hf-mirror.com # your HF mirror endpoint"
+# Make sure all 3 folders have 1000:1000 permission
+export DOC_PATH=${PWD}/workspace
+export TMPFILE_PATH=${PWD}/workspace
+sudo chown 1000:1000 ${MODEL_PATH} ${DOC_PATH} ${TMPFILE_PATH}
+sudo chown 1000:1000 -R $HOME/.cache
+# b60 flag also fit for PTL Xe3 Arch
+docker compose --profile b60 -f docker_compose/intel/gpu/arc/compose.yaml up -d
+
+```
+
+### c. Load Pipeline
+
+Get the host IP and send the pipeline configuration directly to EC-RAG:
+
+```bash
+HOST_IP=$(hostname -I | awk '{print $1}')
+
+curl -X POST "http://${HOST_IP}:16010/v1/settings/pipelines" \
+  -H "Content-Type: application/json" \
+  --data-binary @- <<EOF | jq '.'
+{
+  "name": "rag_pipeline",
+  "node_parser": {
+    "chunk_size": 400,
+    "chunk_overlap": 48,
+    "parser_type": "simple"
+  },
+  "indexer": {
+    "indexer_type": "faiss_vector",
+    "embedding_model": {
+      "model_id": "BAAI/bge-m3-int8",
+      "model_path": "./models/BAAI/bge-m3-int8",
+      "device": "auto",
+      "weight": "INT8"
+    }
+  },
+  "retriever": {
+    "retriever_type": "vectorsimilarity",
+    "retrieve_topk": 30
+  },
+  "postprocessor": [
+    {
+      "processor_type": "reranker",
+      "top_n": 2,
+      "reranker_model": {
+        "model_id": "BAAI/bge-reranker-large-int8",
+        "model_path": "./models/BAAI/bge-reranker-large-int8",
+        "device": "auto",
+        "weight": "INT8"
+      }
+    }
+  ],
+  "generator": {
+    "generator_type": "chatqna",
+    "inference_type": "vllm",
+    "model": {
+      "model_id": "Qwen/Qwen3.5-35B-A3B",
+      "model_path": "",
+      "device": "",
+      "weight": ""
+    },
+    "prompt_path": "./default_prompt.txt",
+    "vllm_endpoint": "http://${HOST_IP}:8086"
+  },
+  "active": "True"
+}
+EOF
+```
+
+### d. Add Text
+
+Add text to the EC-RAG knowledge base:
+
+```bash
+curl -X POST "http://${HOST_IP}:16010/v1/data" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Intel Core Ultra X7 358H is a mobile processor designed for high-performance laptops. It combines CPU, integrated Intel graphics, and NPU capabilities to support productivity, content creation, and AI workloads."}' | jq '.'
+```
+
+## 3. Set Up OpenClaw
+
+### 3.1 Install and Onboard OpenClaw
+
+If you do not have OpenClaw yet, install it from the official repository at
+<https://github.com/openclaw/openclaw>. Install `openclaw@2026.5.6`:
+
+```bash
+# openclaw needs Node.js >= 22.14.0
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+node -e 'const [a,b]=process.versions.node.split(".").map(Number); process.exit(a>22||(a===22&&b>=14)?0:1)' \
+  || { echo "ERROR: Node.js >= 22.14.0 required, found $(node -v)"; exit 1; }
+
+npm install -g openclaw@2026.5.6
+```
+
+Use the following choices in the onboarding wizard. Skip all online provider/channel/skill
+configuration for now and configure them manually in the following sections:
+
+```bash
+openclaw onboard --install-daemon
+```
+
+| Wizard Step | Selection |
+| --- | --- |
+| Onboarding mode | **QuickStart** |
+| Model / auth provider | **Skip for now** |
+| Filter models by provider | **All providers** |
+| Default model | **Keep current** |
+| Select channel | **Skip for now** |
+| Configure skills now | **No** |
+| Enable hooks | **Skip for now** |
+| How do you want to hatch your bot? | **Do this later** |
+
+If you are using an internally packaged version or a preinstalled environment, make sure you
+can access the following:
+
+- OpenClaw executable
+- `openclaw.json` configuration file
+- A usable agent workspace, for example `~/.openclaw/workspace`
+
+### 3.2 Configure `openclaw.json`
+
+Before editing the configuration, stop the `openclaw gateway` service:
+
+```bash
+openclaw gateway stop
+```
+
+Edit `~/.openclaw/openclaw.json`.
+
+The `~/.openclaw/openclaw.json` file generated by `openclaw onboard` already includes the
+basic skeleton such as `gateway`, `tools.profile`, and `agents.list[main]`, so **you do not need to replace the entire file**. Merge the following sections into it:
+
+- `models.providers`: add the `minimax`, `vllm`, and `proxy-101` providers
+- `tools`: append web search using `tavily`
+- `agents`:
+  - configure `subagents`
+  - add `vllm/Qwen/Qwen3.5-35B-A3B`, `minimax/MiniMax-M2.7`, `proxy-101/auto`, and `proxy-101/Qwen/Qwen3.5-35B-A3B` under `models`
+  - configure `model`
+  - configure `llm`
+- `plugins`: add the `tavily` configuration
+- `gateway`: configure `controlUi`
+
+```json
+{
+  "agents": {
+    "defaults": {
+      "workspace": "${HOME}/.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      },
+      "subagents": {
+        "maxConcurrent": 2,
+        "maxSpawnDepth": 1,
+        "maxChildrenPerAgent": 1,
+        "model": "proxy-101/Qwen/Qwen3.5-35B-A3B",
+        "runTimeoutSeconds": 1500
+      },
+      "models": {
+        "vllm/Qwen/Qwen3.5-35B-A3B": {},
+        "minimax/MiniMax-M2.7": {
+          "alias": "Minimax"
+        },
+        "proxy-101/auto": {
+          "alias": "Router"
+        },
+        "proxy-101/Qwen/Qwen3.5-35B-A3B": {
+          "alias": "Router-Qwen3.5-35B-A3B"
+        },
+        "minimax/MiniMax-M2.7-highspeed": {}
+      },
+      "model": {
+        "primary": "proxy-101/auto",
+        "fallbacks": [
+          "vllm/Qwen/Qwen3.5-35B-A3B",
+          "minimax/MiniMax-M2.7-highspeed",
+          "proxy-101/Qwen/Qwen3.5-35B-A3B",
+          "minimax/MiniMax-M2.7"
+        ]
+      },
+      "llm": {
+        "idleTimeoutSeconds": 800
+      }
+    },
+    "list": [
+      {
+        "id": "main"
+      },
+      {
+        "id": "auto",
+        "name": "auto",
+        "subagents": {
+          "model": "vllm/Qwen/Qwen3.5-35B-A3B"
+        },
+        "workspace": "${HOME}/.openclaw/workspace-auto",
+        "agentDir": "${HOME}/.openclaw/agents/auto/agent",
+        "model": {
+          "primary": "proxy-101/auto"
+        }
+      },
+      {
+        "id": "intro-self",
+        "name": "intro-self",
+        "workspace": "/tmp/intro-self",
+        "agentDir": "${HOME}/.openclaw/agents/intro-self/agent",
+        "model": "proxy-101/auto"
+      }
+    ]
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": ""
+    },
+    "port": 18789,
+    "bind": "loopback",
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    },
+    "controlUi": {
+      "allowedOrigins": [
+        "http://localhost:18789",
+        "http://127.0.0.1:18789",
+        "http://localhost:7000",
+        "http://127.0.0.1:7000"
+      ],
+      "allowInsecureAuth": true,
+      "dangerouslyDisableDeviceAuth": true
+    },
+    "nodes": {
+      "denyCommands": [
+        "camera.snap",
+        "camera.clip",
+        "screen.record",
+        "contacts.add",
+        "calendar.add",
+        "reminders.add",
+        "sms.send",
+        "sms.search"
+      ]
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "tools": {
+    "profile": "coding",
+    "web": {
+      "search": {
+        "provider": "tavily",
+        "enabled": true
+      }
+    }
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "proxy-101": {
+        "baseUrl": "http://localhost:8000/v1",
+        "apiKey": "fake",
+        "api": "openai-completions",
+        "models": [
+          {
+            "id": "Qwen/Qwen3.5-35B-A3B",
+            "name": "Qwen/Qwen3.5-35B-A3B",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": 8192
+          },
+          {
+            "id": "auto",
+            "name": "auto",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 200000,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "vllm": {
+        "baseUrl": "http://localhost:8086/v1",
+        "api": "openai-completions",
+        "apiKey": "VLLM_API_KEY",
+        "models": [
+          {
+            "id": "Qwen/Qwen3.5-35B-A3B",
+            "name": "Qwen/Qwen3.5-35B-A3B",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 90000,
+            "maxTokens": 8192
+          }
+        ]
+      },
+      "minimax": {
+        "baseUrl": "https://api.minimaxi.com/anthropic",
+        "models": [
+          {
+            "id": "MiniMax-M2.7",
+            "name": "MiniMax M2.7",
+            "reasoning": true,
+            "input": [
+              "text",
+              "image"
+            ],
+            "cost": {
+              "input": 0.3,
+              "output": 1.2,
+              "cacheRead": 0.06,
+              "cacheWrite": 0.375
+            },
+            "contextWindow": 204800,
+            "maxTokens": 131072
+          }
+        ],
+        "api": "anthropic-messages",
+        "apiKey": "${MINIMAX_API_KEY}",
+        "authHeader": true
+      }
+    }
+  },
+  "plugins": {
+    "entries": {
+      "tavily": {
+        "enabled": true,
+        "config": {
+          "webSearch": {
+            "apiKey": "${TAVILY_API_KEY}"
+          }
+        }
+      },
+      "vllm": {
+        "enabled": true
+      },
+      "minimax": {
+        "enabled": true
+      }
+    }
+  },
+  "skills": {
+    "entries": {
+      "competitive_analysis_PDF_generator": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Remember to put `MINIMAX_API_KEY` into `${HOME}/.openclaw/.env`. Do not use `~/` in `openclaw.json`,
+because it is not allowed.
+
+### 3.3 Install Repository Skills into the OpenClaw Agent Directory
+
+Skill files in this repository cannot remain only in the repository. They must be copied into
+the workspace of the corresponding OpenClaw agent so that OpenClaw can load them.
+
+The most common target directory is:
+
+- `~/.openclaw/workspace/skills/`
+
+If you only need `competitive_analysis_PDF_generator`, copy it as follows:
+
+```bash
+mkdir -p ~/.openclaw/workspace/skills
+cp -r ./skills/competitive_analysis_PDF_generator ~/.openclaw/workspace/skills/
+```
+
+### 3.4 Enable the Skill in OpenClaw Configuration
+
+After copying the skill directory, you also need to enable it in `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "competitive_analysis_PDF_generator": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+This step tells OpenClaw:
+
+- This skill exists
+- The agent is allowed to load it at runtime
+
+After copying, restart the gateway:
+
+```bash
+openclaw gateway restart
+```
+
+Verify whether the skill is available:
+
+```bash
+openclaw tui
+
+# In tui:
+/reset
+# Then ask:
+"Can you use competitive_analysis_PDF_generator?"
+```
+
+## 4. Set Up the UI
+
+> **Note:** OpenClaw must be configured and running before you use the UI. Standalone UI-only mode is not supported; without OpenClaw, the UI starts and serves HTTP on port 7000 but reports backend connection errors.
+
+Use Docker Compose to build and start the UI container:
+
+```bash
+cd <enterprise-data-intelligence_repo>/ui/docker
+
+# Set the required environment variables.
+# VITE_AUTH_TOKEN should match gateway.auth.token in openclaw.json.
+export VITE_AUTH_TOKEN=<your-auth-token>
+export SERVER_HOST=<your-server-ip>
+
+# Build the UI image.
+docker compose -f build.yaml build
+
+# Start the UI container.
+docker compose -f compose.yaml up -d
+```
+
+By default, the UI is available at:
+
+```text
+http://<SERVER_HOST>:7000
+```
+
+## 5. Test the Configuration
+
+Install `weasyprint`:
+
+```bash
+sudo apt install weasyprint
+```
+
+After completing the setup steps above, verify the configuration as follows:
+
+1. Open the UI in a browser: `http://<HOST_IP>:7000`
+2. Enter the verification prompt:
+
+```text
+Generate a competitive analysis report for Unitree Robotics G1 Basic and comparable products on the market.
+```
+
+Expected result: The UI should display a professional HTML/PDF report comparing the Unitree
+Robotics G1 Basic with other products, generated using the `competitive_analysis_PDF_generator` skill.
+
+## 6. Use the Knowledgebase Skill
+
+First install the `knowledgebase` skill the same way as in Steps 3.3–3.4 — copy its directory
+into the workspace and register it in `openclaw.json`:
+
+```bash
+cp -r ./skills/knowledgebase ~/.openclaw/workspace/skills/
+```
+
+Add it alongside the other skill under `skills.entries` in `openclaw.json`:
+
+```json
+{
+  "skills": {
+    "entries": {
+      "knowledgebase": {
+        "enabled": true
+      }
+    }
+  }
+}
+```
+
+Then restart the gateway so OpenClaw picks it up:
+
+```bash
+openclaw gateway restart
+```
+
+If the Large Language Model (LLM) is not strong enough to use the knowledgebase skill
+automatically, add the following instruction to OpenClaw's `AGENTS.md`:
+
+```text
+For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
+Do not answer questions by searching for files!
+```
+
+Insert the text into the "Tools" chapter in `$HOME/.openclaw/workspace/AGENTS.md`, for example:
+
+```md
+## Tools
+
+Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
+
+For any user question, query, summarization, overview, or comparison, you must use the knowledgebase skill!
+Do not answer questions by searching for files!
+```
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements.md
+
+:::
+hide_directive-->

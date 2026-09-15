@@ -4,7 +4,7 @@ export { planCtl } from "./plan-ctl.js";
 export type { PlanCtlParams } from "./plan-ctl.js";
 export { sceneQuery } from "./scene-query.js";
 export type { SceneQueryParams } from "./scene-query.js";
-export { generateReport } from "./generate-report.js";
+export { generateReport, planLevels } from "./generate-report.js";
 export type { GenerateReportParams, ReportConfig } from "./generate-report.js";
 export { VideoSummaryClient } from "./clients/video-summary-client.js";
 export type {
@@ -30,7 +30,7 @@ export type {
   ParsedSummary,
 } from "./rule-engine/index.js";
 export { monitorCtl, detachMonitor } from "./monitor-ctl.js";
-export type { MonitorCtlParams } from "./monitor-ctl.js";
+export type { IWorkerService, MonitorCtlParams } from "./monitor-ctl.js";
 export { loadMonitorsFromYaml, validateMonitors } from "./monitors-compose.js";
 export type {
   ComposeAction,
@@ -46,11 +46,13 @@ export type {
   UseCaseValidateDeps,
   UseCaseValidateResult,
 } from "./use-case-validate.js";
-export { useCaseRegister } from "./use-case-register.js";
+export { useCaseRegister, checkUseCaseConsistency } from "./use-case-register.js";
 export type {
   UseCaseRegisterParams,
   UseCaseRegisterDeps,
   UseCaseRegisterResult,
+  UseCaseListEntry,
+  ConsistencyReport,
 } from "./use-case-register.js";
 export { ruleEval } from "./rule-eval.js";
 export type { RuleEvalParams, RuleEvalDeps, RuleEvalResult } from "./rule-eval.js";

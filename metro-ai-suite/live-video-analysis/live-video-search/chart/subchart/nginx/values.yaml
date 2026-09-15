@@ -1,4 +1,6 @@
 global:
+  metricsManager:
+    enabled: true
   proxy:
     httpProxy: ''
     httpsProxy: ''
@@ -106,14 +108,23 @@ nginx:
                 proxy_cache_bypass $http_upgrade;
             }
 
-            location /manager/metrics/ws/ {
-                proxy_pass "http://${APP_MANAGER}/metrics/ws/";
+            {{- if .Values.global.metricsManager.enabled }}
+            location = /metrics-manager/health {
+                proxy_pass "http://metrics-manager:9090/health";
                 proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+            }
+
+            location = /metrics-manager/metrics/stream {
+                proxy_pass "http://metrics-manager:9090/metrics/stream";
+                proxy_http_version 1.1;
                 proxy_set_header Host $host;
                 proxy_read_timeout 3600s;
+                proxy_buffering off;
+                proxy_cache off;
+                add_header X-Accel-Buffering no;
             }
+            {{- end }}
 
             location /datastore/ {
                 proxy_pass "http://${APP_ASSETS}/";

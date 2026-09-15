@@ -1,0 +1,10 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Optional GPU device mapping for DL Streamer inference.
+# Include this overlay only on systems where /dev/dri exists.
+
+services:
+  dlstreamer-pipeline-server:
+    devices:
+      - /dev/dri:/dev/dri

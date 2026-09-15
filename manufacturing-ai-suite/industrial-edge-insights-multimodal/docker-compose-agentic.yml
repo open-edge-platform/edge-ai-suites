@@ -1,0 +1,204 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Agent service: LangGraph meta-agent + 4 worker agents.
+# Detection-agnostic — reacts to the detection layer's "batch-complete" MQTT
+# event (see compose.detection.yaml) and never talks to DL Streamer directly.
+# Depends on: storage-service, ia-mqtt-broker (compose.base.yaml)
+
+services:
+  apm-agent:
+    # Pulled from the EAL agent-quality-handler microservice — no longer
+    # built from this repo. See services/agent-service (removed) history
+    # for the prior in-repo implementation this replaced.
+    image: ${DOCKER_REGISTRY}${AGENTIC_QUALITY_HANDLER_IMAGE}
+    container_name: apm-agent
+    hostname: apm-agent
+    environment:
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: ${no_proxy:-},ia-fusion-analytics,apm-llm,ia-mqtt-broker,localhost
+      # Storage service
+      STORAGE_SERVICE_URL: http://ia-fusion-analytics:8080
+      # LLM service (OVMS — OpenVINO Model Server)
+      LLM_BASE_URL: http://apm-llm:8000/v3
+      LLM_MODEL_NAME: ${LLM_MODEL_NAME}
+      LLM_MODE: ${LLM_MODE:-server}
+      LLM_API_KEY: ${LLM_API_KEY:-UNUSED}
+      # MQTT — subscribes only to the detection layer's "batch-complete"
+      # event; never subscribes to raw detections directly.
+      MQTT_HOST: ia-mqtt-broker
+      MQTT_PORT: 1883
+      MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
+      MQTT_QOS: ${MQTT_QOS:-1}
+      MQTT_KEEPALIVE: ${MQTT_KEEPALIVE:-60}
+      MQTT_MAX_PAYLOAD_BYTES: ${MQTT_MAX_PAYLOAD_BYTES:-1048576}
+      MQTT_BATCH_CLIENT_ID: ${MQTT_BATCH_CLIENT_ID:-apm-agent-batch}
+      # Use-case config — agents.yaml itself declares use_case_id
+      AGENTS_CONFIG_PATH: /app/config/agents.yaml
+      USE_CASE_PROMPTS_DIR: /app/prompts
+      USE_CASE_CONFIGS_DIR: /app/config
+      FALLBACK_POLICY_PATH: /app/config/policy_fallback.json
+      # Run retention (in-memory registry + persisted output pruning)
+      RUN_RETENTION_SECONDS: ${RUN_RETENTION_SECONDS:-86400}
+      MAX_RETAINED_RUNS: ${MAX_RETAINED_RUNS:-1000}
+      # Outputs
+      OUTPUT_DIR: /app/output
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      - ./configs/agentic/agents.yaml:/app/config/agents.yaml:ro
+      - ./configs/agentic/policy_fallback.json:/app/config/policy_fallback.json:ro
+      - ./configs/agentic/prompts:/app/prompts:ro
+      - apm_agent_output:/app/output
+      
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5002/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  apm-llm:
+    image: ${DOCKER_REGISTRY}${OVMS_IMAGE}
+    container_name: apm-llm
+    hostname: apm-llm
+    # The mounted /model directory contains a pre-converted mediapipe graph
+    # (graph.pbtxt) produced by scripts/download_llm_model.sh via the
+    # model-download service — device/pipeline_type are already baked into it,
+    # so only model_path/model_name/rest_port are valid here (anything else
+    # is rejected with "unsupported model settings" by OVMS for graph-based
+    # models).
+    command: >
+      --model_path /model/llm_model_agentic/openvino_models/cpu/int4/microsoft/Phi-4-mini-instruct
+      --model_name ${LLM_MODEL_NAME:?LLM_MODEL_NAME must be set}
+      --rest_port 8000
+    environment:
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: ${no_proxy:-},localhost
+      HUGGINGFACE_TOKEN: ${HUGGINGFACEHUB_API_TOKEN:-}
+    restart: unless-stopped
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - ${USER_GROUP_ID:-1000}
+      - ${VIDEO_GROUP_ID:-44}
+      - ${RENDER_GROUP_ID:-1002}
+    volumes:
+      - ./configs/agentic/models:/model:ro
+    ports:
+      - "${LLM_PORT:-8010}:8000"
+    networks:
+      - timeseries_network
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/v1/config || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 40
+      start_period: 30s
+
+  model-download:
+    image: ${DOCKER_REGISTRY}${MODEL_DOWLOADER_IMAGE}
+    container_name: apm-model-download
+    hostname: model-download
+    # The model-download entrypoint only accepts the plugin list via the
+    # --plugins CLI flag — it does not read an ENABLED_PLUGINS env var.
+    command: ["--plugins", "${MODEL_DOWNLOAD_PLUGINS:-huggingface,openvino}"]
+    environment:
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: ${no_proxy:-}
+      HF_TOKEN: ${HUGGINGFACEHUB_API_TOKEN:-}
+      HF_HUB_ENABLE_HF_TRANSFER: 1
+      MODEL_PATH: /opt/models
+    volumes:
+      - ./configs/agentic/models:/opt/models
+    ports:
+      - "${MODEL_DOWNLOAD_PORT:-8200}:8000"
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+      # ui
+
+  apm-metrics:
+    image: ${DOCKER_REGISTRY}${METRICS_MANAGER_IMAGE}
+    container_name: apm-metrics
+    hostname: apm-metrics
+    environment:
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: ${no_proxy:-},localhost
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+
+  prometheus:
+    image: ${PROMETHEUS_IMAGE}
+    container_name: apm-prometheus
+    hostname: apm-prometheus
+    volumes:
+      - ./configs/agentic/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+
+  multimodal-agentic-ui:
+    image: ${DOCKER_REGISTRY}${APM_UI_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    container_name: multimodal-agentic-ui
+    hostname: multimodal-agentic-ui
+    build:
+      context: ui-service
+      dockerfile: Dockerfile
+    environment:
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: ${no_proxy:-},apm-agent,apm-detection,ia-fusion-analytics,localhost,ia-mqtt-broker
+      AGENT_SERVICE_URL: http://apm-agent:5002
+      DETECTION_SERVICE_URL: http://apm-detection:5004
+      STORAGE_SERVICE_URL: http://ia-fusion-analytics:8080
+      HOST: 0.0.0.0
+      PORT: 5003
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      REST_API_ROOT_PATH: "/agentic-ui"
+    networks:
+      - timeseries_network
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  apm_agent_output:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

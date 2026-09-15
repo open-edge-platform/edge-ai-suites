@@ -4,24 +4,24 @@
 
 ### Version 2.5.0
 
-**December 2025**
+**Release Date:** December 2025
 
-**New**
+**New:**
 
 - Consumed the latest DL Streamer Pipeline Server version 2025.2
 - Introduced the nginx server as a reverse proxy and TLS.
 - Enabled support for GenICam compliant GIGe/USB Cameras using Intel’s gencamsrc
   gStreamer plugin.
 
-**Improved**
+**Improved:**
 
 - Optimized pipelines and quantized the model from FP32 to INT8.
 
 ### Version 2.4.0
 
-**August 2025**
+**Release Date:** August 2025
 
-**New**
+**New:**
 
 - Consumed the latest DL Streamer Pipeline Server to 3.1.0.
 - Model Registry is now accessed as environment variables.
@@ -29,9 +29,9 @@
 
 ### Version 2.3.0
 
-**April 2025**
+**Release Date:** April 2025
 
-**New**
+**New:**
 
 - Consumed the rebranded Edge Video Analytics Microservice as DL Streamer
   Pipeline Server.
@@ -42,9 +42,9 @@
 
 ### Version 2.2.0
 
-**March 2025**
+**Release Date:** March 2025
 
-**New**
+**New:**
 
 - Architectural changes to include MediaMTX for signaling and Coturn server for
   NAT traversal.
@@ -52,7 +52,7 @@
 - Open Telemetry dashboard for viewing metrics.
 - Frame and metadata publishing support over OPCUA protocol.
 
-**Improved**
+**Improved:**
 
 - The Pallet Defect Detection AI model updated to Geti™ 2.7.1.
 - Updated EVAM image to v2.4.0 and model-registry image to v1.0.3.
@@ -61,14 +61,14 @@
 
 ### Version 2.1.0
 
-**March 2025**
+**Release Date:** March 2025
 
-**New**
+**New:**
 
 - Added multiple pipelines with gRPC and included the MLOps flow.
 - Added documentation for using the model registry and visualization service.
 
-**Improved**
+**Improved:**
 
 - Updated documentation and configurations across various components.
 - Enhanced Helm charts and proxy settings, enabling gRPC communication between
@@ -76,21 +76,21 @@
 - Implemented Docker and pipeline instruction updates to improve deployment and
   integration processes.
 
-**Fixed**
+**Fixed:**
 
 - Changes to fix the Grafana multiple pipeline issue.
 
 ### Version 2.0.0
 
-**February 2025**
+**Release Date:** February 2025
 
-**New**
+**New:**
 
 - Added changes to get GPU inference to work in a Kubernetes environment.
 - Added S3 usage documentation, including configuration updates in
   evam_config.json and references in the Get Started Guide.
 
-**Improved**
+**Improved:**
 
 - Migrated pipelines to use gvadetect, including updates to the design diagram
   and documentation.
@@ -100,22 +100,22 @@
 
 ### Version 1.1.0
 
-**December 2025**
+**Release Date:** December 2025
 
-**New**
+**New:**
 
 - Consumed the latest DL Streamer Pipeline Server version 2025.2.
 - Introduced the nginx server as a reverse proxy and TLS.
 
-**Improved**
+**Improved:**
 
 - Optimized pipelines.
 
 ### Version 1.0.0
 
-**August 2025**
+**Release Date:** August 2025
 
-**New**
+**New:**
 
 - Consumed the latest DL Streamer Pipeline Server version 3.1.0.
 - Added support for PCB anomaly detection.

@@ -1,0 +1,44 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Ethernet / Real-Hardware Mode
+#
+# Run when PX4 is on a remote machine (real FC or SITL-SIH) connected over Ethernet.
+# The local Gazebo sim (px4, camera-bridge) is not started.
+#
+# Usage:
+#   export FC_IP=192.168.1.100        # IP of the FC machine running mavlink-router
+#   docker compose -f docker-compose.yml -f docker-compose.ethernet.yml --profile ethernet up
+#
+# Or via Makefile:
+#   make up-ethernet FC_IP=192.168.1.100
+
+services:
+
+  # ── Disable local-sim-only services ───────────────────────────────────────
+  px4:
+    profiles: ["local-only"]
+
+  camera-bridge:
+    profiles: ["local-only"]
+
+  # ── Override companion-bridge for ethernet ─────────────────────────────────
+  # Uses host networking so it can reach the remote FC over the physical NIC.
+  # PX4_ADDRESS switches from udpin (listen) to udpout (connect to remote).
+  # profiles: ["ethernet"] replaces the sim/usb-camera profiles — start with --profile ethernet.
+  # depends_on overridden: px4 is excluded in ethernet mode.
+  companion-bridge:
+    profiles: ["ethernet"]
+    network_mode: host
+    environment:
+      - PX4_ADDRESS=udpout://${FC_IP:?FC_IP must be set — IP of FC machine running mavlink-router}:14541
+      - MQTT_BROKER_HOST=localhost
+      - MQTT_BROKER_PORT=1884
+      - UAV_ID=${UAV_ID:-uav-1}
+      - REST_PORT=8080
+    depends_on:
+      px4:
+        condition: service_started
+        required: false
+      mosquitto:
+        condition: service_healthy

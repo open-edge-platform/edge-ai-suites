@@ -1,0 +1,75 @@
+{{- $globalDevices := default (dict) .Values.global.devices -}}
+{{- $dataprepDevices := default (dict) (index $globalDevices "multimodalDataprep") -}}
+{{- $embeddingCfg := default (dict) (index $dataprepDevices "embedding") -}}
+{{- $detectionCfg := default (dict) (index $dataprepDevices "detection") -}}
+{{- $resolvedEmbeddingDevice := upper (default "CPU" (index $embeddingCfg "device")) -}}
+{{- $resolvedDetectionDevice := upper (default "CPU" (index $detectionCfg "device")) -}}
+{{- $embeddingUsesAccelerator := or (eq $resolvedEmbeddingDevice "GPU") (eq $resolvedEmbeddingDevice "NPU") -}}
+{{- $detectionUsesAccelerator := or (eq $resolvedDetectionDevice "GPU") (eq $resolvedDetectionDevice "NPU") -}}
+{{- $anyAccelerator := or $embeddingUsesAccelerator $detectionUsesAccelerator -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multimodal-dataprep-config
+  labels:
+    {{- include "lvs.dataprep.labels" . | nindent 4 }}
+data:
+  MM_DATAPREP_APP_HOST: "multimodal-dataprep"
+  MM_DATAPREP_VECTORDB_BACKEND: {{ .Values.global.vectordbBackend | quote }}
+  MM_DATAPREP_STORAGE_BACKEND: "minio"
+  MM_DATAPREP_VDMS_VDB_HOST: "vdms-vector-db"
+  MM_DATAPREP_VDMS_VDB_PORT: "55555"
+  MM_DATAPREP_MILVUS_URI: "http://milvus-standalone:19530"
+  MM_DATAPREP_VDB_METRIC_TYPE: {{ .Values.global.env.vdbMetricType | quote }}
+  MM_DATAPREP_VDB_INDEX_TYPE: {{ .Values.global.env.vdbIndexType | quote }}
+  MM_DATAPREP_MINIO_ENDPOINT: "minio-service:80"
+  MM_DATAPREP_MINIO_SECURE: "false"
+  MM_DATAPREP_DEFAULT_BUCKET_NAME: {{ .Values.global.env.defaultBucketName | quote }}
+  MM_DATAPREP_DB_COLLECTION: {{ .Values.global.env.vsIndexName | quote }}
+  MM_DATAPREP_EMBEDDING_MODEL_NAME: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
+  MM_DATAPREP_USE_OPENVINO: {{ ternary "true" .Values.global.env.sdkUseOpenvino $anyAccelerator | quote }}
+  MM_DATAPREP_EMBEDDING_DEVICE: {{ $resolvedEmbeddingDevice | quote }}
+  MM_DATAPREP_DETECTION_DEVICE: {{ $resolvedDetectionDevice | quote }}
+  MM_DATAPREP_EMBEDDING_BATCH_SIZE: {{ .Values.global.env.embeddingBatchSize | quote }}
+  MM_DATAPREP_OV_MODELS_DIR: {{ .Values.global.env.ovModelsDir | quote }}
+  OV_CACHE_DIR: {{ .Values.ovCacheDir | default "/app/ov_models/ov_cache" | quote }}
+  MM_DATAPREP_OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $anyAccelerator | quote }}
+  MM_DATAPREP_FRAME_INTERVAL: {{ .Values.global.env.frameInterval | quote }}
+  MM_DATAPREP_ENABLE_OBJECT_DETECTION: {{ .Values.global.env.enableObjectDetection | quote }}
+  MM_DATAPREP_DETECTION_CONFIDENCE: {{ .Values.global.env.detectionConfidence | quote }}
+  MM_DATAPREP_ROI_CONSOLIDATION_ENABLED: {{ .Values.global.env.roiConsolidationEnabled | quote }}
+  MM_DATAPREP_ROI_CONSOLIDATION_IOU_THRESHOLD: {{ .Values.global.env.roiConsolidationIouThreshold | quote }}
+  MM_DATAPREP_ROI_CONSOLIDATION_CLASS_AWARE: {{ .Values.global.env.roiConsolidationClassAware | quote }}
+  MM_DATAPREP_ROI_CONSOLIDATION_CONTEXT_SCALE: {{ .Values.global.env.roiConsolidationContextScale | quote }}
+  MM_DATAPREP_FRAMES_TEMP_DIR: {{ .Values.global.env.framesTempDir | quote }}
+  MM_DATAPREP_DETECTION_MODEL_DIR: "/app/models/yolox"
+  MM_DATAPREP_MAX_PARALLEL_WORKERS: {{ .Values.global.env.maxParallelWorkers | quote }}
+  MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS: {{ .Values.global.env.sdkVideoShmMaxBlocks | quote }}
+  MM_DATAPREP_VIDEO_SHM_BLOCK_SIZE: {{ .Values.global.env.sdkVideoShmBlockSize | quote }}
+  MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE: {{ .Values.global.env.sdkVideoExtractionBatchSize | quote }}
+  MM_DATAPREP_PIPELINE_QUEUE_MAXSIZE: {{ .Values.global.env.sdkPipelineQueueMaxsize | quote }}
+  MM_DATAPREP_PIPELINE_COMPLETION_QUEUE_MAXSIZE: {{ .Values.global.env.sdkPipelineCompletionQueueMaxsize | quote }}
+  MM_DATAPREP_DETECTION_WORKER_THREADS: {{ .Values.global.env.sdkDetectionWorkerThreads | quote }}
+  MM_DATAPREP_EMBED_WORKER_THREADS: {{ .Values.global.env.sdkEmbedWorkerThreads | quote }}
+  MM_DATAPREP_PIPELINE_QUEUE_GET_TIMEOUT_S: {{ .Values.global.env.sdkPipelineQueueGetTimeoutS | quote }}
+  MM_DATAPREP_SAVE_RUNTIME_PIPELINE_STATS: {{ .Values.global.env.saveRuntimePipelineStats | quote }}
+  MM_DATAPREP_ENABLE_TRACING: {{ .Values.global.env.sdkEnableTracing | quote }}
+  MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS: {{ .Values.global.env.videoFrameDecoderWorkers | quote }}
+  MM_DATAPREP_VIDEO_FRAME_LOG_LEVEL: {{ .Values.global.env.videoFrameLogLevel | quote }}
+  MM_DATAPREP_LOG_LEVEL: "INFO"
+  MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS: {{ .Values.global.env.allowDuplicateUploads | quote }}
+  MM_DATAPREP_ALLOW_ORIGINS: "*"
+  MM_DATAPREP_ALLOW_METHODS: "*"
+  MM_DATAPREP_ALLOW_HEADERS: "*"
+  {{- if .Values.global.metricsManager.enabled }}
+  MM_DATAPREP_METRICS_MANAGER_URL: {{ .Values.metricsManager.url | quote }}
+  MM_DATAPREP_METRICS_MANAGER_TIMEOUT_SECONDS: {{ .Values.metricsManager.timeoutSeconds | quote }}
+  {{- end }}
+  HF_HOME: "/home/appuser/.cache/huggingface"
+  TRANSFORMERS_CACHE: "/home/appuser/.cache/huggingface"
+  HUGGINGFACE_HUB_CACHE: "/home/appuser/.cache/huggingface"
+  XDG_CACHE_HOME: "/home/appuser/.cache"
+  FASTAPI_ENV: "development"
+  no_proxy: "{{ .Values.global.proxy.noProxy }},vdms-vector-db,milvus-standalone,minio-service,metrics-manager,localhost"
+  http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
+  https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}

@@ -39,6 +39,7 @@ from fixtures import LEVEL1_KPI, LEVEL2_KPI
 #                   False: validation must return one or more errors
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 def _del(keys):
     """Return a mutator that deletes a nested key path (list of keys)."""
     def _mutate(d):
@@ -87,6 +88,7 @@ LEVEL2_CASES = [
 #  pytest parametrize
 # ──────────────────────────────────────────────────────────────────────────────
 
+
 @pytest.mark.parametrize('case_id,mutate_fn,expect_valid', LEVEL1_CASES,
                          ids=[c[0] for c in LEVEL1_CASES])
 def test_level1_schema(case_id, mutate_fn, expect_valid):
@@ -111,4 +113,3 @@ def test_level2_schema(case_id, mutate_fn, expect_valid):
     assert is_valid == expect_valid, (
         f'expect_valid={expect_valid} but got {len(errors)} error(s): {errors[:1]}'
     )
-

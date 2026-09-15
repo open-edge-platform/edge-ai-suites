@@ -15,6 +15,10 @@ To see the system requirements and other installations, see the following guides
 
 Clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the source video, and then triggers a multi-agent reasoning pass over exactly the detections that run produced, generating structured maintenance tickets.
 
+In LLM mode, the dashboard also provides **Ask & Analyze** for grounded questions about completed
+agent analysis, stored detections, or both. It reuses the same `apm-llm` OpenVINO Model Server
+deployment; it does not download or start a second model.
+
 For more information see [How it works](./docs/user-guide/how-it-works.md)
 
 ## Learn More
@@ -22,6 +26,7 @@ For more information see [How it works](./docs/user-guide/how-it-works.md)
 - [Overview](./docs/user-guide/index.md)
 - [Get Started](./docs/user-guide/get-started.md)
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md)
+- [Training with Intel Geti](./docs/user-guide/training-with-geti.md)
 - [API Reference](./docs/user-guide/api-reference.md)
 - [How to Build from Source](./docs/user-guide/build-from-source.md)
 - [Troubleshooting](./docs/user-guide/troubleshooting.md)

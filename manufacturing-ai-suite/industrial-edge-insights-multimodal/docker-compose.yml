@@ -237,8 +237,8 @@ services:
     command: >
      /bin/sh -c "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"
     environment:
-      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer"
-      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer"
+      no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer,apm-metrics,multimodal-agentic-ui"
+      NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer,apm-metrics,multimodal-agentic-ui"
       MEDIAMTX_SERVER: mediamtx
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:

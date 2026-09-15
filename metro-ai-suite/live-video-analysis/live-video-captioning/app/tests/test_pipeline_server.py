@@ -82,30 +82,6 @@ class TestPipelineServerHelpers:
         assert exc_info.value.status_code == 400
         assert "No matching backend pipeline found" in exc_info.value.detail["message"]
 
-    def test_normalize_pipeline_name_for_npu_strips_default_resolution_suffix(self, server):
-        assert (
-            server._normalize_pipeline_name_for_vlm_device(
-                "Video_Captioning_RTSP_Hardware_Default_Resolution", "npu"
-            )
-            == "Video_Captioning_RTSP_Hardware"
-        )
-
-    def test_normalize_pipeline_name_for_non_npu_keeps_suffix(self, server):
-        assert (
-            server._normalize_pipeline_name_for_vlm_device(
-                "Video_Captioning_RTSP_Hardware_Default_Resolution", "gpu"
-            )
-            == "Video_Captioning_RTSP_Hardware_Default_Resolution"
-        )
-
-    def test_normalize_pipeline_name_for_npu_without_suffix_keeps_name(self, server):
-        assert (
-            server._normalize_pipeline_name_for_vlm_device(
-                "Video_Captioning_RTSP_Hardware", "npu"
-            )
-            == "Video_Captioning_RTSP_Hardware"
-        )
-
     def test_build_unique_run_name_sanitizes_and_avoids_collisions(self, server):
         RUNS["My_Run"] = _running_run(run_id="My_Run")
         assert server._build_unique_run_name(" My Run ") == "My_Run_1"
@@ -195,7 +171,7 @@ class TestPipelineParameterBuilding:
         assert params["detection_pre_process_backend"] == "opencv"
         assert params["detection_threshold"] == 0.65
         assert params["queue_size"] == 2
-        assert params["captioner-properties"]["scheduler-config"] == server.CPU_SCHEDULER_CONFIG
+        assert params["captioner-properties"]["scheduler-config"] == server.SCHEDULER_CONFIG
 
     def test_build_pipeline_parameters_gpu_adds_cache_path(self, server):
         req = StartRunRequest(
@@ -211,29 +187,8 @@ class TestPipelineParameterBuilding:
         )
 
         assert params["captioner-properties"]["device"] == "GPU"
-        assert params["captioner-properties"]["scheduler-config"] == server.GPU_SCHEDULER_CONFIG
+        assert params["captioner-properties"]["scheduler-config"] == server.SCHEDULER_CONFIG
         assert params["captioner-properties"]["model-cache-path"] == "/tmp/ov_cache"
-
-    def test_build_pipeline_parameters_npu_forces_resolution_and_uses_npu_captioner_config(self, server):
-        req = StartRunRequest(
-            rtspUrl="rtsp://host/stream",
-            vlmDevice="npu",
-            frameWidth=1920,
-            frameHeight=1080,
-        )
-
-        with patch("backend.services.pipeline_server.NPU_FORCED_RESOLUTION", 640):
-            params = server._build_pipeline_parameters(
-                req,
-                run_id="run1",
-                pipeline_name="GenAI_X_Pipeline",
-            )
-
-        assert params["frame_width"] == 640
-        assert params["frame_height"] == 640
-        assert params["captioner-properties"]["device"] == "NPU"
-        assert "generation-config" in params["captioner-properties"]
-        assert "scheduler-config" not in params["captioner-properties"]
 
     def test_build_pipeline_parameters_npu_vlm_override_excludes_scheduler(self, server):
         req = StartRunRequest(

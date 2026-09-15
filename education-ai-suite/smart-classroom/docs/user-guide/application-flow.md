@@ -65,7 +65,34 @@ The Room View toggle allows the user to switch between full audio–video mode a
 
 ![Uploaded Files Processing](./_assets/search.png)
 
+## Step 7: Class Report
+
+Once processing settles, a structured **Class Report** can be generated from the session. It
+combines the measured data collected during processing (attendance, speaking speed, hand-raise
+counts, keywords, mind map, and so on) with an AI-generated teaching assessment, and can be
+downloaded as a Word or PDF document.
+
+Open it from **View Report** in the top navigation menu.
+
+![View Report](./_assets/report-entry.png)
+
+For details, see the [Class Report Flow](./class-report-flow.md).
+
+## Step 8: Grading
+
+Scanned exam papers can be scored automatically. You provide a paper (PDF) and a rubric, and the
+system renders the pages, splits them into question sections, and uses a Vision-Language Model to
+grade each section and produce scores with reasoning.
+
+Open it from **Grading** in the top navigation menu.
+
+![Grading Entry](./_assets/grading-entry.png)
+
+For details, see the [Grading Flow](./grading-flow.md).
+
 ## Learn More
 
 - [How It Works](./how-it-works.md): Technical architecture and design details.
 - [Content Search Flow](./content-search-flow.md): The flow of the content search functionality.
+- [Class Report Flow](./class-report-flow.md): The flow of generating and exporting a class report.
+- [Grading Flow](./grading-flow.md): The flow of grading scanned exam papers.

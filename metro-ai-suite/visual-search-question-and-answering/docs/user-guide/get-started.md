@@ -62,11 +62,12 @@ export TAG="latest"
 
 ### Step 2: Prepare host directories for models and data
 
-```sh
+```bash
 mkdir -p $HOME/data
 ```
 
-If you would like to test the application with a demo dataset, please continue and follow the instructions in the [Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
+If you would like to test the application with a demo dataset, please continue and follow the instructions in the
+[Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
 
 Otherwise, if you would like to use your own data (images and video), make sure to put them all in the created data directory (`$HOME/data` in the example commands above) and make sure the created path matches with the `HOST_DATA_PATH` variable in `deployment/docker-compose/env.sh` BEFORE deploying the services.
 
@@ -97,7 +98,7 @@ Otherwise, if you would like to use your own data (images and video), make sure 
 
      > **Important:** You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
      > [Supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for Multimodal Embedding Serving for available embedding models, and
-     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
      You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 
@@ -157,7 +158,7 @@ Refer to [Deploy with helm](./get-started/deploy-with-helm.md) for details.
 
 Create a `prepare_demo_dataset.sh` script as following
 
-```text
+```bash
 CONTAINER_IDS=$(docker ps -a --filter "status=running" -q | xargs -r docker inspect --format '{{.Config.Image}} {{.Id}}' | grep "dataprep-visualdata-milvus" | awk '{print $2}')
 
 # Check if any containers were found

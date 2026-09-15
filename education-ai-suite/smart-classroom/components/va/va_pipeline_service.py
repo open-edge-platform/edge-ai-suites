@@ -1,12 +1,10 @@
 import subprocess
 import os
-import sys
 import time
 import logging
 from pathlib import Path
 from typing import Optional, Dict, List, Generator
 import psutil
-import signal
 from dataclasses import dataclass
 from enum import Enum
 import atexit
@@ -16,10 +14,25 @@ from utils.config_loader import config
 from utils.rtsp_recorder import (
     start_rtsp_recording,
     stop_rtsp_recording,
-    is_rtsp_recording_running,
 )
 from utils.runtime_config_loader import RuntimeConfig
 from utils.system_checker import check_dlstreamer_installation
+from utils.gstreamer_env import (
+    GST_SUBPROCESS_TIMEOUT,
+    add_gst_plugin_path,
+    ensure_dlstreamer_env,
+    ensure_gst_registry,
+)
+from components.va.runner_client import PipelineRunnerClient
+
+MAX_INPUT_FRAMERATE = "30/1"
+CLASSIFY_FRAMERATE = "1/1"
+
+# Keyframe cadence of the RTSP output, in seconds. A WebRTC or HLS client cannot
+# render anything until an IDR arrives, so this bounds how long a viewer waits
+# after opening a stream. 0.5s matches what the 30fps pipelines produced with
+# the previous fixed gop-size=15.
+RTSP_KEYFRAME_INTERVAL_SEC = 0.5
 
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
@@ -35,6 +48,7 @@ class PipelineOptions:
     device: str = "NPU"  # CPU, GPU, or NPU
     output_dir: str = "outputs"  # Directory for metadata output files
     output_rtsp: str = "rtsp://127.0.0.1:8554"  # RTSP output URL
+    output_stream: bool = True  # Push video to RTSP; False = discard to fakesink
     threshold: float = 0.5  # Detection threshold for YOLO
     record: bool = False
 
@@ -82,6 +96,10 @@ class VideoAnalyticsPipelineService:
         self.pipeline_retry_counts: Dict[str, int] = {}
         self.max_retries = 10
 
+        # How long to wait for a pipeline to report PLAYING on its bus before
+        # calling the launch failed.
+        self.pipeline_ready_timeout = 60.0
+
         # "eos" (normal), "failed" (gave up after max retries), or "stopped" (manual stop).
         self.pipeline_final_status: Dict[str, str] = {}
 
@@ -103,6 +121,15 @@ class VideoAnalyticsPipelineService:
         self.unidentified_max = getattr(ps, "unidentified_max", 50) if ps else 50
         self.stale_unidentified_threshold = getattr(ps, "stale_unidentified_threshold", 30) if ps else 30
 
+        # Upper bound on the framerate the pipeline runs inference at. Protects against high-framerate cameras.
+        self.max_input_framerate = MAX_INPUT_FRAMERATE
+        # Framerate the classification branches run at.
+        self.classify_framerate = CLASSIFY_FRAMERATE
+
+        # Settle the GStreamer environment before the first GStreamer process
+        # runs, so every process this service spawns shares one registry cache.
+        self._setup_environment()
+
         # Verify DL Streamer installation
         if not check_dlstreamer_installation():
             raise RuntimeError("DL Streamer is not installed or does not meet the minimum version requirement")
@@ -122,10 +149,13 @@ class VideoAnalyticsPipelineService:
             return None
 
     def _setup_environment(self):
-        """Setup GStreamer environment variables"""
-        current_path = os.environ.get("GST_PLUGIN_PATH", "")
-
-        os.environ["GST_PLUGIN_PATH"] = f"{self.plugin_path};{current_path}"
+        """Setup GStreamer environment variables. Idempotent.
+        Runner children inherit this environment, so DL Streamer only has to be
+        located here.
+        """
+        ensure_gst_registry()
+        ensure_dlstreamer_env()
+        add_gst_plugin_path(self.plugin_path)
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )
@@ -152,7 +182,7 @@ class VideoAnalyticsPipelineService:
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=10,
+                timeout=GST_SUBPROCESS_TIMEOUT,
             )
             combined_output = result.stdout + result.stderr
             if "An error was encountered while discovering the file" in combined_output:
@@ -184,7 +214,7 @@ class VideoAnalyticsPipelineService:
                 "!",
                 "h264parse",
                 "!",
-                "d3d11h264dec",
+                "d3d12h264dec",
                 "!",
             ]
         elif input_type == "rtsp" and config.va_pipeline.rtsp_codec == "h265":
@@ -198,7 +228,7 @@ class VideoAnalyticsPipelineService:
                 "!",
                 "h265parse",
                 "!",
-                "d3d11h265dec",
+                "d3d12h265dec",
                 "!",
             ]
         elif input_type == "file":
@@ -212,14 +242,37 @@ class VideoAnalyticsPipelineService:
         else:
             raise ValueError(f"Unknown input type: {input_type}")
 
-    def _get_rtsp_sink_elements(self, rtsp_url: str, pipeline_name: str) -> List[str]:
+    @staticmethod
+    def _framerate_to_fps(framerate: Optional[str]) -> float:
+        """Convert a GStreamer 'num/den' framerate to fps. Falls back to 30."""
+        if not framerate:
+            return 30.0
+        num, _, den = str(framerate).partition("/")
+        try:
+            fps = float(num) / float(den or 1)
+        except (TypeError, ValueError, ZeroDivisionError):
+            return 30.0
+        return fps if fps > 0 else 30.0
+
+    def _gop_size(self, sink_framerate: Optional[str]) -> int:
+        """Keyframe interval in frames, for a pipeline running at sink_framerate.
+
+        mfh264enc's gop-size counts *pictures*, not seconds. Deriving it from the
+        framerate keeps the keyframe cadence constant in wall-clock time.
+        """
+        fps = self._framerate_to_fps(sink_framerate)
+        return max(1, round(fps * RTSP_KEYFRAME_INTERVAL_SEC))
+
+    def _get_rtsp_sink_elements(
+        self, rtsp_url: str, pipeline_name: str, sink_framerate: Optional[str] = None
+    ) -> List[str]:
         """Get RTSP sink elements for pushing to RTSP server"""
         return [
             "d3d11convert",
             "!",
             "mfh264enc",
             "bitrate=3000",
-            "gop-size=15",
+            f"gop-size={self._gop_size(sink_framerate)}",
             "low-latency=true",
             "bframes=0",
             "rc-mode=cbr",
@@ -234,45 +287,69 @@ class VideoAnalyticsPipelineService:
             "protocols=udp",
         ]
 
-    def _check_redistribute_latency(self, log_file: Path) -> bool:
-        """Check if 'Redistribute latency' appears in log file"""
-        try:
-            with open(log_file, "r") as f:
-                content = f.read()
-                return "Redistribute latency" in content
-        except Exception as e:
-            self.logger.warning(f"Failed to check log file: {e}")
-            return False
+    def _get_video_sink_elements(
+        self,
+        options: PipelineOptions,
+        stream_name: str,
+        sink_framerate: Optional[str] = None,
+    ) -> List[str]:
+        """Get video sink elements: RTSP sink, or a discarding fakesink when
+        streaming is disabled (options.output_stream=False)
 
-    def _check_error(self, log_file: Path) -> Optional[str]:
-        """Check if 'ERROR' appears in log file and return error text.
-
-        Returns:
-            The error text from 'ERROR: from element' to end of file,
-            or None if no error found.
+        Args:
+            sink_framerate: the framerate actually reaching this sink, as
+                'num/den'. Sets the keyframe interval; see _gop_size.
         """
-        try:
-            with open(log_file, "r") as f:
-                content = f.read()
-                idx = content.find("WARNING: erroneous pipeline")
-                if idx < 0:
-                    idx = content.find("ERROR: from element")
-                if idx >= 0:
-                    return content[idx:].strip()
-                return None
-        except Exception as e:
-            self.logger.warning(f"Failed to check log file: {e}")
-            return None
+        if not options.output_stream:
+            return ["fakesink", "async=false", "sync=false"]
+        return self._get_rtsp_sink_elements(
+            options.output_rtsp, stream_name, sink_framerate
+        )
 
-    def _check_normal_exit(self, log_file: Path) -> bool:
-        """Check if pipeline exited normally (has EOS message)"""
-        try:
-            with open(log_file, "r") as f:
-                content = f.read()
-                return 'Got EOS from element "pipeline0".' in content
-        except Exception as e:
-            self.logger.warning(f"Failed to check log file: {e}")
-            return False
+    def _get_input_framerate_cap_elements(self) -> List[str]:
+        """Get elements capping the framerate ahead of gvadetect.
+        It exists so a 50/60fps camera cannot push the pose model past the rate the
+        NPU can serve.
+        """
+        if not self.max_input_framerate:
+            return []
+        return [
+            "videorate",
+            "drop-only=true",
+            "!",
+            f"video/x-raw(memory:D3D11Memory),framerate=[0/1,{self.max_input_framerate}]",
+            "!",
+        ]
+
+    def _get_classify_decimation_elements(self) -> List[str]:
+        """Get elements dropping a classification branch to classify_framerate."""
+        if not self.classify_framerate:
+            return []
+        return [
+            "videorate",
+            "drop-only=true",
+            "!",
+            f"video/x-raw(memory:D3D11Memory),framerate={self.classify_framerate}",
+            "!",
+        ]
+
+    @staticmethod
+    def _join_pipeline_description(elements: List[str]) -> str:
+        """Join argv-style pipeline tokens into a gst-parse description string.
+
+        Argv tokens are space-safe; a parse-launch description is not. Quote
+        the value half of any token carrying whitespace.
+        """
+        parts = []
+        for token in elements:
+            if not any(char.isspace() for char in token):
+                parts.append(token)
+            elif "=" in token:
+                key, value = token.split("=", 1)
+                parts.append(f'{key}="{value}"')
+            else:
+                parts.append(f'"{token}"')
+        return " ".join(parts)
 
     def _monitor_pipeline(self, pipeline_name: str):
         """
@@ -292,21 +369,30 @@ class VideoAnalyticsPipelineService:
 
             # Check process status
             if process.poll() is not None:
-                # Process has exited
+                # Process has exited. The runner reports EOS as a typed event.
                 log_file = self.pipeline_logs.get(pipeline_name)
+                normal_exit = process.exited_normally()
+                self.logger.info(
+                    f"[VA][monitor] pipeline '{pipeline_name}' exited rc={process.returncode} "
+                    f"normal_exit={normal_exit} final_event={process.final_event} log={log_file}"
+                )
 
-                if log_file and self._check_normal_exit(log_file):
+                if normal_exit:
                     # Normal exit with EOS
                     self.logger.info(
                         f"Pipeline '{pipeline_name}' exited normally (EOS received)"
                     )
-                    self.pipeline_final_status[pipeline_name] = "eos"
-                    self._fire_done_callback_if_all_finished()
+                    self.logger.info(
+                        f"[VA][monitor] marking '{pipeline_name}' eos; firing done callback"
+                    )
+                    self._finalize_pipeline(pipeline_name, "eos")
                     break
                 else:
                     # Unexpected exit — record error for status reporting
-                    log_error = self._check_error(log_file) if log_file else None
-                    error_detail = log_error or f"Pipeline exited with code {process.returncode}"
+                    error_detail = (
+                        process.error_text()
+                        or f"Pipeline exited with code {process.returncode}"
+                    )
                     if pipeline_name not in self.pipeline_errors:
                         self.pipeline_errors[pipeline_name] = []
                     self.pipeline_errors[pipeline_name].append(error_detail)
@@ -325,6 +411,13 @@ class VideoAnalyticsPipelineService:
                         # Increment retry count
                         self.pipeline_retry_counts[pipeline_name] = retry_count + 1
 
+                        # Release the dead runner's IPC listener before the
+                        # relaunch replaces it.
+                        try:
+                            process.close()
+                        except Exception:
+                            pass
+
                         # Close old log handle
                         if pipeline_name in self.pipeline_log_handles:
                             try:
@@ -332,24 +425,42 @@ class VideoAnalyticsPipelineService:
                             except:
                                 pass
 
+                        if stop_flag.is_set():
+                            self.logger.info(
+                                f"[VA][monitor] '{pipeline_name}' is being stopped; skipping restart"
+                            )
+                            break
+
                         # Restart pipeline using saved parameters
                         params = self.pipeline_params.get(pipeline_name)
                         if params:
-                            self._launch_pipeline_internal(
-                                pipeline_name, params["options"], params["command"]
-                            )
+                            try:
+                                self._launch_pipeline_internal(
+                                    pipeline_name, params["options"], params["description"]
+                                )
+                            except Exception as e:
+                                self.logger.error(
+                                    f"[VA][monitor] restart of pipeline '{pipeline_name}' raised: {e}",
+                                    exc_info=True,
+                                )
+                                # The pipeline is dead and will not be retried:
+                                # a terminal state, not a reason to stop
+                                # reporting. Leaving this bare let the session's
+                                # "va" stage sit on "running" for good.
+                                self._finalize_pipeline(pipeline_name, "failed")
+                                break
                         else:
                             self.logger.error(
                                 f"Cannot restart pipeline '{pipeline_name}': parameters not found"
                             )
+                            self._finalize_pipeline(pipeline_name, "failed")
                             break
                     else:
                         self.logger.error(
                             f"Pipeline '{pipeline_name}' reached maximum retry limit ({self.max_retries}). "
                             f"Giving up."
                         )
-                        self.pipeline_final_status[pipeline_name] = "failed"
-                        self._fire_done_callback_if_all_finished()
+                        self._finalize_pipeline(pipeline_name, "failed")
                         break
 
             # Check every 2 seconds
@@ -357,27 +468,51 @@ class VideoAnalyticsPipelineService:
 
         self.logger.info(f"Monitor thread for pipeline '{pipeline_name}' stopped")
 
+    def _finalize_pipeline(self, pipeline_name: str, status: str) -> None:
+        """Record a pipeline's terminal status, then fire the all-done callback.
+
+        Every route out of a running pipeline must come through here. The
+        callback is the only thing that closes out the session's "va" stage, so
+        a path that ends a pipeline without calling it leaves the stage on
+        "running" for good - and a session whose stages never all settle is
+        never marked complete.
+
+        setdefault rather than assignment: the monitor thread and
+        stop_pipeline() can both reach the same dying pipeline, and the first
+        verdict is the informative one. "eos" must not become "stopped" just
+        because teardown ran after the process had already finished on its own.
+        """
+        self.pipeline_final_status.setdefault(pipeline_name, status)
+        self._fire_done_callback_if_all_finished()
+
     def _fire_done_callback_if_all_finished(self):
         """Fire on_all_pipelines_done once when no pipeline processes remain running."""
-        if self._reports_generated or not self._any_pipeline_ran:
+        if self._reports_generated:
+            self.logger.info("[VA][done] skip: _reports_generated already set")
+            return
+        if not self._any_pipeline_ran:
+            self.logger.info("[VA][done] skip: _any_pipeline_ran is False")
             return
         still_running = [
             name for name, proc in self.pipelines.items()
             if proc.poll() is None
         ]
         if still_running:
-            self.logger.debug(f"[VA] Pipelines still running: {still_running} — reports deferred.")
+            self.logger.info(f"[VA][done] deferring, still running: {still_running}")
             return
         self._reports_generated = True
         self.logger.info("[VA] All pipelines finished — triggering engagement report generation.")
         if callable(self.on_all_pipelines_done):
             try:
                 self.on_all_pipelines_done(getattr(self, "x_session_id", None))
+                self.logger.info("[VA][done] callback returned")
             except Exception as exc:
                 self.logger.error(f"[VA] on_all_pipelines_done callback raised: {exc}", exc_info=True)
+        else:
+            self.logger.warning("[VA][done] no on_all_pipelines_done callback configured")
 
     def _launch_pipeline_internal(
-        self, pipeline_name: str, options: PipelineOptions, command: List[str]
+        self, pipeline_name: str, options: PipelineOptions, description: str
     ) -> bool:
         """
         Internal method to launch pipeline (used for initial launch and restarts)
@@ -385,55 +520,38 @@ class VideoAnalyticsPipelineService:
         Args:
             pipeline_name: Name of pipeline
             options: Pipeline options
-            command: Full command to execute
+            description: gst-parse pipeline description string
 
         Returns:
             True if pipeline launched successfully, False otherwise
+
+        Raises:
+            RuntimeError: the pipeline failed to reach PLAYING. The message
+                carries the element name and error text straight from the bus.
         """
+        log_handle = None
         try:
-            # Create log file for pipeline output
+            # The runner writes its own logging here.
             log_dir = Path(options.output_dir) / "logs"
-            log_dir.mkdir(exist_ok=True)
+            log_dir.mkdir(parents=True, exist_ok=True)
             log_file = log_dir / f"{pipeline_name}_{int(time.time())}.log"
             log_handle = open(log_file, "w", buffering=1)  # Line buffered
 
-            # Launch pipeline
-            process = subprocess.Popen(
-                command,
-                stdout=log_handle,
-                stderr=subprocess.STDOUT,
-                encoding="utf-8",
-                errors="replace",
-                bufsize=1,
-                env=os.environ.copy(),
-                creationflags=(
-                    subprocess.CREATE_NEW_PROCESS_GROUP
-                    if sys.platform == "win32"
-                    else 0
-                ),
-            )
+            runner = PipelineRunnerClient(pipeline_name, description, log_handle)
 
-            # Store pipeline process, log file, and log handle
-            self.pipelines[pipeline_name] = process
+            # Store handle, log file, and log handle before starting so a
+            # failure mid-handshake still leaves the state cleanable.
+            self.pipelines[pipeline_name] = runner
             self.pipeline_logs[pipeline_name] = log_file
             self.pipeline_log_handles[pipeline_name] = log_handle
 
+            # Blocks until the pipeline reports PLAYING on its bus
+            runner.start(ready_timeout=self.pipeline_ready_timeout)
+
             self.logger.info(
-                f"Pipeline '{pipeline_name}' started with PID: {process.pid}"
+                f"Pipeline '{pipeline_name}' started with PID: {runner.pid}"
             )
             self.logger.info(f"  Log file: {log_file}")
-
-            # Check for "Redistribute latency" in log file
-            time.sleep(5)
-            self.pipeline_log_handles[pipeline_name].flush()
-            if self._check_redistribute_latency(log_file):
-                self.logger.info("Pipeline initialized successfully")
-            else:
-                self.logger.warning("Pipeline may not have initialized properly")
-            error_text = self._check_error(log_file)
-            if error_text:
-                self.logger.error(f"Errors detected in pipeline log:\n{error_text}")
-                raise RuntimeError(error_text)
 
             return True
 
@@ -441,6 +559,11 @@ class VideoAnalyticsPipelineService:
             raise
         except Exception as e:
             self.logger.error(f"Failed to launch pipeline '{pipeline_name}': {e}")
+            if log_handle:
+                try:
+                    log_handle.close()
+                except Exception:
+                    pass
             return False
 
     def _build_pipeline_front(
@@ -448,10 +571,13 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build front camera pipeline (Pipeline 1)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
+            "gvafpscounter",
+            "!",
+            *self._get_input_framerate_cap_elements(),
             # YOLO detection
             "gvadetect",
             f"model={self._get_model_path('front-pose')}",
@@ -471,6 +597,7 @@ class VideoAnalyticsPipelineService:
             "!",
             "queue",
             "!",
+            *self._get_classify_decimation_elements(),
             "gvaroifilter",
             "max-rois-num=10",
             "!",
@@ -481,8 +608,6 @@ class VideoAnalyticsPipelineService:
             "batch-size=1",
             "inference-region=1",
             "model-instance-id=resnet18-0",
-            "!",
-            "gvafpscounter",
             "!",
             "gvametaconvert",
             "!",
@@ -517,8 +642,6 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvaroifilter",
             "!",
-            "gvafpscounter",
-            "!",
             "gvametaconvert",
             "!",
             "gvametapublish",
@@ -527,12 +650,16 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "front_stream"),
+            # Not on a decimated branch, so this sink runs at the capped source rate.
+            *self._get_video_sink_elements(
+                options, "front_stream", self.max_input_framerate
+            ),
             # Branch 3: MobileNetv2 classification
             "t.",
             "!",
             "queue",
             "!",
+            *self._get_classify_decimation_elements(),
             "gvaroifilter",
             "max-rois-num=50",
             "!",
@@ -543,8 +670,6 @@ class VideoAnalyticsPipelineService:
             "batch-size=1",
             "inference-region=1",
             "model-instance-id=mobilenetv2-0",
-            "!",
-            "gvafpscounter",
             "!",
             "gvametaconvert",
             "!",
@@ -563,10 +688,13 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build back camera pipeline (Pipeline 2)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
+            "gvafpscounter",
+            "!",
+            *self._get_input_framerate_cap_elements(),
             # YOLO detection
             "gvadetect",
             f"model={self._get_model_path('back-pose')}",
@@ -587,9 +715,24 @@ class VideoAnalyticsPipelineService:
             f"file-path={output_dir.as_posix()}/back_posture.txt",
             "file-format=json-lines",
             "!",
+            "tee",
+            "name=t",
+            # Branch 1: video output, kept at the source framerate. Split off ahead
+            # of the classification decimation so the stream is not thinned too;
+            # gvawatermark already ran, and it only draws the pose detections.
+            "t.",
+            "!",
             "queue",
             "!",
-            # ResNet18 classification
+            *self._get_video_sink_elements(
+                options, "back_stream", self.max_input_framerate
+            ),
+            # Branch 2: ResNet18 classification
+            "t.",
+            "!",
+            "queue",
+            "!",
+            *self._get_classify_decimation_elements(),
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",
@@ -598,15 +741,15 @@ class VideoAnalyticsPipelineService:
             "inference-region=1",
             "model-instance-id=resnet18-0",
             "!",
-            "gvafpscounter",
-            "!",
             "gvametaconvert",
             "!",
             "gvametapublish",
             f"file-path={output_dir.as_posix()}/back_resnet18.txt",
             "file-format=json-lines",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "back_stream"),
+            "fakesink",
+            "async=false",
+            "sync=false",
         ]
         return pipeline
 
@@ -615,14 +758,16 @@ class VideoAnalyticsPipelineService:
     ) -> List[str]:
         """Build content/file pipeline (Pipeline 3)"""
         output_dir = Path(options.output_dir)
-        output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         pipeline = [
             *self._get_source_elements(source, input_type),
-            # Branch 1: ResNet18 classification
+            # Branch 1: ResNet18 classification. Unlike front/back this rate
+            # applies to the whole pipeline, video output included, so the sink
+            # below is told the same framerate.
             "videorate",
             "!",
-            "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            f"video/x-raw(memory:D3D11Memory),framerate={self.classify_framerate}",
             "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
@@ -642,7 +787,9 @@ class VideoAnalyticsPipelineService:
             "!",
             "gvawatermark",
             "!",
-            *self._get_rtsp_sink_elements(options.output_rtsp, "content_stream"),
+            *self._get_video_sink_elements(
+                options, "content_stream", self.classify_framerate
+            ),
         ]
         return pipeline
 
@@ -663,7 +810,8 @@ class VideoAnalyticsPipelineService:
         Note:
             - Source can be RTSP URL (rtsp://...) or local file path
             - Input type is auto-detected from source (starts with 'rtsp://' = RTSP, else file)
-            - Video output is always pushed to RTSP server (configured via options.output_rtsp)
+            - Video output is pushed to RTSP server (configured via options.output_rtsp)
+              unless options.output_stream is False, in which case it is discarded
             - Metadata is saved to files in options.output_dir
         """
         # Validate pipeline name
@@ -683,6 +831,11 @@ class VideoAnalyticsPipelineService:
         if options is None:
             options = PipelineOptions()
 
+        # Setup environment before any GStreamer process runs, so gst-discoverer
+        # below and the pipeline itself see the same GST_PLUGIN_PATH and share
+        # one plugin registry cache.
+        self._setup_environment()
+
         # Auto-detect input type from source
         if source.startswith("rtsp://"):
             input_type = "rtsp"
@@ -698,9 +851,6 @@ class VideoAnalyticsPipelineService:
                 raise ValueError(f"Invalid source file '{source}': {error_msg}")
 
         try:
-            # Setup environment
-            self._setup_environment()
-
             # Build pipeline based on name
             if pipeline_name == PipelineName.FRONT.value:
                 pipeline_elements = self._build_pipeline_front(
@@ -717,14 +867,18 @@ class VideoAnalyticsPipelineService:
             else:
                 raise ValueError(f"Unknown pipeline: {pipeline_name}")
 
-            # Build full command
-            command = ["gst-launch-1.0.exe", "-e"] + pipeline_elements
+            # Join into a description for Gst.parse_launch in the runner.
+            description = self._join_pipeline_description(pipeline_elements)
 
             self.logger.info(f"Launching pipeline '{pipeline_name}'")
             self.logger.info(f"  Source: {source} (type: {input_type})")
-            self.logger.info(f"  RTSP output: {options.output_rtsp}")
+            self.logger.info(
+                f"  RTSP output: {options.output_rtsp}"
+                if options.output_stream
+                else "  RTSP output: disabled (fakesink)"
+            )
             self.logger.info(f"  Metadata dir: {options.output_dir}")
-            self.logger.info(f"Command: {' '.join(command)}")
+            self.logger.info(f"Pipeline: {description}")
 
             # Store output files for monitoring
             output_files = []
@@ -746,7 +900,7 @@ class VideoAnalyticsPipelineService:
             # Save pipeline parameters for restart capability
             self.pipeline_params[pipeline_name] = {
                 "options": options,
-                "command": command,
+                "description": description,
             }
 
             # Initialize retry count
@@ -755,7 +909,7 @@ class VideoAnalyticsPipelineService:
             self.pipeline_final_status.pop(pipeline_name, None)
 
             # Launch pipeline
-            success = self._launch_pipeline_internal(pipeline_name, options, command)
+            success = self._launch_pipeline_internal(pipeline_name, options, description)
 
             if not success:
                 return False
@@ -821,12 +975,23 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
 
+        # Retire the monitor before anything touches the process.
+        if pipeline_name in self.monitor_stop_flags:
+            self.monitor_stop_flags[pipeline_name].set()
+
         stop_rtsp_recording(f"{pipeline_name}_recorder")
         process = self.pipelines[pipeline_name]
 
         if process.poll() is not None:
             self.logger.info(f"Pipeline '{pipeline_name}' is not running")
             del self.pipelines[pipeline_name]
+            # It ended on its own before the stop arrived. Ask the runner how it
+            # went rather than assuming the worst - the monitor polls only every
+            # two seconds, so a clean EOS often lands here first. setdefault
+            # inside _finalize_pipeline keeps the monitor's verdict if it won.
+            self._finalize_pipeline(
+                pipeline_name, "eos" if process.exited_normally() else "failed"
+            )
             return True
 
         try:
@@ -834,13 +999,14 @@ class VideoAnalyticsPipelineService:
                 f"Stopping pipeline '{pipeline_name}' (PID: {process.pid})"
             )
 
-            # Try graceful shutdown
-            if sys.platform == "win32":
-                process.send_signal(signal.CTRL_BREAK_EVENT)
-            else:
+            # Graceful shutdown: ask the runner to push EOS through the
+            # pipeline so sinks and muxers finalise their output.
+            if not process.request_stop():
+                self.logger.warning(
+                    f"Pipeline '{pipeline_name}' unreachable over IPC; terminating"
+                )
                 process.terminate()
 
-            # Wait for process to terminate
             try:
                 process.wait(timeout=timeout)
                 self.logger.info(f"Pipeline '{pipeline_name}' stopped gracefully")
@@ -851,14 +1017,11 @@ class VideoAnalyticsPipelineService:
                 process.kill()
                 process.wait(timeout=5)
                 self.logger.info(f"Pipeline '{pipeline_name}' killed")
+            finally:
+                process.close()
 
             del self.pipelines[pipeline_name]
-            self.pipeline_final_status[pipeline_name] = "stopped"
-            self._fire_done_callback_if_all_finished()
-
-            # Stop monitoring thread
-            if pipeline_name in self.monitor_stop_flags:
-                self.monitor_stop_flags[pipeline_name].set()
+            self._finalize_pipeline(pipeline_name, "stopped")
 
             if pipeline_name in self.monitor_threads:
                 monitor_thread = self.monitor_threads[pipeline_name]
@@ -890,6 +1053,13 @@ class VideoAnalyticsPipelineService:
 
         except Exception as e:
             self.logger.error(f"Error stopping pipeline '{pipeline_name}': {e}")
+            # Only call it over if the process really is gone. A stop that threw
+            # on the way in may well have left it running, and recording a
+            # terminal status here would - via setdefault - override whatever
+            # the monitor thread later decides. When it is still alive the
+            # monitor is still watching it, so say nothing.
+            if process.poll() is not None:
+                self._finalize_pipeline(pipeline_name, "failed")
             return False
 
     def is_pipeline_running(self, pipeline_name: str) -> bool:
@@ -936,16 +1106,21 @@ class VideoAnalyticsPipelineService:
         try:
             while True:
                 pipeline_statuses = []
-                all_stopped = True
+                any_live = False
+                any_awaiting_restart = False
 
                 for pipeline_name in all_pipeline_names:
                     pipeline_name_lower = pipeline_name.lower()
+                    # Set by _finalize_pipeline, and the only authority on "this
+                    # one is never coming back": "eos", "failed" or "stopped".
+                    final_status = self.pipeline_final_status.get(pipeline_name_lower)
 
                     # Check if pipeline is registered
                     if pipeline_name_lower not in self.pipelines:
                         pipeline_statuses.append({
                             "pipeline_name": pipeline_name,
                             "status": "not_found",
+                            "final_status": final_status,
                             "message": f"Pipeline '{pipeline_name}' not found",
                         })
                         continue
@@ -958,10 +1133,11 @@ class VideoAnalyticsPipelineService:
 
                     # Pipeline is running
                     if return_code is None:
-                        all_stopped = False
+                        any_live = True
                         status_entry = {
                             "pipeline_name": pipeline_name,
                             "status": "running",
+                            "final_status": final_status,
                             "pid": process.pid,
                         }
                         if errors:
@@ -970,25 +1146,32 @@ class VideoAnalyticsPipelineService:
 
                     # Pipeline has stopped
                     else:
-                        log_file = self.pipeline_logs.get(pipeline_name_lower)
+                        # Dead but not finalised means the monitor thread is
+                        # between a crash and its relaunch. Reported as such so
+                        # the client shows "retrying" rather than "failed", and
+                        # counted so this stream stays open across the gap.
+                        if final_status is None:
+                            any_awaiting_restart = True
 
-                        # Check if it was a normal exit
-                        if log_file and self._check_normal_exit(log_file):
+                        # Normal-vs-error comes from the runner's bus events.
+                        if process.exited_normally():
                             pipeline_statuses.append({
                                 "pipeline_name": pipeline_name,
                                 "status": "stopped_normal",
+                                "final_status": final_status,
                                 "return_code": return_code,
                                 "message": "Pipeline exited normally (EOS received)",
                             })
                         else:
                             if not errors:
-                                log_error = self._check_error(log_file) if log_file else None
-                                if log_error:
-                                    errors = [log_error]
+                                reported = process.error_text()
+                                if reported:
+                                    errors = [reported]
 
                             pipeline_statuses.append({
                                 "pipeline_name": pipeline_name,
                                 "status": "stopped_error",
+                                "final_status": final_status,
                                 "return_code": return_code,
                                 "message": "Pipeline exited unexpectedly.",
                                 "errors": errors,
@@ -996,6 +1179,13 @@ class VideoAnalyticsPipelineService:
 
                 # Yield combined status
                 yield {"pipelines": pipeline_statuses}
+
+                # Close the stream once there is nothing left to report.
+                if self._any_pipeline_ran and not any_live and not any_awaiting_restart:
+                    self.logger.info(
+                        "[VA][status] all pipelines settled; ending status stream"
+                    )
+                    return
 
                 await asyncio.sleep(check_interval)
 

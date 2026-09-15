@@ -1,5 +1,7 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import '../../assets/css/Modal.css';
+import { useTitleBarTheme } from '../../hooks/useTitleBarTheme';
 
 interface ModalProps {
   isOpen: boolean;
@@ -10,9 +12,11 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, showCloseIcon = true, closeOnOverlayClick = true }) => {
+  useTitleBarTheme(isOpen, 'dimmed');
+
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={closeOnOverlayClick ? onClose : undefined}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         {showCloseIcon && (
@@ -22,7 +26,8 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, showCloseIcon 
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -1,0 +1,61 @@
+Generate a comprehensive jsMind JSON structure that accurately captures ALL key concepts from the summary. Follow these strict rules:
+
+1. The output must be a valid JSON object with "meta", "format", and "data" properties
+2. Set format to "node_tree"
+3. There must be exactly ONE root node with id "root"
+4. If the summary contains multiple top-level topics, create a synthetic root topic that reflects the main theme:
+   - Use the actual title if provided 
+   - Otherwise use descriptive titles like "Class Overview", "Lecture Summary", "Main Topics"
+5. Each node must have "id" and "topic" properties
+6. Child nodes are placed in a "children" array
+7. IMPORTANT: Extract ALL key details and concepts from the summary:
+   - Include specific examples, definitions, and explanations mentioned
+   - Capture contrasts, comparisons, and relationships between concepts
+   - Include technical terms, equations, or scientific principles mentioned
+   - Don't oversimplify - preserve the depth and nuance of the content
+8. Use descriptive and specific topic names that reflect the actual content:
+   - Instead of "Topic A" use "Discontinuous electron transitions between orbits"
+   - Instead of "Definition" use "Areas without atomic particles (ether/empty space)"
+   - Capture the essence and specificity of each concept
+9. Create 2-4 levels of hierarchy to properly organize information:
+   - Main topics (from headings)
+   - Sub-concepts (key points within each topic)
+   - Specific details (examples, explanations, technical details)
+10. Ensure conceptual accuracy - each node should represent a distinct, meaningful concept
+11. Do NOT include any markdown formatting, code fences, or explanatory text
+12. Output only the raw JSON structure
+13. Always return a valid JSON structure.
+
+Example of GOOD specificity:
+{
+  "meta": {
+    "name": "physics_lecture",
+    "author": "ai_assistant", 
+    "version": "1.0"
+  },
+  "format": "node_tree",
+  "data": {
+    "id": "root",
+    "topic": "Quantum Mechanics and Wave Theory",
+    "children": [
+      {
+        "id": "wave_particle_duality",
+        "topic": "Wave-Particle Duality",
+        "children": [
+          {"id": "photon_behavior", "topic": "Photons exhibit both wave and particle properties"},
+          {"id": "double_slit", "topic": "Double-slit experiment demonstrates interference"},
+          {"id": "measurement_effect", "topic": "Measurement collapses wave function"}
+        ]
+      },
+      {
+        "id": "uncertainty_principle",
+        "topic": "Heisenberg Uncertainty Principle",
+        "children": [
+          {"id": "position_momentum", "topic": "Cannot precisely know both position and momentum"},
+          {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 mathematical relationship"},
+          {"id": "quantum_limitations", "topic": "Fundamental limit of quantum measurements"}
+        ]
+      }
+    ]
+  }
+}

@@ -1,4 +1,5 @@
 from utils.platform_info import get_platform_and_model_info
+from utils.gstreamer_env import GST_SUBPROCESS_TIMEOUT, ensure_gst_registry
 import sys
 import re
 import subprocess
@@ -87,13 +88,17 @@ def check_dlstreamer_installation() -> bool:
             logger.error("❌ gst-inspect-1.0 is not installed or not found in PATH.")
             return False
 
+        # This is usually the first GStreamer process the app spawns, so it is
+        # the one that pays for a plugin registry rebuild if the cache is stale.
+        ensure_gst_registry()
+
         result = subprocess.run(
             ["gst-inspect-1.0.exe", "gvadetect"],
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
-            timeout=10
+            timeout=GST_SUBPROCESS_TIMEOUT
         )
 
         if result.returncode == 0 and "gvadetect" in result.stdout.lower():

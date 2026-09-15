@@ -15,4 +15,5 @@ adbscan_sub_node:
     base: 3.4694
     coeff_1: -0.0335
     coeff_2: 0.00015124
+    scale_factor: 0.7
     tracking_radius: 0.2

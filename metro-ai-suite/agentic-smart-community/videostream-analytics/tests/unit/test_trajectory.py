@@ -1,4 +1,4 @@
-"""Phase 9 — trajectory accumulation + should_split early-cut.
+"""Trajectory accumulation + should_split early-cut.
 
 Covers:
 - `_postprocess` returns normalized xyxy alongside name/conf

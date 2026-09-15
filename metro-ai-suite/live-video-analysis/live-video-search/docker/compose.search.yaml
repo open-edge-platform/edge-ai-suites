@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 services:
@@ -69,14 +69,14 @@ services:
         condition: service_started
       vdms-vector-db:
         condition: service_started
-      vdms-dataprep:
+      multimodal-dataprep:
         condition: service_healthy
       multimodal-embedding-serving:
         condition: service_healthy
       video-search:
         condition: service_started
     environment:
-      no_proxy: ${no_proxy},${EVAM_HOST},${VLM_HOST},${AUDIO_HOST},${RABBITMQ_HOST},${MINIO_HOST},${POSTGRES_HOST},${OVMS_HOST},${VDMS_DATAPREP_HOST},${VS_HOST},localhost
+      no_proxy: ${no_proxy},${EVAM_HOST},${VLM_HOST},${AUDIO_HOST},${RABBITMQ_HOST},${MINIO_HOST},${POSTGRES_HOST},${OVMS_HOST},${MM_DATAPREP_HOST},${VS_HOST},localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       MINIO_PROTOCOL: "http:"
@@ -91,22 +91,21 @@ services:
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_NAME: ${POSTGRES_DB}
       SEARCH_ENDPOINT: ${VS_ENDPOINT}
-      SEARCH_DATAPREP_ENDPOINT: ${VDMS_DATAPREP_ENDPOINT}
+      SEARCH_DATAPREP_ENDPOINT: ${MM_DATAPREP_ENDPOINT}
       SEARCH_DATAPREP_TIMEOUT_MS: ${SEARCH_DATAPREP_TIMEOUT_MS:-90000}
+      SEARCH_DATAPREP_POLL_MAX_RETRIES: ${SEARCH_DATAPREP_POLL_MAX_RETRIES:-3}
+      SEARCH_DATAPREP_POLL_TIMEOUT_MS: ${SEARCH_DATAPREP_POLL_TIMEOUT_MS:-10000}
+      SEARCH_DATAPREP_POLL_RETRY_DELAY_MS: ${SEARCH_DATAPREP_POLL_RETRY_DELAY_MS:-500}
       SUMMARY_FEATURE: ${SUMMARY_FEATURE:-FEATURE_OFF}
       SEARCH_FEATURE: ${SEARCH_FEATURE:-FEATURE_ON}
       OTLP_TRACE_URL: ${OTLP_TRACE_URL:-}
-      DATAPREP_TELEMETRY_URL: ${DATAPREP_TELEMETRY_URL:-http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1}
-      TELEMETRY_SIGNAL_DIR: ${TELEMETRY_SIGNAL_DIR:-/app/.collector-signals}
+      OTEL_CONSOLE_EXPORTER: ${OTEL_CONSOLE_EXPORTER:-false}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-    user: "0:0"
-    volumes:
-      - collector_signals:/app/.collector-signals
     networks:
       - live-video-network
 
@@ -162,34 +161,36 @@ services:
     # user root to make it equivalent permission to frigate to w/r shared volume
     user: "0:0"
     depends_on:
-      vdms-vector-db:
-        condition: service_started
       minio-service:
         condition: service_healthy
-      vdms-dataprep:
+      multimodal-dataprep:
         condition: service_started
-      multimodal-embedding-serving:
+      vector-retriever:
         condition: service_healthy
     ipc: host
     ports:
       - "${VS_HOST_PORT}:8000"
     environment:
-      no_proxy: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},${PM_HOST},localhost
-      no_proxy_env: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},${PM_HOST},localhost
+      no_proxy: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${MM_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},vector-retriever,${PM_HOST},localhost
+      no_proxy_env: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${MM_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},vector-retriever,${PM_HOST},localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      VDMS_VDB_HOST: ${VDMS_VDB_HOST}
-      VDMS_VDB_PORT: 55555
       EMBEDDINGS_ENDPOINT: ${MULTIMODAL_EMBEDDING_ENDPOINT}
-      EMBEDDINGS_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      EMBEDDINGS_MODEL_NAME: ${MULTIMODAL_EMBEDDING_MODEL}
       INDEX_NAME: ${VS_INDEX_NAME}
-      VIDEO_UPLOAD_ENDPOINT: ${VDMS_PIPELINE_MANAGER_UPLOAD}
+      RETRIEVER_ENDPOINT: ${VS_RETRIEVER_ENDPOINT:-http://vector-retriever:8000/query}
+      VIDEO_UPLOAD_ENDPOINT: ${VIDEO_UPLOAD_ENDPOINT}
+      WATCH_BATCH_SIZE: ${VS_WATCH_BATCH_SIZE:-10}
+      BATCH_JOB_POLL_INTERVAL_SECONDS: ${VS_BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
+      BATCH_JOB_TIMEOUT_SECONDS: ${VS_BATCH_JOB_TIMEOUT_SECONDS:-3600}
       AGGREGATION_ENABLED: ${AGGREGATION_ENABLED}
       AGGREGATION_SEGMENT_DURATION: ${AGGREGATION_SEGMENT_DURATION}
       AGGREGATION_MIN_GAP: ${AGGREGATION_MIN_GAP}
       AGGREGATION_MAX_RESULTS: ${AGGREGATION_MAX_RESULTS}
       AGGREGATION_INITIAL_K: ${AGGREGATION_INITIAL_K}
       AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS: ${AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS}
+      AGGREGATION_PREFER_FULL_FRAME_SEEK: ${AGGREGATION_PREFER_FULL_FRAME_SEEK:-true}
+      AGGREGATION_FULL_FRAME_SEEK_BAND: ${AGGREGATION_FULL_FRAME_SEEK_BAND:-0.06}
     restart: unless-stopped
     networks:
       - live-video-network
@@ -210,67 +211,72 @@ services:
     networks:
       - live-video-network
 
-  vdms-dataprep:
-    image: ${REGISTRY:-}vdms-dataprep:${VSS_STACK_TAG:-${TAG:-latest}}
-    hostname: vdms-dataprep
+  multimodal-dataprep:
+    image: ${REGISTRY:-}multimodal-dataprep:${VSS_STACK_TAG:-${TAG:-latest}}
+    hostname: multimodal-dataprep
     environment:
-      no_proxy: ${no_proxy},${VDMS_VDB_HOST},${MULTIMODAL_EMBEDDING_HOST},${MINIO_HOST},localhost
+      no_proxy: ${no_proxy},${VDMS_VDB_HOST},${MINIO_HOST},milvus-standalone,metrics-manager,localhost
+      NO_PROXY: ${NO_PROXY:-${no_proxy}},${VDMS_VDB_HOST},${MINIO_HOST},milvus-standalone,metrics-manager,localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      APP_HOST: vdms-dataprep
-      VDMS_VDB_HOST: ${VDMS_VDB_HOST}
-      VDMS_VDB_PORT: 55555
-      MINIO_ENDPOINT: ${MINIO_HOST}:80
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_SECURE: false
-      DEFAULT_BUCKET_NAME: ${DEFAULT_BUCKET_NAME}
-      DB_COLLECTION: ${VS_INDEX_NAME}
-      MULTIMODAL_EMBEDDING_ENDPOINT: ${MULTIMODAL_EMBEDDING_ENDPOINT}
-      MULTIMODAL_EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
-      EMBEDDING_PROCESSING_MODE: ${EMBEDDING_PROCESSING_MODE:-sdk}
-      SDK_USE_OPENVINO: ${SDK_USE_OPENVINO:-true}
-      EMBEDDING_DEVICE: ${DATAPREP_EMBEDDING_DEVICE:-CPU}
-      DETECTION_DEVICE: ${DATAPREP_DETECTION_DEVICE:-CPU}
-      OV_MODELS_DIR: ${OV_MODELS_DIR:-/app/ov_models}
-      OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-THROUGHPUT}
-      SDK_VIDEO_SHM_MAX_BLOCKS: ${SDK_VIDEO_SHM_MAX_BLOCKS:-512}
-      SDK_VIDEO_SHM_BLOCK_SIZE: ${SDK_VIDEO_SHM_BLOCK_SIZE:-6220800}
-      SDK_VIDEO_EXTRACTION_BATCH_SIZE: ${SDK_VIDEO_EXTRACTION_BATCH_SIZE:-256}
-      SDK_PIPELINE_QUEUE_MAXSIZE: ${SDK_PIPELINE_QUEUE_MAXSIZE:-16}
-      SDK_PIPELINE_COMPLETION_QUEUE_MAXSIZE: ${SDK_PIPELINE_COMPLETION_QUEUE_MAXSIZE:-1}
-      SDK_DETECTION_WORKER_THREADS: ${SDK_DETECTION_WORKER_THREADS:-2}
-      SDK_EMBED_WORKER_THREADS: ${SDK_EMBED_WORKER_THREADS:-2}
-      SDK_PIPELINE_QUEUE_GET_TIMEOUT_S: ${SDK_PIPELINE_QUEUE_GET_TIMEOUT_S:-1.0}
-      SAVE_RUNTIME_PIPELINE_STATS: ${SAVE_RUNTIME_PIPELINE_STATS:-false}
-      SDK_ENABLE_TRACING: ${SDK_ENABLE_TRACING:-false}
-      VIDEO_FRAME_DECODER_WORKERS: ${VIDEO_FRAME_DECODER_WORKERS:-2}
-      VIDEO_FRAME_LOG_LEVEL: ${VIDEO_FRAME_LOG_LEVEL:-INFO}
-      FRAME_INTERVAL: ${FRAME_INTERVAL:-15}
-      ENABLE_OBJECT_DETECTION: ${ENABLE_OBJECT_DETECTION:-true}
-      DETECTION_CONFIDENCE: ${DETECTION_CONFIDENCE:-0.85}
-      ROI_CONSOLIDATION_ENABLED: ${ROI_CONSOLIDATION_ENABLED:-false}
-      ROI_CONSOLIDATION_IOU_THRESHOLD: ${ROI_CONSOLIDATION_IOU_THRESHOLD:-0.2}
-      ROI_CONSOLIDATION_CLASS_AWARE: ${ROI_CONSOLIDATION_CLASS_AWARE:-false}
-      ROI_CONSOLIDATION_CONTEXT_SCALE: ${ROI_CONSOLIDATION_CONTEXT_SCALE:-0.2}
-      FRAMES_TEMP_DIR: ${FRAMES_TEMP_DIR:-/tmp/dataprep}
-      DETECTION_MODEL_DIR: ${YOLOX_MODELS_MOUNT_PATH}
-      LOG_LEVEL: ${VDMS_DATAPREP_LOG_LEVEL:-INFO}
-      ALLOW_ORIGINS: ${ALLOW_ORIGINS:-*}
-      ALLOW_METHODS: ${ALLOW_METHODS:-*}
-      ALLOW_HEADERS: ${ALLOW_HEADERS:-*}
+      MM_DATAPREP_APP_HOST: multimodal-dataprep
+      MM_DATAPREP_VECTORDB_BACKEND: ${VECTORDB_BACKEND:-vdms}
+      MM_DATAPREP_STORAGE_BACKEND: minio
+      MM_DATAPREP_VDMS_VDB_HOST: ${VDMS_VDB_HOST}
+      MM_DATAPREP_VDMS_VDB_PORT: 55555
+      MM_DATAPREP_MILVUS_URI: ${MILVUS_URI:-http://milvus-standalone:19530}
+      MM_DATAPREP_VDB_METRIC_TYPE: ${VDB_METRIC_TYPE:-IP}
+      MM_DATAPREP_VDB_INDEX_TYPE: ${VDB_INDEX_TYPE:-FLAT}
+      MM_DATAPREP_MINIO_ENDPOINT: ${MINIO_HOST}:80
+      MM_DATAPREP_MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MM_DATAPREP_MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MM_DATAPREP_MINIO_SECURE: false
+      MM_DATAPREP_DEFAULT_BUCKET_NAME: ${DEFAULT_BUCKET_NAME}
+      MM_DATAPREP_DB_COLLECTION: ${VS_INDEX_NAME}
+      MM_DATAPREP_EMBEDDING_MODEL_NAME: ${MULTIMODAL_EMBEDDING_MODEL}
+      MM_DATAPREP_OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-THROUGHPUT}
+      MM_DATAPREP_USE_OPENVINO: ${SDK_USE_OPENVINO:-true}
+      MM_DATAPREP_EMBEDDING_DEVICE: ${DATAPREP_EMBEDDING_DEVICE:-CPU}
+      MM_DATAPREP_DETECTION_DEVICE: ${DATAPREP_DETECTION_DEVICE:-CPU}
+      MM_DATAPREP_OV_MODELS_DIR: ${OV_MODELS_DIR:-/app/ov_models}
+      MM_DATAPREP_EMBEDDING_BATCH_SIZE: ${EMBEDDING_BATCH_SIZE:-32}
+      MM_DATAPREP_MAX_PARALLEL_WORKERS: ${MAX_PARALLEL_WORKERS:-}
+      MM_DATAPREP_VIDEO_SHM_MAX_BLOCKS: ${SDK_VIDEO_SHM_MAX_BLOCKS:-512}
+      MM_DATAPREP_VIDEO_SHM_BLOCK_SIZE: ${SDK_VIDEO_SHM_BLOCK_SIZE:-6220800}
+      MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE: ${SDK_VIDEO_EXTRACTION_BATCH_SIZE:-256}
+      MM_DATAPREP_PIPELINE_QUEUE_MAXSIZE: ${SDK_PIPELINE_QUEUE_MAXSIZE:-16}
+      MM_DATAPREP_PIPELINE_COMPLETION_QUEUE_MAXSIZE: ${SDK_PIPELINE_COMPLETION_QUEUE_MAXSIZE:-1}
+      MM_DATAPREP_DETECTION_WORKER_THREADS: ${SDK_DETECTION_WORKER_THREADS:-2}
+      MM_DATAPREP_EMBED_WORKER_THREADS: ${SDK_EMBED_WORKER_THREADS:-2}
+      MM_DATAPREP_PIPELINE_QUEUE_GET_TIMEOUT_S: ${SDK_PIPELINE_QUEUE_GET_TIMEOUT_S:-1.0}
+      MM_DATAPREP_SAVE_RUNTIME_PIPELINE_STATS: ${SAVE_RUNTIME_PIPELINE_STATS:-false}
+      MM_DATAPREP_ENABLE_TRACING: ${SDK_ENABLE_TRACING:-false}
+      MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS: ${VIDEO_FRAME_DECODER_WORKERS:-2}
+      MM_DATAPREP_VIDEO_FRAME_LOG_LEVEL: ${VIDEO_FRAME_LOG_LEVEL:-INFO}
+      MM_DATAPREP_FRAME_INTERVAL: ${FRAME_INTERVAL:-15}
+      MM_DATAPREP_ENABLE_OBJECT_DETECTION: ${ENABLE_OBJECT_DETECTION:-true}
+      MM_DATAPREP_DETECTION_CONFIDENCE: ${DETECTION_CONFIDENCE:-0.85}
+      MM_DATAPREP_ROI_CONSOLIDATION_ENABLED: ${ROI_CONSOLIDATION_ENABLED:-false}
+      MM_DATAPREP_ROI_CONSOLIDATION_IOU_THRESHOLD: ${ROI_CONSOLIDATION_IOU_THRESHOLD:-0.2}
+      MM_DATAPREP_ROI_CONSOLIDATION_CLASS_AWARE: ${ROI_CONSOLIDATION_CLASS_AWARE:-false}
+      MM_DATAPREP_ROI_CONSOLIDATION_CONTEXT_SCALE: ${ROI_CONSOLIDATION_CONTEXT_SCALE:-0.2}
+      MM_DATAPREP_FRAMES_TEMP_DIR: ${FRAMES_TEMP_DIR:-/tmp/dataprep}
+      MM_DATAPREP_DETECTION_MODEL_DIR: ${YOLOX_MODELS_MOUNT_PATH}
+      MM_DATAPREP_LOG_LEVEL: ${MM_DATAPREP_LOG_LEVEL:-INFO}
+      MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS: ${MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS:-true}
+      MM_DATAPREP_ALLOW_ORIGINS: ${ALLOW_ORIGINS:-*}
+      MM_DATAPREP_ALLOW_METHODS: ${ALLOW_METHODS:-*}
+      MM_DATAPREP_ALLOW_HEADERS: ${ALLOW_HEADERS:-*}
     ulimits:
         nofile:
             soft: 32768
             hard: 65535
     ipc: host
     ports:
-      - "${VDMS_DATAPREP_HOST_PORT}:8000"
+      - "${MM_DATAPREP_HOST_PORT}:8000"
     depends_on:
       vdms-vector-db:
         condition: service_started
-      multimodal-embedding-serving:
-        condition: service_healthy
       minio-service:
         condition: service_healthy
     healthcheck:
@@ -286,7 +292,7 @@ services:
       retries: 40
       start_period: 5s
     volumes:
-      - "${YOLOX_MODELS_VOLUME_NAME:-vdms-yolox-models}:${YOLOX_MODELS_MOUNT_PATH:-/app/models/yolox}"
+      - "${YOLOX_MODELS_VOLUME_NAME:-dataprep-yolox-models}:${YOLOX_MODELS_MOUNT_PATH:-/app/models/yolox}"
       - data_prep:/tmp/dataprep
       - ov_models:/home/appuser/.cache/huggingface
       - ov_models:${OV_MODELS_DIR:-/app/ov_models}
@@ -307,11 +313,11 @@ services:
       - "${EMBEDDING_SERVER_PORT:-9777}:8000"
     ipc: host
     environment:
-      no_proxy: ${no_proxy},${MINIO_HOST},${VDMS_DATAPREP_HOST},localhost
-      no_proxy_env: ${no_proxy},${MINIO_HOST},${VDMS_DATAPREP_HOST},localhost
+      no_proxy: ${no_proxy},${MINIO_HOST},${MM_DATAPREP_HOST},localhost
+      no_proxy_env: ${no_proxy},${MINIO_HOST},${MM_DATAPREP_HOST},localhost
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      EMBEDDING_MODEL_NAME: ${MULTIMODAL_EMBEDDING_MODEL}
       EMBEDDING_DEVICE: ${MME_EMBEDDING_DEVICE:-CPU}
       EMBEDDING_USE_OV: ${EMBEDDING_USE_OV}
       EMBEDDING_OV_MODELS_DIR: ${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
@@ -348,6 +354,52 @@ services:
       - data_prep:/tmp/dataprep
       - ov_models:${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
 
+  vector-retriever:
+    image: ${REGISTRY:-}vector-retriever-${RETRIEVER_BACKEND:-vdms}:${VSS_STACK_TAG:-${TAG:-latest}}
+    hostname: vector-retriever
+    ipc: host
+    ports:
+      - "${VECTOR_RETRIEVER_HOST_PORT:-6008}:8000"
+    environment:
+      no_proxy: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_VDB_HOST},milvus-standalone,localhost
+      NO_PROXY: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_VDB_HOST},milvus-standalone,localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      RETRIEVER_BACKEND: ${RETRIEVER_BACKEND:-vdms}
+      LOG_LEVEL: ${VECTOR_RETRIEVER_LOG_LEVEL:-INFO}
+      INDEX_NAME: ${VS_INDEX_NAME}
+      EMBEDDINGS_ENDPOINT: ${MULTIMODAL_EMBEDDING_ENDPOINT}
+      EMBEDDING_MODEL_NAME: ${MULTIMODAL_EMBEDDING_MODEL}
+      DEFAULT_TOP_K: ${AGGREGATION_INITIAL_K:-20}
+      MAX_TOP_K: ${VECTOR_RETRIEVER_MAX_TOP_K:-1000}
+      VDMS_VDB_HOST: ${VDMS_VDB_HOST}
+      VDMS_VDB_PORT: 55555
+      SEARCH_ENGINE: ${SEARCH_ENGINE:-FaissFlat}
+      DISTANCE_STRATEGY: ${DISTANCE_STRATEGY:-IP}
+      MILVUS_URI: ${MILVUS_URI:-http://milvus-standalone:19530}
+      MILVUS_METRIC_TYPE: ${VDB_METRIC_TYPE:-IP}
+      MILVUS_INDEX_TYPE: ${VDB_INDEX_TYPE:-FLAT}
+      MILVUS_TEXT_FIELD: ${MILVUS_TEXT_FIELD:-text}
+      MILVUS_METADATA_FIELD: ${MILVUS_METADATA_FIELD:-}
+    depends_on:
+      multimodal-embedding-serving:
+        condition: service_healthy
+      vdms-vector-db:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')\"",
+        ]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - live-video-network
+
 volumes:
   minio_data:
     driver: local
@@ -359,9 +411,7 @@ volumes:
     driver: local
   data_prep:
     driver: local
-  vdms-yolox-models:
-    driver: local
-  collector_signals:
+  dataprep-yolox-models:
     driver: local
 
 networks:

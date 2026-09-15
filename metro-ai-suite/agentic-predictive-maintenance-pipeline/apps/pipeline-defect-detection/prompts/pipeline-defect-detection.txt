@@ -16,15 +16,17 @@ Include:
 Format your response as a structured report with clear sections.
 
 [ANALYSIS]
-Analyze the following pipeline defect detections and produce a comprehensive report.
+Analyze the following pipeline defect detections and policy output to produce a comprehensive report.
+Use both the raw detection data and the policy recommendations to inform your analysis.
 Include:
 1. Summary of findings: total detections, dominant defect class, confidence distribution
 2. Spatial analysis: which bounding box regions show clustering
 3. Temporal trend: are defects increasing across frame IDs?
-4. Risk assessment for each defect class
-5. Recommended next steps for the maintenance team
+4. Risk assessment for each defect class, correlated with policy risk level and violations
+5. Policy alignment: confirm whether the detection patterns support the policy's risk rating and flagged violations
+6. Recommended next steps for the maintenance team, incorporating policy-recommended actions
 
-Be factual and base all conclusions strictly on the provided data.
+Be factual and base all conclusions strictly on the provided detection data and policy output.
 
 [EVIDENCE]
 Build a compliance audit trail from the detection records below.

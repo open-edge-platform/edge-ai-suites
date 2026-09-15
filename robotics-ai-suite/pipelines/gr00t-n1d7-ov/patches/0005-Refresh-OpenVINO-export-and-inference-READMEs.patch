@@ -1,0 +1,1226 @@
+From 0359e9f08cf923a7eb3833524d72d6d2688f7dbb Mon Sep 17 00:00:00 2001
+From: yhe39 <yue.he@intel.com>
+Date: Thu, 23 Jul 2026 13:37:15 +0800
+Subject: [PATCH 5/7] Refresh OpenVINO export and inference READMEs
+
+Signed-off-by: He Yue <yue.he@intel.com>
+---
+ .../deployment/export_ov_n1d7_single_ov.py    |   3 +-
+ scripts/deployment/export_ov_readme.md        | 529 +++++++-----------
+ scripts/deployment/ov_inference_readme.md     | 493 +++++-----------
+ 3 files changed, 331 insertions(+), 694 deletions(-)
+
+diff --git a/scripts/deployment/export_ov_n1d7_single_ov.py b/scripts/deployment/export_ov_n1d7_single_ov.py
+index a1500558f64a..3d0253feb040 100644
+--- a/scripts/deployment/export_ov_n1d7_single_ov.py
++++ b/scripts/deployment/export_ov_n1d7_single_ov.py
+@@ -2,8 +2,7 @@
+ 
+ """Export a single OpenVINO IR for the GR00T N1.7 neural pipeline.
+ 
+-This script follows the single-model export structure from
+-`export_ov_n1d7_single_onnx_ov.py`, but reuses the current component-export logic in
++This script reuses the current component-export logic in
+ `export_ov_n1d7.py` so the exported single-OV graph inherits the same
+ deepstack-delta optimization now used by the split OpenVINO path.
+ 
+diff --git a/scripts/deployment/export_ov_readme.md b/scripts/deployment/export_ov_readme.md
+index e6b53cc0d87e..bd09e2dd4a5f 100644
+--- a/scripts/deployment/export_ov_readme.md
++++ b/scripts/deployment/export_ov_readme.md
+@@ -2,190 +2,182 @@
+ 
+ This document describes the usage difference between these exporters:
+ 
++- `scripts/deployment/export_ov_n1d7_single_ov.py`
+ - `scripts/deployment/export_ov_n1d7.py`
+-- `scripts/deployment/export_ov_n1d7_all_onnx.py`
+ - `scripts/deployment/export_ov_n1d7_single_onnx_ov.py`
+-- `scripts/deployment/export_ov_n1d7_single_ov.py`
++- `scripts/deployment/export_ov_n1d7_all_onnx.py`
+ 
+-They support similar OpenVINO export workflows, but they use different conversion paths and are intended for different sharing and debugging workflows.
++They support similar OpenVINO export workflows, but they package the exported model differently and are intended for different deployment workflows.
+ 
+-## Which Script To Use
++## Optimal Starting Example
+ 
+-### `export_ov_n1d7.py`
++The recommended default export path is the single-IR export:
+ 
+-Use this script when you want the shorter direct conversion path:
++```bash
++python scripts/deployment/export_ov_n1d7_single_ov.py \
++  --model-path checkpoints/GR00T-N1.7-LIBERO/libero_10/ \
++  --dataset-path demo_data/libero_demo/ \
++  --embodiment-tag LIBERO_PANDA \
++  --output-dir ~/openvino_models/libero_single_direct_ov_optimal \
++  --precision fp16 \
++  --llm-lang-tokens 64
++```
+ 
+-- PyTorch -> OpenVINO IR
++Arguments:
+ 
+-This is the better choice when:
++- `--model-path`: local checkpoint directory to export from
++- `--dataset-path`: optional; use a real sample source to capture representative input shapes, or omit it to use dummy capture mode
++- `--embodiment-tag`: embodiment configuration to load from the checkpoint and sample
++- `--output-dir`: directory where the merged IR, metadata, and copied checkpoint config files are written
++- `--precision fp16`: save the exported OpenVINO weights with fp16 compression
++- `--device`: optional; defaults to `cpu`; this script also falls back to CPU for OV verification if the requested OV device is unavailable
++- `--llm-lang-tokens`: optional; reserve 64 language-token slots here for static-sequence export, or omit it to bake in the captured sequence length
++- `--output-name`: optional; output file prefix for the merged XML/BIN and metadata, default `gr00t_n1d7_single_from_ov`
++- `--video-backend`: optional; video decoding backend for dataset-backed export, choices are `decord`, `torchvision_av`, or `torchcodec`, default `torchcodec`
++- `--batch-size`: optional; batch size baked into the exported IR, default `1`
++- `--num-inference-timesteps`: optional; override the denoising step count before exporting the merged model
+ 
+-- you are working inside this repository
+-- you want the original direct-OV export path
+-- you do not need a self-contained merged exporter script
+-- you want to avoid the extra ONNX intermediate step
++Use this as the default because it pairs directly with `scripts/deployment/run_base_single_ov_inference.py`, keeps deployment artifacts compact, gives the simplest OpenVINO inference flow, and currently delivers the best performance.
+ 
+-### `export_ov_n1d7_all_onnx.py`
++If you want the split-component OpenVINO export instead, use a real sample and a fixed language-token budget:
+ 
+-Use this script when you want the fully merged single-file exporter:
++```bash
++python scripts/deployment/export_ov_n1d7.py \
++  --model-path checkpoints/GR00T-N1.7-LIBERO/libero_10/ \
++  --dataset-path demo_data/libero_demo/ \
++  --embodiment-tag LIBERO_PANDA \
++  --output-dir ~/openvino_models/libero_full_direct_optimal \
++  --export-mode full_pipeline \
++  --use-fused-dit \
++  --precision fp16 \
++  --llm-lang-tokens 64
++```
+ 
+-- PyTorch -> ONNX -> OpenVINO IR
++Arguments:
+ 
+-This is the better choice when:
++- `--model-path`: local checkpoint directory to export from
++- `--dataset-path`: optional; use a real sample source to capture representative input shapes, or omit it to use dummy capture mode
++- `--embodiment-tag`: embodiment configuration to load from the checkpoint and sample
++- `--output-dir`: directory where the exported component IR files, metadata, and copied checkpoint config files are written
++- `--export-mode full_pipeline`: export ViT + LLM + VL self-attention + action head
++- `--use-fused-dit`: optional; export the fused denoising loop instead of a separate DiT IR when supported
++- `--precision fp16`: save the exported OpenVINO weights with fp16 compression
++- `--device`: optional; defaults to `cpu`, or set it to `cuda` when you want export-time PyTorch execution on GPU
++- `--llm-lang-tokens`: optional; reserve 64 language-token slots here for static-sequence export, or omit it to bake in the captured sequence length
++- `--video-backend`: optional; video decoding backend for dataset-backed export, choices are `decord`, `torchvision_av`, or `torchcodec`, default `torchcodec`
++- `--batch-size`: optional; batch size baked into the exported IRs, default `1`
++- `--num-inference-timesteps`: optional; override the action-head denoising step count during export
+ 
+-- you want one exporter file instead of several local helper scripts
+-- you want all components to go through the same ONNX-based path
+-- you want an easier script to share with another user
+-- you want to debug ONNX artifacts as part of export
++Use this path when you want separate component IRs for debugging, per-module inspection, or split-pipeline benchmarking.
+ 
+-### `export_ov_n1d7_single_onnx_ov.py`
+ 
+-Use this script when you want one merged OpenVINO IR for the whole learned pipeline:
++## ONNX-First Exporters
+ 
+-- PyTorch -> ONNX -> one OpenVINO IR
++Use the direct IR exporters above by default when your target is OpenVINO only. Keep the ONNX-first path when you need format parity with other backends, want to inspect intermediate ONNX graphs, or need to compare OpenVINO conversion against a TensorRT pipeline built from the same ONNX exports.
+ 
+-This is the better choice when:
++Tradeoffs relative to direct IR:
+ 
+-- you want to deploy one XML/BIN pair instead of several component models
+-- you want one runtime call for ViT + LLM + VL self-attention + action head
+-- you want a simpler parity check against one exported model directory
+-- you are comfortable preparing `position_ids` and initial diffusion `actions` at runtime
++- Pros: easier cross-backend comparison, same ONNX artifacts can feed TensorRT, useful when validating conversion differences from a shared intermediate format.
++- Cons: one extra conversion stage, more files to manage, usually not the simplest path when OpenVINO IR is the final target.
+ 
+-### `export_ov_n1d7_single_ov.py`
++If you want the ONNX-first merged single-IR variant, use:
+ 
+-Use this script when you want one merged OpenVINO IR for the whole learned pipeline, but with the direct OpenVINO conversion path:
++```bash
++python scripts/deployment/export_ov_n1d7_single_onnx_ov.py \
++  --model-path checkpoints/GR00T-N1.7-LIBERO/libero_10/ \
++  --dataset-path demo_data/libero_demo/ \
++  --embodiment-tag LIBERO_PANDA \
++  --output-dir ~/openvino_models/libero_single_onnx_first \
++  --precision fp16 \
++  --device cpu
++```
+ 
+-- PyTorch -> one OpenVINO IR
++For the split-component ONNX-first variant:
+ 
+-This is the better choice when:
++```bash
++python scripts/deployment/export_ov_n1d7_all_onnx.py \
++  --model-path checkpoints/GR00T-N1.7-LIBERO/libero_10/ \
++  --dataset-path demo_data/libero_demo/ \
++  --embodiment-tag LIBERO_PANDA \
++  --output-dir ~/openvino_models/libero_full_onnx_first \
++  --export-mode full_pipeline \
++  --use-fused-dit \
++  --precision fp16 \
++  --device cpu
++```
+ 
+-- you want to deploy one XML/BIN pair instead of several component models
+-- you want one runtime call for ViT + LLM + VL self-attention + action head
+-- you want the single-IR direct-OV path instead of the ONNX-intermediate path
+-- you want to keep the same single-IR CLI shape as `export_ov_n1d7_single_onnx_ov.py`
++These ONNX-first scripts do not currently expose `--llm-lang-tokens`, so if you need the newer static LLM token-budget export behavior, prefer the direct IR exporters.
++Other arguments follow the corresponding direct-IR examples above.
+ 
+-## What This Script Does
++## Which Script To Use
+ 
+-The first two scripts support these export modes:
++### `export_ov_n1d7_single_ov.py`
+ 
+-- `dit_only`: export only the DiT
+-- `action_head`: export state encoder + action encoder + DiT or fused DiT + action decoder
+-- `full_pipeline`: export ViT + LLM + VL self-attention + action head
++Use this script when you want one merged OpenVINO IR for the whole learned pipeline:
+ 
+-Both scripts also support two capture modes:
++- PyTorch -> one OpenVINO IR
+ 
+-- with `--dataset-path`: capture model inputs from a real dataset sample
+-- without `--dataset-path`: capture model inputs from a synthesized dummy observation
++This is the better choice when:
+ 
+-`export_ov_n1d7_single_onnx_ov.py` and `export_ov_n1d7_single_ov.py` always export the merged full neural pipeline and do not use `--export-mode`.
++- you want to deploy one XML/BIN pair instead of several component models
++- you want one runtime call for ViT + LLM + VL self-attention + action head
++- you want the single-IR packaging model
+ 
+-## Main Difference
++`export_ov_n1d7_single_ov.py` always exports the merged full neural pipeline and does not use `--export-mode`.
+ 
+ ### `export_ov_n1d7.py`
+ 
+-Conversion path:
+-
+-- PyTorch -> OpenVINO IR
+-
+-Characteristics:
++Use this script when you want separate OpenVINO IR files for the main model components:
+ 
+-- stays on the original direct OpenVINO export implementation
+-- still depends on local repository files such as `export_onnx_n1d7.py` and the `gr00t/` package
+-- good when you are exporting inside the same repo environment
++- PyTorch -> split OpenVINO IR
+ 
+-### `export_ov_n1d7_all_onnx.py`
+-
+-Conversion path:
++This is the better choice when:
+ 
+-- PyTorch -> ONNX -> OpenVINO IR
++- you are working inside this repository
++- you want separate IRs for ViT, LLM, VL self-attention, and action-head components
++- you do not need a self-contained merged exporter script
++- you want an easier path to debug and isolate which module is failing
+ 
+-Characteristics:
++`export_ov_n1d7.py` supports these export modes:
+ 
+-- merges logic that was previously split across multiple deployment helper scripts
+-- keeps the `all_onnx` style CLI while removing local helper-script imports
+-- useful when you want ONNX files and ONNX-based debugging during export
++- `dit_only`: export only the DiT
++- `action_head`: export state encoder + action encoder + DiT or fused DiT + action decoder
++- `full_pipeline`: export ViT + LLM + VL self-attention + action head
+ 
+ ### `export_ov_n1d7_single_onnx_ov.py`
+ 
+-Conversion path:
+-
+-- PyTorch -> ONNX -> single OpenVINO IR
+-
+-Characteristics:
+-
+-- exports one merged wrapper instead of separate ViT, LLM, VL self-attention, and action-head IRs
+-- verifies against a single wrapper output during export
+-- writes single-OV metadata describing fixed vision grid, sequence length, and denoising steps
+-- keeps `position_ids` as a runtime input instead of baking them into the graph
+-- expects the runtime to supply the initial diffusion trajectory through the `actions` input
++Use this script when you want one merged OpenVINO IR, but still want the export to go through ONNX first:
+ 
+-### `export_ov_n1d7_single_ov.py`
+-
+-Conversion path:
+-
+-- PyTorch -> single OpenVINO IR
+-
+-Characteristics:
+-
+-- exports one merged wrapper instead of separate ViT, LLM, VL self-attention, and action-head IRs
+-- uses the direct OpenVINO conversion path from `export_ov_n1d7.py`
+-- keeps the same overall single-IR usage pattern as `export_ov_n1d7_single_onnx_ov.py`
+-- verifies against a single wrapper output during export
+-- keeps `position_ids` as a runtime input instead of baking them into the graph
+-- expects the runtime to supply the initial diffusion trajectory through the `actions` input
+-
+-The script is still not fully standalone from the whole repository because it depends on the `gr00t/` package and the model checkpoint files.
+-
+-## File Requirements
+-
+-### For `export_ov_n1d7.py`
+-
+-Share at least:
+-
+-- `scripts/deployment/export_ov_n1d7.py`
+-- `scripts/deployment/export_onnx_n1d7.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the checkpoint directory
+-
+-### For `export_ov_n1d7_all_onnx.py`
++- PyTorch -> ONNX -> one OpenVINO IR
+ 
+-Share at least:
++This is the better choice when:
+ 
+-- `scripts/deployment/export_ov_n1d7_all_onnx.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the checkpoint directory
++- you want a single XML/BIN output for deployment
++- you also want the ONNX-first path for parity with TensorRT-style benchmarking or debugging
++- you are comparing the merged direct-IR export against a merged ONNX-first export
+ 
+-### For `export_ov_n1d7_single_onnx_ov.py`
++`export_ov_n1d7_single_onnx_ov.py` always exports the merged full neural pipeline and does not use `--export-mode`.
+ 
+-Share at least:
++### `export_ov_n1d7_all_onnx.py`
+ 
+-- `scripts/deployment/export_ov_n1d7_single_onnx_ov.py`
+-- `scripts/deployment/export_ov_n1d7_all_onnx.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the checkpoint directory
++Use this script when you want split-component OpenVINO export through an ONNX intermediate:
+ 
+-### For `export_ov_n1d7_single_ov.py`
++- PyTorch -> ONNX -> split OpenVINO IR
+ 
+-Share at least:
++This is the better choice when:
+ 
+-- `scripts/deployment/export_ov_n1d7_single_ov.py`
+-- `scripts/deployment/export_ov_n1d7.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the checkpoint directory
++- you want to compare OpenVINO against TensorRT or another ONNX-consuming backend using the same exported intermediate
++- you want to inspect or archive ONNX artifacts in addition to the final IR
++- you are debugging a conversion issue and want to separate PyTorch -> ONNX from ONNX -> OpenVINO
+ 
+-## Minimum Files To Share
++`export_ov_n1d7_all_onnx.py` supports the same high-level export modes as the direct split exporter:
+ 
+-For another user to run this exporter, share at least:
++- `dit_only`: export only the DiT
++- `action_head`: export state encoder + action encoder + DiT or fused DiT + action decoder
++- `full_pipeline`: export ViT + LLM + VL self-attention + action head
+ 
+-- `scripts/deployment/export_ov_n1d7_all_onnx.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the checkpoint directory, for example `checkpoints/GR00T-N1.7-3B`
++If `--embodiment-tag` is omitted on either script, the exporter tries to auto-detect it from the checkpoint's `processor_config.json`. If the checkpoint contains multiple embodiments, you must pass `--embodiment-tag` explicitly.
+ 
+-The target machine also needs the Python environment used by this repository.
+ 
+ ## Environment Setup
+ 
+@@ -197,158 +189,7 @@ uv sync --all-extras
+ 
+ If `uv` is not available, use an existing environment where GR00T inference already works.
+ 
+-## Example Commands
+-
+-Run from the repository root.
+-
+-### 1. `export_ov_n1d7.py`: Full Pipeline Export Without Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --embodiment-tag REAL_G1 \
+-  --output-dir ~/openvino_models/real_g1_full_direct \
+-  --export-mode full_pipeline \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 2. `export_ov_n1d7_all_onnx.py`: Full Pipeline Export Without Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_all_onnx.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --embodiment-tag REAL_G1 \
+-  --output-dir ~/openvino_models/real_g1_full \
+-  --export-mode full_pipeline \
+-  --use-fused-dit \
+-  --precision fp16 \
+-  --device cpu
+-```
+ 
+-### 3. `export_ov_n1d7.py`: Full Pipeline Export With Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --dataset-path demo_data/libero_demo \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir ~/openvino_models/libero_full_direct \
+-  --export-mode full_pipeline \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 4. `export_ov_n1d7_all_onnx.py`: Full Pipeline Export With Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_all_onnx.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --dataset-path demo_data/libero_demo \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir ~/openvino_models/libero_full \
+-  --export-mode full_pipeline \
+-  --use-fused-dit \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 5. `export_ov_n1d7.py`: Minimal DiT-Only Export
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --embodiment-tag REAL_G1 \
+-  --output-dir ~/openvino_models/real_g1_dit_direct \
+-  --export-mode dit_only \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 6. `export_ov_n1d7_all_onnx.py`: Minimal DiT-Only Export
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_all_onnx.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --embodiment-tag REAL_G1 \
+-  --output-dir ~/openvino_models/real_g1_dit \
+-  --export-mode dit_only \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 7. `export_ov_n1d7_single_onnx_ov.py`: Single-IR Export Without Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_single_onnx_ov.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --embodiment-tag REAL_G1 \
+-  --output-dir ~/openvino_models/real_g1_single_ov \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 8. `export_ov_n1d7_single_onnx_ov.py`: Single-IR Export With Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_single_onnx_ov.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --dataset-path demo_data/libero_demo \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir ~/openvino_models/libero_single_ov \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 9. `export_ov_n1d7_single_ov.py`: Single-IR Export Without Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_single_ov.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --embodiment-tag REAL_G1 \
+-  --output-dir ~/openvino_models/real_g1_single_direct_ov \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-### 10. `export_ov_n1d7_single_ov.py`: Single-IR Export With Dataset
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_single_ov.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --dataset-path demo_data/libero_demo \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir ~/openvino_models/libero_single_direct_ov \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-## Main Arguments
+-
+-- `--model-path`: local checkpoint directory
+-- `--dataset-path`: optional dataset path; if omitted, dummy capture mode is used
+-- `--embodiment-tag`: embodiment name such as `REAL_G1`, `LIBERO_PANDA`, `XDOF`
+-- `--output-dir`: directory where `.xml`, `.bin`, `.onnx`, and metadata are written
+-- `--export-mode`: `dit_only`, `action_head`, or `full_pipeline`
+-- `--use-fused-dit`: export fused denoising loop when supported
+-- `--precision`: `fp32` or `fp16`
+-- `--device`: export device, usually `cpu` or `cuda`
+-- `--num-inference-timesteps`: optional override for denoising steps during export
+-- `--llm-lang-tokens`: optional; reserve a fixed number of language-token slots so the exported LLM (and VL self-attention / DiT) use a static seq_len — see [Static LLM Sequence Length](#static-llm-sequence-length---llm-lang-tokens) below
+-
+-For `export_ov_n1d7_single_onnx_ov.py`, the main arguments are:
+-
+-- `--model-path`: local checkpoint directory
+-- `--dataset-path`: optional dataset path; if omitted, dummy capture mode is used
+-- `--embodiment-tag`: embodiment name such as `REAL_G1` or `NEW_EMBODIMENT`
+-- `--output-dir`: directory where the merged `.xml`, `.bin`, metadata, and ONNX files are written
+-- `--output-name`: output file prefix, default `gr00t_n1d7_single`
+-- `--precision`: `fp32` or `fp16`
+-- `--batch-size`: export batch size, default `1`
+-- `--num-inference-timesteps`: optional denoising-step override before export
+-- `--device`: export device, usually `cpu`
+-
+-For `export_ov_n1d7_single_ov.py`, the main arguments are the same, plus `--llm-lang-tokens` (same meaning as for `export_ov_n1d7.py`). `export_ov_n1d7_single_onnx_ov.py` does not support `--llm-lang-tokens`.
+ 
+ ## Static LLM Sequence Length (`--llm-lang-tokens`)
+ 
+@@ -369,80 +210,115 @@ Notes:
+ - Padding tokens are masked out via `attention_mask` (LLM, VL self-attention) and `False` mask entries (DiT image/backbone masks), so padding does not change the output for the valid tokens.
+ - The resolved static seq_len is written to `export_metadata.json` (or `*_single_ov_metadata.json`) as `llm_static_seq_len`, which the inference scripts read automatically — no separate flag is needed at inference time.
+ 
+-Example: reserve 64 language-token slots when exporting the direct-OV full pipeline for LIBERO_PANDA:
+ 
+-```bash
+-python scripts/deployment/export_ov_n1d7.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --dataset-path demo_data/libero_demo \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir ~/openvino_models/libero_full_direct_static \
+-  --export-mode full_pipeline \
+-  --precision fp16 \
+-  --device cpu \
+-  --llm-lang-tokens 64
+-```
+-
+-Same idea for the single-IR direct-OV export:
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7_single_ov.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --dataset-path demo_data/libero_demo \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir ~/openvino_models/libero_single_direct_ov_static \
+-  --precision fp16 \
+-  --device cpu \
+-  --llm-lang-tokens 64
+-```
++## Expected Outputs
+ 
+-The CLI shape is intentionally the same between `export_ov_n1d7_single_onnx_ov.py` and `export_ov_n1d7_single_ov.py`, so commands can be switched with minimal changes. The main difference is only the conversion path:
++For `export_ov_n1d7_single_ov.py`, the output directory typically contains:
+ 
+-- `export_ov_n1d7_single_onnx_ov.py`: PyTorch -> ONNX -> one OpenVINO IR
+-- `export_ov_n1d7_single_ov.py`: PyTorch -> one OpenVINO IR
++- `gr00t_n1d7_single_from_ov_fp16.xml` / `gr00t_n1d7_single_from_ov_fp16.bin`
++- `gr00t_n1d7_single_from_ov_metadata.json`
++- `config/processor_config.json`
++- `config/statistics.json`
++- `config/embodiment_id.json`
++- `config/config.json`
++- `config/model.safetensors.index.json`
+ 
+-## Expected Outputs
++When `--llm-lang-tokens` is used, the corresponding metadata JSON also includes an `llm_static_seq_len` field with the resolved static seq_len; it is `null` when `--llm-lang-tokens` is not set.
+ 
+-The exporter writes model files under the output directory, for example:
++For `export_ov_n1d7.py`, the exporter writes model files under the output directory, for example:
+ 
+ - `export_metadata.json`
++- `config/processor_config.json`
++- `config/statistics.json`
++- `config/embodiment_id.json`
++- `config/config.json`
++- `config/model.safetensors.index.json`
+ - `vit_fp16.xml` / `vit_fp16.bin`
+ - `llm_fp16.xml` / `llm_fp16.bin`
+ - `vl_self_attention_fp16.xml` / `vl_self_attention_fp16.bin`
+ - `state_encoder_fp16.xml` / `state_encoder_fp16.bin`
+-- `action_encoder_fp16.xml` / `action_encoder_fp16.bin`
+-- `dit_fp16.xml` / `dit_fp16.bin`
+-- `action_decoder_fp16.xml` / `action_decoder_fp16.bin`
+-- or `dit_fused_fp16.xml` / `dit_fused_fp16.bin`
+ 
+-Actual outputs depend on `--export-mode` and whether `--use-fused-dit` is enabled.
++For the action-generation part of the export, the output depends on whether `--use-fused-dit` is enabled:
++
++- Without `--use-fused-dit`, the action head is exported as separate component IRs:
++  - `action_encoder_fp16.xml` / `action_encoder_fp16.bin`
++  - `dit_fp16.xml` / `dit_fp16.bin`
++  - `action_decoder_fp16.xml` / `action_decoder_fp16.bin`
++- With `--use-fused-dit`, those three files are replaced by one fused denoising IR:
++  - `dit_fused_fp16.xml` / `dit_fused_fp16.bin`
+ 
+-For `export_ov_n1d7_all_onnx.py`, the output directory may also contain intermediate `.onnx` files.
++Actual outputs depend on `--export-mode` and whether `--use-fused-dit` is enabled.
+ 
+ For `export_ov_n1d7_single_onnx_ov.py`, the output directory typically contains:
+ 
+-- `gr00t_n1d7_single_fp16.xml` / `gr00t_n1d7_single_fp16.bin`
+ - `gr00t_n1d7_single_fp16.onnx`
+ - `gr00t_n1d7_single_fp16.onnx.data`
++- `gr00t_n1d7_single_fp16.xml` / `gr00t_n1d7_single_fp16.bin`
+ - `gr00t_n1d7_single_metadata.json`
+ 
+-For `export_ov_n1d7_single_ov.py`, the output directory typically contains:
++For `export_ov_n1d7_all_onnx.py`, the output directory typically contains both ONNX intermediates and OpenVINO IR files, for example:
+ 
+-- `gr00t_n1d7_single_from_ov_fp16.xml` / `gr00t_n1d7_single_from_ov_fp16.bin`
+-- `gr00t_n1d7_single_from_ov_metadata.json`
++- `export_metadata.json`
++- `vit_fp16.onnx`
++- `vit_fp16.xml` / `vit_fp16.bin`
++- `llm_fp16.onnx`
++- `llm_fp16.onnx.data`
++- `llm_fp16.xml` / `llm_fp16.bin`
++- `vl_self_attention_fp16.onnx`
++- `vl_self_attention_fp16.xml` / `vl_self_attention_fp16.bin`
++- `state_encoder_fp16.onnx`
++- `state_encoder_fp16.xml` / `state_encoder_fp16.bin`
+ 
+-When `--llm-lang-tokens` is used, the corresponding metadata JSON also includes an `llm_static_seq_len` field with the resolved static seq_len; it is `null` when `--llm-lang-tokens` is not set.
++When `--use-fused-dit` is enabled, the action-generation part also includes:
++
++- `dit_fused_fp16.onnx`
++- `dit_fused_fp16.onnx.data`
++- `dit_fused_fp16.xml` / `dit_fused_fp16.bin`
++
++Without `--use-fused-dit`, expect the corresponding split action-head ONNX and IR files instead of `dit_fused_*`.
++
++Unlike the direct-IR exporters above, the ONNX-first exporters do not copy checkpoint config files into the OV output directory. For inference, either pass `--model-path`, or omit `--model-path` and first run `scripts/deployment/copy_configs_to_ov.py` to copy the config files into the OV directory.
++
++## Export Accuracy Check In Logs
++
++During export, the scripts also run small OpenVINO-vs-PyTorch checks and print similarity metrics in the log so you can quickly judge whether the converted model stayed numerically aligned with the original PyTorch path.
++
++In the export logs, you may see logs such as:
++
++```text
++Direct OV vs PyTorch: cosine=1.00000000 mae=3.55251082e-08
++```
++
++This means:
++
++- `cosine`: cosine similarity between the OpenVINO output and the PyTorch output. Closer to `1.0` is better.
++- `mae`: mean absolute error between the two outputs. Closer to `0` is better.
++
++As a practical rule of thumb, a healthy export usually shows cosine very close to `1.0` and MAE very close to `0`, like the example above.
++
++For single-OV export in `export_ov_n1d7_single_ov.py`, the verification log is similar but also includes MSE, for example:
++
++```text
++predicted_action: OpenVINO vs PyTorch cosine = 1.000000, mae = 0.000000, mse = 0.000000
++```
++
++Here:
++
++- `cosine`: closer to `1.0` means the output direction matches PyTorch very closely.
++- `mae`: closer to `0` means elementwise absolute error is very small.
++- `mse`: closer to `0` means squared error is very small.
++
++These checks are meant to confirm export quality. If cosine drops noticeably below `1.0`, or MAE / MSE are clearly larger than expected, treat that export as suspicious and re-check the export inputs, precision setting, and model files.
+ 
+ ## Notes
+ 
+ - `fp16` controls OpenVINO weight compression during save.
+ - If no dataset is available, dummy capture is used only to collect representative tensor shapes for export.
+ - If a checkpoint contains multiple embodiments, pass `--embodiment-tag` explicitly.
+-- `export_ov_n1d7.py` is the direct-OV path.
+-- `export_ov_n1d7_all_onnx.py` is the ONNX-intermediate path.
+-- The single exporter removes local helper-script imports, but it still depends on the main `gr00t/` Python package.
+-- `export_ov_n1d7_single_onnx_ov.py` exports one merged learned pipeline, but runtime still has to prepare `position_ids` and the initial diffusion `actions` seed.
+-- `export_ov_n1d7_single_ov.py` exports one merged learned pipeline through the direct OpenVINO path, but runtime still has to prepare `position_ids` and the initial diffusion `actions` seed.
++- `export_ov_n1d7.py` exports the pipeline as multiple component IRs.
++- `export_ov_n1d7_single_ov.py` exports one merged learned pipeline, but runtime still has to prepare `position_ids` and the initial diffusion `actions` seed.
++- `export_ov_n1d7_all_onnx.py` and `export_ov_n1d7_single_onnx_ov.py` keep an ONNX intermediate in the export flow, which is useful for cross-backend comparison but adds an extra conversion step.
++- Both export scripts also copy lightweight checkpoint config files into `output_dir/config/`: `processor_config.json`, `statistics.json`, `embodiment_id.json`, `config.json`, and `model.safetensors.index.json`.
+ - The single-OV metadata file records the fixed vision grid and denoising-step count used during export.
+ - `--llm-lang-tokens` (on `export_ov_n1d7.py` and `export_ov_n1d7_single_ov.py`) enables static-shape LLM export so one compiled OV model can serve varying prompt lengths; see [Static LLM Sequence Length](#static-llm-sequence-length---llm-lang-tokens).
+ 
+@@ -450,5 +326,4 @@ When `--llm-lang-tokens` is used, the corresponding metadata JSON also includes
+ 
+ - If export fails, try `--export-mode dit_only` first to narrow the failing component.
+ - If embodiment auto-detection is ambiguous, pass `--embodiment-tag` explicitly.
+-- If ONNX Runtime is not installed, verification will be skipped but export can still proceed.
+ - If OpenVINO conversion is slow, keep export on `cpu` unless you specifically need `cuda` for the PyTorch side.
+diff --git a/scripts/deployment/ov_inference_readme.md b/scripts/deployment/ov_inference_readme.md
+index 7adf21a8008a..f815b7c21915 100644
+--- a/scripts/deployment/ov_inference_readme.md
++++ b/scripts/deployment/ov_inference_readme.md
+@@ -7,7 +7,72 @@ The main inference files are:
+ - `scripts/deployment/ov_n1d7_forward.py` — generic OpenVINO inference backend
+ - `scripts/deployment/run_base_ov_inference.py` — base model inference (no dataset required)
+ - `scripts/deployment/run_base_single_ov_inference.py` — single-IR base model inference (no dataset required)
+-- `scripts/deployment/run_aloha_full_ov_accelerated.py` — ALOHA-specific inference (requires dataset)
++
++## Optimal Starting Example
++
++The recommended default inference command is the single-OV path:
++
++```bash
++python scripts/deployment/run_base_single_ov_inference.py \
++  --ov-model-dir ~/openvino_models/libero_single_direct_ov_optimal \
++  --embodiment-tag LIBERO_PANDA \
++  --num-samples 10 \
++  --device GPU \
++  --static-shape
++```
++
++Arguments:
++
++- `--model-path`: optional; local PyTorch checkpoint directory. If `--ov-model-dir/config/` exists, you can omit this and run in config-only mode
++- `--ov-model-dir`: directory containing exactly one merged single-OV XML model
++- `--embodiment-tag LIBERO_PANDA`: embodiment configuration to use for dummy input generation and inference
++- `--device GPU`: run OpenVINO inference on the GPU plugin
++- `--verify-pytorch`: optional; run one parity check against the original PyTorch model before timing. If enabled, you must also pass `--model-path` so the script can load the original PyTorch checkpoint and weights
++- `--static-shape`: optional; reshape the single OpenVINO model to the actual input shapes before compilation
++- `--num-samples`: optional; number of timed inference iterations, default `10`
++- `--num-warmup`: optional; number of warmup iterations before timed inference, default `5`
++- `--num-threads`: optional; sets `torch.set_num_threads`, default `4`; pass `<=0` to keep the existing thread count
++- `--language`: optional; language instruction used for the synthesized dummy input, default `Pick and place the object.`
++- `--image-size`: optional; dummy input image size as `H W`, default `224 224`
++- `--input-seed`: optional; deterministic seed for dummy video generation; if omitted, the script preserves the legacy zero-filled dummy-frame behavior
++- `--diffusion-seed`: optional; seed for the initial diffusion trajectory used by OV inference and PyTorch parity checks, default `0`
++- `--info_log`: optional; enable per-iteration action-detail logging during timed inference
++
++Use this as the default because it runs the merged model through a single OpenVINO call, keeps the runtime flow simplest, and is the preferred path for routine benchmarking.
++
++If you exported the standard multi-component full pipeline instead, use this inference command:
++
++```bash
++python scripts/deployment/run_base_ov_inference.py \
++  --ov-model-dir ~/openvino_models/libero_full_direct_optimal \
++  --embodiment-tag LIBERO_PANDA \
++  --num-samples 10 \
++  --device GPU \
++  --static-shape \
++  --use-fused-dit \
++  --full-ov
++```
++
++Arguments:
++
++- `--model-path`: optional; local PyTorch checkpoint directory. If `--ov-model-dir/config/` exists, you can omit this and run in config-only mode
++- `--ov-model-dir`: directory containing the exported multi-component OpenVINO IR files
++- `--embodiment-tag LIBERO_PANDA`: embodiment configuration to use for dummy input generation and inference
++- `--num-samples 10`: run 10 timed inference iterations
++- `--device GPU`: run OpenVINO inference on the GPU plugin
++- `--use-fused-dit`: optional; use the fused DiT IR when `dit_fused_*.xml` is present. If it is missing, the runtime falls back to the non-fused 3-component action-head path when those files are available
++- `--full-ov`: enable the full OpenVINO path for ViT, LLM, VL self-attention, and action head
++- `--static-shape`: optional; reshape each OV component to static shapes captured from the first inference call before compilation
++- `--num-warmup`: optional; number of warmup iterations before timed inference, default `5`
++- `--force-fp32`: optional; force FP32 precision for GPU full-OV inference when stability matters more than speed
++- `--num-threads`: optional; sets `torch.set_num_threads`, default `4`; pass `<=0` to keep the existing thread count
++- `--language`: optional; language instruction used for the synthesized dummy input, default `Pick and place the object.`
++- `--image-size`: optional; dummy input image size as `H W`, default `224 224`
++- `--input-seed`: optional; deterministic seed for dummy video generation; if omitted, the script preserves the legacy random dummy-frame behavior
++- `--diffusion-seed`: optional; deterministic seed for action-head diffusion noise on every inference call
++- `--log-timing-breakdown`: optional; print per-iteration backbone and action-head timing breakdown during timed inference
++
++Use this path when you need per-component visibility or want to benchmark the split OpenVINO pipeline directly.
+ 
+ ## Common Backend: `ov_n1d7_forward.py`
+ 
+@@ -23,7 +88,7 @@ It contains:
+ - timing collection and summary logic
+ - generic dataset inference loop
+ 
+-It is intended to be imported by the entrypoint scripts below.
++It is intended to be imported by the base-model entrypoint scripts below.
+ 
+ ### Static LLM Sequence Length (Automatic)
+ 
+@@ -35,24 +100,42 @@ If the actual input seq_len ever exceeds `llm_static_seq_len`, inference raises
+ 
+ Your OpenVINO model directory should contain these files for the selected precision.
+ 
++For single-OV inference (`run_base_single_ov_inference.py`), `--ov-model-dir` should contain:
++
++- exactly one merged single-OV XML model, for example `gr00t_n1d7_single_from_ov_fp16.xml`
++- the matching BIN file, for example `gr00t_n1d7_single_from_ov_fp16.bin`
++- the export metadata JSON, for example `gr00t_n1d7_single_from_ov_metadata.json`
++- `config/processor_config.json`
++- usually `config/statistics.json`
++- when running in config-only mode, the rest of the copied config files under `config/`, such as `config/embodiment_id.json`, `config/config.json`, and `config/model.safetensors.index.json`
++
++For ONNX-first single-OV inference, the merged model may instead be named like `gr00t_n1d7_single_fp16.xml` / `gr00t_n1d7_single_fp16.bin`, with metadata such as `gr00t_n1d7_single_metadata.json`.
++
+ For full pipeline inference:
+ 
+ - `vit_fp16.xml` or `vit_fp32.xml`
+ - `llm_fp16.xml` or `llm_fp32.xml`
+ - `vl_self_attention_fp16.xml` or `vl_self_attention_fp32.xml`
+ - `state_encoder_fp16.xml` or `state_encoder_fp32.xml`
++- `config/processor_config.json`
++- usually `config/statistics.json`
++- when running in config-only mode, the rest of the copied config files under `config/`, such as `config/embodiment_id.json`, `config/config.json`, and `config/model.safetensors.index.json`
+ 
+ For fused action head mode:
+ 
+ - `dit_fused_fp16.xml` or `dit_fused_fp32.xml`
+ 
+-For 4-component action head mode:
++For non-fused 3-component action head mode:
+ 
+ - `action_encoder_fp16.xml` or `action_encoder_fp32.xml`
+ - `dit_fp16.xml` or `dit_fp32.xml`
+ - `action_decoder_fp16.xml` or `action_decoder_fp32.xml`
+ 
+-If you pass `--use-fused-dit` but `dit_fused_*.xml` is missing, `ov_n1d7_forward.py` will automatically fall back to the 4-component path when the three non-fused action-head files are present.
++For ONNX-first full-pipeline inference, the same OV files are used at runtime; the `.onnx` and `.onnx.data` files can remain in the directory but are not consumed by the OpenVINO inference scripts.
++
++If you pass `--use-fused-dit` but `dit_fused_*.xml` is missing, `ov_n1d7_forward.py` will automatically fall back to the non-fused 3-component action-head path when those three files are present.
++
++Unlike the direct-IR exporters, the ONNX-first exporters do not copy checkpoint config files into `--ov-model-dir`. For ONNX-first inference, either pass `--model-path`, or omit `--model-path` and first run `scripts/deployment/copy_configs_to_ov.py` so the required config files are present under `--ov-model-dir/config/`.
+ 
+ ## Environment Setup
+ 
+@@ -64,380 +147,60 @@ uv sync --all-extras
+ 
+ Or run inside an existing environment where GR00T inference already works.
+ 
+-## Main Inference Modes
+-
+-### Partial OpenVINO
+-
+-This uses the partial OpenVINO path.
+-
+-- OpenVINO is used for the accelerated components
+-- some parts still run in PyTorch
+-
+-Run this by omitting `--full-ov`.
+-
+-### Full OpenVINO
+-
+-This uses the full OpenVINO path.
+-
+-- ViT in OpenVINO
+-- LLM in OpenVINO
+-- VL self-attention in OpenVINO
+-- action head in OpenVINO
+-
+-Run this with `--full-ov`.
+-
+-### Full OpenVINO FP32
+-
+-Use this when Intel iGPU full-precision stability matters more than speed.
+-
+-Run this with:
+-
+-- `--full-ov`
+-- `--force-fp32`
+-
+----
+-
+-## Base Model Inference: `run_base_ov_inference.py`
+-
+-This is the generic base model inference script. It works with any embodiment tag supported by the base checkpoint and does not require a dataset.
+-
+-It synthesizes dummy observations from the checkpoint's `processor_config.json` and `statistics.json`, making it suitable for:
+-
+-- benchmarking OpenVINO IR models on different devices
+-- validating exported IR models without needing real data
+-- quick sanity checks after export
+-
+-### Runtime Dependencies
+-
+-- `scripts/deployment/run_base_ov_inference.py`
+-- `scripts/deployment/ov_n1d7_forward.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the GR00T checkpoint directory (with `processor_config.json` and `statistics.json`)
+-- the OpenVINO model directory
+-
+-### Arguments
+-
+-- `--model-path`: local PyTorch checkpoint directory
+-- `--ov-model-dir`: directory containing OpenVINO IR files
+-- `--embodiment-tag`: embodiment tag such as `REAL_G1`
+-- `--num-samples`: number of timed inference iterations (default: 10)
+-- `--num-warmup`: number of warmup iterations (default: 5)
+-- `--device`: OpenVINO device — `GPU`, `CPU`, `NPU`, or `AUTO`
+-- `--use-fused-dit`: use fused DiT when available
+-- `--full-ov`: enable full OpenVINO inference path
+-- `--force-fp32`: force FP32 precision for GPU inference
+-- `--language`: language instruction for dummy input (default: "Pick and place the object.")
+-- `--image-size`: image size H W for dummy input (default: 224 224)
+-
+-### Example Commands
+-
+-Run from the repository root.
+-
+-#### Base Model on GPU (Direct-Path IR, 4-Component)
+-
+-```bash
+-python scripts/deployment/run_base_ov_inference.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --ov-model-dir checkpoints/real_g1_full_direct \
+-  --embodiment-tag REAL_G1 \
+-  --num-samples 10 \
+-  --device GPU \
+-  --full-ov
+-```
+-
+-#### Base Model on GPU (ONNX-Path IR, Fused DiT)
+-
+-```bash
+-python scripts/deployment/run_base_ov_inference.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --ov-model-dir checkpoints/real_g1_full_onnx \
+-  --embodiment-tag REAL_G1 \
+-  --num-samples 10 \
+-  --device GPU \
+-  --full-ov \
+-  --use-fused-dit
+-```
+-
+-#### Base Model on CPU
+-
+-```bash
+-python scripts/deployment/run_base_ov_inference.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --ov-model-dir checkpoints/real_g1_full_direct \
+-  --embodiment-tag REAL_G1 \
+-  --num-samples 5 \
+-  --device CPU \
+-  --full-ov
+-```
+-
+-#### LIBERO Checkpoint (LIBERO_PANDA)
+-
+-Download the LIBERO fine-tuned checkpoint:
+-
+-```bash
+-huggingface-cli download nvidia/GR00T-N1.7-LIBERO \
+-  --include "libero_10/config.json" "libero_10/embodiment_id.json" \
+-  "libero_10/model-*.safetensors" "libero_10/model.safetensors.index.json" \
+-  "libero_10/processor_config.json" "libero_10/statistics.json" \
+-  --local-dir checkpoints/GR00T-N1.7-LIBERO
+-```
+-
+-Export OpenVINO IR models:
+-
+-```bash
+-python scripts/deployment/export_ov_n1d7.py \
+-  --model-path checkpoints/GR00T-N1.7-LIBERO/libero_10 \
+-  --embodiment-tag LIBERO_PANDA \
+-  --output-dir checkpoints/libero_full_direct \
+-  --export-mode full_pipeline \
+-  --precision fp16 \
+-  --device cpu
+-```
+-
+-Run inference:
+-
+-```bash
+-python scripts/deployment/run_base_ov_inference.py \
+-  --model-path checkpoints/GR00T-N1.7-LIBERO/libero_10 \
+-  --ov-model-dir checkpoints/libero_full_direct \
+-  --embodiment-tag LIBERO_PANDA \
+-  --num-samples 10 \
+-  --device GPU \
+-  --full-ov
+-```
+-
+-### Notes
+-
+-- Does not require a dataset; constructs valid dummy observations automatically
+-- Reads `processor_config.json` to determine video/state/language keys
+-- Reads `statistics.json` to determine per-key state dimensions
+-- For eef state keys (containing rot6d), dummy values use a valid identity rotation
+-
+----
+-
+-## Single-IR Base Inference: `run_base_single_ov_inference.py`
+-
+-This is the single-OV runtime for the merged IR exported by `export_ov_n1d7_single_ov.py`.
+-
+-It is intended for:
+-
+-- benchmarking the merged single-IR export on CPU, GPU, NPU, or AUTO
+-- validating one exported XML against the original PyTorch model without a dataset
+-- checking embodiment-specific parity for the merged export path
+-
+-Unlike `run_base_ov_inference.py`, this script does not load separate ViT, LLM, VL self-attention, or action-head component models. It resolves exactly one XML from `--ov-model-dir` and runs the whole learned pipeline in one OpenVINO call.
+-
+-### Runtime Dependencies
+-
+-- `scripts/deployment/run_base_single_ov_inference.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the GR00T checkpoint directory with `processor_config.json` and usually `statistics.json`
+-- the single-OV model directory containing exactly one XML model
+-
+-### Arguments
+-
+-- `--model-path`: local PyTorch checkpoint directory
+-- `--ov-model-dir`: directory containing exactly one single-OV XML model
+-- `--embodiment-tag`: embodiment tag such as `REAL_G1` or `NEW_EMBODIMENT`
+-- `--num-samples`: number of timed inference iterations
+-- `--num-warmup`: number of warmup iterations
+-- `--verify-pytorch`: run one parity check against the original PyTorch model before timing
+-- `--device`: OpenVINO device — `GPU`, `CPU`, `NPU`, or `AUTO`
+-- `--language`: language instruction for dummy input
+-- `--image-size`: image size H W for dummy input
+-- `--diffusion-seed`: fixed seed used to sample the initial denoising trajectory for both PyTorch verification and OV inference
+-
+-### Example Commands
+-
+-Run from the repository root.
+-
+-#### Single-OV Base Model on CPU
+-
+-```bash
+-python scripts/deployment/run_base_single_ov_inference.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --ov-model-dir checkpoints/gr00t_n1d7_ov_g1 \
+-  --embodiment-tag REAL_G1 \
+-  --device CPU \
+-  --verify-pytorch
+-```
+-
+-#### Single-OV Base Model on GPU
+-
+-```bash
+-python scripts/deployment/run_base_single_ov_inference.py \
+-  --model-path checkpoints/GR00T-N1.7-3B \
+-  --ov-model-dir checkpoints/gr00t_n1d7_ov_g1 \
+-  --embodiment-tag REAL_G1 \
+-  --device GPU \
+-  --verify-pytorch
+-```
+-
+-#### Single-OV ALOHA-Style Finetuned Checkpoint Verification
+-
+-```bash
+-python scripts/deployment/run_base_single_ov_inference.py \
+-  --model-path /path/to/aloha_finetuned_checkpoint \
+-  --ov-model-dir /path/to/gr00t_n1d7_single_ov \
+-  --embodiment-tag NEW_EMBODIMENT \
+-  --device CPU \
+-  --verify-pytorch \
+-  --diffusion-seed 0
+-```
+-
+-### Notes
+-
+-- Does not require a dataset; constructs valid dummy observations automatically
+-- Resolves exactly one XML from `--ov-model-dir`; if there are zero or multiple XML files, the script raises an error
+-- The runtime reconstructs `position_ids` and, during verification, can also reuse the runtime-captured PyTorch `position_ids`
+-- The `actions` input to the single-OV model is the initial denoising trajectory, not a decoded robot action
+-- `--verify-pytorch` is only meaningful when PyTorch and OV use the same checkpoint and the same `--diffusion-seed`
+-- The script logs both full-tensor metrics and trimmed active-action metrics, because some embodiments use far fewer than the padded `132` action channels
+-- If the single-OV model was exported with `--llm-lang-tokens`, the script reads `llm_static_seq_len` from the `*_metadata.json` file in `--ov-model-dir` automatically and zero-pads `input_ids` / `attention_mask` / `position_ids` up to that fixed length before the OV call; there is no separate CLI flag for this
+-
+----
+-
+-## ALOHA Inference: `run_aloha_full_ov_accelerated.py`
+-
+-This is the ALOHA-specific runnable entrypoint.
+-
+-It contains only the ALOHA-specific parts:
+-
+-- camera selection
+-- ALOHA modality config
+-- task mapping loading
+-- converting one dataset row into GR00T observation format
+-
+-This is the script you run for ALOHA inference.
+-
+-### Runtime Dependencies
+-
+-- `scripts/deployment/run_aloha_full_ov_accelerated.py`
+-- `scripts/deployment/ov_n1d7_forward.py`
+-- `gr00t/`
+-- `pyproject.toml`
+-- the GR00T checkpoint directory
+-- the OpenVINO model directory
+-- the target dataset directory
+-
+-### Arguments
+-
+-- `--model-path`: local PyTorch checkpoint directory
+-- `--dataset-path`: dataset directory used for inference samples
+-- `--ov-model-dir`: directory containing OpenVINO IR files
+-- `--embodiment-tag`: embodiment tag such as `NEW_EMBODIMENT`
+-- `--num-cameras`: ALOHA camera count, currently `1` or `4`
+-- `--num-samples`: number of dataset episodes to time
+-- `--device`: OpenVINO device, usually `GPU`, `CPU`, `NPU`, or `AUTO`
+-- `--use-fused-dit`: use fused DiT when fused model files are available
+-- `--full-ov`: enable full OpenVINO inference path
+-- `--force-fp32`: force FP32 precision for full GPU inference
+-
+-### Example Commands
+-
+-Run from the repository root.
+-
+-#### ALOHA Full OpenVINO
+-
+-```bash
+-python scripts/deployment/run_aloha_full_ov_accelerated.py \
+-  --model-path /path/to/checkpoint \
+-  --dataset-path /path/to/aloha_dataset \
+-  --ov-model-dir /path/to/ov_models \
+-  --embodiment-tag NEW_EMBODIMENT \
+-  --num-cameras 4 \
+-  --num-samples 10 \
+-  --device GPU \
+-  --full-ov
+-```
+-
+-#### ALOHA Full OpenVINO With Fused DiT
+-
+-```bash
+-python scripts/deployment/run_aloha_full_ov_accelerated.py \
+-  --model-path /path/to/checkpoint \
+-  --dataset-path /path/to/aloha_dataset \
+-  --ov-model-dir /path/to/ov_models \
+-  --embodiment-tag NEW_EMBODIMENT \
+-  --num-cameras 4 \
+-  --num-samples 10 \
+-  --device GPU \
+-  --full-ov \
+-  --use-fused-dit
+-```
+-
+-#### ALOHA Full OpenVINO FP32
+-
+-```bash
+-python scripts/deployment/run_aloha_full_ov_accelerated.py \
+-  --model-path /path/to/checkpoint \
+-  --dataset-path /path/to/aloha_dataset \
+-  --ov-model-dir /path/to/ov_models \
+-  --embodiment-tag NEW_EMBODIMENT \
+-  --num-cameras 4 \
+-  --num-samples 10 \
+-  --device GPU \
+-  --full-ov \
+-  --force-fp32
+-```
+-
+-#### ALOHA Partial OpenVINO
+-
+-```bash
+-python scripts/deployment/run_aloha_full_ov_accelerated.py \
+-  --model-path /path/to/checkpoint \
+-  --dataset-path /path/to/aloha_dataset \
+-  --ov-model-dir /path/to/ov_models \
+-  --embodiment-tag NEW_EMBODIMENT \
+-  --num-cameras 4 \
+-  --num-samples 10 \
+-  --device GPU
+-```
+-
+-#### Example From A Real ALOHA Setup
+-
+-```bash
+-taskset -c 11 python run_aloha_full_ov_accelerated.py \
+-  --model-path ~/yue/gr00t_env/checkpoints/aloha_finetuned_insert_4c_100000 \
+-  --dataset-path ~/yue/dataset/lerobot_aloha_sim_insertion_4c/ \
+-  --ov-model-dir ~/yue/gr00t_env/model/tmp_fused_aloha_4c_insert_fp16_v3 \
+-  --embodiment-tag NEW_EMBODIMENT \
+-  --num-samples 4 \
+-  --num-cameras 4 \
+-  --device GPU \
+-  --full-ov
+-```
+-
+-If `dit_fused_fp16.xml` is not present in that directory, omit `--use-fused-dit`, or use the updated `ov_n1d7_forward.py` which can auto-fallback to the 4-component action-head path.
+-
+-### Notes
+-
+-- For ALOHA, `--num-cameras` must be `1` or `4`
+-- Requires a real dataset in LeRobot format
+-
+----
+ 
+ ## Output Behavior
+ 
+-During inference the scripts print:
++### Multi-Component Inference (`run_base_ov_inference.py`)
++
++During split / multi-component OV inference, the script prints:
+ 
+ - checkpoint path
+ - OpenVINO model directory
+-- dataset path (ALOHA) or dummy observation info (base)
+-- embodiment adapter name
+-- camera configuration
+-- selected mode
++- embodiment tag
++- device
++- whether full OV is enabled
++- whether fused DiT is enabled
++- sample / warmup counts
++- language, image size, input seed, and diffusion seed
++- modality details such as video keys, state keys, state dims, action keys, and language keys
++- dummy observation tensor shapes and dtypes
+ - warmup timing
+ - per-iteration timing
+ - averaged timing breakdown
+ 
+-The timing summary separates:
++When timing breakdown logging is enabled, the breakdown separates:
+ 
+ - ViT
+ - LLM prep
+ - LLM
+ - VL self-attention
+ - state encoder
+-- fused DiT or 4-component diffusion loop
++- fused DiT or non-fused 3-component diffusion loop
++
++### Single-OV Inference (`run_base_single_ov_inference.py`)
++
++During single-OV inference, the script prints:
++
++- checkpoint path when provided, or config-only mode information when `--model-path` is omitted
++- OpenVINO model directory
++- the resolved single XML model path
++- embodiment tag
++- device
++- sample / warmup counts
++- whether `--verify-pytorch` is enabled
++- input seed, diffusion seed, language, and image size
++- modality details such as video keys, state keys, state dims, action keys, and language keys
++- dummy observation tensor shapes and dtypes
++- prepared single-OV input tensor shapes and dtypes
++- static LLM seq_len from metadata when present
++- static reshape details when `--static-shape` is enabled
++- warmup timing
++- per-iteration timing summary
++- final latency summary with mean, median, min, max, and FPS
++
++When `--verify-pytorch` is enabled, the script also prints parity metrics for:
++
++- raw `action_pred`
++- trimmed `action_pred`
++- padded-tail-only comparison when applicable
++- active action dimension information
+-- 
+2.43.0
+

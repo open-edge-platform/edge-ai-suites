@@ -124,6 +124,53 @@ async def upload_file_with_ingest(
     )
     return resp_200(data=result)
 
+class IngestPathRequest(BaseModel):
+    path: str
+    meta: Dict[str, Any] = Field(default_factory=dict)
+    prompt: Optional[str] = None
+    chunk_duration: Optional[int] = None
+
+
+# Loopback addresses allowed to use server-side path ingest.
+_LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost", "::ffff:127.0.0.1"}
+
+
+@router.post("/ingest-path")
+async def ingest_local_path(
+    payload: IngestPathRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """Ingest a file that already exists on this machine, by absolute path.
+
+    Used by the Electron desktop app, which runs alongside this service and can pass
+    a real path, avoiding a multipart upload of potentially multi-GB media over
+    localhost HTTP. The file is copied into the object store, so the user's original
+    is never touched by later cleanup/delete operations.
+
+    Restricted to loopback callers: the UI is often served on 0.0.0.0, and reading
+    arbitrary server-side paths must not be reachable from other devices.
+    """
+    client_host = request.client.host if request.client else None
+    if client_host not in _LOOPBACK_HOSTS:
+        logger.warning(f"Rejected /ingest-path from non-loopback client: {client_host}")
+        return resp_200(
+            code=40300,
+            message="Path-based ingest is only available to local clients."
+        )
+
+    if not payload.path or not payload.path.strip():
+        return resp_200(code=40000, message="path is required")
+
+    result = await asset_service.process_path_and_ingest(
+        db, payload.path.strip(), background_tasks,
+        meta=payload.meta or {},
+        prompt=payload.prompt,
+        chunk_duration=payload.chunk_duration
+    )
+    return resp_200(data=result)
+
 @router.post("/search")
 async def file_search(payload: dict, db: Session = Depends(get_db)):
     result = await task_service.handle_sync_search(db, payload)
@@ -277,7 +324,7 @@ async def delete_specific_task(
         # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
         if run_id:
             import shutil
-            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            run_dir = storage_service.get_run_directory(run_id, bucket_name=f_bucket)
             if run_dir.exists():
                 shutil.rmtree(run_dir)
                 logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
@@ -418,7 +465,7 @@ async def delete_file_by_hash(
         # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
         if run_id:
             import shutil
-            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            run_dir = storage_service.get_run_directory(run_id, bucket_name=f_bucket)
             if run_dir.exists():
                 shutil.rmtree(run_dir)
                 deletion_results["storage_deleted"] = True
@@ -566,12 +613,17 @@ async def list_all_files(
 
             storage_exists = storage_service.file_exists(file_asset.file_path)
 
+            # SQLite stores the bucket-relative file_key, while the id_maps are
+            # keyed by the full local://<bucket>/<key> URI used at ingest time.
+            index_bucket = file_asset.bucket_name or "content-search"
+            index_key = f"local://{index_bucket}/{file_path.lstrip('/')}"
+
             collections_info = []
             total_vectors = 0
             indexed = False
 
-            if file_path in visual_map:
-                vector_ids = visual_map[file_path]
+            if index_key in visual_map:
+                vector_ids = visual_map[index_key]
                 collections_info.append({
                     "name": "visual",
                     "vector_count": len(vector_ids)
@@ -579,8 +631,8 @@ async def list_all_files(
                 total_vectors += len(vector_ids)
                 indexed = True
 
-            if file_path in document_map:
-                vector_ids = document_map[file_path]
+            if index_key in document_map:
+                vector_ids = document_map[index_key]
                 collections_info.append({
                     "name": "documents",
                     "vector_count": len(vector_ids)
@@ -588,9 +640,9 @@ async def list_all_files(
                 total_vectors += len(vector_ids)
                 indexed = True
 
-            has_summary = file_path in video_summary_map
+            has_summary = index_key in video_summary_map
             if has_summary:
-                summary_ids = video_summary_map[file_path]
+                summary_ids = video_summary_map[index_key]
                 collections_info.append({
                     "name": "documents",
                     "type": "summary",

@@ -6,12 +6,12 @@ import {
   gradingUploadRubric,
   gradingCreateTask,
 } from '../../services/api';
-import type { GradingRubricInfo, GradingTask } from '../../services/api';
+import type { GradingRubricInfo } from '../../services/api';
 import DirectoryPicker from './DirectoryPicker';
 import RubricEditor from './RubricEditor';
 
 interface NewTaskFormProps {
-  onTaskCreated: (task: GradingTask) => void;
+  onTaskCreated: () => void;
 }
 
 const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
@@ -29,6 +29,8 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
   const [editorOpen, setEditorOpen] = useState<boolean>(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const isElectron = !!window.electronAPI?.isElectron;
 
   const loadRubrics = async (selectPath?: string) => {
     setLoadingRubrics(true);
@@ -64,9 +66,26 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
       const res = await gradingUploadRubric(file);
       await loadRubrics(res.rubric_path);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toErrorMessage(err));
     } finally {
       setUploading(false);
+    }
+  };
+
+  // In Electron, use the OS-native folder chooser: the app and the Python
+  // backends run on the same machine, so a locally picked path is also readable
+  // by the server. On the web, fall back to the in-app picker that browses the
+  // server's filesystem over the API.
+  const handleBrowse = async () => {
+    if (!window.electronAPI?.pickDirectory) {
+      setPickerOpen(true);
+      return;
+    }
+    try {
+      const picked = await window.electronAPI.pickDirectory(paperPath || undefined);
+      if (picked) setPaperPath(picked);
+    } catch (e) {
+      setError(toErrorMessage(e));
     }
   };
 
@@ -78,14 +97,14 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
     setSubmitting(true);
     setError('');
     try {
-      const task = await gradingCreateTask({
+      await gradingCreateTask({
         paper_path: paperPath.trim(),
         rubric_path: rubricPath || undefined,
       });
-      onTaskCreated(task);
+      onTaskCreated();
       setPaperPath('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(toErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -153,7 +172,7 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
         <div className="grading-form-btns">
           <button
             className="grading-btn grading-btn-secondary"
-            onClick={() => setPickerOpen(true)}
+            onClick={handleBrowse}
           >
             {t('grading.form.browse', 'Browse')}
           </button>
@@ -166,9 +185,11 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
           </button>
         </div>
       </div>
-      <div className="grading-form-hint">
-        {t('grading.form.pathHint', 'A path visible to the server, not a browser upload.')}
-      </div>
+      {!isElectron && (
+        <div className="grading-form-hint">
+          {t('grading.form.pathHint', 'A path visible to the server, not a browser upload.')}
+        </div>
+      )}
 
       {error && <div className="grading-error">{error}</div>}
 

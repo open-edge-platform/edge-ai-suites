@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import base64
-import multiprocessing
 import os
 import random
+import subprocess
 import sys
 from io import BytesIO
 from pathlib import Path
@@ -24,6 +24,9 @@ __all__ = ["convert_model", "is_model_ready", "load_images", "load_model_config"
 _PRECONVERTED_OV_MODELS = {
     ("Qwen/Qwen3-VL-8B-Instruct", "int4"): "OpenVINO/Qwen3-VL-8B-Instruct-int4-ov",
     ("Qwen/Qwen3-VL-8B-Instruct", "int8"): "OpenVINO/Qwen3-VL-8B-Instruct-int8-ov",
+    ("Qwen/Qwen3.5-9B", "int4"): "OpenVINO/Qwen3.5-9B-int4-ov",
+    ("Qwen/Qwen3.5-9B", "int8"): "OpenVINO/Qwen3.5-9B-int8-ov",
+    ("Qwen/Qwen3.6-35B-A3B", "int4"): "OpenVINO/Qwen3.6-35B-A3B-int4-ov",
 }
 
 
@@ -45,62 +48,67 @@ def _download_preconverted_ov_model(repo_id: str, cache_dir: str):
     logger.info("Pre-converted OpenVINO IR download complete.")
 
 
-def _convert_model_worker(
-    model_id: str, cache_dir: str, model_type: str, weight_format: str
-):
+_CONVERT_WORKER = Path(__file__).resolve().parent / "convert_worker.py"
+
+# ---------------------------------------------------------------------------
+# Export-time transformers pin
+# ---------------------------------------------------------------------------
+# optimum-intel 2.1.0's per-architecture support table caps Qwen3_5 / 
+# Qwen3_5Moe / Qwen3_5Text / Qwen3_5MoeText at transformers 5.2.0. 
+# Above 5.2.0 the OpenVINO export patcher fails with "cannot import name
+# 'Qwen3_5DynamicCache' from transformers.models.qwen3_5.modeling_qwen3_5"
+# (optimum-intel issue #1786). Installed with --no-deps into a side directory
+# used only by the export subprocess, so requirements.txt keeps the newer pin:
+# 5.2.0 needs huggingface-hub>=1.3.0, tokenizers>=0.22.0,<=0.23.0,
+# safetensors>=0.4.3 and typer-slim, all satisfied by requirements.txt.
+_EXPORT_TRANSFORMERS_VERSION = "5.2.0"
+_EXPORT_TRANSFORMERS_MODEL_MARKERS = ("qwen3.5", "qwen3.6")
+_SC_ROOT = Path(__file__).resolve().parents[4]
+
+
+def _export_overlay_dir() -> Path:
+    """Directory holding the export-only transformers build.
+
+    Lives under the gitignored ``models/`` tree. ``SC_EXPORT_DEPS_DIR`` overrides
+    it so a setup script can provision the overlay ahead of time (e.g. for an
+    offline install).
     """
-    Worker function that runs in a subprocess to perform the actual model conversion.
-    When the subprocess exits, all memory used during conversion is fully reclaimed by the OS.
-    """
-    from openvino_tokenizers import convert_tokenizer
-    from optimum.exporters.openvino.utils import save_preprocessors
-    from optimum.intel import (
-        OVModelForCausalLM,
-        OVModelForFeatureExtraction,
-        OVModelForSequenceClassification,
-        OVModelForVisualCausalLM,
+    override = os.environ.get("SC_EXPORT_DEPS_DIR")
+    if override:
+        return Path(override)
+    return (
+        _SC_ROOT / "models" / ".export-deps" /
+        f"transformers-{_EXPORT_TRANSFORMERS_VERSION}"
     )
-    from optimum.utils.save_utils import maybe_load_preprocessors
-    from transformers import AutoTokenizer
 
-    hf_tokenizer = AutoTokenizer.from_pretrained(model_id)
-    hf_tokenizer.save_pretrained(cache_dir)
-    add_special_tokens = model_type in ("embedding", "reranker")
-    needs_detokenizer = model_type in ("llm", "vlm")
-    if needs_detokenizer:
-        ov_tokenizer, ov_detokenizer = convert_tokenizer(
-            hf_tokenizer, add_special_tokens=add_special_tokens, with_detokenizer=True
-        )
-        ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
-        ov.save_model(ov_detokenizer, f"{cache_dir}/openvino_detokenizer.xml")
-    else:
-        ov_tokenizer = convert_tokenizer(hf_tokenizer, add_special_tokens=add_special_tokens)
-        ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
 
-    if model_type == "embedding":
-        embedding_model = OVModelForFeatureExtraction.from_pretrained(
-            model_id, export=True
+def _needs_transformers_overlay(model_id: str) -> bool:
+    name = str(model_id).lower()
+    return any(marker in name for marker in _EXPORT_TRANSFORMERS_MODEL_MARKERS)
+
+
+def _ensure_transformers_overlay() -> Path:
+    """Return the overlay dir, installing the pinned transformers with --no-deps if missing."""
+    overlay = _export_overlay_dir()
+    marker = overlay / "transformers" / "__init__.py"
+    if marker.exists():
+        logger.info(f"Using export-only transformers overlay at {overlay}")
+        return overlay
+
+    spec = f"transformers=={_EXPORT_TRANSFORMERS_VERSION}"
+    logger.info(f"Provisioning {spec} for the export subprocess in {overlay}...")
+    overlay.mkdir(parents=True, exist_ok=True)
+    completed = subprocess.run(
+        [sys.executable, "-m", "pip", "install", "--no-deps",
+         "--target", str(overlay), spec]
+    )
+    if completed.returncode != 0 or not marker.exists():
+        raise RuntimeError(
+            f"Could not provision {spec}, required to export this model. "
+            f"Install it manually and retry:\n"
+            f'  python -m pip install --no-deps --target "{overlay}" {spec}'
         )
-        embedding_model.save_pretrained(cache_dir)
-    elif model_type == "reranker":
-        reranker_model = OVModelForSequenceClassification.from_pretrained(
-            model_id, export=True
-        )
-        reranker_model.save_pretrained(cache_dir)
-    elif model_type == "llm":
-        llm_model = OVModelForCausalLM.from_pretrained(
-            model_id, export=True, weight_format=weight_format
-        )
-        llm_model.save_pretrained(cache_dir)
-    elif model_type == "vlm":
-        vlm_model = OVModelForVisualCausalLM.from_pretrained(
-            model_id, export=True, weight_format=weight_format
-        )
-        vlm_model.save_pretrained(cache_dir)
-        preprocessors = maybe_load_preprocessors(model_id)
-        save_preprocessors(preprocessors, vlm_model.config, cache_dir, True)
-    else:
-        raise ValueError(f"Unsupported model type: {model_type}")
+    return overlay
 
 
 def convert_model(
@@ -134,23 +142,30 @@ def convert_model(
             _download_preconverted_ov_model(preconverted_repo, cache_dir)
         else:
             logger.info(f"Converting {model_id} model to OpenVINO format in subprocess...")
-            _orig_pythonpath = os.environ.get("PYTHONPATH")
-            os.environ["PYTHONPATH"] = os.pathsep.join(p for p in sys.path if p)
-            try:
-                process = multiprocessing.Process(
-                    target=_convert_model_worker,
-                    args=(model_id, cache_dir, model_type, weight_format),
-                )
-                process.start()
-                process.join()
-            finally:
-                if _orig_pythonpath is None:
-                    os.environ.pop("PYTHONPATH", None)
-                else:
-                    os.environ["PYTHONPATH"] = _orig_pythonpath
-            if process.exitcode != 0:
+            # Run a standalone script rather than multiprocessing.Process: on
+            # Windows the spawn start method re-executes the parent's __main__
+            # (main.py) in the child, which needlessly re-imports the whole app
+            # and breaks on top-level package-name collisions in sys.path.
+            env = os.environ.copy()
+            search_path = [p for p in sys.path if p]
+            if _needs_transformers_overlay(model_id):
+                # Must come first: PYTHONPATH entries are searched in order.
+                search_path.insert(0, str(_ensure_transformers_overlay()))
+            env["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(search_path))
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(_CONVERT_WORKER),
+                    "--model-id", model_id,
+                    "--cache-dir", cache_dir,
+                    "--model-type", model_type,
+                    "--weight-format", weight_format,
+                ],
+                env=env,
+            )
+            if completed.returncode != 0:
                 raise RuntimeError(
-                    f"Model conversion subprocess failed with exit code {process.exitcode}"
+                    f"Model conversion subprocess failed with exit code {completed.returncode}"
                 )
             logger.info(f"Model conversion completed. Subprocess memory released.")
     except Exception as e:

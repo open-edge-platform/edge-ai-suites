@@ -1,5 +1,15 @@
 # Get Started
 
+This guide provides step-by-step instructions to set up and deploy the two sample applications
+in the Industrial Edge Insights Vision suite: Pallet Defect Detection and PCB Anomaly Detection.
+
+For more information on each application, see the respective application guides:
+
+- [Pallet Defect Detection](./pallet-defect-detection/index.md)
+- [PCB Anomaly Detection](./pcb-anomaly-detection/index.md)
+
+About this guide:
+
 - **Time to Complete:** 30 minutes
 - **Programming Language:**  Python 3
 
@@ -300,14 +310,15 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
-- [Enable MLOps](./how-to-guides/enable-mlops.md)
-- [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
-- [Publish frames to S3 storage pipelines](./how-to-guides/store-frames-in-s3.md)
-- [View telemetry data in Open Telemetry](./how-to-guides/view-telemetry-data.md)
-- [Publish metadata to OPCUA](./how-to-guides/use-opcua-publisher.md)
-- For the Pallet Defect Detection application, see [Generate a model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md)
-- For the Pallet Defect Detection application, see [Integrate Balluff SDK with supported cameras](./pallet-defect-detection/how-to-guides/integrate-balluff-sdk.md)
-- For the Pallet Defect Detection application, see [Integrate pylon SDK for Basler camera support](./pallet-defect-detection/how-to-guides/integrate-pylon-sdk.md)
+- [Run multiple AI pipelines](./how-to-customize/run-multiple-ai-pipelines.md)
+- [Enable MLOps](./how-to-extend-functionality/enable-mlops.md)
+- [Publish frames to S3 storage pipelines](./how-to-extend-functionality/store-frames-in-s3.md)
+- [View telemetry data in Open Telemetry](./how-to-extend-functionality/view-telemetry-data.md)
+- [Publish metadata to OPCUA](./how-to-extend-functionality/use-opcua-publisher.md)
+- For the Pallet Defect Detection application, see:
+  - [Generate a model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md)
+  - [Export and optimize a Geti™ model](./pallet-defect-detection/how-to-guides/export-and-optimize-geti-model.md)
+  - [Integrate Camera SDK with supported cameras](./pallet-defect-detection/how-to-guides/integrate-camera-sdks.md)
 
 ## Troubleshooting
 

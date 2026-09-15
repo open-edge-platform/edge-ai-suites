@@ -270,18 +270,27 @@ export METRICS_MANAGER_URL=http://metrics-manager:9090
 export METRICS_STREAM_URL=http://metrics-manager:9090/metrics/stream
 export METRICS_PUSH_ENABLED=True
 export METRICS_PUSH_TIMEOUT_SECONDS=1.0
-export METRICS_MANAGER_PRIVILEGED=False      # Set True only when NPU telemetry requires it
+export METRICS_MANAGER_PRIVILEGED=True       # Required for GPU/NPU host telemetry
 ```
 
 The **System Telemetry** panel in the UI is backed by Metrics Manager. If you override the
 Metrics Manager endpoint, keep `METRICS_MANAGER_URL` and `METRICS_STREAM_URL` reachable from
 the Traffic Intersection Agent container. Docker Compose uses the published
-`intel/metrics-manager:2026.1.0` image by default; set `METRICS_MANAGER_IMAGE` and
+`intel/metrics-manager:2026.2.0-20260715-weekly` image by default; set `METRICS_MANAGER_IMAGE` and
 `METRICS_MANAGER_TAG` only when deploying a custom Metrics Manager build.
 
 ### Customizing the video used by sample application
 
 The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
+
+### Enabling NPU for Object Detection
+
+Object detection for the Smart Traffic Intersection Agent is performed by the Smart
+Intersection application's DL Streamer Pipeline Server, which can be configured to run on
+NPU. The relevant configuration lives in the vendored Smart Intersection sources at
+`deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/`. Refer to
+[Smart Intersection - How to Use NPU for Inference](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/how-to-use-npu-for-inference.html)
+for prerequisites and configuration steps.
 
 ## Accessing the Services
 

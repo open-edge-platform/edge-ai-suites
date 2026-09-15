@@ -1,9 +1,9 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """MQTT subscriber for object detection inference metadata.
 
-Subscribes to the MQTT broker and routes incoming DLStreamer inference
+Subscribes to the MQTT broker and routes incoming DL Streamer inference
 metadata to the appropriate VMS shim for analytics push.
 
 Topic convention: ``/{vms_name}/{analytics_app_id}/{camera_id}``
@@ -146,7 +146,7 @@ class MqttSubscriber:
         except (json.JSONDecodeError, ValueError) as exc:
             logger.warning("mqtt_payload_parse_failed", topic=topic, error=str(exc))
             return
-        # accommodate DLS envelope {"metadata": {...}, "blob": ""} as well as just {}, 
+        # accommodate DLS envelope {"metadata": {...}, "blob": ""} as well as just {},
         # as seen in DLS pipelines with appsink based destination vs gvametapublish based destination
         metadata = data.get("metadata", data)
         objects, timestamp_ms = translate_dls_metadata(metadata, label_type_map, timestamp_offset_ms)

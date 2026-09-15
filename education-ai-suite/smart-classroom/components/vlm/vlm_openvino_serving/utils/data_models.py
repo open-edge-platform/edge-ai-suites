@@ -87,6 +87,10 @@ class ChatRequest(BaseModel):
         None,
         json_schema_extra={"example": 42, "description": "Seed for reproducibility"},
     )
+    enable_thinking: Optional[bool] = Field(
+        None,
+        json_schema_extra={"example": False, "description": "Set False to suppress Qwen3 thinking; None keeps model default"},
+    )
 
 
 class ChatCompletionDelta(BaseModel):

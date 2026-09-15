@@ -101,10 +101,8 @@ cd live-video-captioning
 Clone the repository containing the charts files:
 
 ```bash
-# Clone the latest on mainline
+# Clone the mainline branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
-# Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
 ```
 
 ##### Step 2: Navigate to the chart directory

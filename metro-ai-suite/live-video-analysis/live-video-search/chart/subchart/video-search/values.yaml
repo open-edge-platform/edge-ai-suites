@@ -1,6 +1,11 @@
 global:
   env:
     aggregationContextSeekOffsetSeconds: '0'
+    aggregationPreferFullFrameSeek: 'true'
+    aggregationFullFrameSeekBand: '0.06'
+    watchBatchSize: '10'
+    batchJobPollIntervalSeconds: '0.5'
+    batchJobTimeoutSeconds: '3600'
     aggregationEnabled: 'true'
     aggregationInitialK: '1000'
     aggregationMaxResults: '20'
@@ -15,6 +20,7 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
+  pullPolicy: ''
 images:
   videoSearch:
     repository: video-search

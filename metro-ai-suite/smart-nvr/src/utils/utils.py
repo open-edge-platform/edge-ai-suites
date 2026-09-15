@@ -14,6 +14,12 @@ except Exception:
     VSS_SEARCH_URL = settings.VIDEO_UPLOAD_ENDPOINT or ""
 
 uploaded_files = set()
+TERMINAL_BATCH_STATES = {
+    "completed",
+    "completed_with_errors",
+    "failed",
+    "cancelled",
+}
 
 
 def sanitize_file_path(file_path):
@@ -22,17 +28,17 @@ def sanitize_file_path(file_path):
     return sanitized_name
 
 
-
 def upload_single_video_with_retry(file_path, max_retries=3):
-    """Upload a single video with retry mechanism"""
-    retry_count = 1
+    """Upload one video through Pipeline Manager and return its video ID."""
     sanitized_name = sanitize_file_path(file_path)
     file_size = None
     try:
         file_size = os.path.getsize(file_path)
     except Exception:
         pass
-    logger.info(f"[Upload] Starting upload attempts for {file_path} (sanitized='{sanitized_name}' size={file_size})")
+    logger.info(
+        f"[Upload] Starting upload attempts for {file_path} (sanitized='{sanitized_name}' size={file_size})"
+    )
 
     camera_name = None
     try:
@@ -47,18 +53,14 @@ def upload_single_video_with_retry(file_path, max_retries=3):
     except Exception:
         camera_name = "unknown"
     tags = f"{camera_name}"
-    while retry_count < max_retries:
+    for attempt in range(1, max_retries + 1):
         try:
             with open(file_path, "rb") as file:
                 logger.debug(f"Upload target base: {VSS_SEARCH_URL}")
-                # Step 1: Upload video to get ID
-
                 files = {
                     "video": (sanitized_name, file, "video/mp4"),
                 }
-                data = {
-                    "tags": tags
-                }
+                data = {"tags": tags}
 
                 upload_response = requests.post(
                     f"{VSS_SEARCH_URL}/manager/videos/",
@@ -74,24 +76,14 @@ def upload_single_video_with_retry(file_path, max_retries=3):
                     raise ValueError("No video ID returned from upload")
 
                 logger.info(f"[Upload] Uploaded {file_path} -> videoId={video_id}")
-
-                # Step 2: Process video for search embeddings
-                embedding_response = requests.post(
-                    f"{VSS_SEARCH_URL}/manager/videos/search-embeddings/{video_id}",
-                )
-                embedding_response.raise_for_status()
-
-                logger.info(f"[Upload] Search embeddings processed for videoId={video_id} ({file_path})")
-                return True  # Successfully processed
-        except (requests.exceptions.HTTPError, Exception) as e:
-            retry_count += 1
-
-            # Determine if we should retry or exit
-            if retry_count > max_retries:
-                # Log error with additional context for HTTP errors
+                return video_id
+        except Exception as e:
+            if attempt == max_retries:
                 if isinstance(e, requests.exceptions.HTTPError):
                     status_code = (
-                        e.response.status_code if hasattr(e, "response") else "unknown"
+                        e.response.status_code
+                        if getattr(e, "response", None) is not None
+                        else "unknown"
                     )
                     logger.error(
                         f"HTTP error {status_code} occurred while processing {file_path} after {max_retries} retries: {str(e)}"
@@ -100,49 +92,145 @@ def upload_single_video_with_retry(file_path, max_retries=3):
                     logger.error(
                         f"Error occurred while processing {file_path} after {max_retries} retries: {str(e)}"
                     )
-                return False
+                return None
 
-            # Calculate backoff time and retry
-            backoff_time = 2**retry_count  # Exponential backoff 2,4,8,...
+            backoff_time = 2**attempt
             error_type = (
                 "HTTP error"
                 if isinstance(e, requests.exceptions.HTTPError)
                 else "Error"
             )
-            logger.warning(f"[Upload] {error_type} attempt {retry_count-1}/{max_retries} for {file_path}: {str(e)} | retrying in {backoff_time}s")
+            logger.warning(
+                f"[Upload] {error_type} attempt {attempt}/{max_retries} for {file_path}: "
+                f"{str(e)} | retrying in {backoff_time}s"
+            )
             time.sleep(backoff_time)
 
-    # This should never be reached due to the return statements above, but adding as a safety measure
-    return False
+    return None
+
+
+def submit_embedding_batch(video_ids, max_retries=3):
+    """Submit one Pipeline Manager batch that delegates to DataPrep."""
+    endpoint = f"{VSS_SEARCH_URL}/manager/videos/search-embeddings-batch"
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.post(endpoint, json={"videoIds": video_ids})
+            response.raise_for_status()
+            job_id = response.json().get("job_id")
+            if not job_id:
+                raise ValueError("No job_id returned from batch submission")
+            logger.info(
+                f"[Upload] Submitted {len(video_ids)} videos for batch embedding, "
+                f"job ID: {job_id}"
+            )
+            return job_id
+        except Exception as e:
+            if attempt == max_retries:
+                logger.error(
+                    f"[Upload] Failed to submit embedding batch after "
+                    f"{max_retries} attempts: {str(e)}"
+                )
+                return None
+            backoff_time = 2**attempt
+            logger.warning(
+                f"[Upload] Embedding batch submission failed on attempt "
+                f"{attempt}/{max_retries}: {str(e)}. Retrying in "
+                f"{backoff_time} seconds..."
+            )
+            time.sleep(backoff_time)
+    return None
+
+
+def wait_for_embedding_batch(job_id):
+    """Poll Pipeline Manager until a DataPrep batch job reaches a terminal state."""
+    endpoint = f"{VSS_SEARCH_URL}/manager/videos/search-embeddings-jobs/{job_id}"
+    deadline = time.monotonic() + settings.BATCH_JOB_TIMEOUT_SECONDS
+
+    while time.monotonic() < deadline:
+        try:
+            response = requests.get(endpoint)
+            response.raise_for_status()
+            status = response.json()
+            state = status.get("state")
+            if state in TERMINAL_BATCH_STATES:
+                logger.info(
+                    f"[Upload] Embedding batch {job_id} finished with state {state}"
+                )
+                return status
+        except Exception as e:
+            logger.warning(
+                f"[Upload] Failed to poll embedding batch {job_id}: {str(e)}"
+            )
+
+        time.sleep(settings.BATCH_JOB_POLL_INTERVAL_SECONDS)
+
+    logger.error(
+        f"[Upload] Timed out after {settings.BATCH_JOB_TIMEOUT_SECONDS:.1f} "
+        f"seconds waiting for embedding batch {job_id}"
+    )
+    return None
 
 
 def upload_videos_to_dataprep(file_paths):
+    """Upload files through Pipeline Manager and embed them in DataPrep batches."""
+    requested_paths = list(file_paths)
     start_batch = time.time()
-    logger.info(f"[Upload] Starting batch upload of {len(file_paths)} files")
-    all_success = True
-    processed = 0
-    skipped = 0
-    for file_path in file_paths:
+    logger.info(f"[Upload] Starting batch upload of {len(requested_paths)} files")
+    previously_uploaded_paths = {
+        path for path in requested_paths if path in uploaded_files
+    }
+    successful_paths = set(previously_uploaded_paths)
+    video_paths_by_id = {}
+
+    for file_path in requested_paths:
         if file_path in uploaded_files:
-            skipped += 1
             logger.debug(f"[Upload] Skipping already uploaded file {file_path}")
             continue
-        single_start = time.time()
-        success = upload_single_video_with_retry(file_path)
-        elapsed_single = time.time() - single_start
-        if success:
-            processed += 1
-            uploaded_files.add(file_path)
-            logger.info(f"[Upload] Completed upload for {file_path} in {elapsed_single:.2f}s (progress {processed}/{len(file_paths)})")
-            if settings.DELETE_PROCESSED_FILES:
-                try:
-                    os.remove(file_path)
-                    logger.info(f"[Upload] Deleted processed file {file_path}")
-                except Exception as del_err:
-                    logger.warning(f"[Upload] Failed to delete {file_path}: {del_err}")
-        else:
-            all_success = False
-            logger.error(f"[Upload] Failed upload for {file_path} after retries (elapsed {elapsed_single:.2f}s)")
+        video_id = upload_single_video_with_retry(file_path)
+        if video_id:
+            video_paths_by_id[video_id] = file_path
+
+    video_ids = list(video_paths_by_id)
+    batch_size = max(1, settings.WATCH_BATCH_SIZE)
+    for start in range(0, len(video_ids), batch_size):
+        batch_ids = video_ids[start : start + batch_size]
+        job_id = submit_embedding_batch(batch_ids)
+        status = wait_for_embedding_batch(job_id) if job_id else None
+        if not status:
+            continue
+
+        for item in status.get("items", []):
+            if item.get("status") != "success":
+                logger.error(
+                    f"[Upload] Batch embedding failed for "
+                    f"{item.get('identifier', 'unknown item')}: "
+                    f"{item.get('message', 'unknown error')}"
+                )
+                continue
+            video_id = item.get("video_id") or item.get("identifier")
+            file_path = video_paths_by_id.get(video_id)
+            if file_path:
+                successful_paths.add(file_path)
+
+    for file_path in successful_paths:
+        uploaded_files.add(file_path)
+        if (
+            file_path not in previously_uploaded_paths
+            and settings.DELETE_PROCESSED_FILES
+            and os.path.exists(file_path)
+        ):
+            try:
+                os.remove(file_path)
+                logger.info(f"[Upload] Deleted processed file {file_path}")
+            except OSError as del_err:
+                logger.warning(f"[Upload] Failed to delete {file_path}: {del_err}")
+
+    failed_count = len(requested_paths) - len(successful_paths)
     batch_elapsed = time.time() - start_batch
-    logger.info(f"[Upload] Batch complete: success={all_success} processed={processed} skipped={skipped} total={len(file_paths)} elapsed={batch_elapsed:.2f}s")
-    return all_success
+    logger.info(
+        f"[Upload] Batch complete: success={failed_count == 0} "
+        f"processed={len(successful_paths) - len(previously_uploaded_paths)} "
+        f"skipped={len(previously_uploaded_paths)} total={len(requested_paths)} "
+        f"elapsed={batch_elapsed:.2f}s"
+    )
+    return failed_count == 0

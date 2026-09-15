@@ -1,7 +1,7 @@
 import { join } from "node:path";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
-import { monitorCtl } from "@smartbuilding-video/tools";
-import type { MonitorConfig, ServerConfig } from "./config.js";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import { monitorCtl } from "@smart-community-video/tools";
+import { loadMonitorsConfig, type MonitorConfig, type ServerConfig } from "./config.js";
 import { logger, monitorLogger } from "./logger.js";
 import type { WorkerService } from "./video-worker/index.js";
 
@@ -24,7 +24,7 @@ export interface ApplyResult {
  * <monitorsLogsDir>/<monitor_id>/<YYYY-MM-DD>.log via monitorLogger.
  */
 export async function applyMonitorConfig(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   config: ServerConfig,
   workerService: WorkerService,
   monitors: Record<string, MonitorConfig>,
@@ -97,10 +97,10 @@ export async function applyMonitorConfig(
  * full per-monitor traces go to logs/monitors/<monitor_id>/<date>.log.
  *
  * videostream-analytics (:8999) unreachable → warn for each affected monitor,
- * server continues running. User can run smartbuilding_monitors_compose up later.
+ * server continues running. User can run smart_community_monitors_compose up later.
  */
 export async function autoRegisterMonitors(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   config: ServerConfig,
   workerService: WorkerService,
 ): Promise<void> {
@@ -121,7 +121,7 @@ export async function autoRegisterMonitors(
 }
 
 async function isAlreadyRunning(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsUrl: string,
   workerService: WorkerService,
   monitorId: string,
@@ -134,5 +134,65 @@ async function isAlreadyRunning(
     return resp.status === 200;
   } catch {
     return false;
+  }
+}
+
+const reRegisterInFlight = new Set<string>();
+
+/**
+ * Re-register one monitor that videostream-analytics no longer knows — the
+ * keepalive heartbeat got a 404, meaning VSA is reachable but its in-memory
+ * source registry was wiped (container recreate / process restart).
+ *
+ * The declaration is re-read from monitors.yaml on every call, so entries
+ * persisted at runtime and pipeline_config (which is NOT stored in the
+ * monitors DB table) are picked up. Monitors absent from or disabled in
+ * monitors.yaml are NOT resurrected — VSA dropping them then matches the
+ * desired state.
+ *
+ * Concurrent triggers for the same monitor collapse into one registration;
+ * keepalive ticks fire faster than a registration completes. A failed attempt
+ * clears the guard, so the next 404 retries — self-healing across a VSA that
+ * is still coming up.
+ */
+export async function reregisterUnknownMonitor(
+  db: SmartCommunityDB,
+  config: ServerConfig,
+  workerService: WorkerService,
+  monitorId: string,
+): Promise<void> {
+  if (reRegisterInFlight.has(monitorId)) return;
+  reRegisterInFlight.add(monitorId);
+  const mLog = monitorLogger(monitorId, config.monitorsLogsDir, config.logging.maxFileMb);
+  try {
+    if (!config.monitorsPath) {
+      mLog.warn(`re-register skipped: server started without --monitors, no monitors.yaml to reload`);
+      return;
+    }
+    let monitors: Record<string, MonitorConfig>;
+    try {
+      monitors = loadMonitorsConfig(config.monitorsPath);
+    } catch (err: any) {
+      mLog.error(`re-register failed: cannot reload ${config.monitorsPath}: ${err?.message ?? err}`);
+      return;
+    }
+    const cfg = monitors[monitorId];
+    if (!cfg) {
+      mLog.warn(`re-register skipped: ${monitorId} not declared in monitors.yaml (removed while analytics was down?)`);
+      return;
+    }
+    if (cfg.enabled === false) {
+      mLog.info(`re-register skipped: disabled in monitors.yaml`);
+      return;
+    }
+    logger.warn(`[re-register] ${monitorId} unknown to videostream-analytics — re-registering from ${config.monitorsPath}`);
+    const [r] = await applyMonitorConfig(db, config, workerService, { [monitorId]: cfg }, "up");
+    if (r && (r.status === "ok" || r.status === "already_running")) {
+      logger.info(`[re-register] ${monitorId} ${r.status}`);
+    } else {
+      logger.warn(`[re-register] ${monitorId} failed: ${r?.reason ?? "no result"} — will retry on the next keepalive 404`);
+    }
+  } finally {
+    reRegisterInFlight.delete(monitorId);
   }
 }

@@ -11,6 +11,8 @@ spec:
       app: postgres-service
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/postgres-service-configmap.yaml") . | sha256sum }}
       labels:
         app: postgres-service
         {{- include "lvs.postgres.selectorLabels" . | nindent 8 }}

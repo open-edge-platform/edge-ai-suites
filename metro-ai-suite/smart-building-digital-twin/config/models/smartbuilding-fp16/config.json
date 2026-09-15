@@ -1,0 +1,8 @@
+{
+   "model_parameters": {
+      "labels": "luggage door person",
+      "label_ids": "69a0a94d52c987d6db7c30f2 69a0a94d52c987d6db7c30f3 69a0a94d52c987d6db7c30f4"
+   },
+   "model_type": "ssd",
+   "task_type": "detection"
+}

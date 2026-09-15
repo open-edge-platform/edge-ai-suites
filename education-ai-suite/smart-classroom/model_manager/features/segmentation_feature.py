@@ -7,10 +7,10 @@ from fastapi.responses import JSONResponse
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
-from utils.locks import audio_pipeline_lock
 from utils.runtime_config_loader import RuntimeConfig
 from utils.scp_sender import get_scp_sender
 from utils.session_state_manager import SessionState
+from utils.stage_tracker import stage_tracker
 from utils.telegram_sender import get_sender
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,6 @@ router = APIRouter()
 @router.post("/content-segmentation")
 def content_segmentation(request: SummaryRequest):
 
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
-
     pipeline = Pipeline(request.session_id)
 
     session_state = SessionState.get_session_state(request.session_id)
@@ -31,7 +28,8 @@ def content_segmentation(request: SummaryRequest):
     logger.info(f"   Session state: {session_state}")
 
     try:
-        contents_json = pipeline.run_content_segmentation()
+        with stage_tracker(pipeline.session_id, "segmentation"):
+            contents_json = pipeline.run_content_segmentation()
         logger.info("✅ content segmentation generated successfully.")
 
         project_config = RuntimeConfig.get_section("Project")

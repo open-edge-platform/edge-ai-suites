@@ -73,6 +73,14 @@ live-video-captioning:
       captionHistory: "3"
       liveVideoRagHostPort: "4172"
 
+      # Optional: NPU-specific configuration
+      # NPU_MAX_PROMPT_LENGTH: Maximum number of tokens that the model can process for the input prompt.
+      #                        Higher values may increase processing time, while lower values may limit the model's ability to process high resolution frames.
+      #                        Default set to 4096 tokens, which is adjusted to support 1080p frame. You can adjust this value based on your performance requirements.
+      # NPU_MIN_RESPONSE_LENGTH: Minimum number of tokens that the model can generate for the output response.
+      NPU_MAX_PROMPT_LENGTH: 4096
+      NPU_MIN_RESPONSE_LENGTH: 128
+
   dlstreamer-pipeline-server:
     modelsPvcName: "models-pvc"
 

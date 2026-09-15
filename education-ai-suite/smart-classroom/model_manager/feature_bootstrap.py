@@ -58,20 +58,15 @@ def startup(app: FastAPI) -> None:
 
     ModelManager.instance().warmup(list(eff.capabilities))
 
-    if eff.is_enabled("video_analytics"):
-        from components.va.media_service import ensure_media_service_running
-        ensure_media_service_running()  # health-polled, idempotent
-        logger.info("MediaMTX ensured running for video_analytics.")
-
-    if eff.is_enabled("content_search"):
-        logger.info("content_search enabled; will start via feature build().")
-
     for feature in in_dependency_order():
         if not eff.is_enabled(feature.id):
             continue
         logger.info("Building feature '%s'...", feature.id)
         feature.build()
-        app.include_router(feature.router)
-        logger.info("Feature '%s' built and router mounted.", feature.id)
+        if feature.router is not None:
+            app.include_router(feature.router)
+            logger.info("Feature '%s' built and router mounted.", feature.id)
+        else:
+            logger.info("Feature '%s' built (no router to mount).", feature.id)
 
     logger.info("Startup orchestration complete.")

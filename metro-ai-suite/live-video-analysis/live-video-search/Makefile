@@ -9,7 +9,7 @@
 # This application consumes pre-built images and also images build from source from upstream projects:
 #   - VSS Search (Video Search and Summarization)
 #   - Smart NVR (Frigate-based network video recorder)
-#   - Telemetry (vss-collector)
+#   - Metrics Manager
 # 
 #
 # Quick Start:
@@ -22,9 +22,12 @@
 # Configuration:
 #   REGISTRY_URL              - Image registry prefix (default: intel)
 #   TAG                       - Shared image tag (default: latest)
-#   DEVICE                    - GPU (default) or CPU
-#   EMBEDDING_MODEL_NAME      - Embedding model (default: CLIP/clip-vit-b-32)
+#   MULTIMODAL_EMBEDDING_MODEL - Embedding model (default: CLIP/clip-vit-b-32)
+#   DATAPREP_EMBEDDING_DEVICE - Indexing embedding device (default: CPU)
+#   DATAPREP_DETECTION_DEVICE - Object detection device (default: CPU)
+#   MME_EMBEDDING_DEVICE      - Query embedding device (default: CPU)
 #   APP_HOST_PORT             - Main app port (default: 12345)
+#   ENABLE_METRICS_MANAGER    - Live system/DataPrep metrics (default: true)
 #
 # Required Secrets (must be set before deploy):
 #   MINIO_ROOT_USER, MINIO_ROOT_PASSWORD
@@ -56,16 +59,6 @@ TAG ?= latest
 VSS_STACK_TAG ?= $(TAG)
 SMART_NVR_STACK_TAG ?= $(TAG)
 
-# Release-specific tag mapping: TAG=1.0.0 pins upstream versions
-ifeq ($(TAG),1.0.0)
-  ifeq ($(VSS_STACK_TAG),$(TAG))
-    VSS_STACK_TAG := 1.3.2
-  endif
-  ifeq ($(SMART_NVR_STACK_TAG),$(TAG))
-    SMART_NVR_STACK_TAG := 1.2.4
-  endif
-endif
-
 # Compute REGISTRY the same way setup.sh does: REGISTRY_URL/PROJECT_NAME/
 REGISTRY := $(if $(REGISTRY_URL),$(REGISTRY_URL)/)$(if $(PROJECT_NAME),$(PROJECT_NAME)/)
 
@@ -73,14 +66,12 @@ REGISTRY := $(if $(REGISTRY_URL),$(REGISTRY_URL)/)$(if $(PROJECT_NAME),$(PROJECT
 # Component Definitions
 # ==============================================================================
 
-# VSS Search stack components
-VSS_COMPONENTS := vss-ui pipeline-manager video-search vdms-dataprep multimodal-embedding-serving
+# VSS Search stack components. Both retriever backend images are distributed
+# with LVS; VECTORDB_BACKEND selects which one runs.
+VSS_COMPONENTS := vss-ui pipeline-manager video-search multimodal-dataprep multimodal-embedding-serving vector-retriever-vdms vector-retriever-milvus
 
 # Smart NVR stack components
 SMART_NVR_COMPONENTS := nvr-event-router
-
-# Telemetry stack components (uses fixed upstream tag)
-TELEMETRY_COMPONENTS := vss-collector
 
 # All first-party components
 COMPONENTS := $(VSS_COMPONENTS) $(SMART_NVR_COMPONENTS)
@@ -89,9 +80,7 @@ COMPONENTS := $(VSS_COMPONENTS) $(SMART_NVR_COMPONENTS)
 # Deployment Configuration
 # ==============================================================================
 
-DEVICE ?= GPU
-EMBEDDING_MODEL_NAME ?= CLIP/clip-vit-b-32
-ENABLE_EMBEDDING_GPU ?= true
+MULTIMODAL_EMBEDDING_MODEL ?= CLIP/clip-vit-b-32
 FRAME_INTERVAL ?= 15
 ROI_CONSOLIDATION_ENABLED ?= false
 ROI_CONSOLIDATION_IOU_THRESHOLD ?= 0.2
@@ -100,6 +89,11 @@ ROI_CONSOLIDATION_CONTEXT_SCALE ?= 0.2
 DATAPREP_EMBEDDING_DEVICE ?= CPU
 DATAPREP_DETECTION_DEVICE ?= CPU
 MME_EMBEDDING_DEVICE ?= CPU
+VECTORDB_BACKEND ?= vdms
+ENABLE_METRICS_MANAGER ?= true
+VS_WATCH_BATCH_SIZE ?= 10
+VS_BATCH_JOB_POLL_INTERVAL_SECONDS ?= 0.5
+VS_BATCH_JOB_TIMEOUT_SECONDS ?= 3600
 
 # Deployment mode: default | rtsp-test | usb-camera
 START_MODE ?= default
@@ -118,7 +112,13 @@ else
 endif
 
 # Compose file set based on mode
-COMPOSE_BASE := -f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml -f docker/compose.telemetry.yaml
+COMPOSE_BASE := -f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml
+ifeq ($(ENABLE_METRICS_MANAGER),true)
+  COMPOSE_BASE += -f docker/compose.metrics-manager.yaml
+endif
+ifeq ($(VECTORDB_BACKEND),milvus)
+  COMPOSE_BASE += -f docker/compose.search.milvus.yaml
+endif
 ifeq ($(START_MODE),rtsp-test)
   COMPOSE_FILES := $(COMPOSE_BASE) -f docker/compose.rtsp-test.yaml
 else ifeq ($(START_MODE),usb-camera)
@@ -126,8 +126,6 @@ else ifeq ($(START_MODE),usb-camera)
 else
   COMPOSE_FILES := $(COMPOSE_BASE)
 endif
-
-DEVICE_UPPER := $(shell echo $(DEVICE) | tr '[:lower:]' '[:upper:]')
 
 # ==============================================================================
 # Environment Export Block
@@ -138,9 +136,7 @@ define EXPORT_RUNTIME_ENV
 	export TAG="$${TAG:-$(TAG)}"
 	export VSS_STACK_TAG="$${VSS_STACK_TAG:-$(VSS_STACK_TAG)}"
 	export SMART_NVR_STACK_TAG="$${SMART_NVR_STACK_TAG:-$(SMART_NVR_STACK_TAG)}"
-	export DEVICE="$${DEVICE:-$(DEVICE_UPPER)}"
-	export EMBEDDING_MODEL_NAME="$${EMBEDDING_MODEL_NAME:-$(EMBEDDING_MODEL_NAME)}"
-	export ENABLE_EMBEDDING_GPU="$${ENABLE_EMBEDDING_GPU:-$(ENABLE_EMBEDDING_GPU)}"
+	export MULTIMODAL_EMBEDDING_MODEL="$${MULTIMODAL_EMBEDDING_MODEL:-$(MULTIMODAL_EMBEDDING_MODEL)}"
 	export FRAME_INTERVAL="$${FRAME_INTERVAL:-$(FRAME_INTERVAL)}"
 	export ROI_CONSOLIDATION_ENABLED="$${ROI_CONSOLIDATION_ENABLED:-$(ROI_CONSOLIDATION_ENABLED)}"
 	export ROI_CONSOLIDATION_IOU_THRESHOLD="$${ROI_CONSOLIDATION_IOU_THRESHOLD:-$(ROI_CONSOLIDATION_IOU_THRESHOLD)}"
@@ -149,6 +145,11 @@ define EXPORT_RUNTIME_ENV
 	export DATAPREP_EMBEDDING_DEVICE="$${DATAPREP_EMBEDDING_DEVICE:-$(DATAPREP_EMBEDDING_DEVICE)}"
 	export DATAPREP_DETECTION_DEVICE="$${DATAPREP_DETECTION_DEVICE:-$(DATAPREP_DETECTION_DEVICE)}"
 	export MME_EMBEDDING_DEVICE="$${MME_EMBEDDING_DEVICE:-$(MME_EMBEDDING_DEVICE)}"
+	export VECTORDB_BACKEND="$${VECTORDB_BACKEND:-$(VECTORDB_BACKEND)}"
+	export ENABLE_METRICS_MANAGER="$${ENABLE_METRICS_MANAGER:-$(ENABLE_METRICS_MANAGER)}"
+	export VS_WATCH_BATCH_SIZE="$${VS_WATCH_BATCH_SIZE:-$(VS_WATCH_BATCH_SIZE)}"
+	export VS_BATCH_JOB_POLL_INTERVAL_SECONDS="$${VS_BATCH_JOB_POLL_INTERVAL_SECONDS:-$(VS_BATCH_JOB_POLL_INTERVAL_SECONDS)}"
+	export VS_BATCH_JOB_TIMEOUT_SECONDS="$${VS_BATCH_JOB_TIMEOUT_SECONDS:-$(VS_BATCH_JOB_TIMEOUT_SECONDS)}"
 	export MINIO_ROOT_USER="$${MINIO_ROOT_USER:-}"
 	export MINIO_ROOT_PASSWORD="$${MINIO_ROOT_PASSWORD:-}"
 	export POSTGRES_USER="$${POSTGRES_USER:-}"
@@ -256,13 +257,20 @@ validate-env:
 	fi
 
 validate-device:
-	@if [ "$(DEVICE_UPPER)" != "CPU" ] && [ "$(DEVICE_UPPER)" != "GPU" ]; then \
-		echo "❌ Invalid DEVICE '$(DEVICE_UPPER)'. Use CPU or GPU."; \
-		exit 1; \
-	fi; \
-	if [ "$(DEVICE_UPPER)" = "GPU" ]; then \
+	@for value in "$(DATAPREP_EMBEDDING_DEVICE)" "$(DATAPREP_DETECTION_DEVICE)" "$(MME_EMBEDDING_DEVICE)"; do \
+		case "$$value" in CPU|GPU|NPU) ;; \
+			*) echo "❌ Invalid component device '$$value'. Use CPU, GPU, or NPU."; exit 1 ;; \
+		esac; \
+	done; \
+	if [ "$(DATAPREP_EMBEDDING_DEVICE)" = "GPU" ] || [ "$(DATAPREP_DETECTION_DEVICE)" = "GPU" ] || [ "$(MME_EMBEDDING_DEVICE)" = "GPU" ]; then \
 		if [ ! -d /dev/dri ] || [ -z "$$(ls -A /dev/dri 2>/dev/null)" ]; then \
-			echo "❌ GPU mode requires /dev/dri but it is not available."; \
+			echo "❌ A GPU component device requires /dev/dri but it is not available."; \
+			exit 1; \
+		fi; \
+	fi; \
+	if [ "$(DATAPREP_EMBEDDING_DEVICE)" = "NPU" ] || [ "$(DATAPREP_DETECTION_DEVICE)" = "NPU" ] || [ "$(MME_EMBEDDING_DEVICE)" = "NPU" ]; then \
+		if [ ! -c /dev/accel/accel0 ]; then \
+			echo "❌ An NPU component device requires /dev/accel/accel0 but it is not available."; \
 			exit 1; \
 		fi; \
 	fi; \
@@ -286,14 +294,15 @@ deploy: validate
 	@echo "Configuration:"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	@echo "  START_MODE:         $(START_MODE)"
-	@echo "  DEVICE:             $(DEVICE_UPPER)"
 	@echo "  REGISTRY_URL:       $(REGISTRY_URL)"
 	@echo "  TAG:                $(TAG)"
 	@echo "  VSS_STACK_TAG:      $(VSS_STACK_TAG)"
 	@echo "  SMART_NVR_STACK_TAG: $(SMART_NVR_STACK_TAG)"
 	@echo "  APP_HOST_PORT:      $(APP_HOST_PORT)"
-	@echo "  EMBEDDING_MODEL:    $(EMBEDDING_MODEL_NAME)"
-	@echo "  ENABLE_EMBEDDING_GPU: $(ENABLE_EMBEDDING_GPU)"
+	@echo "  MULTIMODAL_EMBEDDING_MODEL: $(MULTIMODAL_EMBEDDING_MODEL)"
+	@echo "  DATAPREP_EMBEDDING_DEVICE: $(DATAPREP_EMBEDDING_DEVICE)"
+	@echo "  DATAPREP_DETECTION_DEVICE: $(DATAPREP_DETECTION_DEVICE)"
+	@echo "  MME_EMBEDDING_DEVICE: $(MME_EMBEDDING_DEVICE)"
 	@echo ""
 	@echo "Secrets:"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -595,10 +604,15 @@ help:
 	@echo "  TAG                     Shared image tag (default: latest)"
 	@echo "  VSS_STACK_TAG           Override tag for VSS services (default: TAG)"
 	@echo "  SMART_NVR_STACK_TAG     Override tag for Smart NVR services (default: TAG)"
-	@echo "  DEVICE                  CPU (default) or GPU"
-	@echo "  EMBEDDING_MODEL_NAME    Embedding model (default: CLIP/clip-vit-b-32)"
+	@echo "  MULTIMODAL_EMBEDDING_MODEL  Embedding model (default: CLIP/clip-vit-b-32)"
 	@echo "  APP_HOST_PORT           Main app port (default: 12345)"
-	@echo "  ENABLE_EMBEDDING_GPU    Force GPU mode (default: false)"
+	@echo "  DATAPREP_EMBEDDING_DEVICE  Indexing embedding device: CPU, GPU, or NPU"
+	@echo "  DATAPREP_DETECTION_DEVICE  Object detection device: CPU, GPU, or NPU"
+	@echo "  MME_EMBEDDING_DEVICE       Query embedding device: CPU, GPU, or NPU"
+	@echo "  VECTORDB_BACKEND        vdms (default) or milvus"
+	@echo "  VS_WATCH_BATCH_SIZE     Continuous-ingestion watcher batch size (default: 10; max: 100)"
+	@echo "  VS_BATCH_JOB_POLL_INTERVAL_SECONDS  Batch poll interval (default: 0.5)"
+	@echo "  VS_BATCH_JOB_TIMEOUT_SECONDS  Batch completion timeout (default: 3600)"
 	@echo "  USB_CAMERA_DEVICE       USB camera path (default: /dev/video0)"
 	@echo "  START_MODE              default | rtsp-test | usb-camera"
 	@echo ""
@@ -610,14 +624,17 @@ help:
 	@echo "  # Deploy with RTSP test stream"
 	@echo "  make deploy-rtsp-test"
 	@echo ""
-	@echo "  # Deploy with GPU-accelerated embeddings"
-	@echo "  DEVICE=GPU make deploy"
+	@echo "  # Run indexing and query embeddings on GPU"
+	@echo "  DATAPREP_EMBEDDING_DEVICE=GPU MME_EMBEDDING_DEVICE=GPU make deploy"
 	@echo ""
-	@echo "  # Pull specific version and deploy"
-	@echo "  TAG=1.0.0 make deploy-build"
+	@echo "  # Pull a specific version and deploy"
+	@echo "  TAG=<version> make deploy-build"
 	@echo ""
 	@echo "  # Preview resolved compose config"
 	@echo "  make config"
+	@echo ""
+	@echo "  # Deploy with Milvus and vector-retriever-milvus"
+	@echo "  VECTORDB_BACKEND=milvus make deploy"
 	@echo ""
 	@echo "  # Check host readiness"
 	@echo "  make validate"

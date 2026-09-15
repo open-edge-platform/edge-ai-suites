@@ -411,7 +411,10 @@ class UIComponents:
             return []
         
         image_list = []
-        
+        from datetime import datetime, timezone
+        stale_threshold_seconds = Config.get_camera_stale_threshold_seconds()
+        now = datetime.now(timezone.utc)
+
         for camera_name, camera_data in monitoring_data.camera_images.items():
             # Handle both CameraData objects and dict structures from API
             if hasattr(camera_data, 'image_base64'):
@@ -419,11 +422,13 @@ class UIComponents:
                 image_base64 = camera_data.image_base64
                 direction = camera_data.direction
                 camera_id = camera_data.camera_id
+                image_timestamp = camera_data.timestamp
             elif isinstance(camera_data, dict):
                 # Dict from API
                 image_base64 = camera_data.get('image_base64')
                 direction = camera_data.get('direction', 'unknown')
                 camera_id = camera_data.get('camera_id', 'unknown')
+                image_timestamp = camera_data.get('timestamp')
             else:
                 continue
                 
@@ -437,6 +442,25 @@ class UIComponents:
                     
                     # Create a caption with camera info
                     caption = f"{direction.upper()} - {camera_id}"
+
+                    # Flag feeds that haven't produced a new frame recently.
+                    # This is a UI-side mitigation/diagnostic for the
+                    # "frozen video" symptom in ITEP-92089; the underlying
+                    # video source issue lives in the upstream ingestion
+                    # pipeline (deps/metro-vision submodule) and is tracked
+                    # separately.
+                    if image_timestamp:
+                        if isinstance(image_timestamp, str):
+                            try:
+                                image_timestamp = datetime.fromisoformat(image_timestamp.replace('Z', '+00:00'))
+                            except ValueError:
+                                image_timestamp = None
+                        if image_timestamp is not None:
+                            if image_timestamp.tzinfo is None:
+                                image_timestamp = image_timestamp.replace(tzinfo=timezone.utc)
+                            age_seconds = (now - image_timestamp).total_seconds()
+                            if age_seconds > stale_threshold_seconds:
+                                caption = f"⚠️ STALE ({int(age_seconds)}s old) - {caption}"
                     
                     # For Gradio Gallery, we need to save the image temporarily or use base64
                     # We'll return the image object and caption
@@ -451,6 +475,17 @@ class UIComponents:
     @staticmethod
     async def create_system_info(monitoring_data: Optional[MonitoringData] = None) -> str:
         """Create system information footer with current status"""
+        return UIComponents.build_system_info_html(monitoring_data)
+
+    @staticmethod
+    def build_system_info_html(monitoring_data: Optional[MonitoringData] = None) -> str:
+        """Synchronously build the system information footer HTML.
+
+        Extracted from create_system_info so a live clock timer (which cannot
+        await a coroutine on every tick from a sync Gradio callback) can
+        re-render this panel with a fresh "Current Time" on every tick,
+        independent of when new monitoring data actually arrives.
+        """
         # Use UTC and consistent formatting for both current time and last update
         from datetime import datetime, timezone
 

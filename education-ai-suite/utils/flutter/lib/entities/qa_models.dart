@@ -25,12 +25,26 @@ class QaSource {
       score = s <= 1.0 ? s * 100 : s;
     }
 
+    // Format video_pin_second (raw seconds) to MM:SS timestamp
+    // Backend sends video_pin_second as a float for video sources
+    String? formattedTimestamp;
+    final videoPinSecond = json['video_pin_second'];
+    if (videoPinSecond != null) {
+      final totalSeconds = (videoPinSecond as num).toInt();
+      final minutes = totalSeconds ~/ 60;
+      final seconds = totalSeconds % 60;
+      formattedTimestamp = '$minutes:${seconds.toString().padLeft(2, '0')}';
+    } else {
+      // Fallback: check if backend already sent a formatted timestamp
+      formattedTimestamp = json['timestamp'] as String?;
+    }
+
     return QaSource(
       type: json['type'] as String?,
       displayName: (json['display_name'] as String?) ??
           (json['file_name'] as String?) ??
           'Source',
-      formattedTimestamp: json['timestamp'] as String?,
+      formattedTimestamp: formattedTimestamp,
       score: score,
     );
   }

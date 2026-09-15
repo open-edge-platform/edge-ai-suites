@@ -9,7 +9,8 @@ import {
 } from '../../services/api';
 import type { GradingTask, GradingSummary } from '../../services/api';
 import RemoveConfirmationModal from '../common/RemoveConfirmationModal';
-import { shortId, formatElapsed, toErrorMessage } from './gradingUtils';
+import GradingModal from './GradingModal';
+import { shortId, formatElapsed, isTerminalStatus, toErrorMessage } from './gradingUtils';
 
 interface TaskDetailProps {
   task: GradingTask;
@@ -35,7 +36,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
   const [fullLogLoading, setFullLogLoading] = useState<boolean>(false);
 
   const status = task.status;
-  const isTerminal = status === 'COMPLETED' || status === 'FAILED' || status === 'CANCELLED';
+  const isTerminal = isTerminalStatus(status);
 
   const canPause = status === 'RUNNING';
   const canResume = status === 'PAUSED';
@@ -225,21 +226,19 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ task, onControlled, onDeleted, 
       </div>
 
       {logModalOpen && (
-        <div className="grading-picker-overlay" onClick={() => setLogModalOpen(false)}>
-          <div className="grading-log-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="grading-picker-header">
-              <span className="grading-picker-title">{t('grading.detail.log', 'Live log')} — {shortId(task.task_id)}</span>
-              <button className="grading-picker-close" onClick={() => setLogModalOpen(false)}>×</button>
-            </div>
-            <pre className="grading-log-modal-box">
-              {fullLogLoading
-                ? t('grading.detail.logLoading', 'Loading...')
-                : fullLogLines.length > 0
-                  ? fullLogLines.join('\n')
-                  : t('grading.detail.logEmpty', 'No log output yet.')}
-            </pre>
-          </div>
-        </div>
+        <GradingModal
+          title={`${t('grading.detail.log', 'Live log')} — ${shortId(task.task_id)}`}
+          onClose={() => setLogModalOpen(false)}
+          className="grading-log-modal"
+        >
+          <pre className="grading-log-modal-box">
+            {fullLogLoading
+              ? t('grading.detail.logLoading', 'Loading...')
+              : fullLogLines.length > 0
+                ? fullLogLines.join('\n')
+                : t('grading.detail.logEmpty', 'No log output yet.')}
+          </pre>
+        </GradingModal>
       )}
 
       <RemoveConfirmationModal

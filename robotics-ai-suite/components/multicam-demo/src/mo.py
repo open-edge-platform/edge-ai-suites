@@ -27,6 +27,6 @@ if __name__ == '__main__':
 	half=True if args.data_type=="FP16" else False
 
 	model = YOLO(args.model)
-	model.export(format="openvino", dynamic=True, half=half, opset=18)
+	model.export(format="openvino", dynamic=True, half=half)
 
 

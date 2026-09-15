@@ -1,4 +1,4 @@
-import { SchemaManager, type SchemaDefinition } from "@smartbuilding-video/db";
+import { SchemaManager, type SchemaDefinition } from "@smart-community-video/db";
 
 export interface UseCaseValidateParams {
   use_case: string;

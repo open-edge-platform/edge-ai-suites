@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/agentic-predictive-maintenance">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/agentic-predictive-maintenance-pipeline">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/agentic-predictive-maintenance/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-predictive-maintenance-pipeline/README.md">
      Readme
   </a>
 </div>
@@ -43,6 +43,8 @@ configuration files.
 
 - **Development**
   - [Build from Source](./build-from-source.md): Build the application images from source code.
+  - [Training with Intel Geti](./training-with-geti.md): Train and export a custom defect
+    detection model for use with the DL Streamer pipeline.
 
 - **API Reference**
   - [API Reference](./api-reference.md): Representational State Transfer (REST) API endpoints for
@@ -58,6 +60,7 @@ configuration files.
 get-started
 how-it-works
 build-from-source
+training-with-geti
 api-reference
 troubleshooting
 release-notes

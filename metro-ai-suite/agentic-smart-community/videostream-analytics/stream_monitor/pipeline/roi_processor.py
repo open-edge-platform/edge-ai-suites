@@ -26,6 +26,39 @@ _CONCAT_CROP_W = 224
 _DIVIDER_W = 4
 
 
+def transcode_h264_in_place(path: str) -> bool:
+    """Replace an MP4 with a browser-compatible H.264 encode."""
+    h264_path = f"{os.path.splitext(path)[0]}_h264.mp4"
+    try:
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-nostdin", "-i", path,
+                "-map", "0:v:0", "-an", "-c:v", "libx264",
+                "-preset", "fast", "-pix_fmt", "yuv420p",
+                "-movflags", "+faststart", h264_path,
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True,
+            timeout=120,
+        )
+        os.replace(h264_path, path)
+        return True
+    except (
+        subprocess.CalledProcessError,
+        subprocess.TimeoutExpired,
+        FileNotFoundError,
+        OSError,
+    ) as error:
+        logger.warning("H.264 re-encode failed for %s (%s), keeping original", path, error)
+        try:
+            if os.path.exists(h264_path):
+                os.remove(h264_path)
+        except OSError:
+            pass
+        return False
+
+
 def _expand_roi(roi_xyxy: list[float], expand: float) -> tuple[float, float, float, float]:
     """Expand normalized [x1,y1,x2,y2] box by `expand` fraction, clamp to [0,1]."""
     x1, y1, x2, y2 = roi_xyxy
@@ -166,25 +199,7 @@ def prepare_roi_segment(
         cap.release()
         writer.release()
 
-    # Re-encode to h264 for VLM compatibility. Failure is tolerated — keep
-    # the mp4v output rather than dropping the clip.
-    h264_path = out_path.replace(".mp4", "_h264.mp4")
-    try:
-        subprocess.run(
-            ["ffmpeg", "-y", "-i", out_path,
-             "-c:v", "libx264", "-preset", "fast", h264_path],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True,
-        )
-        os.remove(out_path)
-        os.rename(h264_path, out_path)
-    except (subprocess.CalledProcessError, FileNotFoundError, OSError) as e:
-        logger.warning("ROI %s: ffmpeg re-encode failed (%s), keeping mp4v", mode, e)
-        # Clean up partial h264 file if it exists.
-        try:
-            if os.path.exists(h264_path):
-                os.remove(h264_path)
-        except OSError:
-            pass
+    transcode_h264_in_place(out_path)
 
     logger.debug(
         "ROI %s: %s -> %s (%dx%d)",

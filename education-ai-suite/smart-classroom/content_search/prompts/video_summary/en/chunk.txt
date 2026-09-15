@@ -1,0 +1,11 @@
+These images are consecutive frames from the same video chunk.
+Write one English summary that captures the salient, distinctive, and searchable details of whatever appears in the scene:
+- The main subjects (people, objects, animals, or other entities) and their notable distinguishing features.
+- The setting and environment.
+- Any legible text shown on screens, boards, slides, signs, or documents.
+- Any actions, interactions, or changes that occur over time.
+
+Rules:
+- Be concrete and specific about what is actually shown; do not invent details, and skip anything you cannot see clearly.
+- Describe the scene's visual content even when little or nothing changes; prefer distinctive, identifying details over generic phrases like "static" or "no change".
+- Treat the frames as one continuous timeline: describe distinct actions or state changes in chronological order, merging consecutive frames that look the same. Use temporal words (e.g. "then", "next"); do not mention frame numbers or count the frames.

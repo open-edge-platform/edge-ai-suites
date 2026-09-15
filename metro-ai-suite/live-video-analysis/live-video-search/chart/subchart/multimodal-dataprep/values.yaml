@@ -1,0 +1,128 @@
+global:
+  metricsManager:
+    enabled: true
+  vectordbBackend: vdms
+  volumeHostPath: ''
+  usePvc: true
+  keepPvc: false
+  env:
+    defaultBucketName: vdms-bucket
+    detectionConfidence: '0.85'
+    embeddingModelName: ''
+    embeddingBatchSize: '32'
+    maxParallelWorkers: ''
+    sdkVideoShmMaxBlocks: '512'
+    sdkVideoShmBlockSize: '6220800'
+    sdkVideoExtractionBatchSize: '256'
+    sdkPipelineQueueMaxsize: '16'
+    sdkPipelineCompletionQueueMaxsize: '1'
+    sdkDetectionWorkerThreads: '2'
+    sdkEmbedWorkerThreads: '2'
+    sdkPipelineQueueGetTimeoutS: '1.0'
+    saveRuntimePipelineStats: 'false'
+    sdkEnableTracing: 'false'
+    videoFrameDecoderWorkers: '2'
+    videoFrameLogLevel: INFO
+    enableObjectDetection: 'true'
+    frameInterval: '15'
+    framesTempDir: /tmp/dataprep
+    ovModelsDir: /app/ov_models
+    ovPerformanceMode: THROUGHPUT
+    roiConsolidationClassAware: 'false'
+    roiConsolidationContextScale: '0.2'
+    roiConsolidationEnabled: 'false'
+    roiConsolidationIouThreshold: '0.2'
+    sdkUseOpenvino: 'true'
+    vsIndexName: video_frame_embeddings
+    vdbMetricType: IP
+    vdbIndexType: FLAT
+    allowDuplicateUploads: 'true'
+  accelGroupIds:
+    - 992
+  devices:
+    multimodalDataprep:
+      embedding:
+        device: CPU
+        key: ''
+      detection:
+        device: CPU
+        key: ''
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  registry: ''
+  tag: latest
+  vssStackTag: ''
+  pullPolicy: ''
+images:
+  multimodalDataprep:
+    repository: multimodal-dataprep
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
+
+replicaCount: 1
+
+hostIPC: true
+
+imagePullPolicy: IfNotPresent
+
+metricsManager:
+  url: "http://metrics-manager:9090"
+  timeoutSeconds: "2"
+
+service:
+  type: ClusterIP
+  port: 8000
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+# OpenVINO model cache directory. Points at the persistent ov_models mount so an
+# NPU/GPU first-compile is written once and reused across restarts (avoids slow
+# recompilation and startup-probe crash loops). Used when device is GPU/NPU.
+ovCacheDir: "/app/ov_models/ov_cache"
+
+modelPvc:
+  enabled: true
+  existingClaim: ''
+  storageClassName: ''
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+livenessProbe:
+  httpGet:
+    path: /v1/dataprep/health
+    port: http
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /v1/dataprep/health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /v1/dataprep/health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 180

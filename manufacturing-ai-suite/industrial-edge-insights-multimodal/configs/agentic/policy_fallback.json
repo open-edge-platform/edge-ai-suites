@@ -1,0 +1,77 @@
+{
+  "thresholds": {
+    "Burnthrough": {
+      "alert_above": 0.8,
+      "description": "Burn-through detected — immediate weld process intervention required"
+    },
+    "Crater Cracks": {
+      "alert_above": 0.8,
+      "description": "Crater cracking detected — immediate halt and inspection required"
+    },
+    "Excessive Convexity": {
+      "alert_above": 0.75,
+      "description": "Excessive convexity observed — adjust heat input and travel speed"
+    },
+    "Excessive Penetration": {
+      "alert_above": 0.75,
+      "description": "Excessive penetration detected — reduce heat input/current"
+    },
+    "Lack of Fusion": {
+      "alert_above": 0.75,
+      "description": "Lack of fusion detected — likely insufficient heat or poor joint prep"
+    },
+    "No Label": {
+      "alert_above": 1.0,
+      "description": "Unclassified output — monitor and collect more evidence"
+    },
+    "No Weld": {
+      "alert_above": 0.9,
+      "description": "No weld bead detected — immediate process check required"
+    },
+    "Overlap": {
+      "alert_above": 0.75,
+      "description": "Overlap defect detected — adjust travel speed and deposition"
+    },
+    "Porosity": {
+      "alert_above": 0.7,
+      "description": "Gas porosity in weld bead — shielding gas or contamination"
+    },
+    "Porosity with Excessive Penetration": {
+      "alert_above": 0.75,
+      "description": "Combined porosity and excessive penetration detected"
+    },
+    "Spatter": {
+      "alert_above": 0.7,
+      "description": "Excessive spatter — electrode or gas flow issue"
+    },
+    "Undercut": {
+      "alert_above": 0.7,
+      "description": "Undercut detected — reduce travel speed or tune voltage/current"
+    },
+    "Warping": {
+      "alert_above": 0.7,
+      "description": "Warping detected — likely thermal imbalance or fixturing issue"
+    },
+    "Good Weld": {
+      "alert_above": 0.0,
+      "description": "Acceptable weld — no action"
+    }
+  },
+  "actions": {
+    "Burnthrough":                             "HALT_LINE",
+    "Crater Cracks":                           "HALT_LINE",
+    "Excessive Convexity":                     "ADJUST_PARAMETERS",
+    "Excessive Penetration":                   "REDUCE_HEAT_INPUT",
+    "Lack of Fusion":                          "HALT_LINE",
+    "No Label":                                "MONITOR",
+    "No Weld":                                 "HALT_LINE",
+    "Overlap":                                 "ADJUST_PARAMETERS",
+    "Porosity":                                "SCHEDULE_INSPECTION",
+    "Porosity with Excessive Penetration":     "SCHEDULE_INSPECTION",
+    "Spatter":                                 "ADJUST_PARAMETERS",
+    "Undercut":                                "ADJUST_PARAMETERS",
+    "Warping":                                 "CHECK_FIXTURING",
+    "Good Weld":                               "CONTINUE"
+  },
+  "default_action": "MONITOR"
+}

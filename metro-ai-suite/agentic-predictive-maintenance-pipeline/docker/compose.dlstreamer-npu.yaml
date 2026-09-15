@@ -1,0 +1,10 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Optional NPU device mapping for DL Streamer inference.
+# Include this overlay only on systems where /dev/accel exists.
+
+services:
+  dlstreamer-pipeline-server:
+    devices:
+      - /dev/accel:/dev/accel

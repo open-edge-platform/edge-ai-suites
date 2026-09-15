@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  detection_zone — Fully self-contained SDF with NO Fuel/network model includes.
+  All objects are primitive shapes (box, cylinder, sphere) so they render
+  immediately in headless Gazebo Harmonic without model downloads.
+
+  Scene visible from downward camera at 5-10m AGL:
+    - 4× "vehicle" blocks (coloured boxes) placed 4-6m from centre
+    - 1× white helipad H-marker (flat box + cross)
+    - 4× orange traffic-cone cylinders at corners
+    - Ground tarmac-grey plane with white lane-line strips
+-->
+<sdf version="1.9">
+  <world name="detection_zone">
+
+    <physics type="ode">
+      <max_step_size>0.004</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <real_time_update_rate>250</real_time_update_rate>
+    </physics>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <world_frame_orientation>ENU</world_frame_orientation>
+      <latitude_deg>47.397742</latitude_deg>
+      <longitude_deg>8.545594</longitude_deg>
+      <elevation>0</elevation>
+    </spherical_coordinates>
+
+    <scene>
+      <grid>false</grid>
+      <ambient>0.8 0.8 0.8 1</ambient>
+      <background>0.5 0.7 0.9 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <!-- Bright overhead sun -->
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 200 0 -0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>0.4 0.4 0.4 1</specular>
+      <direction>-0.3 0.1 -0.95</direction>
+    </light>
+
+    <!-- Fill light to reduce harsh shadow blacks -->
+    <light name="fill_light" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 50 0 0 0</pose>
+      <diffuse>0.4 0.4 0.4 1</diffuse>
+      <specular>0 0 0 1</specular>
+      <direction>0.3 -0.1 -0.8</direction>
+    </light>
+
+    <!-- ── Ground plane (tarmac grey) ── -->
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>1 1</size></plane>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>500 500</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.45 0.45 0.42 1</ambient>
+            <diffuse>0.50 0.50 0.45 1</diffuse>
+            <specular>0.02 0.02 0.02 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ── White lane-line strips (H helipad painted on ground) ── -->
+    <!-- Horizontal bar of H -->
+    <model name="helipad_hbar">
+      <static>true</static>
+      <pose>0 0 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>4.0 0.4 0.02</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>4.0 0.4 0.02</size></box></geometry></collision>
+      </link>
+    </model>
+    <!-- Left vertical bar of H -->
+    <model name="helipad_left">
+      <static>true</static>
+      <pose>-1.5 0 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.4 2.8 0.02</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>0.4 2.8 0.02</size></box></geometry></collision>
+      </link>
+    </model>
+    <!-- Right vertical bar of H -->
+    <model name="helipad_right">
+      <static>true</static>
+      <pose>1.5 0 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.4 2.8 0.02</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>0.4 2.8 0.02</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ── Vehicle A — red box (north, 5.5m) ── -->
+    <model name="vehicle_A">
+      <static>true</static>
+      <pose>5.5 0 0.3 0 0 0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><box><size>2.2 1.0 0.6</size></box></geometry>
+          <material><ambient>0.75 0.1 0.1 1</ambient><diffuse>0.8 0.15 0.15 1</diffuse></material>
+        </visual>
+        <visual name="cabin">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry><box><size>1.2 0.85 0.4</size></box></geometry>
+          <material><ambient>0.6 0.08 0.08 1</ambient><diffuse>0.65 0.1 0.1 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>2.2 1.0 0.6</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ── Vehicle B — blue box (south-west, 4m) ── -->
+    <model name="vehicle_B">
+      <static>true</static>
+      <pose>-4 -4 0.3 0 0 2.1</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><box><size>2.0 0.9 0.55</size></box></geometry>
+          <material><ambient>0.1 0.15 0.75 1</ambient><diffuse>0.15 0.2 0.85 1</diffuse></material>
+        </visual>
+        <visual name="cabin">
+          <pose>0 0 0.45 0 0 0</pose>
+          <geometry><box><size>1.1 0.75 0.4</size></box></geometry>
+          <material><ambient>0.08 0.1 0.6 1</ambient><diffuse>0.1 0.15 0.7 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>2.0 0.9 0.55</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ── Vehicle C — green box (east, 6m) ── -->
+    <model name="vehicle_C">
+      <static>true</static>
+      <pose>2 6 0.3 0 0 -0.8</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><box><size>2.1 0.95 0.58</size></box></geometry>
+          <material><ambient>0.1 0.65 0.15 1</ambient><diffuse>0.15 0.75 0.2 1</diffuse></material>
+        </visual>
+        <visual name="cabin">
+          <pose>0 0 0.48 0 0 0</pose>
+          <geometry><box><size>1.1 0.8 0.38</size></box></geometry>
+          <material><ambient>0.08 0.5 0.1 1</ambient><diffuse>0.1 0.6 0.15 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>2.1 0.95 0.58</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ── Vehicle D — yellow box (south-east, 5m) ── -->
+    <model name="vehicle_D">
+      <static>true</static>
+      <pose>-5 5 0.3 0 0 1.0</pose>
+      <link name="link">
+        <visual name="body">
+          <geometry><box><size>2.3 1.0 0.6</size></box></geometry>
+          <material><ambient>0.8 0.72 0.05 1</ambient><diffuse>0.9 0.8 0.1 1</diffuse></material>
+        </visual>
+        <visual name="cabin">
+          <pose>0 0 0.5 0 0 0</pose>
+          <geometry><box><size>1.2 0.85 0.4</size></box></geometry>
+          <material><ambient>0.65 0.58 0.04 1</ambient><diffuse>0.75 0.65 0.08 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><box><size>2.3 1.0 0.6</size></box></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ── Orange traffic-cone cylinders at corners ── -->
+    <model name="cone_NE">
+      <static>true</static>
+      <pose>7 7 0.4 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry>
+          <material><ambient>0.95 0.45 0.0 1</ambient><diffuse>1.0 0.5 0.05 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry></collision>
+      </link>
+    </model>
+
+    <model name="cone_SW">
+      <static>true</static>
+      <pose>-7 -7 0.4 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry>
+          <material><ambient>0.95 0.45 0.0 1</ambient><diffuse>1.0 0.5 0.05 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry></collision>
+      </link>
+    </model>
+
+    <model name="cone_NW">
+      <static>true</static>
+      <pose>-7 7 0.4 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry>
+          <material><ambient>0.95 0.45 0.0 1</ambient><diffuse>1.0 0.5 0.05 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry></collision>
+      </link>
+    </model>
+
+    <model name="cone_SE">
+      <static>true</static>
+      <pose>7 -7 0.4 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry>
+          <material><ambient>0.95 0.45 0.0 1</ambient><diffuse>1.0 0.5 0.05 1</diffuse></material>
+        </visual>
+        <collision name="c"><geometry><cylinder><radius>0.2</radius><length>0.8</length></cylinder></geometry></collision>
+      </link>
+    </model>
+
+    <!-- ── White lane lines across the pad ── -->
+    <model name="lane_line_N">
+      <static>true</static>
+      <pose>0 9 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.3 3.5 0.02</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="lane_line_S">
+      <static>true</static>
+      <pose>0 -9 0.01 0 0 0</pose>
+      <link name="link">
+        <visual name="v">
+          <geometry><box><size>0.3 3.5 0.02</size></box></geometry>
+          <material><ambient>0.9 0.9 0.9 1</ambient><diffuse>0.95 0.95 0.95 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>

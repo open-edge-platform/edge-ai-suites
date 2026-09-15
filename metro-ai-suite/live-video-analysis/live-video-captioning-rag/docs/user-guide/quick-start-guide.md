@@ -15,13 +15,13 @@ Live Video Captioning RAG works with Live Video Captioning to generate live capt
 
 Make sure your machine meets these minimums:
 
-| What | Minimum |
-|------|---------|
+| What      | Minimum                                                      |
+| --------- | ------------------------------------------------------------ |
 | Processor | Intel(R) Core(TM) Ultra (2nd or 3rd gen) with integrated GPU |
-| Memory | Min 16 GB RAM |
-| Disk | 64 GB free SSD space |
-| OS | Ubuntu 24.04 or 24.10 |
-| Internet | Required for first-time setup |
+| Memory    | Min 16 GB RAM                                                |
+| Disk      | 64 GB free SSD space                                         |
+| OS        | Ubuntu 24.04 or 24.10                                        |
+| Internet  | Required for first-time setup                                |
 
 You also need **Docker** installed. If you do not have it yet, run the following two commands in a terminal:
 
@@ -99,7 +99,7 @@ By default, conversion runs on CPU. To target another device:
 	--device <CPU|GPU|NPU>
 ```
 
-> Note: NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`. Additionally, LLM model support for NPU is not yet available in Live-Video-Captioning-RAG.
+> **Note:** NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`. Additionally, LLM model support for NPU is not yet available in Live-Video-Captioning-RAG.
 
 ---
 
@@ -117,20 +117,20 @@ The first run may take a few minutes while images are downloaded and services be
 
 1. Open Live Video Captioning at:
 
-	 ```text
-	 http://<YOUR_IP>:4173
-	 ```
+   ```text
+   http://<YOUR_IP>:4173
+   ```
 
 2. In the Live Video Captioning dashboard:
-	 - Enter a video source (RTSP URL or USB/webcam if available).
-	 - Select the VLM device and model.
-	 - Click **Start** and confirm captions are appearing.
+   - Enter a video source (RTSP URL or USB/webcam if available).
+   - Select the VLM device and model.
+   - Click **Start** and confirm captions are appearing.
 
 3. Open Live Video Captioning RAG via `chat icon` on the top right of Live Video Captioning dashboard or open a new tab with:
 
-	 ```text
-	 http://<YOUR_IP>:4172
-	 ```
+   ```text
+   http://<YOUR_IP>:4172
+   ```
 
 4. Ask questions about the live or recent scene in the chat panel.
 
@@ -148,16 +148,16 @@ docker compose down
 
 ## Troubleshooting
 
-| Problem | What to try |
-|---------|-------------|
-| RAG dashboard does not load | Wait 30-60 seconds after `docker compose up -d`, then refresh `http://<YOUR_IP>:4172` |
-| Live captioning dashboard does not load | Verify `http://<YOUR_IP>:4173` is reachable and containers are running (`docker ps`) |
-| No captions appear | Check that your RTSP URL is reachable from this machine |
-| No RAG answers/context | Ensure captioning is running first so embeddings can be ingested |
-| Stream behind a proxy | Add the camera IP/host to `no_proxy` in your shell environment |
-| "permission denied" with Docker | Run `sudo usermod -aG docker $USER`, then log out and back in |
-| Model download fails with authentication error | Set `HUGGINGFACEHUB_API_TOKEN` and rerun the command |
-| Model download interrupted or fails due to network | Remove model folders (`ov_models/`, `llm_models/`, `ovms_model/`) and rerun download |
+| Problem                                            | What to try                                                                           |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| RAG dashboard does not load                        | Wait 30-60 seconds after `docker compose up -d`, then refresh `http://<YOUR_IP>:4172` |
+| Live captioning dashboard does not load            | Verify `http://<YOUR_IP>:4173` is reachable and containers are running (`docker ps`)  |
+| No captions appear                                 | Check that your RTSP URL is reachable from this machine                               |
+| No RAG answers/context                             | Ensure captioning is running first so embeddings can be ingested                      |
+| Stream behind a proxy                              | Add the camera IP/host to `no_proxy` in your shell environment                        |
+| "permission denied" with Docker                    | Run `sudo usermod -aG docker $USER`, then log out and back in                         |
+| Model download fails with authentication error     | Set `HUGGINGFACEHUB_API_TOKEN` and rerun the command                                  |
+| Model download interrupted or fails due to network | Remove model folders (`ov_models/`, `llm_models/`, `ovms_model/`) and rerun download  |
 
 ---
 
@@ -165,6 +165,6 @@ docker compose down
 
 After quick start setup, continue with:
 
-- [System Requirements](./get-started/system-requirements.md) - full hardware and software details
-- [Get Started](./get-started.md) - complete setup guide with advanced configuration
-- [How It Works](./how-it-works.md) - architecture and data flow
+- [System Requirements](./get-started/system-requirements.md) - full hardware and software details.
+- [Get Started](./get-started.md) - a complete setup guide with advanced configuration.
+- [How It Works](./how-it-works.md) - architecture and data flow.

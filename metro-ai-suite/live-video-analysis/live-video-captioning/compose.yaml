@@ -23,7 +23,7 @@ services:
       - app_network
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc2
+    image: intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc1
     hostname: dlstreamer-pipeline-server
     container_name: dlstreamer-pipeline-server
     read_only: false
@@ -176,6 +176,9 @@ services:
       - CAPTION_HISTORY=${CAPTION_HISTORY:-3}
       - VLM_CACHE_SIZE=${VLM_CACHE_SIZE:-4}
       - METRICS_SERVICE_PORT=${METRICS_SERVICE_PORT:-9090}
+      # NPU-specific token length controls for static-shape LLM pipelines.
+      - NPU_MAX_PROMPT_LENGTH=${NPU_MAX_PROMPT_LENGTH:-1024}
+      - NPU_MIN_RESPONSE_LENGTH=${NPU_MIN_RESPONSE_LENGTH:-128}
     device_cgroup_rules:
       # Broad access to USB devices is required to support a wide range of USB cameras.
       - 'c 189:* rmw'
@@ -205,7 +208,7 @@ services:
       - app_network
 
   metrics-manager:
-    image: docker.io/intel/metrics-manager:2026.2.0-20260715-weekly
+    image: intel/metrics-manager:2026.2.0-extended-rc1
     container_name: metrics-manager
     environment:
       - no_proxy=localhost,127.0.0.1,video-caption-service,metrics-manager,${no_proxy}

@@ -11,22 +11,12 @@ spec:
       app: pipeline-manager
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/pipeline-manager-configmap.yaml") . | sha256sum }}
       labels:
         app: pipeline-manager
         {{- include "lvs.pipeline.selectorLabels" . | nindent 8 }}
     spec:
-      {{- if not .Values.global.persistence.rwxEnabled }}
-      affinity:
-        podAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - vdms-dataprep
-              topologyKey: kubernetes.io/hostname
-      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -45,7 +35,7 @@ spec:
       containers:
         - name: pipeline-manager
           image: {{ include "lvs.pipeline.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.pipelineManager.repository .Values.imageOverride.repository) "tag" (default (include "lvs.pipeline.vssTag" .) .Values.imageOverride.tag)) }}
-          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          imagePullPolicy: {{ include "lvs.imagePullPolicy" (.Values.global.pullPolicy | default .Values.imagePullPolicy) }}
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -93,10 +83,3 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          volumeMounts:
-            - name: collector-signals
-              mountPath: /app/.collector-signals
-      volumes:
-        - name: collector-signals
-          persistentVolumeClaim:
-            claimName: {{ include "lvs.pipeline.fullname" . }}-collector-signals

@@ -39,6 +39,10 @@ from statistics import mean, pstdev
 from textwrap import dedent as textwrap_dedent
 from typing import Optional
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ── Log-parsing patterns ───────────────────────────────────────────────────────
 
@@ -369,7 +373,7 @@ def _patch_kpi(kpi_path: Path, parsed: dict, kpis: dict) -> None:
     }
 
     kpi_path.write_text(json.dumps(kpi, indent=2))
-    print(f'  kpi.json patched   → {kpi_path}')
+    logger.info(f'  kpi.json patched   → {kpi_path}')
 
 
 # ── Sidecar JSON ───────────────────────────────────────────────────────────────
@@ -409,7 +413,7 @@ def _write_cycles(session_dir: Path, parsed: dict, kpis: dict) -> None:
     }
     out_path = session_dir / 'picknplace_cycles.json'
     out_path.write_text(json.dumps(out, indent=2))
-    print(f'  cycles written     → {out_path}')
+    logger.info(f'  cycles written     → {out_path}')
 
 
 # ── CLI summary ────────────────────────────────────────────────────────────────
@@ -426,24 +430,23 @@ def _print_summary(parsed: dict, kpis: dict) -> None:
     missed = parsed['missed_attempts']
     complete = '✓ YES' if kpis['demo_complete'] else '✗ NO (run killed / timed out)'
 
-    print('')
-    print('  ┌─ Pick-and-Place Task Performance ───────────────────────┐')
-    print(f'  │  Demo complete    : {complete}')
-    print(f'  │  Successful grasps: {kpis["grasp_count"]:>3}   '
+    logger.info('\n  ┌─ Pick-and-Place Task Performance ───────────────────────┐')
+    logger.info(f'  │  Demo complete    : {complete}')
+    logger.info(f'  │  Successful grasps: {kpis["grasp_count"]:>3}   '
           f'   Missed: {kpis["missed_count"]:>2}   '
           f'   Placements: {kpis["placement_count"]:>2}')
-    print(f'  │  Startup time     : {_fmt(kpis["startup_s"])}')
-    print(f'  │  Total elapsed    : {_fmt(kpis["total_elapsed_s"])}')
+    logger.info(f'  │  Startup time     : {_fmt(kpis["startup_s"])}')
+    logger.info(f'  │  Total elapsed    : {_fmt(kpis["total_elapsed_s"])}')
     if kpis['throughput_hz'] is not None:
-        print(f'  │  Grasp rate       : {kpis["throughput_hz"]:.4f} Hz '
+        logger.info(f'  │  Grasp rate       : {kpis["throughput_hz"]:.4f} Hz '
               f'(between 1st and last success)')
-    print('  ├─ ARM1 Phase Durations (mean / min / max) ───────────────┤')
+    logger.info('  ├─ ARM1 Phase Durations (mean / min / max) ───────────────┤')
 
     def _row(label: str, stat: dict, unit: str = 's') -> None:
         if stat['n'] == 0:
-            print(f'  │  {label:<26} n/a')
+            logger.info(f'  │  {label:<26} n/a')
             return
-        print(
+        logger.info(
             f'  │  {label:<26} '
             f'mean={stat["mean"]:.3f}{unit}  '
             f'min={stat["min"]:.3f}  '
@@ -457,19 +460,18 @@ def _print_summary(parsed: dict, kpis: dict) -> None:
     _row('Cycle time', kpis['cycle_time_s'])
 
     if grasps:
-        print('  ├─ Per-Grasp Detail ────────────────────────────────────────┤')
+        logger.info('  ├─ Per-Grasp Detail ────────────────────────────────────────┤')
         for i, a in enumerate(grasps, 1):
             g = f'{a.grasp_duration_s:.2f}s' if a.grasp_duration_s is not None else '?'
             d = f'{a.detect_to_grasp_s:.2f}s' if a.detect_to_grasp_s is not None else '?'
-            print(f'  │  Grasp {i:>2} ({a.cube_id:<8}) '
+            logger.info(f'  │  Grasp {i:>2} ({a.cube_id:<8}) '
                   f'attempt={a.attempt_num}  grasp={g}  total={d}')
     if missed:
-        print('  ├─ Missed Attempts ─────────────────────────────────────────┤')
+        logger.info('  ├─ Missed Attempts ─────────────────────────────────────────┤')
         for a in missed:
-            print(f'  │  missed {a.cube_id}  (approach timed out)')
+            logger.info(f'  │  missed {a.cube_id}  (approach timed out)')
 
-    print('  └───────────────────────────────────────────────────────────┘')
-    print('')
+    logger.info('  └───────────────────────────────────────────────────────────┘\n')
 
 
 # ── Entry point ────────────────────────────────────────────────────────────────
@@ -533,19 +535,18 @@ def main() -> int:
         return 1
 
     if not log_path.exists():
-        print(f'ERROR: log file not found: {log_path}', file=sys.stderr)
+        logger.error(f'log file not found: {log_path}')
         return 1
 
     parsed = parse_log(log_path)
 
     if parsed['first_t'] is None:
-        print('ERROR: No timestamped log lines found — is this a picknplace launch log?',
-              file=sys.stderr)
+        logger.error('No timestamped log lines found — is this a picknplace launch log?')
         return 1
 
     if not parsed['attempts']:
-        print('WARNING: No ARM1 pick attempts detected in the log.', file=sys.stderr)
-        print('         The run may have been killed before ARM1 initialised.')
+        logger.warning('No ARM1 pick attempts detected in the log.')
+        logger.info('         The run may have been killed before ARM1 initialised.')
 
     kpis = _derive_kpis(parsed)
     _print_summary(parsed, kpis)
@@ -558,7 +559,7 @@ def main() -> int:
     if kpi_path.exists():
         _patch_kpi(kpi_path, parsed, kpis)
     else:
-        print(f'  ⚠ kpi.json not found at {kpi_path} — skipping patch', file=sys.stderr)
+        logger.error(f'  ⚠ kpi.json not found at {kpi_path} — skipping patch')
 
     return 0
 

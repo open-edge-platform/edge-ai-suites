@@ -1,7 +1,7 @@
 import path from "node:path";
 import os from "node:os";
 import { definePluginEntry, type OpenClawPluginApi } from "./api.js";
-import { SmartBuildingAdapter, FileCursorStore } from "@smartbuilding-video/framework-adapter-sdk";
+import { SmartCommunityAdapter, FileCursorStore } from "@smart-community-video/framework-adapter-sdk";
 import { parseConfig, ConfigError } from "./src/config.js";
 import { createOpenClawSink, type SubagentLike } from "./src/sink.js";
 import type { SessionAppender } from "./src/inject-types.js";
@@ -13,16 +13,16 @@ function openclawHome(): string {
 }
 
 /**
- * smartbuilding-alerts — reference OpenClaw framework adapter.
+ * smart-community-alerts — reference OpenClaw framework adapter.
  *
- * Subscribes (via @smartbuilding-video/framework-adapter-sdk) to the MCP server's per-monitor
+ * Subscribes (via @smart-community-video/framework-adapter-sdk) to the MCP server's per-monitor
  * alert resources and injects each new alert into the routed OpenClaw session(s).
  */
 export default definePluginEntry({
-  id: "smartbuilding-alerts",
-  name: "SmartBuilding Alerts",
+  id: "smart-community-alerts",
+  name: "Smart Community Alerts",
   description:
-    "Subscribes to SmartBuilding MCP alert resources and delivers alerts into OpenClaw sessions (reference framework adapter).",
+    "Subscribes to Smart Community MCP alert resources and delivers alerts into OpenClaw sessions (reference framework adapter).",
   register(api: OpenClawPluginApi) {
     let config;
     try {
@@ -44,12 +44,12 @@ export default definePluginEntry({
     }
 
     const cursorFile =
-      config.cursorFile ?? path.join(openclawHome(), "smartbuilding-alerts-cursor.json");
+      config.cursorFile ?? path.join(openclawHome(), "smart-community-alerts-cursor.json");
 
-    let adapter: SmartBuildingAdapter | undefined;
+    let adapter: SmartCommunityAdapter | undefined;
 
     api.registerService({
-      id: "smartbuilding-alerts-adapter",
+      id: "smart-community-alerts-adapter",
       async start() {
         // Prefer the first-class transcript API; fall back to FS-append when it's unavailable
         // (createTranscriptInjector returns null).
@@ -64,7 +64,7 @@ export default definePluginEntry({
         );
 
         const sink = createOpenClawSink({ config, logger: api.logger, appendToSession, subagent });
-        adapter = new SmartBuildingAdapter(
+        adapter = new SmartCommunityAdapter(
           {
             transport: {
               kind: "http",

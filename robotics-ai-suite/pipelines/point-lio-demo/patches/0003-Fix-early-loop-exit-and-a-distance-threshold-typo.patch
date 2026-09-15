@@ -1,0 +1,1464 @@
+From 86c04405f88ef2f892142d1c12c2e97939bc92cc Mon Sep 17 00:00:00 2001
+From: "Deng, Bing" <bing.deng@intel.com>
+Date: Tue, 18 Aug 2026 09:15:47 +0800
+Subject: [PATCH] Fix early loop exit and a distance-threshold typo
+
+Major bug fixes:
+1. Drop a stray break in the first-frame IMU initialization block
+   (both the kf_input and kf_output paths) that broke out of the
+   outer while loop right after the first sample, silently
+   skipping the rest of the IMU messages already queued for that
+   lidar scan window.
+2. Fix Preprocess's constructor setting disA twice in a row
+   instead of setting disB on the second line, so disB never got
+   its intended 0.1 value.
+3. Guard plane_judge against dividing by a zero-area
+   cross-product and against reading two elements before the
+   sorted distance array when it can't have that many, check
+   mkdir()'s return value for the log directory, and wrap main()
+   in a try/catch so a startup exception is logged instead of
+   crashing the node.
+
+Signed-off-by: Deng, Bing <bing.deng@intel.com>
+---
+ src/laserMapping.cpp | 1241 +++++++++++++++++++++---------------------
+ src/preprocess.cpp   |    8 +-
+ 2 files changed, 634 insertions(+), 615 deletions(-)
+
+diff --git a/src/laserMapping.cpp b/src/laserMapping.cpp
+index a189a2a..edc2ce4 100755
+--- a/src/laserMapping.cpp
++++ b/src/laserMapping.cpp
+@@ -13,6 +13,7 @@
+ #include <malloc.h>
+ #include <sys/stat.h>
+ #include <cerrno>
++#include <cstring>
+ #include <sched.h>
+ #include <pthread.h>
+ #include <unistd.h>
+@@ -430,754 +431,772 @@ void publish_path()
+ 
+ int main(int argc, char ** argv)
+ {
+-  rclcpp::init(argc, argv);
+-  g_node = std::make_shared<rclcpp::Node>("pointlio_mapping");
+-  auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
+-  executor->add_node(g_node);
++  try {
++    rclcpp::init(argc, argv);
++    g_node = std::make_shared<rclcpp::Node>("pointlio_mapping");
++    auto executor = std::make_shared<rclcpp::executors::MultiThreadedExecutor>();
++    executor->add_node(g_node);
+ 
+-  readParameters(g_node);
+-  cout << "lidar_type: " << lidar_type << endl;
+-  ivox_ = std::make_shared<IVoxType>(ivox_options_);
++    readParameters(g_node);
++    cout << "lidar_type: " << lidar_type << endl;
++    ivox_ = std::make_shared<IVoxType>(ivox_options_);
+ 
+-  path.header.stamp = stamp_from_sec(lidar_end_time);
+-  path.header.frame_id = "camera_init";
++    path.header.stamp = stamp_from_sec(lidar_end_time);
++    path.header.frame_id = "camera_init";
+ 
+-  /*** variables definition for counting ***/
+-  int frame_num = 0;
+-  double aver_time_consu = 0, aver_time_icp = 0, aver_time_match = 0, aver_time_incre = 0,
+-         aver_time_solve = 0, aver_time_propag = 0;
++    /*** variables definition for counting ***/
++    int frame_num = 0;
++    double aver_time_consu = 0, aver_time_icp = 0, aver_time_match = 0, aver_time_incre = 0,
++           aver_time_solve = 0, aver_time_propag = 0;
+ 
+-  memset(point_selected_surf, true, sizeof(point_selected_surf));
+-  downSizeFilterSurf.setLeafSize(filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
+-  downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
++    memset(point_selected_surf, true, sizeof(point_selected_surf));
++    downSizeFilterSurf.setLeafSize(
++      filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
++    downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
+ 
+-  Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
+-  Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
++    Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
++    Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
+ 
+-  if (extrinsic_est_en) {
+-    if (!use_imu_as_input) {
+-      kf_output.x_.offset_R_L_I = Lidar_R_wrt_IMU;
+-      kf_output.x_.offset_T_L_I = Lidar_T_wrt_IMU;
+-    } else {
+-      kf_input.x_.offset_R_L_I = Lidar_R_wrt_IMU;
+-      kf_input.x_.offset_T_L_I = Lidar_T_wrt_IMU;
++    if (extrinsic_est_en) {
++      if (!use_imu_as_input) {
++        kf_output.x_.offset_R_L_I = Lidar_R_wrt_IMU;
++        kf_output.x_.offset_T_L_I = Lidar_T_wrt_IMU;
++      } else {
++        kf_input.x_.offset_R_L_I = Lidar_R_wrt_IMU;
++        kf_input.x_.offset_T_L_I = Lidar_T_wrt_IMU;
++      }
+     }
+-  }
+ 
+-  p_imu->lidar_type = p_pre->lidar_type = lidar_type;
+-  p_imu->imu_en = imu_en;
+-
+-  kf_input.init_dyn_share_modified_2h(get_f_input, df_dx_input, h_model_input);
+-  kf_output.init_dyn_share_modified_3h(
+-    get_f_output, df_dx_output, h_model_output, h_model_IMU_output);
+-  Eigen::Matrix<double, 24, 24> P_init;
+-  reset_cov(P_init);
+-  kf_input.change_P(P_init);
+-  Eigen::Matrix<double, 30, 30> P_init_output;
+-  reset_cov_output(P_init_output);
+-  kf_output.change_P(P_init_output);
+-  Eigen::Matrix<double, 24, 24> Q_input = process_noise_cov_input();
+-  Eigen::Matrix<double, 30, 30> Q_output = process_noise_cov_output();
+-  /*** debug record ***/
+-  FILE * fp;
+-  {
+-    string log_dir = root_dir + "/Log";
+-    mkdir(log_dir.c_str(), 0755);
+-  }
+-  string pos_log_dir = root_dir + "/Log/pos_log.txt";
+-  fp = fopen(pos_log_dir.c_str(), "w");
+-  open_file();
++    p_imu->lidar_type = p_pre->lidar_type = lidar_type;
++    p_imu->imu_en = imu_en;
++
++    kf_input.init_dyn_share_modified_2h(get_f_input, df_dx_input, h_model_input);
++    kf_output.init_dyn_share_modified_3h(
++      get_f_output, df_dx_output, h_model_output, h_model_IMU_output);
++    Eigen::Matrix<double, 24, 24> P_init;
++    reset_cov(P_init);
++    kf_input.change_P(P_init);
++    Eigen::Matrix<double, 30, 30> P_init_output;
++    reset_cov_output(P_init_output);
++    kf_output.change_P(P_init_output);
++    Eigen::Matrix<double, 24, 24> Q_input = process_noise_cov_input();
++    Eigen::Matrix<double, 30, 30> Q_output = process_noise_cov_output();
++    /*** debug record ***/
++    FILE * fp;
++    {
++      string log_dir = root_dir + "/Log";
++      if (mkdir(log_dir.c_str(), 0755) != 0 && errno != EEXIST) {
++        std::cerr << "Failed to create log directory " << log_dir << ": " << strerror(errno)
++                  << std::endl;
++      }
++    }
++    string pos_log_dir = root_dir + "/Log/pos_log.txt";
++    fp = fopen(pos_log_dir.c_str(), "w");
++    open_file();
+ 
+ #ifdef ENABLE_PROFILING
+-  {
+-    string log_dir = root_dir + "/Log";
+-    mkdir(log_dir.c_str(), 0755);
+-    string csv_dir = log_dir + "/point_lio_profiling.csv";
+-    g_csv_fp = fopen(csv_dir.c_str(), "w");
+-    if (g_csv_fp) {
+-      fprintf(
+-        g_csv_fp,
+-        "timestamp,recv_wall,recv_mono,t0,t1,t3,t5,end_wall,propag_time,kf_solve_time,coord_xform_"
+-        "time,feats_down_size,feats_undistort_size,raw_pts_size,queue_wait,s_plot11\n");
+-      fflush(g_csv_fp);
+-      g_csv_stop.store(false);
+-      g_csv_thread = std::thread(csv_writer_thread);
+-      // Pin CSV writer outside the algorithm cpuset so it doesn't compete with P-cores.
+-      if (!pin_csv_thread(g_csv_thread.native_handle()))
++    {
++      string log_dir = root_dir + "/Log";
++      if (mkdir(log_dir.c_str(), 0755) != 0 && errno != EEXIST) {
++        std::cerr << "Failed to create log directory " << log_dir << ": " << strerror(errno)
++                  << std::endl;
++      }
++      string csv_dir = log_dir + "/point_lio_profiling.csv";
++      g_csv_fp = fopen(csv_dir.c_str(), "w");
++      if (g_csv_fp) {
+         fprintf(
+-          stderr, "[PROFILING] WARNING: could not pin CSV thread (PROFILING_CSV_CPU=%d)\n",
+-          PROFILING_CSV_CPU);
+-    } else {
+-      fprintf(stderr, "[PROFILING] failed to open %s: %s\n", csv_dir.c_str(), strerror(errno));
++          g_csv_fp,
++          "timestamp,recv_wall,recv_mono,t0,t1,t3,t5,end_wall,propag_time,kf_solve_time,coord_"
++          "xform_time,feats_down_size,feats_undistort_size,raw_pts_size,queue_wait,s_plot11\n");
++        fflush(g_csv_fp);
++        g_csv_stop.store(false);
++        g_csv_thread = std::thread(csv_writer_thread);
++        // Pin CSV writer outside the algorithm cpuset so it doesn't compete with P-cores.
++        if (!pin_csv_thread(g_csv_thread.native_handle()))
++          fprintf(
++            stderr, "[PROFILING] WARNING: could not pin CSV thread (PROFILING_CSV_CPU=%d)\n",
++            PROFILING_CSV_CPU);
++      } else {
++        fprintf(stderr, "[PROFILING] failed to open %s: %s\n", csv_dir.c_str(), strerror(errno));
++      }
+     }
+-  }
+ #endif
+ 
+-  /*** ROS subscribe initialization ***/
+-  rclcpp::SubscriptionBase::SharedPtr sub_pcl;
+-  if (p_pre->lidar_type == AVIA) {
+-    sub_pcl = g_node->create_subscription<livox_ros_driver2::msg::CustomMsg>(
+-      lid_topic, rclcpp::QoS(200000), livox_pcl_cbk);
+-  } else {
+-    sub_pcl = g_node->create_subscription<sensor_msgs::msg::PointCloud2>(
+-      lid_topic, rclcpp::QoS(200000), standard_pcl_cbk);
+-  }
+-  auto sub_imu =
+-    g_node->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(200000), imu_cbk);
+-
+-  pubLaserCloudFullRes =
+-    g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 1000);
+-  pubLaserCloudFullRes_body =
+-    g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 1000);
+-  pubLaserCloudMap = g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 1000);
+-  pubOdomAftMapped = g_node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_to_init", 1000);
+-  pubPath = g_node->create_publisher<nav_msgs::msg::Path>("/path", 1000);
+-
+-  //------------------------------------------------------------------------------------------------------
+-  signal(SIGINT, SigHandle);
+-  rclcpp::Rate loop_rate(500);
+-  while (rclcpp::ok()) {
+-    if (flg_exit) break;
+-    executor->spin_some();
+-    if (sync_packages(Measures)) {
+-      if (flg_reset) {
+-        printf("reset when rosbag play back\n");
+-        p_imu->Reset();
+-        feats_undistort.reset(new PointCloudXYZI());
+-        if (use_imu_as_input) {
+-          state_in = state_input();
+-          kf_input.change_P(P_init);
+-        } else {
+-          state_out = state_output();
+-          kf_output.change_P(P_init_output);
+-        }
+-        flg_first_scan = true;
+-        is_first_frame = true;
+-        flg_reset = false;
+-        init_map = false;
++    /*** ROS subscribe initialization ***/
++    rclcpp::SubscriptionBase::SharedPtr sub_pcl;
++    if (p_pre->lidar_type == AVIA) {
++      sub_pcl = g_node->create_subscription<livox_ros_driver2::msg::CustomMsg>(
++        lid_topic, rclcpp::QoS(200000), livox_pcl_cbk);
++    } else {
++      sub_pcl = g_node->create_subscription<sensor_msgs::msg::PointCloud2>(
++        lid_topic, rclcpp::QoS(200000), standard_pcl_cbk);
++    }
++    auto sub_imu =
++      g_node->create_subscription<sensor_msgs::msg::Imu>(imu_topic, rclcpp::QoS(200000), imu_cbk);
++
++    pubLaserCloudFullRes =
++      g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 1000);
++    pubLaserCloudFullRes_body =
++      g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 1000);
++    pubLaserCloudMap = g_node->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 1000);
++    pubOdomAftMapped =
++      g_node->create_publisher<nav_msgs::msg::Odometry>("/aft_mapped_to_init", 1000);
++    pubPath = g_node->create_publisher<nav_msgs::msg::Path>("/path", 1000);
++
++    //------------------------------------------------------------------------------------------------------
++    signal(SIGINT, SigHandle);
++    rclcpp::Rate loop_rate(500);
++    while (rclcpp::ok()) {
++      if (flg_exit) break;
++      executor->spin_some();
++      if (sync_packages(Measures)) {
++        if (flg_reset) {
++          printf("reset when rosbag play back\n");
++          p_imu->Reset();
++          feats_undistort.reset(new PointCloudXYZI());
++          if (use_imu_as_input) {
++            state_in = state_input();
++            kf_input.change_P(P_init);
++          } else {
++            state_out = state_output();
++            kf_output.change_P(P_init_output);
++          }
++          flg_first_scan = true;
++          is_first_frame = true;
++          flg_reset = false;
++          init_map = false;
+ 
+-        {
+-          ivox_.reset(new IVoxType(ivox_options_));
++          {
++            ivox_.reset(new IVoxType(ivox_options_));
++          }
+         }
+-      }
+ 
+-      if (flg_first_scan) {
+-        first_lidar_time = Measures.lidar_beg_time;
+-        flg_first_scan = false;
+-        if (first_imu_time < 1) {
+-          first_imu_time = rclcpp::Time(imu_next.header.stamp).seconds();
+-          printf("first imu time: %f\n", first_imu_time);
+-        }
+-        time_current = 0.0;
+-        if (imu_en) {
+-          kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
+-          kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
++        if (flg_first_scan) {
++          first_lidar_time = Measures.lidar_beg_time;
++          flg_first_scan = false;
++          if (first_imu_time < 1) {
++            first_imu_time = rclcpp::Time(imu_next.header.stamp).seconds();
++            printf("first imu time: %f\n", first_imu_time);
++          }
++          time_current = 0.0;
++          if (imu_en) {
++            kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
++            kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
+ 
+-          {
+-            while (Measures.lidar_beg_time > rclcpp::Time(imu_next.header.stamp).seconds()) {
+-              imu_deque.pop_front();
+-              if (imu_deque.empty()) {
+-                break;
++            {
++              while (Measures.lidar_beg_time > rclcpp::Time(imu_next.header.stamp).seconds()) {
++                imu_deque.pop_front();
++                if (imu_deque.empty()) {
++                  break;
++                }
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
+               }
+-              imu_last = imu_next;
+-              imu_next = *(imu_deque.front());
+             }
++          } else {
++            kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
++            kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
++            kf_output.x_.acc << VEC_FROM_ARRAY(gravity);
++            kf_output.x_.acc *= -1;
++            p_imu->imu_need_init_ = false;
+           }
+-        } else {
+-          kf_input.x_.gravity << VEC_FROM_ARRAY(gravity);
+-          kf_output.x_.gravity << VEC_FROM_ARRAY(gravity);
+-          kf_output.x_.acc << VEC_FROM_ARRAY(gravity);
+-          kf_output.x_.acc *= -1;
+-          p_imu->imu_need_init_ = false;
++          G_m_s2 =
++            std::sqrt(gravity[0] * gravity[0] + gravity[1] * gravity[1] + gravity[2] * gravity[2]);
+         }
+-        G_m_s2 =
+-          std::sqrt(gravity[0] * gravity[0] + gravity[1] * gravity[1] + gravity[2] * gravity[2]);
+-      }
+ 
+-      double t0, t1, t2, t3, t4, t5, match_start, solve_start;
+-      match_time = 0;
++        double t0, t1, t2, t3, t4, t5, match_start, solve_start;
++        match_time = 0;
+ #ifdef ENABLE_PROFILING
+-      solve_time = 0;
+-      propag_time = 0;
+-      update_time = 0;
++        solve_time = 0;
++        propag_time = 0;
++        update_time = 0;
+ #endif
+-      t0 = omp_get_wtime();
+-
+-      /*** downsample the feature points in a scan ***/
+-      t1 = omp_get_wtime();
+-      p_imu->Process(Measures, feats_undistort);
+-      if (space_down_sample) {
+-        downSizeFilterSurf.setInputCloud(feats_undistort);
+-        downSizeFilterSurf.filter(*feats_down_body);
+-        sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list);
+-      } else {
+-        feats_down_body = Measures.lidar;
+-        sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list);
+-      }
+-      {
+-        time_seq = time_compressing<int>(feats_down_body);
+-        feats_down_size = feats_down_body->points.size();
+-      }
++        t0 = omp_get_wtime();
++
++        /*** downsample the feature points in a scan ***/
++        t1 = omp_get_wtime();
++        p_imu->Process(Measures, feats_undistort);
++        if (space_down_sample) {
++          downSizeFilterSurf.setInputCloud(feats_undistort);
++          downSizeFilterSurf.filter(*feats_down_body);
++          sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list);
++        } else {
++          feats_down_body = Measures.lidar;
++          sort(feats_down_body->points.begin(), feats_down_body->points.end(), time_list);
++        }
++        {
++          time_seq = time_compressing<int>(feats_down_body);
++          feats_down_size = feats_down_body->points.size();
++        }
+ 
+-      if (!p_imu->after_imu_init_) {
+-        if (!p_imu->imu_need_init_) {
+-          V3D tmp_gravity;
+-          if (imu_en) {
+-            tmp_gravity = -p_imu->mean_acc / p_imu->mean_acc.norm() * G_m_s2;
++        if (!p_imu->after_imu_init_) {
++          if (!p_imu->imu_need_init_) {
++            V3D tmp_gravity;
++            if (imu_en) {
++              tmp_gravity = -p_imu->mean_acc / p_imu->mean_acc.norm() * G_m_s2;
++            } else {
++              tmp_gravity << VEC_FROM_ARRAY(gravity_init);
++              p_imu->after_imu_init_ = true;
++            }
++            M3D rot_init;
++            p_imu->Set_init(tmp_gravity, rot_init);
++            kf_input.x_.rot = rot_init;
++            kf_output.x_.rot = rot_init;
++            kf_output.x_.acc = -rot_init.transpose() * kf_output.x_.gravity;
+           } else {
+-            tmp_gravity << VEC_FROM_ARRAY(gravity_init);
+-            p_imu->after_imu_init_ = true;
++            continue;
+           }
+-          M3D rot_init;
+-          p_imu->Set_init(tmp_gravity, rot_init);
+-          kf_input.x_.rot = rot_init;
+-          kf_output.x_.rot = rot_init;
+-          kf_output.x_.acc = -rot_init.transpose() * kf_output.x_.gravity;
+-        } else {
+-          continue;
+         }
+-      }
+-      /*** initialize the map ***/
+-      if (!init_map) {
+-        feats_down_world->resize(feats_undistort->size());
+-        for (int i = 0; i < (int)feats_undistort->size(); i++) {
+-          {
+-            pointBodyToWorld(&(feats_undistort->points[i]), &(feats_down_world->points[i]));
++        /*** initialize the map ***/
++        if (!init_map) {
++          feats_down_world->resize(feats_undistort->size());
++          for (int i = 0; i < (int)feats_undistort->size(); i++) {
++            {
++              pointBodyToWorld(&(feats_undistort->points[i]), &(feats_down_world->points[i]));
++            }
+           }
+-        }
+-        for (size_t i = 0; i < feats_down_world->size(); i++) {
+-          init_feats_world->points.emplace_back(feats_down_world->points[i]);
+-        }
+-        if ((int)init_feats_world->size() < init_map_size) {
+-          init_map = false;
+-        } else {
+-          ivox_->AddPoints(init_feats_world->points);
+-          publish_init_map();
++          for (size_t i = 0; i < feats_down_world->size(); i++) {
++            init_feats_world->points.emplace_back(feats_down_world->points[i]);
++          }
++          if ((int)init_feats_world->size() < init_map_size) {
++            init_map = false;
++          } else {
++            ivox_->AddPoints(init_feats_world->points);
++            publish_init_map();
+ 
+-          init_feats_world.reset(new PointCloudXYZI());
+-          init_map = true;
++            init_feats_world.reset(new PointCloudXYZI());
++            init_map = true;
++          }
++          continue;
+         }
+-        continue;
+-      }
+ 
+-      /*** ICP and Kalman filter update ***/
+-      normvec->resize(feats_down_size);
+-      feats_down_world->resize(feats_down_size);
++        /*** ICP and Kalman filter update ***/
++        normvec->resize(feats_down_size);
++        feats_down_world->resize(feats_down_size);
+ 
+-      Nearest_Points.resize(feats_down_size);
++        Nearest_Points.resize(feats_down_size);
+ 
+-      t2 = omp_get_wtime();
++        t2 = omp_get_wtime();
+ 
+-      /*** iterated state estimation ***/
+-      crossmat_list.reserve(feats_down_size);
+-      pbody_list.reserve(feats_down_size);
++        /*** iterated state estimation ***/
++        crossmat_list.reserve(feats_down_size);
++        pbody_list.reserve(feats_down_size);
+ 
+-      for (size_t i = 0; i < feats_down_body->size(); i++) {
+-        V3D point_this(
+-          feats_down_body->points[i].x, feats_down_body->points[i].y, feats_down_body->points[i].z);
+-        pbody_list[i] = point_this;
+-        if (!extrinsic_est_en) {
+-          point_this = Lidar_R_wrt_IMU * point_this + Lidar_T_wrt_IMU;
+-          M3D point_crossmat;
+-          point_crossmat << SKEW_SYM_MATRX(point_this);
+-          crossmat_list[i] = point_crossmat;
++        for (size_t i = 0; i < feats_down_body->size(); i++) {
++          V3D point_this(
++            feats_down_body->points[i].x, feats_down_body->points[i].y,
++            feats_down_body->points[i].z);
++          pbody_list[i] = point_this;
++          if (!extrinsic_est_en) {
++            point_this = Lidar_R_wrt_IMU * point_this + Lidar_T_wrt_IMU;
++            M3D point_crossmat;
++            point_crossmat << SKEW_SYM_MATRX(point_this);
++            crossmat_list[i] = point_crossmat;
++          }
+         }
+-      }
+-      if (!use_imu_as_input) {
+-        bool imu_upda_cov = false;
+-        effct_feat_num = 0;
+-        /**** point by point update ****/
+-        if (time_seq.size() > 0) {
+-          double pcl_beg_time = Measures.lidar_beg_time;
+-          idx = -1;
+-          for (k = 0; k < (int)time_seq.size(); k++) {
+-            PointType & point_body = feats_down_body->points[idx + time_seq[k]];
+-
+-            time_current = point_body.curvature / 1000.0 + pcl_beg_time;
+-
+-            if (is_first_frame) {
+-              if (imu_en) {
+-                while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
+-                  imu_deque.pop_front();
+-                  if (imu_deque.empty()) break;
+-                  imu_last = imu_next;
+-                  imu_next = *(imu_deque.front());
++        if (!use_imu_as_input) {
++          bool imu_upda_cov = false;
++          effct_feat_num = 0;
++          /**** point by point update ****/
++          if (time_seq.size() > 0) {
++            double pcl_beg_time = Measures.lidar_beg_time;
++            idx = -1;
++            for (k = 0; k < (int)time_seq.size(); k++) {
++              PointType & point_body = feats_down_body->points[idx + time_seq[k]];
++
++              time_current = point_body.curvature / 1000.0 + pcl_beg_time;
++
++              if (is_first_frame) {
++                if (imu_en) {
++                  while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
++                    imu_deque.pop_front();
++                    if (imu_deque.empty()) break;
++                    imu_last = imu_next;
++                    imu_next = *(imu_deque.front());
++                  }
++                  angvel_avr << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                    imu_last.angular_velocity.z;
++                  acc_avr << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                    imu_last.linear_acceleration.z;
+                 }
+-                angvel_avr << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
+-                  imu_last.angular_velocity.z;
+-                acc_avr << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
+-                  imu_last.linear_acceleration.z;
++                is_first_frame = false;
++                imu_upda_cov = true;
++                time_update_last = time_current;
++                time_predict_last_const = time_current;
+               }
+-              is_first_frame = false;
+-              imu_upda_cov = true;
+-              time_update_last = time_current;
+-              time_predict_last_const = time_current;
+-            }
+-            if (imu_en && !imu_deque.empty()) {
+-              bool last_imu = rclcpp::Time(imu_next.header.stamp).seconds() ==
+-                              rclcpp::Time(imu_deque.front()->header.stamp).seconds();
+-              while (rclcpp::Time(imu_next.header.stamp).seconds() < time_predict_last_const &&
+-                     !imu_deque.empty()) {
+-                if (!last_imu) {
+-                  imu_last = imu_next;
+-                  imu_next = *(imu_deque.front());
+-                  break;
+-                } else {
+-                  imu_deque.pop_front();
+-                  if (imu_deque.empty()) break;
+-                  imu_last = imu_next;
+-                  imu_next = *(imu_deque.front());
++              if (imu_en && !imu_deque.empty()) {
++                bool last_imu = rclcpp::Time(imu_next.header.stamp).seconds() ==
++                                rclcpp::Time(imu_deque.front()->header.stamp).seconds();
++                while (rclcpp::Time(imu_next.header.stamp).seconds() < time_predict_last_const &&
++                       !imu_deque.empty()) {
++                  if (!last_imu) {
++                    imu_last = imu_next;
++                    imu_next = *(imu_deque.front());
++                    break;
++                  } else {
++                    imu_deque.pop_front();
++                    if (imu_deque.empty()) break;
++                    imu_last = imu_next;
++                    imu_next = *(imu_deque.front());
++                  }
+                 }
+-              }
+-              bool imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
+-              while (imu_comes) {
+-                imu_upda_cov = true;
+-                angvel_avr << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
+-                  imu_next.angular_velocity.z;
+-                acc_avr << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
+-                  imu_next.linear_acceleration.z;
+-
+-                /*** covariance update ***/
+-                double dt = rclcpp::Time(imu_next.header.stamp).seconds() - time_predict_last_const;
+-                kf_output.predict(dt, Q_output, input_in, true, false);
+-                time_predict_last_const = rclcpp::Time(imu_next.header.stamp).seconds();
++                bool imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
++                while (imu_comes) {
++                  imu_upda_cov = true;
++                  angvel_avr << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
++                    imu_next.angular_velocity.z;
++                  acc_avr << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
++                    imu_next.linear_acceleration.z;
++
++                  /*** covariance update ***/
++                  double dt =
++                    rclcpp::Time(imu_next.header.stamp).seconds() - time_predict_last_const;
++                  kf_output.predict(dt, Q_output, input_in, true, false);
++                  time_predict_last_const = rclcpp::Time(imu_next.header.stamp).seconds();
+ 
+-                {
+-                  double dt_cov = rclcpp::Time(imu_next.header.stamp).seconds() - time_update_last;
++                  {
++                    double dt_cov =
++                      rclcpp::Time(imu_next.header.stamp).seconds() - time_update_last;
+ 
+-                  if (dt_cov > 0.0) {
+-                    time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
++                    if (dt_cov > 0.0) {
++                      time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
+ #ifdef ENABLE_PROFILING
+-                    double propag_imu_start = omp_get_wtime();
++                      double propag_imu_start = omp_get_wtime();
+ #endif
+-                    kf_output.predict(dt_cov, Q_output, input_in, false, true);
++                      kf_output.predict(dt_cov, Q_output, input_in, false, true);
+ #ifdef ENABLE_PROFILING
+-                    propag_time += omp_get_wtime() - propag_imu_start;
+-                    double solve_imu_start = omp_get_wtime();
++                      propag_time += omp_get_wtime() - propag_imu_start;
++                      double solve_imu_start = omp_get_wtime();
+ #endif
+-                    kf_output.update_iterated_dyn_share_IMU();
++                      kf_output.update_iterated_dyn_share_IMU();
+ #ifdef ENABLE_PROFILING
+-                    solve_time += omp_get_wtime() - solve_imu_start;
++                      solve_time += omp_get_wtime() - solve_imu_start;
+ #endif
++                    }
+                   }
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
++                  imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
+                 }
+-                imu_deque.pop_front();
+-                if (imu_deque.empty()) break;
+-                imu_last = imu_next;
+-                imu_next = *(imu_deque.front());
+-                imu_comes = time_current > rclcpp::Time(imu_next.header.stamp).seconds();
+               }
+-            }
+-            if (flg_reset) {
+-              break;
+-            }
++              if (flg_reset) {
++                break;
++              }
+ 
+-            double dt = time_current - time_predict_last_const;
++              double dt = time_current - time_predict_last_const;
+ #ifdef ENABLE_PROFILING
+-            double propag_state_start = omp_get_wtime();
++              double propag_state_start = omp_get_wtime();
+ #endif
+-            if (!prop_at_freq_of_imu) {
+-              double dt_cov = time_current - time_update_last;
+-              if (dt_cov > 0.0) {
+-                kf_output.predict(dt_cov, Q_output, input_in, false, true);
+-                time_update_last = time_current;
++              if (!prop_at_freq_of_imu) {
++                double dt_cov = time_current - time_update_last;
++                if (dt_cov > 0.0) {
++                  kf_output.predict(dt_cov, Q_output, input_in, false, true);
++                  time_update_last = time_current;
++                }
+               }
+-            }
+-            kf_output.predict(dt, Q_output, input_in, true, false);
++              kf_output.predict(dt, Q_output, input_in, true, false);
+ #ifdef ENABLE_PROFILING
+-            propag_time += omp_get_wtime() - propag_state_start;
++              propag_time += omp_get_wtime() - propag_state_start;
+ #endif
+-            time_predict_last_const = time_current;
++              time_predict_last_const = time_current;
+ #ifdef ENABLE_PROFILING
+-            double t_update_start = omp_get_wtime();
++              double t_update_start = omp_get_wtime();
+ #endif
+ 
+-            if (feats_down_size < 1) {
+-              printf("No point, skip this scan!\n");
+-              idx += time_seq[k];
+-              continue;
+-            }
+-            if (!kf_output.update_iterated_dyn_share_modified()) {
+-              idx = idx + time_seq[k];
+-              continue;
+-            }
++              if (feats_down_size < 1) {
++                printf("No point, skip this scan!\n");
++                idx += time_seq[k];
++                continue;
++              }
++              if (!kf_output.update_iterated_dyn_share_modified()) {
++                idx = idx + time_seq[k];
++                continue;
++              }
+ #ifdef ENABLE_PROFILING
+-            solve_start = omp_get_wtime();
++              solve_start = omp_get_wtime();
+ #endif
+-            if (publish_odometry_without_downsample) {
+-              publish_odometry();
+-              if (runtime_pos_log) {
+-                euler_cur = SO3ToEuler(kf_output.x_.rot);
+-                fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
+-                         << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " "
+-                         << kf_output.x_.vel.transpose() << " " << kf_output.x_.omg.transpose()
+-                         << " " << kf_output.x_.acc.transpose() << " "
+-                         << kf_output.x_.gravity.transpose() << " " << kf_output.x_.bg.transpose()
+-                         << " " << kf_output.x_.ba.transpose() << " "
+-                         << feats_undistort->points.size() << endl;
++              if (publish_odometry_without_downsample) {
++                publish_odometry();
++                if (runtime_pos_log) {
++                  euler_cur = SO3ToEuler(kf_output.x_.rot);
++                  fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                           << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " "
++                           << kf_output.x_.vel.transpose() << " " << kf_output.x_.omg.transpose()
++                           << " " << kf_output.x_.acc.transpose() << " "
++                           << kf_output.x_.gravity.transpose() << " " << kf_output.x_.bg.transpose()
++                           << " " << kf_output.x_.ba.transpose() << " "
++                           << feats_undistort->points.size() << endl;
++                }
+               }
+-            }
+ 
+-            for (int j = 0; j < time_seq[k]; j++) {
+-              PointType & point_body_j = feats_down_body->points[idx + j + 1];
+-              PointType & point_world_j = feats_down_world->points[idx + j + 1];
+-              pointBodyToWorld(&point_body_j, &point_world_j);
+-            }
++              for (int j = 0; j < time_seq[k]; j++) {
++                PointType & point_body_j = feats_down_body->points[idx + j + 1];
++                PointType & point_world_j = feats_down_world->points[idx + j + 1];
++                pointBodyToWorld(&point_body_j, &point_world_j);
++              }
+ #ifdef ENABLE_PROFILING
+-            solve_time += omp_get_wtime() - solve_start;
+-            update_time += omp_get_wtime() - t_update_start;
++              solve_time += omp_get_wtime() - solve_start;
++              update_time += omp_get_wtime() - t_update_start;
+ #endif
+-            idx += time_seq[k];
+-          }
+-        } else {
+-          if (!imu_deque.empty()) {
+-            imu_last = imu_next;
+-            imu_next = *(imu_deque.front());
++              idx += time_seq[k];
++            }
++          } else {
++            if (!imu_deque.empty()) {
++              imu_last = imu_next;
++              imu_next = *(imu_deque.front());
+ 
+-            while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current &&
+-                   ((rclcpp::Time(imu_next.header.stamp).seconds() <
+-                     Measures.lidar_beg_time + lidar_time_inte))) {
+-              if (is_first_frame) {
+-                {
++              while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current &&
++                     ((rclcpp::Time(imu_next.header.stamp).seconds() <
++                       Measures.lidar_beg_time + lidar_time_inte))) {
++                if (is_first_frame) {
+                   {
+-                    while (rclcpp::Time(imu_next.header.stamp).seconds() <
+-                           Measures.lidar_beg_time + lidar_time_inte) {
+-                      imu_deque.pop_front();
+-                      if (imu_deque.empty()) break;
+-                      imu_last = imu_next;
+-                      imu_next = *(imu_deque.front());
++                    {
++                      while (rclcpp::Time(imu_next.header.stamp).seconds() <
++                             Measures.lidar_beg_time + lidar_time_inte) {
++                        imu_deque.pop_front();
++                        if (imu_deque.empty()) break;
++                        imu_last = imu_next;
++                        imu_next = *(imu_deque.front());
++                      }
+                     }
+                   }
+-                  break;
+-                }
+-                angvel_avr << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
+-                  imu_last.angular_velocity.z;
++                  angvel_avr << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                    imu_last.angular_velocity.z;
+ 
+-                acc_avr << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
+-                  imu_last.linear_acceleration.z;
++                  acc_avr << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                    imu_last.linear_acceleration.z;
+ 
+-                imu_upda_cov = true;
+-                time_update_last = time_current;
+-                time_predict_last_const = time_current;
++                  imu_upda_cov = true;
++                  time_update_last = time_current;
++                  time_predict_last_const = time_current;
+ 
+-                is_first_frame = false;
+-              }
+-              time_current = rclcpp::Time(imu_next.header.stamp).seconds();
++                  is_first_frame = false;
++                }
++                time_current = rclcpp::Time(imu_next.header.stamp).seconds();
+ 
+-              if (!is_first_frame) {
+-                double dt = time_current - time_predict_last_const;
+-                {
+-                  double dt_cov = time_current - time_update_last;
+-                  if (dt_cov > 0.0) {
+-                    kf_output.predict(dt_cov, Q_output, input_in, false, true);
+-                    time_update_last = time_current;
++                if (!is_first_frame) {
++                  double dt = time_current - time_predict_last_const;
++                  {
++                    double dt_cov = time_current - time_update_last;
++                    if (dt_cov > 0.0) {
++                      kf_output.predict(dt_cov, Q_output, input_in, false, true);
++                      time_update_last = time_current;
++                    }
++                    kf_output.predict(dt, Q_output, input_in, true, false);
+                   }
+-                  kf_output.predict(dt, Q_output, input_in, true, false);
+-                }
+ 
+-                time_predict_last_const = time_current;
++                  time_predict_last_const = time_current;
+ 
+-                angvel_avr << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
+-                  imu_next.angular_velocity.z;
+-                acc_avr << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
+-                  imu_next.linear_acceleration.z;
+-                kf_output.update_iterated_dyn_share_IMU();
+-                imu_deque.pop_front();
+-                if (imu_deque.empty()) break;
+-                imu_last = imu_next;
+-                imu_next = *(imu_deque.front());
+-              } else {
+-                imu_deque.pop_front();
+-                if (imu_deque.empty()) break;
+-                imu_last = imu_next;
+-                imu_next = *(imu_deque.front());
++                  angvel_avr << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
++                    imu_next.angular_velocity.z;
++                  acc_avr << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
++                    imu_next.linear_acceleration.z;
++                  kf_output.update_iterated_dyn_share_IMU();
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
++                } else {
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
++                }
+               }
+             }
+           }
+-        }
+-      } else {
+-        bool imu_prop_cov = false;
+-        effct_feat_num = 0;
+-        if (time_seq.size() > 0) {
+-          double pcl_beg_time = Measures.lidar_beg_time;
+-          idx = -1;
+-          for (k = 0; k < (int)time_seq.size(); k++) {
+-            PointType & point_body = feats_down_body->points[idx + time_seq[k]];
+-            time_current = point_body.curvature / 1000.0 + pcl_beg_time;
+-            if (is_first_frame) {
++        } else {
++          bool imu_prop_cov = false;
++          effct_feat_num = 0;
++          if (time_seq.size() > 0) {
++            double pcl_beg_time = Measures.lidar_beg_time;
++            idx = -1;
++            for (k = 0; k < (int)time_seq.size(); k++) {
++              PointType & point_body = feats_down_body->points[idx + time_seq[k]];
++              time_current = point_body.curvature / 1000.0 + pcl_beg_time;
++              if (is_first_frame) {
++                while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
++                }
++                imu_prop_cov = true;
++
++                is_first_frame = false;
++                t_last = time_current;
++                time_update_last = time_current;
++                {
++                  input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                    imu_last.angular_velocity.z;
++                  input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                    imu_last.linear_acceleration.z;
++                  input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++                }
++              }
++
+               while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
+                 imu_deque.pop_front();
+-                if (imu_deque.empty()) break;
+-                imu_last = imu_next;
+-                imu_next = *(imu_deque.front());
+-              }
+-              imu_prop_cov = true;
+ 
+-              is_first_frame = false;
+-              t_last = time_current;
+-              time_update_last = time_current;
+-              {
+                 input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
+                   imu_last.angular_velocity.z;
+                 input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
+                   imu_last.linear_acceleration.z;
+                 input_in.acc = input_in.acc * G_m_s2 / acc_norm;
+-              }
+-            }
++                double dt = rclcpp::Time(imu_last.header.stamp).seconds() - t_last;
+ 
+-            while (time_current > rclcpp::Time(imu_next.header.stamp).seconds()) {
+-              imu_deque.pop_front();
+-
+-              input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
+-                imu_last.angular_velocity.z;
+-              input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
+-                imu_last.linear_acceleration.z;
+-              input_in.acc = input_in.acc * G_m_s2 / acc_norm;
+-              double dt = rclcpp::Time(imu_last.header.stamp).seconds() - t_last;
++                double dt_cov = rclcpp::Time(imu_last.header.stamp).seconds() - time_update_last;
++                if (dt_cov > 0.0) {
++                  kf_input.predict(dt_cov, Q_input, input_in, false, true);
++                  time_update_last = rclcpp::Time(imu_last.header.stamp).seconds();
++                }
++                kf_input.predict(dt, Q_input, input_in, true, false);
++                t_last = rclcpp::Time(imu_last.header.stamp).seconds();
++                imu_prop_cov = true;
+ 
+-              double dt_cov = rclcpp::Time(imu_last.header.stamp).seconds() - time_update_last;
+-              if (dt_cov > 0.0) {
+-                kf_input.predict(dt_cov, Q_input, input_in, false, true);
+-                time_update_last = rclcpp::Time(imu_last.header.stamp).seconds();
++                if (imu_deque.empty()) break;
++                imu_last = imu_next;
++                imu_next = *(imu_deque.front());
+               }
+-              kf_input.predict(dt, Q_input, input_in, true, false);
+-              t_last = rclcpp::Time(imu_last.header.stamp).seconds();
+-              imu_prop_cov = true;
+-
+-              if (imu_deque.empty()) break;
+-              imu_last = imu_next;
+-              imu_next = *(imu_deque.front());
+-            }
+-            if (flg_reset) {
+-              break;
+-            }
+-            double dt = time_current - t_last;
+-            t_last = time_current;
++              if (flg_reset) {
++                break;
++              }
++              double dt = time_current - t_last;
++              t_last = time_current;
+ #ifdef ENABLE_PROFILING
+-            double propag_start = omp_get_wtime();
++              double propag_start = omp_get_wtime();
+ #endif
+-            if (!prop_at_freq_of_imu) {
+-              double dt_cov = time_current - time_update_last;
+-              if (dt_cov > 0.0) {
+-                kf_input.predict(dt_cov, Q_input, input_in, false, true);
+-                time_update_last = time_current;
++              if (!prop_at_freq_of_imu) {
++                double dt_cov = time_current - time_update_last;
++                if (dt_cov > 0.0) {
++                  kf_input.predict(dt_cov, Q_input, input_in, false, true);
++                  time_update_last = time_current;
++                }
+               }
+-            }
+-            kf_input.predict(dt, Q_input, input_in, true, false);
++              kf_input.predict(dt, Q_input, input_in, true, false);
+ #ifdef ENABLE_PROFILING
+-            propag_time += omp_get_wtime() - propag_start;
++              propag_time += omp_get_wtime() - propag_start;
+ #endif
+ #ifdef ENABLE_PROFILING
+-            double t_update_start = omp_get_wtime();
++              double t_update_start = omp_get_wtime();
+ #endif
+ 
+-            if (feats_down_size < 1) {
+-              printf("No point, skip this scan!\n");
++              if (feats_down_size < 1) {
++                printf("No point, skip this scan!\n");
+ 
+-              idx += time_seq[k];
+-              continue;
+-            }
+-            if (!kf_input.update_iterated_dyn_share_modified()) {
+-              idx = idx + time_seq[k];
+-              continue;
+-            }
++                idx += time_seq[k];
++                continue;
++              }
++              if (!kf_input.update_iterated_dyn_share_modified()) {
++                idx = idx + time_seq[k];
++                continue;
++              }
+ 
+ #ifdef ENABLE_PROFILING
+-            solve_start = omp_get_wtime();
++              solve_start = omp_get_wtime();
+ #endif
+-            if (publish_odometry_without_downsample) {
+-              publish_odometry();
+-              if (runtime_pos_log) {
+-                euler_cur = SO3ToEuler(kf_input.x_.rot);
+-                fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
+-                         << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " "
+-                         << kf_input.x_.vel.transpose() << " " << kf_input.x_.bg.transpose() << " "
+-                         << kf_input.x_.ba.transpose() << " " << kf_input.x_.gravity.transpose()
+-                         << " " << feats_undistort->points.size() << endl;
++              if (publish_odometry_without_downsample) {
++                publish_odometry();
++                if (runtime_pos_log) {
++                  euler_cur = SO3ToEuler(kf_input.x_.rot);
++                  fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                           << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " "
++                           << kf_input.x_.vel.transpose() << " " << kf_input.x_.bg.transpose()
++                           << " " << kf_input.x_.ba.transpose() << " "
++                           << kf_input.x_.gravity.transpose() << " "
++                           << feats_undistort->points.size() << endl;
++                }
+               }
+-            }
+ 
+-            for (int j = 0; j < time_seq[k]; j++) {
+-              PointType & point_body_j = feats_down_body->points[idx + j + 1];
+-              PointType & point_world_j = feats_down_world->points[idx + j + 1];
+-              pointBodyToWorld(&point_body_j, &point_world_j);
+-            }
++              for (int j = 0; j < time_seq[k]; j++) {
++                PointType & point_body_j = feats_down_body->points[idx + j + 1];
++                PointType & point_world_j = feats_down_world->points[idx + j + 1];
++                pointBodyToWorld(&point_body_j, &point_world_j);
++              }
+ #ifdef ENABLE_PROFILING
+-            solve_time += omp_get_wtime() - solve_start;
+-            update_time += omp_get_wtime() - t_update_start;
++              solve_time += omp_get_wtime() - solve_start;
++              update_time += omp_get_wtime() - t_update_start;
+ #endif
+-            idx = idx + time_seq[k];
+-          }
+-        } else {
+-          if (!imu_deque.empty()) {
+-            imu_last = imu_next;
+-            imu_next = *(imu_deque.front());
+-            while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current &&
+-                   ((rclcpp::Time(imu_next.header.stamp).seconds() <
+-                     Measures.lidar_beg_time + lidar_time_inte))) {
+-              if (is_first_frame) {
+-                {
++              idx = idx + time_seq[k];
++            }
++          } else {
++            if (!imu_deque.empty()) {
++              imu_last = imu_next;
++              imu_next = *(imu_deque.front());
++              while (rclcpp::Time(imu_next.header.stamp).seconds() > time_current &&
++                     ((rclcpp::Time(imu_next.header.stamp).seconds() <
++                       Measures.lidar_beg_time + lidar_time_inte))) {
++                if (is_first_frame) {
+                   {
+-                    while (rclcpp::Time(imu_next.header.stamp).seconds() <
+-                           Measures.lidar_beg_time + lidar_time_inte) {
+-                      imu_deque.pop_front();
+-                      if (imu_deque.empty()) break;
+-                      imu_last = imu_next;
+-                      imu_next = *(imu_deque.front());
++                    {
++                      while (rclcpp::Time(imu_next.header.stamp).seconds() <
++                             Measures.lidar_beg_time + lidar_time_inte) {
++                        imu_deque.pop_front();
++                        if (imu_deque.empty()) break;
++                        imu_last = imu_next;
++                        imu_next = *(imu_deque.front());
++                      }
+                     }
+                   }
++                  imu_prop_cov = true;
+ 
+-                  break;
++                  t_last = time_current;
++                  time_update_last = time_current;
++                  input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
++                    imu_last.angular_velocity.z;
++                  input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
++                    imu_last.linear_acceleration.z;
++                  input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++
++                  is_first_frame = false;
+                 }
+-                imu_prop_cov = true;
++                time_current = rclcpp::Time(imu_next.header.stamp).seconds();
+ 
+-                t_last = time_current;
+-                time_update_last = time_current;
+-                input_in.gyro << imu_last.angular_velocity.x, imu_last.angular_velocity.y,
+-                  imu_last.angular_velocity.z;
+-                input_in.acc << imu_last.linear_acceleration.x, imu_last.linear_acceleration.y,
+-                  imu_last.linear_acceleration.z;
+-                input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++                if (!is_first_frame) {
++                  double dt = time_current - t_last;
+ 
+-                is_first_frame = false;
+-              }
+-              time_current = rclcpp::Time(imu_next.header.stamp).seconds();
++                  double dt_cov = time_current - time_update_last;
++                  if (dt_cov > 0.0) {
++                    time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
++                  }
+ 
+-              if (!is_first_frame) {
+-                double dt = time_current - t_last;
++                  t_last = rclcpp::Time(imu_next.header.stamp).seconds();
+ 
+-                double dt_cov = time_current - time_update_last;
+-                if (dt_cov > 0.0) {
+-                  time_update_last = rclcpp::Time(imu_next.header.stamp).seconds();
++                  input_in.gyro << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
++                    imu_next.angular_velocity.z;
++                  input_in.acc << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
++                    imu_next.linear_acceleration.z;
++                  input_in.acc = input_in.acc * G_m_s2 / acc_norm;
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
++                } else {
++                  imu_deque.pop_front();
++                  if (imu_deque.empty()) break;
++                  imu_last = imu_next;
++                  imu_next = *(imu_deque.front());
+                 }
+-
+-                t_last = rclcpp::Time(imu_next.header.stamp).seconds();
+-
+-                input_in.gyro << imu_next.angular_velocity.x, imu_next.angular_velocity.y,
+-                  imu_next.angular_velocity.z;
+-                input_in.acc << imu_next.linear_acceleration.x, imu_next.linear_acceleration.y,
+-                  imu_next.linear_acceleration.z;
+-                input_in.acc = input_in.acc * G_m_s2 / acc_norm;
+-                imu_deque.pop_front();
+-                if (imu_deque.empty()) break;
+-                imu_last = imu_next;
+-                imu_next = *(imu_deque.front());
+-              } else {
+-                imu_deque.pop_front();
+-                if (imu_deque.empty()) break;
+-                imu_last = imu_next;
+-                imu_next = *(imu_deque.front());
+               }
+             }
+           }
+         }
+-      }
+-      /******* Publish odometry downsample *******/
+-      if (!publish_odometry_without_downsample) {
+-        publish_odometry();
+-      }
++        /******* Publish odometry downsample *******/
++        if (!publish_odometry_without_downsample) {
++          publish_odometry();
++        }
+ 
+-      /*** add the feature points to map ***/
++        /*** add the feature points to map ***/
+ #ifdef ENABLE_PROFILING
+-      t3 = omp_get_wtime();
++        t3 = omp_get_wtime();
+ #endif
+-      if (feats_down_size > 4) {
+-        MapIncremental();
+-      }
++        if (feats_down_size > 4) {
++          MapIncremental();
++        }
+ #ifdef ENABLE_PROFILING
+-      t5 = omp_get_wtime();
+-      {
+-        static double prev_lidar_time = 0.0;
+-        static int total_skipped = 0;
+-        if (prev_lidar_time > 0.0) {
+-          int skipped =
+-            (int)round((Measures.lidar_beg_time - prev_lidar_time) / lidar_time_inte) - 1;
+-          if (skipped > 0) {
+-            total_skipped += skipped;
+-            printf(
+-              "[PROFILING] lidar skip: +%d frame(s) (gap=%.3fs), total_skipped=%d\n", skipped,
+-              Measures.lidar_beg_time - prev_lidar_time, total_skipped);
++        t5 = omp_get_wtime();
++        {
++          static double prev_lidar_time = 0.0;
++          static int total_skipped = 0;
++          if (prev_lidar_time > 0.0) {
++            int skipped =
++              (int)round((Measures.lidar_beg_time - prev_lidar_time) / lidar_time_inte) - 1;
++            if (skipped > 0) {
++              total_skipped += skipped;
++              printf(
++                "[PROFILING] lidar skip: +%d frame(s) (gap=%.3fs), total_skipped=%d\n", skipped,
++                Measures.lidar_beg_time - prev_lidar_time, total_skipped);
++            }
+           }
++          prev_lidar_time = Measures.lidar_beg_time;
+         }
+-        prev_lidar_time = Measures.lidar_beg_time;
+-      }
+-      {
+-        double end_wall = omp_get_wtime();
+-        if (g_csv_fp) {
+-          double queue_wait = t0 - (recv_mono + s_plot11[scan_count]);
+-          csv_push(
+-            {Measures.lidar_beg_time, recv_wall, recv_mono, t0, t1, t3, t5, end_wall, propag_time,
+-             (update_time - solve_time), solve_time, feats_down_size, (int)feats_undistort->size(),
+-             raw_pts_size_last, queue_wait, s_plot11[scan_count]});
++        {
++          double end_wall = omp_get_wtime();
++          if (g_csv_fp) {
++            double queue_wait = t0 - (recv_mono + s_plot11[scan_count]);
++            csv_push(
++              {Measures.lidar_beg_time, recv_wall, recv_mono, t0, t1, t3, t5, end_wall, propag_time,
++               (update_time - solve_time), solve_time, feats_down_size,
++               (int)feats_undistort->size(), raw_pts_size_last, queue_wait, s_plot11[scan_count]});
++          }
+         }
+-      }
+ #endif
+ 
+-      /******* Publish points *******/
+-      if (path_en) publish_path();
+-      if (scan_pub_en || pcd_save_en) publish_frame_world();
+-      if (scan_pub_en && scan_body_pub_en) publish_frame_body();
++        /******* Publish points *******/
++        if (path_en) publish_path();
++        if (scan_pub_en || pcd_save_en) publish_frame_world();
++        if (scan_pub_en && scan_body_pub_en) publish_frame_body();
+ 
+-      /*** Debug variables Logging ***/
+-      if (runtime_pos_log) {
+-        frame_num++;
+-        aver_time_consu = aver_time_consu * (frame_num - 1) / frame_num + (t5 - t0) / frame_num;
+-        {
+-          aver_time_icp = aver_time_icp * (frame_num - 1) / frame_num + update_time / frame_num;
+-        }
+-        aver_time_match = aver_time_match * (frame_num - 1) / frame_num + (match_time) / frame_num;
+-        aver_time_solve = aver_time_solve * (frame_num - 1) / frame_num + solve_time / frame_num;
+-        aver_time_propag = aver_time_propag * (frame_num - 1) / frame_num + propag_time / frame_num;
+-        T1[time_log_counter] = Measures.lidar_beg_time;
+-        s_plot[time_log_counter] = t5 - t0;
+-        s_plot2[time_log_counter] = feats_undistort->points.size();
+-        s_plot3[time_log_counter] = aver_time_consu;
+-        time_log_counter++;
+-        printf(
+-          "[ mapping ]: time: IMU + Map + Input Downsample: %0.6f ave match: %0.6f ave solve: "
+-          "%0.6f  ave ICP: %0.6f  map incre: %0.6f ave total: %0.6f icp: %0.6f propogate: %0.6f \n",
+-          t1 - t0, aver_time_match, aver_time_solve, t3 - t1, t5 - t3, aver_time_consu,
+-          aver_time_icp, aver_time_propag);
+-        if (!publish_odometry_without_downsample) {
+-          if (!use_imu_as_input) {
+-            euler_cur = SO3ToEuler(kf_output.x_.rot);
+-            fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
+-                     << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " "
+-                     << kf_output.x_.vel.transpose() << " " << kf_output.x_.omg.transpose() << " "
+-                     << kf_output.x_.acc.transpose() << " " << kf_output.x_.gravity.transpose()
+-                     << " " << kf_output.x_.bg.transpose() << " " << kf_output.x_.ba.transpose()
+-                     << " " << feats_undistort->points.size() << endl;
+-          } else {
+-            euler_cur = SO3ToEuler(kf_input.x_.rot);
+-            fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
+-                     << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " "
+-                     << kf_input.x_.vel.transpose() << " " << kf_input.x_.bg.transpose() << " "
+-                     << kf_input.x_.ba.transpose() << " " << kf_input.x_.gravity.transpose() << " "
+-                     << feats_undistort->points.size() << endl;
++        /*** Debug variables Logging ***/
++        if (runtime_pos_log) {
++          frame_num++;
++          aver_time_consu = aver_time_consu * (frame_num - 1) / frame_num + (t5 - t0) / frame_num;
++          {
++            aver_time_icp = aver_time_icp * (frame_num - 1) / frame_num + update_time / frame_num;
++          }
++          aver_time_match =
++            aver_time_match * (frame_num - 1) / frame_num + (match_time) / frame_num;
++          aver_time_solve = aver_time_solve * (frame_num - 1) / frame_num + solve_time / frame_num;
++          aver_time_propag =
++            aver_time_propag * (frame_num - 1) / frame_num + propag_time / frame_num;
++          T1[time_log_counter] = Measures.lidar_beg_time;
++          s_plot[time_log_counter] = t5 - t0;
++          s_plot2[time_log_counter] = feats_undistort->points.size();
++          s_plot3[time_log_counter] = aver_time_consu;
++          time_log_counter++;
++          printf(
++            "[ mapping ]: time: IMU + Map + Input Downsample: %0.6f ave match: %0.6f ave solve: "
++            "%0.6f  ave ICP: %0.6f  map incre: %0.6f ave total: %0.6f icp: %0.6f propogate: %0.6f "
++            "\n",
++            t1 - t0, aver_time_match, aver_time_solve, t3 - t1, t5 - t3, aver_time_consu,
++            aver_time_icp, aver_time_propag);
++          if (!publish_odometry_without_downsample) {
++            if (!use_imu_as_input) {
++              euler_cur = SO3ToEuler(kf_output.x_.rot);
++              fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                       << euler_cur.transpose() << " " << kf_output.x_.pos.transpose() << " "
++                       << kf_output.x_.vel.transpose() << " " << kf_output.x_.omg.transpose() << " "
++                       << kf_output.x_.acc.transpose() << " " << kf_output.x_.gravity.transpose()
++                       << " " << kf_output.x_.bg.transpose() << " " << kf_output.x_.ba.transpose()
++                       << " " << feats_undistort->points.size() << endl;
++            } else {
++              euler_cur = SO3ToEuler(kf_input.x_.rot);
++              fout_out << setw(20) << Measures.lidar_beg_time - first_lidar_time << " "
++                       << euler_cur.transpose() << " " << kf_input.x_.pos.transpose() << " "
++                       << kf_input.x_.vel.transpose() << " " << kf_input.x_.bg.transpose() << " "
++                       << kf_input.x_.ba.transpose() << " " << kf_input.x_.gravity.transpose()
++                       << " " << feats_undistort->points.size() << endl;
++            }
+           }
++          dump_lio_state_to_log(fp);
+         }
+-        dump_lio_state_to_log(fp);
+       }
++      loop_rate.sleep();
+     }
+-    loop_rate.sleep();
+-  }
+-  //--------------------------save map-----------------------------------
+-  if (pcl_wait_save->size() > 0 && pcd_save_en) {
+-    string file_name = string("scans.pcd");
+-    string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
+-    pcl::PCDWriter pcd_writer;
+-    pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
+-  }
+-  fout_out.close();
+-  fout_imu_pbp.close();
++    //--------------------------save map-----------------------------------
++    if (pcl_wait_save->size() > 0 && pcd_save_en) {
++      string file_name = string("scans.pcd");
++      string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
++      pcl::PCDWriter pcd_writer;
++      pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
++    }
++    fout_out.close();
++    fout_imu_pbp.close();
+ #ifdef ENABLE_PROFILING
+-  if (g_csv_fp) {
+-    g_csv_stop.store(true, std::memory_order_release);
+-    if (g_csv_thread.joinable()) g_csv_thread.join();
+-    fclose(g_csv_fp);
+-    g_csv_fp = nullptr;
+-  }
++    if (g_csv_fp) {
++      g_csv_stop.store(true, std::memory_order_release);
++      if (g_csv_thread.joinable()) g_csv_thread.join();
++      fclose(g_csv_fp);
++      g_csv_fp = nullptr;
++    }
+ #endif
+-  rclcpp::shutdown();
++    rclcpp::shutdown();
++  } catch (const std::exception & e) {
++    RCLCPP_FATAL(
++      rclcpp::get_logger("pointlio_mapping"), "Unhandled exception in main: %s", e.what());
++    return 1;
++  }
+   return 0;
+ }
+diff --git a/src/preprocess.cpp b/src/preprocess.cpp
+index cd47868..d4fdc8a 100755
+--- a/src/preprocess.cpp
++++ b/src/preprocess.cpp
+@@ -12,7 +12,7 @@ Preprocess::Preprocess() : lidar_type(AVIA), blind(0.01), point_filter_num(1), d
+   SCAN_RATE = 10;
+   group_size = 8;
+   disA = 0.01;
+-  disA = 0.1;  // B?
++  disB = 0.1;
+   p2l_ratio = 225;
+   limit_maxmid = 6.25;
+   limit_midmin = 6.25;
+@@ -863,13 +863,13 @@ int Preprocess::plane_judge(
+     }
+   }
+ 
+-  if ((two_dis * two_dis / leng_wid) < p2l_ratio) {
++  if ((leng_wid <= 0) || ((two_dis * two_dis / leng_wid) < p2l_ratio)) {
+     curr_direct.setZero();
+     return 0;
+   }
+ 
+   uint disarrsize = disarr.size();
+-  for (uint j = 0; j < disarrsize - 1; j++) {
++  for (uint j = 0; disarrsize > 0 && j < disarrsize - 1; j++) {
+     for (uint k = j + 1; k < disarrsize; k++) {
+       if (disarr[j] < disarr[k]) {
+         leng_wid = disarr[j];
+@@ -879,7 +879,7 @@ int Preprocess::plane_judge(
+     }
+   }
+ 
+-  if (disarr[disarr.size() - 2] < 1e-16) {
++  if ((disarrsize < 2) || (disarr[disarr.size() - 2] < 1e-16)) {
+     curr_direct.setZero();
+     return 0;
+   }
+-- 
+2.43.0
+

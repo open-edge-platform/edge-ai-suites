@@ -7,6 +7,10 @@ import os
 import httpx
 import json
 import traceback
+from typing import Optional
+
+from utils.prompt_loader import get_default_video_summary_prompt
+
 
 class VideoService:
     def __init__(self):
@@ -20,14 +24,7 @@ class VideoService:
         file_key: str,
         bucket_name: str,
         tags: list = None,
-        prompt: str = (
-            "Please summarize this classroom video segment. "
-            "Focus on the teaching activities, lecture topics, "
-            "key knowledge points being explained, "
-            "any content written or displayed on the blackboard/screen, "
-            "student behaviors (e.g. raising hands, taking notes, discussing, distracted, leaving the classroom), "
-            "and notable student-teacher interactions."
-        ),
+        prompt: Optional[str] = None,
         chunk_duration: int = None,
         run_id: str = None
     ):
@@ -39,8 +36,7 @@ class VideoService:
             "tags": tags
         }
 
-        if prompt is not None:
-            payload["prompt"] = prompt
+        payload["prompt"] = prompt or get_default_video_summary_prompt()
 
         if chunk_duration is not None:
             payload["chunk_duration_s"] = chunk_duration

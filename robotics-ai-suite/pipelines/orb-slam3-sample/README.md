@@ -12,7 +12,7 @@ ORB-SLAM3 is one of popular real-time feature-based SLAM libraries able to perfo
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/ORB_VSLAM.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/ORB_VSLAM.html)
 
 ## Changes to 3rd party source
 
@@ -27,25 +27,28 @@ The following patches are provided to enhance the ORB_SLAM3 source:
 ## Prerequisites
 
 > [!IMPORTANT]
-> Please make sure you have all the prerequisites and installation in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) before proceeding.
-> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense SDK.
+> Please make sure you have all the prerequisites and installation in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) before proceeding.
+> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#5-install-realsense-camera-sdk) to install Realsense SDK.
 
 ## Installation
 
-1. Make sure Realsense SDK installed. If not, follow [Install Realsense SDK](
-https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense packages.
+1. Make sure Realsense SDK installed.
 
-Here is a minimal installation:
+   If not, follow
+   [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#5-install-realsense-camera-sdk)
+   to install Realsense packages.
 
-```bash
-sudo apt install librealsense2
-```
+   Here is a minimal installation:
+
+   ```bash
+   sudo apt install librealsense2
+   ```
 
 2. Install the ORB-SLAM3 packages by following the below command:
 
-```bash
-sudo apt install orb-slam3
-```
+   ```bash
+   sudo apt install orb-slam3
+   ```
 
 After installation, the VSLAM example programs are installed under folder ``/opt/intel/orb-slam3``.
 
@@ -59,28 +62,30 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
 
 1. Download the EUROC MAV Dataset files
 
-```bash
-mkdir -p ~/orb-slam3/dataset
-cd ~/orb-slam3/dataset
-wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_04_difficult/MH_04_difficult.zip
-unzip MH_04_difficult.zip -d MH04
-```
+   ```bash
+   mkdir -p ~/orb-slam3/dataset
+   cd ~/orb-slam3/dataset
+   wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_04_difficult/MH_04_difficult.zip
+   unzip MH_04_difficult.zip -d MH04
+   ```
 
-> [!NOTE]
-> This demo uses `MH_04_difficult dataset`. If you want to try other dataset, you may download them from the link: https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets.
+   > **Note:**
+   > This demo uses `MH_04_difficult dataset`. If you want to try other dataset, you may download them from the link:
+   > <https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets>.
 
 2. Launch ORB-SLAM3 Demo pipeline
 
-Run the below commands in a bash terminal:
+   Run the below commands in a bash terminal:
 
-```bash
-mkdir -p ~/orb-slam3/log
-cd ~/orb-slam3/
-/opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
-```
+   ```bash
+   mkdir -p ~/orb-slam3/log
+   cd ~/orb-slam3/
+   /opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
+   ```
 
-> [!NOTE]
-> If you use other datasets other than `MH_04_difficult`, you should make sure you update the command above with the correct name of dataset you use.
+> **Note:**
+> If you use other datasets other than `MH_04_difficult`, you should make sure you update
+> the command above with the correct name of dataset you use.
 
 ### Demo-2: VSLAM Demo with Intel Realsense Camera
 
@@ -92,89 +97,94 @@ This Demo uses Intel Realsense Camera as stereo inputs.
 
 2. Launch ORB-SLAM3 Demo pipeline
 
-Run the below command in a bash terminal:
+   Run the below command in a bash terminal:
 
-```bash
-/opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml
-```
+   ```bash
+   /opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml
+   ```
 
 ## Building ORB-SLAM3 Debian package
 
 This step-by-step guide will detail how to build ORB-SLAM3 into a Debian package. Execute the following steps on an Ubuntu-based Linux development system:
 
-1. Install prerequiste development tools:
+1. Install prerequisite development tools:
 
-```bash
-apt update
-apt install build-essential make cmake git wget debhelper devscripts equivs
-```
+   ```bash
+   apt update
+   apt install build-essential make cmake git wget debhelper devscripts equivs
+   ```
 
 2. Add the ECI APT repository to your APT sources:
 
-```bash
-sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
-echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee /etc/apt/sources.list.d/eci.list
-```
+   ```bash
+   sudo -E wget -O- https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg | sudo tee /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null
+   echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee /etc/apt/sources.list.d/eci.list
+   ```
 
 3. Add the Intel RealSense APT repository to your APT sources:
 
-```bash
-sudo mkdir -p /etc/apt/keyrings
-curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
-```
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+   ```
 
 4. Update your APT sources:
 
-```bash
-sudo apt update
-```
+   ```bash
+   sudo apt update
+   ```
 
 5. Clone the Robotics AI Suite source:
 
-```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main --recurse-submodules
-```
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main --recurse-submodules
+   ```
 
 6. Copy the Robotics AI Suite ORB-SLAM3 patches:
 
-```bash
-cd edge-ai-suites/robotics-ai-suite/components/orb-slam3-sample
-cp ./patches/* ./ORB_SLAM3
-```
+   ```bash
+   cd edge-ai-suites/robotics-ai-suite/components/orb-slam3-sample
+   cp ./patches/* ./ORB_SLAM3
+   ```
 
 7. Apply the patches:
 
-```bash
-cd ORB_SLAM3
-git apply *.patch
-rm *.patch
-```
+   ```bash
+   cd ORB_SLAM3
+   git apply *.patch
+   rm *.patch
+   ```
 
 8. Install the package build dependencies:
 
-```bash
-sudo mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" debian/control
-```
+   ```bash
+   sudo mk-build-deps -i --host-arch amd64 --build-arch amd64 -t "apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades" debian/control
+   ```
 
 9. Build the Debian package:
 
-```bash
-dpkg-buildpackage
-```
+   ```bash
+   dpkg-buildpackage
+   ```
 
-The Debian package will reside in the parent directory of `ORB_SLAM3`.
+   The Debian package will reside in the parent directory of `ORB_SLAM3`.
 
-```
-ls ../ -1
-ORB_SLAM3
-liborb-slam3-dbgsym_1.0-1_amd64.ddeb
-liborb-slam3-dev_1.0-1_amd64.deb
-liborb-slam3_1.0-1_amd64.deb
-orb-slam3-dbgsym_1.0-1_amd64.ddeb
-orb-slam3_1.0-1.dsc
-orb-slam3_1.0-1.tar.gz
-orb-slam3_1.0-1_amd64.buildinfo
-orb-slam3_1.0-1_amd64.changes
-orb-slam3_1.0-1_amd64.deb
+   ```bash
+   ls ../ -1
+   ```
 
+   Output:
+
+   ```text
+   ORB_SLAM3
+   liborb-slam3-dbgsym_1.0-1_amd64.ddeb
+   liborb-slam3-dev_1.0-1_amd64.deb
+   liborb-slam3_1.0-1_amd64.deb
+   orb-slam3-dbgsym_1.0-1_amd64.ddeb
+   orb-slam3_1.0-1.dsc
+   orb-slam3_1.0-1.tar.gz
+   orb-slam3_1.0-1_amd64.buildinfo
+   orb-slam3_1.0-1_amd64.changes
+   orb-slam3_1.0-1_amd64.deb
+   ```

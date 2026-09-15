@@ -1,4 +1,4 @@
-"""Phase 8 integration tests — keepalive protocol & watchdog auto-pause.
+"""Integration tests — keepalive protocol & watchdog auto-pause.
 
 Requires a live VSA service (`videostream-analytics serve`) and an RTSP source
 (see scripts/test-videostream-analytics.sh). The watchdog timeout / interval

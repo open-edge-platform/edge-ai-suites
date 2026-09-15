@@ -1,10 +1,10 @@
 # Sample Video Resources
 
-Place your sample video file here as `sample.mp4`.
+Place your sample video file here as `datastream.mp4`.
 
 The DL Streamer pipeline uses:
 ```
-location=/home/pipeline-server/resources/videos/sample.mp4
+location=/home/pipeline-server/resources/videos/datastream.mp4
 ```
 
 ## Obtaining a Sample Video

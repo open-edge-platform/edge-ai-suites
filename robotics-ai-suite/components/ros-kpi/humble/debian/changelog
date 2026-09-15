@@ -1,3 +1,106 @@
+ros-humble-benchmark-framework (0.2.6-2) UNRELEASED; urgency=low
+
+  * realsense2_tutorial_fixes: fix a silent graph-monitor bug and correct
+    docs/config for the realsense2_tutorial benchmark scenario.
+    - ros2_graph_monitor.py: fixed a startup race where the node-discovery
+      retry loop gave up permanently (instead of retrying) if no other ROS
+      nodes were visible on the first check, silently producing an empty
+      graph_timing.csv with no error shown.
+    - README.md: corrected the post-install cd path to the actual install
+      location, /opt/ros/$ROS_DISTRO/benchmarking.
+    - config/realsense2_tutorial_run.yaml: bumped init_sleep 8s -> 20s to
+      cover the RealSense USB camera's measured ~15-16s device-detection
+      delay.
+    - Removed the generated uv.lock from version control (added to
+      .gitignore).
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 19 Aug 2026 00:00:00 +0000
+
+ ros-humble-benchmark-framework (0.2.6-1) UNRELEASED; urgency=low
+
+  * per_node_resource_followups: per-core CPU hot-spotting joined with
+    per-node attribution, latency-spike/resource-usage correlation, and a
+    thread-mode attribution fix.
+    - visualize_resources.py --core-nodes: per-core CPU stacked by ROS2 node
+      (top busiest cores), joining the existing per-core series with
+      ros2_node_map to distinguish affinity/scheduling hot spots from
+      generally CPU-heavy load.
+    - analyze_trigger_latency.py now cross-references latency outliers
+      (events at/above their pair's own p99) against resource_usage.json,
+      surfacing the nearest sample's top CPU consumers as a new
+      latency_spikes array in Level 1 KPI output (--max-latency-spikes,
+      default 5).
+    - Fixed aggregate_core_by_node() to attribute thread CPU via tgid so
+      per-thread samples roll up to their owning process/node correctly.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 14 Aug 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.2.6) UNRELEASED; urgency=low
+
+  * system_wide_resource_attribution: psutil-based system-wide resource
+    capture with post-hoc ROS2 process-tree attribution; drop RAPL/thermal
+    monitoring; shared post-run analysis menu.
+    - New _psutil_probe.py sampler replaces pidstat everywhere (incl.
+      --continuous); writes a single JSON document (resource_usage.json/
+      _ros2.json) with ROS2 process-tree attribution and PID -> node name
+      mapping. visualize_resources.py, view_average.py, prometheus_exporter.py,
+      aggregate_kpi.py updated for the new format.
+    - Removed RAPL CPU power/thermal throttling support.
+    - New shared src/_session_menu.sh post-run analysis module, used by both
+      benchmark_runner.sh and bench_menu.sh.
+    - Added min/max latency fields to Level 1 KPI output.
+    - monitor_resources.py --io now collects real per-process disk I/O
+      (delta read/write bytes per tick), with an optional plot in
+      visualize_resources.py.
+    - New monitor_resources.py -x/--ctx-switches (also in monitor_stack.py)
+      collects per-process voluntary/involuntary context-switch deltas, a
+      privilege-free signal of CPU contention, with an optional plot in
+      visualize_resources.py.
+    - Fixed ros2_graph_monitor.py bugs causing analyze_trigger_latency.py to
+      report 0 input->output pairs: mixed wall-clock/sim-time timestamps on
+      the same topic, and message callbacks starved by sharing a thread with
+      periodic graph discovery/display.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 24 Jul 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.2.5) UNRELEASED; urgency=low
+
+  * Added ADBScan benchmark
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 24 Jul 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.2.4) UNRELEASED; urgency=low
+
+  * post_run_analysis_prompt: centralized logging, CI-friendly benchmark
+    targets, interactive post-run/post-benchmark analysis menus.
+    - src/log_config.py: new shared logging module; get_logger()/
+      configure_logging() resolve verbosity from --log-level CLI arg >
+      LOG_LEVEL env var > .env file at repo root (simple parser, no
+      python-dotenv dependency) > default INFO; logs to stdout (not
+      logging's stderr default) so 2>/dev/null shell wrappers used to
+      silence third-party stderr noise don't silence our own output too.
+    - src/*.py: convert print() to logger.info/warning/error() across all
+      scripts (854 call sites). INFO = progress/status messages; DEBUG =
+      full per-run and aggregate result tables; WARNING = quiet/CI mode,
+      with "no data found"-style messages kept visible at WARNING/ERROR
+      so real problems aren't silently swallowed.
+    - src/bench_menu.sh: new interactive post-benchmark menu (summary,
+      E2E latency, per-run drill-down); run-picker accepts 0 or Enter to
+      cancel instead of erroring.
+    - src/benchmark_runner.sh: add --no-prompt for non-interactive/CI use;
+      add interactive post-run analysis menu; disable EXIT trap after
+      manual shutdown to avoid duplicate cleanup; validate numeric menu
+      input under set -e.
+    - Makefile: *-benchmark targets accept NO_PROMPT=1 to force --no-prompt
+      on every run (including the last), skip the interactive post-
+      benchmark menu, and force --log-level WARNING for aggregate_kpi.py;
+      benchmark banners display the effective log level.
+    - .github/linters/.pylintrc: disable logging-fstring-interpolation/
+      logging-format-interpolation/logging-not-lazy to allow f-strings/
+      .format() in log calls repo-wide.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 09 Jul 2026 00:00:00 +0000
+
 ros-humble-benchmark-framework (0.2.3) UNRELEASED; urgency=low
 
   * use_intel_python_libs: Intel-optimised Python acceleration layer.

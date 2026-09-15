@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 import os
 import gradio as gr
@@ -19,6 +19,7 @@ from services.api_client import (
     fetch_summary_status,
     fetch_camera_watcher_mapping,
     submit_camera_watcher_mapping,
+    fetch_vss_features,
 )
 from services.video_processor import process_video
 from services.event_utils import display_events
@@ -280,6 +281,19 @@ def create_ui():
     show_genai_tab = os.getenv("NVR_GENAI", "false").lower() == "true"
     show_scenescape_source = os.getenv("NVR_SCENESCAPE", "false").lower() == "true"
     time.sleep(5)  # Ensure the environment is fully initialized
+    # Detect which VSS features are active so the UI only offers actions the
+    # running VSS deployment can actually service.
+    vss_features = fetch_vss_features()
+    vss_summary_enabled = vss_features.get("summary_enabled", True)
+    vss_search_enabled = vss_features.get("search_enabled", True)
+    action_choices = (
+        (["Summarize"] if vss_summary_enabled else [])
+        + (["Add to Search"] if vss_search_enabled else [])
+    )
+    if not action_choices:
+        # Defensive: VSS reported no active feature; fall back to both.
+        action_choices = ["Summarize", "Add to Search"]
+    default_action = action_choices[0]
     # Prefer enriched labels-aware fetch; fall back to simple list on error
     camera_list, camera_labels_map = fetch_cameras_with_labels()
     if not camera_list:
@@ -362,7 +376,7 @@ def create_ui():
                         )
                     with gr.Column(scale=1):
                         action_dropdown = gr.Dropdown(
-                            choices=["Summarize", "Add to Search"], value="Summarize"
+                            choices=action_choices, value=default_action
                         )
                     with gr.Column(scale=1):
                         start_input = gr.DateTime(
@@ -401,7 +415,7 @@ def create_ui():
                         scale=5,
                     )
                     close_toast_btn = gr.Button("❌", visible=False, scale=1)
-                
+
                 # Register the tick event
                 polling_timer.tick(
                     fn=auto_refresh_summary_status,
@@ -588,7 +602,7 @@ def create_ui():
                             </style>
                             """
                             )
-                    
+
                     def fetch_and_display_events(camera):
                         nonlocal recent_events
                         recent_events = fetch_events(camera)
@@ -622,7 +636,7 @@ def create_ui():
                     )
 
                     if show_scenescape_source:
-                        # SceneScape: fixed labels, count visible by default
+                        # Scenescape: fixed labels, count visible by default
                         SCENESCAPE_LABELS = ["vehicle", "pedestrian"]
                         label_filter = gr.Dropdown(
                             choices=SCENESCAPE_LABELS,
@@ -644,7 +658,7 @@ def create_ui():
                             value=0,
                             precision=0,
                             interactive=True,
-                            visible=False,  
+                            visible=False,
                         )
 
                     def toggle_count_visibility(source):
@@ -668,8 +682,8 @@ def create_ui():
                         )
 
                     action_dropdown_auto = gr.Dropdown(
-                        choices=["Summarize", "Add to Search"],
-                        value="Summarize",
+                        choices=action_choices,
+                        value=default_action,
                         label="Select Action",
                     )
                     add_rule_btn = gr.Button("➕ Add Rule")

@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  edge-ai-showcase:
+    build:
+      context: .
+      args:
+        - http_proxy=${http_proxy}
+        - https_proxy=${https_proxy}
+        - no_proxy=${no_proxy}
+    container_name: edge-ai-showcase
+    ports:
+      - "127.0.0.1:5002:5002"
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - COMPANION_BRIDGE_URL=${COMPANION_BRIDGE_URL:-http://px4-gazebo:8080}
+      - RTSP_HOST=mediamtx
+      - RTSP_PORT=8554
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+    volumes:
+      - ./app.py:/app/app.py:ro
+      - ./templates:/app/templates:ro
+    networks:
+      - uav-mission-compute-sdk_default
+    restart: unless-stopped
+
+networks:
+  uav-mission-compute-sdk_default:
+    external: true

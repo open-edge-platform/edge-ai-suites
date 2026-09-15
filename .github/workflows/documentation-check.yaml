@@ -105,7 +105,7 @@ jobs:
             visual-search-question-and-answering:
               - 'metro-ai-suite/visual-search-question-and-answering/docs/user-guide/**'
             robotics-ai-suite:
-              - 'robotics-ai-suite/docs/**'
+              - 'robotics-ai-suite/docs/user-guide/**'
 
   build-smart-classroom:
     permissions:

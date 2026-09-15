@@ -53,6 +53,13 @@ def _validate_features(data):
         )
 
 def load_config(path="config.yaml"):
+    # Allow override via environment variable SC_CONFIG_PATH
+    # Used by Flutter integration to use utils/flutter/config.yaml
+    env_config_path = os.environ.get("SC_CONFIG_PATH")
+    if env_config_path:
+        path = env_config_path
+        logger.info(f"Using config from SC_CONFIG_PATH: {path}")
+    
     with open(path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
     data = _apply_backcompat(data)

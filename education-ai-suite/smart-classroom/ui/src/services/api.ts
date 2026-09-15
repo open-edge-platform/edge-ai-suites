@@ -1,33 +1,25 @@
 import type { StreamEvent, StreamOptions } from './streamSimulator';
-import { store } from "../redux/store";
-import { 
-  setVideoStatus,
-  setVideoAnalyticsActive,
-  setVideoPlaybackMode
-} from "../redux/slices/uiSlice";
 import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
 
-export type ProjectConfig = { 
-  name: string; 
-  location: string; 
-  microphone: string; 
-  frontCamera?: string; 
-  backCamera?: string; 
-  boardCamera?: string 
+export type ProjectConfig = {
+  name: string;
+  location: string;
+  microphone: string;
+  frontCamera?: string;
+  backCamera?: string;
+  boardCamera?: string
 };
 
-export type Settings = { 
-  projectName: string; 
-  projectLocation: string; 
-  microphone: string; 
-  frontCamera?: string; 
-  backCamera?: string; 
-  boardCamera?: string 
+export type Settings = {
+  projectName: string;
+  projectLocation: string;
+  microphone: string;
+  frontCamera?: string;
+  backCamera?: string;
+  boardCamera?: string
 };
 
 export type SessionMode = 'record' | 'upload';
-export type StartSessionRequest = { projectName: string; projectLocation: string; microphone: string; mode: SessionMode };
-export type StartSessionResponse = { sessionId: string };
 
 export interface SearchRequest {
   session_id: string;
@@ -48,6 +40,47 @@ const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
 const GRADING_API_URL: string = env.VITE_GRADING_API_URL || '/grading-api';
 const HEALTH_TIMEOUT_MS = 5000;
+// Content Search wraps every reply in {code, data, message}; only this code means success.
+const CS_SUCCESS_CODE = 20000;
+
+// ============================================================================
+// FEATURE CONFIGURATION API
+// ============================================================================
+
+export interface FeatureDescriptor {
+  id: string;
+  dependency: string[];
+  requires: string[];
+  endpoints?: Record<string, string>;
+  mode?: string;
+  chunking?: boolean;
+}
+
+/**
+ * Fetch enabled features with full UI descriptors from backend
+ * This is the foundation for dynamic UI rendering
+ */
+export async function fetchFeatures(): Promise<FeatureDescriptor[]> {
+  const res = await fetch(`${BASE_URL}/features`, { cache: 'no-store' });
+  if (!res.ok) {
+    throw new Error(`Failed to fetch features: ${res.status}`);
+  }
+  const data = await res.json();
+  return data.features || [];
+}
+
+/**
+ * Get endpoint URL for a specific feature action
+ */
+export function getFeatureEndpoint(
+  features: FeatureDescriptor[],
+  featureId: string,
+  endpointKey: string
+): string | null {
+  const feature = features.find(f => f.id === featureId);
+  return feature?.endpoints?.[endpointKey] || null;
+}
+
 
 /**
  * Convert a local:// storage path from search results into a browser-loadable URL
@@ -55,11 +88,25 @@ const HEALTH_TIMEOUT_MS = 5000;
  * e.g. "local://content-search/runs/.../image.jpg" → "/api/v1/object/download?file_key=runs%2F...%2Fimage.jpg&inline=true"
  */
 export function getContentSearchFileUrl(filePath: string): string {
+  return csDownloadUrl(extractFileKey(filePath), true);
+}
+
+/**
+ * Strip the `local://<bucket>/` prefix from a search result's file_path, yielding the
+ * storage file_key. Paths that are already keys are returned unchanged.
+ */
+export function extractFileKey(filePath: string): string {
   const LOCAL_PREFIX = 'local://content-search/';
-  const fileKey = filePath.startsWith(LOCAL_PREFIX)
-    ? filePath.slice(LOCAL_PREFIX.length)
-    : filePath;
-  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
+  return filePath.startsWith(LOCAL_PREFIX) ? filePath.slice(LOCAL_PREFIX.length) : filePath;
+}
+
+/**
+ * Build the backend /download URL for a storage file_key.
+ * `inline` renders in the browser (preview); otherwise it downloads as an attachment.
+ */
+export function csDownloadUrl(fileKey: string, inline = false): string {
+  const base = `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+  return inline ? `${base}&inline=true` : base;
 }
 
 /**
@@ -76,52 +123,6 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-export async function startPipelineMonitoring(sessionId: string) {
-  const controller = new AbortController();
-  try {
-    for await (const event of monitorVideoAnalyticsPipelines(
-      sessionId,
-      controller.signal
-    )) {
-      if (!event?.pipelines) continue;
-      let anyRunning = false;
-      let allCompleted = true;
-
-      for (const pipeline of event.pipelines) {
-
-        if (pipeline.status === "running") {
-          anyRunning = true;
-        }
-
-        if (
-          pipeline.status !== "completed" &&
-          pipeline.status !== "stopped"
-        ) {
-          allCompleted = false;
-        }
-      }
-
-      if (anyRunning) {
-        store.dispatch(setVideoAnalyticsActive(true));
-        store.dispatch(setVideoStatus("streaming"));
-        store.dispatch(setVideoPlaybackMode(false));
-      }
-
-      if (allCompleted && !anyRunning) {
-        console.log("✅ All pipelines completed");
-        store.dispatch(setVideoAnalyticsActive(false));
-        store.dispatch(setVideoStatus("completed"));
-        store.dispatch(setVideoPlaybackMode(true));
-        break;
-      }
-    }
-
-  }
-  catch (err) {
-    console.error("Monitor error:", err);
-  }
-  return controller;
-}
 
 export async function pingBackend(): Promise<boolean> {
   try {
@@ -134,19 +135,42 @@ export async function pingBackend(): Promise<boolean> {
   }
 }
 
+// Sentinel message thrown when the backend cannot be reached at all, so callers
+// can recognise it and show a localized message instead of this English text.
+export const BACKEND_UNAVAILABLE_MESSAGE = 'Backend server is unavailable. Please ensure the backend is running.';
+
 export async function safeApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
   try {
     return await apiCall();
   } catch (error) {
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Backend server is unavailable. Please ensure the backend is running.');
+      throw new Error(BACKEND_UNAVAILABLE_MESSAGE);
     }
     throw error;
   }
 }
 
+/**
+ * Pull the human-readable reason out of an error response body. FastAPI raises
+ * surface it as `detail`; handlers that return a JSONResponse use `message`.
+ * Falls back to the raw body text, then to the caller's generic message.
+ */
+async function errorDetail(res: Response, fallback: string): Promise<string> {
+  const text = await res.text().catch(() => '');
+  if (!text) return fallback;
+  try {
+    const json = JSON.parse(text);
+    const detail = json.detail ?? json.message ?? json.error;
+    if (typeof detail === 'string' && detail.trim()) return detail;
+  } catch {
+    // Not JSON — the raw body is the best description we have.
+    return text;
+  }
+  return fallback;
+}
+
 export async function getSettings(): Promise<Settings> {
-  return safeApiCall(async() => {
+  return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/project`, { cache: 'no-store' });
     if (!res.ok) throw new Error(`Failed to fetch project config: ${res.status}`);
     const cfg = (await res.json()) as ProjectConfig;
@@ -154,15 +178,15 @@ export async function getSettings(): Promise<Settings> {
       projectName: cfg.name ?? '',
       projectLocation: cfg.location ?? '',
       microphone: cfg.microphone ?? '',
-      frontCamera: cfg.frontCamera || '', 
-      backCamera: cfg.backCamera || '',   
-      boardCamera: cfg.boardCamera || ''  
+      frontCamera: cfg.frontCamera || '',
+      backCamera: cfg.backCamera || '',
+      boardCamera: cfg.boardCamera || ''
     };
   });
 }
 
 export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
-  return safeApiCall(async () =>{
+  return safeApiCall(async () => {
     const payload: ProjectConfig = {
       name: settings.projectName,
       location: settings.projectLocation,
@@ -182,49 +206,23 @@ export async function saveSettings(settings: Settings): Promise<ProjectConfig> {
   });
 }
 
-// Compatibility aliases (use getSettings/saveSettings internally)
-export async function getProjectConfig(): Promise<ProjectConfig> {
-  return safeApiCall(async () => {
-    const s = await getSettings();
-    return { name: s.projectName, location: s.projectLocation, microphone: s.microphone };
-  });
-}
-
-export async function updateProjectConfig(config: ProjectConfig): Promise<ProjectConfig> {
-  return safeApiCall(async () => {
-    return saveSettings({ projectName: config.name, projectLocation: config.location, microphone: config.microphone });
-  });
-}
-
-export async function startSession(req: StartSessionRequest): Promise<StartSessionResponse> {
-  return safeApiCall(async () => {
-  const res = await fetch(`${BASE_URL}/session/start`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(req),
-  });
-  if (!res.ok) throw new Error('Failed to start session');
-  return (await res.json()) as StartSessionResponse;});
-}
-
 export async function uploadAudio(file: File): Promise<{ filename: string; message: string; path: string }> {
   return safeApiCall(async () => {
-  const form = new FormData();
-  form.append('file', file);
-  const res = await fetch(`${BASE_URL}/upload-audio`, { method: 'POST', body: form });
-  if (!res.ok) {
-    const json = await res.json();
-    throw new Error(json.message || `Upload failed (${res.status})`);
-}
-return res.json();
-});
+    const form = new FormData();
+    form.append('file', file);
+    const res = await fetch(`${BASE_URL}/upload-audio`, { method: 'POST', body: form });
+    if (!res.ok) {
+      throw new Error(await errorDetail(res, `Upload failed (${res.status})`));
+    }
+    return res.json();
+  });
 }
 
 export async function storeAudioDuration(sessionId: string, audioFile: File): Promise<{ status: string; message: string }> {
   return safeApiCall(async () => {
     console.log(`🔊 Extracting audio duration from ${audioFile.name}...`);
     const duration = await getAudioDuration(audioFile);
-    
+
     if (!duration) {
       throw new Error('Could not extract audio duration from file');
     }
@@ -259,7 +257,7 @@ export function getAudioDuration(file: File): Promise<number | null> {
     try {
       const audio = document.createElement('audio');
       const url = URL.createObjectURL(file);
-      
+
       // Set a timeout in case metadata never loads
       const timeout = setTimeout(() => {
         URL.revokeObjectURL(url);
@@ -403,9 +401,23 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
       if (!trimmed) continue;
       let chunk: any;
       try { chunk = JSON.parse(trimmed); } catch { continue; }
+      if (chunk.board_ocr_partial) {
+        yield { type: 'board_ocr_partial' };
+      }
       const token: string | undefined = chunk.token ?? chunk.summary_token;
       if (typeof token === 'string' && token.length > 0) {
         yield { type: 'summary_token', token };
+        continue;
+      }
+      // Progress from the staged path of a long summary: map counts lesson
+      // segments, fold counts note groups, reduce just marks the final write.
+      if (chunk.event === 'progress' && typeof chunk.chunks === 'number') {
+        yield {
+          type: 'summary_progress',
+          stage: String(chunk.stage ?? 'map'),
+          chunk: Number(chunk.chunk ?? 0),
+          chunks: Number(chunk.chunks),
+        };
       }
     }
   }
@@ -420,8 +432,7 @@ export async function fetchMindmap(sessionId: string): Promise<string> {
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(errText || `HTTP ${response.status}`);
+    throw new Error(await errorDetail(response, `Mind map request failed (${response.status})`));
   }
 
   const data: { mindmap?: string; error?: string } = await response.json();
@@ -460,12 +471,12 @@ export async function getResourceMetrics(sessionId: string): Promise<any> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/metrics`, {
       method: 'GET',
-      headers: { 
-        'x-session-id': sessionId, 
-        'Accept': 'application/json' 
+      headers: {
+        'x-session-id': sessionId,
+        'Accept': 'application/json'
       }
     });
-    
+
     if (!res.ok) {
       console.warn(`Metrics endpoint returned ${res.status}`);
       return {
@@ -476,7 +487,7 @@ export async function getResourceMetrics(sessionId: string): Promise<any> {
         power: []
       };
     }
-    
+
     const text = await res.text();
     return text ? JSON.parse(text) : {
       cpu_utilization: [],
@@ -493,7 +504,7 @@ export async function getConfigurationMetrics(sessionId: string): Promise<any> {
     const res = await fetch(`${BASE_URL}/performance-metrics`, {
       method: "GET",
       headers: {
-        "session_id": sessionId, 
+        "session_id": sessionId,
         "Accept": "application/json",
       },
     });
@@ -529,8 +540,7 @@ export const startVideoAnalytics = async (
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || `Failed to start video analytics: ${response.status}`);
+      throw new Error(await errorDetail(response, `Failed to start video analytics (${response.status})`));
     }
 
     return response.json();
@@ -626,17 +636,17 @@ export async function getClassStatistics(
       try {
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) {
             break;
           }
 
           buffer += decoder.decode(value, { stream: true });
-          
+
           // Process complete JSON objects
           const lines = buffer.split('\n');
           buffer = lines.pop() || ''; // Keep incomplete line in buffer
-          
+
           for (const line of lines) {
             if (line.trim()) {
               try {
@@ -705,10 +715,10 @@ export async function* monitorVideoAnalyticsPipelines(
     for (const line of lines) {
       if (!line.trim()) continue;
       const parsed = JSON.parse(line);
-    yield parsed;
-        }
-      }
+      yield parsed;
     }
+  }
+}
 
 export async function getPlatformInfo(): Promise<any> {
   return safeApiCall(async () => {
@@ -726,7 +736,7 @@ export async function getPlatformInfo(): Promise<any> {
 
     const text = await res.text();
     return text ? JSON.parse(text) : {};
-  } );
+  });
 }
 
 export async function getAudioDevices(): Promise<string[]> {
@@ -827,6 +837,42 @@ export async function csUploadIngest(
   });
 }
 
+/**
+ * Ingest a file that already exists on the machine running the backend, by absolute
+ * path, no multipart upload. Electron-only: the desktop app and the backend share a
+ * filesystem, so this avoids pushing multi-GB media through localhost HTTP.
+ * The backend copies the file into its store, so the original is never modified.
+ */
+export async function csIngestPath(
+  path: string,
+  meta?: Record<string, unknown>
+): Promise<{ task_id: string; status: string; file_key?: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/ingest-path`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path, ...(meta ? { meta } : {}) }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.detail || json.message || `Path ingest failed (${res.status})`);
+    }
+    const data = await res.json();
+    // code 40901 = file already exists; backend returns task_id for cleanup
+    if (data.code === 40901) {
+      return { task_id: data.data?.task_id ?? '', status: 'ALREADY_EXISTS', file_key: data.data?.file_key };
+    }
+    if (data.code && data.code !== 20000) {
+      throw new Error(data.message || `Path ingest failed (code ${data.code})`);
+    }
+    const payload = data.data ?? data;
+    if (!payload?.task_id) {
+      throw new Error('ingest-path response missing task_id');
+    }
+    return payload;
+  });
+}
+
 export async function csIngest(
   fileKey: string,
   meta: Record<string, unknown>,
@@ -874,9 +920,19 @@ export async function csCleanupTask(
       `${CONTENT_SEARCH_API_URL}/api/v1/object/cleanup-task/${encodeURIComponent(taskId)}`,
       { method: 'DELETE' }
     );
+    if (!res.ok) {
+      throw new Error(await errorDetail(res, `Delete failed (${res.status})`));
+    }
     const data = await res.json().catch(() => ({}));
+    // Content Search reports refusals ("Task is still processing", "Task ID does
+    // not exist or has expired") as HTTP 200 with a non-success `code`. Treating
+    // those as success would drop the file from the list while it is still on
+    // the server, so they have to be raised explicitly.
+    if (data.code !== undefined && data.code !== CS_SUCCESS_CODE) {
+      throw new Error(data.message || `Delete failed (code ${data.code})`);
+    }
     return {
-      code: data.code ?? 20000,
+      code: data.code ?? CS_SUCCESS_CODE,
       task_id: data.data?.task_id ?? taskId,
       status: data.data?.status ?? 'COMPLETED',
       message: data.message ?? '',
@@ -908,7 +964,9 @@ export interface CsHealthStatus {
 
 export async function getCsHealth(): Promise<CsHealthStatus> {
   const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/health`);
-  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+  // 503 means degraded, not unreachable: the body still carries the per-service
+  // detail, so callers can name what is down instead of the generic banner.
+  if (!res.ok && res.status !== 503) throw new Error(`Health check failed: ${res.status}`);
   return res.json();
 }
 
@@ -918,7 +976,7 @@ export async function csDownloadText(fileKey: string): Promise<string> {
       `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`
     );
     if (!res.ok) {
-      throw new Error(`Download failed (${res.status})`);
+      throw new Error(await errorDetail(res, `Download failed (${res.status})`));
     }
     return await res.text();
   });
@@ -930,18 +988,196 @@ export async function createSession(): Promise<{ sessionId: string }> {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
     });
- 
+
     if (!res.ok) {
-      const errorText = await res.text();
-      console.error('❌ Failed to create session:', errorText);
-      throw new Error(`Failed to create session: ${res.status}`);
+      const detail = await errorDetail(res, `Failed to create session (${res.status})`);
+      console.error('❌ Failed to create session:', detail);
+      throw new Error(detail);
     }
- 
+
     const data = await res.json();
     const sessionId = data['session-id'];
     console.log('🟢 Session ID created:', sessionId);
- 
+
     return { sessionId };
+  });
+}
+
+/** The pipeline stages the session API knows about. */
+export type SessionStage =
+  | 'transcribe'
+  | 'summarize'
+  | 'mindmap'
+  | 'va'
+  | 'segmentation'
+  | 'report';
+
+/**
+ * Put a session on the books so it shows up in the history.
+ *
+ * Nothing is started here — the app goes on driving /transcribe, /summarize and
+ * the rest itself. `stages` declares what this session intends to run; the
+ * backend marks it completed once all of them settle, so declaring a stage that
+ * will never run would leave the session open forever.
+ *
+ * Best-effort: a failure here must not stop a recording from starting, so it is
+ * logged and swallowed. The session simply goes unrecorded.
+ */
+export async function registerSession(
+  sessionId: string,
+  stages: SessionStage[],
+  sources?: { audio_path?: string; video_sources?: Record<string, string> },
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, stages, ...sources }),
+    });
+    if (!res.ok) {
+      console.warn('⚠️ Session not registered:', await errorDetail(res, `${res.status}`));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('⚠️ Session not registered:', e);
+    return false;
+  }
+}
+
+/**
+ * Close out a registered session. Normal completion is derived by the backend
+ * from the stages, so this is for the outcomes it cannot see — chiefly the
+ * browser going away mid-run. Best-effort, like registerSession.
+ */
+export async function finalizeSession(
+  sessionId: string,
+  outcome: 'completed' | 'aborted' | 'failed',
+  error?: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/finalize`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome, error: error ?? null }),
+      },
+    );
+    return res.ok;
+  } catch (e) {
+    console.warn('⚠️ Session not finalized:', e);
+    return false;
+  }
+}
+
+/**
+ * Report a session as aborted while the page is going away.
+ *
+ * sendBeacon rather than fetch: the browser keeps a beacon in flight after the
+ * document is gone, where a normal request would be cancelled. The trade-offs
+ * are that the response is unreadable and delivery is not guaranteed — a hard
+ * crash or a lost network still leaves the row running, which is what the
+ * backend's recover_after_restart() is for.
+ */
+export function beaconAbortSession(sessionId: string): void {
+  const url = `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/finalize`;
+  const body = new Blob(
+    [JSON.stringify({ outcome: 'aborted', error: null })],
+    { type: 'application/json' },
+  );
+  try {
+    if (!navigator.sendBeacon?.(url, body)) {
+      // Queueing can fail (payload limits, or no beacon support at all). keepalive
+      // gets the same "outlives the page" guarantee out of fetch.
+      void fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome: 'aborted', error: null }),
+        keepalive: true,
+      }).catch(() => { /* the page is going away; nothing to report to */ });
+    }
+  } catch {
+    /* the page is going away; nothing to report to */
+  }
+}
+
+export type SessionState = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface SessionSummary {
+  session_id: string;
+  state: SessionState | null;
+  current_stage: string | null;
+  /** Every stage in the vocabulary, including the ones marked 'skipped'. */
+  stages: Record<string, string> | null;
+  sources: { audio?: string; video?: Record<string, string> } | null;
+  error: string | null;
+  started_at: string | null;
+  updated_at: string | null;
+}
+
+export interface StageEvent {
+  stage: string | null;
+  status: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_sec: number | null;
+  error_class: string | null;
+  error_detail: string | null;
+}
+
+/** One page of session history, newest first. `total` is the whole table. */
+export async function listSessions(
+  limit: number,
+  offset = 0,
+): Promise<{ total: number; sessions: SessionSummary[] }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions?limit=${limit}&offset=${offset}`);
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load sessions (${res.status})`));
+    return res.json();
+  });
+}
+
+/**
+ * The live stage table for one session.
+ *
+ * Returns null when the session has no row — it was never registered, or the
+ * history panel deleted it. That is a different outcome from the request
+ * failing, and the caller needs to tell them apart: a missing row means stop
+ * asking, a failed request means the backend is momentarily away. So 404 comes
+ * back as null while everything else throws.
+ */
+export async function getSessionStatus(sessionId: string): Promise<SessionSummary | null> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/status`,
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load status (${res.status})`));
+    return res.json();
+  });
+}
+
+/**
+ * Per-stage timings for one session, read back from its stage_events.jsonl.
+ * The session row carries each stage's current status; this carries how long it
+ * took and what it said when it broke.
+ */
+export async function getSessionEvents(sessionId: string): Promise<StageEvent[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/events`);
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load stage events (${res.status})`));
+    return (await res.json()).events ?? [];
+  });
+}
+
+/** Delete a session record and everything it wrote to disk. */
+export async function deleteSession(sessionId: string): Promise<void> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to delete session (${res.status})`));
   });
 }
 
@@ -950,7 +1186,7 @@ export async function startMonitoring(sessionId: string): Promise<{ status: stri
     console.log('📊 Starting monitoring for session:', sessionId);
     const res = await fetch(`${BASE_URL}/start-monitoring`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'x-session-id': sessionId  // Pass session ID in header like transcription
       },
@@ -968,7 +1204,7 @@ export async function stopMonitoring(): Promise<{ status: string; message: strin
     console.log('🛑 Stopping monitoring');
     const res = await fetch(`${BASE_URL}/stop-monitoring`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json'
       },
     });
@@ -1004,7 +1240,7 @@ export async function uploadVideoMetadata(sessionId: string, videoFile: File): P
     console.log(`📹 Extracting video duration from ${videoFile.name}...`);
     // Extract duration from video file using HTML5 Video API
     const duration = await getVideoDuration(videoFile);
-    
+
     if (!duration) {
       throw new Error('Could not extract video duration from file');
     }
@@ -1040,7 +1276,7 @@ export function getVideoDuration(file: File): Promise<number | null> {
     try {
       const video = document.createElement('video');
       const url = URL.createObjectURL(file);
-      
+
       // Set a timeout in case metadata never loads
       const timeout = setTimeout(() => {
         URL.revokeObjectURL(url);
@@ -1266,8 +1502,7 @@ export async function csGetFilesList(): Promise<{
       { method: 'GET' }
     );
     if (!res.ok) {
-      const json = await res.json().catch(() => ({}));
-      throw new Error(json.message || `Files list failed (${res.status})`);
+      throw new Error(await errorDetail(res, `Files list failed (${res.status})`));
     }
     return await res.json();
   });
@@ -1313,12 +1548,32 @@ export interface GradingQuestionScore {
   max_score?: number | null;
 }
 
+export interface GradingQuestionMeta {
+  sub_question?: boolean;
+  max_score?: number | null;
+  grading_score?: number | null;
+  part_path?: number[];
+  part_key?: string;
+  catalog?: string;
+  type?: string;
+}
+
+export interface GradingQuestionNode {
+  question_no?: number | null;
+  sub_question_no?: number | null;
+  meta?: GradingQuestionMeta;
+  student_answer?: string | null;
+  reason?: string | null;
+  questions?: GradingQuestionNode[];
+}
+
 export interface GradingStudentResult {
   student_id?: string | null;
   student_name?: string | null;
   class_name?: string | null;
   exam_number?: string | null;
   paper_path?: string | null;
+  result_path?: string | null;
   total_score?: number | null;
   total_max?: number | null;
   objective_score?: number | null;
@@ -1326,7 +1581,22 @@ export interface GradingStudentResult {
   subjective_score?: number | null;
   subjective_max?: number | null;
   processing_seconds?: number | null;
-  questions?: Record<string, GradingQuestionScore>;
+  questions_hierarchy?: GradingQuestionNode[];
+}
+
+export interface GradingStudentResultDetail {
+  summary?: {
+    total_score?: number | null;
+    total_max?: number | null;
+    objective_score?: number | null;
+    objective_max?: number | null;
+    subjective_score?: number | null;
+    subjective_max?: number | null;
+  };
+  questions_hierarchy?: GradingQuestionNode[];
+  paper_meta?: Record<string, unknown>;
+  student_meta?: Record<string, unknown>;
+  input?: Record<string, unknown>;
 }
 
 export interface GradingSummary {
@@ -1346,6 +1616,9 @@ async function gradingFetch<T>(path: string, init?: RequestInit): Promise<T> {
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       throw new Error(json.detail || `Grading request failed (${res.status})`);
+    }
+    if (res.status === 204 || res.headers.get('content-length') === '0') {
+      return undefined as T;
     }
     return (await res.json()) as T;
   });
@@ -1386,12 +1659,12 @@ export async function gradingListTasks(status?: string): Promise<{
   return gradingFetch(`/grading/tasks${q}`);
 }
 
-export async function gradingGetTask(taskId: string): Promise<GradingTask> {
-  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}`);
-}
-
 export async function gradingGetTaskSummary(taskId: string): Promise<GradingSummary> {
   return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/summary`);
+}
+
+export async function gradingGetStudentResult(taskId: string, slot: string): Promise<GradingStudentResultDetail> {
+  return gradingFetch(`/grading/tasks/${encodeURIComponent(taskId)}/students/${encodeURIComponent(slot)}/result`);
 }
 
 export async function gradingPauseTask(taskId: string): Promise<GradingTask> {
@@ -1456,10 +1729,23 @@ export async function gradingGetTaskLog(taskId: string, tail = 50): Promise<Grad
 
 export interface GradingConfig {
   dpi: number | null;
+  page_columns: number | 'auto' | null;
+  column_split_ratio: number | null;
+  force_split: boolean | null;
+  force_split_pairs: number[][] | null;
+  contrast_enhance: boolean | null;
+  contrast_factor: number | null;
+  max_tokens: number | null;
   vlm_temperature: number | null;
+  max_image_pixels: number | null;
   poll_interval: number | null;
   stable_checks: number | null;
   idle_timeout: number | null;
+  min_score: number | null;
+  sort_boxes: boolean | null;
+  expand_margin: number | null;
+  merge_overlapping: boolean | null;
+  iou_threshold: number | null;
   vlm_model: string | null;
   ocr_model: string | null;
   layout_model: string | null;
@@ -1469,7 +1755,12 @@ export async function gradingGetConfig(): Promise<GradingConfig> {
   return gradingFetch('/grading/config');
 }
 
-export async function gradingUpdateConfig(updates: { dpi?: number | null; vlm_temperature?: number | null; poll_interval?: number | null; stable_checks?: number | null; idle_timeout?: number | null }): Promise<GradingConfig> {
+export type GradingConfigUpdate = Partial<Pick<GradingConfig,
+  'dpi' | 'page_columns' | 'column_split_ratio' | 'force_split' | 'force_split_pairs' | 'contrast_enhance' | 'contrast_factor' | 'max_tokens' | 'vlm_temperature' | 'max_image_pixels' |
+  'poll_interval' | 'stable_checks' | 'idle_timeout' |
+  'min_score' | 'sort_boxes' | 'expand_margin' | 'merge_overlapping' | 'iou_threshold'>>;
+
+export async function gradingUpdateConfig(updates: GradingConfigUpdate): Promise<GradingConfig> {
   return gradingFetch('/grading/config', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
@@ -1618,6 +1909,17 @@ export async function downloadReportPdf(sessionId: string): Promise<void> {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// Which download formats the server can produce (GET /report/capabilities).
+// pdf_export is false when LibreOffice ('soffice') is missing, so the UI can
+// disable the PDF option up front instead of failing on click. Defaults to
+// pdf_export:false if the endpoint is unreachable, so we never offer a format
+// that can't be produced.
+export async function getReportCapabilities(): Promise<{ pdf_export: boolean }> {
+  const res = await fetch(`${BASE_URL}/report/capabilities`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Failed to load report capabilities (${res.status})`);
+  return res.json();
 }
 
 // Fetch a previously generated report's markdown (GET /report/{id}).

@@ -83,18 +83,23 @@ Common optional values:
 | --- | ----------- | ------------- |
 | `global.registry` | Optional image registry override | `intel` |
 | `global.tag` | Shared image tag | `latest` |
-| `global.vssStackTag` | Override tag for VSS stack services | `1.3.2` |
-| `global.smartNvrStackTag` | Override tag for Smart NVR services | `1.2.4` |
+| `global.vssStackTag` | Override tag for VSS stack services | `latest` |
+| `global.smartNvrStackTag` | Override tag for Smart NVR services | `latest` |
+| `global.pullPolicy` | Pull-policy override for application images selected by the shared or stack-specific tags | `Always`, `IfNotPresent`, or `Never` |
+| `global.vectordbBackend` | Vector database used by Multimodal DataPrep and Vector Retriever | `vdms` (default) or `milvus` |
+| `global.metricsManager.enabled` | Deploy Metrics Manager and enable live system/DataPrep metrics | `true` (default) or `false` |
+| `metrics-manager.image.repository` | Metrics Manager image repository | `intel/metrics-manager` |
+| `metrics-manager.image.tag` | Metrics Manager image tag | `2026.2.0-20260715-weekly` |
 | `global.proxy.httpProxy` | HTTP proxy | `http://proxy-example.com:000` |
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |
 | `global.keepPvc` | Retain PVCs on uninstall | `true` or `false` |
 | `global.devices.multimodalEmbedding.device` | MME embedding execution device | `CPU`, `GPU`, or `NPU` |
 | `global.devices.multimodalEmbedding.key` | MME accelerator key (required when device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
-| `global.devices.vdmsDataprep.embedding.device` | DataPrep embedding execution device | `CPU`, `GPU`, or `NPU` |
-| `global.devices.vdmsDataprep.embedding.key` | DataPrep embedding accelerator key (required when embedding.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
-| `global.devices.vdmsDataprep.detection.device` | DataPrep detection execution device | `CPU`, `GPU`, or `NPU` |
-| `global.devices.vdmsDataprep.detection.key` | DataPrep detection accelerator key (required when detection.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.devices.multimodalDataprep.embedding.device` | DataPrep indexing-embedding device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.multimodalDataprep.embedding.key` | DataPrep embedding accelerator key (required when embedding.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
+| `global.devices.multimodalDataprep.detection.device` | DataPrep detection execution device | `CPU`, `GPU`, or `NPU` |
+| `global.devices.multimodalDataprep.detection.key` | DataPrep detection accelerator key (required when detection.device=GPU/NPU) | `gpu.intel.com/xe`, `gpu.intel.com/i915`, or `npu.intel.com/accel` |
 | `global.accelGroupIds` | Host group ids owning the accelerator device nodes (`/dev/dri`, `/dev/accel`); added to the pod `supplementalGroups` when a service uses GPU/NPU | `[992]` |
 | `frigate.usbCameraDevice` | USB device path (used with USB profile) | `/dev/video0` |
 
@@ -102,15 +107,25 @@ Common optional values:
 
 > **Tag Resolution Note:** `global.tag` is the fallback image tag. If `global.vssStackTag` is non-empty, VSS-side services use it instead of `global.tag`. If `global.smartNvrStackTag` is non-empty, Smart NVR-side services use it instead of `global.tag`. Leaving stack-specific tags empty makes those services inherit `global.tag`.
 
+> **Pull Policy Note:** Leaving `global.pullPolicy` empty preserves each subchart's default. Values are case-insensitive and normalized to Kubernetes' canonical spelling. Setting it overrides the pull policy for Pipeline Manager, Video Search, VSS UI, Multimodal DataPrep, Multimodal Embedding Serving, Vector Retriever, and NVR Event Router. Third-party infrastructure images retain their component-specific policies.
+
 > **Device Note:** All device selection is per-component via the `global.devices.*` block. Each component defaults to `CPU` and requires its matching `key` only when set to `GPU` or `NPU`.
 
-> **Accelerator Note:** MME and DataPrep use independent per-component accelerator settings via `global.devices.multimodalEmbedding.*`, `global.devices.vdmsDataprep.embedding.*`, and `global.devices.vdmsDataprep.detection.*`. This is the single source of truth for device placement; there is no separate legacy `global.gpu` flow.
+> **Accelerator Note:** Multimodal DataPrep creates indexing embeddings in-process and uses `global.devices.multimodalDataprep.*`. MME uses `global.devices.multimodalEmbedding.*` for query embeddings requested by Vector Retriever.
 
 > **Device Permissions Note:** When a component runs on GPU or NPU, its host accelerator nodes (`/dev/dri` for GPU, `/dev/accel` for NPU) are mounted and the gids in `global.accelGroupIds` are added to the pod `supplementalGroups` so the non-root container user can open the device. These gids are host-specific — check the target node with `ls -ln /dev/accel` and `ls -ln /dev/dri` and override `global.accelGroupIds` to match (default `[992]`).
 
 > **OpenVINO Cache Note:** On GPU/NPU, MME and DataPrep write the first-time OpenVINO model compilation to `ovCacheDir` (default `/app/ov_models/ov_cache`) on the persistent models mount, so the compile is reused across pod restarts instead of recompiling on every start.
 
 > **Storage Note:** MME and DataPrep now use independent PVCs (`<release>-live-video-search-mmes-models-pvc` and `<release>-live-video-search-dataprep-models-pvc`, with per-service `*-data-pvc` fallback), so they are no longer coupled through a shared PVC.
+
+> **Metrics Manager Note:** Metrics Manager runs with host PID access,
+> privileged device access, and read-only `/sys` and `/run` mounts so it can
+> collect host metrics. It does not use or share a PVC. Multimodal DataPrep
+> publishes throughput metrics directly to `metrics-manager:9090`; NGINX exposes
+> only the health and SSE stream endpoints to the UI. Publishing is non-blocking,
+> so ingestion continues if Metrics Manager becomes unavailable. The bundled
+> DataPrep image must support `MM_DATAPREP_METRICS_MANAGER_URL`.
 
 ### 3. Build Helm Dependencies
 
@@ -167,10 +182,10 @@ First update `user_values_override.yaml`:
 
 - `global.devices.multimodalEmbedding.device: GPU|NPU`
 - `global.devices.multimodalEmbedding.key: <accelerator-resource-key>` (for example `gpu.intel.com/xe` or `npu.intel.com/accel`)
-- `global.devices.vdmsDataprep.embedding.device: GPU|NPU`
-- `global.devices.vdmsDataprep.embedding.key: <accelerator-resource-key>`
-- `global.devices.vdmsDataprep.detection.device: GPU|NPU`
-- `global.devices.vdmsDataprep.detection.key: <accelerator-resource-key>`
+- `global.devices.multimodalDataprep.embedding.device: GPU|NPU`
+- `global.devices.multimodalDataprep.embedding.key: <accelerator-resource-key>`
+- `global.devices.multimodalDataprep.detection.device: GPU|NPU`
+- `global.devices.multimodalDataprep.detection.key: <accelerator-resource-key>`
 - `global.accelGroupIds: [<gid>]` (host gids owning `/dev/dri` and `/dev/accel`; check the target node with `ls -ln /dev/accel` and `ls -ln /dev/dri`)
 
 Then deploy with your selected scenario profile (example: default):
@@ -178,6 +193,16 @@ Then deploy with your selected scenario profile (example: default):
 ```bash
 helm install lvs . -f user_values_override.yaml -f default_override.yaml -n $my_namespace
 ```
+
+#### Use Case 5: Milvus Vector Database
+
+Milvus uses the same application and camera profiles. Add `milvus_override.yaml` after the selected scenario override:
+
+```bash
+helm install lvs . -f user_values_override.yaml -f default_override.yaml -f milvus_override.yaml -n $my_namespace
+```
+
+The override sets `global.vectordbBackend: milvus`, disables the VDMS workload, and enables the pinned Milvus standalone and etcd workloads. Vector Retriever automatically selects the `vector-retriever-milvus` image. Without this override, the chart deploys VDMS and `vector-retriever-vdms`.
 
 ### Step 6: Verify the Deployment
 
@@ -198,6 +223,16 @@ If needed, inspect specific workloads:
 ```bash
 kubectl describe pod <pod-name> -n $my_namespace
 kubectl logs <pod-name> -n $my_namespace
+```
+
+When metrics are enabled, verify the same-origin endpoints through NGINX:
+
+```bash
+kubectl get pods -n $my_namespace -l app.kubernetes.io/name=metrics-manager
+kubectl port-forward svc/nginx 12345:80 -n $my_namespace
+curl http://localhost:12345/metrics-manager/health
+curl -N -H "Accept: text/event-stream" \
+  http://localhost:12345/metrics-manager/metrics/stream
 ```
 
 ### Step 7: Accessing the application
@@ -260,13 +295,18 @@ kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
   A one-off `FailedScheduling ... running PreBind plugin "VolumeBinding": ... the object has been modified` warning that is immediately followed by a successful `Scheduled` event is a transient optimistic-lock retry and is safe to ignore — it self-heals on the scheduler's next attempt. The MME and DataPrep pods now reference each model PVC through a single volume, so this should no longer recur. If a pod stays `Pending` and the warning repeats indefinitely, treat it as a real failure: check that the model PVC is `Bound` (`kubectl get pvc -n "$my_namespace"`) and that the `WaitForFirstConsumer` storage class can provision on the target node.
 
 - **Search not returning expected results:**
-  Verify `global.env.embeddingModelName` and confirm clips are ingested.
+  Verify `global.env.embeddingModelName`, confirm clips are ingested, and check that Vector Retriever is ready with the same backend selected by `global.vectordbBackend`.
+
+- **Live metrics are not displayed:**
+  Confirm `global.metricsManager.enabled` is `true`, the Metrics Manager pod is
+  ready, and `kubectl logs deployment/metrics-manager -n "$my_namespace"` does
+  not report missing host access.
 
 - **USB mode does not detect camera:**
   Confirm device path and override `frigate.usbCameraDevice` in `user_values_override.yaml` when not using `/dev/video0`.
 
 - **Accelerator deployment fails validation:**
-  Verify the required key is set for each accelerator path (`global.devices.multimodalEmbedding.key` for MME, `global.devices.vdmsDataprep.embedding.key` / `global.devices.vdmsDataprep.detection.key` for DataPrep) whenever the matching device is set to `GPU` or `NPU`.
+  Verify the required key is set for each accelerator path (`global.devices.multimodalEmbedding.key` for MME, `global.devices.multimodalDataprep.embedding.key` / `global.devices.multimodalDataprep.detection.key` for DataPrep) whenever the matching device is set to `GPU` or `NPU`.
 
 - **Accelerator pod cannot access the device (NPU/GPU init fails):**
   Confirm `global.accelGroupIds` matches the host gids owning `/dev/accel` (NPU) and `/dev/dri` (GPU) on the scheduled node (`ls -ln /dev/accel`, `ls -ln /dev/dri`). The non-root container needs these in its `supplementalGroups` to open the device.

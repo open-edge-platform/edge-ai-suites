@@ -25,7 +25,7 @@ For detailed Geti™ software installation instructions, refer to the [Geti™ I
 >
 > ![Geti™ Software Installation](../_assets/installation_geti.png)
 
-## Setting Up Your Project
+## Set Up Your Project
 
 ### Step 1: Sign In to Geti™ Software
 

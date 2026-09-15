@@ -19,35 +19,38 @@ if (-not $IsWindowsOS) {
     exit 1
 }
 
-# ============================================================================
-# AUTO-ELEVATE TO ADMINISTRATOR
-# ============================================================================
-if (-not $NoElevate) {
-    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    
-    if (-not $isAdmin) {
-        Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
-        
-        $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        if ($SkipProxy) { $argList += " -SkipProxy" }
-        if ($Restart) { $argList += " -Restart" }
-        if ($Help) { $argList += " -Help" }
-        if ($Silent) { $argList += " -Silent" }
-        if ($NoWindowsTerminal) { $argList += " -NoWindowsTerminal" }
-        if ($Electron) { $argList += " -Electron" }
-        $argList += " -NoElevate"  # Prevent infinite elevation loop
-        
-        try {
-            Start-Process powershell -Verb RunAs -ArgumentList $argList
-            Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
-            exit 0
-        } catch {
-            Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
-            Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
-            exit 1
+# Disable QuickEdit Mode on conhost to prevent the process from hanging
+function Disable-ConsoleQuickEdit {
+    try {
+        if (-not ('SmartClassroom.ConsoleMode' -as [type])) {
+            Add-Type -Namespace SmartClassroom -Name ConsoleMode -MemberDefinition @'
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern IntPtr GetStdHandle(int nStdHandle);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+'@ -ErrorAction Stop
         }
+
+        $handle = [SmartClassroom.ConsoleMode]::GetStdHandle(-10)  # STD_INPUT_HANDLE
+        if ($handle -eq [IntPtr]::Zero -or $handle -eq [IntPtr](-1)) { return }
+
+        $mode = [uint32]0
+        if (-not [SmartClassroom.ConsoleMode]::GetConsoleMode($handle, [ref]$mode)) { return }
+
+        # ENABLE_EXTENDED_FLAGS (0x0080) must be set for the console to honour
+        # a cleared ENABLE_QUICK_EDIT_MODE (0x0040).
+        $newMode = [uint32](($mode -band (-bnot 0x0040)) -bor 0x0080)
+        if ($newMode -ne $mode) {
+            [void][SmartClassroom.ConsoleMode]::SetConsoleMode($handle, $newMode)
+        }
+    } catch {
+        # No real console attached (redirected output, ISE, ...)
     }
 }
+
+if (-not $env:WT_SESSION) { Disable-ConsoleQuickEdit }
 
 if ($Help) {
     Write-Host @"
@@ -61,20 +64,86 @@ Options:
     -Silent              Unattended mode - auto-restart, skip all prompts
     -NoElevate           Skip auto-elevation to Administrator (Windows)
     -NoWindowsTerminal   Use Invoke-WmiMethod instead of Windows Terminal (for remote sessions)
-    -Electron            Launch the UI as an Electron desktop app instead of a browser tab
+    -Electron            Shortcut for ./start-desktop-app.ps1 - launches the desktop app, which
+                         manages the Python services itself. Never elevates.
     -Help                Show this help message
 
-Note: On Windows, the script automatically requests Administrator privileges.
+Note: without -Electron the script starts every service itself and requests
+      Administrator privileges. -Electron never elevates.
 
 Services Launched (in order):
     1. Backend (port 8000)     - Main Python pipeline service, runs in THIS terminal (with paddleocr if OCR enabled)
     2. Content Search (9011)   - RAG, video summarization, semantic search
     3. Grading (9902 + 9012)   - Layout detection + VLM grading service (if grading.enabled)
-    4. Frontend (port 5173)    - React UI, launches in a NEW terminal (opens as an Electron desktop window when -Electron is set;
-                                 the dev server still runs on port 5173)
+    4. Frontend (port 5173)    - React UI in a browser tab, launched in a NEW terminal
 
 "@ -ForegroundColor Cyan
     exit 0
+}
+
+# ============================================================================
+# DESKTOP APP MODE (-Electron)
+# ============================================================================
+# The Electron app supervises the Python services itself, so -Electron just
+# delegates. Kept before the elevation block on purpose: the desktop app must
+# not run as Administrator.
+if ($Electron) {
+    $ScriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+    & (Join-Path $ScriptDir "start-desktop-app.ps1")
+    exit $LASTEXITCODE
+}
+
+# ============================================================================
+# AUTO-ELEVATE TO ADMINISTRATOR
+# ============================================================================
+if (-not $NoElevate) {
+    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    if (-not $isAdmin) {
+        Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
+
+        $relaunchArgs = @()
+        if ($SkipProxy) { $relaunchArgs += "-SkipProxy" }
+        if ($Restart) { $relaunchArgs += "-Restart" }
+        if ($Help) { $relaunchArgs += "-Help" }
+        if ($Silent) { $relaunchArgs += "-Silent" }
+        if ($NoWindowsTerminal) { $relaunchArgs += "-NoWindowsTerminal" }
+        # No -Electron: desktop-app mode exits above and never elevates.
+        $relaunchArgs += "-NoElevate"  # Prevent infinite elevation loop
+
+        # Encoded rather than -File "<path>": wt treats ';' as its own delimiter
+        # and mangles nested quotes.
+        $relaunchCommand = "& '" + $PSCommandPath.Replace("'", "''") + "' " + ($relaunchArgs -join ' ')
+        $relaunchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($relaunchCommand))
+        $psArgs = "-NoExit -ExecutionPolicy Bypass -EncodedCommand $relaunchEncoded"
+
+        $wtCmd = if ($NoWindowsTerminal) { $null } else { Get-Command wt.exe -ErrorAction SilentlyContinue }
+
+        $elevated = $false
+        if ($wtCmd) {
+            # '-w SmartClassroom' also makes the Frontend tab join this window.
+            try {
+                Start-Process $wtCmd.Source -Verb RunAs -ArgumentList "-w SmartClassroom new-tab --title `"Smart Classroom`" powershell.exe $psArgs"
+                $elevated = $true
+            } catch {
+                Write-Host "  Windows Terminal launch failed; falling back to powershell.exe..." -ForegroundColor DarkYellow
+            }
+        }
+
+        if (-not $elevated) {
+            try {
+                Start-Process powershell -Verb RunAs -ArgumentList $psArgs
+                $elevated = $true
+            } catch {
+                Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
+                Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
+                exit 1
+            }
+        }
+
+        Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
+        exit 0
+    }
 }
 
 # ============================================================================
@@ -253,12 +322,14 @@ Set-Location $ScriptDir
 
 $configPath = Join-Path $ScriptDir "config.yaml"
 $contentSearchEnabled = $true
+$videoSummarizationEnabled = $true
 if (Test-Path $configPath) {
     $configContent = Get-Content $configPath -Raw
     $csFlag  = $configContent -match "content_search:\s*\{\s*enabled:\s*true"
     $segFlag = $configContent -match "topic_segmentation:\s*\{\s*enabled:\s*true"
     $qaFlag  = $configContent -match "qa:\s*\{\s*enabled:\s*true"
     $contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+    $videoSummarizationEnabled = -not ($configContent -match "video_summarization_enabled:\s*false")
 }
 
 # ============================================================================
@@ -310,12 +381,11 @@ function Remove-VirtualEnvironments {
     
     $parentDir = Split-Path $ScriptDir -Parent
     $backendVenv = Join-Path $parentDir "smartclassroom"
-    $contentSearchVenv = Join-Path $ScriptDir "content_search\venv_content_search"
-    
+
     Write-Host "    Terminating Python processes that may be using venvs..." -ForegroundColor Gray
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
-        if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
+        if ($procPath -and $procPath -like "*smartclassroom*") {
             Write-Host "      Killing Python process $($_.Id): $procPath" -ForegroundColor Gray
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
@@ -337,25 +407,6 @@ function Remove-VirtualEnvironments {
         }
     } else {
         Write-Host "    Backend venv not found (will be created fresh)" -ForegroundColor Gray
-    }
-    
-    if (-not $contentSearchEnabled) {
-        Write-Host "    Content Search disabled - skipping Content Search venv cleanup." -ForegroundColor Gray
-    } elseif (Test-Path $contentSearchVenv) {
-        Write-Host "    Removing Content Search venv: $contentSearchVenv" -ForegroundColor Gray
-        for ($i = 1; $i -le 3; $i++) {
-            Remove-Item -Path $contentSearchVenv -Recurse -Force -ErrorAction SilentlyContinue
-            if (-not (Test-Path $contentSearchVenv)) { break }
-            Write-Host "      Retry $i - waiting for file handles to release..." -ForegroundColor DarkYellow
-            Start-Sleep -Seconds 2
-        }
-        if (Test-Path $contentSearchVenv) {
-            Write-Host "    WARNING: Could not fully remove Content Search venv. Some files may be locked." -ForegroundColor Yellow
-        } else {
-            Write-Host "    Content Search venv removed." -ForegroundColor Gray
-        }
-    } else {
-        Write-Host "    Content Search venv not found (will be created fresh)" -ForegroundColor Gray
     }
     
     Write-Host "  Virtual environments cleaned." -ForegroundColor Green
@@ -391,7 +442,6 @@ $anyRunning = $backendRunning -or $contentSearchRunning -or $layoutDetectionRunn
 
 $script:skipBackend = $backendRunning
 $script:skipContentSearch = $contentSearchRunning
-$script:skipGrading = $layoutDetectionRunning -and $gradingRunning
 $script:skipFrontend = $frontendRunning
 
 $gradingEnabled = $false
@@ -467,7 +517,6 @@ if ($Restart) {
 
     $script:skipBackend = $false
     $script:skipContentSearch = $false
-    $script:skipGrading = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
     if ($Silent) {
@@ -515,7 +564,6 @@ if ($Restart) {
             
             $script:skipBackend = $false
             $script:skipContentSearch = $false
-            $script:skipGrading = $false
             $script:skipFrontend = $false
             Write-Host "  Existing services stopped." -ForegroundColor Green
         }
@@ -524,7 +572,6 @@ if ($Restart) {
             Write-Host "  Smart Start: Keeping running services, starting stopped ones." -ForegroundColor Yellow
             $script:skipBackend = $backendRunning
             $script:skipContentSearch = $contentSearchRunning
-            $script:skipGrading = $layoutDetectionRunning -and $gradingRunning
             $script:skipFrontend = $frontendRunning
         }
         "A" {
@@ -567,7 +614,7 @@ if ($Restart) {
     
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
-        if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
+        if ($procPath -and $procPath -like "*smartclassroom*") {
             Write-Host "    Killing orphaned Python: $($_.Id)" -ForegroundColor Gray
             Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
         }
@@ -599,6 +646,24 @@ $httpProxy = ""
 $httpsProxy = ""
 $noProxy = ""
 $proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
+
+# Python's urllib/requests/httpx split no_proxy on COMMAS only. A Windows-style
+# semicolon list - which is what .proxy-config usually holds - is then read as
+# one bogus host, so every 127.0.0.1 call in the services goes out to the
+# corporate proxy and comes back 403. Normalise the separator and always keep
+# the loopback entries, so local service-to-service calls stay local.
+function Format-NoProxy {
+    param([string]$Value)
+
+    $entries = @()
+    if ($Value) {
+        $entries = $Value -split '[;,]' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+    }
+    foreach ($loopback in @('localhost', '127.0.0.1', '::1')) {
+        if ($entries -notcontains $loopback) { $entries += $loopback }
+    }
+    return ($entries -join ',')
+}
 
 if (-not $SkipProxy -and -not $Silent) {
     if (Test-Path $proxyConfigFile) {
@@ -786,11 +851,12 @@ if (-not $SkipProxy -and -not $Silent) {
         Write-Host "  Applied HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
     }
     
-    if ($noProxy) {
-        $env:NO_PROXY = $noProxy
-        $env:no_proxy = $noProxy
-        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
-    }
+    # Always set it, even with no saved value: the loopback entries matter
+    # whenever a proxy is configured.
+    $noProxy = Format-NoProxy $noProxy
+    $env:NO_PROXY = $noProxy
+    $env:no_proxy = $noProxy
+    Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
 } else {
     # -SkipProxy flag: load saved settings without prompting user
     Write-Host "  Loading proxy from .proxy-config (skipping prompts)..." -ForegroundColor Gray
@@ -813,12 +879,11 @@ if (-not $SkipProxy -and -not $Silent) {
             Write-Host "  Applied HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
         }
         
-        if ($noProxy) {
-            $env:NO_PROXY = $noProxy
-            $env:no_proxy = $noProxy
-            Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
-        }
-        
+        $noProxy = Format-NoProxy $noProxy
+        $env:NO_PROXY = $noProxy
+        $env:no_proxy = $noProxy
+        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
+
         if (-not $httpProxy -and -not $httpsProxy) {
             Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
             Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue | ForEach-Object {
@@ -832,6 +897,12 @@ if (-not $SkipProxy -and -not $Silent) {
             Write-Host "    Found: $($_.Name) = $($_.Value)" -ForegroundColor DarkGray
         }
         Write-Host "  No .proxy-config file found" -ForegroundColor Gray
+
+        # An inherited proxy still applies here, so keep loopback out of it.
+        $noProxy = Format-NoProxy $env:NO_PROXY
+        $env:NO_PROXY = $noProxy
+        $env:no_proxy = $noProxy
+        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
     }
 }
 
@@ -882,10 +953,16 @@ Write-Host "----------------------------" -ForegroundColor Green
 
 # $configPath and $contentSearchEnabled were computed earlier (near script start).
 if (Test-Path $configPath) {
-    if ($configContent -match "ocr:\s*\n\s*enabled:\s*true") {
-        Write-Host "  OCR: Enabled" -ForegroundColor Yellow
+    if ($configContent -match "ocr_enabled:\s*true") {
+        Write-Host "  Document OCR: Enabled" -ForegroundColor Yellow
     } else {
-        Write-Host "  OCR: Disabled" -ForegroundColor Gray
+        Write-Host "  Document OCR: Disabled" -ForegroundColor Gray
+    }
+
+    if ($configContent -match "board_ocr\s*:\s*\{\s*enabled\s*:\s*true\s*\}") {
+        Write-Host "  Board OCR: Enabled" -ForegroundColor Yellow
+    } else {
+        Write-Host "  Board OCR: Disabled" -ForegroundColor Gray
     }
 
     if ($contentSearchEnabled) {
@@ -915,7 +992,8 @@ Write-Host "------------------------" -ForegroundColor Green
 Write-Host ""
 Write-Host "Services will start with health checks:" -ForegroundColor Yellow
 Write-Host "  1. Backend (port 8000) - runs in THIS terminal, wait until healthy" -ForegroundColor White
-Write-Host "  2. Content Search (port 9011) - wait until healthy" -ForegroundColor White
+Write-Host "  2. Content Search (port 9011) - wait until healthy, including the" -ForegroundColor White
+Write-Host "     services its launcher spawns: video preprocess (8001), file ingest (9990), ChromaDB (9090)" -ForegroundColor White
 Write-Host "  3. Frontend (port 5173) - launches in a NEW terminal" -ForegroundColor White
 Write-Host ""
 Write-Host "Press Ctrl+C to stop all services and exit." -ForegroundColor DarkGray
@@ -923,6 +1001,33 @@ Write-Host ""
 
 # Mark that services are being started (for Ctrl+C handler)
 $script:servicesStarted = $true
+
+function Get-HealthDetail {
+    param($ErrorRecord)
+
+    $body = $null
+    if ($ErrorRecord.ErrorDetails -and $ErrorRecord.ErrorDetails.Message) {
+        $body = $ErrorRecord.ErrorDetails.Message          # PowerShell 7
+    } elseif ($ErrorRecord.Exception.Response) {
+        try {                                              # Windows PowerShell 5.1
+            $stream = $ErrorRecord.Exception.Response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($stream)
+            $body = $reader.ReadToEnd()
+            $reader.Close()
+        } catch {}
+    }
+    if (-not $body) { return "" }
+
+    try { $json = $body | ConvertFrom-Json } catch { return "" }
+    if (-not $json.services) { return "" }
+
+    $pending = @()
+    foreach ($svc in $json.services.PSObject.Properties) {
+        if ($svc.Value -ne "healthy") { $pending += "$($svc.Name)=$($svc.Value)" }
+    }
+    if ($pending.Count -eq 0) { return "" }
+    return " - pending: $($pending -join ', ')"
+}
 
 # Health check function (no timeout - relies on crash detection)
 function Wait-ForService {
@@ -933,10 +1038,15 @@ function Wait-ForService {
         [int[]]$DependentPorts = @(),
         [string]$CommandLinePattern = "",  # Pattern to match in process command line (e.g., "main.py", "start_services.py")
         [System.Diagnostics.Process]$Process = $null,  # Launched process to watch for early exit
-        [int]$IntervalSeconds = 5
+        [int]$IntervalSeconds = 5,
+        # Ceiling for aggregate endpoints, where the port stays open (so the
+        # crash detection below never fires) while a service behind it is dead.
+        # 0 = wait forever, the default for single-process services.
+        [int]$TimeoutSeconds = 0
     )
-    
+
     $elapsed = 0
+    $lastDetail = ""
     $initialGracePeriod = 60  # 1 minute grace period before checking for crashes
     Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
     Write-Host "  Health check: $Url" -ForegroundColor DarkGray
@@ -947,7 +1057,6 @@ function Wait-ForService {
         if ($Process -and $Process.HasExited) {
             $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
             if (-not $listening) {
-                Write-Host ""
                 Write-Host ""
                 Write-Host "========================================" -ForegroundColor Red
                 Write-Host "  ERROR: $ServiceName EXITED" -ForegroundColor Red
@@ -965,7 +1074,6 @@ function Wait-ForService {
             foreach ($depPort in $DependentPorts) {
                 $depListening = Get-NetTCPConnection -LocalPort $depPort -State Listen -ErrorAction SilentlyContinue
                 if (-not $depListening) {
-                    Write-Host ""
                     Write-Host ""
                     Write-Host "========================================" -ForegroundColor Red
                     Write-Host "  ERROR: DEPENDENT SERVICE STOPPED" -ForegroundColor Red
@@ -1040,7 +1148,6 @@ function Wait-ForService {
                 if (-not $serviceRunning) {
                     # No matching process running and port not listening = crashed or user closed terminal
                     Write-Host ""
-                    Write-Host ""
                     Write-Host "========================================" -ForegroundColor Red
                     Write-Host "  ERROR: $ServiceName CRASHED" -ForegroundColor Red
                     Write-Host "========================================" -ForegroundColor Red
@@ -1054,19 +1161,37 @@ function Wait-ForService {
             }
         }
         
+        $detail = ""
         try {
             $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
             if ($response.StatusCode -eq 200) {
-                Write-Host "`r  [$elapsed s] $ServiceName is healthy!                              " -ForegroundColor Green
+                Write-Host "  [$elapsed s] $ServiceName is healthy!" -ForegroundColor Green
                 return $true
             }
         } catch {
-            # Service not ready yet, continue waiting
+            # Service not ready yet, continue waiting. A 503 from an aggregate
+            # health endpoint tells us which sub-service is holding it up.
+            $detail = Get-HealthDetail -ErrorRecord $_
         }
-        
-        Write-Host "`r  [$elapsed s] Waiting for $ServiceName...                    " -NoNewline -ForegroundColor Gray
+        $lastDetail = $detail
+
+        # Newline-terminated, not an in-place `r overwrite: the Backend and
+        # Content Search share this console and would append to an open line.
+        Write-Host "  [$elapsed s] Waiting for $ServiceName...$detail" -ForegroundColor Gray
         Start-Sleep -Seconds $IntervalSeconds
         $elapsed += $IntervalSeconds
+
+        if ($TimeoutSeconds -gt 0 -and $elapsed -ge $TimeoutSeconds) {
+            Write-Host ""
+            Write-Host "========================================" -ForegroundColor Red
+            Write-Host "  ERROR: $ServiceName NOT READY" -ForegroundColor Red
+            Write-Host "========================================" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "  $ServiceName did not become healthy within ${TimeoutSeconds}s.$lastDetail" -ForegroundColor Red
+            Write-Host "  Check the output above and content_search/logs/ for error messages." -ForegroundColor Yellow
+            Write-Host ""
+            return $false
+        }
     }
 }
 
@@ -1083,35 +1208,55 @@ if ($noProxy) {
 }
 
 # ============================================================================
-# FRONTEND LAUNCH MODE (browser dev server vs Electron desktop app)
+# FRONTEND LAUNCH MODE
 # ============================================================================
-# In Electron mode the frontend terminal runs `npm run electron:dev`, which
-# starts the Vite dev server on 5173 and opens the Electron window pointed at
-# it. The runtime binary is downloaded lazily the first time `electron` runs,
-# and that download uses @electron/get's own proxy vars. We set them for the
-# whole frontend terminal so both npm and the first-launch download go through
-# the proxy.
+# Desktop-app mode exits long before this point, so the browser dev server is
+# the only frontend this path starts.
 $frontendProxyCommands = ""
-if ($Electron) {
-    $frontendStartCommand = "npm run electron:dev"
-    $frontendHeader = "FRONTEND UI (ELECTRON DESKTOP APP)"
-    $frontendStartMsg = "Starting Electron desktop app (dev server on port 5173)..."
-    $frontendTitle = "Electron"
-
-    $electronProxy = if ($httpsProxy) { $httpsProxy } elseif ($httpProxy) { $httpProxy } else { "" }
-    if ($electronProxy) {
-        $frontendProxyCommands = $proxyCommands +
-            "`$env:ELECTRON_GET_USE_PROXY='true'; `$env:GLOBAL_AGENT_HTTPS_PROXY='$electronProxy'; `$env:GLOBAL_AGENT_HTTP_PROXY='$electronProxy'; "
-    }
-} else {
-    $frontendStartCommand = "npm run dev -- --host 0.0.0.0 --port 5173"
-    $frontendHeader = "FRONTEND UI"
-    $frontendStartMsg = "Starting Frontend (port 5173)..."
-    $frontendTitle = "Frontend"
-}
+$frontendStartCommand = "npm run dev -- --host 0.0.0.0 --port 5173"
+$frontendHeader = "FRONTEND UI"
+$frontendStartMsg = "Starting Frontend (port 5173)..."
+$frontendTitle = "Frontend"
 
 if ($IsWindowsOS) {
     $wtExists = if ($NoWindowsTerminal) { $false } else { Get-Command wt -ErrorAction SilentlyContinue }
+
+    # ========================================================================
+    # LAYOUT MODEL PREPARATION (one-time; the layout & grading services
+    # themselves are launched by the main app via GradingFeature.build())
+    # ========================================================================
+    if ($gradingEnabled) {
+        $venvBackendPath = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
+        $layoutDir = Join-Path $ScriptDir "components\grading\providers\layout_detection_service"
+        $layoutIrModel = Join-Path $ScriptDir "models\detection_model\PP-DocLayoutV2-ov\fp16\model.xml"
+
+        # The layout IR model needs a separate conversion venv (paddle2onnx
+        # conflicts with the main venv). Prepared once when the IR is absent;
+        # subsequent starts skip this and the main app launches the service.
+        if (-not (Test-Path $layoutIrModel)) {
+            Write-Host ""
+            Write-Host "Preparing layout model (one-time, may take several minutes)..." -ForegroundColor Yellow
+
+            $convertVenv = Join-Path $layoutDir "venv_convert"
+            if (-not (Test-Path (Join-Path $convertVenv "Scripts\paddle2onnx.exe"))) {
+                Write-Host "  Creating conversion venv..." -ForegroundColor Gray
+                & "$venvBackendPath\Scripts\python.exe" -m venv $convertVenv
+                & "$convertVenv\Scripts\python.exe" -m pip install --upgrade pip | Out-Null
+                & "$convertVenv\Scripts\pip.exe" install -r (Join-Path $layoutDir "requirements_convert.txt")
+            }
+
+            Write-Host "  Downloading and converting layout model..." -ForegroundColor Gray
+            Push-Location $layoutDir
+            & "$venvBackendPath\Scripts\python.exe" ensure_layout_model.py
+            $ensureExit = $LASTEXITCODE
+            Pop-Location
+            if ($ensureExit -ne 0 -or -not (Test-Path $layoutIrModel)) {
+                Write-Host "Exiting script: layout model preparation failed." -ForegroundColor Red
+                exit 1
+            }
+            Write-Host "  Layout model ready." -ForegroundColor Green
+        }
+    }
 
     # ========================================================================
     # BACKEND (runs in THIS terminal, with paddleocr check)
@@ -1190,8 +1335,14 @@ python main.py
     if ($contentSearchEnabled) {
         Write-Host ""
         Write-Host "Content Search is started by the backend (main.py); waiting for it to become healthy..." -ForegroundColor Yellow
+        Write-Host "File Ingest loads the embedding/reranker models - this can take a few minutes on first start." -ForegroundColor Yellow
 
-        $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
+        # One gate for the whole content-search stack: /api/v1/system/health on
+        # :9011 answers 200 only once every service start_services.py launches
+        # (chromadb 9090, video preprocess 8001, file ingest 9990, main_app
+        # itself) is ready, and 503 with the per-service detail until then. That
+        # matches "[launcher] All N services are ready" in the backend output.
+        $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py" -TimeoutSeconds 1800
         if (-not $csHealthy) {
             Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
             exit 1
@@ -1200,100 +1351,9 @@ python main.py
         Write-Host ""
         Write-Host "Content Search is disabled in config (content_search/topic_segmentation/qa all off); skipping." -ForegroundColor Gray
     }
-    
-    # ========================================================================
-    # TERMINAL 3: GRADING
-    # ========================================================================
-    if ($gradingEnabled) {
-        if ($script:skipGrading) {
-            Write-Host ""
-            Write-Host "Skipping Grading (already running on ports 9902 and 9012)" -ForegroundColor Yellow
-        } else {
-            Write-Host ""
-            Write-Host "Launching Terminal 3: Grading..." -ForegroundColor Yellow
 
-            $venvBackendPath = Join-Path (Split-Path $ScriptDir -Parent) "smartclassroom"
-
-            $layoutScript = @"
-`$ErrorActionPreference = 'Continue'
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-$proxyCommands
-
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  LAYOUT DETECTION SERVICE' -ForegroundColor Cyan
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ''
-
-Set-Location '$ScriptDir\components\grading\providers'
-Write-Host "Working directory: `$PWD" -ForegroundColor Gray
-Write-Host ''
-
-Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
-& '$venvBackendPath\Scripts\Activate.ps1'
-
-Write-Host ''
-Write-Host 'Starting Layout Detection Service (port 9902)...' -ForegroundColor Green
-Write-Host ''
-python .\layout_detection_service\layout_detection_server.py
-"@
-            $layoutEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($layoutScript))
-
-            $gradingScript = @"
-`$ErrorActionPreference = 'Continue'
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
-
-$proxyCommands
-
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host '  GRADING SERVICE' -ForegroundColor Cyan
-Write-Host '========================================' -ForegroundColor Cyan
-Write-Host ''
-
-Set-Location '$ScriptDir\components\grading'
-Write-Host "Working directory: `$PWD" -ForegroundColor Gray
-Write-Host ''
-
-Write-Host 'Activating Backend virtual environment...' -ForegroundColor Gray
-& '$venvBackendPath\Scripts\Activate.ps1'
-
-Write-Host ''
-Write-Host 'Starting Grading Service (port 9012)...' -ForegroundColor Green
-Write-Host ''
-python grading_service.py
-"@
-            $gradingEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($gradingScript))
-
-            if ($wtExists) {
-                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title LayoutDetection powershell -NoExit -EncodedCommand $layoutEncoded"
-            } else {
-                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $layoutEncoded" | Out-Null
-            }
-            Write-Host "  Layout Detection terminal launched" -ForegroundColor Green
-        }
-
-        $layoutHealthy = Wait-ForService -ServiceName "Layout Detection" -Url "http://localhost:9902/health" -Port 9902 -DependentPorts @(8000) -CommandLinePattern "layout_detection_server.py"
-        if (-not $layoutHealthy) {
-            Write-Host "Exiting script due to Layout Detection startup failure." -ForegroundColor Red
-            exit 1
-        }
-
-        if (-not $script:skipGrading) {
-            if ($wtExists) {
-                Start-Process wt -ArgumentList "-w SmartClassroom new-tab --title Grading powershell -NoExit -EncodedCommand $gradingEncoded"
-            } else {
-                Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $gradingEncoded" | Out-Null
-            }
-            Write-Host "  Grading terminal launched" -ForegroundColor Green
-            Write-Host ""
-        }
-
-        $gradingHealthy = Wait-ForService -ServiceName "Grading" -Url "http://localhost:9012/api/v1/health" -Port 9012 -DependentPorts @(8000) -CommandLinePattern "grading_service.py"
-        if (-not $gradingHealthy) {
-            Write-Host "Exiting script due to Grading startup failure." -ForegroundColor Red
-            exit 1
-        }
-    }
+    # Grading service (port 9012) is launched by the main app via
+    # GradingFeature.build(); no separate terminal needed here.
 
     # ========================================================================
     # TERMINAL 4: FRONTEND
@@ -1359,17 +1419,18 @@ Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Services:" -ForegroundColor Yellow
 Write-Host "  1. Backend        -> http://localhost:8000  [HEALTHY]" -ForegroundColor White
-Write-Host "  2. Content Search -> http://localhost:9011  [HEALTHY]" -ForegroundColor White
-if ($Electron) {
-    Write-Host "  3. Frontend       -> Electron desktop app (dev server http://localhost:5173)  [HEALTHY]" -ForegroundColor White
-    Write-Host ""
-    Write-Host "The Smart Classroom Electron window should now be open." -ForegroundColor Cyan
-    Write-Host "(You can also open http://localhost:5173 in a browser.)" -ForegroundColor DarkGray
+if ($contentSearchEnabled) {
+    Write-Host "  2. Content Search -> http://localhost:9011  [HEALTHY]" -ForegroundColor White
+    Write-Host "       File Ingest  -> http://localhost:9990  [HEALTHY]" -ForegroundColor White
+    if ($videoSummarizationEnabled) {
+        Write-Host "       Preprocess   -> http://localhost:8001  [HEALTHY]" -ForegroundColor White
+    }
 } else {
-    Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
-    Write-Host ""
-    Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
+    Write-Host "  2. Content Search -> disabled in config" -ForegroundColor Gray
 }
+Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
+Write-Host ""
+Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
 Write-Host ""
 
 if ($Silent) {
@@ -1383,19 +1444,20 @@ if ($Silent) {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
 
-    while ($true) {
-        # If the backend exited on its own (crash or graceful shutdown),
-        # clean up the remaining services and return to the prompt instead
-        # of spinning here forever.
-        if ($script:backendProcess -and $script:backendProcess.HasExited) {
-            Write-Host ""
-            Write-Host "Backend process exited (code $($script:backendProcess.ExitCode)). Stopping remaining services..." -ForegroundColor Yellow
-            if ($script:servicesStarted) {
-                Stop-AllServices
-                $script:servicesStarted = $false
+    try {
+        while ($true) {
+            if ($script:backendProcess -and $script:backendProcess.HasExited) {
+                Write-Host ""
+                Write-Host "Backend process exited (code $($script:backendProcess.ExitCode)). Stopping remaining services..." -ForegroundColor Yellow
+                break
             }
-            break
+            Start-Sleep -Seconds 1
         }
-        Start-Sleep -Seconds 1
+    }
+    finally {
+        if ($script:servicesStarted) {
+            Stop-AllServices
+            $script:servicesStarted = $false
+        }
     }
 }

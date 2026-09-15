@@ -4,7 +4,6 @@
 #
 
 import os
-import uuid
 import traceback
 import asyncio
 from pathlib import Path
@@ -314,7 +313,6 @@ class TaskService:
         """Detect if PDF is handwritten and extract text via OCR API. Returns .ocr.txt object key or None."""
         try:
             file_disk_path = str(storage_service.get_file_disk_path(file_key))
-            session_id = str(uuid.uuid4())
 
             with httpx.Client(timeout=OCR_TIMEOUT) as client:
                 # Step 1: detect if PDF is handwritten/scanned
@@ -334,33 +332,24 @@ class TaskService:
                 # Step 2: extract text from handwritten PDF
                 print(f"[OCR] Handwritten PDF detected, extracting text...", flush=True)
                 with open(file_disk_path, 'rb') as f:
+                    # No X-Session-ID: we only want the text back, and sending one
+                    # would make the service create a session folder per PDF
+                    # under storage/.
                     extract_resp = client.post(
                         f"{OCR_BASE_URL}/ocr/extract-text",
-                        files={'file': (Path(file_disk_path).name, f, 'application/pdf')},
-                        headers={'X-Session-ID': session_id}
+                        files={'file': (Path(file_disk_path).name, f, 'application/pdf')}
                     )
 
                 if extract_resp.status_code != 200:
                     print(f"[OCR] Text extraction failed: {extract_resp.status_code}", flush=True)
                     return None
 
-                ocr_result_file = extract_resp.json().get("data", {}).get("result_file")
-                if not ocr_result_file:
-                    print(f"[OCR] No result_file in response", flush=True)
+                ocr_text = extract_resp.json().get("data", {}).get("text")
+                if not ocr_text:
+                    print(f"[OCR] No text in response", flush=True)
                     return None
 
-                # OCR service returns path relative to smart-classroom/ (one level up)
-                if not os.path.isabs(ocr_result_file) and not os.path.exists(ocr_result_file):
-                    ocr_result_file = os.path.join("..", ocr_result_file)
-
-                if not os.path.exists(ocr_result_file):
-                    print(f"[OCR] Result file not found: {ocr_result_file}", flush=True)
-                    return None
-
-                # Step 3: read OCR text and save a copy to content_search local storage
-                with open(ocr_result_file, 'r', encoding='utf-8') as tf:
-                    ocr_text = tf.read()
-
+                # Step 3: save the OCR text to content_search local storage
                 ocr_object_key = file_key.rsplit('.', 1)[0] + '.ocr.txt'
                 storage_service._store.put_bytes(
                     ocr_object_key,

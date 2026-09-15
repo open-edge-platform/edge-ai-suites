@@ -15,7 +15,7 @@
    Look for log lines showing inference results. If the container exited, the video file may be
    missing.
 
-2. Confirm that `sample.mp4` exists in the expected location:
+2. Confirm that `datastream.mp4` exists in the expected location:
 
    ```bash
    ls apps/pipeline-defect-detection/resources/videos/
@@ -34,9 +34,13 @@
    If no messages appear, the DL Streamer pipeline may not have been triggered. Start it manually:
 
    ```bash
-   curl -X POST http://localhost:8554/pipelines/user_defined_pipelines/pipeline_defect_detection \
+   docker exec apm-dlstreamer curl -X POST \
+     http://localhost:8554/pipelines/user_defined_pipelines/pipeline_defect_detection \
      -H "Content-Type: application/json" -d '{}'
    ```
+
+   The pipeline server port is available only inside the Compose network and is not published on
+   the host.
 
 ## Agent Run Stays in `in_progress` and Never Completes
 
@@ -54,7 +58,8 @@
    Server is healthy:
 
    ```bash
-   curl http://localhost:8010/v1/config
+   docker exec apm-ui python3 -c \
+     "import urllib.request; print(urllib.request.urlopen('http://apm-llm:8000/v1/config').status)"
    ```
 
    If the OpenVINO model server service is unhealthy or is still loading the model, wait for it to finish.
@@ -87,8 +92,78 @@ docker logs apm-nginx
 Also confirm that the agent service itself is healthy:
 
 ```bash
-curl http://localhost:5002/health
+curl http://localhost:8080/api/agents/health
 ```
+
+## Ask & Analyze Is Unavailable or Returns an Error
+
+**Symptom**: The chat page reports that LLM-backed analysis is disabled, cannot reach the model, or
+cannot gather supporting data.
+
+1. Confirm the deployment mode:
+
+   ```bash
+   docker inspect apm-ui --format '{{range .Config.Env}}{{println .}}{{end}}' \
+     | grep -E '^(LLM_BASE_URL|LLM_MODEL_NAME)='
+   ```
+
+   `LLM_MODE=fallback` omits `apm-llm`, leaving Ask & Analyze unavailable while preserving the
+   dashboard and rule-based detect-then-reason workflow.
+
+2. In LLM mode, verify that the shared OVMS service is healthy:
+
+   ```bash
+   docker inspect apm-llm --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}'
+   docker logs apm-llm
+   ```
+
+3. Verify internal DNS/connectivity from the UI container:
+
+   ```bash
+   docker exec apm-ui python3 -c \
+     "import urllib.request; print(urllib.request.urlopen('http://apm-llm:8000/v1/config').status)"
+   ```
+
+   `apm-llm` must remain in the UI's `no_proxy` list. Do not replace the internal URL with
+   `localhost`; inside `apm-ui`, `localhost` refers to the UI container itself.
+
+4. If an answer cannot be grounded, check the relevant source:
+
+   ```bash
+   curl http://localhost:8080/api/agents/runs
+   curl http://localhost:8080/api/storage/detections/summary
+   ```
+
+   Analysis mode needs completed agent output. Detection mode needs stored detections. A specified
+   run ID must exist, have completed, and include a valid detection ID window.
+
+5. If the services are healthy but chat repeatedly returns an LLM or invalid-query error, try a
+   larger instruction model. Smaller models can be less reliable at following the structured query
+   schema used by Detection and Combined modes. In
+   `apps/pipeline-defect-detection/.env_pipeline-defect-detection`, set `LLM_MODEL_NAME` to the
+   Hugging Face model ID of a larger model supported by your OpenVINO model server release, such as
+   a supported Qwen3 instruction model.
+
+   Ensure the target system has enough memory for the larger model. Keep
+   `LLM_WEIGHT_FORMAT=int4` on memory-constrained systems, then download, convert, and redeploy it:
+
+   ```bash
+   source ./scripts/download_llm_model.sh --use-case pipeline-defect-detection
+   source ./setup.sh --use-case pipeline-defect-detection
+   ```
+
+   Wait for `apm-llm` to become healthy before retrying chat. The agent pipeline and Ask & Analyze
+   share this model, so the change applies to Analysis, Detection, and Combined modes.
+
+Questions longer than 4,000 characters, malformed run IDs, unsupported modes/control characters,
+extra request fields, and invalid structured-query plans are rejected. General upstream requests
+have a 15-second timeout; LLM generation requests allow 60 seconds by default. On constrained
+hardware, wait until `apm-llm` is healthy, shorten the question, and retry.
+
+Application APIs are exposed only through NGINX at `http://localhost:8080`. The model-download
+service is the only other service with a published host port (`http://localhost:8200` by default).
+Use container logs, health status, or `docker exec` for services that are internal to the Compose
+network.
 
 ## OpenVINO Model Server Service is Unhealthy after Startup
 
@@ -167,8 +242,11 @@ curl http://localhost:8080/api/agents/runs/$RUN_ID | python3 -m json.tool
 
 | Symptom | Likely Cause | Action |
 |---------|-------------|--------|
-| No detections in storage | `sample.mp4` is missing or pipeline is not triggered | Prepare data and trigger the DL Streamer pipeline |
+| No detections in storage | `datastream.mp4` is missing or pipeline is not triggered | Prepare data and trigger the DL Streamer pipeline |
 | Agent run is stuck in `in_progress` | OpenVINO model server service is unhealthy or is still loading | Check `docker logs apm-llm` or switch to the fallback mode |
 | UI shows no runs | NGINX proxy issue or agent service is down | Check `docker logs apm-nginx` and `docker logs apm-agent` |
-| `apm-storage` is unhealthy | Port conflict or volume permission issue | Check port 5001 or run `./setup.sh --clean-data` |
+| Ask & Analyze is disabled | `LLM_MODE=fallback` | Restart in LLM mode after preparing the configured model |
+| Ask & Analyze cannot reach the model | `apm-llm` is unhealthy, still loading, or incorrectly proxied | Check `apm-llm`, `LLM_BASE_URL`, and the UI `no_proxy` value |
+| Ask & Analyze has no grounding data | Requested run is incomplete/missing or storage has no detections | Check agent runs and the detection summary |
+| `apm-storage` is unhealthy | Container startup or volume permission issue | Check `docker logs apm-storage`, query `http://localhost:8080/api/storage/health`, or run `./setup.sh --clean-data` |
 | OpenVINO model server container restarts repeatedly | GPU out of memory or the model is not supported | Switch to CPU inference or use a smaller model |

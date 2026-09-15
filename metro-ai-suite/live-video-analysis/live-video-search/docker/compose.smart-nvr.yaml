@@ -48,7 +48,7 @@ services:
       - live-video-network
     ipc: host
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.build_opener(u.ProxyHandler({})).open('http://localhost:8000/health', timeout=5)"]
       interval: 10s
       timeout: 10s
       retries: 40
@@ -73,6 +73,9 @@ services:
       FRIGATE_BASE_URL: ${FRIGATE_BASE_URL}
       VSS_SEARCH_URL: ${VSS_SEARCH_URL}
       VSS_SUMMARY_URL: ${VSS_SUMMARY_URL}
+      WATCH_BATCH_SIZE: ${VS_WATCH_BATCH_SIZE:-10}
+      BATCH_JOB_POLL_INTERVAL_SECONDS: ${VS_BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
+      BATCH_JOB_TIMEOUT_SECONDS: ${VS_BATCH_JOB_TIMEOUT_SECONDS:-3600}
       no_proxy: ${no_proxy},frigate-vms,${PM_HOST},${VLM_SERVING_IP},mqtt-broker,${HOST_IP},localhost,nginx
       MQTT_BROKER: mqtt-broker
       MQTT_PORT: 1883

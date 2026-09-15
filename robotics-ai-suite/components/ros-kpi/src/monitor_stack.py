@@ -25,6 +25,10 @@ from pathlib import Path
 from typing import List, Optional
 import threading
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 class MonitoringSession:
     """Manages a complete monitoring session with multiple concurrent monitors."""
@@ -36,9 +40,11 @@ class MonitoringSession:
                  remote_ip: Optional[str] = None, remote_user: str = 'ubuntu',
                  ros_domain_id: Optional[int] = None,
                  enable_gpu: bool = False, enable_npu: bool = False,
-                 enable_power: bool = False,
+                 enable_io: bool = False,
+                 enable_ctx: bool = False,
                  algorithm: Optional[str] = None,
-                 use_sim_time: bool = False):
+                 use_sim_time: bool = False,
+                 root_pid: Optional[int] = None):
         """
         Initialize a monitoring session.
 
@@ -53,8 +59,21 @@ class MonitoringSession:
             pid_only: Monitor PIDs only (no thread details)
             remote_ip: IP address of the remote system running the ROS2 pipeline
             remote_user: SSH username for the remote system (default: ubuntu)
+            enable_io: Include per-process disk I/O statistics (read/write bytes
+                       since last tick) in resource monitoring, via
+                       monitor_resources.py's --io flag
+            enable_ctx: Include per-process voluntary/involuntary context-switch
+                        counts since last tick in resource monitoring, via
+                        monitor_resources.py's --ctx-switches flag. A spike in
+                        involuntary switches is a privilege-free signal of CPU
+                        oversubscription/contention.
             algorithm: Algorithm/experiment label — sessions are grouped under
                        monitoring_sessions/<algorithm>/<timestamp>/
+            root_pid: PID of the top-level launch process (e.g. `ros2 launch`).
+                      Passed to monitor_resources.py so it can classify ROS2
+                      processes by process-tree ancestry instead of name
+                      matching, which misses nodes whose command line doesn't
+                      happen to contain a recognizable ROS2 substring.
         """
         self.algorithm = algorithm
         self.session_name = session_name or datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -76,8 +95,10 @@ class MonitoringSession:
         self.ros_domain_id = ros_domain_id  # explicit override; None = auto-detect
         self.enable_gpu = enable_gpu or bool(remote_ip)  # auto-enable GPU when remote
         self.enable_npu = enable_npu  # explicit only — not auto-enabled
-        self.enable_power = enable_power  # explicit only — not auto-enabled
+        self.enable_io = enable_io  # explicit only — not auto-enabled
+        self.enable_ctx = enable_ctx  # explicit only — not auto-enabled
         self.use_sim_time = use_sim_time
+        self.root_pid = root_pid
 
         # Process tracking
         self.processes: List[subprocess.Popen] = []
@@ -86,10 +107,9 @@ class MonitoringSession:
         # Output files
         self.graph_log = self.output_dir / "graph_timing.csv"
         self.topology_log = self.output_dir / "graph_topology.json"
-        self.resource_log = self.output_dir / "resource_usage.log"
+        self.resource_log = self.output_dir / "resource_usage.json"
         self.gpu_log = self.output_dir / "gpu_usage.log"
         self.npu_log = self.output_dir / "npu_usage.log"
-        self.cpu_power_log = self.output_dir / "cpu_power.log"
         self.visualization_dir = self.output_dir / "visualizations"
 
         # Setup signal handlers
@@ -98,7 +118,7 @@ class MonitoringSession:
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""
-        print("\n\n🛑 Received shutdown signal. Cleaning up...")
+        logger.info("\n\n🛑 Received shutdown signal. Cleaning up...")
         self.stop()
 
     def _auto_detect_hardware(self) -> None:
@@ -118,7 +138,7 @@ class MonitoringSession:
         if str(script_dir) not in sys.path:
             sys.path.insert(0, str(script_dir))
         try:
-            from monitor_resources import probe_gpu_available, probe_npu_available, probe_cpu_power_available
+            from monitor_resources import probe_gpu_available, probe_npu_available
         except ImportError:
             return  # probe functions not available in this install
 
@@ -126,53 +146,37 @@ class MonitoringSession:
         gpu_avail, _gpu_tool, gpu_reason = probe_gpu_available()
         if self.enable_gpu:
             if not gpu_avail:
-                print(f"   ⚠️  GPU monitoring requested but unavailable: {gpu_reason}")
-                print("       Skipping GPU monitoring.")
+                logger.info(f"   ⚠️  GPU monitoring requested but unavailable: {gpu_reason}")
+                logger.info("       Skipping GPU monitoring.")
                 self.enable_gpu = False
             else:
-                print(f"   ✅ GPU: {gpu_reason}")
+                logger.info(f"   ✅ GPU: {gpu_reason}")
         else:
             if gpu_avail:
                 self.enable_gpu = True
-                print(f"   🖥️  GPU auto-detected — enabling monitoring ({gpu_reason})")
+                logger.info(f"   🖥️  GPU auto-detected — enabling monitoring ({gpu_reason})")
             else:
-                print(f"   ℹ️  GPU monitoring skipped: {gpu_reason}")
+                logger.info(f"   ℹ️  GPU monitoring skipped: {gpu_reason}")
 
         # ── NPU ──────────────────────────────────────────────────────────────
         npu_avail, npu_reason = probe_npu_available()
         if self.enable_npu:
             if not npu_avail:
-                print(f"   ⚠️  NPU monitoring requested but unavailable: {npu_reason}")
-                print("       Skipping NPU monitoring.")
+                logger.info(f"   ⚠️  NPU monitoring requested but unavailable: {npu_reason}")
+                logger.info("       Skipping NPU monitoring.")
                 self.enable_npu = False
             else:
-                print(f"   ✅ NPU: {npu_reason}")
+                logger.info(f"   ✅ NPU: {npu_reason}")
         else:
             if npu_avail:
                 self.enable_npu = True
-                print(f"   🧠 NPU auto-detected — enabling monitoring ({npu_reason})")
+                logger.info(f"   🧠 NPU auto-detected — enabling monitoring ({npu_reason})")
             else:
-                print(f"   ℹ️  NPU monitoring skipped: {npu_reason}")
-
-        # ── RAPL CPU power ────────────────────────────────────────────────────
-        pwr_avail, pwr_reason = probe_cpu_power_available()
-        if self.enable_power:
-            if not pwr_avail:
-                print(f"   ⚠️  CPU power monitoring requested but unavailable: {pwr_reason}")
-                print("       Skipping CPU power monitoring.")
-                self.enable_power = False
-            else:
-                print(f"   ✅ RAPL: {pwr_reason}")
-        else:
-            if pwr_avail:
-                self.enable_power = True
-                print(f"   ⚡ RAPL auto-detected — enabling CPU power monitoring ({pwr_reason})")
-            else:
-                print(f"   ℹ️  CPU power monitoring skipped: {pwr_reason}")
+                logger.info(f"   ℹ️  NPU monitoring skipped: {npu_reason}")
 
     def setup(self):
         """Setup the monitoring session directories and files."""
-        print(f"📁 Setting up monitoring session: {self.session_name}")
+        logger.info(f"📁 Setting up monitoring session: {self.session_name}")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.visualization_dir.mkdir(parents=True, exist_ok=True)
 
@@ -193,10 +197,10 @@ class MonitoringSession:
             f.write("-" * 80 + "\n")
 
         if self.algorithm:
-            print(f"   Algorithm: {self.algorithm}")
+            logger.info(f"   Algorithm: {self.algorithm}")
         if self.remote_ip:
-            print(f"   Remote system: {self.remote_user}@{self.remote_ip}")
-        print(f"   Output directory: {self.output_dir}")
+            logger.info(f"   Remote system: {self.remote_user}@{self.remote_ip}")
+        logger.info(f"   Output directory: {self.output_dir}")
 
         # Auto-detect GPU and NPU when resource monitoring is active
         if self.monitor_resources:
@@ -228,23 +232,23 @@ class MonitoringSession:
             if self.ros_domain_id is not None:
                 # User explicitly specified --ros-domain-id; use it and skip auto-detect.
                 env['ROS_DOMAIN_ID'] = str(self.ros_domain_id)
-                print(f"   ✅ ROS_DOMAIN_ID={self.ros_domain_id} (explicit override).")
+                logger.info(f"   ✅ ROS_DOMAIN_ID={self.ros_domain_id} (explicit override).")
             else:
                 # Auto-detect the remote's ROS_DOMAIN_ID and align locally.
                 # This is the most common reason DDS peer discovery silently fails.
                 remote_domain = self._get_remote_domain_id()
                 local_domain  = env.get('ROS_DOMAIN_ID', '0')
                 if remote_domain is not None and str(remote_domain) != str(local_domain):
-                    print("   ⚠  ROS_DOMAIN_ID mismatch detected:")
-                    print(f"      local={local_domain}  remote={remote_domain}")
-                    print(f"      Setting ROS_DOMAIN_ID={remote_domain} for monitoring processes.")
+                    logger.info("   ⚠  ROS_DOMAIN_ID mismatch detected:")
+                    logger.info(f"      local={local_domain}  remote={remote_domain}")
+                    logger.info(f"      Setting ROS_DOMAIN_ID={remote_domain} for monitoring processes.")
                     env['ROS_DOMAIN_ID'] = str(remote_domain)
                 elif remote_domain is not None:
-                    print(f"   ✅ ROS_DOMAIN_ID={remote_domain} matches on both machines.")
+                    logger.info(f"   ✅ ROS_DOMAIN_ID={remote_domain} matches on both machines.")
                 else:
-                    print("   ℹ  Could not detect remote ROS_DOMAIN_ID (SSH auth issue?).")
-                    print(f"      Using local ROS_DOMAIN_ID={local_domain}.")
-                    print("      Tip: use --ros-domain-id <id> to set it explicitly.")
+                    logger.info("   ℹ  Could not detect remote ROS_DOMAIN_ID (SSH auth issue?).")
+                    logger.info(f"      Using local ROS_DOMAIN_ID={local_domain}.")
+                    logger.info("      Tip: use --ros-domain-id <id> to set it explicitly.")
 
             env['ROS_LOCALHOST_ONLY'] = '0'
             # CycloneDDS: explicit unicast peer + disable multicast (works across subnets)
@@ -268,10 +272,10 @@ class MonitoringSession:
         # Prepare subprocess environment (adds DDS peer vars when monitoring remotely)
         proc_env = self._build_remote_env()
 
-        print("\n🚀 Starting monitoring processes...")
+        logger.info("\n🚀 Starting monitoring processes...")
         if self.remote_ip:
-            print(f"   🌐 Monitoring remote system: {self.remote_user}@{self.remote_ip}")
-            print("      Ensure ROS_DOMAIN_ID matches on both machines.")
+            logger.info(f"   🌐 Monitoring remote system: {self.remote_user}@{self.remote_ip}")
+            logger.info("      Ensure ROS_DOMAIN_ID matches on both machines.")
 
         # Start graph monitor if enabled
         if self.monitor_graph:
@@ -297,8 +301,8 @@ class MonitoringSession:
             # Skip the interactive countdown when launched programmatically
             cmd.append("--no-countdown")
 
-            print("   📊 Starting graph monitor...")
-            print(f"      Logging to: {self.graph_log}")
+            logger.info("   📊 Starting graph monitor...")
+            logger.info(f"      Logging to: {self.graph_log}")
 
             process = subprocess.Popen(
                 cmd,
@@ -325,26 +329,33 @@ class MonitoringSession:
                 str(script_dir / "monitor_resources.py"),
                 "--interval", str(self.interval),
                 "--memory",
-                "--log", str(self.resource_log)
+                "--log", str(self.resource_log),
             ]
+
+            if self.root_pid:
+                cmd.extend(["--root-pid", str(self.root_pid)])
 
             # Add --threads flag only if not pid_only mode
             if not self.pid_only:
                 cmd.append("--threads")
 
+            if self.enable_io:
+                cmd.append("--io")
+
+            if self.enable_ctx:
+                cmd.append("--ctx-switches")
+
             if self.enable_gpu:
                 cmd.extend(["--gpu", "--gpu-log", str(self.gpu_log)])
             if self.enable_npu:
                 cmd.extend(["--npu", "--npu-log", str(self.npu_log)])
-            if self.enable_power:
-                cmd.extend(["--power", "--power-log", str(self.cpu_power_log)])
 
             if self.remote_ip:
                 cmd.extend(["--remote-ip", self.remote_ip,
                              "--remote-user", self.remote_user])
 
-            print("   💻 Starting resource monitor...")
-            print(f"      Logging to: {self.resource_log}")
+            logger.info("   💻 Starting resource monitor...")
+            logger.info(f"      Logging to: {self.resource_log}")
 
             process = subprocess.Popen(
                 cmd,
@@ -364,14 +375,14 @@ class MonitoringSession:
                 daemon=True
             ).start()
 
-        print("\n✅ All monitors started. Collecting data...")
-        print("   Press Ctrl+C to stop monitoring and generate visualizations.\n")
+        logger.info("\n✅ All monitors started. Collecting data...")
+        logger.info("   Press Ctrl+C to stop monitoring and generate visualizations.\n")
 
     def _stream_output(self, process: subprocess.Popen, label: str):
         """Stream process output with label."""
         for line in process.stdout:
             if line.strip():
-                print(f"[{label}] {line.rstrip()}")
+                logger.info(f"[{label}] {line.rstrip()}")
 
     def wait(self):
         """Wait for monitoring processes to complete."""
@@ -380,11 +391,11 @@ class MonitoringSession:
                 # Check if any process has died unexpectedly
                 for process in self.processes:
                     if process.poll() is not None:
-                        print(f"\n⚠️  Monitor process exited unexpectedly (exit code: {process.returncode})")
+                        logger.info(f"\n⚠️  Monitor process exited unexpectedly (exit code: {process.returncode})")
                         # Show any error output
                         stderr = process.stderr.read()
                         if stderr:
-                            print(f"Error output: {stderr}")
+                            logger.error(f"stderr: {stderr}")
 
                 time.sleep(1)
         except KeyboardInterrupt:
@@ -396,7 +407,7 @@ class MonitoringSession:
             return
 
         self.running = False
-        print("\n🛑 Stopping monitors...")
+        logger.info("\n🛑 Stopping monitors...")
 
         for process in self.processes:
             if process.poll() is None:
@@ -411,20 +422,20 @@ class MonitoringSession:
         with open(info_file, 'a') as f:
             f.write(f"\nStopped: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-        print("✅ All monitors stopped.")
+        logger.info("✅ All monitors stopped.")
 
     def visualize(self):
         """Generate visualizations from collected data."""
         if not self.auto_visualize:
-            print("\n⏭️  Skipping visualization (disabled)")
+            logger.info("\n⏭️  Skipping visualization (disabled)")
             return
 
-        print("\n📈 Generating visualizations...")
+        logger.info("\n📈 Generating visualizations...")
         script_dir = Path(__file__).parent
 
         # Visualize timing data if graph monitor was running
         if self.monitor_graph and self.graph_log.exists():
-            print("   📊 Creating timing visualizations...")
+            logger.info("   📊 Creating timing visualizations...")
             cmd = [
                 sys.executable,
                 str(script_dir / "visualize_timing.py"),
@@ -435,12 +446,12 @@ class MonitoringSession:
             ]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"      ✅ Timing plots saved to {self.visualization_dir}")
+                logger.info(f"      ✅ Timing plots saved to {self.visualization_dir}")
             else:
-                print(f"      ⚠️  Error generating timing plots: {result.stderr}")
+                logger.error(f"      ⚠️  Error generating timing plots: {result.stderr}")
 
             # Pipeline graph – rqt_graph-style directed view with KPI metrics
-            print("   🗺️  Creating pipeline graph (rqt_graph style)...")
+            logger.info("   🗺️  Creating pipeline graph (rqt_graph style)...")
             graph_cmd = [
                 sys.executable,
                 str(script_dir / "visualize_graph.py"),
@@ -452,13 +463,13 @@ class MonitoringSession:
                 graph_cmd.extend(["--topology", str(self.topology_log)])
             result = subprocess.run(graph_cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"      ✅ Pipeline graph saved to {self.visualization_dir}/pipeline_graph.png")
+                logger.info(f"      ✅ Pipeline graph saved to {self.visualization_dir}/pipeline_graph.png")
             else:
-                print(f"      ⚠️  Error generating pipeline graph: {result.stderr}")
+                logger.error(f"      ⚠️  Error generating pipeline graph: {result.stderr}")
 
         # Visualize resource data if resource monitor was running
         if self.monitor_resources and self.resource_log.exists():
-            print("   💻 Creating resource visualizations...")
+            logger.info("   💻 Creating resource visualizations...")
             cmd = [
                 sys.executable,
                 str(script_dir / "visualize_resources.py"),
@@ -472,13 +483,13 @@ class MonitoringSession:
                 cmd.extend(["--gpu-log", str(self.gpu_log)])
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"      ✅ Resource plots saved to {self.visualization_dir}")
+                logger.info(f"      ✅ Resource plots saved to {self.visualization_dir}")
             else:
-                print(f"      ⚠️  Error generating resource plots: {result.stderr}")
+                logger.error(f"      ⚠️  Error generating resource plots: {result.stderr}")
 
         # Visualize GPU data if collected
         if self.gpu_log.exists():
-            print("   🖥️  Creating GPU visualizations...")
+            logger.info("   🖥️  Creating GPU visualizations...")
             gpu_cmd = [
                 sys.executable,
                 str(script_dir / "visualize_gpu.py"),
@@ -488,13 +499,13 @@ class MonitoringSession:
             ]
             result = subprocess.run(gpu_cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"      ✅ GPU plots saved to {self.visualization_dir}")
+                logger.info(f"      ✅ GPU plots saved to {self.visualization_dir}")
             else:
-                print(f"      ⚠️  Error generating GPU plots: {result.stderr}")
+                logger.error(f"      ⚠️  Error generating GPU plots: {result.stderr}")
 
         # Visualize NPU data if collected
         if self.npu_log.exists():
-            print("   🧠 Creating NPU visualizations...")
+            logger.info("   🧠 Creating NPU visualizations...")
             npu_cmd = [
                 sys.executable,
                 str(script_dir / "visualize_npu.py"),
@@ -504,17 +515,17 @@ class MonitoringSession:
             ]
             result = subprocess.run(npu_cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"      ✅ NPU plots saved to {self.visualization_dir}")
+                logger.info(f"      ✅ NPU plots saved to {self.visualization_dir}")
             else:
-                print(f"      ⚠️  Error generating NPU plots: {result.stderr}")
+                logger.error(f"      ⚠️  Error generating NPU plots: {result.stderr}")
 
-        print(f"\n📊 Session complete! Results saved to: {self.output_dir}")
-        print(f"   Visualizations: {self.visualization_dir}")
+        logger.info(f"\n📊 Session complete! Results saved to: {self.output_dir}")
+        logger.info(f"   Visualizations: {self.visualization_dir}")
 
-        print("\n\U0001f4a1 To compare across multiple runs:")
+        logger.info("\n\U0001f4a1 To compare across multiple runs:")
         algo_flag = f" --algorithm {self.algorithm}" if self.algorithm else ""
-        print(f"   uv run python src/view_average.py{algo_flag}          # avg KPIs across last 5 sessions")
-        print(f"   uv run python src/view_average.py{algo_flag} --plot   # same + save bar-chart PNGs")
+        logger.info(f"   uv run python src/view_average.py{algo_flag}          # avg KPIs across last 5 sessions")
+        logger.info(f"   uv run python src/view_average.py{algo_flag} --plot   # same + save bar-chart PNGs")
 
     def run(self):
         """Run the complete monitoring session."""
@@ -631,6 +642,21 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     )
 
     parser.add_argument(
+        '--io',
+        action='store_true',
+        help='Include per-process disk I/O statistics (read/write bytes since last '
+             'tick) in resource monitoring. No short flag here -- -d is --duration.'
+    )
+
+    parser.add_argument(
+        '--ctx-switches',
+        action='store_true',
+        help='Include per-process voluntary/involuntary context-switch counts since '
+             'last tick in resource monitoring (involuntary spikes indicate CPU '
+             'contention). No new privileges required.'
+    )
+
+    parser.add_argument(
         '--remote-ip',
         type=str,
         default=None,
@@ -683,11 +709,12 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     )
 
     parser.add_argument(
-        '--power',
-        action='store_true',
-        default=False,
-        help='Enable RAPL CPU package power monitoring (writes cpu_power.log). '
-             'Auto-detected when /sys/class/powercap/intel-rapl:0/energy_uj is readable.'
+        '--root-pid',
+        type=int,
+        default=None,
+        help='PID of the top-level launch process (e.g. `ros2 launch`). Used to '
+             'classify ROS2 processes by process-tree ancestry for resource '
+             'attribution, instead of matching process names/args.'
     )
 
     args = parser.parse_args()
@@ -696,7 +723,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     if args.list_sessions:
         sessions_dir = Path("./monitoring_sessions")
         if not sessions_dir.exists():
-            print("No monitoring sessions found.")
+            logger.info("No monitoring sessions found.")
             return
 
         # Collect all session dirs: both flat (<ts>/) and grouped (<algo>/<ts>/)
@@ -717,10 +744,10 @@ All data is automatically saved and visualized (unless --no-visualize is used).
 
         entries = list(_iter_sessions(sessions_dir))
         if not entries:
-            print("No monitoring sessions found.")
+            logger.info("No monitoring sessions found.")
             return
 
-        print("\n📂 Previous Monitoring Sessions:\n")
+        logger.info("\n📂 Previous Monitoring Sessions:\n")
         last_algo = None
         for session_path, info_file in entries:
             # Determine algorithm group label
@@ -728,20 +755,20 @@ All data is automatically saved and visualized (unless --no-visualize is used).
             algo_label = None if parent == sessions_dir else parent.name
             if algo_label != last_algo:
                 header = f"── {algo_label} ──" if algo_label else "── (no algorithm) ──"
-                print(f"  {header}")
+                logger.info(f"  {header}")
                 last_algo = algo_label
-            print(f"   {session_path.name}:")
+            logger.info(f"   {session_path.name}:")
             with open(info_file, 'r') as f:
                 lines = [line.strip() for line in f.readlines()[:5]]
                 for line in lines:
                     if line and not line.startswith('-'):
-                        print(f"      {line}")
-            print()
+                        logger.info(f"      {line}")
+            logger.info("")
         return
 
     # Validate conflicting options
     if args.graph_only and args.resources_only:
-        print("Error: Cannot specify both --graph-only and --resources-only")
+        logger.error("Cannot specify both --graph-only and --resources-only")
         sys.exit(1)
 
     # Determine what to monitor
@@ -763,16 +790,18 @@ All data is automatically saved and visualized (unless --no-visualize is used).
         ros_domain_id=args.ros_domain_id,
         enable_gpu=args.gpu,
         enable_npu=args.npu,
-        enable_power=args.power,
+        enable_io=args.io,
+        enable_ctx=args.ctx_switches,
         algorithm=args.algorithm,
         use_sim_time=args.use_sim_time,
+        root_pid=args.root_pid,
     )
 
     # Handle duration if specified
     if args.duration:
         def stop_after_duration():
             time.sleep(args.duration)
-            print(f"\n⏰ Duration limit reached ({args.duration}s)")
+            logger.info(f"\n⏰ Duration limit reached ({args.duration}s)")
             session.stop()
 
         timer_thread = threading.Thread(target=stop_after_duration, daemon=True)
@@ -781,7 +810,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     try:
         session.run()
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        logger.error(f"\n❌ Error: {e}")
         session.stop()
         sys.exit(1)
 

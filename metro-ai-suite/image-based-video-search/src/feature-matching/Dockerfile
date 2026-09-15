@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.14
+FROM docker.io/library/python:3.14.7
 
 USER root
 
@@ -12,8 +12,10 @@ WORKDIR /usr/src/app
 
 RUN python -m pip install --upgrade \
     pip \
-    setuptools \
-    wheel
+    "setuptools>=78.1.1" \
+    wheel \
+ # remove pip's stale CycloneDX SBOM (baked into base image); Trivy reads it and flags if even if pip packages are updated.
+ && find /usr/local/lib/python*/site-packages/pip/_vendor -name "bom.cdx.json" -delete
 
 COPY ./requirements.txt .
 

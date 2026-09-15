@@ -7,6 +7,7 @@ Storage Service — FastAPI REST wrapper over SQLite for detection persistence.
 Endpoints:
   POST   /detections          Insert one detection
   POST   /detections/batch    Bulk insert detections
+  POST   /detections/query    Run a validated structured detection query
   GET    /detections          Query detections (filter by label, confidence, id window)
   GET    /detections/summary  Per-class statistics (optionally scoped to an id window)
   GET    /detections/max_id   Current max detection id + total count (watermark)
@@ -25,6 +26,7 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
 from src.sqlite_client import SQLiteClient
+from src.query_models import DetectionQuery, DetectionQueryResponse
 
 # ── Logging ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -119,6 +121,14 @@ def insert_batch(batch: DetectionBatch, _auth: None = Depends(require_api_key)):
     records = [d.model_dump() for d in batch.detections]
     count = db.insert_many(records)
     return {"inserted": count}
+
+
+@app.post("/detections/query", response_model=DetectionQueryResponse)
+def query_detections(query: DetectionQuery):
+    """Run an allowlisted query plan. Raw SQL is never accepted."""
+    global db, _request_count
+    _request_count += 1
+    return db.query_detections(query)
 
 
 @app.get("/detections")

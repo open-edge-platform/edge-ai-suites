@@ -4,10 +4,11 @@ from service.directory_watcher import restore_camera_watchers_from_redis
 from utils.utils import upload_videos_to_dataprep
 from fastapi import FastAPI
 from api.router import router  # your custom route logic (rules, results, etc.)
-from service.mqtt_listener import start_mqtt_clients
+from service.mqtt_listener import start_frigate_client
+from service import broker_manager
 import asyncio
 import logging
-from config import REDIS_HOST, REDIS_PORT
+from config import REDIS_HOST, REDIS_PORT, NVR_SCENESCAPE_ENABLED
 import redis.asyncio as redis
 
 # Configure global logger
@@ -31,8 +32,13 @@ async def startup_event():
     app.state.redis_client = redis.from_url(
         f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True
     )
-    logger.info("🚀 FastAPI starting up... launching MQTT listener")
-    await start_mqtt_clients()
+    if NVR_SCENESCAPE_ENABLED:
+        logger.info("Scenescape mode: starting multi-broker manager")
+        await broker_manager.load_yaml_brokers()
+        await broker_manager.start_all_from_redis()
+    else:
+        logger.info("Frigate mode: starting Frigate MQTT client")
+        asyncio.create_task(start_frigate_client())
 
     # Start the camera watcher manager (restore from Redis)
     logger.info("[Watcher] Restoring camera watchers from Redis and starting directory watcher(s)...")
@@ -46,6 +52,8 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
+    if NVR_SCENESCAPE_ENABLED:
+        await broker_manager.stop_all()
     await app.state.redis_client.close()
 
 

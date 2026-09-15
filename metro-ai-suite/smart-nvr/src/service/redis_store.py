@@ -102,6 +102,49 @@ async def delete_rule(request: Request, rule_id: str) -> bool:
     return True
 
 
+# --- BROKER MANAGEMENT (scenescape mode) ---
+
+
+def _resolve_client(request):
+    return (
+        getattr(request.app.state, "redis_client", None)
+        if request
+        else fallback_redis_client
+    )
+
+
+async def save_broker(broker_id: str, broker_data: dict, request=None):
+    redis_client = _resolve_client(request)
+    await redis_client.set(f"broker:{broker_id}", json.dumps(broker_data))
+    await redis_client.sadd("brokers", broker_id)
+
+
+async def get_broker(broker_id: str, request=None):
+    redis_client = _resolve_client(request)
+    data = await redis_client.get(f"broker:{broker_id}")
+    return json.loads(data) if data else None
+
+
+async def get_brokers(request=None):
+    redis_client = _resolve_client(request)
+    broker_ids = await redis_client.smembers("brokers")
+    brokers = []
+    for bid in broker_ids:
+        data = await redis_client.get(f"broker:{bid}")
+        if data:
+            brokers.append(json.loads(data))
+    return brokers
+
+
+async def delete_broker(broker_id: str, request=None) -> bool:
+    redis_client = _resolve_client(request)
+    if not await redis_client.exists(f"broker:{broker_id}"):
+        return False
+    await redis_client.delete(f"broker:{broker_id}")
+    await redis_client.srem("brokers", broker_id)
+    return True
+
+
 # --- RESPONSE MANAGEMENT ---
 
 

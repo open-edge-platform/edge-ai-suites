@@ -92,6 +92,18 @@ Define the name of the CA cert secret.
 {{- end }}
 
 {{/*
+Compute the OVMS model storage name.
+*/}}
+{{- define "stia.ovms.storageName" -}}
+{{- $tcGpu := and .Values.ovms.trustedCompute.enabled .Values.ovms.trustedCompute.tc_gpu_enabled -}}
+{{- $targetDevice := ternary "GPU" .Values.ovms.env.targetDevice (or .Values.ovms.gpu.enabled $tcGpu) -}}
+{{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.ovms.env.weightFormat -}}
+{{- $sanitized := .Values.ovms.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
+{{- $isOpenvino := hasPrefix "OpenVINO/" .Values.ovms.env.modelName -}}
+{{- ternary (printf "%s_%s" $sanitized $targetDevice) (printf "%s_%s_%s" $sanitized $targetDevice $weightFormat) $isOpenvino -}}
+{{- end }}
+
+{{/*
 MQTT broker FQDN.
 If .Values.mqtt.host is set, use it directly.
 Otherwise, construct from serviceName + brokerNamespace.

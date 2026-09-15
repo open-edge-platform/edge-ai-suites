@@ -1,8 +1,8 @@
 {
     "integrationManifest": {
-        "id": "DLStreamerAnalyticsIntegrationVMS",
-        "name": "DLStreamerAnalyticsIntegrationVMS",
-        "description": "REST-only analytics integration example with DLStreamer Pipeline Server based Application",
+        "id": "VAP Analytics Integration",
+        "name": "VAP Analytics Integration",
+        "description": "REST-only integration with analytics applications",
         "vendor": "Open Edge Platform",
         "version": "1.0.0",
         "engineSettingsModel": {

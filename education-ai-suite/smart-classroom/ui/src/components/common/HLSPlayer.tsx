@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import videojs from "video.js";
 import "video.js/dist/video-js.css";
 import { useTranslation } from 'react-i18next';
+import { useStreamReady } from "../../hooks/useStreamReady";
 import "../../assets/css/HLSPlayer.css";
 interface Props {
   streamUrl?: string;
@@ -94,6 +95,12 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode, camera }) => {
 
   // Determine if streamUrl is a webpage or HLS stream
   const isWebpage = streamUrl && !streamUrl.endsWith('.m3u8');
+
+  // Hold the MediaMTX player back until its path actually has media.
+  const readiness = useStreamReady(
+    mode === "stream" && isWebpage ? streamUrl : undefined
+  );
+  const showPlayer = readiness !== "waiting";
 
   console.log("HLSPlayer initializing:", { 
     streamUrl, 
@@ -281,15 +288,22 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode, camera }) => {
     return (
       <div className="hls-player-container">
         {isWebpage && streamUrl ? (
-          <iframe
-            src={streamUrl}
-            scrolling="no"
-            width="100%"
-            height="100%"
-            style={{ border: 'none' }}
-            title="Stream Content"
-            allowFullScreen
-          />
+          showPlayer ? (
+            <iframe
+              src={streamUrl}
+              scrolling="no"
+              width="100%"
+              height="100%"
+              style={{ border: 'none' }}
+              title="Stream Content"
+              allowFullScreen
+            />
+          ) : (
+            <div className="stream-connecting">
+              <div className="spinner-circle"></div>
+              <p>{t("videoStream.connectingStream")}</p>
+            </div>
+          )
         ) : streamUrl ? (
           <video 
             controls 

@@ -11,8 +11,12 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 
 ## Quick Start with Setup Script
 
-1. **Clone the Repository :**
+Intel recommends using the unified setup script `setup.sh` that configures, builds, deploys,
+and manages the Smart Route Planning Agent.
 
+1. Clone the suite:
+
+   Go to the target directory of your choice and clone the suite.
    If you want to clone a specific release branch, replace `main` with the desired tag.
    To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
@@ -23,90 +27,35 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
    cd metro-ai-suite/smart-route-planning-agent
    ```
 
-2. **Configure _Smart Traffic Intersection Agent_ Node Endpoints :**
+2. Run the application:
 
-    In order to plan routes, **Smart Route Planning Agent** needs **_Smart Traffic Intersection Agents_** running on pre-defined nodes. See [this](#multi-node-stack-for-smart-route-planning-agent) to learn more.
-
-    Edit `src/data/config.json` to add the IP addresses and ports of the edge nodes where Smart Traffic Intersection Agents are running.
-
-    #### Example Configuration
-
-    ```json
-    {
-        "api_endpoint": "/api/v1/traffic/current/ws?images=false",
-        "api_hosts": [
-            {
-                "host": "ws://<node-1-ip>:<port>"
-            },
-            {
-                "host": "ws://<node-2-ip>:<port>"
-            },
-            {
-                "host": "ws://<node-3-ip>:<port>"
-            }
-        ]
-    }
-    ```
-
-3. **Set the required environment variables :**
-
-    ```bash
-    export REASONING_MODEL_NAME=<model-name>    # e.g. OpenVINO/Qwen3.5-9B-int8-ov, OpenVINO/Qwen3.6-35B-A3B-int4-ov, OpenVINO/Qwen2.5-14B-Instruct-int4-ov
-    export TAG=latest   # Make sure TAG is set to latest to pull the latest image.
-    ```
-
-4. **Run the _Smart Route Planning Agent_ along with all dependencies :**
+   The setup script provides several options. For running the service by pulling the official image (recommended for first-time
+   users):
 
    ```bash
    source setup.sh --run
    ```
 
-> **Note**: When deployed for the first time, the AI model is downloaded and converted to required format. This can take several minutes depending on your network. This model is later cached in a Docker volume, so that restarts or next deployments with same models are fast. Set `HF_TOKEN` environment variable, as well, if the model repository is gated.
+3. **Alternative setup options :**
 
-### Stop the application :
-
-   To stop and remove the containers for the application and its dependencies :
+   For a more granular control, run these commands as per your requirement:
 
    ```bash
+   # Build application image only (without starting containers)
+   source setup.sh --build
+
+   # Build application image locally and run the services
+   source setup.sh --setup
+
+   # Stop all services
    source setup.sh --stop
-   ```
 
-   To restart the application along with all the dependencies :
-
-   ```bash
+   # Restart services
    source setup.sh --restart
-   ```
 
-   To stop application along with cleaning up all the associated volumes and images:
-   _(**Caution:** This will remove all downloaded AI models for the application. Next run will re-download these models.)_
-
-   ```bash
+   # Clean up containers, volumes, images, networks, and all related resources
    source setup.sh --clean
    ```
-
-
-### Validated AI Models
-
-The following models were measured on Intel® Xeon® 5th Gen CPU:
-
-| Model | Precision | Size | Suitability |
-| --- | --- | --- | --- |
-| `OpenVINO/Qwen3.5-9B-int8-ov` | INT8 | 9GB | Dense INT8 model, suitable for basic reasoning on moderate compute environments. |
-| `OpenVINO/Qwen3.6-35B-A3B-int4-ov` | INT4 | 20GB | MoE Sparse Model, Requires less compute for the performance delivered by models with similar number of parameters. |
-| `OpenVINO/Qwen2.5-14B-Instruct-int4-ov` | INT4 | 15GB | Dense, considerably large number of parameters. Might require tweaking `OVMS_CACHE_SIZE` and `REASONING_TIMEOUT_SEC`. |
-
-
-> **IMPORTANT**: On slower hardware prefer a smaller model or consider increasing the value of REASONING_TIMEOUT_SEC or OVMS_CACHE_SIZE. See [Environment Variables Guide](./get-started/environment-variables.md)
-
-> **Note**: Before adopting a model that is not listed above, please validate it for the map updates in the UI without the fallback notice. If the OVMS container restarts repeatedly, the model is most likely not compatible.
-
-### Fallback behaviour
-
-The agent automatically falls back to rule based planning for that update, whenever:
-
-- the model server is unreachable, still loading, or times out,
-- the model could not make a decision
-- the model hullucinates (For example, names a route that does not exist or has no live traffic data.)
 
 ## Manual Setup for Advanced Users
 
@@ -118,7 +67,7 @@ manually using Docker Compose tool.
 If you prefer to configure environment variables manually instead of using the setup script,
 see the [Environment Variables Guide](./get-started/environment-variables.md) for details.
 
-### Build from Source and Deploy
+### Manual Docker Compose Tool Deployment
 
 See [Build from Source](./get-started/build-from-source.md) for instructions on building and
 running with the Docker Compose tool.
@@ -127,9 +76,10 @@ running with the Docker Compose tool.
 
 See [Deploy with Helm](./get-started/deploy-with-helm.md) for a simple Kubernetes deployment flow.
 
-## Multi-Node Stack for Smart Route Planning Agent
+## Multi-Node Deployment
 
-The Smart Route Planning Agent works in a multi-node setup with one central _Smart Route Planning Agent_ and multiple _Smart Traffic Intersection Agent_ edge nodes.
+The Smart Route Planning Agent works in a multi-node setup with one central Route Planning
+Agent and multiple Smart Traffic Intersection Agent edge nodes.
 
 ### Architecture Overview
 
@@ -140,7 +90,29 @@ The Smart Route Planning Agent works in a multi-node setup with one central _Sma
 1. Deploy the [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-traffic-intersection-agent/get-started.html#quick-start-with-setup-script) on each edge node.
 2. Ensure network connectivity between the central node and edge nodes.
 3. Note the IP address and port of each Smart Traffic Intersection Agent.
-4. Update the `api_hosts` field in the `src/data/config.json` file with all the edge node's IP address and port. See [this](#quick-start-with-setup-script) for example configuration.
+
+### Configure Edge Node Endpoints
+
+Edit `src/data/config.json` to add the IP addresses and ports of the edge nodes where Smart Traffic Intersection Agents are running.
+
+#### Example Configuration
+
+```json
+{
+    "api_endpoint": "/api/v1/traffic/current/ws?images=false",
+    "api_hosts": [
+        {
+            "host": "ws://<node-1-ip>:<port>"
+        },
+        {
+            "host": "ws://<node-2-ip>:<port>"
+        },
+        {
+            "host": "ws://<node-3-ip>:<port>"
+        }
+    ]
+}
+```
 
 > **NOTE :** We can add `api_hosts` for even just one instance, however minimum three instances of Smart Traffic Intersection Agent is recommended for proper route planning in the application.
 
@@ -150,7 +122,7 @@ After configuring the edge node endpoints, deploy the Smart Route Planning Agent
 central node:
 
 ```bash
-source setup.sh --run
+source setup.sh --setup
 ```
 
 The Route Planning Agent will query all configured Smart Traffic Intersection Agents to gather

@@ -3,6 +3,7 @@
 
 services:
   backend:
+    image: ${DOCKER_REGISTRY}intel/vms-adapter-backend:${APP_VERSION:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -35,6 +36,7 @@ services:
       - vms-net
 
   ui:
+    image: ${DOCKER_REGISTRY}intel/vms-adapter-ui:${APP_VERSION:-latest}
     build:
       context: ./ui
       dockerfile: Dockerfile

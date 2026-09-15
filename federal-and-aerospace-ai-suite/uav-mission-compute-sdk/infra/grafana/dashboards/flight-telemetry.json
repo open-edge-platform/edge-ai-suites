@@ -1,0 +1,118 @@
+{
+  "uid": "uav-flight",
+  "title": "Flight Telemetry",
+  "tags": ["uav-sdk"],
+  "schemaVersion": 38,
+  "refresh": "2s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Altitude (m)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"flight_position\")\n  |> filter(fn: (r) => r._field == \"alt_m\")"
+      }],
+      "fieldConfig": { "defaults": { "unit": "lengthm", "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 2,
+      "title": "Armed State",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"flight_status\" and r._field == \"armed\")\n  |> last()"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [{ "type": "value", "options": { "0": { "text": "DISARMED", "color": "green" }, "1": { "text": "ARMED", "color": "red" } } }],
+          "thresholds": { "mode": "absolute", "steps": [] }
+        }
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "id": 3,
+      "title": "Battery %",
+      "type": "gauge",
+      "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"flight_battery\" and r._field == \"remaining_pct\")\n  |> last()"
+      }],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent", "min": 0, "max": 100,
+          "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "red" }, { "value": 25, "color": "yellow" }, { "value": 50, "color": "green" }] }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "GPS Satellites",
+      "type": "stat",
+      "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: -1m)\n  |> filter(fn: (r) => r._measurement == \"flight_gps\" and r._field == \"satellites\")\n  |> last()"
+      }],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "red" }, { "value": 6, "color": "yellow" }, { "value": 8, "color": "green" }] } } },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background" }
+    },
+    {
+      "id": 5,
+      "title": "Roll / Pitch / Yaw (deg)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"flight_attitude\")\n  |> filter(fn: (r) => r._field == \"roll\" or r._field == \"pitch\" or r._field == \"yaw\")"
+      }],
+      "fieldConfig": { "defaults": { "unit": "degree" } }
+    },
+    {
+      "id": 6,
+      "title": "Velocity NED (m/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"flight_velocity\")"
+      }],
+      "fieldConfig": { "defaults": { "unit": "velocityms" } }
+    },
+    {
+      "id": 7,
+      "title": "Battery Voltage (V)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 7 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"flight_battery\" and r._field == \"voltage_v\")"
+      }],
+      "fieldConfig": { "defaults": { "unit": "volt" } }
+    },
+    {
+      "id": 8,
+      "title": "Relative Altitude (m)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 7 },
+      "datasource": { "type": "influxdb", "uid": "influxdb" },
+      "targets": [{
+        "refId": "A",
+        "query": "from(bucket: \"telemetry\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"flight_position\" and r._field == \"rel_alt_m\")"
+      }],
+      "fieldConfig": { "defaults": { "unit": "lengthm" } }
+    }
+  ]
+}

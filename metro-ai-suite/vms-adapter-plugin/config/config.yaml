@@ -5,12 +5,6 @@
 # All ${ENV_VAR} references are resolved from environment variables at startup.
 
 vms_instances:
-  - name: frigate-main
-    vendor: frigate
-    base_url: "http://${FRIGATE_HOST}:5000"
-    auth:
-      auth_type: none
-
   - name: nx-main
     vendor: nx_witness
     base_url: "https://${NX_HOST}:7001"

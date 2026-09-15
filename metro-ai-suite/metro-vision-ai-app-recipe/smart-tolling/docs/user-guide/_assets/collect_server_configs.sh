@@ -46,7 +46,7 @@ FILES=(
     "src/grafana/dashboards.yml"
     "src/grafana/datasources.yml"
 
-    # DLStreamer (Critical)
+    # DL Streamer (Critical)
     "src/dlstreamer-pipeline-server/config.json"
 
     # Scenescape Configs

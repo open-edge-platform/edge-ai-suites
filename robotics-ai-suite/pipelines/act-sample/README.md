@@ -8,7 +8,7 @@ In this tutorial, we will introduce how to setup ACT pipeline.
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/software_references/humanoid/sample_pipelines/imitation_learning_act.html)
 
 ## Changes to 3rd party source
 
@@ -23,7 +23,7 @@ The following patches are provided to enhance the ACT source:
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
+Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/components/ai_resources/developer_tools/oneapi.html) to setup Intel® oneAPI packages.
 
 ## Installation
 
@@ -35,16 +35,13 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 
 1. Create a Python 3.10 virtual environment with the following command:
 
-   
-
 2. Activate the virtual environment with the following command:
-
-   
 
 ### Install Intel® Extension for PyTorch
 
-> [!IMPORTANT]
-> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/troubleshooting.html).
+> **Important:**
+> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the
+> [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/resources/troubleshooting.html).
 
 Install the Intel® Extension for PyTorch with the following command:
 
@@ -75,7 +72,7 @@ The Embodied Intelligence SDK provides optimized source code for Intel® Extensi
 For Intel® Extension for PyTorch:
 
 ```bash
-sudo apt install act-ipex 
+sudo apt install act-ipex
 sudo chown -R $USER /opt/act-ipex/
 ```
 
@@ -99,91 +96,102 @@ pip install -e .
 
 ### Inference
 
-1. You can download our pre-trained weights from this link: [Download Link](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_insertion_scripted.zip). The command of training is the same as above, but you need to set the argument `--ckpt_dir` to the path of the pre-trained weights.
+1. You can download our pre-trained weights from [eci.intel.com](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_insertion_scripted.zip).
+
+   The command of training is the same as above, but you need to set the `--ckpt_dir`
+   argument to the path of the pre-trained weights.
 
 2. Convert the model checkpoint to OpenVINO IR **(Optional)**
 
-`ov_convert.py` is a script provided to convert the PyTorch model to OpenVINO IR. You can find the script in the `act-ov` directory, and see the usage with the following command:
+   `ov_convert.py` is a script provided to convert the PyTorch model to
+   OpenVINO IR. You can find the script in the `act-ov` directory, and see the usage with the following command:
 
-```bash
-cd /opt/act-ov/
-python3 ov_convert.py -h
-```
+   ```bash
+   cd /opt/act-ov/
+   python3 ov_convert.py -h
+   ```
 
-For example, you can convert the model with the following command:
+   For example, you can convert the model with the following command:
 
-```bash
-python3 ov_convert.py --ckpt_path <your_ckpt_path> --height 480 --weight 640 --camera_num 4 --chunk_size 100
-```
+   ```bash
+   python3 ov_convert.py --ckpt_path <your_ckpt_path> --height 480 --weight 640 --camera_num 4 --chunk_size 100
+   ```
 
-> [!IMPORTANT]
-> Please make sure the arguments `--chunk_size`, `--kl_weight`, `--hidden_dim`, `--dim_feedforward`, `--camera_num` are the same as the training arguments.
+   > **Important:**
+   > Please make sure the arguments `--chunk_size`, `--kl_weight`, `--hidden_dim`, `--dim_feedforward`, `--camera_num`
+   > are the same as the training arguments.
 
-3. The pipeline supports configurations with up to four cameras. You can modify the `constants.py` file in the source directory to define the number of cameras. Below are examples of configurations for four cameras and one camera:
+3. The pipeline supports configurations with up to four cameras.
 
-```
-# In /opt/act-ov/constants.py
-SIM_TASK_CONFIGS = {
-    'sim_insertion_scripted': {
-        'dataset_dir': DATA_DIR + '/sim_insertion_scripted',
-        'num_episodes': 50,
-        'episode_len': 400,
-        'camera_names': ['top', 'angle', 'left_wrist', 'right_wrist']
-    },
-}
+   You can modify the `constants.py` file in the source directory to define the
+   number of cameras. Below are examples of configurations for four cameras and one camera:
 
-# In /opt/act-ipex/constants.py
-SIM_TASK_CONFIGS = {
-    'sim_insertion_scripted': {
-        'dataset_dir': DATA_DIR + '/sim_insertion_scripted',
-        'num_episodes': 50,
-        'episode_len': 400,
-        'camera_names': ['top']
-    },
-}
-```
+   ```python
+   # In /opt/act-ov/constants.py
+   SIM_TASK_CONFIGS = {
+       'sim_insertion_scripted': {
+           'dataset_dir': DATA_DIR + '/sim_insertion_scripted',
+           'num_episodes': 50,
+           'episode_len': 400,
+           'camera_names': ['top', 'angle', 'left_wrist', 'right_wrist']
+       },
+   }
 
-Below is a camera viewer showcasing four different camera perspectives, the left one is the `angle` camera, and the right one is the `top` camera. The middle two are the `left and right wrist` cameras, respectively.
+   # In /opt/act-ipex/constants.py
+   SIM_TASK_CONFIGS = {
+       'sim_insertion_scripted': {
+           'dataset_dir': DATA_DIR + '/sim_insertion_scripted',
+           'num_episodes': 50,
+           'episode_len': 400,
+           'camera_names': ['top']
+       },
+   }
+   ```
 
-![act-sim-cameras](README.assets/act-sim-cameras.png)
+   Below is a camera viewer showcasing four different camera perspectives, the
+   left one is the `angle` camera, and the right one is the `top` camera.
+   The middle two are the `left and right wrist` cameras, respectively.
+
+   ![act-sim-cameras](README.assets/act-sim-cameras.png)
 
 4. Evaluate the policy with the following command:
 
-```bash
-python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
-```
+   ```bash
+   python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
+   ```
 
-> [!NOTE]
-> `--eval` is used to evaluate the policy.
-> `--device` is used to set the device to CPU or GPU.
-> `--temporal_agg` can be used to enable the temporal aggregation algorithm.
-> `--onscreen_render` can be used to enable onscreen rendering.
+   > **Note:**
+   >
+   > - `--eval` is used to evaluate the policy.
+   > - `--device` is used to set the device to CPU or GPU.
+   > - `--temporal_agg` can be used to enable the temporal aggregation algorithm.
+   > - `--onscreen_render` can be used to enable onscreen rendering.
 
-When the `--onscreen_render` parameter is enabled, the successful inference result appears as follows:
+   When the `--onscreen_render` parameter is enabled, the successful inference result appears as follows:
 
-![act-sim-insertion-demo](README.assets/act-sim-insertion-demo.gif)
+   ![act-sim-insertion-demo](README.assets/act-sim-insertion-demo.gif)
 
 ### Training **(Optional)**
 
-> [!IMPORTANT]
+> **Important:**
 > Please refer to the [ALOHA paper](https://arxiv.org/abs/2304.13705) for instructions on setting up a machine with the training environment.
 
 1. Generate 50 episodes with the following command:
 
-```bash
-# Bimanual Insertion task
-python3 record_sim_episodes.py --task_name sim_insertion_scripted --dataset_dir <data save dir> --num_episodes 50
-```
+   ```bash
+   # Bimanual Insertion task
+   python3 record_sim_episodes.py --task_name sim_insertion_scripted --dataset_dir <data save dir> --num_episodes 50
+   ```
 
 2. Visualize the episode with the following command:
 
-```bash
-python3 visualize_episodes.py --dataset_dir <data save dir> --episode_idx 0
-```
+   ```bash
+   python3 visualize_episodes.py --dataset_dir <data save dir> --episode_idx 0
+   ```
 
 3. Train ACT with the following command:
 
-```bash
-# Bimanual Insertion task
-python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0
-```
+   ```bash
+   # Bimanual Insertion task
+   python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0
+   ```

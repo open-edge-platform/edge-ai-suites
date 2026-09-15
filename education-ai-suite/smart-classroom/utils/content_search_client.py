@@ -116,5 +116,5 @@ class ContentSearchClient:
             raw_results = data.get("data", {}).get("results", [])
             return self._map_results(raw_results)
         except Exception as e:
-            logger.warning("Content-search search failed, will fall back to FAISS: %s", e)
+            logger.warning("Content-search search failed: %s", e)
             return None

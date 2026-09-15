@@ -63,5 +63,8 @@ VLM_CACHE_SIZE = os.environ.get("VLM_CACHE_SIZE", "4")
 # Enable/Disable Embedding
 ENABLE_EMBEDDING = os.environ.get("ENABLE_EMBEDDING", "false").lower() in ("true", "1", "yes")
 
-# Forced NPU resolution
-NPU_FORCED_RESOLUTION = 160
+# NPU-specific token length controls for static-shape LLM pipelines.
+# Defaults follow documented behavior: prompt up to 1024 tokens and response
+# generation of at least 128 tokens unless EOS is reached or a lower limit is set.
+NPU_MAX_PROMPT_LENGTH = os.environ.get("NPU_MAX_PROMPT_LENGTH", "1024")
+NPU_MIN_RESPONSE_LENGTH = os.environ.get("NPU_MIN_RESPONSE_LENGTH", "128")

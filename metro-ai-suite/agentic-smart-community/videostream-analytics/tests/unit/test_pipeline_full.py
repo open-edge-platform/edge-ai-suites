@@ -50,14 +50,14 @@ class TestFullPipeline:
         return p
 
     def test_pipeline_produces_motion_clips(self, pipeline, data_dir, mock_sink):
-        """Pipeline should produce at least 1 motion clip from child_safety_demo.mp4."""
+        """Pipeline should produce at least one motion clip from the generated video."""
         pipeline.start()
         # Let it run for 20 seconds (enough for motion events to trigger)
         time.sleep(20)
         pipeline.stop()
 
         # Check clip files were produced
-        # Phase 7: data_dir is already the per-source root (no source_id nesting).
+        # data_dir is already the per-source root (no source_id nesting).
         motion_dir = os.path.join(data_dir, "motion_events")
         clip_files = []
         if os.path.exists(motion_dir):
@@ -76,7 +76,7 @@ class TestFullPipeline:
         time.sleep(20)
         pipeline.stop()
 
-        # Phase 7: data_dir is already the per-source root (no source_id nesting).
+        # data_dir is already the per-source root (no source_id nesting).
         motion_dir = os.path.join(data_dir, "motion_events")
         clip_files = []
         if os.path.exists(motion_dir):
@@ -94,15 +94,16 @@ class TestFullPipeline:
                 frame_count += 1
             cap.release()
             assert frame_count > 0, f"Clip has no frames: {clip_path}"
-            assert frame_count > 20, f"Clip too short ({frame_count} frames): {clip_path}"
+            # No minimum-length assertion: short motion-end/shutdown tails are
+            # kept by design (min_duration gates cut frequency, not content).
 
     def test_clip_duration_reasonable(self, pipeline, data_dir, mock_sink):
-        """Clip duration should be within min_duration to interval range."""
+        """Clip duration is bounded above by max_duration; short tails are kept."""
         pipeline.start()
         time.sleep(20)
         pipeline.stop()
 
-        # Phase 7: data_dir is already the per-source root (no source_id nesting).
+        # data_dir is already the per-source root (no source_id nesting).
         motion_dir = os.path.join(data_dir, "motion_events")
         clip_files = []
         if os.path.exists(motion_dir):
@@ -120,11 +121,13 @@ class TestFullPipeline:
                 frame_count += 1
             cap.release()
             duration = frame_count / fps
-            # Fixed interval: duration should be around interval (10s) or shorter for tail segments
-            assert 1.0 <= duration <= 11.0, f"Clip duration {duration:.1f}s out of range"
+            # Cuts happen at max_duration; motion-end/shutdown tails may be any
+            # length — kept by design (min_duration is a cut-frequency guard,
+            # not a drop filter). Ceiling: max_duration + 1s tolerance.
+            assert 0 < duration <= 11.0, f"Clip duration {duration:.1f}s out of range"
 
     def test_sink_receives_no_status_events(self, pipeline, mock_sink):
-        """§32: RTSP connection status is no longer pushed to the sink/webhook.
+        """RTSP connection status is not pushed to the sink/webhook.
         Starting and stopping the pipeline must not emit any `status` envelope
         (health is exposed via GET /sources/{id}/status; internal pipeline.status
         still tracks it)."""
@@ -158,6 +161,23 @@ class TestFullPipeline:
         assert payload["summary_clip_input"].endswith(".mp4")
         assert isinstance(payload["start_time"], str)
         assert isinstance(payload["end_time"], str)
+
+    def test_non_roi_clip_is_emitted_as_written(self, pipeline, tmp_path, mock_sink):
+        """Clips are H.264 by construction (SegmentExtractor writes H.264
+        directly): emit passes the path through, no transcode step."""
+        clip_path = str(tmp_path / "motion.mp4")
+        result = MagicMock(
+            path=clip_path,
+            start_time="2026-07-30T09:00:00",
+            end_time="2026-07-30T09:00:04",
+            duration_s=4.0,
+        )
+
+        pipeline._emit_segment(result)
+
+        payload = mock_sink.emit.call_args.args[0]["payload"]
+        assert payload["event_file_path"] == clip_path
+        assert payload["summary_clip_input"] == clip_path
 
     def test_pipeline_stops_cleanly(self, pipeline, mock_sink):
         """Pipeline should stop without errors and report stopped status."""

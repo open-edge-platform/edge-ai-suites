@@ -5,7 +5,7 @@
 import os
 import sys
 from datetime import datetime, timezone
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -117,3 +117,93 @@ async def test_publish_batch_skips_network_when_disabled():
         await client.publish_batch([{"name": "metric", "fields": {"value": 1}, "tags": {}}])
 
     session.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_publish_batch_sends_metrics_when_enabled():
+    with patch.dict(
+        os.environ,
+        {
+            "METRICS_MANAGER_URL": "http://metrics-manager:9090",
+            "METRICS_PUSH_ENABLED": "true",
+            "METRICS_PUSH_TIMEOUT_SECONDS": "1.5",
+        },
+        clear=True,
+    ):
+        client = MetricsManagerClient(MetricsConfig())
+
+    posted_payload = {}
+
+    class FakeResponse:
+        status = 202
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def text(self):
+            return "accepted"
+
+    class FakeSession:
+        def __init__(self, *args, **kwargs):
+            self.timeout = kwargs.get("timeout")
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        def post(self, url, json):
+            posted_payload["url"] = url
+            posted_payload["json"] = json
+            return FakeResponse()
+
+    with patch("services.metrics_client.aiohttp.ClientSession", FakeSession):
+        await client.publish_batch([{"name": "metric", "fields": {"value": 1}, "tags": {}}])
+
+    assert posted_payload["url"] == "http://metrics-manager:9090/api/v1/metrics"
+    assert posted_payload["json"] == {"metrics": [{"name": "metric", "fields": {"value": 1}, "tags": {}}]}
+
+
+@pytest.mark.asyncio
+async def test_publish_batch_handles_rejection_response():
+    with patch.dict(
+        os.environ,
+        {
+            "METRICS_MANAGER_URL": "http://metrics-manager:9090",
+            "METRICS_PUSH_ENABLED": "true",
+        },
+        clear=True,
+    ):
+        client = MetricsManagerClient(MetricsConfig())
+
+    class FakeResponse:
+        status = 500
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        async def text(self):
+            return "server error"
+
+    class FakeSession:
+        def __init__(self, *args, **kwargs):
+            self.timeout = kwargs.get("timeout")
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return None
+
+        def post(self, url, json):
+            return FakeResponse()
+
+    with patch("services.metrics_client.aiohttp.ClientSession", FakeSession):
+        await client.publish_batch([{"name": "metric", "fields": {"value": 1}, "tags": {}}])

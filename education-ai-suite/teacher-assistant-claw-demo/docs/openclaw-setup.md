@@ -2,7 +2,7 @@
 
 The OpenClaw based agent functions as the "Teacher Assistant" persona that enables the staff of a school, which includes teachers, to create their own custom report based on the per classroom data provided by the Smart Classroom application. The custom report can be at a class level or at a grade level combining all classrooms in that grade and at the school level which combines all the grades. The deployment setup envisaged is shown in the figure below.
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────────────┐
 │                        Teacher Assistant Demo                        │
 │  ┌──────────┐     ┌─────────────────┐    ┌──────────────────────┐    │
@@ -76,8 +76,8 @@ Perform the following steps to setup OpenClaw agent for the Teacher Assistant de
 
 Clone the repository and navigate to the Teacher Assistant demo directory. All subsequent commands assume you are in this directory.
 
-``` bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+```bash
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/education-ai-suite/teacher-assistant-claw-demo
 ```
 
@@ -147,7 +147,7 @@ chmod +x ./setup-openclaw-workspace.sh
 
 This script creates the following structure:
 
-```
+```text
 ~/.openclaw/workspace/
 ├── SOUL.md                          # Agent persona and behavior
 ├── AGENTS.md                        # Agent definitions

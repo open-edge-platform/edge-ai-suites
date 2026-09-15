@@ -63,7 +63,7 @@ pip install -e .[pi-ov] --extra-index https://download.pytorch.org/whl/cpu
 
 ## Model Preparation
 Running model inference with the OpenVINO toolkit requires converting the model to the OpenVINO IR format.
-You can use the [checkpoint](https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz) finetuned on a simulation task for convenience. 
+You can use the [checkpoint](https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz) finetuned on a simulation task for convenience.
 Alternatively, you can convert your own checkpoints trained using the LeRobot framework.
 ```bash
 cd examples/pi05_with_openvino
@@ -81,7 +81,7 @@ To convert the standard Pi05 model to OpenVINO IR (without RTC support), use the
 - `--override`: (Optional) Overwrite existing files.
 - `--camera_num`, `-c`: (Optional) Number of cameras (batch size for image input). Default: 4.
 
-> **Notice**: Using the Pi0.5 model in LeRobot will automatically download the [google/paligemma-3b-pt-224](https://huggingface.co/google/paligemma-3b-pt-224) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account. 
+> **Notice**: Using the Pi0.5 model in LeRobot will automatically download the [google/paligemma-3b-pt-224](https://huggingface.co/google/paligemma-3b-pt-224) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account.
 > If you encounter download errors, follow the [instructions](https://huggingface.co/docs/huggingface_hub/quick-start#authentication) on how to log in and authorize your account.
 
 Examples (`uv`):
@@ -124,7 +124,7 @@ uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
     --override
 ```
 
-Exported OpenVINO models with RTC require two extra inputs: `prev_chunk_left_over` and `prefix_weights` during inference. 
+Exported OpenVINO models with RTC require two extra inputs: `prev_chunk_left_over` and `prefix_weights` during inference.
 > **Note**: When it is unnecessary to enable the RTC function (e.g., the first inference step that doesn't have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
 
 ## Run Pipeline
@@ -132,12 +132,14 @@ Exported OpenVINO models with RTC require two extra inputs: `prev_chunk_left_ove
 Bind the `xe` driver to the iGPU, as it provides better performance than `i915` in this scenario.
 
 - Check the kernel driver in use for the iGPU:
-    ```
+
+    ```bash
     lspci -s 00:02.0 -vvv
     ```
 
 - If it does not show "Kernel driver in use: xe", run the following script to bind the `xe` driver:
-    ```
+
+    ```bash
     #!/bin/bash
     set -e
 

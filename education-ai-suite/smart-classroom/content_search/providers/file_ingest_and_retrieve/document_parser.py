@@ -5,7 +5,6 @@ import hashlib
 import logging
 import os
 import re
-import uuid
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -423,7 +422,7 @@ class DocumentParser:
 
     @staticmethod
     def _is_ocr_enabled() -> bool:
-        enabled = os.getenv("OCR_ENABLED", "false").lower() in ("true", "1", "yes")
+        enabled = os.getenv("OCR_ENABLED", "true").lower() in ("true", "1", "yes")
         if not enabled:
             logger.info("OCR is disabled (OCR_ENABLED env var). Skipping image text extraction.")
         return enabled
@@ -491,7 +490,7 @@ class DocumentParser:
         if not nodes and image_files:
             logger.warning(
                 f"Found {len(image_files)} image(s) in {file_path} but OCR service returned no text. "
-                f"Check that OCR is enabled (ocr.enabled: true in config.yaml) and the service is running at {self.ocr_service_url}"
+                f"Check that OCR is enabled (content_search.ocr_enabled: true in config.yaml) and the service is running at {self.ocr_service_url}"
             )
         return nodes
 
@@ -503,21 +502,13 @@ class DocumentParser:
                     resp = client.post(
                         f"{self.ocr_service_url}/ocr/extract-text",
                         files={'file': (Path(image_path).name, f, 'application/octet-stream')},
-                        headers={'X-Session-ID': str(uuid.uuid4())},
                     )
             if resp.status_code != 200:
                 logger.warning(f"OCR service returned {resp.status_code} for {image_path}")
                 return ""
-            result_file = resp.json().get("data", {}).get("result_file")
-            if result_file and os.path.exists(result_file):
-                with open(result_file, 'r', encoding='utf-8') as tf:
-                    return tf.read()
-            if result_file and not os.path.isabs(result_file):
-                alt_path = os.path.join("..", result_file)
-                if os.path.exists(alt_path):
-                    with open(alt_path, 'r', encoding='utf-8') as tf:
-                        return tf.read()
-            return ""
+            # No X-Session-ID: we only want the text back, and sending one would
+            # make the service create a session folder per image under storage/.
+            return resp.json().get("data", {}).get("text", "")
         except Exception as e:
             logger.warning(f"OCR service call failed for {image_path}: {e}")
             return ""

@@ -8,6 +8,7 @@ import '../entities/ingest_task_result.dart';
 import '../entities/qa_models.dart';
 import '../entities/health_status.dart';
 import '../entities/file_asset.dart';
+import 'ui_keepalive_interceptor.dart';
 
 /// Result of POST /api/v1/object/upload-ingest
 class UploadIngestResult {
@@ -41,6 +42,9 @@ class ContentSearchApiService {
       ),
     );
 
+    // Keep UI responsive during long VLM operations (2-3 minutes)
+    _dio.interceptors.add(UiKeepAliveInterceptor());
+
      assert(() {
        _dio.interceptors.add(
          LogInterceptor(
@@ -71,7 +75,14 @@ class ContentSearchApiService {
   /// Equivalent of getCsHealth() in React's api.ts.
   Future<HealthStatus> checkHealth() async {
     try {
-      final res = await _dio.get('/api/v1/system/health');
+      // 503 means degraded, not unreachable: the body still carries the
+      // per-service detail, so let it through instead of falling into catch.
+      final res = await _dio.get(
+        '/api/v1/system/health',
+        options: Options(
+          validateStatus: (s) => s != null && (s < 400 || s == 503),
+        ),
+      );
       return HealthStatus.fromJson(res.data as Map<String, dynamic>);
     } catch (_) {
       return HealthStatus.unreachable();

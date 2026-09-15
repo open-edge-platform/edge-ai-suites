@@ -73,67 +73,66 @@ To set up the integrated deployment, obtain the chart and install it with your e
 
 1. Run the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning-rag/tags) from Docker Hub. Refer to the release notes for details on the latest version number to use for the sample application.
 
-     ```bash
-	 helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
-     ```
-	 > Note: When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
+   ```bash
+   helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
+   ```
+
+   > **Note:** When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
 
 2. Extract the `.tgz` file.
 
-     ```bash
-	 tar -xvf live-video-captioning-rag-<version-no>.tgz
-	 cd live-video-captioning-rag
-	 ```
+   ```bash
+   tar -xvf live-video-captioning-rag-<version-no>.tgz
+   cd live-video-captioning-rag
+   ```
 
 3. Configure the `values-override.yaml` using the [Select target node](#select-the-target-node) and [Configured required values](#configure-required-values) sections below.
 
 4. Install/Deploy the chart.
 
-     ```bash
-	 helm install lvc-rag . \
-	 -f values-override.yaml \
-	 -n "$my_namespace"
-	 ```
+   ```bash
+   helm install lvc-rag . \
+   -f values-override.yaml \
+   -n "$my_namespace"
+   ```
 
 5. See the [Verify the deployment section](#verify-the-deployment) to confirm the deployment.
 
 6. If you modify the chart or subcharts, refresh dependencies first:
 
-     ```bash
-	 # Update/refresh the chart
-	 helm dependency update
-	 ```
+   ```bash
+   # Update/refresh the chart
+   helm dependency update
+   ```
 
    Then upgrade the deployment:
 
-	 ```bash
-	 helm upgrade lvc-rag . \
-	 -f values-override.yaml \
-	 -n "$my_namespace"
-	 ```
+   ```bash
+   helm upgrade lvc-rag . \
+   -f values-override.yaml \
+   -n "$my_namespace"
+   ```
 
-6. Uninstall the chart.
+7. Uninstall the chart.
 
-     ```bash
-	 helm uninstall lvc-rag -n "$my_namespace"
-	 ```
+   ```bash
+   helm uninstall lvc-rag -n "$my_namespace"
+   ```
 
 #### Option 2: Install from source
 
 1. Clone the repository.
 
-	 ```bash
-	 # Clone latest mainline
-	 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
-	 # Or clone a specific release branch
-	 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
-	 ```
+   ```bash
+   # Clone the mainline branch
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
+   ```
 
 2. Navigate to the chart directory.
 
-	 ```bash
-	 cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag/charts
-	 ```
+   ```bash
+   cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag/charts
+   ```
 
 ### Select the target node
 
@@ -211,12 +210,12 @@ global:
 
 > **Important:** the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
 >
->For example:
+> For example:
 >
->- If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
->- If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
+> - If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
+> - If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
 >
->If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
+> If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
 
 #### Optional: Detection pipeline
 

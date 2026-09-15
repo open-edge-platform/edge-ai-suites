@@ -8,6 +8,122 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # Summary of Improvements
 
+## 🗓️ July 2026 — Latest Updates
+
+### psutil-Based Resource Monitoring, Replacing pidstat
+
+`monitor_resources.py` no longer shells out to `pidstat` at all. A minimal `psutil`-based
+sampler, `_psutil_probe.py`, now provides CPU/memory data for both its primary logging mode and
+`--continuous` — `pidstat`'s text output has no structured/JSON mode, so every downstream
+consumer had grown its own fragile positional-column parser (thread-vs-PID-mode heuristics,
+12h/24h timestamp regex, ANSI stripping) independently.
+
+Samples ALL processes system-wide (not just ones that looked ROS2-related at a single
+point-in-time `ps aux` snapshot), avoiding missed samples on short runs and on process-name
+churn from node restarts. Downstream consumers classify each entry as ROS2-related or not
+post-hoc, using the full log.
+
+**New session output:**
+- `resource_usage.json` — single, pretty-printed JSON document (all processes), rewritten
+  atomically (write-to-temp + rename) after every sample so it's always valid and safe for live
+  pollers (e.g. `prometheus_exporter.py`) to re-read mid-run.
+- `resource_usage_ros2.json` — sidecar with the same shape, filtered to ROS2 PIDs.
+- Replaces the old `resource_usage.log` pidstat text dump.
+
+**Files changed:** `src/_psutil_probe.py` (new), `src/monitor_resources.py`,
+`src/visualize_resources.py`, `src/analyze_trigger_latency.py`, `src/prometheus_exporter.py`,
+`src/view_average.py`, `src/show_sessions.py`, `src/summarize_benchmark.py`.
+
+`--continuous` (interactive console mode) now reuses the same long-lived `_psutil_probe.py`
+subprocess, refreshing the ROS2 PID list every ~10 seconds and printing a live per-process
+CPU/RSS/%MEM table -- no more `pidstat` dependency anywhere in `monitor_resources.py`.
+
+### Per-Node CPU/Memory Attribution
+
+`resource_usage.json`/`resource_usage_ros2.json` now include a `ros2_node_map` (PID → node
+name) sibling key to `ros2_pids`, resolved from the `__node:=<name>` `--ros-args` remap (falling
+back to the bare executable name when absent) — no extra subprocess calls beyond what
+`ros2_pids` already required.
+
+`visualize_resources.py` groups per-PID CPU/memory series by node name for a per-node view; older
+sessions captured before this change simply skip that section (no `ros2_node_map` present).
+
+**Known limitation:** PIDs are not stable identifiers across a long-running session — the OS can
+recycle a PID after its original process exits (e.g. a crashed/respawned node), so a PID
+observed late in a run is not guaranteed to refer to the same node as when first captured. Same
+caveat applies to the existing `ros2_pids` field.
+
+### Per-Process Disk I/O Counters
+
+`monitor_resources.py --io` (`-d`) now actually collects per-process disk I/O instead of just
+logging a warning that it was unsupported. `_psutil_probe.py --disk-io` reads
+`proc.io_counters()` each tick and reports `io_read_bytes`/`io_write_bytes` as deltas since the
+previous tick (same prev-value-cache pattern already used for per-thread CPU deltas), so
+consumers get incremental bytes transferred per sample rather than psutil's raw cumulative
+counters. `AccessDenied`/unsupported platforms are handled gracefully — that process's entry
+simply omits the I/O fields for that tick.
+
+`visualize_resources.py --disk-io` adds an optional panel plotting the top-N processes by total
+read+write bytes over the session (solid = read, dashed = write). `monitor_stack.py --io` passes
+the flag through end-to-end for orchestrated sessions.
+
+**Files changed:** `src/_psutil_probe.py`, `src/monitor_resources.py`,
+`src/visualize_resources.py`, `src/monitor_stack.py`.
+
+### Context-Switch Counters for Contention Diagnostics
+
+High CPU usage alone doesn't distinguish "this node is genuinely compute-heavy" from "this node
+is being starved by contention." `monitor_resources.py -x`/`--ctx-switches` collects per-process
+voluntary/involuntary context-switch counts via `_psutil_probe.py --ctx-switches`, which reads
+`proc.num_ctx_switches()` each tick and reports the delta since the previous tick (same
+prev-value-cache pattern as the disk I/O and per-thread CPU deltas above). A spike in
+*involuntary* switches (the process was preempted, not that it voluntarily yielded) is a
+privilege-free signal of CPU oversubscription — relevant on constrained hardware such as the
+PTL box. No new privileges are required.
+
+`visualize_resources.py --ctx-switches` adds an optional panel plotting the top-N processes by
+total involuntary switches (solid = involuntary, dashed = voluntary for context).
+`monitor_stack.py --ctx-switches` passes the flag through end-to-end for orchestrated sessions.
+
+**Files changed:** `src/_psutil_probe.py`, `src/monitor_resources.py`,
+`src/visualize_resources.py`, `src/monitor_stack.py`.
+
+### Per-Core Hot-Spotting Joined With Per-Node Attribution
+
+`visualize_resources.py`'s existing per-core heatmap shows total CPU% per core over time, but
+not which node dominates each core — so it couldn't distinguish "core-bound due to poor
+affinity/scheduling" from "generally CPU-heavy." `--core-nodes` adds a new
+`aggregate_core_by_node()` grouping that joins the existing per-core CPU series with
+`ros2_node_map` (#58), then `plot_core_node_stacking()` renders one stacked-area subplot per
+busiest core: a stack dominated by a single node signals an affinity/scheduling hot spot; an
+even mix signals genuinely shared CPU-heavy load. PIDs absent from `ros2_node_map` are grouped
+as `(non-ROS2)`; per core, only the busiest few node labels are kept individually and the rest
+are summed into `(other)`. Requires `ros2_node_map` in the log — skipped with a warning
+otherwise (older sessions).
+
+**Files changed:** `src/visualize_resources.py`.
+
+### Correlate Latency Spikes With Resource Usage
+
+`resource_usage.json` and `analyze_trigger_latency.py`'s per-pair timing data were both
+timestamped but never cross-referenced — two disconnected charts instead of a root-cause story
+("node X spiked CPU right before this latency outlier"). `analyze_trigger_latency.py` now flags
+any event at or above its own (node, input, output) pair's `p99_ms` (reusing the percentile
+already computed, no second statistical pass), joins it to the nearest `resource_usage.json`
+sample by timestamp (`_load_resource_samples()` + `_nearest_sample_index()`, bisect-based), and
+attributes the top-3 CPU consumers at that moment via `ros2_node_map` (#58).
+
+Surfaced as a new `latency_spikes` array in `kpi.json` (Level 1), sorted by latency descending
+and capped to `--max-latency-spikes` (default 5) to keep the payload bounded. Empty when
+`resource_usage.json` is absent or no event crosses its pair's threshold.
+
+**Known limitation:** the join assumes both timestamp sources share a wall-clock time base. A
+session run with `--use-sim-time` may have `out_ts` (simulated time) diverge from the resource
+probe's wall-clock samples once `/clock` comes online, making the correlation unreliable for
+that portion of the run — same category as the sim-time bug fixed in `ros2_graph_monitor.py`.
+
+**Files changed:** `src/analyze_trigger_latency.py`, `schemas/kpi_level1_v1.json`.
+
 ## 🗓️ May 2026 — Latest Updates
 
 ### Intel RAPL CPU Package Power Monitoring (0.1.17)
@@ -422,7 +538,7 @@ monitoring_sessions/
 └── 20260209_143022/          # Auto-timestamped
     ├── session_info.txt      # What you monitored
     ├── graph_timing.csv      # Raw timing data
-    ├── resource_usage.log    # Raw CPU/memory data
+    ├── resource_usage.json    # Raw CPU/memory data
     └── visualizations/       # Auto-generated plots
 ```
 
@@ -526,7 +642,7 @@ monitoring_sessions/
 ├── 20260209_143022/
 │   ├── session_info.txt
 │   ├── graph_timing.csv
-│   ├── resource_usage.log
+│   ├── resource_usage.json
 │   └── visualizations/
 │       ├── timing_delays.png
 │       ├── message_frequencies.png

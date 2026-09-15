@@ -12,32 +12,80 @@ def render_pdf_to_pngs(
     dpi: int = 300,
     contrast_enhance: bool = False,
     contrast_factor: float = 1.5,
+    page_columns: int = 1,
+    column_split_ratio: float = 0.5,
 ) -> list[Path]:
     """Render each page of ``pdf_path`` to ``out_dir/page_N.png``.
 
-    Returns the list of written PNG paths in page order.
+    When ``page_columns`` is 2, each rendered page is split vertically into a
+    left and a right half (at ``column_split_ratio`` of the width) and emitted
+    as two consecutive pages, so downstream reading order is left-then-right.
+    Returns the list of written PNG paths in reading order.
     """
     out_dir.mkdir(parents=True, exist_ok=True)
     zoom = dpi / 72.0
     matrix = fitz.Matrix(zoom, zoom)
 
+    from PIL import Image, ImageEnhance
+    import io
+
     paths: list[Path] = []
+    page_no = 0
     doc = fitz.open(str(pdf_path))
     try:
         for i in range(len(doc)):
             pix = doc[i].get_pixmap(matrix=matrix)
-            page_path = out_dir / f"page_{i + 1}.png"
+            img = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
             if contrast_enhance:
-                from PIL import Image, ImageEnhance
-                import io
-                img = Image.open(io.BytesIO(pix.tobytes("png"))).convert("RGB")
                 img = ImageEnhance.Contrast(img).enhance(contrast_factor)
-                img.save(str(page_path))
+
+            if page_columns == 2:
+                split_x = int(img.width * column_split_ratio)
+                halves = [
+                    img.crop((0, 0, split_x, img.height)),
+                    img.crop((split_x, 0, img.width, img.height)),
+                ]
             else:
-                pix.save(str(page_path))
-            paths.append(page_path)
+                halves = [img]
+
+            for half in halves:
+                page_no += 1
+                page_path = out_dir / f"page_{page_no}.png"
+                half.save(str(page_path))
+                paths.append(page_path)
     finally:
         doc.close()
+    return paths
+
+
+def split_pages_into_columns(
+    page_images: list[Path],
+    out_dir: Path,
+    column_split_ratio: float = 0.5,
+) -> list[Path]:
+    """Cut each page in ``page_images`` vertically at ``column_split_ratio``.
+
+    Emits ``out_dir/page_N.png`` with left and right halves as consecutive
+    pages, so downstream reading order is left-then-right.
+    """
+    from PIL import Image
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    paths: list[Path] = []
+    page_no = 0
+    for src in page_images:
+        with Image.open(src) as img:
+            img = img.convert("RGB")
+            split_x = int(img.width * column_split_ratio)
+            halves = [
+                img.crop((0, 0, split_x, img.height)),
+                img.crop((split_x, 0, img.width, img.height)),
+            ]
+        for half in halves:
+            page_no += 1
+            page_path = out_dir / f"page_{page_no}.png"
+            half.save(str(page_path))
+            paths.append(page_path)
     return paths
 
 

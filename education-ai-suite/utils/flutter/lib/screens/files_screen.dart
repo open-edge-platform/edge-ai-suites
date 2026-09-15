@@ -21,6 +21,12 @@ class _FilesScreenState extends ConsumerState<FilesScreen> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    ref.listenManual(filesRefreshProvider, (_, __) => _load());
+  }
+
   Future<void> _load() async {
     setState(() {
       _loading = true;

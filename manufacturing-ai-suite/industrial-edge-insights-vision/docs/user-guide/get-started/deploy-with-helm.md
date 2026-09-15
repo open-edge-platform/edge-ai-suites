@@ -114,7 +114,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0
+         helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.8.0
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -122,7 +122,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.3.0
+         helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.4.0
          ```
 
          <!--hide_directive
@@ -137,7 +137,7 @@ configured Kubernetes cluster.
          <!--hide_directive:sync: pallet-detect hide_directive-->
 
          ```bash
-         tar -xvf pallet-defect-detection-reference-implementation-2.7.0.tgz
+         tar -xvf pallet-defect-detection-reference-implementation-2.8.0.tgz
          ```
 
          <!--hide_directive ::: hide_directive-->
@@ -145,7 +145,7 @@ configured Kubernetes cluster.
          <!--hide_directive :sync: pcb-detect hide_directive-->
 
          ```bash
-         tar -xvf pcb-anomaly-detection-1.3.0.tgz
+         tar -xvf pcb-anomaly-detection-1.4.0.tgz
          ```
 
          <!--hide_directive
@@ -189,6 +189,7 @@ configured Kubernetes cluster.
        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
+       no_proxy: <no proxy> # append following to existing no_proxy - localhost,127.0.0.1,.local,.cluster.local
        SAMPLE_APP: pallet-defect-detection # application directory
    webrtcturnserver:
        username: <username>  # WebRTC credentials e.g. intel1234
@@ -206,6 +207,7 @@ configured Kubernetes cluster.
        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
+       no_proxy: <no proxy> # append following to existing no_proxy - localhost,127.0.0.1,.local,.cluster.local
        SAMPLE_APP: pcb-anomaly-detection # application directory
    webrtcturnserver:
        username: <username>  # WebRTC credentials e.g. intel1234
@@ -217,7 +219,9 @@ configured Kubernetes cluster.
    ::::
    hide_directive-->
 
-   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
+   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 5. Install prerequisites. Run with sudo if needed.
 
@@ -406,6 +410,8 @@ configured Kubernetes cluster.
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
     ```
 
+    > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/`. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
+    
     <!--hide_directive ::: hide_directive-->
     <!--hide_directive :::{tab-item} hide_directive--> PCB Anomaly Detection
     <!--hide_directive :sync: pcb-detect hide_directive-->
@@ -426,16 +432,16 @@ configured Kubernetes cluster.
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
 
+    > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/anomaly/`. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
+
     <!--hide_directive
     :::
     ::::
     hide_directive-->
 
-   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/` for Pallet Defect Detection. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
-
 ### Start GPU- and NPU-Based Pipelines
 
-For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines.
+For GPU- and NPU-based pipelines, ensure you have done the necessary [setup](../how-to-evaluate-accelerate/use-gpu-for-inference.md#deployment-with-helm) from here, and start the respective pipelines.
 
 <!--hide_directive::::{tab-set} hide_directive-->
 <!--hide_directive:::{tab-item} hide_directive-->Pallet Defect Detection
@@ -708,7 +714,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "pdds3"
+               "peer-id": "pdds3",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -733,7 +743,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "anomaly_s3"
+               "peer-id": "anomaly_s3",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -821,7 +835,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "pdd"
+                   "peer-id": "pdd",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -851,7 +869,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -963,7 +985,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "pdd"
+                   "peer-id": "pdd",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {
@@ -993,7 +1019,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
                "destination": {
                "frame": {
                    "type": "webrtc",
-                   "peer-id": "anomaly"
+                   "peer-id": "anomaly",
+                   "overlay-properties": {
+                       "font-scale": 1.0,
+                       "draw-txt-bg": false
+                   }
                }
                },
                "parameters": {

@@ -75,6 +75,17 @@ def get_max_id() -> dict:
     return r.json()
 
 
+def clear_detections() -> None:
+    """Remove detections that cannot be correlated with this process's run registry."""
+    r = requests.delete(
+        f"{_STORAGE_URL}/detections",
+        headers=_HEADERS,
+        timeout=_TIMEOUT,
+        proxies=_NO_PROXY,
+    )
+    r.raise_for_status()
+
+
 def post_detection(payload: dict) -> dict:
     r = requests.post(
         f"{_STORAGE_URL}/detections",

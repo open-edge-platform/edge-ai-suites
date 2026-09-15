@@ -12,10 +12,9 @@ When the stack is running, FastAPI provides OpenAPI/Swagger UI at:
 
 ## REST Endpoints
 
-### Health & Capabilities
+### Health Check
 
 - `GET /api/health` - Liveness check (`{"status": "healthy"}`)
-- `GET /api/capabilities` - Report host acceleration capability flags used by the UI (`has_gpu`, `has_npu`)
 
 ### Models
 

@@ -5,7 +5,8 @@ This guide provides instructions for setting up a custom UDF deployment package 
 ## Configuration
 
 - **`config.json`**:
-   - Review the [configuration reference](../wind-turbine-anomaly-detection/index.md#configjson) and update it as needed for your custom UDF deployment package.
+
+  Review the [configuration reference](../wind-turbine-anomaly-detection/index.md#configjson) and update it as needed for your custom UDF deployment package.
 
 - **`UDF Deployment Package`**:
 

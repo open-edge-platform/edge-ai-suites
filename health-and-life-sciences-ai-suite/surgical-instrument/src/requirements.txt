@@ -1,0 +1,15 @@
+# Core runtime
+openvino>=2024.0
+numpy>=1.24
+opencv-python>=4.8
+
+# Optional: vsync-locked OpenGL display (--presenter gl/auto). Not needed for
+# --headless, --source file, or CI. Also needs the system libs libglfw3 +
+# an OpenGL/GLX runtime (libgl1 libglx-mesa0 libgl1-mesa-dri).
+#   pip install glfw PyOpenGL
+# glfw>=2.6
+# PyOpenGL>=3.1
+
+# Basler live camera only (not needed for --source file or --source v4l2).
+# Install separately on camera hosts:  pip install pypylon
+# pypylon>=3.0

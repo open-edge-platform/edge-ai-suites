@@ -175,6 +175,10 @@ spec:
               value: {{ .Values.env.captionHistory | quote }}
             - name: VLM_CACHE_SIZE
               value: {{ .Values.env.VLM_CACHE_SIZE | quote }}
+            - name: NPU_MAX_PROMPT_LENGTH
+              value: {{ .Values.env.NPU_MAX_PROMPT_LENGTH | quote }}
+            - name: NPU_MIN_RESPONSE_LENGTH
+              value: {{ .Values.env.NPU_MIN_RESPONSE_LENGTH | quote }}
             - name: PIPELINE_SERVER_URL
               value: {{ .Values.env.pipelineServerUrl | quote }}
             - name: METRICS_SERVICE_PORT

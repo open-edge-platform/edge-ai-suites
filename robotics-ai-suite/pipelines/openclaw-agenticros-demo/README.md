@@ -55,7 +55,7 @@ First, clone this deployment folder with all submodules:
 ```bash
 # Clone the edge-ai-suites repository (if not already done)
 cd ~
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the deployment folder
 cd ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo
@@ -399,7 +399,7 @@ curl -s http://127.0.0.1:18789/ | head -5
 - The above configuration shows only the OVMS-related sections
 - **no_proxy setting**: Required for OpenClaw to connect to OVMS (localhost:8000) and rosbridge (localhost:9090) without proxy interference
 - OpenClaw creates a default config during installation - always backup before modifying
-- `baseUrl`: Points to OVMS v3 API endpoint (http://127.0.0.1:8000/v3)
+- `baseUrl`: Points to OVMS v3 API endpoint (<http://127.0.0.1:8000/v3>)
 - `api`: Set to `openai-completions` for OpenAI-compatible API
 - `input`: Must include `["text", "image"]` for multimodal support (critical for camera snapshots)
 - `model.primary`: Uses `ovms/` provider prefix to reference the OVMS provider
@@ -713,7 +713,7 @@ openclaw dashboard
 # or http://localhost:XXXX (port may vary)
 ```
 
-**Open the displayed URL in your web browser** (e.g., http://localhost:3000)
+**Open the displayed URL in your web browser** (e.g., <http://localhost:3000>)
 
 **Verify OpenClaw gateway status (optional):**
 ```bash
@@ -736,11 +736,13 @@ systemctl --user status openclaw-gateway
 **Try these commands in the OpenClaw interface:**
 
 #### Camera Snapshot
-```
+
+```text
 What does the robot see
 ```
 
 **Expected behavior:**
+
 1. ✅ OpenClaw calls AgenticROS `camera_snapshot` tool
 2. ✅ AgenticROS subscribes to `/camera/image_raw/compressed`
 3. ✅ Image is captured and displayed in OpenClaw UI
@@ -752,7 +754,8 @@ What does the robot see
 </p>
 
 #### Movement Commands
-```
+
+```bash
 Move the robot forward 1 meter
 ```
 
@@ -768,7 +771,7 @@ Move the robot forward 1 meter
   <em>JAKA Kargo robot executing 1-meter forward movement with closed-loop odometry feedback</em>
 </p>
 
-```
+```text
 Rotate the robot 90 degrees clockwise
 ```
 

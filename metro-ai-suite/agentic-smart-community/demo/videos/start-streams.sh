@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# Start RTSP push for each enabled stream in streams.yaml.
+# Start RTSP push for each enabled stream declared in a streams config.
+#
+# The default config lives with the rest of the demo resources in
+# ../quick-start/streams.yaml. Point STREAMS_CONFIG at another file to publish a
+# different set of streams (see demo/user-case-register/streams.elder_care.yaml).
 #
 # Usage:
 #   ./start-streams.sh                 # start every enabled stream
@@ -12,16 +16,21 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="${STREAMS_CONFIG:-$SCRIPT_DIR/streams.yaml}"
+CONFIG_FILE="${STREAMS_CONFIG:-$SCRIPT_DIR/../quick-start/streams.yaml}"
 RUN_DIR="$SCRIPT_DIR/.run"
 VENV_DIR="$SCRIPT_DIR/.venv"
 REQUIREMENTS_FILE="$SCRIPT_DIR/requirements.txt"
 PYTHON_BIN="$VENV_DIR/bin/python"
+ACTIVE_STREAMS_FILE="$RUN_DIR/active-streams.txt"
 mkdir -p "$RUN_DIR"
 
 command -v ffmpeg >/dev/null || { echo "ffmpeg not found in PATH" >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 not found in PATH" >&2; exit 1; }
 [[ -f "$CONFIG_FILE" ]] || { echo "config not found: $CONFIG_FILE" >&2; exit 1; }
+
+# Relative `file:` entries resolve against the config's own directory, so a
+# config can sit anywhere and still point at videos next to it.
+CONFIG_DIR="$(cd "$(dirname "$CONFIG_FILE")" && pwd)"
 
 ensure_python_env() {
   if [[ ! -d "$VENV_DIR" ]]; then
@@ -40,22 +49,39 @@ ensure_python_env() {
 }
 
 parse_streams() {
-  # Emit one tab-separated row per stream: id\tenabled\tfile\trtsp\tloop
+  # Emit one unit-separator-delimited row per stream. Bash collapses empty fields
+  # when IFS uses whitespace such as tabs, but an unset ${VAR} must stay empty.
   "$PYTHON_BIN" - "$CONFIG_FILE" <<'PY'
-import sys, yaml
+import os
+import re
+import sys
+
+import yaml
+
+ENV_VAR = re.compile(r"\$\{([A-Z_][A-Z0-9_]*)\}", re.IGNORECASE)
+
+
+def expand_env(value):
+    if not isinstance(value, str):
+        return "", []
+    names = ENV_VAR.findall(value)
+    missing = [name for name in names if not os.environ.get(name)]
+    return ENV_VAR.sub(lambda match: os.environ.get(match.group(1), ""), value), missing
+
+
 with open(sys.argv[1]) as f:
     cfg = yaml.safe_load(f) or {}
 for sid, s in (cfg.get("streams") or {}).items():
     enabled = bool(s.get("enabled", False))
-    file = s.get("file", "")
+    file, missing = expand_env(s.get("file", ""))
     rtsp = s.get("rtsp_url", "")
     loop = bool(s.get("loop", False))
-    print(f"{sid}\t{enabled}\t{file}\t{rtsp}\t{loop}")
+    print("\x1f".join((sid, str(enabled), file, rtsp, str(loop), ",".join(missing))))
 PY
 }
 
 write_mediamtx_conf() {
-  # Read mediamtx.binary and mediamtx.config from streams.yaml, expand ~ in
+  # Read mediamtx.binary and mediamtx.config from the streams config, expand ~ in
   # binary path, dump mediamtx.config sub-tree to a temp YAML file.
   # Emit a single tab-separated row: binary\tconf_path
   "$PYTHON_BIN" - "$CONFIG_FILE" "$RUN_DIR/_mediamtx.yml" <<'PY'
@@ -126,10 +152,7 @@ stop_one() {
 }
 
 cmd_stop() {
-  shopt -s nullglob
-  for pidfile in "$RUN_DIR"/*.pid; do
-    stop_one "$(basename "$pidfile" .pid)"
-  done
+  exec "$SCRIPT_DIR/stop_streams.sh"
 }
 
 cmd_status() {
@@ -151,10 +174,14 @@ cmd_status() {
 
 start_one() {
   local sid="$1" file="$2" rtsp="$3" loop="$4"
+  if [[ -z "$file" ]]; then
+    echo "  warning: skip $sid: video path is empty" >&2
+    return 1
+  fi
   local abs_file="$file"
-  [[ "$abs_file" != /* ]] && abs_file="$SCRIPT_DIR/$file"
+  [[ "$abs_file" != /* ]] && abs_file="$CONFIG_DIR/$file"
   if [[ ! -f "$abs_file" ]]; then
-    echo "  skip $sid: file not found: $abs_file" >&2
+    echo "  warning: skip $sid: video file not found: $abs_file" >&2
     return 1
   fi
 
@@ -181,7 +208,7 @@ case "${1:-}" in
   --stop) cmd_stop; exit 0 ;;
   --status) cmd_status; exit 0 ;;
   -h|--help)
-    sed -n '2,11p' "$0"
+    sed -n '2,14p' "$0"
     exit 0 ;;
 esac
 
@@ -194,9 +221,12 @@ ensure_python_env
 
 start_mediamtx || true
 
+# This invocation defines the monitor set that start-demo.sh will register.
+: >"$ACTIVE_STREAMS_FILE"
+
 started=0
 skipped=0
-while IFS=$'\t' read -r sid enabled file rtsp loop; do
+while IFS=$'\x1f' read -r sid enabled file rtsp loop missing_vars; do
   [[ -z "$sid" ]] && continue
   if (( filter_active )) && [[ -z "${WANTED[$sid]:-}" ]]; then
     continue
@@ -206,10 +236,19 @@ while IFS=$'\t' read -r sid enabled file rtsp loop; do
     skipped=$((skipped+1))
     continue
   fi
+  if [[ -n "$missing_vars" ]]; then
+    echo "  warning: skip $sid: required video variable is unset or empty: $missing_vars" >&2
+    skipped=$((skipped+1))
+    continue
+  fi
   if start_one "$sid" "$file" "$rtsp" "$loop"; then
+    printf '%s\n' "$sid" >>"$ACTIVE_STREAMS_FILE"
     started=$((started+1))
+  else
+    skipped=$((skipped+1))
   fi
 done < <(parse_streams)
 
 echo
 echo "summary: started=$started skipped=$skipped (logs: $RUN_DIR/<id>.log)"
+echo "active streams: $ACTIVE_STREAMS_FILE"

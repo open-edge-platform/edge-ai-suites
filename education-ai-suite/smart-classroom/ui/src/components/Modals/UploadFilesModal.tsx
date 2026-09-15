@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
@@ -7,10 +7,12 @@ import {
   uploadAudio,
   storeAudioDuration,
   createSession,
+  registerSession,
   startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring
+  BACKEND_UNAVAILABLE_MESSAGE
 } from '../../services/api';
+import { declaredStages } from '../../utils/sessionStages';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
   setUploadedAudioPath,
@@ -18,6 +20,7 @@ import {
   processingFailed,
   resetFlow,
   setSessionId,
+  setSessionRegistered,
   setActiveStream,
   startStream,
   setFrontCameraStream,
@@ -36,14 +39,17 @@ import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { resetMediaValidation } from '../../redux/slices/mediaValidationSlice';
-import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
+import type { FeatureGuard } from '../../utils/featureGuards';
+import { collectPipelineErrors } from '../../utils/pipelineErrors';
+
 interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
+  featureGuard: FeatureGuard;
 }
 
-const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) => {
+const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, featureGuard }) => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [frontCameraPath, setFrontCameraPath] = useState<File | null>(null);
   const [rearCameraPath, setRearCameraPath] = useState<File | null>(null);
@@ -56,10 +62,26 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [baseDirectory, setBaseDirectory] = useState(() => sessionStorage.getItem('baseDirectory') || "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [notification, setNotification] = useState(constants.START_NOTIFICATION);
+  // The same fact as `loading`, kept where handleApply can trust it. `disabled`
+  // on the button is not enough on its own: two clicks landing in one render
+  // both read `loading` from that render's closure, and a second run here means
+  // a second session and a second audio upload.
+  const loadingRef = useRef(false);
+  /** The stage in flight, or the closing summary once it has finished. */
+  const [notification, setNotification] = useState('');
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
+
+  // Check if video_analytics feature is enabled
+  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+
+  // Check if any audio-related features are enabled
+  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
+    featureGuard.hasFeature('summary') ||
+    featureGuard.hasFeature('mindmap') ||
+    featureGuard.hasFeature('topic_segmentation') ||
+    featureGuard.hasFeature('report');
 
   const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 
@@ -119,7 +141,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
           setter(null);
           pathSetter?.('');
           const expectedTypes = accept.replace(/\./g, '').replace(/,/g, ', ');
-          setError(`Please select only ${expectedTypes} files.`);
+          setError(t('uploadFiles.invalidFileType', { types: expectedTypes }));
         }
       } else {
         setter(null);
@@ -130,14 +152,43 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     input.click();
   };
 
-  const startVideoAnalyticsWithSession = async (sessionId: string, pipelines: any[]) => {
+  /**
+   * The reason behind a thrown error, as shown to the user. The backend reports
+   * it in the response body (`detail` / `message`), which the API layer re-throws
+   * as the Error message. Returns '' when there is nothing usable to show.
+   */
+  const errorReason = (err: unknown): string => {
+    const detail = err instanceof Error ? err.message.trim() : typeof err === 'string' ? err.trim() : '';
+    return detail === BACKEND_UNAVAILABLE_MESSAGE ? t('uploadFiles.backendUnavailable') : detail;
+  };
+
+  // Failure of the whole upload flow: the backend reason if there is one,
+  // otherwise the generic retry prompt.
+  const describeError = (err: unknown): string => {
+    const reason = errorReason(err);
+    return reason
+      ? t('uploadFiles.processingFailedDetail', { detail: reason })
+      : t('uploadFiles.processingFailed');
+  };
+
+  /**
+   * Start the video pipelines, reporting both whether anything streams and why
+   * the rest did not — the endpoint reports per-pipeline failures with HTTP 200,
+   * so they have to be read out of the body (see utils/pipelineErrors).
+   */
+  const startVideoAnalyticsWithSession = async (
+    sessionId: string,
+    pipelines: any[]
+  ): Promise<{ started: boolean; errors: string[] }> => {
     if (pipelines.length === 0) {
       console.log('📹 No valid video pipelines found, skipping video analytics');
       dispatch(setVideoAnalyticsLoading(false));
       dispatch(setVideoAnalyticsActive(false));
       dispatch(setVideoStatus('no-config'));
-      return false;
+      return { started: false, errors: [] };
     }
+
+    const errors: string[] = [];
 
     try {
       console.log('🎬 Starting video analytics with session ID:', sessionId);
@@ -147,7 +198,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       dispatch(setVideoStatus('starting')); // This will change from 'processed' to 'starting'
 
       const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
-      startPipelineMonitoring(sessionId);
       let hasSuccessfulStreams = false;
 
       videoResponse.results.forEach((result: any) => {
@@ -170,6 +220,8 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         }
       });
 
+      errors.push(...collectPipelineErrors(videoResponse.results, t, t('uploadFiles.videoAnalyticsFailed')));
+
       if (hasSuccessfulStreams) {
         dispatch(setActiveStream('all'));
         dispatch(setVideoAnalyticsActive(true));
@@ -179,14 +231,15 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       }
 
       dispatch(setVideoAnalyticsLoading(false));
-      return hasSuccessfulStreams;
+      return { started: hasSuccessfulStreams, errors };
 
     } catch (videoError) {
       console.error('❌ Failed to start video analytics:', videoError);
       dispatch(setVideoAnalyticsLoading(false));
       dispatch(setVideoAnalyticsActive(false));
       dispatch(setVideoStatus('failed'));
-      return false;
+      errors.push(errorReason(videoError) || t('uploadFiles.videoAnalyticsFailed'));
+      return { started: false, errors };
     }
   };
 
@@ -195,26 +248,27 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     const videoSuccess = hasVideo && videoStarted;
 
     if (audioSuccess && videoSuccess) {
-      return 'Transcription and video analytics started successfully.';
+      return t('uploadFiles.transcriptionAndVideoStarted');
     } else if (audioSuccess && !videoSuccess && hasVideo) {
-      return 'Transcription started successfully. Video analytics failed to start.';
+      return t('uploadFiles.transcriptionStartedVideoFailed');
     } else if (audioSuccess && !hasVideo) {
-      return 'Transcription started successfully.';
+      return t('uploadFiles.transcriptionStarted');
     } else if (!audioSuccess && videoSuccess) {
-      return 'Video analytics started successfully.';
+      return t('uploadFiles.videoAnalyticsStarted');
     } else if (!audioSuccess && !videoSuccess && hasVideo) {
-      return 'Failed to start video analytics.';
+      return t('uploadFiles.videoAnalyticsFailed');
     } else {
-      return 'No valid processing started.';
+      return t('uploadFiles.noProcessingStarted');
     }
   };
 
   const handleApply = async () => {
+    if (loadingRef.current) return;
     const hasAudioFile = audioFile !== null;
     const hasVideoFiles = frontCameraPath !== null || rearCameraPath !== null || boardCameraPath !== null;
 
     if (!hasAudioFile && !hasVideoFiles) {
-      setError('At least one file (audio or video) is required.');
+      setError(t('uploadFiles.fileRequired'));
       return;
     }
 
@@ -222,7 +276,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     // on the web it is reconstructed from the base directory, so require that only
     // for any selected video whose absolute path wasn't resolved.
     if (hasVideoFiles && videoMissingFullPath && !baseDirectory.trim()) {
-      setError('Base directory is required when video files are selected.');
+      setError(t('uploadFiles.baseDirectoryRequired'));
       return;
     }
 
@@ -230,7 +284,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       sessionStorage.setItem('baseDirectory', baseDirectory);
     }
 
-    setNotification('Starting processing...');
+    setNotification(t('uploadFiles.startingProcessing'));
     dispatch(resetFlow());  // Reset flow FIRST
     dispatch(resetTranscript());
     dispatch(resetSummary());
@@ -259,17 +313,42 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       console.log('🎯 Audio status set to ready - no audio file selected');
     }
 
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      setNotification('Creating session...');
+      setNotification(t('uploadFiles.creatingSession'));
       const sessionResponse = await createSession();
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
       dispatch(setSessionId(sessionId));
+      // Same declaration Start recording makes, from the same helper, so the two
+      // entry points cannot drift apart. Best-effort: an unrecorded session
+      // still uploads and processes normally.
+      //
+      // File names, not the paths uploaded further down: this is what the
+      // history lists a session by, and the browser's File objects have no
+      // trustworthy path anyway. The backend basenames whatever it gets, so a
+      // bare name arrives unchanged. Only /sessions/process validates that the
+      // sources exist on disk; register does not.
+      const registeredVideoSources: Record<string, string> = {};
+      if (frontCameraPath) registeredVideoSources.front = frontCameraPath.name;
+      if (rearCameraPath) registeredVideoSources.back = rearCameraPath.name;
+      if (boardCameraPath) registeredVideoSources.board = boardCameraPath.name;
+      const registered = await registerSession(
+        sessionId,
+        declaredStages(featureGuard, { hasAudio: hasAudioFile, hasVideo: hasVideoFiles }),
+        {
+          audio_path: audioFile?.name,
+          video_sources: registeredVideoSources,
+        },
+      );
+      dispatch(setSessionRegistered(registered));
 
       try {
+        // Covers the handover as a whole: the stop, the 5s settle and the start.
+        setNotification(t('uploadFiles.startingMonitoring'));
         if (monitoringActive) {
           await stopMonitoring();
           dispatch(setMonitoringActive(false));
@@ -282,11 +361,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         console.error('❌ Monitoring restart failed:', monitoringError);
       }
 
-      let audioPath = '';
       if (hasAudioFile) {
+        setNotification(t('uploadFiles.uploadingAudio'));
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
-        audioPath = audioResponse.path;
         console.log('✅ Audio uploaded successfully:', audioResponse);
 
         // Extract and store audio duration
@@ -343,45 +421,58 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       const hasValidVideo = validPipelines.length > 0;
       console.log('🎯 Has valid video files:', hasValidVideo);
-      dispatch(setHasUploadedVideoFiles(hasValidVideo));
 
-      if (hasValidVideo) {
-        console.log('🎥 Setting uploaded video files in Redux (second time, inside video block):', {
-          front: frontCameraPath ? frontCameraPath.name : 'null',
-          back: rearCameraPath ? rearCameraPath.name : 'null',
-          board: boardCameraPath ? boardCameraPath.name : 'null'
-        });
-
-        dispatch(setUploadedVideoFiles({
-          front: frontCameraPath,
-          back: rearCameraPath,
-          board: boardCameraPath,
-        }));
-
-        dispatch(setHasUploadedVideoFiles(true));
-
-        if (rearCameraPath)
-          dispatch(setActiveStream('back'));
-
-        else if (boardCameraPath)
-          dispatch(setActiveStream('content'));
-
-        else if (frontCameraPath)
-          dispatch(setActiveStream('front'));
-      }
-      else {
+      // Only process videos if video_analytics feature is enabled
+      if (!hasVideoAnalyticsFeature && hasValidVideo) {
+        console.warn('⚠️ Video files selected but video_analytics feature is disabled. Skipping video processing.');
         dispatch(setVideoStatus('no-config'));
+        dispatch(setHasUploadedVideoFiles(false));
+      } else {
+        dispatch(setHasUploadedVideoFiles(hasValidVideo));
+
+        if (hasValidVideo && hasVideoAnalyticsFeature) {
+          console.log('🎥 Setting uploaded video files in Redux (second time, inside video block):', {
+            front: frontCameraPath ? frontCameraPath.name : 'null',
+            back: rearCameraPath ? rearCameraPath.name : 'null',
+            board: boardCameraPath ? boardCameraPath.name : 'null'
+          });
+
+          dispatch(setUploadedVideoFiles({
+            front: frontCameraPath,
+            back: rearCameraPath,
+            board: boardCameraPath,
+          }));
+
+          dispatch(setHasUploadedVideoFiles(true));
+
+          if (rearCameraPath)
+            dispatch(setActiveStream('back'));
+
+          else if (boardCameraPath)
+            dispatch(setActiveStream('content'));
+
+          else if (frontCameraPath)
+            dispatch(setActiveStream('front'));
+        }
+        else {
+          dispatch(setVideoStatus('no-config'));
+        }
       }
 
       let videoAnalyticsStarted = false;
-      if (hasValidVideo) {
-        videoAnalyticsStarted = await startVideoAnalyticsWithSession(sessionId, validPipelines);
+      let videoErrors: string[] = [];
+      if (hasValidVideo && hasVideoAnalyticsFeature) {
+        setNotification(t('uploadFiles.startingVideo'));
+        ({ started: videoAnalyticsStarted, errors: videoErrors } =
+          await startVideoAnalyticsWithSession(sessionId, validPipelines));
         if (videoAnalyticsStarted) {
           console.log('✅ Video analytics started successfully');
         } else {
           console.warn('⚠️ Video analytics failed to start');
           dispatch(setVideoStatus('failed'));
         }
+      } else if (!hasVideoAnalyticsFeature && hasValidVideo) {
+        console.log('📹 Video files present but feature disabled, skipping video analytics');
       } else {
         console.log('📹 No valid video files provided, skipping video analytics');
       }
@@ -398,13 +489,23 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         finalMessage: finalNotification
       });
 
+      loadingRef.current = false;
       setLoading(false);
+
+      // Show the reasons and keep the modal open. Whatever did start
+      // (transcription, other pipelines) keeps running in the background.
+      if (videoErrors.length > 0) {
+        setError(t('errors.videoPipelineFailed', { details: videoErrors.join('\n') }));
+        return;
+      }
+
       onClose();
     } catch (err) {
       console.error('❌ Failed during processing:', err);
-      setError('Failed during processing. Please try again.');
+      setError(describeError(err));
       setNotification('');
       dispatch(processingFailed());
+      loadingRef.current = false;
       setLoading(false);
     }
   };
@@ -424,85 +525,111 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
                 type="text"
                 value={baseDirectory}
                 onChange={(e) => setBaseDirectory(e.target.value)}
-                placeholder="Enter the base directory"
+                placeholder={t('uploadFiles.enterBaseDirectory')}
               />
             </div>
           )}
-          <div className="modal-input-group modal-title fw-semibold">
-            <label>{t('uploadFiles.audioFileLabel')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={audioFile?.name || ''}
-                readOnly
-                placeholder="Select an audio file"
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3')}
-              />
-            </div>
-          </div>
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.frontCameraFile')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={frontVideoFullPath || frontCameraPath?.name || ''}
-                readOnly
-                placeholder="Select a front camera file"
-                title={frontVideoFullPath || frontCameraPath?.name || ''}
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setFrontCameraPath, '.mp4', setFrontVideoFullPath)}
-              />
-            </div>
-          </div>
 
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.backCameraFile')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={rearVideoFullPath || rearCameraPath?.name || ''}
-                readOnly
-                placeholder="Select a back camera file"
-                title={rearVideoFullPath || rearCameraPath?.name || ''}
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setRearCameraPath, '.mp4', setRearVideoFullPath)}
-              />
+          {/* Audio upload section - only show if audio features are enabled */}
+          {hasAudioFeatures ? (
+            <div className="modal-input-group modal-title fw-semibold">
+              <label>{t('uploadFiles.audioFileLabel')}</label>
+              <div className="file-input-wrapper">
+                <input
+                  type="text"
+                  value={audioFile?.name || ''}
+                  readOnly
+                  placeholder={t('uploadFiles.selectAudioFile')}
+                />
+                <img
+                  src={folderIcon}
+                  alt={t('uploadFiles.chooseFile')}
+                  className="folder-icon"
+                  onClick={() => handleFileSelect(setAudioFile, '.wav,.mp3,.m4a')}
+                />
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="modal-info-message" style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
+              {t('uploadFiles.audioFeaturesDisabled')}
+            </div>
+          )}
 
-          <div className="modal-input-group">
-            <label>{t('uploadFiles.boardCameraFile')}</label>
-            <div className="file-input-wrapper">
-              <input
-                type="text"
-                value={boardVideoFullPath || boardCameraPath?.name || ''}
-                readOnly
-                placeholder="Select a board camera file"
-                title={boardVideoFullPath || boardCameraPath?.name || ''}
-              />
-              <img
-                src={folderIcon}
-                alt="Choose File"
-                className="folder-icon"
-                onClick={() => handleFileSelect(setBoardCameraPath, '.mp4', setBoardVideoFullPath)}
-              />
+          {/* Video upload sections - only show if video_analytics is enabled */}
+          {hasVideoAnalyticsFeature ? (
+            <>
+              <div className="modal-input-group">
+                <label>{t('uploadFiles.frontCameraFile')}</label>
+                <div className="file-input-wrapper">
+                  <input
+                    type="text"
+                    value={frontVideoFullPath || frontCameraPath?.name || ''}
+                    readOnly
+                    placeholder={t('uploadFiles.selectFrontCameraFile')}
+                    title={frontVideoFullPath || frontCameraPath?.name || ''}
+                  />
+                  <img
+                    src={folderIcon}
+                    alt={t('uploadFiles.chooseFile')}
+                    className="folder-icon"
+                    onClick={() => handleFileSelect(setFrontCameraPath, '.mp4', setFrontVideoFullPath)}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-input-group">
+                <label>{t('uploadFiles.backCameraFile')}</label>
+                <div className="file-input-wrapper">
+                  <input
+                    type="text"
+                    value={rearVideoFullPath || rearCameraPath?.name || ''}
+                    readOnly
+                    placeholder={t('uploadFiles.selectBackCameraFile')}
+                    title={rearVideoFullPath || rearCameraPath?.name || ''}
+                  />
+                  <img
+                    src={folderIcon}
+                    alt={t('uploadFiles.chooseFile')}
+                    className="folder-icon"
+                    onClick={() => handleFileSelect(setRearCameraPath, '.mp4', setRearVideoFullPath)}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-input-group">
+                <label>{t('uploadFiles.boardCameraFile')}</label>
+                <div className="file-input-wrapper">
+                  <input
+                    type="text"
+                    value={boardVideoFullPath || boardCameraPath?.name || ''}
+                    readOnly
+                    placeholder={t('uploadFiles.selectBoardCameraFile')}
+                    title={boardVideoFullPath || boardCameraPath?.name || ''}
+                  />
+                  <img
+                    src={folderIcon}
+                    alt={t('uploadFiles.chooseFile')}
+                    className="folder-icon"
+                    onClick={() => handleFileSelect(setBoardCameraPath, '.mp4', setBoardVideoFullPath)}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="modal-info-message" style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f0f0', borderRadius: '4px', color: '#666' }}>
+              {t('uploadFiles.videoAnalyticsDisabled')}
             </div>
-          </div>
+          )}
           {error && <div className="error-message">{error}</div>}
-          {notification && <div className="notification-message">{notification}</div>}
+          {/* Same row for both, because it is the same line of text moving on:
+              the spinner is what distinguishes a stage still running from the
+              summary left behind once it finished. */}
+          {notification && (
+            <div className="modal-progress" role="status">
+              {loading && <span className="modal-spinner" aria-hidden="true" />}
+              {notification}
+            </div>
+          )}
         </div>
         <div className="modal-actions">
           <button

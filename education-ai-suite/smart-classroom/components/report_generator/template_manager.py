@@ -21,6 +21,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 from utils.runtime_config_loader import RuntimeConfig
+from utils.session_paths import SessionPaths
 
 logger = logging.getLogger(__name__)
 
@@ -59,22 +60,13 @@ def get_template_path(language: str = "zh", session_id: str = None, template_nam
         logger.warning(f"Selected template {template_name!r} not found; falling back to defaults.")
 
     if session_id:
-        project_config = RuntimeConfig.get_section("Project")
-        custom_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            session_id,
-            "custom_report_template.docx",
+        custom_path = str(
+            SessionPaths.session_dir(session_id) / "custom_report_template.docx"
         )
         if os.path.exists(custom_path):
             return custom_path
 
-    project_config = RuntimeConfig.get_section("Project")
-    project_custom = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        "report_template.docx",
-    )
+    project_custom = str(SessionPaths.base_dir() / "report_template.docx")
     if os.path.exists(project_custom):
         return project_custom
 

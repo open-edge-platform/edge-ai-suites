@@ -1,11 +1,7 @@
-<!--
-SPDX-FileCopyrightText: (C) 2026 Intel Corporation
-SPDX-License-Identifier: Apache-2.0
--->
-
-# Smart Classroom Flutter + RAG Integration
+## Smart Classroom Flutter + RAG Integration
 
 A cross-platform Flutter application demonstrating **Retrieval Augmented Generation (RAG)** integration with the Smart Classroom Content Search backend. This application showcases how educational platforms can leverage **OpenVINO-accelerated AI** for intelligent content search, multi-turn Q&A, and document management.
+
 ---
 
 ## Table of Contents
@@ -41,11 +37,20 @@ This application demonstrates a **unique dual-interaction model**:
 1. **Traditional UI**: Graphical Flutter interface for end users
 2. **Agentic Mode**: AI coding companions that autonomously execute workflows via natural language commands
 
+### Configuration
+
+The Flutter app uses its **own dedicated config.yaml** file located at `utils/flutter/config.yaml`. This allows the Flutter application to:
+- Run independently from the main Smart Classroom application
+- Configure Content Search backend settings (VLM, vector DB, storage) specific to its use case
+- Point to the main backend for VLM services while managing its own Content Search instance
+
+The main backend (`smart-classroom/config.yaml`) and Flutter config are separate, allowing flexible deployment scenarios.
+
 ---
 
 ## Architecture
 
-The Flutter app acts as a REST API client to the Content Search backend:
+The Flutter app acts as a REST API client to the Content Search backend, which depends on a standalone VLM service:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -68,14 +73,25 @@ The Flutter app acts as a REST API client to the Content Search backend:
                           │ HTTP REST API
                           ▼
          ┌────────────────────────────────────────┐
-         │      Content Search Backend            │
-         │       (FastAPI +OpenVINO)              │
+         │   Content Search Backend (Port 9011)   │
+         │        (FastAPI + ChromaDB)            │
          ├────────────────────────────────────────┤
          │   • File upload & ingestion            │
-         │   • Vector indexing                    │
-         │   • LLM-powered Q&A                    │
-         │   • Multi-modal processing             │
+         │   • Vector indexing (ChromaDB)         │
+         │   • RAG Q&A orchestration              │
          │   • Task management                    │
+         └─────────────┬──────────────────────────┘
+                       │
+                       │ VLM API Calls
+                       ▼
+         ┌────────────────────────────────────────┐
+         │   Standalone VLM Service (Port 8000)   │
+         │   (Lightweight FastAPI + OpenVINO)     │
+         ├────────────────────────────────────────┤
+         │   • VLM inference (Qwen3-VL-8B)        │
+         │   • /v1/chat/completions endpoint      │
+         │   • Multi-modal processing             │
+         │   • OpenVINO GenAI runtime             │
          └─────────────┬──────────────────────────┘
                        │
                        ▼
@@ -86,10 +102,18 @@ The Flutter app acts as a REST API client to the Content Search backend:
          └────────────────────────────────────────┘
 ```
 
+**Service Dependencies**:
+1. **Standalone VLM (Port 8000)**: Lightweight VLM-only service - must start first
+2. **Content Search (Port 9011)**: RAG pipeline - depends on VLM service
+3. **Flutter UI**: Cross-platform interface - depends on Content Search API
+
+**Why Standalone VLM?**: Instead of running the entire Smart Classroom main application, we use a lightweight standalone VLM server (`components/vlm/vlm_openvino_serving/app.py`) that only provides the VLM inference endpoint. This is much faster to start and uses fewer resources.
+
 **Key Components**:
 - **Flutter Frontend**: Cross-platform UI (Windows Desktop, Web)
 - **Content Search API**: REST endpoints for file management and RAG operations
-- **OpenVINO Models**: Local inference for embeddings and LLM
+- **Standalone VLM**: Dedicated OpenVINO VLM service (Qwen3-VL-8B-Instruct)
+- **OpenVINO Models**: Local inference for embeddings, VLM, and document processing
 - **Skill Files**: AI agent automation scripts in `.github/skills/`
 
 ---
@@ -127,10 +151,15 @@ The Flutter app acts as a REST API client to the Content Search backend:
 
 **For end users who prefer graphical interfaces:**
 
+> **Important — PowerShell required**
+> All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
+
 1. **Setup** (one-time):
    ```powershell
    .\utils\flutter\setup.ps1
    ```
+
+   > **Security prompt**: A warning — *"Runs \<script\> — pulls untrusted third-party code"* — may appear when running any `.ps1` script. This is expected; click **Allow** to continue.
 
 2. **Launch**:
    ```powershell
@@ -186,30 +215,106 @@ Agent: [Reads sc-files skill, calls files endpoint, displays table]
 - **PowerShell 7+** (for automation scripts)
 - **VS Code** (recommended for agentic mode)
 - **Coding Companion** (optional): GitHub Copilot, Continue, Cursor, Claude Code, etc.
+- **Visual Studio Build Tools 2022** with the following components:
+
+  1. Open **Visual Studio Installer** and locate **Visual Studio Build Tools 2022**, then click **Modify**.
+  2. Under the **Workloads** tab, enable **Desktop development with C++**.
+  3. Under the **Individual components** tab, ensure the following are selected:
+     - `MSVC v142 - VS 2019 C++ x64/x86 build tools`
+     - `C++ CMake tools for Windows`
+     - `Windows 11 SDK`
+     - `Windows 10 SDK`
+  4. Click **Modify** to apply the changes, then restart your terminal before running the setup script.
+
+### Python Dependencies
+
+The setup script installs from [`smart-classroom/requirements.txt`](../../smart-classroom/requirements.txt)
 
 ### Network
 - **Internet access** for first-time model downloads
 ---
 
+## Configuration
+
+The Flutter application uses a **dedicated configuration file** at `utils/flutter/config.yaml`. This file configures:
+
+- **Content Search API** settings (host, port)
+- **VLM (Vision-Language Model)** connection to main backend
+- **ChromaDB** vector database settings
+- **File storage** limits and paths
+- **Q&A parameters** (context size, token limits, retrieval thresholds)
+- **Document processing** (chunking, embedding models, reranker)
+
+**Key Configuration Sections**:
+
+```yaml
+content_search:
+  host_addr: "127.0.0.1"
+  port: 9011
+
+  vlm:
+    model_name: "Qwen/Qwen3-VL-8B-Instruct"
+    host_addr: "127.0.0.1"
+    port: 8000  # Main backend VLM service
+    device: "GPU"
+
+  qa:
+    max_context: 5          # Top chunks for RAG
+    max_tokens: 1024        # Max answer length
+    max_history_turns: 3    # Conversation history
+    retrieval_score_threshold: 60 # minimum relevance score (0-100)
+```
+
+**When to Modify**:
+- Change VLM model or device (CPU/GPU)
+- Adjust file upload limits
+- Tune RAG parameters (retrieval threshold, context size)
+- Configure custom storage paths
+
+**Note**: The Flutter config is **independent** from `smart-classroom/config.yaml`. The main backend uses its own config for the full Smart Classroom application, while Flutter uses this simplified config focused on Content Search and VLM integration only.
+
+---
+
 ## Quick Start
+
+> **Important — PowerShell required**
+> All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
+
+```powershell
+# Clone the repository (if not already done)
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+cd edge-ai-suites/education-ai-suite
+```
 
 ### Traditional UI Mode
 
 ```powershell
-# 1. Clone the repository (if not already done)
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/education-ai-suite
-
-# 2. Run setup (one-time)
+# 1. Run setup (one-time)
+#    Installs Flutter deps + Python venv + minimal VLM dependencies
+#    (NOT the full Smart Classroom - only what's needed for VLM service)
 .\utils\flutter\setup.ps1
 
-# 3. Start the application
+# 2. Start the application
+#    This starts THREE services in separate windows:
+#    - Standalone VLM (port 8000): Lightweight VLM server
+#    - Content Search (port 9011): RAG backend
+#    - Flutter UI: Desktop application
 .\utils\flutter\start.ps1
 
-# 4. Open browser or desktop app
-# Backend: http://127.0.0.1:9011
-# Flutter Web: http://localhost:5000 (or desktop window)
+# 3. Use the application
+# VLM Service: http://127.0.0.1:8000/health
+# Content Search: http://127.0.0.1:9011/api/v1/system/health
+# Flutter: Desktop window opens automatically
 ```
+
+**Startup Sequence** (handled automatically by start.ps1):
+1. Standalone VLM service launches (lightweight, port 8000)
+2. Waits 45s for VLM model loading
+3. Content Search starts (depends on VLM service)
+4. Waits for Content Search to be healthy
+5. Flutter UI launches
+
+**Note**: The standalone VLM service is much lighter than the full Smart Classroom application. It only provides the `/v1/chat/completions` endpoint needed by Content Search.
 
 ### Agentic Mode (Coding Companion)
 
@@ -358,7 +463,8 @@ The Content Search backend exposes the following REST API (base URL: `http://127
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `GET` | `/api/v1/system/health` | Health check (returns `{"status":"ok"}`) |
+| `GET` | `/api/v1/system/health` | Aggregate health: 200 + `{"status":"ok"}` when every service is ready, 503 + `{"status":"degraded", "services": {...}}` otherwise |
+| `GET` | `/api/v1/system/ping` | Liveness of the API process only (always 200 while it is serving) |
 | `POST` | `/api/v1/object/upload-ingest` | Upload file + start ingestion (multipart/form-data) |
 | `GET` | `/api/v1/task/query/{task_id}` | Check ingestion task status |
 | `DELETE` | `/api/v1/object/cleanup-task/{task_id}` | Cleanup failed/duplicate task |
@@ -378,6 +484,7 @@ For detailed request/response schemas, see `.github/skills/*/references/`.
 
 | Problem | Cause | Solution |
 |---------|-------|----------|
+| Security warning: *"Runs \<script\> — pulls untrusted third-party code"* | VS Code/agent safety prompt when executing any `.ps1` script | This is expected — click **Allow** to proceed |
 | `flutter: command not found` | Flutter not in PATH | Install Flutter SDK and add to PATH |
 | `Connection refused on port 9011` | Backend not running | Run `.\utils\flutter\start.ps1` or `sc-up` skill |
 | `Task status: FAILED` | Model download failed / Disk space | Check `smart-classroom/content_search/logs/` for errors |

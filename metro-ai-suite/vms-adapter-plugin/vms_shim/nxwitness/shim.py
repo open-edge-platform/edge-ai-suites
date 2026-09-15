@@ -911,7 +911,7 @@ class NxWitnessVmsShim(IVmsShim):
         """Look up the Nx-internal UUID for our integration via the admin client.
 
         Matches the approved integration whose manifest integration ID equals
-        our integration username (e.g. ``"DLStreamerAnalyticsIntegrationVMS"``).
+        our integration username (e.g. ``"VAP Analytics Integration"``).
         """
         if not self._client or not self._integration_username:
             return None

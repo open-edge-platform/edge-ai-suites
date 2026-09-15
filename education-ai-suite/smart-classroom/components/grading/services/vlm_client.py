@@ -67,6 +67,7 @@ def build_payload(image: "Path | PIL.Image.Image", user_prompt: str,
         ],
         "max_completion_tokens": max_tokens,
         "temperature": temperature,
+        "enable_thinking": False,
     }
 
 
@@ -171,6 +172,7 @@ def extract_header_info(
         ],
         "max_completion_tokens": max_tokens,
         "temperature": temperature,
+        "enable_thinking": False,
     }
 
     start = time.perf_counter()
@@ -216,3 +218,18 @@ def check_health(url: str, timeout: int = 10) -> dict[str, Any]:
     )
     resp.raise_for_status()
     return resp.json()
+
+
+def fetch_model_name(url: str, timeout: int = 5) -> str | None:
+    if not url:
+        return None
+    try:
+        resp = requests.get(
+            f"{url}/v1/models", timeout=timeout, proxies={"http": None, "https": None}
+        )
+        resp.raise_for_status()
+        data = (resp.json().get("data") or [{}])[0]
+    except Exception:
+        return None
+    name = data.get("id")
+    return str(name) if name else None

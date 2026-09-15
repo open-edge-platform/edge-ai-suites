@@ -30,12 +30,25 @@ if os.path.exists(env_path):
 
 class Settings(BaseSettings):
     # Core watcher paths
-    WATCH_DIRECTORY_CONTAINER_PATH: str = Field(default="/media/frigate/recordings", env="WATCH_DIRECTORY_CONTAINER_PATH")
-    WATCH_DIRECTORY_CONTAINER_PATHS: str = Field(default="", env="WATCH_DIRECTORY_CONTAINER_PATHS")
+    WATCH_DIRECTORY_CONTAINER_PATH: str = Field(
+        default="/media/frigate/recordings", env="WATCH_DIRECTORY_CONTAINER_PATH"
+    )
+    WATCH_DIRECTORY_CONTAINER_PATHS: str = Field(
+        default="", env="WATCH_DIRECTORY_CONTAINER_PATHS"
+    )
     # Debounce + deletion behavior
     DEBOUNCE_TIME: int = Field(default=5, env="DEBOUNCE_TIME")
     DELETE_PROCESSED_FILES: bool = Field(default=False, env="DELETE_PROCESSED_FILES")
-    WATCH_DIRECTORY_RECURSIVE: bool = Field(default=False, env="WATCH_DIRECTORY_RECURSIVE")
+    WATCH_DIRECTORY_RECURSIVE: bool = Field(
+        default=False, env="WATCH_DIRECTORY_RECURSIVE"
+    )
+    WATCH_BATCH_SIZE: int = Field(default=10, env="WATCH_BATCH_SIZE")
+    BATCH_JOB_POLL_INTERVAL_SECONDS: float = Field(
+        default=0.5, env="BATCH_JOB_POLL_INTERVAL_SECONDS"
+    )
+    BATCH_JOB_TIMEOUT_SECONDS: float = Field(
+        default=3600, env="BATCH_JOB_TIMEOUT_SECONDS"
+    )
     # Upload target (Video Search / embeddings service)
     VIDEO_UPLOAD_ENDPOINT: str = Field(default="", env="VSS_SEARCH_IP")
     # Proxy control (trimmed to only what upload code references)

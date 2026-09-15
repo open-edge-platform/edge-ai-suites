@@ -1,0 +1,1064 @@
+From e9811a740de52335d575c8d86034f53cd5fd8781 Mon Sep 17 00:00:00 2001
+From: "Deng, Bing" <bing.deng@intel.com>
+Date: Mon, 20 Jul 2026 14:49:49 +0800
+Subject: [PATCH] Add profiling instrumentation, new LiDAR configs, and thread
+ tuning
+
+Features:
+1. Add avia_ros2.yaml, targeting the FAST-LIO2 paper's Avia setup
+   (1000m map cube, 0.5m voxel, point_filter_num=4).
+2. Add avia_ros2_remote.yaml for the mujoco_bridge simulator, which
+   publishes plain x/y/z/intensity clouds instead of Avia's CustomMsg.
+3. Add config/velodyne_generic.yaml, a Velodyne HDL-32E parameter set
+   for NCLT validation in the fast-lio2-demo pipeline, with the
+   LiDAR-IMU extrinsic derived from the NCLT dataset paper's own
+   Table 4 sensor calibration (Carlevaris-Bianco et al. 2016) rather
+   than the UrbanLoco/Point-LIO placeholder it started from.
+4. Gate a per-frame latency CSV (Log/fast_lio_profiling.csv) behind a
+   new ENABLE_PROFILING cmake option; release builds are unaffected.
+5. Log timing for h_share_model's transform/kdtree/plane stages and
+   the EKF's manifold/kalman/cov/dx-solve/boxplus/converge/h_dyn_share
+   steps, plus odom publish time, raw point count, and queue wait.
+6. Detect and log lidar frame skips (gaps over 1.5x the scan period).
+7. Let MP_PROC_NUM be overridden via a cmake cache variable, and raise
+   the x86 auto-detected default from 3 to 4 threads on >4-core boxes.
+8. Upgrade to C++17 and make the Python dependency optional, matching
+   Jazzy/Humble RCLCPP requirements.
+
+Performance:
+1. Move per-stage algorithm timers to CLOCK_MONOTONIC so a PTP clock
+   step (phc2sys) can no longer corrupt a latency measurement.
+2. Write the profiling CSV from a lock-free ring buffer drained by a
+   dedicated thread, off the LiDAR callback's hot path; pad the
+   ring's head/tail counters to avoid false sharing, and pin the
+   writer to a core outside the algorithm's cpuset.
+3. Skip the fout_pre debug-log write entirely when runtime_pos_log
+   is off, instead of writing it unconditionally.
+
+Bug fixes:
+1. Check for a 'time' field before reading it in velodyne_handler, to
+   avoid a segfault on point clouds without per-point time.
+2. Create Log/ before opening pos_log.txt or the profiling CSV, and
+   guard fclose(fp) with a null check, so a missing directory or an
+   unopened file can't crash startup/shutdown.
+3. Stop linking PythonLibs unconditionally so the build doesn't fail
+   on systems without Python dev headers installed.
+4. Revert UrbanLoco's fov_degree to 180; the field is unused in the
+   codebase, so 360 only caused confusion.
+5. Replace velodyne_generic.yaml's identity LiDAR-IMU extrinsic (an
+   UrbanLoco/Point-LIO placeholder) with the real Velodyne HDL-32E ->
+   Microstrain MS25 IMU transform, composed from the NCLT paper's own
+   Table 4 body-frame sensor poses (x_body_vel, x_body_imu) - the
+   placeholder's identity rotation was off by ~90 degrees of yaw from
+   the actual mounting.
+
+Signed-off-by: Deng, Bing <bing.deng@intel.com>
+---
+ .gitignore                                |   2 +
+ CMakeLists.txt                            |  58 ++--
+ config/avia_ros2.yaml                     |  89 +++++++
+ config/avia_ros2_remote.yaml              |  93 +++++++
+ config/velodyne_generic.yaml              |  60 +++++
+ include/IKFoM_toolkit/esekfom/esekfom.hpp |  60 ++++-
+ src/laserMapping.cpp                      | 307 ++++++++++++++++++++--
+ src/preprocess.cpp                        |   7 +-
+ 8 files changed, 629 insertions(+), 47 deletions(-)
+ create mode 100644 config/avia_ros2.yaml
+ create mode 100644 config/avia_ros2_remote.yaml
+ create mode 100644 config/velodyne_generic.yaml
+
+diff --git a/.gitignore b/.gitignore
+index eb7be62..8c03dfa 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,4 +1,6 @@
+ build
++install
++log
+ Log/*.png
+ Log/*.txt
+ Log/*.csv
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index be3040b..e2b8aa0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5,37 +5,39 @@ if(NOT CMAKE_BUILD_TYPE)
+   set(CMAKE_BUILD_TYPE Release)
+ endif()
+ 
+-ADD_COMPILE_OPTIONS(-std=c++14)
+-ADD_COMPILE_OPTIONS(-std=c++14)
+-set(CMAKE_CXX_FLAGS "-std=c++14 -O3")
++ADD_COMPILE_OPTIONS(-std=c++17)
++set(CMAKE_CXX_FLAGS "-std=c++17 -O3 -fno-omit-frame-pointer")
+ 
+ add_definitions(-DROOT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/\")
+ 
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fexceptions")
+-set(CMAKE_CXX_STANDARD 14)
++set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED ON)
+ set(CMAKE_CXX_EXTENSIONS OFF)
+-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -std=c++0x -std=c++14 -fexceptions")
++set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread -fexceptions")
+ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ 
+-message("Current CPU archtecture: ${CMAKE_SYSTEM_PROCESSOR}")
+-
+-if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+-  include(ProcessorCount)
+-  ProcessorCount(N)
+-  message("Processer number:  ${N}")
++set(MP_PROC_NUM "0" CACHE STRING
++    "Compute-thread count override (from cpuset_PTL.conf's MP_PROC_NUM, or CPUSET_ALGO's core count as a fallback); 0 = auto-detect by arch/core-count")
+ 
+-  if(N GREATER 4)
+-    add_definitions(-DMP_EN)
+-    add_definitions(-DMP_PROC_NUM=3)
+-    message("core for MP: 3")
+-  elseif(N GREATER 3)
++message("Current CPU archtecture: ${CMAKE_SYSTEM_PROCESSOR}")
++include(ProcessorCount)
++ProcessorCount(N)
++message("Processer number:  ${N}")
++if(MP_PROC_NUM GREATER 0)
++  if(MP_PROC_NUM GREATER 1)
+     add_definitions(-DMP_EN)
+-    add_definitions(-DMP_PROC_NUM=2)
+-    message("core for MP: 2")
+-  else()
+-    add_definitions(-DMP_PROC_NUM=1)
+   endif()
++  add_definitions(-DMP_PROC_NUM=${MP_PROC_NUM})
++  message("core for MP: ${MP_PROC_NUM} (override)")
++elseif(N GREATER 4)
++  add_definitions(-DMP_EN)
++  add_definitions(-DMP_PROC_NUM=4)
++  message("core for MP: 4")
++elseif(N GREATER 3)
++  add_definitions(-DMP_EN)
++  add_definitions(-DMP_PROC_NUM=2)
++  message("core for MP: 2")
+ else()
+   add_definitions(-DMP_PROC_NUM=1)
+ endif()
+@@ -44,7 +46,7 @@ find_package(OpenMP QUIET)
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}   ${OpenMP_C_FLAGS}")
+ 
+-find_package(PythonLibs REQUIRED)
++find_package(PythonLibs QUIET)
+ find_path(MATPLOTLIB_CPP_INCLUDE_DIRS "matplotlibcpp.h")
+ 
+ # ROS dependencies
+@@ -98,8 +100,11 @@ target_include_directories(fastlio_mapping PUBLIC
+   $<INSTALL_INTERFACE:include>
+   ${PCL_INCLUDE_DIRS}
+ )
+-target_link_libraries(fastlio_mapping ${PCL_LIBRARIES} ${PYTHON_LIBRARIES} Eigen3::Eigen)
+-target_include_directories(fastlio_mapping PRIVATE ${PYTHON_INCLUDE_DIRS})
++target_link_libraries(fastlio_mapping ${PCL_LIBRARIES} Eigen3::Eigen)
++if(PYTHON_LIBRARIES)
++  target_link_libraries(fastlio_mapping ${PYTHON_LIBRARIES})
++  target_include_directories(fastlio_mapping PRIVATE ${PYTHON_INCLUDE_DIRS})
++endif()
+ 
+ list(APPEND EOL_LIST "foxy" "galactic" "eloquent" "dashing" "crystal")
+ 
+@@ -125,4 +130,11 @@ install(
+   DESTINATION share/${PROJECT_NAME}
+ )
+ 
++option(ENABLE_PROFILING "Enable end-to-end latency profiling CSV" OFF)
++set(PROFILING_CSV_CPU "-1" CACHE STRING "CPU to pin the CSV writer thread to (-1 = auto-detect outside algo cpuset)")
++if(ENABLE_PROFILING)
++  add_compile_definitions(ENABLE_PROFILING)
++  add_compile_definitions(PROFILING_CSV_CPU=${PROFILING_CSV_CPU})
++endif()
++
+ ament_package()
+\ No newline at end of file
+diff --git a/config/avia_ros2.yaml b/config/avia_ros2.yaml
+new file mode 100644
+index 0000000..8242188
+--- /dev/null
++++ b/config/avia_ros2.yaml
+@@ -0,0 +1,89 @@
++# FAST-LIO2 Table VII Reproduction Configuration
++# Target:
++#   Livox Avia
++#   100hz_2021-02-05-19-50-54.bag
++#   Match FAST-LIO2 paper Table VII as closely as possible
++
++/**:
++  ros__parameters:
++
++    common:
++      lid_topic: "/livox/lidar"
++      imu_topic: "/livox/imu"
++
++      time_sync_en: false
++      time_offset_lidar_to_imu: 0.0
++
++    preprocess:
++
++      # Livox
++      lidar_type: 1
++
++      # Avia
++      scan_line: 6
++
++      # FAST-LIO2 default for Avia
++      blind: 4.0
++
++    # Iterative EKF
++    max_iteration: 3
++
++    # Paper Section VI-A:
++    # 1:4 temporal downsampling
++    point_filter_num: 4
++
++    # Paper Section VI-A:
++    # spatial downsample resolution = 0.5m
++    filter_size_surf: 0.5
++    filter_size_map: 0.5
++    filter_size_corner: 0.5
++
++    # Paper Section VI-A:
++    # local map size L = 1000m
++    cube_side_length: 1000.0
++
++    # FAST-LIO2 direct method
++    feature_extract_enable: false
++
++    # Disable runtime file logging
++    runtime_pos_log_enable: false
++
++    mapping:
++
++      acc_cov: 0.1
++      gyr_cov: 0.1
++
++      b_acc_cov: 0.0001
++      b_gyr_cov: 0.0001
++
++      #
++      # Keep default values unless calibration requires otherwise
++      #
++      fov_degree: 180.0
++      det_range: 100.0
++
++      extrinsic_est_en: false
++
++      # Use Avia calibration if known
++      extrinsic_T:
++        [0.04165, 0.02326, -0.02840]
++
++      extrinsic_R:
++        [
++          1.0, 0.0, 0.0,
++          0.0, 1.0, 0.0,
++          0.0, 0.0, 1.0
++        ]
++
++    publish:
++
++      path_en: true
++
++      scan_publish_en: true
++      dense_publish_en: false
++      scan_bodyframe_pub_en: false
++
++    pcd_save:
++
++      pcd_save_en: false
++      interval: -1
+\ No newline at end of file
+diff --git a/config/avia_ros2_remote.yaml b/config/avia_ros2_remote.yaml
+new file mode 100644
+index 0000000..cc90e2e
+--- /dev/null
++++ b/config/avia_ros2_remote.yaml
+@@ -0,0 +1,93 @@
++# S11 — Remote simulated LiDAR (mujoco_bridge on 10.239.92.61)
++# Target:
++#   NOT a real Livox Avia. mujoco_bridge publishes /livox/lidar as a plain
++#   sensor_msgs/msg/PointCloud2 with only x/y/z/intensity fields (no
++#   tag/line/reflectivity/ring/time) — confirmed via direct `ros2 topic echo`
++#   on the publisher host. avia_ros2.yaml's lidar_type=1 (AVIA) makes fast_lio2
++#   subscribe with type livox_ros_driver2::msg::CustomMsg (see
++#   laserMapping.cpp's `if (p_pre->lidar_type == AVIA)` branch), which can
++#   never DDS-match a PointCloud2 publisher — a hard type mismatch, not a
++#   network issue. lidar_type below is deliberately NOT 1/2/3/4 (AVIA/VELO16/
++#   OUST64/MID360) so it falls through to Preprocess::default_handler(), the
++#   only handler that reads plain x/y/z/intensity (see preprocess.cpp).
++#   Per-point curvature (intra-scan time offset) is always 0 in that handler,
++#   i.e. no intra-scan deskew — acceptable here since the sim runs at
++#   RTF~0.3 (slow relative to real time).
++
++/**:
++  ros__parameters:
++
++    common:
++      lid_topic: "/livox/lidar"
++      imu_topic: "/livox/imu"
++
++      time_sync_en: false
++      time_offset_lidar_to_imu: 0.0
++
++    preprocess:
++
++      # Not AVIA(1)/VELO16(2)/OUST64(3)/MID360(4) -> Preprocess::default_handler()
++      # (plain PointCloud2, x/y/z/intensity only)
++      lidar_type: 0
++
++      # Unused by default_handler, kept for parity with other configs
++      scan_line: 1
++
++      # Indoor kitchen sim scene (unlike the real Avia's 4.0 outdoor default) —
++      # 4.0m would blind out most/all points in a small room.
++      blind: 0.5
++
++    # Iterative EKF
++    max_iteration: 3
++
++    point_filter_num: 4
++
++    filter_size_surf: 0.5
++    filter_size_map: 0.5
++    filter_size_corner: 0.5
++
++    cube_side_length: 1000.0
++
++    # FAST-LIO2 direct method
++    feature_extract_enable: false
++
++    # Disable runtime file logging
++    runtime_pos_log_enable: false
++
++    mapping:
++
++      acc_cov: 0.1
++      gyr_cov: 0.1
++
++      b_acc_cov: 0.0001
++      b_gyr_cov: 0.0001
++
++      fov_degree: 180.0
++      det_range: 100.0
++
++      # No calibration available for this simulated rig — identity until
++      # measured/estimated. Revisit if mapping drifts noticeably.
++      extrinsic_est_en: false
++
++      extrinsic_T:
++        [0.0, 0.0, 0.0]
++
++      extrinsic_R:
++        [
++          1.0, 0.0, 0.0,
++          0.0, 1.0, 0.0,
++          0.0, 0.0, 1.0
++        ]
++
++    publish:
++
++      path_en: true
++
++      scan_publish_en: true
++      dense_publish_en: false
++      scan_bodyframe_pub_en: false
++
++    pcd_save:
++
++      pcd_save_en: false
++      interval: -1
+diff --git a/config/velodyne_generic.yaml b/config/velodyne_generic.yaml
+new file mode 100644
+index 0000000..18b7a8c
+--- /dev/null
++++ b/config/velodyne_generic.yaml
+@@ -0,0 +1,60 @@
++/**:
++    ros__parameters:
++        feature_extract_enable: false
++        point_filter_num: 4
++        max_iteration: 3
++        filter_size_surf: 0.5
++        filter_size_map: 0.5
++        cube_side_length: 1000.0
++        runtime_pos_log_enable: false
++        map_file_path: "./test.pcd"
++
++        common:
++            lid_topic:  "/velodyne_points_0"
++            imu_topic:  "/imu/data"
++            time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
++            time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
++                                        # This param will take effect no matter what time_sync_en is. So if the time offset is not known exactly, please set as 0.0
++
++        preprocess:
++            lidar_type: 2                # 1 for Livox serials LiDAR, 2 for Velodyne LiDAR, 3 for ouster LiDAR,
++            scan_line: 32
++            scan_rate: 10                # only need to be set for velodyne, unit: Hz,
++            timestamp_unit: 2            # the unit of time/t field in the PointCloud2 rostopic: 0-second, 1-milisecond, 2-microsecond, 3-nanosecond.
++            blind: 2.0
++
++        mapping:
++            acc_cov: 0.1
++            gyr_cov: 0.1
++            b_acc_cov: 0.0001
++            b_gyr_cov: 0.0001
++            fov_degree:    180.0
++            det_range:     100.0
++            extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic,
++            # Velodyne HDL-32E -> Microstrain MS25 IMU, derived from the NCLT
++            # dataset paper's own Table 4 (Carlevaris-Bianco et al. 2016,
++            # "University of Michigan North Campus long-term vision and lidar
++            # dataset"), which gives each sensor's pose in the vehicle body
++            # frame as x_body_S = [x, y, z, roll, pitch, yaw] (meters/degrees):
++            #   x_body_vel = [ 0.002, -0.004, -0.957,  0.807,  0.166, -90.703]
++            #   x_body_imu = [-0.110, -0.180, -0.710,  0,       0,      0    ]
++            # Composed (p_body = Rz(yaw)Ry(pitch)Rx(roll)*p_S + T, IMU frame ==
++            # body frame since its own roll/pitch/yaw are 0) into the
++            # LiDAR->IMU transform FAST-LIO expects (p_IMU = R*p_LiDAR + T):
++            #   T_imu_vel = T_body_vel - T_body_imu
++            #   R_imu_vel = R_body_vel
++            extrinsic_T: [ 0.112,  0.176, -0.247]
++            extrinsic_R: [-0.012269,  0.999825, -0.014119,
++                        -0.999921, -0.012309, -0.002724,
++                        -0.002897,  0.014084,  0.999897]
++
++        publish:
++            path_en:  false
++            scan_publish_en:  true       # false: close all the point cloud output
++            dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
++            scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
++
++        pcd_save:
++            pcd_save_en: true
++            interval: -1                 # how many LiDAR frames saved in each pcd file;
++                                        # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+diff --git a/include/IKFoM_toolkit/esekfom/esekfom.hpp b/include/IKFoM_toolkit/esekfom/esekfom.hpp
+index 7547584..577a381 100755
+--- a/include/IKFoM_toolkit/esekfom/esekfom.hpp
++++ b/include/IKFoM_toolkit/esekfom/esekfom.hpp
+@@ -38,6 +38,7 @@
+ 
+ #include <vector>
+ #include <cstdlib>
++#include <time.h>
+ 
+ #include <boost/bind.hpp>
+ #include <Eigen/Core>
+@@ -1617,7 +1618,11 @@ public:
+ 	
+ 	//iterated error state EKF update modified for one specific system.
+ 	void update_iterated_dyn_share_modified(double R, double &solve_time) {
+-		
++#ifdef ENABLE_PROFILING
++		t_manifold_acc = t_kalman_acc = t_cov_acc = 0;
++		t_dx_solve_acc = t_boxplus_acc = t_converge_acc = 0;
++		t_h_dyn_share_acc = 0;
++#endif
+ 		dyn_share_datastruct<scalar_type> dyn_share;
+ 		dyn_share.valid = true;
+ 		dyn_share.converge = true;
+@@ -1632,8 +1637,14 @@ public:
+ 		vectorized_state dx_new = vectorized_state::Zero();
+ 		for(int i=-1; i<maximum_iter; i++)
+ 		{
+-			dyn_share.valid = true;	
++			dyn_share.valid = true;
++#ifdef ENABLE_PROFILING
++			double _t_h_dyn_share = omp_get_wtime();
++#endif
+ 			h_dyn_share(x_, dyn_share);
++#ifdef ENABLE_PROFILING
++			t_h_dyn_share_acc += omp_get_wtime() - _t_h_dyn_share;
++#endif
+ 
+ 			if(! dyn_share.valid)
+ 			{
+@@ -1647,13 +1658,16 @@ public:
+ 				Eigen::Matrix<scalar_type, Eigen::Dynamic, 12> h_x_ = dyn_share.h_x;
+ 			#endif
+ 			double solve_start = omp_get_wtime();
++#ifdef ENABLE_PROFILING
++			double _t_ekf = omp_get_wtime();
++#endif
+ 			dof_Measurement = h_x_.rows();
+ 			vectorized_state dx;
+ 			x_.boxminus(dx, x_propagated);
+ 			dx_new = dx;
+-			
+-			
+-			
++
++
++
+ 			P_ = P_propagated;
+ 			
+ 			Matrix<scalar_type, 3, 3> res_temp_SO3;
+@@ -1697,9 +1711,13 @@ public:
+ 					P_. template block<1, 2>(i, idx) = (P_. template block<1, 2>(i, idx)) * res_temp_S2.transpose();
+ 				}
+ 			}
++#ifdef ENABLE_PROFILING
++			t_manifold_acc += omp_get_wtime() - _t_ekf;
++			_t_ekf = omp_get_wtime();
++#endif
+ 			//Matrix<scalar_type, n, Eigen::Dynamic> K_;
+ 			//Matrix<scalar_type, n, 1> K_h;
+-			//Matrix<scalar_type, n, n> K_x; 
++			//Matrix<scalar_type, n, n> K_x;
+ 
+ 			/*
+ 			if(n > dof_Measurement)
+@@ -1811,10 +1829,22 @@ public:
+ 			#endif 
+ 			}
+ 
++#ifdef ENABLE_PROFILING
++			t_kalman_acc += omp_get_wtime() - _t_ekf;
++			_t_ekf = omp_get_wtime();
++#endif
+ 			//K_x = K_ * h_x_;
+-			Matrix<scalar_type, n, 1> dx_ = K_h + (K_x - Matrix<scalar_type, n, n>::Identity()) * dx_new; 
++			Matrix<scalar_type, n, 1> dx_ = K_h + (K_x - Matrix<scalar_type, n, n>::Identity()) * dx_new;
++#ifdef ENABLE_PROFILING
++			t_dx_solve_acc += omp_get_wtime() - _t_ekf;
++			_t_ekf = omp_get_wtime();
++#endif
+ 			state x_before = x_;
+ 			x_.boxplus(dx_);
++#ifdef ENABLE_PROFILING
++			t_boxplus_acc += omp_get_wtime() - _t_ekf;
++			_t_ekf = omp_get_wtime();
++#endif
+ 			dyn_share.converge = true;
+ 			for(int i = 0; i < n ; i++)
+ 			{
+@@ -1830,11 +1860,17 @@ public:
+ 			{
+ 				dyn_share.converge = true;
+ 			}
++#ifdef ENABLE_PROFILING
++			t_converge_acc += omp_get_wtime() - _t_ekf;
++#endif
+ 
+ 			if(t > 1 || i == maximum_iter - 1)
+ 			{
++#ifdef ENABLE_PROFILING
++				double _t_cov = omp_get_wtime();
++#endif
+ 				L_ = P_;
+-				//std::cout << "iteration time" << t << "," << i << std::endl; 
++				//std::cout << "iteration time" << t << "," << i << std::endl;
+ 				Matrix<scalar_type, 3, 3> res_temp_SO3;
+ 				MTK::vect<3, scalar_type> seg_SO3;
+ 				for(typename std::vector<std::pair<int, int> >::iterator it = x_.SO3_state.begin(); it != x_.SO3_state.end(); it++) {
+@@ -1923,6 +1959,9 @@ public:
+ 				//{
+ 					P_ = L_ - K_x.template block<n, 12>(0, 0) * P_.template block<12, n>(0, 0);
+ 				//}
++#ifdef ENABLE_PROFILING
++				t_cov_acc += omp_get_wtime() - _t_cov;
++#endif
+ 				solve_time += omp_get_wtime() - solve_start;
+ 				return;
+ 			}
+@@ -1952,6 +1991,11 @@ public:
+ 	const cov& get_P() const {
+ 		return P_;
+ 	}
++#ifdef ENABLE_PROFILING
++	double t_manifold_acc = 0, t_kalman_acc = 0, t_cov_acc = 0;
++	double t_dx_solve_acc = 0, t_boxplus_acc = 0, t_converge_acc = 0;
++	double t_h_dyn_share_acc = 0;  // wall time inside h_dyn_share() (h_share_model), measured from the call site
++#endif
+ private:
+ 	state x_;
+ 	measurement m_;
+diff --git a/src/laserMapping.cpp b/src/laserMapping.cpp
+index e5d9950..8d5188f 100644
+--- a/src/laserMapping.cpp
++++ b/src/laserMapping.cpp
+@@ -36,12 +36,28 @@
+ #include <mutex>
+ #include <math.h>
+ #include <thread>
++#include <pthread.h>
+ #include <fstream>
++#ifdef ENABLE_PROFILING
++#include <atomic>
++#endif
+ #include <csignal>
+ #include <chrono>
+ #include <unistd.h>
+-#include <Python.h>
+ #include <so3_math.h>
++
++/*** Profiling: wall-clock using CLOCK_REALTIME (same domain as PTP-synced header.stamp).
++ *  Only used for recv_wall (DDS transport delay S0 = recv_wall − timestamp).
++ *  All algorithm computation timing uses omp_get_wtime() (CLOCK_MONOTONIC on Linux),
++ *  which is immune to phc2sys CLOCK_REALTIME step adjustments.
++ *  TOTAL = end_wall − recv_mono  (both omp_get_wtime(), telescope holds).
++ *  S0   = recv_wall − timestamp  (both CLOCK_REALTIME, separate measurement).
++ ***/
++static inline double realtime_sec() {
++    struct timespec ts;
++    clock_gettime(CLOCK_REALTIME, &ts);
++    return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
++}
+ #include <rclcpp/rclcpp.hpp>
+ #include <Eigen/Core>
+ #include "IMU_Processing.hpp"
+@@ -62,6 +78,10 @@
+ #include <livox_ros_driver2/msg/custom_msg.hpp>
+ #include "preprocess.h"
+ #include <ikd-Tree/ikd_Tree.h>
++#include <sys/stat.h>
++#include <cerrno>
++#include <sched.h>
++#include <vector>
+ 
+ #define INIT_TIME           (0.1)
+ #define LASER_POINT_COV     (0.001)
+@@ -72,10 +92,139 @@
+ double kdtree_incremental_time = 0.0, kdtree_search_time = 0.0, kdtree_delete_time = 0.0;
+ double T1[MAXN], s_plot[MAXN], s_plot2[MAXN], s_plot3[MAXN], s_plot4[MAXN], s_plot5[MAXN], s_plot6[MAXN], s_plot7[MAXN], s_plot8[MAXN], s_plot9[MAXN], s_plot10[MAXN], s_plot11[MAXN];
+ double match_time = 0, solve_time = 0, solve_const_H_time = 0;
++#ifdef ENABLE_PROFILING
++double h_transform_time = 0, h_kdtree_time = 0, h_plane_time = 0;
++#endif
+ int    kdtree_size_st = 0, kdtree_size_end = 0, add_point_size = 0, kdtree_delete_counter = 0;
+ bool   runtime_pos_log = false, pcd_save_en = false, time_sync_en = false, extrinsic_est_en = true, path_en = true;
+ /**************************/
+ 
++#ifdef ENABLE_PROFILING
++#ifndef PROFILING_CSV_CPU
++#define PROFILING_CSV_CPU -1  // fallback if ENABLE_PROFILING was set without going through CMakeLists.txt
++#endif
++double recv_wall = 0.0;  // CLOCK_REALTIME — only for S0 = recv_wall − timestamp
++double recv_mono = 0.0;  // CLOCK_MONOTONIC — anchor for TOTAL and T2
++int    raw_pts_size_last = 0;
++
++struct CsvRow {
++    double timestamp, recv_wall, recv_mono, t0, t1, t3, t5, end_wall;
++    double propag_time, match_time, solve_time;
++    int    feats_down_size;
++    int    feats_undistort_size;
++    int    raw_pts_size;
++    double queue_wait, s_plot11;
++    double h_transform_time, h_kdtree_time, h_plane_time;
++    double ekf_manifold_time, ekf_kalman_time, ekf_cov_time;
++    double ekf_dx_solve_time, ekf_boxplus_time, ekf_converge_time;
++    double odom_pub_time;
++    double h_dyn_share_time;  // wall time of h_dyn_share() call, measured from esekfom.hpp call site
++    double fout_pre_time;     // wall time of fout_pre<<...<<endl debug-log write (0 if runtime_pos_log is off)
++};
++
++static constexpr int CSV_RING_SIZE = 1024;  // must be power-of-2
++struct CsvRing {
++    CsvRow  buf[CSV_RING_SIZE];
++    // Each counter on its own cache line to prevent false sharing between
++    // the producer (algo thread, P-core) and consumer (CSV thread, E-core).
++    alignas(64) std::atomic<uint32_t> head{0};  // written by producer
++    alignas(64) std::atomic<uint32_t> tail{0};  // written by consumer
++} g_csv_ring;
++
++FILE                   *g_csv_fp        = nullptr;
++std::thread             g_csv_thread;
++std::atomic<bool>       g_csv_stop{false};
++std::atomic<uint32_t>   g_csv_drop_count{0};
++
++// Pin the CSV writer thread to a CPU outside the algorithm cpuset.
++// PROFILING_CSV_CPU >= 0: use that exact CPU (set at cmake time via -DPROFILING_CSV_CPU=N).
++// PROFILING_CSV_CPU == -1 (default): scan online CPUs and pick the first one not in the
++//   calling process's affinity set so it never competes with the algorithm cores.
++static bool pin_csv_thread(pthread_t tid) {
++#if !defined(PROFILING_CSV_CPU)
++    return false;  // should not happen when ENABLE_PROFILING is set
++#else
++    int target = PROFILING_CSV_CPU;
++    if (target >= 0) {
++        cpu_set_t s; CPU_ZERO(&s); CPU_SET(target, &s);
++        return pthread_setaffinity_np(tid, sizeof(s), &s) == 0;
++    }
++    // auto-detect: first CPU outside the process cpuset
++    cpu_set_t proc_set;
++    if (pthread_getaffinity_np(pthread_self(), sizeof(proc_set), &proc_set) != 0)
++        return false;
++    int ncpus = (int)sysconf(_SC_NPROCESSORS_ONLN);
++    for (int c = 0; c < ncpus; ++c) {
++        if (!CPU_ISSET(c, &proc_set)) {
++            cpu_set_t s; CPU_ZERO(&s); CPU_SET(c, &s);
++            return pthread_setaffinity_np(tid, sizeof(s), &s) == 0;
++        }
++    }
++    return false;
++#endif
++}
++
++static constexpr int CSV_BATCH = 64;  // rows to drain per wakeup
++
++static void csv_writer_thread() {
++    uint32_t last_seen_drops = 0;
++    char line_buf[CSV_BATCH][512];
++    while (true) {
++        uint32_t t = g_csv_ring.tail.load(std::memory_order_acquire);
++        uint32_t h = g_csv_ring.head.load(std::memory_order_acquire);
++        if (t == h) {
++            uint32_t drops = g_csv_drop_count.load(std::memory_order_relaxed);
++            if (drops != last_seen_drops) {
++                fprintf(stderr, "[PROFILING] WARNING: CSV ring buffer overflow, dropped %u row(s) so far\n",
++                        drops);
++                last_seen_drops = drops;
++            }
++            if (g_csv_stop.load(std::memory_order_acquire)) break;
++            struct timespec ts{1, 0};  // 1 s — reduces IO wakeups; ring holds 1024 rows
++            nanosleep(&ts, nullptr);
++            continue;
++        }
++        // Drain up to CSV_BATCH rows into line_buf, then fwrite once.
++        int n = 0;
++        while (n < CSV_BATCH) {
++            t = g_csv_ring.tail.load(std::memory_order_acquire);
++            h = g_csv_ring.head.load(std::memory_order_acquire);
++            if (t == h) break;
++            const CsvRow &r = g_csv_ring.buf[t & (CSV_RING_SIZE - 1)];
++            n += snprintf(line_buf[n], sizeof(line_buf[n]),
++                "%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%d,%d,%d,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f,%0.9f\n",
++                r.timestamp, r.recv_wall, r.recv_mono, r.t0, r.t1, r.t3, r.t5, r.end_wall,
++                r.propag_time, r.match_time, r.solve_time,
++                r.feats_down_size, r.feats_undistort_size, r.raw_pts_size, r.queue_wait, r.s_plot11,
++                r.h_transform_time, r.h_kdtree_time, r.h_plane_time,
++                r.ekf_manifold_time, r.ekf_kalman_time, r.ekf_cov_time,
++                r.ekf_dx_solve_time, r.ekf_boxplus_time, r.ekf_converge_time,
++                r.odom_pub_time, r.h_dyn_share_time, r.fout_pre_time) > 0 ? 1 : 0;
++            g_csv_ring.tail.store(t + 1, std::memory_order_release);
++        }
++        for (int i = 0; i < n; ++i) fputs(line_buf[i], g_csv_fp);
++    }
++    fflush(g_csv_fp);
++    uint32_t total_drops = g_csv_drop_count.load(std::memory_order_relaxed);
++    if (total_drops > 0) {
++        fprintf(g_csv_fp, "# WARNING: %u row(s) dropped due to ring buffer overflow\n", total_drops);
++        fprintf(stderr, "[PROFILING] WARNING: total CSV rows dropped = %u\n", total_drops);
++        fflush(g_csv_fp);
++    }
++}
++
++static inline void csv_push(const CsvRow &row) {
++    uint32_t h = g_csv_ring.head.load(std::memory_order_relaxed);
++    uint32_t t = g_csv_ring.tail.load(std::memory_order_acquire);
++    if (h - t >= CSV_RING_SIZE) {
++        g_csv_drop_count.fetch_add(1, std::memory_order_relaxed);
++        return;
++    }
++    g_csv_ring.buf[h & (CSV_RING_SIZE - 1)] = row;
++    g_csv_ring.head.store(h + 1, std::memory_order_release);
++}
++#endif
++
+ float res_last[100000] = {0.0};
+ float DET_RANGE = 300.0f;
+ const float MOV_THRESHOLD = 1.5f;
+@@ -285,7 +434,8 @@ void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::UniquePtr msg)
+     mtx_buffer.lock();
+     scan_count ++;
+     double cur_time = get_time_sec(msg->header.stamp);
+-    double preprocess_start_time = omp_get_wtime();
++    double preprocess_start_time = realtime_sec();
++    double preprocess_start_mono = omp_get_wtime();
+     if (!is_first_lidar && cur_time < last_timestamp_lidar)
+     {
+         std::cerr << "lidar loop back, clear buffer" << std::endl;
+@@ -301,7 +451,12 @@ void standard_pcl_cbk(const sensor_msgs::msg::PointCloud2::UniquePtr msg)
+     lidar_buffer.push_back(ptr);
+     time_buffer.push_back(cur_time);
+     last_timestamp_lidar = cur_time;
+-    s_plot11[scan_count] = omp_get_wtime() - preprocess_start_time;
++    s_plot11[scan_count] = omp_get_wtime() - preprocess_start_mono;
++#ifdef ENABLE_PROFILING
++    recv_wall = preprocess_start_time;
++    recv_mono = preprocess_start_mono;
++    raw_pts_size_last = (int)msg->width * (int)msg->height;
++#endif
+     mtx_buffer.unlock();
+     sig_buffer.notify_all();
+ }
+@@ -312,7 +467,8 @@ void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::UniquePtr msg)
+ {
+     mtx_buffer.lock();
+     double cur_time = get_time_sec(msg->header.stamp);
+-    double preprocess_start_time = omp_get_wtime();
++    double preprocess_start_time = realtime_sec();
++    double preprocess_start_mono = omp_get_wtime();
+     scan_count ++;
+     if (!is_first_lidar && cur_time < last_timestamp_lidar)
+     {
+@@ -341,8 +497,13 @@ void livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::UniquePtr msg)
+     p_pre->process(msg, ptr);
+     lidar_buffer.push_back(ptr);
+     time_buffer.push_back(last_timestamp_lidar);
+-    
+-    s_plot11[scan_count] = omp_get_wtime() - preprocess_start_time;
++
++    s_plot11[scan_count] = omp_get_wtime() - preprocess_start_mono;
++#ifdef ENABLE_PROFILING
++    recv_wall = preprocess_start_time;
++    recv_mono = preprocess_start_mono;
++    raw_pts_size_last = (int)msg->point_num;
++#endif
+     mtx_buffer.unlock();
+     sig_buffer.notify_all();
+ }
+@@ -677,27 +838,40 @@ void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
+ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_data)
+ {
+     double match_start = omp_get_wtime();
+-    laserCloudOri->clear(); 
+-    corr_normvect->clear(); 
+-    total_residual = 0.0; 
++    laserCloudOri->clear();
++    corr_normvect->clear();
++    total_residual = 0.0;
+ 
+     /** closest surface search and residual computation **/
++#ifdef ENABLE_PROFILING
++    double _sum_transform = 0, _sum_kdtree = 0, _sum_plane = 0;
++#endif
+     #ifdef MP_EN
+         omp_set_num_threads(MP_PROC_NUM);
++        #ifdef ENABLE_PROFILING
++        #pragma omp parallel for reduction(+:_sum_transform,_sum_kdtree,_sum_plane)
++        #else
+         #pragma omp parallel for
++        #endif
+     #endif
+     for (int i = 0; i < feats_down_size; i++)
+     {
+-        PointType &point_body  = feats_down_body->points[i]; 
+-        PointType &point_world = feats_down_world->points[i]; 
++        PointType &point_body  = feats_down_body->points[i];
++        PointType &point_world = feats_down_world->points[i];
+ 
+         /* transform to world frame */
++#ifdef ENABLE_PROFILING
++        double _t = omp_get_wtime();
++#endif
+         V3D p_body(point_body.x, point_body.y, point_body.z);
+         V3D p_global(s.rot * (s.offset_R_L_I*p_body + s.offset_T_L_I) + s.pos);
+         point_world.x = p_global(0);
+         point_world.y = p_global(1);
+         point_world.z = p_global(2);
+         point_world.intensity = point_body.intensity;
++#ifdef ENABLE_PROFILING
++        _sum_transform += omp_get_wtime() - _t;
++#endif
+ 
+         vector<float> pointSearchSqDis(NUM_MATCH_POINTS);
+ 
+@@ -706,7 +880,13 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
+         if (ekfom_data.converge)
+         {
+             /** Find the closest surfaces in the map **/
++#ifdef ENABLE_PROFILING
++            _t = omp_get_wtime();
++#endif
+             ikdtree.Nearest_Search(point_world, NUM_MATCH_POINTS, points_near, pointSearchSqDis);
++#ifdef ENABLE_PROFILING
++            _sum_kdtree += omp_get_wtime() - _t;
++#endif
+             point_selected_surf[i] = points_near.size() < NUM_MATCH_POINTS ? false : pointSearchSqDis[NUM_MATCH_POINTS - 1] > 5 ? false : true;
+         }
+ 
+@@ -714,6 +894,9 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
+ 
+         VF(4) pabcd;
+         point_selected_surf[i] = false;
++#ifdef ENABLE_PROFILING
++        _t = omp_get_wtime();
++#endif
+         if (esti_plane(pabcd, points_near, 0.1f))
+         {
+             float pd2 = pabcd(0) * point_world.x + pabcd(1) * point_world.y + pabcd(2) * point_world.z + pabcd(3);
+@@ -729,7 +912,15 @@ void h_share_model(state_ikfom &s, esekfom::dyn_share_datastruct<double> &ekfom_
+                 res_last[i] = abs(pd2);
+             }
+         }
++#ifdef ENABLE_PROFILING
++        _sum_plane += omp_get_wtime() - _t;
++#endif
+     }
++#ifdef ENABLE_PROFILING
++    h_transform_time += _sum_transform;
++    h_kdtree_time    += _sum_kdtree;
++    h_plane_time     += _sum_plane;
++#endif
+     
+     effct_feat_num = 0;
+ 
+@@ -905,9 +1096,33 @@ public:
+ 
+         /*** debug record ***/
+         // FILE *fp;
++        {
++            string log_dir = root_dir + "/Log";
++            mkdir(log_dir.c_str(), 0755);
++        }
+         string pos_log_dir = root_dir + "/Log/pos_log.txt";
+         fp = fopen(pos_log_dir.c_str(),"w");
+ 
++#ifdef ENABLE_PROFILING
++        {
++            string log_dir = root_dir + "/Log";
++            mkdir(log_dir.c_str(), 0755);
++            string csv_dir = log_dir + "/fast_lio_profiling.csv";
++            g_csv_fp = fopen(csv_dir.c_str(), "w");
++            if (g_csv_fp) {
++                fprintf(g_csv_fp, "timestamp,recv_wall,recv_mono,t0,t1,t3,t5,end_wall,propag_time,match_time,solve_time,feats_down_size,feats_undistort_size,raw_pts_size,queue_wait,s_plot11,h_transform_time,h_kdtree_time,h_plane_time,ekf_manifold_time,ekf_kalman_time,ekf_cov_time,ekf_dx_solve_time,ekf_boxplus_time,ekf_converge_time,odom_pub_time,h_dyn_share_time,fout_pre_time\n");
++                fflush(g_csv_fp);
++                g_csv_stop.store(false);
++                g_csv_thread = std::thread(csv_writer_thread);
++                // Pin CSV writer outside the algorithm cpuset so it doesn't compete with P-cores.
++                if (!pin_csv_thread(g_csv_thread.native_handle()))
++                    fprintf(stderr, "[PROFILING] WARNING: could not pin CSV thread (PROFILING_CSV_CPU=%d)\n", PROFILING_CSV_CPU);
++            } else {
++                fprintf(stderr, "[PROFILING] failed to open %s: %s\n", csv_dir.c_str(), strerror(errno));
++            }
++        }
++#endif
++
+         // ofstream fout_pre, fout_out, fout_dbg;
+         fout_pre.open(DEBUG_FILE_DIR("mat_pre.txt"),ios::out);
+         fout_out.open(DEBUG_FILE_DIR("mat_out.txt"),ios::out);
+@@ -951,7 +1166,15 @@ public:
+     {
+         fout_out.close();
+         fout_pre.close();
+-        fclose(fp);
++        if (fp) fclose(fp);
++#ifdef ENABLE_PROFILING
++        if (g_csv_fp) {
++            g_csv_stop.store(true, std::memory_order_release);
++            if (g_csv_thread.joinable()) g_csv_thread.join();
++            fclose(g_csv_fp);
++            g_csv_fp = nullptr;
++        }
++#endif
+     }
+ 
+ private:
+@@ -973,6 +1196,9 @@ private:
+             kdtree_search_time = 0.0;
+             solve_time = 0;
+             solve_const_H_time = 0;
++#ifdef ENABLE_PROFILING
++            h_transform_time = h_kdtree_time = h_plane_time = 0;
++#endif
+             svd_time   = 0;
+             t0 = omp_get_wtime();
+ 
+@@ -1028,8 +1254,17 @@ private:
+             feats_down_world->resize(feats_down_size);
+ 
+             V3D ext_euler = SO3ToEuler(state_point.offset_R_L_I);
+-            fout_pre<<setw(20)<<Measures.lidar_beg_time - first_lidar_time<<" "<<euler_cur.transpose()<<" "<< state_point.pos.transpose()<<" "<<ext_euler.transpose() << " "<<state_point.offset_T_L_I.transpose()<< " " << state_point.vel.transpose() \
+-            <<" "<<state_point.bg.transpose()<<" "<<state_point.ba.transpose()<<" "<<state_point.grav<< endl;
++#ifdef ENABLE_PROFILING
++            double t_fout_pre_start = omp_get_wtime();
++#endif
++            if (runtime_pos_log)
++            {
++                fout_pre<<setw(20)<<Measures.lidar_beg_time - first_lidar_time<<" "<<euler_cur.transpose()<<" "<< state_point.pos.transpose()<<" "<<ext_euler.transpose() << " "<<state_point.offset_T_L_I.transpose()<< " " << state_point.vel.transpose() \
++                <<" "<<state_point.bg.transpose()<<" "<<state_point.ba.transpose()<<" "<<state_point.grav<< endl;
++            }
++#ifdef ENABLE_PROFILING
++            double fout_pre_time = omp_get_wtime() - t_fout_pre_start;
++#endif
+ 
+             if(0) // If you need to see map point, change to "if(1)"
+             {
+@@ -1059,15 +1294,57 @@ private:
+             geoQuat.w = state_point.rot.coeffs()[3];
+ 
+             double t_update_end = omp_get_wtime();
++#ifdef ENABLE_PROFILING
++            double ekf_manifold_time = kf.t_manifold_acc;
++            double ekf_kalman_time   = kf.t_kalman_acc;
++            double ekf_cov_time      = kf.t_cov_acc;
++            double ekf_dx_solve_time = kf.t_dx_solve_acc;
++            double ekf_boxplus_time  = kf.t_boxplus_acc;
++            double ekf_converge_time = kf.t_converge_acc;
++            double h_dyn_share_time  = kf.t_h_dyn_share_acc;
++#endif
+ 
+             /******* Publish odometry *******/
++            double t_odom_pub_start = omp_get_wtime();
+             publish_odometry(pubOdomAftMapped_, tf_broadcaster_);
++            double t_odom_pub_end = omp_get_wtime();
+ 
+             /*** add the feature points to map kdtree ***/
+             t3 = omp_get_wtime();
+             map_incremental();
+             t5 = omp_get_wtime();
+-            
++
++#ifdef ENABLE_PROFILING
++            double odom_pub_time = t_odom_pub_end - t_odom_pub_start;
++            double end_wall = omp_get_wtime();
++            {
++                static double prev_lidar_time = 0.0;
++                static int total_skipped = 0;
++                double period = 1.0 / p_pre->SCAN_RATE;
++                if (prev_lidar_time > 0.0) {
++                    int skipped = (int)round((Measures.lidar_beg_time - prev_lidar_time) / period) - 1;
++                    if (skipped > 0) {
++                        total_skipped += skipped;
++                        printf("[PROFILING] lidar skip: +%d frame(s) (gap=%.3fs), total_skipped=%d\n",
++                               skipped, Measures.lidar_beg_time - prev_lidar_time, total_skipped);
++                    }
++                }
++                prev_lidar_time = Measures.lidar_beg_time;
++            }
++            if (g_csv_fp && flg_EKF_inited) {
++                double propag_time = t1 - t0;
++                double queue_wait = t0 - (recv_mono + s_plot11[scan_count]);
++                csv_push(CsvRow{Measures.lidar_beg_time, recv_wall, recv_mono, t0, t1, t3, t5, end_wall,
++                          propag_time, match_time, solve_time,
++                          feats_down_size, (int)feats_undistort->size(), raw_pts_size_last,
++                          queue_wait, s_plot11[scan_count],
++                          h_transform_time, h_kdtree_time, h_plane_time,
++                          ekf_manifold_time, ekf_kalman_time, ekf_cov_time,
++                          ekf_dx_solve_time, ekf_boxplus_time, ekf_converge_time, odom_pub_time,
++                          h_dyn_share_time, fout_pre_time});
++            }
++#endif
++
+             /******* Publish points *******/
+             if (path_en)                         publish_path(pubPath_);
+             if (scan_pub_en)      publish_frame_world(pubLaserCloudFull_);
+diff --git a/src/preprocess.cpp b/src/preprocess.cpp
+index 9015782..dfa73ff 100644
+--- a/src/preprocess.cpp
++++ b/src/preprocess.cpp
+@@ -314,7 +314,12 @@ void Preprocess::velodyne_handler(const sensor_msgs::msg::PointCloud2::UniquePtr
+   std::vector<float> time_last(N_SCANS, 0.0);  // last offset time
+   /*****************************************************************/
+ 
+-  if (pl_orig.points[plsize - 1].time > 0)
++  bool has_time_field = false;
++  for (const auto &field : msg->fields) {
++    if (field.name == "time") { has_time_field = true; break; }
++  }
++
++  if (has_time_field && pl_orig.points[plsize - 1].time > 0)
+   {
+     given_offset_time = true;
+   }
+-- 
+2.43.0
+

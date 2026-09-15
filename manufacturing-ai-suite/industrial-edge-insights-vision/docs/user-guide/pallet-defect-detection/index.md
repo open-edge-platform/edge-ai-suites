@@ -79,6 +79,5 @@ This sample application offers the following features:
 
 how-to-guides
 
-
 :::
 hide_directive-->

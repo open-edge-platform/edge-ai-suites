@@ -1,5 +1,5 @@
-config/*.js /opt/ros/humble/share/pyrealsense2-ai-demo/config
-scripts/generate_ai_models.sh /opt/ros/humble/share/pyrealsense2-ai-demo/scripts
+config/* /opt/ros/humble/share/pyrealsense2-ai-demo/config
+scripts/*.sh /opt/ros/humble/share/pyrealsense2-ai-demo/scripts
 src/mo.py /opt/ros/humble/share/pyrealsense2-ai-demo/src
 src/pyrealsense2_ai_demo_launcher.py /opt/ros/humble/share/pyrealsense2-ai-demo/src
 src/setup.py /opt/ros/humble/share/pyrealsense2-ai-demo/src

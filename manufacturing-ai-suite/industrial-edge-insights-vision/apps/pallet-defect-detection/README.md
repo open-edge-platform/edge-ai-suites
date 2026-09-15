@@ -11,8 +11,8 @@ models for video analysis. This sample application offers the following:
 
 ## Get Started
 
-- [System Requirements](../../docs/user-guide/pallet-defect-detection/get-started/system-requirements.md)
-- [Setup guide](../../docs/user-guide/pallet-defect-detection/get-started.md)
+- [System Requirements](../../docs/user-guide/get-started/vision-system-requirements.md)
+- [Setup guide](../../docs/user-guide/get-started.md)
 - [Overview](../../docs/user-guide/pallet-defect-detection/index.md)
 
 
@@ -46,13 +46,13 @@ It also consists of the following third-party microservices:
 
 ## Learn More
 
-- [Helm based deployment](../../docs/user-guide/pallet-defect-detection/get-started/deploy-with-helm.md)
-- [MLOps using Model Download](../../docs/user-guide/pallet-defect-detection/how-to-guides/enable-mlops.md)
-- [Run multiple AI pipelines](../../docs/user-guide/pallet-defect-detection/how-to-guides/run-multiple-ai-pipelines.md)
-- [Publish frames to S3 storage pipelines](../../docs/user-guide/pallet-defect-detection/how-to-guides/store-frames-in-s3.md)
-- [View telemetry data in Open Telemetry](../../docs/user-guide/pallet-defect-detection/how-to-guides/view-telemetry-data.md)
-- [Publish metadata to OPCUA](../../docs/user-guide/pallet-defect-detection/how-to-guides/use-opcua-publisher.md)
+- [Helm based deployment](../../docs/user-guide/get-started/deploy-with-helm.md)
+- [MLOps using Model Download](../../docs/user-guide/how-to-extend-functionality/enable-mlops.md)
+- [Run multiple AI pipelines](../../docs/user-guide/how-to-customize/run-multiple-ai-pipelines.md)
+- [Publish frames to S3 storage pipelines](../../docs/user-guide/how-to-extend-functionality/store-frames-in-s3.md)
+- [View telemetry data in Open Telemetry](../../docs/user-guide/how-to-extend-functionality/view-telemetry-data.md)
+- [Publish metadata to OPCUA](../../docs/user-guide/how-to-extend-functionality/use-opcua-publisher.md)
 
 ## Troubleshooting
 
-- [Troubleshooting Guide](../../docs/user-guide/pallet-defect-detection/troubleshooting.md)
+- [Troubleshooting Guide](../../docs/user-guide/troubleshooting.md)
