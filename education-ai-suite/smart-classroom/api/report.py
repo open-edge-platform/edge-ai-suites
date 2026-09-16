@@ -30,6 +30,7 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.session_manager import PATH_SAFE_SESSION_ID
 from utils.session_paths import SessionPaths
+from utils.pipeline_catalog import FEATURE_STAGE
 from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ async def generate_report(request: ReportRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
-        with stage_tracker(pipeline.session_id, "report") as stage:
+        with stage_tracker(pipeline.session_id, FEATURE_STAGE["report"]) as stage:
             try:
                 for event in pipeline.run_report_generator(
                     selected_fields=request.selected_fields,

@@ -1,5 +1,18 @@
 from utils.platform_info import get_platform_and_model_info
 from utils.gstreamer_env import GST_SUBPROCESS_TIMEOUT, ensure_gst_registry
+
+# Thresholds live in utils/requirements.py, shared with the app's Setup screen.
+# Re-exported because callers already import them from this module.
+from utils.requirements import (  # noqa: F401
+    MIN_DLSTREAMER_VERSION,
+    MIN_MEMORY_GB,
+    MIN_WINDOWS_BUILD,
+    REQUIRED_NODE_MAJOR,
+    REQUIRED_OS,
+    REQUIRED_PYTHON_MAJOR,
+    REQUIRED_PYTHON_MINOR,
+    dlstreamer_version_str,
+)
 import sys
 import re
 import subprocess
@@ -7,13 +20,6 @@ import shutil
 import logging
 
 logger = logging.getLogger(__name__)
-
-MIN_MEMORY_GB = 32
-REQUIRED_OS = "Windows 11"
-REQUIRED_PYTHON_MAJOR = 3
-REQUIRED_PYTHON_MINOR = 12
-REQUIRED_NODE_MAJOR = 18  # Minimum required Node.js version
-MIN_DLSTREAMER_VERSION = (2026, 1, 0)
 
 
 def check_meteor_lake(processor_name: str) -> bool:
@@ -107,8 +113,10 @@ def check_dlstreamer_installation() -> bool:
                 version = version_match.group(1)
                 parts = tuple(int(x) for x in re.findall(r"\d+", version))[:3]
                 if parts < MIN_DLSTREAMER_VERSION:
-                    min_ver_str = ".".join(str(v) for v in MIN_DLSTREAMER_VERSION)
-                    logger.error(f"❌ DL Streamer version {version} is too old. Minimum required: {min_ver_str}.")
+                    logger.error(
+                        f"❌ DL Streamer version {version} is too old. "
+                        f"Minimum required: {dlstreamer_version_str()}."
+                    )
                     return False
                 logger.info(f"✅ DL Streamer found and working (version {version}).")
                 return True

@@ -2,6 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { SessionSummary } from '../services/api';
+import {
+  FEATURE_STAGE,
+  SETTLED_STAGE_STATUSES,
+  STAGE_RUN_AFTER,
+  TERMINAL_SESSION_STATES,
+} from '../generated/pipeline';
 
 /**
  * What the stage-driven chain should do next, given one session row.
@@ -15,33 +21,26 @@ import type { SessionSummary } from '../services/api';
  * Note that the table always carries every stage in the vocabulary — the ones
  * this session did not declare are 'skipped' rather than absent (see
  * SessionStore.create). So "declared" is a status test, never a key test.
+ *
+ * Stage names, settled statuses and segmentation's prerequisites all come from
+ * src/generated/pipeline.ts.
  */
 
-/** A stage that will not change again on its own. */
-const SETTLED = ['done', 'failed', 'interrupted'];
-
-/** States a session cannot move out of — mirrors `_TERMINAL` in session_service.py. */
-const TERMINAL_STATES = ['completed', 'failed', 'cancelled'];
-
-/**
- * Everything that has to finish before segmentation can read a complete
- * transcript. `va` is in here because topics are matched against the video
- * timeline, so segmentation must not start while frames are still being
- * analysed.
- */
-const SEGMENTATION_PREREQS = ['transcribe', 'summarize', 'mindmap', 'va'];
+const SEGMENTATION = FEATURE_STAGE.topic_segmentation!;
+const REPORT = FEATURE_STAGE.report!;
 
 export type ChainAction = 'segmentation' | 'report' | 'wait' | 'stop';
 
-const isSettled = (status: string | undefined) => !!status && SETTLED.includes(status);
+const isSettled = (status: string | undefined) =>
+  !!status && SETTLED_STAGE_STATUSES.includes(status);
 const isDeclared = (status: string | undefined) => !!status && status !== 'skipped';
 
 export function decideChainAction(session: SessionSummary): ChainAction {
-  if (session.state && TERMINAL_STATES.includes(session.state)) return 'stop';
+  if (session.state && TERMINAL_SESSION_STATES.includes(session.state)) return 'stop';
 
   const stages = session.stages ?? {};
-  const segmentation = stages.segmentation;
-  const report = stages.report;
+  const segmentation = stages[SEGMENTATION];
+  const report = stages[REPORT];
 
   // Nothing left for this hook to start. Normally fires *before* the session
   // flips to 'completed': the row only settles when the last stage writes its
@@ -52,7 +51,7 @@ export function decideChainAction(session: SessionSummary): ChainAction {
     // Only the prerequisites this session actually declared. A session with no
     // video carries va: 'skipped', and treating that as unfinished would wait
     // forever — the same shape of bug this change exists to fix.
-    const unfinished = SEGMENTATION_PREREQS.filter(
+    const unfinished = STAGE_RUN_AFTER[SEGMENTATION].filter(
       (stage) => isDeclared(stages[stage]) && !isSettled(stages[stage]),
     );
     return unfinished.length === 0 ? 'segmentation' : 'wait';

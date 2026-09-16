@@ -1,5 +1,7 @@
 import type { StreamEvent, StreamOptions } from './streamSimulator';
 import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
+import type { SessionStage } from '../generated/pipeline';
+import type { FeatureDescriptor } from '../redux/slices/featureConfigSlice';
 
 export type ProjectConfig = {
   name: string;
@@ -47,14 +49,8 @@ const CS_SUCCESS_CODE = 20000;
 // FEATURE CONFIGURATION API
 // ============================================================================
 
-export interface FeatureDescriptor {
-  id: string;
-  dependency: string[];
-  requires: string[];
-  endpoints?: Record<string, string>;
-  mode?: string;
-  chunking?: boolean;
-}
+// Declared with the slice that stores it; re-exported for existing callers.
+export type { FeatureDescriptor };
 
 /**
  * Fetch enabled features with full UI descriptors from backend
@@ -1004,13 +1000,7 @@ export async function createSession(): Promise<{ sessionId: string }> {
 }
 
 /** The pipeline stages the session API knows about. */
-export type SessionStage =
-  | 'transcribe'
-  | 'summarize'
-  | 'mindmap'
-  | 'va'
-  | 'segmentation'
-  | 'report';
+export type { SessionStage };
 
 /**
  * Put a session on the books so it shows up in the history.

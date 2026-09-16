@@ -13,19 +13,14 @@ import {
   type SessionSummary,
   type StageEvent,
 } from '../../services/api';
+import { SESSION_STATES, STAGE_ORDER } from '../../generated/pipeline';
 
 const PAGE_SIZE = 20;
 
-/** Stage pip order, matching the order the pipeline runs them in. */
-const STAGE_ORDER = ['transcribe', 'summarize', 'mindmap', 'va', 'segmentation', 'report'] as const;
-
-const STATE_LABELS: Record<string, string> = {
-  pending: 'history.state.pending',
-  running: 'history.state.running',
-  completed: 'history.state.completed',
-  failed: 'history.state.failed',
-  cancelled: 'history.state.cancelled',
-};
+/** Keyed off the generated vocabulary, so a new stage or state needs no edit here. */
+const STATE_LABELS: Record<string, string> = Object.fromEntries(
+  SESSION_STATES.map((state) => [state, `history.state.${state}`]),
+);
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return '—';
