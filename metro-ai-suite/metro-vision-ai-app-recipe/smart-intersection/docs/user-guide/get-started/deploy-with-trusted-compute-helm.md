@@ -305,7 +305,11 @@ You should see the DL Streamer Pipeline Server pods running with the Trusted Com
 
 ### NodeRED Editor
 - **URL**: `https://<HOST_IP>:30443/nodered/`
-- **No login required** - Visual programming interface
+- **Username**: `admin`
+- **Password**: Get from secrets:
+  ```bash
+  kubectl get secret smart-intersection-nodered-secrets -n smart-intersection -o jsonpath='{.data.nodered-admin-password}' | base64 -d && echo
+  ```
 
 ### DL Streamer Pipeline Server
 - **URL**: `https://<HOST_IP>:30443/api/pipelines/status`
