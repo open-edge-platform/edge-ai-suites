@@ -1537,10 +1537,16 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 )
                 return False
 
-        with _tempfile.NamedTemporaryFile(
-            suffix=".tar", delete=False, prefix=f"{sample_app}_udf_"
-        ) as tmp_file:
-            tar_path = tmp_file.name
+        if sample_app == constants.MULTIMODAL_SAMPLE_APP:
+            tar_name = "weld_anomaly_detector.tar"
+        elif sample_app == constants.WIND_SAMPLE_APP:
+            tar_name = "wind-turbine-anomaly-detection.tar"
+        else:
+            tar_name = f"{sample_app}_udf.tar"
+
+        tar_path = str(Path(config_path.parent) / tar_name)
+        if os.path.exists(tar_path):
+            os.unlink(tar_path)
 
         with _tarfile.open(tar_path, "w") as tar:
             for folder in required_folders:
@@ -1555,10 +1561,6 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
 
         logger.info("Created UDF tar archive at '%s'.", tar_path)
         logger.info("Uploading UDF tar package for '%s' to %s", sample_app, upload_endpoint)
-        upload_file = f"file=@{tar_path}"
-        if sample_app == constants.MULTIMODAL_SAMPLE_APP:
-            udf_name = app_cfg["udf"]
-            upload_file = f"file=@{tar_path};filename={udf_name}.tar"
 
         with _tempfile.NamedTemporaryFile(
             suffix=".json", delete=False, prefix="udf_upload_response_"
@@ -1570,7 +1572,7 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", upload_file,
+                "-F", f"file=@{tar_path}",
             ]
             result = common_utils.exec_command(curl_command, capture_output=True, text=True, timeout=60)
             if result.returncode == 0:

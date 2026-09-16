@@ -1988,14 +1988,14 @@ def _post_ts_api_config(
     except subprocess.SubprocessError as exc:
         logger.error(f"Failed to execute ts-api request: {exc}")
         return False
-
+    config_process_deplay = 5
     if result and result.returncode == 0:
         *body_lines, http_code = result.stdout.strip().splitlines() or [""]
         if http_code == "200":
             logger.info("ts-api request completed successfully. Response:")
             logger.info("\n".join(body_lines))
-            logger.info("Waiting 5 seconds for configuration to be processed...")
-            time.sleep(5)
+            logger.info(f"Waiting {config_process_deplay} seconds for configuration to be processed...")
+            time.sleep(config_process_deplay)
             return True
         logger.error(f"ts-api request rejected by server (HTTP {http_code}). Response: {chr(10).join(body_lines)}")
         return False
@@ -2018,12 +2018,14 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
         endpoint=restart_endpoint,
         method="GET",
     )
+    config_restart_time = 45
     if result:
-        logger.info("Configuration restart successful. Waiting 45 seconds for microservice to fully restart and activate UDF...")
-        time.sleep(45)
+        logger.info(f"Configuration restart successful. Waiting {config_restart_time} seconds for microservice to fully restart and activate UDF...")
+        time.sleep(config_restart_time)
     else:
-        logger.warning("Configuration restart failed, waiting 15 seconds before continuing...")
-        time.sleep(15)
+        config_fail_wait = 15
+        logger.warning(f"Configuration restart failed, waiting {config_fail_wait} seconds before continuing...")
+        time.sleep(config_fail_wait)
     return result
 
 
@@ -2112,11 +2114,16 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 )
                 return False
 
-        # Build tar containing required udfs and tick_scripts, and optional models
-        with _tempfile.NamedTemporaryFile(
-            suffix=".tar", delete=False, prefix=f"{sample_app}_udf_"
-        ) as tmp_file:
-            tar_path = tmp_file.name
+        if sample_app == constants.MULTIMODAL_SAMPLE_APP:
+            tar_name = "weld_anomaly_detector.tar"
+        elif sample_app == constants.WIND_SAMPLE_APP:
+            tar_name = "wind-turbine-anomaly-detection.tar"
+        else:
+            tar_name = f"{sample_app}_udf.tar"
+
+        tar_path = str(Path(config_path.parent) / tar_name)
+        if os.path.exists(tar_path):
+            os.unlink(tar_path)
 
         with _tarfile.open(tar_path, "w") as tar:
             for folder in required_folders:
@@ -2131,10 +2138,6 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 logger.debug("Skipping absent/empty optional folder 'models'.")
 
         logger.info("Created UDF tar archive at '%s'.", tar_path)
-        upload_file = f"file=@{tar_path}"
-        if sample_app == constants.MULTIMODAL_SAMPLE_APP:
-            udf_name = constants.get_app_config(sample_app)["udf"]
-            upload_file = f"file=@{tar_path};filename={udf_name}.tar"
 
         # Wait for nginx + ts-api to actually accept connections on NodePort 30001
         # before attempting upload (avoids transient curl rc=7 connection refused).
@@ -2146,7 +2149,7 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
             return False
 
         # Upload the tar via curl (mirrors make upload_tar_file)
-        logger.info("Uploading UDF tar package to %s", upload_endpoint)
+        logger.info("Uploading UDF tar package for '%s' to %s", sample_app, upload_endpoint)
         with _tempfile.NamedTemporaryFile(
             suffix=".json", delete=False, prefix="udf_upload_response_"
         ) as resp_file:
@@ -2157,7 +2160,7 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 "-o", tmp_response,
                 "-w", "%{http_code}",
                 "-X", "POST", upload_endpoint,
-                "-F", upload_file,
+                "-F", f"file=@{tar_path}",
             ]
             try:
                 result = common_utils.exec_command(
