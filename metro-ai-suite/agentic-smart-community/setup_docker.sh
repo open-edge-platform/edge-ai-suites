@@ -62,6 +62,44 @@ is_vllm_healthy() {
   curl -s --max-time 5 "$VLLM_HEALTH_URL" 2>/dev/null | grep -q '"id"'
 }
 
+# Resolve each role against the standard OpenAI /v1/models response. An empty
+# requested name selects the first advertised ID; a supplied one must match.
+resolve_model_name() {
+  local role="$1" base_url="$2" api_key="$3" requested="$4" models selected
+  models="$(curl -fsS --connect-timeout 3 --max-time 10 \
+    -H "Authorization: Bearer ${api_key}" "${base_url%/}/models" 2>/dev/null \
+    | python3 -c 'import json, sys; print("\\n".join(str(item["id"]) for item in json.load(sys.stdin).get("data", []) if isinstance(item, dict) and item.get("id")))' 2>/dev/null || true)"
+  if [ -z "$models" ]; then
+    echo -e "${RED}Error: ${role} serving did not return a usable model from ${base_url%/}/models.${NC}" >&2
+    return 1
+  fi
+  if [ -z "$requested" ]; then
+    selected="${models%%$'\n'*}"
+    echo "${role} model not specified; selected ${selected} from ${base_url%/}/models" >&2
+  elif grep -Fqx -- "$requested" <<<"$models"; then
+    selected="$requested"
+    echo "${role} model verified: ${selected}" >&2
+  else
+    echo -e "${RED}Error: configured ${role} model '${requested}' is not served by ${base_url%/}/models.${NC}" >&2
+    printf 'Available %s models:\n%s\n' "$role" "$models" >&2
+    return 1
+  fi
+  printf '%s' "$selected"
+}
+
+resolve_serving_models() {
+  local vlm_discovery_url="$VLM_BASE_URL" llm_discovery_url="$LLM_BASE_URL"
+  if [ "$USE_LOCAL_VLLM" = true ]; then
+    # The service name is resolvable only inside app-network; discovery runs on
+    # the host before MLVU/MCP containers are created.
+    vlm_discovery_url="http://localhost:${VLLM_SERVICE_PORT}/v1"
+    llm_discovery_url="$vlm_discovery_url"
+  fi
+  VLM_MODEL_NAME="$(resolve_model_name VLM "$vlm_discovery_url" "${VLM_API_KEY:-EMPTY}" "${VLM_MODEL_NAME:-}")" || return 1
+  LLM_MODEL_NAME="$(resolve_model_name LLM "$llm_discovery_url" "${LLM_API_KEY:-EMPTY}" "${LLM_MODEL_NAME:-}")" || return 1
+  export VLM_MODEL_NAME LLM_MODEL_NAME
+}
+
 # --- serving startup recovery --------------------------------------------------
 # compose.yaml gives vllm-ipex-serving `restart: always`, and multilevel/mcp-server
 # depend on it with `condition: service_healthy`. If the serving dies mid-weight-load
@@ -432,21 +470,29 @@ if [ "$UP_CONTAINERS" = true ]; then
   if [ "$LIGHT_MODE" = true ]; then
     # Reuse an already-warm serving; start only the app + analytics.
     if is_vllm_healthy; then
+      resolve_serving_models || exit 1
       echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smart-community-mcp-server only."
       compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     elif [ "$USE_LOCAL_VLLM" = true ]; then
-      echo "Local vllm-ipex-serving not healthy yet — starting the full stack instead."
+      echo "Local vllm-ipex-serving not healthy yet — starting it before the app tier."
       echo "(first run pulls/compiles the model — this can take about 30 mins)"
-      compose_up || exit 1
-    else
-      echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smart-community-mcp-server anyway (they retry at runtime)."
+      compose_up vllm-ipex-serving || exit 1
+      wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
+      resolve_serving_models || exit 1
       compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
+    else
+      echo -e "${RED}Error: external serving is not reachable at ${VLLM_HEALTH_URL}.${NC}" >&2
+      exit 1
     fi
   else
-    # End-to-end: bring up serving + app + analytics together.
-    echo "Starting all three services..."
+    # End-to-end: wait for the serving, resolve its advertised model, then start
+    # the services that require a concrete VLM/LLM model ID.
+    echo "Starting model serving..."
     echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take about 30 mins)"
-    compose_up || exit 1
+    compose_up vllm-ipex-serving || exit 1
+    wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
+    resolve_serving_models || exit 1
+    compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
   fi
 
   echo -e "${GREEN}==== Setup complete! ====${NC}"
