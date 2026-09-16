@@ -78,9 +78,7 @@ services:
         "/bin/bash",
         "-e",
         "-c",
-        "export NODE_RED_ADMIN_USERNAME=$(cat /run/secrets/nodered-admin-username) && \
-        export NODE_RED_ADMIN_PASSWORD=$(cat /run/secrets/nodered-admin-password) && \
-        cp /tmp/flows_cred.json /data/flows_cred.json && \
+        "cp /tmp/flows_cred.json /data/flows_cred.json && \
         sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /data/flows_cred.json && \
         bash /data/install_package.sh && \
         /usr/src/node-red/entrypoint.sh",
