@@ -14,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/mindmap")
-async def generate_mindmap(request: SummaryRequest):
+def generate_mindmap(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
     try:
         with stage_tracker(pipeline.session_id, FEATURE_STAGE["mindmap"]):
