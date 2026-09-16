@@ -190,10 +190,6 @@ function numFromEnv(name: string): number | undefined {
   return Number.isFinite(value) && value > 0 ? value : undefined;
 }
 
-function nonEmptyString(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim() ? value : fallback;
-}
-
 /** Report knobs, shared by the MCP tool and the dashboard's /reports/generate route. */
 export function reportTuning(config: ServerConfig) {
   return {
@@ -208,7 +204,7 @@ export function loadConfig(configPath?: string): ServerConfig {
   const dataDir = resolveDataDir();
 
   const parsed = configPath
-    ? expandEnvVars(parseYaml(readFileSync(resolve(configPath), "utf-8"))) as Record<string, any>
+    ? parseYaml(readFileSync(resolve(configPath), "utf-8"))
     : {};
 
   // Reject monitors in config.yaml — they must live in a separate file passed via --monitors
@@ -245,8 +241,8 @@ export function loadConfig(configPath?: string): ServerConfig {
       maxHopRatio: parsed?.summary_service?.max_hop_ratio ?? 10,
     },
     vlmService: {
-      url: nonEmptyString(parsed?.vlm_service?.url, "http://localhost:41091/v1"),
-      model: nonEmptyString(parsed?.vlm_service?.model, "Qwen/Qwen3.6-35B-A3B"),
+      url: parsed?.vlm_service?.url ?? "http://localhost:41091/v1",
+      model: parsed?.vlm_service?.model ?? "default",
       maxEdgePx: parsed?.vlm_service?.max_edge_px ?? 720,
     },
     videostreamAnalytics: { url: parsed?.videostream_analytics?.url ?? "http://localhost:8999" },
@@ -322,9 +318,7 @@ function parseUseCaseDict(raw: unknown): Record<string, UseCaseConfig> {
 
 function expandEnvVars(value: unknown): unknown {
   if (typeof value === "string") {
-    return value.replace(/\$\{([A-Z_][A-Z0-9_]*)(?::-(.*?))?\}/gi, (_m, name, fallback) => {
-      return process.env[name] || fallback || "";
-    });
+    return value.replace(/\$\{([A-Z_][A-Z0-9_]*)\}/gi, (_m, name) => process.env[name] ?? "");
   }
   if (Array.isArray(value)) return value.map(expandEnvVars);
   if (value && typeof value === "object") {
