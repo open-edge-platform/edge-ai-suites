@@ -73,10 +73,34 @@ export USER_GROUP_ID="$(id -g "$USER")"
 
 # Both roles are served by the same on-device vLLM-IPEX endpoint by default. The
 # caller may instead set these standard MLVU variables to reuse another serving.
+VLM_BASE_URL_WAS_SET="${VLM_BASE_URL+x}"
+LLM_BASE_URL_WAS_SET="${LLM_BASE_URL+x}"
 export VLM_BASE_URL=${VLM_BASE_URL:-http://vllm-ipex-serving:8000/v1}
 export LLM_BASE_URL=${LLM_BASE_URL:-http://vllm-ipex-serving:8000/v1}
+
+# An external OpenAI-compatible serving advertises its model ID at /v1/models.
+# Discover it when the caller supplied an endpoint but no role-specific model;
+# retain the bundled default if the endpoint is not reachable yet so --light can
+# still start the app tier and retry the serving at runtime.
+discover_model_name() {
+  local base_url="$1" model_id
+  model_id="$(curl -fsS --connect-timeout 3 --max-time 5 \
+    -H "Authorization: Bearer ${VLM_API_KEY:-EMPTY}" "${base_url%/}/models" 2>/dev/null \
+    | python3 -c 'import json, sys; print(next((item.get("id", "") for item in json.load(sys.stdin).get("data", []) if isinstance(item, dict)), ""))' 2>/dev/null || true)"
+  printf '%s' "$model_id"
+}
+
+if [[ -z "${VLM_MODEL_NAME:-}" && -n "$VLM_BASE_URL_WAS_SET" ]]; then
+  VLM_MODEL_NAME="$(discover_model_name "$VLM_BASE_URL")"
+  [[ -n "$VLM_MODEL_NAME" ]] || echo "warning: cannot discover VLM model at ${VLM_BASE_URL%/}/models; set VLM_MODEL_NAME explicitly" >&2
+fi
+if [[ -z "${LLM_MODEL_NAME:-}" && -n "$LLM_BASE_URL_WAS_SET" ]]; then
+  LLM_MODEL_NAME="$(discover_model_name "$LLM_BASE_URL")"
+  [[ -n "$LLM_MODEL_NAME" ]] || echo "warning: cannot discover LLM model at ${LLM_BASE_URL%/}/models; set LLM_MODEL_NAME explicitly" >&2
+fi
 export VLM_MODEL_NAME=${VLM_MODEL_NAME:-${LLM_MODEL}}
 export LLM_MODEL_NAME=${LLM_MODEL_NAME:-${LLM_MODEL}}
+unset VLM_BASE_URL_WAS_SET LLM_BASE_URL_WAS_SET
 
 export MAX_CONCURRENT_REQUESTS=4
 export DEFAULT_MAX_TOKENS=1024

@@ -45,6 +45,10 @@ services:
       # report. config.yaml's summary_service keys override when present.
       MAX_MODEL_LEN: ${MAX_MODEL_LEN:-}
       DEFAULT_MAX_TOKENS: ${DEFAULT_MAX_TOKENS:-}
+      # Used by config.yaml's vlm_service placeholders. This container runs on
+      # the host network, so its URL is host-reachable (normally localhost).
+      VLM_BASE_URL: ${VLM_BASE_URL:-http://localhost:41091/v1}
+      VLM_MODEL_NAME: ${VLM_MODEL_NAME:-${LLM_MODEL:-Qwen/Qwen3.6-35B-A3B}}
       # Timezone for the container
       TZ: ${TZ:-Asia/Shanghai}
     volumes:
