@@ -65,11 +65,11 @@ spec:
               secretKeyRef:
                 name: {{ .Release.Name }}-nodered-secrets
                 key: nodered-admin-username
-          - name: NODE_RED_ADMIN_PASSWORD_HASH
+          - name: NODE_RED_ADMIN_PASSWORD
             valueFrom:
               secretKeyRef:
                 name: {{ .Release.Name }}-nodered-secrets
-                key: nodered-admin-password-hash
+                key: nodered-admin-password
         image: {{ .Values.nodered.repository }}:{{ .Values.nodered.tag }}
         name: {{ .Release.Name }}-nodered
         imagePullPolicy: {{ .Values.imagePullPolicy }}

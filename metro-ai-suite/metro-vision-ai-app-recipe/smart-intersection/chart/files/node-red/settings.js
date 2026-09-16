@@ -72,15 +72,28 @@ module.exports = {
 
     /** To password protect the Node-RED editor and admin API, the following
      * property can be used. See https://nodered.org/docs/security.html for details.
+     *
+     * Credentials are generated per deployment (see generate_secrets.sh / Helm
+     * app-secrets.yaml) and injected via NODE_RED_ADMIN_USERNAME /
+     * NODE_RED_ADMIN_PASSWORD. The password is hashed here with the bcryptjs
+     * dependency Node-RED already bundles, so no external hashing tool is
+     * needed at secret-generation time. Startup fails if the password is
+     * missing so the editor/admin API can never be exposed unauthenticated.
      */
-    //adminAuth: {
-    //    type: "credentials",
-    //    users: [{
-    //        username: "admin",
-    //        password: "$2a$08$zZWtXTja0fB1pzD4sHCMyOCMYz2Z6dNbM6tl8sJogENOMcxWV9DN.",
-    //        permissions: "*"
-    //    }]
-    //},
+    adminAuth: (() => {
+        const password = process.env.NODE_RED_ADMIN_PASSWORD;
+        if (!password) {
+            throw new Error("NODE_RED_ADMIN_PASSWORD must be set; refusing to start without adminAuth");
+        }
+        return {
+            type: "credentials",
+            users: [{
+                username: process.env.NODE_RED_ADMIN_USERNAME || "admin",
+                password: require("bcryptjs").hashSync(password, 8),
+                permissions: "*"
+            }]
+        };
+    })(),
 
     /** The following property can be used to enable HTTPS
      * This property can be either an object, containing both a (private) key

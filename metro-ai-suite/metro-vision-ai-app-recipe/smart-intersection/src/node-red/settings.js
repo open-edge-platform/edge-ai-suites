@@ -75,19 +75,21 @@ module.exports = {
      *
      * Credentials are generated per deployment (see generate_secrets.sh / Helm
      * app-secrets.yaml) and injected via NODE_RED_ADMIN_USERNAME /
-     * NODE_RED_ADMIN_PASSWORD_HASH. Startup fails if the hash is missing so the
-     * editor/admin API can never be exposed unauthenticated by mistake.
+     * NODE_RED_ADMIN_PASSWORD. The password is hashed here with the bcryptjs
+     * dependency Node-RED already bundles, so no external hashing tool is
+     * needed at secret-generation time. Startup fails if the password is
+     * missing so the editor/admin API can never be exposed unauthenticated.
      */
     adminAuth: (() => {
-        const passwordHash = process.env.NODE_RED_ADMIN_PASSWORD_HASH;
-        if (!passwordHash) {
-            throw new Error("NODE_RED_ADMIN_PASSWORD_HASH must be set; refusing to start without adminAuth");
+        const password = process.env.NODE_RED_ADMIN_PASSWORD;
+        if (!password) {
+            throw new Error("NODE_RED_ADMIN_PASSWORD must be set; refusing to start without adminAuth");
         }
         return {
             type: "credentials",
             users: [{
                 username: process.env.NODE_RED_ADMIN_USERNAME || "admin",
-                password: passwordHash,
+                password: require("bcryptjs").hashSync(password, 8),
                 permissions: "*"
             }]
         };

@@ -100,15 +100,3 @@ done
 echo Generating SUPASS
 SUPASS=$(openssl rand -base64 16)
 echo -n "$SUPASS" > $SECRETSDIR/supass
-
-# Generate Node-RED admin credentials (adminAuth is mandatory, see settings.js)
-echo Generating Node-RED admin credentials
-mkdir -p $SECRETSDIR/nodered
-NODERED_USER="admin"
-NODERED_PASS=$(openssl rand -base64 12)
-NODERED_HASH=$(docker run --rm -e NODERED_PASS="$NODERED_PASS" --entrypoint node nodered/node-red:4.1 \
-    -e "console.log(require('bcryptjs').hashSync(process.env.NODERED_PASS,8))")
-echo -n "$NODERED_USER" > $SECRETSDIR/nodered/nodered-admin-username
-echo -n "$NODERED_PASS" > $SECRETSDIR/nodered/nodered-admin-password
-echo -n "$NODERED_HASH" > $SECRETSDIR/nodered/nodered-admin-password-hash
-chmod 0600 $SECRETSDIR/nodered/nodered-admin-password $SECRETSDIR/nodered/nodered-admin-password-hash
