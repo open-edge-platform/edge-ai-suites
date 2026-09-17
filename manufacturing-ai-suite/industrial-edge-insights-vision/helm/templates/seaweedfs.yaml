@@ -60,11 +60,21 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: seaweedfs-master
           image: {{ .Values.images.seaweedfs }}
           command: ['weed', 'master', '-ip=seaweedfs-master', '-ip.bind=0.0.0.0']
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: seaweedfs-master-data
               mountPath: /data
@@ -108,11 +118,21 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: seaweedfs-volume
           image: {{ .Values.images.seaweedfs }}
           command: ['weed', 'volume', '-mserver=seaweedfs-master:9333', '-ip.bind=0.0.0.0', '-port=8080']
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: seaweedfs-volume-data
               mountPath: /data
@@ -156,11 +176,21 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: seaweedfs-filer
           image: {{ .Values.images.seaweedfs }}
           command: ['weed', 'filer', '-master=seaweedfs-master:9333', '-ip.bind=0.0.0.0']
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: seaweedfs-filer-data
               mountPath: /data
@@ -205,11 +235,21 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       containers:
         - name: seaweedfs-s3
           image: {{ .Values.images.seaweedfs }}
           command: ['weed', 's3', '-filer=seaweedfs-filer:8888', '-ip.bind=0.0.0.0', '-port=8333', '-config=/etc/seaweedfs/s3_config.json']
           imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: seaweedfs-s3-config
               mountPath: /etc/seaweedfs/s3_config.json

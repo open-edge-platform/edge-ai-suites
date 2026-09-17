@@ -1,18 +1,5 @@
 # Release Notes: Pallet Defect Detection and PCB Anomaly Detection
 
-## Unreleased
-
-**Fixed**:
-
-- Replaced MinIO with SeaweedFS as the S3-compatible storage backend, since the MinIO image
-  used previously was removed from Docker Hub. This is a breaking change: the env vars
-  `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are renamed to `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD`,
-  and `MINIO_HOSTNAME`/`MINIO_SERVER_PORT` are replaced by `S3_STORAGE_HOST`/`S3_STORAGE_PORT`/
-  `S3_STORAGE_HOST_PORT`. Update your `.env`/`helm/values*.yaml` files accordingly. The web
-  console for browsing stored frames moved from `/minio/` to `/storage/`, and is now
-  protected by HTTP Basic Auth using the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD`
-  credentials instead of MinIO's built-in login console.
-
 ## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
 
 **Release Date**: September 9, 2026
@@ -21,6 +8,14 @@
 
 - Fixed coturn server configuration for WebRTC relay.
 - Fixed Grafana MQTT datasource version to avoid errors with the latest version.
+
+**Fixed**:
+
+- Replaced MinIO with SeaweedFS as the S3-compatible storage backend (MinIO image was removed
+  from Docker Hub). Breaking change: `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are renamed to
+  `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD`; update your `.env`/`helm/values*.yaml` files.
+  The frame browsing console moved from `/minio/` to `/storage/`, protected by HTTP Basic Auth
+  using the same credentials.
 
 **Improved**:
 

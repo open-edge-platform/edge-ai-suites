@@ -764,7 +764,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ::::
    hide_directive-->
 
-7. Go to `https://<host_IP>:30443/storage/buckets/ecgdemo/` to browse the frames stored in the `ecgdemo` bucket. You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/values.yaml` file (HTTP Basic Auth).
+7. Go to `https://<host_IP>:30443/storage/buckets/ecgdemo/` to browse the frames stored in the `ecgdemo` bucket (replace `ecgdemo` with the bucket name you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/values.yaml` file (HTTP Basic Auth).
 
    > **Note:** If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
