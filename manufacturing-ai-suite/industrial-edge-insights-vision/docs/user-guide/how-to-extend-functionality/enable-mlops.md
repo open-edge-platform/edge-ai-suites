@@ -66,8 +66,8 @@ hide_directive-->
    ```sh
    HOST_IP= # <IP Address of the host machine>
 
-   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   S3_STORAGE_USERNAME=   # SeaweedFS S3 service & client access key e.g. intel1234
+   S3_STORAGE_PASSWORD=   # SeaweedFS S3 service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=  # Webrtc-mediamtx username. e.g intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=  # Webrtc-mediamtx password. e.g intel1234

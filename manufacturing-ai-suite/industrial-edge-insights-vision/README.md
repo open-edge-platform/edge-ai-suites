@@ -19,7 +19,7 @@ It consists of the following microservices:
 - Open Telemetry Collector
 - Prometheus
 - Postgres
-- MinIO.
+- SeaweedFS.
 
 <div style="text-align: center;">
     <img src=industrial-edge-insights-vision-architecture.drawio.svg width=800>

@@ -29,8 +29,8 @@
    ```yaml
    env:
        HOST_IP: <HOST_IP>   # host IP address
-       MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
-       MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
+       S3_STORAGE_USERNAME: <DATABASE USERNAME> #  example: s3user
+       S3_STORAGE_PASSWORD: <DATABASE PASSWORD> #  example: s3pass
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
        SAMPLE_APP: pcb-anomaly-detection # application directory
