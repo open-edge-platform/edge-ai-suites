@@ -4,14 +4,12 @@ import os
 import shutil
 
 from utils import session_store, orchestrator
+from utils.pipeline_catalog import ALL_STAGES, FEATURE_STAGE, TERMINAL_SESSION_STATES
 from utils.session_manager import is_generated_session_id
 from utils.session_paths import SessionPaths
 from api.v1.schemas.session import RegisterRequest, WorkflowRequest
 
 logger = logging.getLogger(__name__)
-
-# States a session cannot move out of.
-_TERMINAL = ("completed", "failed", "cancelled")
 
 
 class SessionNotFound(Exception):
@@ -100,7 +98,7 @@ def finalize_session(session_id: str, outcome: str, error: str | None = None) ->
         raise SessionNotFound("session not found")
     if session_id in orchestrator.running_session_ids():
         raise SessionRunning("session is driven by the orchestrator; it finalizes itself")
-    if state.get("state") in _TERMINAL:
+    if state.get("state") in TERMINAL_SESSION_STATES:
         return {
             "session_id": session_id,
             "state": state.get("state"),
@@ -219,16 +217,16 @@ def _summary(state: dict) -> dict:
 
 
 def _validate_stages(stages: list) -> None:
-    from utils.session_store import _ALL_STAGES
     for s in stages:
-        if s not in _ALL_STAGES:
+        if s not in ALL_STAGES:
             raise SessionValidationError(f"unknown stage: {s}")
 
 
 def _validate_sources(req: WorkflowRequest) -> None:
-    if "transcribe" in req.stages:
+    transcribe = FEATURE_STAGE["asr"]
+    if transcribe in req.stages:
         if not req.audio_path:
-            raise SessionValidationError("stage transcribe requires audio_path")
+            raise SessionValidationError(f"stage {transcribe} requires audio_path")
         _check_file(req.audio_path, "audio_path")
     for name, source in (req.video_sources or {}).items():
         if source and not source.startswith("rtsp://"):

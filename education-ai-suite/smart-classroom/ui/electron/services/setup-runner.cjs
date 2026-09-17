@@ -19,17 +19,31 @@ const registry = require('./registry.cjs');
 const proc = require('./win-proc.cjs');
 const winEnv = require('./win-env.cjs');
 
+// RAM, Windows build, Python and DL Streamer are checked by the backend too
+// (utils/system_checker.py), so they come from a generated copy of
+// utils/requirements.py. Everything below is this screen's alone.
+const {
+  MIN_MEMORY_GB: MIN_RAM_GB,
+  MIN_WINDOWS_BUILD,
+  PYTHON_TARGET,
+  REQUIRED_DLSTREAMER,
+} = require('./requirements-catalog.cjs');
+
 const LOG_ID = 'setup';
-const MIN_RAM_GB = 32;
+// Slack for firmware-reserved RAM, so a 32 GB machine reporting 31.9 still passes.
 const RAM_TOLERANCE = 0.95;
 const MIN_DISK_GB = 50;
-const PYTHON_TARGET = [3, 12];
 const LATEST_GPU_DRIVER = '32.0.101.8826';
 const LATEST_NPU_DRIVER = '32.0.100.4778';
-const REQUIRED_DLSTREAMER = '2026.1.0';
 const NPU_DRIVER_URL = 'https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html';
+
+// Derived, so bumping the version in utils/requirements.py carries the label,
+// the winget id and the download URL with it.
+const PYTHON_VERSION = PYTHON_TARGET.join('.');
+const PYTHON_WINGET_ID = `Python.Python.${PYTHON_VERSION}`;
+const PYTHON_WINGET_HINT = `winget install -e --id ${PYTHON_WINGET_ID} --source winget`;
 const DLSTREAMER_URL =
-  'https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.1.0/dlstreamer-2026.1.0-win64.exe';
+  `https://github.com/open-edge-platform/dlstreamer/releases/download/v${REQUIRED_DLSTREAMER}/dlstreamer-${REQUIRED_DLSTREAMER}-win64.exe`;
 
 const STATUS = {
   UNKNOWN: 'unknown',
@@ -152,7 +166,7 @@ async function pythonVersion(exe) {
   return result.ok ? result.stdout : null;
 }
 
-/** The interpreter used to create the venv: prefers an exact 3.12 match. */
+/** The interpreter used to create the venv: prefers an exact PYTHON_TARGET match. */
 async function findPython() {
   for (const exe of await pythonCandidates()) {
     const version = await pythonVersion(exe);
@@ -457,8 +471,8 @@ const STEPS = [
     async check() {
       const build = Number(os.release().split('.')[2] || 0);
       if (process.platform !== 'win32') return { status: STATUS.FAILED, detail: `${process.platform} is not supported` };
-      // Windows 11 reports build 22000 or higher.
-      return build >= 22000
+      // The release string carries no marketing version, so test the build.
+      return build >= MIN_WINDOWS_BUILD
         ? { status: STATUS.OK, detail: `Windows 11 (build ${build})` }
         : { status: STATUS.WARN, detail: `Windows build ${build}; Windows 11 is recommended` };
     },
@@ -557,7 +571,7 @@ const STEPS = [
 
   {
     id: 'python',
-    label: 'Python 3.12',
+    label: `Python ${PYTHON_VERSION}`,
     section: 'software',
     async check() {
       const found = await findPython();
@@ -565,15 +579,15 @@ const STEPS = [
         return {
           status: STATUS.MISSING,
           detail: 'No interpreter found; needed to create the Python environment',
-          hint: 'winget install -e --id Python.Python.3.12 --source winget',
+          hint: PYTHON_WINGET_HINT,
         };
       }
       return found.exact
         ? { status: STATUS.OK, detail: `${found.version} (${found.exe})` }
         : {
             status: STATUS.OUTDATED,
-            detail: `${found.version} (${found.exe}); 3.12.x is the verified version, others may fail to build the environment`,
-            hint: 'winget install -e --id Python.Python.3.12 --source winget',
+            detail: `${found.version} (${found.exe}); ${PYTHON_VERSION}.x is the verified version, others may fail to build the environment`,
+            hint: PYTHON_WINGET_HINT,
           };
     },
     actions: [
@@ -581,7 +595,7 @@ const STEPS = [
         id: 'install',
         label: 'Install',
         async run(emit) {
-          await wingetInstall(emit, 'Python.Python.3.12', 'Python 3.12');
+          await wingetInstall(emit, PYTHON_WINGET_ID, `Python ${PYTHON_VERSION}`);
           emit('Installed.');
         },
       },
@@ -737,7 +751,7 @@ const STEPS = [
           // Recreate, not Upgrade: an environment's interpreter is fixed when it
           // is built, so the only way to change it is to build it again.
           repair: 'recreate',
-          detail: `Built with Python ${version}; ${PYTHON_TARGET.join('.')}.x is the verified version — select Recreate to rebuild it (${dir})`,
+          detail: `Built with Python ${version}; ${PYTHON_VERSION}.x is the verified version — select Recreate to rebuild it (${dir})`,
         };
       }
 
@@ -763,7 +777,7 @@ const STEPS = [
       cwd: () => paths.home(),
       interpreter: async () => {
         const found = await findPython();
-        if (!found) throw new Error('No Python interpreter found; install Python 3.12 first.');
+        if (!found) throw new Error(`No Python interpreter found; install Python ${PYTHON_VERSION} first.`);
         return found.exe;
       },
     }),
