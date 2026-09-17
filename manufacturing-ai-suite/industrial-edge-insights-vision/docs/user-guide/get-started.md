@@ -67,8 +67,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```bash
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
-   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   S3_STORAGE_USERNAME=   # SeaweedFS S3 service & client access key e.g. intel1234
+   S3_STORAGE_PASSWORD=   # SeaweedFS S3 service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -84,8 +84,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```bash
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
-   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   S3_STORAGE_USERNAME=   # SeaweedFS S3 service & client access key e.g. intel1234
+   S3_STORAGE_PASSWORD=   # SeaweedFS S3 service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>

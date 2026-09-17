@@ -113,8 +113,8 @@ configured Kubernetes cluster.
    ```yaml
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
-   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   S3_STORAGE_USERNAME=   # SeaweedFS S3 service & client access key e.g. intel1234
+   S3_STORAGE_PASSWORD=   # SeaweedFS S3 service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -785,13 +785,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 5. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
+   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running SeaweedFS S3 server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
 
    ```python
    import boto3
    url = "http://<HOST_IP>:<S3_STORAGE_PORT>"
-   user = "<value of MINIO_ACCESS_KEY used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
-   password = "<value of MINIO_SECRET_KEY used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
+   user = "<value of S3_STORAGE_USERNAME used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
+   password = "<value of S3_STORAGE_PASSWORD used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -876,9 +876,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ::::
    hide_directive-->
 
-7. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
-
-   ![S3 minio image storage](../_assets/s3-minio-storage.png)
+7. Go to `https://<HOST_IP>:<NGINX_HTTPS_PORT>/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file (HTTP Basic Auth).
 
 8. Uninstall the Helm chart.
 

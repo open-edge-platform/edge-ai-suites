@@ -22,7 +22,7 @@ defects before they impact operations.
 
 This sample application consists of the following microservices:
 DL Streamer Pipeline Server, MediaMTX server, Coturn server,
-Open Telemetry Collector, Prometheus and Minio.
+Open Telemetry Collector, Prometheus and SeaweedFS.
 
 You start the pallet defect detection pipeline with a REST request using Client URL (cURL).
 The REST request will return a pipeline instance ID. DL Streamer Pipeline Server then sends
@@ -59,9 +59,8 @@ It also consists of these Third-party microservices:
   is a set of receivers, exporters, processors, connectors for Open Telemetry.
 - [Prometheus](https://hub.docker.com/r/prom/prometheus)
   is a systems and service monitoring system used for viewing Open Telemetry.
-- [Minio](https://hub.docker.com/r/minio/minio)
-  is a high performance object storage system that is API compatible with
-  Amazon S3 cloud storage service.
+- [SeaweedFS](https://github.com/seaweedfs/seaweedfs)
+  is a fast, S3-compatible distributed object storage system.
 
 ## Features
 
