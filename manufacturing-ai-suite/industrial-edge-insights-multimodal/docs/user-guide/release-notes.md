@@ -45,7 +45,6 @@ documentation enhancements.
 - **Documentation**: Editorial, punctuation, and formatting improvements were made throughout the
   user guide.
 
-
 ## Version 2026.1
 
 **Release Date**: June 17, 2026
