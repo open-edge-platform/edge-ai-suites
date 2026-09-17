@@ -36,7 +36,6 @@ various fixes and documentation improvements.
 - **Documentation**: Multiple language, formatting, and editorial fixes applied across the
   Time Series user guides.
 
-
 ## Version 2026.1
 
 **Release Date**: June 17,2026

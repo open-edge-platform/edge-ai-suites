@@ -185,8 +185,8 @@ configured Kubernetes cluster.
    ```yaml
    env:
        HOST_IP: <host_IP>   # host IP address
-       MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
-       MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
+       S3_STORAGE_USERNAME: <DATABASE USERNAME> #  example: s3user
+       S3_STORAGE_PASSWORD: <DATABASE PASSWORD> #  example: s3pass
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
        no_proxy: <no proxy> # append following to existing no_proxy - localhost,127.0.0.1,.local,.cluster.local
@@ -203,8 +203,8 @@ configured Kubernetes cluster.
    ```yaml
    env:
        HOST_IP: <host_IP>   # host IP address
-       MINIO_ACCESS_KEY: <DATABASE USERNAME> #  example: minioadmin
-       MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
+       S3_STORAGE_USERNAME: <DATABASE USERNAME> #  example: s3user
+       S3_STORAGE_PASSWORD: <DATABASE PASSWORD> #  example: s3pass
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
        no_proxy: <no proxy> # append following to existing no_proxy - localhost,127.0.0.1,.local,.cluster.local
@@ -671,13 +671,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 5. Create an S3 bucket using the following script.
 
-   Update the `host_IP` and credentials with that of the running MinIO server. Use `create_bucket.py` as the file name.
+   Update the `host_IP` and credentials with that of the running SeaweedFS S3 server. Use `create_bucket.py` as the file name.
 
    ```python
    import boto3
    url = "http://<host_IP>:30800"
-   user = "<value of MINIO_ACCESS_KEY used in helm/values.yaml>"
-   password = "<value of MINIO_SECRET_KEY used in helm/values.yaml>"
+   user = "<value of S3_STORAGE_USERNAME used in helm/values.yaml>"
+   password = "<value of S3_STORAGE_PASSWORD used in helm/values.yaml>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -764,11 +764,9 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ::::
    hide_directive-->
 
-7. Go to MinIO console on `https://<host_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+7. Go to `https://<host_IP>:30443/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/values.yaml` file (HTTP Basic Auth).
 
    > **Note:** If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
-
-   ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
 8. Uninstall the Helm chart.
 

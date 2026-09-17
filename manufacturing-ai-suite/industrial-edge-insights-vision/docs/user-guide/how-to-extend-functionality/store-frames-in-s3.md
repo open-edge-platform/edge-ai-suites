@@ -4,7 +4,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 ## Steps
 
-> **Note:** For the purpose of this demonstration, we will be using MinIO as the S3 storage. The necessary compose configuration for MinIO microservice is already part of the Docker Compose file.
+> **Note:** For the purpose of this demonstration, we will be using SeaweedFS as the S3 storage. The necessary compose configuration for the SeaweedFS microservices is already part of the Docker Compose file.
 
 1. Setup the application to use the docker based deployment following this [document](../get-started.md#set-up-the-application).
 
@@ -41,13 +41,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 4. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and credentials with that of the running MinIO server. Use `create_bucket.py` as the file name.
+   Update the `HOST_IP` and credentials with that of the running SeaweedFS S3 server. Use `create_bucket.py` as the file name.
 
    ```python
    import boto3
-   url = "http://<HOST_IP>:<MINIO_SERVER_PORT>"
-   user = "<value of MINIO_ACCESS_KEY used in .env>"
-   password = "<value of MINIO_SECRET_KEY used in .env>"
+   url = "http://<HOST_IP>:<S3_STORAGE_HOST_PORT>"
+   user = "<value of S3_STORAGE_USERNAME used in .env>"
+   password = "<value of S3_STORAGE_PASSWORD used in .env>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -135,9 +135,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ::::
    hide_directive-->
 
-6. Go to MinIO console on `https://<HOST_IP>/minio` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+6. Go to `https://<HOST_IP>/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `.env` file (HTTP Basic Auth).
 
     > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
     > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-
-   ![S3 minio image storage](../_assets/s3-minio-storage.png)

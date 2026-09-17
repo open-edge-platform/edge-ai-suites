@@ -276,7 +276,10 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       dlstreamer-pipeline-server
 127.0.0.1       prometheus
 127.0.0.1       mediamtx-server
-127.0.0.1       minio
+127.0.0.1       seaweedfs-master
+127.0.0.1       seaweedfs-volume
+127.0.0.1       seaweedfs-filer
+127.0.0.1       seaweedfs-s3
 127.0.0.1       otel-collector
 127.0.0.1       mqtt-broker
 ```

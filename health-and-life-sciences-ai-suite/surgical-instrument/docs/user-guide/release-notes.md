@@ -1,14 +1,14 @@
-# Release Notes - Surgical Instrument
+# Release Notes: Surgical Instrument
 
 ## Version 2026.2.0
 
-**Aug 18, 2026**
+**Release Date**: September 9, 2026
 
 This is the initial release of the application. It is intended for reference
 and evaluation purposes only and not for direct use in clinical or diagnostic
 environments.
 
-**New**
+**New**:
 
 - Docker Compose driven workflow with a single `make up` entrypoint that
   supports both registry pull (default) and local source build via

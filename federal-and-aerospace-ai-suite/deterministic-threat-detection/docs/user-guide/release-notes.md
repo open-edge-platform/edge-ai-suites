@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Deterministic Threat Detection
 
 - [Version 1.0.1](#version-101)
 - [Version 1.0.0](#version-100)

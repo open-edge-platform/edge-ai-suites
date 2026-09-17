@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Smart Parking
 
 ## Version 1.6.0
 
