@@ -876,7 +876,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ::::
    hide_directive-->
 
-7. Go to `https://<HOST_IP>:<NGINX_HTTPS_PORT>/storage/buckets/ecgdemo/` to browse the frames stored in the `ecgdemo` bucket (replace `ecgdemo` with the bucket name you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file (HTTP Basic Auth).
+7. Go to `https://<HOST_IP>:<NGINX_HTTPS_PORT>/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file (HTTP Basic Auth).
 
 8. Uninstall the Helm chart.
 
