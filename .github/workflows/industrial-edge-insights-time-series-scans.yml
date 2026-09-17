@@ -29,6 +29,7 @@ on:
         - dbs-scan
         - codeql-scan
         - pylint-scan
+        - shellcheck-scan
       
       application:
         description: 'Which application to scan (time-series, multimodal or both)'
@@ -995,4 +996,44 @@ jobs:
           path: |
             manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt
             manufacturing-ai-suite/industrial-edge-insights-multimodal/pylint-report.txt
+
+  shellcheck-scan:
+    name: Run ShellCheck Scan
+    if: ${{ (inputs.target == 'shellcheck-scan') || (inputs.target == 'all-scans') }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck lint
+        env:
+          APPLICATION: ${{ inputs.application }}
+        run: |
+          mkdir -p reports
+          if [[ "$APPLICATION" == "time-series" || "$APPLICATION" == "both" ]]; then
+            shellcheck --format=json $(find manufacturing-ai-suite/industrial-edge-insights-time-series -name "*.sh") \
+              > reports/shellcheck-timeseries-report.json || true
+          fi
+          if [[ "$APPLICATION" == "multimodal" || "$APPLICATION" == "both" ]]; then
+            shellcheck --format=json $(find manufacturing-ai-suite/industrial-edge-insights-multimodal -name "*.sh") \
+              > reports/shellcheck-multimodal-report.json || true
+          fi
+
+      - name: Upload ShellCheck reports
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
+        if: always()
+        with:
+          name: shellcheck-reports
+          path: |
+            reports/shellcheck-timeseries-report.json
+            reports/shellcheck-multimodal-report.json
 
