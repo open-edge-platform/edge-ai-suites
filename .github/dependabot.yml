@@ -31,19 +31,9 @@ updates:
   - package-ecosystem: "pip"
     directories: &manufacturing-directories
       - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
-      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/*/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/*/*/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/*/*/*/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/*/*/*/*/*/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
       - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
-      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/*/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/*/*/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/*/*/*/*/*"
-      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/*/*/*/*/*/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
     schedule:
       interval: "weekly"
     cooldown:
