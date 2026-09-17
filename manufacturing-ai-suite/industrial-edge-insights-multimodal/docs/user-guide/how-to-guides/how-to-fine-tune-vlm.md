@@ -42,7 +42,7 @@ This process consists of two stages:
    domain-agnostic scripts in this directory:
 
    | Script | Input | Output |
-   |---|---|---|
+   | --- | --- | --- |
    | `train_qwen.py` | A parquet dataset (`image` and `conversation_json` columns) | LoRA adapter and tokenizer |
    | `infer_qwen.py` | Base model or adapter (from `train_qwen.py`) | Streamed model response, token-by-token |
 
@@ -71,7 +71,6 @@ vlm-fine-tuning/
 > `processed_dataset/`, `*_adapter/`, `checkpoint-*/`, and downloaded
 > datasets and images to `.gitignore`. Do not commit these generated artifacts.
 
-
 ## Prerequisites
 
 - Python programming version 3.12 or newer
@@ -79,14 +78,13 @@ vlm-fine-tuning/
   if your dataset preparation requires intensive memory operations like the
   Weld Worked example does.
 - Install the Intel® Graphics Compute Runtime for oneAPI Level Zero and OpenCL™ Driver
-  from https://github.com/intel/compute-runtime/releases.
+  from <https://github.com/intel/compute-runtime/releases>.
 - A GPU or an XPU is strongly recommended for fine-tuning and inference:
   - An Intel® Arc™ GPU or Intel® integrated GPU, with an Intel® XPU-enabled PyTorch build, or
   - A CPU that supports the workflow but runs slowly; use it for pipeline smoke tests only.
 - Ensure that your user can access the GPU's DRM render nodes. The `render` group
   provides GPU rendering access without granting broader display-management
   permissions. Check the render-node group and your current group memberships:
-
 
   ```bash
   stat -c "%G" /dev/dri/render*
@@ -132,7 +130,6 @@ The Unsloth library auto-detects the installed PyTorch backend, whether that is 
 Intel XPU, CUDA device, or CPU, at import time. `common.detect_device()` selects the
 available PyTorch backend in the order of Intel XPU, CUDA device, then CPU for tensor
 placement during training and inference.
-
 
 ## Pipeline Architecture
 
@@ -232,7 +229,7 @@ Notable flags (all optional, defaults shown):
 | `--per-device-eval-batch-size` | 4 | Per-device eval batch size |
 | `--gradient-accumulation-steps` | 4 | Effective batch size = train batch × this |
 | `--max-seq-length` | 2048 | Maximum token sequence length |
-| `--lora-r`| 16 | LoRA rank |
+| `--lora-r` | 16 | LoRA rank |
 | `--lora-alpha` | 16 | LoRA alpha |
 | `--preview-only` | off | Load data, print the first converted sample, and exit (no model building or training) |
 | `--skip-save` | off | Skip saving the adapter or tokenizer at the end |
@@ -340,7 +337,6 @@ the un-tuned base model, or a local directory containing a saved LoRA
 adapter from `train_qwen.py`. The output is streamed token-by-token to stdout via
 the `TextStreamer` instance.
 
-
 ## Troubleshooting
 
 - **Out-of-memory during training** — lower the
@@ -358,7 +354,7 @@ the `TextStreamer` instance.
 
 - **Dataset-prep issues** (missing files, split-ratio errors, malformed
   `conversation_json`, etc.) are specific to whichever dataset-preparation script
-  you use. See [Weld Usecase — Data-Preparation Troubleshooting](./how-to-fine-tune-vlm-weld-usecase.md#data-prep-troubleshooting)
+  you use. See [Weld Usecase — Data-Preparation Troubleshooting](./how-to-fine-tune-vlm-weld-usecase.md#data-preparation-troubleshooting)
   for the worked example's troubleshooting notes.
 
 ## License
@@ -375,4 +371,4 @@ The following are third-party components used by the scripts in this directory (
 
 For the license of any dataset used with this toolkit, see the dataset's
 own license terms,  e.g. for the weld worked example, see the
-[Weld Use Case — License and Dataset Attribution](./how-to-fine-tune-vlm-weld-usecase.md#license--dataset-attribution).
+[Weld Use Case — License and Dataset Attribution](./how-to-fine-tune-vlm-weld-usecase.md#license-and-dataset-attribution).

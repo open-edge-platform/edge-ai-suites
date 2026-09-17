@@ -5,7 +5,7 @@ generic VLM fine-tuning flow using the Unsloth library described in
 [`VLM Fine-Tuning with Unsloth Library`](./how-to-fine-tune-vlm.md).
 
 | Generic Stage | Weld-Specific Instance (This Section) |
-|---|---|
+| --- | --- |
 | Bring-your-own dataset, prepared as a parquet file (or files) | `prepare_weld_dataset.py` — [Step 1](#step-1-input-data) & [Step 2](#step-2-prepare-the-dataset) |
 | Fine-tune with `train_qwen.py` | Weld-specific invocation — [Step 3](#step-3-fine-tune-the-model-weld-instance) |
 | Infer with `infer_qwen.py` | Weld-specific invocation — [Step 4](#step-4-run-inference-weld-instance) |
@@ -17,9 +17,9 @@ generic VLM fine-tuning flow using the Unsloth library described in
 - [Step 2: Prepare the Dataset](#step-2-prepare-the-dataset)
 - [Step 3: Fine-Tune the Model (Weld Instance)](#step-3-fine-tune-the-model-weld-instance)
 - [Step 4: Run Inference (Weld Instance)](#step-4-run-inference-weld-instance)
-- [Detailed Data-Preparation Flow](#detailed-data-prep-flow)
-- [Data-Preparation Troubleshooting](#data-prep-troubleshooting)
-- [License and Dataset Attribution](#license--dataset-attribution)
+- [Detailed Data-Preparation Flow](#detailed-data-preparation-flow)
+- [Data-Preparation Troubleshooting](#data-preparation-troubleshooting)
+- [License and Dataset Attribution](#license-and-dataset-attribution)
 
 ## Data Preparation Strategy
 
@@ -182,7 +182,7 @@ by the Qwen-VL model and the Unsloth fine-tuning library during training
 and inference:
 
 | Turn | Content | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `system` | A fixed "expert weld quality inspector and metallurgical engineer" persona that references AWS D1.1 and ISO 5817 | Anchors the model's domain role and output-structuring behavior consistently across samples |
 | `user` | `{one of seven user instruction templates}`, a `{sensor telemetry block}`, and an `{image}` | The operator's question, phrased differently each time, with raw sensor readings inlined as text so the model attends to both modalities together |
 | `assistant` | A fixed-schema structured report as described in [Data Preparation Strategy](#data-preparation-strategy), synthesized from classifier output and a small defect knowledge base | The learning target that the model is trained to produce |
@@ -209,7 +209,7 @@ turn as the image.
 formats, because they serve different consumers:
 
 | Format | Location | Used by | Purpose |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Arrow** (`hf_dataset/`, written through `DatasetDict.save_to_disk`) | On-disk memory-mapped Arrow tables | Ad-hoc exploration with `datasets.load_from_disk`, or as a base to derive further Hugging Face-native transforms | Arrow is the `datasets` library's native, memory-mapped columnar format. Large image datasets can be inspected and iterated without loading everything into RAM, and the Arrow dataset round-trips through `datasets` APIs (filters, `map`, etc.) losslessly |
 | **Parquet** (`parquet/{split}.parquet`) | One portable file per split | **`train_qwen.py`**, via `datasets.load_dataset("parquet", ...)` | Parquet is a compact, columnar, self-contained, widely-portable file format. With the `image` column cast to `datasets.Image`, image bytes are embedded directly in the parquet file, so a single file per split carries both the conversation and its image with no separate file tree to keep in synchronization. Parquet is the standard format used by the Unsloth library, the datasets library, and Hugging Face Hub for VLM datasets. |
 | **JSONL** (`conversations/{split}.jsonl`) | One line per record, `{"messages": [...]}` | Manual inspection (`less`, `jq`, diffing) and any other chat-format supervised fine-tuning (SFT) trainer (e.g. axolotl, LLaMA-Factory) that expects JSONL conversations | Human-readable, diffable, and framework-agnostic. No binary or Arrow tooling is needed to inspect a few samples, and it is the lowest-common-denominator format most other SFT trainers already accept. |
@@ -294,7 +294,6 @@ Model Confidence and Defect Probability, Severity, Root Cause,
 and Corrective Actions, as described in [Data Preparation Strategy](#data-preparation-strategy).
 The report format is the assistant-turn schema that the model was
 fine-tuned to reproduce in Step 3.
-
 
 ## Detailed Data-Preparation Flow
 
