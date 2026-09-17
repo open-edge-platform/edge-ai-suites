@@ -37,6 +37,8 @@ spec:
   ports:
     - name: "master-port"
       port: 9333
+    - name: "master-grpc-port"
+      port: 19333
   selector:
     app: seaweedfs-master
 ---
@@ -95,6 +97,8 @@ spec:
   ports:
     - name: "volume-port"
       port: 8080
+    - name: "volume-grpc-port"
+      port: 18080
   selector:
     app: seaweedfs-volume
 ---
@@ -153,6 +157,8 @@ spec:
   ports:
     - name: "filer-port"
       port: 8888
+    - name: "filer-grpc-port"
+      port: 18888
   selector:
     app: seaweedfs-filer
 ---
