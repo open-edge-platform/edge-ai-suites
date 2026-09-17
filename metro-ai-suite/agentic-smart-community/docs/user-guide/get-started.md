@@ -86,7 +86,7 @@ bash setup_docker.sh
 
 **Reuse an existing model serving:** Replace only this Step 1 startup procedure as described in [Use an existing model serving](#use-an-existing-model-serving). After the application tier starts, continue with [Step 2 - Verify the MCP server](#step-2---verify-the-mcp-server) and the remaining steps.
 
-> **Note:**
+> [!NOTE]
 >
 > - Use `bash setup_docker.sh --light` to reuse an already warm serving and start only `multilevel-video-understanding`, `videostream-analytics`, and `smart-community-mcp-server`.
 > - Use `bash setup_docker.sh --light-down` to stop the app tier while leaving `vllm-ipex-serving` running (avoids its 3-20 min recompile), or `bash setup_docker.sh --down` to stop all four services.
@@ -130,7 +130,8 @@ ls ~/.mcp-smart-community/smart-community.db
 ls ~/.mcp-smart-community/config.yaml ~/.mcp-smart-community/monitors.yaml
 ```
 
-> **Note:** Use `bash setup_docker.sh --light-down` to stop the MCP server (and the rest of the app tier) while keeping the model serving warm, or `bash setup_docker.sh --down` for a full teardown.
+> [!NOTE]
+> Use `bash setup_docker.sh --light-down` to stop the MCP server (and the rest of the app tier) while keeping the model serving warm, or `bash setup_docker.sh --down` for a full teardown.
 
 ### Step 3 - Connect an agent host
 
@@ -183,7 +184,7 @@ Open `http://localhost:3100/` to use the Agentic Smart Community Web UI. It prov
    # http://localhost:18789/
    ```
 
-   > **Note:**
+   > [!NOTE]
    > - If there is no GUI on your host, run: `ssh -N -L 18789:127.0.0.1:18789 username@your-host-ip`
    > - Find the gateway token from `~/.openclaw/openclaw.json`
 
@@ -244,7 +245,9 @@ Ask the agent to delete the monitor registered in the previous step:
 ```text
 "Delete the cam_test monitor."
 ```
-> Note: Only do this if you don't need this monitor any more
+
+> [!NOTE]
+> Only do this if you don't need this monitor any more
 
 ##### **Real-Time Alert Notifications**
 MCP Server subscriptions can deliver alert updates directly to connected clients. To enable real-time notifications through the OpenClaw adapter:
@@ -301,7 +304,8 @@ docker pull intel/smart-community-mcp-server:2026.2.0
 docker pull intel/videostream-analytics:2026.2.0
 ```
 
-> **Note:** `setup_docker.sh` resolves each image as `${REGISTRY_URL}<service>:${TAG}`, which with the defaults in [docker/set_env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/set_env.sh). Export `TAG` before sourcing `docker/set_env.sh` so it matches the tag you pulled or built.
+> [!NOTE]
+> `setup_docker.sh` resolves each image as `${REGISTRY_URL}<service>:${TAG}`, which with the defaults in [docker/set_env.sh](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-smart-community/docker/set_env.sh). Export `TAG` before sourcing `docker/set_env.sh` so it matches the tag you pulled or built.
 
 ## Use an existing model serving
 

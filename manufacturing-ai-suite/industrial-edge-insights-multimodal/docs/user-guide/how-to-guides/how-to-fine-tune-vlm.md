@@ -6,12 +6,13 @@ fine-tuning a vision-language model (VLM) on your own multimodal
 library and the Low-Rank Adaptation (LoRA) fine-tuning method, and
 running inference with the resulting adapter.
 
-> **Note**: This section describes a generic flow that applies to all domains and
-datasets. For a concrete and ready-to-run example, see
-[Fine-Tune a VLM with Unsloth Library — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
-This example applies the generic flow to the weld-defect visual
-inspection dataset, including but not limited to, the input schema,
-prompt design, and the exact commands.
+> [!NOTE]
+> This section describes a generic flow that applies to all domains and
+> datasets. For a concrete and ready-to-run example, see
+> [Fine-Tune a VLM with Unsloth Library — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
+> This example applies the generic flow to the weld-defect visual
+> inspection dataset, including but not limited to, the input schema,
+> prompt design, and the exact commands.
 
 ## Table of Contents
 
@@ -63,7 +64,7 @@ vlm-fine-tuning/
 └── infer_qwen.py               # Generic standalone inference
 ```
 
-> **Notes**:
+> [!NOTE]
 > Generated artifacts are written to the directories specified by
 > `--output-dir` and `--dataset-path` that you pass on the command line,
 > for example, `processed_dataset/` and `qwen_3.5_2b_adapter/`.

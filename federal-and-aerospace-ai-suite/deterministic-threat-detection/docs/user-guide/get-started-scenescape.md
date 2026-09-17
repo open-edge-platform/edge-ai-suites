@@ -66,7 +66,8 @@ Before continuing, complete the following steps in order:
 Create VLAN interfaces to isolate critical camera traffic from best-effort traffic on the
 TSN switch.
 
-> **Note:** First configure VLAN IDs on the MOXA switch as described in the
+> [!NOTE]
+> First configure VLAN IDs on the MOXA switch as described in the
 > [MOXA VLAN Configuration Guide](./how-to-guides/common/configure-vlan-on-moxa-switch.md).
 
 ```bash
@@ -80,7 +81,8 @@ sudo ip link set enp1s0.5 type vlan egress-qos-map 0:5
 sudo ifconfig enp1s0.5 192.168.5.31 up
 ```
 
-> **Note:** If you are using 1588v2 PTP for the time synchronization, make sure to assign any IP address to the default host interface (e.g., `enp1s0`) that is within the same subnet as the camera and switch to ensure the PTP daemon can discover the Grandmaster over UDP.
+> [!NOTE]
+> If you are using 1588v2 PTP for the time synchronization, make sure to assign any IP address to the default host interface (e.g., `enp1s0`) that is within the same subnet as the camera and switch to ensure the PTP daemon can discover the Grandmaster over UDP.
 
 For detailed instructions, refer to the
 [HOST VLAN Configuration Guide](./how-to-guides/common/create-vlan-on-all-machines.md).
@@ -92,7 +94,8 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/deploy-scenescape-using-prebuilt-containers.html) to use the prebuilt images.
+> [!NOTE]
+> Use the instructions in the [Scenescape prebuilt containers guide](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/deploy-scenescape-using-prebuilt-containers.html) to use the prebuilt images.
 
 > **Basler camera users:** If you completed the Basler prerequisite steps above, the Docker Compose file has already been patched and the custom DL Streamer image with Basler support has been built. Start Scenescape with `make demo` as usual — the patched compose file will be picked up automatically.
 
@@ -124,9 +127,11 @@ prioritize the camera traffic, protecting it from background congestion.
 
 ![MOXA Time Aware Shaper](./_assets/moxa-time-aware-shaper-port-setting.png)
 
-> **Note:** The default MOXA switch username is `admin` and the default password is `moxa`.
+> [!NOTE]
+> The default MOXA switch username is `admin` and the default password is `moxa`.
 
-> **Note:** Apply the port setting on the switch port that connects to the host running
+> [!NOTE]
+> Apply the port setting on the switch port that connects to the host running
 > Scenescape.
 
 For detailed instructions, refer to the

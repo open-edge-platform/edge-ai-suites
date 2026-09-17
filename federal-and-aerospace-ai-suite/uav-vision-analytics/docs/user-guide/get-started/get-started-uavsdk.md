@@ -148,7 +148,8 @@ make uavsdk-up
 
 ### 5. Run a simple mission
 
-> **Note:** Video streams are not available until the UAV is armed and actively on a mission.
+> [!NOTE]
+> Video streams are not available until the UAV is armed and actively on a mission.
 
 Run the simple UAV mission in a persistent terminal window to keep the simulation active. The following sequence arms the UAV, commands a takeoff to 10 m, holds for 120 seconds, then lands:
 
@@ -184,7 +185,8 @@ make start-rtsp DEVICE=all     # all three cameras simultaneously
 
 #### Option B — Manual REST API
 
-> **Note:** RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
+> [!NOTE]
+> RTSP streams are not available until the UAV is armed. Run a simple mission first (see [Step 5: Run a simple mission](#5-run-a-simple-mission)).
 
 Start a single camera pipeline directly. The UAVSDK mode loads `config-uavsdk.json` which defines the three camera-source pipelines (`nadir_camera_rtsp_cpu`, `forward_camera_rtsp_gpu`, `rear_camera_rtsp_npu`).
 
@@ -260,7 +262,8 @@ The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
 
-> **Note — Other ways to view the stream:**
+> [!NOTE]
+> Other ways to view the stream:
 > - Leverage versatile streaming media players such as VLC Player to seamlessly handle, manage, and playback the incoming streams with ease and efficiency.
 
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 6](#6-start-inference-pipelines)):

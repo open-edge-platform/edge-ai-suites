@@ -29,8 +29,9 @@ Produce:
 - `.env` template
 - `tests/` pytest suite
 
-Note: RealSense device must be physically connected and accessible as
-`/dev/video0` on the host. The compose file must mount the device and
-include the appropriate `group_add` GID for the video group.
+> [!NOTE]
+> RealSense device must be physically connected and accessible as
+> `/dev/video0` on the host. The compose file must mount the device and
+> include the appropriate `group_add` GID for the video group.
 
 Verify against all completion criteria before declaring success.

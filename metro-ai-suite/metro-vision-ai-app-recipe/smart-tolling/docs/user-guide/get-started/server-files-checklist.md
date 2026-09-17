@@ -56,7 +56,8 @@ This assumes the root directory on the server matches the `${SAMPLE_APP}` variab
 
 ## 8. Secrets & Certificates
 
-*Note: Only download these if you need to replicate the exact security environment. For documentation purposes, just knowing they exist is usually enough, but `supass` might be needed for login.*
+> [!NOTE]
+> Only download these if you need to replicate the exact security environment. For documentation purposes, just knowing they exist is usually enough, but `supass` might be needed for login.
 
 - [ ] `src/secrets/certs/scenescape-ca.pem`
 - [ ] `src/secrets/certs/scenescape-broker.crt`

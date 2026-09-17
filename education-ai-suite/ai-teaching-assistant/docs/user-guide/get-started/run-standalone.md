@@ -135,7 +135,7 @@ Or use:
 .\stop_ata.ps1
 ```
 
-> **Note:**
+> [!NOTE]
 >
 > - The launcher flow (`start_ata.ps1`) is the supported default.
 > - Manual mode is primarily for debugging service-level behavior.

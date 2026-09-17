@@ -39,7 +39,7 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 
 ### Install Intel® Extension for PyTorch
 
-> **Important:**
+> [!IMPORTANT]
 > Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the
 > [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/resources/troubleshooting.html).
 
@@ -117,7 +117,7 @@ pip install -e .
    python3 ov_convert.py --ckpt_path <your_ckpt_path> --height 480 --weight 640 --camera_num 4 --chunk_size 100
    ```
 
-   > **Important:**
+   > [!IMPORTANT]
    > Please make sure the arguments `--chunk_size`, `--kl_weight`, `--hidden_dim`, `--dim_feedforward`, `--camera_num`
    > are the same as the training arguments.
 
@@ -160,7 +160,7 @@ pip install -e .
    python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
    ```
 
-   > **Note:**
+   > [!NOTE]
    >
    > - `--eval` is used to evaluate the policy.
    > - `--device` is used to set the device to CPU or GPU.
@@ -173,7 +173,7 @@ pip install -e .
 
 ### Training **(Optional)**
 
-> **Important:**
+> [!IMPORTANT]
 > Please refer to the [ALOHA paper](https://arxiv.org/abs/2304.13705) for instructions on setting up a machine with the training environment.
 
 1. Generate 50 episodes with the following command:

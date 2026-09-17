@@ -72,7 +72,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
 
 2. Deploy the sample app, use only one of the following options:
 
-> **NOTE**:
+> [!NOTE]
 >
 > - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
 >   as per the rules called out in `.env` file.
@@ -131,7 +131,8 @@ curl -k -X 'POST' \
 
 1. Get into the InfluxDB* container:
 
-   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the Helm deployment
+   > [!NOTE]
+   > Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the Helm deployment
    > where for <namespace> replace with namespace name where the application was deployed and
    > for <influxdb-pod-name> replace with InfluxDB pod name.
 
@@ -141,7 +142,7 @@ curl -k -X 'POST' \
 
 2. Run the following commands to see the data in InfluxDB*:
 
-   > **NOTE:**
+   > [!NOTE]
    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
    > This does not affect any functionality while working with the InfluxDB commands
 
@@ -160,7 +161,7 @@ curl -k -X 'POST' \
 
    - Use link `https://localhost:3000/` to launch Grafana from browser (preferably Chrome browser)
 
-     > **Note:**:
+     > [!NOTE]
      > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
      > - If you are accessing the UI remotely, replace `localhost` with the host system IP address.
 

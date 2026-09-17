@@ -15,13 +15,13 @@ and the Clearpath Robotics software packages. This guide shows how to install
 the Autonomous Mobile Robot on top of that pre-installed software and validate
 the robot with a RealSense D435i camera.
 
-:::{warning}
-Intel has only validated this Blueprint with the Jackal's onboard computer
-swapped for the AAEON UP Nexus WCL Edge board listed below. Running this guide
-on the Jackal's original stock onboard computer, or any other board, is
-**use at your own risk** — steps, package versions, and behavior are not
-validated on unlisted hardware.
-:::
+> [!WARNING]
+> Intel has only validated this Blueprint with the Jackal's onboard computer
+> swapped for the AAEON UP Nexus WCL Edge board listed below. Running this guide
+> on the Jackal's original stock onboard computer, or any other board, is
+> **use at your own risk** — steps, package versions, and behavior are not
+> validated on unlisted hardware.
+
 
 ### Hardware Bill of Materials
 

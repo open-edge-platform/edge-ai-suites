@@ -1,9 +1,9 @@
 # Smart Traffic Intersection Agent
 
-> Note!
+> [!NOTE]
 > This is a sample application **intended for evaluation and development purposes only**.
-  For more information, refer to
-  [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
+> For more information, refer to
+> [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
 
 The Smart Traffic Intersection Agent application demonstrates how Intel hardware performs
 in AI use cases for urban traffic management. It analyzes various traffic scenarios at the

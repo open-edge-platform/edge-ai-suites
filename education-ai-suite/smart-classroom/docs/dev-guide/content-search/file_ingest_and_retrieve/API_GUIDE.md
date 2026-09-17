@@ -160,7 +160,8 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest \
   }'
 ```
 
-> **Note:** Metadata values can be strings, numbers, booleans, or **homogeneous lists** (all elements must be the same type). The `tags` field, if provided, must be a **list of strings** — passing a non-list or a list with non-string elements returns `422`.
+> [!NOTE]
+> Metadata values can be strings, numbers, booleans, or **homogeneous lists** (all elements must be the same type). The `tags` field, if provided, must be a **list of strings** — passing a non-list or a list with non-string elements returns `422`.
 
 #### Response
 
@@ -213,7 +214,8 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest \
 { "message": "Files from storage directory successfully processed. db returns ..." }
 ```
 
-> **Tip:** The service distinguishes between a single-file request and a directory request based on the presence of `file_path` vs `folder_path`.
+> [!TIP]
+> The service distinguishes between a single-file request and a directory request based on the presence of `file_path` vs `folder_path`.
 
 ---
 
@@ -262,7 +264,8 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest_text \
   }'
 ```
 
-> **Note:** The `tags` field must be a **list of strings** — passing a non-list or a list with non-string elements returns `422`.
+> [!NOTE]
+> The `tags` field must be a **list of strings** — passing a non-list or a list with non-string elements returns `422`.
 
 Below metadatas shall be automatically appended
 ```json
@@ -436,7 +439,8 @@ curl -X POST http://localhost:9990/v1/dataprep/recover
 - `visual_files` — number of distinct file paths recovered into the visual id_map
 - `document_files` — number of distinct file paths recovered into the document id_map
 
-> **Note:** POST is write-only with respect to in-memory state — it rebuilds the id_maps from the database but does not modify any stored data.
+> [!NOTE]
+> POST is write-only with respect to in-memory state — it rebuilds the id_maps from the database but does not modify any stored data.
 
 ---
 
@@ -455,7 +459,8 @@ Search the index using a text query or a base64-encoded image. Returns the top-k
 | `filter` | object | No | Metadata filter to narrow results (see [Filter usage](#filter-usage) below). |
 | `max_num_results` | integer | No (default `10`) | Max results per collection (1–16384). For text queries, up to `2 × max_num_results` may be returned (top-k from visual collection + top-k from document collection, merged and sorted by distance). For image queries, at most `max_num_results` are returned. |
 
-> **Note:** Provide exactly one of `query` or `image_base64` — not both.
+> [!NOTE]
+> Provide exactly one of `query` or `image_base64` — not both.
 
 **Text search example**
 
@@ -519,7 +524,8 @@ curl -X POST http://localhost:9990/v1/retrieval \
   }'
 ```
 
-> **Note:** Video-type results may appear even when `"video"` is not explicitly selected in the `type` filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have `"original_type": "constructed_from_summary"` in their metadata to distinguish them from native video frame results.
+> [!NOTE]
+> Video-type results may appear even when `"video"` is not explicitly selected in the `type` filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have `"original_type": "constructed_from_summary"` in their metadata to distinguish them from native video frame results.
 
 **Filter for constructed summaries** — returns only video results that were constructed from document summaries:
 
@@ -636,7 +642,8 @@ Error responses include a `detail` field:
 
 ## Developer-Only APIs
 
-> **Note:** The following endpoints are for testing and debugging purposes only. They are not part of the production API.
+> [!NOTE]
+> The following endpoints are for testing and debugging purposes only. They are not part of the production API.
 
 ### DELETE /v1/dataprep/delete_by_ids
 
