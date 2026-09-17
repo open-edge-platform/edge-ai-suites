@@ -3,6 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Query
 
 from api.v1.schemas.session import (
+    ArtifactListResponse,
+    ArtifactTextResponse,
     CancelResponse,
     DeleteResponse,
     FinalizeRequest,
@@ -17,6 +19,7 @@ from api.v1.schemas.session import (
 )
 from services import session_service
 from services.session_service import (
+    ArtifactNotFound,
     ConcurrencyLimitError,
     SessionNotCancellable,
     SessionNotFound,
@@ -85,6 +88,27 @@ def get_session_events(session_id: str):
     try:
         return session_service.get_stage_events(session_id)
     except SessionNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{session_id}/artifacts", response_model=ArtifactListResponse)
+def list_session_artifacts(session_id: str):
+    """The stage outputs the history panel can open, for one session."""
+    try:
+        return session_service.list_artifacts(session_id)
+    except SessionNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/{session_id}/artifacts/{stage}", response_model=ArtifactTextResponse)
+def get_session_artifact(session_id: str, stage: str):
+    """One stage's output, as the text it was written as - the preview lays it
+    out itself, rather than being handed something already rendered."""
+    try:
+        return session_service.read_text_artifact(session_id, stage)
+    except SessionNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ArtifactNotFound as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 

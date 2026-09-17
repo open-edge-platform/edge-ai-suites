@@ -1161,6 +1161,53 @@ export async function getSessionEvents(sessionId: string): Promise<StageEvent[]>
   });
 }
 
+/** How a stage's output should be rendered, not what it is on disk. */
+export type SessionArtifactKind = 'transcript' | 'markdown' | 'mindmap' | 'topics' | 'stats';
+
+export interface SessionArtifact {
+  stage: string;
+  kind: SessionArtifactKind;
+  filename: string;
+  size_bytes: number;
+}
+
+export interface SessionArtifactText extends SessionArtifact {
+  content: string;
+  /** The file was longer than one preview response; `content` is the head of it. */
+  truncated: boolean;
+}
+
+/**
+ * The stage outputs a past session left on disk.
+ *
+ * Only what exists, so the history panel can tell up front which stage names
+ * open something and which are just a timing. A stage that failed or wrote
+ * nothing is absent rather than listed-and-broken.
+ */
+export async function listSessionArtifacts(sessionId: string): Promise<SessionArtifact[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/artifacts`,
+    );
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load files (${res.status})`));
+    return (await res.json()).artifacts ?? [];
+  });
+}
+
+/** One stage's output, as the text it was written as. */
+export async function getSessionArtifactText(
+  sessionId: string,
+  stage: string,
+): Promise<SessionArtifactText> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/${encodeURIComponent(stage)}`,
+    );
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load file (${res.status})`));
+    return res.json();
+  });
+}
+
 /** Delete a session record and everything it wrote to disk. */
 export async function deleteSession(sessionId: string): Promise<void> {
   return safeApiCall(async () => {

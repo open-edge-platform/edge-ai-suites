@@ -2,6 +2,8 @@ import json
 import logging
 import os
 import shutil
+from pathlib import Path
+from typing import Callable
 
 from utils import session_store, orchestrator
 from utils.pipeline_catalog import ALL_STAGES, FEATURE_STAGE, TERMINAL_SESSION_STATES
@@ -34,6 +36,29 @@ class SessionValidationError(Exception):
 
 class ConcurrencyLimitError(Exception):
     pass
+
+
+class ArtifactNotFound(Exception):
+    pass
+
+
+# Stage outputs, list in run order
+_STAGE_ARTIFACTS: dict[str, tuple[str, Callable[[str], Path]]] = {
+    FEATURE_STAGE["asr"]: ("transcript", SessionPaths.transcript_path),
+    FEATURE_STAGE["summary"]: ("markdown", SessionPaths.summary_path),
+    # The .mmd source, not the report's PNG: the source is what the stage itself
+    # wrote, so it is there for every session that got this far, and the preview
+    # re-renders it live rather than showing a screenshot of an old layout.
+    FEATURE_STAGE["mindmap"]: ("mindmap", SessionPaths.mindmap_path),
+    FEATURE_STAGE["video_analytics"]: ("stats", SessionPaths.class_statistics_path),
+    FEATURE_STAGE["topic_segmentation"]: ("topics", SessionPaths.topics_path),
+    # The markdown, not the .docx or .pdf: those are for sending, and the
+    # report screen already downloads them.
+    FEATURE_STAGE["report"]: ("markdown", SessionPaths.report_md_path),
+}
+
+#: Cutoff for text artifacts. anything past this is not something a pop-up should be paging through
+_TEXT_ARTIFACT_LIMIT = 2 * 1024 * 1024
 
 
 def list_sessions(limit: int | None = None, offset: int = 0) -> dict:
@@ -201,6 +226,68 @@ def get_stage_events(session_id: str) -> dict:
             logger.error(f"failed to read stage events for {session_id}: {e}")
 
     return {"session_id": session_id, "events": events}
+
+
+def list_artifacts(session_id: str) -> dict:
+    """The files this session's stages left behind that the history can open."""
+    if session_store.SessionStore.get(session_id) is None:
+        raise SessionNotFound("session not found")
+
+    artifacts = []
+    for stage, (kind, resolve) in _STAGE_ARTIFACTS.items():
+        path = resolve(session_id)
+        try:
+            size = path.stat().st_size
+        except OSError:
+            continue
+        artifacts.append(
+            {"stage": stage, "kind": kind, "filename": path.name, "size_bytes": size}
+        )
+    return {"session_id": session_id, "artifacts": artifacts}
+
+
+def artifact_file(session_id: str, stage: str) -> tuple[str, Path]:
+    """`(kind, path)` for one stage's artifact, checked to exist.
+
+    Raises SessionNotFound for an unknown session and ArtifactNotFound for a
+    stage with no preview or with nothing written - the caller cannot tell those
+    apart, and does not need to: both mean there is nothing to show.
+    """
+    if session_store.SessionStore.get(session_id) is None:
+        raise SessionNotFound("session not found")
+
+    entry = _STAGE_ARTIFACTS.get(stage)
+    if entry is None:
+        raise ArtifactNotFound(f"stage {stage!r} has no previewable output")
+
+    kind, resolve = entry
+    path = resolve(session_id)
+    if not path.is_file():
+        raise ArtifactNotFound(f"no {stage} output on disk for session {session_id}")
+    return kind, path
+
+
+def read_text_artifact(session_id: str, stage: str) -> dict:
+    """One stage's artifact, as text for the caller to lay out itself."""
+    kind, path = artifact_file(session_id, stage)
+
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as f:
+            content = f.read(_TEXT_ARTIFACT_LIMIT + 1)
+    except OSError as e:
+        logger.error(f"failed to read {stage} artifact for {session_id}: {e}")
+        raise ArtifactNotFound(f"could not read {stage} output: {e}")
+
+    truncated = len(content) > _TEXT_ARTIFACT_LIMIT
+    return {
+        "session_id": session_id,
+        "stage": stage,
+        "kind": kind,
+        "filename": path.name,
+        "size_bytes": path.stat().st_size,
+        "content": content[:_TEXT_ARTIFACT_LIMIT],
+        "truncated": truncated,
+    }
 
 
 def _summary(state: dict) -> dict:
