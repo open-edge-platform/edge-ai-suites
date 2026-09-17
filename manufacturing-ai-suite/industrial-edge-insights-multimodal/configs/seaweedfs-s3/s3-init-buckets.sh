@@ -37,12 +37,12 @@ DEFAULT_BUCKETS="${DEFAULT_S3_BUCKETS:-dlstreamer-pipeline-results}"
 # Optional TTL for all default buckets, e.g. 10m, 1h, 7d
 DEFAULT_S3_BUCKET_TTL="${S3_BUCKET_TTL:-30m}"
 
-# Split on commas via IFS/positional params (POSIX-safe, avoids SC2046 word-splitting)
+# Split on commas via IFS word-splitting (avoids SC2046 command-substitution);
+# does NOT touch "$@", which is needed intact for `exec weed "$@"` below.
 old_ifs="$IFS"
 IFS=','
-set -- $DEFAULT_BUCKETS
-IFS="$old_ifs"
-for bucket in "$@"; do
+for bucket in $DEFAULT_BUCKETS; do
+    IFS="$old_ifs"
     echo "Creating bucket: $bucket"
     
     RESULT=$(curl -s -w "\n%{http_code}" -X POST "http://seaweedfs-filer:8888/buckets/$bucket/?op=mkdir" 2>&1)
