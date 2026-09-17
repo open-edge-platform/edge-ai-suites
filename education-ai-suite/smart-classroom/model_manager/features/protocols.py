@@ -1,4 +1,4 @@
-from typing import Dict, List, Protocol, runtime_checkable
+from typing import Dict, List, Optional, Protocol, runtime_checkable
 
 from fastapi import APIRouter
 
@@ -7,8 +7,12 @@ from fastapi import APIRouter
 class FeatureModule(Protocol):
     id: str
     requires: List[str]      # capability names
-    depends_on: List[str]    # feature ids
     router: APIRouter
+
+    # Attached by registry.register() from utils/pipeline_catalog.py.
+    label: str
+    depends_on: List[str]    # feature ids
+    stage: Optional[str]     # the pipeline stage this feature owns, if any
 
     def build(self) -> None: ...
 

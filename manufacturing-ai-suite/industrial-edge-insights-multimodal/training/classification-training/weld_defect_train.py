@@ -48,7 +48,8 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # -- Configuration -------------------------------------------------------------
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "/tmp/welding_dataset"))
+# Default is overridable via DATA_DIR env var; container runs isolated so shared-/tmp risk doesn't apply.
+DATA_DIR = Path(os.getenv("DATA_DIR", "/tmp/welding_dataset"))  # nosec B108
 MANIFEST_NAME = "manifest.csv"
 TARGET_STEEL_TYPE = "FE410"
 MIN_WELD_CURRENT = 50.0
@@ -118,14 +119,15 @@ def _normalize_category_label(raw_label, fallback_stem: str) -> str:
 
 
 def _normalize_split(value: str):
+    # NB: TRN/TST/DEV below are dataset split abbreviations (train/test/dev), not credentials.
     token = _canonical_token(value)
     if not token:
         return None
-    if "TRAIN" in token or token == "TRN":
+    if "TRAIN" in token or token == "TRN":  # nosec B105
         return "TRAIN"
-    if "TEST" in token or token == "TST":
+    if "TEST" in token or token == "TST":  # nosec B105
         return "TEST"
-    if "VAL" in token or "VALID" in token or token == "DEV":
+    if "VAL" in token or "VALID" in token or token == "DEV":  # nosec B105
         return "VAL"
     return None
 
