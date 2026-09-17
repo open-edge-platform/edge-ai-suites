@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Smart Intersection
 
 ## Version 1.20.0
 

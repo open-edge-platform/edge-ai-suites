@@ -57,7 +57,7 @@ how-to-use-npu-for-inference
 how-to-setup-rtsp
 export-and-optimize-geti-model
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->
