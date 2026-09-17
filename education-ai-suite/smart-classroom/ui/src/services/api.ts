@@ -1,10 +1,4 @@
 import type { StreamEvent, StreamOptions } from './streamSimulator';
-import { store } from "../redux/store";
-import {
-  setVideoStatus,
-  setVideoAnalyticsActive,
-  setVideoPlaybackMode
-} from "../redux/slices/uiSlice";
 import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
 
 export type ProjectConfig = {
@@ -129,52 +123,6 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-export async function startPipelineMonitoring(sessionId: string) {
-  const controller = new AbortController();
-  try {
-    for await (const event of monitorVideoAnalyticsPipelines(
-      sessionId,
-      controller.signal
-    )) {
-      if (!event?.pipelines) continue;
-      let anyRunning = false;
-      let allCompleted = true;
-
-      for (const pipeline of event.pipelines) {
-
-        if (pipeline.status === "running") {
-          anyRunning = true;
-        }
-
-        if (
-          pipeline.status !== "completed" &&
-          pipeline.status !== "stopped"
-        ) {
-          allCompleted = false;
-        }
-      }
-
-      if (anyRunning) {
-        store.dispatch(setVideoAnalyticsActive(true));
-        store.dispatch(setVideoStatus("streaming"));
-        store.dispatch(setVideoPlaybackMode(false));
-      }
-
-      if (allCompleted && !anyRunning) {
-        console.log("✅ All pipelines completed");
-        store.dispatch(setVideoAnalyticsActive(false));
-        store.dispatch(setVideoStatus("completed"));
-        store.dispatch(setVideoPlaybackMode(true));
-        break;
-      }
-    }
-
-  }
-  catch (err) {
-    console.error("Monitor error:", err);
-  }
-  return controller;
-}
 
 export async function pingBackend(): Promise<boolean> {
   try {
@@ -1052,6 +1000,184 @@ export async function createSession(): Promise<{ sessionId: string }> {
     console.log('🟢 Session ID created:', sessionId);
 
     return { sessionId };
+  });
+}
+
+/** The pipeline stages the session API knows about. */
+export type SessionStage =
+  | 'transcribe'
+  | 'summarize'
+  | 'mindmap'
+  | 'va'
+  | 'segmentation'
+  | 'report';
+
+/**
+ * Put a session on the books so it shows up in the history.
+ *
+ * Nothing is started here — the app goes on driving /transcribe, /summarize and
+ * the rest itself. `stages` declares what this session intends to run; the
+ * backend marks it completed once all of them settle, so declaring a stage that
+ * will never run would leave the session open forever.
+ *
+ * Best-effort: a failure here must not stop a recording from starting, so it is
+ * logged and swallowed. The session simply goes unrecorded.
+ */
+export async function registerSession(
+  sessionId: string,
+  stages: SessionStage[],
+  sources?: { audio_path?: string; video_sources?: Record<string, string> },
+): Promise<boolean> {
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, stages, ...sources }),
+    });
+    if (!res.ok) {
+      console.warn('⚠️ Session not registered:', await errorDetail(res, `${res.status}`));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn('⚠️ Session not registered:', e);
+    return false;
+  }
+}
+
+/**
+ * Close out a registered session. Normal completion is derived by the backend
+ * from the stages, so this is for the outcomes it cannot see — chiefly the
+ * browser going away mid-run. Best-effort, like registerSession.
+ */
+export async function finalizeSession(
+  sessionId: string,
+  outcome: 'completed' | 'aborted' | 'failed',
+  error?: string,
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/finalize`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome, error: error ?? null }),
+      },
+    );
+    return res.ok;
+  } catch (e) {
+    console.warn('⚠️ Session not finalized:', e);
+    return false;
+  }
+}
+
+/**
+ * Report a session as aborted while the page is going away.
+ *
+ * sendBeacon rather than fetch: the browser keeps a beacon in flight after the
+ * document is gone, where a normal request would be cancelled. The trade-offs
+ * are that the response is unreadable and delivery is not guaranteed — a hard
+ * crash or a lost network still leaves the row running, which is what the
+ * backend's recover_after_restart() is for.
+ */
+export function beaconAbortSession(sessionId: string): void {
+  const url = `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/finalize`;
+  const body = new Blob(
+    [JSON.stringify({ outcome: 'aborted', error: null })],
+    { type: 'application/json' },
+  );
+  try {
+    if (!navigator.sendBeacon?.(url, body)) {
+      // Queueing can fail (payload limits, or no beacon support at all). keepalive
+      // gets the same "outlives the page" guarantee out of fetch.
+      void fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ outcome: 'aborted', error: null }),
+        keepalive: true,
+      }).catch(() => { /* the page is going away; nothing to report to */ });
+    }
+  } catch {
+    /* the page is going away; nothing to report to */
+  }
+}
+
+export type SessionState = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+
+export interface SessionSummary {
+  session_id: string;
+  state: SessionState | null;
+  current_stage: string | null;
+  /** Every stage in the vocabulary, including the ones marked 'skipped'. */
+  stages: Record<string, string> | null;
+  sources: { audio?: string; video?: Record<string, string> } | null;
+  error: string | null;
+  started_at: string | null;
+  updated_at: string | null;
+}
+
+export interface StageEvent {
+  stage: string | null;
+  status: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_sec: number | null;
+  error_class: string | null;
+  error_detail: string | null;
+}
+
+/** One page of session history, newest first. `total` is the whole table. */
+export async function listSessions(
+  limit: number,
+  offset = 0,
+): Promise<{ total: number; sessions: SessionSummary[] }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions?limit=${limit}&offset=${offset}`);
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load sessions (${res.status})`));
+    return res.json();
+  });
+}
+
+/**
+ * The live stage table for one session.
+ *
+ * Returns null when the session has no row — it was never registered, or the
+ * history panel deleted it. That is a different outcome from the request
+ * failing, and the caller needs to tell them apart: a missing row means stop
+ * asking, a failed request means the backend is momentarily away. So 404 comes
+ * back as null while everything else throws.
+ */
+export async function getSessionStatus(sessionId: string): Promise<SessionSummary | null> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/status`,
+    );
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load status (${res.status})`));
+    return res.json();
+  });
+}
+
+/**
+ * Per-stage timings for one session, read back from its stage_events.jsonl.
+ * The session row carries each stage's current status; this carries how long it
+ * took and what it said when it broke.
+ */
+export async function getSessionEvents(sessionId: string): Promise<StageEvent[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/events`);
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load stage events (${res.status})`));
+    return (await res.json()).events ?? [];
+  });
+}
+
+/** Delete a session record and everything it wrote to disk. */
+export async function deleteSession(sessionId: string): Promise<void> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to delete session (${res.status})`));
   });
 }
 

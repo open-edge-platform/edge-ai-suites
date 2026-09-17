@@ -1,12 +1,17 @@
+import json
 import logging
 import os
 import shutil
 
 from utils import session_store, orchestrator
+from utils.session_manager import is_generated_session_id
 from utils.session_paths import SessionPaths
-from api.v1.schemas.session import WorkflowRequest
+from api.v1.schemas.session import RegisterRequest, WorkflowRequest
 
 logger = logging.getLogger(__name__)
+
+# States a session cannot move out of.
+_TERMINAL = ("completed", "failed", "cancelled")
 
 
 class SessionNotFound(Exception):
@@ -21,6 +26,10 @@ class SessionNotRunning(Exception):
     pass
 
 
+class SessionNotCancellable(Exception):
+    pass
+
+
 class SessionValidationError(Exception):
     pass
 
@@ -29,21 +38,12 @@ class ConcurrencyLimitError(Exception):
     pass
 
 
-def list_sessions() -> dict:
-    sessions = []
-    for state in session_store.SessionStore.list_all():
-        sessions.append(
-            {
-                "session_id": state.get("session_id"),
-                "state": state.get("state"),
-                "current_stage": state.get("current_stage"),
-                "stages": state.get("stages"),
-                "sources": state.get("sources"),
-                "started_at": state.get("started_at"),
-                "updated_at": state.get("updated_at"),
-            }
-        )
-    return {"total": len(sessions), "sessions": sessions}
+def list_sessions(limit: int | None = None, offset: int = 0) -> dict:
+    """Newest first. `total` is the whole table, not the page, so the history
+    screen can page through it."""
+    states = session_store.SessionStore.list_all(limit=limit, offset=offset)
+    total = session_store.SessionStore.count() if limit is not None else len(states)
+    return {"total": total, "sessions": [_summary(s) for s in states]}
 
 
 def create_process(req: WorkflowRequest) -> dict:
@@ -62,6 +62,65 @@ def create_process(req: WorkflowRequest) -> dict:
         "stages": state.get("stages") if state else stages,
         "output_dir": os.path.abspath(_session_dir(session_id)),
         "started_at": state.get("started_at") if state else None,
+    }
+
+
+def register_session(req: RegisterRequest) -> dict:
+    """Record a session whose stages the caller runs itself.
+
+    Nothing is started here - unlike create_process(), which hands the whole run
+    to the orchestrator. The UI goes on calling /transcribe, /summarize and the
+    rest one at a time; this only gives those stages a row to write to, so a
+    UI-driven session shows up in the history with the same shape as an
+    orchestrated one.
+    """
+    # The id is the caller's, and it becomes a directory name and the target of
+    # DELETE /sessions/{id}. Accept only what this server itself minted.
+    if not is_generated_session_id(req.session_id):
+        raise SessionValidationError("session_id must be one issued by GET /create-session")
+    stages = req.stages or []
+    if not stages:
+        raise SessionValidationError("stages required")
+    _validate_stages(stages)
+
+    existing = session_store.SessionStore.get(req.session_id)
+    if existing is not None:
+        # Idempotent: a retried POST must not rewind a session already underway.
+        return _register_response(existing, already_registered=True)
+
+    session_store.SessionStore.create(req.session_id, req.model_dump(), stages)
+    state = session_store.SessionStore.update(req.session_id, state="running")
+    return _register_response(state, already_registered=False)
+
+
+def finalize_session(session_id: str, outcome: str, error: str | None = None) -> dict:
+    # Close out a registered session. Refuses sessions the orchestrator owns.
+    state = session_store.SessionStore.get(session_id)
+    if state is None:
+        raise SessionNotFound("session not found")
+    if session_id in orchestrator.running_session_ids():
+        raise SessionRunning("session is driven by the orchestrator; it finalizes itself")
+    if state.get("state") in _TERMINAL:
+        return {
+            "session_id": session_id,
+            "state": state.get("state"),
+            "error": state.get("error"),
+        }
+
+    if outcome == "completed":
+        state = session_store.SessionStore.mark_completed(session_id)
+    else:
+        # An aborted run is the same outcome as recover_after_restart() records:
+        # over, unsuccessful, with a reason. No extra state to teach the UI.
+        default = (
+            "interrupted (client disconnected)" if outcome == "aborted" else "reported failed by client"
+        )
+        state = session_store.SessionStore.mark_failed(session_id, error or default)
+
+    return {
+        "session_id": session_id,
+        "state": state.get("state"),
+        "error": state.get("error"),
     }
 
 
@@ -100,28 +159,63 @@ def cancel_session(session_id: str) -> dict:
         raise SessionNotFound("session not found")
     if state.get("state") != "running":
         raise SessionNotRunning(f"session is not running (state={state.get('state')})")
-    orchestrator.request_cancel(session_id)
+    # Only the orchestrator has something to cancel, a UI-driven session has not.
+    if not orchestrator.request_cancel(session_id):
+        raise SessionNotCancellable(
+            "session is not driven by the orchestrator; stop it where it was started"
+        )
     session_store.SessionStore.update(session_id, cancel_requested=1)
     return {"session_id": session_id, "cancelled": True}
 
 
 def list_running_sessions() -> dict:
-    sessions = []
-    for state in session_store.SessionStore.list_all():
-        if state.get("state") != "running":
-            continue
-        sessions.append(
-            {
-                "session_id": state.get("session_id"),
-                "state": state.get("state"),
-                "current_stage": state.get("current_stage"),
-                "stages": state.get("stages"),
-                "sources": state.get("sources"),
-                "started_at": state.get("started_at"),
-                "updated_at": state.get("updated_at"),
-            }
-        )
-    return {"total": len(sessions), "sessions": sessions}
+    running = [
+        s for s in session_store.SessionStore.list_all()
+        if s.get("state") == "running"
+    ]
+    return {"total": len(running), "sessions": [_summary(s) for s in running]}
+
+
+def get_stage_events(session_id: str) -> dict:
+    """The per-stage timings behind a session, read back from its
+    stage_events.jsonl. Timings are not in the database - the row carries the
+    current status of each stage, this carries how long each one took and what
+    it said when it broke."""
+    state = session_store.SessionStore.get(session_id)
+    if state is None:
+        raise SessionNotFound("session not found")
+
+    path = SessionPaths.stage_events_path(session_id)
+    events = []
+    if os.path.isfile(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        events.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        # A crash mid-append can leave a partial last line.
+                        logger.warning(f"skipping malformed stage event in {path}")
+        except OSError as e:
+            logger.error(f"failed to read stage events for {session_id}: {e}")
+
+    return {"session_id": session_id, "events": events}
+
+
+def _summary(state: dict) -> dict:
+    return {
+        "session_id": state.get("session_id"),
+        "state": state.get("state"),
+        "current_stage": state.get("current_stage"),
+        "stages": state.get("stages"),
+        "sources": state.get("sources"),
+        "error": state.get("error"),
+        "started_at": state.get("started_at"),
+        "updated_at": state.get("updated_at"),
+    }
 
 
 def _validate_stages(stages: list) -> None:
@@ -148,6 +242,18 @@ def _check_file(path: str, field: str) -> None:
 
 def _session_dir(session_id: str) -> str:
     return str(SessionPaths.session_dir(session_id))
+
+
+def _register_response(state: dict, already_registered: bool) -> dict:
+    session_id = state.get("session_id")
+    return {
+        "session_id": session_id,
+        "state": state.get("state"),
+        "stages": state.get("stages"),
+        "output_dir": os.path.abspath(_session_dir(session_id)),
+        "started_at": state.get("started_at"),
+        "already_registered": already_registered,
+    }
 
 
 def _status_response(state: dict) -> dict:

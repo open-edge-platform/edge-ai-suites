@@ -164,9 +164,10 @@ def _run_audio_chain(session_id: str, request: dict, stages: list,
                      va_thread=None, va_error=None) -> None:
     pipeline = Pipeline(session_id)
 
+    # stage_tracker owns the running/done/failed transitions on the session row;
+    # this function only decides which stages run and in what order.
     if "transcribe" in stages:
         _check_cancel(session_id)
-        session_store.SessionStore.set_stage(session_id, "transcribe", "running")
         audio_path = request.get("audio_path")
         if not audio_path:
             raise _OrchestrationError("stage transcribe requires audio_path")
@@ -174,42 +175,33 @@ def _run_audio_chain(session_id: str, request: dict, stages: list,
         _touch_heartbeat(session_id)
         with stage_tracker(session_id, "transcribe"):
             _drain(pipeline.run_transcription(tr))
-        session_store.SessionStore.set_stage(session_id, "transcribe", "done")
         _await_pending_writes()
 
     if "summarize" in stages:
         _check_cancel(session_id)
-        session_store.SessionStore.set_stage(session_id, "summarize", "running")
         _touch_heartbeat(session_id)
         with stage_tracker(session_id, "summarize"):
             _drain(pipeline.run_summarizer())
-        session_store.SessionStore.set_stage(session_id, "summarize", "done")
         _await_pending_writes()
 
     if "mindmap" in stages:
         _check_cancel(session_id)
-        session_store.SessionStore.set_stage(session_id, "mindmap", "running")
         _touch_heartbeat(session_id)
         with stage_tracker(session_id, "mindmap"):
             pipeline.run_mindmap()
-        session_store.SessionStore.set_stage(session_id, "mindmap", "done")
 
     if "segmentation" in stages:
         _join_va(va_thread, va_error)
         _check_cancel(session_id)
-        session_store.SessionStore.set_stage(session_id, "segmentation", "running")
         _touch_heartbeat(session_id)
         with stage_tracker(session_id, "segmentation"):
             pipeline.run_content_segmentation()
-        session_store.SessionStore.set_stage(session_id, "segmentation", "done")
 
     if "report" in stages:
         _check_cancel(session_id)
-        session_store.SessionStore.set_stage(session_id, "report", "running")
         _touch_heartbeat(session_id)
         with stage_tracker(session_id, "report"):
             _drain(pipeline.run_report_generator())
-        session_store.SessionStore.set_stage(session_id, "report", "done")
 
 
 def _join_va(va_thread, va_error) -> None:
@@ -229,8 +221,6 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
     wanted = {k: v for k, v in video_sources.items() if v}
     if not wanted:
         raise _OrchestrationError("stage va requires video_sources")
-
-    session_store.SessionStore.set_stage(session_id, "va", "running")
 
     with stage_tracker(session_id, "va"):
         va_out_dir = _va_output_dir(session_id)
@@ -295,8 +285,6 @@ def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
             if need_cleanup:
                 _teardown_va(session_id, service)
                 _stop_board_ocr_if_enabled(session_id, final_status)
-
-        session_store.SessionStore.set_stage(session_id, "va", "done")
 
 
 def _teardown_va(session_id: str, service) -> None:
