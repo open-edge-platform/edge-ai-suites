@@ -18,6 +18,7 @@ data:
             }
           ],
           "actions": [
+            "Admin",
             "Read",
             "Write",
             "List"
