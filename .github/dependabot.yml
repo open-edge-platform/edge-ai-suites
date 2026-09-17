@@ -29,7 +29,7 @@ updates:
           - "*"
 
   - package-ecosystem: "pip"
-    directories: &manufacturing-directories
+    directories:
       - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
       - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
       - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
@@ -46,7 +46,11 @@ updates:
           - "*"
 
   - package-ecosystem: "docker"
-    directories: *manufacturing-directories
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
     schedule:
       interval: "weekly"
     cooldown:
@@ -59,7 +63,11 @@ updates:
           - "*"
 
   - package-ecosystem: "docker-compose"
-    directories: *manufacturing-directories
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
     schedule:
       interval: "weekly"
     cooldown:
@@ -72,7 +80,11 @@ updates:
           - "*"
 
   - package-ecosystem: "helm"
-    directories: *manufacturing-directories
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
     schedule:
       interval: "weekly"
     cooldown:
