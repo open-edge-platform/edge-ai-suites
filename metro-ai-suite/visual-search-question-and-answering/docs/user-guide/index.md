@@ -118,7 +118,7 @@ The UI, built with `streamlit`, allows users to:
 get-started
 tutorials
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

@@ -76,7 +76,7 @@ Validate your ideas by developing an end-to-end solution faster.
 get-started.md
 how-to-guides.md
 troubleshooting.md
-release-notes.md
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Loitering Detection
 
 ## Version 1.6.0
 
