@@ -55,7 +55,7 @@ It integrates various components such as MQTT, Node-RED, and Grafana to provide 
 get-started
 how-to-guides
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

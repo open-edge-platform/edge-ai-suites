@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Intel® OEP SDK Manager
 
 ## Intel® OEP SDK Manager 2026.2.0 Release
 
