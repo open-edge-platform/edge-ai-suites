@@ -2,9 +2,13 @@
 
 Win Vision AI is a Python application for running concurrent GStreamer inference pipelines on Intel hardware (CPU / GPU / NPU) on Windows 11.
 
----
-
 ## Prerequisites
+
+### Optional Hardware (GPU / NPU)
+
+For quick deployment of optional hardware components, you can use
+[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
+provided as part of Open Edge Platform.
 
 ### Install Python and Git
 
@@ -26,8 +30,6 @@ $env:no_proxy    = "localhost,127.0.0.1"
 Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
 > **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
-
----
 
 ## Set Up the Application
 
@@ -51,8 +53,6 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
-
----
 
 ### Set Environment Variables
 
@@ -121,8 +121,6 @@ Verify the camera plugin loaded correctly:
 gst-inspect-1.0 gencamsrc
 ```
 
----
-
 ### Download MediaMTX (for RTSP / WebRTC streaming)
 
 Required when any pipeline uses RTSP or WebRTC frame output.
@@ -134,8 +132,6 @@ New-Item -ItemType Directory -Path "<mediamtx_dir>"
 python src/setup_mediamtx.py --dir <mediamtx_dir> --version v1.18.1
 $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 ```
-
----
 
 ### Download a Model
 
@@ -154,10 +150,12 @@ python src/download_models.py --model yolo11n --outdir C:/Users/<username>/model
 Use the exported `.xml` path in `config.yaml`.
 
 > **Note:** You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
+>
 > ```powershell
 > wget -O pallet_defect_detection.zip "https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip" ; Expand-Archive -Path "pallet_defect_detection.zip" -DestinationPath "models"
 > wget -O warehouse.avi "https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/warehouse.avi"
 > ```
+>
 > Update the model and video paths in `config.yaml` accordingly.
 
 ---
@@ -183,13 +181,13 @@ metrics:
 
 When **enabled**, each pipeline logs a full stats line every interval:
 
-```
+```text
 state=PLAYING     fps_avg=30.6    fps_now=31.6    lat_avg=3.01 ms  frames=1047
 ```
 
 When **disabled**, only the frame count is shown:
 
-```
+```text
 state=PLAYING     frames=121
 ```
 
@@ -429,8 +427,6 @@ pipelines:
 
 For detection models use `model_id` as `inst0`, and for classifcation models use `model_id` as `inst1`.
 
----
-
 ### Supported Pipeline Combinations
 
 The following combinations are supported in basic configuration mode.
@@ -464,8 +460,6 @@ The following combinations are supported in basic configuration mode.
 
 For custom element chains or combinations not listed above, use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
 
----
-
 ## Run the App
 
 ```powershell
@@ -474,14 +468,12 @@ python app.py config.yaml
 
 On startup the app loads the config, starts MediaMTX, launches all pipelines, and prints viewer URLs:
 
-```
+```text
 [front] RTSP stream:   rtsp://localhost:8554/front
 [back]  WebRTC stream: http://localhost:8889/back
 ```
 
 Press **Ctrl+C** if you need to forcefully stop the application.
-
----
 
 ## Advanced: Raw Pipeline Mode
 
@@ -501,8 +493,6 @@ raw_pipelines:
 The above pipelines are example pipelines to run with webrtc/rtsp/any sink element.
 
 MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears in a string.
-
----
 
 ## Troubleshooting
 
