@@ -16,7 +16,7 @@ the simulated flight controller.
 - Deployment mode: `pymavlink`
 - Video source: `realsense` (v4l2src `/dev/video0`, 640×480 BGR)
 - Inference device: `GPU`
-- Model: `yolov8n-visdrone`
+- Model: `yolo11s`
 - Output directory: `./uav-realsense-stack/`
 
 Produce:

@@ -17,7 +17,7 @@ annotated stream. Automatically start all three pipelines when the UAV arms
 - Deployment mode: `uavsdk`
 - Video source: `gazebo-rtsp` (RTSP from SDK: `rtsp://host.docker.internal:8554/uav-1/nadir`, `/forward`, `/rear`)
 - Inference device: `all` (nadir=CPU, forward=GPU, rear=NPU)
-- Model: `yolov8n-visdrone`
+- Model: `yolo11s`
 - Output directory: `./uav-uavsdk-stack/`
 - UAV ID: `uav-1`
 
