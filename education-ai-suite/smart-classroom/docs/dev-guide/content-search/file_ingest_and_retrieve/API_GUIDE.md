@@ -243,7 +243,7 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest_text \
   }'
 ```
 
-> Note: The `tags` field must be a **list of strings** — passing a non-list or a list with non-string elements returns `422`.
+> **Note:** The `tags` field must be a **list of strings** — passing a non-list or a list with non-string elements returns `422`.
 
 Below metadatas shall be automatically appended
 ```json

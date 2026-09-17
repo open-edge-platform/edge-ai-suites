@@ -57,7 +57,14 @@ export async function alertQuery(
       if (!params.ack_by) {
         throw new Error("ack_by is required for ack action");
       }
-      db.ackAlertWithUser(params.alert_id, params.ack_by);
+      const acked = db.ackAlertWithUser(params.alert_id, params.ack_by, params.monitor_id);
+      if (!acked) {
+        throw new Error(
+          params.monitor_id
+            ? `Alert ${params.alert_id} not found on monitor ${params.monitor_id}`
+            : `Alert not found: ${params.alert_id}`
+        );
+      }
       return { success: true, alert_id: params.alert_id };
     }
 

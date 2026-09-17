@@ -29,7 +29,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set manufacturing-ai-suite
    cd manufacturing-ai-suite/industrial-edge-insights-vision

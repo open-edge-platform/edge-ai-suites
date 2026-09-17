@@ -4,7 +4,7 @@ This section lists the hardware, software, and network requirements for running 
 
 ## Host Operating System
 
-- Ubuntu 22.04 LTS (recommended and validated).
+- Ubuntu 24.04 LTS (recommended and validated).
 - Other recent 64‑bit Linux distributions may work, but are not fully validated.
 
 ## Hardware Requirements

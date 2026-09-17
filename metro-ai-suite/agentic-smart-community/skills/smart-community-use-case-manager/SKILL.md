@@ -95,7 +95,7 @@ This table is authoritative. Later steps must not mix invariants across rows.
 |---|---|---|---|---|
 | Report-only | none | factual narrative; multiple findings allowed | none | completed `video_summary_tasks` |
 | Base alerting | `severity, event, desc` | one primary EVENT | `defaultRuleEvaluator` | `alerts` |
-| Extended alerting | base + user-confirmed extensions | one primary EVENT + extension fields | `evaluate_rules.py` | `alerts` |
+| Extended alerting | base + user-confirmed extensions | one primary EVENT + extension fields | `evaluate_rules.py` | completed `video_summary_tasks` unless the user asks for `alerts` |
 
 Product invariants:
 
@@ -224,16 +224,16 @@ Base alerting
 Extended alerting
   Final Schema: severity, event, desc, <extensions>
   Rule Path: evaluate_rules.py
-  Report Source: alerts
+  Report Source: completed video_summary_tasks
 ```
 
 ## Defaults
 
 - `video_summary_task = <use_case>_monitor`; omit the argument to use it.
 - `use_case` must match `^[a-z][a-z0-9_]{1,63}$`.
-- Alerting reports:
+- Base-alerting reports:
   `{ data_source: "alerts", default_type: "daily", filter: {} }`.
-- Report-only reports (pass explicitly):
+- Extended-alerting and report-only reports (pass explicitly):
   `{ data_source: "video_summary_tasks", default_type: "daily", filter: { status: "completed" } }`.
 - Omit `summarize`; register supplies
   `{ method: "SIMPLE", processor_kwargs: { levels: 1, level_sizes: [-1], process_fps: 2 } }`.

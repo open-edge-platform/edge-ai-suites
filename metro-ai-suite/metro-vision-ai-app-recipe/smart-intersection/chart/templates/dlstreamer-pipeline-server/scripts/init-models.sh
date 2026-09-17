@@ -1,3 +1,10 @@
+# This file contains a Helm template that generates the dlstreamer-pipeline-server init-models script.
+# ShellCheck reports syntax errors (SC1054/SC1127) on the Helm template
+# directives because they are not valid shell syntax when analyzed directly.
+# These findings are expected and cannot be removed without changing the
+# Helm template structure. The generated startup script is valid shell code
+# and should be ShellChecked after Helm template rendering.
+#shellcheck disable=SC1054,SC1127
 {{/*
 Template for models download init container script
 */}}
@@ -10,12 +17,12 @@ else
   apk add --no-cache wget tar
   cd /tmp
   {{- if eq .Values.version.modelsReleaseType "tag" }}
-  wget --no-check-certificate -O models.tar.gz {{ .Values.externalUrls.githubRepo }}/archive/refs/tags/{{ .Values.version.modelsRelease }}.tar.gz
+  wget -O models.tar.gz {{ .Values.externalUrls.githubRepo }}/archive/refs/tags/{{ .Values.version.modelsRelease }}.tar.gz
   tar -xzf models.tar.gz
   mkdir -p /data/models
   cp -r edge-ai-suites-{{ .Values.version.modelsRelease | replace "v" "" }}/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/models/* /data/models/
   {{- else }}
-  wget --no-check-certificate -O models.tar.gz {{ .Values.externalUrls.githubRepo }}/archive/refs/heads/{{ .Values.version.modelsRelease }}.tar.gz
+  wget -O models.tar.gz {{ .Values.externalUrls.githubRepo }}/archive/refs/heads/{{ .Values.version.modelsRelease }}.tar.gz
   tar -xzf models.tar.gz
   mkdir -p /data/models
   cp -r edge-ai-suites-{{ .Values.version.modelsRelease }}/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/models/* /data/models/

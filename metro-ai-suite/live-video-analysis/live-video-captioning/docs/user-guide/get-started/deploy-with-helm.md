@@ -75,7 +75,7 @@ There are 2 options to obtain the charts in your workspace:
 Use the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning/tags) from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-captioning --version 2026.2.0-rc1-helm
+helm pull oci://registry-1.docker.io/intel/live-video-captioning --version 2026.2.0-helm
 ```
 
 Refer to the release notes for details on the latest version number to use for the sample application.
@@ -101,10 +101,8 @@ cd live-video-captioning
 Clone the repository containing the charts files:
 
 ```bash
-# Clone the latest on mainline
+# Clone the release branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.2.0
-# Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
 ```
 
 ##### Step 2: Navigate to the chart directory

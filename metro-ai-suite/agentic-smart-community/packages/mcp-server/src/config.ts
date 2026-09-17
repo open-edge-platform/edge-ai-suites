@@ -81,6 +81,24 @@ export interface ServerConfig {
      * before POSTing. Leave undefined when both sides see the same paths.
      */
     pathRemap?: { hostPrefix: string; containerPrefix: string };
+    /** Timeout for one *clip* summarization (video-worker). */
+    timeoutSeconds: number;
+    /** Timeout for a whole caption-only report — a period costs far more than a clip. */
+    reportTimeoutSeconds: number;
+    /**
+     * The service's `MAX_MODEL_LEN` and `DEFAULT_MAX_TOKENS` (both set in
+     * docker/set_env.sh). Report chunking sizes its groups from these two plus the
+     * measured timeline, so a stale value here silently mis-sizes every report —
+     * `max_output_tokens` especially, since it is the per-rung output bandwidth.
+     */
+    modelContextTokens: number;
+    maxOutputTokens: number;
+    /**
+     * Compression one report call may be asked to do. The direct dial on group
+     * size (`group = ratio · max_output_tokens / tokens-per-cue`): raise it for
+     * fewer, coarser calls; lower it if reports start dropping events.
+     */
+    maxHopRatio: number;
   };
   vlmService: {
     url: string;
@@ -105,6 +123,15 @@ export interface ServerConfig {
   };
   pollIntervalMs: number;
   videoSummaryMaxConcurrent: number;
+  /**
+   * Alert notification cooldown. When a new alert fires for a monitor+use_case
+   * that already produced a *notified* alert within this window, the row is
+   * still written (full audit) but with notified=false and no subscriber
+   * broadcast. 0 disables cooldown — every alert notifies.
+   */
+  alerts: {
+    cooldownSeconds: number;
+  };
   mcp?: {
     port?: number;
     /** Evict an MCP session after this long with no open SSE stream AND no HTTP request. Default 30min. */
@@ -143,6 +170,36 @@ function resolveDataDir(): string {
   return join(homedir(), ".mcp-smart-community");
 }
 
+/**
+ * Interface both listeners bind to. Hardcoded, not configurable.
+ *
+ * Neither the MCP/dashboard listener (`mcp.port`) nor the events webhook
+ * (`events_webhook.port`) authenticates: whoever can open a socket can call
+ * every MCP tool, browse the dashboard, and write events straight into the DB.
+ * Every access path is local by design — the containers that serve them run
+ * with `network_mode: host`, so this is the host's own loopback and the kernel
+ * drops non-local SYNs outright. For off-host access, forward a port over SSH
+ * (`ssh -N -L <port>:127.0.0.1:<port> user@host`) rather than widening this.
+ */
+export const BIND_HOST = "127.0.0.1";
+
+function numFromEnv(name: string): number | undefined {
+  const raw = process.env[name];
+  if (!raw) return undefined;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+/** Report knobs, shared by the MCP tool and the dashboard's /reports/generate route. */
+export function reportTuning(config: ServerConfig) {
+  return {
+    modelContext: config.summaryService.modelContextTokens,
+    maxOutputTokens: config.summaryService.maxOutputTokens,
+    maxHopRatio: config.summaryService.maxHopRatio,
+    timeoutSeconds: config.summaryService.reportTimeoutSeconds,
+  };
+}
+
 export function loadConfig(configPath?: string): ServerConfig {
   const dataDir = resolveDataDir();
 
@@ -173,6 +230,15 @@ export function loadConfig(configPath?: string): ServerConfig {
             containerPrefix: parsed.summary_service.path_remap.container_prefix,
           }
         : undefined,
+      timeoutSeconds: parsed?.summary_service?.timeout_seconds ?? 600,
+      reportTimeoutSeconds: parsed?.summary_service?.report_timeout_seconds ?? 3600,
+      // Fall back to the env the summary service itself reads, so sourcing
+      // docker/set_env.sh keeps both sides in step without a second edit here.
+      modelContextTokens:
+        parsed?.summary_service?.model_context_tokens ?? numFromEnv("MAX_MODEL_LEN") ?? 32768,
+      maxOutputTokens:
+        parsed?.summary_service?.max_output_tokens ?? numFromEnv("DEFAULT_MAX_TOKENS") ?? 512,
+      maxHopRatio: parsed?.summary_service?.max_hop_ratio ?? 10,
     },
     vlmService: {
       url: parsed?.vlm_service?.url ?? "http://localhost:41091/v1",
@@ -188,6 +254,9 @@ export function loadConfig(configPath?: string): ServerConfig {
     },
     pollIntervalMs: parsed?.poll_interval_ms ?? 5000,
     videoSummaryMaxConcurrent: parsed?.video_summary_max_concurrent ?? 2,
+    alerts: {
+      cooldownSeconds: parsed?.alerts?.cooldown_seconds ?? 60,
+    },
     mcp: {
       port: parsed?.mcp?.port ?? 3100,
       sessionIdleTimeoutMs: parsed?.mcp?.session_idle_timeout_ms ?? 30 * 60 * 1000,

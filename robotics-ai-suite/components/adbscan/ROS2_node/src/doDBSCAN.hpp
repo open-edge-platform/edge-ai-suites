@@ -36,7 +36,8 @@
 #include "Util.hpp"
 
 vector<Obstacle> doDBSCAN(
-  void * p_Data, int LiDAR_data_size, int dimension, std::vector<double> * benchmark_time);
+  void * p_Data, int LiDAR_data_size, int dimension, std::vector<double> * benchmark_time,
+  float epsilon_scale_factor = 0.9f, float min_3d_epsilon = 0.9f);
 
 double diff(timespec start, timespec end);
 

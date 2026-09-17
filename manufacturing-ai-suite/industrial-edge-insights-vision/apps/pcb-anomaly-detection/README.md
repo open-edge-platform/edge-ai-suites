@@ -13,8 +13,8 @@ models for video analysis. This sample application offers the following:
 
 To see the system requirements and other installation procedures, see the following guides:
 
-- [System Requirements](../../docs/user-guide/pcb-anomaly-detection/get-started/system-requirements.md)
-- [Setup guide](../../docs/user-guide/pcb-anomaly-detection/get-started.md)
+- [System Requirements](../../docs/user-guide/get-started/vision-system-requirements.md)
+- [Setup guide](../../docs/user-guide/get-started.md)
 - [Overview](../../docs/user-guide/pcb-anomaly-detection/index.md)
 
 ## How It Works

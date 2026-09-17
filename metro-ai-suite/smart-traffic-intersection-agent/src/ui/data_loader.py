@@ -19,7 +19,7 @@ from ui_components import UIComponents
 from config import Config
 
 logger = logging.getLogger(__name__)
-ui_update_queue = asyncio.Queue()
+DISCONNECT_CHECK_INTERVAL_SECONDS = 2.0
 
 # Cache of the most recently received monitoring data, kept so a live clock
 # timer can re-render the system-info panel with a fresh "Current Time" on
@@ -38,76 +38,91 @@ async def get_latest_system_info_html(debug_mode=False) -> str:
     return UIComponents.build_system_info_html(latest_monitoring_data)
 
 
-async def fetch_intersection_data(api_url: str = Config.get_api_url()) -> None:
+async def fetch_intersection_data(debug_mode: bool = False):
     """
     Fetch data from the Traffic Intersection Agent API
     
     Args:
-        api_url: URL of the Traffic Intersection Agent API endpoint
+        debug_mode: Whether to include the debug panel in the UI update
         
-    Returns:
-        None. Puts MonitoringData objects into the UI update queue.
+    Yields:
+        Component updates whenever the backend publishes new data.
     """
-    try:
-        logger.info(f"Connecting to WebSocket API at {api_url}")
-        async for websocket in websocket_connect(api_url, max_size=100_000_000): 
-            async for message in websocket:
-                raw_data: dict = json.loads(message)
-                traffic_data: Optional[MonitoringData] = await parse_api_response(raw_data)
-                # Put data into the queue for the UI to consume
-                await ui_update_queue.put(traffic_data)
-    except WebsocketsConnectionClosed as e:
-        logger.warning(f"WebSocket connection closed by server: {str(e)}")
-        await asyncio.sleep(3)
-    except WebSocketException as e:
-        logger.error(f"WebSocket error: {str(e)}")
-        await asyncio.sleep(3)
-    except json.JSONDecodeError as e:
-        logger.error("Received invalid JSON data from WebSocket")
-        raise e
-    except Exception as e:
-        logger.error(f"Error Connecting to WebSocket: {str(e)}.")
-        await asyncio.sleep(3)
+    api_url: str = Config.get_api_url()
 
-async def update_components(debug_mode=False):
+    while True:
+        try:
+            logger.info("Connecting to WebSocket API at %s", api_url)
+            async with websocket_connect(
+                api_url,
+                max_size=100_000_000,
+                open_timeout=DISCONNECT_CHECK_INTERVAL_SECONDS,
+            ) as websocket:
+                while True:
+                    try:
+                        message = await asyncio.wait_for(
+                            websocket.recv(),
+                            timeout=DISCONNECT_CHECK_INTERVAL_SECONDS,
+                        )
+                    except (TimeoutError, asyncio.TimeoutError):
+                        # Keep telling the gradio UI that no updates came yet and retry, instead of waiting indefinitely.
+                        # This gives control back to the UI, periodically, to handle disconnects and other events.
+                        yield tuple(gr.skip() for _ in range(7))
+                        continue
+
+                    raw_data: dict = json.loads(message)
+                    traffic_data: Optional[MonitoringData] = await parse_api_response(raw_data)
+                    yield await update_components(traffic_data, debug_mode=debug_mode)
+        except asyncio.CancelledError:
+            logger.info("Closing WebSocket API connection for disconnected UI session")
+            raise
+        except WebsocketsConnectionClosed as e:
+            logger.warning("WebSocket connection closed by server: %s", e)
+        except WebSocketException as e:
+            logger.error("WebSocket error: %s", e)
+        except json.JSONDecodeError:
+            logger.error("Received invalid JSON data from WebSocket")
+        except Exception as e:
+            logger.exception("Error connecting to WebSocket: %s", e)
+
+
+async def update_components(data: Optional[MonitoringData], debug_mode: bool = False):
     """
-    Get the latest monitoring data from the UI update queue
+    Get the latest monitoring data and update the UI components
 
     Args:
+        data: The latest monitoring data or None if not available
         debug_mode: Whether to include the debug panel in the UI update
     
     Returns:
-        AsyncGenerator yielding tuple of UI components to update the dashboard
+        Tuple of UI components to update the dashboard
     """
-    while True:
-        try:
-            # Wait for new data from the queue, required to update the UI
-            data = await ui_update_queue.get()
-            if data is None:
-                error_msg = "<div style='color: red; text-align: center; padding: 20px;'> 🤖 Waiting for Agent. This might take several seconds...</div>"
-                yield error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
-                continue
+    try:
+        if data is None:
+            wait_msg = "<div style='color: red; text-align: center; padding: 20px;'> 🤖 Waiting for Agent. This might take several seconds...</div>"
+            return wait_msg, [], wait_msg, wait_msg, wait_msg, wait_msg, gr.HTML(visible=False)
 
-            # Cache the latest data so the live clock timer can keep the
-            # system-info panel's "Current Time" fresh between updates.
-            global latest_monitoring_data
-            latest_monitoring_data = data
+        # Cache the latest data so the live clock timer can keep the
+        # system-info panel's "Current Time" fresh between updates.
+        global latest_monitoring_data
+        latest_monitoring_data = data
 
-            header = await UIComponents.create_header(data)
-            camera_gallery = await UIComponents.create_camera_images(data)
-            traffic = await UIComponents.create_traffic_summary(data)
-            environmental = await UIComponents.create_environmental_panel(data)
-            alerts = await UIComponents.create_alerts_panel(data)
-            system_info = await UIComponents.create_system_info(data)
-            debug_panel = await UIComponents.create_debug_panel(data)
+        header = await UIComponents.create_header(data)
+        camera_gallery = await UIComponents.create_camera_images(data)
+        traffic = await UIComponents.create_traffic_summary(data)
+        environmental = await UIComponents.create_environmental_panel(data)
+        alerts = await UIComponents.create_alerts_panel(data)
+        system_info = await UIComponents.create_system_info(data)
+        debug_panel = await UIComponents.create_debug_panel(data)
 
-            yield header, camera_gallery, traffic, environmental, alerts, system_info, gr.HTML(value=debug_panel, visible=debug_mode)
-            
-        except Exception as e:
-            logger.error(f"Error getting monitoring data from queue: {str(e)}")
-            error_msg = f"<div style='color: red; text-align: center; padding: 20px;'>❌ Error</div>"
-            yield error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
-            await asyncio.sleep(5)
+        logger.debug("UI components updated with latest monitoring data")
+
+        return header, camera_gallery, traffic, environmental, alerts, system_info, gr.HTML(value=debug_panel, visible=debug_mode)
+        
+    except Exception as e:
+        logger.error(f"Error getting monitoring data from queue: {str(e)}")
+        error_msg = f"<div style='color: red; text-align: center; padding: 20px;'>❌ Error</div>"
+        return error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
 
 async def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
     """

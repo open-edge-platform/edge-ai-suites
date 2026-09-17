@@ -16,7 +16,8 @@ All HTTP Response bodies must follow this unified JSON structure:
 | **timestamp** | Long | Yes | Server-side current Unix timestamp. |
 
 ### Response Example
-```
+
+```text
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -27,11 +28,13 @@ Content-Type: application/json
   "timestamp": 167890123
 }
 ```
+
 ---
 
 ## Status Codes and Task
 
 ### HTTP Status Codes (Network Layer)
+
 | Code | Meaning | Frontend Handling Suggestion |
 | :--- | :--- | :--- |
 | 200 | OK | Proceed to parse Application Layer code. |
@@ -92,55 +95,60 @@ stateDiagram-v2
 
 * Pattern: SYNC
 
-Query Parameters:
-| Parameter | Type    | Required | Default | Description                                         |
-| :-------- | :------ | :------- | :------ | :-------------------------------------------------- |
-| `status`  | `string`  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
-| `limit`   | `integer` | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
+  Query Parameters:
+  | Parameter | Type    | Required | Default | Description                                         |
+  | :-------- | :------ | :------- | :------ | :-------------------------------------------------- |
+  | `status`  | `string`  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
+  | `limit`   | `integer` | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
 
-Request:
-```
-curl --location 'http://127.0.0.1:9011/api/v1/task/list?status=COMPLETED&limit=1'
-```
-Response (200 OK)
-```json
-{
-    "code": 20000,
-    "data": [
-        {
-            "task_id": "f1cdfb26-db7f-4c4a-8d95-c4a1fefd9347",
-            "task_type": "file_search",
-            "status": "COMPLETED",
-            "progress": 0,
-            "payload": {
-                "source": "local",
-                "file_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.pdf",
-                "bucket": "content-search",
-                "filename": "handwritten-notebook.pdf",
-                "run_id": "25c5a670-a29a-4b59-8b7d-47293048cd0b",
-                "file_hash": "a08082baa261503715c24c168d24622f12fad325dab88baf19ef819e111e7de8",
-                "size_bytes": 149703,
-                "is_biz_error": false,
-                "file_name": "handwritten-notebook.pdf",
-                "content_type": "application/pdf",
-                "bucket_name": "content-search",
-                "meta": {},
-                "prompt": null,
-                "chunk_duration": null
-            },
-            "result": {
-                "message": "File successfully processed. db returns {'document': {'insert_count': 1}}",
-                "ocr_text_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.ocr.txt"
-            },
-            "user_id": "admin",
-            "created_at": "2026-05-15T12:36:16.795600"
-        }
-    ],
-    "message": "Success",
-    "timestamp": 1778820484
-}
-```
+  Request:
+
+  ```text
+  curl --location 'http://127.0.0.1:9011/api/v1/task/list?status=COMPLETED&limit=1'
+  ```
+
+  Response (200 OK)
+
+  ```json
+  {
+      "code": 20000,
+      "data": [
+          {
+              "task_id": "f1cdfb26-db7f-4c4a-8d95-c4a1fefd9347",
+              "task_type": "file_search",
+              "status": "COMPLETED",
+              "progress": 0,
+              "payload": {
+                  "source": "local",
+                  "file_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.pdf",
+                  "bucket": "content-search",
+                  "filename": "handwritten-notebook.pdf",
+                  "run_id": "25c5a670-a29a-4b59-8b7d-47293048cd0b",
+                  "file_hash": "a08082baa261503715c24c168d24622f12fad325dab88baf19ef819e111e7de8",
+                  "size_bytes": 149703,
+                  "is_biz_error": false,
+                  "file_name": "handwritten-notebook.pdf",
+                  "content_type": "application/pdf",
+                  "bucket_name": "content-search",
+                  "meta": {},
+                  "prompt": null,
+                  "chunk_duration": null
+              },
+              "result": {
+                  "message": "File successfully processed. db returns {'document': {'insert_count': 1}}",
+                  "ocr_text_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.ocr.txt"
+              },
+              "user_id": "admin",
+              "created_at": "2026-05-15T12:36:16.795600"
+          }
+      ],
+      "message": "Success",
+      "timestamp": 1778820484
+  }
+  ```
+
 #### Task Status Polling
+
 Used to track the progress and retrieve the final result of a submitted task.
 
 * URL: /api/v1/task/query/{task_id}
@@ -149,53 +157,56 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 * Pattern: SYNC
 
-Request:
-```
-curl --location 'http://127.0.0.1:9011/api/v1/task/query/6b9a6a55-d327-42fe-b05e-e0f3098fe797'
-```
+  Request:
 
-Response (200 OK):
-```json
-// Example 1: Normal file (upload only)
-{
-    "code": 20000,
-    "data": {
-        "task_id": "6b9a6a55-d327-42fe-b05e-e0f3098fe797",
-        "status": "COMPLETED",
-        "progress": 100,
-        "result": {
-            "message": "Upload only, no ingest requested",
-            "file_info": {
-                "source": "local",
-                "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
-                "bucket": "content-search",
-                "filename": "phy_class.txt",
-                "run_id": "9e96f16a-9689-4c25-a515-04a1040b193f"
-            }
-        }
-    },
-    "message": "Query successful",
-    "timestamp": 1774931711
-}
+  ```text
+  curl --location 'http://127.0.0.1:9011/api/v1/task/query/6b9a6a55-d327-42fe-b05e-e0f3098fe797'
+  ```
 
-// Example 2: Handwritten PDF (OCR processed)
-{
-    "code": 20000,
-    "data": {
-        "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-        "status": "COMPLETED",
-        "progress": 100,
-        "result": {
-            "message": "File successfully processed. db returns {}",
-            "ocr_text_key": "runs/a1b2c3d4-xxxx/raw/application/default/handwritten_notes.ocr.txt"
-        }
-    },
-    "message": "Query successful",
-    "timestamp": 1774931800
-}
-```
+  Response (200 OK):
+
+  ```json
+  // Example 1: Normal file (upload only)
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "6b9a6a55-d327-42fe-b05e-e0f3098fe797",
+          "status": "COMPLETED",
+          "progress": 100,
+          "result": {
+              "message": "Upload only, no ingest requested",
+              "file_info": {
+                  "source": "local",
+                  "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
+                  "bucket": "content-search",
+                  "filename": "phy_class.txt",
+                  "run_id": "9e96f16a-9689-4c25-a515-04a1040b193f"
+              }
+          }
+      },
+      "message": "Query successful",
+      "timestamp": 1774931711
+  }
+
+  // Example 2: Handwritten PDF (OCR processed)
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "status": "COMPLETED",
+          "progress": 100,
+          "result": {
+              "message": "File successfully processed. db returns {}",
+              "ocr_text_key": "runs/a1b2c3d4-xxxx/raw/application/default/handwritten_notes.ocr.txt"
+          }
+      },
+      "message": "Query successful",
+      "timestamp": 1774931800
+  }
+  ```
 
 ### File Process
+
 #### File Support Matrix
 
 The system supports the following file formats for all ingestion and upload-ingest operations.
@@ -207,7 +218,7 @@ The system supports the following file formats for all ingestion and upload-inge
 | **Web/Markup** | `.html`, `.htm`, `.xml`, `.md` | Structured text parsing and content indexing. |
 | **Image** | `.jpg`, `.png`, `.jpeg` | Visual feature embedding and similarity search indexing. |
 
-> **Technical Note**: 
+> **Technical Note**:
 > - **Video**: Default chunking is set to 30 seconds unless the `chunk_duration` parameter is provided.
 > - **Text**: Automatic semantic segmentation is applied to ensure high-quality retrieval results.
 > - **Max File Size**: Please refer to the `CS_MAX_CONTENT_LENGTH` environment variable (Default: 100MB).
@@ -221,60 +232,68 @@ Used to upload a video file and initiate an asynchronous background task.
 * Payload: file (Binary)
 * Pattern: ASYNC
 
-Request:
-```
-curl --location 'http://127.0.0.1:9011/api/v1/object/upload' \
---form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
-```
-Response (200 OK):
-```json
-{
-    "code": 20000,
-    "data": {
-        "task_id": "c68211de-2187-4f52-b47d-f3a51a52b9ca",
-        "status": "PROCESSING"
-    },
-    "message": "File received, processing started.",
-    "timestamp": 1773909147
-}
-```
+  Request:
+
+  ```text
+  curl --location 'http://127.0.0.1:9011/api/v1/object/upload' \
+  --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
+  ```
+
+  Response (200 OK):
+
+  ```json
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "c68211de-2187-4f52-b47d-f3a51a52b9ca",
+          "status": "PROCESSING"
+      },
+      "message": "File received, processing started.",
+      "timestamp": 1773909147
+  }
+  ```
 
 #### File ingestion
+
 * URL: /api/v1/object/ingest
 * Method: POST
 * Pattern: ASYNC
 * Parameters:
 
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `file_key` | `string` | Yes | The full path of the file in storage (excluding bucket name). |
-| `bucket_name` | `string` | No | The storage bucket name. Defaults to content-search. |
-| `prompt` | `string` | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
-| `chunk_duration` | `integer` | No | Duration of each video segment in seconds. Defaults to 30. |
-| `meta` | `object` | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
+  | Field | Type | Required | Description |
+  | :--- | :--- | :--- | :--- |
+  | `file_key` | `string` | Yes | The full path of the file in storage (excluding bucket name). |
+  | `bucket_name` | `string` | No | The storage bucket name. Defaults to content-search. |
+  | `prompt` | `string` | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
+  | `chunk_duration` | `integer` | No | Duration of each video segment in seconds. Defaults to 30. |
+  | `meta` | `object` | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
 
-Request:
-```
-curl --location 'http://127.0.0.1:9011/api/v1/object/ingest' \
---header 'Content-Type: application/json' \
---data '{
-    "bucket_name": "content-search", 
-    "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4"
-}'
-```
-Response:
-```json
-{
-    "code": 20000,
-    "data": {
-        "task_id": "44e339fb-3306-41b8-b1e1-4ecae7ce0ada",
-        "status": "PROCESSING",
-        "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4"
-    },
-    "message": "Ingestion process started for existing file",
-    "timestamp": 1774878031
-}
-```
+  Request:
+
+  ```text
+
+  curl --location 'http://127.0.0.1:9011/api/v1/object/ingest' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "bucket_name": "content-search",
+      "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4"
+  }'
+  ```
+
+  Response:
+
+  ```json
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "44e339fb-3306-41b8-b1e1-4ecae7ce0ada",
+          "status": "PROCESSING",
+          "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4"
+      },
+      "message": "Ingestion process started for existing file",
+      "timestamp": 1774878031
+  }
+  ```
 
 #### Text file ingestion
 
@@ -287,39 +306,43 @@ It also supports fetching content from existing text-based objects in storage.
 * Pattern: ASYNC
 * Parameters:
 
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `text` | `string` | **Yes** | **Raw text content** to be embedded, and stored in the vector database. |
-| `bucket_name` | `string` | No | Storage bucket name (used to logically group the data or build the identifier). |
-| `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
-| `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
+  | Field | Type | Required | Description |
+  | :--- | :--- | :--- | :--- |
+  | `text` | `string` | **Yes** | **Raw text content** to be embedded, and stored in the vector database. |
+  | `bucket_name` | `string` | No | Storage bucket name (used to logically group the data or build the identifier). |
+  | `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
+  | `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
 
-Request:
-```
-# example for raw text content
-curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-text' \
---header 'Content-Type: application/json' \
---data '{
-    "text": "Newton'\''s Second Law of Motion states that the force acting on an object is equal to the mass of that object multiplied by its acceleration (F = ma). This relationship describes how the velocity of an object changes when it is subjected to an external force.",
-    "meta": {
-        "source": "topic-search"
-    }
-}'
-```
-Response:
-```json
-{
-    "code": 20000,
-    "data": {
-        "task_id": "df3caeb3-3287-4e41-a1f0-098c90d08e03",
-        "status": "PROCESSING"
-    },
-    "message": "Text ingestion task created successfully",
-    "timestamp": 1775006765
-}
-```
+  Request:
+
+  ```text
+  # example for raw text content
+  curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-text' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "text": "Newton'\''s Second Law of Motion states that the force acting on an object is equal to the mass of that object multiplied by its acceleration (F = ma). This relationship describes how the velocity of an object changes when it is subjected to an external force.",
+      "meta": {
+          "source": "topic-search"
+      }
+  }'
+  ```
+
+  Response:
+
+  ```json
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "df3caeb3-3287-4e41-a1f0-098c90d08e03",
+          "status": "PROCESSING"
+      },
+      "message": "Text ingestion task created successfully",
+      "timestamp": 1775006765
+  }
+  ```
 
 #### File upload and ingestion
+
 A unified workflow that first saves the file to local storage and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
 
 * URL: /api/v1/object/upload-ingest
@@ -328,48 +351,53 @@ A unified workflow that first saves the file to local storage and then immediate
 * Pattern: ASYNC
 * Parameters:
 
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `file` | `Binary` | Yes | The video file to be uploaded. |
-| `prompt` | `string` | No | Summarization instructions (passed as a Form field). |
-| `chunk_duration` | `integer` | No | Segment duration in seconds (passed as a Form field). |
-| `meta` | `string` | No | JSON string of metadata (e.g., `'{"course": "CS101", "vs_enabled": true}'`). `vs_enabled` (optional): set to `true` to enable video summarization for this upload, default is `false`. |
+  | Field | Type | Required | Description |
+  | :--- | :--- | :--- | :--- |
+  | `file` | `Binary` | Yes | The video file to be uploaded. |
+  | `prompt` | `string` | No | Summarization instructions (passed as a Form field). |
+  | `chunk_duration` | `integer` | No | Segment duration in seconds (passed as a Form field). |
+  | `meta` | `string` | No | JSON string of metadata (e.g., `'{"course": "CS101", "vs_enabled": true}'`). `vs_enabled` (optional): set to `true` to enable video summarization for this upload, default is `false`. |
 
 * Example:
-Request:
-```
-curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
---form 'file=@"/C:/videos/videos/classroom_8.mp4"' \
---form 'meta="{\"tags\": [\"class\"], \"course\": \"CS101\", \"semester\": \"Spring 2026\"}"'
-```
-Response (200 OK):
-```json
-// example 1: Normal upload and ingest
-{
-    "code": 20000,
-    "data": {
-        "task_id": "559814ae-cef6-475c-9a79-3819549228d9",
-        "status": "PROCESSING",
-        "file_key": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4"
-    },
-    "message": "Upload and Ingest started",
-    "timestamp": 1774878113
-}
-// example 2: File already exists, return the existed taskid
-{
-    "code": 40901,
-    "data": {
-        "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
-        "file_name": "classroom_8.mp4",
-        "created_at": "2026-04-14 14:33:53.107540",
-        "task_id": "559814ae-cef6-475c-9a79-3819549228d9"
-    },
-    "message": "Upload failed: File already exists.",
-    "timestamp": 1776148605
-}
-```
+
+  Request:
+
+  ```text
+  curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
+  --form 'file=@"/C:/videos/videos/classroom_8.mp4"' \
+  --form 'meta="{\"tags\": [\"class\"], \"course\": \"CS101\", \"semester\": \"Spring 2026\"}"'
+  ```
+
+  Response (200 OK):
+
+  ```json
+  // example 1: Normal upload and ingest
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "559814ae-cef6-475c-9a79-3819549228d9",
+          "status": "PROCESSING",
+          "file_key": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4"
+      },
+      "message": "Upload and Ingest started",
+      "timestamp": 1774878113
+  }
+  // example 2: File already exists, return the existed taskid
+  {
+      "code": 40901,
+      "data": {
+          "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
+          "file_name": "classroom_8.mp4",
+          "created_at": "2026-04-14 14:33:53.107540",
+          "task_id": "559814ae-cef6-475c-9a79-3819549228d9"
+      },
+      "message": "Upload failed: File already exists.",
+      "timestamp": 1776148605
+  }
+  ```
 
 #### Local path ingestion (no upload)
+
 Ingests a file that already exists on the filesystem of the machine running this service, given its absolute path. Functionally equivalent to `upload-ingest` — same storage keys, hash-based deduplication, content indexing, OCR, and Video Summarization — but the bytes are read directly from disk instead of being transferred as a multipart body.
 
 Intended for the Electron desktop app, which runs alongside this service: it avoids pushing potentially multi-GB media through localhost HTTP. The browser-based web UI cannot use it (browsers do not expose real file paths) and continues to use `upload-ingest`.
@@ -383,68 +411,73 @@ The file is **copied** into the object store, so the returned `file_key` always 
 * Access: **Loopback clients only** (`127.0.0.1`, `::1`). Requests from any other address are rejected with code `40300`, because reading arbitrary server-side paths must not be reachable from other devices on the network.
 * Parameters:
 
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `path` | `string` | Yes | Absolute path to the file on the server's filesystem. Must be an existing regular file. |
-| `meta` | `object` | No | Metadata object (e.g., `{"tags": ["class"], "vs_enabled": true}`). Unlike `upload-ingest` this is a JSON **object**, not a JSON string. `vs_enabled` (optional): set to `true` to enable video summarization, default is `false`. |
-| `prompt` | `string` | No | Summarization instructions. |
-| `chunk_duration` | `integer` | No | Segment duration in seconds. |
+  | Field | Type | Required | Description |
+  | :--- | :--- | :--- | :--- |
+  | `path` | `string` | Yes | Absolute path to the file on the server's filesystem. Must be an existing regular file. |
+  | `meta` | `object` | No | Metadata object (e.g., `{"tags": ["class"], "vs_enabled": true}`). Unlike `upload-ingest` this is a JSON **object**, not a JSON string. `vs_enabled` (optional): set to `true` to enable video summarization, default is `false`. |
+  | `prompt` | `string` | No | Summarization instructions. |
+  | `chunk_duration` | `integer` | No | Segment duration in seconds. |
 
 * Example:
-Request:
-```
-curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-path' \
---header 'Content-Type: application/json' \
---data '{
-    "path": "C:/videos/classroom_8.mp4",
-    "meta": { "tags": ["class"], "course": "CS101", "vs_enabled": true }
-}'
-```
-Response (200 OK):
-```json
-// example 1: Normal path ingest
-{
-    "code": 20000,
-    "data": {
-        "task_id": "559814ae-cef6-475c-9a79-3819549228d9",
-        "status": "PROCESSING",
-        "file_key": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4"
-    },
-    "message": "Upload and Ingest started",
-    "timestamp": 1774878113
-}
-// example 2: File already exists (same content hash), returns the existing task id
-{
-    "code": 40901,
-    "data": {
-        "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
-        "file_name": "classroom_8.mp4",
-        "created_at": "2026-04-14 14:33:53.107540",
-        "task_id": "559814ae-cef6-475c-9a79-3819549228d9"
-    },
-    "message": "Upload failed: File already exists.",
-    "timestamp": 1776148605
-}
-// example 3: Called from a non-loopback address
-{
-    "code": 40300,
-    "data": {},
-    "message": "Path-based ingest is only available to local clients.",
-    "timestamp": 1776148605
-}
-```
+
+  Request:
+
+  ```text
+  curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-path' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "path": "C:/videos/classroom_8.mp4",
+      "meta": { "tags": ["class"], "course": "CS101", "vs_enabled": true }
+  }'
+  ```
+
+  Response (200 OK):
+
+  ```json
+  // example 1: Normal path ingest
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "559814ae-cef6-475c-9a79-3819549228d9",
+          "status": "PROCESSING",
+          "file_key": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4"
+      },
+      "message": "Upload and Ingest started",
+      "timestamp": 1774878113
+  }
+  // example 2: File already exists (same content hash), returns the existing task id
+  {
+      "code": 40901,
+      "data": {
+          "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
+          "file_name": "classroom_8.mp4",
+          "created_at": "2026-04-14 14:33:53.107540",
+          "task_id": "559814ae-cef6-475c-9a79-3819549228d9"
+      },
+      "message": "Upload failed: File already exists.",
+      "timestamp": 1776148605
+  }
+  // example 3: Called from a non-loopback address
+  {
+      "code": 40300,
+      "data": {},
+      "message": "Path-based ingest is only available to local clients.",
+      "timestamp": 1776148605
+  }
+  ```
 
 * Error conditions:
 
-| Code | Condition |
-| :--- | :--- |
-| `40000` | `path` is missing or empty. |
-| `40002` | Path does not exist, is not a regular file, is unreadable, or failed file/content validation. |
-| `40300` | Caller is not on a loopback address. |
-| `40901` | A file with the same content hash was already ingested. |
-| `41301` | File exceeds the size limit (`DOCUMENT_MAX_MB`, or `VIDEO_MAX_MB` for video types). |
+  | Code | Condition |
+  | :--- | :--- |
+  | `40000` | `path` is missing or empty. |
+  | `40002` | Path does not exist, is not a regular file, is unreadable, or failed file/content validation. |
+  | `40300` | Caller is not on a loopback address. |
+  | `40901` | A file with the same content hash was already ingested. |
+  | `41301` | File exceeds the size limit (`DOCUMENT_MAX_MB`, or `VIDEO_MAX_MB` for video types). |
 
 #### Retrieve and Search
+
 Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and object references.
 
 * URL: /api/v1/object/search
@@ -453,116 +486,122 @@ Executes a similarity search across vector collections using either natural lang
 * Pattern: SYNC
 * Parameters:
 
-| Field | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `query` | `string` | Either | Natural language search query (e.g., "student at desk"). |
-| `image_base64` | `string` | Either | Base64 encoded image string for visual similarity search. |
-| `max_num_results` | `integer` | No | Maximum number of results to return. Defaults to 10. For text queries, up to `2 × max_num_results` may be returned (`top-k` from visual collection + `top-k` from document collection, merged and sorted by distance). For image queries, at most `max_num_results` are returned.|
-| `filter` | `object` | No | Metadata filters (e.g., {"type": ["document"], "tags": ["class"]}), detail sees below |
+  | Field | Type | Required | Description |
+  | :--- | :--- | :--- | :--- |
+  | `query` | `string` | Either | Natural language search query (e.g., "student at desk"). |
+  | `image_base64` | `string` | Either | Base64 encoded image string for visual similarity search. |
+  | `max_num_results` | `integer` | No | Maximum number of results to return. Defaults to 10. For text queries, up to `2 × max_num_results` may be   returned (`top-k` from visual collection + `top-k` from document collection, merged and sorted by distance). For image queries, at most   `max_num_results` are returned.|
+  | `filter` | `object` | No | Metadata filters (e.g., {"type": ["document"], "tags": ["class"]}), detail sees below |
 
 * Filter Usage Detail
 
-Different filter keys are always combined with `AND`. When a filter value is a `list`, the matching logic depends on the field type:
+  Different filter keys are always combined with `AND`. When a filter value is a `list`, the matching logic depends on the field type:
 
-| Field type | Example fields | List behavior | Operator used |
-| ---------- | -------------- | ------------- | ------------- |
-| `Array metadata` | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
-| `Scalar metadata` | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
+  | Field type | Example fields | List behavior | Operator used |
+  | ---------- | -------------- | ------------- | ------------- |
+  | `Array metadata` | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
+  | `Scalar metadata` | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
 
-| Note: Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to distinguish them from native video frame results.
+  > **Note:** Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be   converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to   distinguish them from native video frame results.
 
 * Example:
-Request:
-```
-# Example 1: Filter by tags — returns results whose tags array contains "test_tag1" or "test_tag2"
-curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
---header 'Content-Type: application/json' \
---data '{
-    "query": "classroom",
-    "max_num_results": 2,
-    "filter": {
-        "tags": ["test_tag1", "test_tag2"]
-    }
-}'
-# Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
-curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
---header 'Content-Type: application/json' \
---data '{
-    "query": "student in classroom",
-    "max_num_results": 1,
-    "filter": {
-        "type": ["video", "document"]
-    }
-}'
-```
-Response (200 OK):
-```json
-{
-    "code": 20000,
-    "data": {
-        "task_id": "4d3159df-93d1-44a9-8592-bc48eb561b05",
-        "status": "COMPLETED",
-        "results": [
-            {
-                "id": "197972195449837430",
-                "distance": 0.8402439,
-                "meta": {
-                    "type": "video",
-                    "file_path": "local://content-search/runs/2a6e14b6-da45-4e20-93a1-2291ab01d6f6/raw/video/default/store-aisle-detection.mp4",
-                    "file_name": "store-aisle-detection.mp4",
-                    "video_pin_second": 11.01,
-                    "video_start_second": 7.76,
-                    "video_end_second": 14.26,
-                    "summary_text": "The video ... e store's layout and organization allow customers to easily navigate through the aisles and find their desired items."
-                },
-                "score": 53.65
-            },
-            {
-                "id": "435369449869751787",
-                "distance": 0.7416173,
-                "meta": {
-                    "type": "image",
-                    "file_path": "local://content-search/runs/7a4480af-3f9c-40b6-ac9e-0a698717bc45/raw/image/default/classroom.jpg",
-                    "file_name": "classroom.jpg",
-                    "tags": [
-                        "img_tag1",
-                        "img_tag2"
-                    ]
-                },
-                "score": 83.56
-            },
-            {
-                "id": "3898473585704952476",
-                "distance": 0.19918823,
-                "meta": {
-                    "doc_filename": "ComputerScienceOne.pdf",
-                    "doc_is_continuation": true,
-                    "doc_last_modified": "2026-04-14T20:56:13",
-                    "doc_sequence_number": 448,
-                    "chunk_text": "tegral. Instead, Computer Science is the study of computers and computation. It involves studying and understanding computational processes and the development of algorithms and techniques and how they apply to problems.",
-                    "chunk_index": 448,
-                    "type": "document",
-                    "doc_filetype": "application/pdf",
-                    "doc_page_number": 36,
-                    "doc_languages": "[\"eng\"]",
-                    "doc_file_directory": "C:\\Users\\user\\AppData\\Local\\Temp\\tmpwma1e266",
-                    "file_path": "local://content-search/runs/a6d3ef1f-510b-4ec9-8a16-4db2332758b0/raw/application/default/ComputerScienceOne.pdf",
-                    "file_name": "ComputerScienceOne.pdf",
-                    "tags": [
-                        "pdf_tag1",
-                        "pdf_tag2"
-                    ]
-                },
-                "score": 99.81,
-                "reranker_score": 6.28125
-            }
-        ]
-    },
-    "message": "Search completed",
-    "timestamp": 1776171542
-}
-```
+
+  Request:
+
+  ```text
+  # Example 1: Filter by tags — returns results whose tags array contains "test_tag1" or "test_tag2"
+  curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "query": "classroom",
+      "max_num_results": 2,
+      "filter": {
+          "tags": ["test_tag1", "test_tag2"]
+      }
+  }'
+  # Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
+  curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
+  --header 'Content-Type: application/json' \
+  --data '{
+      "query": "student in classroom",
+      "max_num_results": 1,
+      "filter": {
+          "type": ["video", "document"]
+      }
+  }'
+  ```
+
+  Response (200 OK):
+
+  ```json
+  {
+      "code": 20000,
+      "data": {
+          "task_id": "4d3159df-93d1-44a9-8592-bc48eb561b05",
+          "status": "COMPLETED",
+          "results": [
+              {
+                  "id": "197972195449837430",
+                  "distance": 0.8402439,
+                  "meta": {
+                      "type": "video",
+                      "file_path": "local://content-search/runs/2a6e14b6-da45-4e20-93a1-2291ab01d6f6/raw/video/default/store-aisle-detection.mp4",
+                      "file_name": "store-aisle-detection.mp4",
+                      "video_pin_second": 11.01,
+                      "video_start_second": 7.76,
+                      "video_end_second": 14.26,
+                      "summary_text": "The video ... e store's layout and organization allow customers to easily navigate through the aisles and find their desired items."
+                  },
+                  "score": 53.65
+              },
+              {
+                  "id": "435369449869751787",
+                  "distance": 0.7416173,
+                  "meta": {
+                      "type": "image",
+                      "file_path": "local://content-search/runs/7a4480af-3f9c-40b6-ac9e-0a698717bc45/raw/image/default/classroom.jpg",
+                      "file_name": "classroom.jpg",
+                      "tags": [
+                          "img_tag1",
+                          "img_tag2"
+                      ]
+                  },
+                  "score": 83.56
+              },
+              {
+                  "id": "3898473585704952476",
+                  "distance": 0.19918823,
+                  "meta": {
+                      "doc_filename": "ComputerScienceOne.pdf",
+                      "doc_is_continuation": true,
+                      "doc_last_modified": "2026-04-14T20:56:13",
+                      "doc_sequence_number": 448,
+                      "chunk_text": "tegral. Instead, Computer Science is the study of computers and computation. It involves studying and understanding computational processes and the development of algorithms and techniques and how they apply to problems.",
+                      "chunk_index": 448,
+                      "type": "document",
+                      "doc_filetype": "application/pdf",
+                      "doc_page_number": 36,
+                      "doc_languages": "[\"eng\"]",
+                      "doc_file_directory": "C:\\Users\\user\\AppData\\Local\\Temp\\tmpwma1e266",
+                      "file_path": "local://content-search/runs/a6d3ef1f-510b-4ec9-8a16-4db2332758b0/raw/application/default/ComputerScienceOne.pdf",
+                      "file_name": "ComputerScienceOne.pdf",
+                      "tags": [
+                          "pdf_tag1",
+                          "pdf_tag2"
+                      ]
+                  },
+                  "score": 99.81,
+                  "reranker_score": 6.28125
+              }
+          ]
+      },
+      "message": "Search completed",
+      "timestamp": 1776171542
+  }
+  ```
+
 #### Question & Answer (QA)
+
 Answers natural language questions over uploaded educational materials using Retrieval-Augmented Generation (RAG). The service retrieves the most relevant chunks from the vector database, injects them as context into the VLM prompt, and returns a grounded answer together with the source references used.
 
 * URL: /api/v1/object/qa
@@ -1139,7 +1178,7 @@ Response (200 OK):
 **Three-Phase Check Process:**
 
 1. **Phase 1: SQLite → Storage/Index** - Checks each database record against physical storage
-2. **Phase 2: LocalStorage → SQLite** - Finds orphaned files without database records  
+2. **Phase 2: LocalStorage → SQLite** - Finds orphaned files without database records
 3. **Phase 3: ChromaDB → SQLite** - Finds orphaned indices without database records
 
 **Inconsistency States:**

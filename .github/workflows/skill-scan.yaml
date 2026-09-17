@@ -98,12 +98,14 @@ jobs:
 
       # v0.2.0 adds support for non-standard directories and root-level files inside a skill.
       # The default `allow-dirs` is "evals,example-prompts", which together with the standard
-      # scripts/references/assets layout covers every skill in this repository, so the input is
-      # not overridden here. Add it (e.g. allow-dirs: "evals,example-prompts,my_custom_folder")
+      # scripts/references/assets layout covers most skills in this repository. The metro
+      # skills (metro-ai-apps-builder, metro-ai-apps-recipe) also ship a `benchmark/` directory,
+      # so it is added below. Extend this list (e.g. allow-dirs: "evals,example-prompts,benchmark,my_custom_folder")
       # only when a skill introduces another directory.
       - name: Run skill-validator
         uses: open-edge-platform/geti-ci/actions/skill-validator@c64543e05e9f84c7c4ef212666c3ea5fc869e55a # skill-validator/v0.2.0
         with:
           skills-path: ${{ matrix.skills-path }}
+          allow-dirs: "evals,example-prompts,benchmark"
           strict: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
           fail-on-findings: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}

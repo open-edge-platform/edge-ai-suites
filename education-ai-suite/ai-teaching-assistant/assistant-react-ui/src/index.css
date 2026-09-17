@@ -12,7 +12,7 @@ body,
 }
 
 body {
-  @apply bg-white text-black font-sans antialiased;
+  @apply bg-slate-100 text-black font-sans antialiased;
 }
 
 /* Thin scrollbars */

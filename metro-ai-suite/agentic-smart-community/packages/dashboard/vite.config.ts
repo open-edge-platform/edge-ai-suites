@@ -51,7 +51,9 @@ const viteConfig = defineConfig(({ mode }) => {
     // mcp-server backend on :3100. The shipped UI is always `vite build` → dist/ hosted by
     // mcp-server on :3100 — do NOT treat :8100 as the product entry point.
     server: {
-      host: "0.0.0.0",
+      // Loopback: this dev server proxies to an unauthenticated backend, so it
+      // stays local unless you deliberately widen it (`vite --host <addr>`).
+      host: "127.0.0.1",
       port: 8100,
       hmr: true,
       proxy: {

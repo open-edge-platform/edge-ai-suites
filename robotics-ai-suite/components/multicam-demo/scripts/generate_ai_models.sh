@@ -1,7 +1,11 @@
 #!/bin/bash
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+cd "${SCRIPT_DIR}/.."
 
 # Generating Yolov8 models
 echo "------------------------------------------------------------------------"
@@ -31,7 +35,7 @@ cd ./models/yolov8/ || exit
 i=1
 status=0
 for i in "${yolov8_models[@]}"; do
-  python3 ../../src/mo.py --model="$i".pt --data_type="$datatype"
+  python3 "${SCRIPT_DIR}/../src/mo.py" --model="$i".pt --data_type="$datatype"
   if [[ $? -ne 0 ]]
   then
     status=1

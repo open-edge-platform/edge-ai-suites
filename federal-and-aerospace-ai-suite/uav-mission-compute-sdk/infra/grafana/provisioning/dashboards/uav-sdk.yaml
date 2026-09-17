@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: 1
+
+providers:
+  - name: uav-sdk
+    folder: UAV SDK
+    type: file
+    options:
+      path: /etc/grafana/dashboards

@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: ecrag query "question" [--mode retrieve|rag|mega] [--top-n N] [--max-tokens N]
+
+Environment:
+  ECRAG_HOST             API host, including scheme (default: http://localhost)
+  ECRAG_PORT             retrieval service port (default: 16010)
+  ECRAG_MEGA_PORT        ChatQnA mega service port (default: 16011)
+  ECRAG_CONNECT_TIMEOUT  connection timeout in seconds (default: 10)
+EOF
+}
+
+json_escape() {
+  local value="$1" escaped="" char
+  local index
+
+  for ((index = 0; index < ${#value}; index++)); do
+    char="${value:index:1}"
+    case "$char" in
+      '"') escaped+='\"' ;;
+      '\') escaped+='\\' ;;
+      $'\b') escaped+='\b' ;;
+      $'\f') escaped+='\f' ;;
+      $'\n') escaped+='\n' ;;
+      $'\r') escaped+='\r' ;;
+      $'\t') escaped+='\t' ;;
+      *) escaped+="$char" ;;
+    esac
+  done
+
+  printf '%s' "$escaped"
+}
+
+require_positive_integer() {
+  local option="$1" value="$2"
+  if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Error: $option must be a positive integer." >&2
+    exit 2
+  fi
+}
+
+if ! command -v curl >/dev/null 2>&1; then
+  echo "Error: curl is required but was not found in PATH." >&2
+  exit 127
+fi
+
+if [[ $# -eq 1 && ( "$1" == "-h" || "$1" == "--help" ) ]]; then
+  usage
+  exit 0
+fi
+
+if [[ $# -lt 2 || "$1" != "query" ]]; then
+  usage >&2
+  exit 2
+fi
+
+shift
+mode="rag"
+top_n="5"
+max_tokens="512"
+query_parts=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --mode)
+      [[ $# -ge 2 ]] || { echo "Error: --mode requires a value." >&2; exit 2; }
+      mode="$2"
+      shift 2
+      ;;
+    --top-n)
+      [[ $# -ge 2 ]] || { echo "Error: --top-n requires a value." >&2; exit 2; }
+      top_n="$2"
+      shift 2
+      ;;
+    --max-tokens)
+      [[ $# -ge 2 ]] || { echo "Error: --max-tokens requires a value." >&2; exit 2; }
+      max_tokens="$2"
+      shift 2
+      ;;
+    --)
+      shift
+      query_parts+=("$@")
+      break
+      ;;
+    --*)
+      echo "Error: unknown option '$1'." >&2
+      exit 2
+      ;;
+    *)
+      query_parts+=("$1")
+      shift
+      ;;
+  esac
+done
+
+query="${query_parts[*]}"
+if [[ -z "${query//[[:space:]]/}" ]]; then
+  echo "Error: query text cannot be empty." >&2
+  exit 2
+fi
+
+require_positive_integer "--top-n" "$top_n"
+require_positive_integer "--max-tokens" "$max_tokens"
+
+host="${ECRAG_HOST:-http://localhost}"
+port="${ECRAG_PORT:-16010}"
+mega_port="${ECRAG_MEGA_PORT:-16011}"
+connect_timeout="${ECRAG_CONNECT_TIMEOUT:-10}"
+host="${host%/}"
+
+require_positive_integer "ECRAG_PORT" "$port"
+require_positive_integer "ECRAG_MEGA_PORT" "$mega_port"
+require_positive_integer "ECRAG_CONNECT_TIMEOUT" "$connect_timeout"
+
+case "$mode" in
+  retrieve)
+    url="${host}:${port}/v1/retrieval"
+    ;;
+  rag|qa|mega|summary)
+    url="${host}:${mega_port}/v1/chatqna"
+    ;;
+  *)
+    echo "Error: unsupported mode '$mode'. Use retrieve, rag, or mega." >&2
+    exit 2
+    ;;
+esac
+
+payload=$(printf '{"messages":"%s","top_n":%s,"max_tokens":%s}' \
+  "$(json_escape "$query")" "$top_n" "$max_tokens")
+
+exec curl \
+  --silent \
+  --show-error \
+  --fail-with-body \
+  --connect-timeout "$connect_timeout" \
+  --request POST \
+  --header "Content-Type: application/json" \
+  --data "$payload" \
+  "$url"

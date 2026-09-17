@@ -1,3 +1,10 @@
+# This file contains a Helm template that generates the web serverstartup script.
+# ShellCheck reports syntax errors (SC1054/SC1127) on the Helm template
+# directives because they are not valid shell syntax when analyzed directly.
+# These findings are expected and cannot be removed without changing the
+# Helm template structure. The generated startup script is valid shell code
+# and should be ShellChecked after Helm template rendering.
+#shellcheck disable=SC1054,SC1127
 {{/*
 Template for Web server startup script
 */}}

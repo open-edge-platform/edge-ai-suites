@@ -554,6 +554,16 @@ footer {
   padding: 0.65rem 0.8rem;
 }
 .chat-error[hidden] { display: none; }
+.chat-unavailable-banner {
+  background: #fff3e0;
+  border: 1px solid #ffb74d;
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+.chat-unavailable-banner strong { display: block; margin-bottom: 0.35rem; color: #e65100; }
+.chat-unavailable-banner p { margin: 0; font-size: 0.9rem; color: #4e342e; }
+.chat-unavailable-banner code { background: #ffe0b2; padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.85em; }
 .chat-composer { display: grid; gap: 0.4rem; }
 .chat-composer > label { font-size: 0.82rem; font-weight: 700; color: #444; }
 .chat-compose-row { display: flex; gap: 0.65rem; align-items: end; }

@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/education-ai-suite/smart-classroom">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.2.0/education-ai-suite/smart-classroom">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.2.0/education-ai-suite/smart-classroom/README.md">
      Readme
   </a>
 </div>
@@ -27,7 +27,7 @@ The main features are as follows:
 
 - **Audio transcription** with ASR models (e.g., Whisper, Paraformer)
 - **Speaker diarization** using Pyannote Audio models
-- **Summarization** using LLMs (e.g., Qwen, LLaMA) optimized with OpenVINO
+- **Summarization** using LLMs (e.g., Qwen, LLaMA) optimized with OpenVINO™
 - **MindMap generation** using Mermaid.js for visual diagram rendering
 - **Content segmentation** for automatic topic extraction from transcripts
 - **Semantic topic search** using FAISS vector indexing
@@ -53,6 +53,8 @@ The main features are as follows:
 ./how-it-works
 ./application-flow
 ./content-search-flow
+./class-report-flow
+./grading-flow
 Release Notes <./release-notes>
 
 :::

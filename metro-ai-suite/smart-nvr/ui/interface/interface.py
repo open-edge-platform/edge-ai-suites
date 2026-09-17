@@ -415,7 +415,7 @@ def create_ui():
                         scale=5,
                     )
                     close_toast_btn = gr.Button("❌", visible=False, scale=1)
-                
+
                 # Register the tick event
                 polling_timer.tick(
                     fn=auto_refresh_summary_status,
@@ -602,7 +602,7 @@ def create_ui():
                             </style>
                             """
                             )
-                    
+
                     def fetch_and_display_events(camera):
                         nonlocal recent_events
                         recent_events = fetch_events(camera)
@@ -636,7 +636,7 @@ def create_ui():
                     )
 
                     if show_scenescape_source:
-                        # SceneScape: fixed labels, count visible by default
+                        # Scenescape: fixed labels, count visible by default
                         SCENESCAPE_LABELS = ["vehicle", "pedestrian"]
                         label_filter = gr.Dropdown(
                             choices=SCENESCAPE_LABELS,
@@ -658,7 +658,7 @@ def create_ui():
                             value=0,
                             precision=0,
                             interactive=True,
-                            visible=False,  
+                            visible=False,
                         )
 
                     def toggle_count_visibility(source):

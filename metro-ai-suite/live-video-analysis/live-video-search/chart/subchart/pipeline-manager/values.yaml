@@ -13,7 +13,7 @@ global:
     httpsProxy: ''
     noProxy: localhost,127.0.0.1,.svc.cluster.local
   registry: ''
-  tag: 2026.2.0-rc1
+  tag: 2026.2.0
   vssStackTag: ''
   pullPolicy: ''
 images:

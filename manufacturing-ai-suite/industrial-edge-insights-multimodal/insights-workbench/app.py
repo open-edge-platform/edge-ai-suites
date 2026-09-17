@@ -117,17 +117,19 @@ def fetch_rows(
 ) -> tuple[list[dict[str, Any]], bool]:
     """Fetch a page of fusion rows and indicate whether more rows are available."""
     offset = (page - 1) * page_size
+    NO_RESULT_RE = r"/^(No_Weld|No Weld|No_Label|No Label|No label)$/"
 
     # Request one extra record so we can determine if there is a next page.
     # page/offset are ints (validated via int()/min()/max() by the caller), not user-controlled strings.
     query = (
         f'SELECT time, timeseries_classification, vision_classification, fused_decision FROM fusion_result '
+        f"WHERE vision_classification !~ {NO_RESULT_RE} "
+        f"AND timeseries_classification !~ {NO_RESULT_RE} "
         f"ORDER BY time DESC LIMIT {page_size + 1} OFFSET {offset}"
-    )  # nosec B608
+    )   # nosec B608
 
     result = client.query(query)
     points = list(result.get_points())
-
     has_more = len(points) > page_size
     rows = points[:page_size]
 

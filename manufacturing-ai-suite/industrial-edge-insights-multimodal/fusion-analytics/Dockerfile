@@ -9,13 +9,14 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+  PIP_NO_CACHE_DIR=1
+
 # Copy requirements file
 COPY requirements.txt .
 
-RUN pip install --upgrade pip
-
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Copy application code
 COPY fusion.py api.py /app/
@@ -39,6 +40,8 @@ RUN  if [ "$COPYLEFT_SOURCES" = "true" ]; then \
       done; \
     fi
 
+RUN python -m pip uninstall -y pip && \
+    rm -rf /usr/local/lib/python3.13/ensurepip/_bundled  
 # Expose any necessary ports (if needed for debugging/monitoring)
 EXPOSE 8080
 

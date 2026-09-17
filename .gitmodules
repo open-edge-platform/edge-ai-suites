@@ -1,6 +1,7 @@
-[submodule "retail-ai-suite/lose-prevention"]
+[submodule "retail-ai-suite/loss-prevention"]
 	path = retail-ai-suite/loss-prevention
 	url = https://github.com/intel-retail/loss-prevention.git
+	branch = release-2026.2.0
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/g2o"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/g2o
 	url = https://github.com/ros2-gbp/libg2o-release.git
@@ -32,6 +33,7 @@
 [submodule "retail-ai-suite/order-accuracy"]
 	path = retail-ai-suite/order-accuracy
 	url = https://github.com/intel-retail/order-accuracy
+	branch = release-2026.2.0
 [submodule "robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets/ocs2_robotic_assets"]
 	path = robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets/ocs2_robotic_assets
 	url = https://github.com/leggedrobotics/ocs2_robotic_assets.git
@@ -51,12 +53,15 @@
 [submodule "retail-ai-suite/storewide-loss-prevention"]
 	path = retail-ai-suite/storewide-loss-prevention
 	url = https://github.com/intel-retail/storewide-loss-prevention.git
+	branch = release-2026.2.0
 [submodule "retail-ai-suite/voice-enabled-interactions"]
 	path = retail-ai-suite/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+	branch = release-2026.2.0
 [submodule "retail-ai-suite/digital-signage"]
 	path = retail-ai-suite/digital-signage
 	url = https://github.com/intel-retail/digital-signage.git
+	branch = release-2026.2.0
 [submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros"]
 	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros
 	url = https://github.com/agenticros/agenticros.git
@@ -83,3 +88,21 @@
 [submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
 	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "robotics-ai-suite/pipelines/gr00t-n1d7-ov/isaac-gr00t"]
+	path = robotics-ai-suite/pipelines/gr00t-n1d7-ov/isaac-gr00t
+	url = https://github.com/NVIDIA/Isaac-GR00T.git
+[submodule "robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl"]
+	path = robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl
+	url = https://github.com/NVlabs/GR00T-WholeBodyControl.git
+[submodule "robotics-ai-suite/pipelines/point-lio-demo/Point-LIO"]
+	path = robotics-ai-suite/pipelines/point-lio-demo/Point-LIO
+	url = https://github.com/hku-mars/Point-LIO.git
+	branch = point-lio-with-grid-map
+[submodule "robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2"]
+	path = robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2
+	url = https://github.com/hku-mars/FAST-LIVO2.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/fast-lio2-demo/FAST_LIO"]
+	path = robotics-ai-suite/pipelines/fast-lio2-demo/FAST_LIO
+	url = https://github.com/hku-mars/FAST_LIO.git
+	branch = ROS2

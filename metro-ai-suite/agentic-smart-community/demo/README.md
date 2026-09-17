@@ -17,8 +17,8 @@ This bundle provides reference configurations for three Agentic Smart Community 
 
 Two configuration files drive the bundle:
 
-- [config.demo.yaml](config.demo.yaml) — service endpoints plus the `use_case_dict` (each use case declares its Video Summary task, DB schema extensions, summarize tuning, and report policy).
-- [monitors.demo.yaml](monitors.demo.yaml) — the per-camera monitors that reference those use cases, with their RTSP source and pipeline config (motion / prefilter / ROI / recording).
+- [config.demo.yaml](quick-start/config.demo.yaml) — service endpoints plus the `use_case_dict` (each use case declares its Video Summary task, DB schema extensions, summarize tuning, and report policy).
+- [monitors.demo.yaml](quick-start/monitors.demo.yaml) — the per-camera monitors that reference those use cases, with their RTSP source and pipeline config (motion / prefilter / ROI / recording).
 
 Start and stop the demo with the bundled scripts (the MCP server itself now runs
 as a container in [docker/compose.yaml](../docker/compose.yaml); `start-demo.sh`
@@ -26,8 +26,8 @@ pushes the RTSP streams, writes the demo config/monitors, then brings the stack 
 via `setup_docker.sh --light`):
 
 ```bash
-demo/scripts/start-demo.sh   # push RTSP streams + write demo config, then start the stack
-demo/scripts/stop-demo.sh    # stop streams + app tier (vllm stays warm)
+demo/quick-start/start-demo.sh   # push RTSP streams + write demo config, then start the stack
+demo/quick-start/stop-demo.sh    # stop streams + app tier (vllm stays warm)
 ```
 
 For video-path variables, automatic stream skipping, and the full installation sequence, see [Ready-to-Run Demo](../docs/user-guide/get-started/ready-to-run-demo.md).
@@ -43,7 +43,7 @@ A scheduled daily report aggregates the day's activity and turns it into staple-
 
 **Pipeline.**
 Report-only use case — the summary task emits no severity/event lines, so no alert columns are parsed.
-Motion detection is on; the NPU pre-filter is off (see [monitors.demo.yaml](monitors.demo.yaml)); reports are built from the `events` data source (`fridge` use case in [config.demo.yaml](config.demo.yaml)).
+Motion detection is on; the NPU pre-filter is off (see [monitors.demo.yaml](quick-start/monitors.demo.yaml)); reports are built from the `events` data source (`fridge` use case in [config.demo.yaml](quick-start/config.demo.yaml)).
 
 **Try these questions (ask the agent in order).**
 
@@ -81,10 +81,10 @@ An end-of-week report summarizes get-up times and on-time vs. late days.
 
 **Pipeline.**
 Motion detection plus an NPU YOLO pre-filter (person class) feed the Video Summary service, which reports whether the elder is up and at what time.
-This is a time-based use case: a custom rule adapter (`demo/prompts/elder_wakeup_evaluate_rules.py`) judges by `event` + `wakeup_time` rather than a severity threshold, and reports are weekly, filtered to `event: wakeup` (`elder_wakeup` use case in [config.demo.yaml](config.demo.yaml)).
+This is a time-based use case: a custom rule adapter (`demo/prompts/elder_wakeup_evaluate_rules.py`) judges by `event` + `wakeup_time` rather than a severity threshold, and reports are weekly, filtered to `event: wakeup` (`elder_wakeup` use case in [config.demo.yaml](quick-start/config.demo.yaml)).
 
 **Two-camera design (optional second channel).**
-A second monitor, `cam_elder_bedroom_2` (disabled by default in [monitors.demo.yaml](monitors.demo.yaml)), reuses the same use case on a separate RTSP path, SQLite scope, and notification channel.
+A second monitor, `cam_elder_bedroom_2` (disabled by default in [monitors.demo.yaml](quick-start/monitors.demo.yaml)), reuses the same use case on a separate RTSP path, SQLite scope, and notification channel.
 It is meant to run continuously as a persistent alert-demo channel, while the primary bedroom camera can be configured to pause once the elder is confirmed up — mirroring a real household that stops watching after wake-up.
 
 **Try these questions.**
@@ -96,7 +96,7 @@ It is meant to run continuously as a persistent alert-demo channel, while the pr
 
 ## Video inputs
 
-Videos are user-provided and excluded from release artifacts. [videos/streams.yaml](videos/streams.yaml) maps each environment variable to its RTSP path; an unavailable input is warned about and skipped.
+Videos are user-provided and excluded from release artifacts. [quick-start/streams.yaml](quick-start/streams.yaml) maps each environment variable to its RTSP path; an unavailable input is warned about and skipped.
 
 | Use case | Stream path | Environment variable |
 |---|---|---|

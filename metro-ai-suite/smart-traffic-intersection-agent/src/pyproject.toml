@@ -17,7 +17,7 @@ dependencies = [
     "starlette<1.4.0" # Ceiling on starlette version because of gradio's incompatibility with latest starlette
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest~=8.4.2",
     "pytest-asyncio~=0.23.8",

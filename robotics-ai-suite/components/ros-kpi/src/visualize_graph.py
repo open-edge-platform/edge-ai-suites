@@ -50,6 +50,10 @@ import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch
 from _accel import np  # Intel dpnp/numpy shim
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  Pipeline category helpers  (mirrors ros2_graph_monitor.py)
@@ -525,8 +529,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
     Falls back to a styled matplotlib figure window when Tkinter is not
     available (e.g. Qt5 backend).
     """
-    import matplotlib as _mpl
-    be = _mpl.get_backend().lower()
+    be = matplotlib.get_backend().lower()
     non_interactive = be in ('agg', 'pdf', 'svg', 'ps', 'cairo', 'template')
     if non_interactive:
         return   # headless – no windows
@@ -803,19 +806,17 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
 
     # ── Early-exit: nothing to draw ──────────────────────────────────────────
     if not nodes and not topics_to_show:
-        print('\n  ⚠  No nodes or topics to display.')
+        logger.info('\n  ⚠  No nodes or topics to display.')
         if filtered_mnodes and filter_monitor_nodes is not False:
-            print('     (Only the ros2_graph_monitor node was found in this session —')
-            print('      the ROS2 pipeline was not running when monitoring started.)')
-        print()
-        print('  How to fix:')
-        print('    1. Start your ROS2 launch file first.')
-        print('    2. Then run:  uv run python src/monitor_stack.py   (or with --remote-ip <ip>)')
-        print('    3. Then:      uv run python src/visualize_graph.py <session>/graph_timing.csv --show')
+            logger.info('     (Only the ros2_graph_monitor node was found in this session —')
+            logger.info('      the ROS2 pipeline was not running when monitoring started.)')
+        logger.info("\n  How to fix:")
+        logger.info('    1. Start your ROS2 launch file first.')
+        logger.info('    2. Then run:  uv run python src/monitor_stack.py   (or with --remote-ip <ip>)')
+        logger.info('    3. Then:      uv run python src/visualize_graph.py <session>/graph_timing.csv --show')
         if filtered_mnodes:
-            print()
-            print('  To see the raw observer-only data anyway:')
-            print('    uv run python src/visualize_graph.py <session>/graph_timing.csv --include-monitors --show')
+            logger.info("\n  To see the raw observer-only data anyway:")
+            logger.info('    uv run python src/visualize_graph.py <session>/graph_timing.csv --include-monitors --show')
 
         # Render a minimal figure with the explanation text rather than a
         # blank dark canvas, so the window that opens is informative.
@@ -840,7 +841,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         if output_file:
             fig.savefig(output_file, dpi=100, bbox_inches='tight',
                         facecolor=fig.get_facecolor())
-            print(f'  Empty-state image saved -> {output_file}')
+            logger.info(f'  Empty-state image saved -> {output_file}')
         if show:
             try:
                 plt.show()
@@ -857,8 +858,8 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     if filtered_mnodes:   filter_parts.append(f'-{filtered_mnodes} observer nodes')
     if filtered_isolated: filter_parts.append(f'-{filtered_isolated} isolated topics')
     filter_note = f'  [{", ".join(filter_parts)} filtered]' if filter_parts else ''
-    print(f'  Rendering: {len(nodes)} nodes, {len(topics_to_show)} topics{filter_note}')
-    print(f'  Densest column: {layout.max_bucket_size} items  →  figure height: '
+    logger.info(f'  Rendering: {len(nodes)} nodes, {len(topics_to_show)} topics{filter_note}')
+    logger.info(f'  Densest column: {layout.max_bucket_size} items  →  figure height: '
           f'{max(16, layout.max_bucket_size * 0.55 + 4):.0f} in')
 
     # ────────────────────── figure setup ─────────────────────────────────────
@@ -1085,13 +1086,13 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         # Check node artists first (they open detail popup on click)
         for patch, nname, info, nd, cat in node_artists:
             if patch.contains(event)[0]:
-                print(f'\n{"─"*60}\n{info}\n{"─"*60}')
+                logger.info(f'\n{"─"*60}\n{info}\n{"─"*60}')
                 _open_node_detail(nname, nd, cat, topics_to_show, main_fig=fig)
                 return
         # Fall back to topic artists (print tooltip text to console)
         for patch, _, info in topic_artists:
             if patch.contains(event)[0]:
-                print(f'\n{"─"*60}\n{info}\n{"─"*60}')
+                logger.info(f'\n{"─"*60}\n{info}\n{"─"*60}')
                 return
 
     fig.canvas.mpl_connect('motion_notify_event', _on_motion)
@@ -1101,13 +1102,13 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     if output_file:
         fig.savefig(output_file, dpi=150, bbox_inches='tight',
                     facecolor=fig.get_facecolor())
-        print(f'Pipeline graph saved -> {output_file}')
+        logger.info(f'Pipeline graph saved -> {output_file}')
 
     if show:
         try:
             plt.show()
         except Exception:
-            print('Interactive display unavailable – graph saved to file.')
+            logger.info('Interactive display unavailable – graph saved to file.')
 
     plt.close(fig)
 
@@ -1177,7 +1178,7 @@ Note:
                 continue
 
     if not os.path.isfile(args.csv_file):
-        print(f'Error: {args.csv_file} not found.', file=sys.stderr)
+        logger.error(f'{args.csv_file} not found.')
         sys.exit(1)
 
     # Auto-detect topology JSON alongside the CSV
@@ -1206,22 +1207,22 @@ Note:
     meta:     dict = {}
 
     if topology_path:
-        print(f'Loading topology from {topology_path} ...')
+        logger.info(f'Loading topology from {topology_path} ...')
         with open(topology_path) as f:
             topology = json.load(f)
         n_nodes   = len(topology.get('nodes', {}))
         n_ttopics = len(topology.get('topics', {}))
-        print(f'  {n_nodes} nodes, {n_ttopics} topics in topology.')
+        logger.info(f'  {n_nodes} nodes, {n_ttopics} topics in topology.')
         # Always parse the CSV too — the topology JSON captures structure but
         # SSH-discovered topics have msg_count=0; CSV has the real metrics.
         metrics, meta = parse_csv_metrics(args.csv_file)
     else:
-        print('No graph_topology.json found – parsing CSV for metrics ...')
+        logger.info('No graph_topology.json found – parsing CSV for metrics ...')
         metrics, meta = parse_csv_metrics(args.csv_file)
-        print(f'  {len(metrics)} topics in CSV.')
-        print('  Tip: run ros2_graph_monitor.py with --topology to get the full Node→Topic→Node view.')
+        logger.info(f'  {len(metrics)} topics in CSV.')
+        logger.info('  Tip: run ros2_graph_monitor.py with --topology to get the full Node→Topic→Node view.')
 
-    print('Rendering ...')
+    logger.info('Rendering ...')
     render_graph(topology, metrics, meta,
                  output_file=output_file,
                  show=args.show,

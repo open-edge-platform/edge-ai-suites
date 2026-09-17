@@ -4,7 +4,7 @@ export { planCtl } from "./plan-ctl.js";
 export type { PlanCtlParams } from "./plan-ctl.js";
 export { sceneQuery } from "./scene-query.js";
 export type { SceneQueryParams } from "./scene-query.js";
-export { generateReport } from "./generate-report.js";
+export { generateReport, planLevels } from "./generate-report.js";
 export type { GenerateReportParams, ReportConfig } from "./generate-report.js";
 export { VideoSummaryClient } from "./clients/video-summary-client.js";
 export type {

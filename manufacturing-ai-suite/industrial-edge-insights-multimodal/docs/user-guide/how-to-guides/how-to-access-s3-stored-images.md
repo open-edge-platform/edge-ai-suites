@@ -18,10 +18,10 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
     docker exec -it ia-influxdb bash
     ```
 
-    > **NOTE:**
+    > **Note:**
     > Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
-    > where for <namespace> replace with namespace name where the application was deployed and
-    > for <influxdb-pod-name> replace with InfluxDB pod name.
+    > where for `<namespace>` replace with namespace name where the application was deployed and
+    > for `<influxdb-pod-name>` replace with InfluxDB pod name.
 
 2. Query the vision metadata:
 
@@ -35,7 +35,7 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
     SELECT * FROM "vision-weld-classification-results"
     ```
 
-> **NOTE:** You may see the error `There was an error writing history file: open /.influx_history: read-only file system` in the InfluxDB shell. This is harmless and does not affect functionality.
+> **Note:** You may see the error `There was an error writing history file: open /.influx_history: read-only file system` in the InfluxDB shell. This is harmless and does not affect functionality.
 
 ## Accessing Stored Images using SeaweedFS Filer Web Interface
 

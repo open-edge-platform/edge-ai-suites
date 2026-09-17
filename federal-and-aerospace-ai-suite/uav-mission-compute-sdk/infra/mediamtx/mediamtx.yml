@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# MediaMTX Configuration for FedAero UAV SDK PoC
+# RTSP server for uav camera streams
+
+logLevel: info
+logDestinations: [stdout]
+
+# allow unauthenticated access from within the Docker network
+authInternalUsers:
+  - user: any
+    ips: []
+    permissions:
+      - action: read
+      - action: publish
+      - action: api
+      - action: metrics
+      - action: pprof
+
+api: yes
+apiAddress: :9997
+
+metrics: yes
+metricsAddress: :9998
+
+rtspAddress: :8554
+rtspTransports: [tcp]
+
+hlsAddress: :8888
+hlsVariant: lowLatency
+
+webrtcAddress: :8889
+webrtcAllowOrigins: ["*"]
+
+pathDefaults:
+  sourceOnDemand: no
+  overridePublisher: yes
+
+paths:
+  uav-1/nadir: {}
+  uav-1/forward: {}
+  uav-1/rear: {}

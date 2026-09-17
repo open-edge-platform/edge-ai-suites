@@ -7,8 +7,8 @@ var data0 = stream
                 .measurement('wind-turbine-data')
                 .groupBy('source')
         |window()
-                .period(2m)
-                .every(2m)
+                .period(20m)
+                .every(20m)
         @windturbine_anomaly_detector_batch()
 data0
         |influxDBOut()

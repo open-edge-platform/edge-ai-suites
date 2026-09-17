@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Tests
 
-The default API suite validates the HTTP contracts documented under `docs/user-guide/get-started/`. It uses mocks for external model serving, RTSP streams, video workers, and filesystem-heavy processing, so no camera, VLM, or running Docker service is required.
+The default API suite validates the HTTP contracts documented under `docs/user-guide/api-reference/`. It uses mocks for external model serving, RTSP streams, video workers, and filesystem-heavy processing, so no camera, VLM, or running Docker service is required.
 
 ## Environment setup
 
@@ -28,11 +28,11 @@ npm run build
 
 | Test module | API document | Test boundary |
 |---|---|---|
-| `test_api/test_mcp_api.py` | [api-reference-mcp.md](../docs/user-guide/get-started/api-reference-mcp.md) | Real MCP Streamable HTTP server and temporary SQLite database; external VSA, VLM, and summary services are mocked. |
-| `test_api/test_mcp_subscription_api.py` | [api-reference-mcp-subscription.md](../docs/user-guide/get-started/api-reference-mcp-subscription.md) | Real MCP sessions, subscriptions, cursor reads, unsubscribe requests, and SSE connection setup. |
-| `test_api/test_webhook_api.py` | [api-reference-mcp-webhook-event.md](../docs/user-guide/get-started/api-reference-mcp-webhook-event.md) | Real webhook endpoint and temporary SQLite database; validates motion, static, recording, and error requests. |
-| `test_api/test_videostream_analytics_api.py` | [api-reference-videostream-analytics.md](../docs/user-guide/get-started/api-reference-videostream-analytics.md) | Real FastAPI routes with a mocked `SourceManager`; no RTSP, OpenCV, recorder, or worker threads. |
-| `test_api/test_dashboard_api.py` | [api-reference-dashboard.md](../docs/user-guide/get-started/api-reference-dashboard.md) | Real dashboard HTTP routes with temporary SQLite/media data; validates monitor redaction, contained media access, full-clip preview, and OpenClaw configuration. |
+| `test_api/test_mcp_api.py` | [api-reference-mcp.md](../docs/user-guide/api-reference/api-reference-mcp.md) | Real MCP Streamable HTTP server and temporary SQLite database; external VSA, VLM, and summary services are mocked. |
+| `test_api/test_mcp_subscription_api.py` | [api-reference-mcp-subscription.md](../docs/user-guide/api-reference/api-reference-mcp-subscription.md) | Real MCP sessions, subscriptions, cursor reads, unsubscribe requests, and SSE connection setup. |
+| `test_api/test_webhook_api.py` | [api-reference-mcp-webhook-event.md](../docs/user-guide/api-reference/api-reference-mcp-webhook-event.md) | Real webhook endpoint and temporary SQLite database; validates motion, static, recording, and error requests. |
+| `test_api/test_videostream_analytics_api.py` | [api-reference-videostream-analytics.md](../docs/user-guide/api-reference/api-reference-videostream-analytics.md) | Real FastAPI routes with a mocked `SourceManager`; no RTSP, OpenCV, recorder, or worker threads. |
+| `test_api/test_dashboard_api.py` | [api-reference-dashboard.md](../docs/user-guide/api-reference/api-reference-dashboard.md) | Real dashboard HTTP routes with temporary SQLite/media data; validates monitor redaction, contained media access, full-clip preview, and OpenClaw configuration. |
 
 Tests use free local ports and temporary directories. They do not connect to the default service ports or write to `~/.mcp-smart-community`.
 

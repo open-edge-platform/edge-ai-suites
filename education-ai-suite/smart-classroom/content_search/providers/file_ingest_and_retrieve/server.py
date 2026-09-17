@@ -164,14 +164,14 @@ def _recover_video_summary_id_map():
 
 _recover_video_summary_id_map()
 
-indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
-retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
-
-local_store = LocalStore.from_config()
-
 _frame_extract_interval = int(os.getenv("FRAME_EXTRACT_INTERVAL", "15"))
 _frame_extract_interval_sparse = int(os.getenv("FRAME_EXTRACT_INTERVAL_SPARSE", "90"))
 _do_detect_and_crop = os.getenv("DO_DETECT_AND_CROP", "false").lower() == "true"
+
+indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map, do_detect_and_crop=_do_detect_and_crop)
+retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
+
+local_store = LocalStore.from_config()
 logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, frame_extract_interval_sparse={_frame_extract_interval_sparse}, do_detect_and_crop={_do_detect_and_crop}")
 
 @app.get("/v1/dataprep/health")

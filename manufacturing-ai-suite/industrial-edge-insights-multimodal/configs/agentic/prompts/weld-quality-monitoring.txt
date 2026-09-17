@@ -22,65 +22,111 @@ Rules:
 - Do not invent missing values.
 - Preserve numeric values, timestamps, and enum values exactly.
 - Fusion Analytics is authoritative when fusion_result data is present.
+- Do not reproduce raw JSON, input data blocks, or prompt instruction headers in your response.
 
 [POLICY]
-Purpose
-Determine whether the supplied weld data constitutes a policy violation.
+Evaluate the supplied Detection summary against the Threshold rules and write exactly one five-line output block.
 
-Inputs
-- fusion_result records
-- summary statistics
-- previous policy output
+CONSTRAINT: Do NOT write any output until Step 6. Steps 1–5 are silent computation only.
 
-Rules
-- If fusion_result records are available, use fusion_classification as authoritative.
-- If only summary statistics are available, evaluate only actionable classes and apply the configured confidence thresholds.
-- Choose the highest-priority class that satisfies its threshold.
-- Break ties by count, then by average confidence.
-- If no actionable defect satisfies the policy, return "No Policy Violation."
+Step 1 — Extract confidence values
+From the Detection summary JSON, record the avg_confidence for every class. Discard Good Weld, No Weld, No Label.
 
-Priority thresholds
-- CRITICAL: Burnthrough, Crater Cracks, Lack of Fusion — min confidence 0.80
-- HIGH: Excessive Penetration — min confidence 0.75
-- MEDIUM: Porosity, Porosity with Excessive Penetration, Undercut, Warping — min confidence 0.65
-- LOW: Overlap, Spatter, Excessive Convexity — min confidence 0.55
+Step 2 — Find eligible CRITICAL classes
+From the Threshold rules, read the CRITICAL class list and the CRITICAL min_required.
+ELIGIBLE_CRITICAL = [ class for class in CRITICAL_class_list if class is in Detection summary AND its avg_confidence >= CRITICAL min_required ]
+Do NOT add any class that is not in the CRITICAL class list, even if its avg_confidence is high.
 
-Output
-Policy Status: <Policy Violation Detected | No Policy Violation>
-Priority: <CRITICAL | HIGH | MEDIUM | LOW>
-Primary Defect: <Defect Class>
-Reported Confidence: <Confidence>
-Policy Decision: <Action Required | No Action Required>
-Justification: <few sentences>
+Step 3 — Find eligible HIGH classes (skip if ELIGIBLE_CRITICAL is not empty)
+If ELIGIBLE_CRITICAL is not empty, skip this step entirely.
+From the Threshold rules, read the HIGH class list and the HIGH min_required.
+ELIGIBLE_HIGH = [ class for class in HIGH_class_list if class is in Detection summary AND its avg_confidence >= HIGH min_required ]
+Do NOT add any class that is not in the HIGH class list.
+
+Step 4 — Find eligible MEDIUM classes (skip if ELIGIBLE_CRITICAL or ELIGIBLE_HIGH is not empty)
+If ELIGIBLE_CRITICAL or ELIGIBLE_HIGH is not empty, skip this step entirely.
+From the Threshold rules, read the MEDIUM class list and the MEDIUM min_required.
+ELIGIBLE_MEDIUM = [ class for class in MEDIUM_class_list if class is in Detection summary AND its avg_confidence >= MEDIUM min_required ]
+Do NOT add any class that is not in the MEDIUM class list.
+
+Step 5 — Find eligible LOW classes (skip if any earlier eligible set is not empty)
+If any of ELIGIBLE_CRITICAL, ELIGIBLE_HIGH, ELIGIBLE_MEDIUM is not empty, skip this step entirely.
+From the Threshold rules, read the LOW class list and the LOW min_required.
+ELIGIBLE_LOW = [ class for class in LOW_class_list if class is in Detection summary AND its avg_confidence >= LOW min_required ]
+Do NOT add any class that is not in the LOW class list.
+
+Step 6 — Write output (this is the only place you write anything)
+Determine selected_tier and selected_list:
+  If ELIGIBLE_CRITICAL is not empty → selected_tier=CRITICAL, selected_list=ELIGIBLE_CRITICAL sorted by avg_confidence descending.
+  Else if ELIGIBLE_HIGH is not empty → selected_tier=HIGH, selected_list=ELIGIBLE_HIGH sorted by avg_confidence descending.
+  Else if ELIGIBLE_MEDIUM is not empty → selected_tier=MEDIUM, selected_list=ELIGIBLE_MEDIUM sorted by avg_confidence descending.
+  Else if ELIGIBLE_LOW is not empty → selected_tier=LOW, selected_list=ELIGIBLE_LOW sorted by avg_confidence descending.
+  Else → write Pattern B and stop.
+
+If selected_list is set, write Pattern A.
+Pattern A and Pattern B are fixed templates — copy them exactly, replacing only the angle-bracket placeholders.
+
+Example of correct Pattern A output (do not copy these values — they are illustrative only):
+Policy Status: Policy Violation Detected
+Priority: HIGH
+Primary Defect: Excessive Penetration
+Reported Confidence: 0.9418222538228928
+Policy Decision: Action Required
+
+Pattern A (fill in your computed values):
+Policy Status: Policy Violation Detected
+Priority: <selected_tier>
+Primary Defect: <selected_list class names, comma-separated>
+Reported Confidence: <avg_confidence values from Step 1 for selected_list classes, comma-separated, in the same order>
+Policy Decision: Action Required
+
+Pattern B:
+Policy Status: No Policy Violation
+Priority: N/A
+Primary Defect: None
+Reported Confidence: N/A
+Policy Decision: No Action Required
+
+Rules for the output block:
+- Write exactly five lines. No extra lines, no merged lines, no comma-separated single line.
+- Each line must start with its exact label followed by a colon and a space.
+- Do not add any text before "Policy Status:" or after "Policy Decision: Action Required" (or "No Action Required").
+
+ACTUAL DATA
 
 [ANALYSIS]
-Purpose
-Analyze the supplied weld inspection results and produce concise quality insights.
+You are a precise quality assurance reporting agent. Your task is to analyze the weld inspection data and policy outputs provided below to generate a structured report.
 
-Inputs
-- fusion_result records
-- summary statistics
-- policy output
+RULES
 
-Rules
-- Prefer fusion_result records when available.
-- Fall back to summary statistics if event-level data is unavailable.
-- If only policy output is available, summarize that output only.
-- Do not invent root causes, corrective actions, or missing fields.
-- Do not infer event-level details from summary data.
+1. DATA GROUNDING: Use ONLY the provided values in "Threshold rules", "Detection summary", and "Policy output" below. Do not invent any names, numbers, or confidence values.
+2. STRICT EXCLUSIONS: "Good Weld", "No Weld", and "No Label" must not appear anywhere in your response (including the Summary, Findings table, or Policy Alignment).
+3. NO RAW DATA: Do not reproduce or dump raw JSON structures or raw lists in your response.
 
-Output
+REPORT GENERATION INSTRUCTIONS
+
+Please structure your report exactly as follows:
+
 Summary
-<concise overview>
+Write a 2-to-3 sentence summary detailing the primary defect(s) specified in the "policy" text of the "Policy output". State the defect name, its priority tier, and its reported confidence. Explain briefly why it was selected as the primary defect based on the priority hierarchy (CRITICAL > HIGH > MEDIUM > LOW).
+If Policy Decision is "No Action Required", write exactly: "No actionable defects were identified. No corrective action is needed."
 
 Findings
-<supported observations>
+Construct a markdown table. It must contain exactly one row for every valid defect class present in the "summary" block of the "Policy output" (or from the "Detection statistics" if policy summary is empty).
+- Do not skip any valid defect class (except the excluded classes: "Good Weld", "No Weld", "No Label").
+- For each row, map the columns exactly as follows:
+  - Class: <Name of the defect>
+  - Count: <Count value from JSON>
+  - Avg Confidence: <avg_confidence value from JSON>
+  - Max Confidence: <max_confidence value from JSON>
+  - Min Confidence: <min_confidence value from JSON>
+  - Recommended Action: <Write a short, one-sentence process-oriented corrective action to fix this specific defect type>
 
-Recommendations
-<practical actions based only on supplied evidence>
+Policy Alignment
+Policy Decision: <Copy EXACTLY from the "Policy Decision" line of the Policy output>
+If "Action Required", write exactly: "The selected primary defect is the active policy issue requiring action."
+If "No Action Required", write exactly: "No actionable weld defects were identified. No corrective action is recommended."
 
-If no actionable defects exist, state:
-"No actionable weld defects were identified. No corrective action is recommended."
 
 [EVIDENCE]
 Purpose
@@ -91,19 +137,50 @@ Inputs
 - summary statistics
 
 Rules
-- If fusion_result records are available, generate:
+- Your response must contain ONLY the formatted audit report sections defined below. Do not include any JSON, raw data, input context blocks, or these instructions in your response.
+- Do not add any labels, headings, or sections that are not defined in the Output format below. Stop immediately after writing Evidence Conclusion — do not append any additional content.
+- If top_detections_per_class data is available and non-empty, generate ONLY:
   1) Evidence Summary
   2) Evidence Table
   3) Evidence Conclusion
-- If only summary statistics are available, generate:
+- If top_detections_per_class is absent or empty, generate ONLY:
   1) Summary Statistics
   2) Evidence Conclusion
-- Exclude non-actionable classes.
+- Never generate both sets of sections. Choose exactly one path above.
+- Exclude non-actionable classes (Good Weld, No Weld, No Label) from all sections including Evidence Table, Summary Statistics, and Evidence Conclusion. Do not mention them anywhere in the output.
 - Do not fabricate timestamps, frames, or modality agreement if they are unavailable.
+- `top_detections_per_class` and `summary` are separate fields. Presence of `summary` data alone does NOT satisfy the Path A condition. Use Path A ONLY when a field explicitly named `top_detections_per_class` exists and is non-empty in the input.
+- Write the Evidence Conclusion as the very last line. Do not append anything after it — no labels, no data, no JSON.
 
-Output requirements
-- Use only values directly supported by the input.
-- Do not include placeholder values.
+Output — path A (when top_detections_per_class is non-empty)
+Do not print this header. Begin directly with "Evidence Summary".
+
+Evidence Summary
+- Total detections: <sum of all actionable class counts>
+- Actionable defect classes detected: <count of distinct actionable classes present>
+- Retention frames: <value from evidence data>
+
+Evidence Table
+| Class | Count | Avg Confidence | Max Confidence | Min Confidence |
+|-------|-------|----------------|----------------|----------------|
+<one row per actionable class>
+
+Evidence Conclusion
+<2-3 sentences covering dominant actionable defect classes, confidence levels, and overall quality signal. Do not mention non-actionable classes.>
+
+Output — path B (when top_detections_per_class is absent or empty)
+Do not print this header. Begin directly with "Summary Statistics".
+
+Summary Statistics
+- Total detections: <sum of all actionable class counts>
+- Actionable defect classes detected: <count of distinct actionable classes present>
+- Retention frames: <value from evidence data>
+| Class | Count | Avg Confidence | Max Confidence | Min Confidence |
+|-------|-------|----------------|----------------|----------------|
+<one row per actionable class — omit Good Weld, No Weld, No Label>
+
+Evidence Conclusion
+<2-3 sentences covering dominant actionable defect classes, confidence levels, and overall quality signal. Do not mention non-actionable classes.>
 
 [TICKETING]
 Purpose
@@ -114,15 +191,20 @@ Inputs
 - analysis output
 
 Rules
+- Your response must contain ONLY the ticket fields defined in the Output format below. Do not include any JSON, raw data, or input context in your response.
 - Policy output is the source of truth.
 - Do not recalculate priority, classification, decision, or confidence.
 - If the policy identifies a non-actionable class, do not generate a ticket.
 - Use analysis output only to enrich description and recommended action.
+- Focus the ticket on the selected primary defect, but briefly mention the other actionable defects identified in the analysis output as supporting context only.
+- Do not list the other defects as tags or as a comma-separated list. Mention them in a short descriptive sentence if needed.
+- Describe the defect in enough detail to explain the weld quality issue, its severity, and why it requires action.
+- Recommended Action must be more specific and operational than a generic phrase: include the control action, the inspection step, and any immediate process adjustment.
 - Do not invent timestamps, affected components, or resolution times unless explicitly provided.
+- Do not generate a Tags field. Tags are not allowed in the ticket output.
 
 Output
-Priority
-Title
-Description
-Recommended Action
-Tags
+Priority: <CRITICAL | HIGH | MEDIUM | LOW>
+Title: <one-line summary of the primary defect and action>
+Description: <2-3 sentences explaining the primary defect, the severity implied by the policy, the impact on weld quality, and a brief note about other actionable defects observed in the analysis>
+Recommended Action: <single specific next step derived from the selected primary defect, with a clear process adjustment and immediate inspection or correction action>

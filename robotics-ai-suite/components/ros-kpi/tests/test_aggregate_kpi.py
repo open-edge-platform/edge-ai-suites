@@ -153,7 +153,7 @@ class TestAggregate:
 
         results = aggregate(per_pair, total_runs=5, min_runs=3)
 
-        assert results == []
+        assert not results
 
     def test_min_runs_includes_pair_at_threshold(self):
         """Pair with exactly min_runs occurrences is included."""
@@ -173,8 +173,8 @@ class TestAggregate:
         """Results are sorted by pipeline stage order, then worst_p90 descending."""
         sensor_key     = ('ros_gz_bridge',    '/clock',  '/tf')
         planning_key   = ('bt_navigator',     '/goal',   '/cmd_vel')
-        control_key_hi = ('controller_server','/plan',   '/cmd_vel')
-        control_key_lo = ('velocity_smoother','/cmd_vel_nav','/cmd_vel')
+        control_key_hi = ('controller_server', '/plan', '/cmd_vel')
+        control_key_lo = ('velocity_smoother', '/cmd_vel_nav', '/cmd_vel')
 
         def three_runs(key, mean, p90):
             return [_make_pair(*key, mean_ms=mean, p90_ms=p90, p50_ms=mean*0.9,

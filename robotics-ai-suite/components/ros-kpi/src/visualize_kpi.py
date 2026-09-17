@@ -44,6 +44,10 @@ import matplotlib.patches as mpatches  # noqa: E402
 import matplotlib.pyplot as plt        # noqa: E402
 from _accel import np                  # Intel dpnp/numpy shim  # noqa: E402
 
+from log_config import get_logger  # noqa: E402
+
+logger = get_logger(__name__)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  Constants
@@ -141,7 +145,7 @@ def load_kpi(path: Path) -> dict:
     try:
         return json.loads(path.read_text())
     except (OSError, json.JSONDecodeError) as exc:
-        print(f"ERROR: cannot read {path}: {exc}", file=sys.stderr)
+        logger.error(f"Cannot read {path}: {exc}")
         sys.exit(1)
 
 
@@ -194,8 +198,7 @@ def latency_histogram(kpi: dict, output_dir: Path, fmt: str = "png"):
     """
     nodes = extract_node_stats(kpi)
     if not nodes:
-        print("WARNING: no per_node data in KPI — skipping latency_histogram",
-              file=sys.stderr)
+        logger.warning("No per_node data in KPI — skipping latency_histogram")
         return None
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -269,7 +272,7 @@ def latency_histogram(kpi: dict, output_dir: Path, fmt: str = "png"):
     out_path = output_dir / f"latency_histogram.{fmt}"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  latency_histogram -> {out_path}")
+    logger.info(f"  latency_histogram -> {out_path}")
     return out_path
 
 
@@ -382,7 +385,7 @@ def sku_comparison(kpi_list: list, labels: list, output_dir: Path, fmt: str = "p
     out_path = output_dir / f"sku_comparison.{fmt}"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  sku_comparison   -> {out_path}")
+    logger.info(f"  sku_comparison   -> {out_path}")
     return out_path
 
 
@@ -396,10 +399,6 @@ _RES_METRICS = [
     # CPU utilization from top-level kpi fields
     ("cpu_mean_pct",       "CPU mean %",   "#3b82f6", 100.0, "%"),
     ("cpu_max_pct",        "CPU max %",    "#1d4ed8", 100.0, "%"),
-    # Temperatures from the thermal block
-    ("thermal.cpu_temp_c", "CPU temp",     "#f97316", 110.0, "°C"),
-    ("thermal.gpu_temp_c", "GPU temp",     "#ef4444", 105.0, "°C"),
-    ("thermal.npu_temp_c", "NPU temp",     "#8b5cf6", 105.0, "°C"),
 ]
 
 
@@ -416,12 +415,11 @@ def _get_nested(d: dict, dotted_key: str):
 
 def resource_utilization(kpi: dict, output_dir: Path, fmt: str = "png"):
     """
-    Horizontal bar chart of CPU utilization and thermal readings.
+    Horizontal bar chart of CPU utilization.
 
     Draws one bar per metric, coloured by resource type.  A thin vertical
-    reference line marks 100 % / thermal-limit thresholds.  Metrics whose
-    value is None are omitted; if all metrics are None the chart is skipped
-    with a warning (common on WSL2 where /sys/class/thermal is unavailable).
+    reference line marks the 100 % threshold.  Metrics whose value is None
+    are omitted; if all metrics are None the chart is skipped with a warning.
 
     Returns the Path of the saved figure, or None if no data.
     """
@@ -433,19 +431,11 @@ def resource_utilization(kpi: dict, output_dir: Path, fmt: str = "png"):
                          "color": color, "x_max": x_max, "unit": unit})
 
     if not rows:
-        print("WARNING: no resource data in KPI — skipping resource_utilization",
-              file=sys.stderr)
+        logger.warning("No resource data in KPI — skipping resource_utilization")
         return None
 
     output_dir.mkdir(parents=True, exist_ok=True)
     session = kpi.get("metadata", {}).get("name", "session")
-
-    # Check for any throttling flags to annotate.
-    throttle_flags = {
-        k: _get_nested(kpi, f"thermal.{k}_throttled")
-        for k in ("cpu", "gpu", "npu")
-    }
-    throttled = {k for k, v in throttle_flags.items() if v}
 
     n = len(rows)
     fig_h = max(2.5, n * 0.55 + 1.2)
@@ -465,14 +455,6 @@ def resource_utilization(kpi: dict, output_dir: Path, fmt: str = "png"):
         # Reference line at the upper bound for this metric
         ax.axvline(row["x_max"], color=row["color"], linewidth=0.8,
                    linestyle="--", alpha=0.4)
-        # Throttle warning marker
-        resource_key = row["label"].split()[0].lower()  # "cpu", "gpu", "npu"
-        if resource_key in throttled:
-            ax.text(
-                row["x_max"] * 1.01, i,
-                "⚠ throttled", va="center", ha="left",
-                fontsize=8, color="#ef4444", fontweight="bold",
-            )
 
     ax.set_yticks(y_pos)
     ax.set_yticklabels([r["label"] for r in rows], fontsize=9)
@@ -491,7 +473,7 @@ def resource_utilization(kpi: dict, output_dir: Path, fmt: str = "png"):
     out_path = output_dir / f"resource_utilization.{fmt}"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  resource_utilization -> {out_path}")
+    logger.info(f"  resource_utilization -> {out_path}")
     return out_path
 
 
@@ -518,8 +500,7 @@ def throughput_drop(kpi2: dict, output_dir: Path, fmt: str = "png"):
 
     e2e = kpi2.get("e2e_latency_ms", {}) or {}
     if not e2e or e2e.get("mean") is None:
-        print("WARNING: no e2e_latency_ms data in kpi_level2 — skipping throughput_drop",
-              file=sys.stderr)
+        logger.warning("No e2e_latency_ms data in kpi_level2 — skipping throughput_drop")
         return None
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -654,7 +635,7 @@ def throughput_drop(kpi2: dict, output_dir: Path, fmt: str = "png"):
     out_path = output_dir / f"throughput_drop.{fmt}"
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"  throughput_drop      -> {out_path}")
+    logger.info(f"  throughput_drop      -> {out_path}")
     return out_path
 
 
@@ -707,7 +688,7 @@ def _resolve_inputs(args):
         session_dir = Path(args.session)
         kpi_path    = session_dir / "kpi.json"
         if not kpi_path.exists():
-            print(f"ERROR: {kpi_path} not found", file=sys.stderr)
+            logger.error(f"{kpi_path} not found")
             sys.exit(1)
         kpi_list = [load_kpi(kpi_path)]
         labels   = [session_dir.name]
@@ -721,8 +702,7 @@ def _resolve_inputs(args):
         out_dir  = Path(args.output_dir) if args.output_dir else Path("charts")
 
     if len(kpi_list) != len(labels):
-        print("ERROR: number of --label values must match number of --kpi files",
-              file=sys.stderr)
+        logger.error("Number of --label values must match number of --kpi files")
         sys.exit(1)
 
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -733,7 +713,7 @@ def main() -> int:
     args = _build_parser().parse_args()
     kpi_list, labels, kpi2, out_dir = _resolve_inputs(args)
 
-    print(f"Writing charts -> {out_dir}/")
+    logger.info(f"Writing charts -> {out_dir}/")
     generated = []
 
     path = latency_histogram(kpi_list[0], out_dir, fmt=args.format)
@@ -754,10 +734,10 @@ def main() -> int:
         generated.append(path)
 
     if not generated:
-        print("No charts generated.", file=sys.stderr)
+        logger.error("No charts generated.")
         return 1
 
-    print(f"\n{len(generated)} chart(s) written.")
+    logger.info(f"\n{len(generated)} chart(s) written.")
     return 0
 
 

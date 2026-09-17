@@ -21,7 +21,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: {{ .Values.dataprepVisualdataMilvus.name }}
-        image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.dataprepVisualdataMilvus.image.repository }}:{{ .Values.dataprepVisualdataMilvus.image.tag }}"
+        image: "{{ .Values.dataprepVisualdataMilvus.image.repository }}:{{ .Values.dataprepVisualdataMilvus.image.tag }}"
         imagePullPolicy: {{ .Values.dataprepVisualdataMilvus.image.pullPolicy }}
         ports:
         - containerPort: {{ .Values.servicePorts.dataprep }}

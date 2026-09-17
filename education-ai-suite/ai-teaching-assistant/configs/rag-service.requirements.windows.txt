@@ -14,26 +14,26 @@
 # Keep the versions below in sync with the submodule's requirements.txt.
 # =============================================================================
 
-# google-adk requires fastapi>=0.133 — keep <1 to stay on v0 stable track
-fastapi>=0.133,<1
-uvicorn>=0.35.0
-# google-adk requires pydantic>=2.12
-pydantic>=2.12,<3
+# fastapi must stay <1 for google-adk (v0 track); pinned to the tested install
+fastapi==0.141.1
+uvicorn==0.52.4
+# pydantic v2; pinned to the tested install
+pydantic==2.13.5
 PyYAML==6.0.2
-python-multipart==0.0.27
+python-multipart==0.0.32
 
 # Document ingestion (PDF/DOCX support for RAG context upload)
 python-docx==1.1.2
-pypdf==4.3.1
+pypdf==6.16.2
 
 openvino==2026.1.0
-openvino-tokenizers
+openvino-tokenizers==2026.1.0.0
 optimum==2.3.0
 optimum-intel==2.1.0
 nncf==2.19.0
 
 huggingface-hub==1.21.0
-fsspec>=2023.1.0,<=2025.3.0
+fsspec==2025.3.0
 
 numpy==1.26.4
 --extra-index-url https://download.pytorch.org/whl/cpu
@@ -43,20 +43,17 @@ tokenizers==0.22.2
 safetensors==0.6.2
 sentence-transformers==5.2.0
 
-langchain-chroma>=0.2.5
-langchain-core>=0.3.74
-chromadb>=1.0.20
+langchain-chroma==1.1.0
+langchain-core==1.6.1
+chromadb==1.5.9
 
-# Pin pyarrow (transitive via chromadb/datasets). Newer builds (e.g. 25.x) ship a
-# _parquet DLL that some Windows Application Control policies (Smart App Control /
-# WDAC) block from loading, which breaks chromadb import at runtime. 21.0.0 loads
-# fine and still satisfies datasets>=21.0.0.
-pyarrow==21.0.0
+pyarrow==23.0.1
 
 # openai + aiohttp are imported at module load by services/ (ovms_llm_service),
 # so they are required even though ATA uses the local OpenVINO backend. They are
 # pure-Python/wheels and install fine on Windows. The heavier agentic packages
 # (google-adk, litellm, fastmcp) are still omitted — those are only used by the
 # ordering agent, which ATA disables and imports lazily.
-openai>=1.30.0
-aiohttp>=3.9.0
+openai==3.6.0
+aiohttp==3.14.3
+

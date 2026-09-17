@@ -1,6 +1,6 @@
 # Third-party Debian packages requiring GPL source redistribution
 # Format: package_name=version
-# Base image: intel/hl-ai-nicu-backend:2026.1.0-rc1
+# Base image: intel/hl-ai-nicu-backend:2026.1.0
 #
 libatomic1=14.2.0-19
 libpciaccess0=0.17-3+b3

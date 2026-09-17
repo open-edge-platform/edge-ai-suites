@@ -94,24 +94,28 @@ Manual-field behavior for frontend:
 The server emits one JSON object per line. Common event shapes:
 
 1. `partial_report` / `report`
-```json
-{"type":"partial_report","content":"...markdown..."}
-```
+
+   ```json
+   {"type":"partial_report","content":"...markdown..."}
+   ```
 
 2. `report_ready`
-```json
-{"type":"report_ready","session_id":"20260708-100000-abcd"}
-```
+
+   ```json
+   {"type":"report_ready","session_id":"20260708-100000-abcd"}
+   ```
 
 3. `token`
-```json
-{"token":"...","error":""}
-```
 
-Error token shape:
-```json
-{"token":"","error":"[ERROR]: ..."}
-```
+   ```json
+   {"token":"...","error":""}
+   ```
+
+   Error token shape:
+
+   ```json
+   {"token":"","error":"[ERROR]: ..."}
+   ```
 
 Frontend stream handling rule:
 - Stream ending is not equal to success.

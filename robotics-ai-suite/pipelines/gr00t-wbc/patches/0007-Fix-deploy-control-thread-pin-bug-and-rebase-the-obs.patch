@@ -1,0 +1,136 @@
+From 883d6f5b0fcca421ede594b2d00b829429dceabd Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Mon, 6 Jul 2026 08:43:32 +0800
+Subject: [PATCH 07/13] Fix deploy control thread pin bug and rebase the
+ observation_config_vla.yaml to support NPU priority and tiles configurations
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../release/observation_config_vla.yaml       | 28 +++++++++---
+ .../src/OVInference/OVInferenceEngine.cpp     |  8 +++-
+ .../src/g1_deploy_onnx_ref.cpp                | 43 +++++++++++++------
+ 3 files changed, 59 insertions(+), 20 deletions(-)
+
+diff --git a/gear_sonic_deploy/policy/release/observation_config_vla.yaml b/gear_sonic_deploy/policy/release/observation_config_vla.yaml
+index 498e0a8..f693320 100644
+--- a/gear_sonic_deploy/policy/release/observation_config_vla.yaml
++++ b/gear_sonic_deploy/policy/release/observation_config_vla.yaml
+@@ -86,10 +86,26 @@ encoder:
+ inference:
+   encoder_device: "NPU"
+   policy_device: "NPU"
+-  # Planner runs on CPU here: the V2 planner ONNX fails NPU compilation
+-  # (vpux-compiler legalization error). VLA + sonic uses this config.
+-  planner_device: "CPU"
++  planner_device: "NPU"
++  # NPU tile allocation per model (0=auto/driver default, 1-N=specific tile count).
++  # Encoder+decoder run sequentially in the control thread — 1 tile each is sufficient.
++  # Planner runs in a separate thread — can use more tiles for throughput.
++  encoder_npu_tiles: 3
++  policy_npu_tiles: 3
++  planner_npu_tiles: 0
++  # OpenVINO model priority: HIGH, NORMAL, or LOW. Controls how the OV scheduler
++  # arbitrates models that share the same device (e.g. policy/encoder/planner on
++  # one NPU). Mapped to ov::hint::model_priority. Default: NORMAL.
++  encoder_priority: "HIGH"
++  policy_priority: "HIGH"
++  planner_priority: "NORMAL"
++  # Pin the inference/control thread to a specific CPU core to reduce latency jitter.
++  # Set to -1 to disable pinning (default), or a core number (e.g., 10) to pin.
++  # Here 10 is one of isolated core, dedicated for inference.
++  # use 'echo 10 | sudo tee /proc/irq/189/smp_affinity_list' to set vpu interrupt affitiy
++  # to reduce jitter in case NPU sync inference.
+   cpu_affinity: 10
+-  dump_planner_input: false
+-  max_input_dump_cnt: 200
+-  dump_csv_path: "planner_input_dump.csv"
+\ No newline at end of file
++  # Emit a periodic "[Planner] Inference #N | latency | NaN/Inf check | mode/vel/dir"
++  # summary line (every 10th planner inference, ~1 Hz on the 10 Hz planner thread).
++  # Off by default — turn on for accuracy/sanity checking, leave off in production.
++  planner_log_summary: false
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+index 8044da9..a11730e 100644
+--- a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+@@ -166,8 +166,12 @@ bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::stri
+                     << " (NPU-only hint, using plugin default)" << std::endl;
+         }
+ 
+-        // Enable CPU pinning to reduce scheduling jitter on inference threads
+-        config[ov::hint::enable_cpu_pinning.name()] = true;
++        // Disable OpenVINO's CPU pinning. The deploy pins the control thread
++        // itself to a dedicated isolated core (obs-config cpu_affinity, e.g.
++        // core 10) and runs it SCHED_FIFO. OV's own pinning (oneTBB) would
++        // otherwise re-pin the synchronous infer() calling thread onto its
++        // chosen cores. set to false here.
++        config[ov::hint::enable_cpu_pinning.name()] = false;
+ 
+         // Single inference request — no queuing overhead for real-time control
+         config[ov::hint::num_requests.name()] = 1;
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+index aa77249..5fb4d9b 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+@@ -414,7 +414,7 @@ class G1Deploy {
+     std::unique_ptr<EncoderEngine> encoder_engine_;
+     EncoderConfig encoder_config_;  // Encoder configuration from observation config
+     InferenceConfig inference_config_;  // Inference device and affinity configuration
+-    bool control_thread_affinity_set_ = false;  // One-shot flag for control thread CPU pinning
++    bool control_thread_rt_configured_ = false;  // One-shot flag for control thread CPU pin + SCHED_FIFO
+     bool is_using_encoder_ = false;
+     int initial_encoder_mode_ = -2;  // -2: no token state. -1: need token state but no encoder. 0,1,2,...: encoder mode.
+     int last_logged_encoder_mode_ = -999;  // Track last logged mode to avoid spam
+@@ -3917,19 +3917,38 @@ class G1Deploy {
+     void Control() {
+       if (operator_state.stop) { return; }
+ 
+-      // Pin this thread to a specific CPU core (once) for deterministic
+-      // encoder + decoder inference latency. Planner runs in a separate thread.
+-      if (!control_thread_affinity_set_ && inference_config_.cpu_affinity >= 0) {
+-        cpu_set_t cpuset;
+-        CPU_ZERO(&cpuset);
+-        CPU_SET(inference_config_.cpu_affinity, &cpuset);
+-        if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset) == 0) {
+-          std::cout << "[Control] ✓ Thread pinned to CPU core " << inference_config_.cpu_affinity
+-                    << " (encoder + decoder inference)" << std::endl;
++      // Configure realtime scheduling for the control thread (once) for
++      // deterministic encoder + decoder inference latency. 
++      if (!control_thread_rt_configured_) {
++        // (1) Pin to the dedicated inference core if configured (-1 = no pin).
++        if (inference_config_.cpu_affinity >= 0) {
++            cpu_set_t cpuset;
++            CPU_ZERO(&cpuset);
++            CPU_SET(inference_config_.cpu_affinity, &cpuset);
++          if (pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset) == 0) {
++            std::cout << "[Control] ✓ Thread pinned to CPU core " << inference_config_.cpu_affinity
++                      << " (encoder + decoder inference)" << std::endl;
++          } else {
++            std::cerr << "[Control] ⚠ Failed to pin thread to core " << inference_config_.cpu_affinity << std::endl;
++          }
++        }
++
++        // (2) Raise this (control) thread to SCHED_FIFO at max priority.
++        //     pthread_setschedparam returns an errno-style code (0 == success);
++        //     it does NOT set errno, so strerror() the return value.
++        struct sched_param param;
++        param.sched_priority = sched_get_priority_max(SCHED_FIFO);
++        int sched_rc = pthread_setschedparam(pthread_self(), SCHED_FIFO, &param);
++        if (sched_rc == 0) {
++          std::cout << "[Control] ✓ Thread scheduling set to SCHED_FIFO priority "
++                    << param.sched_priority << std::endl;
+         } else {
+-          std::cerr << "[Control] ⚠ Failed to pin thread to core " << inference_config_.cpu_affinity << std::endl;
++          std::cerr << "[Control] ⚠ Failed to set SCHED_FIFO (rc=" << sched_rc << " "
++                    << std::strerror(sched_rc)
++                    << "); need CAP_SYS_NICE or a raised RLIMIT_RTPRIO" << std::endl;
+         }
+-        control_thread_affinity_set_ = true;
++
++        control_thread_rt_configured_ = true;
+       }
+ 
+       switch (program_state_) {
+-- 
+2.43.0
+

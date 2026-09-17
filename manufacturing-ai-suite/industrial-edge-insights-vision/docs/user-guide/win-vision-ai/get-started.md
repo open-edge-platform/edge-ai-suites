@@ -37,7 +37,7 @@ If you want to clone a specific release branch, replace `main` with the desired 
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```powershell
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set manufacturing-ai-suite
 cd manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
@@ -139,7 +139,7 @@ $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 
 ### Download a Model
 
-If you want to download YOLO models, you can refer to the [DL Streamer download scripts](https://github.com/open-edge-platform/dlstreamer/tree/main/scripts/download_models).
+If you want to download YOLO models, you can refer to the [DL Streamer download scripts](https://github.com/open-edge-platform/dlstreamer/tree/v2026.2.0/scripts/download_models).
 
 ```powershell
 pip install ultralytics

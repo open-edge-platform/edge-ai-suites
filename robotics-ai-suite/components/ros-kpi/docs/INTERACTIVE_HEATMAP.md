@@ -53,7 +53,7 @@ uv run python demo_interactive_heatmap.py monitoring_sessions/<session_name>
 
 ### Via Visualization Tool
 ```bash
-uv run python src/visualize_resources.py monitoring_sessions/<session_name>/resource_usage.log \
+uv run python src/visualize_resources.py monitoring_sessions/<session_name>/resource_usage.json \
     --output-dir monitoring_sessions/<session_name>/visualizations \
     --heatmap --show
 ```
@@ -111,7 +111,8 @@ uv run python demo_interactive_heatmap.py
 
 ## Technical Details
 
-The feature parses `pidstat -u -r -t` output which includes:
+The feature reads `resource_usage.json` (written by `monitor_resources.py`'s `psutil`-based
+probe, `_psutil_probe.py`), which includes per-sample, per-process records with:
 - CPU utilization per thread
 - Memory usage statistics
 - Page fault counters

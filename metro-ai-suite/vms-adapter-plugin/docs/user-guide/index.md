@@ -11,20 +11,21 @@
 </div>
 hide_directive-->
 
-The VMS Adapter Plugin (VAP) is an I/O bridge between Video Management Systems (VMS) and AI
-Analytics Applications. It helps developers understand how to connect existing VMS infrastructure to AI
-analytics pipelines, manage camera streams through a unified provider dashboard, and extend the
-system with new VMS vendors or analytics applications.
+The **VMS Adapter Plugin** (VAP) is an I/O bridge between Video Management Systems (VMS) and AI
+Analytics Applications. It helps developers understand how to connect existing VMS infrastructure
+to AI analytics pipelines, manage camera streams through a unified provider dashboard, and
+extend the system with new VMS vendors or analytics applications.
 
-## Overview
+It connects VMS solutions, such as Nx Witness and Milestone, to AI analytics applications such
+as Live Video Captioning and DL Streamer Vision-based Loitering Detection, offering a unified
+React dashboard for discovering cameras, managing analytics runs, and viewing live results.
+Adding support for a new VMS or a new Analytics Application requires only a new shim class —
+no route changes are needed.
 
-The **VMS Adapter Plugin** connects VMS solutions like Nx Witness, Genetec, and Milestone to
-AI analytics applications such as Live Video Captioning and DL Streamer Vision-based Loitering
-Detection, and presents a unified React provider dashboard for discovering cameras, managing
-analytics runs, and viewing live results. Adding support for a new VMS or a new Analytics
-Application requires only a new shim class — no route changes are needed.
+> **Note:** Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
+  email us at cities@intel.com to discuss integration with this plugin.
 
-### Example Use Cases
+**Example Use Cases:**
 
 - **Intelligent Surveillance**: Connect IP cameras from Nx Witness to Live Video Captioning
   for scene description and prompt-driven monitoring (for example, "Is there an unauthorized
@@ -36,7 +37,7 @@ Application requires only a new shim class — no route changes are needed.
   in one dashboard and selectively enable AI analytics on specific cameras without reconfiguring
   each system individually.
 
-### Key Benefits
+**Key Benefits:**
 
 - **Multi-VMS Support**: Connect cameras from supported VMS systems such as Nx Witness through a
   single plugin instance.
@@ -53,7 +54,7 @@ Application requires only a new shim class — no route changes are needed.
 
 ## Sequence Diagram
 
-![VAP Sequence Diagram](./_assets/vap-sequence-diagram.svg)
+![VAP Sequence Diagram](./_assets/VAP-sequence-diagram.svg)
 
 The VMS Adapter Plugin lifecycle consists of two phases: manual setup and a continuous
 processing loop.
@@ -90,30 +91,7 @@ respective systems and provide RTSP URLs. Analytics App shims manage run lifecyc
 delivery. The FastAPI backend coordinates between shims, persists state to a PostgreSQL database,
 and exposes a unified API consumed by the React provider dashboard.
 
-```text
-VMS Systems
-  ┌──────────┐   RTSP / REST    ┌───────────────────────────────────────────┐
-  │ Any VMS  ├─────────────────►│                                           │
-  └──────────┘                  │           VMS Adapter Plugin              │
-  ┌──────────┐   RTSP / REST    │                                           │
-  │Nx Witness├─────────────────►│  FastAPI Backend    ┌───────────────────┐ │
-  └──────────┘                  │  ─────────────      │  PostgreSQL DB    │ │
-                                │  Orchestrator   ◄──►│  (cameras,        │ │
-                                │  Camera sync        │   sessions,       │ │
-                                │  Schema fetch       │   events)         │ │
-                                │                     └───────────────────┘ │
-                                └────────┬─────────────────────┬────────────┘
-                                         │                     │
-                          ┌──────────────▼──────┐   ┌─────────▼────────────────┐
-                          │  Live Video         │   │  Loitering Detection     │
-                          │  Captioning (LVC)   │   │ (DL Streamer Vision) App │
-                          └──────────┬──────────┘   └────────────┬─────────────┘
-                                     │                           │
-                          ┌──────────▼───────────────────────────▼─────────┐
-                          │              Provider Dashboard (React)        │
-                          │   Camera list | Run controls | Live stream     │
-                          └────────────────────────────────────────────────┘
-```
+![VAP System Architecture Diagram](./_assets/VAP-System-Architecture-frame.svg)
 
 To interact with the plugin, users have two dashboard options. The first option is to use the
 respective VMS UI, which integrates with VAP. The plugin provides this option by default, but it

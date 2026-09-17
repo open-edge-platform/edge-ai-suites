@@ -272,4 +272,5 @@ For OPC UA servers, ensure the following configuration:
 
 ## Step 5: Deploy and Verify
 
-Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose).
+Deploy the sample application following the
+[instructions](../get-started.md#deploy-with-docker-compose).

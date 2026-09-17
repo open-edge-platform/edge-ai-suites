@@ -1,0 +1,60 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "nadir_camera_rtsp_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "rtspsrc location=rtsp://host.docker.internal:8554/uav-1/nadir latency=100 ! rtph264depay ! h264parse ! decodebin3 ! videoconvert ! video/x-raw,format=NV12,width=416,height=416 ! gvadetect device=CPU name=detection model-instance-id=instcpu0 threshold=0.4 ! queue ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py class=DrawDynamicText function=process_frame arg=[\"UAVSDK-RTSP-CPU\"] ! gvametaconvert add-empty-results=true name=metaconvert ! gvametapublish name=destination ! appsink name=appsink",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "forward_camera_rtsp_gpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "rtspsrc location=rtsp://host.docker.internal:8554/uav-1/forward latency=100 protocols=tcp ! rtph264depay ! h264parse ! decodebin3 ! videoconvert ! video/x-raw,format=NV12,width=416,height=416 ! gvadetect device=GPU model-instance-id=instgpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py class=DrawDynamicText function=process_frame arg=[\"UAVSDK-RTSP-GPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "rear_camera_rtsp_npu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "rtspsrc location=rtsp://host.docker.internal:8554/uav-1/rear latency=100 protocols=tcp ! rtph264depay ! h264parse ! decodebin3 ! videoconvert ! video/x-raw,format=NV12,width=416,height=416 ! gvadetect device=NPU model-instance-id=instnpu0 inference-region=full-frame inference-interval=1 batch-size=1 nireq=4 threshold=0.4 name=detection ! gvapython module=/home/pipeline-server/gvapython/telemetry-overlay-uavsdk.py class=DrawDynamicText function=process_frame arg=[\"UAVSDK-RTSP-NPU\"] ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                             "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                              }
+                        }
+                    }
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}

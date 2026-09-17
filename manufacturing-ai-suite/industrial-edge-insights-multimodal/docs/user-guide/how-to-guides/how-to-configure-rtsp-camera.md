@@ -4,8 +4,6 @@ To ensure proper timestamp synchronization and smooth video processing in the pi
 
 In addition, the camera’s system time should be synchronized with the edge device using a common time source such as **NTP**. The camera and edge device should also use the **same time zone** to avoid timestamp drift, log mismatches, and inconsistencies during stream processing.
 
----
-
 ## Check Whether the RTSP Camera Supports RTCP Sender Reports (SR)
 
 ### 1. Install required GStreamer packages (Ubuntu)
@@ -33,7 +31,7 @@ Update the RTSP URL in the pipeline and replace the placeholders with your camer
 - `<PORT>`: RTSP port (commonly `554`)
 - `<FEED>`: stream path (varies by camera model/vendor)
 
-> Note: If you are behind a proxy network, make sure the camera IP is added to `no_proxy` or `NO_PROXY`
+> **Note:** If you are behind a proxy network, make sure the camera IP is added to `no_proxy` or `NO_PROXY`
 
 ```bash
 rm -f text.txt; timeout 15s sh -c "GST_DEBUG=rtpsession:7 \
@@ -46,9 +44,7 @@ gst-launch-1.0 -v rtspsrc protocols=tcp add-reference-timestamp-meta=true locati
 - If you see `true` printed in the console, the camera supports **RTCP Sender Reports (SR)**.
 - If nothing is printed, the camera likely does **not** provide SR packets (or they were not observed during the 15-second window).
 
-> **Note**: If you suspect SR exists but wasn’t observed, increase the timeout window (e.g., `timeout 30s`) and re-run.
-
----
+> **Note:** If you suspect SR exists but was not observed, increase the timeout window (e.g., `timeout 30s`) and re-run.
 
 ## Configure the RTSP Camera in the Multimodal App
 
@@ -87,8 +83,6 @@ Restart the services to apply the changes:
 ```bash
 make down && make up
 ```
-
----
 
 ## References
 

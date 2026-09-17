@@ -1,1 +1,1 @@
-Please refer [link](../docs/user-guide/get-started/deploy-with-helm.md) for the helm deployment
+Refer to the [Deploy with Helm](../docs/user-guide/get-started/deploy-with-helm.md) guide.

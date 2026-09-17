@@ -23,7 +23,7 @@ flowchart TD
         GRAPH["ros2_graph_monitor.py"]
         RES["monitor_resources.py"]
         CSV[(graph_timing.csv)]
-        LOG[(resource_usage.log)]
+        LOG[(resource_usage.json)]
         VIZ["Auto-Visualization"]
 
         ORCH --> GRAPH
@@ -93,7 +93,7 @@ flowchart LR
 
     subgraph Collect["Collect"]
         CSV["graph_timing.csv\n• timestamps\n• delays\n• frequencies"]
-        LOG["resource_usage.log\n• CPU per thread\n• memory\n• I/O"]
+        LOG["resource_usage.json\n• CPU per thread\n• memory\n• I/O"]
     end
 
     subgraph Viz["Visualize"]
@@ -136,13 +136,13 @@ flowchart LR
 
 ## File Organization
 
-```
+```text
 monitoring_sessions/
 │
 ├── <timestamp>/              # Auto-generated session
 │   ├── session_info.txt     # Metadata: time, node, options
 │   ├── graph_timing.csv     # Raw timing data
-│   ├── resource_usage.log   # Raw resource data
+│   ├── resource_usage.json   # Raw resource data
 │   └── visualizations/      # Generated plots
 │       ├── timing_*.png
 │       └── resource_*.png

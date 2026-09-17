@@ -87,6 +87,12 @@ $SubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/edge-ai-libraries"
 # declared in .gitmodules rather than any hardcoded fork.
 $SubmoduleUrl = "https://github.com/open-edge-platform/edge-ai-libraries.git"
 
+# Pinned commit for reproducible builds. The setup always checks out this exact
+# commit instead of the moving branch tip, so upstream changes can't break the
+# app. Bump this SHA deliberately after validating a newer upstream commit.
+# $SubmodulePinnedCommit = "152442976009c8825b3646362f0ed7c619d385b9" Last Stable commit SHA (Edge-AI-Libraries)
+$SubmodulePinnedCommit = "3ceefb6df6f66ef6f6303c29f8310160ab1e70e1"
+
 # Locate the enclosing git repository (the edge-ai-suites fork).
 $RepoRoot = $null
 try {
@@ -143,10 +149,13 @@ else {
         if ((Test-Path $SubmoduleAbs) -and -not (Get-ChildItem -Force $SubmoduleAbs -ErrorAction SilentlyContinue)) {
             Remove-Item -Force $SubmoduleAbs -ErrorAction SilentlyContinue
         }
-        Write-Info "Cloning submodule (shallow + partial + sparse)..."
-        git clone --quiet --depth 1 --filter=blob:none --sparse $SubmoduleUrl $SubmoduleAbs 2>&1 | Out-Null
+        Write-Info "Cloning submodule (shallow + partial + sparse) pinned at $SubmodulePinnedCommit..."
+        git clone --quiet --depth 1 --filter=blob:none --sparse --no-checkout $SubmoduleUrl $SubmoduleAbs 2>&1 | Out-Null
         if (Test-Path $SubmoduleGit) {
+            # Fetch only the pinned commit (GitHub allows fetch-by-SHA) and check it out.
+            git -C $SubmoduleAbs fetch --quiet --depth 1 --filter=blob:none origin $SubmodulePinnedCommit 2>&1 | Out-Null
             git -C $SubmoduleAbs sparse-checkout set @SparsePaths 2>&1 | Out-Null
+            git -C $SubmoduleAbs checkout --quiet --force $SubmodulePinnedCommit 2>&1 | Out-Null
         }
     }
 
@@ -154,6 +163,14 @@ else {
         # Ensure the sparse paths are applied (idempotent for pre-existing clones).
         Write-Info "Applying sparse-checkout paths: $($SparsePaths -join ', ')"
         git -C $SubmoduleAbs sparse-checkout set @SparsePaths 2>&1 | Out-Null
+
+        # Ensure the working tree is pinned to $SubmodulePinnedCommit (idempotent).
+        $EdgeCurrentCommit = (git -C $SubmoduleAbs rev-parse HEAD 2>$null | Out-String).Trim()
+        if ($EdgeCurrentCommit -ne $SubmodulePinnedCommit) {
+            Write-Info "Pinning edge-ai-libraries to $SubmodulePinnedCommit..."
+            git -C $SubmoduleAbs fetch --quiet --depth 1 --filter=blob:none origin $SubmodulePinnedCommit 2>&1 | Out-Null
+            git -C $SubmoduleAbs checkout --quiet --force $SubmodulePinnedCommit 2>&1 | Out-Null
+        }
 
         # Promote the standalone sparse clone to a real submodule of the
         # superproject. `--force` reuses the clone already on disk instead of
@@ -207,6 +224,10 @@ $VeiSubmoduleRelPath = "education-ai-suite/ai-teaching-assistant/voice-enabled-i
 # (see below) so new users always clone the source declared in .gitmodules.
 $VeiSubmoduleUrl = "https://github.com/intel-retail/voice-enabled-interactions.git"
 
+# Pinned commit for reproducible builds (see edge-ai-libraries note above).
+# $VeiPinnedCommit = "771132c3a784fdea1f5617a5b349fc30bd1640a7" Last Stable commit SHA (Voice Enabled Interactions)
+$VeiPinnedCommit = "17dfa4c60365f0a475ef446e1e7c850fb50329bc"
+
 $VeiRepoRoot = $null
 try { $VeiRepoRoot = (git -C $ScriptDir rev-parse --show-toplevel 2>$null) } catch {}
 
@@ -239,16 +260,27 @@ else {
         if ((Test-Path $VeiAbs) -and -not (Get-ChildItem -Force $VeiAbs -ErrorAction SilentlyContinue)) {
             Remove-Item -Force $VeiAbs -ErrorAction SilentlyContinue
         }
-        Write-Info "Cloning voice-enabled-interactions submodule (shallow + partial + sparse)..."
-        git clone --quiet --depth 1 --filter=blob:none --sparse $VeiSubmoduleUrl $VeiAbs 2>&1 | Out-Null
+        Write-Info "Cloning voice-enabled-interactions submodule (shallow + partial + sparse) pinned at $VeiPinnedCommit..."
+        git clone --quiet --depth 1 --filter=blob:none --sparse --no-checkout $VeiSubmoduleUrl $VeiAbs 2>&1 | Out-Null
         if (Test-Path $VeiGit) {
+            # Fetch only the pinned commit (GitHub allows fetch-by-SHA) and check it out.
+            git -C $VeiAbs fetch --quiet --depth 1 --filter=blob:none origin $VeiPinnedCommit 2>&1 | Out-Null
             git -C $VeiAbs sparse-checkout set --no-cone @VeiSparsePaths 2>&1 | Out-Null
+            git -C $VeiAbs checkout --quiet --force $VeiPinnedCommit 2>&1 | Out-Null
         }
     }
 
     if (Test-Path $VeiGit) {
         Write-Info "Applying sparse-checkout paths: $($VeiSparsePaths -join ', ')"
         git -C $VeiAbs sparse-checkout set --no-cone @VeiSparsePaths 2>&1 | Out-Null
+
+        # Ensure the working tree is pinned to $VeiPinnedCommit (idempotent).
+        $VeiCurrentCommit = (git -C $VeiAbs rev-parse HEAD 2>$null | Out-String).Trim()
+        if ($VeiCurrentCommit -ne $VeiPinnedCommit) {
+            Write-Info "Pinning voice-enabled-interactions to $VeiPinnedCommit..."
+            git -C $VeiAbs fetch --quiet --depth 1 --filter=blob:none origin $VeiPinnedCommit 2>&1 | Out-Null
+            git -C $VeiAbs checkout --quiet --force $VeiPinnedCommit 2>&1 | Out-Null
+        }
 
         $null = git -C $VeiRepoRoot config --file .gitmodules --get "submodule.$VeiSubmoduleRelPath.url" 2>&1
         if ($LASTEXITCODE -ne 0) {
@@ -631,9 +663,27 @@ foreach ($Service in $Services) {
         if ($LASTEXITCODE -eq 0) {
             Write-Success "Dependencies installed for $($Service.Name)"
 
-            # openwakeword pip package ships only .tflite files; download the
-            # .onnx models (melspectrogram, embedding_model, etc.) explicitly.
             if ($Service.Name -eq "kiosk-core") {
+                # openwakeword is deliberately NOT in requirements.txt: 0.6.0
+                # declares a tflite-runtime dependency that pip would resolve
+                # alongside the rest of the set. Install it with --no-deps so
+                # only its ONNX runtime path is pulled in; its real runtime deps
+                # are already pinned in requirements.txt.
+                try {
+                    Write-Info "Installing openwakeword (--no-deps)..."
+                    Invoke-NativeInstallCommand -Command "pip install --no-deps openwakeword==0.6.0" -ScriptBlock {
+                        & $PythonExe -m pip install --no-deps openwakeword==0.6.0
+                    }
+                    Write-Success "openwakeword installed"
+                }
+                catch {
+                    Write-Warning "openwakeword install failed: $_"
+                    Write-Warning "Continuing setup. Wake-word detection will not work until openwakeword is installed."
+                }
+
+                # openwakeword's pip package ships only .tflite files; download
+                # the .onnx models into its resources/models dir (the location
+                # openwakeword.Model loads from) so the ONNX inference path works.
                 Write-Info "Downloading openwakeword ONNX model assets..."
                 try {
                     Invoke-OpenWakeWordOnnxSync -PythonExe $PythonExe
@@ -813,10 +863,10 @@ else {
 # OpenVINO IR on first startup (inside the FastAPI lifespan, BEFORE the
 # /health endpoint becomes available). On a fresh machine this first-run
 # export can take many minutes and exceeds the health-check window used by
-# start_kiosk.ps1, making services look like they "never come up".
+# start_ata.ps1, making services look like they "never come up".
 #
 # We do that heavy one-time work here, during setup, where there is no
-# health-check timeout. After this completes, start_kiosk.ps1 finds the
+# health-check timeout. After this completes, start_ata.ps1 finds the
 # exported models already on disk and every service becomes healthy quickly.
 # =============================================================================
 
@@ -855,12 +905,29 @@ foreach ($Service in $ModelServices) {
     Write-Step "Warming up models for $($Service.Name) (downloads + OpenVINO export on first run)..."
     Push-Location $Service.Path
     try {
-        $WarmupPy | & $PythonExe -
-        if ($LASTEXITCODE -eq 0) {
-            Write-Success "Models ready for $($Service.Name)"
+        # First-run model download/export can fail transiently (interrupted HF
+        # download, timeout, rate-limiting). Retry a few times; already-exported
+        # IR files are cached, so a retry only re-attempts the failed step.
+        $MaxAttempts = 3
+        $Succeeded = $false
+        for ($Attempt = 1; $Attempt -le $MaxAttempts; $Attempt++) {
+            if ($Attempt -gt 1) {
+                Write-Info "Retrying model warmup for $($Service.Name) (attempt $Attempt of $MaxAttempts)..."
+                Start-Sleep -Seconds 5
+            }
+
+            $WarmupPy | & $PythonExe -
+            if ($LASTEXITCODE -eq 0) {
+                Write-Success "Models ready for $($Service.Name)"
+                $Succeeded = $true
+                break
+            }
+
+            Write-Error-Custom "Model warmup attempt $Attempt failed for $($Service.Name) (exit code $LASTEXITCODE)"
         }
-        else {
-            Write-Error-Custom "Model warmup failed for $($Service.Name) (exit code $LASTEXITCODE)"
+
+        if (-not $Succeeded) {
+            Write-Error-Custom "Model warmup failed for $($Service.Name) after $MaxAttempts attempts"
             Write-Info "The service will retry the export on first startup, which may be slow."
         }
     }
@@ -915,8 +982,8 @@ foreach ($Service in $Services) {
 
 Write-Header "SETUP COMPLETE"
 Write-Success "All components installed successfully!"
-Write-Info "Next step: Run start_kiosk.ps1 to start all services"
+Write-Info "Next step: Run start_ata.ps1 to start all services"
 Write-Info ""
 Write-Info "Usage:"
-Write-Info "  powershell -ExecutionPolicy Bypass -File start_kiosk.ps1"
+Write-Info "  powershell -ExecutionPolicy Bypass -File start_ata.ps1"
 Write-Info ""

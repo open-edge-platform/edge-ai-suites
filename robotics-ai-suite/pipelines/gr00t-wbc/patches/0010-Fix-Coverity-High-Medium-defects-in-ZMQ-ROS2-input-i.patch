@@ -1,0 +1,133 @@
+From 9530b9e25094216145dfc9d49c41a7baf09a0259 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Fri, 7 Aug 2026 15:46:54 +0800
+Subject: [PATCH 10/13] Fix Coverity High/Medium defects in ZMQ/ROS2 input
+ interfaces   - zmq_packed_message_subscriber: byte_swap uses memcpy, not
+ union (UB)   - zmq_manager: lock planner_mutex_ in update(); null-check
+ pose_interface_   - ros2_input_handler: atomic locomotion_mode_is_fast_;
+ checked fcntl   - zmq_endpoint_interface: checked fcntl return
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../input_interface/ros2_input_handler.hpp      | 12 +++++++++---
+ .../input_interface/zmq_endpoint_interface.hpp  |  8 ++++++--
+ .../include/input_interface/zmq_manager.hpp     | 16 ++++++++++++----
+ .../zmq_packed_message_subscriber.hpp           | 17 ++++++++++-------
+ 4 files changed, 37 insertions(+), 16 deletions(-)
+
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp
+index b5fadf0..023eeac 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/ros2_input_handler.hpp
+@@ -180,8 +180,12 @@ public:
+         struct termios new_termios = old_termios_;
+         new_termios.c_lflag &= ~(ICANON | ECHO);
+         tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
+-        fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+-        
++        // Set stdin non-blocking, preserving existing flags and checking for error.
++        int stdin_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
++        if (stdin_flags == -1 || fcntl(STDIN_FILENO, F_SETFL, stdin_flags | O_NONBLOCK) == -1) {
++            std::cerr << "[WARNING] Failed to set stdin non-blocking: " << strerror(errno) << std::endl;
++        }
++
+         // Initialize ROS2 - this is the only ROS2 component in the system
+         if (!rclcpp::ok()) {
+             if constexpr (DEBUG_LOGGING) {
+@@ -1045,7 +1049,9 @@ private:
+     bool control_is_active_ = false;       ///< Tracks the toggle state for toggle_policy_action.
+     bool pause_navigation_ = false;         ///< Set by 2nd toggle_policy_action pulse: holds robot in place
+                                             ///< (planner still enabled, navigate_cmd forced to zero); 3rd pulse resumes.
+-    bool locomotion_mode_is_fast_ = false;  ///< false = SLOW_WALK (custom speed), true = WALK (default speed).
++    // Atomic: written under control_goal_mutex_ but read lock-free in handle_input()
++    // on another thread (Coverity MISSING_LOCK).
++    std::atomic<bool> locomotion_mode_is_fast_{false};  ///< false = SLOW_WALK (custom speed), true = WALK (default speed).
+     
+     // ------------------------------------------------------------------
+     // Per-frame control flags (reset in update())
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_endpoint_interface.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_endpoint_interface.hpp
+index 4f56765..2b7ba7d 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_endpoint_interface.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_endpoint_interface.hpp
+@@ -138,8 +138,12 @@ public:
+         struct termios new_termios = old_termios_;
+         new_termios.c_lflag &= ~(ICANON | ECHO);
+         tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
+-        fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+-        
++        // Set stdin non-blocking, preserving existing flags and checking for error.
++        int stdin_flags = fcntl(STDIN_FILENO, F_GETFL, 0);
++        if (stdin_flags == -1 || fcntl(STDIN_FILENO, F_SETFL, stdin_flags | O_NONBLOCK) == -1) {
++            std::cerr << "[WARNING] Failed to set stdin non-blocking mode" << std::endl;
++        }
++
+         // Create ZMQ subscriber
+         subscriber_ = std::make_unique<ZMQPackedMessageSubscriber>(
+             host, port, topic,
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_manager.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_manager.hpp
+index 6917e59..02a68fc 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_manager.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_manager.hpp
+@@ -250,6 +250,10 @@ class ZMQManager : public InputInterface {
+ 
+             if (new_mode == ManagedMode::PLANNER) {
+               std::cout << "[ZMQManager] Switched to: PLANNER mode (safety reset)" << std::endl;
++              // latest_planner_message_ is written by the ZMQ receive thread while
++              // holding planner_mutex_; hold the same lock while reading it here
++              // (Coverity MISSING_LOCK). Scope ends with this PLANNER branch.
++              std::lock_guard<std::mutex> lock(planner_mutex_);
+               if (latest_planner_message_.valid) {
+                 constexpr auto PLANNER_MESSAGE_TIMEOUT = std::chrono::milliseconds(100);
+                 auto time_since_last_planner = std::chrono::steady_clock::now() - latest_planner_message_.timestamp;
+@@ -1160,10 +1164,14 @@ class ZMQManager : public InputInterface {
+         }
+         has_vr_3point_control_ = true;
+ 
+-        pose_interface_->SetVR3PointPosition(vr_position_values);
+-        pose_interface_->SetVR3PointOrientation(vr_orientation_values);
+-        pose_interface_->SetVR3PointCompliance(vr_compliance_values);
+-        
++        // pose_interface_ is optional (null unless a streamed-motion interface is
++        // attached); guard the deref as elsewhere in this class (Coverity NULL_FIELD).
++        if (pose_interface_) {
++          pose_interface_->SetVR3PointPosition(vr_position_values);
++          pose_interface_->SetVR3PointOrientation(vr_orientation_values);
++          pose_interface_->SetVR3PointCompliance(vr_compliance_values);
++        }
++
+         if constexpr (DEBUG_LOGGING) {
+             std::cout << "[ZMQManager] VR 3-point data updated:" << std::endl;
+             std::cout << "  Position (left, right, head): [";
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_packed_message_subscriber.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_packed_message_subscriber.hpp
+index 8bab9b1..6a08fd4 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_packed_message_subscriber.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/zmq_packed_message_subscriber.hpp
+@@ -71,15 +71,18 @@ inline bool is_little_endian() {
+ template<typename T>
+ inline T byte_swap(T value) {
+   static_assert(sizeof(T) <= 8, "byte_swap only supports up to 64-bit types");
+-  union {
+-    T val;
+-    uint8_t bytes[sizeof(T)];
+-  } src, dst;
+-  src.val = value;
++  // Use memcpy rather than a union to reverse bytes: reading a union member
++  // other than the one last written is undefined behavior in C++ (Coverity
++  // INCONSISTENT_UNION_ACCESS). memcpy is the well-defined way to type-pun.
++  uint8_t src[sizeof(T)];
++  uint8_t dst[sizeof(T)];
++  std::memcpy(src, &value, sizeof(T));
+   for (size_t i = 0; i < sizeof(T); ++i) {
+-    dst.bytes[i] = src.bytes[sizeof(T) - 1 - i];
++    dst[i] = src[sizeof(T) - 1 - i];
+   }
+-  return dst.val;
++  T result;
++  std::memcpy(&result, dst, sizeof(T));
++  return result;
+ }
+ 
+ /**
+-- 
+2.43.0
+

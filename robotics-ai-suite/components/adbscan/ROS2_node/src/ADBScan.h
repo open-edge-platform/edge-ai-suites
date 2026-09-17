@@ -80,6 +80,7 @@ typedef struct _config_params  // to be moved into ADBScan.h and becomes global 
   bool verbose;
   string Lidar_type;
   float scale_factor;
+  float min_3d_epsilon;
   string oneapi_library;
 } Config_params_t;
 

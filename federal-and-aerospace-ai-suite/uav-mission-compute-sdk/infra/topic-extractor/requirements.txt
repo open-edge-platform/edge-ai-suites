@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+paho-mqtt==2.1.0
+influxdb-client==1.50.0

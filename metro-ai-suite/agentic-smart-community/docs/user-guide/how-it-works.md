@@ -48,36 +48,13 @@ The MCP server sits between AI agents and the dependent external services:
 
 Per monitor: the video pipeline drives events into the server, the worker summarizes clips, the rule engine decides alerts, and any subscribed MCP client is delivered those alerts through the **standard MCP resource-subscription protocol** — no framework-specific coupling.
 
-A client (OpenClaw, Hermes, Claude Desktop, …) subscribes to `smart-community://monitor/<id>/alerts`; the push carries only the URI, and the client pulls new alerts with a `?since=<cursor>` incremental read (at-least-once, cursor-deduped).
+![Smart Community Runtime Data Flow](_assets/smart-community-runtime-data-flow.png)
+**Figure: Smart Community Runtime Data Flow**
 
-```mermaid
----
-config: {"theme": "dark"}
----
-sequenceDiagram
-    autonumber
-    participant Analytics as videostream-analytics<br/>(:8999)
-    participant Server as MCP Server<br/>(worker + rule engine)
-    participant DB as SQLite<br/>(per monitor)
-    participant Summary as multilevel-video-understanding<br/>(:8192)
-    participant Client as MCP Client<br/>(any agent framework)
-
-    Client->>Server: resources/subscribe  smart-community://monitor/<id>/alerts
-
-    Analytics->>Server: POST event (:3101)
-    Server->>DB: write event + pending task
-    Server->>DB: poll pending task
-    Server->>Summary: summarize clip
-    Summary-->>Server: summary text
-    Server->>DB: write summary
-    Note over Server: rule engine → alert
-    Server->>DB: write alert
-    Server-->>Client: notifications/resources/updated { uri }  (no payload)
-    Client->>Server: resources/read  ...?since=<cursor>
-    Server->>DB: query alerts since cursor
-    DB-->>Server: alerts[] + latestId
-    Server-->>Client: alerts[] + latestId  (advance cursor)
-```
+- Video analytics sends events to the MCP server, which creates video-summary tasks for the affected monitor.
+- The video-summary service analyzes clips, and the rule engine evaluates each resulting summary to create alerts when needed.
+- The server stores alerts and generates scheduled reports from the collected monitor data.
+- An MCP client (OpenClaw, Hermes, Claude Desktop, …) subscribes to `smart-community://monitor/<id>/alerts` and receives alert notifications.
 
 ### MCP Tools
 

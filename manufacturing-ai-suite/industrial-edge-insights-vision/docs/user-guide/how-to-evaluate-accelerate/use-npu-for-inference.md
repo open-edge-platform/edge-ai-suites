@@ -75,22 +75,39 @@ Follow the steps below to run the pipeline.
 
 ### Steps
 
-1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
+1. Ensure that the sample application is up and running. If not, follow
+[the steps](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
-    > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+   > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
-    ```sh
-    docker compose up -d
-    ```
+   ```sh
+   docker compose up -d
+   ```
 
 2. Start the pipeline.
 
-  <!--hide_directive ::::{tab-set} hide_directive-->
-  <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
-  <!--hide_directive :sync: pallet-detect hide_directive-->
+   <!--hide_directive ::::{tab-set} hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
+   <!--hide_directive :sync: pallet-detect hide_directive-->
+
+   ```sh
+   ./sample_start.sh -p pallet_defect_detection_npu
+   ```
+
+   This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
+
+   > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
+   ```bash
+   https://<HOST_IP>/mediamtx/pdd/
+   ```
+
+   <!--hide_directive ::: hide_directive-->
+   <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
+   <!--hide_directive :sync: pcb-detect hide_directive-->
 
     ```sh
-    ./sample_start.sh -p pallet_defect_detection_npu
+    ./sample_start.sh -p pcb_anomaly_detection_npu
     ```
 
     This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
@@ -98,29 +115,13 @@ Follow the steps below to run the pipeline.
     > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
     ```bash
-    https://<HOST_IP>/mediamtx/pdd/
+    https://<HOST_IP>/mediamtx/anomaly/
     ```
 
-    <!--hide_directive ::: hide_directive-->
-    <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
-    <!--hide_directive :sync: pcb-detect hide_directive-->
-
-     ```sh
-     ./sample_start.sh -p pcb_anomaly_detection_npu
-     ```
-
-     This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
-
-     > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
-
-     ```bash
-     https://<HOST_IP>/mediamtx/anomaly/
-     ```
-
-    <!--hide_directive
-    :::
-    ::::
-    hide_directive-->
+   <!--hide_directive
+   :::
+   ::::
+   hide_directive-->
 
 ## Deployment with Helm
 

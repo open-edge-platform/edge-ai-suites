@@ -513,14 +513,9 @@ class TestConfigClass:
     def test_get_all_settings_contains_required_keys(self):
         settings = Config.get_all_settings()
         required_keys = [
-            "refresh_interval",
-            "api_url",
-            "app_title",
-            "app_port",
-            "app_host",
-            "ui_theme",
-            "high_density_threshold",
-            "moderate_density_threshold",
+            'api_url', 'app_title', 'app_port',
+            'app_host', 'ui_theme', 'high_density_threshold',
+            'moderate_density_threshold'
         ]
         for key in required_keys:
             assert key in settings

@@ -12,7 +12,9 @@ WORKDIR /app
 RUN groupadd -r appuser && useradd -r -g appuser -u 1001 appuser
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    python -m pip uninstall -y pip && \
+    rm -rf /usr/local/lib/python3.13/ensurepip/_bundled
 
 COPY src/ ./src/
 

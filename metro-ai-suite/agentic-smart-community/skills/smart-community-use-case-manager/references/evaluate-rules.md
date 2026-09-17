@@ -10,6 +10,7 @@ Contract:
 
 - The script reads the parsed fields as a JSON object on `argv[1]` and prints
   an AlertOutcome JSON object, or `null` when no alert should fire.
+  **The function returns alerts only. No alert ⇒ print `null`.**
 - It may read **only** fields declared in the Final Schema (base +
   extensions). The register consistency gate rejects rule files that read
   undeclared fields (`rule_fields_not_in_schema`).

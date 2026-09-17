@@ -9,7 +9,7 @@ This folder contains a complete, self-contained setup for running the DOPE (6D p
 
 ## Contents
 
-- **setup_dope_intel.sh** — One-command setup script  
+- **setup_dope_intel.sh** — One-command setup script
 - **isaac_ros_dope_intel.py** — Benchmark test script
 - **plugin_scaffold/** — Minimal Intel DopeOpenVINONode plugin
   - `dope_openvino_node.hpp` — Plugin header
@@ -62,4 +62,4 @@ The plugin is a minimal scaffold that publishes `vision_msgs/Detection3DArray` f
 ## Dataset
 
 Downloaded from NVIDIA® NGC via setup script:
-- https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/
+- <https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/>

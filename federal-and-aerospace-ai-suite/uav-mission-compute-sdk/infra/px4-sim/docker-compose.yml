@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Remote deployment compose — PX4 + Gazebo + mavlink-router
+#
+# Deployed to the FC machine by infra/scripts/deploy_remote.sh.
+# Run with: docker compose up -d --build
+
+services:
+
+  px4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        http_proxy:  ${HTTP_PROXY:-}
+        https_proxy: ${HTTPS_PROXY:-}
+        no_proxy:    ${NO_PROXY:-localhost,127.0.0.0/8}
+    image: uav-mission-compute-sdk/px4-gazebo
+    container_name: px4-gazebo
+    restart: unless-stopped
+    network_mode: host
+    devices:
+      - /dev/dri/${GPU_CARD:-card0}:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    environment:
+      - http_proxy=${HTTP_PROXY:-}
+      - https_proxy=${HTTPS_PROXY:-}
+      - no_proxy=${NO_PROXY:-localhost,127.0.0.0/8}
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep px4 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  mavlink-router:
+    build:
+      context: ./mavlink-router
+      dockerfile: Dockerfile
+      args:
+        http_proxy:  ${HTTP_PROXY:-}
+        https_proxy: ${HTTPS_PROXY:-}
+        no_proxy:    ${NO_PROXY:-localhost,127.0.0.0/8}
+    container_name: mavlink-router
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      px4:
+        condition: service_healthy

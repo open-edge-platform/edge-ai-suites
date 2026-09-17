@@ -33,7 +33,7 @@ To get started:
    To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set metro-ai-suite
    cd metro-ai-suite/metro-vision-ai-app-recipe/
@@ -108,7 +108,7 @@ instead of `localhost` for external access:
 > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
 > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
 > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
-> - SceneScape supports uploading GLB 3D base map files. The upload limit is configurable via `NGINX_CLIENT_MAX_BODY_SIZE` in the `.env` file (Docker Compose) or `nginx.clientMaxBodySize` in `chart/values.yaml` (Helm).
+> - Scenescape supports uploading GLB 3D base map files. The upload limit is configurable via `NGINX_CLIENT_MAX_BODY_SIZE` in the `.env` file (Docker Compose) or `nginx.clientMaxBodySize` in `chart/values.yaml` (Helm).
 
 - **URL**: [https://localhost](https://localhost)
 - **Log in with credentials**:

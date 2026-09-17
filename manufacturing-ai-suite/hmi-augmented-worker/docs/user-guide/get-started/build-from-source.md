@@ -29,7 +29,7 @@ If you want to clone a specific release branch, replace `main` with the desired 
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.2/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.2.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set manufacturing-ai-suite
    ```
@@ -164,7 +164,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
 ### `Error: [WinError 206] The filename or extension is too long`
 
-#### Description:
+#### Description
 
 When attempting to install packages using `pip` on Windows, you may encounter the following error:
 
@@ -172,7 +172,7 @@ When attempting to install packages using `pip` on Windows, you may encounter th
 ERROR: Could not install packages due to an OSError: [WinError 206] The filename or extension is too long: "...
 ```
 
-#### Solution:
+#### Solution
 
 - Modify the registry entry using Registry Editor.
 

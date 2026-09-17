@@ -448,7 +448,8 @@
     "reset": "重置",
     "searchNotAvailable": "搜索不可用。",
     "filesStillUploading": "文件仍在上传中...",
-    "uploadFilesToEnable": "上传文件以启用搜索。"
+    "uploadFilesToEnable": "上传文件以启用搜索。",
+    "unsupportedImageWarning": "已跳过不支持的文件：{{files}}。图像搜索支持的格式：JPG、JPEG、PNG。"
   },
   "qaSection": {
     "title": "问答",

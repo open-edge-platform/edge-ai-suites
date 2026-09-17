@@ -19,7 +19,7 @@ spec:
         fsGroup: {{ .Values.vlmOpenvinoServing.videoGroupId }}
       containers:
         - name: {{ .Values.vlmOpenvinoServing.name }}
-          image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.vlmOpenvinoServing.image.repository }}:{{ .Values.vlmOpenvinoServing.image.tag }}"
+          image: "{{ .Values.vlmOpenvinoServing.image.repository }}:{{ .Values.vlmOpenvinoServing.image.tag }}"
           imagePullPolicy: {{ .Values.vlmOpenvinoServing.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.vlmOpenvinoServing.service.targetPort }}

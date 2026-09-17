@@ -148,7 +148,7 @@ fi
 info "Starting mock webhook on :$WEBHOOK_PORT..."
 cd "$PROJECT_DIR"
 $PYTHON -m uvicorn tests.integration.mock_webhook_server:app \
-    --host 0.0.0.0 --port "$WEBHOOK_PORT" --log-level warning &
+    --host 127.0.0.1 --port "$WEBHOOK_PORT" --log-level warning &
 MOCK_PID=$!
 sleep 2
 curl -sf "http://localhost:$WEBHOOK_PORT/health" >/dev/null \
@@ -157,7 +157,7 @@ ok "Mock webhook up (pid $MOCK_PID)"
 
 info "Starting analytics on :$ANALYTICS_PORT..."
 WEBHOOK_URL="http://localhost:$WEBHOOK_PORT/events" \
-    $PYTHON __main__.py --host 0.0.0.0 --port "$ANALYTICS_PORT" --config config/config.yaml &
+    $PYTHON __main__.py --host 127.0.0.1 --port "$ANALYTICS_PORT" --config config/config.yaml &
 ANALYTICS_PID=$!
 for _ in {1..15}; do
     curl -sf "http://localhost:$ANALYTICS_PORT/health" >/dev/null 2>&1 && break

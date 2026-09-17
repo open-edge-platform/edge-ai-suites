@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor swap/temp files
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Logs
+*.log
+logs/
+
+# Environment files with secrets
+.env
+.env.local
+*.secret
+
+# Data directories (models, videos, outputs)
+models/
+!infra/px4-sim/models/
+videos/
+outputs/
+data/
+cache/
+
+# Demo and test data
+demo_data/
+demo_data_test/
+results/
+**/results/
+
+# Docker
+docker-compose.override.yml
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+test-results/
+playwright-report/
+*.webm
+trace.zip
+/tmp/showcase-*.png
+
+# MCP server generated files
+.mcp.json
+dlstreamer/
+anomalib/
+edge-ai-suites/
+
+# Cloned repositories (downloaded by setup.sh)
+anomalib/
+dlstreamer/
+edge-ai-suites/
+scenescape/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Test data files
+*.csv
+
+# IDE
+.vscode/
+.idea/
+
+# Docker logs
+*.log
+
+# MCP config (user-specific)
+.mcp.json
+
+#sample apps
+
+# UAV Vision
+output/
+plugins/

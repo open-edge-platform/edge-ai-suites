@@ -33,6 +33,14 @@ export class TaskPoller {
   startPolling(monitorId: string): void {
     if (this.intervals.has(monitorId)) return;
 
+    // A previous process may have died mid-summarize, stranding tasks in
+    // `processing` (getPendingTasks only selects `pending`). No poll for this
+    // monitor is in flight at this point, so requeue them.
+    const requeued = this.db.resetProcessingTasks(monitorId);
+    if (requeued > 0) {
+      logger.info(`[task-poller] requeued ${requeued} stale processing task(s) for ${monitorId}`);
+    }
+
     const interval = setInterval(() => {
       // Skip this tick if the previous poll for this monitor is still in
       // flight. Otherwise, while a poll waits on yieldManager.acquire() (which
@@ -136,15 +144,24 @@ export class TaskPoller {
       const ruleResult = await evaluateWithOverride(ruleCtx, overridePath);
 
       if (ruleResult.shouldAlert) {
+        // Cooldown: if a *notified* alert for this monitor+use_case already
+        // fired inside the window, persist the row for audit with
+        // notified=false but skip the subscriber broadcast.
+        const cooldownSeconds = this.config.alerts.cooldownSeconds;
+        const inCooldown =
+          cooldownSeconds > 0 &&
+          this.db.latestAlertWithin(monitorId, useCase, cooldownSeconds) !== undefined;
         this.db.createAlert({
           monitorId,
           taskId: task.id,
           eventId: task.eventId,
           useCase,
           description: ruleResult.alertMessage,
-          notified: true,
+          notified: !inCooldown,
         });
-        if (this.onAlert) {
+        if (inCooldown) {
+          logger.debug(`[task-poller] alert for ${monitorId}/${useCase} suppressed by cooldown (${cooldownSeconds}s)`);
+        } else if (this.onAlert) {
           this.onAlert(monitorId);
         }
       }

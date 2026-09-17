@@ -143,10 +143,16 @@ async def reconcile_storage_data(
     stats["sqlite_total"] = len(sqlite_records)
 
     sqlite_paths = set()
+    # Phase 3 compares against ChromaDB keys, which are full local://<bucket>/<key>
+    # URIs rather than the bucket-relative file_key stored in SQLite.
+    sqlite_index_paths = set()
 
     for row in sqlite_records:
         f_hash, f_name, f_path, f_bucket = row
         sqlite_paths.add(f_path)
+        sqlite_index_paths.add(
+            f"local://{f_bucket or 'content-search'}/{f_path.lstrip('/')}"
+        )
 
         local_exists = storage_service.file_exists(f_path)
         chroma_exists = await search_service.check_file_exists(f_path, bucket_name=f_bucket)
@@ -213,7 +219,7 @@ async def reconcile_storage_data(
     stats["index_total"] = len(all_indexed_paths)
 
     for indexed_path in all_indexed_paths:
-        if indexed_path not in sqlite_paths:
+        if indexed_path not in sqlite_index_paths:
             if cleanup_index_orphans and not dry_run:
                 bucket = None
                 if indexed_path.startswith("local://"):

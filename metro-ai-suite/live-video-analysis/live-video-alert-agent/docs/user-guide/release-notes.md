@@ -2,7 +2,9 @@
 
 ## Version 2026.2.0
 
-**New**
+**Release Date**: September 9, 2026
+
+**New**:
 
 - **Microservice architecture for action dispatch.** Alert action dispatch
   (tool execution, ADK agent reasoning, webhook/MQTT delivery) is now handled
@@ -16,7 +18,7 @@
   alert-agent-service, maintaining backward compatibility for dashboard and
   API consumers.
 
-**Changed**
+**Improved**:
 
 - `USE_ADK` environment variable removed — use `AGENT_MODE` on the
   `alert-agent-service` container instead.
@@ -29,9 +31,9 @@
 
 ## Version 2026.1.0
 
-**June 17, 2026**
+**Release Date**: June 17, 2026
 
-**New**
+**New**:
 
 - **Google ADK agentic dispatch.** Alert actions are now driven by a
   [Google ADK](https://adk.dev/) `LlmAgent` that reasons over
@@ -45,7 +47,7 @@
 
 ## Version 1.0.0
 
-**April 01, 2026**
+**Release Date**: April 1, 2026
 
 Live Video Alert Agent is a new sample "agentic application" that accepts live camera input
 and enables monitoring for up to four events on a single camera stream. Alerts are raised when
@@ -55,7 +57,7 @@ A rich UI is provided to configure various features of the application, such as 
 capturing the event to be monitored, and provides a dashboard view of the compute and memory
 usage.
 
-**New**
+**New**:
 
 - Initial release of Live Video Alert.
 - Live-metrics-service for CPU, GPU, and memory utilization integrated directly in the dashboard.

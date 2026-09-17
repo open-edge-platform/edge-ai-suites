@@ -22,6 +22,8 @@ log = logging.getLogger(__name__)
 _MQTT_HOST        = os.environ.get("MQTT_HOST", "mqtt-broker")
 _MQTT_PORT        = int(os.environ.get("MQTT_PORT", "1883"))
 _MQTT_BATCH_TOPIC = os.environ.get("MQTT_BATCH_TOPIC", "apm/batch-complete")
+_MQTT_USERNAME    = os.environ.get("MQTT_USERNAME", "")
+_MQTT_PASSWORD    = os.environ.get("MQTT_PASSWORD", "")
 
 
 def publish_batch_complete(event: dict) -> None:
@@ -45,11 +47,13 @@ def publish_batch_complete(event: dict) -> None:
     endpoint remains available as a manual fallback trigger.
     """
     try:
+        auth = {"username": _MQTT_USERNAME, "password": _MQTT_PASSWORD} if _MQTT_USERNAME else None
         publish.single(
             _MQTT_BATCH_TOPIC,
             payload=json.dumps(event),
             hostname=_MQTT_HOST,
             port=_MQTT_PORT,
+            auth=auth,
         )
         log.info("Published batch-complete event for run %s (status=%s) to %s",
                   event.get("run_id"), event.get("status"), _MQTT_BATCH_TOPIC)
