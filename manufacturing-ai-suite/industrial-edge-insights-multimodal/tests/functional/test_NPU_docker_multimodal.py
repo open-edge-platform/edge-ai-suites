@@ -61,6 +61,7 @@ def _has_npu_devices():
 def _run_multimodal_npu_flow(context, device):
     """Execute the four multimodal GPU/NPU steps sequentially."""
     device_upper = device.upper()
+    tsa_device = "CPU"
 
     # Step 1: Deploy the multimodal stack
     logger.info("Step 1: Deploying multimodal stack via 'make up'")
@@ -73,14 +74,25 @@ def _run_multimodal_npu_flow(context, device):
     )
     time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
 
-    # Step 2: Configure Time Series Analytics UDF for NPU
-    logger.info(f"Step 2: Posting Time Series Analytics UDF config with device='{device_upper}'")
+    # Step 2: Configure Time Series Analytics UDF for the TSA-compatible device
+    logger.info(f"Step 2: Posting Time Series Analytics UDF config with device='{tsa_device}'")
     tsa_config = _load_multimodal_tsa_config()
-    tsa_result = docker_utils.execute_multimodal_gpu_config_curl(tsa_config, device=device_upper)
-    logger.info(f"TSA {device_upper} config result: {tsa_result}")
-    assert_condition(tsa_result, f"Failed to post Time Series Analytics {device_upper} configuration")
+    tsa_result = docker_utils.execute_multimodal_gpu_config_curl(tsa_config, device=tsa_device)
+    logger.info(f"TSA {tsa_device} config result: {tsa_result}")
+    assert_condition(tsa_result, f"Failed to post Time Series Analytics {tsa_device} configuration")
 
-    # Step 3: Activate DL Streamer Pipeline Server pipeline on GPU/NPU
+    logger.info("Verifying TSAM logs confirm sklearnex accelerated execution on the TSA-compatible device...")
+    tsa_container = constants.CONTAINERS["time_series_analytics"]["name"]
+    tsa_gpu_result = docker_utils.verify_sklearnex_device_offload(
+        tsa_container,
+        device=tsa_device,
+        timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT,
+        interval=10,
+    )
+    logger.info(f"TSAM sklearnex verification result: {tsa_gpu_result}")
+    assert_condition(tsa_gpu_result is True, f"TSAM did not confirm accelerated {tsa_device} inference in logs")
+
+    # Step 3: Activate DL Streamer Pipeline Server pipeline on NPU
     logger.info(f"Step 3: Activating DL Streamer pipeline with device='{device_upper}'")
     dlsps_result = docker_utils.execute_dlstreamer_pipeline_activation(device=device_upper)
     logger.info(f"DL Streamer pipeline activation result: {dlsps_result}")
@@ -95,11 +107,11 @@ def _run_multimodal_npu_flow(context, device):
 
     # Step 4: Verify InfluxDB contains both analytics and vision multimodal measurements
     logger.info("Step 4: Verifying multimodal measurements in InfluxDB")
-    
+
     # Get measurement names from constants
     sensor_measurement = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("analytics_topic")
     vision_measurement = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get("vision_measurement")
-    
+
     influx_response = docker_utils.execute_influxdb_commands_multimodal()
     logger.info(f"Multimodal InfluxDB response (truncated): {str(influx_response)[:500]}")
     assert_condition(influx_response, "InfluxDB query for multimodal measurements returned no response")

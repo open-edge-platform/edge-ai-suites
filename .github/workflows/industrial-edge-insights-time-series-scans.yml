@@ -306,6 +306,23 @@ jobs:
                   IMAGE_MAP_MM["$image"]="$image_prefix"
               done
 
+              IMAGE_SUFFIX=$(grep -m1 '^IMAGE_SUFFIX=' .env | cut -d'=' -f2- | tr -d '"\r' | xargs)
+              WORKBENCH_INSIGHTS_IMAGE=$(grep -m1 '^WORKBENCH_INSIGHTS_IMAGE=' .env | cut -d'=' -f2- | tr -d '"\r' | xargs)
+              MULTIMODAL_AGENTIC_UI_IMAGE=$(grep -m1 '^MULTIMODAL_AGENTIC_UI_IMAGE=' .env | cut -d'=' -f2- | tr -d '"\r' | xargs)
+              if [[ -n "$IMAGE_SUFFIX" && -n "$WORKBENCH_INSIGHTS_IMAGE" && -n "$MULTIMODAL_AGENTIC_UI_IMAGE" ]]; then
+                manual_images=("${WORKBENCH_INSIGHTS_IMAGE}:${IMAGE_SUFFIX}" "${MULTIMODAL_AGENTIC_UI_IMAGE}:${IMAGE_SUFFIX}")
+                for image in "${manual_images[@]}"; do
+                  if docker image inspect "$image" >/dev/null 2>&1; then
+                    image_prefix=$(echo "$image" | sed 's|/|-|g' | cut -d':' -f1)
+                    IMAGE_MAP_MM["$image"]="$image_prefix"
+                  else
+                    echo "Skipping manual image not found locally: $image"
+                  fi
+                done
+              else
+                echo "IMAGE_SUFFIX, WORKBENCH_INSIGHTS_IMAGE, or MULTIMODAL_AGENTIC_UI_IMAGE missing in .env; skipping manual image additions"
+              fi
+
 
               # Loop through images and perform Trivy scans
               for IMAGE in "${!IMAGE_MAP_MM[@]}"; do
@@ -469,6 +486,12 @@ jobs:
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics/Dockerfile
             output-report-path: trivy-fusion-analytics-dockerfile.json
             scan-name: Multimodal Fusion Analytics Dockerfile
+          - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/insights-workbench/Dockerfile
+            output-report-path: trivy-insights-workbench-dockerfile.json
+            scan-name: Multimodal Insights Workbench Dockerfile
+          - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/ui-service/Dockerfile
+            output-report-path: trivy-multimodal-ui-dockerfile.json
+            scan-name: Multimodal UI Service Dockerfile
     uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
     with:
       dockerfile-path: ${{ matrix.dockerfile-path }}

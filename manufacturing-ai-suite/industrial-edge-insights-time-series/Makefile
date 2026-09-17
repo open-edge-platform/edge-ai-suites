@@ -353,8 +353,10 @@ gen_helm_charts_targz: gen_helm_charts
 .PHONY: push_helm_charts
 push_helm_charts: gen_helm_charts_targz
 	@echo "Pushing helm charts for ${SAMPLE_APP}"
-	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
-	cd ..
+	@set -eu; \
+	set -- helm-packages/*.tgz; \
+	[ "$$#" -eq 1 ] && [ -e "$$1" ] || { echo "Expected exactly one Helm chart package in helm-packages/ (run 'make gen_helm_charts_targz')" >&2; exit 1; }; \
+	helm push "$$1" "$(HELM_REGISTRY)" && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"
 
 # Help
 .PHONY: help

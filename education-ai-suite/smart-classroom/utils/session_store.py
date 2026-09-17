@@ -4,9 +4,8 @@ import sqlite3
 from datetime import datetime, timezone
 from threading import Lock
 
+from utils.pipeline_catalog import ALL_STAGES, SETTLED_STAGE_STATUSES
 from utils.runtime_config_loader import RuntimeConfig
-
-_ALL_STAGES = ("transcribe", "summarize", "mindmap", "va", "segmentation", "report")
 
 _DB_FILE = "sessions.db"
 
@@ -77,7 +76,7 @@ class SessionStore:
             state = {
                 "session_id": session_id,
                 "state": "pending",
-                "stages": {s: "pending" for s in _ALL_STAGES},
+                "stages": {s: "pending" for s in ALL_STAGES},
                 "current_stage": None,
                 "sources": _extract_sources(request),
                 "error": None,
@@ -87,7 +86,7 @@ class SessionStore:
             }
             for s in stages:
                 state["stages"][s] = "pending"
-            for s in set(_ALL_STAGES) - set(stages):
+            for s in set(ALL_STAGES) - set(stages):
                 state["stages"][s] = "skipped"
             conn = cls._conn()
             try:
@@ -179,7 +178,7 @@ class SessionStore:
             state["error"] = state.get("error") or "; ".join(reasons)
             return
 
-        if any(s in ("pending", "running") for s in declared):
+        if any(s not in SETTLED_STAGE_STATUSES for s in declared):
             return
         state["state"] = "completed"
 

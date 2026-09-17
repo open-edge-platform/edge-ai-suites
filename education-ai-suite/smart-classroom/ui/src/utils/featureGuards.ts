@@ -1,4 +1,10 @@
 import type { FeatureDescriptor } from '../redux/slices/featureConfigSlice';
+import {
+  FEATURES_BY_INPUT,
+  FEATURES_BY_SCREEN,
+  type FeatureScreen,
+  type PipelineInput,
+} from '../generated/pipeline';
 
 /**
  * Feature Guard - Centralized feature availability and configuration access
@@ -82,6 +88,22 @@ export class FeatureGuard {
    */
   hasAnyFeature(...featureIds: string[]): boolean {
     return featureIds.some(id => this.hasFeature(id));
+  }
+
+  /**
+   * Whether anything is enabled that works from a given source. Membership
+   * comes from the generated catalog, not from a list at the call site.
+   */
+  hasAnyFeatureForInput(input: PipelineInput): boolean {
+    return FEATURES_BY_INPUT[input].some(id => this.hasFeature(id));
+  }
+
+  /**
+   * Whether anything belonging to a screen is enabled. Drives the app's
+   * auto-switch when the main features are all off.
+   */
+  hasAnyFeatureForScreen(screen: FeatureScreen): boolean {
+    return FEATURES_BY_SCREEN[screen].some(id => this.hasFeature(id));
   }
 
   /**

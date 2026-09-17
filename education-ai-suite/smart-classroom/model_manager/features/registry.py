@@ -1,5 +1,7 @@
 from typing import Dict, List
 
+from utils.pipeline_catalog import FEATURES, topo_sort
+
 from .protocols import FeatureModule
 
 
@@ -7,31 +9,29 @@ REGISTRY: Dict[str, FeatureModule] = {}
 
 
 def register(module: FeatureModule) -> FeatureModule:
+    """Add a feature module, taking its place in the graph from the catalog.
+
+    A module declares only its own behaviour; `label`, `depends_on` and `stage`
+    are attached here from utils/pipeline_catalog.py.
+    """
+    spec = FEATURES.get(module.id)
+    if spec is None:
+        raise ValueError(
+            f"Feature {module.id!r} is not in utils/pipeline_catalog.py; add it "
+            "there (and re-run Scripts/gen_catalog.py) before registering it."
+        )
+    module.label = spec.label
+    module.depends_on = list(spec.depends_on)
+    module.stage = spec.stage
     REGISTRY[module.id] = module
     return module
 
 
 def in_dependency_order() -> List[FeatureModule]:
-    ordered: List[FeatureModule] = []
-    visited: Dict[str, bool] = {}  # feature id -> fully resolved
-
-    def visit(feature_id: str, stack: List[str]) -> None:
-        if visited.get(feature_id):
-            return
-        if feature_id in stack:
-            cycle = " -> ".join([*stack, feature_id])
-            raise ValueError(f"Dependency cycle detected: {cycle}")
-        if feature_id not in REGISTRY:
-            raise ValueError(f"Unknown feature dependency: {feature_id!r}")
-
-        module = REGISTRY[feature_id]
-        for dep in module.depends_on:
-            visit(dep, [*stack, feature_id])
-
-        visited[feature_id] = True
-        ordered.append(module)
-
-    for feature_id in REGISTRY:
-        visit(feature_id, [])
-
-    return ordered
+    """Registered modules, each one after everything it depends on."""
+    order = topo_sort(
+        list(REGISTRY),
+        lambda fid: REGISTRY[fid].depends_on,
+        what="feature dependency",
+    )
+    return [REGISTRY[fid] for fid in order]

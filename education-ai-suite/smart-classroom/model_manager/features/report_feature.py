@@ -15,7 +15,7 @@ class ReportFeature:
 
     id: str = "report"
     requires: List[str] = ["text_gen"]
-    depends_on: List[str] = ["summary", "mindmap", "topic_segmentation", "video_analytics"]
+    # label / depends_on / stage: utils/pipeline_catalog.py
     router: APIRouter = router
 
     def build(self) -> None:
