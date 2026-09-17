@@ -62,8 +62,8 @@ is_vllm_healthy() {
   curl -s --max-time 5 "$VLLM_HEALTH_URL" 2>/dev/null | grep -q '"id"'
 }
 
-# Resolve each role against the standard OpenAI /v1/models response. An empty
-# requested name selects the first advertised ID; a supplied one must match.
+# Resolve each role against the standard OpenAI /v1/models response. The
+# requested name must match an advertised ID; never select by list order.
 resolve_model_name() {
   local role="$1" base_url="$2" api_key="$3" requested="$4" models selected
   models="$(curl -fsS --connect-timeout 3 --max-time 10 \
@@ -74,8 +74,9 @@ resolve_model_name() {
     return 1
   fi
   if [ -z "$requested" ]; then
-    selected="${models%%$'\n'*}"
-    echo "${role} model not specified; selected ${selected} from ${base_url%/}/models" >&2
+    echo -e "${RED}Error: ${role} model is not configured; set ${role}_MODEL_NAME to an advertised model ID.${NC}" >&2
+    printf 'Available %s models:\n%s\n' "$role" "$models" >&2
+    return 1
   elif grep -Fqx -- "$requested" <<<"$models"; then
     selected="$requested"
     echo "${role} model verified: ${selected}" >&2
@@ -98,6 +99,43 @@ resolve_serving_models() {
   VLM_MODEL_NAME="$(resolve_model_name VLM "$vlm_discovery_url" "${VLM_API_KEY:-EMPTY}" "${VLM_MODEL_NAME:-}")" || return 1
   LLM_MODEL_NAME="$(resolve_model_name LLM "$llm_discovery_url" "${LLM_API_KEY:-EMPTY}" "${LLM_MODEL_NAME:-}")" || return 1
   export VLM_MODEL_NAME LLM_MODEL_NAME
+}
+
+# Published MCP images read a concrete YAML file and do not expand shell-style
+# placeholders. Render the two VLM placeholders after model discovery so both
+# direct setup and demo launchers produce the same runtime configuration.
+prepare_mcp_config() {
+  local config_path template_path temporary_path content mcp_vlm_url
+  local url_placeholder='${VLM_BASE_URL:-http://localhost:41091/v1}'
+  local model_placeholder='${VLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}'
+
+  config_path="${SMART_COMMUNITY_DATA_DIR}/config.yaml"
+  template_path="${SCRIPT_DIR}/config.yaml.example"
+  mkdir -p "${SMART_COMMUNITY_DATA_DIR}"
+  if [[ ! -e "$config_path" ]]; then
+    cp -- "$template_path" "$config_path"
+    echo "Created runtime MCP configuration: ${config_path}"
+  fi
+  [[ ! -L "$config_path" && -f "$config_path" ]] || {
+    echo -e "${RED}Error: MCP configuration must be a regular file: ${config_path}${NC}" >&2
+    return 1
+  }
+
+  content="$(<"$config_path")"
+  if [[ "$content" != *"$url_placeholder"* && "$content" != *"$model_placeholder"* ]]; then
+    return 0
+  fi
+
+  mcp_vlm_url="$VLM_BASE_URL"
+  if [[ "$mcp_vlm_url" == "http://vllm-ipex-serving:8000/v1" ]]; then
+    mcp_vlm_url="http://localhost:${VLLM_SERVICE_PORT}/v1"
+  fi
+  content="${content//"$url_placeholder"/"$mcp_vlm_url"}"
+  content="${content//"$model_placeholder"/"$VLM_MODEL_NAME"}"
+  temporary_path="$(mktemp "${SMART_COMMUNITY_DATA_DIR}/.config.yaml.XXXXXX")"
+  printf '%s' "$content" > "$temporary_path"
+  mv -- "$temporary_path" "$config_path"
+  echo "Rendered VLM settings in runtime MCP configuration: ${config_path}"
 }
 
 # --- serving startup recovery --------------------------------------------------
@@ -471,6 +509,7 @@ if [ "$UP_CONTAINERS" = true ]; then
     # Reuse an already-warm serving; start only the app + analytics.
     if is_vllm_healthy; then
       resolve_serving_models || exit 1
+      prepare_mcp_config || exit 1
       echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smart-community-mcp-server only."
       compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     elif [ "$USE_LOCAL_VLLM" = true ]; then
@@ -479,6 +518,7 @@ if [ "$UP_CONTAINERS" = true ]; then
       compose_up vllm-ipex-serving || exit 1
       wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
       resolve_serving_models || exit 1
+      prepare_mcp_config || exit 1
       compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     else
       echo -e "${RED}Error: external serving is not reachable at ${VLLM_HEALTH_URL}.${NC}" >&2
@@ -492,6 +532,7 @@ if [ "$UP_CONTAINERS" = true ]; then
     compose_up vllm-ipex-serving || exit 1
     wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
     resolve_serving_models || exit 1
+    prepare_mcp_config || exit 1
     compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
   fi
 

@@ -64,12 +64,7 @@ ACTIVE_CONFIG="$DATA_DIR/config.yaml"
 ACTIVE_MONITORS="$DATA_DIR/monitors.yaml"
 RUNTIME_CONFIG="$(mktemp)"
 trap 'rm -f "$FILTERED_MONITORS" "$RUNTIME_CONFIG"' EXIT
-
-# Resolve the template before persisting it: published MCP images receive plain
-# YAML and do not need to implement environment-variable expansion.
-# shellcheck disable=SC1091
-source "$REPO_DIR/docker/set_env.sh"
-python3 "$REPO_DIR/docker/render_vlm_config.py" "$SCRIPT_DIR/config.demo.yaml" "$RUNTIME_CONFIG"
+cp -- "$SCRIPT_DIR/config.demo.yaml" "$RUNTIME_CONFIG"
 
 persist_demo_config() {
   local source="$1"
