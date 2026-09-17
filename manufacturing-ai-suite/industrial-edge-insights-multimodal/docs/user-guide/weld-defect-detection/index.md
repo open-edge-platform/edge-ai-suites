@@ -40,7 +40,7 @@ Similarly, it ingests the .csv files as data points into **Telegraf** using the 
 
 ##### 2.1 DL Streamer Pipeline Server
 
-The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
+The [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html) microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
 defect classification model, publishes the frame metadata results over MQTT, stores the processed frames in SeaweedFS S3 storage, and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
 ###### DL Streamer Pipeline Server `config.json`

@@ -11,20 +11,21 @@
 </div>
 hide_directive-->
 
-The VMS Adapter Plugin (VAP) is an I/O bridge between Video Management Systems (VMS) and AI
-Analytics Applications. It helps developers understand how to connect existing VMS infrastructure to AI
-analytics pipelines, manage camera streams through a unified provider dashboard, and extend the
-system with new VMS vendors or analytics applications.
+The **VMS Adapter Plugin** (VAP) is an I/O bridge between Video Management Systems (VMS) and AI
+Analytics Applications. It helps developers understand how to connect existing VMS infrastructure
+to AI analytics pipelines, manage camera streams through a unified provider dashboard, and
+extend the system with new VMS vendors or analytics applications.
 
-## Overview
+It connects VMS solutions, such as Nx Witness and Milestone, to AI analytics applications such
+as Live Video Captioning and DL Streamer Vision-based Loitering Detection, offering a unified
+React dashboard for discovering cameras, managing analytics runs, and viewing live results.
+Adding support for a new VMS or a new Analytics Application requires only a new shim class —
+no route changes are needed.
 
-The **VMS Adapter Plugin** connects VMS solutions like Nx Witness, Genetec, and Milestone to
-AI analytics applications such as Live Video Captioning and DL Streamer Vision-based Loitering
-Detection, and presents a unified React provider dashboard for discovering cameras, managing
-analytics runs, and viewing live results. Adding support for a new VMS or a new Analytics
-Application requires only a new shim class — no route changes are needed.
+> **Note:** Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
+  email us at cities@intel.com to discuss integration with this plugin.
 
-### Example Use Cases
+**Example Use Cases:**
 
 - **Intelligent Surveillance**: Connect IP cameras from Nx Witness to Live Video Captioning
   for scene description and prompt-driven monitoring (for example, "Is there an unauthorized
@@ -36,7 +37,7 @@ Application requires only a new shim class — no route changes are needed.
   in one dashboard and selectively enable AI analytics on specific cameras without reconfiguring
   each system individually.
 
-### Key Benefits
+**Key Benefits:**
 
 - **Multi-VMS Support**: Connect cameras from supported VMS systems such as Nx Witness through a
   single plugin instance.

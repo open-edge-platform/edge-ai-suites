@@ -26,7 +26,7 @@ class ContentSearchFeature:
 
     id: str = "content_search"
     requires: List[str] = ["text_gen"]
-    depends_on: List[str] = []
+    # label / depends_on / stage: utils/pipeline_catalog.py
     router: APIRouter = router
 
     def __init__(self) -> None:

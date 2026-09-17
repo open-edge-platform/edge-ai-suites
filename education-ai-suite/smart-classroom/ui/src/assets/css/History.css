@@ -1,0 +1,333 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/* Slide-over, sized and animated to match the report panel: the two are the
+   same kind of surface and should not feel like different mechanisms. */
+
+.history-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+}
+
+.history-panel-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.history-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 560px;
+  max-width: 92vw;
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+  z-index: 1600;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-text);
+}
+
+.history-panel.open {
+  transform: translateX(0);
+}
+
+.history-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+  border-bottom: 1px solid #dfe3e8;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.history-panel-header > div {
+  min-width: 0;
+}
+
+.history-panel-title,
+.history-panel-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-panel-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.history-panel-subtitle {
+  font-size: 12px;
+  color: #8c95a6;
+  margin-top: 2px;
+}
+
+.history-panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.history-panel-close {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: #5a6374;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-panel-close:hover {
+  background: #edf0f5;
+  color: var(--color-gray-900);
+}
+
+.history-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.history-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--control-border-color);
+  border-radius: var(--control-radius);
+  background: var(--control-background);
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--color-gray-900);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.history-btn:hover:not(:disabled) {
+  border-color: var(--color-theme);
+  color: var(--color-theme);
+}
+
+.history-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.history-btn.danger:hover:not(:disabled) {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.history-error {
+  margin: 8px 24px;
+  padding: 8px 12px;
+  border-radius: var(--control-radius);
+  background: #fdecea;
+  color: #a93226;
+  font-size: 13px;
+}
+
+.history-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--color-gray-700);
+  font-size: 13px;
+}
+
+/* Two lines per row — the panel is too narrow for a five-column table, and
+   this is the same shape the Services screen uses. */
+.history-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 24px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.history-row:hover {
+  background: #fafafa;
+}
+
+.history-row.expanded {
+  background: #f4f8fc;
+}
+
+.history-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-caret {
+  width: 10px;
+  flex-shrink: 0;
+  color: var(--color-gray-700);
+}
+
+.history-time {
+  white-space: nowrap;
+}
+
+/* Pushes the state badge and the buttons to the right edge. */
+.history-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.history-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Line up under the timestamp, past the caret. */
+  padding-left: 18px;
+  min-width: 0;
+}
+
+.history-sources {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.history-pips {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* One pip per stage, in pipeline order — the whole run at a glance.
+   Filled means the stage has an outcome; outlined means it does not. Two shades
+   of grey were not enough: "declared but never ran" and "not part of this
+   session" looked identical, so a row of six pips with four green ones read as
+   two pips too many rather than as two stages left undone. */
+.history-pip {
+  width: 12px;
+  height: 6px;
+  border-radius: 3px;
+  background: #bdbdbd;
+}
+
+/* Declared and still waiting: outlined, so it reads as an empty slot. */
+.history-pip.stage-pending {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px #9e9e9e;
+}
+
+/* Not part of this session at all: the faintest thing still visible, so the
+   pips stay positional (stage 4 is always VA) without claiming anything. */
+.history-pip.stage-skipped {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px #e8e8e8;
+}
+
+.history-pip.stage-running { background: var(--color-theme); }
+.history-pip.stage-done { background: #27ae60; }
+.history-pip.stage-failed { background: #c0392b; }
+.history-pip.stage-interrupted { background: #e67e22; }
+
+.history-state {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.history-state.state-pending { background: #eee; color: var(--color-gray-700); }
+.history-state.state-running { background: #e3f0fa; color: var(--color-theme); }
+.history-state.state-completed { background: #e8f6ed; color: #1e8449; }
+.history-state.state-failed { background: #fdecea; color: #a93226; }
+.history-state.state-cancelled { background: #f4ecfa; color: #6c3483; }
+
+.history-detail {
+  padding: 10px 24px 14px 42px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fbfcfd;
+}
+
+.history-detail-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.history-detail-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.history-detail-error {
+  font-size: 12px;
+  color: #a93226;
+}
+
+.history-detail-note {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.history-events {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.history-events th,
+.history-events td {
+  text-align: left;
+  padding: 4px 10px 4px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.history-events th {
+  color: var(--color-gray-700);
+  font-weight: 600;
+}
+
+.history-events-detail {
+  color: var(--color-gray-700);
+  word-break: break-word;
+}
+
+.stage-text-done { color: #1e8449; }
+.stage-text-failed { color: #a93226; }
+.stage-text-interrupted { color: #b9770e; }
+
+.history-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 24px;
+  border-top: 1px solid #dfe3e8;
+  flex-shrink: 0;
+}
+
+.history-pager-label {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}

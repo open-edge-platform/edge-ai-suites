@@ -1,6 +1,10 @@
 # VMS Adapter Plugin (VAP): AI Analytics Bridge for VMS Systems
 
-The VMS Adapter Plugin (VAP) serves as an I/O bridge between Video Management Systems (VMS) like Nx Witness, Genetec, Milestone, etc. on the one side and AI Analytics Apps such as Object Detection pipelines like loitering detection, GenAI pipelines like Live Video Captioning (LVC), Live Video Search (LVS) on the other side. It combines a FastAPI backend, pluggable VMS and Analytics App shims, and a React operator dashboard into a single Docker Compose deployment.
+The VMS Adapter Plugin (VAP) serves as an I/O bridge between Video Management Systems (VMS),
+such as Nx Witness ad Milestone, and AI Analytics Apps such as Object Detection pipelines
+(e.g., loitering detection), GenAI pipelines (e.g., Live Video Captioning and Live Video Search).
+It combines a FastAPI backend, pluggable VMS and Analytics App shims, and a React operator
+dashboard into a single Docker Compose deployment.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -23,8 +27,8 @@ The VMS Adapter Plugin (VAP) serves as an I/O bridge between Video Management Sy
 
 ```
 
-> **Note:** Currently, only Nx Witness is supported. Genetec and Milestone support will be
-> added soon.
+> **Note:** Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
+  email us at cities@intel.com to discuss integration with this plugin.
 
 ## Documentation
 

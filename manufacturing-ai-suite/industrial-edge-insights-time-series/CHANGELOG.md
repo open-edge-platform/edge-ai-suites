@@ -2,6 +2,78 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026.2] - September 2026
+
+### Added
+- Added GPU/NPU functional tests for the Time Series sample apps, including helper utilities to activate pipelines and poll service readiness. ([#2596])
+
+### Changed
+- Aligned naming for DL Streamer / DL Streamer Pipeline Server across configuration, documentation, and test utilities. ([#3565])
+- Replaced `<host_ip>` placeholders with `localhost` in user guides and reduced MQTT port exposure in Helm/nginx configuration. ([#3458])
+- Bumped Telegraf, Grafana, and NGINX image versions in Docker Compose deployments. ([#3608])
+- Updated `IMAGE_SUFFIX` and Helm chart version/appVersion to the `2026.2.0` release line. ([#3442])
+- Updated Helm chart download instructions to reference the `2026.2.0-rc1` chart artifact. ([#3667])
+- Updated Helm chart references for the `2026.2.0-rc1` tag. ([#3634])
+- Increased the wind turbine anomaly detection batch TICKscript window from 1m to 2m to improve runtime performance. ([#3666])
+- Simplified the tests GitHub Actions workflow gating for building Docker images and generating Helm charts. ([#3443])
+
+### Removed
+- Removed the deprecated Weld Defect Detection Time Series sample app, its training scripts, models, simulation data, and documentation. ([#3307])
+- Removed remaining model registry configuration references from deployment manifests and test utilities. ([#3285])
+- Removed remaining CatBoost references from tests and documentation, aligning with the scikit-learn RandomForestClassifier-based workflow. ([#3313])
+
+### Security
+- Fixed Bandit `shell=True` (B602) findings in security/Helm test utilities by switching to list-argument `subprocess.run()` calls. ([#3447])
+- Fixed CodeQL alerts by redacting credential values from Helm deployment test logs. ([#3427])
+- Bumped `aiohttp` to address a reported vulnerability in test dependencies. ([#3414], [#3211])
+- Bumped `cryptography` to address a reported vulnerability in the OPC UA server simulator. ([#3315])
+- Applied SDLe scan remediation updates, including container image/dependency bumps and justified Bandit `# nosec` annotations. ([#3602])
+
+### Fixed
+- Fixed the NGINX health check in Docker Compose to correctly probe the HTTPS endpoint. ([#3355])
+- Fixed a subprocess argument error in the `common_utils.py` log collection utility. ([#3423])
+- Fixed nginx expected port mappings and a malformed logger string in functional security tests. ([#3602])
+- Hardened Helm subprocess execution to avoid `shell=True` and improved Kubernetes teardown reliability, fixing main branch test failures. ([#3325])
+- Fixed failing functional and security tests on GitHub-hosted runners. ([#3135])
+- Addressed functional test stability issues across Docker and Helm deployments for Time Series sample apps.
+
+### Documentation
+- Applied further documentation updates for the Manufacturing AI Suite. ([#3465])
+- Pre-added the 2026.2 release notes section. ([#3445])
+- Applied editorial and language/formatting review fixes across AI Suites documentation. ([#3267], [#2991])
+- Applied punctuation and other minor corrections to documentation. ([#2954])
+- Applied miscellaneous documentation fixes (Metro tutorials and others). ([#2929])
+
+---
+[#2596]: https://github.com/open-edge-platform/edge-ai-suites/pull/2596
+[#2929]: https://github.com/open-edge-platform/edge-ai-suites/pull/2929
+[#2954]: https://github.com/open-edge-platform/edge-ai-suites/pull/2954
+[#2991]: https://github.com/open-edge-platform/edge-ai-suites/pull/2991
+[#3135]: https://github.com/open-edge-platform/edge-ai-suites/pull/3135
+[#3211]: https://github.com/open-edge-platform/edge-ai-suites/pull/3211
+[#3267]: https://github.com/open-edge-platform/edge-ai-suites/pull/3267
+[#3285]: https://github.com/open-edge-platform/edge-ai-suites/pull/3285
+[#3307]: https://github.com/open-edge-platform/edge-ai-suites/pull/3307
+[#3313]: https://github.com/open-edge-platform/edge-ai-suites/pull/3313
+[#3315]: https://github.com/open-edge-platform/edge-ai-suites/pull/3315
+[#3325]: https://github.com/open-edge-platform/edge-ai-suites/pull/3325
+[#3355]: https://github.com/open-edge-platform/edge-ai-suites/pull/3355
+[#3414]: https://github.com/open-edge-platform/edge-ai-suites/pull/3414
+[#3423]: https://github.com/open-edge-platform/edge-ai-suites/pull/3423
+[#3427]: https://github.com/open-edge-platform/edge-ai-suites/pull/3427
+[#3442]: https://github.com/open-edge-platform/edge-ai-suites/pull/3442
+[#3443]: https://github.com/open-edge-platform/edge-ai-suites/pull/3443
+[#3445]: https://github.com/open-edge-platform/edge-ai-suites/pull/3445
+[#3447]: https://github.com/open-edge-platform/edge-ai-suites/pull/3447
+[#3458]: https://github.com/open-edge-platform/edge-ai-suites/pull/3458
+[#3465]: https://github.com/open-edge-platform/edge-ai-suites/pull/3465
+[#3565]: https://github.com/open-edge-platform/edge-ai-suites/pull/3565
+[#3602]: https://github.com/open-edge-platform/edge-ai-suites/pull/3602
+[#3608]: https://github.com/open-edge-platform/edge-ai-suites/pull/3608
+[#3634]: https://github.com/open-edge-platform/edge-ai-suites/pull/3634
+[#3666]: https://github.com/open-edge-platform/edge-ai-suites/pull/3666
+[#3667]: https://github.com/open-edge-platform/edge-ai-suites/pull/3667
+
 ## [2026.1] - June 2026
 
 ### Added

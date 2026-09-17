@@ -354,6 +354,7 @@
   },
   "errors": {
       "videoPipelineFailed": "Video analytics could not start:\n{{details}}",
+      "videoPipelineRetrying": "Video analytics problem, retrying:\n{{details}}",
       "videoPipelineStopFailed": "Video analytics could not stop:\n{{details}}",
       "failedToStartRecording": "Failed to start recording",
       "failedToStopRecording": "Failed to stop recording",
@@ -708,6 +709,8 @@
   },
   "reportPanel": {
     "title": "View Report",
+
+    "short": "Report",
     "classReport": "Class Report",
     "noSessionActive": "No session active",
     "reportFields": "Report Fields",
@@ -772,6 +775,38 @@
     "previewUnavailableType": "Preview not available for this file type.",
     "download": "Download {{name}}",
     "closePreview": "Close preview"
+  },
+  "history": {
+    "title": "Session history",
+
+    "short": "History",
+    "subtitle": "Classes recorded on this machine, newest first.",
+    "refresh": "Refresh",
+    "empty": "No sessions yet. Recordings and uploads made from now on will appear here.",
+    "started": "Started",
+    "sources": "Sources",
+    "stages": "Stages",
+    "stateLabel": "State",
+    "stage": "Stage",
+    "status": "Status",
+    "duration": "Duration",
+    "detail": "Detail",
+    "loading": "Loading…",
+    "noEvents": "No stage timings were recorded for this session.",
+    "delete": "Delete",
+    "confirmDelete": "Delete this session and every file it produced? This cannot be undone.",
+    "markFailed": "Mark failed",
+    "markedByUser": "Marked as failed by the user",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "{{page}} / {{pages}}",
+    "state": {
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
   }
 }
  
