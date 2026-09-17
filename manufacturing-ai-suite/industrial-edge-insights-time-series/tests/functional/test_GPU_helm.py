@@ -63,14 +63,15 @@ def _run_gpu_helm_test(request):
     )
     time.sleep(constants.WIND_TURBINE_GPU_RESTART_GRACE)
 
-    logger.info("Checking TSAM pod logs for GPU markers...")
-    gpu_log_result = helm_utils.check_log_gpu_helm(
+    logger.info("Checking TSAM pod logs for sklearnex GPU offload proof...")
+    gpu_log_result = helm_utils.verify_sklearnex_device_offload_helm(
         namespace,
+        device="gpu",
         timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT,
         interval=10,
     )
-    logger.info(f"GPU log check result (Helm): {gpu_log_result}")
-    assert_condition(gpu_log_result is True, "GPU keywords not found in TSAM pod logs")
+    logger.info(f"GPU offload verification result (Helm): {gpu_log_result}")
+    assert_condition(gpu_log_result is True, "sklearnex did not confirm accelerated GPU inference in TSAM pod logs")
 
 
 @pytest.mark.gpu
