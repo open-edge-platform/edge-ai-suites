@@ -2,7 +2,7 @@
 
 ## Version 2026.2.0
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 This is the initial release of the application. It is intended for reference
 and evaluation purposes only and not for direct use in clinical or diagnostic
