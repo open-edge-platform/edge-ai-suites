@@ -1,0 +1,107 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "cv-pipeline-builder",
+  "notes": "The central non-obvious fact under test is that detector_multicam_rtsp.py:248 recovers detections by HSV colour-thresholding the boxes gvawatermark painted, so `label` is hardcoded \"vehicle\" and `confidence` a constant 0.8. A baseline agent reads the gvadetect element in the pipeline string and wrongly concludes that model class output reaches MQTT. Evals 1, 2 and 3 all fail in a specific, observable way without that knowledge.",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "swap-multiclass-model",
+      "prompt": "Swap the vision processor from the vehicle detection model to a multi-class COCO model so I can detect people and bicycles as well as cars in the nadir camera.",
+      "expected_output": "A change that replaces the watermark colour-thresholding with real GVA metadata extraction, plus the model and input-size updates.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Identifies that the current detection output is produced by colour-thresholding the gvawatermark overlay rather than by reading inference metadata.",
+        "States that because the label is hardcoded to \"vehicle\" and the confidence to 0.8, simply changing the model would leave every detection mislabelled as a vehicle.",
+        "Replaces the watermark parsing with GVA metadata extraction so that real per-object labels and confidences are published.",
+        "Updates MODEL_XML and MODEL_PROC together rather than changing only the model file.",
+        "Notes that the 416x416 input size is hardcoded in the Python source rather than configurable by environment variable, and must be changed if the new model expects a different resolution."
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "confidence-threshold-no-effect",
+      "prompt": "Every detection published to MQTT has confidence exactly 0.8, no matter what I set CONF_THRESH to. Is the confidence value broken?",
+      "expected_output": "An explanation that the published confidence is a hardcoded constant because detections are recovered from the rendered watermark, not from inference metadata.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains that the published confidence is a hardcoded constant and carries no information about model certainty.",
+        "Explains that detections are recovered by colour-thresholding the bounding boxes drawn by gvawatermark, which discards the model's real confidence.",
+        "Explains that CONF_THRESH still has an indirect effect because it controls which boxes gvadetect causes to be drawn in the first place.",
+        "Recommends reading GVA metadata if real per-object confidence values are required."
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "small-objects-missing",
+      "prompt": "The model detects small objects near the edge of the frame when I test it standalone, but those detections never show up on the MQTT topic. What is filtering them out?",
+      "expected_output": "Identification of the geometric filters in the watermark parser: minimum area, aspect ratio band, minimum dimensions, and the edge margin.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Identifies that a post-inference filter in the Python code, not the model or gvadetect, is discarding these detections.",
+        "Names the minimum contour area threshold as one cause of small objects being dropped.",
+        "Names the edge-margin rejection that discards detections whose centre falls within roughly 5 percent of any frame border.",
+        "Mentions at least one of the aspect-ratio band or the minimum width/height constraints as an additional filter.",
+        "Recommends switching to GVA metadata extraction rather than loosening the heuristic thresholds."
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "use-rtsp-flag-semantics",
+      "prompt": "I want the vision processor to consume the RTSP streams. USE_RTSP is currently unset. Do I need to change anything?",
+      "expected_output": "Confirmation that USE_RTSP defaults to false, which selects the legacy MQTT frame path, so it must be explicitly set to true.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "States that USE_RTSP defaults to false.",
+        "States that the false value selects the legacy MQTT frame-by-frame path rather than RTSP consumption.",
+        "Instructs the user to set USE_RTSP to true explicitly to get RTSP behaviour."
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "pipeline-stopped-on-disarm",
+      "prompt": "The vision-processor logs show the pipeline stopped and no detections are being published. Should I add a retry loop or restart the container automatically?",
+      "expected_output": "An explanation that pipeline teardown on disarm is intentional lifecycle behaviour, so no retry or restart should be added.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains that pipelines are deliberately torn down when the UAV disarms and rebuilt when it re-arms.",
+        "Explains the reason: an RTSP source would stall against a stream that is no longer being published.",
+        "Advises against adding a retry loop or automatic container restart to work around it.",
+        "Tells the user to arm the UAV to restore detections."
+      ]
+    },
+    {
+      "id": 6,
+      "eval_name": "new-processor-mqtt-port",
+      "prompt": "Write a standalone Python consumer that runs inside the compose network, subscribes to the detection topics for all cameras, and logs a running count per camera.",
+      "expected_output": "A consumer using the in-container broker port and the correct wildcard topic and payload schema.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Connects to the broker on the in-container port 1883 rather than the host-published port 1884, given the consumer runs inside the compose network.",
+        "Subscribes using the detection topic pattern uav/{uav_id}/camera/+/detections.",
+        "Parses the payload by reading the `objects` array and the nested `detection` object within each element.",
+        "Does not assume a message is published on every frame, since frames with no detections publish nothing."
+      ]
+    },
+    {
+      "id": 7,
+      "eval_name": "raise-inference-rate",
+      "prompt": "Inference feels sluggish at the default settings. How do I make the vision processor run inference more often, and what is the cost?",
+      "expected_output": "An explanation of the inference-interval derivation from STREAM_FPS and INFERENCE_FPS and the resulting GPU load tradeoff.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Identifies INFERENCE_FPS as the variable to raise, and explains that the GStreamer inference-interval is derived from the ratio of STREAM_FPS to INFERENCE_FPS.",
+        "Explains that decoding continues at full stream rate while inference runs on every Nth frame.",
+        "States that raising the inference rate increases GPU load roughly proportionally.",
+        "Mentions verifying that inference is running on the Intel GPU rather than silently falling back to CPU."
+      ]
+    }
+  ]
+}

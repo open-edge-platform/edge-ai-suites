@@ -1,0 +1,150 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "mission-compute-deployment",
+  "notes": "Stack deployment targets knowledge that is not in the README: that camera modes require different make targets (not just .env edits), that -lean targets skip observability, that bridges must restart after PX4 restarts, that RTSP/telemetry are only active while armed, that apps layer is optional and must run separately after core stack, and that MediaMTX validates RTSP stream paths.",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "start-sim-camera-stack",
+      "prompt": "I want to start the UAV SDK with the default Gazebo simulation and 3 virtual cameras. What commands do I run?",
+      "expected_output": "Instructions to run `make up-sim-camera` to start the core infrastructure, then `make apps` to start the vision-processor and dashboard.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recommends `make up-sim-camera` as the primary startup command for the default simulation mode.",
+        "Explains that the core stack (PX4, bridges, MQTT, RTSP) must start first before the apps layer.",
+        "Mentions `make apps` as a separate command to bring up the vision-processor and edge-ai-showcase dashboard.",
+        "Notes that the core stack exposes REST (8080), MQTT (1884), and RTSP (8554)."
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "switch-to-usb-camera",
+      "prompt": "I want to switch the stack from the Gazebo simulation to a real USB webcam. How do I do it?",
+      "expected_output": "Instructions to stop the current stack and run `make up-usb-camera` instead, with an explanation of the differences.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recommends stopping the current stack with `make down` and `make apps-down` before switching.",
+        "Instructs to run `make up-usb-camera` (not a manual .env edit) to select the USB camera profile.",
+        "Explains that the make target rewrites the .env file and composes the appropriate bridge.",
+        "Notes that USB mode uses 1 camera vs. the sim mode's 3 cameras.",
+        "Does not recommend editing .env directly or assume the profile can change without restarting."
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "stack-health-check",
+      "prompt": "How do I verify that the UAV SDK stack is healthy and all services are running?",
+      "expected_output": "A checklist of diagnostic commands to validate REST API, MQTT broker, RTSP streams, and container status.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Includes `curl -s localhost:8080/health` to check companion-bridge connectivity.",
+        "Includes an MQTT broker health check (e.g., `mosquitto_sub` with a short timeout).",
+        "Mentions the MediaMTX RTSP health endpoint or testing with `ffplay rtsp://localhost:8554/uav-1/nadir`.",
+        "Suggests `make validate-infra` as an automated validation command.",
+        "Notes that RTSP streams are only active when the UAV is armed."
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "realsense-depth-camera",
+      "prompt": "I have an Intel RealSense D400 depth camera. How do I configure the stack to use it?",
+      "expected_output": "Instructions to use `make up-realsense-camera` to configure the stack for the RealSense profile.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recommends `make up-realsense-camera` as the correct make target.",
+        "Explains that the RealSense profile exposes IR and depth RTSP streams.",
+        "Notes that USB connectivity and kernel drivers (librealsense2) must be available.",
+        "Mentions that this mode differs from sim (3 virtual cameras) and usb (1 color camera)."
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "lean-observability-skip",
+      "prompt": "I want to start the stack but don't need Grafana and metrics — I want to minimize resource usage. How?",
+      "expected_output": "Use the -lean make targets to skip the observability stack (InfluxDB, Grafana, metrics-manager).",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recommends the -lean variant: `make up-sim-camera-lean`, `make up-usb-camera-lean`, or `make up-realsense-camera-lean`.",
+        "Explains what is omitted: InfluxDB, Grafana, metrics-manager.",
+        "Notes that the core UAV functionality (PX4, bridges, MQTT, RTSP) remains unchanged.",
+        "Confirms that all API/MQTT/RTSP endpoints still work."
+      ]
+    },
+    {
+      "id": 6,
+      "eval_name": "teardown-procedure",
+      "prompt": "I want to stop the running stack cleanly. What's the correct order?",
+      "expected_output": "Stop the app layer first with `make apps-down`, then the core stack with `make down`.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recommends stopping the app layer (vision-processor, dashboard) first with `make apps-down`.",
+        "Then stops the core stack with `make down`.",
+        "Explains that this order prevents apps from trying to connect to a shutting-down core stack.",
+        "Mentions that `docker compose down` removes containers but leaves images."
+      ]
+    },
+    {
+      "id": 7,
+      "eval_name": "bridges-restart-after-px4-reset",
+      "prompt": "I restarted PX4 and now the REST API says the UAV is not connected. What do I do?",
+      "expected_output": "Manually restart the bridges after a PX4 restart because the MAVSDK connection may stale.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recognizes this as a known gotcha documented in the stack-deployment skill and CLAUDE.md.",
+        "Recommends restarting the companion-bridge: `docker restart companion-bridge`.",
+        "Explains that the MAVSDK connection from the bridge to PX4 does not auto-reconnect.",
+        "Notes that after restart, `curl localhost:8080/health` should return `connected: true`."
+      ]
+    },
+    {
+      "id": 8,
+      "eval_name": "cameras-not-publishing",
+      "prompt": "The RTSP streams on mediamtx are not showing any video. I see the streams listed but no frames are coming through.",
+      "expected_output": "Explanation that cameras only publish when the UAV is armed; check armed status and arm the UAV.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "States that camera bridges only publish video while the UAV is armed.",
+        "Recommends checking `curl localhost:8080/health | jq .armed` to verify armed status.",
+        "If disarmed, instructs to arm the UAV (via REST API: `curl -X POST localhost:8080/action/arm`).",
+        "Notes that disarming also tears down camera pipelines, which rebuild on re-arm (causing a brief delay)."
+      ]
+    },
+    {
+      "id": 9,
+      "eval_name": "port-already-in-use",
+      "prompt": "When I run `make up-sim-camera`, Docker fails because port 8080 is already in use. How do I fix this?",
+      "expected_output": "Edit the docker-compose.yml port bindings or kill the process using that port.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Suggests checking what is using port 8080: `lsof -i :8080` or `netstat -tlnp | grep 8080`.",
+        "Recommends either stopping the conflicting service or editing `docker-compose.yml` to bind to a different host port.",
+        "Notes the default ports: 8080 (REST), 8554 (RTSP), 1884 (MQTT), 3000 (Grafana).",
+        "Warns that changing the REST port also requires updating `.env` or hardcoding in mission scripts."
+      ]
+    },
+    {
+      "id": 10,
+      "eval_name": "validate-after-mode-switch",
+      "prompt": "I switched from sim camera to RealSense and restarted the stack. How do I confirm the new camera profile is active?",
+      "expected_output": "Check the .env file and validate that the correct RTSP streams are available.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Recommends checking `.env` to confirm `CAMERA_MODE=realsense` (or the appropriate value).",
+        "Lists the expected RTSP streams: `rtsp://localhost:8554/uav-1/ir` and `rtsp://localhost:8554/uav-1/depth` for RealSense.",
+        "Suggests validating with MediaMTX: `docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list`.",
+        "Notes that the make target rewrites .env automatically, so manual edits are not needed."
+      ]
+    }
+  ]
+}
