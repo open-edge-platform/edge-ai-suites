@@ -100,3 +100,12 @@ if [ ! -f server.key ] || [ ! -f server.crt ]; then
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
     chown -R "$(id -u):$(id -g)" server.key server.crt 2>/dev/null || true
 fi
+
+# Generate/refresh nginx basic auth credentials for the /storage/ (SeaweedFS filer) path
+if [ -n "$S3_STORAGE_USERNAME" ] && [ -n "$S3_STORAGE_PASSWORD" ]; then
+    echo "Generating nginx basic auth credentials for storage browsing..."
+    printf '%s:%s\n' "$S3_STORAGE_USERNAME" "$(openssl passwd -apr1 "$S3_STORAGE_PASSWORD")" > htpasswd
+    chown "$(id -u):$(id -g)" htpasswd 2>/dev/null || true
+else
+    echo "WARNING: S3_STORAGE_USERNAME/S3_STORAGE_PASSWORD not set; skipping nginx basic auth setup for /storage/ path."
+fi
