@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import '../../assets/css/Setup.css';
 // The log pane is shared with the Services screen, and its classes live there.
 import '../../assets/css/Services.css';
-import type { SetupStep } from '../../types/setup';
+import { SETUP_ERROR, type SetupStep } from '../../types/setup';
 import { copyText, revealSetupLogs, useSetup, useSetupLogs } from '../../services/setupManager';
 import { useServices } from '../../services/serviceManager';
 import LogViewer from '../Services/LogViewer';
@@ -42,7 +42,7 @@ interface SetupScreenProps {
 
 const SetupScreen: React.FC<SetupScreenProps> = ({ onOpenScreen, focusStepId }) => {
   const { t } = useTranslation();
-  const { sections, steps, error, busyId, checking, check, run, cancel } = useSetup();
+  const { sections, steps, error, errorCode, busyId, checking, check, run, cancel } = useSetup();
   const { services, start } = useServices();
   const { lines, clear: clearLogs } = useSetupLogs();
   const [runningAll, setRunningAll] = useState(false);
@@ -188,7 +188,16 @@ const SetupScreen: React.FC<SetupScreenProps> = ({ onOpenScreen, focusStepId }) 
         </div>
       </div>
 
-      {error && <div className="setup-error">{error}</div>}
+      {error && (
+        <div className="setup-error">
+          <span>{error}</span>
+          {errorCode === SETUP_ERROR.BACKEND_RUNNING && onOpenScreen && (
+            <button className="setup-btn" onClick={() => onOpenScreen('services')}>
+              {t('setup.openServices', 'Open Services')}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* The environment is what everything else waits on, so lead with it. */}
       {steps.some((step) => step.id === 'venv' && (step.status === 'missing' || step.status === 'failed')) && (
