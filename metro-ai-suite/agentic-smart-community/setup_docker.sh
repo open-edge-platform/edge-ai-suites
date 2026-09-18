@@ -62,6 +62,12 @@ is_vllm_healthy() {
   curl -s --max-time 5 "$VLLM_HEALTH_URL" 2>/dev/null | grep -q '"id"'
 }
 
+is_external_serving_reachable() {
+  local status
+  status="$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' "$VLLM_ENDPOINT" 2>/dev/null || true)"
+  [ "$status" != "000" ] && [ -n "$status" ]
+}
+
 # Resolve each role against the standard OpenAI /v1/models response. The
 # requested name must match an advertised ID; never select by list order.
 resolve_model_name() {
@@ -70,6 +76,11 @@ resolve_model_name() {
     -H "Authorization: Bearer ${api_key}" "${base_url%/}/models" 2>/dev/null \
     | python3 -c 'import json, sys; print("\\n".join(str(item["id"]) for item in json.load(sys.stdin).get("data", []) if isinstance(item, dict) and item.get("id")))' 2>/dev/null || true)"
   if [ -z "$models" ]; then
+    if [ -n "$requested" ]; then
+      echo -e "${YELLOW}Warning: ${role} serving did not return a usable model list from ${base_url%/}/models; using configured model '${requested}' without validation.${NC}" >&2
+      printf '%s' "$requested"
+      return 0
+    fi
     echo -e "${RED}Error: ${role} serving did not return a usable model from ${base_url%/}/models.${NC}" >&2
     return 1
   fi
@@ -519,6 +530,11 @@ if [ "$UP_CONTAINERS" = true ]; then
       wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
       resolve_serving_models || exit 1
       prepare_mcp_config || exit 1
+      compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
+    elif is_external_serving_reachable; then
+      resolve_serving_models || exit 1
+      prepare_mcp_config || exit 1
+      echo "External model serving is reachable but does not expose a usable model list — starting multilevel + videostream-analytics + smart-community-mcp-server with the configured model IDs."
       compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     else
       echo -e "${RED}Error: external serving is not reachable at ${VLLM_HEALTH_URL}.${NC}" >&2
