@@ -51,6 +51,7 @@ hide_directive-->
 :hidden:
 
 get-started.md
+Blueprint <./blueprint.md>
 How To Customize <./how-to-customize/index.md>
 How To Evaluate and Accelerate <./how-to-evaluate-accelerate/index.md>
 How To Extend Functionality <./how-to-extend-functionality/index.md>
