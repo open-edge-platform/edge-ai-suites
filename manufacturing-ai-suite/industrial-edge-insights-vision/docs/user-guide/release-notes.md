@@ -2,7 +2,7 @@
 
 ## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 **New**:
 

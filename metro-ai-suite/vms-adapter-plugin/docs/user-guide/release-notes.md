@@ -1,6 +1,6 @@
 # Release Notes: VMS Adapter Plugin
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 ## Version 1.0.0
 

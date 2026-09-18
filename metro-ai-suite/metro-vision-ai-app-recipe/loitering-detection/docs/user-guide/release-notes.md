@@ -2,7 +2,7 @@
 
 ## Version 1.6.0
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 **New**:
 
