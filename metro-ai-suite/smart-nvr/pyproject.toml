@@ -11,7 +11,7 @@ dependencies = [
     "aiofiles>=24.1.0,<25",
     "pydantic>=2.13.4,<3",
     "python-dotenv>=1.2.2,<2",
-    "gradio>=6.7.0,<6.8",
+    "gradio>=6.27.0,<6.28",
     "paho-mqtt>=2.1.0,<3",
     "aiomqtt>=2.3.0,<3",
     "pyyaml>=6.0.2",
@@ -32,6 +32,10 @@ dev = [
 # not an installable library, so uv must not try to build/install it.
 [tool.uv]
 package = false
+# Force transitive dep pulled in by gradio to a patched, CVE-free version.
+constraint-dependencies = [
+    "pillow>=12.3.0",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
