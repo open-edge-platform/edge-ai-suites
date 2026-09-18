@@ -1,0 +1,104 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "skill_name": "mission-compute-authoring",
+  "notes": "Expectations target knowledge that is not derivable from the SDK README or CLAUDE.md: that GET /telemetry carries no live position (companion_bridge.py:103,319), that goto negates `down` into altitude (:255), and that PX4 auto-disarms after landing. Baseline runs without the skill are expected to poll REST for lat/lon and to append an explicit disarm.",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "survey-mission-waypoints",
+      "prompt": "Write a mission script for the UAV SDK that takes off to 20 m, flies a 4-point square survey pattern 30 m on a side, and lands.",
+      "expected_output": "A Python mission script that drives the companion-bridge REST API for commands and subscribes to MQTT for position feedback, with correct goto altitude sign.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Sends commands to the companion-bridge REST API at port 8080 using POST /action/<action> rather than connecting to PX4 or MAVSDK directly.",
+        "Obtains live position from the MQTT topic uav/{uav_id}/telemetry/position rather than from GET /telemetry or GET /state.",
+        "Passes a negative `down` value (or equivalently negates the target altitude) when calling the goto action so the UAV climbs rather than descends.",
+        "Arms before calling takeoff.",
+        "Ends the mission at land without issuing an explicit disarm action.",
+        "Checks the `success` field of the JSON response rather than relying only on the HTTP status code."
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "keyerror-latitude-debug",
+      "prompt": "My mission script crashes with KeyError: 'latitude' on this line: pos = requests.get('http://localhost:8080/telemetry').json(); lat = pos['latitude']. Why?",
+      "expected_output": "An explanation that the REST /telemetry endpoint returns only status and home fields, and that live position is published to MQTT only.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "States that GET /telemetry returns the bridge's internal state dict, which contains only connected, armed, mode, stale, flight_time_s, timestamp and the home_* fields.",
+        "States that live position is published to MQTT and is not exposed on any REST endpoint.",
+        "Names the MQTT topic uav/{uav_id}/telemetry/position as the correct source.",
+        "Notes that the position payload uses suffixed key names such as latitude_deg and longitude_deg rather than latitude."
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "goto-altitude-sign",
+      "prompt": "I called the goto action with north=50, east=0, down=15 and the drone descended into the ground instead of holding altitude. What did I get wrong?",
+      "expected_output": "An explanation that `down` is negated into altitude by the bridge, so a positive down flies below home.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains that the bridge computes altitude as the negation of the `down` parameter, so a positive `down` places the target below home altitude.",
+        "Gives the corrected call using a negative `down` value to fly above home.",
+        "Identifies the offsets as NED metres relative to the home position rather than absolute GPS coordinates."
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "mission-directory-missing",
+      "prompt": "Add a new orbit mission to the mission-simulation sample app in this SDK.",
+      "expected_output": "Recognition that sample-apps/mission-simulation/ does not exist in the tree and must be created, not assumed.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Determines that the sample-apps/mission-simulation directory does not currently exist in the repository despite being referenced in README.md and CLAUDE.md.",
+        "Creates the directory and the new mission script rather than claiming to edit or copy an existing template file.",
+        "Does not fabricate the contents of a pre-existing mission file such as mission_1_survey.py."
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "home-position-race",
+      "prompt": "My mission calls goto as its first action after arming and sometimes fails with 'Home position not yet known'. How should I fix it?",
+      "expected_output": "Guidance to poll for the home_lat field before the first goto, because home is populated only after a valid GPS fix.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains that the home position is recorded only when the first valid GPS position arrives, so it is unavailable immediately after startup.",
+        "Recommends polling GET /telemetry until home_lat is present before issuing the first goto.",
+        "Notes that the home_* keys are absent from the response entirely until that first fix, so the check must tolerate a missing key rather than a null value."
+      ]
+    },
+    {
+      "id": 6,
+      "eval_name": "video-drops-between-legs",
+      "prompt": "Between each leg of my multi-leg mission I disarm the UAV to be safe, but the camera feed drops out every time and takes seconds to come back. How do I keep video continuous?",
+      "expected_output": "An explanation that cameras publish only while armed and that pipelines tear down on disarm, so the UAV should stay armed across the mission.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Explains that cameras publish only while the UAV is armed, so disarming stops the RTSP streams.",
+        "Explains that the camera bridge and vision-processor tear down their pipelines on disarm and rebuild them on re-arm, which accounts for the delay.",
+        "Recommends keeping the UAV armed for the duration of the mission instead of disarming between legs."
+      ]
+    },
+    {
+      "id": 7,
+      "eval_name": "mission-run-invocation",
+      "prompt": "How do I run a mission script against the running stack from my host machine?",
+      "expected_output": "The documented invocation using the .venv interpreter with both REST and MQTT environment variables set to host-reachable ports.",
+      "should_trigger": true,
+      "files": [],
+      "expectations": [
+        "Instructs the user to create the virtual environment first with `make deps` and to invoke the script with the .venv interpreter.",
+        "Sets both the REST_API_* and MQTT_BROKER_* environment variables, reflecting that commands travel over REST and telemetry over MQTT.",
+        "Uses MQTT broker port 1884 for host-side access rather than the in-container port 1883.",
+        "Uses REST port 8080."
+      ]
+    }
+  ]
+}
