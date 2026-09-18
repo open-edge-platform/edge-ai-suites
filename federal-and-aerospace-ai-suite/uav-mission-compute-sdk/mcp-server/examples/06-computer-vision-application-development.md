@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Computer Vision Application Development
+# Example 6: Computer Vision Application Development
 
 Build a custom computer vision application on top of the UAV's live camera streams — not just run a canned detector, but have the agent design and wire up a full DLStreamer pipeline for your use case.
 
