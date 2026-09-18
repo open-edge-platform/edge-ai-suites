@@ -228,8 +228,8 @@ configure_genai_setup() {
 
 download_videos() {
     local video_dir="./resources/videos"
-    local video_url="https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
-    local videos=(1122north_h264.ts 1122east_h264.ts 1122south_h264.ts 1122west_h264.ts)
+    local video_url="https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos/synthetic_data"
+    local videos=(intersection_1_1.ts intersection_1_2.ts intersection_1_3.ts intersection_1_4.ts)
     mkdir -p "$video_dir"
     local downloaded=false
     for video in "${videos[@]}"; do
@@ -246,7 +246,7 @@ download_videos() {
 }
 
 start_rtsp_streamer() {
-    local videos=(1122north_h264.ts 1122east_h264.ts 1122south_h264.ts 1122west_h264.ts)
+    local videos=(intersection_1_1.ts intersection_1_2.ts intersection_1_3.ts intersection_1_4.ts)
     for video in "${videos[@]}"; do
         if [ ! -f "./resources/videos/${video}" ]; then
             print_error "Missing video: ./resources/videos/${video}"

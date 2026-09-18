@@ -44,6 +44,7 @@ CLONE_PATH="$APP_DIR/$CLONE_DIR"
 export DEPS_DIR="$CLONE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
 export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
+export STIA_OVERRIDES_DIR="${APP_DIR}/src/config/smart-intersection-overrides"
 export SI_SETUP_REPO_URL="${SI_SETUP_REPO_URL:-https://github.com/svamsik/edge-ai-suites.git}"
 export SI_SETUP_BRANCH="${SI_SETUP_BRANCH:-svamsik/si-rtsp-config}"
 export RTSP_STREAM_IP="${RTSP_STREAM_IP:-${SI_RTSP_HOST:-}}"
@@ -191,6 +192,41 @@ if [ -z "$VLM_MODEL_NAME" ]; then
     return 1
 fi
 
+# Copy tracked site-specific Smart Intersection overrides (DL Streamer Pipeline Server
+# config and Scenescape scene bundle) into the vendored RI dependency. These live under
+# version-controlled $STIA_OVERRIDES_DIR (not in deps/metro-vision, which is gitignored and
+# recreated on every re-clone/upgrade), so this step must run every time dependencies are
+# checked/installed to keep the RI in sync.
+apply_stia_overrides() {
+    local dlsps_config_src="${STIA_OVERRIDES_DIR}/dlstreamer-pipeline-server/config.json"
+    local dlsps_config_dst="${RI_DIR}/src/dlstreamer-pipeline-server/config.json"
+    local scene_src="${STIA_OVERRIDES_DIR}/webserver/smart-intersection-ri.tar.bz2"
+    local scene_dst="${RI_DIR}/src/webserver/smart-intersection-ri.tar.bz2"
+
+    if [ ! -f "$dlsps_config_src" ] && [ ! -f "$scene_src" ]; then
+        # No overrides tracked yet; keep the RI defaults untouched.
+        return 0
+    fi
+
+    echo -e "${BLUE}==> Applying Smart Intersection overrides from ${STIA_OVERRIDES_DIR} ...${NC}"
+
+    if [ -f "$dlsps_config_src" ]; then
+        cp -f "$dlsps_config_src" "$dlsps_config_dst" || {
+            echo -e "${RED}ERROR: Failed to apply DL Streamer Pipeline Server config override.${NC}"
+            return 1
+        }
+        echo -e "${GREEN}Applied DL Streamer Pipeline Server config override.${NC}"
+    fi
+
+    if [ -f "$scene_src" ]; then
+        cp -f "$scene_src" "$scene_dst" || {
+            echo -e "${RED}ERROR: Failed to apply Scenescape scene bundle override.${NC}"
+            return 1
+        }
+        echo -e "${GREEN}Applied Scenescape scene bundle override.${NC}"
+    fi
+}
+
 # Verify if dependencies are setup; if not, clone the required dependency and run install script
 check_and_setup_dependencies() {
     echo -e "${BLUE}==> Setting up required dependencies ...${NC}"
@@ -233,6 +269,8 @@ check_and_setup_dependencies() {
         return 1
     fi
     echo -e "${GREEN}Installation script completed successfully${NC}"
+
+    apply_stia_overrides || return 1
 
     # Create symbolic link to compose-scenescape.yml in docker dir of agent application
     rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null
@@ -653,6 +691,47 @@ get_si_rtsp_stream_path() {
     esac
 }
 
+# Resolve the actual loaded pipeline name for a given camera number.
+# Custom DLSPS configs (e.g. via smart-intersection-overrides) may use a
+# different name prefix than the stock demo (e.g. "intersection1-cam1"
+# instead of "intersection-cam1"), so discover the real name from the API
+# instead of hardcoding it. Excludes -gpu/-npu device variants.
+resolve_si_pipeline_name() {
+    local camera_number="$1"
+    local api_base="$2"
+    local pipelines_json
+    local match
+
+    # NOTE: the pipeline's runtime/instance name lives in the "version"
+    # field of each entry returned by GET /api/pipelines; "name" is always
+    # the pipeline group ("user_defined_pipelines").
+    pipelines_json=$(curl -k -s --noproxy '*' "${api_base}") || return 1
+
+    match=$(printf '%s' "$pipelines_json" | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+cam = 'cam${camera_number}'
+candidates = [
+    p.get('version') for p in data
+    if isinstance(p, dict) and p.get('version', '').endswith(cam)
+    and not p.get('version', '').endswith(cam + '-gpu')
+    and not p.get('version', '').endswith(cam + '-npu')
+]
+if candidates:
+    print(candidates[0])
+" 2>/dev/null)
+
+    if [ -z "$match" ]; then
+        # Fallback to legacy hardcoded convention
+        match="intersection-cam${camera_number}"
+    fi
+
+    printf '%s' "$match"
+}
+
 start_si_dlsps_rtsp_pipelines() {
     if [ -z "$RTSP_STREAM_IP" ]; then
         return 0
@@ -666,7 +745,8 @@ start_si_dlsps_rtsp_pipelines() {
 
     echo -e "${BLUE}==> Starting Smart Intersection DLStreamer pipelines with RTSP source ${RTSP_STREAM_IP}:${RTSP_STREAM_PORT} ...${NC}"
     for camera_number in 1 2 3 4; do
-        local pipeline_name="intersection-cam${camera_number}"
+        local pipeline_name
+        pipeline_name=$(resolve_si_pipeline_name "$camera_number" "$api_base")
         local payload
         local response
         local http_code
