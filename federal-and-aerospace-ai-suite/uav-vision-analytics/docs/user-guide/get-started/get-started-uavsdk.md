@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-
 # Get Started (UAV Mission Compute SDK Mode)
 
 This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in UAV Mission Compute SDK mode and running the demo with a simulated UAV camera feed/RealSense cameras.
@@ -14,13 +13,9 @@ A minimal single-container stack. Telemetry is received via MQTT from the `uav-m
 
 ![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.drawio.svg)
 
-
 **Telemetry / pipeline lifecycle flow:**
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 sequenceDiagram
     participant SDK as uav-mission-compute-sdk
     participant OVL as gvapython (MavlinkReceiver)
@@ -35,7 +30,7 @@ sequenceDiagram
 **Services:**
 
 | Service | Image | Ports | Role |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` | `8081`, `8555` | AI inference, RTSP output |
 
 ---
@@ -223,10 +218,13 @@ curl -s http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.
 ```
 
 If `state` is `ERROR`, check the container logs:
+
 ```bash
 docker logs dlstreamer-pipeline-server 2>&1 | tail -20
 ```
+
 Change following **three values** to switch between CPU / GPU / NPU:
+
 1. **Pipeline name** in the URL path (`nadir_camera_rtsp_cpu` → `forward_camera_rtsp_gpu` / `rear_camera_rtsp_npu`)
 2. **RTSP path** in the request body (`nadir` → `forward` / `rear`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
@@ -246,6 +244,7 @@ ffplay rtsp://<HOST_IP>:8555/rear               # rearcamera
 ```
 
 #### Capture all the video streams
+
 Record all three streams to disk with `ffmpeg`:
 
 ```bash
@@ -294,7 +293,7 @@ make down
 ### UAV Mission Compute SDK Mode (`config-uavsdk.json`)
 
 | Pipeline | Device | Source (inside Docker) | Output RTSP (host) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `nadir_camera_rtsp_cpu` | CPU | `rtsp://host.docker.internal:8554/uav-1/nadir` | `rtsp://<HOST_IP>:8555/nadir` |
 | `forward_camera_rtsp_gpu` | GPU | `rtsp://host.docker.internal:8554/uav-1/forward` | `rtsp://<HOST_IP>:8555/forward` |
 | `rear_camera_rtsp_npu` | NPU | `rtsp://host.docker.internal:8554/uav-1/rear` | `rtsp://<HOST_IP>:8555/rear` |
@@ -314,7 +313,7 @@ REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{nam
 Each output frame carries these overlaid fields in the upper-left corner:
 
 | Field | Source MAVLink message | Description |
-|---|---|---|
+| --- | --- | --- |
 | `Name` | — | Name passed as argument to the gvapython |
 | `Frame` | — | Running frame counter |
 | `ALT` | `GLOBAL_POSITION_INT.relative_alt` | Relative altitude (m) |
@@ -329,7 +328,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 ## Port Reference
 
 | Port | Protocol | Service | Mode |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `8081` | HTTP | DL Streamer REST API | All modes |
 | `8555` | RTSP | Annotated video output | All modes |
 
@@ -338,10 +337,9 @@ Each output frame carries these overlaid fields in the upper-left corner:
 ## Documentation
 
 | Document | Description |
-|---|---|
+| --- | --- |
 | [index.md](../index.md) | Application overview and component block diagrams |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
-

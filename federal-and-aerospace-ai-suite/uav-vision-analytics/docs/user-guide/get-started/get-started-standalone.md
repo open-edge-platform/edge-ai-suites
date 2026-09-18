@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-
 # Get Started (Standalone Mode / pymavlink)
 
 This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in standalone mode (pymavlink) and running the demo with a simulated UAV camera feed/RealSense cameras.
@@ -17,9 +16,6 @@ A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manag
 **Telemetry flow:**
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 sequenceDiagram
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
@@ -36,9 +32,9 @@ sequenceDiagram
 **Services:**
 
 | Service | Image | Ports | Role |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP output |
-| `px4` | `px4io/px4-sitl` | `14550`  | Flight controller simulator |
+| `px4` | `px4io/px4-sitl` | `14550` | Flight controller simulator |
 | `mavlink-router` | custom build | `14551` | MAVLink UDP routing (:14550 → :14541) |
 | `metrics-manager` | `intel/metrics-manager` | `9090` | CPU/GPU/NPU/power metrics |
 
@@ -102,7 +98,6 @@ make model
 
 > See the [AI Model guide](../how-to-guides/model.md) for model details.
 
-
 ### 3. Standalone mode (pymavlink)
 
 ```bash
@@ -160,6 +155,7 @@ echo "Instance ID: $INSTANCE_ID"
 ```
 
 Change following **three values** to switch between CPU / GPU / NPU:
+
 1. **Pipeline name** in the URL path (`uav_object_detection_cpu` → `_gpu` / `_npu`)
 2. **RTSP path** in the request body (`uav-mavlink-cpu` → `uav-mavlink-gpu` / `uav-mavlink-npu`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
@@ -185,9 +181,7 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 > [!NOTE]
 > Other ways to view the stream:
 > - Leverage versatile streaming media players such as VLC Player to seamlessly handle, manage, and playback the incoming streams with ease and efficiency.
->
 > - **QGroundControl (QGC)** — connect and view the stream directly in its video panel; see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for connection details. For the [Step 4](#4-start-inference-pipelines)-Option A flow, connecting QGC and pressing takeoff is arms the drone and triggers the pipeline manager to starts the selected pipeline and serves the RTSP stream once the UAV is armed. If the UAV is armed without a takeoff command, PX4 SITL automatically disarms it again after a few seconds.
->
 > - `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 4](#4-start-inference-pipelines)):
@@ -211,7 +205,7 @@ make pymav-down
 ### pymavlink mode (`config-pymavlink.json`)
 
 | Pipeline | Device | Source | Output |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `uav_object_detection_cpu` | CPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
 | `uav_object_detection_gpu` | GPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
 | `uav_object_detection_npu` | NPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
@@ -229,7 +223,7 @@ make pymav-down
 Each output frame carries these overlaid fields in the upper-left corner:
 
 | Field | Source MAVLink message | Description |
-|---|---|---|
+| --- | --- | --- |
 | `Name` | — | Name passed as argument to the gvapython |
 | `Frame` | — | Running frame counter |
 | `ALT` | `GLOBAL_POSITION_INT.relative_alt` | Relative altitude (m) |
@@ -244,7 +238,7 @@ Each output frame carries these overlaid fields in the upper-left corner:
 ## Port Reference
 
 | Port | Protocol | Service | Mode |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `8081` | HTTP | DL Streamer REST API | All modes |
 | `8555` | RTSP | Annotated video output | All modes |
 | `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes |
@@ -259,8 +253,8 @@ Intel RealSense camera setup and pipelines details are provided in the [RealSens
 ## Documentation
 
 | Document | Description |
-|---|---|
+| --- | --- |
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [benchmark.md](../benchmark.md) | Performance benchmarking guide  |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |

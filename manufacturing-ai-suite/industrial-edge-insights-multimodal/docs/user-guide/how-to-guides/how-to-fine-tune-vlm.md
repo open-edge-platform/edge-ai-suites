@@ -138,9 +138,6 @@ At a high level, this is a generic two-stage flow that sits on top of
 any dataset-preparation step you bring:
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 flowchart TD
     subgraph S0["Your Dataset Prep (domain-specific — bring your own, see the Weld Usecase guide)"]
         direction LR
