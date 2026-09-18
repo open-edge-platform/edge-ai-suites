@@ -5,7 +5,7 @@ from ..services import (
     process_query,
     build_chain,
 )
-from ..logger import logger
+from ..utils.logger import logger
 from http import HTTPStatus
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException

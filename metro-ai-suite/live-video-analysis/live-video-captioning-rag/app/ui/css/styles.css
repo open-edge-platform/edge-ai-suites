@@ -64,6 +64,14 @@ header {
   margin-bottom: 0;
 }
 
+body.embedded-mode header {
+  justify-content: flex-start;
+}
+
+body.embedded-mode #themeToggle {
+  display: none !important;
+}
+
 h1,
 h2 {
   margin: 0;

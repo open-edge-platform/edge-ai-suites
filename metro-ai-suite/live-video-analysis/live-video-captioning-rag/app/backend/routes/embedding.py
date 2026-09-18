@@ -4,7 +4,7 @@
 from ..services import (
     process_embeddings
 )
-from ..logger import logger
+from ..utils.logger import logger
 from http import HTTPStatus
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException

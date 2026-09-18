@@ -47,10 +47,10 @@ spec:
             - /bin/sh
             - -c
             - |
-              LLM_MODEL_ID_RAW={{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId .Values.env.llmModelId "" | quote }}
+              LLM_MODEL_ID_RAW={{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId "" | quote }}
               LLM_MODEL_TYPE={{ coalesce .Values.global.llmModel.modelType .Values.env.llmModel.modelType "llm" | quote }}
               LLM_WEIGHT_FORMAT={{ coalesce .Values.global.llmModel.weightFormat .Values.env.llmModel.weightFormat "" | quote }}
-              LLM_DEVICE={{ (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) | quote }}
+              LLM_DEVICE={{ (ternary "NPU" (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) (or .Values.global.llmModel.useNPU.enabled .Values.env.llmModel.useNPU.enabled)) | quote }}
               if [ -z "$LLM_MODEL_ID_RAW" ]; then
                 echo "ERROR: global.llmModel.modelId must be set"
                 exit 1
@@ -86,7 +86,7 @@ spec:
             - name: LLM_MODEL_ID
               value: {{ .Values.global.llmModel.modelId | quote }}
             - name: LLM_DEVICE
-              value: {{ (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) | quote }}
+              value: {{ (ternary "NPU" (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) (or .Values.global.llmModel.useNPU.enabled .Values.env.llmModel.useNPU.enabled)) | quote }}
             - name: http_proxy
               value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
@@ -197,12 +197,22 @@ spec:
             - name: dri-device
               mountPath: /dev/dri
       {{- end }}
+      {{- if .Values.global.llmModel.useNPU.enabled }}
+            - name: accel-device
+              mountPath: /dev/accel
+      {{- end }}
       {{- if .Values.global.llmModel.useGPU.enabled }}
           resources:
             requests:
               {{ .Values.global.llmModel.useGPU.key}}: 1
             limits:
               {{ .Values.global.llmModel.useGPU.key}}: 1
+      {{- else if .Values.global.llmModel.useNPU.enabled }}
+          resources:
+            requests:
+              {{ .Values.global.llmModel.useNPU.key}}: 1
+            limits:
+              {{ .Values.global.llmModel.useNPU.key}}: 1
       {{- else if .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
@@ -222,6 +232,12 @@ spec:
         - name: dri-device
           hostPath:
             path: /dev/dri
+            type: Directory
+      {{- end }}
+      {{- if .Values.global.llmModel.useNPU.enabled }}
+        - name: accel-device
+          hostPath:
+            path: /dev/accel
             type: Directory
       {{- end }}
         - name: models

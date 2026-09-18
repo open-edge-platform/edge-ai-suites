@@ -188,6 +188,8 @@ spec:
               value: {{ .Values.global.enableRAG | quote }}
             - name: LIVE_VIDEO_RAG_HOST_PORT
               value: {{ .Values.env.liveVideoRagHostPort | quote }}
+            - name: RAG_CHATBOT_MODE
+              value: {{ .Values.global.ragChatbotMode | quote }}
             {{- end }}
             {{- include "lvc.proxyEnv" . | nindent 12 }}
           livenessProbe:

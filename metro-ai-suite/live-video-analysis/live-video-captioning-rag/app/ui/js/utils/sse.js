@@ -35,7 +35,9 @@ const SSEUtil = (function () {
                         if (line.startsWith('event:')) {
                             eventName = line.slice(6).trim() || 'message';
                         } else if (line.startsWith('data:')) {
-                            dataLines.push(line.slice(5)); // keep leading spaces
+                            let data = line.slice(5);
+                            if (data.startsWith(' ')) data = data.slice(1);
+                            dataLines.push(data);
                         }
                     }
                     onEvent({ event: eventName, data: dataLines.join('\n') });
