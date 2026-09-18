@@ -12,19 +12,21 @@ from config import (
     ADVERSE_WEATHER_CONDITIONS,
     GPX_DIR,
     IGNORED_ROUTES,
+    REASONING_ENABLED,
     CongestionLevel,
     PlannerNode,
     StaticOptimizerName,
 )
 from controllers import (
     LiveTrafficController,
+    ReasoningModelController,
     StaticRouteOptimizerFactory,
     ThresholdController,
 )
 from utils.gpx_parser import MapDataParser
 from utils.helper import get_all_available_route_files as route_files
 from utils.logging_config import get_logger
-from schema import LiveTrafficData
+from schema import LiveTrafficData, IntersectionCondition, RouteCandidate
 
 
 logger = get_logger(__name__)
@@ -432,6 +434,222 @@ class RoutePlanner:
             "all_routes_data": all_routes_data,
         }
 
+    async def _collect_route_candidates(
+        self,
+        source: str,
+        destination: str,
+        all_routes_data: List[LiveTrafficData],
+    ) -> list[RouteCandidate]:
+        """
+        Build the complete candidate set for the reasoning model.
+        """
+
+        candidates: list[RouteCandidate] = []
+        live_traffic_controller = LiveTrafficController()
+
+        for route_file in set(self.all_routes) - set(IGNORED_ROUTES):
+            try:
+                route_parser = await MapDataParser.create(GPX_DIR / route_file)
+                waypoints = route_parser.get_waypoints()
+
+                # Keep only the routes that actually connect the requested source and destination.
+                source_wpt = waypoints[0] if waypoints else None
+                destination_wpt = waypoints[-1] if waypoints else None
+                if not source_wpt or not destination_wpt:
+                    continue
+
+                if not (
+                    (
+                        source_wpt["name"] == source
+                        or source_wpt["description"] == source
+                    )
+                    and (
+                        destination_wpt["name"] == destination
+                        or destination_wpt["description"] == destination
+                    )
+                ):
+                    continue
+
+                route_data = route_parser.get_route_data()
+                distance = route_parser.get_total_distance()
+            except Exception as e:
+                logger.error(f"Error parsing route file {route_file}: {e}")
+                continue
+            finally:
+                if "route_parser" in locals():
+                    route_parser.clean()  # Clean up parser instance to free memory
+
+            trackpoints = route_data.get("waypoints", [])
+            trackpoints.extend(
+                route_data.get("tracks", [{}])[0].get("track_points", [])
+            )
+
+            # The same coordinate comparison as the rule based path is reused deliberately, so
+            # that any behavioural difference between the two paths comes from the decision
+            # being made and never from the data being matched differently.
+            conditions: list[IntersectionCondition] = []
+            matched_intersections: set[str] = set()
+            for trackpoint in trackpoints:
+                for traffic_status in all_routes_data:
+                    if (
+                        abs(
+                            traffic_status.location_coordinates.latitude
+                            - trackpoint["lat"]
+                        )
+                        <= live_traffic_controller.proximity_factor
+                        and abs(
+                            traffic_status.location_coordinates.longitude
+                            - trackpoint["lon"]
+                        )
+                        <= live_traffic_controller.proximity_factor
+                        and traffic_status.intersection_name
+                        not in matched_intersections
+                    ):
+                        matched_intersections.add(traffic_status.intersection_name)
+                        conditions.append(
+                            IntersectionCondition(
+                                intersection_name=traffic_status.intersection_name,
+                                traffic_density=traffic_status.traffic_density,
+                                weather_status=traffic_status.weather_status.value
+                                if traffic_status.weather_status
+                                else "",
+                                incident_status=traffic_status.incident_status.value
+                                if traffic_status.incident_status
+                                else "",
+                            )
+                        )
+
+            candidates.append(
+                RouteCandidate(
+                    route_name=route_file,
+                    distance_km=round(distance, 2),
+                    has_live_data=bool(conditions),
+                    conditions=conditions,
+                )
+            )
+
+        # Stable ordering keeps the prompt deterministic across iterations.
+        candidates.sort(key=lambda candidate: candidate.distance_km)
+        logger.debug(
+            f"Collected {len(candidates)} route candidates for reasoning: "
+            f"{[(c.route_name, c.distance_km, len(c.conditions)) for c in candidates]}"
+        )
+        return candidates
+
+    def _pick_incident_marker(
+        self,
+        candidates: list[RouteCandidate],
+        selected_route_name: str,
+        all_routes_data: List[LiveTrafficData],
+    ) -> LiveTrafficState:
+        """
+        Choose the intersection to highlight as an incident on the map.
+        """
+
+        worst_condition: Optional[IntersectionCondition] = None
+        worst_route: Optional[RouteCandidate] = None
+
+        for candidate in candidates:
+            if candidate.route_name == selected_route_name:
+                continue
+            for condition in candidate.conditions:
+                if (
+                    worst_condition is None
+                    or condition.traffic_density > worst_condition.traffic_density
+                ):
+                    worst_condition = condition
+                    worst_route = candidate
+
+        # No other route carries live data, so there is nothing to mark. The UI simply draws
+        # no incident marker, exactly as it does today when no issue is found.
+        if not worst_condition or not worst_route:
+            return {"route_name": "", "distance": 0.0}
+
+        live_traffic_state: LiveTrafficState = {
+            "route_name": worst_route.route_name,
+            "distance": worst_route.distance_km,
+            "intersection_name": worst_condition.intersection_name,
+            "traffic_density": worst_condition.traffic_density,
+        }
+
+        # Coordinates and timestamp are only available on the original live traffic record.
+        for traffic_status in all_routes_data:
+            if traffic_status.intersection_name == worst_condition.intersection_name:
+                live_traffic_state["location_coordinates"] = (
+                    traffic_status.location_coordinates
+                )
+                live_traffic_state["timestamp"] = traffic_status.timestamp
+                if traffic_status.traffic_description:
+                    live_traffic_state["traffic_description"] = (
+                        traffic_status.traffic_description
+                    )
+                break
+
+        return live_traffic_state
+
+    async def decide_route_with_reasoning(self, state: State) -> State:
+        """
+        Selects the optimal route using the reasoning model served by OVMS.
+
+        Falls back to the rule based real-time optimizer whenever the model cannot produce a
+        usable decision, so that route planning never stops because of an inference problem.
+        """
+
+        logger.info("Planning route using the reasoning model ...")
+
+        source = state.get("source", "")
+        destination = state.get("destination", "")
+
+        live_traffic_controller = LiveTrafficController()
+        all_routes_data: List[
+            LiveTrafficData
+        ] = await live_traffic_controller.fetch_route_status()
+
+        candidates = await self._collect_route_candidates(
+            source, destination, all_routes_data
+        )
+
+        decision = await ReasoningModelController().decide_route(
+            source, destination, candidates
+        )
+
+        if decision is None:
+            logger.warning(
+                "Reasoning path unavailable. Falling back to rule based route selection."
+            )
+            fallback_state = await self.update_optimal_route_realtime(state)
+            fallback_state["reasoning_fallback"] = True
+            # IMPORTANT: the previous state is merged back in on every iteration, so a summary
+            # left over from an earlier successful decision must be cleared explicitly.
+            # Without this, a stale justification would keep being shown after a failure.
+            fallback_state["reasoning_summary"] = ""
+            return fallback_state
+
+        selected_candidate = next(
+            candidate
+            for candidate in candidates
+            if candidate.route_name == decision.selected_route
+        )
+
+        return {
+            "optimal_route": {
+                "route_name": selected_candidate.route_name,
+                "distance": selected_candidate.distance_km,
+            },
+            "live_traffic": self._pick_incident_marker(
+                candidates, selected_candidate.route_name, all_routes_data
+            ),
+            "is_sub_optimal": decision.is_sub_optimal,
+            "all_routes_data": all_routes_data,
+            "reasoning_summary": decision.reason,
+            "reasoning_fallback": False,
+            # IMPORTANT: no_fly_list is an accumulating state field (Annotated[list, add]).
+            # The reasoning path re-evaluates every route on each iteration by design, so it must
+            # contribute nothing. Adding routes here would permanently retire them across
+            # iterations and starve the candidate set over a long session.
+            "no_fly_list": [],
+        }
+
     def _should_rerun_static_route_optimizers(self, state: State) -> bool:
         """Re-run static route optimizers until optimizer stack is empty"""
         return len(state.get("static_optimizers", [])) > 0
@@ -446,7 +664,9 @@ class RoutePlanner:
         # if static optimizers are available, run static optimization node
         elif state.get("static_optimizers", []):
             return PlannerNode.OPTIMAL.value
-        # Otherwise run realtime route optimization node
+        # Use the reasoning model when the user has configured one, otherwise keep the rule based path.
+        elif REASONING_ENABLED:
+            return PlannerNode.REASONING.value
         else:
             return PlannerNode.REALTIME.value
 
@@ -458,6 +678,9 @@ class RoutePlanner:
         self.graph.add_node(PlannerNode.OPTIMAL.value, self.find_optimal_route)
         self.graph.add_node(
             PlannerNode.REALTIME.value, self.update_optimal_route_realtime
+        )
+        self.graph.add_node(
+            PlannerNode.REASONING.value, self.decide_route_with_reasoning
         )
 
         # Add conditional edges from START node to each of the three nodes, based on _route_optimizers_selector response.
@@ -472,6 +695,7 @@ class RoutePlanner:
             {True: PlannerNode.OPTIMAL.value, False: END},
         )
         self.graph.add_edge(PlannerNode.REALTIME.value, END)
+        self.graph.add_edge(PlannerNode.REASONING.value, END)
 
         # Compile the graph to be able to execute it
         return self.graph.compile()
@@ -512,6 +736,8 @@ class RoutePlanner:
             live_traffic=route_detail.get("live_traffic", {}),
             is_sub_optimal=route_detail.get("is_sub_optimal", False),
             all_routes_data=route_detail.get("all_routes_data", []),
+            reasoning_summary=route_detail.get("reasoning_summary", ""),
+            reasoning_fallback=route_detail.get("reasoning_fallback", False),
         )
 
         return route_detail
