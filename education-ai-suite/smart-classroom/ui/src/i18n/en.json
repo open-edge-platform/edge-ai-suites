@@ -60,6 +60,7 @@
       "allReadyRunning": "Everything is ready and the backend is running.",
       "startBackend": "Start backend",
       "backToGetStarted": "Back to Get started",
+      "openServices": "Open Services",
       "sections": {
         "system": "System and drivers",
         "software": "Software and environment"

@@ -19,7 +19,10 @@ function ok(data) {
 
 function fail(error) {
   // Message only — stacks and absolute paths stay in the main process log.
-  return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  // A code comes too when the thrower set one, so the renderer can offer a way
+  // out of a known failure without matching on its English text.
+  const code = typeof error?.code === 'string' ? error.code : undefined;
+  return { ok: false, error: error instanceof Error ? error.message : String(error), code };
 }
 
 function register({ manager, logs, setup, getWindow }) {
