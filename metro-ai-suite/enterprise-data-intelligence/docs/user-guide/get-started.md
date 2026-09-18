@@ -87,7 +87,7 @@ grep -q 'intel/llm-scaler-vllm:0.11.1-b7' "$compose" || {
 sed -i \
   -e '/--disable-log-requests/d' \
   -e 's@ source /opt/intel/oneapi/setvars.sh --force &&@@' \
-  -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.21.0-b1@g' \
+  -e 's@intel/llm-scaler-vllm:0.11.1-b7@intel/llm-scaler-vllm:0.14.0-b8.3.2@g' \
   -e 's@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=1@VLLM_OFFLOAD_WEIGHTS_BEFORE_QUANT=0@g' \
   -e "s|$server_image_template|$server_image|g" \
   "$compose"
@@ -97,7 +97,7 @@ grep -Fq "$server_image" "$compose" || {
   exit 1
 }
 
-grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
+grep -q 'intel/llm-scaler-vllm:0.14.0-b8.3.2' "$compose" || {
   echo "ERROR: vLLM image rewrite did not apply to $compose; aborting" >&2
   exit 1
 }
