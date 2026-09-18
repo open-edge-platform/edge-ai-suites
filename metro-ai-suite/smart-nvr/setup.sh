@@ -208,24 +208,6 @@ configure_scenescape_setup() {
     fi
 }
 
-configure_genai_setup() {
-    if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
-        print_info "Enabling GenAI detection in Frigate"
-
-        if [ -f "./resources/frigate-config/config.yml" ]; then
-            sed -i '/^\s*genai:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
-            # Enable Detect - required for GenAI
-            sed -i '/^\s*detect:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
-            print_success "GenAI and Detection enabled in Frigate configuration"
-        else
-            print_error "Frigate config file not found at ./resources/frigate-config/config.yml"
-            return 1
-        fi
-    else
-        print_info "NVR_GENAI is disabled"
-    fi
-}
-
 download_videos() {
     local video_dir="./resources/videos"
     local video_url="https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
@@ -288,16 +270,6 @@ stop_scenescape() {
 validate_environment() {
     export NVR_SCENESCAPE="${NVR_SCENESCAPE:-false}"
 
-    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
-        if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
-            print_error "NVR_GENAI cannot be enabled when NVR_SCENESCAPE is enabled"
-            return 1
-        fi
-        export NVR_GENAI=false
-    else
-        export NVR_GENAI="${NVR_GENAI:-false}"
-    fi
-
     # Check for VSS endpoint — one nginx proxy serves both summary and search
     if [ -z "${VSS_IP}" ]; then
         print_error "VSS_IP environment variable is required"
@@ -307,19 +279,6 @@ validate_environment() {
     export VSS_PORT="${VSS_PORT:-12345}"
     print_info "Using VSS endpoint: ${VSS_IP}:${VSS_PORT}"
 
-    if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
-        if [ -z "${VLM_SERVING_IP}" ]; then
-            print_error "VLM_SERVING_IP environment variable is required when NVR_GENAI is enabled"
-            print_info "Please set it to the IP address of your VLM Model Endpoint"
-            return 1
-        fi
-
-        if [ -z "${VLM_SERVING_PORT}" ]; then
-            print_error "VLM_SERVING_PORT environment variable is required when NVR_GENAI is enabled"
-            print_info "Please set it to the port of your VLM Model Endpoint (typically 9766)"
-            return 1
-        fi
-    fi
     # Resolve MQTT credentials — auto-generates if not provided by the user
     if ! resolve_mqtt_credentials; then
         print_error "Could not resolve MQTT credentials. Aborting."
@@ -352,11 +311,6 @@ start_services() {
         if ! start_scenescape; then
             return 1
         fi
-    fi
-
-    # Configure GenAI setup
-    if ! configure_genai_setup; then
-        return 1
     fi
 
     print_info "Starting Docker Compose services..."
@@ -472,10 +426,6 @@ start_nvr_services() {
     fi
 
     if ! SCENESCAPE_NVR_ONLY=true configure_scenescape_setup; then
-        return 1
-    fi
-
-    if ! configure_genai_setup; then
         return 1
     fi
 

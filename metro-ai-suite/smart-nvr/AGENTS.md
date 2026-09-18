@@ -75,12 +75,9 @@ start RTSP/Scenescape components depending on environment flags. Treat changes u
 
 Important environment variables used by the stack include:
 
-- `NVR_GENAI`
 - `NVR_SCENESCAPE`
 - `VSS_IP`
 - `VSS_PORT`
-- `VLM_SERVING_IP`
-- `VLM_SERVING_PORT`
 - `SI_RTSP_HOST`
 - `SCENESCAPE_MQTT_BROKER`
 - `MAX_CONCURRENT_EVENTS`
