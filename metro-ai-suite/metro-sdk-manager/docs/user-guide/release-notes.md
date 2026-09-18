@@ -2,7 +2,7 @@
 
 ## Intel® OEP SDK Manager 2026.2.0 Release
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 **New**:
 
