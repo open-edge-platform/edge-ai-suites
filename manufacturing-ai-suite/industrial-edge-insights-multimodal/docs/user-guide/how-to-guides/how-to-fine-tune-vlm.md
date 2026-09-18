@@ -140,20 +140,17 @@ any dataset-preparation step you bring:
 ```mermaid
 flowchart LR
     subgraph S0["Your Dataset Prep (domain-specific — bring your own, see the Weld Usecase guide)"]
-        direction TD
         A["Your raw data"] --> B["system/user/assistant</br>conversations per sample"]
         B --> C["Parquet export</br>(image + conversation_json columns)"]
     end
 
     subgraph S1["Fine-Tuning (generic — train_qwen.py)"]
-        direction TD
         E["Load parquet dataset"] --> F["Base VLM + LoRA adapter</br>(FastVisionModel)"]
         F --> G["SFTTrainer</br>(Unsloth vision collator)"]
         G --> H["LoRA adapter</br>saved to disk"]
     end
 
     subgraph S2["Inference / Serving (generic — infer_qwen.py)"]
-        direction TD
         J["Load base model</br>+ LoRA adapter"] --> K["Streamed model response"]
     end
 
