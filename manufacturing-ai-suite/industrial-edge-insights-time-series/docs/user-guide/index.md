@@ -35,6 +35,7 @@ hide_directive-->
 :hidden:
 
 get-started
+Blueprint <blueprint>
 how-to-guides
 wind-turbine-anomaly-detection/index
 troubleshooting

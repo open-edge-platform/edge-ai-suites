@@ -108,6 +108,7 @@ You can also check the [system requirements](./get-started/system-requirements.m
 :hidden:
 
 get-started
+Blueprint <blueprint>
 Release Notes <release-notes>
 
 :::

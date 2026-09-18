@@ -38,6 +38,7 @@ visual inspection and sensor data analysis to identify anomalies in welding data
 :hidden:
 
 get-started.md
+Blueprint <./blueprint.md>
 how-to-guides.md
 weld-defect-detection/index.md
 troubleshooting.md
