@@ -75,6 +75,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | [`references/DEPLOY.md`](references/DEPLOY.md) | Docker Compose services, env vars, Makefile targets, volumes, device access |
 | [`references/MODEL.md`](references/MODEL.md) | YOLO11s download + OpenVINO export, custom model substitution |
 | [`references/TESTS.md`](references/TESTS.md) | pytest structure, REST API tests, RTSP stream validation, MQTT checks |
+| [`benchmark.md`](benchmark.md) | benchmarking the generated stack's inference throughput/latency |
 
 ## Parameters (from invoking prompt)
 
