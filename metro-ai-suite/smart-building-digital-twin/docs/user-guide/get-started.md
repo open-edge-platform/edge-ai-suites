@@ -43,11 +43,11 @@ complete replay loop, preventing partial data from a mid-loop startup from affec
 
 | Image | Tag |
 |---|---|
-| `intel/scenescape-manager` | `2026.2.0-rc3` |
-| `intel/scenescape-controller` | `2026.2.0-rc3` |
-| `intel/scenescape-autocalibration` | `2026.2.0-rc3` |
-| `intel/scenescape-analytics` | `2026.2.0-rc3` |
-| `intel/dlstreamer-pipeline-server` | `2026.2.0-ubuntu24-rc3` |
+| `intel/scenescape-manager` | `2026.2.0` |
+| `intel/scenescape-controller` | `2026.2.0` |
+| `intel/scenescape-autocalibration` | `2026.2.0` |
+| `intel/scenescape-analytics` | `2026.2.0` |
+| `intel/dlstreamer-pipeline-server` | `2026.2.0-ubuntu24` |
 
 `setup.sh` automatically downloads the GStreamer plugin scripts (`gstplugins/`) used by the
 Deep Learning Streamer (DL Streamer), from the Scenescape repository using a sparse shallow
