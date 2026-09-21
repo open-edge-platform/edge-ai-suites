@@ -58,7 +58,7 @@ Edit `user_values_override.yaml` with values for your environment:
 | `app.mcpServersConfig` | MCP server configuration JSON (see `resources/mcp_servers.json` for format) | See `values.yaml` |
 | `app.nodeSelector` | Schedule app pod on a specific node | `kubernetes.io/hostname: worker1` |
 
-> **Note:**
+> [!NOTE]
 > - `user_values_override.yaml` may contain credentials. Do not commit it to version control.
 > - `.svc.cluster.local` must be included in `global.proxy.noProxy` to allow cluster-internal communication.
 > - GPU and NPU can be enabled independently. For example, use GPU for the VLM and NPU for the LLM by enabling both and setting the appropriate `device` value in each `ovms` / `ovms-llm` section.
@@ -80,7 +80,8 @@ my_namespace=lva
 kubectl create namespace $my_namespace || true
 ```
 
-> **Note:** All subsequent steps assume `my_release` and `my_namespace` are set in your shell session. The `|| true` makes the namespace creation safe to re-run.
+> [!NOTE]
+> All subsequent steps assume `my_release` and `my_namespace` are set in your shell session. The `|| true` makes the namespace creation safe to re-run.
 
 ### 5. Deploy the Helm Chart
 
@@ -97,7 +98,8 @@ kubectl get svc -n $my_namespace
 
 Before proceeding, ensure all pods show `Running` status and `1/1` in the READY column.
 
-> **Note:** The OVMS pod may take up to 10 minutes on first start while the VLM model is downloaded. Set `global.keepPvc: true` to retain the model across reinstalls.
+> [!NOTE]
+> The OVMS pod may take up to 10 minutes on first start while the VLM model is downloaded. Set `global.keepPvc: true` to retain the model across reinstalls.
 
 ### 7. Access the Application
 

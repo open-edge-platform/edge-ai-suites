@@ -141,7 +141,8 @@ Execute the command below to start the autonomous simulation pipeline:
 ros2 launch wandering_bringup wandering_sim.launch.py gui:=true
 ```
 
-> **Note:** By default, `gui` is set to `false` in `wandering_sim.launch.py`. The Gazebo simulation continues running headlessly in the backend via Gazebo server, significantly reducing GPU and CPU resource overhead while RViz handles visualization. Omit `gui:=true` when running on resource-constrained systems, headless test nodes, or automated benchmarks.
+> [!NOTE]
+> By default, `gui` is set to `false` in `wandering_sim.launch.py`. The Gazebo simulation continues running headlessly in the backend via Gazebo server, significantly reducing GPU and CPU resource overhead while RViz handles visualization. Omit `gui:=true` when running on resource-constrained systems, headless test nodes, or automated benchmarks.
 
 **What this starts:**
 

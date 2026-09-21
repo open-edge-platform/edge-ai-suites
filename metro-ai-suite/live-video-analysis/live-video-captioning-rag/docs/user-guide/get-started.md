@@ -104,7 +104,9 @@ By default the model is converted on CPU. To explicitly set the device:
   --weight-format int8 \
   --device <CPU|GPU|NPU>
 ```
-> Note: NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
+
+> [!NOTE]
+> NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 The VLM models stored under `ov_models`.
 
@@ -122,7 +124,9 @@ Download a LLM model for RAG.
   --device CPU \
   --weight-format int8
 ```
-> Note: LLM model support for NPU is not yet enabled in Live-Video-Captioning-RAG application.
+
+> [!NOTE]
+> LLM model support for NPU is not yet enabled in Live-Video-Captioning-RAG application.
 
 This stores the model under `llm_models/`.
 
@@ -140,9 +144,11 @@ From the `live-video-analysis/live-video-captioning-rag` directory, start the sa
 docker compose up -d
 ```
 
-> **Note:** Docker Compose automatically reads values from `.env` in the project root.
+> [!NOTE]
+> Docker Compose automatically reads values from `.env` in the project root.
 
-> **Note:** The application will take some time to start. Check the container status and ensure that they are in the `"healthy/running"` state using the `docker ps` command before accessing the application.
+> [!NOTE]
+> The application will take some time to start. Check the container status and ensure that they are in the `"healthy/running"` state using the `docker ps` command before accessing the application.
 
 ### 5. Access the application
 

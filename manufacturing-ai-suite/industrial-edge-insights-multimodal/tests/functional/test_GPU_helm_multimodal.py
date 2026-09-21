@@ -53,6 +53,7 @@ logger = logging.getLogger(__name__)
 def _run_multimodal_helm_gpu_flow(device):
     """Execute the five documented multimodal helm steps sequentially."""
     device_upper = device.upper()
+    tsa_device = "GPU"
 
     # Pre-check: pods are healthy before activation
     pods_result = helm_utils.verify_pods(namespace_multi)
@@ -73,13 +74,23 @@ def _run_multimodal_helm_gpu_flow(device):
     logger.info(f"upload_udf_tar_package result: {step2}")
     assert_condition(step2, "Failed to upload multimodal UDF tar package")
 
-    # Step 3: Activate the TSA UDF config on chosen device
-    logger.info(f"Step 3: Activating Time Series Analytics UDF (device='{device_upper}')")
+    # Step 3: Activate the TSA UDF config on the TSA-compatible device
+    logger.info(f"Step 3: Activating Time Series Analytics UDF (device='{tsa_device}')")
     step3 = helm_utils.activate_multimodal_tsa_udf_config(
-        namespace_multi, device_value=device_upper
+        namespace_multi, device_value=tsa_device
     )
     logger.info(f"activate_multimodal_tsa_udf_config result: {step3}")
-    assert_condition(step3, f"Failed to activate Time Series Analytics UDF on {device_upper}")
+    assert_condition(step3, f"Failed to activate Time Series Analytics UDF on {tsa_device}")
+
+    logger.info("Verifying TSAM pod logs confirm sklearnex accelerated execution on the TSA-compatible device...")
+    tsa_result = helm_utils.verify_sklearnex_device_offload_helm(
+        namespace_multi,
+        device=tsa_device,
+        timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT,
+        interval=10,
+    )
+    logger.info(f"TSAM sklearnex verification result: {tsa_result}")
+    assert_condition(tsa_result is True, f"TSAM did not confirm accelerated {tsa_device} inference in logs")
 
     # Step 4: Activate DL Streamer pipeline on chosen device
     logger.info(f"Step 4: Activating DL Streamer pipeline (device='{device_upper}')")
@@ -96,7 +107,7 @@ def _run_multimodal_helm_gpu_flow(device):
         f"inference output to be written to InfluxDB..."
     )
     time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
-    
+
     influx_result = helm_utils.verify_multimodal_influxdb_data(chart_path_multi, namespace_multi)
     assert_condition(influx_result and influx_result.get("success"), f"InfluxDB verification failed: {influx_result.get('error') if influx_result else 'No result returned'}")
     assert_condition(influx_result.get("sensor_data_count", 0) > 0, "Time Series Analytics measurement data missing from InfluxDB")

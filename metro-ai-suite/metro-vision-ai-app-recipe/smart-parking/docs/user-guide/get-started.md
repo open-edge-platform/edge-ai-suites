@@ -51,7 +51,8 @@ By following this guide, you will learn how to:
      ./install.sh smart-parking
      ```
 
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the
+> [!NOTE]
+> For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the
 > IP address : `./install.sh smart-parking <HOST_IP>` (replace `<HOST_IP>` with your target IP address).
 
 ## Run the Application
@@ -106,7 +107,8 @@ By following this guide, you will learn how to:
        ./sample_stop.sh
        ```
 
-     > **Note:** This will stop all the pipelines and the streams. **DO NOT** run this if
+     > [!NOTE]
+     > This will stop all the pipelines and the streams. **DO NOT** run this if
      > you want to see smart parking detection.
 
      </details>

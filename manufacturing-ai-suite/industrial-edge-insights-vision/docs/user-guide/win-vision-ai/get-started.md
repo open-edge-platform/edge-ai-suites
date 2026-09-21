@@ -2,9 +2,13 @@
 
 Win Vision AI is a Python application for running concurrent GStreamer inference pipelines on Intel hardware (CPU / GPU / NPU) on Windows 11.
 
----
-
 ## Prerequisites
+
+### Optional Hardware (GPU / NPU)
+
+For quick deployment of optional hardware components, you can use
+[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
+provided as part of Open Edge Platform.
 
 ### Install Python and Git
 
@@ -25,9 +29,8 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
-> **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
-
----
+> [!NOTE]
+> By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 
 ## Set Up the Application
 
@@ -51,8 +54,6 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
-
----
 
 ### Set Environment Variables
 
@@ -87,7 +88,8 @@ Run this once to download `bin\gstgencamsrc.dll` (from the Edge AI Libraries Git
 .\src\setup_genicam_runtime.ps1
 ```
 
-> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+> [!NOTE]
+> If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 ##### Set Camera Environment Variables
 
@@ -121,8 +123,6 @@ Verify the camera plugin loaded correctly:
 gst-inspect-1.0 gencamsrc
 ```
 
----
-
 ### Download MediaMTX (for RTSP / WebRTC streaming)
 
 Required when any pipeline uses RTSP or WebRTC frame output.
@@ -134,8 +134,6 @@ New-Item -ItemType Directory -Path "<mediamtx_dir>"
 python src/setup_mediamtx.py --dir <mediamtx_dir> --version v1.18.1
 $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 ```
-
----
 
 ### Download a Model
 
@@ -153,20 +151,25 @@ python src/download_models.py --model yolo11n --outdir C:/Users/<username>/model
 
 Use the exported `.xml` path in `config.yaml`.
 
-> **Note:** You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
+> [!NOTE]
+> You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
+>
 > ```powershell
 > wget -O pallet_defect_detection.zip "https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip" ; Expand-Archive -Path "pallet_defect_detection.zip" -DestinationPath "models"
 > wget -O warehouse.avi "https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/warehouse.avi"
 > ```
+>
 > Update the model and video paths in `config.yaml` accordingly.
 
 ---
 
 ### Configure `config.yaml`
 
-> **Note:** The `config.yaml` file is located in the `win-vision-ai` directory of your clone (i.e., `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/config.yaml`).
+> [!NOTE]
+> The `config.yaml` file is located in the `win-vision-ai` directory of your clone (i.e., `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/config.yaml`).
 
-> **Note:** Use forward slashes in all YAML paths to avoid escape issues.
+> [!NOTE]
+> Use forward slashes in all YAML paths to avoid escape issues.
 
 #### Metrics
 
@@ -183,13 +186,13 @@ metrics:
 
 When **enabled**, each pipeline logs a full stats line every interval:
 
-```
+```text
 state=PLAYING     fps_avg=30.6    fps_now=31.6    lat_avg=3.01 ms  frames=1047
 ```
 
 When **disabled**, only the frame count is shown:
 
-```
+```text
 state=PLAYING     frames=121
 ```
 
@@ -270,7 +273,8 @@ Requires the camera environment variables from [Set Environment Variables](#set-
 
 `serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
-> **Note:** If specified, `width` and `height` values must be greater than 60.
+> [!NOTE]
+> If specified, `width` and `height` values must be greater than 60.
 
 > **Supported pixel formats:** The basic configuration supports standard formats - `mono8`, `bgr8`, `rgb8`, and `ycbcr422_8`. For other pixel formats — use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
 
@@ -429,13 +433,12 @@ pipelines:
 
 For detection models use `model_id` as `inst0`, and for classifcation models use `model_id` as `inst1`.
 
----
-
 ### Supported Pipeline Combinations
 
 The following combinations are supported in basic configuration mode.
 
-> **Important:** `input` and `inference` are **mandatory** for all pipeline combinations below.
+> [!IMPORTANT]
+> `input` and `inference` are **mandatory** for all pipeline combinations below.
 
 | Frame Output  | Metadata Output |
 | ------------- | --------------- |
@@ -456,15 +459,13 @@ The following combinations are supported in basic configuration mode.
 | None          | MQTT + File     |
 | None          | None            |
 
-> **Notes:**
+> [!NOTE]
 >
 > - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
 > - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
 > - When no frame output is configured, the pipeline renders locally using `d3d11videosink`.
 
 For custom element chains or combinations not listed above, use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
-
----
 
 ## Run the App
 
@@ -474,19 +475,18 @@ python app.py config.yaml
 
 On startup the app loads the config, starts MediaMTX, launches all pipelines, and prints viewer URLs:
 
-```
+```text
 [front] RTSP stream:   rtsp://localhost:8554/front
 [back]  WebRTC stream: http://localhost:8889/back
 ```
 
 Press **Ctrl+C** if you need to forcefully stop the application.
 
----
-
 ## Advanced: Raw Pipeline Mode
 
 Pass complete GStreamer strings directly — `models` and `pipelines` sections are ignored:
-> **Note:** When using `whipclientsink` (in raw pipeline mode), the WHIP endpoint path must include the `/whip` suffix (e.g. `http://localhost:8889/front/whip`). The browser viewer URL does **not** include `/whip` — open `http://localhost:8889/front` to watch the stream.
+> [!NOTE]
+> When using `whipclientsink` (in raw pipeline mode), the WHIP endpoint path must include the `/whip` suffix (e.g. `http://localhost:8889/front/whip`). The browser viewer URL does **not** include `/whip` — open `http://localhost:8889/front` to watch the stream.
 
 ```yaml
 raw_pipelines:
@@ -501,8 +501,6 @@ raw_pipelines:
 The above pipelines are example pipelines to run with webrtc/rtsp/any sink element.
 
 MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears in a string.
-
----
 
 ## Troubleshooting
 

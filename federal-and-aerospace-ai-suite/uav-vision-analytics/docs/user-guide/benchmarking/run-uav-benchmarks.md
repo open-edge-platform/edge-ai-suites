@@ -13,14 +13,14 @@ determines the maximum number of concurrent drone-camera video streams the
 system can process (**stream density**) while sustaining a target frame rate,
 and simultaneously collects hardware utilization and power metrics from `metrics-manager`.
 
-> **Note**:
+> [!NOTE]
 > Other benchmarking optios are also offered by Open Edge Platform. Use
-  [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
-  for comparing AI pipeline performance across CPU, GPU, and NPU.
+> [Visual Pipeline and Platform Evaluation Tool (ViPPET)](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)
+> for comparing AI pipeline performance across CPU, GPU, and NPU.
 >
 > For platform-level benchmarking, see the [Edge Workloads and Benchmarks Guide](./run-edge-benchmarks.md) -
-  a solution for end-to-end video analytics pipelines, vision AI inference,
-  hardware-accelerated media processing, and generative AI.
+> a solution for end-to-end video analytics pipelines, vision AI inference,
+> hardware-accelerated media processing, and generative AI.
 
 
 ## Table of Contents
@@ -52,7 +52,7 @@ running. See [index.md](../index.md) for full setup instructions.
 The model must exist at:
 
 ```text
-resources/models/yolov8n-visdrone/best_openvino_model/best.xml
+resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml
 ```
 
 Run `make model` if it is missing (Deployment will fail with an error if the model is absent).
@@ -184,7 +184,8 @@ utilization measurements.
 | **Platform power** | `hw_rapl_psys_w` (full platform), `hw_rapl_pkg_w` (SoC), `hw_rapl_core_w`, `hw_rapl_uncore_w`, `hw_pkg_power_w` | RAPL + qmassa |
 | **NPU** | `hw_npu_utilization`, `hw_npu_frequency`, `hw_npu_power`, `hw_npu_temperature`, `hw_npu_memory_mb`, `hw_npu_bandwidth` | Zero when pipeline uses CPU/GPU |
 
-> **Note:** *HW metrics disabled automatically** if `metrics-manager` is not
+> [!NOTE]
+> *HW metrics disabled automatically** if `metrics-manager` is not
 > reachable — the FPS benchmark continues normally and `hw_sample_count: 0` appears in `kpi.txt`.
 
 ## Available Pipelines
@@ -215,8 +216,8 @@ must be physically attached and accessible inside the container.
 | `uav_realsense_gpu` | GPU | RealSense (v4l2) |
 | `uav_realsense_npu` | NPU | RealSense (v4l2) |
 
-All pipelines use the **YOLOv8n-VisDrone** model (FP16 OpenVINO IR) at 640×640
-resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, motor, etc.).
+All pipelines use the **YOLO11s** model (FP16 OpenVINO IR) at 640×640
+resolution for drone object detection (pedestrian, car, van, truck, bus, bicycle, etc.).
 
 List pipeline names available in the payload file at any time:
 
@@ -540,7 +541,8 @@ uav-vision-analytics/
     └── sample.logs
 ```
 
-> **Note:** Intermediate numbered directories (`benchmark-1/`, `benchmark-2/`,
+> [!NOTE]
+> Intermediate numbered directories (`benchmark-1/`, `benchmark-2/`,
 > etc.) are created during the search and **automatically cleaned up** once the
 > best result is copied to the named `benchmark-density-<pipeline>/` directory.
 

@@ -39,7 +39,8 @@ cp edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/
 cp edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/usecases/rtsp-deterministic-inference/rtsp_camera_pipeline/config.json .
 ```
 
-> **Notes for this step:**
+> [!NOTE]
+> For this step:
 > - If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
 > - Update `<rtsp-camera-username>`, `<rtsp-camera-password>`, and `<rtsp-camera-url>` in `config.json` before proceeding.
 > - If you are behind a proxy, add the RTSP camera IP to the `no_proxy` environment variable.
@@ -92,4 +93,5 @@ curl -k http://localhost:8080/pipelines/user_defined_pipelines/rtsp_camera_pipel
 }'
 ```
 
-> **Note:** Update the topic name if you are running the pipeline on multiple machines.
+> [!NOTE]
+> Update the topic name if you are running the pipeline on multiple machines.

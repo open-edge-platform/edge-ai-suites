@@ -197,7 +197,8 @@ This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/iss
 
 - Now the Application UI should show objects detected on scene.
 
-  > **Note:** For Helm deployments, use the equivalent commands to inspect logs and restart the scene controller.
+  > [!NOTE]
+  > For Helm deployments, use the equivalent commands to inspect logs and restart the scene controller.
 
 - Inspect the logs:
 
@@ -238,7 +239,8 @@ This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/iss
     -t '#' -v
   ```
 
-  > **Note:** The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
+  > [!NOTE]
+  > The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
 
 ## 3. Helm Deployments
 
@@ -294,7 +296,8 @@ This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/iss
   Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 Insufficient npu.intel.com/accel.
   ```
 
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), you will see `gpu.intel.com/xe` instead of `gpu.intel.com/i915`.
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), you will see `gpu.intel.com/xe` instead of `gpu.intel.com/i915`.
 
 - **Verification**: Confirm whether the GPU and/or NPU resources are available
   on your nodes:
@@ -313,7 +316,8 @@ This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/iss
   [Prerequisites](./get-started/deploy-with-helm.md#prerequisites)
   section for installation steps.
 
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `gpu.intel.com/xe` in `values.yaml`.
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `gpu.intel.com/xe` in `values.yaml`.
 
 ### 3.5 Accessing the MQTT Broker Externally
 
@@ -333,7 +337,8 @@ This is a [known issue](https://github.com/open-edge-platform/edge-ai-suites/iss
     -t '#' -v
   ```
 
-  > **Note:** The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
+  > [!NOTE]
+  > The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
 
 ### 6. **`dlstreamer-pipeline-server` pod shows `CreateContainerError`**
 

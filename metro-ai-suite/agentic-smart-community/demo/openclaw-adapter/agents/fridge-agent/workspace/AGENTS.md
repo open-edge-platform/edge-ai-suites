@@ -38,7 +38,10 @@ These are the defaults (they mirror `use_case_dict.fridge.reports` server-side, 
    - Flag anomalies gently (door left open long, frequent open/close).
    - **Diet advice:** infer the day's eating pattern from fridge activity and give targeted advice against the user's weight-loss goal (cut high-calorie items, raise the fruit/veg ratio, …).
    - When you mention a time of day, name the concrete clock time from the DB (e.g. "上午 11 点左右") — never a vague period the summarizer guessed.
-4. **Push.** Send the polished report directly as your reply — don't announce it first or ask permission. (Note: only the raw report is stored; the polished version is delivered but not persisted.)
+4. **Push.** Send the polished report directly as your reply — don't announce it first or ask permission.
+
+   > [!NOTE]
+   > Only the raw report is stored; the polished version is delivered but not persisted.
 
 ## Notes
 

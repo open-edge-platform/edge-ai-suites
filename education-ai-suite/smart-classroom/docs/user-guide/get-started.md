@@ -1,6 +1,7 @@
 # Get Started with Smart Classroom
 
-> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> [!IMPORTANT]
+> Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
 > PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
 
 There are two ways to run Smart Classroom. Both use the same services, models and
@@ -68,7 +69,8 @@ Each row shows what was found and what it blocks. Rows the app can fix have a bu
 outstanding in order. Progress appears in the **Output** pane below, and **Copy
 diagnostics** puts the whole list on the clipboard for a bug report.
 
-> **Note:** Creating the Python environment downloads several gigabytes, and preparing
+> [!NOTE]
+> Creating the Python environment downloads several gigabytes, and preparing
 > the layout detection model downloads and converts it. Both take a while on a first run.
 
 The backend cannot start until the Python environment exists.
@@ -79,7 +81,8 @@ The backend cannot start until the Python environment exists.
 the full list from `config.yaml`, `runtime_config.yaml` and `.proxy-config`, grouped and
 searchable. Saving a change while the services are running offers a restart.
 
-> **Note:** Speaker diarization (identifying who is speaking) is optional and requires a
+> [!NOTE]
+> Speaker diarization (identifying who is speaking) is optional and requires a
 > one-time Hugging Face access token. The **Get started** screen flags this when
 > diarization is enabled without a token; set it under **Configuration**, or see
 > [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional).
@@ -109,7 +112,8 @@ windows.
 .\setup-smart-classroom.ps1
 ```
 
-> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python
+> [!NOTE]
+> If all prerequisites are already installed (FFmpeg, DL Streamer, Python
 > dependencies), you can skip setup and go straight to `.\start-smart-classroom.ps1`.
 
 The setup script will:
@@ -130,7 +134,8 @@ The setup script will:
    - [3.5] Board OCR Configuration
    - [3.6] Grading Configuration (enable/disable Smart Grading)
 
-> **Note:** Speaker diarization (identifying who is speaking) is optional and requires a one-time
+> [!NOTE]
+> Speaker diarization (identifying who is speaking) is optional and requires a one-time
 > Hugging Face access token setup if enabled — see
 > [Speaker Diarization Setup](advance-setup-guide.md#f-speaker-diarization-setup-optional).
 
@@ -211,7 +216,8 @@ Advanced Setup guide covers:
 | Grading | 9012 | <http://localhost:9012/api/v1/health> |
 | Frontend | 5173 | <http://localhost:5173> |
 
-> **Note:** Layout Detection and Grading services only start when `grading.enabled: true` in `config.yaml`.
+> [!NOTE]
+> Layout Detection and Grading services only start when `grading.enabled: true` in `config.yaml`.
 > The desktop app is its own frontend and does not use port 5173.
 
 ## Learn More

@@ -8,6 +8,10 @@ The `Chat Question & Answer Core` sample application system requirements are doc
 
 The `HMI Augmented worker` sample application has been validated on Intel® Core&trade; i7-14700 based systems. The memory configuration used was 32GB, which is the recommended minimum configuration. This machine hosts an Edge Microvisor Toolkit based host together with Windows VM.
 
+For quick deployment of hardware components, you can use
+[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
+provided as part of Open Edge Platform.
+
 ## Software Requirements
 
 Required Software:

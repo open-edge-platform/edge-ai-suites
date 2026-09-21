@@ -76,7 +76,8 @@ Customize the pipeline according to your needs. For details, see the following D
 
 ## Start the Pipeline
 
-> **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> [!NOTE]
+> If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 Follow this procedure to start the pipeline.
@@ -190,7 +191,7 @@ Replace `HOST_IP` with the IP address of your system and `instance_id` with the 
 curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 ```
 
-> **Note:**
+> [!NOTE]
 > The instance ID is shown in the Terminal when the [pipeline was started](#start-the-pipeline) or when [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
 
 ## Additional Usage

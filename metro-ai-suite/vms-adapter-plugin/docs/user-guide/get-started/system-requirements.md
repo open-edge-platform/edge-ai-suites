@@ -45,7 +45,8 @@ Default ports (configurable via `.env`):
 | Provider Dashboard   | `3443`           | React UI (nginx)                     |
 | PostgreSQL           | `5433`           | Internal database (host-mapped)      |
 
-> **Note:** Ensure these ports are not in use by other services before starting the stack.
+> [!NOTE]
+> Ensure these ports are not in use by other services before starting the stack.
 
 ## Connected Service Requirements
 

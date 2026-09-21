@@ -66,13 +66,8 @@ const StartRecordingModal: React.FC<StartRecordingModalProps> = ({
   // would let that default overwrite the user's choice.
   const [loaded, setLoaded] = useState(false);
 
-  const hasAudioFeatures =
-    featureGuard.hasFeature('asr') ||
-    featureGuard.hasFeature('summary') ||
-    featureGuard.hasFeature('mindmap') ||
-    featureGuard.hasFeature('topic_segmentation') ||
-    featureGuard.hasFeature('report');
-  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasAudioFeatures = featureGuard.hasAnyFeatureForInput('audio');
+  const hasVideoAnalyticsFeature = featureGuard.hasAnyFeatureForInput('video');
 
   // Reloaded on every open: the microphone list changes when hardware is
   // plugged in, and Configuration may have renamed the project since last time.

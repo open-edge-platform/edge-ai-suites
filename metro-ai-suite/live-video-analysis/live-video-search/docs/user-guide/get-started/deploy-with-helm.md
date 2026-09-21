@@ -103,7 +103,8 @@ Common optional values:
 | `global.accelGroupIds` | Host group ids owning the accelerator device nodes (`/dev/dri`, `/dev/accel`); added to the pod `supplementalGroups` when a service uses GPU/NPU | `[992]` |
 | `frigate.usbCameraDevice` | USB device path (used with USB profile) | `/dev/video0` |
 
-> **Note:** Scenario selection is profile-driven. Use override profiles for mode switching (`default_override.yaml`, `rtsp_test_override.yaml`, `usb_camera_override.yaml`) instead of setting mode switches in `user_values_override.yaml`.
+> [!NOTE]
+> Scenario selection is profile-driven. Use override profiles for mode switching (`default_override.yaml`, `rtsp_test_override.yaml`, `usb_camera_override.yaml`) instead of setting mode switches in `user_values_override.yaml`.
 
 > **Tag Resolution Note:** `global.tag` is the fallback image tag. If `global.vssStackTag` is non-empty, VSS-side services use it instead of `global.tag`. If `global.smartNvrStackTag` is non-empty, Smart NVR-side services use it instead of `global.tag`. Leaving stack-specific tags empty makes those services inherit `global.tag`.
 
@@ -155,7 +156,8 @@ helm dependency build
 
 Deploy one of the following use cases.
 
-> **Note:** Before switching use cases, uninstall the existing release if it is already running:
+> [!NOTE]
+> Before switching use cases, uninstall the existing release if it is already running:
 > `helm uninstall lvs -n $my_namespace`
 
 #### Use Case 1: Default Live Video Search
@@ -216,7 +218,8 @@ Before proceeding, ensure:
 1. Pods are in `Running` state.
 2. Containers are in ready state.
 
-> **Note:** `init-resources` runs as a Kubernetes Job. Its pod can show `0/1 Completed` (for example, `lvs-live-video-search-init-resources-xxxxx 0/1 Completed`), which is expected. Use `kubectl get jobs -n $my_namespace` and confirm `lvs-live-video-search-init-resources` shows `COMPLETIONS 1/1` and `STATUS Complete`.
+> [!NOTE]
+> `init-resources` runs as a Kubernetes Job. Its pod can show `0/1 Completed` (for example, `lvs-live-video-search-init-resources-xxxxx 0/1 Completed`), which is expected. Use `kubectl get jobs -n $my_namespace` and confirm `lvs-live-video-search-init-resources` shows `COMPLETIONS 1/1` and `STATUS Complete`.
 
 If needed, inspect specific workloads:
 

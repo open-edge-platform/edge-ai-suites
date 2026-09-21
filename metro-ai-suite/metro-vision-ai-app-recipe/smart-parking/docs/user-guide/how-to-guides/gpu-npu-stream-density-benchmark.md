@@ -168,7 +168,8 @@ This section evaluates the best performance when **GPU and NPU pipelines run sim
   `Stream Density(NPU) = 7 - 2 = 5`, so the combined test uses 7 GPU streams and 5 NPU
   streams.
 
-> **Note:** In this document, `GPU!NPU` is shorthand for the combined run (GPU and NPU
+> [!NOTE]
+> In this document, `GPU!NPU` is shorthand for the combined run (GPU and NPU
 > together), not logical negation.
 
 ### Run the Combined Stream Density Benchmark
@@ -236,6 +237,7 @@ Applying a tuned backoff (for example, 2 streams per pipeline on this platform) 
 headroom for NPU-related media work, and enables higher total stream density than either
 standalone path while maintaining stable throughput.
 
-> **Note:** The values in this document are example reference results. Actual stream density
+> [!NOTE]
+> The values in this document are example reference results. Actual stream density
 > and throughput can vary by platform setup, software stack, and runtime conditions. Re-run the
 > benchmark in your target environment to validate expected behavior.

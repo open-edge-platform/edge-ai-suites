@@ -86,9 +86,8 @@ Checks:
 - Verify the `dlstreamer-pipeline-server` service is running.
 - Restart the pipeline server or the full application stack if the service is not running.
 
-Tip:
-
-- Size the number of streams according to the available hardware resources.
+> [!TIP]
+> Size the number of streams according to the available hardware resources.
 
 ## Proxy and no_proxy configuration (mandatory)
 
@@ -117,9 +116,9 @@ sudo systemctl restart docker
   ```bash
   source /etc/environment
   ```
-Note:
 
-- On an open network (no proxy), remove the proxy settings from the DLSPS (`dlstreamer-pipeline-server`) service in `compose.yaml`. This is a known bug and will be fixed soon.
+> [!NOTE]
+> On an open network (no proxy), remove the proxy settings from the DLSPS (`dlstreamer-pipeline-server`) service in `compose.yaml`. This is a known bug and will be fixed soon.
 
 ## DLSPS segfault from improper proxy configuration
 

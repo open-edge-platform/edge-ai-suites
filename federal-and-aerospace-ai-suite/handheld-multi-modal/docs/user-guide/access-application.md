@@ -5,7 +5,7 @@ They are bound to localhost only and are not exposed on any external IP address.
 Since the intended use is on handheld devices, the applications do not provide authentication
 or authorization.
 
-> **Note:**
+> [!NOTE]
 > The "self-signed certificate" browser warning is expected.
 > Modern browsers require HTTPS to enable microphone input used by Open WebUI and
 > Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure

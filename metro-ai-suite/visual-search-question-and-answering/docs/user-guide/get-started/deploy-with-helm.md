@@ -109,7 +109,8 @@ mkdir -p $HOME/data
 
 Make sure the host directories are available to the cluster nodes, and the host-paths under the `volumes.hostDataPath` section in `values.yaml` file match the correct directories. Particularly, the default path in `values.yaml` is `/home/user/data`, which corresponds to a host username `user`.
 
-Note: supported media types: jpg, png, mp4
+> [!NOTE]
+> supported media types: jpg, png, mp4
 
 ### Step 6: Deploy the Application
 

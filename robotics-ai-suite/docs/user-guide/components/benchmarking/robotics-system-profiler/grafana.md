@@ -46,7 +46,8 @@ make grafana-open   # → http://localhost:30000
 | Prometheus | <http://localhost:9090> | — |
 | Metrics endpoint | <http://localhost:9092/metrics> | — |
 
-> **Note:** The exporter uses **port 9092** because Prometheus runs in
+> [!NOTE]
+> The exporter uses **port 9092** because Prometheus runs in
 > host-network mode and binds port 9090 itself.
 
 ## Dashboard Panels

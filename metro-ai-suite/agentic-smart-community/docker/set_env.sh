@@ -8,9 +8,9 @@
 #
 # Usage:   source docker/set_env.sh      # before ./setup_docker.sh / docker compose up
 
-# Everything in the stack is reached over loopback or by compose service name, so
-# these are the only hosts that must bypass the proxy.
-export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding
+# Everything in the stack is reached over loopback or by compose service name.
+# Preserve caller-supplied hosts so an external model serving can bypass a proxy.
+export no_proxy="${no_proxy:+${no_proxy},}localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding"
 
 # =========================================================================
 # vLLM-IPEX model serving
@@ -35,7 +35,7 @@ export HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
 export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2
 
 # Model + context window.
-export LLM_MODEL=Qwen/Qwen3.6-35B-A3B
+export LLM_MODEL=${LLM_MODEL:-Qwen/Qwen3.6-35B-A3B}
 export MAX_MODEL_LEN=61440            # 60k context; lower (e.g. 32768) to reduce RAM.
 
 # Precision + share of system RAM the serving may reserve.
@@ -71,12 +71,15 @@ export SERVICE_PORT=8192
 # To ensure bind-mount directories (e.g. ~/.cache/...) are available in container
 export USER_GROUP_ID="$(id -g "$USER")"
 
-# Both roles are served by the same on-device vLLM-IPEX endpoint. The two
-# containers share `app-network`, so the microservice reaches it by service name.
-export VLM_BASE_URL=http://vllm-ipex-serving:8000/v1
-export LLM_BASE_URL=http://vllm-ipex-serving:8000/v1
-export VLM_MODEL_NAME=${LLM_MODEL}
-export LLM_MODEL_NAME=${LLM_MODEL}
+# Both roles are served by the same on-device vLLM-IPEX endpoint by default. The
+# caller may instead set these standard MLVU variables to reuse another serving.
+export VLM_BASE_URL=${VLM_BASE_URL:-http://vllm-ipex-serving:8000/v1}
+export LLM_BASE_URL=${LLM_BASE_URL:-http://vllm-ipex-serving:8000/v1}
+# Preserve the bundled-serving model defaults. setup_docker.sh verifies both
+# selected IDs against the endpoint's standard /v1/models response before the
+# application tier starts.
+export VLM_MODEL_NAME=${VLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}
+export LLM_MODEL_NAME=${LLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}
 
 export MAX_CONCURRENT_REQUESTS=4
 export DEFAULT_MAX_TOKENS=1024

@@ -116,7 +116,8 @@ making it available for dashboards.
 
 ## Node-RED Flow for Data Processing
 
-> **Note:** For comprehensive Node-RED documentation, visit the [Official Node-RED Documentation](https://nodered.org/docs/).
+> [!NOTE]
+> For comprehensive Node-RED documentation, visit the [Official Node-RED Documentation](https://nodered.org/docs/).
 
 Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs,
 and online services. This guide demonstrates how Node-RED can be used to process video
@@ -333,7 +334,8 @@ topic, making it accessible to visualization tools (e.g., Grafana).
 
 ## Grafana visualization
 
-> **Note:** For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/).
+> [!NOTE]
+> For detailed Grafana documentation, visit the [Official Grafana Documentation](https://grafana.com/docs/).
 
 ![Grafana Dashboard](../_assets/grafana.png)
 

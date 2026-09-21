@@ -4,20 +4,24 @@ from unittest.mock import patch
 
 from api.v1.schemas.session import RegisterRequest, WorkflowRequest
 from services.session_service import (
+    ArtifactNotFound,
     ConcurrencyLimitError,
     SessionNotCancellable,
     SessionNotFound,
     SessionNotRunning,
     SessionRunning,
     SessionValidationError,
+    artifact_file,
     cancel_session,
     create_process,
     delete_session,
     finalize_session,
     get_stage_events,
     get_status,
+    list_artifacts,
     list_running_sessions,
     list_sessions,
+    read_text_artifact,
     register_session,
 )
 from services import session_service
@@ -333,6 +337,118 @@ def test_stage_events_are_empty_when_nothing_was_recorded():
     req = _reg()
     register_session(req)
     assert get_stage_events(req.session_id) == {"session_id": req.session_id, "events": []}
+
+
+def test_artifacts_not_found():
+    _expect_raises(SessionNotFound, lambda: list_artifacts("20260101-000000-abcd"))
+    _expect_raises(SessionNotFound, lambda: artifact_file("20260101-000000-abcd", "summarize"))
+
+
+def test_artifacts_lists_only_what_is_on_disk():
+    """A stage that wrote nothing must be absent, not listed-and-broken: the
+    history decides from this which stage names are worth making clickable."""
+    from utils.session_paths import SessionPaths
+
+    req = _reg()
+    register_session(req)
+    assert list_artifacts(req.session_id)["artifacts"] == []
+
+    path = SessionPaths.summary_path(req.session_id)
+    os.makedirs(path.parent, exist_ok=True)
+    path.write_text("## Summary\n- a point\n", encoding="utf-8")
+
+    artifacts = list_artifacts(req.session_id)["artifacts"]
+    assert [a["stage"] for a in artifacts] == ["summarize"]
+    assert artifacts[0]["kind"] == "markdown"
+    assert artifacts[0]["filename"] == "summary.md"
+
+
+def test_artifact_rejects_a_stage_with_no_preview():
+    req = _reg()
+    register_session(req)
+    # A stage nobody has heard of, and one that simply wrote nothing.
+    _expect_raises(ArtifactNotFound, lambda: artifact_file(req.session_id, "bogus"))
+    _expect_raises(ArtifactNotFound, lambda: artifact_file(req.session_id, "va"))
+
+
+def test_every_stage_that_produces_a_file_has_a_preview():
+    """Each stage's own output, at the path that stage writes: the timings table
+    is keyed by stage, so a stage with an artifact nobody mapped is a row the
+    teacher cannot open."""
+    from utils.session_paths import SessionPaths
+
+    expected = {
+        "transcribe": ("transcript", SessionPaths.transcript_path, "教师: 好，\n"),
+        "summarize": ("markdown", SessionPaths.summary_path, "## 教师总结\n"),
+        "mindmap": ("mindmap", SessionPaths.mindmap_path, '{"format": "node_tree"}'),
+        "va": ("stats", SessionPaths.class_statistics_path, '{"student_count": 10}'),
+        "segmentation": ("topics", SessionPaths.topics_path, '[{"topic": "影子"}]'),
+        "report": ("markdown", SessionPaths.report_md_path, "# 课后总结报告\n"),
+    }
+    req = _reg()
+    register_session(req)
+    for stage, (kind, resolve, body) in expected.items():
+        path = resolve(req.session_id)
+        os.makedirs(path.parent, exist_ok=True)
+        path.write_text(body, encoding="utf-8")
+        assert artifact_file(req.session_id, stage) == (kind, path)
+
+    listed = list_artifacts(req.session_id)["artifacts"]
+    # Listed in pipeline order, so the files read the way the run did.
+    assert [a["stage"] for a in listed] == list(expected)
+
+
+def test_read_text_artifact_returns_the_file():
+    from utils.session_paths import SessionPaths
+
+    req = _reg()
+    register_session(req)
+    path = SessionPaths.transcript_path(req.session_id)
+    os.makedirs(path.parent, exist_ok=True)
+    path.write_text("教师: 好，\n教师: 上课。\n", encoding="utf-8")
+
+    result = read_text_artifact(req.session_id, "transcribe")
+    assert result["kind"] == "transcript"
+    assert result["truncated"] is False
+    assert "上课" in result["content"]
+
+
+def test_mindmap_artifact_is_the_mmd_source_not_the_report_png():
+    """The .mmd is what the stage itself wrote, so it is there for every session
+    that got that far; the PNG only exists once the UI screenshots the live view
+    for a report."""
+    from utils.session_paths import SessionPaths
+
+    req = _reg()
+    register_session(req)
+    png = SessionPaths.mindmap_png_path(req.session_id)
+    os.makedirs(png.parent, exist_ok=True)
+    png.write_bytes(b"\x89PNG\r\n\x1a\n")
+    # A PNG on its own is not a preview.
+    _expect_raises(ArtifactNotFound, lambda: artifact_file(req.session_id, "mindmap"))
+
+    SessionPaths.mindmap_path(req.session_id).write_text(
+        '{"meta": {}, "format": "node_tree", "data": {"id": "root", "topic": "影子"}}',
+        encoding="utf-8",
+    )
+    kind, resolved = artifact_file(req.session_id, "mindmap")
+    assert kind == "mindmap"
+    assert resolved.name == "mindmap.mmd"
+    assert "node_tree" in read_text_artifact(req.session_id, "mindmap")["content"]
+
+
+def test_read_text_artifact_truncates_a_huge_file():
+    from utils.session_paths import SessionPaths
+
+    req = _reg()
+    register_session(req)
+    path = SessionPaths.transcript_path(req.session_id)
+    os.makedirs(path.parent, exist_ok=True)
+    with patch.object(session_service, "_TEXT_ARTIFACT_LIMIT", 16):
+        path.write_text("x" * 64, encoding="utf-8")
+        result = read_text_artifact(req.session_id, "transcribe")
+    assert result["truncated"] is True
+    assert len(result["content"]) == 16
 
 
 def test_stage_events_survive_a_truncated_last_line():

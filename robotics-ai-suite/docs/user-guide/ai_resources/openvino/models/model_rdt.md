@@ -42,7 +42,8 @@ The notebook provides a step-by-step guide to load the pre-trained model and con
 
 You can find the notebook in the same directory as the conversion script. Open it in Jupyter Notebook or JupyterLab, and follow the instructions provided within the notebook to perform the conversion.
 
-> **Note:** If you are using docker container built from the `Dockerfile` in the project, you can skip step #1 & #2 as the environment is already set up.
+> [!NOTE]
+> If you are using docker container built from the `Dockerfile` in the project, you can skip step #1 & #2 as the environment is already set up.
 
 1. Install Jupyter Notebook and ipywidgets:
 

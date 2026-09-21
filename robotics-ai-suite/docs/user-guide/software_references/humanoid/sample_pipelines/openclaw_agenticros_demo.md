@@ -48,7 +48,8 @@ The system enables natural language control of the robot, including:
 
 ## Installation
 
-> **Note:** This guide uses `~/edge-ai-suites/...` as an example checkout root. If you cloned
+> [!NOTE]
+> This guide uses `~/edge-ai-suites/...` as an example checkout root. If you cloned
 > the repository elsewhere, replace those paths with your local repository root.
 
 ### 0. Clone Deployment Repository
@@ -616,7 +617,7 @@ The helper script adds this configuration (or add manually if needed):
 }
 ```
 
-> **Important Notes:**
+> [!IMPORTANT]
 >
 > - Do NOT set `"tools": {"profile": "coding"}` - this hides plugin tools from the model
 > - Keep `transport.mode` as `"rosbridge"` for this deployment
@@ -654,7 +655,8 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
 
 ```
 
-> **Note:** `use_gazebo_gui:=true` requires a graphical desktop session with a valid
+> [!NOTE]
+> `use_gazebo_gui:=true` requires a graphical desktop session with a valid
 > display. In pure tty sessions, use `use_gazebo_gui:=false` (or the xvfb path
 > in Troubleshooting).
 >
