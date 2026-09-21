@@ -138,7 +138,7 @@ At a high level, this is a generic two-stage flow that sits on top of
 any dataset-preparation step you bring:
 
 ```mermaid
-flowchart LR
+flowchart TD
     subgraph S0["Your Dataset Prep (domain-specific — bring your own, see the Weld Usecase guide)"]
         A["Your raw data"] --> B["system/user/assistant</br>conversations per sample"]
         B --> C["Parquet export</br>(image + conversation_json columns)"]
