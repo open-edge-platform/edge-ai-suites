@@ -36,7 +36,6 @@ tracking behavior.
 get-started
 how-it-works
 how-to-use-application
-api-reference
 troubleshooting
 Release Notes <release-notes>
 
