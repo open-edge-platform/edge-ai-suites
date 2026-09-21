@@ -620,6 +620,263 @@ print_all_service_host_endpoints() {
     echo -e
 }
 
+get_scenescape_api_base() {
+    local nginx_container
+    local https_port
+
+    nginx_container=$(docker ps --format '{{.Names}}' | grep -E "^${PROJECT_NAME}.*nginx-reverse-proxy" | head -1)
+    if [ -z "$nginx_container" ]; then
+        nginx_container=$(docker ps --format '{{.Names}}' | grep -E 'nginx-reverse-proxy$' | head -1)
+    fi
+
+    if [ -n "$nginx_container" ]; then
+        https_port=$(docker port "$nginx_container" 443 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
+    fi
+
+    if [ -z "$https_port" ]; then
+        https_port=443
+    fi
+
+    printf 'https://localhost:%s' "$https_port"
+}
+
+# Configure Scenescape's four-corner geospatial calibration (map_corners_lla)
+# so the scene controller starts emitting real-world lat/long/alt on tracked
+# objects (scenescape/data/scene/<scene_id>/<thing_type> MQTT topic). This is
+# opt-in: it only runs when MAP_CORNERS_LLA is set (a JSON array of 4
+# [lat, lon, alt] triples, one per map/scene corner). On success it exports
+# SCENESCAPE_SCENE_ID so the Traffic Agent can subscribe to the scene output
+# topic and surface live geolocation instead of the static value in
+# deployment_instance.json.
+set_scenescape_geospatial_coordinates() {
+    if [ -z "$MAP_CORNERS_LLA" ]; then
+        return 0
+    fi
+
+    local api_base
+    local supass
+    local token
+    local scenes_json
+    local scene_uid
+
+    api_base=$(get_scenescape_api_base)
+    supass=$(cat "${RI_DIR}/src/secrets/supass" 2>/dev/null)
+    if [ -z "$supass" ]; then
+        echo -e "${RED}ERROR: Unable to read Scenescape admin password from ${RI_DIR}/src/secrets/supass${NC}"
+        return 1
+    fi
+
+    echo -e "${BLUE}==> Configuring Scenescape geospatial calibration (map_corners_lla) ...${NC}"
+
+    token=$(curl -k -s --noproxy '*' -X POST "${api_base}/api/v1/auth" \
+        -H "Content-Type: application/json" \
+        -d "{\"username\":\"admin\",\"password\":\"${supass}\"}" | \
+        python3 -c "import json,sys; print(json.load(sys.stdin).get('token',''))" 2>/dev/null)
+
+    if [ -z "$token" ]; then
+        echo -e "${RED}ERROR: Failed to authenticate with Scenescape API at ${api_base}.${NC}"
+        return 1
+    fi
+
+    scenes_json=$(curl -k -s --noproxy '*' -H "Authorization: Token ${token}" "${api_base}/api/v1/scenes")
+    scene_uid=$(printf '%s' "$scenes_json" | python3 -c "
+import json, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(1)
+results = data.get('results', data) if isinstance(data, dict) else data
+if isinstance(results, dict):
+    results = [results]
+if results:
+    print(results[0].get('uid') or results[0].get('id', ''))
+" 2>/dev/null)
+
+    if [ -z "$scene_uid" ]; then
+        echo -e "${RED}ERROR: Failed to discover Scenescape scene UID from ${api_base}/api/v1/scenes.${NC}"
+        return 1
+    fi
+
+    local put_response
+    local put_http_code
+    put_response=$(curl -k -s --noproxy '*' -w "\nHTTP_CODE:%{http_code}" \
+        -X PUT "${api_base}/api/v1/scene/${scene_uid}" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Token ${token}" \
+        -d "{\"output_lla\":true,\"map_corners_lla\":${MAP_CORNERS_LLA}}")
+    put_http_code=$(printf '%s\n' "$put_response" | awk -F: '/^HTTP_CODE:/ {print $2}' | tail -1)
+
+    if [ "$put_http_code" != "200" ] && [ "$put_http_code" != "201" ]; then
+        echo -e "${RED}ERROR: Failed to set map_corners_lla on scene ${scene_uid}. HTTP ${put_http_code}.${NC}"
+        return 1
+    fi
+
+    export SCENESCAPE_SCENE_ID="$scene_uid"
+    echo -e "${GREEN}Scenescape geospatial calibration set for scene ${scene_uid}. Live lat/long/alt will be published on scenescape/data/scene/${scene_uid}/*.${NC}"
+}
+
+# Poll Scenescape's web container until Docker reports it healthy, so
+# callers that restart it (e.g. after a live source patch) can safely
+# proceed once it's actually serving requests again. Checks the container's
+# own health status directly (not through the nginx reverse proxy), since
+# nginx can keep returning 502s for a while after the upstream container
+# restarts even once the container itself is healthy.
+wait_for_scenescape_web() {
+    local web_container="$1"
+    local timeout="${SCENESCAPE_WEB_START_TIMEOUT:-120}"
+    local elapsed=0
+    local status
+
+    while [ "$elapsed" -lt "$timeout" ]; do
+        status=$(docker inspect --format '{{.State.Health.Status}}' "$web_container" 2>/dev/null)
+        if [ "$status" = "healthy" ]; then
+            return 0
+        fi
+        if [ "$status" = "" ]; then
+            # No healthcheck defined; fall back to "is it running at all".
+            if [ "$(docker inspect --format '{{.State.Running}}' "$web_container" 2>/dev/null)" = "true" ]; then
+                return 0
+            fi
+        fi
+        sleep 3
+        elapsed=$((elapsed + 3))
+    done
+
+    echo -e "${YELLOW}WARNING: Scenescape web service did not report healthy within ${timeout}s.${NC}"
+    return 1
+}
+
+# Work around an upstream Scenescape bug (intel/scenescape-manager image):
+# SceneSerializer.create_update() persists trs_matrix updates with
+# "Scene.objects.filter(pk=self.pk)" instead of "pk=instance.pk" (self is the
+# serializer, which has no .pk), so every request that updates trs_matrix -
+# including the scene controller's own internal geospatial-calibration call
+# after map_corners_lla is set - fails with HTTP 500 and the matrix is never
+# persisted. This live-patches the vendored serializers.py inside the running
+# web container. Idempotent (no-op if already patched or fixed upstream).
+# NOTE: the patch lives only in the container's writable layer - it does NOT
+# survive the container/image being recreated, so this function re-applies it
+# on every setup.sh start/restart path.
+patch_scenescape_trs_matrix_bug() {
+    local web_container
+    web_container=$(docker ps --format '{{.Names}}' | grep -E "^${PROJECT_NAME}.*web" | head -1)
+    if [ -z "$web_container" ]; then
+        return 0
+    fi
+
+    local serializer_path="/home/scenescape/SceneScape/manager/serializers.py"
+    if ! docker exec "$web_container" test -f "$serializer_path" 2>/dev/null; then
+        return 0
+    fi
+
+    if docker exec "$web_container" grep -q "Scene.objects.filter(pk=self.pk).update(trs_matrix" "$serializer_path" 2>/dev/null; then
+        echo -e "${BLUE}==> Applying Scenescape trs_matrix serializer bug workaround ...${NC}"
+        docker exec "$web_container" sed -i \
+            "s/Scene.objects.filter(pk=self.pk).update(trs_matrix=trs_matrix)/Scene.objects.filter(pk=instance.pk).update(trs_matrix=trs_matrix)/" \
+            "$serializer_path"
+        docker restart "$web_container" >/dev/null 2>&1
+        wait_for_scenescape_web "$web_container"
+        echo -e "${GREEN}Patched and restarted Scenescape web service (trs_matrix bug workaround).${NC}"
+    fi
+}
+
+# Reconcile Scenescape's registered sensor IDs (manager_sensor.sensor_id/name)
+# with the "cameraN" convention that build_si_rtsp_pipeline_payload() enforces
+# on every DLSPS RTSP pipeline (see get_si_rtsp_stream_path()). A custom
+# Scenescape scene export (e.g. a scene tar imported from a different demo,
+# such as the DLSPS config.json's own default "<project>_N" ids) may register
+# sensors under a different naming scheme, which silently breaks the scene
+# controller's camera-topic subscriptions and object tracking: it subscribes
+# to scenescape/data/camera/<sensor_id> and validates each incoming
+# detection's "id" field against the same value, so both must match what
+# DLSPS actually publishes on (cameraN). Idempotent - rows already named
+# cameraN are left untouched. Only runs when using the RTSP pipeline flow
+# (RTSP_STREAM_IP set), since that's the only path enforcing this convention.
+#
+# IMPORTANT: the target camera number is derived from the TRAILING DIGIT of
+# each sensor's existing sensor_id (e.g. "intersection_1_2" -> camera2), NOT
+# from DB row insertion order - the manager_sensor table's auto-increment id
+# has no guaranteed relationship to the camera number encoded in the name,
+# and assigning cameraN by id order can silently swap two cameras'
+# calibration data (translation/rotation/intrinsics), which is worse than
+# leaving the mismatch in place. Any sensor_id without a resolvable trailing
+# digit in 1-4 is left untouched with a warning.
+align_scenescape_sensor_ids() {
+    if [ -z "$RTSP_STREAM_IP" ]; then
+        return 0
+    fi
+
+    local pgserver_container
+    pgserver_container=$(docker ps --format '{{.Names}}' | grep -E "^${PROJECT_NAME}.*pgserver" | head -1)
+    if [ -z "$pgserver_container" ]; then
+        return 0
+    fi
+
+    local mismatched
+    mismatched=$(docker exec "$pgserver_container" psql -U scenescape -d scenescape -tAc \
+        "SELECT count(*) FROM manager_sensor WHERE sensor_id !~ '^camera[1-4]\$';" 2>/dev/null)
+
+    if [ -z "$mismatched" ] || [ "$mismatched" = "0" ]; then
+        return 0
+    fi
+
+    echo -e "${BLUE}==> Reconciling Scenescape sensor IDs with the 'cameraN' RTSP pipeline convention ...${NC}"
+
+    local old_id
+    local digit
+    docker exec "$pgserver_container" psql -U scenescape -d scenescape -tAc \
+        "SELECT sensor_id FROM manager_sensor WHERE sensor_id !~ '^camera[1-4]\$' ORDER BY id;" 2>/dev/null | \
+    while IFS= read -r old_id; do
+        [ -z "$old_id" ] && continue
+
+        # Extract the trailing digit run from the existing name, e.g.
+        # "intersection_1_2" -> "2". This is what actually identifies which
+        # physical camera the sensor's calibration belongs to.
+        digit=$(printf '%s' "$old_id" | grep -oE '[0-9]+$')
+
+        if [ -z "$digit" ] || [ "$digit" -lt 1 ] || [ "$digit" -gt 4 ]; then
+            echo -e "${YELLOW}WARNING: Cannot determine target camera number for Scenescape sensor '${old_id}' (no trailing digit 1-4); skipping rename.${NC}"
+            continue
+        fi
+
+        docker exec "$pgserver_container" psql -U scenescape -d scenescape -c \
+            "UPDATE manager_sensor SET sensor_id = 'camera${digit}', name = 'camera${digit}' WHERE sensor_id = '${old_id}';" >/dev/null 2>&1
+        echo -e "${GREEN}Renamed Scenescape sensor '${old_id}' -> 'camera${digit}'.${NC}"
+    done
+
+    local scene_container
+    scene_container=$(docker ps --format '{{.Names}}' | grep -E "^${PROJECT_NAME}.*scene" | head -1)
+    if [ -n "$scene_container" ]; then
+        docker restart "$scene_container" >/dev/null 2>&1
+        echo -e "${GREEN}Restarted Scenescape scene controller to apply sensor ID changes.${NC}"
+    fi
+}
+
+# Applies both live-environment workarounds above. Called unconditionally
+# (independent of MAP_CORNERS_LLA) right after the DLSPS RTSP pipelines are
+# started, since the sensor ID/topic mismatch breaks Scenescape's own
+# object tracking regardless of whether geospatial (LLA) output is enabled.
+apply_scenescape_runtime_fixes() {
+    patch_scenescape_trs_matrix_bug
+    align_scenescape_sensor_ids
+}
+
+# Wrapper called after the stack is up: sets Scenescape's map_corners_lla
+# (no-op unless MAP_CORNERS_LLA is configured) and, if a scene UID was
+# resolved, force-recreates the traffic-agent container so it picks up the
+# newly exported SCENESCAPE_SCENE_ID and starts consuming live geolocation.
+apply_scenescape_geospatial_config() {
+    if [ -z "$MAP_CORNERS_LLA" ]; then
+        return 0
+    fi
+
+    set_scenescape_geospatial_coordinates || return 1
+
+    if [ -n "$SCENESCAPE_SCENE_ID" ]; then
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --no-deps --force-recreate traffic-agent
+    fi
+}
+
 get_dlsps_pipeline_api_base() {
     local nginx_container
     local https_port
@@ -828,6 +1085,8 @@ build_and_start_service() {
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
         start_si_dlsps_rtsp_pipelines || return 1
+        apply_scenescape_runtime_fixes
+        apply_scenescape_geospatial_config || return 1
         print_all_service_host_endpoints
     else
         echo -e "${RED}Failed to build and start Smart-Traffic-Intersection-Agent Services${NC}"
@@ -848,6 +1107,8 @@ start_service() {
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
         start_si_dlsps_rtsp_pipelines || return 1
+        apply_scenescape_runtime_fixes
+        apply_scenescape_geospatial_config || return 1
         print_all_service_host_endpoints
     else
         echo -e "${RED}Failed to start Smart-Traffic-Intersection-Agent Services${NC}"
@@ -911,6 +1172,8 @@ restart_service() {
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Dependencies restarted successfully!${NC}"
                 start_si_dlsps_rtsp_pipelines || return 1
+                apply_scenescape_runtime_fixes
+                apply_scenescape_geospatial_config || return 1
                 print_all_service_host_endpoints
             else
                 echo -e "${RED}Failed to restart dependencies!${NC}"
@@ -940,6 +1203,8 @@ restart_service() {
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"
                 start_si_dlsps_rtsp_pipelines || return 1
+                apply_scenescape_runtime_fixes
+                apply_scenescape_geospatial_config || return 1
             else
                 echo -e "${RED}Failed to restart dependencies and Backend/UI services!${NC}"
                 return 1

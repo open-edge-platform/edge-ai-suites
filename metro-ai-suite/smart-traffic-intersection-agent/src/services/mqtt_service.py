@@ -64,6 +64,10 @@ class MQTTService:
         # Camera topics
         self.camera_topics = config_service.get_camera_topics()
         self.image_topics = config_service.get_image_topics()
+
+        # Scenescape scene geospatial output topic (None unless a scene UID
+        # is configured, i.e. map_corners_lla calibration has been applied).
+        self.scene_output_topic = config_service.get_scene_output_topic()
         
         # MQTT client and connection state
         self.client = None
@@ -82,6 +86,8 @@ class MQTTService:
         self.camera_data_pattern = re.compile(r'scenescape/data/camera/camera(\d+)')
         # Pattern: scenescape/image/camera/camera{1,2,3,4}
         self.camera_image_pattern = re.compile(r'scenescape/image/camera/camera(\d+)')
+        # Pattern: scenescape/data/scene/{scene_id}/{thing_type}
+        self.scene_data_pattern = re.compile(r'^scenescape/data/scene/[^/]+/[^/]+$')
         
         logger.info("MQTT service initialized", 
                    host=self.host, 
@@ -206,6 +212,10 @@ class MQTTService:
             for topic in self.image_topics:
                 client.subscribe(topic, qos=1)
                 logger.info("Subscribed to image topic", topic=topic)
+            if self.scene_output_topic:
+                client.subscribe(self.scene_output_topic, qos=1)
+                logger.info("Subscribed to Scenescape scene output topic",
+                           topic=self.scene_output_topic)
             
             # Automatically trigger getimage commands once connected and subscribed
             # if self.loop:
@@ -247,6 +257,10 @@ class MQTTService:
             # Check if this is a camera data or camera image topic
             camera_data_match = self.camera_data_pattern.match(msg.topic)
             camera_image_match = self.camera_image_pattern.match(msg.topic)
+            scene_data_match = (
+                self.scene_output_topic is not None
+                and self.scene_data_pattern.match(msg.topic)
+            )
             
             if camera_data_match:
                 # Handle camera data message
@@ -288,6 +302,16 @@ class MQTTService:
                 else:
                     logger.warning("No event loop set, cannot process camera image message")
                     
+            elif scene_data_match:
+                # Handle Scenescape scene geospatial output message (live lat/long/alt)
+                if self.loop:
+                    asyncio.run_coroutine_threadsafe(
+                        self._process_scene_data_message(payload=payload, topic=msg.topic),
+                        self.loop
+                    )
+                else:
+                    logger.warning("No event loop set, cannot process scene data message")
+
             else:
                 logger.debug("Ignoring unrecognized topic", topic=msg.topic)
         
@@ -556,6 +580,51 @@ class MQTTService:
                         error=str(e), 
                         camera_number=camera_number, 
                         topic=topic)
+    
+    async def _process_scene_data_message(self, payload: Dict[str, Any], topic: str) -> None:
+        """
+        Process a Scenescape scene output message and extract live geolocation.
+
+        Only present when the scene's map_corners_lla calibration has been
+        applied (output_lla=true), in which case each tracked object under
+        payload['objects'][<thing_type>] carries a 'lat_long_alt'
+        [lat, lon, alt] field. Averages across all objects in the message
+        to produce a single representative intersection coordinate.
+
+        Args:
+            payload: Message payload
+            topic: MQTT topic (scenescape/data/scene/{scene_id}/{thing_type})
+        """
+        try:
+            objects = payload.get('objects', {})
+            if isinstance(objects, dict):
+                object_lists = objects.values()
+            elif isinstance(objects, list):
+                object_lists = [objects]
+            else:
+                object_lists = []
+
+            lat_sum = 0.0
+            lon_sum = 0.0
+            count = 0
+            for obj_list in object_lists:
+                if not isinstance(obj_list, list):
+                    continue
+                for obj in obj_list:
+                    lat_long_alt = obj.get('lat_long_alt') if isinstance(obj, dict) else None
+                    if lat_long_alt and len(lat_long_alt) >= 2:
+                        lat_sum += lat_long_alt[0]
+                        lon_sum += lat_long_alt[1]
+                        count += 1
+
+            if count == 0:
+                logger.debug("Scene data message has no lat_long_alt entries", topic=topic)
+                return
+
+            self.data_aggregator.update_live_geolocation(lat_sum / count, lon_sum / count)
+
+        except Exception as e:
+            logger.error("Failed to process scene data message", error=str(e), topic=topic)
     
     def get_connection_status(self) -> Dict[str, Any]:
         """Get MQTT connection status information."""
