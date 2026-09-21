@@ -183,11 +183,13 @@ or scripts is a syntax error.
 
 ## Completion Criteria (all must pass)
 
-1. `make init` succeeds: `.env` created with auto-detected GPU/NPU device paths.
+1. `make init` succeeds: `.env` created with auto-detected `HOST_IP` and GPU/NPU device paths.
 2. `make model` succeeds: OpenVINO IR model present at
    `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml`.
-3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`.
-4. `curl http://localhost:8081/pipelines` returns the registered pipeline definitions.
+3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`, including `nginx`.
+4. `curl http://localhost/pipelines` returns the registered pipeline definitions
+   (`dlstreamer-pipeline-server` no longer publishes a host port directly — it is reached
+   only through the `nginx` reverse proxy on `80`).
 5. Pipeline manager starts with `make start-rtsp` and connects to MAVLink/MQTT.
 6. On ARMED signal: pipelines start; RTSP streams appear at `:8555`.
 7. `ffplay rtsp://localhost:8555/{{RTSP_PATH}}` shows annotated video with telemetry overlay.

@@ -26,7 +26,7 @@ import os
 import pytest
 import requests
 
-REST_BASE = os.getenv("DLSPS_REST_URL", "http://localhost:8081")
+REST_BASE = os.getenv("DLSPS_REST_URL", "http://localhost")
 RTSP_HOST = os.getenv("HOST_IP", "127.0.0.1")
 RTSP_PORT = int(os.getenv("RTSP_PORT", "8555"))
 
@@ -285,7 +285,7 @@ pip install pytest requests
 pytest -q tests/
 
 # With custom host
-DLSPS_REST_URL=http://localhost:8081 HOST_IP=192.168.1.x pytest -q tests/
+DLSPS_REST_URL=http://localhost HOST_IP=192.168.1.x pytest -q tests/
 
 # Verbose with stdout
 pytest -v -s tests/

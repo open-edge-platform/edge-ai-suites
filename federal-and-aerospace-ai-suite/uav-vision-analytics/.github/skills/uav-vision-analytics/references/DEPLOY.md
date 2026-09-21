@@ -182,14 +182,39 @@ dlstreamer-pipeline-server:
     - "a 189:* rwm"
   devices:
     - "/dev:/dev"
-  ports:
-    - '8081:8081'
-    - "8555:8555"
+  expose:
+    - "8081"
+    - "8555"
   networks:
     - app_network
   extra_hosts:
     - "host.docker.internal:host-gateway"
 ```
+
+> [!IMPORTANT]
+> `dlstreamer-pipeline-server` must NOT publish `8081`/`8555` to the host via `ports:`.
+> It is reached only through the `nginx` reverse-proxy service below (the only service
+> that publishes ports to the host). See `references/NGINX.md`-style fragment:
+>
+> ```yaml
+> nginx:
+>   image: nginx:1.27-alpine
+>   container_name: nginx
+>   restart: unless-stopped
+>   volumes:
+>     - ./configs/nginx/nginx-pymavlink.conf:/etc/nginx/nginx.conf:ro
+>   ports:
+>     - "${HOST_IP:-127.0.0.1}:80:80"       # HTTP reverse proxy -> dlstreamer-pipeline-server:8081 (+ metrics-manager)
+>     - "${HOST_IP:-127.0.0.1}:8555:8555"   # raw TCP passthrough (stream {} block) -> dlstreamer-pipeline-server:8555
+>   networks:
+>     - app_network
+>   depends_on:
+>     - dlstreamer-pipeline-server
+> ```
+>
+> Binding to `${HOST_IP:-127.0.0.1}` (not `0.0.0.0`) scopes the published ports to the
+> specific interface in `HOST_IP` instead of every interface on the host — see
+> `references/SECURITY.md`-style guidance in `docs/user-guide/how-to-guides/security-considerations.md`.
 
 **For UAVSDK mode** mount the UAVSDK overlay and manager instead:
 ```yaml
@@ -204,7 +229,10 @@ And set `UAV_ID` env var (default `uav-1`).
 
 ```bash
 # Host network
-HOST_IP=192.168.1.x           # LAN IP — NOT 127.0.0.1; used for RTSP URLs
+HOST_IP=192.168.1.x           # LAN IP, auto-detected by 'make init'; used for RTSP URLs
+                               # and binds nginx's published ports (80, 8555). Set to
+                               # 127.0.0.1 to restrict access to the local host only
+                               # (breaks remote QGroundControl/VLC/ffplay viewing).
 
 # DL Streamer image
 DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24

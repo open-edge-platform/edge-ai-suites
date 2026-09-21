@@ -55,7 +55,7 @@ Without the skill, a baseline agent commonly:
 pip install pytest requests paho-mqtt
 
 # Run against a live stack
-DLSPS_REST_URL=http://localhost:8081 HOST_IP=<host-ip> pytest -q tests/
+DLSPS_REST_URL=http://localhost HOST_IP=<host-ip> pytest -q tests/
 
 # Full multi-CLI eval (uses evals/evals.json)
 python3 run_multi_cli_eval.py \
