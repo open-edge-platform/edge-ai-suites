@@ -14,7 +14,7 @@ MODEL_XML      := $(MODEL_DIR)/yolo11s_openvino_model/yolo11s.xml
 VENV           := resources/venv
 DEVICE         ?= gpu
 
-.PHONY: help init build model _check_model \
+.PHONY: help init build model _check_model _check_venv_pkg \
         pymav-up pymav-down \
         uavsdk-up uavsdk-down \
         start-rtsp
@@ -25,12 +25,25 @@ help: ## Show available targets
 
 # ── Init ────────────────────────────────────────────────────────────────────
 
-init: ## Create .env from template and auto-detect GPU/NPU device paths
+init: ## Create .env from template, auto-detect the host IP, and auto-detect GPU/NPU device paths
 	@if test -f .env; then \
 		echo ".env already exists — skipping (delete it to re-run init)"; \
 	else \
 		cp .env.example .env; \
 		echo ".env created from .env.example"; \
+		HOST_IP_DETECTED=$$(hostname -I 2>/dev/null | awk '{print $$1}'); \
+		if [ -z "$$HOST_IP_DETECTED" ]; then \
+			HOST_IP_DETECTED=127.0.0.1; \
+			echo "⚠  Could not auto-detect host IP — defaulting HOST_IP=127.0.0.1 (edit .env manually if needed)."; \
+		else \
+			echo "✅ Host IP detected:"; \
+			echo "   HOST_IP=$$HOST_IP_DETECTED"; \
+			echo "   ⚠  Security: nginx's HTTP (80) and RTSP (8555) ports will be published on"; \
+			echo "      this LAN address so QGroundControl/ffplay/VLC on other devices can reach"; \
+			echo "      them. Set HOST_IP=127.0.0.1 in .env for loopback-only access if this host"; \
+			echo "      is not on a trusted, isolated network. See docs/user-guide/security-considerations.md."; \
+		fi; \
+		sed -i "s|^HOST_IP=.*|HOST_IP=$$HOST_IP_DETECTED|" .env; \
 		GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); \
 		GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
 		if [ -n "$$GPU_CARD" ] && [ -n "$$GPU_RENDER" ]; then \
@@ -93,7 +106,36 @@ _check_model:
 
 # ── Model ────────────────────────────────────────────────────────────────────
 
-model: ## Download YOLO11s (COCO-pretrained) and export to OpenVINO FP16
+_check_venv_pkg: ## Verify python3-venv (ensurepip) is installed; offer to install it if missing
+	@if python3 -c "import ensurepip" >/dev/null 2>&1; then \
+		exit 0; \
+	fi; \
+	PY_VER=$$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")'); \
+	VENV_PKG="python3-venv"; \
+	if command -v apt-cache >/dev/null 2>&1 && apt-cache show "python$${PY_VER}-venv" >/dev/null 2>&1; then \
+		VENV_PKG="python$${PY_VER}-venv"; \
+	fi; \
+	echo "⚠  'python3 -m venv' requires the '$$VENV_PKG' package (ensurepip module not found), which is not installed."; \
+	if ! command -v apt-get >/dev/null 2>&1; then \
+		echo "❌ 'apt-get' not found — install '$$VENV_PKG' (or your distro's equivalent) manually and re-run 'make model'."; \
+		exit 1; \
+	fi; \
+	printf "Install '%s' now via 'sudo apt install %s'? [y/N] " "$$VENV_PKG" "$$VENV_PKG"; \
+	read -r REPLY; \
+	case "$$REPLY" in \
+		[yY]*) \
+			sudo apt-get update && sudo apt-get install -y "$$VENV_PKG" || { \
+				echo "❌ Failed to install $$VENV_PKG. Install it manually and re-run 'make model'."; \
+				exit 1; \
+			}; \
+			;; \
+		*) \
+			echo "❌ '$$VENV_PKG' is required to create the model virtualenv. Install it manually (sudo apt install $$VENV_PKG) and re-run 'make model'."; \
+			exit 1; \
+			;; \
+	esac
+
+model: _check_venv_pkg ## Download YOLO11s (COCO-pretrained) and export to OpenVINO FP16
 	@echo "[model] Creating virtualenv..."
 	python3 -m venv $(VENV)
 	@echo "[model] Installing dependencies..."

@@ -2,6 +2,19 @@
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # Ensure ~/.local/bin (jq wrapper) is in PATH
 export PATH="$HOME/.local/bin:$PATH"
+
+# Pick up HOST_IP (and other vars) from the app's .env if present. nginx only
+# binds to HOST_IP (not 0.0.0.0), so 'localhost'/'127.0.0.1' won't reach it once
+# HOST_IP is set to a real address — this lets DLSPS_NODE_IP/METRICS_URL default
+# to the same address the stack is actually published on, without requiring the
+# caller to pass DLSPS_NODE_IP=<HOST_IP> manually every time.
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "$SCRIPT_DIR/../.env"
+  set +a
+fi
+
 # calc_stream_density.sh — UAV Vision Analytics Pipeline Benchmark
 #
 # Modes:
@@ -12,8 +25,9 @@ export PATH="$HOME/.local/bin:$PATH"
 #                    (CPU + GPU + NPU) and print a unified claim-statement table.
 #
 # HW Metrics Integration (metrics-manager):
-#   Polls intel/metrics-manager at METRICS_URL (default: http://localhost:9090).
-#   Tries SSE endpoint (/metrics/stream) FIRST, falls back to REST
+#   Polls intel/metrics-manager at METRICS_URL (default: http://<HOST_IP from .env>,
+#   falls back to http://localhost, proxied by nginx). Tries SSE endpoint
+#   (/metrics/stream) FIRST, falls back to REST
 #   (/api/v1/metrics/latest). Metrics are collected only while are in RUNNING
 #   state (not during GPU warmup / pipeline init).
 #   Results are appended to kpi.txt as hw_<metric> avg/min/max lines.
@@ -80,8 +94,10 @@ awk_utils='
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HW Metrics Configuration
 #  Override via environment variables or the -m / -M CLI flags.
+#  metrics-manager no longer publishes a host port directly — it is reached
+#  through the nginx reverse proxy (plain HTTP).
 # ═══════════════════════════════════════════════════════════════════════════════
-METRICS_URL="${METRICS_URL:-http://localhost:9090}"
+METRICS_URL="${METRICS_URL:-http://${HOST_IP:-localhost}}"
 METRICS_INTERVAL="${METRICS_INTERVAL:-2}"   # seconds between polls
 HW_MONITOR_ENABLED=true                     # set false to skip entirely
 HW_POLL_PID=""                              # PID of background poller subshell
@@ -440,9 +456,10 @@ function get_hw_metrics_summary() {
 #  Pipeline runner functions
 # ═══════════════════════════════════════════════════════════════════════════════
 
-DLSPS_NODE_IP="${DLSPS_NODE_IP:-localhost}"
-DLSPS_PORT="${DLSPS_PORT:-8081}"
-DLSPS_BASE_URL="http://${DLSPS_NODE_IP}:${DLSPS_PORT}"
+DLSPS_NODE_IP="${DLSPS_NODE_IP:-${HOST_IP:-localhost}}"
+DLSPS_PORT="${DLSPS_PORT:-80}"
+DLSPS_SCHEME="${DLSPS_SCHEME:-http}"
+DLSPS_BASE_URL="${DLSPS_SCHEME}://${DLSPS_NODE_IP}:${DLSPS_PORT}"
 
 function get_pipeline_status() {
     curl -s "${DLSPS_BASE_URL}/pipelines/status" "$@"
@@ -1106,8 +1123,8 @@ function usage() {
     echo "                       and print a unified claim-statement summary table."
     echo "  -nstreams <N1> [N2 ...] Fixed stream count per pipeline (nstreams mode)."
     echo
-    echo "HW Metrics (metrics-manager — no -m/-M needed for localhost:9090):"
-    echo "  -m <url>             metrics-manager base URL (default: http://localhost:9090)."
+    echo "HW Metrics (metrics-manager — reached via nginx, no -m/-M needed by default):"
+    echo "  -m <url>             metrics-manager base URL (default: http://<HOST_IP from .env>, falls back to http://localhost)."
     echo "  -M <seconds>         HW polling interval in seconds (default: 2)."
     echo "  --no-hw-metrics      Disable HW metrics collection entirely."
     echo
