@@ -128,8 +128,6 @@ Clone the repository (Git LFS extension is required for video and model files), 
 
 The script prompts for an admin password (`SUPASS`) and a database password (`DATABASE_PASSWORD`), generates TLS certificates, starts all services, waits for the API, imports the included Showcase scene automatically, and then performs a best-effort telemetry check.
 
-This branch does not require the Ollama service and does not download the Qwen model during setup.
-
 If `xpu-smi` is already installed on the host, `./setup.sh` also grants the needed host access for `xpu-smi`, starts the host GPU telemetry bridge, and verifies that the analytics service can read telemetry. If you install `xpu-smi` after the initial deployment, rerun `./setup.sh`.
 
 The analytics service learns the `SideDoorEntry` door-state baseline only after the first complete replay loop, preventing partial data from a mid-loop startup from affecting the baseline.
