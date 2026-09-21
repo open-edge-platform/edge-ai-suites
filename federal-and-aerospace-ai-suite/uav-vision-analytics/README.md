@@ -11,11 +11,11 @@ The application is built on Intel DL Streamer Pipeline Server and supports two d
 ## Project Structure
 
 ```text
-docker-compose-pymavlink.yml  Standalone mode: PX4 SITL, mavlink-router, broker, DLSPS, metrics-manager.
-docker-compose-uavsdk.yml     UAV Mission Compute SDK mode: DLSPS only (connects to an external SDK stack).
-.env.example                  Template for .env — GPU/NPU/camera device paths and image tags.
+docker-compose-pymavlink.yml  Standalone mode: PX4 SITL, mavlink-router, broker, DLSPS, metrics-manager, nginx.
+docker-compose-uavsdk.yml     UAV Mission Compute SDK mode: DLSPS + nginx (connects to an external SDK stack).
+.env.example                  Template for .env — HOST_IP, GPU/NPU/camera device paths, and image tags.
 Makefile                      Operational targets (init, model, pymav-*, uavsdk-*, start-rtsp).
-configs/                      Mosquitto and mavlink-router configuration, DLSPS pipeline configs.
+configs/                      Mosquitto and mavlink-router configuration, DLSPS pipeline configs, nginx reverse-proxy configs.
 gvapython/                    Telemetry overlay Python scripts (pymavlink and UAVSDK variants).
 scripts/                      Pipeline manager and MAVLink listener scripts.
 resources/                    Python requirements for `make model`, sample input video, and the exported YOLO11s model (after running `make model`).
@@ -32,18 +32,20 @@ benchmark/                    Stream density benchmarking tooling (`calc_stream_
 | `px4` | `px4io/px4-sitl:latest` | PX4 SITL flight controller simulation |
 | `mavlink-router` | Built from `uav-mission-compute-sdk/infra/px4-sim/mavlink-router` | Routes MAVLink telemetry between PX4 and the pipeline server |
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24` (+ `pymavlink`) | Core inference engine — YOLO11s detection and telemetry overlay |
-| `metrics-manager` | `intel/metrics-manager:2026.2.0` | Host platform (CPU/GPU) metrics, exposed on port 9090 |
+| `metrics-manager` | `intel/metrics-manager:2026.2.0` | Host platform (CPU/GPU) metrics |
+| `nginx` | `nginx:1.27-alpine` | Reverse proxy — the only service that publishes ports to the host |
 
-All services share the `app_network` Docker network and are defined in [`docker-compose-pymavlink.yml`](docker-compose-pymavlink.yml).
+All services share the `app_network` Docker network and are defined in [`docker-compose-pymavlink.yml`](docker-compose-pymavlink.yml). Only `nginx` publishes ports to the host; `dlstreamer-pipeline-server` and `metrics-manager` are reachable exclusively through it.
 
 ### UAV Mission Compute SDK Mode
 
 | Service | Image | Role |
 |---------|-------|------|
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24` | Core inference engine — YOLO11s detection and telemetry overlay; connects to an externally running UAV Mission Compute SDK stack |
+| `nginx` | `nginx:1.27-alpine` | Reverse proxy — the only service that publishes ports to the host |
 
 Defined in [`docker-compose-uavsdk.yml`](docker-compose-uavsdk.yml). Requires the
-`edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk` stack to be running first.
+`edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk` stack to be running first. Only `nginx` publishes ports to the host; `dlstreamer-pipeline-server` is reachable exclusively through it.
 
 ## Prerequisites
 
@@ -56,7 +58,7 @@ Defined in [`docker-compose-uavsdk.yml`](docker-compose-uavsdk.yml). Requires th
 | Intel® NPU (optional) | For NPU-accelerated pipelines; falls back to `/dev/null` (disabled) if not detected. |
 | USB or RealSense camera (optional) | For live-camera pipelines; auto-detected by `make init`. |
 
-Run `make init` after cloning to create `.env` from `.env.example` and auto-detect GPU, NPU, and camera device paths.
+Run `make init` after cloning to create `.env` from `.env.example`, auto-detect the host IP (`HOST_IP`), and auto-detect GPU, NPU, and camera device paths.
 
 ## Quick Start
 
@@ -91,18 +93,30 @@ make start-rtsp DEVICE=gpu   # or cpu | npu | all
 
 ## Endpoints
 
+All HTTP traffic is served through the nginx reverse proxy on port 80. `dlstreamer-pipeline-server`
+and `metrics-manager` no longer publish ports directly to the host.
+
 | Service | URL / Path | Notes |
 |---------|-----------|-------|
-| DL Streamer Pipeline Server REST API | `http://localhost:8081` | Pipeline control and status |
-| RTSP annotated stream | `rtsp://localhost:8555` | Detection + telemetry overlay output |
-| Metrics manager (Standalone mode only) | `http://localhost:9090` | Host platform (CPU/GPU) metrics |
+| DL Streamer Pipeline Server REST API | `http://<HOST_IP>/` | Pipeline control and status, proxied to `dlstreamer-pipeline-server:8081` |
+| RTSP annotated stream | `rtsp://<HOST_IP>:8555` | Detection + telemetry overlay output; TCP passthrough via nginx `stream {}` |
+| Metrics manager SSE stream (Standalone mode only) | `http://<HOST_IP>/metrics/stream` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
+| Metrics manager REST snapshot (Standalone mode only) | `http://<HOST_IP>/api/v1/metrics/latest` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
+
+`<HOST_IP>` is auto-detected and written to `.env` by `make init` (defaults to `localhost`/`127.0.0.1` when run locally).
+
+> [!IMPORTANT]
+> `nginx`'s ports (`80`, `8555`) are published on `HOST_IP`, so they are reachable from
+> your LAN by default (needed for QGroundControl/VLC/ffplay on other devices) — not just
+> `localhost`. Traffic is unencrypted and neither the REST API nor the RTSP stream is
+> authenticated. Set `HOST_IP=127.0.0.1` in `.env` to restrict access to the local host only.
 
 ## Make Targets
 
 ```text
-make init          Create .env from template and auto-detect GPU/NPU/camera device paths
+make init          Create .env from template, auto-detect HOST_IP, and auto-detect GPU/NPU/camera device paths
 make model         Download YOLO11s and export to OpenVINO FP16
-make pymav-up       Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + metrics-manager)
+make pymav-up       Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + metrics-manager + nginx)
 make pymav-down     Stop and remove pymavlink stack (includes volumes)
 make uavsdk-up      Start UAV Mission Compute SDK stack (requires uav-mission-compute-sdk running first)
 make uavsdk-down    Stop and remove UAV Mission Compute SDK stack (includes volumes)

@@ -195,7 +195,7 @@ Once the source is confirmed live, start the pipeline:
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
+  http://<HOST_IP>/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -219,7 +219,7 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 
 # Verify it reached RUNNING state (not ERROR)
-curl -s http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
+curl -s http://<HOST_IP>/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
 ```
 
 If `state` is `ERROR`, check the container logs:
@@ -230,6 +230,10 @@ Change following **three values** to switch between CPU / GPU / NPU:
 1. **Pipeline name** in the URL path (`nadir_camera_rtsp_cpu` → `forward_camera_rtsp_gpu` / `rear_camera_rtsp_npu`)
 2. **RTSP path** in the request body (`nadir` → `forward` / `rear`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+
+> [!NOTE]
+> `http://<HOST_IP>/...` is the DL Streamer Pipeline Server REST API, proxied by nginx on port `80`.
+> Replace `<HOST_IP>` with the value auto-detected by `make init` (see `.env`).
 
 ### 7. View the output stream
 
@@ -269,7 +273,7 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 6](#6-start-inference-pipelines)):
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+curl -X DELETE http://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### 8. Stop all services
@@ -305,7 +309,7 @@ make down
 
 All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp DEVICE=cpu|gpu|npu|all`) or the REST API directly.
 
-REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{name}`
+REST endpoint: `POST http://<HOST_IP>/pipelines/user_defined_pipelines/{name}` (proxied by nginx to `dlstreamer-pipeline-server:8081`)
 
 ---
 

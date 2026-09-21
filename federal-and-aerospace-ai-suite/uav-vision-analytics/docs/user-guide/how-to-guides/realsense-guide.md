@@ -75,7 +75,7 @@ Replace `<pipeline-name>` with one of the pipeline names from the table above,
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/<pipeline-name> \
+  http://<HOST_IP>/pipelines/user_defined_pipelines/<pipeline-name> \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {
@@ -103,7 +103,7 @@ echo "Instance ID: $INSTANCE_ID"
 
 ```bash
 INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/uav_realsense_cpu \
+  http://<HOST_IP>/pipelines/user_defined_pipelines/uav_realsense_cpu \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {
@@ -136,5 +136,5 @@ ffplay rtsp://<HOST_IP>:8555/realsense
 To stop the pipeline:
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+curl -X DELETE http://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
