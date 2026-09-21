@@ -29,9 +29,6 @@ The setup script:
 - imports the included Showcase scene automatically
 - performs a best-effort telemetry check
 
-This branch does not require the Ollama service and does not download the Qwen model during
-setup.
-
 If `xpu-smi` is already installed on the host, `./setup.sh` also grants the needed host
 access for `xpu-smi`, starts the host GPU telemetry bridge, and verifies that the
 analytics service can read telemetry. If you install `xpu-smi` after the initial deployment,
