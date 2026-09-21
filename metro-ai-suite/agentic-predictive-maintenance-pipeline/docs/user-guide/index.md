@@ -1,4 +1,4 @@
-# Agentic Predictive Maintenance
+# Agentic Predictive Maintenance for Critical Infrastructure
 
 <!--hide_directive
 <div class="component_card_widget">
@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-The Agentic Predictive Maintenance (APM) blueprint is a configuration-driven, multi-agent sample
+The Agentic Predictive Maintenance for Critical Infrastructure (APM) blueprint is a configuration-driven, multi-agent sample
 application for industrial defect detection on Intel® edge hardware. It processes live or recorded
 video to detect defects, stores detection data, and uses a LangGraph framework-based multi-agent pipeline to
 analyze findings and generate structured maintenance tickets without any code changes between use

@@ -1,13 +1,13 @@
-# Pipeline Defect Detection — Agentic Predictive Maintenance
+# Pipeline Defect Detection — Agentic Predictive Maintenance for Critical Infrastructure
 
 This directory contains the use-case-specific configuration for the
 **Pipeline Defect Detection** sample application, built on the
-Agentic Predictive Maintenance Blueprint from `edge-ai-libraries`.
+Agentic Predictive Maintenance for Critical Infrastructure Blueprint.
 
 ## Quick Start
 
 ```bash
-cd <edge-ai-libraries>/sample-applications/agentic-predictive-maintenance
+cd <edge-ai-suites>/sample-applications/agentic-predictive-maintenance
 ./setup.sh --use-case pipeline-defect-detection \
   --use-case-dir <path-to-this-directory>
 ```

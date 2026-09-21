@@ -1,4 +1,4 @@
-# Release Notes: Agentic Predictive Maintenance
+# Release Notes: Agentic Predictive Maintenance for Critical Infrastructure
 
 ## Version 2026.2.0
 
@@ -6,7 +6,7 @@
 
 **Features**:
 
-- **Initial release** of the Agentic Predictive Maintenance (APM) blueprint.
+- **Initial release** of the Agentic Predictive Maintenance for Critical Infrastructure (APM) blueprint.
 - Configuration-driven multi-agent pipeline using LangGraph. Adapt to any defect detection use case
   by editing four configuration files — no code changes required.
 - Four-agent reasoning pipeline: Policy Agent, Analysis Agent, Evidence Agent, and Ticketing Agent
