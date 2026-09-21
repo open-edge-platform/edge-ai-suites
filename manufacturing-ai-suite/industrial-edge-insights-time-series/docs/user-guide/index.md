@@ -19,17 +19,6 @@ simulators (can act as data destinations if configured) would, of course, be rep
 physical devices, in a real deployment scenario. If you are interested, documents for each
 sample application provide detailed architectural descriptions.
 
-<!--hide_directive
-::::{grid} 1 2 2 2
-:::{grid-item-card} Wind Turbine Anomaly Detection
-:class-card: homepage-card-container-big
-:link: ./wind-turbine-anomaly-detection/index.html
-
-Monitoring power generation anomalies for preventive maintenance.
-:::
-::::
-hide_directive-->
-
 ## Blueprint
 
 This section documents the minimum software stack that **Wind Turbine Anomaly Detection** uses
