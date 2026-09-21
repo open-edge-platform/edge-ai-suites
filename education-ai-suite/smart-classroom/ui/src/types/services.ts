@@ -42,4 +42,7 @@ export interface LogBatch {
   lines: LogLine[];
 }
 
-export type IpcResult<T> = { ok: true; data: T } | { ok: false; error: string };
+export type IpcResult<T> =
+  | { ok: true; data: T }
+  /** `code` is set only for failures the caller is expected to recognise and act on. */
+  | { ok: false; error: string; code?: string };

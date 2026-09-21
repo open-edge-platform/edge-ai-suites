@@ -1,6 +1,7 @@
 # KVM Hypervisor (Optional)
 This document demonstrates the steps for setting up an environment that implements the Robotics KVM virtualization solution. The examples below are provided in both QEMU command-line format and libvirt XML parameter format.
-> **Note:** The parameter values in the examples below are not fixed. Please modify them based on your hardware resources, firmware/image paths, and business requirements.
+> [!NOTE]
+> The parameter values in the examples below are not fixed. Please modify them based on your hardware resources, firmware/image paths, and business requirements.
 
 ## Scenario
 

@@ -66,11 +66,13 @@ configured Kubernetes cluster.
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
 
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 ## Set up the Application
 
-> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
+> [!NOTE]
+> The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follow.
 
@@ -104,7 +106,8 @@ configured Kubernetes cluster.
 
 3. Optional: Pull the Helm chart and replace the existing Helm folder with it.
 
-   > **Note:** Download the Helm chart if you are not using the Helm chart provided in
+   > [!NOTE]
+   > Download the Helm chart if you are not using the Helm chart provided in
    > `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
      - Download the Helm chart with the following command:
@@ -219,9 +222,12 @@ configured Kubernetes cluster.
    ::::
    hide_directive-->
 
-   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
-   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
-   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
+   > [!NOTE]
+   > To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`.
+   > [!NOTE]
+   > To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > [!NOTE]
+   > For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 5. Install prerequisites. Run with sudo if needed.
 
@@ -410,8 +416,9 @@ configured Kubernetes cluster.
     Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
     ```
 
-    > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/`. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
-    
+    > [!NOTE]
+    > This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/pdd/`. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
+
     <!--hide_directive ::: hide_directive-->
     <!--hide_directive :::{tab-item} hide_directive--> PCB Anomaly Detection
     <!--hide_directive :sync: pcb-detect hide_directive-->
@@ -432,7 +439,8 @@ configured Kubernetes cluster.
     Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
     ```
 
-    > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/anomaly/`. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
+    > [!NOTE]
+    > This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<host_IP>:30443/mediamtx/anomaly/`. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
 
     <!--hide_directive
     :::
@@ -667,7 +675,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    pip3 install boto3==1.36.17
    ```
 
-   > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
+   > [!NOTE]
+   > DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
 5. Create an S3 bucket using the following script.
 
@@ -699,7 +708,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Start the pipeline with the following cURL command,  with `<host_IP>` set to system IP address. Give the correct path to the model as seen below.
 
-   > **Note:** If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace `30443` with `<NGINX_HTTPS_PORT>`.
+   > [!NOTE]
+   > If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace `30443` with `<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
@@ -766,7 +776,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 7. Go to `https://<host_IP>:30443/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/values.yaml` file (HTTP Basic Auth).
 
-   > **Note:** If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+   > [!NOTE]
+   > If you are running Helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
 8. Uninstall the Helm chart.
 
@@ -913,11 +924,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
     ::::
     hide_directive-->
 
-   > **Note:** Note the instance-id.
+   > [!TIP]
+   > Note the instance-id.
 
 6. Download and prepare the model.
 
-    > **Note:** For the sake of simplicity, assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+    > [!NOTE]
+    > For the sake of simplicity, assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
     <!--hide_directive::::{tab-set} hide_directive-->
     <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
@@ -959,7 +972,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
 
-   > **Note:** If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+   > [!NOTE]
+   > If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
    ```sh
    curl -k --location -X DELETE https://<host_IP>:30443/api/pipelines/{instance_id}
@@ -1065,7 +1079,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 11. View the WebRTC streaming on `https://<host_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
-   > **Note:** If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
+   > [!NOTE]
+   > If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace 30443 with `<NGINX_HTTPS_PORT>`.
 
 <!--hide_directive::::{tab-set} hide_directive-->
 <!--hide_directive:::{tab-item} hide_directive-->Pallet Defect Detection

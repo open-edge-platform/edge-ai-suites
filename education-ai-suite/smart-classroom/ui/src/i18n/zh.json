@@ -57,6 +57,7 @@
     "allReadyRunning": "一切就绪，后端正在运行。",
     "startBackend": "启动后端",
     "backToGetStarted": "返回“快速开始”",
+    "openServices": "打开服务管理",
     "sections": {
       "system": "系统与驱动",
       "software": "软件与环境"

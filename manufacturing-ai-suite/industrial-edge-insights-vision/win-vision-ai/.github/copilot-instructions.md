@@ -275,7 +275,8 @@ pipelines:
 
 `inference.model_id` is validated against the `models` section at load time.
 
-> **Note:** All pipelines in the structured section launch unconditionally. The `auto_start` field is parsed for backwards compatibility but has no effect.
+> [!NOTE]
+> All pipelines in the structured section launch unconditionally. The `auto_start` field is parsed for backwards compatibility but has no effect.
 
 ---
 
@@ -641,7 +642,7 @@ The following reflects the actual installed environment on this machine.
     get location: Location: C:\Users\intel\AppData\Local\Programs\Python\Python314\Lib\site-packages
 		   set env variables:
 		   $env:PYTHONPATH="C:\Users\intel\AppData\Local\Programs\Python\Python314\Lib\site-packages\gstreamer_python\Lib\site-packages"
-	
+
 5. **Required environment variables** — these must be set before running Python.
    They are already present in the system/user environment on this machine:
 

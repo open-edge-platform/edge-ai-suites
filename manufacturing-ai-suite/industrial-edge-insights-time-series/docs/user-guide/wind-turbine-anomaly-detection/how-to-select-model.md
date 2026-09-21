@@ -227,7 +227,8 @@ Your dataset should contain:
 - **Format**: CSV, Parquet, or any pandas-readable format
 - **Size**: 10k-50k samples minimum for training
 
-> **Note**: If you use a dataset different from the reference, you are responsible for training a model with the required feature set and aligning the preprocessing steps accordingly.
+> [!NOTE]
+> If you use a dataset different from the reference, you are responsible for training a model with the required feature set and aligning the preprocessing steps accordingly.
 
 ### Example Dataset Formats
 

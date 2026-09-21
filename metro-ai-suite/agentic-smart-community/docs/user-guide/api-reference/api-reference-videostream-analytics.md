@@ -113,7 +113,8 @@ List all registered sources.
 ]
 ```
 
-> **Note:** The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
+> [!NOTE]
+> The `/sources` response is intentionally a **bare array**, not `{"sources": [...]}`.
 
 ### 3.4 `GET /sources/{source_id}` and `GET /sources/{source_id}/status`
 

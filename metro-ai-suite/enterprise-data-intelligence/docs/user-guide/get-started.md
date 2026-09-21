@@ -105,7 +105,8 @@ grep -q 'intel/llm-scaler-vllm:0.21.0-b1' "$compose" || {
 
 Then you can launch service:
 
-> **Note:** `LLM_MODEL` and `MODEL_PATH` were set in [Prepare embedding/reranker/LLM models](#a-prepare-embeddingrerankerllm-models). Ensure both remain exported in the current shell.
+> [!NOTE]
+> `LLM_MODEL` and `MODEL_PATH` were set in [Prepare embedding/reranker/LLM models](#a-prepare-embeddingrerankerllm-models). Ensure both remain exported in the current shell.
 
 ```bash
 ip_address=$(hostname -I | awk '{print $1}')
@@ -552,7 +553,8 @@ openclaw tui
 
 ## 4. Set Up the UI
 
-> **Note:** OpenClaw must be configured and running before you use the UI. Standalone UI-only mode is not supported; without OpenClaw, the UI starts and serves HTTP on port 7000 but reports backend connection errors.
+> [!NOTE]
+> OpenClaw must be configured and running before you use the UI. Standalone UI-only mode is not supported; without OpenClaw, the UI starts and serves HTTP on port 7000 but reports backend connection errors.
 
 Use Docker Compose to build and start the UI container:
 

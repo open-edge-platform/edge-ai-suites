@@ -9,7 +9,8 @@ with Nx Witness as the VMS. At the end of this tutorial, you will have:
 - Detection bounding boxes pushed from the application to Nx Witness in real time
 - Pipeline runs started and stopped from the Nx Witness desktop client
 
-> **Note:** Although this tutorial demonstrates Loitering Detection as an analytics application,
+> [!NOTE]
+> Although this tutorial demonstrates Loitering Detection as an analytics application,
 > the same instructions apply to any other DL Streamer-based vision application.
 
 ## Prerequisites
@@ -52,7 +53,8 @@ Detection according to the Loitering Detection
 
 Do not bring up the application yet.
 
-> **Note:** The setup generates a `docker-compose.yml` file.
+> [!NOTE]
+> The setup generates a `docker-compose.yml` file.
 
 ### 1.2 Verify the MQTT Port Exposure and Set the MQTT Host for the DL Streamer Pipeline Server
 
@@ -76,7 +78,8 @@ This is the default configuration. The Mosquitto broker uses an anonymous-access
 (`allow_anonymous true`), which is required for the VMS Analytics Plugin and the DL Streamer
 Pipeline Server to publish and subscribe without credentials.
 
-> **Important:** The plugin connects to this MQTT broker from outside the `dls_vision` Docker
+> [!IMPORTANT]
+> The plugin connects to this MQTT broker from outside the `dls_vision` Docker
 > network. The broker must be reachable at `<HOST_IP>:1883` from the plugin's container. If VAP
 > runs on the same host, `host.docker.internal` resolves to the host from inside the plugin
 > container.
@@ -143,7 +146,8 @@ frameworks require):
 
 #### 2.2.2 Confirm the User Has "View Live Video" Permission
 
-> **Note:** Ignore the following if `NX_USERNAME` is an administrator.
+> [!NOTE]
+> Ignore the following if `NX_USERNAME` is an administrator.
 
 The credentials embedded in the RTSP URL (`NX_USERNAME` / `NX_PASSWORD`) must belong to a user
 with at least the **Live Viewer** role on all cameras used for analytics.
@@ -363,7 +367,8 @@ cd metro-ai-suite/vms-adapter-plugin
 ```bash
 docker compose build
 ```
-> **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+> [!NOTE]
+> You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
 
 #### 4.1.2 Start VAP
 ```bash
@@ -486,7 +491,8 @@ curl -k -u admin:<password> \
 
 A `200 OK` response confirms the device agent is enabled.
 
-> **Note:** VAP also performs this step automatically on the first push for a device ("lazy
+> [!NOTE]
+> VAP also performs this step automatically on the first push for a device ("lazy
 > enablement"). If you start a pipeline run before enabling manually, VAP enables the device
 > agent and pushes the manifest on the first detection.
 
@@ -569,7 +575,8 @@ Expected log output:
 [info] nx_pipeline_stopped     app_id=dls_vision device_id=<device-uuid> run_id=<hex-instance-id> success=True
 ```
 
-> **Note:** To run Loitering Detection and Live Video Captioning simultaneously, see the
+> [!NOTE]
+> To run Loitering Detection and Live Video Captioning simultaneously, see the
 > [Run Both Applications Simultaneously](./run-simultaneous-apps.md) guide.
 
 ### 6.3 Start the Pipeline from the VAP Dashboard (Optional)
@@ -695,7 +702,8 @@ To stop VAP, run:
 docker compose down
 ```
 
-> **Caution:** Be careful not to remove the volume with the `docker compose down -v` command,
+> [!CAUTION]
+> Be careful not to remove the volume with the `docker compose down -v` command,
 > as this deletes the database, as well as any integration information and credentials you
 > created. If this happens, the integration in Nx becomes stale. Either delete it from Nx Witness,
 > or use a different VMS integration name in the `vms_shim/nxwitness/nx_integration.json` file.

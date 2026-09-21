@@ -136,7 +136,8 @@ helm install stia . -n <your-namespace> --create-namespace \
   --set ovms.gpu.enabled=false
 ```
 
-> **Note:** The `OV_CONFIG` environment variable is automatically set based on the device. When GPU is enabled, CPU-only options like `INFERENCE_NUM_THREADS` are excluded to avoid runtime errors.
+> [!NOTE]
+> The `OV_CONFIG` environment variable is automatically set based on the device. When GPU is enabled, CPU-only options like `INFERENCE_NUM_THREADS` are excluded to avoid runtime errors.
 
 ### Supported VLM Models
 
@@ -152,7 +153,8 @@ helm install stia . -n <your-namespace> --create-namespace \
 | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
 | `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
 
-> **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
+> [!NOTE]
+> The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 
 ### Step 7: Deploy the Helm Chart
 
@@ -162,9 +164,11 @@ Deploy the Smart Traffic Intersection Agent Helm chart:
 helm install stia . -n <your-namespace> --create-namespace
 ```
 
-> **Note:** By default, the chart assumes the Smart Intersection RI (MQTT broker) is deployed in the same namespace as the STIA release. If the RI is in a different namespace, add `--set mqtt.brokerNamespace=<ri-namespace>`.
+> [!NOTE]
+> By default, the chart assumes the Smart Intersection RI (MQTT broker) is deployed in the same namespace as the STIA release. If the RI is in a different namespace, add `--set mqtt.brokerNamespace=<ri-namespace>`.
 
-> **Note:** The OVMS init container will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `ovms.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
+> [!NOTE]
+> The OVMS init container will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `ovms.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
 
 ### Step 8: Verify the Deployment
 
@@ -237,7 +241,8 @@ To uninstall the deployed Helm chart:
 helm uninstall stia -n <your-namespace>
 ```
 
-> **Note:** When `ovms.persistence.keepOnUninstall` is `true` (the default), the VLM model cache PVC is **retained** after uninstall to avoid re-downloading the model. This is recommended during development and testing. To fully clean up all PVCs:
+> [!NOTE]
+> When `ovms.persistence.keepOnUninstall` is `true` (the default), the VLM model cache PVC is **retained** after uninstall to avoid re-downloading the model. This is recommended during development and testing. To fully clean up all PVCs:
 >
 > ```bash
 > kubectl get pvc -n <your-namespace>
@@ -344,7 +349,8 @@ Keys are nested under `metricsManager` (camelCase — no hyphen).
 > deployment-time permissions only on trusted nodes and in accordance with your cluster security
 > policy.
 
-> **Note — using an external Metrics Manager:** If you set `metricsManager.enabled=false` to skip
+> [!NOTE]
+> Using an external Metrics Manager: If you set `metricsManager.enabled=false` to skip
 > deploying the bundled Metrics Manager, also set `metrics.managerUrl` (and optionally
 > `metrics.streamUrl` / `metrics.healthUrl`) to point at your external instance. Otherwise the
 > traffic-agent keeps its default URLs pointed at the (now-absent) bundled service, so the UI

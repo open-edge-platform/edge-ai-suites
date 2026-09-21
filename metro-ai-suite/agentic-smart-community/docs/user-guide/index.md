@@ -12,10 +12,10 @@
 </div>
 hide_directive-->
 
-> Note:
+> [!NOTE]
 > This is a sample application **intended for evaluation and development purposes only**.
-  For more information, refer to
-  [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
+> For more information, refer to
+> [Intended Use](https://docs.openedgeplatform.intel.com/dev/OEP-articles/notes-on-usage.html#intended-use)
 
 <!--hide_directive :::: hide_directive-->
 

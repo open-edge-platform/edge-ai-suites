@@ -407,7 +407,8 @@ it contains newer fixes not yet in the stable release:
 
 - [Download and Install QGroundControl — Latest daily build (Ubuntu)](https://docs.qgroundcontrol.com/master/en/qgc-user-guide/getting_started/download_and_install.html#ubuntu)
 
-> **Note:** The daily build is pre-release software and may be less stable
+> [!NOTE]
+> The daily build is pre-release software and may be less stable
 > overall. Only use it if the Stable v5.1 release does not work for your setup.
 
 ### "Network Not Available" warnings

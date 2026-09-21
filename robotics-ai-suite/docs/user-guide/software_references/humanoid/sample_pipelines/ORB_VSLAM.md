@@ -39,7 +39,8 @@ Please make sure you have all the prerequisites and installation in [Get Started
 
 After installation, the VSLAM example programs are installed under folder `/opt/intel/orb-slam3`.
 
-> **Note:** The `orb-slam3` Debian Package is compiled without `-march=native` flag by default to ensure compatibility and prevent potential segmentation faults. For enhanced performance, consider building locally with `-march=native`, which optimizes the code based on specific CPU architecture. The `-march=native` option is a compiler flag used with GCC and other compilers to optimize code for the specific architecture of the machine where the compilation occurs. However, it can potentially lead to unexpected behavior, especially when code is intended to run on different architectures.
+> [!NOTE]
+> The `orb-slam3` Debian Package is compiled without `-march=native` flag by default to ensure compatibility and prevent potential segmentation faults. For enhanced performance, consider building locally with `-march=native`, which optimizes the code based on specific CPU architecture. The `-march=native` option is a compiler flag used with GCC and other compilers to optimize code for the specific architecture of the machine where the compilation occurs. However, it can potentially lead to unexpected behavior, especially when code is intended to run on different architectures.
 
 ## VSLAM Demos
 
@@ -58,7 +59,8 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
    unzip MH_04_difficult.zip -d MH04
    ```
 
-   > **Note:** This demo uses MH_04_difficult dataset. If you want to try other dataset, you may download them from the link: <https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets>.
+   > [!NOTE]
+   > This demo uses MH_04_difficult dataset. If you want to try other dataset, you may download them from the link: <https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets>.
    >
    > Please download EUROC Machine Hall datasets from <https://www.research-collection.ethz.ch/entities/researchdata/bcaf173e-5dac-484b-bc37-faf97a594f1f> if there are any issues with the above links.
 
@@ -72,7 +74,8 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
    /opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
    ```
 
-   > **Note:** If you use other datasets other than MH_04_difficult, you should make sure you update the command above with the correct name of dataset you use.
+   > [!NOTE]
+   > If you use other datasets other than MH_04_difficult, you should make sure you update the command above with the correct name of dataset you use.
 
 ### Demo-2: VSLAM Demo with Intel Realsense Camera
 

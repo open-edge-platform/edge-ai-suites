@@ -51,7 +51,8 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
        S3_STORAGE_HOST_PORT: 10001
    ```
 
-   > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+   > [!NOTE]
+   > A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in `config.yml`.
 
@@ -189,7 +190,8 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ./sample_start.sh
    ```
 
-   > **Important:** Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](../troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
+   > [!IMPORTANT]
+   > Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](../troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
 
    Example output:
 
@@ -249,7 +251,8 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    The inference stream can be viewed on WebRTC, in a browser, at the following URL depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 8443, pdd2 set to 9443 & pcb1 set to 10443.
+   > [!NOTE]
+   > The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 8443, pdd2 set to 9443 & pcb1 set to 10443.
 
    ```text
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection

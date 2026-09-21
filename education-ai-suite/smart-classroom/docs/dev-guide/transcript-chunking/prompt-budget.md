@@ -269,7 +269,8 @@ by a ratio. A ratio is the wrong shape for a fixed cost: it over-reserves on a
 large budget and under-reserves on a small one, and it cannot track a board text
 that varies from empty to several thousand tokens.
 
-> **Note:** Board text is included once in the final reduce call, not in each map
+> [!NOTE]
+> Board text is included once in the final reduce call, not in each map
 > call. If it is too long for the token budget, some board content or the final
 > summary may be truncated.
 

@@ -122,7 +122,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.pkl"`    |
 | `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU`| `CPU`   |
 
-> **Note:** The maximum allowed size for `config.json` is 5 KB.
+> [!NOTE]
+> The maximum allowed size for `config.json` is 5 KB.
 
 **Alerts Configuration**:
 

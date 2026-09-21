@@ -58,7 +58,8 @@ This guide provides instructions for setting up a custom UDF deployment package 
 
 ### Docker Compose Deployment
 
-> **Note:** Follow the [Get started](../get-started.md) guide to deploy the `Wind Turbine Anomaly Detection` sample app.
+> [!NOTE]
+> Follow the [Get started](../get-started.md) guide to deploy the `Wind Turbine Anomaly Detection` sample app.
 
 The UDF deployment package (UDFs, TICKscripts, models) and `config.json` for each sample app are uploaded into the Time Series Analytics Microservice container via `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/Makefile`:
 
