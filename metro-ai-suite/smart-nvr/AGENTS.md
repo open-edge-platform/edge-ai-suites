@@ -79,6 +79,7 @@ Important environment variables used by the stack include:
 - `VSS_IP`
 - `VSS_PORT`
 - `SI_RTSP_HOST`
+- `SI_NODE_COUNT`
 - `SCENESCAPE_MQTT_BROKER`
 - `MAX_CONCURRENT_EVENTS`
 - `BROKER_RECONNECT_DELAY`
