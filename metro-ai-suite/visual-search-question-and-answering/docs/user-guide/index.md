@@ -53,7 +53,7 @@ the image encoder from the CLIP model, and stores them in a vector database.
 
 - Resize, convert colors, normalize, and apply object detection with cropping.
 
-> **Note**
+> [!NOTE]
 >
 > Object detection and cropping improve retrieval performance for large-scale scene
 > images (e.g., high-resolution surveillance images with multiple objects).

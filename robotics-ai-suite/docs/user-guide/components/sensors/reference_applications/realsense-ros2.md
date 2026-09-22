@@ -14,7 +14,8 @@ run this sample application using an RealSense camera connected through
 USB (for example, RealSense camera D435i). The subsequent section focuses
 on an [RealSense Depth Camera D457.](https://www.realsenseai.com/products/d457-gmsl-fakra/)
 
-> **Note:** Currently USB cameras are the only supported cameras.
+> [!NOTE]
+> Currently USB cameras are the only supported cameras.
 
 ## Prerequisites
 
@@ -73,7 +74,8 @@ Complete the [Getting Started guide](../../../platform_foundation/getting_starte
 
 Connect the RealSense Depth Camera D457 to a GMSL-enabled platform, then power on the target.
 
-> **Note:** Select the "MIPI" mode of the RealSense Depth Camera D457
+> [!NOTE]
+> Select the "MIPI" mode of the RealSense Depth Camera D457
 > by moving the select switch on the camera to "M", as shown in the below picture:
 > ![MIPI_USB_Switch_in_D457](../../../hardware_blueprints/amr/images/MIPI_USB_Switch_in_D457.jpeg)
 

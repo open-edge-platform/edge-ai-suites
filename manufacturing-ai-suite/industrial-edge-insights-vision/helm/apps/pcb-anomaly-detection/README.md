@@ -3,13 +3,14 @@
 ## Prerequisites
 
 - [System Requirements](../../../docs/user-guide/get-started/vision-system-requirements.md)
-- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04 and/or Ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
 ## Setup the application
 
-> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
+> [!NOTE]
+> The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
@@ -146,7 +147,8 @@
    Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
    ```
 
-   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by
+   > [!NOTE]
+   > This starts the pipeline. You can view the inference stream on WebRTC by
    > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/anomaly/` for PCB Anomaly Detection.
 
 5. Get status of pipeline instance(s) running.

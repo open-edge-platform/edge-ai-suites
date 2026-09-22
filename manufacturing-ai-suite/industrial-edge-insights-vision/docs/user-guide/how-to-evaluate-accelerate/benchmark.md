@@ -7,7 +7,8 @@ optimal stream density and performance characteristics.
 
 ### Prerequisites
 
-> **Note:** Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
+> [!NOTE]
+> Ensure the application is set up and running. Refer to the [Get Started Guide](../get-started.md) for complete installation and configuration steps.
 
 - DL Streamer Pipeline Server (DLSPS) running and accessible
 - `curl`, `jq`, `gawk`, `ffmpeg`, and `bc` utilities installed
@@ -79,7 +80,8 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    ./calc_stream_density.sh -p pallet_defect_detection_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
-   > **Note:** The script automatically uses the `payload.json` file from the configured sample application directory.
+   > [!NOTE]
+   > The script automatically uses the `payload.json` file from the configured sample application directory.
 
 <!--hide_directive ::: hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **PCB Anomaly Detection**
@@ -99,7 +101,8 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
    ./calc_stream_density.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
    ```
 
-   > **Note:** The script automatically uses the `payload.json` file from the configured sample application directory.
+   > [!NOTE]
+   > The script automatically uses the `payload.json` file from the configured sample application directory.
 
 <!--hide_directive
 :::

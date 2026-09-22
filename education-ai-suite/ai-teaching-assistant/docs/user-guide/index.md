@@ -39,7 +39,8 @@ Model inference is distributed across `audio-analyzer`, `text-to-speech`, and `r
 
 For full setup steps, use [Get Started](./get-started.md).
 
-> **Note:** If PowerShell blocks local scripts on your machine, run this command in the current terminal session before setup:
+> [!NOTE]
+> If PowerShell blocks local scripts on your machine, run this command in the current terminal session before setup:
 >
 > ```powershell
 > Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass

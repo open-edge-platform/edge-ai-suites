@@ -604,11 +604,12 @@ The helper script adds this configuration (or add manually if needed):
 }
 ```
 
-**📌 Important Notes:**
-- Do NOT set `"tools": {"profile": "coding"}` - this hides plugin tools from the model
-- Keep `transport.mode` as `"rosbridge"` for this deployment
-- Keep `rosbridge.url` as `"ws://localhost:9090"`
-- For JAKA simulation, use `cmdVelTopic: "/cmd_vel_unstamped"`
+> [!IMPORTANT]
+>
+> - Do NOT set `"tools": {"profile": "coding"}` - this hides plugin tools from the model
+> - Keep `transport.mode` as `"rosbridge"` for this deployment
+> - Keep `rosbridge.url` as `"ws://localhost:9090"`
+> - For JAKA simulation, use `cmdVelTopic: "/cmd_vel_unstamped"`
 
 #### Verify OpenClaw ROS2 Tool Calling
 

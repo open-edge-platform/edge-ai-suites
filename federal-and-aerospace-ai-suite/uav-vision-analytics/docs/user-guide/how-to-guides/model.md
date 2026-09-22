@@ -20,7 +20,8 @@ COCO-pretrained object detection model.
 | Detection classes | 80 classes (person, car, truck, bus, bicycle, motorcycle, ...) |
 | Ultralytics version | 8.4.67 (pinned — see `resources/requirements.txt`) |
 
-> **Important:** `ultralytics` **is pinned to** `8.4.67`. Newer releases
+> [!IMPORTANT]
+> `ultralytics` **is pinned to** `8.4.67`. Newer releases
 > (8.4.115+ tested) changed the detection head's box-decoding math to use a
 > `CumSum` op instead of `Range`. The resulting OpenVINO IR runs fine on
 > **CPU** but fails to compile on **GPU** and **NPU** plugins. Version `8.4.67`

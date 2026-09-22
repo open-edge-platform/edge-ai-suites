@@ -107,7 +107,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This script sets up the application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
-   > **Note:** For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md).
+   > [!NOTE]
+   > For the Pallet Defect Detection application, the setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md).
 
 ## Deploy the Application
 
@@ -119,7 +120,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    sudo systemctl start docker
    ```
 
-    > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+    > [!NOTE]
+    > If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
@@ -189,7 +191,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This command will look for the payload for the pipeline specified in the `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server.
 
-   > **IMPORTANT:** Before you run `sample_start.sh` script, make sure that
+   > [!IMPORTANT]
+   > Before you run `sample_start.sh` script, make sure that
    > `jq` is installed on your system. See the
    > [troubleshooting guide](./troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package)
    > for more details.
@@ -212,9 +215,11 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
    ```
 
-   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Geti™, follow [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
+   > [!NOTE]
+   > The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Geti™, follow [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
 
-   > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to the application URL below.
+   > [!NOTE]
+   > This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to the application URL below.
    > If you are running multiple instances of the application, provide the `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace 443 with `<NGINX_HTTPS_PORT>`.
 
@@ -298,7 +303,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 6. Stop the Docker application.
 
-    > **Note:** If you are running multiple instances of the application, stop the services using `./run.sh down` instead.
+    > [!NOTE]
+    > If you are running multiple instances of the application, stop the services using `./run.sh down` instead.
 
    ```bash
    docker compose down -v

@@ -22,8 +22,9 @@ React dashboard for discovering cameras, managing analytics runs, and viewing li
 Adding support for a new VMS or a new Analytics Application requires only a new shim class —
 no route changes are needed.
 
-> **Note:** Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
-  email us at cities@intel.com to discuss integration with this plugin.
+> [!NOTE]
+> Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
+> email us at cities@intel.com to discuss integration with this plugin.
 
 **Example Use Cases:**
 

@@ -12,10 +12,10 @@
 </div>
 hide_directive-->
 
-> Note:
+> [!NOTE]
 > This application is for **reference and evaluation purposes only**. It is
-  **not intended for direct use in clinical or diagnostic environments** and is not
-  validated for such a purpose.
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated for such a purpose.
 
 <!--hide_directive :::: hide_directive-->
 

@@ -14,7 +14,8 @@ The OPC-UA server simulator is used for ingesting the wind turbine data in the `
 
 ## Supported Versions
 
-> **Note**: The tags suffixed with `-weekly` and `-rcX` are developmental builds, may not be stable.
+> [!NOTE]
+> The tags suffixed with `-weekly` and `-rcX` are developmental builds, may not be stable.
 
 ### [2026.2.0](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/release-notes.html#version-2026-2)
 

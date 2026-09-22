@@ -17,7 +17,8 @@ Press **`ESC`** as the system boots to enter the BIOS setup screen.
 
 ![Enable the IPU and NPU under the System I/O tab](./images/bios_CEXD_GMSL_2.png)
 
-> **Note:** On AMI BIOS 12 and above, the IPU, NPU, and MIPI camera settings are located under the
+> [!NOTE]
+> On AMI BIOS 12 and above, the IPU, NPU, and MIPI camera settings are located under the
 > **System I/O** tab. From the main page, press the right arrow key to reach **System
 > I/O**.
 

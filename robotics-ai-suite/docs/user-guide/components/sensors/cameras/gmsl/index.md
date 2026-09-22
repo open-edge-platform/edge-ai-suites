@@ -26,7 +26,8 @@ Find the GMSL guide for your specific Development Kit in the table below and com
 #### Install Driver Package
 After the system has been rebooted, install the GMSL driver by running the following command:
 
-> **NOTE:** Prerequisites for the GMSL driver can be found in the [Getting Started](../../../../platform_foundation/getting_started.md) guide.
+> [!NOTE]
+> Prerequisites for the GMSL driver can be found in the [Getting Started](../../../../platform_foundation/getting_started.md) guide.
 
 ```bash
 sudo apt-get update

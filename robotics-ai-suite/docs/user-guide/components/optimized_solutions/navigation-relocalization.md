@@ -119,7 +119,8 @@ toward the goal. To run this demo application execute:
 ros2 launch relocalization_bringup relocalization_demo.launch.xml mode:=demo
 ```
 
-> **Note**: Before launching the relocalization package, ensure that the robot
+> [!NOTE]
+> Before launching the relocalization package, ensure that the robot
 > initial pose has been set as described above.
 
 ## Troubleshooting

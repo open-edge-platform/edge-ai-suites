@@ -99,9 +99,10 @@ export ECRAG_MEGA_PORT="16011"
 export ECRAG_CONNECT_TIMEOUT="10"
 ```
 
-**Important**: 
-- `curl` must be available in `PATH`
-- ALWAYS use Bash tool to execute commands
-- Script execution takes time - wait for output
-- For long-running commands, check status with session ID
-- Never skip execution - always run the command!
+> [!IMPORTANT]
+>
+> - `curl` must be available in `PATH`
+> - ALWAYS use Bash tool to execute commands
+> - Script execution takes time - wait for output
+> - For long-running commands, check status with session ID
+> - Never skip execution - always run the command!

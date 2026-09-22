@@ -74,7 +74,8 @@ Follow these steps to run the tests:
 
 5. **Run the Tests**
 
-   **Important:** Make sure the virtual environment is activated before running tests. You should see `(.venv)` in your terminal prompt.
+   > [!IMPORTANT]
+   > Make sure the virtual environment is activated before running tests. You should see `(.venv)` in your terminal prompt.
 
    ```bash
    # Verify you're in the virtual environment (should show .venv path)

@@ -56,7 +56,8 @@ If you would like to use `uv`, you can set up the environment and install depend
 uv sync --extra pi-ov
 ```
 
-> **Note:** **Usage:** You can run a Python file by using: `uv run --extra pi-ov <your_python_file>`. Follow the [guide](https://docs.astral.sh/uv/getting-started/installation/) to install uv.
+> [!NOTE]
+> **Usage:** You can run a Python file by using: `uv run --extra pi-ov <your_python_file>`. Follow the [guide](https://docs.astral.sh/uv/getting-started/installation/) to install uv.
 
 Alternatively, you can create a Python environment:
 
@@ -137,7 +138,8 @@ uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
 
 Exported OpenVINO™ models with RTC require two extra inputs: `prev_chunk_left_over` and `prefix_weights` during inference.
 
-> **Note:** When the RTC function is unnecessary (e.g., the first inference step that does not have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
+> [!NOTE]
+> When the RTC function is unnecessary (e.g., the first inference step that does not have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
 
 ## Run Pipeline
 
@@ -199,7 +201,8 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--torch_dir`: (Optional) Path to the PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
 - `--disable_rtc`: (Optional) Disable the RTC functionality when loading a model with RTC. It is invalid when loading a model without the RTC support.
 
-> **Note:** If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO™, which handles hardware acceleration independently of PyTorch backends.
+> [!NOTE]
+> If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO™, which handles hardware acceleration independently of PyTorch backends.
 
 ### Evaluation Script Overview
 
@@ -225,7 +228,8 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--ov_model_path`: Path to the OpenVINO™ IR model directory (containing `model.xml` and `model.bin`). Default: `pi05_lerobot_ov_ir_INT8`.
 - `--ov_device`: String with an OpenVINO™ device name (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
 
-> **Note:** OpenVINO™ inference still requires `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO™ model.
+> [!NOTE]
+> OpenVINO™ inference still requires `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO™ model.
 >
 > Since dataset statistics are required for normalization, you need to provide them via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
 
@@ -249,9 +253,11 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 ### Simulation Pipeline
 
-> **Note:** If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO™, which handles hardware acceleration independently of PyTorch backends.
+> [!NOTE]
+> If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO™, which handles hardware acceleration independently of PyTorch backends.
 
-> **Note:** If you encounter MESA warnings, try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
+> [!NOTE]
+> If you encounter MESA warnings, try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
 
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO™ model
 
@@ -264,7 +270,8 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-> **Note:** `MUJOCO_GL=egl` is set automatically inside the script for headless EGL rendering on Intel iGPU. You do not need to set it manually.
+> [!NOTE]
+> `MUJOCO_GL=egl` is set automatically inside the script for headless EGL rendering on Intel iGPU. You do not need to set it manually.
 
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO™ model with RTC
 

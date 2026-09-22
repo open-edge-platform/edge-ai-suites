@@ -71,16 +71,18 @@ configured Kubernetes cluster.
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
-> **Note:**
+> [!NOTE]
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).The target system refers to the system where you are installing the application.
 
 ## Step 1: Download the Helm chart
 
 Follow this procedure on the target system to download the package.
 
-> **Note:** Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
+> [!NOTE]
+> Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
 
 Before you can deploy with Helm, you must clone the repository and download the Helm chart:
 
@@ -95,7 +97,8 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 Optional: Pull the Helm chart and replace the existing `helm-chart` folder with it.
 
-> **Note:** The Helm chart should be downloaded when you are not using the Helm chart provided
+> [!NOTE]
+> The Helm chart should be downloaded when you are not using the Helm chart provided
 > in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/helm-chart`.
 
 ```bash
@@ -133,9 +136,12 @@ cd ..
         password: # example: password: mypassword
     ```
 
-   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
-   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
-   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
+   > [!NOTE]
+   > To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`.
+   > [!NOTE]
+   > To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > [!NOTE]
+   > For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 ## Step 3: Deploy the application and Run multiple AI pipelines
 
@@ -262,7 +268,8 @@ Follow this procedure to run the sample application. In a typical deployment, mu
    }'
    ```
 
-   > **Note:** To run the pipeline on GPU replace `yolov11s`  with `yolov11s_gpu` and change value of  `detection-device` to `GPU` for all the above pipelines. Simimlarly, to run the pipeline on NPU replace `yolov11s`  with `yolov11s_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
+   > [!NOTE]
+   > To run the pipeline on GPU replace `yolov11s`  with `yolov11s_gpu` and change value of  `detection-device` to `GPU` for all the above pipelines. Simimlarly, to run the pipeline on NPU replace `yolov11s`  with `yolov11s_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
