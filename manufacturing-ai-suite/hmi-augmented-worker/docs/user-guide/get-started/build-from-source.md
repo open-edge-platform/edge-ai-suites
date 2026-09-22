@@ -111,7 +111,8 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
        This should point to the directory you want the file watcher service to monitor. It should be a valid path on your system where files are expected to be added, monitored, or deleted. The service will track these events and send the file data to the backend for embedding creation.
 
-       **Important**: Ensure that the directory specified in `WATCH_DIRECTORY` does not have access or permission restrictions. The file watcher service must have read and write permissions to monitor and process files within this directory effectively. And also only `.txt`, `.pdf` and `.docx` file format are only supported formats by backend for embedding creation.
+       > [!IMPORTANT]
+       > Ensure that the directory specified in `WATCH_DIRECTORY` does not have access or permission restrictions. The file watcher service must have read and write permissions to monitor and process files within this directory effectively. And also only `.txt`, `.pdf` and `.docx` file format are only supported formats by backend for embedding creation.
 
        Examples of Valid Directory Paths:
 

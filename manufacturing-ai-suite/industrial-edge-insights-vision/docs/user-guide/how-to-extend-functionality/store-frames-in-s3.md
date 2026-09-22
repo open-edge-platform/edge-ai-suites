@@ -4,13 +4,15 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 ## Steps
 
-> **Note:** For the purpose of this demonstration, we will be using SeaweedFS as the S3 storage. The necessary compose configuration for the SeaweedFS microservices is already part of the Docker Compose file.
+> [!NOTE]
+> For the purpose of this demonstration, we will be using SeaweedFS as the S3 storage. The necessary compose configuration for the SeaweedFS microservices is already part of the Docker Compose file.
 
 1. Setup the application to use the docker based deployment following this [document](../get-started.md#set-up-the-application).
 
 2. Bring up the containers.
 
-   > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+   > [!NOTE]
+   > If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
    ```sh
    docker compose up -d
@@ -37,7 +39,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    pip3 install boto3==1.36.17
    ```
 
-   > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
+   > [!NOTE]
+   > DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
 4. Create an S3 bucket using the following script.
 
@@ -69,7 +72,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 5. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
-    > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > [!NOTE]
+    > If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
     > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive ::::{tab-set} hide_directive-->
@@ -137,5 +141,6 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Go to `https://<HOST_IP>/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `.env` file (HTTP Basic Auth).
 
-    > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > [!NOTE]
+    > If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
     > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.

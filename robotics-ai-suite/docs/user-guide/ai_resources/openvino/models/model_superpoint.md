@@ -54,7 +54,8 @@ tar -xvzf sp_v6.tgz
 
 #### Ensure OpenVINO is Installed
 
-> **Note:** Make sure OpenVINO is installed by following the guide:
+> [!NOTE]
+> Make sure OpenVINO is installed by following the guide:
 > [Install OpenVINO via pip](../../developer_tools/openvino.md)
 
 #### Convert the Model using OpenVINO Conversion Tool

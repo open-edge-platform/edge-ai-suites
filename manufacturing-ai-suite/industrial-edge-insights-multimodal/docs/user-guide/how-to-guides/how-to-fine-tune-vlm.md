@@ -6,12 +6,13 @@ fine-tuning a vision-language model (VLM) on your own multimodal
 library and the Low-Rank Adaptation (LoRA) fine-tuning method, and
 running inference with the resulting adapter.
 
-> **Note**: This section describes a generic flow that applies to all domains and
-datasets. For a concrete and ready-to-run example, see
-[Fine-Tune a VLM with Unsloth Library — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
-This example applies the generic flow to the weld-defect visual
-inspection dataset, including but not limited to, the input schema,
-prompt design, and the exact commands.
+> [!NOTE]
+> This section describes a generic flow that applies to all domains and
+> datasets. For a concrete and ready-to-run example, see
+> [Fine-Tune a VLM with Unsloth Library — Weld Worked Example](./how-to-fine-tune-vlm-weld-usecase.md).
+> This example applies the generic flow to the weld-defect visual
+> inspection dataset, including but not limited to, the input schema,
+> prompt design, and the exact commands.
 
 ## Table of Contents
 
@@ -63,7 +64,7 @@ vlm-fine-tuning/
 └── infer_qwen.py               # Generic standalone inference
 ```
 
-> **Notes**:
+> [!NOTE]
 > Generated artifacts are written to the directories specified by
 > `--output-dir` and `--dataset-path` that you pass on the command line,
 > for example, `processed_dataset/` and `qwen_3.5_2b_adapter/`.
@@ -137,25 +138,19 @@ At a high level, this is a generic two-stage flow that sits on top of
 any dataset-preparation step you bring:
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 flowchart TD
     subgraph S0["Your Dataset Prep (domain-specific — bring your own, see the Weld Usecase guide)"]
-        direction LR
         A["Your raw data"] --> B["system/user/assistant</br>conversations per sample"]
         B --> C["Parquet export</br>(image + conversation_json columns)"]
     end
 
     subgraph S1["Fine-Tuning (generic — train_qwen.py)"]
-        direction LR
         E["Load parquet dataset"] --> F["Base VLM + LoRA adapter</br>(FastVisionModel)"]
         F --> G["SFTTrainer</br>(Unsloth vision collator)"]
         G --> H["LoRA adapter</br>saved to disk"]
     end
 
     subgraph S2["Inference / Serving (generic — infer_qwen.py)"]
-        direction LR
         J["Load base model</br>+ LoRA adapter"] --> K["Streamed model response"]
     end
 

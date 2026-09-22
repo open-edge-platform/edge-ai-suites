@@ -51,7 +51,8 @@ Install the dependencies with the following command:
 pip install torch==2.7.1 torchvision==0.22.1 pyquaternion==0.9.9 pyyaml==6.0 rospkg==1.5.0 pexpect==4.8.0 mujoco==3.2.6 dm_control==1.0.26 matplotlib==3.10.0 einops==0.6.0 packaging==23.0 h5py==3.12.1 ipython==8.12.0 opencv-python==4.10.0.84 transformers==4.37.0 accelerate==0.23.0 huggingface-hub==0.24.7
 ```
 
-> **Note:** Usually, pip tries to download a pre-compiled wheel package so you don't have to build anything in this step. Maintainers may have not uploaded pre-compiled wheels for versions newer than the LTS version yet.
+> [!NOTE]
+> Usually, pip tries to download a pre-compiled wheel package so you don't have to build anything in this step. Maintainers may have not uploaded pre-compiled wheels for versions newer than the LTS version yet.
 >
 > Because of this, pip may fall back to building from source, which triggers the need for compilers and tools like Bazel. Additional build tools may be required to build some of the dependencies from source. If you encounter errors during installation, either switch to a different python version or check the error messages for missing tools or libraries and install them accordingly.
 
@@ -122,7 +123,7 @@ pip install -e .
    python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
    ```
 
-   > **Note:**
+   > [!NOTE]
    >
    > - `--eval` is used to evaluate the policy.
    > - `--device` is used to set the device to CPU or GPU.

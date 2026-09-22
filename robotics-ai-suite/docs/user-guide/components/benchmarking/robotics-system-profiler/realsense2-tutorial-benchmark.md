@@ -15,7 +15,8 @@ Unlike the simulation benchmarks, this is a live-camera scenario: there's no
 goal-based stop condition, so the Robotics System Profiler runs for a fixed
 duration, capturing timing, resource, and optionally GPU metrics.
 
-> **Note:** Currently USB cameras are the only supported cameras.
+> [!NOTE]
+> Currently USB cameras are the only supported cameras.
 
 ## Prerequisites
 

@@ -167,7 +167,7 @@ ros2 launch its_planner its_ackermann_launch.py use_sim_time:=true
 :::
 ::::
 
-> **Note**:
+> [!NOTE]
 >
 > The above command opens Gazebo\* and rviz2 applications. Gazebo\* takes a
 > longer time to open (up to a minute) depending on the host's capabilities.

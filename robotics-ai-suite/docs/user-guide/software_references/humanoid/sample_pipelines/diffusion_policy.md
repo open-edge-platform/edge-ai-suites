@@ -76,7 +76,8 @@ pip install huggingface_hub==0.24.7 openvino==2024.6
 
 1. Refer to `<diffusion-policy_SOURCE_CODE_PATH>/ov_convert/README.md` for instructions on downloading the pre-trained checkpoints, there are four available checkpoints for Push-T task.
 
-   > **Note:** For detailed instructions on the model conversion process, refer to [OpenVINO Model Guidance - Diffusion Policy](../../../components/ai_resources/openvino/models/model_dp.md).
+   > [!NOTE]
+   > For detailed instructions on the model conversion process, refer to [OpenVINO Model Guidance - Diffusion Policy](../../../components/ai_resources/openvino/models/model_dp.md).
 
    | Item | Pre-trained checkpoint Name | Low-dim or image | Policy | Parameters |
    |---|---|---|---|---|

@@ -39,7 +39,8 @@ across a reboot:
   tuning you must restore the config (see
   [What persists across a reboot](#what-persists-across-a-reboot)).
 
-> **Note:** These tools are tuned for Intel Panther Lake (Core Ultra). On other
+> [!NOTE]
+> These tools are tuned for Intel Panther Lake (Core Ultra). On other
 > Intel silicon they still run, but the Config-TDP (cTDP) levels and the
 > platform (psys/SysWatt) domain may differ or be unavailable.
 
@@ -98,7 +99,8 @@ A profile is a package-power (PkgWatt) budget plus a default burst ratio. The
 package cap is enforceable on every platform; on silicon that also exposes the
 psys (SysWatt) domain, a matching whole-platform cap is added automatically.
 
-> **Note:** The table below is a reference recommendation. The values can be
+> [!NOTE]
+> The table below is a reference recommendation. The values can be
 > overridden with command-line parameters (e.g. `--pkgWatt`, `--sysWatt`,
 > `--burstRatio`, `--pl1Tau`) for further tuning — see
 > [Set an Explicit Power Envelope](#set-an-explicit-power-envelope).
@@ -193,7 +195,8 @@ sudo tools/power-tuning/set_power_profile.sh --pkgWatt 15 --pl1Tau 10
 
 ## Monitor Power and Temperature
 
-> **Note:** `pt_mon.sh` is provided as a *reference* monitor. You can use it,
+> [!NOTE]
+> `pt_mon.sh` is provided as a *reference* monitor. You can use it,
 > or any other power-monitoring tool you prefer (e.g. `turbostat`, `powertop`,
 > `intel_gpu_top`, a BMC/OEM utility, or reading
 > `/sys/class/powercap/intel-rapl*`). The power profile and stress steps are
@@ -227,7 +230,8 @@ sudo turbostat -S --interval 1 --num_iterations 60 \
 
 ## Stress the Platform Under Load
 
-> **Note:** `stress_gen.sh` provides a *simulated* load for evaluation purposes.
+> [!NOTE]
+> `stress_gen.sh` provides a *simulated* load for evaluation purposes.
 > You can use it, or run the **actual workload** you want to evaluate — apply the
 > power profile, start the monitor, and drive the platform with either the
 > simulated stress below or your real application. The monitor reacts the same
@@ -361,7 +365,8 @@ sudo cp -a /usr/local/etc/intel_lpmd/intel_lpmd_config_F6_M204.xml.orig \
 sudo systemctl restart intel_lpmd.service
 ```
 
-> **Note:** Only overridden *model-specific* files get an `.orig` backup. The
+> [!NOTE]
+> Only overridden *model-specific* files get an `.orig` backup. The
 > generic `intel_lpmd_config.xml` the script writes has no backup if no config
 > existed there before.
 

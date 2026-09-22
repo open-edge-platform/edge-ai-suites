@@ -10,7 +10,7 @@ import { SmartCommunityDB, SchemaManager } from "@smart-community-video/db";
 import { VideoSummaryClient } from "@smart-community-video/tools";
 import { registerTools } from "./tools.js";
 import { registerResources } from "./resources.js";
-import { BIND_HOST, loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
+import { MCP_BIND_HOST, loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
 import { WorkerService } from "./video-worker/index.js";
 import { EventsEndpoint } from "./events-endpoint.js";
 import { logger } from "./logger.js";
@@ -148,9 +148,9 @@ async function main() {
   const chatProxy = new OpenClawChatProxy(chatCredentials);
 
   if (transportMode === "http") {
-    // BIND_HOST is loopback, so the SDK applies DNS rebinding protection: only
+    // MCP_BIND_HOST is loopback by default, so the SDK applies DNS rebinding protection: only
     // localhost / 127.0.0.1 / [::1] are accepted as Host.
-    const app = createMcpExpressApp({ host: BIND_HOST });
+    const app = createMcpExpressApp({ host: MCP_BIND_HOST });
 
     app.use("/api", createDashboardRouter(db, config, summaryClient, liveStreams, chatCredentials));
 
@@ -235,8 +235,8 @@ async function main() {
     mountStaticUi(app);
 
     const port = config.mcp!.port!;
-    const httpServer = app.listen(port, BIND_HOST, () => {
-      logger.info(`[mcp-server] Streamable HTTP (stateful) on http://${BIND_HOST}:${port}/mcp`);
+    const httpServer = app.listen(port, MCP_BIND_HOST, () => {
+      logger.info(`[mcp-server] Streamable HTTP (stateful) on http://${MCP_BIND_HOST}:${port}/mcp`);
     });
     chatProxy.attach(httpServer);
 

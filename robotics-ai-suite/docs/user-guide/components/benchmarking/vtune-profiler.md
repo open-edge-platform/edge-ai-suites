@@ -172,7 +172,7 @@ The CPU Hotspots Analysis is carried out with the following parameters:
 
 The results are collected in `vtune_results_hotspots` directory.
 
-> **Note**:
+> [!NOTE]
 >
 > The sampling interval and the duration can be changed by adapting the
 > value of the parameters `-sampling-interval` and `-duration`
@@ -320,7 +320,7 @@ parameters:
 
 The results are collected in `vtune_results_uarch` directory.
 
-> **Note**:
+> [!NOTE]
 >
 > The sampling interval and the duration can be changed by adapting the
 > value of the parameters `sampling-interval` and `-duration`

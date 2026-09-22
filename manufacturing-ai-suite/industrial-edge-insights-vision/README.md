@@ -25,7 +25,8 @@ It consists of the following microservices:
     <img src=industrial-edge-insights-vision-architecture.drawio.svg width=800>
 </div>
 
-> **Note:** Although not part of the application configuration files such as Docker Compose or Helm templates, Model Download microservice helps downloading OpenVINO™ and Geti™ trained models that are used by DL Streamer Pipeline Server to demonstrate MLOps flow.
+> [!NOTE]
+> Although not part of the application configuration files such as Docker Compose or Helm templates, Model Download microservice helps downloading OpenVINO™ and Geti™ trained models that are used by DL Streamer Pipeline Server to demonstrate MLOps flow.
 
 ### Directory structure
 

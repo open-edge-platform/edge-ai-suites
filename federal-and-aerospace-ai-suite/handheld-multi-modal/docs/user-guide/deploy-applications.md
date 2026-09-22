@@ -5,7 +5,8 @@ local machine.
 
 ## (Optional) Configuring the Proxy
 
-> **Note**: If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
+> [!NOTE]
+> If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
 
 Depending on the system's network configuration, you may need an additional proxy configuration.
 Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a

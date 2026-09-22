@@ -84,7 +84,8 @@ uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
     --ros-domain-id 46 --gpu --npu --algorithm wandering --duration 180
 ```
 
-> **Note:** DDS discovery on remote sessions typically takes 30–60 seconds.
+> [!NOTE]
+> DDS discovery on remote sessions typically takes 30–60 seconds.
 > Use `--duration 180` or longer to ensure meaningful data is captured.
 
 For repeated remote runs:

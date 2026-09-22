@@ -77,7 +77,8 @@ You can use the following commands to run conversion for the desired target devi
       --device NPU
     ```
 
-    > Note: NPU currently requires `int4` quantization for VLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
+    > [!NOTE]
+    > NPU currently requires `int4` quantization for VLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
 You can also download and convert for multiple target devices in a single command by passing a comma-separated `--device` list:
 
@@ -110,12 +111,24 @@ The following VLM models are validated:
 | openbmb/MiniCPM-V-2_6  | CPU, GPU, NPU | v2026.1 |
 | Qwen/Qwen2-VL-2B-Instruct | CPU, GPU, NPU | v2025.4.1 |
 
-> **Note:** `OVMS_RELEASE_TAG` in `.env` controls the OVMS image version used by the model download/conversion flow. Refer to the validated-model table above, or consult the official OpenVINO documentation for supported models and their corresponding OVMS versions. Using a different tag can change the bundled `transformers`/OpenVINO toolchain and may cause conversion failures.
+> [!NOTE]
 >
-> **Note:** If you want to use newer Hugging Face models, you may need a newer OVMS/OpenVINO stack for conversion, which means updating `OVMS_RELEASE_TAG`.
->
-> **Note:** Runtime compatibility also matters. Live Video Captioning runs models with DL Streamer, so DL Streamer/OpenVINO must also support the converted model at runtime. If you test newer stacks, you can try weekly images from [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating [compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/compose.yaml) or Helm chart [values.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/charts/subcharts/dlstreamer-pipeline-server/values.yaml). Weekly images may include stability issues.
-As of the time of writing, the latest stable DL Streamer release is `2026.1.0`, built on top of `OpenVINO v2026.1`.
+> - `OVMS_RELEASE_TAG` in `.env` controls the OVMS image version used by the
+>   model download/conversion flow. Refer to the validated-model table above,
+>   or consult the official OpenVINO documentation for supported models and
+>   their corresponding OVMS versions. Using a different tag can change the
+>   bundled `transformers`/OpenVINO toolchain and may cause conversion failures.
+> - If you want to use newer Hugging Face models, you may need a newer
+>   OVMS/OpenVINO stack for conversion, which means updating `OVMS_RELEASE_TAG`.
+> - Runtime compatibility also matters. Live Video Captioning runs models with
+>   DL Streamer, so DL Streamer/OpenVINO must also support the converted model
+>   at runtime. If you test newer stacks, you can try weekly images from
+>   [Docker Hub](https://hub.docker.com/r/intel/dlstreamer/tags) by updating
+>   [compose.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/compose.yaml)
+>   or Helm chart [values.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/charts/subcharts/dlstreamer-pipeline-server/values.yaml).
+>   Weekly images may include stability issues.
+>   As of the time of writing, the latest stable DL Streamer release is
+>   `2026.1.0`, built on top of `OpenVINO v2026.1`.
 
 ## Optional: Download an Object-Detection Model
 

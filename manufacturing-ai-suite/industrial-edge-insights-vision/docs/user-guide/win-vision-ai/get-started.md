@@ -29,7 +29,8 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
-> **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
+> [!NOTE]
+> By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 
 ## Set Up the Application
 
@@ -87,7 +88,8 @@ Run this once to download `bin\gstgencamsrc.dll` (from the Edge AI Libraries Git
 .\src\setup_genicam_runtime.ps1
 ```
 
-> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+> [!NOTE]
+> If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 ##### Set Camera Environment Variables
 
@@ -149,7 +151,8 @@ python src/download_models.py --model yolo11n --outdir C:/Users/<username>/model
 
 Use the exported `.xml` path in `config.yaml`.
 
-> **Note:** You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
+> [!NOTE]
+> You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
 >
 > ```powershell
 > wget -O pallet_defect_detection.zip "https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip" ; Expand-Archive -Path "pallet_defect_detection.zip" -DestinationPath "models"
@@ -162,9 +165,11 @@ Use the exported `.xml` path in `config.yaml`.
 
 ### Configure `config.yaml`
 
-> **Note:** The `config.yaml` file is located in the `win-vision-ai` directory of your clone (i.e., `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/config.yaml`).
+> [!NOTE]
+> The `config.yaml` file is located in the `win-vision-ai` directory of your clone (i.e., `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/config.yaml`).
 
-> **Note:** Use forward slashes in all YAML paths to avoid escape issues.
+> [!NOTE]
+> Use forward slashes in all YAML paths to avoid escape issues.
 
 #### Metrics
 
@@ -268,7 +273,8 @@ Requires the camera environment variables from [Set Environment Variables](#set-
 
 `serial` and `pixel-format` are required fields. `width` and `height` are optional — if omitted or set to `null`, they will not be passed to `gencamsrc` and it will fall back to its own resolution defaults (see [src-gst-gencamsrc README](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md) for details). Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
-> **Note:** If specified, `width` and `height` values must be greater than 60.
+> [!NOTE]
+> If specified, `width` and `height` values must be greater than 60.
 
 > **Supported pixel formats:** The basic configuration supports standard formats - `mono8`, `bgr8`, `rgb8`, and `ycbcr422_8`. For other pixel formats — use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
 
@@ -431,7 +437,8 @@ For detection models use `model_id` as `inst0`, and for classifcation models use
 
 The following combinations are supported in basic configuration mode.
 
-> **Important:** `input` and `inference` are **mandatory** for all pipeline combinations below.
+> [!IMPORTANT]
+> `input` and `inference` are **mandatory** for all pipeline combinations below.
 
 | Frame Output  | Metadata Output |
 | ------------- | --------------- |
@@ -452,7 +459,7 @@ The following combinations are supported in basic configuration mode.
 | None          | MQTT + File     |
 | None          | None            |
 
-> **Notes:**
+> [!NOTE]
 >
 > - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
 > - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
@@ -478,7 +485,8 @@ Press **Ctrl+C** if you need to forcefully stop the application.
 ## Advanced: Raw Pipeline Mode
 
 Pass complete GStreamer strings directly — `models` and `pipelines` sections are ignored:
-> **Note:** When using `whipclientsink` (in raw pipeline mode), the WHIP endpoint path must include the `/whip` suffix (e.g. `http://localhost:8889/front/whip`). The browser viewer URL does **not** include `/whip` — open `http://localhost:8889/front` to watch the stream.
+> [!NOTE]
+> When using `whipclientsink` (in raw pipeline mode), the WHIP endpoint path must include the `/whip` suffix (e.g. `http://localhost:8889/front/whip`). The browser viewer URL does **not** include `/whip` — open `http://localhost:8889/front` to watch the stream.
 
 ```yaml
 raw_pipelines:

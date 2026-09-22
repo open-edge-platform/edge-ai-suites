@@ -31,12 +31,14 @@ hide_directive-->
 
 ### Steps
 
-> **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> [!NOTE]
+> If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 1. Set up the sample application to start a pipeline. A named pipeline (`pallet_defect_detection_mlops` or `pcb_anomaly_detection_mlops`) is already provided in the `pipeline-server-config.json` for this demonstration with the Pallet Defect Detection or PCB Anomaly Detection sample app.
 
-   > **Note:** Ensure that the pipeline inference element, such as gvadetect/gvaclassify/gvainference, does not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the `model-instance-id`.
+   > [!NOTE]
+   > Ensure that the pipeline inference element, such as gvadetect/gvaclassify/gvainference, does not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the `model-instance-id`.
 
    Navigate to the `[WORKDIR]/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision` directory and set up the app.
 
@@ -328,4 +330,5 @@ hide_directive-->
 
 To learn how to download models from a running Geti™ server, see the [Model Download service documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
 
-> **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.
+> [!NOTE]
+> The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.

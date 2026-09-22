@@ -49,4 +49,5 @@ iperf3 -c <IPERF_SERVER_IP> -u -b 960M -t 0
 ```
 
 Replace `<IPERF_SERVER_IP>` with the IP address of the machine running the iPerf3 server.
-> **Note:** Adjust the bandwidth (`-b`) to create enough network congestion to see the impact on your latency-sensitive traffic.
+> [!NOTE]
+> Adjust the bandwidth (`-b`) to create enough network congestion to see the impact on your latency-sensitive traffic.

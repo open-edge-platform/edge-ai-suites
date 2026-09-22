@@ -44,7 +44,8 @@ is produced, while the thermal profile governs how the platform responds as the
 package temperature climbs. Apply the power envelope first, then the thermal
 policy.
 
-> **Note:** Unlike the runtime-only RAPL power cap, the thermal config and
+> [!NOTE]
+> Unlike the runtime-only RAPL power cap, the thermal config and
 > systemd override are written to disk and **persist across a reboot** — see
 > [What Persists Across a Reboot](#what-persists-across-a-reboot).
 

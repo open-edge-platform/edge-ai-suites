@@ -9,7 +9,7 @@ This guide provides step-by-step instructions for deploying the Multimodal Weld 
  Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to setup Kubernetes cluster on the web with host OS as Ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
-> **Note:**
+> [!NOTE]
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
 > to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target
 > system refers to the system where you are installing the application.
@@ -72,7 +72,7 @@ You can either generate or download the Helm charts.
 
 ## Step 3: Install Helm charts
 
-> **Note:**
+> [!NOTE]
 >
 > 1. Uninstall Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
@@ -93,7 +93,7 @@ helm install multimodal-weld-defect-detection . -n multimodal-sample-app --creat
 
 **Verify Installation:**
 
-> **Note:**
+> [!NOTE]
 > The `deployment-coturn`, `deployment-fusion-analytics`, `deployment-ia-weld-data-simulator` and `deployment-telegraf` pods might restart since its depended on `deployment-mqtt-broker` and `deployment-mediamtx`
 
 Use the following command to verify if all the application resources got installed with their status:
@@ -149,7 +149,7 @@ this sample application in Kubernetes environment:
    curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.tar" -k
    ```
 
-> **Note:**
+> [!NOTE]
 > Run the commands only after performing the Helm install.
 
 ## Step 5: Activate the Pipeline and UDF Deployment Package
@@ -159,7 +159,7 @@ this sample application in Kubernetes environment:
 You use a Client URL (cURL) command to start the pipeline. Start this pipeline with the
 following cURL command.
 
-> **Note:**
+> [!NOTE]
 >
 > - By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
 > - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
