@@ -120,7 +120,9 @@ def build_payload(frame_path, device):
         "destination": {
             "metadata": {
                 "type": "file",
-                "path": "/tmp/results.jsonl",
+                # Per-device log file so CPU/GPU/NPU detections never
+                # interleave into a single results.jsonl.
+                "path": f"/tmp/results_{device.lower()}.jsonl",
                 "format": "json-lines"
             },
             "frame": {

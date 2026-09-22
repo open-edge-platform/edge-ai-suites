@@ -201,7 +201,7 @@ INSTANCE_ID=$(curl -s -X POST \
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_cpu.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -226,10 +226,11 @@ If `state` is `ERROR`, check the container logs:
 ```bash
 docker logs dlstreamer-pipeline-server 2>&1 | tail -20
 ```
-Change following **three values** to switch between CPU / GPU / NPU:
+Change following **four values** to switch between CPU / GPU / NPU:
 1. **Pipeline name** in the URL path (`nadir_camera_rtsp_cpu` → `forward_camera_rtsp_gpu` / `rear_camera_rtsp_npu`)
 2. **RTSP path** in the request body (`nadir` → `forward` / `rear`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+4. **JSONL log path** in the request body (`/tmp/results_cpu.jsonl` → `/tmp/results_gpu.jsonl` / `/tmp/results_npu.jsonl`) — each camera/device pipeline logs detections to its own file so events from concurrently-running pipelines are never mixed together.
 
 > [!NOTE]
 > `http://<HOST_IP>/...` is the DL Streamer Pipeline Server REST API, proxied by nginx on port `80`.
@@ -247,6 +248,17 @@ Any of the annotated streams can be viewed with `ffplay <RTSP_PATH>`:
 ffplay rtsp://<HOST_IP>:8555/nadir               # nadir camera
 ffplay rtsp://<HOST_IP>:8555/forward               # forward camera
 ffplay rtsp://<HOST_IP>:8555/rear               # rearcamera
+```
+
+#### View detection logs
+
+Each camera/device pipeline writes its detection events (with GPS/telemetry enrichment)
+to a separate JSONL file:
+
+```bash
+tail -f /tmp/results_cpu.jsonl   # nadir (CPU) detections
+tail -f /tmp/results_gpu.jsonl   # forward (GPU) detections
+tail -f /tmp/results_npu.jsonl   # rear (NPU) detections
 ```
 
 #### Capture all the video streams

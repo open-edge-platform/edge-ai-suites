@@ -52,7 +52,9 @@ def _build_rtsp_payload(pipeline: dict) -> dict:
         "destination": {
             "metadata": {
                 "type": "file",
-                "path": "/tmp/results.jsonl",
+                # Per-device log file so CPU/GPU/NPU detections never
+                # interleave into a single results.jsonl.
+                "path": f"/tmp/results_{pipeline['device'].lower()}.jsonl",
                 "format": "json-lines",
             },
             "frame": {
@@ -74,7 +76,9 @@ def _build_udp_payload(pipeline: dict) -> dict:
         "destination": {
             "metadata": {
                 "type": "file",
-                "path": "/tmp/results.jsonl",
+                # Per-device log file so CPU/GPU/NPU detections never
+                # interleave into a single results.jsonl.
+                "path": f"/tmp/results_{pipeline['device'].lower()}.jsonl",
                 "format": "json-lines",
             },
         },

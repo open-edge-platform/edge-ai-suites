@@ -141,7 +141,7 @@ INSTANCE_ID=$(curl -s -X POST \
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_cpu.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -159,10 +159,11 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 ```
 
-Change following **three values** to switch between CPU / GPU / NPU:
+Change following **four values** to switch between CPU / GPU / NPU:
 1. **Pipeline name** in the URL path (`uav_object_detection_cpu` → `_gpu` / `_npu`)
 2. **RTSP path** in the request body (`uav-mavlink-cpu` → `uav-mavlink-gpu` / `uav-mavlink-npu`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+4. **JSONL log path** in the request body (`/tmp/results_cpu.jsonl` → `/tmp/results_gpu.jsonl` / `/tmp/results_npu.jsonl`) — each device pipeline logs detections to its own file so events from concurrently-running pipelines are never mixed together.
 
 ### 5. View the output stream
 
@@ -176,6 +177,18 @@ Any of the annotated streams can be viewed with `ffplay <RTSP_PATH>`:
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-cpu   # CPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
+```
+
+#### View detection logs
+
+Each device pipeline writes its detection events (with GPS/telemetry enrichment) to a
+separate JSONL file, so CPU/GPU/NPU logs never collide even when multiple pipelines run
+at once:
+
+```bash
+tail -f /tmp/results_cpu.jsonl   # CPU pipeline detections
+tail -f /tmp/results_gpu.jsonl   # GPU pipeline detections
+tail -f /tmp/results_npu.jsonl   # NPU pipeline detections
 ```
 
 The annotated stream includes bounding boxes for detected objects
