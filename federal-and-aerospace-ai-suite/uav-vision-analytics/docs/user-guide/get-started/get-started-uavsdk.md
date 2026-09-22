@@ -194,8 +194,8 @@ Once the source is confirmed live, start the pipeline:
 
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
-INSTANCE_ID=$(curl -s -X POST \
-  http://<HOST_IP>/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -219,7 +219,7 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 
 # Verify it reached RUNNING state (not ERROR)
-curl -s http://<HOST_IP>/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
+curl -k -s https://<HOST_IP>/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
 ```
 
 If `state` is `ERROR`, check the container logs:
@@ -233,8 +233,9 @@ Change following **four values** to switch between CPU / GPU / NPU:
 4. **JSONL log path** in the request body (`/tmp/results_cpu.jsonl` → `/tmp/results_gpu.jsonl` / `/tmp/results_npu.jsonl`) — each camera/device pipeline logs detections to its own file so events from concurrently-running pipelines are never mixed together.
 
 > [!NOTE]
-> `http://<HOST_IP>/...` is the DL Streamer Pipeline Server REST API, proxied by nginx on port `80`.
-> Replace `<HOST_IP>` with the value auto-detected by `make init` (see `.env`).
+> `https://<HOST_IP>/...` is the DL Streamer Pipeline Server REST API, proxied by nginx on
+> port `443` (self-signed cert; use `curl -k` to skip verification). Plain HTTP on port `80`
+> redirects to HTTPS. Replace `<HOST_IP>` with the value auto-detected by `make init` (see `.env`).
 
 ### 7. View the output stream
 
@@ -285,7 +286,7 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 6](#6-start-inference-pipelines)):
 
 ```bash
-curl -X DELETE http://<HOST_IP>/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### 8. Stop all services
@@ -321,7 +322,7 @@ make down
 
 All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp DEVICE=cpu|gpu|npu|all`) or the REST API directly.
 
-REST endpoint: `POST http://<HOST_IP>/pipelines/user_defined_pipelines/{name}` (proxied by nginx to `dlstreamer-pipeline-server:8081`)
+REST endpoint: `POST https://<HOST_IP>/pipelines/user_defined_pipelines/{name}` (proxied by nginx over HTTPS to `dlstreamer-pipeline-server:8081`)
 
 ---
 

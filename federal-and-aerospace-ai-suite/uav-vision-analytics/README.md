@@ -93,17 +93,18 @@ make start-rtsp DEVICE=gpu   # or cpu | npu | all
 
 ## Endpoints
 
-All HTTP traffic is served through the nginx reverse proxy on port 80. `dlstreamer-pipeline-server`
+All HTTP(S) traffic is served through the nginx reverse proxy on port 443 (HTTPS,
+self-signed cert; plain HTTP on port 80 redirects to HTTPS. `dlstreamer-pipeline-server`
 and `metrics-manager` no longer publish ports directly to the host.
 
 | Service | URL / Path | Notes |
 |---------|-----------|-------|
-| DL Streamer Pipeline Server REST API | `http://<HOST_IP>/` | Pipeline control and status, proxied to `dlstreamer-pipeline-server:8081` |
+| DL Streamer Pipeline Server REST API | `https://<HOST_IP>/` | Pipeline control and status, proxied to `dlstreamer-pipeline-server:8081` |
 | RTSP annotated stream | `rtsp://<HOST_IP>:8555` | Detection + telemetry overlay output; TCP passthrough via nginx `stream {}` |
-| Metrics manager SSE stream (Standalone mode only) | `http://<HOST_IP>/metrics/stream` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
-| Metrics manager REST snapshot (Standalone mode only) | `http://<HOST_IP>/api/v1/metrics/latest` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
+| Metrics manager SSE stream (Standalone mode only) | `https://<HOST_IP>/metrics/stream` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
+| Metrics manager REST snapshot (Standalone mode only) | `https://<HOST_IP>/api/v1/metrics/latest` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
 
-`<HOST_IP>` is auto-detected and written to `.env` by `make init` (defaults to `localhost`/`127.0.0.1` when run locally).
+`<HOST_IP>` is auto-detected and written to `.env` by `make init` (defaults to `localhost`/`127.0.0.1` when run locally). The self-signed TLS certificate is generated automatically into `configs/nginx/ssl/` the first time `make pymav-up`/`make uavsdk-up` runs — use `curl -k` to skip verification.
 
 > [!IMPORTANT]
 > `nginx`'s ports (`80`, `8555`) are published on `HOST_IP`, so they are reachable from

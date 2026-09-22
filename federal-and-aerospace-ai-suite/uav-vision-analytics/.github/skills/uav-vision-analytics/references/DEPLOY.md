@@ -193,8 +193,10 @@ dlstreamer-pipeline-server:
 
 > [!IMPORTANT]
 > `dlstreamer-pipeline-server` must NOT publish `8081`/`8555` to the host via `ports:`.
-> It is reached only through the `nginx` reverse-proxy service below (the only service
-> that publishes ports to the host). See `references/NGINX.md`-style fragment:
+> It is reached only through the `nginx` reverse-proxy / TLS-termination service below
+> (the only service that publishes ports to the host). Follows the same self-signed-cert
+> + HTTP→HTTPS-redirect pattern.
+> See `references/NGINX.md`-style fragment:
 >
 > ```yaml
 > nginx:
@@ -203,8 +205,10 @@ dlstreamer-pipeline-server:
 >   restart: unless-stopped
 >   volumes:
 >     - ./configs/nginx/nginx-pymavlink.conf:/etc/nginx/nginx.conf:ro
+>     - ./configs/nginx/ssl:/etc/nginx/ssl:ro
 >   ports:
->     - "${HOST_IP:-127.0.0.1}:80:80"       # HTTP reverse proxy -> dlstreamer-pipeline-server:8081 (+ metrics-manager)
+>     - "${HOST_IP:-127.0.0.1}:80:80"       # HTTP -> 301 redirect to HTTPS
+>     - "${HOST_IP:-127.0.0.1}:443:443"     # HTTPS reverse proxy -> dlstreamer-pipeline-server:8081 (+ metrics-manager)
 >     - "${HOST_IP:-127.0.0.1}:8555:8555"   # raw TCP passthrough (stream {} block) -> dlstreamer-pipeline-server:8555
 >   networks:
 >     - app_network

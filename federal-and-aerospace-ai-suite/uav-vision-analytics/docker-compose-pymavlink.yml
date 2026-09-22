@@ -121,17 +121,19 @@ services:
     networks:
       - app_network
 
-  # Nginx reverse proxy — the only service that publishes ports to the host.
-  # modifies the port bindings to use HOST_IP (falls back to loopback-only when HOST_IP is unset)
-  # rather than all interfaces.
+  # Nginx reverse proxy / TLS — the only service that publishes
+  # ports to the host. Binds to HOST_IP (falls back to loopback-only when
+  # HOST_IP is unset) rather than all interfaces.
   nginx:
     image: nginx:1.27-alpine
     container_name: nginx
     restart: unless-stopped
     volumes:
       - ./configs/nginx/nginx-pymavlink.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/nginx/ssl:/etc/nginx/ssl:ro
     ports:
       - "${HOST_IP:-127.0.0.1}:80:80"
+      - "${HOST_IP:-127.0.0.1}:443:443"
       - "${HOST_IP:-127.0.0.1}:8555:8555"
     networks:
       - app_network

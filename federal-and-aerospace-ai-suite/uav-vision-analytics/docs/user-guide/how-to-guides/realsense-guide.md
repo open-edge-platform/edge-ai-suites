@@ -76,8 +76,8 @@ device name (`cpu` / `gpu` / `npu`) — each device pipeline must log to its own
 detection events from concurrently-running pipelines are never mixed together.
 
 ```bash
-INSTANCE_ID=$(curl -s -X POST \
-  http://<HOST_IP>/pipelines/user_defined_pipelines/<pipeline-name> \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/<pipeline-name> \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {
@@ -104,8 +104,8 @@ echo "Instance ID: $INSTANCE_ID"
 **Example** — start the CPU pipeline and publish the stream at `rtsp://<HOST_IP>:8555/realsense`:
 
 ```bash
-INSTANCE_ID=$(curl -s -X POST \
-  http://<HOST_IP>/pipelines/user_defined_pipelines/uav_realsense_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/uav_realsense_cpu \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {
@@ -143,5 +143,5 @@ tail -f /tmp/results_cpu.jsonl
 To stop the pipeline:
 
 ```bash
-curl -X DELETE http://<HOST_IP>/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```

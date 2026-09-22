@@ -134,8 +134,8 @@ Start a single pipeline directly without the pipeline manager. Useful for testin
 
 ```bash
 # CPU pipeline
-INSTANCE_ID=$(curl -s -X POST \
-  http://<HOST_IP>/pipelines/user_defined_pipelines/uav_object_detection_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -206,7 +206,7 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 4](#4-start-inference-pipelines)):
 
 ```bash
-curl -X DELETE http://<HOST_IP>/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### 6. Stop all services

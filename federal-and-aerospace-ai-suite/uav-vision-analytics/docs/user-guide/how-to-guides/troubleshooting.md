@@ -320,7 +320,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 sudo apt-get install -y gawk
 ```
 
-### `Error: DLSPS not reachable at http://localhost:80`
+### `Error: DLSPS not reachable at https://localhost:443`
 
 `calc_stream_density.sh` auto-sources `../.env` and defaults `DLSPS_NODE_IP` to that file's
 `HOST_IP` — if you still see `localhost` in the error, either `.env` doesn't exist yet
@@ -357,10 +357,10 @@ Possible causes:
     /home/pipeline-server/resources/videos/
   ```
 
-### `HW Monitor: metrics-manager not reachable at http://localhost`
+### `HW Monitor: metrics-manager not reachable at https://localhost`
 
 `calc_stream_density.sh` auto-sources `../.env` and defaults `METRICS_URL` to
-`http://<HOST_IP>` from that file — if you still see `localhost`, either `.env` doesn't
+`https://<HOST_IP>` from that file — if you still see `localhost`, either `.env` doesn't
 exist yet (run `make init` first) or `metrics-manager`/`nginx` aren't running. It is
 included in `docker-compose-pymavlink.yml` — ensure the full stack is up:
 
@@ -373,7 +373,7 @@ If you're running the benchmark from a **different machine** than the one hostin
 stack, point it at that host explicitly:
 
 ```bash
-METRICS_URL=http://<HOST_IP> ./benchmark/calc_stream_density.sh ...
+METRICS_URL=https://<HOST_IP> ./benchmark/calc_stream_density.sh ...
 ```
 
 The benchmark continues with FPS-only results when metrics-manager is unavailable.

@@ -136,11 +136,12 @@ For UAVSDK nadir/forward/rear, use `nadir_camera_rtsp_cpu`, `forward_camera_rtsp
 ### RTSP sink (pymavlink mode)
 
 > `dlstreamer-pipeline-server` no longer publishes a host port directly — it is reached through
-> the `nginx` reverse proxy on `http://<HOST_IP>/` (plain HTTP).
+> the `nginx` reverse proxy on `https://<HOST_IP>/` (self-signed cert; plain HTTP on port 80
+> redirects to HTTPS). Use `curl -k` to skip certificate verification.
 
 ```bash
-INSTANCE_ID=$(curl -s -X POST \
-  http://<HOST_IP>/pipelines/user_defined_pipelines/{{PIPELINE_PREFIX}}_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/{{PIPELINE_PREFIX}}_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
@@ -160,19 +161,19 @@ echo "Instance ID: $INSTANCE_ID"
 ### Stopping a pipeline
 
 ```bash
-curl -X DELETE http://<HOST_IP>/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### Checking pipeline status
 
 ```bash
-curl -s http://<HOST_IP>/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
+curl -k -s https://<HOST_IP>/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
 ```
 
 ### Listing all registered pipelines
 
 ```bash
-curl -s http://<HOST_IP>/pipelines
+curl -k -s https://<HOST_IP>/pipelines
 ```
 
 ---

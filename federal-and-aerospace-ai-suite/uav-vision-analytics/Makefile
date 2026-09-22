@@ -13,8 +13,9 @@ MODEL_DIR      := resources/models/yolo11s
 MODEL_XML      := $(MODEL_DIR)/yolo11s_openvino_model/yolo11s.xml
 VENV           := resources/venv
 DEVICE         ?= gpu
+SSL_DIR        := configs/nginx/ssl
 
-.PHONY: help init build model _check_model _check_venv_pkg \
+.PHONY: help init build model _check_model _check_certs _check_venv_pkg \
         pymav-up pymav-down \
         uavsdk-up uavsdk-down \
         start-rtsp
@@ -38,10 +39,10 @@ init: ## Create .env from template, auto-detect the host IP, and auto-detect GPU
 		else \
 			echo "✅ Host IP detected:"; \
 			echo "   HOST_IP=$$HOST_IP_DETECTED"; \
-			echo "   ⚠  Security: nginx's HTTP (80) and RTSP (8555) ports will be published on"; \
+			echo "   ⚠  Security: nginx's HTTPS (443) and RTSP (8555) ports will be published on"; \
 			echo "      this LAN address so QGroundControl/ffplay/VLC on other devices can reach"; \
 			echo "      them. Set HOST_IP=127.0.0.1 in .env for loopback-only access if this host"; \
-			echo "      is not on a trusted, isolated network. See docs/user-guide/security-considerations.md."; \
+			echo "      is not on a trusted, isolated network."; \
 		fi; \
 		sed -i "s|^HOST_IP=.*|HOST_IP=$$HOST_IP_DETECTED|" .env; \
 		GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); \
@@ -103,7 +104,15 @@ _check_model:
 		echo "   Run 'make model' first to download and export the YOLO11s model."; \
 		exit 1; \
 	fi
-
+_check_certs: ## Generate a self-signed TLS certificate for nginx if missing
+	@mkdir -p $(SSL_DIR); \
+	if [ ! -f "$(SSL_DIR)/server.crt" ] || [ ! -f "$(SSL_DIR)/server.key" ]; then \
+		echo "Generate self-signed certificate..."; \
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+		  -keyout $(SSL_DIR)/server.key -out $(SSL_DIR)/server.crt \
+		  -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"; \
+		chown -R "$$(id -u):$$(id -g)" $(SSL_DIR)/server.key $(SSL_DIR)/server.crt 2>/dev/null || true; \
+	fi
 # ── Model ────────────────────────────────────────────────────────────────────
 
 _check_venv_pkg: ## Verify python3-venv (ensurepip) is installed; offer to install it if missing
@@ -153,7 +162,7 @@ model: _check_venv_pkg ## Download YOLO11s (COCO-pretrained) and export to OpenV
 
 # ── pymavlink stack ───────────────────────────────────────────────────────────
 
-pymav-up: _check_model ## Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + mediamtx)
+pymav-up: _check_model _check_certs ## Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + mediamtx)
 	docker compose -f $(COMPOSE_PYMAV) up -d
 
 pymav-down: ## Stop and remove pymavlink stack (includes volumes)
@@ -161,7 +170,7 @@ pymav-down: ## Stop and remove pymavlink stack (includes volumes)
 
 # ── UAV Mission Compute SDK stack ──────────────────────────────────────────────────────────────
 
-uavsdk-up: _check_model ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk running first)
+uavsdk-up: _check_model _check_certs ## Start UAV Mission Compute SDK stack (requires edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk running first)
 	docker compose -f $(COMPOSE_SDK) up -d
 
 uavsdk-down: ## Stop and remove UAV Mission Compute SDK stack (includes volumes)
