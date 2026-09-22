@@ -57,7 +57,8 @@ Run one of the following commands to launch the object detection node with a spe
   ros2 launch object_detection_tutorial openvino_object_detection.launch.py device:=NPU
   ```
 
-> **Note:** If no device is specified, the GPU is selected by default as an inference engine.
+> [!NOTE]
+> If no device is specified, the GPU is selected by default as an inference engine.
 
 Once the tutorial is started, the ``mobilenetssd`` model is downloaded, converted into IR files, and the inference process begins.
 

@@ -17,11 +17,13 @@ cloud-dependent deployments are not feasible.
 - **Memory**: 8 GB RAM recommended
 - **Internet Connection**: Required for package generation only
 
-> **Important:** This process requires two environments - a connected system for package generation and an offline target system for deployment.
+> [!IMPORTANT]
+> This process requires two environments - a connected system for package generation and an offline target system for deployment.
 
 ## Step 1: Generate Offline Package
 
-> **Note:** Perform this step on a system with internet connectivity.
+> [!NOTE]
+> Perform this step on a system with internet connectivity.
 
 **Objective**: Create a complete offline deployment package containing all necessary components for the Loitering Detection application.
 
@@ -126,7 +128,8 @@ To stop the pipelines without waiting for video streams to finish replay:
 ./sample_stop.sh
 ```
 
-> **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see loitering detection.
+> [!NOTE]
+> This will stop all the pipelines and the streams. **DO NOT** run this if you want to see loitering detection.
 
 </details>
 
@@ -134,7 +137,11 @@ To stop the pipelines without waiting for video streams to finish replay:
 
 1. Open a browser and navigate to `https://127.0.0.1/grafana` to access the Grafana dashboard.
    - Change `127.0.0.1` to your host IP if accessing remotely.
-   > **NOTE:** If you experience issues while streaming videos on grafana dashboard on Firefox, it is recommended to use Google Chrome.
+
+     > [!NOTE]
+     > If you experience issues while streaming videos on grafana dashboard on
+     > Firefox, it is recommended to use Google Chrome.
+
 2. Log in with the following credentials:
    - **Username**: `admin`
    - **Password**: `admin`

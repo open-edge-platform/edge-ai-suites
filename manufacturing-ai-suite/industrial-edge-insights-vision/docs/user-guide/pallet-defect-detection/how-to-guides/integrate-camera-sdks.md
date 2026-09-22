@@ -3,7 +3,8 @@
 This guide explains how to create a custom Docker image based on the DL Streamer Pipeline Server with Gencamsrc support, using either the Balluff SDK or the pylon SDK.
 It supports Balluff, Basler, and other GenICam-compatible cameras connected over USB and GigE interfaces.
 
-> **Note:** You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
+> [!NOTE]
+> You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
 
 ## Prerequisites
 
@@ -288,7 +289,8 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 
 Start all the required services using Docker Compose.
 
-> **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+> [!NOTE]
+> If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
 ```bash
 docker compose up -d
@@ -339,7 +341,8 @@ https://<HOST_IP>/mediamtx/pdd/
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 
-> **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> [!NOTE]
+> If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ## Troubleshooting

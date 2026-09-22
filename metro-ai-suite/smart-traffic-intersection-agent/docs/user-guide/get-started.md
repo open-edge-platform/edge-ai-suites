@@ -62,9 +62,11 @@ The application has been validated with following models:
 | Qwen2-VL 7B (pre-converted) | `OpenVINO/Qwen2-VL-7B-Instruct-int4-ov` |
 | InternVL2 1B (pre-converted) | `OpenVINO/InternVL2-1B-int4-ov` |
 
-> **Note:** Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
+> [!NOTE]
+> Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
 
-> **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+> [!IMPORTANT]
+> See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Run the Complete Setup
 
@@ -121,7 +123,8 @@ Intersection Agent to simulate multiple intersections on the same development ma
 The easiest way to do this is to clone and set up the application `n times` in n different
 locations on the same machine for `n` required instances.
 
-> **Note:** In production environments, only a single Traffic Intersection Agent instance is
+> [!NOTE]
+> In production environments, only a single Traffic Intersection Agent instance is
 > deployed on a given node.
 
 > **Intel's recommendation:** The number of instances you can run on a single machine depends
@@ -154,7 +157,8 @@ locations on the same machine for `n` required instances.
    }
    ```
 
-   > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
+   > [!TIP]
+   > Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
 3. Set the required environment variable.
 
@@ -162,9 +166,11 @@ locations on the same machine for `n` required instances.
    export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/Qwen2-VL-2B-Instruct-int4-ov
    ```
 
-   > **Note:** See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
+   > [!NOTE]
+   > See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
 
-   > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+   > [!IMPORTANT]
+   > See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4. Run the setup for instance #1:
 
@@ -199,7 +205,8 @@ locations on the same machine for `n` required instances.
    }
    ```
 
-   > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
+   > [!TIP]
+   > Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
 3. Set the required environment variable.
 
@@ -207,9 +214,11 @@ locations on the same machine for `n` required instances.
    export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/Qwen2-VL-2B-Instruct-int4-ov
    ```
 
-   > **Note:** See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
+   > [!NOTE]
+   > See [supported models](#2-set-the-required-environment-variables) for the full list of supported VLM models, including Microsoft Phi, Qwen, and InternVL2.
 
-   > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+   > [!IMPORTANT]
+   > See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4. Run Setup for Instance #2
 
@@ -329,7 +338,8 @@ cd metro-ai-suite/smart-traffic-intersection-agent
 rm -rf deps/metro-vision
 ```
 
-> **Note:** `setup.sh --setup` automatically re-clones `deps/metro-vision` when the directory
+> [!NOTE]
+> `setup.sh --setup` automatically re-clones `deps/metro-vision` when the directory
 > is absent. Removing it before upgrading ensures the correct version is fetched.
 
 ### 3. Clean and Re-setup
@@ -346,7 +356,8 @@ source setup.sh --setup
 The `--keep-models` flag preserves downloaded VLM model files so they don't need to be
 re-downloaded.
 
-> **IMPORTANT:** If the PostgreSQL version has changed between releases, the existing data
+> [!IMPORTANT]
+> If the PostgreSQL version has changed between releases, the existing data
 > volume is incompatible. The `--clean` step removes it. If you need to preserve data,
 > export it before cleaning.
 

@@ -250,7 +250,7 @@ The five examples below are paired as "what the client sends → what the MCP se
 
 1. Insert into `events`, all three prefilter columns populated (`prefilter_passed=1`, `prefilter_classes='["person"]'`, `prefilter_confidence=0.92`).
 2. Insert into `video_summary_tasks` with **`status='pending'`** (prefilter passed → forward to Video Summary Service).
-3. Note: `summary_clip_input` points to the bbox-cropped `_input.mp4` produced upstream — the Video Summary Service sees the cropped clip, not the full frame, saving tokens.
+3. Note that `summary_clip_input` points to the bbox-cropped `_input.mp4` produced upstream — the Video Summary Service sees the cropped clip, not the full frame, saving tokens.
 4. Return `200 {"status":"ok","event_id":<ev.id>,"task_id":<task.id>}`.
 5. Task-poller picks up the task → Video Summary Service → rule-engine → may insert into `alerts`.
 
@@ -294,7 +294,8 @@ The five examples below are paired as "what the client sends → what the MCP se
 4. Rule-engine is not triggered, no alert is generated.
 5. Return `200 {"status":"ok","event_id":<ev.id>,"task_id":<task.id>}` — the row was inserted, just in a terminal state.
 
-> **Note:** This is the core value of prefilter: a cheap NPU YOLO drops "leaves moving / lighting change / wandering pets" false-motion clips before they reach the Video Summary Service.
+> [!NOTE]
+> This is the core value of prefilter: a cheap NPU YOLO drops "leaves moving / lighting change / wandering pets" false-motion clips before they reach the Video Summary Service.
 
 ---
 
@@ -332,7 +333,8 @@ The five examples below are paired as "what the client sends → what the MCP se
 3. **Does not** trigger rule-engine.
 4. Returns `200 {"status":"ok","event_id":<ev.id>}` (no `task_id` because no task row was created).
 
-> **Note:** `state_query` reads `events` and sees the alternating `motion → static → motion → static …` sequence to infer "active / idle" timing of the room; elder-wakeup's "still in bed" detection depends on long `static` runs.
+> [!NOTE]
+> `state_query` reads `events` and sees the alternating `motion → static → motion → static …` sequence to infer "active / idle" timing of the room; elder-wakeup's "still in bed" detection depends on long `static` runs.
 
 ---
 
@@ -374,7 +376,8 @@ The five examples below are paired as "what the client sends → what the MCP se
 4. Returns `200 {"status":"ok","recording_id":<rec.id>}`.
 5. The MCP server's periodic cleanup job deletes expired `<data_dir>/recordings/<YYYY-MM-DD>/` directories according to `storage.retention_days`.
 
-> **Note:** `recording` and `motion` are **two independent streams**: continuous recording rolls on its own cadence; motion detection slices on its own. They do not interact. `scene_query`, etc., prefer recording segments for time-window playback (stable durations) and use motion clips for event-focused queries.
+> [!NOTE]
+> `recording` and `motion` are **two independent streams**: continuous recording rolls on its own cadence; motion detection slices on its own. They do not interact. `scene_query`, etc., prefer recording segments for time-window playback (stable durations) and use motion clips for event-focused queries.
 
 ---
 

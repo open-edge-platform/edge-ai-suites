@@ -51,7 +51,8 @@ export PROJECT_NAME=<your-project-name>              # e.g. "metro-ai-suite"
 export TAG=<your-tag>                                # e.g. "rc4" or "latest"
 ```
 
-> **_IMPORTANT:_** These variables control how image names are constructed. If `REGISTRY_URL` is **docker.io/username/** and `PROJECT_NAME` is **metro-ai-suite**, an image would be pulled or built as **docker.io/username/metro-ai-suite/\<application-name>:tag**. The `<application-name>` is hardcoded in _image_ field of each service in all docker compose files. If `REGISTRY_URL` or `PROJECT_NAME` are not set, blank string will be used to construct the image name. If `TAG` is not set, **latest** will be used by default.
+> [!IMPORTANT]
+> These variables control how image names are constructed. If `REGISTRY_URL` is **docker.io/username/** and `PROJECT_NAME` is **metro-ai-suite**, an image would be pulled or built as **docker.io/username/metro-ai-suite/\<application-name>:tag**. The `<application-name>` is hardcoded in _image_ field of each service in all docker compose files. If `REGISTRY_URL` or `PROJECT_NAME` are not set, blank string will be used to construct the image name. If `TAG` is not set, **latest** will be used by default.
 
 ```bash
 # Run the build script that takes the build values

@@ -7,7 +7,8 @@ The sample application is based on the Video Processing Platform SDK. It can run
 - **Time to Complete:** 20min
 - **Programming Language:** C++
 
-> **Note:** This guide covers the Video Analytic and Transcoding example applications in the
+> [!NOTE]
+> This guide covers the Video Analytic and Transcoding example applications in the
 > `example` folder.
 
 ## Prerequisites
@@ -152,7 +153,8 @@ Before running the sample application, make sure the environment variables are s
 # export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ```
 
-> **Note:** the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
+> [!NOTE]
+> the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
 
 ### 3 Run a basic Video Analytic pipeline
 

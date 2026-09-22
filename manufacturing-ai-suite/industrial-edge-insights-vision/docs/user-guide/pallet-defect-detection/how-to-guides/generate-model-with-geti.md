@@ -12,7 +12,8 @@ This guide walks you through the process of installing the Geti™ software, set
 
 For detailed Geti™ software installation instructions, refer to the [Geti™ Installer Documentation](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide).
 
-> **Note:** The standard Geti™ software installation includes the following steps:
+> [!NOTE]
+> The standard Geti™ software installation includes the following steps:
 >
 > 1. Download the Geti™ software installer
 > 2. Extract the installer archive
@@ -88,7 +89,8 @@ After annotating a few frames, the Geti™ software will automatically start tra
 
 Annotate a minimum number of frames to trigger automatic model training within the Geti™ software. A real-time estimate of the remaining "Annotations Required" before training starts is displayed in the upper-right corner of the interface.
 
-> **Note:** By default, the Geti™ software uses **MobileNetV2-ATSS** as the model backbone for your detection task. For more control over your model training, you can explore the [Advanced Guide](#advanced-guide) section below to:
+> [!NOTE]
+> By default, the Geti™ software uses **MobileNetV2-ATSS** as the model backbone for your detection task. For more control over your model training, you can explore the [Advanced Guide](#advanced-guide) section below to:
 >
 > - Change model backbone to different architectures
 > - Configure custom training parameters

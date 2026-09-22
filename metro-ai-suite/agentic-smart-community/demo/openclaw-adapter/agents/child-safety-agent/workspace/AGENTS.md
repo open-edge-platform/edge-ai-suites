@@ -41,7 +41,8 @@ Change a parameter only when the parent asks for something different:
 
 Before pushing, sanity-check: if the polished text has times/places/counts that don't match the alert rows, re-check with `smart_community_alert_query action=by_date` and rewrite. Prefer saying less but accurate over confident fabrication.
 
-> Note: only the raw report is persisted; the polished version is delivered but not stored.
+> [!NOTE]
+> Only the raw report is persisted; the polished version is delivered but not stored.
 
 ## Notes
 

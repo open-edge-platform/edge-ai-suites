@@ -86,7 +86,8 @@ inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THRO
 
 ## Step 3: Run the Benchmark
 
-> **Note:** The default parameters are set based on best know methods recommended by Edge Workloads and Benchamarks group for a workload with similar characteristics. These parameters can be modified when starting the pipelines.
+> [!NOTE]
+> The default parameters are set based on best know methods recommended by Edge Workloads and Benchamarks group for a workload with similar characteristics. These parameters can be modified when starting the pipelines.
 
 The `calc_stream_density.sh` script requires a pipeline name and stream count boundaries to run. The available pipelines are defined in the `benchmark_app_payload.json` file located within each application's directory (e.g., `smart-parking/`).
 

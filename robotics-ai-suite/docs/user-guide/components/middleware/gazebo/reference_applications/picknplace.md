@@ -90,7 +90,8 @@ The demonstration workflow is as follows:
 - The item is then placed onto the AMR, which is based on the TurtleBot3 Waffle robot design.
 - Using Nav2, the AMR autonomously plans and traverses a path to the second robotic arm, referred to as ARM2.
 
-> **Note:** This demo prioritizes the representation of combined stack usage over intricate details. Some assumptions have been made for simplicity. For instance, the item's location on the conveyor belt is sourced directly from Gazebo without integrating perception systems.
+> [!NOTE]
+> This demo prioritizes the representation of combined stack usage over intricate details. Some assumptions have been made for simplicity. For instance, the item's location on the conveyor belt is sourced directly from Gazebo without integrating perception systems.
 
 ## Other Details
 

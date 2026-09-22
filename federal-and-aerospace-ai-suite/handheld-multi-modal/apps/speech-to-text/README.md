@@ -52,4 +52,5 @@ Set `WHISPER_MODEL` in the root `docker-compose.yml`:
 
 `base` is the default — a good balance for everyday use on a processor.
 
-> **NOTE** Models loaded at runtime carry their own licenses and the operator is responsible for reviewing the licenses and making sure that they are matching operator's use-case(s).
+> [!NOTE]
+> Models loaded at runtime carry their own licenses and the operator is responsible for reviewing the licenses and making sure that they are matching operator's use-case(s).

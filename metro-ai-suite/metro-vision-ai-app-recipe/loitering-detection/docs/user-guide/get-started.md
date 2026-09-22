@@ -40,7 +40,8 @@ By following this guide, you will learn how to:
      ./install.sh loitering-detection
      ```
 
-   > **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+   > [!NOTE]
+   > For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
    > specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
    > your target IP address.)
 
@@ -90,7 +91,11 @@ By following this guide, you will learn how to:
      Stop pipelines
      </summary>
      - To stop the pipelines without waiting for video streams to finish replay:
-       > **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see loitering detection
+
+       > [!NOTE]
+       > This will stop all the pipelines and the streams. **DO NOT** run this
+       > if you want to see loitering detection
+
        ```bash
        ./sample_stop.sh
        ```
@@ -120,7 +125,12 @@ By following this guide, you will learn how to:
 - In Grafana UI, the dashboard displays detected people and cars
   ![Grafana Dashboard](./_assets/grafana.png "grafana dashboard")
 
-  > **Note:** In the default pipeline, we use `gvatrack tracking-type=short-term-imageless` element. Imageless tracking forms object associations based on the movement and shape of objects, and it does not use image data. Since it does not use image features, the same object may receive different IDs over time due to lack of re-identification.
+  > [!NOTE]
+  > In the default pipeline, we use `gvatrack tracking-type=short-term-imageless`
+  > element. Imageless tracking forms object associations based on the movement
+  > and shape of objects, and it does not use image data. Since it does not use
+  > image features, the same object may receive different IDs over time due to
+  > lack of re-identification.
 
 ### **NodeRED UI**
 

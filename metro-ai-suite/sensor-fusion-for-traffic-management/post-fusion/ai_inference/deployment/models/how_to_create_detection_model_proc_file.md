@@ -118,7 +118,7 @@ This field is designed to describe model output related information. Here's the 
   * **detection_output**: *Optional*. Also known as `B`-dimensional vector, it's the detection summary info. More details can be found in [sec 3.2 model_output.format.detection_output](#32-modeloutputformatdetectionoutput).
 
     * **size**: *Required*. Specifically refers to the length of the detection_output vector.
-  
+
     * **bbox_format**: *Required*. Predicted bounding box's format, `options: [CENTER_SIZE, CORNER_SIZE, CORNER]`. More details can be found in [sec 3.2.1 model_output.format.detection_output.bbox_format](#321-modeloutputformatdetectionoutputbboxformat).
 
     * **location_index**: *Required*. The indices of bounding box coordinate, length of array should be 4.
@@ -128,11 +128,13 @@ This field is designed to describe model output related information. Here's the 
     * **first_class_prob_index**: *Optional*. The start index and the following `num_classes` of values should be the predicted probability for each class. The one with max value of class probs can also be treated as the predicted label index, and the final predicted score = confidence * max_class_prob.
 
     * **predict_label_index**:*Optional*. Specify the index of predicted detection label.
-    * 
+    *
     * **batchid_index**:*Optional*. Specify the index of batchid.
-    > NOTE-1: at least one of `confidence_index` or `first_class_prob_index` should be specified.
+
+    > [!NOTE]
     >
-    > NOTE-2: at least one of `first_class_prob_index` or `predict_label_index` should be specified.
+    > - At least one of `confidence_index` or `first_class_prob_index` should be specified.
+    > - At least one of `first_class_prob_index` or `predict_label_index` should be specified.
 
 * **class_label_table**: *Required*. Refer to the pre-defined labels table in [sec [1] labels_table](#1-labelstable).
 
@@ -162,35 +164,35 @@ Layout here describes output dimension layout definition:
 - `B`: Predicted detection outputs, such as: [x, y, w, h, class_0, class_1, ...], e.g, 85 for coco.
 
 > If one outputs with shape: 1, 85, then the output dimension layout may be described as `B`.
-> 
+>
 > If one outputs with shape: 1, N\*85, 52, 52 (N here means prior anchor boxes), then the output dimension layout may be described as `BCxCy`.
-> 
+>
 > If one outputs with shape: 1, 52, 52, N\*85 (N here means prior anchor boxes), then the output dimension layout may be described as `CxCyB`.
 
 ### **3.2 model_output.format.detection_output**
 
-The order of the detection_output vector values depends on the configuration of the using detection model. A typical detection_output vector should at least contain the predicted bounding-box, confidence and label. 
+The order of the detection_output vector values depends on the configuration of the using detection model. A typical detection_output vector should at least contain the predicted bounding-box, confidence and label.
 
 The requirement of `detection_output` field depends on the using post-proc function. If the in-scope function will be used (i.e, post_proc_output.function_name is "HVA_det_postproc"), then this field must be specified.
 
 Some examples of detection_output vectors for your reference:
 - [SSD-MV2: person-vehicle-bike-detection-crossroad-1016](./person-vehicle-bike-detection-crossroad-1016/FP16-INT8/person-vehicle-bike-detection-crossroad-1016.xml)
- 
+
   The output detection box has format [image_id, label, conf, x_min, y_min, x_max, y_max], where:
 
-> - image_id - ID of the image in the batch 
-> - label - predicted class ID 
-> - conf - confidence for the predicted class 
-> - (x_min, y_min) - coordinates of the top left bounding box corner 
+> - image_id - ID of the image in the batch
+> - label - predicted class ID
+> - conf - confidence for the predicted class
+> - (x_min, y_min) - coordinates of the top left bounding box corner
 > - (x_max, y_max) - coordinates of the bottom right bounding box corner.
 
 - [YoloV3: person-vehicle-bike-detection-crossroad-yolov3-1020](./person-vehicle-bike-detection-crossroad-yolov3-1020/FP16-INT8/person-vehicle-bike-detection-crossroad-yolov3-1020.xml)
-  
+
   The output detection box has format [x, y, w, h, box_score, class_no_1, ...,class_no_80].
-> - (x, y) - coordinates of box center relative to the cell 
-> - (w, h) - raw height and width of box, apply exponential function and multiply them by the corresponding anchors to get the absolute height and width values 
-> - box_score - confidence of detection box in [0, 1] range 
-> - class_no_1, …, class_no_80 - probability distribution over the classes in the [0, 1] range, multiply them by the confidence value box_score to get confidence of each class 
+> - (x, y) - coordinates of box center relative to the cell
+> - (w, h) - raw height and width of box, apply exponential function and multiply them by the corresponding anchors to get the absolute height and width values
+> - box_score - confidence of detection box in [0, 1] range
+> - class_no_1, …, class_no_80 - probability distribution over the classes in the [0, 1] range, multiply them by the confidence value box_score to get confidence of each class
 
 #### **3.2.1 model_output.format.detection_output.bbox_format**
 
@@ -199,7 +201,9 @@ This field is very important for the later processing stage, because different m
 - `CENTER_SIZE`: [x_center, y_center, bbox_width, bbox_height]
 - `CORNER_SIZE`: [x_min, y_min, bbox_width, bbox_height]
 - `CORNER`: [x_min, y_min, x_max, y_max]
-> NOTE:
+
+> [!NOTE]
+>
 > - (x_center, y_center) - coordinates of the center of bounding box.
 > - (bbox_width, bbox_height) - size of bounding box.
 > - (x_min,y_min) - coordinates of the top left bounding box corner.
@@ -273,18 +277,18 @@ An example of this field from [person-vehicle-bike-detection-crossroad-1016.mode
 ```
 
 > **Scalability**:
-> 
+>
 > This field can be easily extensible, for example, we have one more prediction info in the model output: quality_score, then you can write this field as:
 > ```Json
 >   "format": {
 >       "bbox": "FLOAT_ARRAY",
 >       "label_id": "INT",
 >       "confidence": "FLOAT",
->       "quality_score": "FLOAT"   
+>       "quality_score": "FLOAT"
 >   }
 >```
 > Please remember to define the mapping actions in the field `mapping`, see details in [sec 4.3 post_proc_output.mapping](#43-postprocoutputmapping)
-> 
+>
 
 ### **4.2 post_proc_output.process**
 
@@ -401,22 +405,21 @@ This processor is used to do anchor transformation, including anchors applying o
       - **scale_w**: *Required*. Predicted width will be divided with scale_w.
 
       - **scale_h**: *Required*. Predicted height will be divided with scale_h.
-    
+
   - **clip_normalized_rect**: *Optional*. Will clip predicted bunding box within 0~1.0?
 
 
-An example of this field from [person-vehicle-bike-detection-crossroad-yolov3-1020.model_proc.json](./person-vehicle-bike-detection-crossroad-yolov3-1020/person-vehicle-bike-detection-crossroad-yolov3-1020.model_proc.json), which has three-layers outputs: 
-> NOTE:
-> 
-> The array of detection summary info, name: conv2d_58/Conv2D/YoloRegion, shape: 1, 255, 13, 13. The
-> anchor values are 116,90, 156,198, 373,326. 
-> 
-> The array of detection summary info, name: conv2d_66/Conv2D/YoloRegion, shape: 1, 255, 26, 26. The
-> anchor values are 30,61, 62,45, 59,119. 
-> 
-> The array of detection summary info, name: conv2d_74/Conv2D/YoloRegion, shape: 1, 255, 52, 52. The
-> anchor values are 10,13, 16,30, 33,23. 
-> 
+An example of this field from [person-vehicle-bike-detection-crossroad-yolov3-1020.model_proc.json](./person-vehicle-bike-detection-crossroad-yolov3-1020/person-vehicle-bike-detection-crossroad-yolov3-1020.model_proc.json), which has three-layers outputs:
+
+> [!NOTE]
+>
+> - The array of detection summary info, name: `conv2d_58/Conv2D/YoloRegion`, shape: `1, 255, 13, 13`. The
+>   anchor values are 116,90, 156,198, 373,326.
+> - The array of detection summary info, name: `conv2d_66/Conv2D/YoloRegion`, shape: `1, 255, 26, 26`. The
+>   anchor values are 30,61, 62,45, 59,119.
+> - The array of detection summary info, name: `conv2d_74/Conv2D/YoloRegion`, shape: `1, 255, 52, 52`. The
+>   anchor values are 10,13, 16,30, 33,23.
+
 ```Json
 {
     "name": "anchor_transform",
@@ -578,7 +581,7 @@ This field is designed to define the mapping actions to map results to correspon
 }
 ```
 - **^[a-zA-Z0-9-_]\*\$**: *Required*. Key name pattern, such as: "bbox", "label_id", "confidence", etc.
-  
+
   - **input**: *Required*. Mapping input args.
     - **index**: *Required*. Mapping input indices referring to the [detection_output](#32-modeloutputformatdetectionoutput) vector.
   - **op**: *Required*. A list of operators will be conducted one-by-one. More details can be found in [sec 4.3.2 mapping operaters](#432-mapping-operaters).

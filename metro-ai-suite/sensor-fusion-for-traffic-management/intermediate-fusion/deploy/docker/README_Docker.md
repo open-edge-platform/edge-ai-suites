@@ -83,7 +83,8 @@ bash install_driver_related_libs.sh
 
 ## 3. Recommended: pull and run the published image
 
-> **Note that the default username is `tfcc` and password is `intel` in the docker image.**
+> [!NOTE]
+> The default username is `tfcc` and password is `intel` in the docker image.
 
 When the published image is available, pull the `intel/tfcc:2026.1.0-ubuntu24` image and run it directly.
 

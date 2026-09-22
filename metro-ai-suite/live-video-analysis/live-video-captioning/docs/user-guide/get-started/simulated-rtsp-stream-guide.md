@@ -143,13 +143,13 @@ For multiple streams, you can provide all input/output mappings in a JSON file.
    ./setup_proxy_rtsp.sh -c <your-config-file>.json
    ```
 
-> **Note:**
+> [!NOTE]
 >
 > - Use either `-c` or `-i`/`-o` in a single run (do not mix them).
 > - Relative input paths in JSON are resolved relative to the JSON file location.
 > - `-c` mode uses `jq`, and the script installs it automatically if missing.
 
-> **Important:**
+> [!IMPORTANT]
 >
 > - If `-o` is omitted, the script auto-generates `stream1`, `stream2`, ...
 > - If `-o` is provided, the number of `-o` values must match the number of `-i` values.

@@ -87,7 +87,8 @@ docker run -d \
   vms-adapter-ui
 ```
 
-> **Note**: In standalone mode nginx will still proxy `/v1/` to `http://backend:8080`,
+> [!NOTE]
+> In standalone mode nginx will still proxy `/v1/` to `http://backend:8080`,
 > which requires a Docker network containing a container named `backend`.
 > For a truly standalone run you would need to rebuild with a customised nginx.conf.
 

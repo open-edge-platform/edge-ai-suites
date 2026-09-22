@@ -31,7 +31,8 @@ Update the RTSP URL in the pipeline and replace the placeholders with your camer
 - `<PORT>`: RTSP port (commonly `554`)
 - `<FEED>`: stream path (varies by camera model/vendor)
 
-> **Note:** If you are behind a proxy network, make sure the camera IP is added to `no_proxy` or `NO_PROXY`
+> [!NOTE]
+> If you are behind a proxy network, make sure the camera IP is added to `no_proxy` or `NO_PROXY`
 
 ```bash
 rm -f text.txt; timeout 15s sh -c "GST_DEBUG=rtpsession:7 \
@@ -44,7 +45,8 @@ gst-launch-1.0 -v rtspsrc protocols=tcp add-reference-timestamp-meta=true locati
 - If you see `true` printed in the console, the camera supports **RTCP Sender Reports (SR)**.
 - If nothing is printed, the camera likely does **not** provide SR packets (or they were not observed during the 15-second window).
 
-> **Note:** If you suspect SR exists but was not observed, increase the timeout window (e.g., `timeout 30s`) and re-run.
+> [!NOTE]
+> If you suspect SR exists but was not observed, increase the timeout window (e.g., `timeout 30s`) and re-run.
 
 ## Configure the RTSP Camera in the Multimodal App
 

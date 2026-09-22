@@ -94,7 +94,8 @@ This step:
 - converts `.hdf5` to `.{xml,bin}`
 - preserves existing local assets on repeated runs
 
-> **Important**: `make setup` must complete before `make run`. If `docker compose up`
+> [!IMPORTANT]
+> `make setup` must complete before `make run`. If `docker compose up`
 > runs first, Docker creates empty directories for missing bind-mount sources, causing
 > pipeline failures.
 

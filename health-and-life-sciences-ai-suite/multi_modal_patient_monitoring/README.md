@@ -1,9 +1,9 @@
 # Multi-Modal Patient Monitoring
 
-> Note:
+> [!NOTE]
 > This application is for **reference and evaluation purposes only**. It is
-  **not intended for direct use in clinical or diagnostic environments** and is not
-  validated for such a purpose.
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated for such a purpose.
 
 
 The Multi-Modal Patient Monitoring application is a reference solution that demonstrates how

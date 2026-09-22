@@ -52,7 +52,8 @@ DL Streamer inference elements also provides property such as `device=NPU` and `
 
 ## Tutorial on how to use NPU specific pipelines
 
-> **Note:** The sample applications already provide a default `docker-compose.yml` file that includes the necessary NPU access to the containers.
+> [!NOTE]
+> The sample applications already provide a default `docker-compose.yml` file that includes the necessary NPU access to the containers.
 
 <!--hide_directive ::::{tab-set} hide_directive-->
 <!--hide_directive :::{tab-item} hide_directive--> **Pallet Defect Detection**
@@ -78,7 +79,8 @@ Follow the steps below to run the pipeline.
 1. Ensure that the sample application is up and running. If not, follow
 [the steps](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
-   > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+   > [!NOTE]
+   > If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
    ```sh
    docker compose up -d
@@ -96,7 +98,8 @@ Follow the steps below to run the pipeline.
 
    This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
 
-   > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   > [!NOTE]
+   > If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
    ```bash
    https://<HOST_IP>/mediamtx/pdd/
@@ -112,7 +115,8 @@ Follow the steps below to run the pipeline.
 
     This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following URL:
 
-    > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > [!NOTE]
+    > If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
     ```bash
     https://<HOST_IP>/mediamtx/anomaly/

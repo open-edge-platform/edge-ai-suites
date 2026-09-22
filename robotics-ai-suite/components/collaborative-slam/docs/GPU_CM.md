@@ -45,15 +45,18 @@ ls -l /opt/intel/oneapi/redist/lib/libsycl.so*
 # For oneAPI 2025.x: libsycl.so.8.x.x
 ```
 
-**Important:** If you install pre-built packages that were compiled against a different oneAPI version than your system has, you will encounter runtime errors like:
-```bash
-error while loading shared libraries: libsycl.so.7: cannot open shared object file
-```
-
-To resolve this, **rebuild the packages** from source against your installed oneAPI version using:
-```bash
-make package ROS_DISTRO=jazzy  # or humble
-```
+> [!IMPORTANT]
+> If you install pre-built packages that were compiled against a different oneAPI version than your system has, you will encounter runtime errors like:
+>
+> ```bash
+> error while loading shared libraries: libsycl.so.7: cannot open shared object file
+> ```
+>
+> To resolve this, **rebuild the packages** from source against your installed oneAPI version using:
+>
+> ```bash
+> make package ROS_DISTRO=jazzy  # or humble
+> ```
 
 After successfully installing all the packages, you are able to use `sycl-ls` (comes with oneAPI package) to verify that LevelZero is ready and exposed. You should see the line below in the output.
 
@@ -91,7 +94,8 @@ a docker. In case of EI for AMR docker, run:
 
 To get Collaborative SLAM with C-for-Metal GPU support, make sure that Prerequisites are done.
 
-**Important:** Building with GPU/SYCL support is extremely memory-intensive. See the [Build section in README](../README.md#build) for memory requirements. For systems with 16-24GB RAM, use:
+> [!IMPORTANT]
+> Building with GPU/SYCL support is extremely memory-intensive. See the [Build section in README](../README.md#build) for memory requirements. For systems with 16-24GB RAM, use:
 
 ```sh
 ROS_DISTRO=jazzy make safe-package
