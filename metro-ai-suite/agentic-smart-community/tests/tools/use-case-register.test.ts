@@ -178,3 +178,63 @@ test("register without use_case still fails validation", async () => {
   assert.equal(result.ok, false);
   assert.ok(result.errors.some((e) => e.includes("must match")));
 });
+
+test("generate_task stages evaluate_rules content from a remote MCP client", async () => {
+  await withTempDir(async (baseDir) => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = async () => new Response(null, { status: 201 });
+    try {
+      const result = await useCaseRegister(
+        {
+          action: "generate_task",
+          use_case: "remote_rules",
+          description: "Remote rule content",
+          prompt_text: `## GLOBAL_PROMPT
+Summarize observations.
+## MACRO_CHUNK_PROMPT
+Summarize this chunk.
+## LOCAL_PROMPT
+Return exactly:
+SEVERITY: <text>
+EVENT: <text>
+DESC: <text>
+SUBJECT: <text>
+## T_MINUS_1_PROMPT
+Use prior context only.`,
+          evaluate_rules_content: `import json
+import sys
+
+fields = json.loads(sys.argv[1])
+print(json.dumps({"alertType": fields.get("event", "alert"), "severity": "warn"}))`,
+          schema_extensions: [{ name: "subject", type: "text", required: true }],
+        },
+        { useCaseDict: {}, summaryServiceUrl: "http://summary", db: {}, baseDir },
+      );
+
+      assert.equal(result.ok, true);
+      assert.equal(result.steps.artifacts?.evaluate_rules_py, "written");
+      assert.match(
+        await readFile(join(baseDir, "use-cases", "remote_rules", "evaluate_rules.py"), "utf-8"),
+        /fields\.get\("event"/,
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
+test("generate_task rejects both evaluate_rules path and content", async () => {
+  const result = await useCaseRegister(
+    {
+      action: "generate_task",
+      use_case: "conflicting_rules",
+      prompt_text: "prompt",
+      evaluate_rules_path: "/tmp/evaluate_rules.py",
+      evaluate_rules_content: "print('null')",
+    },
+    { useCaseDict: {}, summaryServiceUrl: "http://unused", db: {} },
+  );
+
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((error) => error.includes("either evaluate_rules_path or evaluate_rules_content")));
+});
