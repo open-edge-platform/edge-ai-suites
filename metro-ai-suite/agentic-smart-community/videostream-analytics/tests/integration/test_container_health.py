@@ -17,7 +17,7 @@ class TestContainerHealth:
     def test_sources_initially_empty(self, http_client, analytics_url):
         resp = http_client.get(f"{analytics_url}/sources")
         assert resp.status_code == 200
-        # Phase 7: /sources returns a bare array, not {"sources":[...]}
+        # /sources returns a bare array, not {"sources":[...]}
         assert resp.json() == []
 
     def test_webhook_server_reachable(self, http_client, webhook_url):

@@ -7,8 +7,14 @@ LICENSE            @xwu2intel
 CONTRIBUTING.md    @xwu2intel
 CODE_OF_CONDUCT.md @xwu2intel
 SECURITY.md        @xwu2intel
-README.md          @xwu2intel
+README.md          @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
+# ============================================================================
+# Retail-AI Suite
+# ============================================================================
+
+/retail-ai-suite/                                                  @avinash-palleti @sumanaga @vkb1 @sathyendranv @xwu2intel @pooja-intel
+/retail-ai-suite/digital-signage                                   @vkb1 @sathyendranv @pooja-intel @tanvidhola-ux
 
 # ============================================================================
 # Education-AI Suite
@@ -79,6 +85,8 @@ README.md          @xwu2intel
 /metro-ai-suite/live-video-analysis/**/README.md                 @bharagha @yogeshmpandey  @hteeyeoh  @open-edge-platform/open-edge-platform-docs-write
 
 # /metro-ai-suite/metro-sdk-manager/                             no codeowners, the top codeowners apply
+/metro-ai-suite/metro-sdk-manager/docs/user-guide/                         @vagheshp @rranjan3 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-sdk-manager/docs/oep-sdk-manager-files/config.js     @vagheshp @rranjan3 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 # inside vision ai recipe
 /metro-ai-suite/metro-vision-ai-app-recipe/docs/                           @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
@@ -95,11 +103,14 @@ README.md          @xwu2intel
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/                  @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
-# this may need to be confirmed:
+
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/                  @rrajore @vagheshp @xwu2intel @ajagadi1
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
 
+/metro-ai-suite/prompt-library/                                            @rrajore @vagheshp @xwu2intel
+/metro-ai-suite/prompt-library/docs/                                       @rrajore @vagheshp @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/prompt-library/README.md                                   @rrajore @vagheshp @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 /metro-ai-suite/sensor-fusion-for-traffic-management/                                  @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
 /metro-ai-suite/sensor-fusion-for-traffic-management/docs/                             @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
@@ -132,9 +143,9 @@ README.md          @xwu2intel
 /metro-ai-suite/agentic-smart-community/docs/       @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/agentic-smart-community/README.md   @Johere @lijiunderstand @llin60 @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @xwu2intel
-/metro-ai-suite/enterprise-data-intelligence/docs/       @Yongbozzz @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/enterprise-data-intelligence/README.md   @Yongbozzz @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/enterprise-data-intelligence/            @Yongbozzz @myqi @llin60 @xwu2intel
+/metro-ai-suite/enterprise-data-intelligence/docs/       @Yongbozzz @myqi @llin60 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/enterprise-data-intelligence/README.md   @Yongbozzz @myqi @llin60 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
 
 /metro-ai-suite/vms-adapter-plugin/                              @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard
 /metro-ai-suite/vms-adapter-plugin/docs/                         @sajeevrajput @rrajore @bharagha @yogeshmpandey @ArokiEdgard @open-edge-platform/open-edge-platform-docs-write
@@ -162,9 +173,21 @@ README.md          @xwu2intel
 # Federal & Aerospace AI Suite
 # ============================================================================
 
-/federal-aerospace/                                          @pperycz @jakubsikorski @ikyrycho @rrajore @xwu2intel
-/federal-aerospace/apps/deterministic-threat-detection/      @rrajore @sugnanprabhu @ajagadi1 @xwu2intel
-/federal-aerospace/apps/deterministic-threat-detection/docs/ @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/federal-aerospace/apps/handheld-multi-modal/                @pperycz @jakubsikorski @ikyrycho @xwu2intel
-/federal-aerospace/apps/handheld-multi-modal/docs/           @pperycz @jakubsikorski @ikyrycho @xwu2intel @open-edge-platform/open-edge-platform-docs-write
-/federal-aerospace/docs/                                     @pperycz @jakubsikorski @ikyrycho @rrajore @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/                                             @rrajore @pperycz @jakubsikorski @ikyrycho @xwu2intel
+/federal-and-aerospace-ai-suite/README.md                                    @rrajore @pperycz @jakubsikorski @ikyrycho @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/handheld-multi-modal/                        @rrajore @pperycz @jakubsikorski @ikyrycho @kpuczyns @xwu2intel
+/federal-and-aerospace-ai-suite/handheld-multi-modal/docs/                   @rrajore @pperycz @jakubsikorski @ikyrycho @kpuczyns @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md               @rrajore @pperycz @jakubsikorski @ikyrycho @kpuczyns @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/deterministic-threat-detection/              @rrajore @sugnanprabhu @ajagadi1 @xwu2intel
+/federal-and-aerospace-ai-suite/deterministic-threat-detection/docs/         @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/deterministic-threat-detection/README.md     @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/uav-vision-analytics                         @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz
+/federal-and-aerospace-ai-suite/uav-vision-analytics/docs/                   @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/uav-vision-analytics/README.md               @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @pperycz @open-edge-platform/open-edge-platform-docs-write
+
+/federal-and-aerospace-ai-suite/uav-mission-compute-sdk                      @k-mochi @nathsudi @rranjan3 @pperycz
+/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/                @k-mochi @nathsudi @rranjan3 @pperycz @open-edge-platform/open-edge-platform-docs-write
+/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md            @k-mochi @nathsudi @rranjan3 @pperycz @open-edge-platform/open-edge-platform-docs-write

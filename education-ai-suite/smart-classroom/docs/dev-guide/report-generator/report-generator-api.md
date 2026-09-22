@@ -39,6 +39,7 @@ and report generation requests should be treated as unavailable by frontend logi
 |---|---|---|---|---|
 | `POST` | `/report/generate` | Generate class report with streaming events | `ReportRequest` (`session_id`, `selected_fields`, `manual_fields`, optional `query`) | NDJSON stream (`partial_report`, `report`, `report_ready`, `token`) |
 | `GET` | `/report/template-fields` | Get field catalog for UI checkbox selection | None | JSON (`groups`) |
+| `GET` | `/report/capabilities` | Report which download formats the server can produce (PDF availability) | None | JSON (`pdf_export`) |
 | `POST` | `/report/{session_id}/mindmap-image` | Upload rendered mindmap image for report embedding | `multipart/form-data` with `file` | JSON (`session_id`, `path`) |
 | `GET` | `/report/{session_id}/mindmap-image` | Fetch uploaded mindmap image for inline markdown preview | None | `image/png` file |
 | `GET` | `/report/{session_id}` | Read generated report markdown | None | JSON (`session_id`, `report`) |
@@ -93,24 +94,28 @@ Manual-field behavior for frontend:
 The server emits one JSON object per line. Common event shapes:
 
 1. `partial_report` / `report`
-```json
-{"type":"partial_report","content":"...markdown..."}
-```
+
+   ```json
+   {"type":"partial_report","content":"...markdown..."}
+   ```
 
 2. `report_ready`
-```json
-{"type":"report_ready","session_id":"20260708-100000-abcd"}
-```
+
+   ```json
+   {"type":"report_ready","session_id":"20260708-100000-abcd"}
+   ```
 
 3. `token`
-```json
-{"token":"...","error":""}
-```
 
-Error token shape:
-```json
-{"token":"","error":"[ERROR]: ..."}
-```
+   ```json
+   {"token":"...","error":""}
+   ```
+
+   Error token shape:
+
+   ```json
+   {"token":"","error":"[ERROR]: ..."}
+   ```
 
 Frontend stream handling rule:
 - Stream ending is not equal to success.
@@ -235,6 +240,28 @@ Additional PDF notes:
 - Requires `LibreOffice` (`soffice`) installed on the server.
 - Returns `501` when `soffice` is unavailable.
 - Reuses cached PDF when it exists and is up-to-date.
+
+---
+
+### 5.1 Report Capabilities (Download Format Availability)
+
+- Method: `GET`
+- Path: `/report/capabilities`
+- Response: JSON
+
+### Response Example
+
+```json
+{
+  "pdf_export": true
+}
+```
+
+Notes:
+- `pdf_export` is `true` only when `LibreOffice` (`soffice`) is on the server's `PATH`.
+- Lets the frontend disable the PDF download option up front (with an install hint) instead of letting the user click and hit a `501`.
+- DOCX download is always available and is not gated by this flag.
+- Frontend suggestion: probe this before showing the PDF download option; treat a failed/unreachable request as `pdf_export: false` so an unsupported format is never offered.
 
 ---
 

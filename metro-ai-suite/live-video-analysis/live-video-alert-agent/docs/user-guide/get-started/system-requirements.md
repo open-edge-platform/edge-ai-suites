@@ -45,7 +45,8 @@ Configure these via environment variables:
 export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
 ```
 
-> **Note:** Use pre-converted OpenVINO IR models from the
+> [!NOTE]
+> Use pre-converted OpenVINO IR models from the
 > [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO)
 > for best compatibility with OVMS. These models are already optimized and
 > require no additional conversion. Browse the available models at

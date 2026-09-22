@@ -1,180 +1,50 @@
-# RSU Monitoring System
+# Smart Traffic Intersection Agent — UI
 
-A real-time web dashboard for monitoring Road Side Unit (RSU) traffic and environmental data using Gradio.
+A real-time dashboard for a traffic intersection. It streams live
+intersection data from the agent backend over a WebSocket and renders camera feeds, traffic density,
+weather, alerts, and system telemetry.
 
-## Features
+## How It Runs
 
-- **Real-time Dashboard**: Live monitoring of traffic density, environmental conditions, and system alerts
-- **Auto-refresh**: Configurable automatic data refresh (default: 5 seconds)
-- **Modern UI**: Dark theme with responsive design inspired by professional monitoring systems
-- **Modular Architecture**: Clean separation of concerns with dedicated modules for data, UI, and configuration
-- **Environmental Configuration**: All settings configurable via environment variables
+The UI is packaged inside the `traffic-agent` container and started automatically alongside the backend
+(see `../docker-entrypoint.sh`). For normal usage, deploy the whole agent via Docker Compose from the
+project root — the dashboard is then served on port `7860`.
 
-## Quick Start
+Run it standalone only for development. It requires the agent backend to be reachable so the WebSocket
+has data to stream.
 
-### Using UV (Recommended)
-
-```bash
-# Clone and navigate to the project
-cd /path/to/agent_ui
-
-# Run the startup script (creates venv, installs dependencies, and starts the app)
-chmod +x start.sh
-./start.sh
-```
-
-### Manual Setup
+## Quick Start (standalone)
 
 ```bash
-# Create virtual environment with uv
-uv venv
-source .venv/bin/activate
+# From this directory (src/ui). Python 3.13 is used by the container image.
+pip install -r requirements.txt
 
-# Install dependencies
-uv pip install -r requirements.txt
-
-# Run the application
+# Point the UI at a running backend WebSocket, then launch.
+export AGENT_API_URL="ws://localhost:8081/api/v1/traffic/current/ws"
 python app.py
 ```
 
-## Configuration
+Open http://localhost:7860 in a browser.
 
-Configure the system using environment variables or by editing `config.py`:
+## Minimum Configuration
 
-```bash
-# Data refresh interval (seconds)
-export REFRESH_INTERVAL=5
+All settings are read from environment variables (see `config.py`). Defaults work when the backend and
+Metrics Manager run on `localhost`.
 
-# API endpoint configuration
-export API_URL="http://localhost:8081/api/v1/traffic/current"
+| Variable              | Default                                              | Purpose                                  |
+| --------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `AGENT_API_URL`       | `ws://localhost:8081/api/v1/traffic/current/ws`      | Backend WebSocket for live intersection data |
+| `METRICS_MANAGER_URL` | `http://localhost:9090`                              | Metrics Manager base URL (system telemetry) |
+| `AGENT_UI_HOST`       | `0.0.0.0`                                             | Bind host                                |
+| `AGENT_UI_HOSTPORT`   | `7860`                                               | Bind port                                |
+| `UI_THEME`            | `light`                                              | `light` or `dark`                        |
+| `APP_TITLE`           | `Smart Traffic Intersection Agent`                   | Browser/page title                       |
 
-# UI settings
-export UI_THEME="dark"  # or "light"
-export APP_TITLE="RSU MONITORING SYSTEM"
+## Dashboard Panels
 
-# Alert thresholds
-export HIGH_DENSITY_THRESHOLD=5
-export MODERATE_DENSITY_THRESHOLD=3
-export HIGH_WIND_THRESHOLD=25.0
-export HEAVY_RAIN_THRESHOLD=5.0
-```
-
-## Application Structure
-
-```
-agent_ui/
-├── app.py                 # Main Gradio application
-├── config.py             # Configuration management
-├── models.py             # Data models and classes
-├── data_loader.py        # Data loading and parsing
-├── ui_components.py      # UI component generators
-├── auto_refresh.py       # Auto-refresh functionality
-├── requirements.txt     # Python dependencies
-├── start.sh            # Startup script
-└── README.md           # This file
-```
-
-## Data Source
-
-The system fetches data from the Traffic Intersection Agent API endpoint. The API returns data in this structure:
-
-```json
-{
-  "timestamp": "2025-09-15T20:30:45Z",
-  "intersection_id": "INT_001",
-  "data": {
-    "intersection_name": "Highway South & Pedestrian Crossing",
-    "latitude": 40.7128,
-    "longitude": -74.0060,
-    "northbound_density": 3,
-    "southbound_density": 2,
-    "eastbound_density": 1,
-    "westbound_density": 0,
-    "total_density": 6
-  },
-  "camera_images": {
-    "CAM_1": {
-      "camera_id": "INTERSECTION_NORTH",
-      "direction": "North",
-      "timestamp": "2025-09-15T20:30:45Z"
-    }
-  },
-  "vlm_analysis": {
-    "analysis": "Traffic flow optimized. Pedestrian activity normal.",
-    "alerts": ["URGENT: UNIDENTIFIED OBJECT DETECTED NEAR CAM 4"]
-  },
-  "weather_data": {
-    "temperature_fahrenheit": 28,
-    "humidity_percent": 55,
-    "precipitation_prob": 0.0,
-    "wind_speed_mph": 12.0,
-    "wind_direction_degrees": 180,
-    "conditions": "Clear Sky"
-  }
-}
-```
-
-## Auto-Refresh
-
-The dashboard automatically refreshes every X seconds (configurable). Features include:
-
-- **Visual Indicator**: Green dot showing auto-refresh is active
-- **Manual Refresh**: Backup refresh button
-- **Error Handling**: Graceful handling of data loading errors
-- **Background Processing**: Non-blocking refresh mechanism
-
-## UI Components
-
-### Traffic Summary
-- Real-time traffic density by direction (North, South, East, West)
-- Total vehicle count
-- Active camera information
-
-### Environmental Panel
-- Temperature, humidity, wind speed and direction
-- Precipitation levels
-- Air quality assessment based on conditions
-
-### Alerts & Analysis
-- VLM (Vision Language Model) analysis results
-- System alerts with severity levels (Urgent, Advisory, Info)
-- Analysis confidence and age indicators
-
-### System Information
-- Last update timestamp
-- Intersection location and ID
-- System status indicators
-
-## Dependencies
-
-- **gradio**: Web UI framework
-- **pydantic**: Data validation and models
-- **python-dateutil**: Date/time handling
-
-## Development
-
-To extend the system:
-
-1. **Add new data fields**: Update `models.py` with new data classes
-2. **Modify UI**: Update `ui_components.py` component generators
-3. **Change data source**: Modify `data_loader.py` for different data formats
-4. **Adjust configuration**: Add new settings to `config.py`
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Port already in use**: Change `APP_PORT` in configuration
-2. **API connection failed**: Ensure the Traffic Intersection Agent API is running at the configured endpoint
-3. **Import errors**: Make sure virtual environment is activated and dependencies are installed
-
-### Logs
-
-The application provides detailed logging. Check console output for:
-- Data loading errors
-- Configuration issues
-- Network problems
-
-## License
-
-This project is part of the RSU monitoring system implementation.
+- **Camera Feeds** — live images from the intersection cameras.
+- **Traffic Summary** — per-direction and total vehicle density.
+- **Environmental** — temperature, humidity, wind, and precipitation.
+- **Alerts** — VLM analysis output and severity-tagged alerts.
+- **System Info** — intersection location, ID, and last-update time.
+- **System Telemetry** — CPU/RAM/GPU charts streamed from Metrics Manager over SSE.

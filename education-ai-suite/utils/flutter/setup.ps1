@@ -126,50 +126,6 @@ if ($LASTEXITCODE -ne 0) {
 
 Write-Host "[OK] Main backend dependencies installed" -ForegroundColor Green
 
-# Create Python venv for content search backend
-Write-Host "`nCreating Python virtual environment for content search..." -ForegroundColor Yellow
-Write-Host "  Note: main.py auto-starts content search using this venv when enabled" -ForegroundColor Gray
-$contentSearchPath = Join-Path $smartClassroomPath "content_search"
-$contentSearchVenvPath = Join-Path $contentSearchPath "venv_content_search"
-
-if (-not (Test-Path $contentSearchVenvPath)) {
-    python -m venv $contentSearchVenvPath
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[X] Failed to create content search venv" -ForegroundColor Red
-        exit 1
-    }
-    Write-Host "[OK] Content search venv created at $contentSearchVenvPath" -ForegroundColor Green
-} else {
-    Write-Host "[OK] Content search venv already exists" -ForegroundColor Green
-}
-
-# Install content search dependencies
-Write-Host "`nUpgrading pip for content search..." -ForegroundColor Yellow
-$contentSearchPipPath = Join-Path $contentSearchVenvPath "Scripts\pip.exe"
-$contentSearchPythonPath = Join-Path $contentSearchVenvPath "Scripts\python.exe"
-
-& $contentSearchPythonPath -m pip install --upgrade pip
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[X] Failed to upgrade pip for content search" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "[OK] Pip upgraded for content search" -ForegroundColor Green
-
-Write-Host "`nInstalling content search dependencies..." -ForegroundColor Yellow
-Write-Host "  Includes: RAG, ChromaDB, document processing" -ForegroundColor Gray
-$contentSearchRequirementsPath = Join-Path $contentSearchPath "requirements.txt"
-
-& $contentSearchPipPath install -r $contentSearchRequirementsPath
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "[X] Failed to install content search dependencies" -ForegroundColor Red
-    exit 1
-}
-
-Write-Host "[OK] Content search dependencies installed" -ForegroundColor Green
-
 # Create .env file
 Write-Host "`nCreating configuration file..." -ForegroundColor Yellow
 $envPath = Join-Path $PSScriptRoot "assets\.env"
@@ -191,8 +147,7 @@ Write-Host "  - Main Backend (port 8000): VLM, OCR, ASR, core services" -Foregro
 Write-Host "  - Content Search (port 9011): RAG, Q&A, file management (auto-started)" -ForegroundColor Gray
 Write-Host "  - Flutter App: Cross-platform UI" -ForegroundColor Gray
 Write-Host "`nVirtual Environments:" -ForegroundColor Yellow
-Write-Host "  - smartclassroom/ - Main backend dependencies" -ForegroundColor Gray
-Write-Host "  - smart-classroom/content_search/venv_content_search/ - Content Search dependencies" -ForegroundColor Gray
+Write-Host "  - smartclassroom/ - Main backend + Content Search dependencies" -ForegroundColor Gray
 Write-Host "`nNext steps:" -ForegroundColor Yellow
 Write-Host "  Run: .\start.ps1" -ForegroundColor White
 Write-Host "`nNote: Main backend automatically starts Content Search when content_search.enabled: true" -ForegroundColor Yellow

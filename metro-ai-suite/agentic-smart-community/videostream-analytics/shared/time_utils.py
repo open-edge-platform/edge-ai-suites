@@ -4,6 +4,18 @@ from datetime import datetime
 from typing import Optional, Tuple
 
 
+def now_local_str() -> str:
+    """Current local wall-clock as 'YYYY-MM-DD HH:MM:SS'.
+
+    Canonical timestamp format for all DB time columns (events/recordings
+    start_time & end_time). Matches SQLite's ``datetime('now','localtime')``
+    default used by ``created_at`` — same timezone (machine local), same
+    space separator — so string comparisons in reports and dashboard date
+    filters stay consistent.
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
 def parse_time_range(spec: str) -> Optional[Tuple[int, int]]:
     """Parse 'HH:MM-HH:MM' into (start_minutes, end_minutes) from midnight.
     Supports overnight ranges like '22:00-09:00'."""

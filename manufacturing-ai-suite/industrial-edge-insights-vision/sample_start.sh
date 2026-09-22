@@ -11,7 +11,7 @@
 # ------------------------------------------------------------------
 
 # Default values
-SCRIPT_DIR=$(dirname $(readlink -f "$0"))
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 PIPELINE_ROOT="user_defined_pipelines" # Default root directory for pipelines
 PIPELINE="all"                         # Default to running all pipelines
 PAYLOAD_COPIES=1                       # Default to running a single copy of the payloads

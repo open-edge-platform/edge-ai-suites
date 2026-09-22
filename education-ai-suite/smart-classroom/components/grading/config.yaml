@@ -1,20 +1,30 @@
+# self-only/parent-override
+config_source: parent-override
+
+app:
+  language: zh   # en or zh
+
+grading:
+  force_regrade: true
+  debug_mode: false
+  provider:
+    layout_detection: http://127.0.0.1:9902
+    vlm_provider: http://127.0.0.1:9900
+    ocr_provider: openvino_local
+
 image:
-  dpi: 50
+  dpi: 40
   contrast_enhance: true
   contrast_factor: 1.5
-  # page layout: 1 = single column, 2 = two columns (left/right)
-  page_columns: 1
-  # for page_columns=2: left column width fraction (0.5 = middle, 0.4 = left 40% / right 60%)
+  # page layout: 1 = single column, 2 = two columns, auto = infer from layout detection
+  page_columns: auto
+  # fallback for page_columns=2 or when inference fails: left column width fraction
   column_split_ratio: 0.55
 
 vlm:
   max_tokens: 4096
   temperature: 0.2
-  max_image_pixels: 4000000
-
-grading:
-  force_regrade: true
-  debug_mode: false
+  max_image_pixels: 2000000
 
 watch:
   poll_interval: 5
@@ -47,6 +57,8 @@ section_split:
   gap_threshold: 120        # only gaps larger than this are compressed
   keep_margin: 50           # margin left between content blocks after compression
   content_pad: 20           # padding added above/below each content block
+  force_split: false
+  force_split_pairs: []
 
   rubric_markers:
     zh:

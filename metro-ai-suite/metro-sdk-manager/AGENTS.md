@@ -13,9 +13,9 @@ OEP SDK Manager is a comprehensive development tool that streamlines discovering
 
 | SDK | Install Script | Tutorials | Description |
 |:----|:---------------|:----------|:------------|
-| OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DLStreamer, OpenVINO, Pipeline Server, Scenescape — visual AI inference & spatial analytics |
+| OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DL Streamer, OpenVINO, Pipeline Server, Scenescape — visual AI inference & spatial analytics |
 | OEP Gen AI SDK | `scripts/oep-gen-ai-sdk.sh` | `docs/user-guide/oep-gen-ai-sdk/` | Audio Analyzer, VLM serving, embedding, document ingestion |
-| Visual AI Demo Kit | `scripts/visual-ai-demo-kit.sh` | `docs/user-guide/visual-ai-demo-kit/` | DLStreamer Pipeline Server, Node-RED, Grafana, MQTT, MediaMTX |
+| Visual AI Demo Kit | `scripts/visual-ai-demo-kit.sh` | `docs/user-guide/visual-ai-demo-kit/` | DL Streamer Pipeline Server, Node-RED, Grafana, MQTT, MediaMTX |
 | UAV Mission Compute SDK | `scripts/uav-mission-compute-sdk.sh` | `docs/user-guide/uav-mission-compute-sdk/` |  |
 
 Each SDK installs Docker container images and clones GitHub repositories (`edge-ai-libraries`, `edge-ai-suites`).
@@ -47,7 +47,8 @@ metro-sdk-manager/
 └── AGENTS.md                          # This file
 ```
 
-> **Note:** Files such as `Makefile`, `requirements.txt`, `VERSION`, `dict.txt`, `docconf/`, `docs/conf.py`, and `docs/substitutions.txt` are generated/managed by the CI pipeline and listed in `.gitignore`. They are not tracked in this repo.
+> [!NOTE]
+> Files such as `Makefile`, `requirements.txt`, `VERSION`, `dict.txt`, `docconf/`, `docs/conf.py`, and `docs/substitutions.txt` are generated/managed by the CI pipeline and listed in `.gitignore`. They are not tracked in this repo.
 
 ## Tech Stack
 
@@ -62,7 +63,8 @@ metro-sdk-manager/
 
 ## Core Commands
 
-> **Note:** The `Makefile`, `requirements.txt`, and Sphinx config files are provided by CI and are gitignored.
+> [!NOTE]
+> The `Makefile`, `requirements.txt`, and Sphinx config files are provided by CI and are gitignored.
 > Build and lint commands (`make build`, `make lint`, etc.) are only available in the CI pipeline.
 > Locally, you can run the install scripts and lint with standalone tools as shown below.
 

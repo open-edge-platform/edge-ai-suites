@@ -97,19 +97,29 @@ while (-not (Test-ServiceListening -Port 8000)) {
 $backendStartTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
 Write-Host "  [OK] Backend is listening on port 8000 (after ${backendStartTime}s)" -ForegroundColor Green
 
-# Wait for content search to start listening (auto-started by backend with Flutter config)
-Write-Host "  Waiting for Content Search to start..." -ForegroundColor Gray
-while (-not (Test-ServiceListening -Port 9011)) {
+# Wait for content search to start and become fully healthy
+Write-Host "  Waiting for Content Search to become healthy..." -ForegroundColor Gray
+$csHealthy = $false
+while (-not $csHealthy) {
     $elapsed = ((Get-Date) - $startTime).TotalSeconds
     if ($elapsed -gt $maxWaitSeconds) {
-        Write-Host "`n[X] Timeout: Content Search did not start within 5 minutes" -ForegroundColor Red
-        Write-Host "  Check the minimized backend window for errors" -ForegroundColor Yellow
-        exit 1
+        Write-Host "`n[!] Timeout: Content Search health did not reach 'ok' within ${maxWaitSeconds}s" -ForegroundColor Yellow
+        Write-Host "    The app will launch anyway; the health banner will retry automatically." -ForegroundColor Gray
+        break
     }
-    Start-Sleep -Seconds $checkInterval
+    try {
+        $resp = Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health" `
+                                  -TimeoutSec 5 -ErrorAction Stop
+        if ($resp.status -eq "ok") {
+            $csHealthy = $true
+        }
+    } catch {}
+    if (-not $csHealthy) { Start-Sleep -Seconds $checkInterval }
 }
-$csStartTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
-Write-Host "  [OK] Content Search is listening on port 9011 (after ${csStartTime}s)" -ForegroundColor Green
+if ($csHealthy) {
+    $csStartTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)
+    Write-Host "  [OK] Content Search is healthy (after ${csStartTime}s)" -ForegroundColor Green
+}
 
 Write-Host "`n[OK] All backend services are ready!" -ForegroundColor Green
 $totalTime = [math]::Round(((Get-Date) - $startTime).TotalSeconds, 1)

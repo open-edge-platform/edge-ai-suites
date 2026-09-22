@@ -1,15 +1,40 @@
 # Release Notes: Pallet Defect Detection and PCB Anomaly Detection
 
+## Version 2.8.1 (Pallet Defect Detection) and Version 1.4.1 (PCB Anomaly Detection)
+
+**Release Date**: September 18, 2026
+
+**Fixed**:
+
+- Replaced MinIO with SeaweedFS as the S3-compatible storage backend (MinIO image was removed
+  from Docker Hub). Breaking change: `MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY` are renamed to
+  `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD`; update your `.env`/`helm/values*.yaml` files.
+  The frame browsing console moved from `/minio/` to `/storage/`, protected by HTTP Basic Auth
+  using the same credentials.
+
+## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
+
+**Release Date**: September 10, 2026
+
+**New**:
+
+- Fixed coturn server configuration for WebRTC relay.
+- Fixed Grafana MQTT datasource version to avoid errors with the latest version.
+
+**Improved**:
+
+- Consumed latest DL Streamer Pipeline Server version 2026.2.0.
+
 ## Version 2.7.0 (Pallet Defect Detection) and Version 1.3.0 (PCB Anomaly Detection)
 
-**New:**
+**New**:
 
 - Qualified on the Intel® Core™ Series 3 processor.
 - Deprecated Edge Manageability Framework deployment packages.
 
 ## Version 2.6.0 (Pallet Defect Detection) and Version 1.2.0 (PCB Anomaly Detection)
 
-**New:**
+**New**:
 
 - Qualified on the Intel® Core™ Ultra Series 3 processor.
 - Added support for NPU and iGPU, for the Intel® Core™ Ultra Series 3 processor.
@@ -18,7 +43,7 @@ host via Docker Compose tool and Helm chart.
 - MLOps is now demonstrated with the Model Download microservice instead of
 the Model Registry.
 
-**Improved:**
+**Improved**:
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
 - Retrained the Model with Geti™ software v2.13.1.

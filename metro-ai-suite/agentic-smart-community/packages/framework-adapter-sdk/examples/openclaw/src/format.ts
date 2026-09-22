@@ -1,4 +1,4 @@
-import type { AlertPayload } from "@smartbuilding-video/framework-adapter-sdk";
+import type { AlertPayload } from "@smart-community-video/framework-adapter-sdk";
 
 type Alert = AlertPayload["alert"];
 

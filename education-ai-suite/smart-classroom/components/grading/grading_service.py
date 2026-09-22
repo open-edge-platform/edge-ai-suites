@@ -17,7 +17,6 @@ logger = logging.getLogger("grading.service")
 
 @dataclass
 class GradingServiceConfig:
-    enabled: bool
     host_addr: str
     port: int
     provider: dict[str, Any]
@@ -40,19 +39,20 @@ def _resolve_root_config(path_value: str | None) -> Path:
 
 
 def load_grading_config(config_path: Path) -> GradingServiceConfig:
+    from services.config import get_language, load_config
+
     raw = _load_yaml(config_path)
-    grading = raw.get("grading", {})
-    if not isinstance(grading, dict):
-        raise ValueError("`grading` section is missing or invalid in config.yaml")
-    provider = grading.get("provider", {})
-    if not isinstance(provider, dict):
-        provider = {}
+    grading = raw.get("grading") if isinstance(raw.get("grading"), dict) else {}
+
+    merged = load_config()
+    merged_grading = merged.get("grading") if isinstance(merged.get("grading"), dict) else {}
+    provider = merged_grading.get("provider") if isinstance(merged_grading.get("provider"), dict) else {}
+
     return GradingServiceConfig(
-        enabled=bool(((raw.get("features") or {}).get("grading") or {}).get("enabled", False)),
         host_addr=str(grading.get("host_addr", "127.0.0.1")),
         port=int(grading.get("port", 9012)),
         provider=provider,
-        language=str((raw.get("app") or {}).get("language", "en")),
+        language=get_language(),
     )
 
 
@@ -84,8 +84,6 @@ def create_app(cfg: GradingServiceConfig) -> FastAPI:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run VLM grading service")
     parser.add_argument("--config", default=None, help="Path to root config.yaml")
-    parser.add_argument("--ignore-enabled", action="store_true",
-                        help="Start even when grading.enabled is false")
     parser.add_argument("--dry-run", action="store_true",
                         help="Validate config and print settings without starting")
     return parser.parse_args()
@@ -101,15 +99,11 @@ def main() -> int:
         return 1
 
     cfg = load_grading_config(config_path)
-    logger.info("Loaded grading config from %s: enabled=%s host=%s port=%s language=%s",
-                config_path, cfg.enabled, cfg.host_addr, cfg.port, cfg.language)
+    logger.info("Loaded grading config from %s: host=%s port=%s language=%s",
+                config_path, cfg.host_addr, cfg.port, cfg.language)
 
     if args.dry_run:
         logger.info("Dry run successful")
-        return 0
-
-    if not cfg.enabled and not args.ignore_enabled:
-        logger.warning("grading.enabled=false; not started. Use --ignore-enabled to force.")
         return 0
 
     app = create_app(cfg)

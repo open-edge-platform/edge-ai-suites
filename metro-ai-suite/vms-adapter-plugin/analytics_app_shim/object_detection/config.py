@@ -1,7 +1,7 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Configuration model for the Object Detection (DLStreamer Pipeline Server) analytics app shim."""
+"""Configuration model for the Object Detection (DL Streamer Pipeline Server) analytics app shim."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ _DEVICE_ORDER = ("CPU", "GPU", "NPU")
 
 
 class ObjectDetectionAnalyticsAppConfig(BaseModel):
-    """Config for DLStreamer Pipeline Server–based object detection apps (e.g. Loitering Detection)."""
+    """Config for DL Streamer Pipeline Server–based object detection apps (e.g. Loitering Detection)."""
 
     type: Literal["object_detection"] = "object_detection"
     # Identifies this app instance in API URLs (e.g. "dls_vision" → /v1/analytics-apps/dls_vision/runs)

@@ -40,7 +40,7 @@ Similarly, it ingests the .csv files as data points into **Telegraf** using the 
 
 ##### 2.1 DL Streamer Pipeline Server
 
-The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
+The [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html) microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
 defect classification model, publishes the frame metadata results over MQTT, stores the processed frames in SeaweedFS S3 storage, and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
 ###### DL Streamer Pipeline Server `config.json`
@@ -122,7 +122,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.pkl"`    |
 | `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU`| `CPU`   |
 
-> **Note:** The maximum allowed size for `config.json` is 5 KB.
+> [!NOTE]
+> The maximum allowed size for `config.json` is 5 KB.
 
 **Alerts Configuration**:
 

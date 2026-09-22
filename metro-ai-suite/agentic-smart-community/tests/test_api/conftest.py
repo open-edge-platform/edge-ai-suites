@@ -160,10 +160,14 @@ def vsa_api() -> tuple[TestClient, MagicMock]:
     sys.modules["source_worker"] = source_worker
     try:
         import service
+        from shared.config import AppConfig
 
         manager = MagicMock()
         service._manager = manager
-        client = TestClient(service.create_app(MagicMock()))
+        # A real AppConfig: the register path reads `config.security` to
+        # allowlist source_url schemes, so a MagicMock here would make every
+        # scheme evaluate to "not allowed".
+        client = TestClient(service.create_app(AppConfig()))
         yield client, manager
     finally:
         service._manager = None
@@ -208,10 +212,10 @@ def mcp_api(tmp_path_factory: pytest.TempPathFactory) -> McpApiClient:
     log_path = workdir / "mcp-server.log"
     log_file = log_path.open("w", encoding="utf-8")
     env = os.environ.copy()
-    env.pop("SMARTBUILDING_ROUTER_URL", None)
-    env.pop("SMARTBUILDING_OPENCLAW_GATEWAY_URL", None)
-    env.pop("SMARTBUILDING_OPENCLAW_GATEWAY_TOKEN", None)
-    env["SMARTBUILDING_DATA_DIR"] = str(workdir / "data")
+    env.pop("SMART_COMMUNITY_ROUTER_URL", None)
+    env.pop("SMART_COMMUNITY_OPENCLAW_GATEWAY_URL", None)
+    env.pop("SMART_COMMUNITY_OPENCLAW_GATEWAY_TOKEN", None)
+    env["SMART_COMMUNITY_DATA_DIR"] = str(workdir / "data")
     process = subprocess.Popen(
         ["node", str(dist_entry), "--http", "--config", str(config_path)],
         cwd=REPO_ROOT,

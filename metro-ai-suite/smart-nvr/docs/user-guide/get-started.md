@@ -55,7 +55,7 @@ export VSS_IP=<vss-device-ip>
 export VSS_PORT=<vss-port>                         # optional, default 12345
 
 # Optional — set only if needed
-# export NVR_SCENESCAPE=false           # optional, default false; set to 'true' to enable SceneScape integration
+# export NVR_SCENESCAPE=false           # optional, default false; set to 'true' to enable Scenescape integration
 # export http_proxy=<http-proxy>
 # export https_proxy=<https-proxy>
 # export no_proxy=<no_proxy>
@@ -69,6 +69,11 @@ export VSS_PORT=<vss-port>                         # optional, default 12345
 # Start all services
 source setup.sh start
 ```
+
+The batch settings control how the NVR Event Router groups videos detected by
+the continuous-ingestion watcher, and how often it polls Pipeline Manager for
+asynchronous embedding-job completion. They do not affect single event-rule
+clips or video summarization.
 
 This launches all required containers:
 

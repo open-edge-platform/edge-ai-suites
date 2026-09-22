@@ -59,8 +59,27 @@ stop_containers() {
 
 remove_volumes() {
     echo -e "${YELLOW}Removing Docker volumes...${NC}"
-    docker volume rm apm_sqlite_data apm_model_cache 2>/dev/null
-    echo -e "${GREEN}Volumes removed.${NC}"
+    # docker compose prefixes named volumes with the compose project name
+    # (here "docker", from the directory of the first -f file), so the
+    # actual volume names are e.g. "docker_apm_sqlite_data", not the bare
+    # "apm_sqlite_data". Match on suffix so this works regardless of the
+    # project name in effect.
+    local volume_names=(apm_sqlite_data apm_model_cache apm_agent_output)
+    local found=0
+    for name in "${volume_names[@]}"; do
+        local matches
+        matches=$(docker volume ls -q --filter "name=${name}$")
+        if [ -n "${matches}" ]; then
+            while IFS= read -r vol; do
+                docker volume rm "${vol}" >/dev/null 2>&1 && echo -e "  ${GREEN}✓${NC} ${vol}" && found=1
+            done <<< "${matches}"
+        fi
+    done
+    if [ "${found}" -eq 0 ]; then
+        echo -e "${YELLOW}No APM volumes found.${NC}"
+    else
+        echo -e "${GREEN}Volumes removed.${NC}"
+    fi
 }
 
 validate_env() {
@@ -117,17 +136,6 @@ validate_env() {
         export RENDER_GROUP_ID
         RENDER_GROUP_ID=$(stat -c "%g" "${render_devices[0]}")
     fi
-
-    # LLM_MODEL_PATH is stored relative to the repo root in the use-case env
-    # file (e.g. "./apps/.../Phi-4-mini-instruct") for portability across
-    # machines/users. Docker Compose resolves relative volume host paths
-    # against the compose file's directory (docker/), not the caller's CWD —
-    # so a relative LLM_MODEL_PATH silently binds an empty/auto-created stub
-    # directory instead of the real model, and OVMS then fails to serve any
-    # model ("No version found for model in path" / "Mediapipe graph
-    # definition with requested name is not found"). Normalize it to an
-    # absolute path here (anchored at the repo root, same convention as
-    # USE_CASE_DIR below) before it reaches docker compose.
     if [ -n "${LLM_MODEL_PATH:-}" ] && [[ "${LLM_MODEL_PATH}" != /* ]]; then
         export LLM_MODEL_PATH="$(cd "${PWD}" && realpath -m "${LLM_MODEL_PATH}")"
     fi

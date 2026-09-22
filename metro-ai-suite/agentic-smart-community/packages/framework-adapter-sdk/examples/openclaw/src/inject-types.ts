@@ -1,4 +1,4 @@
-import type { Logger } from "@smartbuilding-video/framework-adapter-sdk";
+import type { Logger } from "@smart-community-video/framework-adapter-sdk";
 
 /**
  * Shared contract between the two session-append implementations (`session-inject.ts`,

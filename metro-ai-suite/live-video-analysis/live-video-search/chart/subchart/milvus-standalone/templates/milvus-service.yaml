@@ -1,0 +1,16 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus-standalone
+spec:
+  ports:
+    - name: grpc
+      port: 19530
+      targetPort: grpc
+    - name: metrics
+      port: 9091
+      targetPort: metrics
+  selector:
+    app: milvus-standalone

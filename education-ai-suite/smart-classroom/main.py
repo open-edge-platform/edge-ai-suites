@@ -33,6 +33,8 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     startup(app)
+    from utils.session_store import SessionStore
+    SessionStore.recover_after_restart()
     yield
     # Shutdown: drain in-flight capability work and release device (GPU) memory.
     from model_manager import ModelManager

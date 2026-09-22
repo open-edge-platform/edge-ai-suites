@@ -1,3 +1,6 @@
+// Copyright (C) 2026 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 // 知识库摘要（左侧列表）
 export interface KnowledgeBaseSummary {
   id: string;

@@ -1,0 +1,315 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/* A stage's output, opened from the history detail. Wider than the app's other
+   modals because what it shows is a document, not a form. */
+
+.modal-content.artifact-modal {
+  width: 820px;
+  max-width: 94vw;
+  height: 80vh;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-text);
+}
+
+.artifact-modal-header {
+  padding: 16px 48px 12px 24px;
+  border-bottom: 1px solid #dfe3e8;
+  flex-shrink: 0;
+}
+
+.artifact-modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.artifact-modal-filename {
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: #8c95a6;
+}
+
+.artifact-modal-truncated {
+  margin: 10px 24px 0;
+  padding: 6px 10px;
+  border-radius: var(--control-radius);
+  background: #fef6e7;
+  color: #b9770e;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.artifact-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+  min-height: 0;
+}
+
+/* The mind map pans inside its own box, so the sheet must not also scroll:
+   two nested scroll areas fight over the same drag. */
+.artifact-modal-body.fill {
+  overflow: hidden;
+  padding: 8px 12px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.artifact-modal-note {
+  font-size: 13px;
+  color: var(--color-gray-700);
+}
+
+.artifact-modal-error {
+  padding: 8px 12px;
+  border-radius: var(--control-radius);
+  background: #fdecea;
+  color: #a93226;
+  font-size: 13px;
+}
+
+/* jsMind lays the map out inside this box and pans within it, so it needs a
+   height of its own — the body's scrollbar cannot do that job for it. */
+.artifact-modal-mindmap {
+  flex: 1;
+  width: 100%;
+  min-height: 360px;
+}
+
+.artifact-modal-markdown {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #222;
+}
+
+.artifact-modal-markdown h1,
+.artifact-modal-markdown h2,
+.artifact-modal-markdown h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 18px 0 8px;
+  color: var(--color-gray-900);
+}
+
+.artifact-modal-markdown h1:first-child,
+.artifact-modal-markdown h2:first-child,
+.artifact-modal-markdown h3:first-child {
+  margin-top: 0;
+}
+
+.artifact-modal-markdown ul,
+.artifact-modal-markdown ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.artifact-modal-markdown li {
+  margin-bottom: 4px;
+}
+
+.artifact-modal-markdown p {
+  margin: 0 0 12px;
+}
+
+/* The report's mind-map screenshot is captured at 2x for print, so it has to be
+   scaled down to the sheet rather than overflowing it. */
+.artifact-modal-markdown img {
+  display: block;
+  max-width: 100%;
+  margin: 4px auto 12px;
+}
+
+/* Last-resort view for a file kind this build does not know how to lay out. */
+.artifact-modal-raw {
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #222;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Topic timeline: the time column is the spine, so it is fixed-width, monospaced
+   and never wraps — the topics beside it are what vary in length. */
+.artifact-modal-topics {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.artifact-modal-topics th,
+.artifact-modal-topics td {
+  text-align: left;
+  padding: 6px 12px 6px 0;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.artifact-modal-topics th {
+  color: var(--color-gray-700);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.artifact-topic-time {
+  width: 1%;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+/* Class engagement, laid out like the live accordion so the same numbers do not
+   look like a different measurement here. */
+.artifact-stat-tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.artifact-stat-tile {
+  flex: 1 1 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid #e6e9ee;
+  border-radius: 8px;
+  background: #fbfcfd;
+}
+
+.artifact-stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.artifact-stat-label {
+  font-size: 12px;
+  color: var(--color-gray-700);
+}
+
+.artifact-stat-board {
+  margin-bottom: 18px;
+}
+
+.artifact-stat-board-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.artifact-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.artifact-stat-id {
+  flex: 0 0 110px;
+  color: var(--color-gray-700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artifact-stat-track {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: #eef1f5;
+  overflow: hidden;
+}
+
+.artifact-stat-bar {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: var(--color-theme);
+}
+
+.artifact-stat-count {
+  flex: 0 0 auto;
+  min-width: 20px;
+  text-align: right;
+  color: var(--color-gray-900);
+}
+
+/* The same bubbles as the live transcript tab, restated here rather than
+   borrowed: that tab's stylesheet only loads while it is mounted, and this
+   pop-up opens from the history, where it never is. */
+.artifact-modal-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.artifact-modal-chat .chat-row {
+  display: flex;
+  width: 100%;
+}
+
+.artifact-modal-chat .teacher-row {
+  justify-content: flex-start;
+}
+
+.artifact-modal-chat .student-row {
+  justify-content: flex-end;
+}
+
+.artifact-modal-chat .chat-bubble {
+  max-width: 78%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f4f6f9;
+  display: flex;
+  flex-direction: column;
+  font-size: 13.5px;
+  color: #222;
+  word-wrap: break-word;
+}
+
+.artifact-modal-chat .teacher-bubble {
+  border-bottom-left-radius: 4px;
+}
+
+.artifact-modal-chat .student-bubble {
+  border-bottom-right-radius: 4px;
+  align-items: flex-end;
+  background: #eef4fb;
+}
+
+.artifact-modal-chat .speaker-label {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  margin-bottom: 5px;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.artifact-modal-chat .teacher-bubble .speaker-label {
+  background-color: #fff3cd;
+  color: #8a6d1d;
+}
+
+.artifact-modal-chat .student-bubble .speaker-label {
+  background-color: #e7f3fe;
+  color: #1b4f72;
+}
+
+.artifact-modal-chat .speaker-text {
+  line-height: 1.55;
+  white-space: pre-line;
+}

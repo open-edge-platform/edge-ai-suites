@@ -328,12 +328,15 @@ def check_and_load_simulation_files(target_fps):
         return
 
     continuous_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower() == "true"
+    replay_count = int(os.getenv("SIMULATION_REPLAY_COUNT", "3"))
     first_iteration = True
     while True:
         if first_iteration:
             for i, filename in enumerate(available_files, 1):
                 logger.info(f"  {i}. {filename}")
-                stream_video_and_csv(filename, target_fps=target_fps)
+                for repeat in range(1, replay_count + 1):
+                    logger.info(f"    Playing {filename} ({repeat}/{replay_count})")
+                    stream_video_and_csv(filename, target_fps=target_fps)
         if not continuous_ingestion:
             logger.info("Continuous ingestion disabled. Sleeping...")
             first_iteration = False
@@ -387,7 +390,8 @@ if __name__ == "__main__":
     # All inputs to ffmpeg_cmd are either hardcoded literals, come from
     # _validated_env/_validated_port above, or are numeric values derived
     # from SIMULATION_TARGET_FPS via int() (safe against injection).
-    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+    ffmpeg_proc = subprocess.Popen(  # nosec B603
+        ffmpeg_cmd, stdin=subprocess.PIPE, shell=False)
     check_and_load_simulation_files(target_fps)
 
     if 'ffmpeg_proc' in locals():

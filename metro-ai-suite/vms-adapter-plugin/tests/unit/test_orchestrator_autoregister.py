@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 """Unit tests for NxWitnessVmsShim.on_startup credential restore."""
@@ -17,7 +17,7 @@ from vms_shim.nxwitness.shim import NxWitnessVmsShim
 
 
 _SAMPLE_MANIFESTS = {
-    "integrationManifest": {"id": "dls_vision", "name": "DLStreamer Vision", "version": "1.0.0"},
+    "integrationManifest": {"id": "dls_vision", "name": "DL Streamer Vision", "version": "1.0.0"},
     "engineManifest": {"typeLibrary": {"objectTypes": []}},
     "pinCode": "1234",
 }

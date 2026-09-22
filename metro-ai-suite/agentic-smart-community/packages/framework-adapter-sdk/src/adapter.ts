@@ -5,7 +5,7 @@ import {
   ResourceUpdatedNotificationSchema,
   type ResourceUpdatedNotification,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { Alert } from "@smartbuilding-video/db";
+import type { Alert } from "@smart-community-video/db";
 import { MemoryCursorStore } from "./cursor.js";
 import type {
   AdapterConfig,
@@ -14,19 +14,19 @@ import type {
   Logger,
 } from "./types.js";
 
-const CLIENT_NAME = "smartbuilding-framework-adapter";
+const CLIENT_NAME = "smart-community-framework-adapter";
 const CLIENT_VERSION = "0.1.0";
 
 const DEFAULT_RECONNECT = { initialMs: 1000, maxMs: 30000, factor: 2 } as const;
 
-/** `smartbuilding://monitor/<id>/alerts` — the alerts resource uri for a monitor. */
+/** `smart-community://monitor/<id>/alerts` — the alerts resource uri for a monitor. */
 function alertsUri(monitorId: string): string {
-  return `smartbuilding://monitor/${monitorId}/alerts`;
+  return `smart-community://monitor/${monitorId}/alerts`;
 }
 
 /** Extract the monitor id from an alerts uri, or null if it isn't one. */
 function monitorIdFromUri(uri: string): string | null {
-  const m = /^smartbuilding:\/\/monitor\/([^/]+)\/alerts(?:\?.*)?$/.exec(uri);
+  const m = /^smart-community:\/\/monitor\/([^/]+)\/alerts(?:\?.*)?$/.exec(uri);
   return m ? m[1] : null;
 }
 
@@ -49,7 +49,7 @@ interface AlertsReadResult {
  * - **self-heals on id regression** — if the source db is recreated and alert ids restart lower, a
  *   persisted cursor stranded in the future is detected and reset down (so it can't swallow alerts).
  */
-export class SmartBuildingAdapter {
+export class SmartCommunityAdapter {
   private readonly monitorIds: string[];
   private readonly cursorStore: CursorStore;
   private readonly pollFallbackMs: number;

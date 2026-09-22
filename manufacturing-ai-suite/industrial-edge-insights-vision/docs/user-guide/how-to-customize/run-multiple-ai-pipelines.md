@@ -8,14 +8,17 @@ The DL Streamer Pipeline Server config supports multiple pipelines that you can 
 
 The following demonstrates running two AI pipelines.
 
-> **Note** This guide assumes that the model and sample video are already available in the application directory under `resources/`.
+> [!NOTE]
+> This guide assumes that the model and sample video are already available in the application directory under `resources/`.
 
-> **Note:** If you are running multiple instances of the applications, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> [!NOTE]
+> If you are running multiple instances of the applications, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 1. Bring up the containers.
 
-   > **Note:** If you are running multiple instances of the applications, start the services using `./run.sh up` instead.
+   > [!NOTE]
+   > If you are running multiple instances of the applications, start the services using `./run.sh up` instead.
 
    ```sh
    docker compose up -d
@@ -32,7 +35,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -53,7 +60,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "anomaly1"
+               "peer-id": "anomaly1",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -85,7 +96,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "pddstream"
+               "peer-id": "pddstream",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -106,7 +121,11 @@ The following demonstrates running two AI pipelines.
        "destination": {
            "frame": {
                "type": "webrtc",
-               "peer-id": "anomaly2"
+               "peer-id": "anomaly2",
+               "overlay-properties": {
+                   "font-scale": 1.0,
+                   "draw-txt-bg": false
+               }
            }
        },
        "parameters": {
@@ -150,7 +169,8 @@ The following demonstrates running two AI pipelines.
    ::::
    hide_directive-->
 
-   > **Note:** You can also observe telemetry data from the Prometheus UI. Refer to the [View Open Telemetry Data document](../how-to-extend-functionality/view-telemetry-data.md) to learn more.
+   > [!NOTE]
+   > You can also observe telemetry data from the Prometheus UI. Refer to the [View Open Telemetry Data document](../how-to-extend-functionality/view-telemetry-data.md) to learn more.
 
 5. Stop the 2nd pipeline using the instance ID noted in point #3 above, before proceeding with this documentation.
 

@@ -14,34 +14,36 @@ This page provides detailed hardware, software, platform requirements, and suppo
 - **Python**: 3.12
 - **Node.js**: v18+ (for frontend)
 
-## Audio Pipeline Supported Models  
+## Audio Pipeline Supported Models
 
-### ASR (Automatic Speech Recognition)  
+### ASR (Automatic Speech Recognition)
 
-- **Whisper (all models supported)**  
-  - Recommended: `whisper-small` or lower for CPU efficiency  
-  - Runs on **CPU** (Whisper is CPU-centric)  
-- **FunASR (Paraformer)**  
+- **Whisper (all models supported)**
+  - Recommended: `whisper-small` or lower for CPU efficiency
+  - Runs on **CPU** (Whisper is CPU-centric)
+- **FunASR (Paraformer)**
   - Recommended for **Chinese transcription** (`paraformer-zh`)
--  Supports transcription of .mp3/.wav audio files up to 45 minutes long.
+- Supports transcription of .mp3/.wav audio files up to 45 minutes long.
 
-###  Summarization (LLMs)  
-- **Qwen Models (OpenVINO / IPEX)**  
-  - `Qwen2.0-7B-Instruct`  
-  -  `Qwen2.5-7B-Instruct`
--  Summarization supports up to 7,500 tokens (≈ 45 minutes of audio) on GPU
--  Run summarization on **GPU** (Intel® iGPU / Arc GPU) for faster performance.
+### Summarization (LLMs)
+
+- **Qwen Models (OpenVINO™)**
+  - `Qwen3-VL-8B-Instruct` (default, shared vision-language model)
+  - `Qwen3.5-9B`
+- Summarization supports up to 5,120 tokens on GPU
+- Run summarization on **GPU** (Intel® iGPU / Arc GPU) for faster performance.
 
 ### Content Segmentation and Topic Search
 
-- **Embedding Model**: `BAAI/bge-large-en-v1.5` for semantic topic indexing and search
-- **Vector Store**: FAISS (IndexFlatIP with cosine similarity)
-- Content segmentation uses the same LLM as summarization (e.g., Qwen2.5-7B-Instruct)
+- **Embedding Model**: `intfloat/multilingual-e5-small` for semantic topic indexing and search
+- **Vector Store**: ChromaDB
+- **Content segmentation**: uses the shared vision-language model (`Qwen3-VL-8B-Instruct` by default)
 
-###  Supported Weight Formats  
-- **int8** → Recommended for lower-end CPUs (fast + efficient)  
-- **fp16** → Recommended for higher-end systems (better accuracy, GPU acceleration)  
-- **int4** → Supported, but may reduce accuracy (use only if memory-constrained)  
+### Supported Weight Formats
+
+- **int4** → Recommended default (fast + memory-efficient on GPU)
+- **int8** → Higher accuracy, larger memory footprint
+- **fp16** → Full precision (use only if sufficient memory available)
 
 ## Video Analytics Pipeline
 
@@ -55,13 +57,15 @@ For pipeline architecture and processing stages, see [How It Works](../how-it-wo
 
 | Model | Format | Used In | Purpose |
 | ----- | ------ | ------- | ------- |
-| **YOLOv8m-pose** | OpenVINO IR | Front pipeline | Person detection + 17-keypoint pose estimation |
-| **YOLOv8s-pose** | OpenVINO IR | Back pipeline | Lightweight person detection + pose estimation |
-| **ResNet-18** | OpenVINO IR | Front, Back, Content | Activity/action classification |
-| **MobileNet-V2** | OpenVINO IR | Front pipeline | Lightweight classification |
-| **Person-ReID-retail-0288** | OpenVINO IR | Front pipeline | Person re-identification and tracking |
+| **YOLOv8m-pose** (default) | OpenVINO™ IR | Front pipeline | Person detection + 17-keypoint pose estimation |
+| **YOLOv8s-pose** (default) | OpenVINO™ IR | Back pipeline | Lightweight person detection + pose estimation |
+| **YOLO11m/s-pose** | OpenVINO™ IR | Front / Back pipeline | Alternative pose model |
+| **YOLO26m/s-pose** | OpenVINO™ IR | Front / Back pipeline | Alternative pose model |
+| **ResNet-18** | OpenVINO™ IR | Front, Back, Content | Activity/action classification |
+| **MobileNet-V2** | OpenVINO™ IR | Front pipeline | Lightweight classification |
+| **Person-ReID-retail-0288** | OpenVINO™ IR | Front pipeline | Person re-identification and tracking |
 
-- All models run in OpenVINO Intermediate Representation (IR) format
+- All models run in OpenVINO™ Intermediate Representation (IR) format
 - Inference supported on **CPU**, **GPU**, and **NPU** (configurable per pipeline)
 - Default inference device: **NPU** (recommended for best performance on Intel® Core Ultra)
 
@@ -71,10 +75,10 @@ For pipeline architecture and processing stages, see [How It Works](../how-it-wo
 
 | Model | Purpose | Device |
 | ----- | ------- | ------ |
-| **Qwen2.5-VL-3B-Instruct** | Vision Language Model for video summarization | GPU |
-| **xlm-roberta-base-ViT-B-32** (CLIP) | Visual embedding for images and video frames | CPU |
-| **BAAI/bge-small-en-v1.5** | Text embedding for document chunks | CPU |
-| **BAAI/bge-reranker-large** | Cross-encoder reranking for search results | GPU |
+| **Qwen3-VL-8B-Instruct** | Vision Language Model for video summarization and Q&A | GPU |
+| **CLIP/clip-xlm-roberta-base-vit-b-32** | Visual embedding for images and video frames | CPU |
+| **intfloat/multilingual-e5-small** | Text embedding for document chunks | CPU |
+| **BAAI/bge-reranker-base** | Cross-encoder reranking for search results | CPU |
 
 ### Supported File Formats
 

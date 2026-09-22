@@ -16,7 +16,13 @@ os.environ["APM_API_KEY"]           = "test-key"
 import respx
 import httpx
 from fastapi.testclient import TestClient
+import src.app as app_module
 from src.app import app
+
+app_module._AGENT_URL = "http://mock-agent"
+app_module._DETECTION_URL = "http://mock-detection"
+app_module._STORAGE_URL = "http://mock-storage"
+app_module._USE_CASE_ID = "test-case"
 
 
 @pytest.fixture(scope="module")
@@ -54,18 +60,20 @@ def test_index_with_summary(client):
 
 @respx.mock
 def test_index_merges_detection_and_agent_runs(client):
+    completed_run_id = "11111111-2222-3333-4444-555555555555"
     respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     respx.get("http://mock-detection/detection/runs").mock(return_value=httpx.Response(200, json=[
-        {"run_id": "r1", "status": "completed", "phase": "completed", "result": {}},
+        {"run_id": completed_run_id, "status": "completed", "phase": "completed", "result": {}},
         {"run_id": "r2", "status": "running", "phase": "detecting", "result": None},
     ]))
     respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[
-        {"run_id": "r1", "status": "completed", "phase": "completed"},
+        {"run_id": completed_run_id, "status": "completed", "phase": "completed"},
     ]))
     r = client.get("/")
     assert r.status_code == 200
-    assert "r1"[:8] in r.text or "r1" in r.text
+    assert completed_run_id in r.text
+    assert f"/chat?run_id={completed_run_id}" in r.text
 
 
 @respx.mock

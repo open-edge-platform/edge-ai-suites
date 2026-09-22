@@ -6,7 +6,7 @@ General instructions for helm based deployment is as follows. This assumes you h
 2. Run `./setup.sh helm` to set env file for scripts to source and identify application specific data such as `HOST_IP`, `REST_SERVER_PORT` and `SAMPLE_APP` directory.
 3. Install the helm chart to deploy the app to Kubernetes
 4. Copy the resources to container volumes. This is done so that deployments such as ITEP can run where volumes mounts are not feasible.
-5. Run `sample_start.sh` to start pipeline. This sends curl request with pre-defined payload to the running DLStreamer Pipeline Server.
+5. Run `sample_start.sh` to start pipeline. This sends curl request with pre-defined payload to the running DL Streamer Pipeline Server.
 6. Run `sample_status.sh` or `sample_list.sh` to monitor pipeline status or list available pipelines.
 7. Run `sample_stop.sh` to abort any running pipeline(s).
 8. Uninstall the helm chart.

@@ -1,4 +1,4 @@
-FROM docker.io/library/node:26.1.0
+FROM docker.io/library/node:26.7.0
 
 USER root
 
@@ -14,6 +14,18 @@ WORKDIR /usr/src/app
 
 # Upgrade npm to latest package version
 RUN npm install -g npm@latest
+
+# Patch npm's own bundled vulnerable deps by installing into a temp dir and copying in-place
+RUN tmpdir=$(mktemp -d) && \
+    cd "$tmpdir" && \
+    echo '{}' > package.json && \
+    npm install --no-fund --no-audit --ignore-scripts \
+      brace-expansion@5.0.9 ip-address@10.3.1 tar@7.5.21 && \
+    npm_pkg_dir=$(npm root -g)/npm/node_modules && \
+    rm -rf "$npm_pkg_dir/brace-expansion" && cp -r node_modules/brace-expansion "$npm_pkg_dir/" && \
+    rm -rf "$npm_pkg_dir/ip-address"     && cp -r node_modules/ip-address "$npm_pkg_dir/" && \
+    rm -rf "$npm_pkg_dir/tar"            && cp -r node_modules/tar "$npm_pkg_dir/" && \
+    rm -rf "$tmpdir"
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./

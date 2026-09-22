@@ -38,10 +38,11 @@ Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
 ## Tutorial on how to use NPU specific pipelines
 
-> **Note:** This sample application already provides a default `compose-without-scenescape.yml`
+> [!NOTE]
+> This sample application already provides a default `compose-without-scenescape.yml`
 > file that includes the necessary NPU access to the containers.
 
-The pipeline `object_tracking_npu` in DL Streamer Pipeline Server's [config.json](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/configs/sample_npu_decode_and_inference/config.json)
+The pipeline `object_tracking_npu` in DL Streamer Pipeline Server's [config.json](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/src/dlstreamer-pipeline-server/config.json)
 contains NPU specific elements and uses NPU backend for inferencing. We can start the pipeline
 as follows:
 

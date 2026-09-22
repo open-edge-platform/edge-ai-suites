@@ -11,6 +11,8 @@ spec:
       app: minio-service
   template:
     metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/minio-service-configmap.yaml") . | sha256sum }}
       labels:
         app: minio-service
         {{- include "lvs.minio.selectorLabels" . | nindent 8 }}

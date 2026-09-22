@@ -5,7 +5,8 @@ from fastapi import APIRouter, HTTPException
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
-from utils.config_loader import config
+from utils.pipeline_catalog import FEATURE_STAGE
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -13,10 +14,11 @@ router = APIRouter()
 
 
 @router.post("/mindmap")
-async def generate_mindmap(request: SummaryRequest):
+def generate_mindmap(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
     try:
-        mindmap_text = pipeline.run_mindmap()
+        with stage_tracker(pipeline.session_id, FEATURE_STAGE["mindmap"]):
+            mindmap_text = pipeline.run_mindmap()
         logger.info("Mindmap generated successfully.")
         return {"mindmap": mindmap_text, "error": ""}
     except HTTPException as http_exc:
@@ -32,19 +34,13 @@ async def generate_mindmap(request: SummaryRequest):
 class MindmapFeature:
     id: str = "mindmap"
     requires: List[str] = ["text_gen"]
-    depends_on: List[str] = ["summary"]
+    # label / depends_on / stage: utils/pipeline_catalog.py
     router: APIRouter = router
 
-    def __init__(self) -> None:
-        self.system_prompt = None
-
     def build(self) -> None:
-        mindmap_cfg = getattr(config, "mindmap", None)
-        self.system_prompt = getattr(mindmap_cfg, "system_prompt", None)
         logger.info("MindmapFeature built.")
 
     def teardown(self) -> None:
-        self.system_prompt = None
         logger.info("MindmapFeature torn down.")
 
     def ui_descriptor(self) -> Dict:

@@ -21,7 +21,7 @@ from components.report_generator.prompts import (
 from utils.config_loader import config
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
-from utils.locks import audio_pipeline_lock
+from utils.session_paths import SessionPaths
 from components.report_generator.template_manager import (
     get_template_path,
     extract_template_structure,
@@ -55,7 +55,7 @@ class ReportGenerator:
     # Selection coupling rules: when ``primary`` is unchecked, all ``hide``
     # fields are force-hidden (can override always_on).
     _SELECTION_HIDE_RULES = (
-        {"primary": "keywords", "hide": ("keywords_count",)},
+        {"primary": "keywords", "hide": ("keywords_count_note",)},
     )
 
     def __init__(self, session_id: str, model=None, template_name: str = None,
@@ -71,12 +71,8 @@ class ReportGenerator:
         self.collected_by_source = {}
 
     def _get_session_dir(self) -> str:
-        project_config = RuntimeConfig.get_section("Project")
-        return os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id,
-        )
+        """Directory holding this session's generated deliverables."""
+        return str(SessionPaths.result_dir(self.session_id))
 
     def _collect_all_data(self):
         """Deterministically collect all available session data."""
@@ -95,8 +91,8 @@ class ReportGenerator:
                 self.collected_data.append(f"[{source_name}] {result}")
                 self.collected_by_source[source_name] = result
 
-    def _build_generated_fill_prompt(self, template_structure: dict, gen_codes: list, raw_values: dict) -> str:
-        """Build the split-fill prompt asking the LLM for ONLY the generated fields.
+    def _build_generated_fill_messages(self, template_structure: dict, gen_codes: list, raw_values: dict) -> list:
+        """Build the split-fill chat history asking the LLM for ONLY the generated fields.
 
         Measured raw values are passed as Known Facts for grounding but are not
         requested back from the model.
@@ -130,13 +126,10 @@ class ReportGenerator:
                 field_definitions=field_definitions,
             )
 
-        messages = [
+        return [
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_content},
         ]
-        return self.model.tokenizer.apply_chat_template(
-            messages, tokenize=False, add_generation_prompt=True,
-        )
 
     def generate_report(self):
         """
@@ -145,16 +138,6 @@ class ReportGenerator:
         """
         if self.model is None:
             raise RuntimeError("ReportGenerator requires a model instance.")
-
-        if audio_pipeline_lock.locked():
-            busy_msg = (
-                "当前音频处理正在进行中，请等待转录/摘要完成后再生成报告。"
-                if self.language == "zh"
-                else "Audio processing is in progress. Please wait for transcription/summary to complete."
-            )
-            logger.warning("[ReportGenerator] audio_pipeline_lock is held, refusing to start.")
-            yield {"type": "token", "content": busy_msg}
-            return
 
         start = time.perf_counter()
 
@@ -224,25 +207,40 @@ class ReportGenerator:
             yield {"type": "partial_report", "content": interim_md}
 
         llm_values = {}
+        # Fallback for AI-generated fields we can't fill: when the LLM errors out
+        # or returns unparseable/partial JSON, mark ONLY those fields as
+        # unavailable instead of discarding the whole report. The measured raw
+        # fields (statistics, mindmap, transcription, manual inputs) are already
+        # resolved and stay intact, so the teacher keeps a usable report.
+        na_placeholder = "无数据" if self.language == "zh" else "N/A"
         if gen_codes:
-            gen_prompt = self._build_generated_fill_prompt(structure, gen_codes, raw_values)
+            gen_messages = self._build_generated_fill_messages(structure, gen_codes, raw_values)
+            llm_failed = False
+            json_response = None
             try:
-                json_response = self.model.generate(gen_prompt, stream=False)
+                json_response = self.model.generate(
+                    messages=gen_messages, stream=False, enable_thinking=False
+                )
                 if isinstance(json_response, str) and json_response.startswith("[ERROR]:"):
                     raise RuntimeError(json_response)
             except RuntimeError as e:
-                logger.error(f"[ReportGenerator] LLM failed during template fill: {e}")
-                err_msg = (
-                    "报告生成失败：LLM服务超时或出错，请稍后重试。"
-                    if self.language == "zh"
-                    else "Report generation failed. Please try again."
-                )
-                yield {"type": "token", "content": f"[ERROR]: {err_msg}"}
-                return
+                logger.error(f"[ReportGenerator] LLM failed during template fill: {e}. "
+                             f"Marking {len(gen_codes)} generated fields as '{na_placeholder}'.")
+                llm_failed = True
 
             first_token_time = time.perf_counter()
-            llm_values = parse_llm_json_response(json_response)
-            logger.info(f"[ReportGenerator] Parsed {len(llm_values)} generated fields from LLM.")
+            llm_values = {} if llm_failed else parse_llm_json_response(json_response)
+            # Any generated field the LLM omitted (or all of them, on failure /
+            # parse error) defaults to N/A so no interim "Generating…" or raw
+            # {{placeholder}} leaks into the finished report.
+            missing = 0
+            for c in gen_codes:
+                v = llm_values.get(c)
+                if v is None or (isinstance(v, str) and not v.strip()):
+                    llm_values[c] = na_placeholder
+                    missing += 1
+            logger.info(f"[ReportGenerator] Filled {len(gen_codes) - missing} generated fields "
+                        f"from LLM, {missing} defaulted to '{na_placeholder}'.")
         else:
             first_token_time = time.perf_counter()
             logger.info("[ReportGenerator] No generated fields; skipping LLM.")
@@ -272,7 +270,7 @@ class ReportGenerator:
         )
 
         StorageManager.update_csv(
-            path=os.path.join(session_dir, "performance_metrics.csv"),
+            path=str(SessionPaths.metrics_path(self.session_id)),
             new_data={
                 "performance.report_collect_time": round(collect_time, 4),
                 "performance.report_generation_time": round(generation_time, 4),

@@ -1,0 +1,12 @@
+{request}
+
+{transcript}
+
+CRITICAL INSTRUCTIONS:
+1. READ the actual text at each timestamp range BEFORE writing the topic title
+2. Topic titles must describe what IS said, not what you think should be said
+{output_constraint}
+4. Each topic title must be a descriptive 10–15 word sentence useful for semantic search.
+{language_rule}
+6. Topic titles are critical—they are embedded and searchable, so make them clear and complete.
+7. VERIFY: For each topic, check that the title matches the actual content in that time range.

@@ -4,7 +4,7 @@ The OpenClaw-based agent functions as the "Teacher Assistant" persona that enabl
 
 > **Data note:** This demo uses sample input data from `workspace/smart_classroom_incoming`. You can add your own data to `~/.openclaw/workspace/smart_classroom_incoming` for custom analysis.
 
-```
+```text
 ┌─────────────────────────────────────────────────────────┐
 │                  Teacher Assistant Demo                 │
 │                                                         │
@@ -44,7 +44,8 @@ The following tools must be available on the system:
 
 Perform the following steps to setup OpenClaw agent for the Teacher Assistant demo.
 
-> **Tip:** Copy and run each command block as a whole.  
+> [!TIP]
+> Copy and run each command block as a whole.
 > Commands use `&&`, so the next command runs only if the previous one succeeds.
 
 ---
@@ -70,7 +71,8 @@ Run the following script to start the OVMS container in the background:
 ./setup-ovms.sh
 ```
 
-> **Note:** The first run downloads the model (~5GB), so this step may take a few minutes.
+> [!NOTE]
+> The first run downloads the model (~5GB), so this step may take a few minutes.
 
 ---
 
@@ -100,7 +102,7 @@ If the model isn't ready in time, the script stops with clear next steps on scre
 
 Try this example prompt to verify the agent works:
 
-```
+```text
 Summarize the lesson from June 15
 ```
 

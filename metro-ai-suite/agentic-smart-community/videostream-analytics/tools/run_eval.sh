@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-# run_eval.sh — End-to-end prefilter evaluation across all phase-2 scenarios.
+# run_eval.sh — End-to-end prefilter evaluation across all demo scenarios.
 #
 # Background
-#   Design doc lists 3 use cases: child_safety, elder_wakeup, refrigerator_monitor
-#   (smartbuilding-video-design-2026.2.md §1).
-#   In test-videostream-analytics.sh these expand to 4 scenarios because
-#   elder_wakeup has two independent input videos. Fridge runs with
-#   prefilter=disabled, so its
-#   "evaluation" is a smoke test only (motion events arrive → PASS).
+#   The demo has 4 evaluation scenarios: child (child_safety), fridge
+#   (refrigerator_monitor) and two elder_wakeup videos (elder_day1 / elder_day2).
+#   Fridge runs with prefilter=disabled (target_classes=person would filter out
+#   hand-only motion), so its "evaluation" is a smoke test only
+#   (motion events arrive → PASS).
 #
 # Scenarios (matching scripts/test-videostream-analytics.sh)
 #   child       cam_child            VSA_EVAL_CHILD_VIDEO              ss=40 prefilter=on  GT yes
@@ -149,7 +148,7 @@ fi
 info "Starting mock webhook on :$WEBHOOK_PORT..."
 cd "$PROJECT_DIR"
 $PYTHON -m uvicorn tests.integration.mock_webhook_server:app \
-    --host 0.0.0.0 --port "$WEBHOOK_PORT" --log-level warning &
+    --host 127.0.0.1 --port "$WEBHOOK_PORT" --log-level warning &
 MOCK_PID=$!
 sleep 2
 curl -sf "http://localhost:$WEBHOOK_PORT/health" >/dev/null \
@@ -158,7 +157,7 @@ ok "Mock webhook up (pid $MOCK_PID)"
 
 info "Starting analytics on :$ANALYTICS_PORT..."
 WEBHOOK_URL="http://localhost:$WEBHOOK_PORT/events" \
-    $PYTHON __main__.py --host 0.0.0.0 --port "$ANALYTICS_PORT" --config config/config.yaml &
+    $PYTHON __main__.py --host 127.0.0.1 --port "$ANALYTICS_PORT" --config config/config.yaml &
 ANALYTICS_PID=$!
 for _ in {1..15}; do
     curl -sf "http://localhost:$ANALYTICS_PORT/health" >/dev/null 2>&1 && break

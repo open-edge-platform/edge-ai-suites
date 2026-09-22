@@ -40,9 +40,9 @@ spec:
           {{- tpl (include "scene.startup-script" .) . | nindent 10 }}
         volumeMounts:
         - name: pgserver-media
-          mountPath: /home/scenescape/SceneScape/media
+          mountPath: /home/scenescape/Scenescape/media
         - name: tracker-config
-          mountPath: /home/scenescape/SceneScape/tracker-config.json
+          mountPath: /home/scenescape/Scenescape/tracker-config.json
           subPath: tracker-config.json
         - mountPath: /tmp/secrets_
           name: secrets

@@ -1,1 +1,5 @@
+{{- $backend := lower (.Values.global.vectordbBackend | default "vdms") -}}
+{{- if not (has $backend (list "vdms" "milvus")) -}}
+{{- fail (printf "global.vectordbBackend must be 'vdms' or 'milvus' (got %q)" $backend) -}}
+{{- end -}}
 {{- include "lvs.root.validate" . -}}

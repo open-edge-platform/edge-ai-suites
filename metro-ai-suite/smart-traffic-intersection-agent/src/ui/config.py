@@ -14,7 +14,6 @@ class Config:
     def get_all_settings(cls) -> Dict[str, Any]:
         """Get all configuration settings as a dictionary"""
         return {
-            "refresh_interval": cls.get_refresh_interval(),
             "api_url": cls.get_api_url(),
             "app_title": cls.get_app_title(),
             "app_port": cls.get_app_port(),
@@ -40,10 +39,6 @@ class Config:
         if value:
             return value
         return default
-    
-    @classmethod
-    def get_refresh_interval(cls) -> float:
-        return float(cls.get_value_from_env("REFRESH_INTERVAL", 10.0))
     
     @classmethod
     def get_api_url(cls) -> str:
@@ -72,6 +67,12 @@ class Config:
     @classmethod
     def get_moderate_density_threshold(cls) -> int:
         return int(cls.get_value_from_env("MODERATE_DENSITY_THRESHOLD", 5))
+
+    @classmethod
+    def get_camera_stale_threshold_seconds(cls) -> float:
+        """Seconds since a camera image was captured before it is flagged
+        as stale/frozen in the UI (ITEP-92089 mitigation)."""
+        return float(cls.get_value_from_env("CAMERA_STALE_THRESHOLD_SECONDS", 30.0))
 
     @staticmethod
     def get_metrics_stream_url() -> str:

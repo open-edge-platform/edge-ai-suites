@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+namespace: dlstreamer
+description: Intel DL Streamer — Video analytics pipeline framework
+version: "1.0"
+
+tools:
+  - id: build_pipeline
+    description: >
+      Build a DL Streamer video analytics application from a natural-language description.
+      Creates complete pipelines with detection, tracking, classification, or VLM inference.
+      Runs in Intel DL Streamer Docker containers with CPU/GPU/NPU support.
+    parameters:
+      type: object
+      properties:
+        description:
+          type: string
+          description: Natural-language description of the video AI pipeline to build
+        video_source:
+          type: string
+          description: "Video input: local file path, HTTP URL, or RTSP URI"
+        model:
+          type: string
+          description: "Model name or HuggingFace URL (e.g., yolo11n, RTDETR, Qwen2.5-VL)"
+        app_type:
+          type: string
+          enum: [python, gst-launch]
+          description: Python application or GStreamer command line
+        device:
+          type: string
+          enum: [CPU, GPU, NPU, AUTO]
+          description: Intel hardware target for inference
+      required: [description]
+    handler: build_pipeline
+    timeout: 600
+
+  - id: list_samples
+    description: >
+      List available DL Streamer sample applications. Returns sample names, descriptions,
+      key patterns, and file paths. Use to find reference implementations before building.
+    parameters:
+      type: object
+      properties:
+        filter:
+          type: string
+          description: "Filter by keyword (e.g., 'detection', 'tracking', 'vlm', 'audio')"
+        type:
+          type: string
+          enum: [python, cli, all]
+          description: Filter by application type
+      required: []
+    handler: list_samples
+
+  - id: run_sample
+    description: >
+      Run an existing DL Streamer sample application in Docker.
+      Pulls the latest weekly image and executes the specified sample.
+    parameters:
+      type: object
+      properties:
+        sample_path:
+          type: string
+          description: "Relative path to sample directory (e.g., samples/gstreamer/python/hello_dlstreamer)"
+        video_input:
+          type: string
+          description: Video file path or URL for the sample
+        device:
+          type: string
+          enum: [CPU, GPU, NPU]
+          description: Inference device
+      required: [sample_path]
+    handler: run_sample
+    timeout: 300
+
+  - id: download_models
+    description: >
+      Download pre-trained models for DL Streamer inference.
+      Supports OpenVINO Model Zoo, HuggingFace, and Ultralytics sources.
+    parameters:
+      type: object
+      properties:
+        model_name:
+          type: string
+          description: "Model name (e.g., yolov8n, person-detection-retail-0013)"
+        source:
+          type: string
+          enum: [openvino, huggingface, ultralytics]
+          description: Model source repository
+        output_dir:
+          type: string
+          description: Directory to save downloaded model
+      required: [model_name]
+    handler: download_models
+    timeout: 600

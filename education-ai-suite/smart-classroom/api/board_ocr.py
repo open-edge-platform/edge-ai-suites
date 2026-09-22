@@ -8,11 +8,10 @@ from fastapi import APIRouter, Header
 from fastapi.responses import JSONResponse
 
 from components.board_ocr.board_ocr_service import (
-    _normalize_board_text,
+    combined_board_text,
     read_board_ocr,
 )
 from utils.config_loader import config
-from utils.markdown_cleaner import strip_think_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +21,9 @@ board_ocr_router = APIRouter()
 def _board_summary_system_prompt(lang: str) -> str:
     """Standalone system prompt for summarizing board/screen OCR text.
 
-    Distinct from ``config.models.summarizer.board_ocr_prompt`` (which is phrased
-    as an addendum to the audio-transcript summary); this one stands on its own
-    for the /board-ocr/summary endpoint.
+    Distinct from ``prompts/summarizer/<lang>/board_ocr_addendum.txt`` (which is
+    phrased as an addendum to the audio-transcript summary); this one stands on
+    its own for the /board-ocr/summary endpoint.
     """
     if lang == "zh":
         return (
@@ -67,7 +66,7 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
     from model_manager import ModelManager
 
     board = read_board_ocr(session_id)
-    board_text = _normalize_board_text(board.get("text") or "")
+    board_text = combined_board_text(board)
 
     if not board_text:
         logger.info(
@@ -85,24 +84,12 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
 
     tg = ModelManager.instance().text_gen()
 
-    model_name = str(config.models.text_gen.vlm_name)
-    user_content = board_text
-    if "qwen3" in model_name.lower() and not user_content.lstrip().startswith("/no_think"):
-        user_content = "/no_think\n" + board_text
-
     messages = [
         {"role": "system", "content": _board_summary_system_prompt(config.app.language)},
-        {"role": "user", "content": user_content},
+        {"role": "user", "content": board_text},
     ]
-    prompt = tg.tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-        enable_thinking=False,
-    )
-
-    raw = tg.generate(prompt, stream=False)
-    summary = strip_think_tokens(raw if isinstance(raw, str) else "".join(raw))
+    raw = tg.generate(messages=messages, stream=False, enable_thinking=False)
+    summary = raw if isinstance(raw, str) else "".join(raw)
 
     logger.info(
         f"Board OCR summary generated for session {board['session_id']} "

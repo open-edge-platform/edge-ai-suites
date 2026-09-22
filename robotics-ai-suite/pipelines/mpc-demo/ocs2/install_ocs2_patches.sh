@@ -31,7 +31,11 @@ if [ "$#" -eq 1 ]; then
         echo "Error: File '$PATCH_LIST_FILE' not found!"
         exit 1
     fi
-    
+
+    # Resolve to an absolute path before changing directory, so the patch-list
+    # redirection below still works after 'cd' into the submodule.
+    PATCH_LIST_FILE="$(cd "$(dirname "$PATCH_LIST_FILE")" && pwd)/$(basename "$PATCH_LIST_FILE")"
+
     cd ocs2
     # Apply patches from file
     while IFS= read -r PATCH_FILE; do

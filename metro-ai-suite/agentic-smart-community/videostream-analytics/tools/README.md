@@ -27,8 +27,8 @@ timeline. Pure stdout, no matplotlib — works over SSH and in CI logs.
 When to use it: a Recall < 100% or a non-zero FP count from `run_eval.sh`.
 The timeline tells you whether the gap is a *detection* problem (cue has no
 event nearby at all) or a *time-window alignment* problem (event is right
-next to the cue but missed by a fraction of a second). Fridge §24.6 was the
-latter — `--tolerance 2.0` recovers it.
+next to the cue but missed by a fraction of a second — `--tolerance 2.0`
+recovers those).
 
 ```bash
 # Use the dumps run_eval.sh leaves behind (file paths printed at end of run):
@@ -53,19 +53,20 @@ from the evaluator.
 ## run_eval.sh — one-shot end-to-end evaluation across all scenarios
 
 Wraps the manual recipe (mediamtx → mock webhook → analytics → ffmpeg push →
-register source → wait → evaluate) for every phase-2 scenario into one
+register source → wait → evaluate) for every demo scenario into one
 command. Trap-based cleanup so nothing leaks on Ctrl-C.
 
 ### Scenarios
 
-Design doc lists 3 use cases (`child_safety`, `elder_wakeup`,
+The demo covers 3 use cases (`child_safety`, `elder_wakeup`,
 `refrigerator_monitor`); they expand to 4 scenarios because `elder_wakeup`
-has 2 input videos:
+has 2 input videos. (`use_case` is only a label here — it is not part of the
+register API; per-scenario behavior comes from the `pipeline` config.)
 
-| Scenario | source_id | Use case | Video | ss | Prefilter | GT |
+| Scenario | source_id | Demo use case | Video | ss | Prefilter | GT |
 |---|---|---|---|---|---|---|
 | `child` | cam_child | child_safety | `VSA_EVAL_CHILD_VIDEO` | 40 | on | yes |
-| `fridge` | cam_fridge | fridge | `VSA_EVAL_FRIDGE_VIDEO` | 0 | **off** | yes (4 [TAKE] cues) |
+| `fridge` | cam_fridge | refrigerator_monitor | `VSA_EVAL_FRIDGE_VIDEO` | 0 | **off** | yes (4 [TAKE] cues) |
 | `elder_day1` | cam_elder_bedroom | elder_wakeup | `VSA_EVAL_ELDER_VIDEO` | 0 | on | yes (excl `[EMPTY]`) |
 | `elder_day2` | cam_elder_bedroom_2 | elder_wakeup | `VSA_EVAL_ELDER_2_VIDEO` | 0 | on | yes (excl `[EMPTY]`) |
 
@@ -124,16 +125,15 @@ the exact `kill $(lsof ...)` command.
 
 ## eval_prefilter_from_webhook.py
 
-Webhook-source variant of the phase-2 prototype's `eval_prefilter_coverage.py`.
-Computes prefilter `Recall` and `Precision` against a GT SRT.
+Computes prefilter `Recall` and `Precision` against a GT SRT, reading motion
+events from the mock webhook (or a saved dump of it).
 
 ### Why `--ss` and `--anchor-mode` matter
 
-The phase-2 prototype evaluator did not need any anchor parameter because the
-prototype ran on a `cv2.VideoCapture(file.mp4)` loop — `start_video_s = frame_count / fps`
-is naturally in the same coordinate as the GT SRT. This service is RTSP-only:
-events carry wall-clock ISO timestamps, never video seconds. So we need to
-align wall-clock T0 to a known point in the video.
+This service is RTSP-only: events carry wall-clock ISO timestamps, never
+video seconds. A GT SRT cue, on the other hand, is in *video time* (seconds
+since stream start). So we need to align wall-clock T0 to a known point in
+the video.
 
 Three modes (recommended → fallback):
 
@@ -149,18 +149,26 @@ pushing the demo video. For `scripts/test-videostream-analytics.sh` this is
 
 ### End-to-end recipe (recommended)
 
+The easiest path is `run_eval.sh`, which drives the whole flow and evaluates
+at the end. To re-evaluate manually against a live service:
+
 ```bash
 cd videostream-analytics
 
-# 1. Start the test scenario in one terminal — leave it running:
-bash scripts/test-videostream-analytics.sh --local --integration-only
+# 1. Run a scenario with --keep so the services stay up afterwards:
+VSA_EVAL_CHILD_VIDEO=<path-to-child.mp4> bash tools/run_eval.sh --scenario child --keep
 
-# 2. In another terminal, evaluate while the service is still up.
-#    --anchor-mode stream-start asks the service for the real stream-open time.
+# 2. Re-evaluate while the service is still up (e.g. with a different
+#    tolerance). --anchor-mode stream-start asks the service for the real
+#    stream-open time.
 .venv/bin/python tools/eval_prefilter_from_webhook.py \
   --srt ../demo/videos/cam_child/child_safety_demo_groundtruth.srt \
     --source-id cam_child --ss 40
 ```
+
+(The same flow works against `scripts/test-videostream-analytics.sh --local
+--integration-only`, but that suite registers short-lived `test_*` sources
+rather than `cam_child`, so pass the matching `--source-id`.)
 
 ### Offline replay (after service shut down)
 
@@ -181,15 +189,10 @@ curl -s http://localhost:9999/recorded_events > /tmp/child_events.json
 ### What it can NOT measure
 
 - `prefilter_skip` count, skip rate, `PARTIAL` status.
-  These need the in-process `pipeline.db.tasks` table that only the phase-2
-  prototype writes. The new microservice stays silent on skip, so anything that
-  motion+prefilter together dropped just shows up as `MISS`.
-  For that breakdown, run the prototype's
-  `phase2-prototype-demo/tools/eval_prefilter_coverage.py` on its `pipeline.db`.
+  The service posts events to a webhook and never persists tasks locally;
+  the prefilter stays silent on skip, so anything that motion+prefilter
+  together dropped just shows up as `MISS`.
 
 - VLM alert accuracy (Recall/Precision/F1, alert latency).
-  That belongs to the MCP Server side: it owns the `alerts` table populated by
-  `evaluate_rules`. Once the full link `videostream-analytics → /events → VLM →
-  alert` is wired, point the prototype's `eval_alert_accuracy.py` at the MCP
-  Server's per-monitor DB (it's schema-compatible by design — see
-  `docs/design/db-schema-design.md`).
+  That belongs to the MCP Server side, which owns the alerts produced from
+  the `videostream-analytics → /events → VLM → alert` link.

@@ -1,0 +1,102 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Milvus vector database backend overlay for Live Video Search.
+# Apply on top of compose.search.yaml by setting VECTORDB_BACKEND=milvus.
+#
+# Backend-specific dependency maps use !override so Compose replaces the VDMS
+# dependencies inherited from compose.search.yaml instead of merging both
+# database backends into the resolved service graph.
+services:
+  vdms-vector-db: !reset null
+
+  milvus-etcd:
+    image: quay.io/coreos/etcd:v3.5.18
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: "1000"
+      ETCD_QUOTA_BACKEND_BYTES: "4294967296"
+      ETCD_SNAPSHOT_COUNT: "50000"
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: ""
+    command: >
+      etcd
+      -advertise-client-urls=http://127.0.0.1:2379
+      -listen-client-urls http://0.0.0.0:2379
+      --data-dir /etcd
+    volumes:
+      - milvus_etcd:/etcd
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - live-video-network
+
+  milvus-standalone:
+    image: ${MILVUS_IMAGE:-milvusdb/milvus:v2.6.14}
+    hostname: milvus-standalone
+    command: ["milvus", "run", "standalone"]
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      ETCD_ENDPOINTS: milvus-etcd:2379
+      COMMON_STORAGETYPE: "local"
+      http_proxy: ""
+      https_proxy: ""
+      no_proxy: ""
+      HTTP_PROXY: ""
+      HTTPS_PROXY: ""
+      NO_PROXY: ""
+    ports:
+      - "${MILVUS_HOST_PORT:-19530}:19530"
+      - "${MILVUS_METRICS_HOST_PORT:-9091}:9091"
+    volumes:
+      - milvus_db:/var/lib/milvus
+    depends_on:
+      milvus-etcd:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 20s
+      retries: 10
+      start_period: 90s
+    networks:
+      - live-video-network
+
+  vector-retriever:
+    depends_on: !override
+      multimodal-embedding-serving:
+        condition: service_healthy
+      milvus-standalone:
+        condition: service_healthy
+
+  multimodal-dataprep:
+    depends_on: !override
+      minio-service:
+        condition: service_healthy
+      milvus-standalone:
+        condition: service_healthy
+
+  pipeline-manager:
+    depends_on: !override
+      minio-service:
+        condition: service_started
+      multimodal-dataprep:
+        condition: service_healthy
+      multimodal-embedding-serving:
+        condition: service_healthy
+      video-search:
+        condition: service_started
+
+volumes:
+  milvus_etcd:
+    driver: local
+  milvus_db:
+    driver: local

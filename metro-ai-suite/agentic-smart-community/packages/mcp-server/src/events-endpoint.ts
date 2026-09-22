@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import { EVENTS_BIND_HOST } from "./config.js";
 import { logger } from "./logger.js";
 
 export interface VideoEvent {
@@ -41,7 +42,7 @@ type DispatchOutcome =
  */
 export class EventsEndpoint {
   private server: Server | null = null;
-  private db: SmartBuildingDB;
+  private db: SmartCommunityDB;
   private onEvent?: EventCallback;
   private maxBodyBytes: number;
 
@@ -50,19 +51,26 @@ export class EventsEndpoint {
    * @param onEvent Optional hook fired after every successfully handled webhook.
    * @param options Optional behavior knobs (max body size, …).
    */
-  constructor(db: SmartBuildingDB, onEvent?: EventCallback, options?: EventsEndpointOptions) {
+  constructor(db: SmartCommunityDB, onEvent?: EventCallback, options?: EventsEndpointOptions) {
     this.db = db;
     this.onEvent = onEvent;
     this.maxBodyBytes = options?.maxBodyBytes ?? DEFAULT_MAX_BODY_BYTES;
   }
 
+  /**
+   * @param port TCP port to listen on.
+   *
+  * Defaults to EVENTS_BIND_HOST (loopback): this endpoint is unauthenticated and
+   * writes straight into the DB, and its only producer is the on-host
+   * videostream-analytics service, which POSTs to localhost.
+   */
   start(port: number = 3101): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = createServer((req, res) => this.route(req, res));
+      const server = createServer((req, res) => this.route(req, res));
 
-      this.server.on("error", (err: NodeJS.ErrnoException) => {
+      server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
-          logger.warn(`[events-endpoint] Port ${port} in use, skipping events endpoint`);
+          logger.warn(`[events-endpoint] ${EVENTS_BIND_HOST}:${port} in use, skipping events endpoint`);
           this.server = null;
           resolve();
         } else {
@@ -70,8 +78,9 @@ export class EventsEndpoint {
         }
       });
 
-      this.server.listen(port, () => {
-        logger.info(`[events-endpoint] Listening on port ${port}`);
+      server.listen(port, EVENTS_BIND_HOST, () => {
+        this.server = server;
+        logger.info(`[events-endpoint] Listening on http://${EVENTS_BIND_HOST}:${port}`);
         resolve();
       });
     });

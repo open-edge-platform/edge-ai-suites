@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { gradingListTasks } from '../../services/api';
 import type { GradingTask } from '../../services/api';
 import TaskDetail from './TaskDetail';
-import { shortId, formatElapsed, toErrorMessage } from './gradingUtils';
+import { shortId, formatDateTime, formatElapsed, isTerminalStatus, toErrorMessage } from './gradingUtils';
 
 interface TaskListProps {
   refreshSignal: number;
@@ -21,18 +21,6 @@ const STATUS_LABELS: Record<string, string> = {
   CANCELLED: 'grading.status.cancelled',
   COMPLETED: 'grading.status.completed',
   FAILED: 'grading.status.failed',
-};
-
-const TERMINAL = new Set(['COMPLETED', 'FAILED', 'CANCELLED']);
-
-const formatTime = (iso: string): string => {
-  try {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  } catch {
-    return iso;
-  }
 };
 
 const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => {
@@ -188,7 +176,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
                 onClick={() => setExpandedId(expanded ? null : task.task_id)}
               >
                 <span className={`grading-dot status-${task.status}`} />
-                <span className="grading-row-time">{task.created_at ? formatTime(task.created_at) : '—'}</span>
+                <span className="grading-row-time">{task.created_at ? formatDateTime(task.created_at) : '—'}</span>
                 <span className="grading-row-status">{t(statusKey, task.status)}</span>
                 <span className="grading-row-counts">
                   {task.dir_info
@@ -201,7 +189,7 @@ const TaskList: React.FC<TaskListProps> = ({ refreshSignal, onViewResults }) => 
                 </span>
                 <span className="grading-row-elapsed">
                   {task.created_at
-                    ? formatElapsed(task.created_at, TERMINAL.has(task.status) ? task.updated_at : null, now)
+                    ? formatElapsed(task.created_at, isTerminalStatus(task.status) ? task.updated_at : null, now)
                     : '—'}
                 </span>
                 <span className="grading-row-arrow">{expanded ? '▾' : '▸'}</span>

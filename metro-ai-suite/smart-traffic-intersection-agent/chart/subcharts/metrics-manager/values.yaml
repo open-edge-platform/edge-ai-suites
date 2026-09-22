@@ -9,7 +9,7 @@ enabled: true
 
 image:
   repository: intel/metrics-manager
-  tag: "2026.1.0"
+  tag: "2026.2.0-20260715-weekly"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -34,14 +34,14 @@ pod:
   priorityClassName: ""
 
 securityContext:
-  privileged: false
+  privileged: true
   runAsNonRoot: false
   readOnlyRootFilesystem: false
   appArmorProfile:
-    type: RuntimeDefault
+    type: Unconfined
   appArmorProfileForce: false
   seccompProfile:
-    type: RuntimeDefault
+    type: Unconfined
 
 hardware:
   gpu:

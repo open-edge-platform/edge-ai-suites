@@ -21,9 +21,11 @@ from .utility import storage_client
 
 log = logging.getLogger(__name__)
 
-_MQTT_HOST  = os.environ.get("MQTT_HOST", "mqtt-broker")
-_MQTT_PORT  = int(os.environ.get("MQTT_PORT", "1883"))
-_MQTT_TOPIC = os.environ.get("MQTT_TOPIC", "apm/detections")
+_MQTT_HOST     = os.environ.get("MQTT_HOST", "mqtt-broker")
+_MQTT_PORT     = int(os.environ.get("MQTT_PORT", "1883"))
+_MQTT_TOPIC    = os.environ.get("MQTT_TOPIC", "apm/detections")
+_MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
+_MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 
 
 def _on_connect(client, userdata, flags, rc, properties=None):
@@ -87,6 +89,8 @@ def start_subscriber() -> mqtt.Client:
     Returns the mqtt.Client so callers can access it if needed.
     """
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    if _MQTT_USERNAME:
+        client.username_pw_set(_MQTT_USERNAME, _MQTT_PASSWORD)
     client.on_connect = _on_connect
     client.on_message = _on_message
 

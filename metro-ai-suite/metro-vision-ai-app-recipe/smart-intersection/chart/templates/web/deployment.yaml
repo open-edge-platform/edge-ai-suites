@@ -51,7 +51,7 @@ spec:
         - name: DBROOT
           value: /workspace
         - name: MODEL_CONFIGS_FOLDER
-          value: /home/scenescape/SceneScape/models/models/model_configs
+          value: /home/scenescape/Scenescape/models/models/model_configs
         - name: SUPASS
           valueFrom:
             secretKeyRef:
@@ -62,7 +62,7 @@ spec:
         - name: DBPORT
           value: "5432"
         - name: EXAMPLEDB
-          value: /home/scenescape/SceneScape/example_db/smart-intersection-ri.tar.bz2
+          value: /home/scenescape/Scenescape/example_db/smart-intersection-ri.tar.bz2
         volumeMounts:
         - name: pgserver-media
           mountPath: /workspace/media
@@ -71,7 +71,7 @@ spec:
         - name: smart-intersection-ri-web-data
           mountPath: /data
         - name: {{ .Release.Name }}-example-db
-          mountPath: /home/scenescape/SceneScape/example_db
+          mountPath: /home/scenescape/Scenescape/example_db
         securityContext:
           runAsUser: 0
           runAsGroup: 0

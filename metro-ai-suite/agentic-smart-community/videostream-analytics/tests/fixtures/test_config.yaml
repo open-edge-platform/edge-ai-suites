@@ -21,7 +21,6 @@ defaults:
   recording:
     interval: 60
     fps: 15
-    retention_days: 5
   prefilter:
     enabled: true
     model_path: ""

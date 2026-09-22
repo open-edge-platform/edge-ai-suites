@@ -1,0 +1,117 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+{{ $backend := lower (.Values.global.vectordbBackend | default "vdms") }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vector-retriever
+  labels:
+    {{- include "lvs.vectorretriever.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vector-retriever
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: vector-retriever
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.embeddingService.waitForHealthy }}
+      initContainers:
+        - name: wait-for-multimodal-embedding
+          image: {{ include "lvs.vectorretriever.image" . | quote }}
+          imagePullPolicy: {{ include "lvs.imagePullPolicy" (.Values.global.pullPolicy | default .Values.image.pullPolicy) }}
+          command:
+            - python3
+            - -c
+          args:
+            - |
+              import os
+              import time
+              import urllib.request
+
+              url = os.environ["MME_HEALTH_URL"]
+              timeout = float(os.environ["MME_HEALTH_TIMEOUT_SECONDS"])
+              interval = float(os.environ["MME_HEALTH_RETRY_INTERVAL_SECONDS"])
+              while True:
+                  try:
+                      with urllib.request.urlopen(url, timeout=timeout) as response:
+                          if response.status == 200:
+                              print("Multimodal Embedding service is healthy")
+                              break
+                  except Exception as error:
+                      print(f"Waiting for Multimodal Embedding service: {error}")
+                  time.sleep(interval)
+          env:
+            - name: MME_HEALTH_URL
+              value: {{ .Values.embeddingService.healthUrl | quote }}
+            - name: MME_HEALTH_TIMEOUT_SECONDS
+              value: {{ .Values.embeddingService.healthTimeoutSeconds | quote }}
+            - name: MME_HEALTH_RETRY_INTERVAL_SECONDS
+              value: {{ .Values.embeddingService.retryIntervalSeconds | quote }}
+      {{- end }}
+      containers:
+        - name: vector-retriever
+          image: {{ include "lvs.vectorretriever.image" . | quote }}
+          imagePullPolicy: {{ include "lvs.imagePullPolicy" (.Values.global.pullPolicy | default .Values.image.pullPolicy) }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},multimodal-embedding-serving,vdms-vector-db,milvus-standalone,localhost"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.noProxy }},multimodal-embedding-serving,vdms-vector-db,milvus-standalone,localhost"
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: RETRIEVER_BACKEND
+              value: {{ $backend | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.retriever.logLevel | quote }}
+            - name: INDEX_NAME
+              value: {{ .Values.global.env.vsIndexName | quote }}
+            - name: EMBEDDINGS_ENDPOINT
+              value: "http://multimodal-embedding-serving:8000/embeddings"
+            - name: EMBEDDING_MODEL_NAME
+              value: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
+            - name: DEFAULT_TOP_K
+              value: {{ .Values.global.env.aggregationInitialK | quote }}
+            - name: MAX_TOP_K
+              value: {{ .Values.retriever.maxTopK | quote }}
+            - name: VDMS_VDB_HOST
+              value: vdms-vector-db
+            - name: VDMS_VDB_PORT
+              value: "55555"
+            - name: SEARCH_ENGINE
+              value: {{ .Values.retriever.searchEngine | quote }}
+            - name: DISTANCE_STRATEGY
+              value: {{ .Values.retriever.distanceStrategy | quote }}
+            - name: MILVUS_URI
+              value: http://milvus-standalone:19530
+            - name: MILVUS_METRIC_TYPE
+              value: {{ .Values.global.env.vdbMetricType | quote }}
+            - name: MILVUS_INDEX_TYPE
+              value: {{ .Values.global.env.vdbIndexType | quote }}
+            - name: MILVUS_TEXT_FIELD
+              value: {{ .Values.retriever.milvusTextField | quote }}
+            - name: MILVUS_METADATA_FIELD
+              value: {{ .Values.retriever.milvusMetadataField | quote }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

@@ -1,4 +1,4 @@
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
+import type { SmartCommunityDB } from "@smart-community-video/db";
 
 export interface PlanCtlParams {
   monitor_id: string;
@@ -11,7 +11,7 @@ export interface PlanCtlParams {
   active_only?: boolean;   // default true
 }
 
-export function planCtl(db: SmartBuildingDB, params: PlanCtlParams): unknown {
+export function planCtl(db: SmartCommunityDB, params: PlanCtlParams): unknown {
   switch (params.action) {
     case "list":
       return db.listPlans(params.monitor_id, params.active_only ?? true);

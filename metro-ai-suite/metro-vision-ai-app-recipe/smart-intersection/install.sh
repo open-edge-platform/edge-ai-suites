@@ -10,11 +10,13 @@ docker run --rm -t \
 # if ENABLE_TC=true is set, configure TC network settings and create resolv.conf for DNS relay
 if [ "${ENABLE_TC}" = "true" ]; then
     ./tc-setup.sh
-    TC_GPU_OVERLAY=""
+    TC_DEVICE_OVERLAYS=""
     if [ "${TC_SI_TARGET_DEVICE}" = "GPU" ]; then
-        TC_GPU_OVERLAY="-f ../tc-gpu-overlay.yml"
+        TC_DEVICE_OVERLAYS="-f ../tc-gpu-overlay.yml"
+    elif [ "${TC_SI_TARGET_DEVICE}" = "NPU" ]; then
+        TC_DEVICE_OVERLAYS="-f ../tc-gpu-overlay.yml -f ../tc-npu-overlay.yml"
     fi
-    docker compose -f ../compose-scenescape.yml -f ../tc-overlay-deps.yml ${TC_GPU_OVERLAY} config \
+    docker compose -f ../compose-scenescape.yml -f ../tc-overlay-deps.yml ${TC_DEVICE_OVERLAYS} config \
         --no-interpolate --no-normalize --no-path-resolution --no-env-resolution \
         > ../docker-compose.yml
 fi

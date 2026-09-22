@@ -46,7 +46,8 @@ To get started:
      ./install.sh smart-intersection
      ```
 
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+> [!NOTE]
+> For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
 > specify the IP address (Replace `<HOST_IP>` with your target IP address.):
 > `./install.sh smart-intersection <HOST_IP>`
 
@@ -103,18 +104,19 @@ To get started:
 Open a browser and go to the following endpoints to access the application. Use `<actual_ip>`
 instead of `localhost` for external access:
 
-> **Note:**
+> [!NOTE]
 >
 > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
 > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
 > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
+> - Scenescape supports uploading GLB 3D base map files. The upload limit is configurable via `NGINX_CLIENT_MAX_BODY_SIZE` in the `.env` file (Docker Compose) or `nginx.clientMaxBodySize` in `chart/values.yaml` (Helm).
 
 - **URL**: [https://localhost](https://localhost)
 - **Log in with credentials**:
   - **Username**: `admin`
   - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
-> **Note**:
+> [!NOTE]
 >
 > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
 

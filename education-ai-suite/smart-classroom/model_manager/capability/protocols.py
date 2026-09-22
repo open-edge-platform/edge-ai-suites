@@ -12,7 +12,8 @@ class TextGen(Protocol):
     def generate(self, prompt: str, *, images: list | None = None,
                  stream: bool = True,
                  max_new_tokens: int | None = None,
-                 temperature: float | None = None) -> Iterator[str]: ...
+                 temperature: float | None = None,
+                 json_schema: str | None = None) -> Iterator[str]: ...
 
 
 @runtime_checkable

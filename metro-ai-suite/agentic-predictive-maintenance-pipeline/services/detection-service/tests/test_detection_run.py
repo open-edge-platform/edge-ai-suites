@@ -19,6 +19,23 @@ import src.main as main_mod  # noqa: E402
 from src.utility.dlstreamer_client import PipelineRunError  # noqa: E402
 
 
+def test_startup_clears_orphaned_detections_before_subscribing(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    events = []
+    monkeypatch.setenv("CLEAR_DETECTIONS_ON_STARTUP", "true")
+    monkeypatch.setenv("MQTT_DISABLED", "false")
+    monkeypatch.setattr(
+        main_mod.storage_client,
+        "clear_detections",
+        lambda: events.append("cleared"),
+    )
+    monkeypatch.setattr(main_mod, "start_subscriber", lambda: events.append("subscribed"))
+
+    with TestClient(main_mod.app):
+        assert events == ["cleared", "subscribed"]
+
+
 def _reset_run_state():
     main_mod._runs.clear()
     main_mod._active_run_id = None

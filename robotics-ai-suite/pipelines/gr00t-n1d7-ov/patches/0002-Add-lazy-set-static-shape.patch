@@ -1,0 +1,687 @@
+From 394f6fa1e4167327d9ef02501b24d46e363e4c9b Mon Sep 17 00:00:00 2001
+From: baihe-liu <baihe.liu@intel.com>
+Date: Wed, 10 Jun 2026 10:23:34 +0800
+Subject: [PATCH 2/7] Add lazy set static shape
+
+Optimize multi-camera attention and fix input seed
+
+Replace per-chunk Python attention loops with a batched matmul path
+for equal-size camera chunks during OV export. Keep the existing
+chunked fallback for uneven sequence lengths.
+
+Fixed input Generation using seed
+Usage: --input-seed 0   --diffusion-seed 0
+
+Add arg to set torch num thread
+
+Signed-off-by: He Yue <yue.he@intel.com>
+Signed-off-by: Liu Baihe <baihe.liu@intel.com>
+---
+ scripts/deployment/export_ov_n1d7.py          |  49 ++++--
+ scripts/deployment/ov_n1d7_forward.py         | 148 ++++++++++++++----
+ scripts/deployment/run_base_ov_inference.py   |  79 ++++++++--
+ .../run_base_single_ov_inference.py           |  73 +++++++--
+ 4 files changed, 288 insertions(+), 61 deletions(-)
+
+diff --git a/scripts/deployment/export_ov_n1d7.py b/scripts/deployment/export_ov_n1d7.py
+index f0fabaedf3e7..3ee3e72c9cc8 100755
+--- a/scripts/deployment/export_ov_n1d7.py
++++ b/scripts/deployment/export_ov_n1d7.py
+@@ -422,24 +422,45 @@ def _make_export_vision_attention_forward(attn_module, chunk_sizes=None):
+ 
+         # Split by image chunks
+         if chunk_sizes is not None and len(chunk_sizes) > 1:
+-            q_chunks = torch.split(q, chunk_sizes, dim=0)
+-            k_chunks = torch.split(k, chunk_sizes, dim=0)
+-            v_chunks = torch.split(v, chunk_sizes, dim=0)
++            if all(chunk_size == chunk_sizes[0] for chunk_size in chunk_sizes):
++                num_chunks = len(chunk_sizes)
++                chunk_size = chunk_sizes[0]
++                num_heads = attn_module.num_heads
+ 
+-            attn_outputs = []
+-            for q_c, k_c, v_c in zip(q_chunks, k_chunks, v_chunks):
+-                q_c = q_c.transpose(0, 1)
+-                k_c = k_c.transpose(0, 1)
+-                v_c = v_c.transpose(0, 1)
++                q_batched = q.contiguous().reshape(num_chunks, chunk_size, num_heads, -1)
++                k_batched = k.contiguous().reshape(num_chunks, chunk_size, num_heads, -1)
++                v_batched = v.contiguous().reshape(num_chunks, chunk_size, num_heads, -1)
+ 
+-                w = torch.matmul(q_c, k_c.transpose(-2, -1)) * attn_module.scaling
++                q_batched = q_batched.permute(0, 2, 1, 3).reshape(num_chunks * num_heads, chunk_size, -1)
++                k_batched = k_batched.permute(0, 2, 1, 3).reshape(num_chunks * num_heads, chunk_size, -1)
++                v_batched = v_batched.permute(0, 2, 1, 3).reshape(num_chunks * num_heads, chunk_size, -1)
++
++                w = torch.matmul(q_batched, k_batched.transpose(1, 2)) * attn_module.scaling
+                 w = w.to(torch.float32)
+                 w = F.softmax(w, dim=-1)
+-                w = w.to(v_c.dtype)
+-                out = torch.matmul(w, v_c)
+-                attn_outputs.append(out.transpose(0, 1))
+-
+-            attn_output = torch.cat(attn_outputs, dim=0)
++                w = w.to(v_batched.dtype)
++                attn_output = torch.matmul(w, v_batched)
++                attn_output = attn_output.reshape(num_chunks, num_heads, chunk_size, -1)
++                attn_output = attn_output.permute(0, 2, 1, 3).reshape(seq_length, num_heads, -1)
++            else:
++                q_chunks = torch.split(q, chunk_sizes, dim=0)
++                k_chunks = torch.split(k, chunk_sizes, dim=0)
++                v_chunks = torch.split(v, chunk_sizes, dim=0)
++
++                attn_outputs = []
++                for q_c, k_c, v_c in zip(q_chunks, k_chunks, v_chunks):
++                    q_c = q_c.transpose(0, 1)
++                    k_c = k_c.transpose(0, 1)
++                    v_c = v_c.transpose(0, 1)
++
++                    w = torch.matmul(q_c, k_c.transpose(-2, -1)) * attn_module.scaling
++                    w = w.to(torch.float32)
++                    w = F.softmax(w, dim=-1)
++                    w = w.to(v_c.dtype)
++                    out = torch.matmul(w, v_c)
++                    attn_outputs.append(out.transpose(0, 1))
++
++                attn_output = torch.cat(attn_outputs, dim=0)
+         else:
+             # Single image: full-sequence attention
+             q = q.transpose(0, 1)
+diff --git a/scripts/deployment/ov_n1d7_forward.py b/scripts/deployment/ov_n1d7_forward.py
+index 93e1c6a89473..41d07a47f262 100644
+--- a/scripts/deployment/ov_n1d7_forward.py
++++ b/scripts/deployment/ov_n1d7_forward.py
+@@ -110,12 +110,96 @@ def _set_device_precision_hint(core, device: str, available_devices: list[str],
+             print(f"  GPU inference precision: native {precision_suffix.upper()}")
+ 
+ 
+-def _load_compiled_model(core, ov_model_path: Path, component_name: str, precision_suffix: str, device: str):
++class _LazyStaticReshapeModel:
++    """Wrapper around an ov.Model that defers compile until first call.
++
++    On first inference, it reshapes the model to the actual input shapes
++    captured from the call, then compiles. Subsequent calls use the
++    static-shape compiled model directly.
++    """
++
++    def __init__(self, core, ov_model, component_name: str, device: str):
++        self._core = core
++        self._ov_model = ov_model
++        self._component_name = component_name
++        self._device = device
++        self._compiled = None
++
++    def _ensure_compiled(self, shapes: dict[str, list[int]]) -> None:
++        if self._compiled is not None:
++            return
++        logger.info(
++            "  [static] reshaping %s to %s and compiling on %s",
++            self._component_name,
++            shapes,
++            self._device,
++        )
++        self._ov_model.reshape(shapes)
++        self._compiled = self._core.compile_model(self._ov_model, device_name=self._device)
++
++    def _shapes_from_inputs(self, inputs) -> dict[str, list[int]]:
++        result: dict[str, list[int]] = {}
++        if isinstance(inputs, dict):
++            iterator = inputs.items()
++        else:
++            ports = list(self._ov_model.inputs)
++            if len(ports) != len(inputs):
++                raise ValueError(
++                    f"Expected {len(ports)} inputs for {self._component_name}, got {len(inputs)}"
++                )
++            iterator = []
++            for port, value in zip(ports, inputs):
++                try:
++                    name = port.get_node().get_friendly_name()
++                except RuntimeError:
++                    name = ""
++                if not name or name.isdigit():
++                    try:
++                        name = port.get_any_name()
++                    except RuntimeError:
++                        name = ""
++                iterator.append((name, value))
++        for name, value in iterator:
++            result[name] = list(np.asarray(value).shape)
++        return result
++
++    def __call__(self, inputs):
++        self._ensure_compiled(self._shapes_from_inputs(inputs))
++        return self._compiled(inputs)
++
++    def get_property(self, name):
++        if self._compiled is None:
++            return f"<uncompiled {self._component_name}>"
++        return self._compiled.get_property(name)
++
++    @property
++    def inputs(self):
++        if self._compiled is not None:
++            return self._compiled.inputs
++        return self._ov_model.inputs
++
++    @property
++    def outputs(self):
++        if self._compiled is not None:
++            return self._compiled.outputs
++        return self._ov_model.outputs
++
++
++def _load_compiled_model(
++    core, ov_model_path: Path, component_name: str, precision_suffix: str, device: str,
++    static_shape: bool = False,
++):
+     model_path = ov_model_path / f"{component_name}_{precision_suffix}.xml"
+     if not model_path.exists():
+         raise FileNotFoundError(f"Expected model file not found: {model_path}")
+     model = core.read_model(str(model_path))
+-    return core.compile_model(model, device_name=device)
++    return _compile_or_lazy(core, model, component_name, device, static_shape=static_shape)
++
++
++def _compile_or_lazy(core, ov_model, component_name: str, device: str, static_shape: bool = False):
++    if static_shape:
++        return _LazyStaticReshapeModel(core, ov_model, component_name, device)
++    return core.compile_model(ov_model, device_name=device)
+ 
+ 
+ def _resolve_backbone_masks(backbone_output, batch_size: int, seq_len: int, device):
+@@ -726,7 +810,7 @@ def action_head_fused_openvino_forward_full(self, backbone_output, action_input,
+     return BatchFeature(data={"action_pred": actions})
+ 
+ 
+-def setup_openvino_models_n1d7(policy, ov_model_path, device="GPU", use_fused_dit=False):
++def setup_openvino_models_n1d7(policy, ov_model_path, device="GPU", use_fused_dit=False, static_shape=False):
+     ov_model_path = Path(ov_model_path)
+     print("[OpenVINO Setup] Deleting PyTorch models to save memory...")
+     if hasattr(policy.model.action_head, "state_encoder"):
+@@ -755,31 +839,31 @@ def setup_openvino_models_n1d7(policy, ov_model_path, device="GPU", use_fused_di
+             print(f"  Will fall back to available device: {available_devices[0] if available_devices else 'None'}")
+ 
+     print("  Loading ViT...")
+-    policy.model.backbone.vit_ov_model = _load_compiled_model(core, ov_model_path, "vit", precision_suffix, device)
++    policy.model.backbone.vit_ov_model = _load_compiled_model(core, ov_model_path, "vit", precision_suffix, device, static_shape=static_shape)
+     print(f"    ViT running on: {policy.model.backbone.vit_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading LLM...")
+-    policy.model.backbone.llm_ov_model = _load_compiled_model(core, ov_model_path, "llm", precision_suffix, device)
++    policy.model.backbone.llm_ov_model = _load_compiled_model(core, ov_model_path, "llm", precision_suffix, device, static_shape=static_shape)
+     print(f"    LLM running on: {policy.model.backbone.llm_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading VL Self-Attention...")
+-    policy.model.backbone.vl_self_attention_ov_model = _load_compiled_model(core, ov_model_path, "vl_self_attention", precision_suffix, device)
++    policy.model.backbone.vl_self_attention_ov_model = _load_compiled_model(core, ov_model_path, "vl_self_attention", precision_suffix, device, static_shape=static_shape)
+     print(f"    VL Self-Attn running on: {policy.model.backbone.vl_self_attention_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading State Encoder...")
+-    policy.model.action_head.state_encoder_ov_model = _load_compiled_model(core, ov_model_path, "state_encoder", precision_suffix, device)
++    policy.model.action_head.state_encoder_ov_model = _load_compiled_model(core, ov_model_path, "state_encoder", precision_suffix, device, static_shape=static_shape)
+     print(f"    State Encoder running on: {policy.model.action_head.state_encoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     if use_fused_dit:
+         print("  Loading Fused DiT...")
+-        policy.model.action_head.dit_fused_ov_model = _load_compiled_model(core, ov_model_path, "dit_fused", precision_suffix, device)
++        policy.model.action_head.dit_fused_ov_model = _load_compiled_model(core, ov_model_path, "dit_fused", precision_suffix, device, static_shape=static_shape)
+         print(f"    Fused DiT running on: {policy.model.action_head.dit_fused_ov_model.get_property('EXECUTION_DEVICES')}")
+     else:
+         print("  Loading Action Encoder...")
+-        policy.model.action_head.action_encoder_ov_model = _load_compiled_model(core, ov_model_path, "action_encoder", precision_suffix, device)
++        policy.model.action_head.action_encoder_ov_model = _load_compiled_model(core, ov_model_path, "action_encoder", precision_suffix, device, static_shape=static_shape)
+         print(f"    Action Encoder running on: {policy.model.action_head.action_encoder_ov_model.get_property('EXECUTION_DEVICES')}")
+         print("  Loading DiT...")
+-        policy.model.action_head.dit_ov_model = _load_compiled_model(core, ov_model_path, "dit", precision_suffix, device)
++        policy.model.action_head.dit_ov_model = _load_compiled_model(core, ov_model_path, "dit", precision_suffix, device, static_shape=static_shape)
+         print(f"    DiT running on: {policy.model.action_head.dit_ov_model.get_property('EXECUTION_DEVICES')}")
+         print("  Loading Action Decoder...")
+-        policy.model.action_head.action_decoder_ov_model = _load_compiled_model(core, ov_model_path, "action_decoder", precision_suffix, device)
++        policy.model.action_head.action_decoder_ov_model = _load_compiled_model(core, ov_model_path, "action_decoder", precision_suffix, device, static_shape=static_shape)
+         print(f"    Action Decoder running on: {policy.model.action_head.action_decoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     print("✓ All OpenVINO models loaded")
+@@ -795,7 +879,7 @@ def setup_openvino_models_n1d7(policy, ov_model_path, device="GPU", use_fused_di
+     print(f"  All forward() calls now use OpenVINO inference on {device}")
+ 
+ 
+-def setup_openvino_models_n1d7_full(policy, ov_model_path, device="GPU", use_fused_dit=False):
++def setup_openvino_models_n1d7_full(policy, ov_model_path, device="GPU", use_fused_dit=False, static_shape=False):
+     ov_model_path = Path(ov_model_path)
+     print("[OpenVINO Full Setup] Deleting PyTorch models to save memory...")
+     if hasattr(policy.model.backbone.model.model, "visual"):
+@@ -882,38 +966,38 @@ def setup_openvino_models_n1d7_full(policy, ov_model_path, device="GPU", use_fus
+ 
+     print("  Loading ViT...")
+     vit_model = core.read_model(str(ov_model_path / f"vit_{precision_suffix}.xml"))
+-    policy.model.backbone.vit_ov_model = core.compile_model(vit_model, device_name=device)
++    policy.model.backbone.vit_ov_model = _compile_or_lazy(core, vit_model, "vit", device, static_shape=static_shape)
+     print(f"    ViT running on: {policy.model.backbone.vit_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading LLM...")
+     llm_model = core.read_model(str(ov_model_path / f"llm_{precision_suffix}.xml"))
+-    policy.model.backbone.llm_ov_model = core.compile_model(llm_model, device_name=device)
++    policy.model.backbone.llm_ov_model = _compile_or_lazy(core, llm_model, "llm", device, static_shape=static_shape)
+     print(f"    LLM running on: {policy.model.backbone.llm_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading VL Self-Attention...")
+     vl_model = core.read_model(str(ov_model_path / f"vl_self_attention_{precision_suffix}.xml"))
+-    policy.model.backbone.vl_self_attention_ov_model = core.compile_model(vl_model, device_name=device)
++    policy.model.backbone.vl_self_attention_ov_model = _compile_or_lazy(core, vl_model, "vl_self_attention", device, static_shape=static_shape)
+     print(f"    VL Self-Attn running on: {policy.model.backbone.vl_self_attention_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading State Encoder...")
+     state_enc_model = core.read_model(str(ov_model_path / f"state_encoder_{precision_suffix}.xml"))
+-    policy.model.action_head.state_encoder_ov_model = core.compile_model(state_enc_model, device_name=device)
++    policy.model.action_head.state_encoder_ov_model = _compile_or_lazy(core, state_enc_model, "state_encoder", device, static_shape=static_shape)
+     print(f"    State Encoder running on: {policy.model.action_head.state_encoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     if use_fused_dit:
+         print("  Loading Fused DiT...")
+         dit_fused_model = core.read_model(str(ov_model_path / f"dit_fused_{precision_suffix}.xml"))
+-        policy.model.action_head.dit_fused_ov_model = core.compile_model(dit_fused_model, device_name=device)
++        policy.model.action_head.dit_fused_ov_model = _compile_or_lazy(core, dit_fused_model, "dit_fused", device, static_shape=static_shape)
+         print(f"    Fused DiT running on: {policy.model.action_head.dit_fused_ov_model.get_property('EXECUTION_DEVICES')}")
+     else:
+         print("  Loading Action Encoder...")
+         action_enc_model = core.read_model(str(ov_model_path / f"action_encoder_{precision_suffix}.xml"))
+-        policy.model.action_head.action_encoder_ov_model = core.compile_model(action_enc_model, device_name=device)
++        policy.model.action_head.action_encoder_ov_model = _compile_or_lazy(core, action_enc_model, "action_encoder", device, static_shape=static_shape)
+         print(f"    Action Encoder running on: {policy.model.action_head.action_encoder_ov_model.get_property('EXECUTION_DEVICES')}")
+         print("  Loading DiT...")
+         dit_model = core.read_model(str(ov_model_path / f"dit_{precision_suffix}.xml"))
+-        policy.model.action_head.dit_ov_model = core.compile_model(dit_model, device_name=device)
++        policy.model.action_head.dit_ov_model = _compile_or_lazy(core, dit_model, "dit", device, static_shape=static_shape)
+         print(f"    DiT running on: {policy.model.action_head.dit_ov_model.get_property('EXECUTION_DEVICES')}")
+         print("  Loading Action Decoder...")
+         action_dec_model = core.read_model(str(ov_model_path / f"action_decoder_{precision_suffix}.xml"))
+-        policy.model.action_head.action_decoder_ov_model = core.compile_model(action_dec_model, device_name=device)
++        policy.model.action_head.action_decoder_ov_model = _compile_or_lazy(core, action_dec_model, "action_decoder", device, static_shape=static_shape)
+         print(f"    Action Decoder running on: {policy.model.action_head.action_decoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     print("✓ All OpenVINO models loaded")
+@@ -930,7 +1014,7 @@ def setup_openvino_models_n1d7_full(policy, ov_model_path, device="GPU", use_fus
+     print("  Expected speedup: 5-6x (vs 3.9x with partial implementation)")
+ 
+ 
+-def setup_openvino_models_n1d7_full_fp32(policy, ov_model_path, device="GPU", use_fused_dit=False):
++def setup_openvino_models_n1d7_full_fp32(policy, ov_model_path, device="GPU", use_fused_dit=False, static_shape=False):
+     ov_model_path = Path(ov_model_path)
+     print("[OpenVINO Full Setup FP32] Deleting PyTorch models to save memory...")
+     if hasattr(policy.model.backbone.model.model, "visual"):
+@@ -997,38 +1081,38 @@ def setup_openvino_models_n1d7_full_fp32(policy, ov_model_path, device="GPU", us
+ 
+     print("  Loading ViT...")
+     vit_model = core.read_model(str(ov_model_path / f"vit_{precision_suffix}.xml"))
+-    policy.model.backbone.vit_ov_model = core.compile_model(vit_model, device_name=device)
++    policy.model.backbone.vit_ov_model = _compile_or_lazy(core, vit_model, "vit", device, static_shape=static_shape)
+     print(f"    ViT running on: {policy.model.backbone.vit_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading LLM...")
+     llm_model = core.read_model(str(ov_model_path / f"llm_{precision_suffix}.xml"))
+-    policy.model.backbone.llm_ov_model = core.compile_model(llm_model, device_name=device)
++    policy.model.backbone.llm_ov_model = _compile_or_lazy(core, llm_model, "llm", device, static_shape=static_shape)
+     print(f"    LLM running on: {policy.model.backbone.llm_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading VL Self-Attention...")
+     vl_model = core.read_model(str(ov_model_path / f"vl_self_attention_{precision_suffix}.xml"))
+-    policy.model.backbone.vl_self_attention_ov_model = core.compile_model(vl_model, device_name=device)
++    policy.model.backbone.vl_self_attention_ov_model = _compile_or_lazy(core, vl_model, "vl_self_attention", device, static_shape=static_shape)
+     print(f"    VL Self-Attn running on: {policy.model.backbone.vl_self_attention_ov_model.get_property('EXECUTION_DEVICES')}")
+     print("  Loading State Encoder...")
+     state_enc_model = core.read_model(str(ov_model_path / f"state_encoder_{precision_suffix}.xml"))
+-    policy.model.action_head.state_encoder_ov_model = core.compile_model(state_enc_model, device_name=device)
++    policy.model.action_head.state_encoder_ov_model = _compile_or_lazy(core, state_enc_model, "state_encoder", device, static_shape=static_shape)
+     print(f"    State Encoder running on: {policy.model.action_head.state_encoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     if use_fused_dit:
+         print("  Loading Fused DiT...")
+         dit_fused_model = core.read_model(str(ov_model_path / f"dit_fused_{precision_suffix}.xml"))
+-        policy.model.action_head.dit_fused_ov_model = core.compile_model(dit_fused_model, device_name=device)
++        policy.model.action_head.dit_fused_ov_model = _compile_or_lazy(core, dit_fused_model, "dit_fused", device, static_shape=static_shape)
+         print(f"    Fused DiT running on: {policy.model.action_head.dit_fused_ov_model.get_property('EXECUTION_DEVICES')}")
+     else:
+         print("  Loading Action Encoder...")
+         action_enc_model = core.read_model(str(ov_model_path / f"action_encoder_{precision_suffix}.xml"))
+-        policy.model.action_head.action_encoder_ov_model = core.compile_model(action_enc_model, device_name=device)
++        policy.model.action_head.action_encoder_ov_model = _compile_or_lazy(core, action_enc_model, "action_encoder", device, static_shape=static_shape)
+         print(f"    Action Encoder running on: {policy.model.action_head.action_encoder_ov_model.get_property('EXECUTION_DEVICES')}")
+         print("  Loading DiT...")
+         dit_model = core.read_model(str(ov_model_path / f"dit_{precision_suffix}.xml"))
+-        policy.model.action_head.dit_ov_model = core.compile_model(dit_model, device_name=device)
++        policy.model.action_head.dit_ov_model = _compile_or_lazy(core, dit_model, "dit", device, static_shape=static_shape)
+         print(f"    DiT running on: {policy.model.action_head.dit_ov_model.get_property('EXECUTION_DEVICES')}")
+         print("  Loading Action Decoder...")
+         action_dec_model = core.read_model(str(ov_model_path / f"action_decoder_{precision_suffix}.xml"))
+-        policy.model.action_head.action_decoder_ov_model = core.compile_model(action_dec_model, device_name=device)
++        policy.model.action_head.action_decoder_ov_model = _compile_or_lazy(core, action_dec_model, "action_decoder", device, static_shape=static_shape)
+         print(f"    Action Decoder running on: {policy.model.action_head.action_decoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     print("✓ All OpenVINO models loaded")
+@@ -1103,6 +1187,9 @@ def add_common_arguments(
+ 
+ def _setup_openvino_policy(args: argparse.Namespace, policy: Gr00tPolicy) -> None:
+     logger.info("\nSetting up OpenVINO models...")
++    static_shape = getattr(args, "static_shape", False)
++    if static_shape:
++        logger.info("  Static shape mode enabled (reshape on first inference call)")
+     if args.full_ov:
+         if args.force_fp32:
+             logger.info("  Using FP32-forced full loader")
+@@ -1111,6 +1198,7 @@ def _setup_openvino_policy(args: argparse.Namespace, policy: Gr00tPolicy) -> Non
+                 ov_model_path=args.ov_model_dir,
+                 device=args.device,
+                 use_fused_dit=args.use_fused_dit,
++                static_shape=static_shape,
+             )
+         else:
+             logger.info("  Using auto-detected precision full loader")
+@@ -1119,6 +1207,7 @@ def _setup_openvino_policy(args: argparse.Namespace, policy: Gr00tPolicy) -> Non
+                 ov_model_path=args.ov_model_dir,
+                 device=args.device,
+                 use_fused_dit=args.use_fused_dit,
++                static_shape=static_shape,
+             )
+     else:
+         logger.info("  Using auto-detected precision partial loader")
+@@ -1127,6 +1216,7 @@ def _setup_openvino_policy(args: argparse.Namespace, policy: Gr00tPolicy) -> Non
+             ov_model_path=args.ov_model_dir,
+             device=args.device,
+             use_fused_dit=args.use_fused_dit,
++            static_shape=static_shape,
+         )
+     logger.info("✓ OpenVINO setup complete")
+ 
+diff --git a/scripts/deployment/run_base_ov_inference.py b/scripts/deployment/run_base_ov_inference.py
+index cba0a8cb70bd..c774f2a899ad 100644
+--- a/scripts/deployment/run_base_ov_inference.py
++++ b/scripts/deployment/run_base_ov_inference.py
+@@ -48,6 +48,37 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
+ logger = logging.getLogger(__name__)
+ 
+ 
++def _make_dummy_video(
++    num_video_frames: int,
++    image_size: tuple[int, int],
++    input_seed: int | None,
++    camera_index: int,
++) -> np.ndarray:
++    if input_seed is None:
++        return np.random.randint(
++            0,
++            255,
++            size=(1, num_video_frames, image_size[0], image_size[1], 3),
++            dtype=np.uint8,
++        )
++
++    rng = np.random.default_rng(input_seed + camera_index)
++    return rng.integers(
++        0,
++        255,
++        size=(1, num_video_frames, image_size[0], image_size[1], 3),
++        dtype=np.uint8,
++    )
++
++
++def _run_policy_get_action(policy: Gr00tPolicy, observation: dict, diffusion_seed: int | None):
++    with torch.random.fork_rng(devices=[]):
++        if diffusion_seed is not None:
++            torch.manual_seed(diffusion_seed)
++        with torch.no_grad():
++            return policy.get_action(observation)
++
++
+ def load_modality_configs_from_checkpoint(model_path: str, embodiment_tag: str):
+     """Load modality configs directly from the checkpoint's processor_config.json."""
+     processor_config_path = Path(model_path) / "processor_config.json"
+@@ -118,6 +149,7 @@ def create_dummy_observation(
+     state_dims: dict[str, int],
+     language_instruction: str = "Pick up the object.",
+     image_size: tuple[int, int] = (224, 224),
++    input_seed: int | None = None,
+ ) -> dict:
+     """Create a dummy observation matching the expected format."""
+     video_config = modality_configs["video"]
+@@ -128,10 +160,8 @@ def create_dummy_observation(
+     num_state_frames = len(state_config.delta_indices)
+ 
+     video_dict = {}
+-    for cam_key in video_config.modality_keys:
+-        video_dict[cam_key] = np.random.randint(
+-            0, 255, size=(1, num_video_frames, image_size[0], image_size[1], 3), dtype=np.uint8
+-        )
++    for camera_index, cam_key in enumerate(video_config.modality_keys):
++        video_dict[cam_key] = _make_dummy_video(num_video_frames, image_size, input_seed, camera_index)
+ 
+     state_dict = {}
+     for state_key in state_config.modality_keys:
+@@ -193,12 +223,35 @@ def build_parser() -> argparse.ArgumentParser:
+         "--full-ov", action="store_true", help="Use full OpenVINO path including LLM and VL self-attention"
+     )
+     parser.add_argument("--force-fp32", action="store_true", help="Force FP32 precision for GPU inference")
++    parser.add_argument(
++        "--static-shape",
++        action="store_true",
++        help="Reshape each OV component to static shapes captured from the first inference call before compilation",
++    )
++    parser.add_argument(
++        "--num-threads",
++        type=int,
++        default=4,
++        help="torch.set_num_threads value (default: 4, empirically optimal on iGPU; pass <=0 to skip)",
++    )
+     parser.add_argument(
+         "--language", type=str, default="Pick and place the object.", help="Language instruction for dummy input"
+     )
+     parser.add_argument(
+         "--image-size", type=int, nargs=2, default=[224, 224], help="Image size (H W) for dummy input"
+     )
++    parser.add_argument(
++        "--input-seed",
++        type=int,
++        default=None,
++        help="Optional seed for deterministic dummy video generation; unset preserves legacy random dummy frames",
++    )
++    parser.add_argument(
++        "--diffusion-seed",
++        type=int,
++        default=None,
++        help="Optional seed for deterministic action-head diffusion noise on every inference call",
++    )
+     parser.add_argument(
+         "--log-timing-breakdown",
+         action="store_true",
+@@ -225,6 +278,9 @@ def build_parser() -> argparse.ArgumentParser:
+ def main() -> None:
+     args = build_parser().parse_args()
+ 
++    if args.num_threads > 0:
++        torch.set_num_threads(args.num_threads)
++
+     logger.info("=" * 80)
+     logger.info("GR00T N1.7 Base Model OpenVINO Inference (Dummy Input)")
+     logger.info("=" * 80)
+@@ -236,8 +292,11 @@ def main() -> None:
+     logger.info(f"Fused DiT: {args.use_fused_dit}")
+     logger.info(f"Num samples: {args.num_samples}")
+     logger.info(f"Num warmup: {args.num_warmup}")
++    logger.info(f"Torch threads: {torch.get_num_threads()}")
+     logger.info(f"Language: {args.language}")
+     logger.info(f"Image size: {args.image_size}")
++    logger.info(f"Input seed: {args.input_seed}")
++    logger.info(f"Diffusion seed: {args.diffusion_seed}")
+     logger.info(f"Per-iteration timing breakdown: {args.log_timing_breakdown}")
+     logger.info("=" * 80)
+ 
+@@ -262,7 +321,11 @@ def main() -> None:
+ 
+     logger.info("\n[Step 4] Creating dummy observation...")
+     observation = create_dummy_observation(
+-        modality_configs, state_dims, language_instruction=args.language, image_size=tuple(args.image_size)
++        modality_configs,
++        state_dims,
++        language_instruction=args.language,
++        image_size=tuple(args.image_size),
++        input_seed=args.input_seed,
+     )
+     logger.info("  Dummy observation created")
+     for modality, data in observation.items():
+@@ -276,8 +339,7 @@ def main() -> None:
+     logger.info(f"\n[Step 5] Warmup ({args.num_warmup} iterations)...")
+     for i in range(args.num_warmup):
+         start = time.time()
+-        with torch.no_grad():
+-            policy.get_action(observation)
++        _run_policy_get_action(policy, observation, args.diffusion_seed)
+         elapsed = time.time() - start
+         logger.info(f"  Warmup {i + 1}/{args.num_warmup}: {elapsed:.3f}s")
+     logger.info("Warmup complete.")
+@@ -290,8 +352,7 @@ def main() -> None:
+ 
+     for i in range(args.num_samples):
+         start_time = time.time()
+-        with torch.no_grad():
+-            action, info = policy.get_action(observation)
++        action, info = _run_policy_get_action(policy, observation, args.diffusion_seed)
+         del info
+         inference_time = time.time() - start_time
+         total_time += inference_time
+diff --git a/scripts/deployment/run_base_single_ov_inference.py b/scripts/deployment/run_base_single_ov_inference.py
+index d709b6f3db3d..032605af9a11 100644
+--- a/scripts/deployment/run_base_single_ov_inference.py
++++ b/scripts/deployment/run_base_single_ov_inference.py
+@@ -41,6 +41,24 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
+ logger = logging.getLogger(__name__)
+ 
+ 
++def _make_dummy_video(
++    video_horizon: int,
++    image_size: tuple[int, int],
++    input_seed: int | None,
++    camera_index: int,
++) -> np.ndarray:
++    if input_seed is None:
++        return np.zeros((1, video_horizon, image_size[0], image_size[1], 3), dtype=np.uint8)
++
++    rng = np.random.default_rng(input_seed + camera_index)
++    return rng.integers(
++        0,
++        255,
++        size=(1, video_horizon, image_size[0], image_size[1], 3),
++        dtype=np.uint8,
++    )
++
++
+ class _RuntimeLLMInputCapture:
+     def __init__(self):
+         self.position_ids: torch.Tensor | None = None
+@@ -213,16 +231,14 @@ def create_dummy_observation(
+     policy: Gr00tPolicy,
+     language_instruction: str = "Pick up the object.",
+     image_size: tuple[int, int] = (224, 224),
++    input_seed: int | None = None,
+ ) -> dict:
+     """Create the same synthesized observation shape used by export verification."""
+     observation = _build_dummy_observation(policy)
+ 
+     video_horizon = len(policy.modality_configs["video"].delta_indices)
+-    for cam_key in policy.modality_configs["video"].modality_keys:
+-        observation["video"][cam_key] = np.zeros(
+-            (1, video_horizon, image_size[0], image_size[1], 3),
+-            dtype=np.uint8,
+-        )
++    for camera_index, cam_key in enumerate(policy.modality_configs["video"].modality_keys):
++        observation["video"][cam_key] = _make_dummy_video(video_horizon, image_size, input_seed, camera_index)
+ 
+     language_horizon = len(policy.modality_configs["language"].delta_indices)
+     for lang_key in policy.modality_configs["language"].modality_keys:
+@@ -549,6 +565,12 @@ def build_parser() -> argparse.ArgumentParser:
+     parser.add_argument(
+         "--image-size", type=int, nargs=2, default=[224, 224], help="Image size (H W) for dummy input"
+     )
++    parser.add_argument(
++        "--input-seed",
++        type=int,
++        default=None,
++        help="Optional seed for deterministic dummy video generation; unset preserves legacy zero-filled dummy frames",
++    )
+     parser.add_argument(
+         "--diffusion-seed",
+         type=int,
+@@ -560,6 +582,17 @@ def build_parser() -> argparse.ArgumentParser:
+         action="store_true",
+         help="Enable info logging for per-iteration action details during timed inference",
+     )
++    parser.add_argument(
++        "--static-shape",
++        action="store_true",
++        help="Reshape the OpenVINO model to static shapes (using the actual input shapes) before compilation",
++    )
++    parser.add_argument(
++        "--num-threads",
++        type=int,
++        default=4,
++        help="torch.set_num_threads value (default: 4, empirically optimal on iGPU; pass <=0 to skip)",
++    )
+     parser.epilog = (
+         "Examples:\n\n"
+         "  python scripts/deployment/run_base_single_ov_inference.py \\\n"
+@@ -573,6 +606,10 @@ def build_parser() -> argparse.ArgumentParser:
+ 
+ def main() -> None:
+     args = build_parser().parse_args()
++
++    if args.num_threads > 0:
++        torch.set_num_threads(args.num_threads)
++
+     ov_model_xml = resolve_ov_model_xml(args.ov_model_dir)
+ 
+     logger.info("=" * 80)
+@@ -585,8 +622,10 @@ def main() -> None:
+     logger.info("Device: %s", args.device)
+     logger.info("Num samples: %d", args.num_samples)
+     logger.info("Num warmup: %d", args.num_warmup)
++    logger.info("Torch threads: %d", torch.get_num_threads())
+     logger.info("Verify PyTorch: %s", args.verify_pytorch)
+     logger.info("Diffusion seed: %d", args.diffusion_seed)
++    logger.info("Input seed: %s", args.input_seed)
+     logger.info("Language: %s", args.language)
+     logger.info("Image size: %s", args.image_size)
+     logger.info("=" * 80)
+@@ -607,13 +646,18 @@ def main() -> None:
+     policy = _load_policy_cpu_fp32(args.model_path, embodiment_tag)
+     logger.info("Policy loaded (PyTorch, CPU)")
+ 
+-    logger.info("\n[Step 3] Compiling single OpenVINO model...")
++    logger.info("\n[Step 3] Reading single OpenVINO model...")
+     core = ov.Core()
+-    compiled_model = core.compile_model(ov_model_xml, args.device.upper())
+-    logger.info("Compiled single OV model with %d inputs and %d outputs", len(compiled_model.inputs), len(compiled_model.outputs))
++    ov_model = core.read_model(ov_model_xml)
++    logger.info("Read single OV model with %d inputs and %d outputs", len(ov_model.inputs), len(ov_model.outputs))
+ 
+     logger.info("\n[Step 4] Creating dummy observation...")
+-    observation = create_dummy_observation(policy, language_instruction=args.language, image_size=tuple(args.image_size))
++    observation = create_dummy_observation(
++        policy,
++        language_instruction=args.language,
++        image_size=tuple(args.image_size),
++        input_seed=args.input_seed,
++    )
+     logger.info("  Dummy observation created")
+     for modality, data in observation.items():
+         if isinstance(data, dict):
+@@ -648,6 +692,17 @@ def main() -> None:
+     for input_name, value in ov_inputs.items():
+         logger.info("  %s: shape=%s, dtype=%s", input_name, value.shape, value.dtype)
+ 
++    if args.static_shape:
++        logger.info("\n[Step 5b] Reshaping model to static shapes...")
++        reshape_dict = {name: list(value.shape) for name, value in ov_inputs.items()}
++        for name, shape in reshape_dict.items():
++            logger.info("  %s -> %s", name, shape)
++        ov_model.reshape(reshape_dict)
++
++    logger.info("\n[Step 5c] Compiling single OpenVINO model on %s...", args.device.upper())
++    compiled_model = core.compile_model(ov_model, args.device.upper())
++    logger.info("Compiled single OV model with %d inputs and %d outputs", len(compiled_model.inputs), len(compiled_model.outputs))
++
+     if args.verify_pytorch:
+         ov_predicted_action = _run_single_ov(compiled_model, ov_inputs)
+         _verify_against_pytorch(policy, collated_inputs, ov_predicted_action, pytorch_action=pytorch_action)
+-- 
+2.43.0
+

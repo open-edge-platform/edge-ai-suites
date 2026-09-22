@@ -43,7 +43,7 @@ def dashboard_monitor(mcp_api: McpApiClient):
     outside_clip = data_dir / "outside.mp4"
     outside_clip.write_bytes(b"outside")
 
-    database_path = data_dir / "smartbuilding.db"
+    database_path = data_dir / "smart-community.db"
     with sqlite3.connect(database_path) as database:
         database.execute(
             """

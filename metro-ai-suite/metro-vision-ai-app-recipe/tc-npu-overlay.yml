@@ -1,0 +1,10 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+services:
+  dlstreamer-pipeline-server:
+    devices:
+      - "/dev/vfio/${TC_NPU_VFIO_GROUP}:/dev/vfio/${TC_NPU_VFIO_GROUP}"
+    annotations:
+      io.katacontainers.config.hypervisor.pcie_root_port: "2"

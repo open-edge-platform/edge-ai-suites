@@ -16,7 +16,6 @@ Before you begin, ensure the following:
 - **System requirements**: Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
   - **Minimum RAM**: 32GB RAM is required for Trusted Compute deployments.
 - **Docker platform**: Install Docker platform. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
-  - **Important**: Trusted Compute is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
 - **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for traffic data streaming, or use the included broker.
 - **Docker commands and terminal usage**: You are familiar with Docker commands and using the terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
 - **Hugging Face token**: Set your token using `export HUGGINGFACE_TOKEN="<your-huggingface-token>"`
@@ -31,7 +30,8 @@ Before you begin, ensure the following:
 - Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
-> **Note**: When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
+> [!NOTE]
+> When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 ## 1. Install Trusted Compute
 
@@ -74,9 +74,11 @@ The application has been validated with following models:
 | Qwen2-VL 7B (pre-converted) | `OpenVINO/Qwen2-VL-7B-Instruct-int4-ov` |
 | InternVL2 1B (pre-converted) | `OpenVINO/InternVL2-1B-int4-ov` |
 
-> **Note:** Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
+> [!NOTE]
+> Both pre-converted OpenVINO models (under the `OpenVINO/` namespace on Hugging Face) and raw Hugging Face VLM models (for example, `microsoft/Phi-3.5-vision-instruct`) are supported. Raw models are automatically downloaded and converted to OpenVINO format during setup.
 
-> **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+> [!IMPORTANT]
+> See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Configure Network Settings (Optional)
 
@@ -122,7 +124,8 @@ This single command will:
 
 #### Step 1: Bind GPU to vfio-pci
 
-> **Note:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+> [!NOTE]
+> Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
 
 Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the Trusted Compute package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver.
 

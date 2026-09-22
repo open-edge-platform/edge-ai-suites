@@ -1,4 +1,4 @@
-import type { SchemaExtension } from "@smartbuilding-video/db";
+import type { SchemaExtension } from "@smart-community-video/db";
 
 export interface ParsedSummary {
   /** Fields successfully extracted from the summary text, keyed by lowercased schema field name. */

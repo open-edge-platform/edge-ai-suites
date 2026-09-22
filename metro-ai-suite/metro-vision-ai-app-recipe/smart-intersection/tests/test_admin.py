@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2025-2026 Intel Corporation
 # SPDX-License-Identifier: LicenseRef-Intel-Edge-Software
 # This file is licensed under the Limited Edge Software Distribution License Agreement.
 
@@ -35,7 +35,7 @@ def web_options_availability_check(waiter, scenescape_url):
     scenescape_url + "/cam/list/",  # Cameras
     scenescape_url + "/singleton_sensor/list/",  # Sensors
     scenescape_url + "/asset/list/",  # Object Library
-    "https://docs.openedgeplatform.intel.com/scenescape/dev/index.html",  # Documentation
+    "https://docs.openedgeplatform.intel.com/dev/scenescape/index.html",  # Documentation
     scenescape_url + "/admin"  # Admin
   ]
 

@@ -1,8 +1,16 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
- 
+import { readCameras } from '../../services/cameraStorage';
+
+// Read once, at module load, so the stored cameras are already in place on the
+// first render and loadCameraSettingsFromStorage derives the right videoStatus.
+// Later edits go through setFrontCamera/etc; this snapshot is only the seed.
+const storedCameras = readCameras();
+
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
-export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
+// 'no-devices' means the machine has no microphone; 'off' means it has one but
+// this session was started without audio (a camera-only recording).
+export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices' | 'off';
 
 export type ReportStatus = 'idle' | 'generating' | 'done' | 'error';
 export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
@@ -34,6 +42,12 @@ export interface UIState {
   autoSwitched: boolean;
   autoSwitchedToMindmap: boolean;
   sessionId: string | null;
+  /**
+   * Whether the backend has a row for `sessionId`. The stage-driven chain reads
+   * that row to decide when to start segmentation, so without a row there is
+   * nothing to poll and it must not try.
+   */
+  sessionRegistered: boolean;
   videoSessionId: string | null;
   uploadedAudioPath: string | null;
   shouldStartSummary: boolean;
@@ -41,7 +55,6 @@ export interface UIState {
   reportStatus: ReportStatus;
   reportError: string | null;
   shouldStartReport: boolean;
-  projectLocation: string;
   frontCamera: string;
   backCamera: string;
   boardCamera: string;
@@ -103,6 +116,7 @@ const initialState: UIState = {
   autoSwitched: false,
   autoSwitchedToMindmap: false,
   sessionId: null,
+  sessionRegistered: false,
   videoSessionId: null,
   uploadedAudioPath: null,
   shouldStartSummary: false,
@@ -111,11 +125,10 @@ const initialState: UIState = {
   shouldStartReport: false,
   shouldStartMindmap: false,
   transcriptionDone: false,
-  projectLocation: 'storage/',
   activeStream: null,
-  frontCamera: '',
-  backCamera: '',
-  boardCamera: '',
+  frontCamera: storedCameras.front,
+  backCamera: storedCameras.back,
+  boardCamera: storedCameras.board,
   frontCameraStream: '',
   backCameraStream: '',
   boardCameraStream: '',
@@ -172,6 +185,7 @@ const uiSlice = createSlice({
       state.autoSwitched = false;
       state.autoSwitchedToMindmap = false;
       state.sessionId = null;
+      state.sessionRegistered = false;
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
@@ -274,8 +288,16 @@ const uiSlice = createSlice({
     setSessionId(state, action: PayloadAction<string | null>) {
       const v = action.payload;
       if (typeof v === 'string' && v.trim().length > 0) {
+        // A fresh id has not been registered yet. Clearing the flag here rather
+        // than leaving it to the caller means the chain can never poll a new
+        // session on the strength of the previous one's registration.
+        if (v !== state.sessionId) state.sessionRegistered = false;
         state.sessionId = v;
       }
+    },
+
+    setSessionRegistered(state, action: PayloadAction<boolean>) {
+      state.sessionRegistered = action.payload;
     },
 
     setVideoSessionId(state, action: PayloadAction<string | null>) {
@@ -317,6 +339,11 @@ const uiSlice = createSlice({
       state.shouldStartMindmap = true;
       state.audioStatus = 'mindmapping';
     },
+
+    mindmapLoadingStart(state) {
+      state.mindmapLoading = true;
+      state.audioStatus = 'mindmapping';
+    },
  
     mindmapSuccess(state) {
       state.mindmapLoading = false;
@@ -343,10 +370,6 @@ const uiSlice = createSlice({
  
     setActiveTab(state, action: PayloadAction<Tab>) {
       state.activeTab = action.payload;
-    },
-    
-    setProjectLocation(state, action: PayloadAction<string>) {
-      state.projectLocation = action.payload;
     },
     
     setFrontCamera(state, action: PayloadAction<string>) {
@@ -606,7 +629,16 @@ const uiSlice = createSlice({
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
       const preservedCsHasUploads = state.csHasUploads;
       const preservedCsUploadsComplete = state.csUploadsComplete;
+      // Which cameras exist is a setting, not flow state. Preserved by hand
+      // rather than left to initialState, which froze the values as they were at
+      // page load and would undo anything entered since.
+      const preservedFrontCamera = state.frontCamera;
+      const preservedBackCamera = state.backCamera;
+      const preservedBoardCamera = state.boardCamera;
       Object.assign(state, initialState);
+      state.frontCamera = preservedFrontCamera;
+      state.backCamera = preservedBackCamera;
+      state.boardCamera = preservedBoardCamera;
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
       state.csHasUploads = preservedCsHasUploads;
@@ -633,6 +665,7 @@ export const {
   summaryStreamComplete,
   setUploadedAudioPath,
   setSessionId,
+  setSessionRegistered,
   setVideoSessionId,
   setActiveStream,
   resetStream,
@@ -641,12 +674,12 @@ export const {
   firstSummaryToken,
   summaryDone,
   mindmapStart,
+  mindmapLoadingStart,
   mindmapSuccess,
   mindmapFailed,
   mindmapImageDone,
   clearMindmapStartRequest,
   setActiveTab,
-  setProjectLocation,
   resetFlow,
   setFrontCamera, 
   setBackCamera, 

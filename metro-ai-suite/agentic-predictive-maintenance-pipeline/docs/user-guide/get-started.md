@@ -13,7 +13,7 @@ Before you start, ensure the following:
 - Python programming language version 3.10 or later: only needed to prepare sample data.
 - `opencv-python` Python package: only needed for the data preparation script.
 - A Hugging Face account and API token if you use a gated model such as
-  `microsoft/Phi-4-mini-instruct`.
+  `microsoft/Phi-4-mini-instruct`,`Qwen/Qwen2.5-1.5B-Instruct`.
 
 Verify that your system meets the
 [hardware and software requirements](./get-started/system-requirements.md) before continuing.
@@ -21,7 +21,7 @@ Verify that your system meets the
 ## Project Structure
 
 ```text
-agentic-predictive-maintenance/
+agentic-predictive-maintenance-pipeline/
 ├── apps/
 │   └── pipeline-defect-detection/     # Use-case configuration directory
 │       ├── configs/
@@ -54,7 +54,8 @@ agentic-predictive-maintenance/
 └── setup.sh                           # Main deployment script
 ```
 
-> **Note**: Each use case ships with its own `.env_<use-case>` file already populated
+> [!NOTE]
+> Each use case ships with its own `.env_<use-case>` file already populated
 > with working defaults at `apps/<use-case>/.env_<use-case>` — you do not need to create
 > it yourself; `setup.sh` reads it from that location automatically.
 
@@ -62,7 +63,7 @@ agentic-predictive-maintenance/
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/metro-ai-suite/agentic-predictive-maintenance
+cd edge-ai-suites/metro-ai-suite/agentic-predictive-maintenance-pipeline/
 ```
 
 ## Step 2 — Configure the Environment
@@ -78,10 +79,14 @@ The most important variables are:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `LLM_MODE` | `llm` | Set to `fallback` to run without an LLM (rule-based mode) |
-| `LLM_MODEL_NAME` | `microsoft/Phi-4-mini-instruct` | Language model used by the agent pipeline |
+| `LLM_MODEL_NAME` | `microsoft/Phi-4-mini-instruct`, `Qwen/Qwen2.5-1.5B-Instruct` | Language model used by the agent pipeline |
 | `LLM_DEVICE` | `CPU` | Inference device: `CPU`, `GPU`, or `NPU` |
 | `LLM_WEIGHT_FORMAT` | `int4` | Model quantization format: `fp32`, `fp16`, `int8`, or `int4` |
 | `DL_DEVICE` | `CPU` | Default DL Streamer mode. The UI device list is hardware-detected: `CPU` is always available, `GPU` appears when `/dev/dri/render*` exists, and `NPU` appears when `/dev/accel` exists. |
+
+The agent service and the UI's **Ask & Analyze** feature share these settings and the same
+`apm-llm` container. The UI connects to OVMS internally at
+`http://apm-llm:8000/v3`; no additional model configuration or download is required.
 
 If you are using a gated Hugging Face model, set your API token:
 
@@ -90,7 +95,8 @@ If you are using a gated Hugging Face model, set your API token:
 HUGGINGFACEHUB_API_TOKEN=hf_your_token_here
 ```
 
-> **Note**: Accept the model license agreement on the
+> [!NOTE]
+> Accept the model license agreement on the
 > [Hugging Face model page](https://huggingface.co/microsoft/Phi-4-mini-instruct) before using
 > the gated models.
 
@@ -119,7 +125,8 @@ This script:
 > for release validation. To train a detector for your own inspection scenario, see
 > [Training a Defect Detection Model with Intel Geti](./training-with-geti.md).
 
-> **Note**: Skip this step if you have your own video, or if you plan to run in
+> [!NOTE]
+> Skip this step if you have your own video, or if you plan to run in
 > `LLM_MODE=fallback` where no video or DL Streamer inference is required.
 
 > **Disclaimer**: By running this script you acknowledge that you are solely responsible for the
@@ -143,12 +150,13 @@ writes the resulting local path back into
 `apps/pipeline-defect-detection/.env_pipeline-defect-detection`
 as `LLM_MODEL_PATH`. `setup.sh` mounts this path read-only into the `apm-llm` container.
 
-> **Note**: Skip this step entirely if `LLM_MODE=fallback` — the script detects this and exits
+> [!NOTE]
+> Skip this step entirely if `LLM_MODE=fallback` — the script detects this and exits
 > immediately without downloading anything.
 
 ## Step 5 — Launch the Application
 
-**LLM mode** (requires the LLM and OpenVINO model server service; uses AI-generated analysis):
+**LLM mode** (requires the `apm-llm` service; uses AI-generated analysis):
 
 ```bash
 source ./setup.sh --use-case pipeline-defect-detection
@@ -182,7 +190,7 @@ If successful, you will see the following containers running:
 | `apm-dlstreamer` | Video inference |
 | `apm-mqtt-broker` | Message Queuing Telemetry Transport (MQTT) broker |
 | `apm-model-download` | Model download utility |
-| `apm-llm` | LLM service (OpenVINO model server) *(LLM mode only)* |
+| `apm-llm` | LLM service served by the OpenVINO model server *(LLM mode only)* |
 
 ## Step 6 — Open the Dashboard
 
@@ -194,6 +202,39 @@ Navigate to `http://localhost:8080` in your browser. The dashboard displays:
 - Live phase status ("Detecting…" / "Analyzing…") while a run is in progress.
 - A log of all agent runs with status indicators.
 - Generated maintenance tickets with priority, description, and recommended action.
+- An **Ask & Analyze** page for questions grounded in completed analysis, stored detections, or
+  both.
+
+### Use Ask & Analyze
+
+Open **Ask & Analyze** in the dashboard navigation, select an answer mode, optionally enter a
+completed run ID, and ask a question.
+
+| Mode | Grounding used |
+|------|----------------|
+| **Analysis** | Completed analysis output; a run ID narrows the answer to that run |
+| **Detections** | Current stored detection records and aggregates; a run ID scopes records to that completed run |
+| **Combined** | Both completed analysis and stored detection evidence |
+
+Example questions:
+
+- `Summarize the most important maintenance findings.`
+- `Which detections need immediate attention, and why?`
+- `Compare the evidence and recommended maintenance actions.`
+- `How many Rupture detections were above 0.7 confidence?`
+
+Answers can include the structured detection query and supporting data used to ground the response.
+Treat generated prose as decision support: verify important conclusions against the displayed
+supporting data and run results.
+
+Ask & Analyze is available in `LLM_MODE=llm`. In `LLM_MODE=fallback`, the dashboard, detection
+workflow, and rule-based agent pipeline remain available, but chat cannot generate answers because
+the deployment omits the `apm-llm` service. The UI intentionally has no hard Compose dependency on that service,
+which allows fallback deployments to start normally.
+
+> [!NOTE]
+> Fallback mode: If you deployed with `LLM_MODE=fallback`, the **Ask & Analyze** page
+> displays a banner explaining that conversational analysis is disabled. The chat form is locked.
 
 ## Stop and Clean Up
 

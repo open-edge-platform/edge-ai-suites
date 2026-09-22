@@ -11,7 +11,9 @@ function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function renderDetectionsRows(byClass) {
@@ -41,9 +43,13 @@ function runningLabel(activeRun) {
 }
 
 function runActionHtml(run) {
-  if (run.status === "completed") return `<a href="/results/${run.run_id}">View Results</a>`;
-  if (run.status === "running") return `<a href="/results/${run.run_id}">Waiting…</a>`;
-  return `<a href="/results/${run.run_id}">View Error</a>`;
+  const runPath = encodeURIComponent(run.run_id);
+  if (run.status === "completed") {
+    return `<a href="/results/${runPath}">View Results</a><span aria-hidden="true"> · </span>`
+      + `<a href="/chat?run_id=${runPath}">Ask about run</a>`;
+  }
+  if (run.status === "running") return `<a href="/results/${runPath}">Waiting…</a>`;
+  return `<a href="/results/${runPath}">View Error</a>`;
 }
 
 function renderRunsRows(runs) {
@@ -52,7 +58,7 @@ function renderRunsRows(runs) {
     .map(
       (run) => `
       <tr>
-        <td><code title="${run.run_id}">${run.run_id.slice(0, 8)}…</code></td>
+        <td class="run-id-cell"><code>${escapeHtml(run.run_id)}</code></td>
         <td>${statusBadgeHtml(run)}</td>
         <td>${runActionHtml(run)}</td>
       </tr>`

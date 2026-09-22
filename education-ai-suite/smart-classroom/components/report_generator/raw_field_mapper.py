@@ -16,8 +16,41 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 
+# Display units for numeric raw fields, keyed by field code: (zh_unit, en_unit).
+# One declarative table so unit strings live in a single place instead of being
+# scattered through resolve_raw_fields. A field absent from this map renders as a
+# bare value. Units stay in code (not the template) so a missing value can drop
+# its unit with it — see _fmt_with_unit / resolve_raw_fields.
+FIELD_UNITS = {
+    "attendance": ("人", "students"),
+    "hand_raise_count": ("人次", "person-times"),
+    "hand_raise_avg": ("次", "times per person"),
+    "question_count": ("次", "questions"),
+    "speaking_speed": ("字/分", "characters/minute"),
+    "teaching_duration": ("分钟", "min"),
+    "duration": ("分钟", "min"),
+}
+
+
 def _no_data(language: str) -> str:
     return "暂无数据" if language == "zh" else "N/A"
+
+
+def _fmt_with_unit(field_code: str, value, language: str) -> str | None:
+    """Format ``value`` with ``field_code``'s unit, or None when there is no value.
+
+    Returning None (rather than a unit-only string) lets the caller fall back to
+    the no-data marker and keeps a lone unit from rendering without a number.
+    A field absent from ``FIELD_UNITS`` is returned as a bare value.
+    """
+    if value is None or value == "":
+        return None
+    units = FIELD_UNITS.get(field_code)
+    if not units:
+        return str(value)
+    zh_unit, en_unit = units
+    unit = zh_unit if language == "zh" else en_unit
+    return f"{value} {unit}"
 
 
 def _manual_default_values(language: str) -> dict:
@@ -26,7 +59,7 @@ def _manual_default_values(language: str) -> dict:
         return {
             "school_name": "XXX中学",
             "class_name": "八（3）班",
-            "course_name": "《XXXX》",
+            "course_name": "XXXX",
             "teacher_name": "XX老师",
         }
     return {
@@ -53,20 +86,26 @@ def _session_start_time(session_id: str) -> datetime | None:
         return None
 
 
-def _format_report_delay(session_id: str, duration_min, language: str) -> str | None:
+def _format_report_delay(session_id: str, duration_sec, language: str) -> str | None:
     """Return a human-readable delay like '8 min after class'.
 
     Uses session start time + measured class duration as a best-effort class-end
     timestamp.
     """
-    if duration_min is None:
+    if duration_sec is None:
+        return None
+    try:
+        duration_value_sec = float(duration_sec)
+    except (TypeError, ValueError):
+        return None
+    if duration_value_sec <= 0:
         return None
     start_time = _session_start_time(session_id)
     if start_time is None:
         return None
 
     from datetime import timedelta
-    class_end = start_time + timedelta(minutes=float(duration_min))
+    class_end = start_time + timedelta(seconds=duration_value_sec)
     delay_minutes = max(0, round((datetime.now() - class_end).total_seconds() / 60.0))
     if language == "zh":
         return f"下课后{delay_minutes}分钟"
@@ -174,47 +213,66 @@ def resolve_raw_fields(collector, raw_codes, language: str = "en") -> dict:
     nd = _no_data(language)
     session_id = getattr(collector, "session_id", "")
 
+    # Total class duration is resolved once from a single source (audio timeline
+    # for audio sessions, video length for video-only) — independent of which
+    # data-source readers ran. Falls back to any duration already in metrics.
+    duration_sec = None
+    duration_min = None
+    if hasattr(collector, "get_total_duration_sec"):
+        duration_sec = collector.get_total_duration_sec()
+        if isinstance(duration_sec, (int, float)) and duration_sec > 0:
+            duration_min = round(float(duration_sec) / 60.0, 2)
+    elif hasattr(collector, "get_total_duration_min"):
+        duration_min = collector.get_total_duration_min()
+        if isinstance(duration_min, (int, float)) and duration_min > 0:
+            duration_sec = float(duration_min) * 60.0
+        else:
+            duration_min = None
+    elif isinstance(metrics.get("duration_min"), (int, float)):
+        duration_sec = float(metrics.get("duration_min")) * 60.0
+        duration_min = float(metrics.get("duration_min"))
+
+    if not (isinstance(duration_sec, (int, float)) and duration_sec > 0):
+        duration_sec = None
+    if not (isinstance(duration_min, (int, float)) and duration_min > 0):
+        duration_min = None
+
     student_count = metrics.get("student_count")
     raise_up = metrics.get("raise_up_count")
 
-    def fmt_min(v):
-        if v is None:
-            return None
-        return f"{v} 分钟" if language == "zh" else f"{v} min"
+    def unit(code, value):
+        return _fmt_with_unit(code, value, language)
 
-    # Bare number only — the template lines already carry the unit
-    # (for example: "Average speaking speed: {speaking_speed} characters/minute"),
-    # so appending a unit here would double-print it.
     speaking_speed = metrics.get("speaking_speed")
-    speaking_speed_str = str(speaking_speed) if speaking_speed else None
+    # 0 chars/min means no usable speech signal — treat as no data, not "0 字/分".
+    speaking_speed_str = unit("speaking_speed", speaking_speed) if speaking_speed else None
 
     hand_raise_avg = None
     if raise_up is not None and student_count:
         hand_raise_avg = round(raise_up / student_count, 1)
 
     resolved = {
-        "attendance": student_count,
-        "hand_raise_count": raise_up,
-        "hand_raise_avg": hand_raise_avg,
-        "question_count": metrics.get("question_count"),
+        "attendance": unit("attendance", student_count),
+        "hand_raise_count": unit("hand_raise_count", raise_up),
+        "hand_raise_avg": unit("hand_raise_avg", hand_raise_avg),
+        "question_count": unit("question_count", metrics.get("question_count")),
         "speaking_speed": speaking_speed_str,
         "pacing_assessment": _build_pacing_assessment(
             metrics.get("speaking_speed"),
             metrics.get("teaching_duration_min"),
             language,
         ),
-        "teaching_duration": fmt_min(metrics.get("teaching_duration_min")),
-        "duration": fmt_min(metrics.get("duration_min")),
+        "teaching_duration": unit("teaching_duration", metrics.get("teaching_duration_min")),
+        "duration": unit("duration", duration_min),
         "keywords": metrics.get("keywords"),
         "key_difficulty": metrics.get("key_difficulty"),
         "difficulty_mentions_summary": metrics.get("difficulty_mentions_summary"),
         "report_time": _format_report_time(language),
         "report_delay_after_class": _format_report_delay(
             session_id,
-            metrics.get("duration_min"),
+            duration_sec,
             language,
         ),
-        "keywords_count": metrics.get("keywords_count"),
         "video_source_count": metrics.get("video_source_count"),
     }
 
@@ -232,5 +290,16 @@ def resolve_raw_fields(collector, raw_codes, language: str = "en") -> dict:
             values[code] = manual_defaults.get(code, "") if code in manual_codes else nd
         else:
             values[code] = str(val)
+
+    # Filled after the loop, not via `resolved`: an empty note must stay "" — the
+    # loop's no-data fallback would turn it into "暂无数据" mid-sentence.
+    if "keywords_count_note" in raw_codes:
+        kw_count = metrics.get("keywords_count")
+        if kw_count:
+            values["keywords_count_note"] = (
+                f"（共{kw_count}个）" if language == "zh" else f" ({kw_count} total)"
+            )
+        else:
+            values["keywords_count_note"] = ""
 
     return values

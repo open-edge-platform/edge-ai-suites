@@ -13,8 +13,8 @@ models for video analysis. This sample application offers the following:
 
 To see the system requirements and other installation procedures, see the following guides:
 
-- [System Requirements](../../docs/user-guide/pcb-anomaly-detection/get-started/system-requirements.md)
-- [Setup guide](../../docs/user-guide/pcb-anomaly-detection/get-started.md)
+- [System Requirements](../../docs/user-guide/get-started/vision-system-requirements.md)
+- [Setup guide](../../docs/user-guide/get-started.md)
 - [Overview](../../docs/user-guide/pcb-anomaly-detection/index.md)
 
 ## How It Works
@@ -43,4 +43,4 @@ It also consists of the following third-party microservices:
 - [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib) is a set of receivers, exporters, processors, connectors for Open Telemetry.
 - [Prometheus](https://hub.docker.com/r/prom/prometheus) is a systems and service monitoring system used for viewing Open Telemetry.
 - [Postgres](https://hub.docker.com/_/postgres) is an object-relational database system that provides reliability and data integrity.
-- [Minio](https://hub.docker.com/r/minio/minio) is a high performance object storage that is API compatible with Amazon S3 cloud storage service.
+- [SeaweedFS](https://github.com/seaweedfs/seaweedfs) is a fast, S3-compatible distributed object storage system.

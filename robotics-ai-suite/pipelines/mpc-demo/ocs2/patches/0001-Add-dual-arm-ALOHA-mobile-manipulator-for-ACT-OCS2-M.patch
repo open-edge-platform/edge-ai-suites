@@ -1,0 +1,3433 @@
+From f1ec18122ec05e93df0611da585a7ed207b10009 Mon Sep 17 00:00:00 2001
+From: AnnikaWU <xian.wu@intel.com>
+Date: Fri, 28 Aug 2026 11:34:44 +0800
+Subject: [PATCH 1/2] Add dual-arm ALOHA mobile manipulator for ACT+OCS2+MUJOCO
+ (ROS2 Jazzy)
+
+Adapts the OCS2 mobile manipulator into a dual-arm ALOHA configuration for the
+ACT + OCS2 + MUJOCO cube-transfer pipeline, and makes it build/run on ROS2 Jazzy.
+
+Folds together:
+- Modify for dual-arm ACT+OCS2+MUJOCO in simulation (#57)
+- Add launch-time mode selection for ALOHA dual-arm configuration
+- Introduce joint position tracking alongside end-effector pose tracking
+- Add synchronizedWallClockLoop: wall-clock anchored policy evaluation with
+  linear blend for real-robot control
+- Optimize lineSearchStrategy to reduce max MPC latency
+- Remove dependence on external ALOHA packages
+- ROS2 Humble/Jazzy build compatibility fixes (tinyxml2 include/optional,
+  declare_parameter in MRT)
+---
+ .../integration/TrapezoidalIntegration.h      |   1 +
+ .../search_strategy/LineSearchStrategy.h      |   2 +
+ .../search_strategy/LineSearchStrategy.cpp    |  64 +-
+ ocs2_mpc/src/MPC_BASE.cpp                     |   6 +-
+ ocs2_msgs/CMakeLists.txt                      |   4 +
+ ocs2_msgs/msg/JointGroupCommand.msg           |   6 +
+ ocs2_msgs/msg/JointTrajectoryCommand.msg      |   7 +
+ ocs2_msgs/package.xml                         |   2 +
+ .../ocs2_self_collision/CMakeLists.txt        |  13 +-
+ .../src/PinocchioGeometryInterface.cpp        |  19 +-
+ .../ocs2_sphere_approximation/CMakeLists.txt  |  12 +-
+ .../src/PinocchioSphereInterface.cpp          |  19 +-
+ .../config/aloha/task.info                    | 391 ++++++++++++
+ .../config/aloha_dual_arm/task.info           | 568 ++++++++++++++++++
+ .../MobileManipulatorInterface.h              |   5 +
+ .../cost/QuadraticJointStateCost.h            |  67 +++
+ .../src/MobileManipulatorInterface.cpp        |  54 +-
+ .../src/constraint/EndEffectorConstraint.cpp  |  19 +-
+ .../launch/manipulator_aloha.launch.py        |  69 +++
+ .../manipulator_aloha_dual_arm.launch.py      | 152 +++++
+ .../rviz/mobile_manipulator.rviz              |   2 +-
+ .../src/MobileManipulatorDummyMRT.cpp         |  52 +-
+ .../src/MobileManipulatorMpcNode.cpp          | 120 +++-
+ .../ocs2_perceptive_anymal/COLCON_IGNORE      |   0
+ ocs2_ros_interfaces/CMakeLists.txt            |  43 +-
+ .../common/RosMsgConversions.h                |  15 +
+ .../mpc/MPC_ROS_Interface.h                   |  24 +
+ .../mrt/MRT_ROS_Dummy_Loop.h                  |  14 +
+ .../mrt/MRT_ROS_Interface.h                   |   7 +
+ .../synchronized_module/RosReferenceManager.h |  52 ++
+ ocs2_ros_interfaces/package.xml               |   2 +
+ .../src/common/RosMsgConversions.cpp          |  56 ++
+ .../src/mpc/MPC_ROS_Interface.cpp             | 176 +++++-
+ .../src/mrt/MRT_ROS_Dummy_Loop.cpp            | 160 ++++-
+ .../src/mrt/MRT_ROS_Interface.cpp             |  34 ++
+ .../RosReferenceManager.cpp                   | 467 ++++++++++++++
+ 36 files changed, 2612 insertions(+), 92 deletions(-)
+ create mode 100644 ocs2_msgs/msg/JointGroupCommand.msg
+ create mode 100644 ocs2_msgs/msg/JointTrajectoryCommand.msg
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/cost/QuadraticJointStateCost.h
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py
+ create mode 100644 ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py
+ create mode 100644 ocs2_robotic_examples/ocs2_perceptive_anymal/COLCON_IGNORE
+
+diff --git a/ocs2_core/include/ocs2_core/integration/TrapezoidalIntegration.h b/ocs2_core/include/ocs2_core/integration/TrapezoidalIntegration.h
+index 37088b127..323f4653b 100644
+--- a/ocs2_core/include/ocs2_core/integration/TrapezoidalIntegration.h
++++ b/ocs2_core/include/ocs2_core/integration/TrapezoidalIntegration.h
+@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #pragma once
+ 
+ #include <cassert>
++#include <cstddef>
+ #include <vector>
+ 
+ namespace ocs2 {
+diff --git a/ocs2_ddp/include/ocs2_ddp/search_strategy/LineSearchStrategy.h b/ocs2_ddp/include/ocs2_ddp/search_strategy/LineSearchStrategy.h
+index a99548f89..d76711b6b 100644
+--- a/ocs2_ddp/include/ocs2_ddp/search_strategy/LineSearchStrategy.h
++++ b/ocs2_ddp/include/ocs2_ddp/search_strategy/LineSearchStrategy.h
+@@ -125,12 +125,14 @@ class LineSearchStrategy final : public SearchStrategyBase {
+   // convergence check
+   scalar_t baselineMerit_ = 0.0;                  // the merit of the rollout for zero learning rate
+   scalar_t unoptimizedControllerUpdateIS_ = 0.0;  // integral of the squared (IS) norm of the controller update.
++  size_t baselineTrajectoryPoints_ = 0;
+ 
+   // threading
+   std::atomic_size_t nextTaskId_{0};
+   std::atomic_size_t alphaExpNext_{0};
+   std::vector<bool> alphaProcessed_;
+   std::mutex lineSearchResultMutex_;
++  std::mutex bestSolutionUpdateMutex_;
+   mutable std::mutex outputDisplayGuardMutex_;
+ };
+ 
+diff --git a/ocs2_ddp/src/search_strategy/LineSearchStrategy.cpp b/ocs2_ddp/src/search_strategy/LineSearchStrategy.cpp
+index 4a6e3b7e1..aae837a1c 100644
+--- a/ocs2_ddp/src/search_strategy/LineSearchStrategy.cpp
++++ b/ocs2_ddp/src/search_strategy/LineSearchStrategy.cpp
+@@ -30,6 +30,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include "ocs2_ddp/search_strategy/LineSearchStrategy.h"
+ 
+ #include <iomanip>
++#include <algorithm>
+ 
+ #include "ocs2_ddp/DDP_HelperFunctions.h"
+ #include "ocs2_ddp/HessianCorrection.h"
+@@ -94,6 +95,22 @@ void LineSearchStrategy::computeSolution(size_t taskId, scalar_t stepLength, sea
+   incrementController(stepLength, *lineSearchInputRef_.unoptimizedControllerPtr, getLinearController(solution.primalSolution));
+   solution.avgTimeStep = rolloutTrajectory(rollout, lineSearchInputRef_.timePeriodPtr->first, *lineSearchInputRef_.initStatePtr,
+                                            lineSearchInputRef_.timePeriodPtr->second, solution.primalSolution);
++  
++  // Early reject: skip expensive downstream computation for divergent rollouts.
++  // Threshold = max(200, 10x baseline points) avoids false positives on short trajectories.
++  if (!numerics::almost_eq(stepLength, scalar_t(0.0))) {
++    const size_t points = solution.primalSolution.timeTrajectory_.size();
++    const size_t threshold = std::max<size_t>(200, baselineTrajectoryPoints_ * 10);
++    if (points > threshold) {
++      solution.performanceIndex.merit = std::numeric_limits<scalar_t>::max();
++      solution.performanceIndex.cost = std::numeric_limits<scalar_t>::max();
++      if (baseSettings_.displayInfo) {
++        printString("    [Thread " + std::to_string(taskId) + "] rollout with step length " + std::to_string(stepLength) +
++                    " is rejected: points=" + std::to_string(points) + " > threshold=" + std::to_string(threshold) + '\n');
++      }
++      return;
++    }
++  }
+ 
+   // adjust dual solution only if it is required
+   const DualSolution* adjustedDualSolutionPtr = lineSearchInputRef_.dualSolutionPtr;
+@@ -148,6 +165,7 @@ bool LineSearchStrategy::run(const std::pair<scalar_t, scalar_t>& timePeriod, co
+   try {
+     computeSolution(taskId, stepLength, workersSolution_[taskId]);
+     baselineMerit_ = workersSolution_[taskId].performanceIndex.merit;
++    baselineTrajectoryPoints_ = workersSolution_[taskId].primalSolution.timeTrajectory_.size();
+     unoptimizedControllerUpdateIS_ = computeControllerUpdateIS(unoptimizedController);
+ 
+     // record solution
+@@ -224,22 +242,44 @@ void LineSearchStrategy::lineSearchTask(const size_t taskId) {
+ 
+     // whether to accept the step or reject it
+     bool terminateLinesearchTasks = false;
+-    {
+-      std::lock_guard<std::mutex> lock(lineSearchResultMutex_);
+ 
+-      /*
+-       * based on the "Armijo backtracking" step length selection policy:
+-       * cost should be better than the baseline cost but learning rate should
+-       * be as high as possible. This is equivalent to a single core line search.
+-       */
+-      const bool armijoCondition = workersSolution_[taskId].performanceIndex.merit <
+-                                   (baselineMerit_ - settings_.armijoCoefficient * stepLength * unoptimizedControllerUpdateIS_);
+-      if (armijoCondition && stepLength > bestStepSize_) {  // save solution
+-        bestStepSize_ = stepLength;
++    /*
++     * based on the "Armijo backtracking" step length selection policy:
++     * cost should be better than the baseline cost but learning rate should
++     * be as high as possible. This is equivalent to a single core line search.
++     */
++    const bool armijoCondition = workersSolution_[taskId].performanceIndex.merit <
++                                 (baselineMerit_ - settings_.armijoCoefficient * stepLength * unoptimizedControllerUpdateIS_);
++
++    // Lock-free CAS update: only the thread with the largest accepted step wins.
++    // acq_rel on success ensures the subsequent solution swap sees all prior writes;
++    // acquire on failure re-reads the latest best for the next comparison.
++    bool acceptedAsBest = false;
++    if (armijoCondition) {
++      scalar_t bestStepSize = bestStepSize_.load(std::memory_order_acquire);
++      while (stepLength > bestStepSize) {
++        if (bestStepSize_.compare_exchange_weak(bestStepSize, stepLength, std::memory_order_acq_rel, std::memory_order_acquire)) {
++          acceptedAsBest = true;
++          break;
++        }
++      }
++    }
++
++    // Double-check under lock: another thread may have won between CAS and swap.
++    if (acceptedAsBest) {
++      std::lock_guard<std::mutex> lock(bestSolutionUpdateMutex_);
++      if (numerics::almost_eq(bestStepSize_.load(std::memory_order_acquire), stepLength)) {
+         swap(*bestSolutionRef_, workersSolution_[taskId]);
+-        terminateLinesearchTasks = std::all_of(alphaProcessed_.cbegin(), alphaProcessed_.cbegin() + alphaExp, [](bool f) { return f; });
++      } else {
++        acceptedAsBest = false;
+       }
++    }
+ 
++    {
++      std::lock_guard<std::mutex> lock(lineSearchResultMutex_);
++      if (acceptedAsBest) {
++        terminateLinesearchTasks = std::all_of(alphaProcessed_.cbegin(), alphaProcessed_.cbegin() + alphaExp, [](bool f) { return f; });
++      }
+       alphaProcessed_[alphaExp] = true;
+     }  // end lock
+ 
+diff --git a/ocs2_mpc/src/MPC_BASE.cpp b/ocs2_mpc/src/MPC_BASE.cpp
+index 6eb0dfe49..8c577f11e 100644
+--- a/ocs2_mpc/src/MPC_BASE.cpp
++++ b/ocs2_mpc/src/MPC_BASE.cpp
+@@ -68,9 +68,9 @@ bool MPC_BASE::run(scalar_t currentTime, const vector_t& currentState) {
+     std::cerr << "\n### MPC is called at time:  " << currentTime << " [s].";
+     std::cerr << "\n### MPC final Time:         " << finalTime << " [s].";
+     std::cerr << "\n### MPC time horizon:       " << mpcSettings_.timeHorizon_ << " [s].\n";
+-    mpcTimer_.startTimer();
+   }
+-
++  mpcTimer_.startTimer();
++  
+   // calculate the MPC policy
+   calculateController(currentTime, currentState, finalTime);
+ 
+@@ -78,7 +78,7 @@ bool MPC_BASE::run(scalar_t currentTime, const vector_t& currentState) {
+   initRun_ = false;
+ 
+   // display
+-  if (mpcSettings_.debugPrint_) {
++  if (true) {
+     mpcTimer_.endTimer();
+     std::cerr << "\n### MPC Benchmarking";
+     std::cerr << "\n###   Maximum : " << mpcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
+diff --git a/ocs2_msgs/CMakeLists.txt b/ocs2_msgs/CMakeLists.txt
+index bf24fba73..e9df36f38 100644
+--- a/ocs2_msgs/CMakeLists.txt
++++ b/ocs2_msgs/CMakeLists.txt
+@@ -3,6 +3,7 @@ project(ocs2_msgs)
+ 
+ find_package(ament_cmake REQUIRED)
+ find_package(rosidl_default_generators REQUIRED)
++find_package(trajectory_msgs REQUIRED)
+ 
+ rosidl_generate_interfaces(${PROJECT_NAME}
+   "msg/MpcState.msg"
+@@ -16,7 +17,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
+   "msg/LagrangianMetrics.msg"
+   "msg/Multiplier.msg"
+   "msg/Constraint.msg"
++  "msg/JointGroupCommand.msg"
++  "msg/JointTrajectoryCommand.msg"
+   "srv/Reset.srv"
++  DEPENDENCIES trajectory_msgs
+ )
+ 
+ ament_export_dependencies(rosidl_default_runtime)
+diff --git a/ocs2_msgs/msg/JointGroupCommand.msg b/ocs2_msgs/msg/JointGroupCommand.msg
+new file mode 100644
+index 000000000..42dac4380
+--- /dev/null
++++ b/ocs2_msgs/msg/JointGroupCommand.msg
+@@ -0,0 +1,6 @@
++# Joint group command for the ALOHA arm target interface.
++# Field layout mirrors interbotix_xs_msgs/JointGroupCommand so the
++# ALOHA reference-tracking code can consume it without changes.
++
++string      name    # joint group name (e.g. "arm")
++float32[]   cmd     # target joint positions for the group
+diff --git a/ocs2_msgs/msg/JointTrajectoryCommand.msg b/ocs2_msgs/msg/JointTrajectoryCommand.msg
+new file mode 100644
+index 000000000..5caf54b0c
+--- /dev/null
++++ b/ocs2_msgs/msg/JointTrajectoryCommand.msg
+@@ -0,0 +1,7 @@
++# Joint trajectory command for the ALOHA arm target interface.
++# Field layout mirrors interbotix_xs_msgs/JointTrajectoryCommand so the
++# ALOHA reference-tracking code can consume it without changes.
++
++string                          cmd_type    # command target type (unused by OCS2, kept for compatibility)
++string                          name        # joint group/single joint name
++trajectory_msgs/JointTrajectory traj        # desired joint trajectory
+diff --git a/ocs2_msgs/package.xml b/ocs2_msgs/package.xml
+index edb060af6..d3b1988f6 100644
+--- a/ocs2_msgs/package.xml
++++ b/ocs2_msgs/package.xml
+@@ -14,6 +14,8 @@
+     <buildtool_depend>ament_cmake</buildtool_depend>
+     <buildtool_depend>rosidl_default_generators</buildtool_depend>
+ 
++    <depend>trajectory_msgs</depend>
++
+     <exec_depend>rosidl_default_runtime</exec_depend>
+ 
+     <member_of_group>rosidl_interface_packages</member_of_group>
+diff --git a/ocs2_pinocchio/ocs2_self_collision/CMakeLists.txt b/ocs2_pinocchio/ocs2_self_collision/CMakeLists.txt
+index c339d998e..5de58ef8d 100644
+--- a/ocs2_pinocchio/ocs2_self_collision/CMakeLists.txt
++++ b/ocs2_pinocchio/ocs2_self_collision/CMakeLists.txt
+@@ -11,14 +11,20 @@ find_package(ocs2_pinocchio_interface REQUIRED)
+ find_package(pinocchio REQUIRED)
+ find_package(hpp-fcl REQUIRED)
+ find_package(coal QUIET)
+-find_package(tinyxml2 REQUIRED)
+ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+ find_package(Boost REQUIRED COMPONENTS system filesystem log_setup log)
+ 
++# PinocchioGeometryInterface.cpp uses tinyxml2 directly on Jazzy (urdfdom >=4.x).
++# Humble (urdfdom <=3.x) uses tinyxml v1 instead, so keep this optional.
++find_package(tinyxml2 QUIET)
++
+ set(SELF_COLLISION_FCL_LINK_TARGETS hpp-fcl::hpp-fcl)
+ if(TARGET coal::coal)
+   list(APPEND SELF_COLLISION_FCL_LINK_TARGETS coal::coal)
+ endif()
++if(TARGET tinyxml2::tinyxml2)
++  list(APPEND SELF_COLLISION_FCL_LINK_TARGETS tinyxml2::tinyxml2)
++endif()
+ list(REMOVE_DUPLICATES SELF_COLLISION_FCL_LINK_TARGETS)
+ 
+ set(SELF_COLLISION_EXPORT_DEPS
+@@ -27,13 +33,16 @@ set(SELF_COLLISION_EXPORT_DEPS
+   ocs2_pinocchio_interface
+   pinocchio
+   hpp-fcl
+-  tinyxml2
+   Eigen3
+   Boost
++  tinyxml2
+ )
+ if(coal_FOUND)
+   list(APPEND SELF_COLLISION_EXPORT_DEPS coal)
+ endif()
++if(tinyxml2_FOUND)
++  list(APPEND SELF_COLLISION_EXPORT_DEPS tinyxml2)
++endif()
+ 
+ set(FLAGS
+   ${OCS2_CXX_FLAGS}
+diff --git a/ocs2_pinocchio/ocs2_self_collision/src/PinocchioGeometryInterface.cpp b/ocs2_pinocchio/ocs2_self_collision/src/PinocchioGeometryInterface.cpp
+index 35099a119..5264c847b 100644
+--- a/ocs2_pinocchio/ocs2_self_collision/src/PinocchioGeometryInterface.cpp
++++ b/ocs2_pinocchio/ocs2_self_collision/src/PinocchioGeometryInterface.cpp
+@@ -40,7 +40,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <pinocchio/parsers/urdf.hpp>
+ 
+ #include <urdf_parser/urdf_parser.h>
+-#include <tinyxml2.h>
++// urdfdom on Humble (<=3.x) uses tinyxml v1; Jazzy (>=4.x) uses tinyxml2
++#ifdef TIXML_USE_STL
++#  include <tinyxml.h>
++#  define OCS2_URDFDOM_USE_TINYXML1
++#else
++#  include <tinyxml2.h>
++#endif
+ 
+ namespace ocs2 {
+ 
+@@ -95,12 +101,19 @@ void PinocchioGeometryInterface::buildGeomFromPinocchioInterface(const Pinocchio
+   }
+ 
+   // TODO: Replace with pinocchio function that uses the ModelInterface directly.
+-  // Pinocchio still expects a URDF stream here, so export the URDFDOM model to a tinyxml2 document first.
++  // urdfdom <=3.x (Humble) returns TiXmlDocument* (tinyxml v1); >=4.x (Jazzy) returns tinyxml2::XMLDocument*.
++  std::stringstream urdfAsStringStream;
++#ifdef OCS2_URDFDOM_USE_TINYXML1
++  const std::unique_ptr<TiXmlDocument> urdfAsXml(urdf::exportURDF(*pinocchioInterface.getUrdfModelPtr()));
++  TiXmlPrinter printer;
++  urdfAsXml->Accept(&printer);
++  urdfAsStringStream << printer.CStr();
++#else
+   const std::unique_ptr<tinyxml2::XMLDocument> urdfAsXml(urdf::exportURDF(*pinocchioInterface.getUrdfModelPtr()));
+   tinyxml2::XMLPrinter printer;
+   urdfAsXml->Print(&printer);
+-  std::stringstream urdfAsStringStream;
+   urdfAsStringStream << printer.CStr();
++#endif
+ 
+   pinocchio::urdf::buildGeom(pinocchioInterface.getModel(), urdfAsStringStream, pinocchio::COLLISION, geomModel);
+ }
+diff --git a/ocs2_pinocchio/ocs2_sphere_approximation/CMakeLists.txt b/ocs2_pinocchio/ocs2_sphere_approximation/CMakeLists.txt
+index bdf025247..010ba6adf 100644
+--- a/ocs2_pinocchio/ocs2_sphere_approximation/CMakeLists.txt
++++ b/ocs2_pinocchio/ocs2_sphere_approximation/CMakeLists.txt
+@@ -10,10 +10,13 @@ find_package(ocs2_robotic_tools REQUIRED)
+ find_package(ocs2_pinocchio_interface REQUIRED)
+ find_package(ocs2_robotic_assets REQUIRED)
+ find_package(pinocchio REQUIRED)
+-find_package(tinyxml2 REQUIRED)
+ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+ find_package(Boost REQUIRED COMPONENTS system filesystem log_setup log)
+ 
++# PinocchioSphereInterface.cpp uses tinyxml2 directly on Jazzy (urdfdom >=4.x).
++# Humble (urdfdom <=3.x) uses tinyxml v1 instead, so keep this optional.
++find_package(tinyxml2 QUIET)
++
+ add_library(${PROJECT_NAME}
+   src/SphereApproximation.cpp
+   src/PinocchioSphereInterface.cpp
+@@ -24,6 +27,12 @@ target_link_libraries(${PROJECT_NAME}
+   pinocchio::pinocchio
+   tinyxml2::tinyxml2
+ )
++# On Jazzy the interface links tinyxml2 (used in PinocchioSphereInterface.cpp).
++# PUBLIC so downstream targets (e.g. the gtest below) inherit it and avoid the
++# "DSO missing from command line" link error. No-op on Humble (tinyxml v1).
++if(tinyxml2_FOUND)
++  target_link_libraries(${PROJECT_NAME} tinyxml2::tinyxml2)
++endif()
+ target_include_directories(${PROJECT_NAME}
+   PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+@@ -88,6 +97,7 @@ if(BUILD_TESTING)
+     gtest_main
+     ${PROJECT_NAME}
+     pinocchio::pinocchio
++    tinyxml2::tinyxml2
+   )
+   target_compile_options(PinocchioSphereKinematicsTest PRIVATE ${OCS2_PINOCCHIO_FLAGS})
+ endif()
+diff --git a/ocs2_pinocchio/ocs2_sphere_approximation/src/PinocchioSphereInterface.cpp b/ocs2_pinocchio/ocs2_sphere_approximation/src/PinocchioSphereInterface.cpp
+index 0f6b97eaf..4eb5d6d0c 100644
+--- a/ocs2_pinocchio/ocs2_sphere_approximation/src/PinocchioSphereInterface.cpp
++++ b/ocs2_pinocchio/ocs2_sphere_approximation/src/PinocchioSphereInterface.cpp
+@@ -34,7 +34,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <pinocchio/parsers/urdf.hpp>
+ 
+ #include <urdf_parser/urdf_parser.h>
+-#include <tinyxml2.h>
++// urdfdom on Humble (<=3.x) uses tinyxml v1; Jazzy (>=4.x) uses tinyxml2
++#ifdef TIXML_USE_STL
++#  include <tinyxml.h>
++#  define OCS2_URDFDOM_USE_TINYXML1
++#else
++#  include <tinyxml2.h>
++#endif
+ 
+ #include <ocs2_sphere_approximation/PinocchioSphereInterface.h>
+ 
+@@ -111,12 +117,19 @@ void PinocchioSphereInterface::buildGeomFromPinocchioInterface(const PinocchioIn
+   }
+ 
+   // TODO: Replace with pinocchio function that uses the ModelInterface directly.
+-  // Pinocchio still expects a URDF stream here, so export the URDFDOM model to a tinyxml2 document first.
++  // urdfdom <=3.x (Humble) returns TiXmlDocument* (tinyxml v1); >=4.x (Jazzy) returns tinyxml2::XMLDocument*.
++  std::stringstream urdfAsStringStream;
++#ifdef OCS2_URDFDOM_USE_TINYXML1
++  const std::unique_ptr<TiXmlDocument> urdfAsXml(urdf::exportURDF(*pinocchioInterface.getUrdfModelPtr()));
++  TiXmlPrinter printer;
++  urdfAsXml->Accept(&printer);
++  urdfAsStringStream << printer.CStr();
++#else
+   const std::unique_ptr<tinyxml2::XMLDocument> urdfAsXml(urdf::exportURDF(*pinocchioInterface.getUrdfModelPtr()));
+   tinyxml2::XMLPrinter printer;
+   urdfAsXml->Print(&printer);
+-  std::stringstream urdfAsStringStream;
+   urdfAsStringStream << printer.CStr();
++#endif
+ 
+   pinocchio::urdf::buildGeom(pinocchioInterface.getModel(), urdfAsStringStream, pinocchio::COLLISION, geomModel);
+ }
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info
+new file mode 100644
+index 000000000..397439f61
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha/task.info
+@@ -0,0 +1,391 @@
++; robot model meta-information
++model_information {
++  manipulatorModelType     0      // 0: Default-arm, 1: Wheel-based manipulator, 2: Floating-arm manipulator, 3: Fully actuated floating-arm manipulator
++  
++  ; motion joints in the URDF to consider fixed
++  removeJoints {
++    [0]  "gripper"
++    [1]  "left_finger"
++    [2]  "right_finger"
++  }
++
++  ; base frame of the robot (from URDF)
++  baseFrame                       "vx300s/base_link"
++  ; end-effector frame of the robot (from URDF)
++  eeFrame                         "vx300s/gripper_link"
++}
++
++model_settings
++{
++  usePreComputation               true
++  recompileLibraries              true
++}
++
++; DDP settings
++ddp
++{
++  algorithm                       SLQ
++
++  nThreads                        3
++  threadPriority                  50
++
++  maxNumIterations                1
++  minRelCost                      0.1
++  constraintTolerance             1e-3
++
++  displayInfo                     false
++  displayShortSummary             false
++  checkNumericalStability         false
++  debugPrintRollout               false
++  debugCaching                    false
++
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  maxNumStepsPerSecond            100000
++  timeStep                        1e-3
++  backwardPassIntegratorType      ODE45
++
++  constraintPenaltyInitialValue   20.0
++  constraintPenaltyIncreaseRate   2.0
++
++  preComputeRiccatiTerms          true
++
++  useFeedbackPolicy               false
++
++  strategy                        LINE_SEARCH
++  lineSearch
++  {
++    minStepLength                 1e-2
++    maxStepLength                 1.0
++    hessianCorrectionStrategy     DIAGONAL_SHIFT
++    hessianCorrectionMultiple     1e-3
++  }
++}
++
++; Rollout settings
++rollout
++{
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  timeStep                        1e-2
++  integratorType                  ODE45
++  maxNumStepsPerSecond            100000
++  checkNumericalStability         false
++}
++
++; MPC settings
++mpc
++{
++  timeHorizon                     0.5   ; [s]
++  solutionTimeWindow              0.5   ; [s]
++  coldStart                       false
++  
++  debugPrint                      false
++
++  mpcDesiredFrequency             50   ; [Hz]
++  mrtDesiredFrequency             50   ; [Hz]
++}
++
++; initial state
++initialState
++{
++  ; initial state for the different types of arm base DOFs
++  base
++  {
++    defaultManipulator
++    {
++    }
++
++    floatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.5  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  1.7  ; euler angle x
++    }
++
++    fullyActuatedFloatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  0.0  ; euler angle x
++    }
++
++    wheelBasedMobileManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; heading
++    }
++  }
++
++  ; initial state for the arm DOFs
++  arm
++  {
++    (0,0)   0.0       ; arm_1
++    (1,0)  -0.96      ; arm_2
++    (2,0)   1.16      ; arm_3
++    (3,0)   0.0       ; arm_4
++    (4,0)  -0.3       ; arm_5
++    (5,0)   0.0       ; arm_6
++  }
++}
++
++inputCost
++{
++  ; control weight matrix
++  R
++  {
++    ; input costs for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; position x
++        (1,1)  5.0  ; position y
++        (2,2)  5.0  ; position z
++        (3,3)  5.0  ; euler angle z
++        (4,4)  5.0  ; euler angle y
++        (5,5)  5.0  ; euler angle x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; forward velocity
++        (1,1)  5.0  ; turning velocity
++      }
++    }
++
++    ; input costs for the arm DOFs
++    arm
++    {
++      scaling 1e-2
++
++      (0,0)  0.0  ; arm_1 velocity
++      (1,1)  0.0   ; arm_2 velocity
++      (2,2)  0.0   ; arm_3 velocity
++      (3,3)  0.0  ; arm_4 velocity
++      (4,4)  0.0  ; arm_5 velocity
++      (5,5)  0.0   ; arm_6 velocity
++    }
++  }
++}
++
++; Joint position tracking cost: 0.5*(q - q_desired)' Q (q - q_desired)
++; Requires stateTrajectory in extended format: [joints(stateDim), ee_pos(3), ee_quat(4)]
++stateCost
++{
++  ; activate joint state tracking cost
++  activate  true
++
++  ; state weight matrix
++  Q
++  {
++    ; state costs for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; position x
++        (1,1)  5.0  ; position y
++        (2,2)  5.0  ; position z
++        (3,3)  5.0  ; euler angle z
++        (4,4)  5.0  ; euler angle y
++        (5,5)  5.0  ; euler angle x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; position x
++        (1,1)  5.0  ; position y
++        (2,2)  5.0  ; heading
++      }
++    }
++
++    ; state costs for the arm DOFs
++    arm
++    {
++      scaling 1e-2
++
++      (0,0)  5.0  ; arm_1 position
++      (1,1)  5.0  ; arm_2 position
++      (2,2)  5.0  ; arm_3 position
++      (3,3)  1.0  ; arm_4 position
++      (4,4)  1.0  ; arm_5 position
++      (5,5)  1.0  ; arm_6 position
++    }
++  }
++}
++
++endEffector 
++{
++  ; activate end-effector tracking constraint
++  activate  false
++
++  ; end effector quadratic penalty scaling
++  muPosition      50.0
++  muOrientation   25.0
++}
++
++finalEndEffector 
++{
++  muPosition      25.0
++  muOrientation   10.0
++}
++
++selfCollision
++{ 
++  ; activate self-collision constraint
++  activate  false
++
++  ; Self Collision raw object pairs // need to add
++  collisionObjectPairs
++  {
++  }
++
++  ; Self Collision pairs // need to add
++  collisionLinkPairs
++  {
++  }
++
++  ; minimum distance allowed between the pairs
++  minimumDistance  0.05
++
++  ; relaxed log barrier mu
++  mu      1e-2
++
++  ; relaxed log barrier delta
++  delta   1e-3
++}
++
++; Only applied for arm joints: limits parsed from URDF // need to add
++jointPositionLimits
++{
++  ; activate constraint
++  activate  false
++
++  ; relaxed log barrier mu
++  mu      1e-3
++
++  ; relaxed log barrier delta
++  delta   1e-4
++}
++
++jointVelocityLimits
++{
++  ; relaxed log barrier mu
++  mu      0.01
++
++  ; relaxed log barrier delta
++  delta   1e-3
++  
++  lowerBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  -0.1  ; linear velocity x
++        (1,0)  -0.1  ; linear velocity y
++        (2,0)  -0.1  ; linear velocity z
++        (3,0)  -0.3  ; euler angle velocity z
++        (4,0)  -0.3  ; euler angle velocity y
++        (5,0)  -0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  -0.1 ; forward velocity
++        (1,0)  -0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs
++    arm
++    {
++      (0,0)  -15  ; arm_1 [rad/s]
++      (1,0)  -15  ; arm_2 [rad/s]
++      (2,0)  -15  ; arm_3 [rad/s]
++      (3,0)  -15  ; arm_4 [rad/s]
++      (4,0)  -15  ; arm_5 [rad/s]
++      (5,0)  -15  ; arm_6 [rad/s]
++    }
++  }
++
++  
++  upperBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  0.1  ; linear velocity x
++        (1,0)  0.1  ; linear velocity y
++        (2,0)  0.1  ; linear velocity z
++        (3,0)  0.3  ; euler angle velocity z
++        (4,0)  0.3  ; euler angle velocity y
++        (5,0)  0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  0.1 ; forward velocity
++        (1,0)  0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs
++    arm
++    {
++      (0,0)  15  ; arm_1 [rad/s]
++      (1,0)  15  ; arm_2 [rad/s]
++      (2,0)  15  ; arm_3 [rad/s]
++      (3,0)  15  ; arm_4 [rad/s]
++      (4,0)  15  ; arm_5 [rad/s]
++      (5,0)  15  ; arm_6 [rad/s]
++    }
++  }
++}
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info
+new file mode 100644
+index 000000000..c270c13d8
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/config/aloha_dual_arm/task.info
+@@ -0,0 +1,568 @@
++; robot model meta-information
++model_information {
++  manipulatorModelType 4          // 0: Default-arm, 1: Wheel-based manipulator, 2: Floating-arm manipulator, 3: Fully actuated floating-arm manipulator, 4: Dual-arm with fixed base
++  
++  ; motion joints in the URDF to consider fixed
++  removeJoints {
++    left 
++    {
++      [0]  "right_base_joint"
++      [1]  "vx300s_right/waist"
++      [2]  "vx300s_right/shoulder"
++      [3]  "vx300s_right/elbow"
++      [4]  "vx300s_right/forearm_roll"
++      [5]  "vx300s_right/wrist_angle"
++      [6]  "vx300s_right/wrist_rotate"
++    }
++    right 
++    {
++      [0]  "left_base_joint"
++      [1]  "vx300s_left/waist"
++      [2]  "vx300s_left/shoulder"
++      [3]  "vx300s_left/elbow"
++      [4]  "vx300s_left/forearm_roll"
++      [5]  "vx300s_left/wrist_angle"
++      [6]  "vx300s_left/wrist_rotate"
++    }
++  }
++  
++  ; base frame of the robot (from URDF)
++  leftBaseFrame                  "vx300s_left/base_link"
++  rightBaseFrame                 "vx300s_right/base_link"
++  
++  ; end-effector frames of the robot (from URDF)
++  leftEeFrame                     "vx300s_left/gripper_link"
++  rightEeFrame                    "vx300s_right/gripper_link"
++  
++}
++
++model_settings
++{
++  usePreComputation               true
++  recompileLibraries              true
++}
++
++; DDP settings
++ddp
++{
++  algorithm                       SLQ
++
++  nThreads                        3
++  threadPriority                  50
++
++  maxNumIterations                1
++  minRelCost                      0.1
++  constraintTolerance             1e-3
++
++  displayInfo                     false
++  displayShortSummary             false
++  checkNumericalStability         false
++  debugPrintRollout               false
++  debugCaching                    false
++
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  maxNumStepsPerSecond            100000
++  timeStep                        1e-3
++  backwardPassIntegratorType      ODE45
++
++  constraintPenaltyInitialValue   20.0
++  constraintPenaltyIncreaseRate   2.0
++
++  preComputeRiccatiTerms          true
++
++  useFeedbackPolicy               false
++
++  strategy                        LINE_SEARCH
++  lineSearch
++  {
++    minStepLength                 1e-2
++    maxStepLength                 1.0
++    hessianCorrectionStrategy     DIAGONAL_SHIFT
++    hessianCorrectionMultiple     1e-3
++  }
++}
++
++; Rollout settings
++rollout
++{
++  AbsTolODE                       1e-5
++  RelTolODE                       1e-3
++  timeStep                        1e-1  // change from 1e-2
++  integratorType                  ODE45
++  maxNumStepsPerSecond            10000  // change from 100000
++  checkNumericalStability         false
++}
++
++; MPC settings
++mpc
++{
++  ; timeHorizon                   1.0   ; [s]
++  timeHorizon                     2.0   ; [s] extend timeHorizon for unstable ALOHA feedback state freq (next feedback state time must <= current feedback time+timeHorizon)
++  solutionTimeWindow              0.2   ; [s]
++  coldStart                       false
++  
++  debugPrint                      false
++ 
++  mpcDesiredFrequency             50   ; [Hz] change from 100Hz as to apply realtime strategy in ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
++  mrtDesiredFrequency             200   ; [Hz] change from 400Hz to allocate with ALOHA
++}
++
++; initial state
++initialState
++{
++  ; initial state for the different types of arm base DOFs
++  base
++  {
++    defaultManipulator
++    {
++    }
++
++    floatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.5  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  1.7  ; euler angle x
++    }
++
++    fullyActuatedFloatingArmManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; position z
++      (3,0)  0.0  ; euler angle z
++      (4,0)  0.0  ; euler angle y
++      (5,0)  0.0  ; euler angle x
++    }
++
++    wheelBasedMobileManipulator
++    {
++      (0,0)  0.0  ; position x
++      (1,0)  0.0  ; position y
++      (2,0)  0.0  ; heading
++    }
++  }
++
++  ; initial state for the dual arm DOFs  // need to check arm num
++  dualArm
++  {
++    leftArm 
++    {
++      (0,0)   0.0       ; arm_1
++      (1,0)  -0.96      ; arm_2
++      (2,0)   1.16      ; arm_3
++      (3,0)   0.0       ; arm_4
++      (4,0)  -0.3       ; arm_5
++      (5,0)   0.0       ; arm_6
++      (6,0)   0.024     ; arm_7
++      (7,0)   0.024     ; arm_8
++    }
++
++    rightArm 
++    {
++      (0,0)   0.0       ; arm_1
++      (1,0)  -0.96      ; arm_2
++      (2,0)   1.16      ; arm_3
++      (3,0)   0.0       ; arm_4
++      (4,0)  -0.3       ; arm_5
++      (5,0)   0.0       ; arm_6
++      (6,0)   0.024     ; arm_7
++      (7,0)   0.024     ; arm_8
++    }
++
++  }
++}
++
++inputCost
++{
++  ; control weight matrix
++  R
++  {
++    ; input costs for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; position x
++        (1,1)  5.0  ; position y
++        (2,2)  5.0  ; position z
++        (3,3)  5.0  ; euler angle z
++        (4,4)  5.0  ; euler angle y
++        (5,5)  5.0  ; euler angle x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        scaling 1e-2
++        (0,0)  5.0  ; forward velocity
++        (1,1)  5.0  ; turning velocity
++      }
++    }
++
++    ; input costs for the arm DOFs // need to check arm num
++    dualArm
++    {
++      leftArm 
++      {
++        scaling 1e-2;
++
++        (0,0)  1.0  ; arm_1 velocity
++        (1,1)  1.0  ; arm_2 velocity
++        (2,2)  1.0  ; arm_3 velocity
++        (3,3)  1.0  ; arm_4 velocity
++        (4,4)  1.0  ; arm_5 velocity
++        (5,5)  1.0  ; arm_6 velocity
++        (6,6)  1.0  ; arm_7 velocity
++        (7,7)  1.0  ; arm_8 velocity
++      }
++
++      rightArm 
++      {
++        scaling 1e-2;
++
++        (0,0)  1.0  ; arm_1 velocity
++        (1,1)  1.0  ; arm_2 velocity
++        (2,2)  1.0  ; arm_3 velocity
++        (3,3)  1.0  ; arm_4 velocity
++        (4,4)  1.0  ; arm_5 velocity
++        (5,5)  1.0  ; arm_6 velocity
++        (6,6)  1.0  ; arm_7 velocity
++        (7,7)  1.0  ; arm_8 velocity
++      }
++    }
++  }
++}
++
++endEffector 
++{
++    leftArm
++    {
++      ; end effector quadratic penalty scaling
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++    rightArm
++    {
++      ; end effector quadratic penalty scaling
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++}
++
++finalEndEffector 
++{
++    leftArm
++    {
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++    rightArm
++    {
++      muPosition      50.0
++      muOrientation   25.0
++    }
++
++}
++
++selfCollision
++{ 
++  ; activate self-collision constraint
++  activate  false
++
++  ; Self Collision raw object pairs // need to add
++  collisionObjectPairs
++  {
++  }
++
++  ; Self Collision pairs // need to add
++  collisionLinkPairs
++  {
++  }
++
++  ; minimum distance allowed between the pairs
++  minimumDistance  0.05
++
++  ; relaxed log barrier mu
++  mu      1e-2
++
++  ; relaxed log barrier delta
++  delta   1e-3
++}
++
++; Only applied for arm joints: limits parsed from URDF // need to add
++jointPositionLimits
++{
++  ; activate constraint
++  activate  true
++
++  ; relaxed log barrier mu
++  mu      1e-3
++
++  ; relaxed log barrier delta
++  delta   1e-4
++
++  lowerBound
++  {
++    ; position limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++      
++      ; add for avoiding bug
++      fullyActuatedFloatingArmManipulator 
++      {
++        (0,0)  -0.1  ; linear velocity x
++        (1,0)  -0.1  ; linear velocity y
++        (2,0)  -0.1  ; linear velocity z
++        (3,0)  -0.3  ; euler angle velocity z
++        (4,0)  -0.3  ; euler angle velocity y
++        (5,0)  -0.3  ; euler angle velocity x
++      }
++      
++      ; add for avoiding bug
++      wheelBasedMobileManipulator
++      {
++        (0,0)  -0.1 ; forward velocity
++        (1,0)  -0.3 ; turning velocity
++      }
++    }
++
++    ; position limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  -3.141582653589793    ; arm_1 
++        (1,0)  -1.8500490071139892   ; arm_2 
++        (2,0)  -1.7627825445142729   ; arm_3 
++        (3,0)  -3.141592653589793	 ; arm_4 
++        (4,0)  -1.8675022996339325   ; arm_5 
++        (5,0)  -3.141592653589793	 ; arm_6 
++        (6,0)   0.021                ; left_finger
++        (7,0)  -0.057                ; right_finger
++      }
++
++      rightArm
++      {
++        (0,0)  -3.141582653589793    ; arm_1 
++        (1,0)  -1.8500490071139892   ; arm_2 
++        (2,0)  -1.7627825445142729   ; arm_3 
++        (3,0)  -3.141592653589793	 ; arm_4 
++        (4,0)  -1.8675022996339325   ; arm_5 
++        (5,0)  -3.141592653589793	 ; arm_6 
++        (6,0)   0.021                ; left_finger
++        (7,0)  -0.057                ; right_finger
++      }
++    }
++  }
++
++  upperBound
++  {
++    ;position limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++      
++      ; add for avoiding bug
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  0.1  ; linear velocity x
++        (1,0)  0.1  ; linear velocity y
++        (2,0)  0.1  ; linear velocity z
++        (3,0)  0.3  ; euler angle velocity z
++        (4,0)  0.3  ; euler angle velocity y
++        (5,0)  0.3  ; euler angle velocity x
++      }
++      
++      ; add for avoiding bug
++      wheelBasedMobileManipulator
++      {
++        (0,0)  0.1 ; forward velocity
++        (1,0)  0.3 ; turning velocity
++      }
++    }
++
++    ; position limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  3.141582653589793       ; arm_1 
++        (1,0)  1.2566370614359172	   ; arm_2 
++        (2,0)  1.6057029118347832	   ; arm_3 
++        (3,0)  3.141592653589793 	   ; arm_4 
++        (4,0)  2.234021442552742 	   ; arm_5
++        (5,0)  3.141592653589793 	   ; arm_6
++        (6,0)  0.057                   ; left_finger
++        (7,0)  -0.021                  ; right_finger
++      }
++      
++      rightArm
++      {
++        (0,0)  3.141582653589793       ; arm_1 
++        (1,0)  1.2566370614359172	   ; arm_2 
++        (2,0)  1.6057029118347832	   ; arm_3 
++        (3,0)  3.141592653589793 	   ; arm_4 
++        (4,0)  2.234021442552742 	   ; arm_5
++        (5,0)  3.141592653589793 	   ; arm_6
++        (6,0)  0.057                   ; left_finger
++        (7,0)  -0.021                  ; right_finger
++      }
++    }
++  }
++}
++
++
++jointVelocityLimits
++{
++  ; relaxed log barrier mu
++  mu      0.01
++
++  ; relaxed log barrier delta
++  delta   1e-3
++  
++  lowerBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  -0.1  ; linear velocity x
++        (1,0)  -0.1  ; linear velocity y
++        (2,0)  -0.1  ; linear velocity z
++        (3,0)  -0.3  ; euler angle velocity z
++        (4,0)  -0.3  ; euler angle velocity y
++        (5,0)  -0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  -0.1 ; forward velocity
++        (1,0)  -0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  -3.141592653589793      ; arm_1 [rad/s]
++        (1,0)  -3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  -3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  -3.141592653589793	   ; arm_4 [rad/s]
++        (4,0)  -3.141592653589793	   ; arm_5 [rad/s]
++        (5,0)  -3.141592653589793	   ; arm_6 [rad/s]
++        (6,0)  -1.000000000000000	   ; left_finger [rad/s]
++        (7,0)  -1.000000000000000	   ; right_finger [rad/s]
++      }
++
++      rightArm
++      {
++        (0,0)  -3.141592653589793      ; arm_1 [rad/s]
++        (1,0)  -3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  -3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  -3.141592653589793	   ; arm_4 [rad/s]
++        (4,0)  -3.141592653589793	   ; arm_5 [rad/s]
++        (5,0)  -3.141592653589793	   ; arm_6 [rad/s]
++        (6,0)  -1.000000000000000	   ; left_finger [rad/s]
++        (7,0)  -1.000000000000000	   ; right_finger [rad/s]
++      }
++    }
++  }
++
++  upperBound
++  {
++    ; velocity limits for the different types of arm base DOFs
++    base
++    {
++      defaultManipulator
++      {
++      }
++
++      floatingArmManipulator
++      {
++      }
++
++      fullyActuatedFloatingArmManipulator
++      {
++        (0,0)  0.1  ; linear velocity x
++        (1,0)  0.1  ; linear velocity y
++        (2,0)  0.1  ; linear velocity z
++        (3,0)  0.3  ; euler angle velocity z
++        (4,0)  0.3  ; euler angle velocity y
++        (5,0)  0.3  ; euler angle velocity x
++      }
++
++      wheelBasedMobileManipulator
++      {
++        (0,0)  0.1 ; forward velocity
++        (1,0)  0.3 ; turning velocity
++      }
++    }
++
++    ; velocity limits for the arm DOFs // all need to change from urdf
++    dualArm
++    {
++      leftArm
++      {
++        (0,0)  3.141592653589793       ; arm_1 [rad/s]
++        (1,0)  3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  3.141592653589793 	   ; arm_4 [rad/s]
++        (4,0)  3.141592653589793 	   ; arm_5 [rad/s]
++        (5,0)  3.141592653589793 	   ; arm_6 [rad/s]
++        (6,0)  1.000000000000000 	   ; left_finger [rad/s] 
++        (7,0)  1.000000000000000 	   ; right_finger [rad/s]
++      }
++
++      rightArm
++      {
++        (0,0)  3.141592653589793       ; arm_1 [rad/s]
++        (1,0)  3.141592653589793	   ; arm_2 [rad/s]
++        (2,0)  3.141592653589793	   ; arm_3 [rad/s]
++        (3,0)  3.141592653589793 	   ; arm_4 [rad/s]
++        (4,0)  3.141592653589793 	   ; arm_5 [rad/s]
++        (5,0)  3.141592653589793 	   ; arm_6 [rad/s]
++        (6,0)  1.000000000000000 	   ; left_finger [rad/s] 
++        (7,0)  1.000000000000000 	   ; right_finger [rad/s]
++      }
++    }
++  }
++}
+\ No newline at end of file
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h b/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h
+index dacd6b9d3..f64661b86 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/MobileManipulatorInterface.h
+@@ -63,6 +63,8 @@ class MobileManipulatorInterface final : public RobotInterface {
+ 
+   const vector_t& getInitialState() { return initialState_; }
+ 
++  const int getEeFrameId() { return eeFrameId_; }
++
+   ddp::Settings& ddpSettings() { return ddpSettings_; }
+ 
+   mpc::Settings& mpcSettings() { return mpcSettings_; }
+@@ -81,6 +83,7 @@ class MobileManipulatorInterface final : public RobotInterface {
+ 
+  private:
+   std::unique_ptr<StateInputCost> getQuadraticInputCost(const std::string& taskFile);
++  std::unique_ptr<StateCost> getQuadraticStateCost(const std::string& taskFile);
+   std::unique_ptr<StateCost> getEndEffectorConstraint(const PinocchioInterface& pinocchioInterface, const std::string& taskFile,
+                                                       const std::string& prefix, bool useCaching, const std::string& libraryFolder,
+                                                       bool recompileLibraries);
+@@ -102,6 +105,8 @@ class MobileManipulatorInterface final : public RobotInterface {
+   ManipulatorModelInfo manipulatorModelInfo_;
+ 
+   vector_t initialState_;
++
++  int eeFrameId_;
+ };
+ 
+ }  // namespace mobile_manipulator
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/cost/QuadraticJointStateCost.h b/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/cost/QuadraticJointStateCost.h
+new file mode 100644
+index 000000000..413096230
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/include/ocs2_mobile_manipulator/cost/QuadraticJointStateCost.h
+@@ -0,0 +1,67 @@
++/******************************************************************************
++Copyright (c) 2020, Farbod Farshidian. All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions are met:
++
++* Redistributions of source code must retain the above copyright notice, this
++  list of conditions and the following disclaimer.
++
++* Redistributions in binary form must reproduce the above copyright notice,
++  this list of conditions and the following disclaimer in the documentation
++  and/or other materials provided with the distribution.
++
++* Neither the name of the copyright holder nor the names of its
++  contributors may be used to endorse or promote products derived from
++  this software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
++AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
++DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
++FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
++CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
++OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++******************************************************************************/
++
++#pragma once
++
++#include <ocs2_core/cost/QuadraticStateCost.h>
++
++namespace ocs2 {
++namespace mobile_manipulator {
++
++/**
++ * Quadratic joint-state tracking cost for the mobile manipulator.
++ *
++ * Expects the reference stateTrajectory to use the extended format:
++ *   [joints(stateDim), ee_position(3), ee_quaternion(4)]
++ *
++ * Whether this cost is active is controlled by the "stateCost.activate" flag
++ * in task.info.  When the flag is false the cost is never registered and
++ * the stateTrajectory format is unconstrained.
++ */
++class QuadraticJointStateCost final : public QuadraticStateCost {
++ public:
++  QuadraticJointStateCost(matrix_t Q, size_t stateDim)
++      : QuadraticStateCost(std::move(Q)), stateDim_(stateDim) {}
++
++  ~QuadraticJointStateCost() override = default;
++  QuadraticJointStateCost(const QuadraticJointStateCost& rhs) = default;
++  QuadraticJointStateCost* clone() const override { return new QuadraticJointStateCost(*this); }
++
++ protected:
++  vector_t getStateDeviation(scalar_t time, const vector_t& state, const TargetTrajectories& targetTrajectories) const override {
++    const vector_t desiredState = targetTrajectories.getDesiredState(time);
++    return state - desiredState.head(stateDim_);
++  }
++
++ private:
++  const size_t stateDim_;
++};
++
++}  // namespace mobile_manipulator
++}  // namespace ocs2
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp
+index 1fdee8f26..2c3636475 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/src/MobileManipulatorInterface.cpp
+@@ -54,6 +54,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include "ocs2_mobile_manipulator/constraint/EndEffectorConstraint.h"
+ #include "ocs2_mobile_manipulator/constraint/MobileManipulatorSelfCollisionConstraint.h"
+ #include "ocs2_mobile_manipulator/cost/QuadraticInputCost.h"
++#include "ocs2_mobile_manipulator/cost/QuadraticJointStateCost.h"
+ #include "ocs2_mobile_manipulator/dynamics/DefaultManipulatorDynamics.h"
+ #include "ocs2_mobile_manipulator/dynamics/FloatingArmManipulatorDynamics.h"
+ #include "ocs2_mobile_manipulator/dynamics/FullyActuatedFloatingArmManipulatorDynamics.h"
+@@ -119,6 +120,9 @@ MobileManipulatorInterface::MobileManipulatorInterface(const std::string& taskFi
+   pinocchioInterfacePtr_.reset(new PinocchioInterface(createPinocchioInterface(urdfFile, modelType, removeJointNames)));
+   std::cerr << *pinocchioInterfacePtr_;
+ 
++  // get end Effector ID
++  eeFrameId_ = pinocchioInterfacePtr_->getModel().getFrameId(eeFrame);
++
+   // ManipulatorModelInfo
+   manipulatorModelInfo_ = mobile_manipulator::createManipulatorModelInfo(*pinocchioInterfacePtr_, modelType, baseFrame, eeFrame);
+ 
+@@ -162,14 +166,26 @@ MobileManipulatorInterface::MobileManipulatorInterface(const std::string& taskFi
+   // Cost
+   problem_.costPtr->add("inputCost", getQuadraticInputCost(taskFile));
+ 
++  // Joint state tracking cost (controlled by stateCost.activate in task.info)
++  bool activateStateCost = false;
++  loadData::loadPtreeValue(pt, activateStateCost, "stateCost.activate", true);
++  if (activateStateCost) {
++    problem_.stateCostPtr->add("stateCost", getQuadraticStateCost(taskFile));
++    problem_.finalCostPtr->add("finalStateCost", getQuadraticStateCost(taskFile));
++  }
++
+   // Constraints
+   // joint limits constraint
+   problem_.softConstraintPtr->add("jointLimits", getJointLimitSoftConstraint(*pinocchioInterfacePtr_, taskFile));
+-  // end-effector state constraint
+-  problem_.stateSoftConstraintPtr->add("endEffector", getEndEffectorConstraint(*pinocchioInterfacePtr_, taskFile, "endEffector",
+-                                                                               usePreComputation, libraryFolder, recompileLibraries));
+-  problem_.finalSoftConstraintPtr->add("finalEndEffector", getEndEffectorConstraint(*pinocchioInterfacePtr_, taskFile, "finalEndEffector",
+-                                                                                    usePreComputation, libraryFolder, recompileLibraries));
++  // end-effector state constraint (controlled by endEffector.activate in task.info)
++  bool activateEndEffector = true;
++  loadData::loadPtreeValue(pt, activateEndEffector, "endEffector.activate", true);
++  if (activateEndEffector) {
++    problem_.stateSoftConstraintPtr->add("endEffector", getEndEffectorConstraint(*pinocchioInterfacePtr_, taskFile, "endEffector",
++                                                                                 usePreComputation, libraryFolder, recompileLibraries));
++    problem_.finalSoftConstraintPtr->add("finalEndEffector", getEndEffectorConstraint(*pinocchioInterfacePtr_, taskFile, "finalEndEffector",
++                                                                                      usePreComputation, libraryFolder, recompileLibraries));
++  }
+   // self-collision avoidance constraint
+   bool activateSelfCollision = true;
+   loadData::loadPtreeValue(pt, activateSelfCollision, "selfCollision.activate", true);
+@@ -248,6 +264,34 @@ std::unique_ptr<StateInputCost> MobileManipulatorInterface::getQuadraticInputCos
+   return std::make_unique<QuadraticInputCost>(std::move(R), manipulatorModelInfo_.stateDim);
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++std::unique_ptr<StateCost> MobileManipulatorInterface::getQuadraticStateCost(const std::string& taskFile) {
++  matrix_t Q = matrix_t::Zero(manipulatorModelInfo_.stateDim, manipulatorModelInfo_.stateDim);
++  const int baseStateDim = manipulatorModelInfo_.stateDim - manipulatorModelInfo_.armDim;
++  const int armStateDim = manipulatorModelInfo_.armDim;
++
++  // arm base DOFs state costs
++  if (baseStateDim > 0) {
++    matrix_t Q_base = matrix_t::Zero(baseStateDim, baseStateDim);
++    loadData::loadEigenMatrix(taskFile, "stateCost.Q.base." + modelTypeEnumToString(manipulatorModelInfo_.manipulatorModelType), Q_base);
++    Q.topLeftCorner(baseStateDim, baseStateDim) = Q_base;
++  }
++
++  // arm joints DOFs state costs
++  matrix_t Q_arm = matrix_t::Zero(armStateDim, armStateDim);
++  loadData::loadEigenMatrix(taskFile, "stateCost.Q.arm", Q_arm);
++  Q.bottomRightCorner(armStateDim, armStateDim) = Q_arm;
++
++  std::cerr << "\n #### State Cost Settings: ";
++  std::cerr << "\n #### =============================================================================\n";
++  std::cerr << "stateCost.Q:  \n" << Q << '\n';
++  std::cerr << " #### =============================================================================\n";
++
++  return std::make_unique<QuadraticJointStateCost>(std::move(Q), manipulatorModelInfo_.stateDim);
++}
++
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator/src/constraint/EndEffectorConstraint.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator/src/constraint/EndEffectorConstraint.cpp
+index 04c46ae35..23e23997b 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator/src/constraint/EndEffectorConstraint.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator/src/constraint/EndEffectorConstraint.cpp
+@@ -112,22 +112,31 @@ auto EndEffectorConstraint::interpolateEndEffectorPose(scalar_t time) const -> s
+   vector_t position;
+   quaternion_t orientation;
+ 
++  // EE pose is always stored as the last 7 elements of each stateTrajectory entry:
++  //   Legacy format:   [ee_pos(3), ee_quat(4)]                       (7D)
++  //   Extended format:  [joints(stateDim), ee_pos(3), ee_quat(4)]    (stateDim+7)
+   if (stateTrajectory.size() > 1) {
+     // Normal interpolation case
+     int index;
+     scalar_t alpha;
+     std::tie(index, alpha) = LinearInterpolation::timeSegment(time, timeTrajectory);
+ 
++    // lhs/rhs: left/right bracketing trajectory points for time interpolation
+     const auto& lhs = stateTrajectory[index];
+     const auto& rhs = stateTrajectory[index + 1];
+-    const quaternion_t q_lhs(lhs.tail<4>());
+-    const quaternion_t q_rhs(rhs.tail<4>());
++    // Extract EE pose from the last 7 elements: [ee_pos(3), ee_quat(4)]
++    const auto eeLhs = lhs.tail(7);
++    const auto eeRhs = rhs.tail(7);
++    const quaternion_t q_lhs(eeLhs.tail<4>());
++    const quaternion_t q_rhs(eeRhs.tail<4>());
+ 
+-    position = alpha * lhs.head<3>() + (1.0 - alpha) * rhs.head<3>();
++    position = alpha * eeLhs.head<3>() + (1.0 - alpha) * eeRhs.head<3>();
+     orientation = q_lhs.slerp((1.0 - alpha), q_rhs);
+   } else {  // stateTrajectory.size() == 1
+-    position = stateTrajectory.front().head<3>();
+-    orientation = quaternion_t(stateTrajectory.front().tail<4>());
++    // Extract EE pose from the last 7 elements
++    const auto eePose = stateTrajectory.front().tail(7);
++    position = eePose.head<3>();
++    orientation = quaternion_t(eePose.tail<4>());
+   }
+ 
+   return {position, orientation};
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py
+new file mode 100644
+index 000000000..e19203d28
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha.launch.py
+@@ -0,0 +1,69 @@
++#!/usr/bin/env python3
++"""Launch file for ALOHA mobile manipulator example."""
++
++import os
++from ament_index_python.packages import get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
++from launch.launch_description_sources import PythonLaunchDescriptionSource
++from launch.substitutions import LaunchConfiguration
++
++def generate_launch_description():
++    # Package directories
++    ocs2_mobile_manipulator_ros_dir = get_package_share_directory('ocs2_mobile_manipulator_ros')
++    ocs2_robotic_assets_dir = get_package_share_directory('ocs2_robotic_assets')
++    ocs2_mobile_manipulator_dir = get_package_share_directory('ocs2_mobile_manipulator')
++
++    # Launch arguments
++    rviz_arg = DeclareLaunchArgument(
++        'rviz',
++        default_value='true',
++        description='Enable rviz visualization'
++    )
++    
++    debug_arg = DeclareLaunchArgument(
++        'debug',
++        default_value='false',
++        description='Set nodes on debug mode'
++    )
++    
++    urdf_file_arg = DeclareLaunchArgument(
++        'urdfFile',
++        default_value=os.path.join(ocs2_robotic_assets_dir, 'resources', 'mobile_manipulator', 'aloha', 'urdf', 'vx300s.urdf'),
++        description='The URDF model of the robot'
++    )
++    
++    task_file_arg = DeclareLaunchArgument(
++        'taskFile',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'config', 'aloha', 'task.info'),
++        description='The task file for the mpc'
++    )
++    
++    lib_folder_arg = DeclareLaunchArgument(
++        'libFolder',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'auto_generated', 'aloha'),
++        description='The library folder to generate CppAD codegen into'
++    )
++
++    # Include main launch file
++    mobile_manipulator_launch = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            os.path.join(ocs2_mobile_manipulator_ros_dir, 'launch', 'mobile_manipulator.launch.py')
++        ),
++        launch_arguments={
++            'rviz': LaunchConfiguration('rviz'),
++            'debug': LaunchConfiguration('debug'),
++            'urdfFile': LaunchConfiguration('urdfFile'),
++            'taskFile': LaunchConfiguration('taskFile'),
++            'libFolder': LaunchConfiguration('libFolder'),
++        }.items()
++    )
++
++    return LaunchDescription([
++        rviz_arg,
++        debug_arg,
++        urdf_file_arg,
++        task_file_arg,
++        lib_folder_arg,
++        mobile_manipulator_launch
++    ])
+\ No newline at end of file
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py
+new file mode 100644
+index 000000000..81558133e
+--- /dev/null
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/launch/manipulator_aloha_dual_arm.launch.py
+@@ -0,0 +1,152 @@
++#!/usr/bin/env python3
++"""Launch file for ALOHA dual arm mobile manipulator example."""
++
++import os
++from ament_index_python.packages import get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument
++from launch.substitutions import LaunchConfiguration
++from launch_ros.actions import Node
++from launch.conditions import IfCondition
++
++def generate_launch_description():
++    # Package directories
++    ocs2_mobile_manipulator_ros_dir = get_package_share_directory('ocs2_mobile_manipulator_ros')
++    ocs2_robotic_assets_dir = get_package_share_directory('ocs2_robotic_assets')
++    ocs2_mobile_manipulator_dir = get_package_share_directory('ocs2_mobile_manipulator')
++
++    # Launch arguments
++    rviz_arg = DeclareLaunchArgument(
++        'rviz',
++        default_value='false',
++        description='Enable rviz visualization'
++    )
++    
++    debug_arg = DeclareLaunchArgument(
++        'debug',
++        default_value='false',
++        description='Set nodes on debug mode'
++    )
++    
++    urdf_file_arg = DeclareLaunchArgument(
++        'urdfFile',
++        default_value=os.path.join(ocs2_robotic_assets_dir, 'resources', 'mobile_manipulator', 'aloha', 'urdf', 'vx300s.urdf'),
++        description='The URDF model of the robot'
++    )
++    
++    task_file_arg = DeclareLaunchArgument(
++        'taskFile',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'config', 'aloha', 'task.info'),
++        description='The task file for the mpc'
++    )
++    
++    lib_folder_arg = DeclareLaunchArgument(
++        'libFolder',
++        default_value=os.path.join(ocs2_mobile_manipulator_dir, 'auto_generated', 'aloha_dual_arm'),
++        description='The library folder to generate CppAD codegen into'
++    )
++
++    # --- ALOHA-specific mode selection ---
++    # subscribeMode: how the MPC node receives reference targets.
++    #   "act"                          — ACT target qpos, extended [joints, ee(7)] (Float32MultiArray)
++    #   "aloha_end_effector"           — single-point joint target → EE-only [ee(7)] (JointGroupCommand)
++    #   "aloha_joint"                  — single-point joint target → extended [joints, ee(7)] (JointGroupCommand)
++    #   "aloha_trajectory_end_effector" — multi-point trajectory → EE-only [ee(7)] (JointTrajectoryCommand)
++    #   "aloha_trajectory_joint"       — multi-point trajectory → extended [joints, ee(7)] (JointTrajectoryCommand)
++    subscribe_mode_arg = DeclareLaunchArgument(
++        'subscribeMode',
++        default_value='aloha_trajectory_joint',
++        description='Reference input mode: act | aloha_end_effector | aloha_joint | aloha_trajectory_end_effector | aloha_trajectory_joint'
++    )
++
++    # launchMode: how the MPC node publishes policy and receives observation.
++    #   "mujoco" — observation via "pose" topic (simulation)
++    #   "aloha"  — observation via JointState from real ALOHA follower arm
++    launch_mode_arg = DeclareLaunchArgument(
++        'launchMode',
++        default_value='aloha',
++        description='MPC node launch mode: mujoco | aloha'
++    )
++
++    # mrtMode: how the MRT dummy loop evaluates and publishes commands.
++    #   "sim"       — forwardSimulation with simulated time stepping (dummy.run)
++    #   "wallclock" — wall-clock anchored evaluatePolicy with linear blend (dummy.run_synchronizedWallClockLoop)
++    mrt_mode_arg = DeclareLaunchArgument(
++        'mrtMode',
++        default_value='wallclock',
++        description='MRT loop mode: sim | wallclock'
++    )
++
++    nodes = []
++
++    # Shared parameters passed to all ALOHA nodes
++    shared_params = [
++        {'robotName': 'mobile_manipulator'},
++        {'taskFile': LaunchConfiguration('taskFile')},
++        {'libFolder': LaunchConfiguration('libFolder')},
++        {'urdfFile': LaunchConfiguration('urdfFile')},
++        {'subscribeMode': LaunchConfiguration('subscribeMode')},
++        {'launchMode': LaunchConfiguration('launchMode')},
++        {'mrtMode': LaunchConfiguration('mrtMode')},
++    ]
++
++    # left arm MPC node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        executable='mobile_manipulator_mpc_node',
++        name='left_arm_mpc_node',
++        namespace='left_arm',
++        parameters=[{'armSide': 'LEFT'}] + shared_params,
++        output='screen'
++    ))
++
++    # right arm MPC node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        executable='mobile_manipulator_mpc_node',
++        name='right_arm_mpc_node',
++        namespace='right_arm',
++        parameters=[{'armSide': 'RIGHT'}] + shared_params,
++        output='screen'
++    ))
++
++    # left arm MRT node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        executable='mobile_manipulator_dummy_mrt_node',
++        name='left_arm_mrt_node',
++        namespace='left_arm',
++        parameters=[{'armSide': 'LEFT'}] + shared_params,
++        output='screen'
++    ))
++
++    # right arm MRT node
++    nodes.append(Node(
++        package='ocs2_mobile_manipulator_ros',
++        executable='mobile_manipulator_dummy_mrt_node',
++        name='right_arm_mrt_node',
++        namespace='right_arm',
++        parameters=[{'armSide': 'RIGHT'}] + shared_params,
++        output='screen'
++    ))
++
++    # # RViz node
++    # nodes.append(Node(
++    #     package='rviz2',
++    #     executable='rviz2',
++    #     name='rviz2',
++    #     arguments=['-d', os.path.join(ocs2_mobile_manipulator_ros_dir, 'rviz', 'mobile_manipulator.rviz')],
++    #     condition=IfCondition(LaunchConfiguration('rviz')),
++    #     output='screen'
++    # ))
++
++    return LaunchDescription([
++        rviz_arg,
++        debug_arg,
++        urdf_file_arg,
++        task_file_arg,
++        lib_folder_arg,
++        subscribe_mode_arg,
++        launch_mode_arg,
++        mrt_mode_arg,
++    ] + nodes)
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/rviz/mobile_manipulator.rviz b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/rviz/mobile_manipulator.rviz
+index 1c7a75667..f031cde56 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/rviz/mobile_manipulator.rviz
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/rviz/mobile_manipulator.rviz
+@@ -242,7 +242,7 @@ Visualization Manager:
+     - Class: rviz_default_plugins/InteractiveMarkers
+       Enable Transparency: true
+       Enabled: true
+-      Interactive Markers Namespace: ""
++      Interactive Markers Namespace: simple_marker
+       Name: InteractiveMarkers
+       Show Axes: false
+       Show Descriptions: true
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp
+index e951057cd..d8075bef2 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorDummyMRT.cpp
+@@ -85,19 +85,45 @@ int main(int argc, char** argv) {
+   SystemObservation initObservation;
+   initObservation.state = interface.getInitialState();
+   initObservation.input.setZero(interface.getManipulatorModelInfo().inputDim);
+-  initObservation.time = 0.0;
+-
+-  // initial command
+-  vector_t initTarget(7);
+-  initTarget.head(3) << 1, 0, 1;
+-  initTarget.tail(4) << Eigen::Quaternion<scalar_t>(1, 0, 0, 0).coeffs();
+-  const vector_t zeroInput =
+-      vector_t::Zero(interface.getManipulatorModelInfo().inputDim);
+-  const TargetTrajectories initTargetTrajectories({initObservation.time},
+-                                                  {initTarget}, {zeroInput});
+-
+-  // Run dummy (loops while ros is ok)
+-  dummy.run(initObservation, initTargetTrajectories);
++  // Use the current ROS wall-clock time so that the MRT virtual clock starts
++  // at the same epoch as the trajectory publisher (which also uses ros::now()).
++  initObservation.time = node->now().nanoseconds() * 1e-9;
++
++  // initial command — extended format: [joints(stateDim), ee_pos(3), ee_quat(4)]
++  // QuadraticJointStateCost reads head(stateDim) as desired joint positions.
++  // EndEffectorConstraint reads tail(7) as desired EE pose.
++  // Using extended format allows free switching between stateCost.activate
++  // and endEffector.activate in task.info without code changes.
++  const int stateDim = interface.getManipulatorModelInfo().stateDim;
++  vector_t initTarget(stateDim + 7);
++  if (taskFile.find("aloha") != std::string::npos) {
++    initTarget.head(stateDim) = initObservation.state;
++    initTarget.tail(7) << 0.151811, 0, 0.295251, 0, -0.0499792, 0, 0.99875; // ALOHA waiting state EE pose
++  } else {
++    initTarget.head(stateDim) = initObservation.state;
++    initTarget.tail(7) << 1, 0, 1, Eigen::Quaternion<scalar_t>(1, 0, 0, 0).coeffs();
++  }
++  const vector_t zeroInput = vector_t::Zero(interface.getManipulatorModelInfo().inputDim);
++  const TargetTrajectories initTargetTrajectories({initObservation.time}, {initTarget}, {zeroInput});
++
++  // Run MRT loop based on mrtMode (set in launch.py):
++  //   sim       — forwardSimulation with simulated time stepping
++  //   wallclock — wall-clock anchored evaluatePolicy with linear blend (real robot)
++  // Declare mrtMode so the launch-file override is applied. This node is created
++  // without automatically_declare_parameters_from_overrides(true), so an
++  // undeclared parameter is invisible: has_parameter("mrtMode") would return
++  // false and mrtMode would silently fall back, ignoring launchMode=wallclock.
++  const std::string mrtMode =
++      node->declare_parameter<std::string>("mrtMode", "wallclock");
++  std::cerr << "ALOHA MRT config: mrtMode=" << mrtMode << std::endl;
++
++  if (mrtMode == "sim") {
++    dummy.run(initObservation, initTargetTrajectories);
++  } else if (mrtMode == "wallclock") {
++    dummy.run_synchronizedWallClockLoop(initObservation, initTargetTrajectories);
++  } else {
++    throw std::runtime_error("Unknown mrtMode: " + mrtMode + ". Use sim|wallclock.");
++  }
+ 
+   // Successful exit
+   return 0;
+diff --git a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp
+index 26a67e4e7..8edb69a63 100644
+--- a/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp
++++ b/ocs2_robotic_examples/ocs2_mobile_manipulator_ros/src/MobileManipulatorMpcNode.cpp
+@@ -44,40 +44,108 @@ int main(int argc, char** argv) {
+ 
+   // Initialize ros node
+   rclcpp::init(argc, argv);
+-  rclcpp::Node::SharedPtr node =
+-      rclcpp::Node::make_shared(robotName + "_mpc");
+-
+-  const std::string taskFile =
+-      node->declare_parameter<std::string>("taskFile", "");
+-  const std::string libFolder =
+-      node->declare_parameter<std::string>("libFolder", "");
+-  const std::string urdfFile =
+-      node->declare_parameter<std::string>("urdfFile", "");
+-  if (taskFile.empty() || libFolder.empty() || urdfFile.empty()) {
+-    throw std::runtime_error(
+-        "[MobileManipulatorMpcNode] Parameters 'taskFile', 'libFolder', and "
+-        "'urdfFile' are required.");
++  auto node = rclcpp::Node::make_shared(robotName + "_mpc",
++           rclcpp::NodeOptions()
++           .allow_undeclared_parameters(true)
++           .automatically_declare_parameters_from_overrides(true));
++  
++  rclcpp::sleep_for(std::chrono::milliseconds(100));
++
++  // Get node parameters
++  std::string taskFile, libFolder, urdfFile, armSide;
++  taskFile = node->get_parameter("taskFile").as_string();
++  libFolder = node->get_parameter("libFolder").as_string();
++  urdfFile = node->get_parameter("urdfFile").as_string();
++  // Check if armSide parameter exists, if not set default to "LEFT"
++  if (node->has_parameter("armSide")) {
++    armSide = node->get_parameter("armSide").as_string();
++    std::cerr << "Set arm side: " << armSide << std::endl;
++  } else {
++    armSide = "LEFT";
++    std::cerr << "armSide parameter not found in launch file, setting default to: " << armSide << std::endl;
+   }
++
+   std::cerr << "Loading task file: " << taskFile << std::endl;
+   std::cerr << "Loading library folder: " << libFolder << std::endl;
+   std::cerr << "Loading urdf file: " << urdfFile << std::endl;
++  
+   // Robot interface
+   MobileManipulatorInterface interface(taskFile, libFolder, urdfFile);
+ 
+   // ROS ReferenceManager
+-  auto rosReferenceManagerPtr = std::make_shared<ocs2::RosReferenceManager>(
+-      robotName, interface.getReferenceManagerPtr());
+-  rosReferenceManagerPtr->subscribe(node);
+-
+-  // MPC
+-  ocs2::GaussNewtonDDP_MPC mpc(
+-      interface.mpcSettings(), interface.ddpSettings(), interface.getRollout(),
+-      interface.getOptimalControlProblem(), interface.getInitializer());
+-  mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
+-
+-  // Launch MPC ROS node
+-  MPC_ROS_Interface mpcNode(mpc, robotName);
+-  mpcNode.launchNodes(node);
++  auto rosReferenceManagerPtr = std::make_shared<ocs2::RosReferenceManager>(robotName, interface.getReferenceManagerPtr());
++
++  // Check if taskFile contains "aloha" to decide which subscribe and launch method to use
++  if (taskFile.find("aloha") != std::string::npos) {
++    // Read launch-time parameters for ALOHA mode selection (set in launch.py).
++    //   subscribeMode: "act" | "aloha" | "aloha_trajectory"
++    //   launchMode:    "mujoco" | "aloha"
++    std::string subscribeMode = "aloha";
++    std::string launchMode = "mujoco";
++    if (node->has_parameter("subscribeMode")) {
++      subscribeMode = node->get_parameter("subscribeMode").as_string();
++    }
++    if (node->has_parameter("launchMode")) {
++      launchMode = node->get_parameter("launchMode").as_string();
++    }
++    std::cerr << "ALOHA MPC config: subscribeMode=" << subscribeMode
++              << ", launchMode=" << launchMode << std::endl;
++
++    // Subscribe target reference based on subscribeMode:
++    //   act                          — ACT target qpos, extended [joints, ee(7)] (Float32MultiArray)
++    //   aloha_end_effector           — single-point joint target → EE-only [ee(7)] (JointGroupCommand)
++    //   aloha_joint                  — single-point joint target → extended [joints, ee(7)] (JointGroupCommand)
++    //   aloha_trajectory_end_effector — multi-point trajectory → EE-only [ee(7)] (JointTrajectoryCommand)
++    //   aloha_trajectory_joint       — multi-point trajectory → extended [joints, ee(7)] (JointTrajectoryCommand)
++    if (subscribeMode == "act") {
++      rosReferenceManagerPtr->subscribe_act_joint(
++          node, interface.getPinocchioInterface(), interface.getEeFrameId(), armSide);
++    } else if (subscribeMode == "aloha_end_effector") {
++      rosReferenceManagerPtr->subscribe_aloha_end_effector(
++          node, interface.getPinocchioInterface(), interface.getEeFrameId(), armSide);
++    } else if (subscribeMode == "aloha_joint") {
++      rosReferenceManagerPtr->subscribe_aloha_joint(
++          node, interface.getPinocchioInterface(), interface.getEeFrameId(), armSide);
++    } else if (subscribeMode == "aloha_trajectory_end_effector") {
++      rosReferenceManagerPtr->subscribe_aloha_trajectory_end_effector(
++          node, interface.getPinocchioInterface(), interface.getEeFrameId(), armSide);
++    } else if (subscribeMode == "aloha_trajectory_joint") {
++      rosReferenceManagerPtr->subscribe_aloha_trajectory_joint(
++          node, interface.getPinocchioInterface(), interface.getEeFrameId(), armSide);
++    } else {
++      throw std::runtime_error("Unknown subscribeMode: " + subscribeMode
++                               + ". Use act|aloha_end_effector|aloha_joint|aloha_trajectory_end_effector|aloha_trajectory_joint.");
++    }
++
++    // MPC solver
++    ocs2::GaussNewtonDDP_MPC mpc(interface.mpcSettings(), interface.ddpSettings(), interface.getRollout(),
++                                interface.getOptimalControlProblem(), interface.getInitializer());
++    mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
++
++    // Launch MPC node based on launchMode:
++    //   mujoco — observation via "pose" topic (simulation)
++    //   aloha  — observation via JointState from real ALOHA follower arm
++    MPC_ROS_Interface mpcNode(mpc, robotName);
++    if (launchMode == "mujoco") {
++      mpcNode.launchNodes_mujoco(node);
++    } else if (launchMode == "aloha") {
++      mpcNode.launchNodes_aloha(node);
++    } else {
++      throw std::runtime_error("Unknown launchMode: " + launchMode
++                               + ". Use mujoco|aloha.");
++    }
++  } else {
++    std::cerr << "For non-aloha, using standard subscribe and launchNodes method" << std::endl;
++    // Subscribe target in Rviz
++    rosReferenceManagerPtr->subscribe(node);
++    // MPC
++    ocs2::GaussNewtonDDP_MPC mpc(interface.mpcSettings(), interface.ddpSettings(), interface.getRollout(),
++                               interface.getOptimalControlProblem(), interface.getInitializer());
++    mpc.getSolverPtr()->setReferenceManager(rosReferenceManagerPtr);
++    // Launch MPC ROS node
++    MPC_ROS_Interface mpcNode(mpc, robotName);
++    mpcNode.launchNodes(node);
++  }
+ 
+   // Successful exit
+   return 0;
+diff --git a/ocs2_robotic_examples/ocs2_perceptive_anymal/COLCON_IGNORE b/ocs2_robotic_examples/ocs2_perceptive_anymal/COLCON_IGNORE
+new file mode 100644
+index 000000000..e69de29bb
+diff --git a/ocs2_ros_interfaces/CMakeLists.txt b/ocs2_ros_interfaces/CMakeLists.txt
+index fb23016c3..6c34fd9e0 100644
+--- a/ocs2_ros_interfaces/CMakeLists.txt
++++ b/ocs2_ros_interfaces/CMakeLists.txt
+@@ -17,7 +17,26 @@ find_package(interactive_markers REQUIRED)
+ find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+ find_package(Boost REQUIRED COMPONENTS system filesystem log_setup log)
+ 
+-add_library(${PROJECT_NAME}
++find_package(ocs2_pinocchio_interface REQUIRED)
++
++###########
++## Build ##
++###########
++
++set(dependencies
++  rclcpp
++  diagnostic_msgs
++  ocs2_msgs
++  ocs2_core
++  ocs2_mpc
++  std_msgs
++  visualization_msgs
++  geometry_msgs
++  interactive_markers
++  ocs2_pinocchio_interface
++)
++
++add_library(${PROJECT_NAME} SHARED
+   src/command/TargetTrajectoriesRosPublisher.cpp
+   src/command/TargetTrajectoriesInteractiveMarker.cpp
+   src/command/TargetTrajectoriesKeyboardPublisher.cpp
+@@ -48,8 +67,12 @@ ament_target_dependencies(${PROJECT_NAME}
+   visualization_msgs
+   geometry_msgs
+   interactive_markers
++  ocs2_pinocchio_interface
++)
++
++target_link_libraries(${PROJECT_NAME}
++  ${Boost_LIBRARIES}
+ )
+-target_compile_options(${PROJECT_NAME} PUBLIC ${OCS2_CXX_FLAGS})
+ 
+ # multiplot remap node
+ add_executable(multiplot_remap
+@@ -91,19 +114,7 @@ ament_export_include_directories(
+   ${EIGEN3_INCLUDE_DIRS}
+ )
+ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
+-ament_export_dependencies(
+-  rclcpp
+-  diagnostic_msgs
+-  ocs2_msgs
+-  ocs2_core
+-  ocs2_mpc
+-  std_msgs
+-  visualization_msgs
+-  geometry_msgs
+-  interactive_markers
+-  Eigen3
+-  Boost
+-)
++ament_export_dependencies(${dependencies})
+ 
+ ############
+ # Testing ##
+@@ -119,4 +130,4 @@ if(BUILD_TESTING)
+   target_compile_options(test_custom_callback_queue PRIVATE ${OCS2_CXX_FLAGS})
+ endif()
+ 
+-ament_package()
++ament_package()
+\ No newline at end of file
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h
+index 1c59c8835..2da61d735 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/common/RosMsgConversions.h
+@@ -46,6 +46,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <ocs2_msgs/msg/mpc_target_trajectories.hpp>
+ #include <ocs2_msgs/msg/multiplier.hpp>
+ 
++// act target messages in sim 
++#include "std_msgs/msg/float32_multi_array.hpp"
++// aloha target messages on real aloha
++#include "ocs2_msgs/msg/joint_group_command.hpp"
++#include "ocs2_msgs/msg/joint_trajectory_command.hpp"
++
+ namespace ocs2 {
+ namespace ros_msg_conversions {
+ 
+@@ -73,6 +79,15 @@ ocs2_msgs::msg::MpcTargetTrajectories createTargetTrajectoriesMsg(
+ TargetTrajectories readTargetTrajectoriesMsg(
+     const ocs2_msgs::msg::MpcTargetTrajectories& targetTrajectoriesMsg);
+ 
++/** Reads the ACT target qpos message. */
++vector_t readActTargetQposMsg(const std_msgs::msg::Float32MultiArray& actTargetMsg);
++
++/** Reads the ALOHA target in real qpos message. */
++vector_t readAlohaTargetQposMsg(const ocs2_msgs::msg::JointGroupCommand& alohaTargetMsg);
++
++/** Reads the ALOHA target trajectory in real qpos message. */
++vector_array_t readAlohaTargetTrajectoryMsg(const ocs2_msgs::msg::JointTrajectoryCommand& alohaTrajectoryMsg);
++
+ /**
+  * Creates the performance indices message.
+  *
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h
+index 4d1b179ac..2e7c0ee67 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mpc/MPC_ROS_Interface.h
+@@ -54,6 +54,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include "rclcpp/rclcpp.hpp"
+ 
++// ACT messages
++#include <std_msgs/msg/float32_multi_array.hpp>
++// aloha target messages on real aloha
++#include <sensor_msgs/msg/joint_state.hpp>
++
+ #define PUBLISH_THREAD
+ 
+ namespace ocs2 {
+@@ -102,6 +107,17 @@ class MPC_ROS_Interface {
+    */
+   void launchNodes(const rclcpp::Node::SharedPtr& node);
+ 
++    /**
++* This is the main routine which launches all the nodes required for MPC to run which includes:
++* (1) The MPC policy publisher (either feedback or feedforward policy).
++* (2) The observation subscriber which gets the current measured state to invoke the MPC run routine.
++*/
++  void launchNodes_mujoco(const rclcpp::Node::SharedPtr& node);
++
++  /** Launches MPC nodes for real ALOHA robot: subscribes to JointState for observation
++   *  and publishes policy via the standard MPC pipeline. */
++  void launchNodes_aloha(const rclcpp::Node::SharedPtr& node);
++
+  protected:
+   /**
+    * Callback to reset MPC.
+@@ -147,6 +163,10 @@ class MPC_ROS_Interface {
+   void mpcObservationCallback(
+       const ocs2_msgs::msg::MpcObservation::ConstSharedPtr& msg);
+ 
++  /** Converts real ALOHA JointState feedback into MPC observation and triggers MPC update. */
++  void alohaObservationCallback(
++      const sensor_msgs::msg::JointState::ConstSharedPtr& msg);
++
+  protected:
+   /*
+    * Variables
+@@ -168,6 +188,10 @@ class MPC_ROS_Interface {
+       mpcSolverDiagnosticsPublisher_;
+   rclcpp::Service<ocs2_msgs::srv::Reset>::SharedPtr mpcResetServiceServer_;
+ 
++  // State feedback subscriber for aloha
++  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr
++      alohaObservationSubscriber_;
++
+   std::unique_ptr<CommandData> bufferCommandPtr_;
+   std::unique_ptr<CommandData> publisherCommandPtr_;
+   std::unique_ptr<PrimalSolution> bufferPrimalSolutionPtr_;
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Dummy_Loop.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Dummy_Loop.h
+index aa055f8d4..c9488fa21 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Dummy_Loop.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Dummy_Loop.h
+@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #pragma once
+ 
++#include <ocs2_core/misc/Benchmark.h>
+ #include "ocs2_ros_interfaces/mrt/DummyObserver.h"
+ #include "ocs2_ros_interfaces/mrt/MRT_ROS_Interface.h"
+ 
+@@ -69,6 +70,13 @@ class MRT_ROS_Dummy_Loop {
+   void run(const SystemObservation& initObservation,
+            const TargetTrajectories& initTargetTrajectories);
+ 
++  /**
++   * Runs the dummy MRT loop using evaluatePolicy (wall-clock anchored query
++   * time with linear blend at policy switches) instead of forwardSimulation.
++   */
++  void run_synchronizedWallClockLoop(const SystemObservation& initObservation,
++                          const TargetTrajectories& initTargetTrajectories);
++
+   /**
+    * Subscribe a set of observers to the dummy loop. Observers are updated in
+    * the provided order at the end of each timestep. The previous list of
+@@ -97,6 +105,10 @@ class MRT_ROS_Dummy_Loop {
+   void synchronizedDummyLoop(const SystemObservation& initObservation,
+                              const TargetTrajectories& initTargetTrajectories);
+ 
++  /** Synchronized loop using evaluatePolicy with wall-clock anchored query time. */
++  void synchronizedWallClockLoop(const SystemObservation& initObservation,
++                                            const TargetTrajectories& initTargetTrajectories);
++
+   /**
+    * Runs a loop where mpc optimizations and simulation of the system are
+    * asynchronous. The simulation runs as the specified mrtFrequency, and the
+@@ -114,6 +126,8 @@ class MRT_ROS_Dummy_Loop {
+ 
+   scalar_t mrtDesiredFrequency_;
+   scalar_t mpcDesiredFrequency_;
++
++  benchmark::RepeatedTimer mrtTimer_;
+ };
+ 
+ }  // namespace ocs2
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Interface.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Interface.h
+index 217437167..28b96c8d1 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Interface.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/mrt/MRT_ROS_Interface.h
+@@ -47,6 +47,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include "ocs2_ros_interfaces/common/RosMsgConversions.h"
+ 
++// aloha target messages on real aloha
++#include "ocs2_msgs/msg/joint_group_command.hpp"
++
+ #define PUBLISH_THREAD
+ 
+ namespace ocs2 {
+@@ -143,6 +146,10 @@ class MRT_ROS_Interface : public MRT_BASE {
+   rclcpp::Subscription<ocs2_msgs::msg::MpcFlattenedController>::SharedPtr
+       mpcPolicySubscriber_;
+   rclcpp::Client<ocs2_msgs::srv::Reset>::SharedPtr mpcResetServiceClient_;
++  
++  // Publisher for aloha
++  rclcpp::Publisher<ocs2_msgs::msg::JointGroupCommand>::SharedPtr
++      alohaCmdPositionPublisher_;
+ 
+   // ROS messages
+   ocs2_msgs::msg::MpcObservation mpcObservationMsg_;
+diff --git a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h
+index bf73baa00..049351a48 100644
+--- a/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h
++++ b/ocs2_ros_interfaces/include/ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h
+@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ #include <ocs2_oc/synchronized_module/ReferenceManagerDecorator.h>
+ 
+ #include <memory>
++#include <mutex>
++#include <ocs2_core/reference/TargetTrajectories.h>
+ #include <ocs2_msgs/msg/mode_schedule.hpp>
+ #include <ocs2_msgs/msg/mpc_target_trajectories.hpp>
+ #include <string>
+@@ -39,6 +41,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+ #include "rclcpp/rclcpp.hpp"
+ 
++#include <ocs2_pinocchio_interface/PinocchioInterface.h>
++
++// act target messages in sim 
++#include "std_msgs/msg/float32_multi_array.hpp"
++// aloha target messages on real aloha
++#include "ocs2_msgs/msg/joint_group_command.hpp"
++#include "ocs2_msgs/msg/joint_trajectory_command.hpp"
++
+ namespace ocs2 {
+ 
+ /**
+@@ -84,6 +94,36 @@ class RosReferenceManager final : public ReferenceManagerDecorator {
+    */
+   void subscribe(const rclcpp::Node::SharedPtr& node);
+ 
++  /**
++   * Receives ACT joint positions, keeps joints and appends EE pose via FK.
++   * stateTrajectory format: [joints(stateDim), ee_pos(3), ee_quat(4)]  (extended)
++   */
++  void subscribe_act_joint(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide);
++
++  /**
++   * Receives single-point ALOHA joint target, converts to EE pose via FK.
++   * stateTrajectory format: [ee_pos(3), ee_quat(4)]  (legacy, 7D)
++   */
++  void subscribe_aloha_end_effector(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide);
++
++  /**
++   * Receives single-point ALOHA joint target, keeps joints and appends EE pose via FK.
++   * stateTrajectory format: [joints(stateDim), ee_pos(3), ee_quat(4)]  (extended)
++   */
++  void subscribe_aloha_joint(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide);
++
++  /**
++   * Receives multi-point ALOHA joint trajectory, converts each point to EE pose via FK.
++   * stateTrajectory format: [ee_pos(3), ee_quat(4)]  (legacy, 7D)
++   */
++  void subscribe_aloha_trajectory_end_effector(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide);
++
++  /**
++   * Receives multi-point ALOHA joint trajectory, keeps joints and appends EE pose via FK.
++   * stateTrajectory format: [joints(stateDim), ee_pos(3), ee_quat(4)]  (extended)
++   */
++  void subscribe_aloha_trajectory_joint(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide);
++ 
+  private:
+   const std::string topicPrefix_;
+   rclcpp::Node::SharedPtr node_;
+@@ -91,6 +131,18 @@ class RosReferenceManager final : public ReferenceManagerDecorator {
+       modeScheduleSubscriber_;
+   rclcpp::Subscription<ocs2_msgs::msg::MpcTargetTrajectories>::SharedPtr
+       targetTrajectoriesSubscriber_;
++  // Subscriber for ACT target qpos in simulation (Float32MultiArray).
++  rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr actTargetTrajectoriesSubscriber_;
++  // Subscriber for single-point ALOHA target qpos on real robot (JointGroupCommand).
++  rclcpp::Subscription<ocs2_msgs::msg::JointGroupCommand>::SharedPtr alohaTargetTrajectoriesSubscriber_;
++  // Subscriber for multi-point ALOHA trajectory on real robot (JointTrajectoryCommand).
++  rclcpp::Subscription<ocs2_msgs::msg::JointTrajectoryCommand>::SharedPtr alohaTrajectorySubscriber_;
++
++  // Accumulated reference trajectory for trajectory-append mode.
++  // Holds the merged result of all received trajectories so that a new
++  // trajectory replaces only the overlapping tail of the existing one.
++  TargetTrajectories pendingTrajectory_;
++  std::mutex pendingMutex_;
+ };
+ 
+ /******************************************************************************************************/
+diff --git a/ocs2_ros_interfaces/package.xml b/ocs2_ros_interfaces/package.xml
+index 360abd661..41215bfa9 100644
+--- a/ocs2_ros_interfaces/package.xml
++++ b/ocs2_ros_interfaces/package.xml
+@@ -18,6 +18,8 @@
+   <depend>ocs2_msgs</depend>
+   <depend>ocs2_core</depend>
+   <depend>ocs2_mpc</depend>
++  <depend>ocs2_pinocchio_interface</depend>
++  <depend>hpp-fcl</depend>
+   <depend>std_msgs</depend>
+   <depend>visualization_msgs</depend>
+   <depend>geometry_msgs</depend>
+diff --git a/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp b/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp
+index a4c314259..7e933d73c 100644
+--- a/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp
++++ b/ocs2_ros_interfaces/src/common/RosMsgConversions.cpp
+@@ -256,6 +256,62 @@ TargetTrajectories readTargetTrajectoriesMsg(
+           desiredInputTrajectory};
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++vector_t readActTargetQposMsg(const std_msgs::msg::Float32MultiArray& actTargetMsg) {
++
++  if (actTargetMsg.data.empty()) {
++      throw std::runtime_error("Input array is empty.");
++  }
++
++  std::vector<float> act_state(actTargetMsg.data.size());
++  for (int i = 0; i < actTargetMsg.data.size(); i++){
++    act_state[i] = actTargetMsg.data.at(i);
++  }
++
++  return Eigen::Map<const Eigen::VectorXf>(act_state.data(), act_state.size()).cast<scalar_t>();
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++vector_t readAlohaTargetQposMsg(const ocs2_msgs::msg::JointGroupCommand& alohaTargetMsg) {
++
++  if (alohaTargetMsg.cmd.empty()) {
++      throw std::runtime_error("Input array is empty.");
++  }
++
++  const std::vector<float>& cmd_data = alohaTargetMsg.cmd;
++  return Eigen::Map<const Eigen::VectorXf>(cmd_data.data(), cmd_data.size()).cast<scalar_t>();
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++vector_array_t readAlohaTargetTrajectoryMsg(const ocs2_msgs::msg::JointTrajectoryCommand& alohaTrajectoryMsg) {
++
++  if (alohaTrajectoryMsg.traj.points.empty()) {
++    throw std::runtime_error("Input trajectory is empty.");
++  }
++
++  vector_array_t jointTrajectory;
++  jointTrajectory.reserve(alohaTrajectoryMsg.traj.points.size());
++
++  for (const auto& point : alohaTrajectoryMsg.traj.points) {
++    if (point.positions.empty()) {
++      throw std::runtime_error("Joint trajectory point positions are empty.");
++    }
++
++    jointTrajectory.emplace_back(
++        Eigen::Map<const Eigen::VectorXd>(point.positions.data(),
++                                          point.positions.size())
++            .cast<scalar_t>());
++  }
++
++  return jointTrajectory;
++}
++
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+diff --git a/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp b/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp
+index ef9c0e299..b3e71251c 100644
+--- a/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp
++++ b/ocs2_ros_interfaces/src/mpc/MPC_ROS_Interface.cpp
+@@ -455,7 +455,12 @@ void MPC_ROS_Interface::mpcObservationCallback(
+   diagnostic_msgs::msg::DiagnosticArray solverDiagnosticsMsg;
+   solverDiagnosticsMsg.header.stamp = node_->now();
+   solverDiagnosticsMsg.status.push_back(std::move(solverStatus));
+-  mpcSolverDiagnosticsPublisher_->publish(std::move(solverDiagnosticsMsg));
++  // mpcSolverDiagnosticsPublisher_ is only initialized by launchNodes() (standard mode).
++  // launchNodes_mujoco() and launchNodes_aloha() skip it because diagnostics are not
++  // needed in those modes. Guard against null to avoid SIGSEGV.
++  if (mpcSolverDiagnosticsPublisher_) {
++    mpcSolverDiagnosticsPublisher_->publish(std::move(solverDiagnosticsMsg));
++  }
+ 
+   // display
+   if (mpc_.settings().debugPrint_) {
+@@ -505,6 +510,80 @@ void MPC_ROS_Interface::shutdownNode() {
+ #endif
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void MPC_ROS_Interface::alohaObservationCallback(const sensor_msgs::msg::JointState::ConstSharedPtr& msg) {
++  std::lock_guard<std::mutex> resetLock(resetMutex_);
++
++  if (!resetRequestedEver_.load()) {
++    RCLCPP_WARN_STREAM(LOGGER, "MPC should be reset first. Either call "
++                               "MPC_ROS_Interface::reset() or use the reset service.");
++    return;
++  }
++
++  // Convert JointState message to SystemObservation
++  SystemObservation currentObservation;
++
++  currentObservation.time = rclcpp::Clock().now().seconds();
++  
++  // Use only the first six joint positions for the state
++  std::vector<float> state(6);
++  for (int i = 0; i < 6; i++){
++    state[i] = static_cast<float>(msg->position[i]);
++  }
++  currentObservation.state = Eigen::Map<const Eigen::VectorXf>(state.data(), state.size()).cast<scalar_t>();
++
++  // Set input to zero vector of size 6
++  currentObservation.input.setZero(6);
++  
++  // std::cout << currentObservation << std::endl;
++
++  // measure the delay in running MPC
++  mpcTimer_.startTimer();
++  
++  // run MPC
++  bool controllerIsUpdated = mpc_.run(currentObservation.time, currentObservation.state);
++  if (!controllerIsUpdated) {
++    return;
++  }
++  copyToBuffer(currentObservation);
++
++  // measure the delay for sending ROS messages
++  mpcTimer_.endTimer();
++
++  // check MPC delay and solution window compatibility
++  scalar_t timeWindow = mpc_.settings().solutionTimeWindow_;
++  if (mpc_.settings().solutionTimeWindow_ < 0) {
++    timeWindow = mpc_.getSolverPtr()->getFinalTime() - currentObservation.time;
++  }
++  if (timeWindow < 2.0 * mpcTimer_.getAverageInMilliseconds() * 1e-3) {
++    std::cerr << "WARNING: The solution time window might be shorter than the MPC delay!\n";
++  }
++
++  // display
++  if (mpc_.settings().debugPrint_) {
++    std::cerr << '\n';
++    std::cerr << "\n### MPC_ROS Benchmarking";
++    std::cerr << "\n###   Maximum : " << mpcTimer_.getMaxIntervalInMilliseconds() << "[ms].";
++    std::cerr << "\n###   Average : " << mpcTimer_.getAverageInMilliseconds() << "[ms].";
++    std::cerr << "\n###   Latest  : " << mpcTimer_.getLastIntervalInMilliseconds() << "[ms]." << std::endl;
++  }
++
++#ifdef PUBLISH_THREAD
++  std::unique_lock<std::mutex> lk(publisherMutex_);
++  readyToPublish_ = true;
++  lk.unlock();
++  msgReady_.notify_one();
++
++#else
++  ocs2_msgs::msg::MpcFlattenedController mpcPolicyMsg =
++      createMpcPolicyMsg(*bufferPrimalSolutionPtr_, *bufferCommandPtr_, *bufferPerformanceIndicesPtr_);
++  mpcPolicyPublisher_->publish(mpcPolicyMsg);
++#endif
++}
++
++
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+@@ -564,4 +643,99 @@ void MPC_ROS_Interface::launchNodes(const rclcpp::Node::SharedPtr& node) {
+   spin();
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void MPC_ROS_Interface::launchNodes_mujoco(const rclcpp::Node::SharedPtr& node) {
++  RCLCPP_INFO(LOGGER, "MPC node is setting up ...");
++  node_ = node;
++
++  // Observation subscriber
++  // modify to /left_arm/pose and /right_arm/pose when applying dual-arm
++  mpcObservationSubscriber_ = node_->create_subscription<ocs2_msgs::msg::MpcObservation>(
++      "pose", 
++      1, 
++      std::bind(&MPC_ROS_Interface::mpcObservationCallback, this, std::placeholders::_1)
++  );
++
++  // MPC publisher — transient_local to match MRT subscriber QoS (DURABILITY_QOS_POLICY).
++  // Without this, MRT receives the DURABILITY_QOS_POLICY incompatibility warning and
++  // never receives any policy messages.
++  const auto latchedQos =
++      rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
++  mpcPolicyPublisher_ = node_->create_publisher<ocs2_msgs::msg::MpcFlattenedController>(
++      topicPrefix_ + "_mpc_policy",
++      latchedQos
++  );
++
++  // MPC reset service server
++  mpcResetServiceServer_ = node_->create_service<ocs2_msgs::srv::Reset>(
++      topicPrefix_ + "_mpc_reset",
++      [this](const std::shared_ptr<ocs2_msgs::srv::Reset::Request>& request,
++             const std::shared_ptr<ocs2_msgs::srv::Reset::Response>& response) {
++        return resetMpcCallback(request, response);
++      });
++
++  // display
++#ifdef PUBLISH_THREAD
++  RCLCPP_INFO(LOGGER, "Publishing SLQ-MPC messages on a separate thread.");
++#endif
++
++  RCLCPP_INFO(LOGGER, "MPC node is ready.");
++
++  // spin
++  spin();
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void MPC_ROS_Interface::launchNodes_aloha(const rclcpp::Node::SharedPtr& node) {
++  RCLCPP_INFO(LOGGER, "MPC node is setting up ...");
++  node_ = node;
++
++  // Observation subscriber according to namespace
++  std::string nodeNamespace = node_->get_namespace();
++  if (nodeNamespace == "/left_arm") {
++    alohaObservationSubscriber_ = node_->create_subscription<sensor_msgs::msg::JointState>(
++      "/follower_left/joint_states",
++      1,
++      std::bind(&MPC_ROS_Interface::alohaObservationCallback, this, std::placeholders::_1)
++    );
++  } else if (nodeNamespace == "/right_arm") {
++    alohaObservationSubscriber_ = node_->create_subscription<sensor_msgs::msg::JointState>(
++      "/follower_right/joint_states",
++      1,
++      std::bind(&MPC_ROS_Interface::alohaObservationCallback, this, std::placeholders::_1)
++    );
++  } else {
++    RCLCPP_ERROR_STREAM(LOGGER, "Unknown namespace '" << nodeNamespace << "' in mpc node");
++  }
++
++  // MPC publisher — transient_local to match MRT subscriber QoS (DURABILITY_QOS_POLICY).
++  const auto latchedQosAloha =
++      rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
++  mpcPolicyPublisher_ = node_->create_publisher<ocs2_msgs::msg::MpcFlattenedController>(
++      topicPrefix_ + "_mpc_policy", latchedQosAloha);
++
++  // MPC reset service server
++  mpcResetServiceServer_ = node_->create_service<ocs2_msgs::srv::Reset>(
++      topicPrefix_ + "_mpc_reset",
++      [this](const std::shared_ptr<ocs2_msgs::srv::Reset::Request>& request,
++             const std::shared_ptr<ocs2_msgs::srv::Reset::Response>& response) {
++        return resetMpcCallback(request, response);
++      });
++
++  // display
++#ifdef PUBLISH_THREAD
++  RCLCPP_INFO(LOGGER, "Publishing SLQ-MPC messages on a separate thread.");
++#endif
++
++  RCLCPP_INFO(LOGGER, "MPC node is ready.");
++
++  // spin
++  spin();
++}
++
++
+ }  // namespace ocs2
+diff --git a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
+index 7a64c5bb9..f7c04522d 100644
+--- a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
++++ b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Dummy_Loop.cpp
+@@ -79,6 +79,158 @@ void MRT_ROS_Dummy_Loop::run(const SystemObservation& initObservation,
+   }
+ }
+ 
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void MRT_ROS_Dummy_Loop::run_synchronizedWallClockLoop(const SystemObservation& initObservation,
++                             const TargetTrajectories& initTargetTrajectories) {
++  RCLCPP_INFO_STREAM(LOGGER, "Waiting for the initial policy ...");
++
++  rclcpp::Rate loop_rate(mrtDesiredFrequency_);
++  // Reset MPC node
++  mrt_.resetMpcNode(initTargetTrajectories);
++
++  // Wait for the initial policy
++  while (!mrt_.initialPolicyReceived() && rclcpp::ok()) {
++    mrt_.spinMRT();
++    mrt_.setCurrentObservation(initObservation);
++    loop_rate.sleep();
++  }
++  RCLCPP_INFO_STREAM(LOGGER, "Initial policy has been received.");
++
++  // Pick simulation loop mode
++  if (mpcDesiredFrequency_ > 0.0) {
++    synchronizedWallClockLoop(initObservation, initTargetTrajectories);
++  } else {
++    realtimeDummyLoop(initObservation, initTargetTrajectories);
++  }
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void MRT_ROS_Dummy_Loop::synchronizedWallClockLoop(
++    const SystemObservation& initObservation,
++    const TargetTrajectories& initTargetTrajectories) {
++  SystemObservation currentObservation = initObservation;
++  bool policyActive = false;
++
++  // Query time is anchored to wall-clock at first policy receipt:
++  //   rawQueryTime = timeAnchor + (wallNow - wallAnchor)
++  // This ensures query time advances at 1:1 wall-clock rate regardless of
++  // policy arrival frequency.  A forward-only clamp prevents regression.
++  rclcpp::Clock wallClock(RCL_STEADY_TIME);
++  scalar_t wallAnchor   = 0.0;
++  scalar_t timeAnchor   = 0.0;
++  bool     anchorSet    = false;
++  scalar_t queryTimePrev = -1.0;
++
++  // Lookahead offset keeps query time ahead of policyFront across policy updates.
++  scalar_t lookahead = 0.0;
++
++  // Linear blend over one MPC period at policy switches to smooth command discontinuities.
++  bool     transInProgress = false;
++  vector_t transOldState;
++  scalar_t transStartWall  = 0.0;
++  scalar_t transDuration   = 0.0;
++
++  rclcpp::Rate simRate(mrtDesiredFrequency_);
++  while (rclcpp::ok()) {
++    // Trigger MRT callbacks to receive any pending policies from the MPC.
++    mrt_.spinMRT();
++
++    if (mrt_.updatePolicy()) {
++      policyActive = true;
++      if (!anchorSet) {
++        // First policy: initialize wall-clock anchor and lookahead.
++        const scalar_t solutionWindow =
++            mrt_.getPolicy().timeTrajectory_.back() -
++            mrt_.getPolicy().timeTrajectory_.front();
++        const scalar_t mpcPeriod = 1.0 / mpcDesiredFrequency_;
++        // lookahead     = std::min(15.0 * mpcPeriod, 0.2 * solutionWindow);
++        lookahead     = 0.05; // 50 ms lookahead has good performance in simulation.
++        transDuration = mpcPeriod;
++        wallAnchor    = wallClock.now().seconds();
++        timeAnchor    = mrt_.getPolicy().timeTrajectory_.front() + lookahead;
++        anchorSet     = true;
++        RCLCPP_INFO_STREAM(rclcpp::get_logger("MRT_ROS_Dummy_Loop"),
++                           "lookahead=" << lookahead << " s"
++                           "  transDuration=" << transDuration << " s"
++                           "  (mpcPeriod=" << mpcPeriod << " s"
++                           ", solutionWindow=" << solutionWindow << " s)");
++      } else {
++        // Start (or restart) linear blend from current state to new policy.
++        transInProgress = true;
++        transOldState   = currentObservation.state;
++        transStartWall  = wallClock.now().seconds();
++      }
++    }
++
++    if (!policyActive) {
++      simRate.sleep();
++      continue;
++    }
++
++    mrtTimer_.startTimer();
++
++    const scalar_t policyFront = mrt_.getPolicy().timeTrajectory_.front();
++    const scalar_t policyBack  = mrt_.getPolicy().timeTrajectory_.back();
++
++    const scalar_t rawQueryTime = timeAnchor +
++                                  (wallClock.now().seconds() - wallAnchor);
++
++    // Forward-only + policy range clamp.
++    const scalar_t queryTime = std::min(
++        std::max(rawQueryTime, queryTimePrev < 0.0 ? policyFront : queryTimePrev),
++        policyBack);
++    queryTimePrev = queryTime;
++
++    SystemObservation nextObservation;
++    nextObservation.time = queryTime;
++    mrt_.evaluatePolicy(queryTime, currentObservation.state,
++                        nextObservation.state, nextObservation.input,
++                        nextObservation.mode);
++    mrtTimer_.endTimer();
++
++    // Save unblended state for MPC feedback (blended state would cause feedback loop).
++    const vector_t rawPolicyState = nextObservation.state;
++
++    // Blend robot command at policy switches; MPC feedback uses raw state above.
++    if (transInProgress) {
++      const scalar_t elapsed = wallClock.now().seconds() - transStartWall;
++      const scalar_t alpha   = std::min(elapsed / transDuration, 1.0);
++      nextObservation.state  = (1.0 - alpha) * transOldState
++                               + alpha       * nextObservation.state;
++      if (alpha >= 1.0) {
++        transInProgress = false;
++      }
++    }
++
++    currentObservation = nextObservation;
++
++    // Feed unblended state back to MPC.
++    SystemObservation mpcObservation = currentObservation;
++    mpcObservation.state = rawPolicyState;
++    mrt_.setCurrentObservation(mpcObservation);
++
++    // Publish blended state as robot command.
++    modifyObservation(currentObservation);
++    for (auto& observer : observers_) {
++      observer->update(currentObservation, mrt_.getPolicy(), mrt_.getCommand());
++    }
++
++    // //display
++    // std::cerr << '\n';
++    // std::cerr << "\n### FOR MRT_ROS Benchmarking";
++    // std::cerr << "\n###   Maximum : " << mrtTimer_.getMaxIntervalInMilliseconds() << "[ms] in interval " << mrtTimer_.getMaxIntervalIndex() << ".";
++    // std::cerr << "\n###   Average : " << mrtTimer_.getAverageInMilliseconds() << "[ms].";
++    // std::cerr << "\n###   Latest  : " << mrtTimer_.getLastIntervalInMilliseconds() << "[ms]." << std::endl;
++
++    simRate.sleep();
++  }
++}
++
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+ /******************************************************************************************************/
+@@ -99,7 +251,8 @@ void MRT_ROS_Dummy_Loop::synchronizedDummyLoop(
+   // old policy instead of the latest one.
+   const auto policyUpdatedForTime = [this](scalar_t time) {
+     constexpr scalar_t tol =
+-        0.1;  // policy must start within this fraction of dt
++        1.0;  // policy must start within this fraction of dt
++            // change from 0.1 to 1 as more lenient synchronization requirements
+     return mrt_.updatePolicy() &&
+            std::abs(mrt_.getPolicy().timeTrajectory_.front() - time) <
+                (tol / mpcDesiredFrequency_);
+@@ -117,6 +270,11 @@ void MRT_ROS_Dummy_Loop::synchronizedDummyLoop(
+       // Wait for the policy to be updated
+       while (!policyUpdatedForTime(currentObservation.time) && rclcpp::ok()) {
+         mrt_.spinMRT();
++        // reset current observation time in case of large gap between mrt policy update time, need to better modify later
++        if (std::abs(mrt_.getPolicy().timeTrajectory_.front() - currentObservation.time) >= 10.0 / mrtDesiredFrequency_){
++          currentObservation.time = mrt_.getPolicy().timeTrajectory_.front();
++          std::cout << "[Warning] The MPC time and MRT time interval exceeds the MRT period. Force MRT to synchronize with MPC.\n";
++        }
+       }
+       std::cout << "<<< New MPC policy starting at "
+                 << mrt_.getPolicy().timeTrajectory_.front() << "\n";
+diff --git a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp
+index 36e590549..053457799 100644
+--- a/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp
++++ b/ocs2_ros_interfaces/src/mrt/MRT_ROS_Interface.cpp
+@@ -131,6 +131,16 @@ void MRT_ROS_Interface::setCurrentObservation(
+   msgReady_.notify_one();
+ #else
+   mpcObservationPublisher_->publish(mpcObservationMsg_);
++
++  // Forward the current state as a joint position command to the real ALOHA robot.
++  if (alohaCmdPositionPublisher_) {
++    ocs2_msgs::msg::JointGroupCommand jointGroupCommandMsg;
++    jointGroupCommandMsg.name = "arm";
++    for (const auto& position : currentObservation.state.value) {
++      jointGroupCommandMsg.cmd.push_back(position);
++    }
++    alohaCmdPositionPublisher_->publish(jointGroupCommandMsg);
++  }
+ #endif
+ }
+ 
+@@ -155,6 +165,16 @@ void MRT_ROS_Interface::publisherWorkerThread() {
+     msgReady_.notify_one();
+ 
+     mpcObservationPublisher_->publish(mpcObservationMsgBuffer_);
++
++    // Forward the buffered state as a joint position command to the real ALOHA robot.
++    if (alohaCmdPositionPublisher_) {
++      ocs2_msgs::msg::JointGroupCommand jointGroupCommandMsg;
++      jointGroupCommandMsg.name = "arm";
++      for (const auto& position : mpcObservationMsgBuffer_.state.value) {
++        jointGroupCommandMsg.cmd.push_back(position);
++      }
++      alohaCmdPositionPublisher_->publish(jointGroupCommandMsg);
++    }
+   }
+ }
+ 
+@@ -323,6 +343,20 @@ void MRT_ROS_Interface::launchNodes(const rclcpp::Node::SharedPtr& node) {
+       node_->create_publisher<ocs2_msgs::msg::MpcObservation>(
+           topicPrefix_ + "_mpc_observation", 1);
+ 
++  // command publisher for aloha
++  std::string nodeNamespace = node_->get_namespace();
++  if (nodeNamespace == "/left_arm") {
++    alohaCmdPositionPublisher_ = 
++    node_->create_publisher<ocs2_msgs::msg::JointGroupCommand>(
++        "/follower_left/commands/joint_group", 1);
++  } else if (nodeNamespace == "/right_arm") {
++    alohaCmdPositionPublisher_ = 
++    node_->create_publisher<ocs2_msgs::msg::JointGroupCommand>(
++        "/follower_right/commands/joint_group", 1);
++  } else {
++    alohaCmdPositionPublisher_ = nullptr;
++  }
++
+   // policy subscriber
+   const auto latchedQos =
+       rclcpp::QoS(rclcpp::KeepLast(1)).transient_local().reliable();
+diff --git a/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp b/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp
+index bc3c7b4a3..fc5606e38 100644
+--- a/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp
++++ b/ocs2_ros_interfaces/src/synchronized_module/RosReferenceManager.cpp
+@@ -26,6 +26,10 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ ******************************************************************************/
++#include <iostream>
++
++#include <pinocchio/fwd.hpp>
++#include <pinocchio/algorithm/frames.hpp>
+ 
+ #include "ocs2_ros_interfaces/synchronized_module/RosReferenceManager.h"
+ 
+@@ -86,4 +90,467 @@ void RosReferenceManager::subscribe(const rclcpp::Node::SharedPtr& node) {
+           topicPrefix_ + "_mpc_target", 1, targetTrajectoriesCallback);
+ }
+ 
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void RosReferenceManager::subscribe_act_joint(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide) {
++  node_ = node;
++
++  // ModeSchedule
++  auto modeScheduleCallback = [this](const ocs2_msgs::msg::ModeSchedule& msg) {
++    auto modeSchedule = ros_msg_conversions::readModeScheduleMsg(msg);
++    referenceManagerPtr_->setModeSchedule(std::move(modeSchedule));
++  };
++  modeScheduleSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::ModeSchedule>(
++          topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
++
++  // get robot model for forward kinematics
++  auto model = pinocchioInterface.getModel();
++
++  // TargetTrajectories
++  auto actTargetTrajectoriesCallback = [this, model, eeFrameId, armSide](const std_msgs::msg::Float32MultiArray& msg) {
++    // msg = [ left_arm_qpos (6),          # absolute joint position
++    //         left_gripper_position (1),  # normalized gripper position (0: close, 1: open)
++    //         right_arm_qpos (6),         # absolute joint position
++    //         right_gripper_qpos (1),     # normalized gripper position (0: close, 1: open)
++    //         ros_time_stamp ]            # rospy.Time.now().to_sec()
++    auto actTargetQpos = ros_msg_conversions::readActTargetQposMsg(msg);
++    // Split into left arm and right arm
++    Eigen::VectorXd armTargetQpos;
++    if (armSide == "LEFT") {
++      armTargetQpos = actTargetQpos.head(6);  // left_arm_qpos
++    } else if (armSide == "RIGHT") {
++      armTargetQpos = actTargetQpos.segment(7, 6);  // right_arm_qpos
++    } else {
++      std::cerr << "[Error] Invalid armSide parameter " << armSide << ". Use LEFT or RIGHT.\n";
++      return;
++    }
++
++    pinocchio::Data data(model);
++    pinocchio::forwardKinematics(model, data, armTargetQpos);
++    pinocchio::updateFramePlacements(model, data);
++
++    // Extended stateTrajectory format: [joints(stateDim), ee_pos(3), ee_quat(4)]
++    // EndEffectorConstraint reads the EE pose from tail(7).
++    // QuadraticJointStateCost reads joint positions from head(stateDim).
++    // When stateCost.activate is false, the joint positions in head(stateDim)
++    // are not consumed by any cost term and have no effect on the optimization.
++    Eigen::Quaterniond quaternion(data.oMf[eeFrameId].rotation());
++    const vector_t target = (vector_t(armTargetQpos.size() + 7)
++        << armTargetQpos, data.oMf[eeFrameId].translation(), quaternion.coeffs()).finished();
++
++    // Use reception wall-clock time instead of the publisher-side timestamp embedded in
++    // actTargetQpos[14]. The publisher timestamp can arrive slightly in the past due to
++    // processing latency, which causes MPC to treat the target as expired and skip it.
++    // Reception time is always >= MPC's currentObservation.time, so the target stays valid.
++    const scalar_array_t desiredTimeTrajectory{node_->get_clock()->now().seconds()};
++    const vector_array_t desiredStateTrajectory{target};
++    const vector_array_t desiredInputTrajectory{vector_t::Zero(model.nv)};
++    TargetTrajectories targetTrajectories(desiredTimeTrajectory, desiredStateTrajectory, desiredInputTrajectory);
++
++    referenceManagerPtr_->setTargetTrajectories(std::move(targetTrajectories));
++  };
++
++  actTargetTrajectoriesSubscriber_ =
++      node_->create_subscription<std_msgs::msg::Float32MultiArray>(
++          "/act_aloha_target_qpos", 1, actTargetTrajectoriesCallback);
++}
++
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void RosReferenceManager::subscribe_aloha_end_effector(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide) {
++  node_ = node;
++
++  // ModeSchedule
++  auto modeScheduleCallback = [this](const ocs2_msgs::msg::ModeSchedule& msg) {
++    auto modeSchedule = ros_msg_conversions::readModeScheduleMsg(msg);
++    referenceManagerPtr_->setModeSchedule(std::move(modeSchedule));
++  };
++  modeScheduleSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::ModeSchedule>(
++          topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
++
++  // get robot model for forward kinematics
++  auto model = pinocchioInterface.getModel();
++
++  // TargetTrajectories
++  auto alohaTargetTrajectoriesCallback = [this, model, eeFrameId](const ocs2_msgs::msg::JointGroupCommand& msg) {
++    // msg.cmd contains target joint positions for this arm (6 DOF for ALOHA).
++    auto jointCommands = ros_msg_conversions::readAlohaTargetQposMsg(msg);
++    pinocchio::Data data(model);
++    pinocchio::forwardKinematics(model, data, jointCommands);
++    pinocchio::updateFramePlacements(model, data);
++
++    // stateTrajectory format: [ee_pos(3), ee_quat(4)]  (legacy, 7D)
++    Eigen::Quaterniond quaternion(data.oMf[eeFrameId].rotation());
++    const vector_t target = (vector_t(7)
++        << data.oMf[eeFrameId].translation(), quaternion.coeffs()).finished();
++
++    // OCS2 point input path: one JointGroupCommand produces one target point at current time.
++    const scalar_array_t desiredTimeTrajectory{static_cast<float>(node_->now().seconds())};
++    const vector_array_t desiredStateTrajectory{target};
++    const vector_array_t desiredInputTrajectory{vector_t::Zero(model.nv)};
++    TargetTrajectories targetTrajectories(desiredTimeTrajectory, desiredStateTrajectory, desiredInputTrajectory);
++
++    referenceManagerPtr_->setTargetTrajectories(std::move(targetTrajectories));
++  };
++
++  // subscribe arm target topic
++  if (armSide == "LEFT") {
++    alohaTargetTrajectoriesSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::JointGroupCommand>(
++          "/follower_left/mpc_commands/joint_group", 1, alohaTargetTrajectoriesCallback);
++  } else if (armSide == "RIGHT") {
++    alohaTargetTrajectoriesSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::JointGroupCommand>(
++          "/follower_right/mpc_commands/joint_group", 1, alohaTargetTrajectoriesCallback);
++  } else {
++    std::cerr << "[Error] Invalid armSide parameter " << armSide << ". Use LEFT or RIGHT.\n";
++    return;
++  }
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void RosReferenceManager::subscribe_aloha_joint(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide) {
++  node_ = node;
++
++  // ModeSchedule
++  auto modeScheduleCallback = [this](const ocs2_msgs::msg::ModeSchedule& msg) {
++    auto modeSchedule = ros_msg_conversions::readModeScheduleMsg(msg);
++    referenceManagerPtr_->setModeSchedule(std::move(modeSchedule));
++  };
++  modeScheduleSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::ModeSchedule>(
++          topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
++
++  // get robot model for forward kinematics
++  auto model = pinocchioInterface.getModel();
++
++  // TargetTrajectories
++  auto alohaTargetTrajectoriesCallback = [this, model, eeFrameId](const ocs2_msgs::msg::JointGroupCommand& msg) {
++    // msg.cmd contains target joint positions for this arm (6 DOF for ALOHA).
++    auto jointCommands = ros_msg_conversions::readAlohaTargetQposMsg(msg);
++    pinocchio::Data data(model);
++    pinocchio::forwardKinematics(model, data, jointCommands);
++    pinocchio::updateFramePlacements(model, data);
++
++    // Extended stateTrajectory format: [joints(stateDim), ee_pos(3), ee_quat(4)]
++    // EndEffectorConstraint reads the EE pose from tail(7).
++    // QuadraticJointStateCost reads joint positions from head(stateDim).
++    // When stateCost.activate is false, the joint positions in head(stateDim)
++    // are not consumed by any cost term and have no effect on the optimization.
++    Eigen::Quaterniond quaternion(data.oMf[eeFrameId].rotation());
++    const vector_t target = (vector_t(jointCommands.size() + 7)
++        << jointCommands, data.oMf[eeFrameId].translation(), quaternion.coeffs()).finished();
++
++    // OCS2 point input path: one JointGroupCommand produces one target point at current time.
++    const scalar_array_t desiredTimeTrajectory{static_cast<float>(node_->now().seconds())};
++    const vector_array_t desiredStateTrajectory{target};
++    const vector_array_t desiredInputTrajectory{vector_t::Zero(model.nv)};
++    TargetTrajectories targetTrajectories(desiredTimeTrajectory, desiredStateTrajectory, desiredInputTrajectory);
++
++    referenceManagerPtr_->setTargetTrajectories(std::move(targetTrajectories));
++  };
++
++  // subscribe arm target topic
++  if (armSide == "LEFT") {
++    alohaTargetTrajectoriesSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::JointGroupCommand>(
++          "/follower_left/mpc_commands/joint_group", 1, alohaTargetTrajectoriesCallback);
++  } else if (armSide == "RIGHT") {
++    alohaTargetTrajectoriesSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::JointGroupCommand>(
++          "/follower_right/mpc_commands/joint_group", 1, alohaTargetTrajectoriesCallback);
++  } else {
++    std::cerr << "[Error] Invalid armSide parameter " << armSide << ". Use LEFT or RIGHT.\n";
++    return;
++  }
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void RosReferenceManager::subscribe_aloha_trajectory_end_effector(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide) {
++  node_ = node;
++
++  auto modeScheduleCallback = [this](const ocs2_msgs::msg::ModeSchedule& msg) {
++    auto modeSchedule = ros_msg_conversions::readModeScheduleMsg(msg);
++    referenceManagerPtr_->setModeSchedule(std::move(modeSchedule));
++  };
++  modeScheduleSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::ModeSchedule>(
++          topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
++
++  auto model = pinocchioInterface.getModel();
++
++  auto alohaTrajectoryCallback = [this, model, eeFrameId, armSide](const ocs2_msgs::msg::JointTrajectoryCommand& msg) {
++    if (msg.traj.points.empty()) {
++      RCLCPP_WARN(node_->get_logger(), "Received empty aloha joint trajectory.");
++      return;
++    }
++
++    // OCS2 trajectory input path: one JointTrajectoryCommand produces
++    // a time-aligned sequence of OCS2 targets.
++    //
++    // time_from_start[k] is a *relative* offset from the publish moment (0 ~ horizon s).
++    // Anchor it to the subscriber's wall-clock so that desiredTimeTrajectory lives in
++    // the same epoch as MPC's currentObservation.time (~1.78×10⁹ s).
++    // Without this anchor, MPC would receive targets at t=[0,1.5]s while its own
++    // clock is at ~1.78e9 s — LinearInterpolation clamps to the last point and
++    // the arm only ever tracks the final endpoint, ignoring all intermediate targets.
++    // Use the message's publish timestamp (header.stamp) instead of
++    // reception time (node_->now()) so that the time base is consistent
++    // with the publisher's clock and not delayed by transport latency.
++    const double startTime = rclcpp::Time(msg.traj.header.stamp).seconds();
++    scalar_array_t desiredTimeTrajectory;
++    vector_array_t desiredStateTrajectory;
++    vector_array_t desiredInputTrajectory;
++    desiredTimeTrajectory.reserve(msg.traj.points.size());
++    desiredStateTrajectory.reserve(msg.traj.points.size());
++    desiredInputTrajectory.reserve(msg.traj.points.size());
++
++    const auto jointTrajectory =
++      ros_msg_conversions::readAlohaTargetTrajectoryMsg(msg);
++
++    for (size_t i = 0; i < msg.traj.points.size(); ++i) {
++      // publisher-clock anchor + relative offset → absolute time aligned with MPC epoch.
++      desiredTimeTrajectory.emplace_back(
++          startTime + rclcpp::Duration(msg.traj.points[i].time_from_start).seconds());
++
++      pinocchio::Data data(model);
++      pinocchio::forwardKinematics(model, data, jointTrajectory[i]);
++      pinocchio::updateFramePlacements(model, data);
++      Eigen::Vector3d translation = data.oMf[eeFrameId].translation();
++      Eigen::Quaterniond quaternion(data.oMf[eeFrameId].rotation());
++      desiredStateTrajectory.emplace_back(
++        (vector_t(7) << translation, quaternion.coeffs()).finished());
++      desiredInputTrajectory.emplace_back(vector_t::Zero(model.nv));
++    }
++
++    // Merge with pendingTrajectory_:
++    //   - Keep every pending point whose time is strictly < new trajectory's start.
++    //   - Discard all pending points at or after that time (they are replaced by
++    //     the new trajectory, which may overlap or extend the existing one).
++    //   - Append the entire new trajectory after the kept prefix.
++    //
++    // This handles three cases uniformly:
++    // Traj1 [t₀, t₀+T]，Traj 2 [t₀+t', t₀+t'+T']
++    //   1. No overlap  (t' >= T): pure extension – entire pending is kept.
++    //   2. Partial overlap (t' < T): pending is truncated at t', new tail appended.
++    //   3. Full replacement (t' <= t₀): pending is empty after truncation.
++    const scalar_t newStartTime = desiredTimeTrajectory.front();
++    {
++      std::lock_guard<std::mutex> lock(pendingMutex_);
++
++      // Count how many pending points lie strictly before the new trajectory.
++      size_t keepCount = 0;
++      for (; keepCount < pendingTrajectory_.timeTrajectory.size(); ++keepCount) {
++        if (pendingTrajectory_.timeTrajectory[keepCount] >= newStartTime) {
++          break;
++        }
++      }
++
++      scalar_array_t mergedTime;
++      vector_array_t mergedState;
++      vector_array_t mergedInput;
++      mergedTime.reserve(keepCount + desiredTimeTrajectory.size());
++      mergedState.reserve(keepCount + desiredStateTrajectory.size());
++      mergedInput.reserve(keepCount + desiredInputTrajectory.size());
++
++      // Prefix: pending points before the new trajectory's start.
++      mergedTime.insert(mergedTime.end(),
++          pendingTrajectory_.timeTrajectory.begin(),
++          pendingTrajectory_.timeTrajectory.begin() + keepCount);
++      mergedState.insert(mergedState.end(),
++          pendingTrajectory_.stateTrajectory.begin(),
++          pendingTrajectory_.stateTrajectory.begin() + keepCount);
++      mergedInput.insert(mergedInput.end(),
++          pendingTrajectory_.inputTrajectory.begin(),
++          pendingTrajectory_.inputTrajectory.begin() + keepCount);
++
++      // Suffix: the new trajectory in its entirety.
++      mergedTime.insert(mergedTime.end(),
++          desiredTimeTrajectory.begin(), desiredTimeTrajectory.end());
++      mergedState.insert(mergedState.end(),
++          desiredStateTrajectory.begin(), desiredStateTrajectory.end());
++      mergedInput.insert(mergedInput.end(),
++          desiredInputTrajectory.begin(), desiredInputTrajectory.end());
++
++      pendingTrajectory_ = TargetTrajectories(
++          std::move(mergedTime), std::move(mergedState), std::move(mergedInput));
++
++      RCLCPP_DEBUG(node_->get_logger(),
++          "[subscribe_aloha_trajectory_end_effector] merged: kept %zu pending points before t=%.3f, "
++          "appended %zu new points (merged total=%zu)",
++          keepCount, newStartTime, desiredTimeTrajectory.size(),
++          pendingTrajectory_.timeTrajectory.size());
++
++      referenceManagerPtr_->setTargetTrajectories(pendingTrajectory_);
++    }
++  };
++
++  if (armSide == "LEFT") {
++    alohaTrajectorySubscriber_ =
++        node_->create_subscription<ocs2_msgs::msg::JointTrajectoryCommand>(
++            "/follower_left/mpc_commands/joint_trajectory", 1,
++            alohaTrajectoryCallback);
++  } else if (armSide == "RIGHT") {
++    alohaTrajectorySubscriber_ =
++        node_->create_subscription<ocs2_msgs::msg::JointTrajectoryCommand>(
++            "/follower_right/mpc_commands/joint_trajectory", 1,
++            alohaTrajectoryCallback);
++  } else {
++    std::cerr << "[Error] Invalid armSide parameter " << armSide << ". Use LEFT or RIGHT.\n";
++    return;
++  }
++}
++
++/******************************************************************************************************/
++/******************************************************************************************************/
++/******************************************************************************************************/
++void RosReferenceManager::subscribe_aloha_trajectory_joint(const rclcpp::Node::SharedPtr& node, PinocchioInterface pinocchioInterface, int eeFrameId, const std::string& armSide) {
++  node_ = node;
++
++  auto modeScheduleCallback = [this](const ocs2_msgs::msg::ModeSchedule& msg) {
++    auto modeSchedule = ros_msg_conversions::readModeScheduleMsg(msg);
++    referenceManagerPtr_->setModeSchedule(std::move(modeSchedule));
++  };
++  modeScheduleSubscriber_ =
++      node_->create_subscription<ocs2_msgs::msg::ModeSchedule>(
++          topicPrefix_ + "_mode_schedule", 1, modeScheduleCallback);
++
++  auto model = pinocchioInterface.getModel();
++
++  auto alohaTrajectoryCallback = [this, model, eeFrameId, armSide](const ocs2_msgs::msg::JointTrajectoryCommand& msg) {
++    if (msg.traj.points.empty()) {
++      RCLCPP_WARN(node_->get_logger(), "Received empty aloha joint trajectory.");
++      return;
++    }
++
++    // OCS2 trajectory input path: one JointTrajectoryCommand produces
++    // a time-aligned sequence of OCS2 targets.
++    //
++    // time_from_start[k] is a *relative* offset from the publish moment (0 ~ horizon s).
++    // Anchor it to the subscriber's wall-clock so that desiredTimeTrajectory lives in
++    // the same epoch as MPC's currentObservation.time (~1.78×10⁹ s).
++    // Without this anchor, MPC would receive targets at t=[0,1.5]s while its own
++    // clock is at ~1.78e9 s — LinearInterpolation clamps to the last point and
++    // the arm only ever tracks the final endpoint, ignoring all intermediate targets.
++    // Use the message's publish timestamp (header.stamp) instead of
++    // reception time (node_->now()) so that the time base is consistent
++    // with the publisher's clock and not delayed by transport latency.
++    const double startTime = rclcpp::Time(msg.traj.header.stamp).seconds();
++    scalar_array_t desiredTimeTrajectory;
++    vector_array_t desiredStateTrajectory;
++    vector_array_t desiredInputTrajectory;
++    desiredTimeTrajectory.reserve(msg.traj.points.size());
++    desiredStateTrajectory.reserve(msg.traj.points.size());
++    desiredInputTrajectory.reserve(msg.traj.points.size());
++
++    const auto jointTrajectory =
++      ros_msg_conversions::readAlohaTargetTrajectoryMsg(msg);
++
++    for (size_t i = 0; i < msg.traj.points.size(); ++i) {
++      // publisher-clock anchor + relative offset → absolute time aligned with MPC epoch.
++      desiredTimeTrajectory.emplace_back(
++          startTime + rclcpp::Duration(msg.traj.points[i].time_from_start).seconds());
++
++      pinocchio::Data data(model);
++      pinocchio::forwardKinematics(model, data, jointTrajectory[i]);
++      pinocchio::updateFramePlacements(model, data);
++      Eigen::Vector3d translation = data.oMf[eeFrameId].translation();
++      Eigen::Quaterniond quaternion(data.oMf[eeFrameId].rotation());
++      // Extended stateTrajectory format: [joints(stateDim), ee_pos(3), ee_quat(4)]
++      // EndEffectorConstraint reads the EE pose from tail(7).
++      // QuadraticJointStateCost reads joint positions from head(stateDim).
++      // When stateCost.activate is false, the joint positions in head(stateDim)
++      // are not consumed by any cost term and have no effect on the optimization.
++      desiredStateTrajectory.emplace_back(
++        (vector_t(jointTrajectory[i].size() + 7) << jointTrajectory[i], translation, quaternion.coeffs()).finished());
++      desiredInputTrajectory.emplace_back(vector_t::Zero(model.nv));
++    }
++
++    // Merge with pendingTrajectory_:
++    //   - Keep every pending point whose time is strictly < new trajectory's start.
++    //   - Discard all pending points at or after that time (they are replaced by
++    //     the new trajectory, which may overlap or extend the existing one).
++    //   - Append the entire new trajectory after the kept prefix.
++    //
++    // This handles three cases uniformly:
++    // Traj1 [t₀, t₀+T]，Traj 2 [t₀+t', t₀+t'+T']
++    //   1. No overlap  (t' >= T): pure extension – entire pending is kept.
++    //   2. Partial overlap (t' < T): pending is truncated at t', new tail appended.
++    //   3. Full replacement (t' <= t₀): pending is empty after truncation.
++    const scalar_t newStartTime = desiredTimeTrajectory.front();
++    {
++      std::lock_guard<std::mutex> lock(pendingMutex_);
++
++      // Count how many pending points lie strictly before the new trajectory.
++      size_t keepCount = 0;
++      for (; keepCount < pendingTrajectory_.timeTrajectory.size(); ++keepCount) {
++        if (pendingTrajectory_.timeTrajectory[keepCount] >= newStartTime) {
++          break;
++        }
++      }
++
++      scalar_array_t mergedTime;
++      vector_array_t mergedState;
++      vector_array_t mergedInput;
++      mergedTime.reserve(keepCount + desiredTimeTrajectory.size());
++      mergedState.reserve(keepCount + desiredStateTrajectory.size());
++      mergedInput.reserve(keepCount + desiredInputTrajectory.size());
++
++      // Prefix: pending points before the new trajectory's start.
++      mergedTime.insert(mergedTime.end(),
++          pendingTrajectory_.timeTrajectory.begin(),
++          pendingTrajectory_.timeTrajectory.begin() + keepCount);
++      mergedState.insert(mergedState.end(),
++          pendingTrajectory_.stateTrajectory.begin(),
++          pendingTrajectory_.stateTrajectory.begin() + keepCount);
++      mergedInput.insert(mergedInput.end(),
++          pendingTrajectory_.inputTrajectory.begin(),
++          pendingTrajectory_.inputTrajectory.begin() + keepCount);
++
++      // Suffix: the new trajectory in its entirety.
++      mergedTime.insert(mergedTime.end(),
++          desiredTimeTrajectory.begin(), desiredTimeTrajectory.end());
++      mergedState.insert(mergedState.end(),
++          desiredStateTrajectory.begin(), desiredStateTrajectory.end());
++      mergedInput.insert(mergedInput.end(),
++          desiredInputTrajectory.begin(), desiredInputTrajectory.end());
++
++      pendingTrajectory_ = TargetTrajectories(
++          std::move(mergedTime), std::move(mergedState), std::move(mergedInput));
++
++      RCLCPP_DEBUG(node_->get_logger(),
++          "[subscribe_aloha_trajectory_joint] merged: kept %zu pending points before t=%.3f, "
++          "appended %zu new points (merged total=%zu)",
++          keepCount, newStartTime, desiredTimeTrajectory.size(),
++          pendingTrajectory_.timeTrajectory.size());
++
++      referenceManagerPtr_->setTargetTrajectories(pendingTrajectory_);
++    }
++  };
++
++  if (armSide == "LEFT") {
++    alohaTrajectorySubscriber_ =
++        node_->create_subscription<ocs2_msgs::msg::JointTrajectoryCommand>(
++            "/follower_left/mpc_commands/joint_trajectory", 1,
++            alohaTrajectoryCallback);
++  } else if (armSide == "RIGHT") {
++    alohaTrajectorySubscriber_ =
++        node_->create_subscription<ocs2_msgs::msg::JointTrajectoryCommand>(
++            "/follower_right/mpc_commands/joint_trajectory", 1,
++            alohaTrajectoryCallback);
++  } else {
++    std::cerr << "[Error] Invalid armSide parameter " << armSide << ". Use LEFT or RIGHT.\n";
++    return;
++  }
++}
++
+ }  // namespace ocs2
+-- 
+2.43.0
+

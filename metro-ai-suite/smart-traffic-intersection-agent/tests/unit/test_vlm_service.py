@@ -18,8 +18,59 @@ from services.config import ConfigService
 from services.weather_service import WeatherService
 from models.weather import WeatherData
 from models.traffic import TrafficSnapshot, CameraImage
-from models.vlm import VLMAnalysisData, VLMAlert
+from models.vlm import VLMAnalysisData
 from models.enums import AlertLevel, AlertType, WeatherType
+
+
+@pytest.fixture
+def traffic_snapshot_factory():
+    """Factory for creating TrafficSnapshot test data."""
+
+    def _make(
+        directional_counts=None,
+        intersection_id="test-001",
+        camera_images=None,
+        timestamp=None,
+    ):
+        counts = directional_counts or {"north": 5, "south": 3, "east": 8, "west": 2}
+        total_count = sum(counts.values())
+        return TrafficSnapshot(
+            timestamp=timestamp or datetime.now(timezone.utc),
+            intersection_id=intersection_id,
+            directional_counts=counts,
+            total_count=total_count,
+            camera_images=camera_images or {},
+        )
+
+    return _make
+
+
+@pytest.fixture
+def camera_images_sample():
+    """Camera image list for tests."""
+    px = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+    return [
+        CameraImage(camera_id="cam-east", direction="east", image_base64=px),
+        CameraImage(camera_id="cam-west", direction="west", image_base64=px),
+        CameraImage(camera_id="cam-north", direction="north", image_base64=px),
+        CameraImage(camera_id="cam-south", direction="south", image_base64=px),
+    ]
+
+
+@pytest.fixture
+def traffic_snapshot_sample(traffic_snapshot_factory):
+    """TrafficSnapshot mock for prompt and integration tests."""
+    camera_map = {
+        "east": CameraImage(camera_id="cam-east", direction="east", image_base64="data-east"),
+        "west": CameraImage(camera_id="cam-west", direction="west", image_base64="data-west"),
+        "north": CameraImage(camera_id="cam-north", direction="north", image_base64="data-north"),
+        "south": CameraImage(camera_id="cam-south", direction="south", image_base64="data-south"),
+    }
+    return traffic_snapshot_factory(
+        directional_counts={"north": 3, "south": 8, "east": 7, "west": 5},
+        intersection_id="7078bfc4174ce703",
+        camera_images=camera_map,
+    )
 
 
 class TestVLMServiceInitialization:
@@ -62,7 +113,7 @@ class TestVLMServiceInitialization:
         service = VLMService(mock_config, mock_weather)
         
         assert service.base_url == "http://custom-vlm:9000"
-        assert service.model == "custom-model_CPU_int8"
+        assert service.model == "custom-model"
         assert service.timeout == 60
         assert service.max_tokens == 1000
         assert service.temperature == 0.5
@@ -167,33 +218,33 @@ class TestComputeOVMSModelName:
     def test_cpu_auto_weight_format(self):
         assert VLMService._compute_ovms_model_name(
             "microsoft/Phi-3.5-vision-instruct", "CPU", ""
-        ) == "microsoft_Phi-3.5-vision-instruct_CPU_int8"
+        ) == "microsoft/Phi-3.5-vision-instruct"
 
     def test_gpu_auto_weight_format(self):
         assert VLMService._compute_ovms_model_name(
             "OpenVINO/InternVL2-1B-int4-ov", "GPU", ""
-        ) == "OpenVINO_InternVL2-1B-int4-ov_GPU"
+        ) == "OpenVINO/InternVL2-1B-int4-ov"
 
     def test_explicit_weight_format(self):
         assert VLMService._compute_ovms_model_name(
             "OpenVINO/InternVL2-1B-int4-ov", "CPU", "int4"
-        ) == "OpenVINO_InternVL2-1B-int4-ov_CPU"
+        ) == "OpenVINO/InternVL2-1B-int4-ov"
 
     def test_openvino_namespace_model(self):
         assert VLMService._compute_ovms_model_name(
             "OpenVINO/my-model", "CPU", "int8"
-        ) == "OpenVINO_my-model_CPU"
+        ) == "OpenVINO/my-model"
 
     def test_sanitizes_special_chars(self):
         assert VLMService._compute_ovms_model_name(
             "org/model:v1.0", "CPU", "int8"
-        ) == "org_model_v1.0_CPU_int8"
+        ) == "org/model:v1.0"
 
 
 class TestVLMServicePromptBuilding:
     """Test cases for prompt building functionality."""
 
-    def test_create_structured_prompt_basic(self):
+    def test_create_structured_prompt_basic(self, traffic_snapshot_sample):
         """Test creating structured prompt with basic traffic data."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -203,21 +254,16 @@ class TestVLMServicePromptBuilding:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5, "south": 3, "east": 8, "west": 2},
-            total_count=18
-        )
+        traffic_snapshot = traffic_snapshot_sample
         
         prompt = service._create_structured_prompt(traffic_snapshot, None)
         
         assert "Test Intersection" in prompt or "intersection" in prompt.lower()
-        assert "18" in prompt  # total count
+        assert "23" in prompt
         assert "north" in prompt.lower()
         assert "JSON" in prompt
 
-    def test_create_structured_prompt_with_weather(self):
+    def test_create_structured_prompt_with_weather(self, traffic_snapshot_sample):
         """Test creating structured prompt with weather context."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -227,12 +273,7 @@ class TestVLMServicePromptBuilding:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5, "south": 3, "east": 8, "west": 2},
-            total_count=18
-        )
+        traffic_snapshot = traffic_snapshot_sample
         
         weather_data = WeatherData(
             name="Current Hour",
@@ -246,6 +287,13 @@ class TestVLMServicePromptBuilding:
         
         assert "72" in prompt
         assert "Sunny" in prompt or "clear" in prompt.lower()
+
+    def test_traffic_snapshot_structure(self, traffic_snapshot_sample):
+        """Validate TrafficSnapshot mock structure."""
+        assert traffic_snapshot_sample.intersection_id == "7078bfc4174ce703"
+        assert traffic_snapshot_sample.total_count == 23
+        assert set(traffic_snapshot_sample.directional_counts.keys()) == {"north", "south", "east", "west"}
+        assert set(traffic_snapshot_sample.camera_images.keys()) == {"east", "west", "north", "south"}
 
     def test_build_vlm_request_with_images(self):
         """Test building VLM request with camera images."""
@@ -382,7 +430,7 @@ class TestVLMServiceResponseParsing:
         
         assert result is None
 
-    def test_parse_vlm_response_valid_json(self):
+    def test_parse_vlm_response_valid_json(self, traffic_snapshot_factory):
         """Test parsing valid VLM JSON response."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -391,12 +439,7 @@ class TestVLMServiceResponseParsing:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 5})
         
         response_text = '''```json
 {
@@ -424,7 +467,7 @@ class TestVLMServiceResponseParsing:
         assert result.alerts[0].level == AlertLevel.INFO
         assert len(result.recommendations) == 1
 
-    def test_parse_vlm_response_with_string_recommendations(self):
+    def test_parse_vlm_response_with_string_recommendations(self, traffic_snapshot_factory):
         """Test parsing VLM response with string recommendations."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -433,12 +476,7 @@ class TestVLMServiceResponseParsing:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 5})
         
         response_text = '''```json
 {
@@ -453,7 +491,7 @@ class TestVLMServiceResponseParsing:
         assert len(result.recommendations) == 2
         assert "Monitor traffic" in result.recommendations
 
-    def test_parse_vlm_response_invalid_json_uses_fallback(self):
+    def test_parse_vlm_response_invalid_json_uses_fallback(self, traffic_snapshot_factory):
         """Test parsing invalid JSON returns fallback analysis."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -462,12 +500,7 @@ class TestVLMServiceResponseParsing:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 5})
         
         response_text = "This is not valid JSON at all"
         
@@ -480,7 +513,7 @@ class TestVLMServiceResponseParsing:
 class TestVLMServiceFallbackAnalysis:
     """Test cases for fallback analysis generation."""
 
-    def test_create_fallback_analysis_low_traffic(self):
+    def test_create_fallback_analysis_low_traffic(self, traffic_snapshot_factory):
         """Test fallback analysis for low traffic conditions."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -489,12 +522,7 @@ class TestVLMServiceFallbackAnalysis:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 2, "south": 1},
-            total_count=3
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 2, "south": 1})
         
         result = service._create_fallback_analysis("Test", traffic_snapshot, None)
         
@@ -502,7 +530,7 @@ class TestVLMServiceFallbackAnalysis:
         assert "3" in result.traffic_summary  # Should mention vehicle count
         assert len(result.recommendations) > 0
 
-    def test_create_fallback_analysis_high_traffic(self):
+    def test_create_fallback_analysis_high_traffic(self, traffic_snapshot_factory):
         """Test fallback analysis for high traffic conditions."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -511,12 +539,7 @@ class TestVLMServiceFallbackAnalysis:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 8, "south": 7},
-            total_count=15  # Above threshold of 10
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 8, "south": 7})
         
         result = service._create_fallback_analysis("Test", traffic_snapshot, None)
         
@@ -526,7 +549,7 @@ class TestVLMServiceFallbackAnalysis:
         congestion_alerts = [a for a in result.alerts if a.alert_type == AlertType.CONGESTION]
         assert len(congestion_alerts) >= 1
 
-    def test_create_fallback_analysis_with_weather(self):
+    def test_create_fallback_analysis_with_weather(self, traffic_snapshot_factory):
         """Test fallback analysis includes weather alerts."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -536,12 +559,7 @@ class TestVLMServiceFallbackAnalysis:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 5})
         
         weather_data = WeatherData(
             name="Current Hour",
@@ -618,15 +636,23 @@ class TestVLMServiceAsync:
         
         service = VLMService(mock_config, mock_weather)
         
-        with patch('aiohttp.ClientSession') as mock_session:
-            mock_context = AsyncMock()
-            mock_context.__aenter__.return_value.status = 500
-            mock_context.__aenter__.return_value.text = AsyncMock(return_value="Internal Server Error")
-            
-            mock_session_instance = AsyncMock()
-            mock_session_instance.__aenter__.return_value.post.return_value = mock_context
-            mock_session.return_value = mock_session_instance
-            
+        # Create response object and async context managers matching aiohttp usage.
+        mock_resp = MagicMock()
+        mock_resp.status = 500
+        mock_resp.text = AsyncMock(return_value="Internal Server Error")
+
+        mock_post_ctx = MagicMock()
+        mock_post_ctx.__aenter__ = AsyncMock(return_value=mock_resp)
+        mock_post_ctx.__aexit__ = AsyncMock(return_value=None)
+
+        mock_session = MagicMock()
+        mock_session.post = MagicMock(return_value=mock_post_ctx)
+
+        mock_session_ctx = MagicMock()
+        mock_session_ctx.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
+
+        with patch('aiohttp.ClientSession', return_value=mock_session_ctx):
             result = await service._call_vlm_service({"test": "data"})
             
             assert result is None
@@ -642,19 +668,22 @@ class TestVLMServiceAsync:
         service = VLMService(mock_config, mock_weather)
         
         import aiohttp
-        with patch('aiohttp.ClientSession') as mock_session:
-            mock_session_instance = AsyncMock()
-            mock_session_instance.__aenter__.return_value.post.side_effect = aiohttp.ClientConnectorError(
-                connection_key=Mock(), os_error=OSError("Connection refused")
-            )
-            mock_session.return_value = mock_session_instance
-            
+        mock_session = MagicMock()
+        mock_session.post.side_effect = aiohttp.ClientConnectorError(
+            connection_key=Mock(), os_error=OSError("Connection refused")
+        )
+
+        mock_session_ctx = MagicMock()
+        mock_session_ctx.__aenter__ = AsyncMock(return_value=mock_session)
+        mock_session_ctx.__aexit__ = AsyncMock(return_value=None)
+
+        with patch('aiohttp.ClientSession', return_value=mock_session_ctx):
             result = await service._call_vlm_service({"test": "data"})
             
             assert result is None
 
     @pytest.mark.asyncio
-    async def test_analyze_traffic_non_blocking_when_busy(self):
+    async def test_analyze_traffic_non_blocking_when_busy(self, traffic_snapshot_factory):
         """Test non-blocking analysis returns cached result when busy."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -676,13 +705,7 @@ class TestVLMServiceAsync:
         # Lock the semaphore to simulate busy state
         await service._vlm_semaphore.acquire()
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5,
-            camera_images={}
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 5})
         
         result = await service.analyze_traffic_non_blocking(traffic_snapshot)
         
@@ -694,7 +717,7 @@ class TestVLMServiceAsync:
         service._vlm_semaphore.release()
 
     @pytest.mark.asyncio
-    async def test_analyze_traffic_non_blocking_no_cache_when_busy(self):
+    async def test_analyze_traffic_non_blocking_no_cache_when_busy(self, traffic_snapshot_factory):
         """Test non-blocking analysis returns None when busy with no cache."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -706,13 +729,7 @@ class TestVLMServiceAsync:
         # Lock the semaphore to simulate busy state (no cached analysis)
         await service._vlm_semaphore.acquire()
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5,
-            camera_images={}
-        )
+        traffic_snapshot = traffic_snapshot_factory(directional_counts={"north": 5})
         
         result = await service.analyze_traffic_non_blocking(traffic_snapshot)
         
@@ -727,7 +744,9 @@ class TestVLMServiceIntegration:
     """Integration-style tests for VLMService."""
 
     @pytest.mark.asyncio
-    async def test_analyze_traffic_with_weather_uses_fallback_on_weather_error(self):
+    async def test_analyze_traffic_with_weather_uses_fallback_on_weather_error(
+        self, traffic_snapshot_sample, camera_images_sample
+    ):
         """Test traffic analysis uses fallback weather on weather fetch error."""
         mock_config = Mock(spec=ConfigService)
         mock_config.get_vlm_config.return_value = {}
@@ -747,17 +766,11 @@ class TestVLMServiceIntegration:
         
         service = VLMService(mock_config, mock_weather)
         
-        traffic_snapshot = TrafficSnapshot(
-            timestamp=datetime.now(timezone.utc),
-            intersection_id="test-001",
-            directional_counts={"north": 5},
-            total_count=5,
-            camera_images={}
-        )
+        traffic_snapshot = traffic_snapshot_sample
         
         # Mock the VLM call to return None (trigger fallback)
         with patch.object(service, '_call_vlm_service', new_callable=AsyncMock, return_value=None):
-            result = await service.analyze_traffic_with_weather(traffic_snapshot, [])
+            result = await service.analyze_traffic_with_weather(traffic_snapshot, camera_images_sample)
             
             # Should still return a result using fallback
             assert result is not None

@@ -1,7 +1,7 @@
 {
-  "id": "smartbuilding-alerts",
-  "name": "SmartBuilding Alerts",
-  "description": "Subscribes to SmartBuilding MCP alert resources and delivers alerts into OpenClaw sessions (reference framework adapter).",
+  "id": "smart-community-alerts",
+  "name": "Smart Community Alerts",
+  "description": "Subscribes to Smart Community MCP alert resources and delivers alerts into OpenClaw sessions (reference framework adapter).",
   "activation": {
     "onStartup": true
   },
@@ -13,7 +13,7 @@
     "properties": {
       "mcpServer": {
         "type": "object",
-        "description": "SmartBuilding MCP server (Streamable HTTP) to subscribe to.",
+        "description": "Smart Community MCP server (Streamable HTTP) to subscribe to.",
         "required": ["url"],
         "properties": {
           "url": {
@@ -30,7 +30,7 @@
       },
       "cursorFile": {
         "type": "string",
-        "description": "Path to the persistent delivery cursor. Defaults to <OPENCLAW_HOME>/smartbuilding-alerts-cursor.json."
+        "description": "Path to the persistent delivery cursor. Defaults to <OPENCLAW_HOME>/smart-community-alerts-cursor.json."
       },
       "pollFallbackMs": {
         "type": "number",
@@ -39,7 +39,7 @@
       },
       "monitors": {
         "type": "object",
-        "description": "Per-monitor routing. Key = monitor id (maps to smartbuilding://monitor/<id>/alerts).",
+        "description": "Per-monitor routing. Key = monitor id (maps to smart-community://monitor/<id>/alerts).",
         "additionalProperties": {
           "type": "object",
           "additionalProperties": true,

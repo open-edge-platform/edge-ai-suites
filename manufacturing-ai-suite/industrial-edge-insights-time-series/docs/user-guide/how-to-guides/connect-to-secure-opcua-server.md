@@ -232,7 +232,7 @@ Edit your Telegraf configuration file:
 - `IDENTIFIER` with your OPC UA server node identifier
 - `USERNAME` and `PASSWORD` with your OPC UA server credentials
 
-> **Note:**
+> [!NOTE]
 > Make sure your OPC UA server exposes nodes for both `wind_speed` and `grid_active_power`.
 > These nodes must be available for data collection.
 
@@ -272,4 +272,5 @@ For OPC UA servers, ensure the following configuration:
 
 ## Step 5: Deploy and Verify
 
-Deploy the sample application following the steps as mentioned [here](../get-started.md#deploy-with-docker-compose).
+Deploy the sample application following the
+[instructions](../get-started.md#deploy-with-docker-compose).

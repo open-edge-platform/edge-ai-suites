@@ -6,15 +6,15 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createMcpExpressApp } from "@modelcontextprotocol/sdk/server/express.js";
-import { SmartBuildingDB, SchemaManager } from "@smartbuilding-video/db";
-import { VideoSummaryClient } from "@smartbuilding-video/tools";
+import { SmartCommunityDB, SchemaManager } from "@smart-community-video/db";
+import { VideoSummaryClient } from "@smart-community-video/tools";
 import { registerTools } from "./tools.js";
 import { registerResources } from "./resources.js";
-import { loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
+import { MCP_BIND_HOST, loadConfig, loadMonitorsConfig, type ServerConfig } from "./config.js";
 import { WorkerService } from "./video-worker/index.js";
 import { EventsEndpoint } from "./events-endpoint.js";
 import { logger } from "./logger.js";
-import { autoRegisterMonitors } from "./monitor-bootstrap.js";
+import { autoRegisterMonitors, reregisterUnknownMonitor } from "./monitor-bootstrap.js";
 import { startStorageCleaner } from "./storage-cleaner.js";
 import { startKeepaliveSender } from "./keepalive-sender.js";
 import { McpSubscriberRegistry } from "./mcp-subscriber-registry.js";
@@ -32,14 +32,14 @@ import { loadDashboardIntegrationConfig } from "./dashboard/integration-env.js";
  */
 function createMcpServer(
   config: ServerConfig,
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   workerService: WorkerService,
   summaryClient: VideoSummaryClient,
   subscriberRegistry: McpSubscriberRegistry,
   getSessionId: () => string,
 ): McpServer {
   const server = new McpServer({
-    name: "smartbuilding-video",
+    name: "smart-community-video",
     version: "0.1.0",
   });
 
@@ -93,7 +93,7 @@ async function main() {
   mkdirSync(config.reportsLogsDir, { recursive: true });
   mkdirSync(config.monitorsLogsDir, { recursive: true });
 
-  const db = new SmartBuildingDB(config.dbPath);
+  const db = new SmartCommunityDB(config.dbPath);
   db.initialize();
 
   {
@@ -124,7 +124,7 @@ async function main() {
   // Broadcast `notifications/resources/updated` to every MCP session subscribed to this monitor's
   // alerts uri. See docs/framework-adapters/README.md for the end-to-end contract.
   const onAlert = (monitorId: string) => {
-    const uri = `smartbuilding://monitor/${monitorId}/alerts`;
+    const uri = `smart-community://monitor/${monitorId}/alerts`;
     const subs = subscriberRegistry.findSubscribers(uri);
     if (subs.length === 0) {
       logger.debug(`[worker] alert for ${monitorId} — no subscribers, dropped notification`);
@@ -137,14 +137,20 @@ async function main() {
     }
   };
 
-  const summaryClient = new VideoSummaryClient(config.summaryService.url, config.summaryService.pathRemap);
+  const summaryClient = new VideoSummaryClient(
+    config.summaryService.url,
+    config.summaryService.pathRemap,
+    config.summaryService.timeoutSeconds * 1000,
+  );
   const workerService = new WorkerService(config, db, summaryClient, onAlert);
   const liveStreams = new LiveStreamManager();
   const chatCredentials = new ChatCredentialStore(loadDashboardIntegrationConfig());
   const chatProxy = new OpenClawChatProxy(chatCredentials);
 
   if (transportMode === "http") {
-    const app = createMcpExpressApp();
+    // MCP_BIND_HOST is loopback by default, so the SDK applies DNS rebinding protection: only
+    // localhost / 127.0.0.1 / [::1] are accepted as Host.
+    const app = createMcpExpressApp({ host: MCP_BIND_HOST });
 
     app.use("/api", createDashboardRouter(db, config, summaryClient, liveStreams, chatCredentials));
 
@@ -228,9 +234,9 @@ async function main() {
 
     mountStaticUi(app);
 
-    const port = config.mcp!.port;
-    const httpServer = app.listen(port, () => {
-      logger.info(`[mcp-server] Streamable HTTP (stateful) on http://localhost:${port}/mcp`);
+    const port = config.mcp!.port!;
+    const httpServer = app.listen(port, MCP_BIND_HOST, () => {
+      logger.info(`[mcp-server] Streamable HTTP (stateful) on http://${MCP_BIND_HOST}:${port}/mcp`);
     });
     chatProxy.attach(httpServer);
 
@@ -271,7 +277,11 @@ async function main() {
 
   // Keepalive heartbeat: POST /sources/{id}/keepalive for online monitors so the
   // videostream-analytics watchdog (armed at register_source) doesn't auto-pause them.
-  const stopKeepalive = startKeepaliveSender(config, db);
+  // A 404 means VSA lost its in-memory registry (container recreate) — re-register
+  // that monitor from monitors.yaml so it self-heals without manual intervention.
+  const stopKeepalive = startKeepaliveSender(config, db, (monitorId) => {
+    void reregisterUnknownMonitor(db, config, workerService, monitorId);
+  });
 
   let shuttingDown = false;
   const shutdown = async () => {
@@ -310,7 +320,7 @@ async function main() {
 }
 
 async function reconcileOnStartup(
-  db: SmartBuildingDB,
+  db: SmartCommunityDB,
   analyticsUrl: string,
 ): Promise<void> {
   let analyticsSources: Map<string, unknown>;

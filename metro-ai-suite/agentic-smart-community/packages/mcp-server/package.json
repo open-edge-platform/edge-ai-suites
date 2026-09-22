@@ -1,7 +1,7 @@
 {
-  "name": "@smartbuilding-video/mcp-server",
+  "name": "@smart-community-video/mcp-server",
   "version": "0.1.0",
-  "description": "SmartBuilding Video MCP Server — tools, resources, and video-worker orchestration",
+  "description": "Smart Community Video MCP Server — tools, resources, and video-worker orchestration",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "@smartbuilding-video/tools": "*",
-    "@smartbuilding-video/db": "*",
+    "@smart-community-video/tools": "*",
+    "@smart-community-video/db": "*",
     "express": "^5.1.0",
     "cors": "^2.8.5",
     "ws": "8.21.1",

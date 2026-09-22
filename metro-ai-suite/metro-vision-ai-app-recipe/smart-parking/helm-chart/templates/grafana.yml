@@ -15,9 +15,23 @@ spec:
       labels:
         app: grafana
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+        fsGroup: 472
       containers:
       - name: grafana
         image: {{ $.Values.grafana.image }}:{{ $.Values.grafana.imageTag }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 472
+          runAsGroup: 472
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         ports:
         - containerPort: {{ $.Values.config.grafana.int.web_ui_port }}
           name: http
@@ -41,6 +55,10 @@ spec:
         - name: GF_SECURITY_ALLOW_EMBEDDING
           value: "true"
         volumeMounts:
+        - name: grafana-storage
+          mountPath: /var/lib/grafana
+        - name: grafana-tmp
+          mountPath: /tmp
         - name: dashboards-config
           mountPath: /etc/grafana/provisioning/dashboards/main.yml
           subPath: dashboards.yml
@@ -54,6 +72,10 @@ spec:
           mountPath: /var/lib/grafana/dashboards/prometheus.json
           subPath: prometheus.json
       volumes:
+      - name: grafana-storage
+        emptyDir: {}
+      - name: grafana-tmp
+        emptyDir: {}
       - name: dashboards-config
         configMap:
           name: grafana-dashboards-config

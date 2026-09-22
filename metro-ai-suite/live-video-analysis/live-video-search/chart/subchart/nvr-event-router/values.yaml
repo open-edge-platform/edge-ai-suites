@@ -4,6 +4,7 @@ global:
   registry: ''
   tag: latest
   smartNvrStackTag: ''
+  pullPolicy: ''
 
 images:
   nvrEventRouter:

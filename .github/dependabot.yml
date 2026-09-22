@@ -1,7 +1,7 @@
 # To get started with Dependabot version updates, you'll need to specify which
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+# https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically
 
 version: 2
 updates:
@@ -21,7 +21,77 @@ updates:
     directory: "metro-ai-suite/interactive-digital-avatar"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     groups:
       other-python:
+        patterns:
+          - "*"
+
+  - package-ecosystem: "pip"
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
+    groups:
+      industrial-edge-insights-python:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
+    groups:
+      docker-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
+    groups:
+      docker-compose-dependencies:
+        applies-to: version-updates
+        patterns:
+          - "*"
+
+  - package-ecosystem: "helm"
+    directories:
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal"
+      - "/manufacturing-ai-suite/industrial-edge-insights-multimodal/**/*"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series"
+      - "/manufacturing-ai-suite/industrial-edge-insights-time-series/**/*"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 1
+    groups:
+      helm-dependencies:
+        applies-to: version-updates
         patterns:
           - "*"

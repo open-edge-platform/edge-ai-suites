@@ -1,0 +1,55 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: milvus-etcd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus-etcd
+  template:
+    metadata:
+      labels:
+        app: milvus-etcd
+    spec:
+      containers:
+        - name: etcd
+          image: {{ .Values.etcd.image | quote }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command:
+            - etcd
+            - -advertise-client-urls=http://127.0.0.1:2379
+            - -listen-client-urls
+            - http://0.0.0.0:2379
+            - --data-dir
+            - /etcd
+          ports:
+            - name: client
+              containerPort: 2379
+          readinessProbe:
+            exec:
+              command: ["etcdctl", "endpoint", "health"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - name: data
+              mountPath: /etcd
+          {{- with .Values.etcd.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.global.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ .Release.Name }}-milvus-etcd-data
+          {{- else if .Values.global.volumeHostPath }}
+          hostPath:
+            path: {{ .Values.global.volumeHostPath }}/milvus-etcd
+            type: DirectoryOrCreate
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

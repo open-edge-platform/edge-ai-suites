@@ -1,5 +1,13 @@
 # Release Notes: Win Vision AI
 
+## Version 2026.2.0
+
+**Release Date**: September 10, 2026
+
+**New**:
+
+- Added camera pipeline support for width and height defaults when not provided, and updated WHIP URL guidance.
+
 ## Version 2026.1.0
 
 Win Vision AI is a new Windows-only component introduced in this release: a
@@ -31,7 +39,7 @@ The initial release of Win Vision AI application features:
   for more reproducible environments.
 - Upgrade of the default MediaMTX version from v1.15.3 to v1.18.1.
 
-**Known Issues**
+**Known Issues**:
 
 - Win Vision AI is supported on Windows only in this release.
 - NPU inference can fail with errors such as "Failed to construct

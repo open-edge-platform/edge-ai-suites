@@ -14,6 +14,9 @@ export REGISTRY_URL=${REGISTRY_URL:-}
 export PROJECT_NAME=${PROJECT_NAME:-}
 export TAG=${TAG:-latest}
 export RTSP_STREAM_PORT=${RTSP_STREAM_PORT:-8554}
+export WATCH_BATCH_SIZE=${WATCH_BATCH_SIZE:-10}
+export BATCH_JOB_POLL_INTERVAL_SECONDS=${BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
+export BATCH_JOB_TIMEOUT_SECONDS=${BATCH_JOB_TIMEOUT_SECONDS:-3600}
 RTSP_STREAM_BIND_IP=${RTSP_STREAM_BIND_IP:-0.0.0.0}
 
 
@@ -185,7 +188,7 @@ configure_scenescape_setup() {
         local rtsp_ip="${SI_RTSP_HOST:-$(get_host_ip)}"
 
         if [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
-            # Configure SI stack: compose + DLStreamer
+            # Configure SI stack: compose + DL Streamer
             local dlstreamer_config="${metro_recipe_dir}/smart-intersection/src/dlstreamer-pipeline-server/config.json"
             cp "./resources/compose-scenescape-rtsp.yml" "${metro_recipe_dir}/compose-scenescape.yml"
             cp "./resources/si-rtsp-config.json" "${dlstreamer_config}"
@@ -208,7 +211,7 @@ configure_scenescape_setup() {
 configure_genai_setup() {
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
         print_info "Enabling GenAI detection in Frigate"
-        
+
         if [ -f "./resources/frigate-config/config.yml" ]; then
             sed -i '/^\s*genai:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
             # Enable Detect - required for GenAI
@@ -303,7 +306,7 @@ validate_environment() {
     fi
     export VSS_PORT="${VSS_PORT:-12345}"
     print_info "Using VSS endpoint: ${VSS_IP}:${VSS_PORT}"
-    
+
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
         if [ -z "${VLM_SERVING_IP}" ]; then
             print_error "VLM_SERVING_IP environment variable is required when NVR_GENAI is enabled"
@@ -350,7 +353,7 @@ start_services() {
             return 1
         fi
     fi
-    
+
     # Configure GenAI setup
     if ! configure_genai_setup; then
         return 1

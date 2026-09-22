@@ -19,7 +19,7 @@ def _client(mcp_api: McpApiClient) -> McpApiClient:
 
 def test_subscribe_read_and_unsubscribe(mcp_api: McpApiClient):
     client = _client(mcp_api)
-    uri = "smartbuilding://monitor/cam_child/alerts"
+    uri = "smart-community://monitor/cam_child/alerts"
 
     subscribed = client.request("resources/subscribe", {"uri": uri})
     initial = client.read_resource(uri)
@@ -34,7 +34,7 @@ def test_subscribe_read_and_unsubscribe(mcp_api: McpApiClient):
 
 def test_sse_stream_accepts_subscribed_session(mcp_api: McpApiClient):
     client = _client(mcp_api)
-    uri = "smartbuilding://monitor/cam_child/alerts"
+    uri = "smart-community://monitor/cam_child/alerts"
     client.request("resources/subscribe", {"uri": uri})
     parsed = urlsplit(client.url)
     connection = http.client.HTTPConnection(parsed.hostname, parsed.port, timeout=2)
@@ -66,7 +66,7 @@ def test_unknown_session_is_rejected(mcp_api: McpApiClient):
             "jsonrpc": "2.0",
             "id": 2,
             "method": "resources/subscribe",
-            "params": {"uri": "smartbuilding://monitor/cam_child/alerts"},
+            "params": {"uri": "smart-community://monitor/cam_child/alerts"},
         },
     )
 

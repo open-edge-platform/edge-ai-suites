@@ -1,0 +1,5 @@
+The following are ordered notes taken from consecutive segments of ONE class lesson.
+Produce a single unified summary of the WHOLE lesson.
+Emit EVERY section listed above, in order, even if a segment contributed
+little to it — the FLOW lines are the source for the session outline.
+Never mention segments, note numbers, or time ranges.

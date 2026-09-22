@@ -75,7 +75,14 @@ class ContentSearchApiService {
   /// Equivalent of getCsHealth() in React's api.ts.
   Future<HealthStatus> checkHealth() async {
     try {
-      final res = await _dio.get('/api/v1/system/health');
+      // 503 means degraded, not unreachable: the body still carries the
+      // per-service detail, so let it through instead of falling into catch.
+      final res = await _dio.get(
+        '/api/v1/system/health',
+        options: Options(
+          validateStatus: (s) => s != null && (s < 400 || s == 503),
+        ),
+      );
       return HealthStatus.fromJson(res.data as Map<String, dynamic>);
     } catch (_) {
       return HealthStatus.unreachable();

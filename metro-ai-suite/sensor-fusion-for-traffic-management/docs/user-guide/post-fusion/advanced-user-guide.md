@@ -165,19 +165,21 @@ sudo bash -x run_service_bare.sh
 
 ```
 
-> NOTE-1: workload (default as 4) can be configured in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
-
-```vim
-...
-[Pipeline]
-maxConcurrentWorkload=4
-```
-
-> NOTE-2 : to stop service, run the following commands:
-
-```bash
-sudo pkill Hce
-```
+> [!NOTE]
+>
+> - Workload (default as 4) can be configured in the `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config` file:
+>
+>   ```ini
+>   ...
+>   [Pipeline]
+>   maxConcurrentWorkload=4
+>   ```
+>
+> - To stop the service, run the following commands:
+>
+>   ```bash
+>   sudo pkill Hce
+>   ```
 
 ### Entry Program
 
@@ -236,7 +238,8 @@ Environment requirement:
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -289,7 +292,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -326,7 +330,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -379,7 +384,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -417,7 +423,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -470,7 +477,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -508,7 +516,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -561,7 +570,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -599,7 +609,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 ***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -652,7 +663,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -747,7 +759,8 @@ Fps and average latency will be calculated.
 
 #### 2C+1L stability test
 
-> **Note:** change workload configuration to `1` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> [!NOTE]
+> Change workload configuration to `1` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -765,7 +778,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 4C+2L stability test
 
-> **Note:** change workload configuration to `2` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> [!NOTE]
+> Change workload configuration to `2` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -783,7 +797,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 12C+2L stability test
 
-> **Note:** change workload configuration to `2` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> [!NOTE]
+> Change workload configuration to `2` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -801,7 +816,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 8C+4L stability test
 
-> **Note:** change workload configuration to `4` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> [!NOTE]
+> Change workload configuration to `4` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -819,7 +835,8 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 12C+4L stability test
 
-> **Note:** change workload configuration to `4` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> [!NOTE]
+> Change workload configuration to `4` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -932,7 +949,8 @@ docker pull intel/tfcc:2025.2.0-ubuntu24
 
 ### Build and run docker image through scripts
 
-> **Note:** The default username is `tfcc` and password is `intel` in docker image.
+> [!NOTE]
+> The default username is `tfcc` and password is `intel` in docker image.
 
 **Build docker image**:
 
@@ -989,7 +1007,8 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 
 ### Build and run docker image through docker compose
 
-> **Note:** The default username is `tfcc` and password is `intel` in docker image.
+> [!NOTE]
+> The default username is `tfcc` and password is `intel` in docker image.
 
 Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 

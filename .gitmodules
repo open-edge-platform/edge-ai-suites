@@ -57,6 +57,7 @@
 [submodule "retail-ai-suite/digital-signage"]
 	path = retail-ai-suite/digital-signage
 	url = https://github.com/intel-retail/digital-signage.git
+	branch = main
 [submodule "robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros"]
 	path = robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros
 	url = https://github.com/agenticros/agenticros.git
@@ -83,3 +84,25 @@
 [submodule "education-ai-suite/ai-teaching-assistant/voice-enabled-interactions"]
 	path = education-ai-suite/ai-teaching-assistant/voice-enabled-interactions
 	url = https://github.com/intel-retail/voice-enabled-interactions.git
+[submodule "robotics-ai-suite/pipelines/gr00t-n1d7-ov/isaac-gr00t"]
+	path = robotics-ai-suite/pipelines/gr00t-n1d7-ov/isaac-gr00t
+	url = https://github.com/NVIDIA/Isaac-GR00T.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl"]
+	path = robotics-ai-suite/pipelines/gr00t-wbc/GR00T-WholeBodyControl
+	url = https://github.com/NVlabs/GR00T-WholeBodyControl.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/point-lio-demo/Point-LIO"]
+	path = robotics-ai-suite/pipelines/point-lio-demo/Point-LIO
+	url = https://github.com/hku-mars/Point-LIO.git
+	branch = point-lio-with-grid-map
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2"]
+	path = robotics-ai-suite/pipelines/fast-livo2-demo/FAST-LIVO2
+	url = https://github.com/hku-mars/FAST-LIVO2.git
+	shallow = true
+[submodule "robotics-ai-suite/pipelines/fast-lio2-demo/FAST_LIO"]
+	path = robotics-ai-suite/pipelines/fast-lio2-demo/FAST_LIO
+	url = https://github.com/hku-mars/FAST_LIO.git
+	branch = ROS2
+	shallow = true

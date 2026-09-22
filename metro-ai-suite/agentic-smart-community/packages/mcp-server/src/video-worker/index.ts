@@ -1,6 +1,6 @@
 import type { ServerConfig } from "../config.js";
-import type { SmartBuildingDB } from "@smartbuilding-video/db";
-import type { VideoSummaryClient } from "@smartbuilding-video/tools";
+import type { SmartCommunityDB } from "@smart-community-video/db";
+import type { VideoSummaryClient } from "@smart-community-video/tools";
 import { TaskPoller } from "./task-poller.js";
 import { VideoSummaryYield } from "./video-summary-yield.js";
 
@@ -18,7 +18,7 @@ export class WorkerService {
 
   constructor(
     config: ServerConfig,
-    db: SmartBuildingDB,
+    db: SmartCommunityDB,
     summaryClient: VideoSummaryClient,
     onAlert?: AlertCallback,
   ) {

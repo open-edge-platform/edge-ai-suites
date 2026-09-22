@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <cstdlib>
+#include <sstream>
 
 // -------- Engine Class --------
 class Engine {
@@ -51,11 +52,15 @@ class Device {
 public:
     std::string device_name;
     ze_device_handle_t device_handle;
+    // sysman_handle must come from zesDeviceGet(); distinct from device_handle in the zesInit() path
+    zes_device_handle_t sysman_handle;
     ze_device_type_t type;
     std::vector<Engine> engines;
 
-    Device(std::string device_name, ze_device_type_t type, ze_device_handle_t device_handle) {
+    Device(std::string device_name, ze_device_type_t type,
+           ze_device_handle_t device_handle, zes_device_handle_t sysman_handle) {
         this->device_handle = device_handle;
+        this->sysman_handle = sysman_handle;
         this->device_name = device_name;
         this->type = type;
     }
@@ -63,17 +68,19 @@ public:
     void device_init() {
         ze_result_t status;
         uint32_t engineGroupCount = 0;
-        status = zesDeviceEnumEngineGroups(device_handle, &engineGroupCount, nullptr);
+        status = zesDeviceEnumEngineGroups(sysman_handle, &engineGroupCount, nullptr);
+        if (status != ZE_RESULT_SUCCESS) {
+            std::cout << "zesDeviceEnumEngineGroups (count) failed: " << status << std::endl;
+            return;
+        }
 
         std::vector<zes_engine_handle_t> engine_handles(engineGroupCount);
-        status = zesDeviceEnumEngineGroups(device_handle, &engineGroupCount, engine_handles.data());
-
+        status = zesDeviceEnumEngineGroups(sysman_handle, &engineGroupCount, engine_handles.data());
         if (status != ZE_RESULT_SUCCESS) {
-            std::cout << "No Engine Modules Found --> " << status << std::endl;
-            exit(1);
-        } else {
-            std::cout << "Engine Modules Found --> " << engineGroupCount << std::endl;
+            std::cout << "zesDeviceEnumEngineGroups (fill) failed: " << status << std::endl;
+            return;
         }
+        std::cout << "Engine Modules Found --> " << engineGroupCount << std::endl;
 
         for (const auto& engine_handle : engine_handles) {
             Engine e(engine_handle);
@@ -89,13 +96,41 @@ public:
 // -------- LevelZero Class --------
 class LevelZero {
 private:
+    static std::string dll_version(const char* dll_name) {
+        DWORD dummy = 0;
+        DWORD size = GetFileVersionInfoSizeA(dll_name, &dummy);
+        if (size == 0) return "(not found)";
+        std::vector<BYTE> buf(size);
+        if (!GetFileVersionInfoA(dll_name, 0, size, buf.data())) return "(read error)";
+        VS_FIXEDFILEINFO* fi = nullptr;
+        UINT len = 0;
+        if (!VerQueryValueA(buf.data(), "\\", reinterpret_cast<void**>(&fi), &len)) return "(query error)";
+        std::ostringstream ss;
+        ss << HIWORD(fi->dwFileVersionMS) << '.' << LOWORD(fi->dwFileVersionMS)
+           << '.' << HIWORD(fi->dwFileVersionLS) << '.' << LOWORD(fi->dwFileVersionLS);
+        return ss.str();
+    }
+
     bool init_levelZero() {
+        // Print versions to help diagnose machine-specific Sysman failures.
+        std::cout << "ze_loader.dll version : " << dll_version("ze_loader.dll") << "\n";
+        std::cout << "ze_intel_npu.dll version: " << dll_version("ze_intel_npu.dll") << "\n";
+
         ze_result_t result = zeInit(ZE_INIT_FLAG_VPU_ONLY);
         if (result != ZE_RESULT_SUCCESS) {
             std::cout << "Ze Driver not initialized: " << result << std::endl;
             return false;
         }
         std::cout << "Ze Driver initialized.\n";
+
+        // zesInit() is the correct Sysman initializer; ZES_ENABLE_SYSMAN set
+        // via _putenv_s is read by the loader at DLL-load time and is too late.
+        ze_result_t zes_result = zesInit(0);
+        if (zes_result != ZE_RESULT_SUCCESS) {
+            std::cout << "Sysman (zesInit) failed: " << zes_result
+                      << " -- try updating the Intel NPU driver.\n";
+            return false;
+        }
         return true;
     }
 
@@ -129,12 +164,6 @@ public:
     ze_device_properties_t pProperties{};
 
     int init() {
-        _putenv_s("ZES_ENABLE_SYSMAN", "1");
-        auto zes_enable_sysman = std::getenv("ZES_ENABLE_SYSMAN");
-        if (zes_enable_sysman == nullptr || std::string("1") != zes_enable_sysman) {
-            std::cout << "Warning: environment variable ZES_ENABLE_SYSMAN is not 1." << std::endl;
-        }
-
         flag = init_levelZero();
         if (!flag) return -1;
 
@@ -150,12 +179,31 @@ public:
             device_handle_list.insert(device_handle_list.end(), found_devices.begin(), found_devices.end());
         }
 
+        // Enumerate Sysman devices via zesDriverGet/zesDeviceGet.
+        // In the zesInit() path these handles are distinct from zeDeviceGet() handles.
+        uint32_t zesDrvCount = 0;
+        zesDriverGet(&zesDrvCount, nullptr);
+        std::vector<zes_driver_handle_t> zesDrvs(zesDrvCount);
+        zesDriverGet(&zesDrvCount, zesDrvs.data());
+
+        std::vector<zes_device_handle_t> sysman_device_list;
+        for (const auto& zesDrv : zesDrvs) {
+            uint32_t devCount = 0;
+            zesDeviceGet(zesDrv, &devCount, nullptr);
+            std::vector<zes_device_handle_t> devs(devCount);
+            zesDeviceGet(zesDrv, &devCount, devs.data());
+            sysman_device_list.insert(sysman_device_list.end(), devs.begin(), devs.end());
+        }
+
         for (size_t i = 0; i < device_handle_list.size(); i++) {
             pProperties.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
             status = zeDeviceGetProperties(device_handle_list[i], &pProperties);
             if (status != ZE_RESULT_SUCCESS) return -4;
 
-            Device d(pProperties.name, pProperties.type, device_handle_list[i]);
+            zes_device_handle_t sysman_h = (i < sysman_device_list.size())
+                                            ? sysman_device_list[i]
+                                            : device_handle_list[i];
+            Device d(pProperties.name, pProperties.type, device_handle_list[i], sysman_h);
             std::cout << "Added Device : " << pProperties.name << std::endl;
             d.device_init();
             devices.push_back(d);

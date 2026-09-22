@@ -1,6 +1,6 @@
 """Integration tests: full pipeline — RTSP → motion detect → webhook events.
 
-Phase 7: webhooks now use the nested envelope:
+Webhooks use the nested envelope:
   { sourceId, type, timestamp, payload: {...} }
 Motion payload fields: event_file_path, summary_clip_input, start_time, ...
 """
@@ -35,7 +35,7 @@ class TestMotionToWebhook:
             pass
 
     def test_no_status_events_pushed(self, http_client, webhook_url):
-        """§32: RTSP connection status is no longer pushed to the /events webhook.
+        """RTSP connection status is not pushed to the /events webhook.
         After the source connects, the mock webhook must have recorded zero `status`
         events (health is exposed via GET /sources/{id}/status instead)."""
         time.sleep(3)  # allow the source to connect / go online
@@ -100,7 +100,7 @@ class TestMotionToWebhook:
         assert len(events) >= 1, "No static events received within 240s"
 
     def test_static_event_payload_complete(self, http_client, webhook_url):
-        """Static envelope + payload should carry the API §4 required fields."""
+        """Static envelope + payload carry the required fields (api-reference-mcp-webhook-event.md §4)."""
         events = wait_for_events(
             http_client, webhook_url, event_type="static", min_count=1, timeout=240
         )

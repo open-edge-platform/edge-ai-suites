@@ -7,9 +7,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import { parse } from "yaml";
-import { SmartBuildingDB } from "@smartbuilding-video/db";
-import { monitorCtl } from "@smartbuilding-video/tools";
-import type { IWorkerService } from "@smartbuilding-video/tools";
+import { SmartCommunityDB } from "@smart-community-video/db";
+import { monitorCtl } from "@smart-community-video/tools";
+import type { IWorkerService } from "@smart-community-video/tools";
 
 // Unreachable on purpose: monitorCtl treats analytics DELETE/pause/resume
 // failures as non-fatal (catch-and-continue), so tests need no live service.
@@ -21,10 +21,10 @@ function fakeWorkerService(): IWorkerService {
 
 async function withTempEnv(
   monitorsYaml: string,
-  run: (env: { db: SmartBuildingDB; monitorsPath: string }) => Promise<void>,
+  run: (env: { db: SmartCommunityDB; monitorsPath: string }) => Promise<void>,
 ): Promise<void> {
   const baseDir = await mkdtemp(join(tmpdir(), "monitor-ctl-persist-"));
-  const db = new SmartBuildingDB(join(baseDir, "test.db"));
+  const db = new SmartCommunityDB(join(baseDir, "test.db"));
   db.initialize();
   try {
     const monitorsPath = join(baseDir, "monitors.yaml");
@@ -48,7 +48,7 @@ monitors:
         enabled: true
 `;
 
-function seedMonitorWithAlert(db: SmartBuildingDB): void {
+function seedMonitorWithAlert(db: SmartCommunityDB): void {
   db.createMonitor({
     id: "cam_pet_safety",
     name: "Pet safety cam",

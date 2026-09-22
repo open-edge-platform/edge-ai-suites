@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Building Digital Twin AI Monitor</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --panel-bg:    #161b22;
+      --border:      #30363d;
+      --header-bg:   #21262d;
+      --text:        #c9d1d9;
+      --muted:       #8b949e;
+      --accent:      #58a6ff;
+      --green:       #3fb950;
+      --red:         #f85149;
+
+      --alert-bg:    #2d0a0a;
+      --alert-border:#7a1c1c;
+      --alert-accent:#f08080;
+
+      --loop-bg:     #5b4308;
+      --loop-border: #d4a72c;
+      --loop-accent: #ffe082;
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px; overflow: hidden; }
+
+    /* ── Top bar ── */
+    .topbar {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 14px; gap: 10px;
+      height: 48px; flex-shrink: 0;
+    }
+    .topbar .logo { font-size: 14px; font-weight: 600; color: var(--accent); }
+    .topbar .subtitle { color: var(--muted); font-size: 12px; }
+
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+    .status-dot.connected { background: var(--green); }
+    .status-label { color: var(--muted); font-size: 11px; }
+
+    /* topbar right group */
+    .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+    /* Clear button in topbar */
+    .btn-clear {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .btn-clear:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Body layout ── */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .panels {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── Shared panel chrome ── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 12px;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--muted);
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+    .panel-header .count {
+      background: var(--border); color: var(--muted);
+      border-radius: 10px; padding: 1px 7px; font-size: 10px;
+    }
+    .panel-header-controls {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .panel-header-controls label { color: var(--muted); }
+    .panel-select {
+      background: var(--panel-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-size: 11px;
+    }
+
+    /* ── Narrator panel (middle, fixed width) ── */
+    .narrator-panel { width: 420px; flex-shrink: 0; }
+
+    /* ── Scene State panel (left, fixed width) ── */
+    .state-panel { width: 230px; flex-shrink: 0; }
+
+    .state-body {
+      flex: 1; overflow-y: auto;
+      padding: 10px 10px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .state-body::-webkit-scrollbar { width: 5px; }
+    .state-body::-webkit-scrollbar-track { background: transparent; }
+    .state-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .state-section { display: flex; flex-direction: column; gap: 5px; }
+    .state-section-title {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+      padding-bottom: 4px; margin-bottom: 2px;
+    }
+
+    /* Count chips */
+    .count-grid { display: flex; flex-wrap: wrap; gap: 5px; }
+    .count-chip {
+      background: var(--header-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 3px 10px;
+      font-size: 11px; font-weight: 600; color: var(--text);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .count-chip .chip-n { color: var(--accent); font-size: 13px; }
+
+    /* Door state rows */
+    .door-row {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 11px; padding: 3px 0;
+    }
+    .door-indicator {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+    }
+    .door-indicator.closed { background: var(--green); }
+    .door-indicator.open   { background: var(--red); box-shadow: 0 0 5px var(--red); }
+    .door-name { flex: 1; color: var(--text); }
+    .door-status { font-size: 10px; font-weight: 700; letter-spacing: 0.05em; }
+    .door-status.closed { color: var(--green); }
+    .door-status.open   { color: var(--red); }
+    .door-count { color: var(--muted); font-size: 10px; }
+
+    /* Region rows */
+    .region-row {
+      font-size: 11px; padding: 3px 6px;
+      background: var(--header-bg); border: 1px solid var(--border);
+      border-radius: 5px;
+    }
+    .region-name { font-weight: 600; color: var(--accent); margin-bottom: 2px; }
+    .region-detail { color: var(--muted); }
+    .region-empty { color: var(--muted); font-style: italic; }
+
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 6px;
+      background: var(--header-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      font-size: 11px;
+    }
+    .telemetry-label { color: var(--muted); }
+    .telemetry-value { color: var(--text); text-align: right; }
+
+    .state-no-data { color: var(--border); font-size: 11px; font-style: italic; }
+
+    /* ── Detail panel (right, fills rest) ── */
+    .detail-panel { flex: 1; }
+    .detail-panel .empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 10px; color: var(--muted); font-size: 12px;
+    }
+    .detail-panel .empty-state .icon { font-size: 32px; }
+
+    /* ── Feed ── */
+    .feed {
+      flex: 1; overflow-y: auto;
+      padding: 10px 10px;
+      display: flex; flex-direction: column; gap: 7px;
+      scroll-behavior: smooth;
+    }
+    .feed::-webkit-scrollbar { width: 5px; }
+    .feed::-webkit-scrollbar-track { background: transparent; }
+    .feed::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ── Narrator entry cards ── */
+    .entry-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: 11px; line-height: 1.6;
+      color: var(--muted);
+      white-space: pre-wrap; word-break: break-word;
+      cursor: default;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .entry-card .entry-header { color: var(--accent); font-weight: 600; }
+
+    .entry-card.is-alert {
+      border-left: 3px solid var(--alert-border);
+      background: var(--alert-bg);
+      cursor: pointer;
+    }
+    .entry-card.is-alert:hover { border-color: var(--alert-accent); }
+    .entry-card.is-alert .entry-header { color: var(--alert-accent); }
+    .entry-card.is-alert.selected {
+      border-color: var(--accent);
+      outline: 1px solid var(--accent);
+    }
+
+    .entry-card.is-loop-event {
+      background: var(--loop-bg);
+      border: 1px solid var(--loop-border);
+      border-left: 5px solid var(--loop-accent);
+      box-shadow: inset 0 0 0 1px rgba(255, 224, 130, 0.12);
+      color: #fff6d5;
+    }
+    .entry-card.is-loop-event .entry-header {
+      color: var(--loop-accent);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Thumbnail strip (inside alert card) ── */
+    .thumb-strip {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      margin-top: 8px;
+    }
+    .thumb-strip .thumb {
+      width: 80px; height: 54px;
+      object-fit: cover;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      background: #000;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .thumb-strip .thumb:hover { border-color: var(--accent); }
+    .thumb-label {
+      font-size: 9px; color: var(--muted);
+      text-align: center; margin-top: 1px;
+    }
+    .thumb-wrap { display: flex; flex-direction: column; }
+
+    /* ── Detail panel content ── */
+    .detail-content {
+      flex: 1; overflow-y: auto; padding: 14px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .detail-content::-webkit-scrollbar { width: 5px; }
+    .detail-content::-webkit-scrollbar-track { background: transparent; }
+    .detail-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .detail-alert-text {
+      background: var(--alert-bg);
+      border: 1px solid var(--alert-border);
+      border-left: 3px solid var(--alert-accent);
+      border-radius: 6px; padding: 10px 12px;
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: 12px; line-height: 1.7;
+      color: var(--text); white-space: pre-wrap;
+    }
+    .detail-alert-text .header-line { color: var(--alert-accent); font-weight: 700; }
+
+    .detail-images {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 10px;
+    }
+    .detail-img-wrap {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .detail-img-wrap .cam-label {
+      font-size: 10px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .detail-img-wrap img {
+      width: 100%; border-radius: 5px;
+      border: 1px solid var(--border); background: #000;
+      cursor: pointer;
+    }
+    .detail-img-wrap img:hover { border-color: var(--accent); }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000; align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 92vw; max-height: 92vh;
+      border-radius: 6px; border: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <span class="logo">🏢 Smart Building Digital Twin AI Monitor</span>
+    <span class="subtitle">Powered by Intel Scenescape</span>
+    <div class="topbar-right">
+      <div class="status-dot" id="narrator-dot"></div>
+      <span class="status-label" id="narrator-status">Narrator: connecting…</span>
+      <span class="status-label" style="color:var(--border)">|</span>
+      <span class="status-label" id="entry-count">0 entries</span>
+      <button class="btn-clear" id="btn-clear">✕ Clear</button>
+    </div>
+  </header>
+
+  <div class="panels">
+
+    <!-- Left: Scene State -->
+    <div class="panel state-panel">
+      <div class="panel-header">&#127758; Scene State</div>
+      <div class="state-body" id="state-body">
+        <div class="state-no-data" id="state-no-data">Waiting for data…</div>
+      </div>
+    </div>
+
+    <!-- Middle: Narrator feed -->
+    <div class="panel narrator-panel">
+      <div class="panel-header">
+        📡 Scene Narrator
+        <span class="count" id="narrator-count">0</span>
+        <div class="panel-header-controls">
+          <label for="narrator-filter">Show:</label>
+          <select id="narrator-filter" class="panel-select">
+            <option value="all">All</option>
+            <option value="alerts">Warnings &amp; Alerts</option>
+          </select>
+        </div>
+      </div>
+      <div class="feed" id="narrator-feed"></div>
+    </div>
+
+    <!-- Right: Detail view -->
+    <div class="panel detail-panel" id="detail-panel">
+      <div class="panel-header" id="detail-header">🔍 Event Detail</div>
+      <div class="empty-state" id="detail-empty">
+        <div class="icon">🖱</div>
+        <div>Click an alert entry to view camera snapshots</div>
+      </div>
+      <div class="detail-content" id="detail-content" style="display:none;"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+'use strict';
+
+// ── Utility ──────────────────────────────────────────────────────────────────
+function isNearBottom(el) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+}
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const narratorDot    = document.getElementById('narrator-dot');
+const narratorStatus = document.getElementById('narrator-status');
+const narratorFeed   = document.getElementById('narrator-feed');
+const narratorCount  = document.getElementById('narrator-count');
+const narratorFilter = document.getElementById('narrator-filter');
+const entryCount     = document.getElementById('entry-count');
+const btnClear       = document.getElementById('btn-clear');
+const detailEmpty    = document.getElementById('detail-empty');
+const detailContent  = document.getElementById('detail-content');
+const detailHeader   = document.getElementById('detail-header');
+const lightbox       = document.getElementById('lightbox');
+const lightboxImg    = document.getElementById('lightbox-img');
+
+let total        = 0;
+let selectedCard = null;
+let selectedEntryId = null;
+let entries      = [];   // in-memory mirror of what's in localStorage
+let nextEntryId  = 1;
+
+// ── localStorage persistence ──────────────────────────────────────────────────
+const ENTRIES_KEY = 'sbd-narrator-entries';
+const STATE_KEY   = 'sbd-scene-state';
+const FILTER_KEY  = 'sbd-narrator-filter';
+const MAX_STORED  = 150;   // max entries kept; older images stripped first
+
+function saveEntries() {
+  try {
+    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries.slice(-MAX_STORED)));
+  } catch (e) {
+    // Quota exceeded — strip images from all but the newest 20 alerts and retry
+    const trimmed = entries.slice(-MAX_STORED).map((d, i, arr) =>
+      (d.is_alert && i < arr.length - 20) ? { text: d.text, is_alert: true, images: {} } : d
+    );
+    try { localStorage.setItem(ENTRIES_KEY, JSON.stringify(trimmed)); } catch (_) {}
+  }
+}
+
+function saveState(state) {
+  try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (_) {}
+}
+
+function saveFilter(value) {
+  try { localStorage.setItem(FILTER_KEY, value); } catch (_) {}
+}
+
+function entryMatchesFilter(entry) {
+  if (narratorFilter.value === 'all') return true;
+  const text = entry.text || '';
+  return Boolean(
+    entry.is_alert
+    || text.startsWith('[WARN ')
+    || text.includes('video loop restarted')
+  );
+}
+
+function visibleEntries() {
+  return entries.filter(entryMatchesFilter);
+}
+
+function updateNarratorCounts() {
+  const visibleTotal = visibleEntries().length;
+  narratorCount.textContent = visibleTotal;
+  entryCount.textContent = `${visibleTotal} shown / ${total} total`;
+}
+
+function renderNarratorFeed() {
+  const wasBottom = isNearBottom(narratorFeed);
+  const visible = visibleEntries();
+  narratorFeed.innerHTML = '';
+  let restoredSelection = false;
+
+  for (const entry of visible) {
+    const card = makeCard(entry);
+    if (entry._entryId === selectedEntryId) {
+      card.classList.add('selected');
+      selectedCard = card;
+      restoredSelection = true;
+    }
+    narratorFeed.appendChild(card);
+  }
+
+  if (!restoredSelection) {
+    clearDetail();
+  }
+  updateNarratorCounts();
+  if (wasBottom) narratorFeed.scrollTop = narratorFeed.scrollHeight;
+}
+
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function openLightbox(src) {
+  lightboxImg.src = src;
+  lightbox.classList.add('open');
+}
+lightbox.addEventListener('click', () => lightbox.classList.remove('open'));
+
+function sortedImageIds(images) {
+  const phaseRank = (label) => {
+    if (label.startsWith('handoff ')) return 0;
+    if (label.startsWith('alert ')) return 1;
+    return 2;
+  };
+
+  const camNumber = (label) => {
+    const match = label.match(/cam-(\d+)/);
+    return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+  };
+
+  return Object.keys(images).sort((left, right) => {
+    const phaseDiff = phaseRank(left) - phaseRank(right);
+    if (phaseDiff !== 0) return phaseDiff;
+
+    const camDiff = camNumber(left) - camNumber(right);
+    if (camDiff !== 0) return camDiff;
+
+    return left.localeCompare(right);
+  });
+}
+
+// ── Detail panel ─────────────────────────────────────────────────────────────
+function showDetail(text, images) {
+  detailEmpty.style.display = 'none';
+  detailContent.style.display = 'flex';
+  detailContent.innerHTML = '';
+
+  // Alert text block
+  const textEl = document.createElement('div');
+  textEl.className = 'detail-alert-text';
+  const lines = text.split('\n');
+  const hdr = document.createElement('span');
+  hdr.className = 'header-line';
+  hdr.textContent = lines[0];
+  textEl.appendChild(hdr);
+  if (lines.length > 1) {
+    textEl.appendChild(document.createTextNode('\n' + lines.slice(1).join('\n')));
+  }
+  detailContent.appendChild(textEl);
+
+  // Camera image grid (sorted by cam ID)
+  const camIds = sortedImageIds(images);
+  if (camIds.length > 0) {
+    const grid = document.createElement('div');
+    grid.className = 'detail-images';
+    for (const camId of camIds) {
+      const src  = images[camId];
+      const wrap = document.createElement('div');
+      wrap.className = 'detail-img-wrap';
+      const lbl = document.createElement('div');
+      lbl.className = 'cam-label';
+      lbl.textContent = camId;
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = camId;
+      img.addEventListener('click', () => openLightbox(src));
+      wrap.appendChild(lbl);
+      wrap.appendChild(img);
+      grid.appendChild(wrap);
+    }
+    detailContent.appendChild(grid);
+  } else {
+    const note = document.createElement('div');
+    note.style.cssText = 'color:var(--muted);font-size:12px;';
+    note.textContent = 'No camera snapshots captured for this event.';
+    detailContent.appendChild(note);
+  }
+}
+
+function clearDetail() {
+  if (selectedCard) {
+    selectedCard.classList.remove('selected');
+    selectedCard = null;
+  }
+  selectedEntryId = null;
+  detailEmpty.style.display = '';
+  detailContent.style.display = 'none';
+  detailContent.innerHTML = '';
+  detailHeader.textContent = '🔍 Event Detail';
+}
+
+// ── Build a narrator entry card ───────────────────────────────────────────────
+function makeCard(data) {
+  const text    = data.text   || '';
+  const images  = data.images || {};
+  const isAlert = data.is_alert || false;
+  const isLoopEvent = text.includes('video loop restarted');
+
+  const card = document.createElement('div');
+  card.className = 'entry-card'
+    + (isAlert ? ' is-alert' : '')
+    + (isLoopEvent ? ' is-loop-event' : '');
+
+  // Header line
+  const lines = text.split('\n');
+  const hdr   = document.createElement('span');
+  hdr.className = 'entry-header';
+  hdr.textContent = lines[0];
+  card.appendChild(hdr);
+  if (lines.length > 1) {
+    card.appendChild(document.createTextNode('\n' + lines.slice(1).join('\n')));
+  }
+
+  // Thumbnail strip for alerts
+  if (isAlert && Object.keys(images).length > 0) {
+    const strip = document.createElement('div');
+    strip.className = 'thumb-strip';
+    const camIds = sortedImageIds(images);
+    for (const camId of camIds) {
+      const src   = images[camId];
+      const wrap  = document.createElement('div');
+      wrap.className = 'thumb-wrap';
+      const img   = document.createElement('img');
+      img.className = 'thumb';
+      img.src = src;
+      img.alt = camId;
+      img.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openLightbox(src);
+      });
+      const lbl   = document.createElement('div');
+      lbl.className = 'thumb-label';
+      lbl.textContent = camId;
+      wrap.appendChild(img);
+      wrap.appendChild(lbl);
+      strip.appendChild(wrap);
+    }
+    card.appendChild(strip);
+  }
+
+  // Click alert card to open detail
+  if (isAlert) {
+    card.addEventListener('click', () => {
+      if (selectedCard) selectedCard.classList.remove('selected');
+      selectedCard = card;
+      selectedEntryId = data._entryId || null;
+      card.classList.add('selected');
+      detailHeader.textContent = '🔍 Event Detail — ' + lines[0].replace(/^\[ALERT [^\]]+\]\s*/, '');
+      showDetail(text, images);
+    });
+  }
+
+  return card;
+}
+
+// ── Scene State SSE ───────────────────────────────────────────────────────────
+const stateBody   = document.getElementById('state-body');
+const stateNoData = document.getElementById('state-no-data');
+
+const CATEGORY_ICONS = { person: '🚶', luggage: '🧳', door: '🚪' };
+
+// Accumulate region names seen across all ticks — list only grows, never shrinks
+const seenRegions = new Set();
+
+function formatBytes(bytes) {
+  if (typeof bytes !== 'number' || !Number.isFinite(bytes) || bytes < 0) return 'unavailable';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let value = bytes;
+  let unitIdx = 0;
+  while (value >= 1024 && unitIdx < units.length - 1) {
+    value /= 1024;
+    unitIdx += 1;
+  }
+  return `${value.toFixed(value >= 10 || unitIdx === 0 ? 0 : 1)} ${units[unitIdx]}`;
+}
+
+function formatPercent(percent) {
+  return (typeof percent === 'number' && Number.isFinite(percent)) ? `${percent.toFixed(1)}%` : 'unavailable';
+}
+
+function formatWatts(watts) {
+  return (typeof watts === 'number' && Number.isFinite(watts)) ? `${watts.toFixed(1)} W` : 'unavailable';
+}
+
+function formatCelsius(tempC) {
+  return (typeof tempC === 'number' && Number.isFinite(tempC)) ? `${tempC.toFixed(1)} C` : 'unavailable';
+}
+
+function addTelemetryRow(parent, label, value) {
+  const row = document.createElement('div');
+  row.className = 'telemetry-row';
+  const labelEl = document.createElement('div');
+  labelEl.className = 'telemetry-label';
+  labelEl.textContent = label;
+  const valueEl = document.createElement('div');
+  valueEl.className = 'telemetry-value';
+  valueEl.textContent = value;
+  row.appendChild(labelEl);
+  row.appendChild(valueEl);
+  parent.appendChild(row);
+}
+
+function renderSceneState(state) {
+  stateNoData.style.display = 'none';
+  stateBody.innerHTML = '';
+
+  if (state.timestamp) {
+    const sec = document.createElement('div');
+    sec.className = 'state-section';
+    const title = document.createElement('div');
+    title.className = 'state-section-title';
+    title.textContent = 'Last snapshot';
+    sec.appendChild(title);
+    const stamp = document.createElement('div');
+    stamp.className = 'region-detail';
+    stamp.textContent = state.timestamp;
+    sec.appendChild(stamp);
+    stateBody.appendChild(sec);
+  }
+
+  // ── Object counts ─────────────────────────────────────────────────────
+  const counts = state.counts || {};
+  if (Object.keys(counts).length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'state-section';
+    const title = document.createElement('div');
+    title.className = 'state-section-title';
+    title.textContent = 'Objects in scene';
+    sec.appendChild(title);
+    const grid = document.createElement('div');
+    grid.className = 'count-grid';
+    for (const [cat, n] of Object.entries(counts).sort()) {
+      const chip = document.createElement('div');
+      chip.className = 'count-chip';
+      const icon = CATEGORY_ICONS[cat] || '○';
+      chip.innerHTML = `<span>${icon}</span><span class="chip-n">${n}</span><span>${cat}</span>`;
+      grid.appendChild(chip);
+    }
+    sec.appendChild(grid);
+    stateBody.appendChild(sec);
+  }
+
+  // ── Door states ───────────────────────────────────────────────────────
+  const doors = state.doors || {};
+  if (Object.keys(doors).length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'state-section';
+    const title = document.createElement('div');
+    title.className = 'state-section-title';
+    title.textContent = 'Door states';
+    sec.appendChild(title);
+    for (const [name, info] of Object.entries(doors).sort()) {
+      const row = document.createElement('div');
+      row.className = 'door-row';
+      const dot = document.createElement('div');
+      dot.className = `door-indicator ${info.state}`;
+      const nameEl = document.createElement('div');
+      nameEl.className = 'door-name';
+      nameEl.textContent = name;
+      const status = document.createElement('div');
+      status.className = `door-status ${info.state}`;
+      status.textContent = info.state.toUpperCase();
+      const count = document.createElement('div');
+      count.className = 'door-count';
+      count.textContent = `${info.count}/${info.expected}`;
+      row.appendChild(dot);
+      row.appendChild(nameEl);
+      row.appendChild(status);
+      row.appendChild(count);
+      sec.appendChild(row);
+    }
+    stateBody.appendChild(sec);
+  }
+
+  // ── Region occupancy ──────────────────────────────────────────────────
+  const regions = state.regions || {};
+  // Accumulate — never remove a region once seen
+  for (const rname of Object.keys(regions)) seenRegions.add(rname);
+
+  if (seenRegions.size > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'state-section';
+    const title = document.createElement('div');
+    title.className = 'state-section-title';
+    title.textContent = 'Region occupancy';
+    sec.appendChild(title);
+    for (const rname of [...seenRegions].sort()) {
+      const cats = regions[rname] || {};
+      const row = document.createElement('div');
+      row.className = 'region-row';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'region-name';
+      nameEl.textContent = rname;
+      row.appendChild(nameEl);
+      const parts = [];
+      for (const [cat, n] of Object.entries(cats).sort()) {
+        if (cat === 'door') continue;
+        const icon = CATEGORY_ICONS[cat] || '○';
+        parts.push(`${icon} ${n} ${cat}`);
+      }
+      const detail = document.createElement('div');
+      if (parts.length > 0) {
+        detail.className = 'region-detail';
+        detail.textContent = parts.join('  ');
+      } else {
+        detail.className = 'region-empty';
+        detail.textContent = 'empty';
+      }
+      row.appendChild(detail);
+      sec.appendChild(row);
+    }
+    stateBody.appendChild(sec);
+  }
+
+  // ── System telemetry ──────────────────────────────────────────────────
+  const telemetry = state.telemetry || {};
+  if (Object.keys(telemetry).length > 0) {
+    const sec = document.createElement('div');
+    sec.className = 'state-section';
+    const title = document.createElement('div');
+    title.className = 'state-section-title';
+    title.textContent = 'System telemetry';
+    sec.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'telemetry-grid';
+    addTelemetryRow(grid, 'CPU SKU', telemetry.cpu_sku || 'unavailable');
+
+    const cpu = telemetry.cpu || {};
+    addTelemetryRow(grid, 'CPU %', formatPercent(cpu.percent));
+
+    const gpu = telemetry.gpu || {};
+    const gpuValue = (typeof gpu.percent === 'number' && Number.isFinite(gpu.percent))
+      ? `${gpu.percent.toFixed(1)}%`
+      : (gpu.status || 'unavailable');
+    addTelemetryRow(grid, 'GPU SKU', gpu.name || 'unavailable');
+    addTelemetryRow(grid, 'GPU %', gpuValue);
+
+    const power = telemetry.power || {};
+    const packagePowerValue = (typeof power.package_watts === 'number' && Number.isFinite(power.package_watts))
+      ? `${power.package_watts.toFixed(1)} W${power.is_estimated ? ' (estimated)' : ''}`
+      : 'unavailable';
+    addTelemetryRow(grid, 'Package power', packagePowerValue);
+
+    const temperature = telemetry.temperature || {};
+    addTelemetryRow(grid, 'Package temperature', formatCelsius(temperature.package_c));
+
+    const memory = telemetry.memory || {};
+    const memoryValue = (typeof memory.used_bytes === 'number' && typeof memory.total_bytes === 'number')
+      ? `${formatBytes(memory.used_bytes)} / ${formatBytes(memory.total_bytes)} (${formatPercent(memory.percent)})`
+      : 'unavailable';
+    addTelemetryRow(grid, 'Memory', memoryValue);
+
+    const storage = telemetry.storage || {};
+    const storageValue = (typeof storage.used_bytes === 'number' && typeof storage.total_bytes === 'number')
+      ? `${formatBytes(storage.used_bytes)} / ${formatBytes(storage.total_bytes)} (${formatPercent(storage.percent)})`
+      : 'unavailable';
+    addTelemetryRow(grid, 'Storage', storageValue);
+
+    sec.appendChild(grid);
+    stateBody.appendChild(sec);
+  }
+}
+
+const stateSrc = new EventSource('/stream/scene-state');
+stateSrc.onmessage = (ev) => {
+  try {
+    const state = JSON.parse(ev.data);
+    renderSceneState(state);
+    saveState(state);
+  } catch(e) {}
+};
+
+// ── Restore from localStorage on page load ────────────────────────────────────
+(function restoreFromStorage() {
+  try {
+    const raw = localStorage.getItem(ENTRIES_KEY);
+    if (raw) {
+      const stored = JSON.parse(raw).map((entry, idx) => ({ ...entry, _entryId: idx + 1 }));
+      entries = stored;
+      total = stored.length;
+      nextEntryId = total + 1;
+    }
+  } catch (_) {}
+  try {
+    const savedFilter = localStorage.getItem(FILTER_KEY);
+    if (savedFilter === 'all' || savedFilter === 'alerts') {
+      narratorFilter.value = savedFilter;
+    }
+  } catch (_) {}
+  renderNarratorFeed();
+  try {
+    const rawState = localStorage.getItem(STATE_KEY);
+    if (rawState) {
+      const state = JSON.parse(rawState);
+      for (const rname of Object.keys(state.regions || {})) seenRegions.add(rname);
+      renderSceneState(state);
+    }
+  } catch (_) {}
+})();
+
+// ── Narrator SSE ──────────────────────────────────────────────────────────────
+const src = new EventSource('/stream/narrator');
+
+src.onopen = () => {
+  narratorDot.classList.add('connected');
+  narratorStatus.textContent = 'Narrator: live';
+};
+src.onerror = () => {
+  narratorDot.classList.remove('connected');
+  narratorStatus.textContent = 'Narrator: reconnecting…';
+};
+
+src.onmessage = (ev) => {
+  const data = JSON.parse(ev.data);
+  if (!data.text) return;
+
+  data._entryId = nextEntryId++;
+  entries.push(data);
+  total++;
+  saveEntries();
+  renderNarratorFeed();
+};
+
+narratorFilter.addEventListener('change', () => {
+  saveFilter(narratorFilter.value);
+  renderNarratorFeed();
+});
+
+// ── Clear button ──────────────────────────────────────────────────────────────
+btnClear.addEventListener('click', () => {
+  narratorFeed.innerHTML = '';
+  entries = [];
+  total = 0;
+  nextEntryId = 1;
+  updateNarratorCounts();
+  try { localStorage.removeItem(ENTRIES_KEY); } catch (_) {}
+  clearDetail();
+});
+</script>
+</body>
+</html>

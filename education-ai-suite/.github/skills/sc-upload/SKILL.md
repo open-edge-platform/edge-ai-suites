@@ -29,8 +29,9 @@ Probe health first — if the backend is unreachable, use
 
 ```powershell
 $BASE = "http://127.0.0.1:9011"
-Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing |
-    Select-Object -ExpandProperty Content
+# 200 = all services ready; 503 = degraded, body names the failing one
+try   { (Invoke-WebRequest -Uri "$BASE/api/v1/system/health" -UseBasicParsing).Content }
+catch { $_.ErrorDetails.Message }
 ```
 
 The file must be one of the supported extensions:
@@ -126,7 +127,8 @@ Invoke-WebRequest -Uri "$BASE/api/v1/object/cleanup-task/$TASK_ID" `
 # Now retry the upload from step 1
 ```
 
-> **Note**: Cleanup fails if the task status is `PROCESSING`. Wait for completion or failure first.
+> [!NOTE]
+> Cleanup fails if the task status is `PROCESSING`. Wait for completion or failure first.
 
 ---
 
@@ -135,7 +137,8 @@ Invoke-WebRequest -Uri "$BASE/api/v1/object/cleanup-task/$TASK_ID" `
 Poll `GET /api/v1/task/query/{task_id}` every 3 seconds.
 Terminal statuses are `COMPLETED` and `FAILED`.
 
-> **Note**: The `progress` field is always 100 (hardcoded) and is not a real progress indicator. Status transitions are: `QUEUED` → `PROCESSING` → `COMPLETED`/`FAILED`.
+> [!NOTE]
+> The `progress` field is always 100 (hardcoded) and is not a real progress indicator. Status transitions are: `QUEUED` → `PROCESSING` → `COMPLETED`/`FAILED`.
 
 ```powershell
 # Agent: Extract $TASK_ID from the response in step 1 ($body.data.task_id)

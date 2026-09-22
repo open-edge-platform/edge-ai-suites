@@ -1,7 +1,7 @@
 #!/bin/bash
 # Start and stop all containers for the instances defined in config.yml
 
-SCRIPT_DIR=$(dirname $(readlink -f "$0"))
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 CONFIG_FILE="$SCRIPT_DIR/config.yml"
 
 err() {

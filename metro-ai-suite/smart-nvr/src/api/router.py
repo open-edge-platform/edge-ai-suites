@@ -14,6 +14,7 @@ from api.endpoints.brokers_api import broker_router
 from api.endpoints.vss_api import vss_router
 from service.vms_service import VmsService
 from service import redis_store
+import asyncio
 import requests
 import logging
 
@@ -44,7 +45,7 @@ async def health_check():
 
 @router.get("/cameras", summary="Get list of camera names")
 async def get_cameras():
-    return frigate_service.get_camera_names()
+    return await asyncio.to_thread(frigate_service.get_camera_names)
 
 
 @router.get("/events", summary="Get list of events for a specific camera")
@@ -69,7 +70,7 @@ async def search_video_embeddings(
 
 @router.get("/summary-status/{summary_id}", summary="Get the summary using id")
 async def get_summary(summary_id: str):
-    return vms_service.summary(summary_id)
+    return await asyncio.to_thread(vms_service.summary, summary_id)
 
 
 from service.redis_store import (
@@ -84,22 +85,28 @@ from service.redis_store import (
 async def get_all_rule_summaries(request: Request):
     rules = await get_rules(request)
     output = {}
+    tasks = []
+    meta = []
 
     for rule in rules:
-        rule_id = rule["id"]
-
-        # Skip rules where the action contains "search"
         if "search" in rule.get("action", "").lower():
             continue
 
+        rule_id = rule["id"]
+        output.setdefault(rule_id, {})
+
         summary_ids = await get_summary_ids(request, rule_id)
-        summaries = {}
-
         for sid in summary_ids:
-            result = vms_service.summary(sid)
-            summaries[sid] = result or "Pending"
+            tasks.append(asyncio.to_thread(vms_service.summary, sid))
+            meta.append((rule_id, sid))
 
-        output[rule_id] = summaries
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    for (rule_id, sid), result in zip(meta, results):
+        if isinstance(result, Exception):
+            output[rule_id][sid] = "Pending"
+        else:
+            output[rule_id][sid] = result or "Pending"
 
     return output
 

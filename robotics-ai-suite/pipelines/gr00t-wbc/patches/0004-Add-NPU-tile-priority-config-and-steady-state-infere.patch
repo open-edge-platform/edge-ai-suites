@@ -1,0 +1,814 @@
+From a89912c95eaf6c67960c02aac838152bd8c3d874 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Fri, 31 Jul 2026 10:37:19 +0800
+Subject: [PATCH 04/13] Add NPU tile/priority config and steady-state inference
+   - Plumb NPU_TILES and ov::hint::model_priority through
+ encoder/policy/planner;     configurable per-model via YAML keys. Also
+ enables higher-precision     ReduceSum/Multiply on NPU and PLUGIN compiler.  
+ - Replace per-tick min/max prints with cumulative stats (avg/min/P99/max) for
+     obs, policy, and planner-model durations. Skips warmup ticks.   - Drop
+ planner CSV dump feature and add planner_log_summary config item.
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../policy/release/observation_config.yaml    |  23 ++-
+ .../src/OVInference/OVInferenceEngine.cpp     |  58 +++++-
+ .../src/OVInference/OVInferenceEngine.h       |   6 +-
+ .../include/control_policy.hpp                |   9 +-
+ .../g1/g1_deploy_onnx_ref/include/encoder.hpp |   9 +-
+ .../include/localmotion_kplanner.hpp          |   6 +-
+ .../include/localmotion_kplanner_tensorrt.hpp |  92 +---------
+ .../include/observation_config.hpp            | 100 ++++++++---
+ .../src/g1_deploy_onnx_ref.cpp                | 167 ++++++++++++++++--
+ 9 files changed, 331 insertions(+), 139 deletions(-)
+
+diff --git a/gear_sonic_deploy/policy/release/observation_config.yaml b/gear_sonic_deploy/policy/release/observation_config.yaml
+index 2c892bc..48b1002 100644
+--- a/gear_sonic_deploy/policy/release/observation_config.yaml
++++ b/gear_sonic_deploy/policy/release/observation_config.yaml
+@@ -82,15 +82,26 @@ encoder:
+ inference:
+   encoder_device: "NPU"
+   policy_device: "NPU"
+-  planner_device: "CPU"
++  planner_device: "NPU"
++  # NPU tile allocation per model (0=auto/driver default, 1-N=specific tile count).
++  # Encoder+decoder run sequentially in the control thread — 1 tile each is sufficient.
++  # Planner runs in a separate thread — can use more tiles for throughput.
++  encoder_npu_tiles: 3
++  policy_npu_tiles: 3
++  planner_npu_tiles: 3
++  # OpenVINO model priority: HIGH, NORMAL, or LOW. Controls how the OV scheduler
++  # arbitrates models that share the same device (e.g. policy/encoder/planner on
++  # one NPU). Mapped to ov::hint::model_priority. Default: NORMAL.
++  encoder_priority: "HIGH"
++  policy_priority: "HIGH"
++  planner_priority: "NORMAL"
+   # Pin the inference/control thread to a specific CPU core to reduce latency jitter.
+   # Set to -1 to disable pinning (default), or a core number (e.g., 10) to pin.
+   # Here 10 is one of isolated core, dedicated for inference.
+   # use 'echo 10 | sudo tee /proc/irq/189/smp_affinity_list' to set vpu interrupt affitiy
+   # to reduce jitter in case NPU sync inference.
+   cpu_affinity: 10
+-  # Dump planner model inputs to CSV for NPU accuracy validation.
+-  # Set to true to enable, max_input_dump_cnt limits the number of rows (0 = unlimited).
+-  dump_planner_input: flase
+-  max_input_dump_cnt: 200
+-  dump_csv_path: "planner_input_dump.csv"
++  # Emit a periodic "[Planner] Inference #N | latency | NaN/Inf check | mode/vel/dir"
++  # summary line (every 10th planner inference, ~1 Hz on the 10 Hz planner thread).
++  # Off by default — turn on for accuracy/sanity checking, leave off in production.
++  planner_log_summary: false
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+index b56ffc6..8044da9 100644
+--- a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+@@ -99,11 +99,22 @@ bool OVInferenceEngine::Initialize(const std::string& modelPath, int /*deviceID*
+     return Initialize(modelPath, "AUTO:NPU,CPU", Precision::FP32);
+ }
+ 
++// ============================================================================
++// Helper: Map priority string ("HIGH"/"NORMAL"/"LOW") to ov::hint::Priority.
++// Falls back to MEDIUM (NORMAL) for unrecognized values.
++// ============================================================================
++static ov::hint::Priority StringToOVPriority(const std::string& s) {
++    if (s == "HIGH") return ov::hint::Priority::HIGH;
++    if (s == "LOW")  return ov::hint::Priority::LOW;
++    return ov::hint::Priority::MEDIUM;  // "NORMAL" or unknown → MEDIUM (the default)
++}
++
+ // ============================================================================
+ // Initialize (extended, with device selection)
+ // ============================================================================
+ bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::string& device,
+-                                   Precision precision) {
++                                   Precision precision, int npu_tiles,
++                                   const std::string& model_priority) {
+     try {
+         std::cout << "[OVInference] Loading model: " << modelPath << std::endl;
+         std::cout << "[OVInference] Requested device: " << device << std::endl;
+@@ -139,6 +150,22 @@ bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::stri
+         // Latency-optimized for real-time control
+         config[ov::hint::performance_mode.name()] = ov::hint::PerformanceMode::LATENCY;
+ 
++        // Model priority: lets the OV scheduler arbitrate between models that share
++        // the same NPU (e.g. encoder + decoder contending for tiles on one NPU).
++        // Allowed strings: HIGH, NORMAL, LOW (mapped to ov::hint::Priority HIGH/MEDIUM/LOW).
++        // Note: only the NPU plugin supports MODEL_PRIORITY in this build —
++        // CPU and GPU plugins reject it with
++        // "Unsupported property MODEL_PRIORITY by <X> plugin".
++        // For non-NPU devices (e.g. planner on CPU) we skip the hint and let
++        // OpenVINO use its default scheduling.
++        if (is_npu) {
++          config[ov::hint::model_priority.name()] = StringToOVPriority(model_priority);
++          std::cout << "[OVInference] Model priority: " << model_priority << std::endl;
++        } else {
++          std::cout << "[OVInference] Model priority: ignored on " << device
++                    << " (NPU-only hint, using plugin default)" << std::endl;
++        }
++
+         // Enable CPU pinning to reduce scheduling jitter on inference threads
+         config[ov::hint::enable_cpu_pinning.name()] = true;
+ 
+@@ -155,6 +182,35 @@ bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::stri
+             } catch (...) {
+                 // NPU_TURBO may not be available on all NPU drivers
+             }
++            config["NPU_COMPILER_TYPE"] = "PLUGIN";   
++            // Force higher precision on numerically sensitive layers (ReduceSum, Multiply)
++            // to avoid FP16 accumulation errors in planner-style models.
++            try {
++                config["NPU_COMPILATION_MODE_PARAMS"] =
++                    "compute-layers-with-higher-precision=ReduceSum,Multiply";
++                std::cout << "[OVInference] NPU higher-precision layers: ReduceSum,Multiply" << std::endl;
++            } catch (...) {
++                std::cout << "[OVInference] Warning: NPU_COMPILATION_MODE_PARAMS not supported by this driver" << std::endl;
++            }
++
++            // NPU tile allocation: restrict how many tiles this model uses.
++            // npu_tiles=0 means auto (use driver default), >0 means explicit count.
++            if (npu_tiles > 0) {
++                try {
++                    config["NPU_TILES"] = std::to_string(npu_tiles);
++                    std::cout << "[OVInference] NPU_TILES set to " << npu_tiles << std::endl;
++                } catch (...) {
++                    std::cout << "[OVInference] Warning: NPU_TILES property not supported by this driver" << std::endl;
++                }
++            }
++
++            // Log available tile info
++            try {
++                auto max_tiles = m_impl->core.get_property("NPU", "NPU_MAX_TILES");
++                std::cout << "[OVInference] NPU max tiles available: " << max_tiles.as<int>() << std::endl;
++            } catch (...) {
++                // NPU_MAX_TILES may not be supported on older drivers
++            }
+         }
+ 
+         // Compile model (uses cache if available, otherwise compiles and stores to cache)
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+index f5fe980..0f59c55 100644
+--- a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+@@ -119,10 +119,14 @@ public:
+      * @param modelPath Path to ONNX file
+      * @param device OpenVINO device string ("GPU", "CPU", "AUTO:GPU,CPU")
+      * @param precision Inference precision hint
++     * @param npu_tiles Number of NPU tiles to use (0 = auto/default, 1-N = specific count)
++     * @param model_priority OpenVINO model priority hint ("HIGH", "NORMAL", "LOW").
++     *                       Maps to ov::hint::model_priority in compile_model config.
+      * @return true on success
+      */
+     bool Initialize(const std::string& modelPath, const std::string& device,
+-                    Precision precision = Precision::FP32);
++                    Precision precision = Precision::FP32, int npu_tiles = 0,
++                    const std::string& model_priority = "NORMAL");
+ 
+     bool InitInputs(const AxisSizes& axisSizes = {});
+     void Destroy();
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+index f359bb5..50ae85f 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+@@ -51,10 +51,13 @@ public:
+    * @param model_path Path to ONNX model file
+    * @param use_fp16 Whether to use FP16 precision
+    * @param device OpenVINO device string ("GPU", "CPU", "NPU", "AUTO:GPU,CPU")
++   * @param npu_tiles Number of NPU tiles to use (0 = auto, 1-N = specific count)
++   * @param model_priority OpenVINO model priority ("HIGH", "NORMAL", "LOW")
+    * @return true if initialization successful, false otherwise
+    */
+   bool Initialize(const std::string& model_path, bool use_fp16 = false,
+-                  const std::string& device = "NPU") {
++                  const std::string& device = "NPU", int npu_tiles = 0,
++                  const std::string& model_priority = "NORMAL") {
+     if (model_path.empty()) {
+       std::cerr << "✗ PolicyEngine::Initialize - Empty model path" << std::endl;
+       return false;
+@@ -86,10 +89,10 @@ public:
+         return false;
+       }
+ 
+-      // Initialize with device selection
++      // Initialize with device selection and tile configuration
+       auto init_start = std::chrono::steady_clock::now();
+       if (!inference_engine_->Initialize(model_file, device,
+-              use_fp16 ? Precision::FP16 : Precision::FP32)) {
++              use_fp16 ? Precision::FP16 : Precision::FP32, npu_tiles, model_priority)) {
+         std::cerr << "✗ Failed to initialize policy on " << device << ": " << model_file << std::endl;
+         inference_engine_.reset();
+         return false;
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+index 23296a6..eadcd3e 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+@@ -57,10 +57,13 @@ public:
+    * @param model_path Path to ONNX model file
+    * @param use_fp16 Whether to use FP16 precision
+    * @param device OpenVINO device string ("GPU", "CPU", "NPU", "AUTO:GPU,CPU")
++   * @param npu_tiles Number of NPU tiles to use (0 = auto, 1-N = specific count)
++   * @param model_priority OpenVINO model priority ("HIGH", "NORMAL", "LOW")
+    * @return true if initialization successful, false otherwise
+    */
+   bool Initialize(const std::string& model_path, bool use_fp16 = false,
+-                  const std::string& device = "NPU") {
++                  const std::string& device = "NPU", int npu_tiles = 0,
++                  const std::string& model_priority = "NORMAL") {
+     if (model_path.empty()) {
+       std::cerr << "✗ EncoderEngine::Initialize - Empty model path" << std::endl;
+       return false;
+@@ -89,10 +92,10 @@ public:
+         return false;
+       }
+ 
+-      // Initialize with device selection
++      // Initialize with device selection and tile configuration
+       auto init_start = std::chrono::steady_clock::now();
+       if (!inference_engine_->Initialize(model_file, device,
+-              use_fp16 ? Precision::FP16 : Precision::FP32)) {
++              use_fp16 ? Precision::FP16 : Precision::FP32, npu_tiles, model_priority)) {
+         std::cerr << "✗ Failed to initialize encoder on " << device << ": " << model_file << std::endl;
+         inference_engine_.reset();
+         return false;
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp
+index 2efade8..a5b157c 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner.hpp
+@@ -212,13 +212,13 @@ inline std::vector<LocomotionMode> get_motion_set(int motion_set_index) {
+ struct PlannerConfig {
+     std::string model_path = "";
+     std::string device = "CPU";            // OpenVINO device ("CPU", "NPU", "GPU")
++    int npu_tiles = 3;                     // NPU tiles for planner (0 = auto, 1-N = specific count)
++    std::string model_priority = "NORMAL"; // OV model priority ("HIGH", "NORMAL", "LOW")
+     int version = 0;
+     int motion_look_ahead_steps = 2;      // 50Hz: 0.02s * 2 = 0.04s
+     double default_height = 0.788740;      // Default robot height
+     int initial_random_seed = 1234;        // Initial random seed for planner
+-    bool dump_input_csv = false;           // Enable CSV dump of inference inputs for accuracy validation
+-    int max_input_dump_cnt = 100;          // Max number of inference inputs to dump (0 = unlimited)
+-    std::string dump_csv_path = "planner_input_dump.csv";  // Path for the CSV dump file
++    bool log_summary = false;              // Periodic [Planner] inference summary (NaN/Inf check + latency)
+ };
+ 
+ /**
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
+index c9424c4..61093f5 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
+@@ -26,10 +26,8 @@
+ 
+ #include "inference_backend.hpp"
+ #include <iostream>
+-#include <fstream>
+ #include <chrono>
+ #include <cmath>
+-#include <iomanip>
+ #include "localmotion_kplanner.hpp"
+ 
+ /**
+@@ -129,85 +127,6 @@ private:
+     uint64_t planner_infer_count_ = 0;
+     uint64_t planner_latency_sum_us_ = 0;
+ 
+-    // ------------------------------------------------------------------
+-    // CSV dump for accuracy validation
+-    // ------------------------------------------------------------------
+-    bool csv_header_written_ = false;
+-    uint64_t csv_dump_count_ = 0;
+-
+-    /**
+-     * @brief Dump all planner input tensors to CSV for NPU accuracy validation.
+-     *
+-     * Controlled by config_.dump_input_csv (enable/disable) and
+-     * config_.max_input_dump_cnt (max rows, 0 = unlimited).
+-     *
+-     * Each row = one inference call. Columns:
+-     *   timestamp_us, mode[1], target_vel[1], target_height[1],
+-     *   movement_direction[3], facing_direction[3], random_seed[1],
+-     *   has_specific_target[1], specific_target_positions[12],
+-     *   specific_target_headings[4], allowed_pred_num_tokens[11],
+-     *   context_mujoco_qpos[144]
+-     */
+-    void DumpInputsToCSV() {
+-        if (!config_.dump_input_csv) return;
+-        if (config_.max_input_dump_cnt > 0 &&
+-            csv_dump_count_ >= static_cast<uint64_t>(config_.max_input_dump_cnt)) return;
+-
+-        std::ofstream csv;
+-        if (!csv_header_written_) {
+-            csv.open(config_.dump_csv_path, std::ios::out | std::ios::trunc);
+-            if (!csv.is_open()) {
+-                std::cerr << "[Planner] ⚠ Cannot open CSV dump file: " << config_.dump_csv_path << std::endl;
+-                return;
+-            }
+-            // Write header
+-            csv << "infer_count,timestamp_us";
+-            csv << ",mode(shape=1;dtype=int64)";
+-            csv << ",target_vel(shape=1;dtype=float)";
+-            csv << ",target_height(shape=1;dtype=float)";
+-            for (int i = 0; i < 3; ++i) csv << ",movement_direction_" << i << "(shape=3;dtype=float)";
+-            for (int i = 0; i < 3; ++i) csv << ",facing_direction_" << i << "(shape=3;dtype=float)";
+-            csv << ",random_seed(shape=1;dtype=int64)";
+-            csv << ",has_specific_target(shape=1;dtype=int64)";
+-            for (int i = 0; i < 12; ++i) csv << ",specific_target_positions_" << i << "(shape=1x4x3;dtype=float)";
+-            for (int i = 0; i < 4; ++i) csv << ",specific_target_headings_" << i << "(shape=1x4;dtype=float)";
+-            for (int i = 0; i < 11; ++i) csv << ",allowed_pred_num_tokens_" << i << "(shape=1x11;dtype=int64)";
+-            for (int i = 0; i < 4 * (G1_NUM_MOTOR + 7); ++i)
+-                csv << ",context_mujoco_qpos_" << i << "(shape=1x4x36;dtype=float)";
+-            csv << "\n";
+-            csv_header_written_ = true;
+-        } else {
+-            csv.open(config_.dump_csv_path, std::ios::out | std::ios::app);
+-            if (!csv.is_open()) return;
+-        }
+-
+-        auto now = std::chrono::steady_clock::now().time_since_epoch();
+-        auto ts_us = std::chrono::duration_cast<std::chrono::microseconds>(now).count();
+-
+-        csv << std::setprecision(8);
+-        csv << planner_infer_count_ << "," << ts_us;
+-        csv << "," << mode_values_[0];
+-        csv << "," << target_vel_values_[0];
+-        csv << "," << target_height_values_[0];
+-        for (int i = 0; i < 3; ++i) csv << "," << movement_direction_values_[i];
+-        for (int i = 0; i < 3; ++i) csv << "," << facing_direction_values_[i];
+-        csv << "," << random_seed_values_[0];
+-        csv << "," << has_specific_target_[0];
+-        for (int i = 0; i < 12; ++i) csv << "," << specific_target_positions_[i];
+-        for (int i = 0; i < 4; ++i) csv << "," << specific_target_headings_[i];
+-        for (int i = 0; i < 11; ++i) csv << "," << allowed_pred_num_tokens_[i];
+-        for (size_t i = 0; i < context_qpos_values_.size(); ++i) csv << "," << context_qpos_values_[i];
+-        csv << "\n";
+-        csv.close();
+-        csv_dump_count_++;
+-
+-        if (config_.max_input_dump_cnt > 0 &&
+-            csv_dump_count_ >= static_cast<uint64_t>(config_.max_input_dump_cnt)) {
+-            std::cout << "[Planner] CSV dump reached max count (" << config_.max_input_dump_cnt
+-                      << "), stopping dump." << std::endl;
+-        }
+-    }
+-
+     /// Named tensor identifiers.
+     struct TensorNames {
+         std::string context_qpos = "context_mujoco_qpos";
+@@ -256,7 +175,8 @@ private:
+         std::cout << "[Planner] Model: " << model_file << std::endl;
+ 
+         auto init_start = std::chrono::steady_clock::now();
+-        if (!inference_engine_->Initialize(model_file, config_.device, planner_precision)) {
++        if (!inference_engine_->Initialize(model_file, config_.device, planner_precision,
++                                           config_.npu_tiles, config_.model_priority)) {
+             std::cout << "✗ Failed to initialize planner on " << config_.device << ": " << model_file << std::endl;
+             return false;
+         }
+@@ -382,9 +302,6 @@ private:
+             inference_engine_->SetInputData(tensor_names_.allowed_pred_num_tokens, allowed_pred_num_tokens_);
+         }
+ 
+-        // Dump inputs to CSV for NPU accuracy validation
+-        DumpInputsToCSV();
+-
+         if (!inference_engine_->Enqueue(nullptr)) {
+             std::cerr << "[Planner] ✗ Inference failed!" << std::endl;
+             return;
+@@ -396,10 +313,11 @@ private:
+         auto infer_end = std::chrono::steady_clock::now();
+         auto latency_us = std::chrono::duration_cast<std::chrono::microseconds>(infer_end - infer_start).count();
+ 
+-        // Log planner inference latency periodically
++        // Periodic [Planner] summary line — only emitted when config_.log_summary
++        // is true. Sampled every 10 planner inferences (~1 Hz on the 10 Hz thread).
+         planner_infer_count_++;
+         planner_latency_sum_us_ += latency_us;
+-        if (planner_infer_count_ % 10 == 1) {
++        if (config_.log_summary && planner_infer_count_ % 10 == 1) {
+             bool has_nan = false, has_inf = false;
+             float max_abs_val = 0.0f;
+             for (size_t i = 0; i < mujoco_qpos_values_.size(); ++i) {
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp
+index 4086573..e0aa19f 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/observation_config.hpp
+@@ -46,6 +46,7 @@
+ #include <fstream>
+ #include <iostream>
+ #include <algorithm>
++#include <cctype>
+ 
+ /**
+  * @brief Configuration for a single observation type (name + enabled flag).
+@@ -99,20 +100,28 @@ struct EncoderConfig {
+  *   encoder_device: "NPU"
+  *   policy_device: "NPU"
+  *   planner_device: "CPU"
++ *   encoder_npu_tiles: 1     # NPU tiles for encoder (0=auto, 1-N=specific)
++ *   policy_npu_tiles: 1      # NPU tiles for decoder (0=auto, 1-N=specific)
++ *   planner_npu_tiles: 3     # NPU tiles for planner (0=auto, 1-N=specific)
++ *   encoder_priority: "NORMAL" # OpenVINO model priority (HIGH, NORMAL, LOW)
++ *   policy_priority: "NORMAL"  # OpenVINO model priority (HIGH, NORMAL, LOW)
++ *   planner_priority: "NORMAL" # OpenVINO model priority (HIGH, NORMAL, LOW)
+  *   cpu_affinity: 2          # Pin inference/control thread to this CPU core (-1 = no pinning)
+- *   dump_planner_input: false # Enable CSV dump of planner inputs for accuracy validation
+- *   max_input_dump_cnt: 100  # Max rows to dump (0 = unlimited)
+- *   dump_csv_path: "planner_input_dump.csv"
++ *   planner_log_summary: false # Periodic [Planner] inference summary (latency, NaN/Inf check, mode)
+  * ```
+  */
+ struct InferenceConfig {
+   std::string encoder_device = "NPU";   ///< OpenVINO device for encoder ("NPU", "GPU", "CPU")
+   std::string policy_device = "NPU";    ///< OpenVINO device for policy ("NPU", "GPU", "CPU")
+   std::string planner_device = "CPU";   ///< OpenVINO device for planner ("CPU" recommended)
++  int encoder_npu_tiles = 1;            ///< NPU tiles for encoder (0 = auto, 1-N = specific count)
++  int policy_npu_tiles = 1;             ///< NPU tiles for decoder/policy (0 = auto, 1-N = specific count)
++  int planner_npu_tiles = 3;            ///< NPU tiles for planner (0 = auto, 1-N = specific count)
++  std::string encoder_priority = "NORMAL"; ///< OV model priority for encoder ("HIGH", "NORMAL", "LOW")
++  std::string policy_priority = "NORMAL";  ///< OV model priority for policy ("HIGH", "NORMAL", "LOW")
++  std::string planner_priority = "NORMAL"; ///< OV model priority for planner ("HIGH", "NORMAL", "LOW")
+   int cpu_affinity = -1;                ///< CPU core to pin inference thread to (-1 = no pinning)
+-  bool dump_planner_input = false;      ///< Enable CSV dump of planner inputs for accuracy validation
+-  int max_input_dump_cnt = 100;         ///< Max number of planner input rows to dump (0 = unlimited)
+-  std::string dump_csv_path = "planner_input_dump.csv";  ///< Path for the planner input CSV dump file
++  bool planner_log_summary = false;     ///< Enable periodic [Planner] inference summary log (NaN/Inf check + latency)
+ };
+ 
+ /**
+@@ -225,31 +234,60 @@ public:
+           full_config.inference.planner_device = ExtractValue(line, "planner_device:");
+           std::cout << "  Inference planner_device: " << full_config.inference.planner_device << std::endl;
+         }
+-        else if (line.find("cpu_affinity:") != std::string::npos) {
+-          std::string affinity_str = ExtractValue(line, "cpu_affinity:");
++        else if (line.find("encoder_npu_tiles:") != std::string::npos) {
++          std::string val = ExtractValue(line, "encoder_npu_tiles:");
+           try {
+-            full_config.inference.cpu_affinity = std::stoi(affinity_str);
+-            std::cout << "  Inference cpu_affinity: " << full_config.inference.cpu_affinity << std::endl;
++            full_config.inference.encoder_npu_tiles = std::stoi(val);
++            std::cout << "  Inference encoder_npu_tiles: " << full_config.inference.encoder_npu_tiles << std::endl;
+           } catch (...) {
+-            std::cerr << "  Warning: Invalid cpu_affinity value: " << affinity_str << std::endl;
++            std::cerr << "  Warning: Invalid encoder_npu_tiles value: " << val << std::endl;
+           }
+         }
+-        else if (line.find("dump_planner_input:") != std::string::npos) {
+-          full_config.inference.dump_planner_input = ExtractBoolValue(line, "dump_planner_input:");
+-          std::cout << "  Inference dump_planner_input: " << (full_config.inference.dump_planner_input ? "true" : "false") << std::endl;
++        else if (line.find("policy_npu_tiles:") != std::string::npos) {
++          std::string val = ExtractValue(line, "policy_npu_tiles:");
++          try {
++            full_config.inference.policy_npu_tiles = std::stoi(val);
++            std::cout << "  Inference policy_npu_tiles: " << full_config.inference.policy_npu_tiles << std::endl;
++          } catch (...) {
++            std::cerr << "  Warning: Invalid policy_npu_tiles value: " << val << std::endl;
++          }
+         }
+-        else if (line.find("max_input_dump_cnt:") != std::string::npos) {
+-          std::string cnt_str = ExtractValue(line, "max_input_dump_cnt:");
++        else if (line.find("planner_npu_tiles:") != std::string::npos) {
++          std::string val = ExtractValue(line, "planner_npu_tiles:");
+           try {
+-            full_config.inference.max_input_dump_cnt = std::stoi(cnt_str);
+-            std::cout << "  Inference max_input_dump_cnt: " << full_config.inference.max_input_dump_cnt << std::endl;
++            full_config.inference.planner_npu_tiles = std::stoi(val);
++            std::cout << "  Inference planner_npu_tiles: " << full_config.inference.planner_npu_tiles << std::endl;
+           } catch (...) {
+-            std::cerr << "  Warning: Invalid max_input_dump_cnt value: " << cnt_str << std::endl;
++            std::cerr << "  Warning: Invalid planner_npu_tiles value: " << val << std::endl;
+           }
+         }
+-        else if (line.find("dump_csv_path:") != std::string::npos) {
+-          full_config.inference.dump_csv_path = ExtractValue(line, "dump_csv_path:");
+-          std::cout << "  Inference dump_csv_path: " << full_config.inference.dump_csv_path << std::endl;
++        else if (line.find("encoder_priority:") != std::string::npos) {
++          full_config.inference.encoder_priority =
++              NormalizePriority(ExtractValue(line, "encoder_priority:"));
++          std::cout << "  Inference encoder_priority: " << full_config.inference.encoder_priority << std::endl;
++        }
++        else if (line.find("policy_priority:") != std::string::npos) {
++          full_config.inference.policy_priority =
++              NormalizePriority(ExtractValue(line, "policy_priority:"));
++          std::cout << "  Inference policy_priority: " << full_config.inference.policy_priority << std::endl;
++        }
++        else if (line.find("planner_priority:") != std::string::npos) {
++          full_config.inference.planner_priority =
++              NormalizePriority(ExtractValue(line, "planner_priority:"));
++          std::cout << "  Inference planner_priority: " << full_config.inference.planner_priority << std::endl;
++        }
++        else if (line.find("cpu_affinity:") != std::string::npos) {
++          std::string affinity_str = ExtractValue(line, "cpu_affinity:");
++          try {
++            full_config.inference.cpu_affinity = std::stoi(affinity_str);
++            std::cout << "  Inference cpu_affinity: " << full_config.inference.cpu_affinity << std::endl;
++          } catch (...) {
++            std::cerr << "  Warning: Invalid cpu_affinity value: " << affinity_str << std::endl;
++          }
++        }
++        else if (line.find("planner_log_summary:") != std::string::npos) {
++          full_config.inference.planner_log_summary = ExtractBoolValue(line, "planner_log_summary:");
++          std::cout << "  Inference planner_log_summary: " << (full_config.inference.planner_log_summary ? "true" : "false") << std::endl;
+         }
+         continue;
+       }
+@@ -569,6 +607,24 @@ private:
+     std::string value = ExtractValue(line, key);
+     return value == "true";  // Only "true" string evaluates to true
+   }
++
++  /**
++   * @brief Normalize a priority string from YAML to one of HIGH/NORMAL/LOW.
++   *
++   * Accepts mixed case ("high", "High", "HIGH"). Falls back to "NORMAL" with
++   * a warning if the value is empty or unrecognized.
++   */
++  static std::string NormalizePriority(const std::string& raw) {
++    std::string upper;
++    upper.reserve(raw.size());
++    for (char c : raw) upper.push_back(static_cast<char>(::toupper(static_cast<unsigned char>(c))));
++    if (upper == "HIGH" || upper == "NORMAL" || upper == "LOW") return upper;
++    if (!raw.empty()) {
++      std::cerr << "  Warning: Invalid model priority '" << raw
++                << "' — using NORMAL (allowed: HIGH, NORMAL, LOW)" << std::endl;
++    }
++    return "NORMAL";
++  }
+   
+   /**
+    * @brief Provides a hardcoded set of default observation configurations
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+index 36921d7..aa77249 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+@@ -59,10 +59,14 @@
+ #include <chrono>
+ #include <unistd.h>
+ #include <cstring>
++#include <cstdlib>
++#include <cctype>
+ #include <functional>
+ #include <unordered_map>
+ #include <fstream>
+ #include <iostream>
++#include <iomanip>
++#include <sstream>
+ #include <chrono>
+ #include <algorithm>
+ #include <numeric>
+@@ -289,6 +293,66 @@ class G1Deploy {
+     static constexpr std::chrono::milliseconds STREAMING_DATA_ABSENT_THRESHOLD{150};
+     CounterDebouncer streaming_data_absent_debouncer_{100, 500, 50, 1};
+     RollingStats<1000> streaming_data_delay_rolling_stats_;
++    // Cumulative stats for inference timing (in microseconds).
++    // Stores every sample since the last reset() so P99 is exact. Reset is
++    // called on mode change (e.g. reference-motion → planner) and after planner
++    // init, so the sample buffer stays bounded in practice (one mode session).
++    // The first kWarmupTicks ticks of the whole run are ignored to skip the
++    // initial NPU model-compile spike; kPlannerWarmupTicks more are ignored
++    // after planner init for steady-state numbers.
++    static constexpr int kWarmupTicks = 100;  // Skip first 100 ticks for stats
++    static constexpr int kPlannerWarmupTicks = 10;  // Skip 10 ticks after planner init
++    int planner_warmup_remaining_ = 0;  // Countdown after planner init
++    struct CumulativeStats {
++      std::vector<double> samples_;
++      double min_ = std::numeric_limits<double>::max();
++      double max_ = 0.0;
++      double sum_ = 0.0;
++      bool sorted_ = false;
++      std::vector<double> sorted_cache_;
++
++      double mean() const {
++        return samples_.empty() ? 0.0 : sum_ / static_cast<double>(samples_.size());
++      }
++      double min() const { return samples_.empty() ? 0.0 : min_; }
++      double max() const { return max_; }
++
++      // Exact percentile (0.0–1.0) over all samples accumulated since last reset.
++      double percentile(double p) {
++        if (samples_.empty()) return 0.0;
++        if (!sorted_) {
++          sorted_cache_ = samples_;
++          std::sort(sorted_cache_.begin(), sorted_cache_.end());
++          sorted_ = true;
++        }
++        size_t idx = static_cast<size_t>(p * static_cast<double>(sorted_cache_.size() - 1));
++        return sorted_cache_[idx];
++      }
++
++      void push(double v) {
++        samples_.push_back(v);
++        sum_ += v;
++        if (v < min_) min_ = v;
++        if (v > max_) max_ = v;
++        sorted_ = false;
++      }
++
++      void reset() {
++        samples_.clear();
++        sorted_cache_.clear();
++        sorted_ = false;
++        min_ = std::numeric_limits<double>::max();
++        max_ = 0.0;
++        sum_ = 0.0;
++      }
++    };
++    CumulativeStats obs_duration_stats_;
++    CumulativeStats policy_duration_stats_;
++    CumulativeStats obs_to_motor_cmd_duration_stats_;
++    // Planner model inference latency stats. Pushed from the 10 Hz planner
++    // thread, read from the 50 Hz control thread for logging — guarded by mutex.
++    CumulativeStats planner_model_duration_stats_;
++    std::mutex planner_model_duration_stats_mutex_;
+     std::unique_ptr<AudioThread> audio_thread_;
+     
+     // =========================================================================
+@@ -332,6 +396,7 @@ class G1Deploy {
+     
+     // Independent logging counter (not affected by planner buffer cleaning)
+     int logging_counter_ = 0;
++
+     TimestampedData<LowState_> used_low_state_data_;
+     TimestampedData<IMUState_> used_imu_torso_data_;
+ 
+@@ -1649,7 +1714,7 @@ class G1Deploy {
+       static int gather_token_log_counter_ = 0;
+       if (!is_using_encoder_) {
+         // No encoder configured; use token_state_data_ (can be set externally via ROS2/ZMQ)
+-        if (gather_token_log_counter_++ % 500 == 0) {
++        if (gather_token_log_counter_++ % 250 == 0) {
+           std::cout << "[TokenState] Using EXTERNAL tokens (encoder NOT active), tokens[0]="
+                     << token_state_data_[0] << std::endl;
+         }
+@@ -1675,7 +1740,7 @@ class G1Deploy {
+         return false;
+       }
+       auto encoder_end = std::chrono::steady_clock::now();
+-      if (gather_token_log_counter_++ % 500 == 0) {
++      if (gather_token_log_counter_++ % 250 == 0) {
+         auto encoder_us = std::chrono::duration_cast<std::chrono::microseconds>(encoder_end - encoder_start).count();
+         std::cout << "[TokenState] Using LOCAL ENCODER inference (" << encoder_us << " us)" << std::endl;
+       }
+@@ -2330,7 +2395,9 @@ class G1Deploy {
+       // Initialize control policy
+       policy_engine_ = std::make_unique<PolicyEngine>();
+ 
+-      if (!policy_engine_->Initialize(model_path, policy_fp16, inference_config.policy_device)) {
++      if (!policy_engine_->Initialize(model_path, policy_fp16, inference_config.policy_device,
++                                      inference_config.policy_npu_tiles,
++                                      inference_config.policy_priority)) {
+         throw std::runtime_error("Failed to initialize control policy from: " + model_path);
+       }
+ 
+@@ -2355,7 +2422,10 @@ class G1Deploy {
+         std::cout << "Initializing encoder..." << std::endl;
+         encoder_engine_ = std::make_unique<EncoderEngine>();
+         
+-        if (!encoder_engine_->Initialize(encoder_file_path, encoder_config_.use_fp16, inference_config.encoder_device)) {
++        if (!encoder_engine_->Initialize(encoder_file_path, encoder_config_.use_fp16,
++                                         inference_config.encoder_device,
++                                         inference_config.encoder_npu_tiles,
++                                         inference_config.encoder_priority)) {
+           throw std::runtime_error("Failed to initialize encoder engine from: " + encoder_file_path);
+         }
+         
+@@ -2419,9 +2489,9 @@ class G1Deploy {
+           throw std::runtime_error("Unsupported planner version: " + planner_path);
+         }
+         planner_config.device = inference_config.planner_device;
+-        planner_config.dump_input_csv = inference_config.dump_planner_input;
+-        planner_config.max_input_dump_cnt = inference_config.max_input_dump_cnt;
+-        planner_config.dump_csv_path = inference_config.dump_csv_path;
++        planner_config.npu_tiles = inference_config.planner_npu_tiles;
++        planner_config.model_priority = inference_config.planner_priority;
++        planner_config.log_summary = inference_config.planner_log_summary;
+         planner_ = std::make_unique<LocalMotionPlannerTensorRT>(planner_fp16, 0, planner_config);
+       }
+       
+@@ -3303,6 +3373,20 @@ class G1Deploy {
+             idle_readapt_stored_ = false;
+             if(is_the_first_time) {
+               reinitialize_heading_ = true;
++
++              // Reference-motion → planner mode switch: reset inference stats
++              // so percentile/avg reflect planner-mode steady state, and skip
++              // the next kPlannerWarmupTicks ticks to ignore the transient.
++              obs_duration_stats_.reset();
++              policy_duration_stats_.reset();
++              obs_to_motor_cmd_duration_stats_.reset();
++              {
++                std::lock_guard<std::mutex> lock(planner_model_duration_stats_mutex_);
++                planner_model_duration_stats_.reset();
++              }
++              planner_warmup_remaining_ = kPlannerWarmupTicks;
++              std::cout << "[Stats] Reset inference timing stats on planner-mode entry (skipping "
++                        << kPlannerWarmupTicks << " warmup ticks)" << std::endl;
+             }
+           }
+         }
+@@ -3592,6 +3676,21 @@ class G1Deploy {
+               }
+ 
+               std::cout << "Planner initialized successfully!" << std::endl;
++
++              // Reset inference timing stats after planner init to exclude the
++              // one-time initialization spike from steady-state measurements.
++              // Also skip the next kPlannerWarmupTicks ticks to let the system
++              // settle (NPU pipeline fill, thread scheduling stabilization).
++              obs_duration_stats_.reset();
++              policy_duration_stats_.reset();
++              obs_to_motor_cmd_duration_stats_.reset();
++              {
++                std::lock_guard<std::mutex> lock(planner_model_duration_stats_mutex_);
++                planner_model_duration_stats_.reset();
++              }
++              planner_warmup_remaining_ = kPlannerWarmupTicks;
++              std::cout << "[Stats] Reset inference timing stats after planner init (skipping "
++                        << kPlannerWarmupTicks << " warmup ticks)" << std::endl;
+               
+               // Start recording session for planner motion (if enabled)
+               if (enable_motion_recording_) {
+@@ -3752,7 +3851,16 @@ class G1Deploy {
+               )) {
+                 throw std::runtime_error("Error when updating planner");
+               }
+-              
++
++              // Accumulate planner model inference latency (skip during warmup
++              // window so the one-time NPU compile/load spike doesn't skew max).
++              if (planner_warmup_remaining_ <= 0) {
++                std::lock_guard<std::mutex> lock(planner_model_duration_stats_mutex_);
++                planner_model_duration_stats_.push(
++                    static_cast<double>(planner_->last_timing_.model_duration.count()));
++              }
++
++
+             } catch (const std::exception& e) {
+               std::cout << "✗ Error during planning update: " << e.what() << std::endl;
+               std::cout << "Disabling planner to prevent further errors..." << std::endl;
+@@ -4063,26 +4171,59 @@ class G1Deploy {
+             return;
+           }
+ 
+-          if (logging_counter_ % 50 == 0) {
++          // Accumulate inference timing stats every tick (skip warm-up phases)
++          if (planner_warmup_remaining_ > 0) {
++            planner_warmup_remaining_--;
++          } else if (logging_counter_ > kWarmupTicks) {
++            auto obs_duration_tick = std::chrono::duration_cast<std::chrono::microseconds>(obs_end_time - obs_start_time);
++            auto policy_duration_tick = std::chrono::duration_cast<std::chrono::microseconds>(motor_command_end_time - obs_end_time);
++            auto motor_command_duration_tick = std::chrono::duration_cast<std::chrono::microseconds>(motor_command_end_time - obs_start_time);
++            obs_duration_stats_.push(static_cast<double>(obs_duration_tick.count()));
++            policy_duration_stats_.push(static_cast<double>(policy_duration_tick.count()));
++            obs_to_motor_cmd_duration_stats_.push(static_cast<double>(motor_command_duration_tick.count()));
++          }
++
++          if (logging_counter_ % 50 == 0) {  // Log every ~1s
+             auto control_loop_end_time = std::chrono::steady_clock::now();
+             auto obs_duration = std::chrono::duration_cast<std::chrono::microseconds>(obs_end_time - obs_start_time);
+             auto policy_duration = std::chrono::duration_cast<std::chrono::microseconds>(motor_command_end_time - obs_end_time);
+             auto motor_command_duration = std::chrono::duration_cast<std::chrono::microseconds>(motor_command_end_time - obs_start_time);
+             auto post_hand_joint_duration = std::chrono::duration_cast<std::chrono::microseconds>(control_loop_end_time - hand_joint_end_time);
+-            
++
+             std::cout << "Loop timing - LowState age: " << used_low_state_data_.GetAgeMs() << "ms"
+                       << ", Streaming data mean delay: " << streaming_data_delay_rolling_stats_.mean() << "ms"
+                       << ", Streaming data std delay: " << streaming_data_delay_rolling_stats_.stddev() << "ms"
+                       << ", IMU age: " << used_imu_torso_data_.GetAgeMs() << "ms"
+-                      << ", Obs: " << obs_duration.count() << "us"
+-                      << ", Policy: " << policy_duration.count() << "us"
+-                      << ", Obs 2 Motor Command: " << motor_command_duration.count() << "us"
++                      << ", Obs: " << obs_duration.count() << "us (avg:" << static_cast<int>(obs_duration_stats_.mean())
++                        << " min:" << static_cast<int>(obs_duration_stats_.min())
++                        << " P99:" << static_cast<int>(obs_duration_stats_.percentile(0.99))
++                        << " max:" << static_cast<int>(obs_duration_stats_.max()) << ")"
++                      << ", Policy: " << policy_duration.count() << "us (avg:" << static_cast<int>(policy_duration_stats_.mean())
++                        << " min:" << static_cast<int>(policy_duration_stats_.min())
++                        << " P99:" << static_cast<int>(policy_duration_stats_.percentile(0.99))
++                        << " max:" << static_cast<int>(policy_duration_stats_.max()) << ")"
++                      << ", Obs 2 Motor Command: " << motor_command_duration.count() << "us (avg:" << static_cast<int>(obs_to_motor_cmd_duration_stats_.mean())
++                        << " min:" << static_cast<int>(obs_to_motor_cmd_duration_stats_.min())
++                        << " P99:" << static_cast<int>(obs_to_motor_cmd_duration_stats_.percentile(0.99))
++                        << " max:" << static_cast<int>(obs_to_motor_cmd_duration_stats_.max()) << ")"
+                       << ", Post processing: " << post_hand_joint_duration.count() << "us";
+             
+             // Add planner timing if planner is enabled and initialized
+             if (planner_ && planner_->planner_state_.enabled && planner_->planner_state_.initialized) {
++              int planner_model_avg = 0, planner_model_min = 0, planner_model_p99 = 0, planner_model_max = 0;
++              {
++                std::lock_guard<std::mutex> lock(planner_model_duration_stats_mutex_);
++                planner_model_avg = static_cast<int>(planner_model_duration_stats_.mean());
++                planner_model_min = static_cast<int>(planner_model_duration_stats_.min());
++                planner_model_p99 = static_cast<int>(planner_model_duration_stats_.percentile(0.99));
++                planner_model_max = static_cast<int>(planner_model_duration_stats_.max());
++              }
+               std::cout << ", Planner - Gather Input: " << planner_->last_timing_.gather_input_duration.count() << "us"
+                         << ", Model: " << planner_->last_timing_.model_duration.count() << "us"
++                        << " (avg:" << planner_model_avg
++                        << " min:" << planner_model_min
++                        << " P99:" << planner_model_p99
++                        << " max:" << planner_model_max << ")"
+                         << ", Convert50Hz: " << planner_->last_timing_.extract_duration.count() << "us"
+                         << ", Total: " << planner_->last_timing_.total_duration.count() << "us";
+             }
+-- 
+2.43.0
+

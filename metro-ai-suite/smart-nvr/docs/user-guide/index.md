@@ -90,7 +90,7 @@ get-started
 how-to-use-application
 development-guide
 Integrate Scenescape with Smart NVR <scenescape-integration.md>
-Multiple SceneScape Deployment <multi-broker-scenescape.md>
+Multiple Scenescape Deployment <multi-broker-scenescape.md>
 api-reference
 troubleshooting
 Release Notes <./release-notes.md>

@@ -6,6 +6,19 @@
 {{- end -}}
 {{- end -}}
 
+{{- define "lvs.imagePullPolicy" -}}
+{{- $policy := lower (trim (default "" .)) -}}
+{{- if eq $policy "always" -}}
+Always
+{{- else if eq $policy "ifnotpresent" -}}
+IfNotPresent
+{{- else if eq $policy "never" -}}
+Never
+{{- else -}}
+{{- fail (printf "image pull policy must be Always, IfNotPresent, or Never (case-insensitive); got %q" .) -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "lvs.root.validate" -}}
 {{- include "lvs.root.validateRequiredString" (list "global.env.embeddingModelName" .Values.global.env.embeddingModelName) -}}
 {{- include "lvs.root.validateRequiredString" (list "global.credentials.minioRootUser" .Values.global.credentials.minioRootUser) -}}

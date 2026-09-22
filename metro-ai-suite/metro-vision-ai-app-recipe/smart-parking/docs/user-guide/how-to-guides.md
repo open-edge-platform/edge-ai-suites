@@ -8,6 +8,7 @@ This section collects guides for the Smart Parking sample application.
 - [View Telemetry Data](./how-to-guides/view-telemetry-data.md)
 - [View System Performance Dashboard](./how-to-guides/system-performance-dashboard.md)
 - [Benchmark](./how-to-guides/benchmark.md)
+- [GPU and NPU Stream Density Benchmark](./how-to-guides/gpu-npu-stream-density-benchmark.md)
 
 <!--hide_directive
 :::{toctree}
@@ -20,6 +21,7 @@ This section collects guides for the Smart Parking sample application.
 ./how-to-guides/view-telemetry-data
 ./how-to-guides/system-performance-dashboard
 ./how-to-guides/benchmark
+./how-to-guides/gpu-npu-stream-density-benchmark
 
 :::
 hide_directive-->

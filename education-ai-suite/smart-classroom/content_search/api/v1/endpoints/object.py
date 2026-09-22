@@ -324,7 +324,7 @@ async def delete_specific_task(
         # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
         if run_id:
             import shutil
-            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            run_dir = storage_service.get_run_directory(run_id, bucket_name=f_bucket)
             if run_dir.exists():
                 shutil.rmtree(run_dir)
                 logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
@@ -465,7 +465,7 @@ async def delete_file_by_hash(
         # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
         if run_id:
             import shutil
-            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            run_dir = storage_service.get_run_directory(run_id, bucket_name=f_bucket)
             if run_dir.exists():
                 shutil.rmtree(run_dir)
                 deletion_results["storage_deleted"] = True
@@ -613,12 +613,17 @@ async def list_all_files(
 
             storage_exists = storage_service.file_exists(file_asset.file_path)
 
+            # SQLite stores the bucket-relative file_key, while the id_maps are
+            # keyed by the full local://<bucket>/<key> URI used at ingest time.
+            index_bucket = file_asset.bucket_name or "content-search"
+            index_key = f"local://{index_bucket}/{file_path.lstrip('/')}"
+
             collections_info = []
             total_vectors = 0
             indexed = False
 
-            if file_path in visual_map:
-                vector_ids = visual_map[file_path]
+            if index_key in visual_map:
+                vector_ids = visual_map[index_key]
                 collections_info.append({
                     "name": "visual",
                     "vector_count": len(vector_ids)
@@ -626,8 +631,8 @@ async def list_all_files(
                 total_vectors += len(vector_ids)
                 indexed = True
 
-            if file_path in document_map:
-                vector_ids = document_map[file_path]
+            if index_key in document_map:
+                vector_ids = document_map[index_key]
                 collections_info.append({
                     "name": "documents",
                     "vector_count": len(vector_ids)
@@ -635,9 +640,9 @@ async def list_all_files(
                 total_vectors += len(vector_ids)
                 indexed = True
 
-            has_summary = file_path in video_summary_map
+            has_summary = index_key in video_summary_map
             if has_summary:
-                summary_ids = video_summary_map[file_path]
+                summary_ids = video_summary_map[index_key]
                 collections_info.append({
                     "name": "documents",
                     "type": "summary",

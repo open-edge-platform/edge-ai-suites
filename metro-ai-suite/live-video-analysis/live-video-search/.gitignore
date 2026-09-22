@@ -147,3 +147,8 @@ config/frigate-config/*
 !config/frigate-config/config-default.yml
 !config/frigate-config/config-rtsp.yml
 !config/frigate-config/config-usb.yml
+# Helm dependency build artifacts. All subcharts are local file:// paths, so
+# Chart.lock records nothing the tree does not already contain, and a stale
+# lock makes "helm dependency build" fail.
+chart/Chart.lock
+chart/charts/

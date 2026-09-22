@@ -66,11 +66,13 @@ configured Kubernetes cluster.
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
 
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 ## Set up the application
 
-> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
+> [!NOTE]
+> The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
@@ -79,7 +81,8 @@ configured Kubernetes cluster.
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
-   > **Note:** These steps demonstrate launching two pallet-defect-detection instances and one pcb-anomaly-detection instance. Modify the sample apps and instances as needed for your use case.
+   > [!NOTE]
+   > These steps demonstrate launching two pallet-defect-detection instances and one pcb-anomaly-detection instance. Modify the sample apps and instances as needed for your use case.
 
 2. Create a `config.yml` file to define your application instances and their unique port configurations. Add the following sample contents and save.
 
@@ -106,21 +109,27 @@ configured Kubernetes cluster.
         S3_STORAGE_PORT: 30802
     ```
 
-    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances (two pallet-defect-detection instances and one pcb-anomaly-detection instance) with the identifiers `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
+    > [!NOTE]
+    > A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances (two pallet-defect-detection instances and one pcb-anomaly-detection instance) with the identifiers `pdd1`, `pdd2`, and `pcb1`. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
 3. Edit the environment variables mentioned below in all the `helm/values_<SAMPLE_APP>.yaml` files:
 
    ```yaml
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
-   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   S3_STORAGE_USERNAME=   # SeaweedFS S3 service & client access key e.g. intel1234
+   S3_STORAGE_PASSWORD=   # SeaweedFS S3 service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
-   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > [!NOTE]
+   > To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`.
+   > [!NOTE]
+   > To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
+   > [!NOTE]
+   > For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 4. Install prerequisites for all instances:
 
@@ -341,7 +350,8 @@ configured Kubernetes cluster.
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance `pdd1` has nginx port set to 30443, `pdd2` set to 30444, and `pcb1` set to 30445.
+   > [!NOTE]
+   > The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance `pdd1` has nginx port set to 30443, `pdd2` set to 30444, and `pcb1` set to 30445.
 
    ```text
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
@@ -779,17 +789,18 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    pip3 install boto3==1.36.17
    ```
 
-   > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
+   > [!NOTE]
+   > DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
 5. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
+   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running SeaweedFS S3 server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
 
    ```python
    import boto3
    url = "http://<HOST_IP>:<S3_STORAGE_PORT>"
-   user = "<value of MINIO_ACCESS_KEY used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
-   password = "<value of MINIO_SECRET_KEY used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
+   user = "<value of S3_STORAGE_USERNAME used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
+   password = "<value of S3_STORAGE_PASSWORD used in helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -824,7 +835,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
       "destination": {
          "frame": {
             "type": "webrtc",
-            "peer-id": "pdds3"
+            "peer-id": "pdds3",
+             "overlay-properties": {
+                 "font-scale": 1.0,
+                 "draw-txt-bg": false
+             }
          }
       },
       "parameters": {
@@ -849,7 +864,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
      "destination": {
        "frame": {
             "type": "webrtc",
-            "peer-id": "anomaly_s3"
+            "peer-id": "anomaly_s3",
+           "overlay-properties": {
+               "font-scale": 1.0,
+               "draw-txt-bg": false
+           }
        }
      },
      "parameters": {
@@ -866,9 +885,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ::::
    hide_directive-->
 
-7. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
-
-   ![S3 minio image storage](../_assets/s3-minio-storage.png)
+7. Go to `https://<HOST_IP>:<NGINX_HTTPS_PORT>/storage/buckets/ecgdemo/camera1/` to browse the frames stored in the `ecgdemo` bucket under the `camera1` folder prefix (replace `ecgdemo`/`camera1` with the bucket/folder prefix you used, if different). You will be prompted to log in with the `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD` credentials provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file (HTTP Basic Auth).
 
 8. Uninstall the Helm chart.
 
@@ -937,7 +954,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -967,7 +988,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "anomaly"
+              "peer-id": "anomaly",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -1013,7 +1038,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Download and prepare the model.
 
-   > **Note:** For the sake of simplicity, these instructions assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
+   > [!NOTE]
+   > For the sake of simplicity, these instructions assume that the new model has already been downloaded by the Model Download microservice. The following curl command is only a simulation that downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
@@ -1053,7 +1079,8 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-   > **Note:** If there are multiple `sample_apps` in `config.yml`, repeat steps 6 and 7 for each sample application and instance.
+   > [!NOTE]
+   > If there are multiple `sample_apps` in `config.yml`, repeat steps 6 and 7 for each sample application and instance.
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated in step 5.
 
@@ -1079,7 +1106,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
                "type": "webrtc",
-               "peer-id": "pdd"
+               "peer-id": "pdd",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {
@@ -1109,7 +1140,11 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
             "destination": {
             "frame": {
               "type": "webrtc",
-              "peer-id": "anomaly"
+              "peer-id": "anomaly",
+                "overlay-properties": {
+                    "font-scale": 1.0,
+                    "draw-txt-bg": false
+                }
             }
             },
             "parameters": {

@@ -1,0 +1,23 @@
+The user message also contains a [BOARD CONTENT] block: text captured frame by
+frame by OCR from the classroom display / interactive flat panel (slide titles,
+bullet points, tables, equations), in chronological order. It may contain OCR
+noise, watermarks, or site/channel names, and the same title may repeat across
+many frames.
+
+Synthesize this content and, in ADDITION to the sections above, append exactly one
+more section at the end:
+
+## Board/IFPD Content
+- ...
+
+Rules for this section only:
+- Write complete, fluent sentences that describe WHAT the board presented, e.g.
+  "Showed ...", "Explained ...", "Described ...", "Illustrated ...", "Listed ...".
+- Do NOT output isolated keywords or fragments. Merge repeated/related frames on the
+  same topic into one coherent statement.
+- Organize into a few bullet points by topic or teaching sequence; each bullet is a
+  full sentence, not a phrase.
+- Ignore watermarks, channel/site names, and other noise; fix obvious OCR errors
+  when the meaning is clear.
+- Do not repeat content already covered in the transcript sections.
+- If the board content is empty or unreadable, write "- None".

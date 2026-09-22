@@ -50,7 +50,8 @@ export SUPASS=<your-password>
 make demo
 ```
 
-> **Note:** Choose a strong password. This is the admin password for the web UI, not your system password.
+> [!NOTE]
+> Choose a strong password. This is the admin password for the web UI, not your system password.
 
 ### Step 4: Access the Web UI
 
@@ -76,7 +77,7 @@ docker compose --profile controller down --remove-orphans
 
 ## Next Steps
 
-- [Scenescape Get Started](https://docs.openedgeplatform.intel.com/dev/scenescape/get-started.html): Follow the getting started guide to explore core Scenescape functionality
+- [Scenescape Installation](https://docs.openedgeplatform.intel.com/dev/scenescape/get-started/installation.html): Follow the getting started guide to explore core Scenescape functionality
 - [How to Use the 3D UI](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/ui-tutorial.html): Explore the 3D visualization interface
 - [How to Integrate Cameras and Sensors](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/integrate-cameras-and-sensors.html): Connect live cameras and sensors
 - [How to Create a New Scene](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/build-a-scene/create-new-scene.html): Build your own scene from scratch

@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/agentic-predictive-maintenance">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/agentic-predictive-maintenance-pipeline">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/agentic-predictive-maintenance/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/agentic-predictive-maintenance-pipeline/README.md">
      Readme
   </a>
 </div>
@@ -63,6 +63,7 @@ build-from-source
 training-with-geti
 api-reference
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
+
 :::
 hide_directive-->

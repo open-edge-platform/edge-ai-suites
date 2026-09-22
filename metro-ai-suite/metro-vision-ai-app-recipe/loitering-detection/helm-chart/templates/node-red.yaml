@@ -1,3 +1,13 @@
+# The node-red container runs install_package.sh at startup, which executes
+# `npm install ...` and `apk add ffmpeg`. Those write across the root
+# filesystem (/usr, /var, /usr/src/node-red/node_modules) and apk requires
+# root, so the following are accepted, unavoidable risks for this container:
+#   * KSV-0014: the root filesystem cannot be made read-only while ffmpeg /
+#     Node-RED nodes are installed at runtime.
+#   * KSV-0118: node-red must run as root (runAsUser: 0) for `apk add`.
+# The intel-plugin-downloader init container below is fully hardened instead.
+#trivy:ignore:AVD-KSV-0014
+#trivy:ignore:AVD-KSV-0118
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -18,6 +28,14 @@ spec:
       initContainers:
       - name: intel-plugin-downloader
         image: curlimages/curl:8.20.0
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 100
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         command:
         - /bin/sh
         - -c
@@ -45,6 +63,8 @@ spec:
         - name: TZ
           value: {{ $.Values.timezone | default "UTC" }}
         volumeMounts:
+        - name: downloader-tmp
+          mountPath: /tmp
         - name: node-red-data
           mountPath: /tmp/data
         - name: node-red-flows-config
@@ -73,6 +93,8 @@ spec:
         - name: node-red-data
           mountPath: /data
       volumes:
+      - name: downloader-tmp
+        emptyDir: {}
       - name: node-red-data
         emptyDir: {}
       - name: node-red-flows-config

@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { toErrorMessage } from './gradingUtils';
-
-const formatDateTime = (iso: string): string => {
-  try {
-    const d = new Date(iso);
-    const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-  } catch { return iso; }
-};
+import { toErrorMessage, formatDateTime, compareByNumericThenString } from './gradingUtils';
+import GradingModal from './GradingModal';
 import { useTranslation } from 'react-i18next';
 import { gradingGetTaskSummary, gradingGetStudentResult } from '../../services/api';
 import type { GradingSummary, GradingStudentResult, GradingStudentResultDetail, GradingQuestionNode } from '../../services/api';
@@ -21,19 +14,6 @@ const dash = '—';
 
 const numOrDash = (v: number | null | undefined): string =>
   v === null || v === undefined ? dash : String(v);
-
-// Order question ids numerically when possible, falling back to string order.
-const sortQuestionIds = (ids: string[]): string[] =>
-  [...ids].sort((a, b) => {
-    const na = Number(a);
-    const nb = Number(b);
-    const aNum = !Number.isNaN(na);
-    const bNum = !Number.isNaN(nb);
-    if (aNum && bNum) return na - nb;
-    if (aNum) return -1;
-    if (bNum) return 1;
-    return a.localeCompare(b);
-  });
 
 const toRootQuestionMap = (student: GradingStudentResult): Record<string, { score: number | null; max_score: number | null }> => {
   const roots = student.questions_hierarchy || [];
@@ -104,12 +84,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
   const rows = useMemo<Array<{ key: string; student: GradingStudentResult }>>(() => {
     if (!summary?.students) return [];
     const base = Object.entries(summary.students).map(([key, student]) => ({ key, student }));
-    base.sort((a, b) => {
-      const na = Number(a.key);
-      const nb = Number(b.key);
-      if (!Number.isNaN(na) && !Number.isNaN(nb)) return na - nb;
-      return a.key.localeCompare(b.key);
-    });
+    base.sort((a, b) => compareByNumericThenString(a.key, b.key));
     if (!sortField) return base;
     const dir = sortDir === 'asc' ? 1 : -1;
     return base.sort((a, b) => {
@@ -135,7 +110,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
         if (!(qid in maxMap)) maxMap[qid] = q.max_score;
       }
     }
-    return { questionIds: sortQuestionIds([...idSet]), questionMax: maxMap };
+    return { questionIds: [...idSet].sort(compareByNumericThenString), questionMax: maxMap };
   }, [rows]);
 
   const metadata = (summary?.metadata || {}) as Record<string, unknown>;
@@ -294,7 +269,7 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
         {summary?.updated_at && (
           <div className="grading-results-meta-item">
             <span className="grading-results-meta-label">{t('grading.results.updated', 'Updated')}</span>
-            <span className="grading-results-meta-value">{formatDateTime(summary.updated_at)}</span>
+            <span className="grading-results-meta-value">{formatDateTime(summary.updated_at, true)}</span>
           </div>
         )}
       </div>
@@ -382,23 +357,21 @@ const ResultsView: React.FC<ResultsViewProps> = ({ taskId, onBack }) => {
       )}
 
       {detailOpen && (
-        <div className="grading-picker-overlay" onClick={() => setDetailOpen(false)}>
-          <div className="grading-log-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="grading-picker-header">
-              <span className="grading-picker-title">{t('grading.results.detailTitle', 'Grading Detail')} — {detailTitle}</span>
-              <button className="grading-picker-close" onClick={() => setDetailOpen(false)}>×</button>
-            </div>
-            <div className="grading-log-modal-box">
-              {detailLoading
-                ? t('grading.results.detailLoading', 'Loading…')
-                : detailError
-                  ? detailError
-                  : detailData
-                    ? renderDetail(detailData)
-                    : dash}
-            </div>
+        <GradingModal
+          title={`${t('grading.results.detailTitle', 'Grading Detail')} — ${detailTitle}`}
+          onClose={() => setDetailOpen(false)}
+          className="grading-log-modal"
+        >
+          <div className="grading-log-modal-box">
+            {detailLoading
+              ? t('grading.results.detailLoading', 'Loading…')
+              : detailError
+                ? detailError
+                : detailData
+                  ? renderDetail(detailData)
+                  : dash}
           </div>
-        </div>
+        </GradingModal>
       )}
     </div>
   );

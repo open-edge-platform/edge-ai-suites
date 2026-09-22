@@ -3,7 +3,8 @@
 This guide explains how to create a custom Docker image based on the DL Streamer Pipeline Server with Gencamsrc support, using either the Balluff SDK or the pylon SDK.
 It supports Balluff, Basler, and other GenICam-compatible cameras connected over USB and GigE interfaces.
 
-> **Note:** You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
+> [!NOTE]
+> You may observe a watermark in the camera feed when testing with a non-Balluff camera, as it is the free version.
 
 ## Prerequisites
 
@@ -31,7 +32,7 @@ Create a Dockerfile inside your `dlstreamer-pipeline-server` directory with the 
 Create a Dockerfile named `BalluffDockerfile`.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24
 
 USER root
 
@@ -41,7 +42,7 @@ COPY ./plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc
 
 RUN cd /home/pipeline-server/src-gst-gencamsrc && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc) && cmake --install build && ldconfig
 
-# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24 base image
+# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24 base image
 RUN apt-get update && apt-get install -y libwxgtk-webview3.2-dev
 
 # For Ubuntu 22 with intel/dlstreamer-pipeline-server:3.1.0-ubuntu22, uncomment the line below and comment the above line
@@ -69,7 +70,7 @@ USER intelmicroserviceuser
 Create a Dockerfile named `BaslerDockerfile`.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24
 
 USER root
 
@@ -103,7 +104,7 @@ Run the following command to build the image.
 <!--hide_directive :sync: balluff-sdk hide_directive-->
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-balluff -f BalluffDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-gencamsrc-balluff -f BalluffDockerfile .
 ```
 
 <!--hide_directive ::: hide_directive-->
@@ -111,7 +112,7 @@ docker build -t intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-bal
 <!--hide_directive :sync: pylon-sdk hide_directive-->
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-basler -f BaslerDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-gencamsrc-basler -f BaslerDockerfile .
 ```
 
 <!--hide_directive
@@ -132,7 +133,7 @@ After the build completes, inside `dlstreamer-pipeline-server/docker` directory,
 Update `.env` with:
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-balluff
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-gencamsrc-balluff
 ```
 
 <!--hide_directive ::: hide_directive-->
@@ -142,7 +143,7 @@ DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubunt
 Update `.env` with:
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-basler
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-gencamsrc-basler
 ```
 
 <!--hide_directive
@@ -212,7 +213,7 @@ Update the `.env` file with the image you built and modify any other required va
 <!--hide_directive :sync: balluff-sdk hide_directive-->
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-balluff
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-gencamsrc-balluff
 ```
 
 <!--hide_directive ::: hide_directive-->
@@ -220,7 +221,7 @@ DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubunt
 <!--hide_directive :sync: pylon-sdk hide_directive-->
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-gencamsrc-basler
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-gencamsrc-basler
 ```
 
 <!--hide_directive
@@ -276,7 +277,10 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       dlstreamer-pipeline-server
 127.0.0.1       prometheus
 127.0.0.1       mediamtx-server
-127.0.0.1       minio
+127.0.0.1       seaweedfs-master
+127.0.0.1       seaweedfs-volume
+127.0.0.1       seaweedfs-filer
+127.0.0.1       seaweedfs-s3
 127.0.0.1       otel-collector
 127.0.0.1       mqtt-broker
 ```
@@ -285,7 +289,8 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 
 Start all the required services using Docker Compose.
 
-> **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+> [!NOTE]
+> If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
 ```bash
 docker compose up -d
@@ -336,7 +341,8 @@ https://<HOST_IP>/mediamtx/pdd/
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 
-> **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> [!NOTE]
+> If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ## Troubleshooting

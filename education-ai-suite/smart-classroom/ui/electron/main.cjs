@@ -5,16 +5,37 @@
 // (which already proxies /api/v1); when packaged we serve `dist/` through the
 // embedded static + proxy micro-server (server.cjs).
 //
-// The Python backends are expected to be started separately.
+// The Python backends can either be started externally (legacy PowerShell
+// path, detected and attached to) or supervised by this process — see
+// electron/services/.
 
 const fs = require('fs');
 const path = require('path');
 const { app, BrowserWindow, Menu, dialog, ipcMain, shell } = require('electron');
 const { startServer } = require('./server.cjs');
+const servicePaths = require('./services/paths.cjs');
+const serviceIpc = require('./services/ipc.cjs');
+const { LogStore } = require('./services/log-store.cjs');
+const { ServiceManager } = require('./services/process-manager.cjs');
+const { SetupRunner } = require('./services/setup-runner.cjs');
+const winEnv = require('./services/win-env.cjs');
 
 // Height (px) of the custom title bar strip. Matches the TopPanel so the
 // native Window Controls Overlay buttons align with the app header.
 const TITLE_BAR_HEIGHT = 63;
+
+// The Window Controls Overlay strip is painted by OS, not by the page, so a
+// DOM overlay cannot dim it. The renderer reports which surface is on top and we
+// recolour the caption to match.
+const TITLE_BAR_THEMES = {
+  // App header.
+  default: { color: '#0071c5', symbolColor: '#ffffff' },
+  // Brand blue and white composited under 50% black. Used by every surface that
+  // covers the caption: the modals, and the slide-over panels — those start
+  // below the caption strip, so what reaches it is their backdrop, not the
+  // panel itself.
+  dimmed: { color: '#003862', symbolColor: '#7f7f7f' },
+};
 
 // ---------------------------------------------------------------------------
 // Native-menu localization
@@ -125,6 +146,11 @@ function buildContextMenu(params, lang = currentLanguage) {
       { type: 'separator' },
       { role: 'selectAll', label: L.selectAll, enabled: editFlags.canSelectAll }
     );
+  } else {
+    template.push(
+      { role: 'reload', label: L.reload },
+      { role: 'toggleDevTools', label: L.toggleDevTools }
+    );
   }
 
   return template.length ? Menu.buildFromTemplate(template) : null;
@@ -135,6 +161,9 @@ const DEV_SERVER_URL = process.env.ELECTRON_START_URL;
 
 let mainWindow = null;
 let serverHandle = null;
+const logStore = new LogStore(servicePaths.managerLogDir());
+const serviceManager = new ServiceManager(logStore);
+const setupRunner = new SetupRunner(logStore);
 
 async function resolveStartUrl() {
   if (DEV_SERVER_URL) return DEV_SERVER_URL;
@@ -146,8 +175,10 @@ async function resolveStartUrl() {
 
 async function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
+    width: 1280,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 600,
     show: false,
     title: 'Smart Classroom',
     titleBarStyle: 'hidden',
@@ -185,8 +216,29 @@ async function createWindow() {
     if (menu) menu.popup({ window: mainWindow });
   });
 
+  // A dead renderer process cannot be caught by the in-page error boundary, so
+  // report it natively rather than leaving a blank window.
+  mainWindow.webContents.on('render-process-gone', async (_event, details) => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const { response } = await dialog.showMessageBox(mainWindow, {
+      type: 'error',
+      title: 'Smart Classroom',
+      message: 'The interface process stopped unexpectedly.',
+      detail: `Reason: ${details.reason}${Number.isInteger(details.exitCode) ? ` (exit code ${details.exitCode})` : ''
+        }\n\nBackend services are unaffected and keep running.`,
+      buttons: ['Reload', 'Quit'],
+      defaultId: 0,
+      cancelId: 1,
+    });
+    if (response === 0) mainWindow.reload();
+    else app.quit();
+  });
+
+  mainWindow.webContents.on('preload-error', (_event, preloadPath, error) => {
+    console.error('[electron] preload script failed:', preloadPath, error);
+  });
+
   mainWindow.once('ready-to-show', () => {
-    mainWindow.maximize();
     mainWindow.show();
   });
   mainWindow.on('closed', () => {
@@ -205,6 +257,20 @@ if (!app.requestSingleInstanceLock()) {
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.focus();
+    }
+  });
+
+  // Renderer reports the surface currently covering the caption area (a modal,
+  // the report panel, or nothing) so the overlay can be recoloured to match.
+  ipcMain.on('titlebar:setTheme', (event, theme) => {
+    if (process.platform === 'darwin') return;
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return;
+    const colors = TITLE_BAR_THEMES[theme] || TITLE_BAR_THEMES.default;
+    try {
+      win.setTitleBarOverlay({ ...colors, height: TITLE_BAR_HEIGHT });
+    } catch {
+      // Overlay unavailable on this platform/frame — leave the caption alone.
     }
   });
 
@@ -260,8 +326,50 @@ if (!app.requestSingleInstanceLock()) {
     return result.filePaths[0];
   });
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     Menu.setApplicationMenu(buildAppMenu());
+
+    // Before anything is spawned: children inherit this process's environment,
+    // so a tool installed since the last run — or by the Setup screen in a
+    // previous session — would otherwise be invisible to the backend too.
+    await winEnv.refreshPath().catch(() => []);
+    await winEnv.applyDlStreamerEnv().catch(() => null);
+
+    serviceIpc.register({
+      manager: serviceManager,
+      logs: logStore,
+      setup: setupRunner,
+      getWindow: () => mainWindow,
+    });
+    serviceManager.start();
+
+    // Populate the Setup screen up front so a first-time user sees real statuses
+    // instead of "Not checked".
+    setupRunner.checkAll().catch(() => { });
+
+    // A backend that dies on a missing package leaves Setup insisting the
+    // environment is fine. Re-check on the transition into failed, so the two
+    // screens stop disagreeing. Edge-triggered: a service that stays failed must
+    // not re-check on every health tick.
+    let backendFailed = false;
+    serviceManager.on('changed', (snapshot) => {
+      const backend = snapshot.find((service) => service.id === 'backend');
+      const failed = backend?.status === 'failed';
+      if (failed && !backendFailed) setupRunner.checkAll().catch(() => { });
+      backendFailed = failed;
+    });
+
+    // Opt-in one-command launch (start-desktop-app.ps1). Skipped when the Python
+    // environment does not exist yet: that is a first-run state to be handled on
+    // the Setup screen, not a failure to show the user.
+    if (process.env.SC_AUTO_START_BACKEND === '1') {
+      const backend = serviceManager.snapshot().find((service) => service.id === 'backend');
+      if (backend?.runnable) {
+        serviceManager.startService('backend').catch((error) => {
+          console.error('[electron] auto-start failed:', error.message);
+        });
+      }
+    }
 
     // Open the native application menu as a popup, positioned under the
     // title-bar menu button (coordinates come from the renderer, in viewport
@@ -289,4 +397,20 @@ if (!app.requestSingleInstanceLock()) {
 app.on('window-all-closed', () => {
   if (serverHandle) serverHandle.close();
   if (process.platform !== 'darwin') app.quit();
+});
+
+// Tear down only the processes this app started; externally started backends
+// (legacy PowerShell path) are left running.
+let shuttingDown = false;
+app.on('before-quit', (event) => {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  event.preventDefault();
+  serviceManager
+    .shutdown()
+    .catch(() => { })
+    .finally(() => {
+      logStore.dispose();
+      app.quit();
+    });
 });

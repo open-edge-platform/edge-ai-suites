@@ -14,6 +14,7 @@ service.
 import logging
 import os
 import threading
+import time
 import uuid
 from contextlib import asynccontextmanager
 from typing import Optional
@@ -43,6 +44,17 @@ _runs: dict[str, dict] = {}
 
 _DETECTION_TIMEOUT = float(os.environ.get("DLSTREAMER_RUN_TIMEOUT", "600"))
 
+# DL Streamer reports the pipeline as COMPLETED as soon as it hits end-of-stream,
+# but the *last* frame(s)' detection metadata still has to travel MQTT broker ->
+# our subscriber thread -> a POST to storage-service before it's durably counted.
+# Without draining for that in-flight write, a run's end_id watermark can be
+# bookmarked before its own detections land — for a run with only one detection
+# this makes the [start_id, end_id] window empty (start_id == end_id), silently
+# dropping the only result the run produced. Poll the watermark until it stops
+# advancing (or this grace period elapses) before bookmarking end_id.
+_DRAIN_TIMEOUT = float(os.environ.get("DETECTION_DRAIN_TIMEOUT", "5"))
+_DRAIN_POLL_INTERVAL = float(os.environ.get("DETECTION_DRAIN_POLL_INTERVAL", "0.5"))
+
 # Only one detection run may be in flight at a time (single shared DL Streamer
 # pipeline). New /detection/run calls are rejected with 409 while one is
 # already running.
@@ -52,6 +64,10 @@ _active_run_id: str | None = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if os.environ.get("CLEAR_DETECTIONS_ON_STARTUP", "false").lower() == "true":
+        storage_client.clear_detections()
+        log.info("Cleared detections from the previous application session")
+
     # Start MQTT subscriber (non-blocking background thread) so raw detection
     # events are persisted to storage whenever the DL Streamer pipeline runs.
     if os.environ.get("MQTT_DISABLED", "false").lower() != "true":
@@ -159,13 +175,37 @@ def metrics():
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
 
+def _drain_pending_detections(known_max_id: int) -> int:
+    """Wait for in-flight MQTT-driven detection writes to land in storage.
+
+    Polls the detection watermark until it stops advancing between two
+    consecutive checks (i.e. the subscriber has caught up) or
+    ``_DRAIN_TIMEOUT`` elapses, whichever comes first. Returns the final
+    watermark to use as ``end_id``.
+    """
+    deadline = time.monotonic() + _DRAIN_TIMEOUT
+    last_seen = known_max_id
+    while time.monotonic() < deadline:
+        time.sleep(_DRAIN_POLL_INTERVAL)
+        try:
+            current = storage_client.get_max_id().get("max_id", last_seen)
+        except Exception as exc:
+            log.warning("Could not poll detection watermark while draining: %s", exc)
+            break
+        if current == last_seen:
+            break
+        last_seen = current
+    return last_seen
+
+
 def _execute_detection_run(run_id: str, device: str, video_filename: str | None):
     """Run one bounded DL Streamer detection run for ``run_id``.
 
     1. Bookmark the current max detection id (start_id).
     2. Start the DL Streamer pipeline (on ``device``, optionally overriding the
        source video with ``video_filename``) and block until it finishes.
-    3. Bookmark the max detection id again (end_id).
+    3. Drain any in-flight MQTT-driven detection writes, then bookmark the max
+       detection id again (end_id) — see ``_drain_pending_detections``.
     4. Publish a "batch-complete" MQTT event describing the outcome — this is
        the only handoff to the agent-service; this service never calls it.
     """
@@ -188,6 +228,7 @@ def _execute_detection_run(run_id: str, device: str, video_filename: str | None)
 
         try:
             end_id = storage_client.get_max_id().get("max_id", start_id)
+            end_id = _drain_pending_detections(end_id)
         except Exception as exc:
             log.warning("Could not resolve ending detection watermark, defaulting to no upper bound: %s", exc)
             end_id = None

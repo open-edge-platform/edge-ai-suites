@@ -16,7 +16,6 @@ Before you begin, ensure the following:
 - Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
  - **Minimum RAM**: 32GB RAM is required for Trusted Compute deployments.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
-  - **Important:** Trusted Compute is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
 - Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/).
 - Install Git: [Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
@@ -48,7 +47,8 @@ Before you begin, ensure the following:
    - Download the Trusted Compute Package
    - Docker Option
 
-   > **Note:** Trusted Compute version 1.5.3 or later is recommended for this deployment. However, Trusted Compute 1.5.3 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required.
+   > [!NOTE]
+   > Trusted Compute version 1.5.3 or later is recommended for this deployment.
 
 3. **Configure Network Settings (Optional)**
 
@@ -84,7 +84,8 @@ export ENABLE_TC=true
 ./install.sh smart-intersection
 ```
 
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+> [!NOTE]
+> For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.):
 > `./install.sh smart-intersection <HOST_IP>`
 
 #### Step 2: Start the Application
@@ -126,11 +127,13 @@ Check Status of Microservices
 
 ### Option B: GPU Deployment
 
-> **Note:** When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
+> [!NOTE]
+> When GPU passthrough is enabled, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 #### Step 1: Bind GPU to vfio-pci
 
-> **Warning:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+> [!WARNING]
+> Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
 
 Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the Trusted Compute package installed in [Setup and First Use, step 2](#setup-and-first-use) to bind the Intel iGPU to the `vfio-pci` driver.
 
@@ -160,10 +163,106 @@ export TC_SI_TARGET_DEVICE=GPU
 ./install.sh smart-intersection
 ```
 
-> **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+> [!NOTE]
+> For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.):
 > `export ENABLE_TC=true && export TC_SI_TARGET_DEVICE=GPU && ./install.sh smart-intersection <HOST_IP>`
 
 #### Step 4: Start the Application
+
+Export admin password as environment variable:
+
+```bash
+export SUPASS=$(cat ./smart-intersection/src/secrets/supass)
+```
+
+Download container images with Application microservices and run with Docker Compose:
+
+```bash
+docker compose up -d
+```
+
+<details>
+<summary>
+Check Status of Microservices
+</summary>
+
+- The application starts the following microservices.
+- To check if all microservices are in Running state:
+
+  ```bash
+  docker ps
+  ```
+
+**Expected Services:**
+- Grafana Dashboard
+- DL Streamer Pipeline Server
+- MQTT Broker
+- Node-RED (for applications without Scenescape)
+- Scenescape services (for Smart Intersection only)
+
+</details>
+
+---
+
+### Option C: NPU Deployment
+
+> [!NOTE]
+> When NPU passthrough is enabled, both the iGPU and the NPU are exclusively bound to the Trusted Compute VM and are unavailable to the host or other workloads. The GPU is required alongside the NPU for video decoding.
+
+#### Step 1: Bind GPU to vfio-pci
+
+> [!WARNING]
+> Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+
+Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the Trusted Compute package to bind the Intel iGPU to the `vfio-pci` driver:
+
+```bash
+sudo ./tools/intel-igpu-vfio-bind.sh bind
+```
+
+Verify the GPU is bound correctly:
+
+```bash
+lspci -nnk -d 8086: | grep -A 3 "VGA\|Display"
+```
+
+The output should show `Kernel driver in use: vfio-pci` for your Intel GPU.
+
+#### Step 2: Bind NPU to vfio-pci
+
+Use the `intel-npu-vfio-bind.sh` script from the `tools/` directory of the Trusted Compute package to bind the Intel NPU to the `vfio-pci` driver:
+
+```bash
+sudo ./tools/intel-npu-vfio-bind.sh bind
+```
+
+Verify the NPU is bound correctly:
+
+```bash
+lspci -nnk -d 8086: | grep -A 3 "Processing accelerators"
+```
+
+The output should show `Kernel driver in use: vfio-pci` for your Intel NPU.
+
+#### Step 3: Configure NPU for Inference
+
+Follow the [How to Use NPU for Inference](./how-to-use-npu-for-inference.md) guide to properly configure your NPU settings for optimal inference performance with Trusted Compute.
+
+#### Step 4: Setup Application and Download Assets
+
+Use the installation script to configure the application and download required models with Trusted Compute and NPU enabled:
+
+```bash
+export ENABLE_TC=true
+export TC_SI_TARGET_DEVICE=NPU
+./install.sh smart-intersection
+```
+
+> [!NOTE]
+> For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.):
+> `export ENABLE_TC=true && export TC_SI_TARGET_DEVICE=NPU && ./install.sh smart-intersection <HOST_IP>`
+
+#### Step 5: Start the Application
 
 Export admin password as environment variable:
 
@@ -206,7 +305,7 @@ Check Status of Microservices
 
 Open a browser and go to the following endpoints to access the application. Use `<actual_ip>` instead of `localhost` for external access:
 
-> **Note:**
+> [!NOTE]
 >
 > - All services are accessed through the nginx reverse proxy at `https://localhost` with appropriate paths.
 > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
@@ -217,7 +316,7 @@ Open a browser and go to the following endpoints to access the application. Use 
   - **Username**: `admin`
   - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
-> **Note**:
+> [!NOTE]
 >
 > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface. Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
 
@@ -275,6 +374,13 @@ sudo ./tools/intel-igpu-vfio-bind.sh unbind
 ```
 
 This will restore the display manager and graphical display on the host.
+
+If you deployed with **NPU**, unbind both the NPU and the GPU from vfio-pci:
+
+```bash
+sudo ./tools/intel-npu-vfio-bind.sh unbind
+sudo ./tools/intel-igpu-vfio-bind.sh unbind
+```
 
 ### Uninstall Trusted Compute (Optional)
 

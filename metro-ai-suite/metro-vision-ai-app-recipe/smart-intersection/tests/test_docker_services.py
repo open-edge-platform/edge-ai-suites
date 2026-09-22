@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: LicenseRef-Intel-Edge-Software
 # This file is licensed under the Limited Edge Software Distribution License Agreement.
 
@@ -39,20 +39,20 @@ def wait_for_container_to_start(container, timeout=30):
   return False
 
 def get_running_dlstreamer_container():
-  """Get DLStreamer container if it exists and is running, otherwise fail test."""
+  """Get DL Streamer container if it exists and is running, otherwise fail test."""
   client = docker.from_env()
   try:
     container = client.containers.get(DLSTREAMER_CONTAINER)
-    assert container.status == 'running', f"DLStreamer container is not running (status: {container.status})"
+    assert container.status == 'running', f"DL Streamer container is not running (status: {container.status})"
     return container
   except docker.errors.NotFound:
-    assert False, f"DLStreamer container '{DLSTREAMER_CONTAINER}' not found"
+    assert False, f"DL Streamer container '{DLSTREAMER_CONTAINER}' not found"
 
 
 @pytest.mark.docker
 @pytest.mark.zephyr_id("NEX-T9625")
 def test_components_access_with_no_dlstreamer_docker():
-  """Test that all application components are accessible without DLStreamer."""
+  """Test that all application components are accessible without DL Streamer."""
   container = get_running_dlstreamer_container()
 
   # Check initial access - all services should be running
@@ -81,7 +81,7 @@ def test_components_access_with_no_dlstreamer_docker():
 @pytest.mark.docker
 @pytest.mark.zephyr_id("NEX-T9626")
 def test_components_access_after_dlstreamer_restart_docker():
-  """Test that all application components are accessible after DLStreamer container restart."""
+  """Test that all application components are accessible after DL Streamer container restart."""
   container = get_running_dlstreamer_container()
 
   # Check initial access - all services should be running
@@ -113,7 +113,7 @@ def test_docker_application_restart_docker():
   logger.info("Tearing down Docker containers...")
   run_command(f"docker compose down")
   logger.info("Docker containers stopped and removed.")
-    
+
   # Build and Deploy Docker images
   logger.info("Building and deploying Docker containers...")
   out, err, code = run_command(f"docker compose up -d")

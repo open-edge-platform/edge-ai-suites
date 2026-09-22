@@ -1,0 +1,22 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+global:
+  usePvc: true
+  keepPvc: false
+  volumeHostPath: ''
+  persistence:
+    storageClassName: ''
+
+etcd:
+  image: quay.io/coreos/etcd:v3.5.18
+  resources: {}
+milvus:
+  image: milvusdb/milvus:v2.6.14
+  resources: {}
+persistence:
+  size: 20Gi
+  etcdSize: 5Gi
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault

@@ -1,6 +1,6 @@
 """Tests for latest.jpg snapshot writing.
 
-Regression guard for the bug found during Phase 7 stage-A integration:
+Regression guard for a bug found during early integration testing:
 cv2.imwrite dispatches by file extension, so an `<x>.jpg.tmp` tmp filename
 fails with "could not find a writer for the specified extension". The
 exception was being swallowed by the broad try/except, making the failure

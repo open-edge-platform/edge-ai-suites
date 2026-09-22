@@ -34,10 +34,11 @@ stop_containers() {
     echo -e "${YELLOW}Bringing down the Docker containers... ${NC}"
     docker compose \
       -f docker/compose.search.yaml \
+      -f docker/compose.search.milvus.yaml \
       -f docker/compose.smart-nvr.yaml \
-            -f docker/compose.telemetry.yaml \
-            -f docker/compose.rtsp-test.yaml \
-      down
+      -f docker/compose.metrics-manager.yaml \
+      -f docker/compose.rtsp-test.yaml \
+      down --remove-orphans
     if [ $? -ne 0 ]; then
         echo -e "${RED}ERROR: Failed to stop and remove containers.${NC}"
         return 1
@@ -95,7 +96,7 @@ elif [ "$1" = "--down" ]; then
 elif [ "$1" = "--clean-data" ]; then
     stop_containers || return 1
     echo -e "${YELLOW}Removing Docker volumes and networks created by the application... ${NC}"
-    docker volume rm docker_minio_data docker_pg_data docker_vdms_db docker_data_prep docker_mosquitto_data docker_mosquitto_log docker_redis_data docker_frigate_recordings docker_collector_signals data-prep minikube 2>/dev/null || true
+    docker volume rm docker_minio_data docker_pg_data docker_vdms_db docker_milvus_db docker_milvus_etcd docker_data_prep docker_dataprep-yolox-models docker_mosquitto_data docker_mosquitto_log docker_redis_data docker_frigate_recordings data-prep minikube 2>/dev/null || true
     docker network rm docker_live-video-network live-video-network 2>/dev/null || true
     echo -e "${GREEN}Clean operation completed successfully! ${NC}"
     return 0
@@ -104,20 +105,11 @@ fi
 export APP_HOST_PORT=${APP_HOST_PORT:-12345}
 export HOST_IP=$(get_host_ip)
 export TAG=${TAG:-latest}
+export ENABLE_METRICS_MANAGER=${ENABLE_METRICS_MANAGER:-true}
 
 # Stack-specific image tags (override-able via env vars)
 export VSS_STACK_TAG=${VSS_STACK_TAG:-$TAG}
 export SMART_NVR_STACK_TAG=${SMART_NVR_STACK_TAG:-$TAG}
-
-# Release-specific tag mapping for Live Video Search 1.0.0
-if [ "$TAG" = "1.0.0" ]; then
-    if [ -z "$VSS_STACK_TAG" ] || [ "$VSS_STACK_TAG" = "$TAG" ]; then
-        export VSS_STACK_TAG="1.3.2"
-    fi
-    if [ -z "$SMART_NVR_STACK_TAG" ] || [ "$SMART_NVR_STACK_TAG" = "$TAG" ]; then
-        export SMART_NVR_STACK_TAG="1.2.4"
-    fi
-fi
 
 [[ -n "$REGISTRY_URL" ]] && REGISTRY_URL="${REGISTRY_URL%/}/"
 [[ -n "$PROJECT_NAME" ]] && PROJECT_NAME="${PROJECT_NAME%/}/"
@@ -160,15 +152,39 @@ export POSTGRES_DB=${POSTGRES_DB:-video_summary_db}
 export VS_HOST_PORT=${VS_HOST_PORT:-7890}
 export VS_HOST=${VS_HOST:-video-search}
 export VS_ENDPOINT=http://${VS_HOST}:8000
-export VDMS_PIPELINE_MANAGER_UPLOAD=http://${PM_HOST}:3000
+export VIDEO_UPLOAD_ENDPOINT=http://${PM_HOST}:3000
 export VS_INDEX_NAME=${VS_INDEX_NAME:-video_frame_embeddings}
+if [ -z "$MULTIMODAL_EMBEDDING_MODEL" ]; then
+    echo -e "${RED}ERROR: MULTIMODAL_EMBEDDING_MODEL is not set in your shell environment.${NC}" >&2
+    return 1
+fi
+export MULTIMODAL_EMBEDDING_MODEL
 
-# VDMS / Embeddings
+# Vector database backend. Video Search delegates similarity search to the
+# backend-specific vector-retriever image for both supported backends.
+export VECTORDB_BACKEND=${VECTORDB_BACKEND:-vdms}
+if [ "$VECTORDB_BACKEND" != "vdms" ] && [ "$VECTORDB_BACKEND" != "milvus" ]; then
+    echo -e "${RED}ERROR: VECTORDB_BACKEND must be 'vdms' or 'milvus' (got '${VECTORDB_BACKEND}').${NC}" >&2
+    return 1
+fi
+export RETRIEVER_BACKEND=${VECTORDB_BACKEND}
+export VECTOR_RETRIEVER_HOST_PORT=${VECTOR_RETRIEVER_HOST_PORT:-6008}
+export VECTOR_RETRIEVER_MAX_TOP_K=${VECTOR_RETRIEVER_MAX_TOP_K:-1000}
+export VDB_METRIC_TYPE=${VDB_METRIC_TYPE:-IP}
+export VDB_INDEX_TYPE=${VDB_INDEX_TYPE:-FLAT}
+export VS_RETRIEVER_ENDPOINT=${VS_RETRIEVER_ENDPOINT:-http://vector-retriever:8000/query}
+if [ "$VECTORDB_BACKEND" = "milvus" ]; then
+    export MILVUS_HOST_PORT=${MILVUS_HOST_PORT:-19530}
+    export MILVUS_METRICS_HOST_PORT=${MILVUS_METRICS_HOST_PORT:-9091}
+    export MILVUS_URI=${MILVUS_URI:-http://milvus-standalone:19530}
+fi
+
+# Vector database / DataPrep / Embeddings
 export VDMS_VDB_HOST_PORT=${VDMS_VDB_HOST_PORT:-55555}
 export VDMS_VDB_HOST=${VDMS_VDB_HOST:-vdms-vector-db}
-export VDMS_DATAPREP_HOST_PORT=${VDMS_DATAPREP_HOST_PORT:-6016}
-export VDMS_DATAPREP_HOST=${VDMS_DATAPREP_HOST:-vdms-dataprep}
-export VDMS_DATAPREP_ENDPOINT=http://${VDMS_DATAPREP_HOST}:8000
+export MM_DATAPREP_HOST_PORT=${MM_DATAPREP_HOST_PORT:-6016}
+export MM_DATAPREP_HOST=${MM_DATAPREP_HOST:-multimodal-dataprep}
+export MM_DATAPREP_ENDPOINT=http://${MM_DATAPREP_HOST}:8000
 export DEFAULT_BUCKET_NAME=${DEFAULT_BUCKET_NAME:-vdms-bucket}
 export FRAME_INTERVAL=${FRAME_INTERVAL:-15}
 export ENABLE_OBJECT_DETECTION=${ENABLE_OBJECT_DETECTION:-true}
@@ -178,8 +194,10 @@ export ROI_CONSOLIDATION_IOU_THRESHOLD=${ROI_CONSOLIDATION_IOU_THRESHOLD:-0.2}
 export ROI_CONSOLIDATION_CLASS_AWARE=${ROI_CONSOLIDATION_CLASS_AWARE:-false}
 export ROI_CONSOLIDATION_CONTEXT_SCALE=${ROI_CONSOLIDATION_CONTEXT_SCALE:-0.2}
 export FRAMES_TEMP_DIR=${FRAMES_TEMP_DIR:-/tmp/dataprep}
-export EMBEDDING_PROCESSING_MODE=${EMBEDDING_PROCESSING_MODE:-sdk}
 export SDK_USE_OPENVINO=${SDK_USE_OPENVINO:-true}
+export EMBEDDING_BATCH_SIZE=${EMBEDDING_BATCH_SIZE:-32}
+export MAX_PARALLEL_WORKERS=${MAX_PARALLEL_WORKERS:-}
+export MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS=${MM_DATAPREP_ALLOW_DUPLICATE_UPLOADS:-true}
 export EMBEDDING_SERVER_PORT=${EMBEDDING_SERVER_PORT:-9777}
 export MULTIMODAL_EMBEDDING_HOST=${MULTIMODAL_EMBEDDING_HOST:-multimodal-embedding-serving}
 export MULTIMODAL_EMBEDDING_ENDPOINT=${MULTIMODAL_EMBEDDING_ENDPOINT:-http://${MULTIMODAL_EMBEDDING_HOST}:8000/embeddings}
@@ -199,25 +217,20 @@ export AGGREGATION_MIN_GAP=${AGGREGATION_MIN_GAP:-0}
 export AGGREGATION_MAX_RESULTS=${AGGREGATION_MAX_RESULTS:-20}
 export AGGREGATION_INITIAL_K=${AGGREGATION_INITIAL_K:-1000}
 export AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS=${AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS:-0}
+export AGGREGATION_PREFER_FULL_FRAME_SEEK=${AGGREGATION_PREFER_FULL_FRAME_SEEK:-true}
+export AGGREGATION_FULL_FRAME_SEEK_BAND=${AGGREGATION_FULL_FRAME_SEEK_BAND:-0.06}
+export VS_WATCH_BATCH_SIZE=${VS_WATCH_BATCH_SIZE:-10}
+export VS_BATCH_JOB_POLL_INTERVAL_SECONDS=${VS_BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
+export VS_BATCH_JOB_TIMEOUT_SECONDS=${VS_BATCH_JOB_TIMEOUT_SECONDS:-3600}
 
 # Per-component device selection (CPU default | GPU | NPU). Each component is
 # independent — parity with the Helm charts. No "baseline" device.
-#   DATAPREP_EMBEDDING_DEVICE → embedding in vdms-dataprep (EMBEDDING_PROCESSING_MODE=sdk)
-#   DATAPREP_DETECTION_DEVICE → YOLOX object detection in vdms-dataprep
-#   MME_EMBEDDING_DEVICE      → embedding in multimodal-embedding-serving (EMBEDDING_PROCESSING_MODE=api)
+#   DATAPREP_EMBEDDING_DEVICE → in-process embedding in multimodal-dataprep
+#   DATAPREP_DETECTION_DEVICE → YOLOX object detection in multimodal-dataprep
+#   MME_EMBEDDING_DEVICE      → query embedding used by vector-retriever
 export DATAPREP_EMBEDDING_DEVICE=${DATAPREP_EMBEDDING_DEVICE:-"CPU"}
 export DATAPREP_DETECTION_DEVICE=${DATAPREP_DETECTION_DEVICE:-"CPU"}
 export MME_EMBEDDING_DEVICE=${MME_EMBEDDING_DEVICE:-"CPU"}
-
-# Easy-button: put embedding on GPU. Mode-aware — targets the component that
-# actually runs embedding in the active EMBEDDING_PROCESSING_MODE.
-if [ "$ENABLE_EMBEDDING_GPU" = true ]; then
-    if [ "${EMBEDDING_PROCESSING_MODE}" = "api" ]; then
-        export MME_EMBEDDING_DEVICE=GPU
-    else
-        export DATAPREP_EMBEDDING_DEVICE=GPU
-    fi
-fi
 
 # Validates host accelerator availability and enforces OpenVINO when any component
 # targets GPU/NPU. Operates on the per-component device values (no baseline device).
@@ -281,7 +294,7 @@ else
 fi
 
 # YOLOX models
-export YOLOX_MODELS_VOLUME_NAME=${YOLOX_MODELS_VOLUME_NAME:-vdms-yolox-models}
+export YOLOX_MODELS_VOLUME_NAME=${YOLOX_MODELS_VOLUME_NAME:-dataprep-yolox-models}
 export YOLOX_MODELS_MOUNT_PATH=${YOLOX_MODELS_MOUNT_PATH:-/app/models/yolox}
 
 # Smart NVR settings
@@ -318,16 +331,26 @@ if [ "$1" = "--setenv" ]; then
     return 0
 fi
 
-APP_COMPOSE_FILE="-f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml -f docker/compose.telemetry.yaml"
+APP_COMPOSE_FILE="-f docker/compose.search.yaml -f docker/compose.smart-nvr.yaml"
+if [ "$ENABLE_METRICS_MANAGER" = "true" ]; then
+    APP_COMPOSE_FILE="$APP_COMPOSE_FILE -f docker/compose.metrics-manager.yaml"
+    echo -e "${GREEN}Metrics Manager enabled.${NC}"
+else
+    echo -e "${YELLOW}Metrics Manager disabled (set ENABLE_METRICS_MANAGER=true to enable).${NC}"
+fi
+if [ "$VECTORDB_BACKEND" = "milvus" ]; then
+    APP_COMPOSE_FILE="$APP_COMPOSE_FILE -f docker/compose.search.milvus.yaml"
+fi
 if [ "$1" = "--start-rtsp-test" ]; then
     APP_COMPOSE_FILE="$APP_COMPOSE_FILE -f docker/compose.rtsp-test.yaml"
 elif [ "$1" = "--start-usb-camera" ]; then
     APP_COMPOSE_FILE="$APP_COMPOSE_FILE -f docker/compose.usb-camera.yaml"
 fi
-FINAL_ARG="up -d" && [ "$2" = "config" ] && FINAL_ARG="config"
+FINAL_ARG="up -d --remove-orphans" && [ "$2" = "config" ] && FINAL_ARG="config"
 DOCKER_COMMAND="docker compose $APP_COMPOSE_FILE $FINAL_ARG"
 
 echo -e "${GREEN}Running Docker command: $DOCKER_COMMAND ${NC}"
+echo -e "${GREEN}Vector database backend: ${YELLOW}${VECTORDB_BACKEND}${GREEN}; retriever endpoint: ${YELLOW}${VS_RETRIEVER_ENDPOINT}${NC}"
 
 if [ "$2" = "config" ]; then
     eval "$DOCKER_COMMAND"

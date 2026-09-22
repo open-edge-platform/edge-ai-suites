@@ -5,11 +5,14 @@ import { getAudioDevices } from '../../services/api';
 interface MicrophoneSelectProps {
   selectedMicrophone: string;
   onChange: (microphone: string) => void;
+  /** Set while a session is starting: the choice has already been acted on. */
+  disabled?: boolean;
 }
 
 const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   selectedMicrophone,
-  onChange
+  onChange,
+  disabled = false
 }) => {
   const { t } = useTranslation();
   const [devices, setDevices] = useState<string[]>([]);
@@ -38,7 +41,7 @@ const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   if (loading) {
     return (
       <select disabled>
-        <option>{t('common.loading', 'Loading...')}</option>
+        <option>{t('settings.loadingDevices')}</option>
       </select>
     );
   }
@@ -46,7 +49,7 @@ const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   if (devices.length === 0) {
     return (
       <select disabled>
-        <option>{t('settings.noMicrophonesFound', 'No microphones found')}</option>
+        <option>{t('settings.noMicrophonesFound')}</option>
       </select>
     );
   }
@@ -58,6 +61,7 @@ const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   return (
     <select
       value={currentValue}
+      disabled={disabled}
       onChange={e => {
         const selectedValue = e.target.value;
         console.log('🎤 Microphone selected:', selectedValue);
@@ -65,7 +69,7 @@ const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
       }}
       id="microphone"
     >
-      <option value="">{t('settings.selectMicrophone', 'Select a microphone...')}</option>
+      <option value="">{t('settings.selectMicrophone')}</option>
       {devices.map((device, index) => {
         const storageValue = getStorageValue(device);
         const displayName = getDisplayName(device);

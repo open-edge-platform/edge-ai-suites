@@ -45,18 +45,19 @@ This assumes the root directory on the server matches the `${SAMPLE_APP}` variab
 - [ ] `src/dlstreamer-pipeline-server/models/vehicle_model_latest/`
 - [ ] `src/dlstreamer-pipeline-server/models/licenseplate_cropped/`
 
-## 6. SceneScape Manager (Web/PGServer)
+## 6. Scenescape Manager (Web/PGServer)
 
 - [ ] `src/webserver/user_access_config.json`
 - [ ] `src/webserver/smart-intersection-ri.tar.bz2` (Database dump)
 
-## 7. SceneScape Controller
+## 7. Scenescape Controller
 
 - [ ] `src/controller/tracker-config.json`
 
 ## 8. Secrets & Certificates
 
-*Note: Only download these if you need to replicate the exact security environment. For documentation purposes, just knowing they exist is usually enough, but `supass` might be needed for login.*
+> [!NOTE]
+> Only download these if you need to replicate the exact security environment. For documentation purposes, just knowing they exist is usually enough, but `supass` might be needed for login.
 
 - [ ] `src/secrets/certs/scenescape-ca.pem`
 - [ ] `src/secrets/certs/scenescape-broker.crt`

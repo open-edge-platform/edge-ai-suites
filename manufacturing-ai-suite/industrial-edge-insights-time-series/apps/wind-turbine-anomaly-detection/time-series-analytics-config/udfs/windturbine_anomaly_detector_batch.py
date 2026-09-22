@@ -9,7 +9,7 @@ the windturbine speed and generated power data. """
 
 import os
 import logging
-import pickle
+import pickle  # nosec B403 - loads trusted model file from operator-configured MODEL_PATH, not untrusted input
 import time
 import math
 import warnings
@@ -57,7 +57,7 @@ class AnomalyDetectorHandler(Handler):
         # read the saved model and load it
         def load_model(filename):
             with open(filename, 'rb') as f:
-                model = pickle.load(f)
+                model = pickle.load(f)  # nosec B301 - trusted model artifact from operator-configured MODEL_PATH
             return model
         model_path = os.getenv('MODEL_PATH')
         model_path = os.path.abspath(model_path)

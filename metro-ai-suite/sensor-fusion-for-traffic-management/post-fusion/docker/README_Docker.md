@@ -34,7 +34,7 @@ sudo -E apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plug
 
 3. Set proxy(Optional).
 
-Note you may need to set proxy for docker.
+You may need to set proxy for docker.
 
 ```bash
 sudo mkdir -p /etc/systemd/system/docker.service.d
@@ -103,14 +103,15 @@ docker pull intel/tfcc:2025.2.0-ubuntu24
 
 ### Build and run docker image through scripts
 
-> **Note that the default username is `tfcc` and password is `intel` in docker image.**
+> [!NOTE]
+> The default username is `tfcc` and password is `intel` in docker image.
 
 #### Build docker image
 
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:2025.2.0-ubuntu24> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
+bash build_docker.sh <IMAGE_TAG, default tfcc:2025.2.0-ubuntu24> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04>
 ```
 
 Example:
@@ -133,7 +134,7 @@ Example:
 ```bash
 cd $PROJ_DIR/docker
 bash run_docker.sh tfcc:2025.2.0-ubuntu24 false
-# After the run is complete, the container ID will be output, or you can view it through docker ps 
+# After the run is complete, the container ID will be output, or you can view it through docker ps
 ```
 
 #### Enter docker
@@ -164,7 +165,8 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 
 ### Build and run docker image through docker compose
 
-> **Note that the default username is `tfcc` and password is `intel` in docker image.**
+> [!NOTE]
+> The default username is `tfcc` and password is `intel` in docker image.
 
 Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 
@@ -207,12 +209,13 @@ cd $PROJ_DIR/docker
 docker compose up tfcc -d
 ```
 
-Note if you need NPU support, for example, on MTL platform please run the command bellow:
-
-```bash
-cd $PROJ_DIR/docker
-docker compose up tfcc-npu -d
-```
+> [!NOTE]
+> If you need NPU support, for example, on MTL platform please run the command bellow:
+>
+> ```bash
+> cd $PROJ_DIR/docker
+> docker compose up tfcc-npu -d
+> ```
 
 #### Enter docker
 Usage:
@@ -245,7 +248,7 @@ copy dataset
 docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 ```
 
-> **Caution:**
+> [!CAUTION]
 >
 > This container image is intended for demo purposes only and not intended for production use.
 >
@@ -269,7 +272,8 @@ What it does:
 3. Pulls the image: `docker pull intel/tfcc:2025.2.0-ubuntu24`.
 4. Starts a container by calling `docker/run_docker.sh` (same settings as manual docker run), verifies build outputs exist under `build/bin`, then runs `test/autotest.sh` inside the container.
 
-Note: The script adds `video`/`render` access by passing numeric group IDs (`--group-add <gid>`), so it does not depend on the container image having `video` or `render` group names defined.
+> [!NOTE]
+> The script adds `video`/`render` access by passing numeric group IDs (`--group-add <gid>`), so it does not depend on the container image having `video` or `render` group names defined.
 
 Outputs:
 

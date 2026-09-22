@@ -302,6 +302,9 @@ function Write-JsonResponse {
 
 Initialize-NpuCounterPath
 Add-MetricSample
+# Hardware facts are static; cache lazily on first /platform-info request so the
+# slow WMI/PnP enumeration runs once instead of on every call.
+$script:PlatformInfo = $null
 
 $prefix = "http://$BindAddress`:$Port/"
 $listener = [System.Net.HttpListener]::new()
@@ -354,7 +357,8 @@ while ($listener.IsListening) {
                 }
             }
             "/platform-info" {
-                Write-JsonResponse -Context $context -StatusCode 200 -Body (Get-PlatformInfo)
+                if ($null -eq $script:PlatformInfo) { $script:PlatformInfo = Get-PlatformInfo }
+                Write-JsonResponse -Context $context -StatusCode 200 -Body $script:PlatformInfo
             }
             default {
                 Write-JsonResponse -Context $context -StatusCode 404 -Body @{ error = "not found"; path = $path }

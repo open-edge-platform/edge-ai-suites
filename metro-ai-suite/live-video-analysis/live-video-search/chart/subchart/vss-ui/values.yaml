@@ -12,6 +12,7 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
+  pullPolicy: ''
 
 images:
   vssUi:

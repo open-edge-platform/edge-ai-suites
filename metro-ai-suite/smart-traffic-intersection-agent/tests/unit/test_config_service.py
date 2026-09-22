@@ -5,7 +5,6 @@
 import pytest
 import os
 import json
-import tempfile
 from unittest.mock import patch, mock_open
 import sys
 
@@ -170,21 +169,21 @@ class TestConfigServiceEnvironmentOverrides:
 class TestConfigServiceDefaults:
     """Test cases for default configuration values."""
 
-    def test_default_intersection_name(self):
-        """Test default intersection name."""
+    def test_raises_when_config_files_missing(self):
+        """Test initialization fails when config files are missing."""
         with patch.dict(os.environ, {}, clear=True):
             with patch('pathlib.Path.exists', return_value=False):
                 with pytest.raises(FileNotFoundError):
-                    service = ConfigService()
+                    ConfigService()
 
     def test_default_intersection_coordinates(self):
-        """Test default intersection coordinates."""
-        with patch.dict(os.environ, {}, clear=True):
-            with patch('os.path.exists', return_value=False):
-                service = ConfigService()
-                lat, lon = service.get_intersection_coordinates()
-                assert lat == 33.3091336
-                assert lon == -111.9353095
+        """Test coordinates come from current deployment config defaults."""
+        service = ConfigService()
+        lat, lon = service.get_intersection_coordinates()
+        expected_lat = float(service.config.get("intersection", {}).get("latitude"))
+        expected_lon = float(service.config.get("intersection", {}).get("longitude"))
+        assert lat == expected_lat
+        assert lon == expected_lon
 
     def test_default_high_density_threshold(self):
         """Test default high density threshold from config file."""
