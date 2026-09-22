@@ -8,6 +8,9 @@ services:
   dlstreamer-pipeline-server:
     runtime: io.containerd.kata.v2
     privileged: false
+    devices: !override []
+    annotations:
+      io.katacontainers.config.hypervisor.default_memory: "4096"
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root
       - ./tc-resolv.conf:/etc/resolv.conf:ro
@@ -15,10 +18,10 @@ services:
       resources:
         limits:
           cpus: '6'
-          memory: 8G
+          memory: 4G
         reservations:
           cpus: '4'
-          memory: 4G
+          memory: 2G
 
   tc-dns-relay:
     image: coredns/coredns:1.14.3
