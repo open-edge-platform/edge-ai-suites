@@ -57,6 +57,49 @@ print_header() {
 }
 
 MQTT_SECRETS_FILE="./resources/mqtt-secrets"
+BROKERS_CONFIG_FILE="${BROKERS_CONFIG_FILE:-./resources/broker-config/brokers.yaml}"
+SI_MAX_NODES=20
+declare -A _SI_YAML_RTSP
+
+# Parses one "- id: x" / "  rtsp_host: y" block into _SI_YAML_RTSP[node].
+_si_apply_broker_host() {
+    local id_re='^si([0-9]+)$'
+    local host_re='^[A-Za-z0-9._:-]+$'
+    [[ "${_si_cur_id}" =~ ${id_re} ]] || return 0
+    local node="${BASH_REMATCH[1]}"
+    [ "${node}" -ge 1 ] && [ "${node}" -le "${SI_MAX_NODES}" ] || return 0
+    [[ -n "${_si_cur_host}" && "${_si_cur_host}" =~ ${host_re} ]] || return 0
+    _SI_YAML_RTSP["${node}"]="${_si_cur_host}"
+    [ "${node}" -gt "${_si_max_node}" ] && _si_max_node="${node}"
+}
+
+# Rebuilds _SI_YAML_RTSP/_SI_YAML_NODE_COUNT from brokers.yaml; env exports (checked
+# separately at point of use) always take priority over these.
+load_si_rtsp_from_brokers() {
+    _SI_YAML_RTSP=()
+    unset _SI_YAML_NODE_COUNT
+    [ -f "${BROKERS_CONFIG_FILE}" ] || return 0
+
+    local line _si_cur_id="" _si_cur_host="" _si_max_node=0
+    local list_item_re='^[[:space:]]*-[[:space:]]*id:[[:space:]]*["'"'"']?([A-Za-z0-9_-]+)["'"'"']?[[:space:]]*$'
+    local host_line_re='^[[:space:]]*rtsp_host:[[:space:]]*["'"'"']?([A-Za-z0-9._:-]+)["'"'"']?[[:space:]]*$'
+
+    while IFS= read -r line || [ -n "${line}" ]; do
+        if [[ "${line}" =~ ${list_item_re} ]]; then
+            local next_id="${BASH_REMATCH[1]}"
+            _si_apply_broker_host
+            _si_cur_id="${next_id}"
+            _si_cur_host=""
+        elif [[ "${line}" =~ ${host_line_re} ]]; then
+            _si_cur_host="${BASH_REMATCH[1]}"
+        fi
+    done < "${BROKERS_CONFIG_FILE}"
+    _si_apply_broker_host
+
+    [ "${_si_max_node}" -gt 0 ] && _SI_YAML_NODE_COUNT="${_si_max_node}"
+}
+
+load_si_rtsp_from_brokers
 
 resolve_mqtt_credentials() {
     if [[ -n "${MQTT_USER}" && -n "${MQTT_PASSWORD}" ]]; then
@@ -97,17 +140,21 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
-# Generate Frigate config for scenescape mode (si1 uses env var or auto-detect; si2+ use env var or prompt)
+# Generate Frigate config for scenescape mode; si1..siN RTSP hosts come from brokers.yaml/SI{N}_RTSP_HOST only (si1 falls back to local auto-detect for `start`).
 generate_scenescape_config() {
     local config_file="./resources/frigate-config/config.yml"
     local port="${RTSP_STREAM_PORT:-8554}"
 
-    local total_nodes
-    read -r -p "$(echo -e "${BLUE}How many SI nodes total? [1]: ${NC}")" total_nodes
-    total_nodes="${total_nodes:-1}"
+    local total_nodes="${SI_NODE_COUNT:-${_SI_YAML_NODE_COUNT:-1}}"
+    if [ "${#_SI_YAML_RTSP[@]}" -gt 0 ]; then
+        print_info "Using SI RTSP hosts from ${BROKERS_CONFIG_FILE}"
+    fi
     if ! [[ "${total_nodes}" =~ ^[0-9]+$ ]] || [ "${total_nodes}" -lt 1 ]; then
-        print_warning "Invalid input, using 1 SI node."
+        print_warning "Invalid SI_NODE_COUNT, using 1 SI node."
         total_nodes=1
+    elif [ "${total_nodes}" -gt "${SI_MAX_NODES}" ]; then
+        print_warning "SI node count ${total_nodes} exceeds the maximum of ${SI_MAX_NODES}, capping."
+        total_nodes="${SI_MAX_NODES}"
     fi
 
     # Copy template and add cameras section
@@ -120,15 +167,15 @@ generate_scenescape_config() {
         local rtsp_ip
 
         if [ "${node_num}" -eq 1 ]; then
-            rtsp_ip="${SI_RTSP_HOST:-}"
+            rtsp_ip="${SI_RTSP_HOST:-${_SI_YAML_RTSP[1]:-}}"
             if [ -z "${rtsp_ip}" ]; then
                 if [ "${SCENESCAPE_NVR_ONLY}" = "true" ]; then
-                    # NVR-only (System 2): SI is remote, prompt for its IP
-                    read -r -p "$(echo -e "${BLUE}  RTSP stream IP for si1: ${NC}")" rtsp_ip
-                else
-                    # Single-node (start): SI is local, auto-detect
-                    rtsp_ip="$(get_host_ip)"
+                    # NVR-only (System 2): SI is remote, IP must come from brokers.yaml or SI_RTSP_HOST
+                    print_error "Please populate ${BROKERS_CONFIG_FILE} with rtsp_host for id 'si1' to add its RTSP stream to Frigate and its MQTT broker subscription."
+                    return 1
                 fi
+                # Single-node (start): SI is local, auto-detect
+                rtsp_ip="$(get_host_ip)"
             fi
             if [ -z "${rtsp_ip}" ]; then
                 print_error "RTSP IP for si1 is required."
@@ -136,12 +183,9 @@ generate_scenescape_config() {
             fi
         else
             local env_var="SI${node_num}_RTSP_HOST"
-            rtsp_ip="${!env_var:-}"
+            rtsp_ip="${!env_var:-${_SI_YAML_RTSP[$node_num]:-}}"
             if [ -z "${rtsp_ip}" ]; then
-                read -r -p "$(echo -e "${BLUE}  RTSP stream IP for ${si_id}: ${NC}")" rtsp_ip
-            fi
-            if [ -z "${rtsp_ip}" ]; then
-                print_error "RTSP IP for ${si_id} is required. Skipping ${si_id}."
+                print_warning "Please populate ${BROKERS_CONFIG_FILE} with rtsp_host for id '${si_id}' to add its RTSP stream to Frigate and its MQTT broker subscription. Skipping ${si_id}."
                 continue
             fi
         fi
@@ -185,7 +229,9 @@ configure_scenescape_setup() {
 
         local metro_recipe_dir
         metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
-        local rtsp_ip="${SI_RTSP_HOST:-$(get_host_ip)}"
+        # Keep in sync with si1's lookup in generate_scenescape_config so the DL Streamer's
+        # advertised IP always matches what Frigate is configured to pull from.
+        local rtsp_ip="${SI_RTSP_HOST:-${_SI_YAML_RTSP[1]:-$(get_host_ip)}}"
 
         if [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
             # Configure SI stack: compose + DL Streamer
@@ -197,7 +243,9 @@ configure_scenescape_setup() {
         fi
 
         if [ "${SCENESCAPE_SI_ONLY}" != "true" ]; then
-            generate_scenescape_config
+            if ! generate_scenescape_config; then
+                return 1
+            fi
         fi
 
         print_success "Scenescape configuration activated"
@@ -385,11 +433,11 @@ start_si_services() {
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
     echo -e "  ${CYAN}export VSS_IP=<vss_ip>${NC}"
     echo -e "  ${CYAN}export VSS_PORT=<vss_port>   # optional, default 12345${NC}"
-    echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # will prompt for SI RTSP IP(s)"
+    echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # reads SI RTSP IP(s) from brokers.yaml/SI_RTSP_HOST"
     echo ""
     print_info "SI1 RTSP: ${CYAN}${nvr_rtsp_host}:${RTSP_STREAM_PORT}${NC}  |  SI1 MQTT: ${CYAN}${HOST_IP}:1883${NC}"
     print_info "On System 2, add the MQTT broker via POST /brokers/ API (or edit brokers.yaml before running start-nvr)."
-    echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=${nvr_rtsp_host}   # skip si1 RTSP prompt${NC}"
+    echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=${nvr_rtsp_host}   # skip editing brokers.yaml for si1${NC}"
     echo -e "  ${CYAN}# Optional: export RTSP_STREAM_PORT=<port>             # default ${RTSP_STREAM_PORT}${NC}"
 }
 
@@ -463,10 +511,10 @@ show_help() {
     echo -e "  ${YELLOW}restart${NC}        - Single-node: restart everything"
     echo -e "  ${GREEN}start-streamer${NC} - RTSP-only: start MediaMTX streamer "
     echo -e "  ${RED}stop-streamer${NC}  - RTSP-only: stop MediaMTX streamer"
-  echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI services (starts local RTSP streamer unless SI_RTSP_HOST is set)"
-  echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI services (prompts to stop local RTSP streamer if running)"
-  echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (prompts for SI RTSP IP(s); MQTT broker via API or brokers.yaml)"
-  echo -e "  ${RED}stop-nvr${NC}       - Distributed Node System 2: stop SmartNVR"
+    echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI services (starts local RTSP streamer unless SI_RTSP_HOST is set)"
+    echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI services (prompts to stop local RTSP streamer if running)"
+    echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (SI RTSP IP(s) from brokers.yaml/SI_RTSP_HOST; MQTT broker via API or brokers.yaml)"
+    echo -e "  ${RED}stop-nvr${NC}       - Distributed Node System 2: stop SmartNVR"
     echo -e "  ${BLUE}help${NC}           - Display this help message"
     echo ""
     echo -e "${WHITE}Examples:${NC}"
@@ -482,8 +530,8 @@ show_help() {
     echo -e "  # Distributed Node — System 2 (SmartNVR):${NC}"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
     echo -e "  ${CYAN}export VSS_IP=<ip>   # VSS_PORT optional, default 12345${NC}"
-    echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # prompts for SI RTSP IP(s) interactively"
-    echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=<sys1_ip>  to skip si1 prompt${NC}"
+    echo -e "  ${CYAN}source setup.sh start-nvr${NC}   # reads SI RTSP IP(s) from brokers.yaml/SI_RTSP_HOST"
+    echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=<sys1_ip>  to skip editing brokers.yaml for si1${NC}"
     echo ""
 }
 

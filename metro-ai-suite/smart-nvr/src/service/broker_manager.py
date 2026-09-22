@@ -112,8 +112,12 @@ async def _has_scenescape(request=None) -> bool:
 
 async def load_yaml_brokers(path: str = BROKERS_CONFIG_PATH, request=None):
     if os.path.exists(path):
-        with open(path) as f:
-            data = yaml.safe_load(f) or {}
+        try:
+            with open(path) as f:
+                data = yaml.safe_load(f) or {}
+        except yaml.YAMLError as e:
+            logger.error("Invalid YAML in %s, skipping broker sync: %s", path, e)
+            data = {}
         yaml_entries = data.get("brokers") or []
         yaml_ids = {e["id"] for e in yaml_entries}
         if yaml_ids:
@@ -143,7 +147,8 @@ async def load_yaml_brokers(path: str = BROKERS_CONFIG_PATH, request=None):
 
 _YAML_HEADER = (
     "# Scenescape-mode MQTT brokers. Active when NVR_SCENESCAPE=true.\n"
-    "# host = MQTT broker IP only. RTSP is configured separately in the Frigate config.\n"
+    "# host = MQTT broker IP only.\n"
+    "# rtsp_host = optional SI RTSP stream IP, read by setup.sh to build the Frigate camera list.\n"
     "# Broker id must match the SI node prefix in Frigate camera names (e.g. si1 -> si1-camera1).\n"
 )
 
