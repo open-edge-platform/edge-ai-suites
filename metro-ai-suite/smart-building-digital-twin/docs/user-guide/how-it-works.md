@@ -16,9 +16,9 @@ The sample application provides:
 The sample application has the following architecture elements:
 
 - Video and sensor sources
-- Scenescape components for MediaMTX media router, Deep Learning Streamer (DL Streamer),
+- Scenescape components for MediaMTX media router, the DL Streamer Pipeline Server (DLSPS),
   scene controller, and MQTT broker
-- An analytics container that runs narrator and dashboard services
+- A scene-narrator container that runs narrator and dashboard services
 - A browser dashboard that shows scene state, narrator feed, and event detail
 
 ```mermaid
@@ -31,19 +31,19 @@ flowchart BT
     subgraph ss["Scenescape"]
         direction BT
         MTX["MediaMTX<br/>RTSP server"]
-        DLS["DLStreamer<br/>YOLOX-S or ATSS-MobileNetV2 detection"]
+        DLSPS["DLSPS<br/>YOLOX-S or ATSS-MobileNetV2 detection"]
         CTRL["scene controller<br/>track fusion"]
         BROKER["MQTT broker"]
-        MTX --> DLS -->|detections| BROKER
+        MTX --> DLSPS -->|detections| BROKER
         CTRL -->|tracked objects| BROKER
         BROKER --> CTRL
     end
 
-    subgraph analytics["Analytics Container"]
+    subgraph narrsvc["scene-narrator container"]
         direction BT
         NAR["narrator.py<br/>event narration + alerts"]
         DASH["dashboard.py<br/>FastAPI"]
-        NAR --> DASH
+        NAR -.->|in-process call| DASH
     end
 
     subgraph ui["Browser  DASHBOARD_URL"]
@@ -57,7 +57,7 @@ flowchart BT
     BROKER -->|MQTT tracks| NAR
     DASH -->|SSE /stream/scene-state| STATE
     DASH -->|SSE /stream/narrator| FEED
-    FEED --> DETAIL
+    FEED -.->|user selects entry - client-side| DETAIL
 
     classDef source  fill:#2d4a6b,stroke:#4a7aab,color:#cce0ff
     classDef infra   fill:#3a3a5c,stroke:#6060a0,color:#d0d0ff
@@ -65,7 +65,7 @@ flowchart BT
     classDef browser fill:#4a3000,stroke:#c08000,color:#ffe0a0
 
     class TS,SJSON source
-    class MTX,DLS,CTRL,BROKER infra
+    class MTX,DLSPS,CTRL,BROKER infra
     class NAR,DASH app
     class STATE,FEED,DETAIL browser
 ```
