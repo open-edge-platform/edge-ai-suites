@@ -10,7 +10,7 @@ Use `num_of_streams` in the deployment command:
 - `num_of_streams=<NUMBER_OF_STREAMS>`: Number of parallel ingestion streams.
 - Example: `num_of_streams=3` starts three concurrent streams.
 
-> **Note:**
+> [!NOTE]
 >
 > - If `num_of_streams` is not provided, the default value is `1`.
 > - `up_opcua_ingestion` is supported only for the `wind-turbine-anomaly-detection` sample app.

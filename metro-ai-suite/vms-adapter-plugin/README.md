@@ -27,8 +27,9 @@ dashboard into a single Docker Compose deployment.
 
 ```
 
-> **Note:** Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
-  email us at cities@intel.com to discuss integration with this plugin.
+> [!NOTE]
+> Currently, only NX Witness and Milestone Xprotect are supported. Other VMS partners,
+> email us at cities@intel.com to discuss integration with this plugin.
 
 ## Documentation
 

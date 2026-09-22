@@ -69,7 +69,7 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
    unzip MH_04_difficult.zip -d MH04
    ```
 
-   > **Note:**
+   > [!NOTE]
    > This demo uses `MH_04_difficult dataset`. If you want to try other dataset, you may download them from the link:
    > <https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets>.
 
@@ -83,7 +83,7 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
    /opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
    ```
 
-> **Note:**
+> [!NOTE]
 > If you use other datasets other than `MH_04_difficult`, you should make sure you update
 > the command above with the correct name of dataset you use.
 

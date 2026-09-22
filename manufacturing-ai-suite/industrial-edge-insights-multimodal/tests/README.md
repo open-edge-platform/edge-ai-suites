@@ -11,7 +11,8 @@
 
 2. For Docker-related test cases, run the following commands:
 
-   > **Note**: Docker and Docker Compose must be installed as prerequisites.
+   > [!NOTE]
+   > Docker and Docker Compose must be installed as prerequisites.
 
    ```sh
    pytest -v -s --html=docker_multimodal_report.html test_docker_deployment_multimodal.py
@@ -19,7 +20,8 @@
 
 3. For Helm-related test cases, run the following commands:
 
-   > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites.
+   > [!NOTE]
+   > A Kubernetes cluster and Helm must be installed as prerequisites.
 
    ```sh
    pytest -v -s --html=helm_multimodal_report.html test_helm_deployment_multimodal.py

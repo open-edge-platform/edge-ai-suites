@@ -17,8 +17,9 @@ own image classification or object attribute recognition CNN model that can be p
 * **description**: *Required*. Describe model information.
 * **shared_postproc**: *Optional*. Describe post processing related information to be shared with each output layer, such as: converter, method, activation, layer_name, attribute_name, labels, etc. Can be optional if you would like to write all the params in `output_postproc` field. More details can be found in [sec [1] shared_postproc](#1-shared_postproc).
 * **output_postproc**: *Optional*. This field describes post processing parameters for every output layer, and inherit all params from `shared_postproc` field. More details can be found in [sec [2] output_postproc](#2-output_postproc).
-> NOTE: at least one of `shared_postproc` or `output_postproc` should be specified.
->
+
+  > [!NOTE]
+  > At least one of `shared_postproc` or `output_postproc` should be specified.
 
 ## **[1] shared_postproc**
 This field is designed to define the post processing parameters. Here's the Json Syntax for your reference:
@@ -63,38 +64,41 @@ This field is designed to define the post processing parameters for each output 
     ...
 ]
 ```
+
 * All the fields are shared with the ones in [sec [1] shared_postproc](#1-shared_postproc)
-> NOTE: since this field is configured for each output layer, the length should be the same with output layers num.
->
-> 
-An example of this field from [vehicle-attributes-recognition-barrier-0039.model_proc.json](./vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.model_proc.json):
-```Json
-"output_postproc": [
-    {
-        "layer_name": "color",
-        "attribute_name": "color",
-        "labels": [
-            "white",
-            "gray",
-            "yellow",
-            "red",
-            "green",
-            "blue",
-            "black"
-        ]
-    },
-    {
-        "layer_name": "type",
-        "attribute_name": "type",
-        "labels": [
-            "car",
-            "bus",
-            "truck",
-            "van"
-        ]
-    }
-]
-```
+
+  > [!NOTE]
+  > Since this field is configured for each output layer, the length should be the same with output layers num.
+
+
+  An example of this field from [vehicle-attributes-recognition-barrier-0039.model_proc.json](./vehicle-attributes-recognition-barrier-0039/  vehicle-attributes-recognition-barrier-0039.model_proc.json):
+  ```json
+  "output_postproc": [
+      {
+          "layer_name": "color",
+          "attribute_name": "color",
+          "labels": [
+              "white",
+              "gray",
+              "yellow",
+              "red",
+              "green",
+              "blue",
+              "black"
+          ]
+      },
+      {
+          "layer_name": "type",
+          "attribute_name": "type",
+          "labels": [
+              "car",
+              "bus",
+              "truck",
+              "van"
+          ]
+      }
+  ]
+  ```
 
 ## [3] Write model_proc.json
 We use one function node named `ClassificationNode` to infer with both classification model and attributes models, the difference between these two is mainly the number of output layers. So we can define a specific model_proc.json file for difference models through configuring `output_postproc` field.

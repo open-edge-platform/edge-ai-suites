@@ -65,7 +65,7 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 ia-mqtt-publisher microservice:
 ===============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF License
 
 2. requirements.txt
@@ -80,7 +80,7 @@ paho-mqtt==1.4.0
 
 License-Identifier: BSD License
 numpy==2.3.5
-pandas==2.3.1
+pandas==2.3.3
 python-dateutil==2.9.0.post0
 ----------------------------------------------------------------------
 
@@ -91,10 +91,11 @@ six==1.17.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
+
 ia-weld-data-simulator:
 ===============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF-2.0
 
 
@@ -104,11 +105,11 @@ numpy==2.2.6
 ----------------------------------------------------------------------
 
 License-Identifier: BSD-3-Clause
-pandas==2.3.2
+pandas==2.3.3
 ----------------------------------------------------------------------
 
 License-Identifier: Apache-2.0
-opencv-python==4.12.0.88
+opencv-python==5.0.0.93
 tzdata==2026.3
 ----------------------------------------------------------------------
 
@@ -124,12 +125,14 @@ License-Identifier: MIT
 pip==26.2.1
 pytz==2026.3.post1
 six==1.17.0
+
 ---------------------------------------------------------------------------------------------------------------------------
+
 
 ia-fusion-analytics:
 ===============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF-2.0
 
 2. requirements.txt
@@ -191,10 +194,11 @@ pip==26.2.1
 
 ---------------------------------------------------------------------------------------------------------------------------
 
+
 ia-insights-workbench:
 ===============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF-2.0
 
 2. requirements.txt
@@ -216,10 +220,11 @@ Pillow==12.3.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
+
 multimodal-agentic-ui:
 ===============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF-2.0
 
 2. requirements.txt
@@ -243,8 +248,9 @@ python-multipart==0.0.20
 
 ---------------------------------------------------------------------------------------------------------------------------
 
+
 classification-training/requirements.txt
-================================================================
+================================================
 License-Identifier: Apache-2.0
 scikit-learn-intelex==2025.11.0
 ----------------------------------------------------------------------
@@ -260,8 +266,9 @@ numpy==2.2.6
 
 ---------------------------------------------------------------------------------------------------------------------------
 
+
 vlm-fine-tuning/requirements.txt
-================================================================
+================================================
 License-Identifier: Apache-2.0
 accelerate==1.11.0
 datasets==5.0.0
@@ -281,6 +288,7 @@ License-Identifier: HPND
 pillow==12.0.0
 
 ---------------------------------------------------------------------------------------------------------------------------
+
 
 Dataset:
 ========

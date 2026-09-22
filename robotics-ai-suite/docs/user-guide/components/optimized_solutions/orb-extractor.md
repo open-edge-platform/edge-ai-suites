@@ -49,7 +49,8 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
 ### OpenCV API Tutorial
 
-> **Note:** This tutorial can be run both inside and outside a Docker image. It assumes that the `liborb-lze-dev` Deb package is installed and the user has copied the tutorial directory from `/opt/intel/orb_lze/samples/` to a user-writable directory.
+> [!NOTE]
+> This tutorial can be run both inside and outside a Docker image. It assumes that the `liborb-lze-dev` Deb package is installed and the user has copied the tutorial directory from `/opt/intel/orb_lze/samples/` to a user-writable directory.
 
 1. Prepare the environment:
 
@@ -110,7 +111,8 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 
    ![ORB extraction output](images/orb_extract_out.jpg "orb extraction output")
 
-   > **Note:** You can specify the number of images per thread and the number of threads to execute. You can process multiple image inputs within a single thread of the extract API, or process one or more image inputs using multiple threads with extract API calls.
+   > [!NOTE]
+   > You can specify the number of images per thread and the number of threads to execute. You can process multiple image inputs within a single thread of the extract API, or process one or more image inputs using multiple threads with extract API calls.
 
 ## Use the OpenCV-free Library
 
@@ -127,7 +129,8 @@ The GPU orb-extractor feature OpenCV-free library provides similar features, exc
 
 2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/user-guide/software_references/amr/sources/sample/main.cpp) to read the comments for the code.
 
-   > **Note:** Refer to the [OpenCV API tutorial](#opencv-api-tutorial) for details on using the orb-extractor feature library API.
+   > [!NOTE]
+   > Refer to the [OpenCV API tutorial](#opencv-api-tutorial) for details on using the orb-extractor feature library API.
 
 3. Build the code:
 
@@ -181,7 +184,8 @@ The GPU orb-extractor feature OpenCV-free library provides similar features, exc
 
    ![ORB extraction output](images/orb_extract_out.jpg "orb extraction output")
 
-   > **Note:** You can specify the number of images per thread and the number of threads to execute.
+   > [!NOTE]
+   > You can specify the number of images per thread and the number of threads to execute.
    > You can process multiple image inputs within a single thread of the extract API, or process one or more image inputs using multiple threads with extract API calls.
 
 ## Limitations and Troubleshooting

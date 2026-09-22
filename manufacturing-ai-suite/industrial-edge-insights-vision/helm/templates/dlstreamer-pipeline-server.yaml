@@ -107,9 +107,9 @@ spec:
         - name: S3_STORAGE_PORT
           value: "{{ $.Values.env.S3_STORAGE_PORT }}"
         - name: S3_STORAGE_USER
-          value: "{{ $.Values.env.MINIO_ACCESS_KEY }}"
+          value: "{{ $.Values.env.S3_STORAGE_USERNAME }}"
         - name: S3_STORAGE_PASS
-          value: "{{ $.Values.env.MINIO_SECRET_KEY }}"
+          value: "{{ $.Values.env.S3_STORAGE_PASSWORD }}"
         - name: ENABLE_OPEN_TELEMETRY
           value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
         - name: OTEL_COLLECTOR_HOST

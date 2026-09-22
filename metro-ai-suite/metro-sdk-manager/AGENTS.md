@@ -47,7 +47,8 @@ metro-sdk-manager/
 └── AGENTS.md                          # This file
 ```
 
-> **Note:** Files such as `Makefile`, `requirements.txt`, `VERSION`, `dict.txt`, `docconf/`, `docs/conf.py`, and `docs/substitutions.txt` are generated/managed by the CI pipeline and listed in `.gitignore`. They are not tracked in this repo.
+> [!NOTE]
+> Files such as `Makefile`, `requirements.txt`, `VERSION`, `dict.txt`, `docconf/`, `docs/conf.py`, and `docs/substitutions.txt` are generated/managed by the CI pipeline and listed in `.gitignore`. They are not tracked in this repo.
 
 ## Tech Stack
 
@@ -62,7 +63,8 @@ metro-sdk-manager/
 
 ## Core Commands
 
-> **Note:** The `Makefile`, `requirements.txt`, and Sphinx config files are provided by CI and are gitignored.
+> [!NOTE]
+> The `Makefile`, `requirements.txt`, and Sphinx config files are provided by CI and are gitignored.
 > Build and lint commands (`make build`, `make lint`, etc.) are only available in the CI pipeline.
 > Locally, you can run the install scripts and lint with standalone tools as shown below.
 

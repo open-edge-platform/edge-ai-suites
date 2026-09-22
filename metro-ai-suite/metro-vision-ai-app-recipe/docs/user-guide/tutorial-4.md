@@ -32,7 +32,8 @@ The below aspects need to be updated accordingly, in order to leverage an existi
 - **Node-RED Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which is provided as insights in the Grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the GitHub Copilot offering.
 - **Configuration updates:** This is the application configuration such as self signed certificates, Docker Compose, Node-RED, Grafana, etc.
 
-Note: The underlying application architecture remains the same.
+> [!Note]
+> The underlying application architecture remains the same.
 
 ## Build a new application: 'AI Crowd Analytics'
 
@@ -220,7 +221,8 @@ Here are the example prompts that we used:
   Provide a Node-RED function that parses bounding box coordinates (x, y, w, h format) to calculate centroids, only include objects that are vehicles and return output message with vehicle positions.
   ```
 
-  > **Note:** After completing step [#7.6](#76-add-debug-output-for-vehicle-data-monitoring) and starting the pipeline using the curl command, open the Node-RED debug panel on the right (bug icon). Select the Vehicle Data Monitor debug node from the drop down in the debug panel to view the metadata, which is used in the prompt to generate Extract Vehicle Positions.
+  > [!NOTE]
+  > After completing step [#7.6](#76-add-debug-output-for-vehicle-data-monitoring) and starting the pipeline using the curl command, open the Node-RED debug panel on the right (bug icon). Select the Vehicle Data Monitor debug node from the drop down in the debug panel to view the metadata, which is used in the prompt to generate Extract Vehicle Positions.
 
 ![Crowd Analytics Node-RED Debug Panel](_images/crowd-analytics-debug-panel.png "crowd analytics node-red debug panel")
 
@@ -241,7 +243,8 @@ Here are the example prompts that we used:
   - Based on the output of the previous function node, generate a table-friendly output with one row per hotspot that can be displayed on a Grafana dashboard. Ensure that each hotspot becomes a separate MQTT message for proper Grafana table visualization
   ```
 
-> **Note:** The exact output for the above prompts from Copilot was not used as is. It involved more 'prompt engineering' and 'fine tuning' along with setting the correct default configurable options in the code as a part of vibe coding with Copilot to achieve the code that best suits our use case.
+> [!NOTE]
+> The exact output for the above prompts from Copilot was not used as is. It involved more 'prompt engineering' and 'fine tuning' along with setting the correct default configurable options in the code as a part of vibe coding with Copilot to achieve the code that best suits our use case.
 
 #### 7.3 **Access the Node-RED Interface**
 
@@ -958,7 +961,8 @@ Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
      }'
      ```
 
-   > **Note:** It is essential for the pipeline to remain running while applying the transformations in the next step
+   > [!NOTE]
+   > It is essential for the pipeline to remain running while applying the transformations in the next step
 
 3. **Add Transformations** (Transform tab at bottom):
    - **Sort by**:
@@ -1027,7 +1031,8 @@ Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
      }'
      ```
 
-     > **Note:** You can check if a pipeline is running currently with `curl -k -s https://localhost/api/pipelines/status`
+     > [!NOTE]
+     > You can check if a pipeline is running currently with `curl -k -s https://localhost/api/pipelines/status`
 
 #### 8.5 **Expected Results**
 

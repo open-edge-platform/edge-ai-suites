@@ -1,0 +1,269 @@
+# Copyright (c) 2024 Intel Corporation.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seaweedfs-s3-config
+  namespace: {{ .Values.namespace }}
+data:
+  s3_config.json: |
+    {
+      "identities": [
+        {
+          "name": "{{ .Values.env.S3_STORAGE_USERNAME }}",
+          "credentials": [
+            {
+              "accessKey": "{{ .Values.env.S3_STORAGE_USERNAME }}",
+              "secretKey": "{{ .Values.env.S3_STORAGE_PASSWORD }}"
+            }
+          ],
+          "actions": [
+            "Admin",
+            "Read",
+            "Write",
+            "List"
+          ]
+        }
+      ]
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-master
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: "master-port"
+      port: 9333
+    - name: "master-grpc-port"
+      port: 19333
+  selector:
+    app: seaweedfs-master
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seaweedfs-master
+  name: deployment-seaweedfs-master
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-master
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-master
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seaweedfs-master
+          image: {{ .Values.images.seaweedfs }}
+          command: ['weed', 'master', '-ip=seaweedfs-master', '-ip.bind=0.0.0.0']
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: seaweedfs-master-data
+              mountPath: /data
+      hostname: seaweedfs-master
+      restartPolicy: Always
+      volumes:
+        - name: seaweedfs-master-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-volume
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: "volume-port"
+      port: 8080
+    - name: "volume-grpc-port"
+      port: 18080
+  selector:
+    app: seaweedfs-volume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seaweedfs-volume
+  name: deployment-seaweedfs-volume
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-volume
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-volume
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seaweedfs-volume
+          image: {{ .Values.images.seaweedfs }}
+          command: ['weed', 'volume', '-mserver=seaweedfs-master:9333', '-ip.bind=0.0.0.0', '-port=8080']
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: seaweedfs-volume-data
+              mountPath: /data
+      hostname: seaweedfs-volume
+      restartPolicy: Always
+      volumes:
+        - name: seaweedfs-volume-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-filer
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: "filer-port"
+      port: 8888
+    - name: "filer-grpc-port"
+      port: 18888
+  selector:
+    app: seaweedfs-filer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seaweedfs-filer
+  name: deployment-seaweedfs-filer
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-filer
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-filer
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seaweedfs-filer
+          image: {{ .Values.images.seaweedfs }}
+          command: ['weed', 'filer', '-master=seaweedfs-master:9333', '-ip.bind=0.0.0.0']
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: seaweedfs-filer-data
+              mountPath: /data
+      hostname: seaweedfs-filer
+      restartPolicy: Always
+      volumes:
+        - name: seaweedfs-filer-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: seaweedfs-s3
+  namespace: {{ .Values.namespace }}
+spec:
+  type: NodePort
+  ports:
+    - name: "s3-port"
+      port: 8333
+      nodePort: {{ $.Values.env.S3_STORAGE_PORT }}
+  selector:
+    app: seaweedfs-s3
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: seaweedfs-s3
+  name: deployment-seaweedfs-s3
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seaweedfs-s3
+  template:
+    metadata:
+      labels:
+        app: seaweedfs-s3
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: seaweedfs-s3
+          image: {{ .Values.images.seaweedfs }}
+          command: ['weed', 's3', '-filer=seaweedfs-filer:8888', '-ip.bind=0.0.0.0', '-port=8333', '-config=/etc/seaweedfs/s3_config.json']
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: seaweedfs-s3-config
+              mountPath: /etc/seaweedfs/s3_config.json
+              subPath: s3_config.json
+      hostname: seaweedfs-s3
+      restartPolicy: Always
+      volumes:
+        - name: seaweedfs-s3-config
+          configMap:
+            name: seaweedfs-s3-config

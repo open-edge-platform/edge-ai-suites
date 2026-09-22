@@ -46,7 +46,8 @@ Before you begin, ensure that you have the following:
 	 | `affinity.enabled` | Set to true to deploy on dedicated node | `true` |
 	 | `affinity.value` | Dedicated node name/value from `kubectl get node` | `<your_node_name>` |
 
-	 > **Note:** The chart can run on CPU-only nodes; however, a GPU-enabled node is strongly recommended for better conversion and runtime performance.
+	 > [!NOTE]
+	 > The chart can run on CPU-only nodes; however, a GPU-enabled node is strongly recommended for better conversion and runtime performance.
 
 3. Deploy the chart.
 
@@ -54,7 +55,8 @@ Before you begin, ensure that you have the following:
 	 helm install model-download . -n <your-namespace>
 	 ```
 
-	 > **Note:** `model-download` creates and manages a shared PVC consumed by Live Video Captioning and Live Video Captioning RAG workloads.
+	 > [!NOTE]
+	 > `model-download` creates and manages a shared PVC consumed by Live Video Captioning and Live Video Captioning RAG workloads.
 
 4. Verify deployment.
 
@@ -77,7 +79,8 @@ To set up the integrated deployment, obtain the chart and install it with your e
    helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
    ```
 
-   > **Note:** When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
+   > [!NOTE]
+   > When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
 
 2. Extract the `.tgz` file.
 
@@ -196,7 +199,8 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 | `live-video-captioning-rag.env.scoreThreshold` | Minimum retrieval score for including RAG search results | `0.5` |
 | `live-video-captioning-rag.env.maxPromptLen` | Maximum token limit accepted by the LLM pipeline on NPU devices. | `1024` |
 
-> **Note:** You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
+> [!NOTE]
+> You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
 >
 > **Note:** If `NPU` is selected in `global.models[].device` for VLM models, `weightFormat` is automatically forced to `int4`.
 
@@ -211,7 +215,8 @@ global:
     noProxy: "<your-rtsp-camera-host-or-ip>"
 ```
 
-> **Important:** the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
+> [!IMPORTANT]
+> the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
 >
 > For example:
 >
@@ -265,7 +270,8 @@ kubectl get pods -n <your-namespace>
 kubectl get services -n <your-namespace>
 ```
 
-> **Note:** First-time deployment can take several minutes because models may be downloaded and converted before services become ready.
+> [!NOTE]
+> First-time deployment can take several minutes because models may be downloaded and converted before services become ready.
 
 ## Access the application
 

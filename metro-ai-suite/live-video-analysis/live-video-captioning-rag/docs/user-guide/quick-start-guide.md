@@ -4,7 +4,7 @@ Get the application up and running in a few simple steps.
 
 Live Video Captioning RAG works with Live Video Captioning to generate live captions from a video stream, store caption context in a vector database, and let you ask natural-language questions about what happened in the video.
 
-> **Note:**
+> [!NOTE]
 >
 > 1. Setup and first run time depends on network speed because Docker images and models are downloaded.
 > 2. If you do not have a camera stream, configure a simulated RTSP stream by following [these instructions](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/simulated-rtsp-stream-guide.html).

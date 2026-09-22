@@ -59,6 +59,14 @@ const STATUS = {
 // is the whole distinction between them.
 const REPAIRABLE = [STATUS.MISSING, STATUS.FAILED, STATUS.OUTDATED];
 
+// Failures the Setup screen can offer a way out of. The code crosses IPC with
+// the message (see fail() in ipc.cjs), so the screen decides what to offer from
+// this rather than by matching on English prose that translation would break.
+// Mirrored in ui/src/types/setup.ts.
+const SETUP_ERROR = { BACKEND_RUNNING: 'backend-running' };
+
+const setupError = (message, code) => Object.assign(new Error(message), { code });
+
 const SECTIONS = [
   { id: 'system', label: 'System and drivers' },
   { id: 'software', label: 'Software and environment' },
@@ -968,7 +976,13 @@ class SetupRunner extends EventEmitter {
     if (action.requiresBackendStopped) {
       const port = registry.get('backend')?.port;
       if (port && !(await proc.isPortFree(port))) {
-        throw new Error('Stop the backend first: its Python environment is in use.');
+        // Coded, because stopping the backend is a different screen: the Setup
+        // screen turns this into a button rather than an instruction to go
+        // hunting for one.
+        throw setupError(
+          'Stop the backend first: its Python environment is in use.',
+          SETUP_ERROR.BACKEND_RUNNING
+        );
       }
     }
 
@@ -1006,4 +1020,4 @@ class SetupRunner extends EventEmitter {
   }
 }
 
-module.exports = { SetupRunner, STATUS, SECTIONS, LOG_ID };
+module.exports = { SetupRunner, STATUS, SECTIONS, SETUP_ERROR, LOG_ID };

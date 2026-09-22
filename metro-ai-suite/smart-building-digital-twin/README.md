@@ -35,19 +35,19 @@ flowchart BT
     subgraph ss["Scenescape"]
         direction BT
         MTX["MediaMTX<br/>RTSP server"]
-        DLS["DLStreamer<br/>YOLOX-S or ATSS-MobileNetV2 detection"]
+        DLSPS["DLSPS<br/>YOLOX-S or ATSS-MobileNetV2 detection"]
         CTRL["scene controller<br/>track fusion"]
         BROKER["MQTT broker"]
-        MTX --> DLS -->|detections| BROKER
+        MTX --> DLSPS -->|detections| BROKER
         CTRL -->|tracked objects| BROKER
         BROKER --> CTRL
     end
 
-    subgraph analytics["Analytics Container"]
+    subgraph narrsvc["scene-narrator container"]
         direction BT
         NAR["narrator.py<br/>event narration + alerts"]
         DASH["dashboard.py<br/>FastAPI"]
-        NAR --> DASH
+        NAR -.->|in-process call| DASH
     end
 
     subgraph ui["Browser  DASHBOARD_URL"]
@@ -61,7 +61,7 @@ flowchart BT
     BROKER -->|MQTT tracks| NAR
     DASH -->|SSE /stream/scene-state| STATE
     DASH -->|SSE /stream/narrator| FEED
-    FEED --> DETAIL
+    FEED -.->|user selects entry - client-side| DETAIL
 
     classDef source  fill:#2d4a6b,stroke:#4a7aab,color:#cce0ff
     classDef infra   fill:#3a3a5c,stroke:#6060a0,color:#d0d0ff
@@ -69,7 +69,7 @@ flowchart BT
     classDef browser fill:#4a3000,stroke:#c08000,color:#ffe0a0
 
     class TS,SJSON source
-    class MTX,DLS,CTRL,BROKER infra
+    class MTX,DLSPS,CTRL,BROKER infra
     class NAR,DASH app
     class STATE,FEED,DETAIL browser
 ```
@@ -127,8 +127,6 @@ Clone the repository (Git LFS extension is required for video and model files), 
 ```
 
 The script prompts for an admin password (`SUPASS`) and a database password (`DATABASE_PASSWORD`), generates TLS certificates, starts all services, waits for the API, imports the included Showcase scene automatically, and then performs a best-effort telemetry check.
-
-This branch does not require the Ollama service and does not download the Qwen model during setup.
 
 If `xpu-smi` is already installed on the host, `./setup.sh` also grants the needed host access for `xpu-smi`, starts the host GPU telemetry bridge, and verifies that the analytics service can read telemetry. If you install `xpu-smi` after the initial deployment, rerun `./setup.sh`.
 
