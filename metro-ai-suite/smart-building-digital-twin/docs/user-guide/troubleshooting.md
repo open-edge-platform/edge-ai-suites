@@ -28,8 +28,7 @@ Then rerun:
 ./setup.sh
 ```
 
-## `setup.sh` Succeeds But `SCENESCAPE_UI_URL` or `DASHBOARD_URL` is Unreachable from
-the Browser
+## `setup.sh` Succeeds But `SCENESCAPE_UI_URL` or `DASHBOARD_URL` is Unreachable from the Browser
 
 This is almost always host DNS or proxy configuration rather than a service problem.
 
@@ -78,5 +77,3 @@ Add the internal domain to `no_proxy` and `NO_PROXY`, for example `.example.com`
 that nothing later in `~/.bashrc` or other shell startup files re-exports `no_proxy` or
 `NO_PROXY` without it, because a later export `no_proxy=...` silently overwrites rather
 than appends to an earlier one. Restart the browser afterward so it picks up the change.
-
-

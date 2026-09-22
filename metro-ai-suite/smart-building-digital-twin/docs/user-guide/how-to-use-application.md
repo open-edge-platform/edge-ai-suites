@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-```
+```text
 config/          Model files, and pipeline and tracker configuration
 datasets/        Looping video files per scene (Git LFS)
 scenes/          Scene zip bundles and sensor event data
@@ -53,7 +53,7 @@ The narrator (`narrator.py`) subscribes to MQTT track data and produces a rollin
 text window of scene events. It detects the following alert and warning types:
 
 | Alert | Description |
-|---|---|
+| --- | --- |
 | No credentials at `Checkpoint` | Person enters an inbound zone without a badge or FaceID |
 | Badge switch | An inbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the face previously associated with the badge during the loop |
 | Possible badge switch | An outbound `Checkpoint` or `Entry` crossing shows a badge associated with a different face than the face previously associated with the badge during the loop |
@@ -77,7 +77,7 @@ text window of scene events. It detects the following alert and warning types:
 Key variables in the `.env` file:
 
 | Variable | Default | Description |
-|---|---|---|
+| --- | --- | --- |
 | `PUBLIC_HOSTNAME` | Detected from the `hostname` | The hostname used to build the default web and API URLs, and TLS certificate Subject Alternative Names (SANs) |
 | `API_BASE_URL` | `https://localhost/api/v1` | Host-local Scenescape API base URL used by the setup and helper scripts; override this when running the helper scripts from another machine |
 | `SCENESCAPE_UI_URL` | `https://$PUBLIC_HOSTNAME` | Scenescape web UI URL printed by the setup |
@@ -94,7 +94,7 @@ Follow these steps:
 1. Add `scenes/{SceneName}.zip` and `datasets/{scene-name}/cam-*.ts`
 2. (Optional) Add `scenes/{SceneName}-sensors.json` for sensor replay. If present,
    the project’s sensor replay process can replay those events in synchronization
-   with the scene’s looping camera videos. 
+   with the scene’s looping camera videos.
 3. Run `./setup.sh`
 
 ## Export Configuration
@@ -139,7 +139,6 @@ This repository includes shared Copilot customization files to help with cross-s
 
 Use the tuning skill before changing analytics logic on another system. In most cases, the important first comparisons are `.env`, GPU and CPU mode, service health, `config/resolved-uuids.json`, and exported scene and object-class configuration.
 
+## Notice for FFmpeg Project
 
-## Notice for FFmpeg Project:
-
-FFmpeg is an open source project licensed under LGPL and GPL. See https://www.ffmpeg.org/legal.html. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+FFmpeg is an open source project licensed under LGPL and GPL. See <https://www.ffmpeg.org/legal.html>. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.

@@ -7,7 +7,6 @@
 
 - [System Requirements](./get-started/system-requirements.md)
 
-
 ## Clone the Repository
 
 Clone the repository and ensure the Git LFS extension is installed before the clone completes.
@@ -42,7 +41,7 @@ complete replay loop, preventing partial data from a mid-loop startup from affec
 `./setup.sh` pulls Scenescape images automatically from Docker Hub. The images used are:
 
 | Image | Tag |
-|---|---|
+| --- | --- |
 | `intel/scenescape-manager` | `2026.2.0` |
 | `intel/scenescape-controller` | `2026.2.0` |
 | `intel/scenescape-autocalibration` | `2026.2.0` |
@@ -73,7 +72,6 @@ After setup completes, you can access these runtime endpoints:
 
 - [How It Works](./how-it-works.md)
 - [How to Use the Application](./how-to-use-application.md)
-- [API Reference](./api-reference.md)
 - [Troubleshooting](./troubleshooting.md)
 - [Release Notes](./release-notes.md)
 
