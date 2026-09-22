@@ -50,23 +50,10 @@ specific workflows:
 > application containers — only the resulting OpenVINO™ IR model is consumed at runtime by
 > DL Streamer.
 
-### Stack Component System Requirements
+### Minimum Configuration
 
-Each shared component brings its own hardware/software requirements, documented at the
-source rather than repeated here:
-
-| Component | System Requirements |
-|---|---|
-| DL Streamer Pipeline Server | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/get-started/system-requirements.html) |
-| DL Streamer | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/system_requirements.html) |
-| Model Download microservice | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/system-requirements.html) |
-| Intel® Geti™ Software | [Installation Guide](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide) |
-
-### Not Used by This Sample Application
-
-The following platform capabilities are available on Open Edge Platform but are **not** part
-of this sample application's stack: Generative AI / LLM models, RAG or chat microservices,
-time-series analytics (TICK stack), and ROS-based robotics middleware.
+See [System Requirements](./get-started/vision-system-requirements.md) for the minimum
+hardware and software configuration for this sample application.
 
 [Win Vision AI](./win-vision-ai/index.md), in contrast to the other vision applications, is a more
 generalised Python-based Windows application for running multiple AI inference pipelines on

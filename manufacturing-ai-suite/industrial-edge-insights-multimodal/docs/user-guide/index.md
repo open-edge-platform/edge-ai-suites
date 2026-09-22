@@ -73,30 +73,10 @@ The following components are deployed by default through `docker-compose.yml`:
 | PyTorch (training only) | Used offline for VLM fine-tuning (LoRA adapters for defect explainability) — not part of the deployed containers | [training/vlm-fine-tuning](../../training/vlm-fine-tuning/README.md) |
 | Helm / Kubernetes | Alternative deployment path for the core (non-agentic, non-vLLM) stack | [Deploy with Helm](./get-started/deploy-with-helm.md) |
 
-### Stack Component System Requirements
+### Minimum Configuration
 
-Each shared component brings its own hardware/software requirements, documented at the
-source rather than repeated here:
-
-| Component | System Requirements |
-|---|---|
-| DL Streamer Pipeline Server | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/get-started/system-requirements.html) |
-| DL Streamer | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/system_requirements.html) |
-| Time Series Analytics Microservice | [Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/time-series-analytics/index.html) (no dedicated hardware requirements beyond the Docker Compose baseline below) |
-| OpenVINO™ Model Server (OVMS) | [Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/OVMS.html) |
-| Model Download microservice | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/system-requirements.html) |
-| Intel® Geti™ Software | [Installation Guide](https://docs.geti.intel.com/docs/user-guide/getting-started/installation/installation-guide) |
-
-> **Note:** vLLM does not have an Open Edge Platform-hosted requirements page; see the
-> [Deploy vLLM Service](./how-to-guides/how-to-deploy-vllm-service.md) how-to guide for its
-> specific prerequisites (for example, GPU memory for the served model).
-
-### Not Used by This Sample Application
-
-The following platform capabilities are available on Open Edge Platform but are **not** part
-of the *core* deployment: Generative AI / LLM models, RAG/chat microservices, and OpenVINO™
-Model Server are only introduced when the vLLM or agentic add-ons are explicitly enabled.
-ROS-based robotics middleware is not used at all.
+See [System Requirements](./get-started/system-requirements.md) for the minimum hardware and
+software configuration for this sample application.
 
 <!--hide_directive
 :::{toctree}

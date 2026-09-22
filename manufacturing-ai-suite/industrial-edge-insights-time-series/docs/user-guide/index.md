@@ -52,21 +52,10 @@ equivalent Helm chart in `helm/`):
 > (scikit-learn `RandomForestClassifier`), not OpenVINO™ or DL Streamer — there is no
 > vision/inference-accelerator component in this stack.
 
-### Stack Component System Requirements
+### Minimum Configuration
 
-Each shared component brings its own hardware/software requirements, documented at the
-source rather than repeated here:
-
-| Component | System Requirements |
-|---|---|
-| Time Series Analytics Microservice | [Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/time-series-analytics/index.html) (no dedicated hardware requirements beyond the Docker Compose baseline below) |
-| Visual Pipeline and Platform Evaluation Tool (ViPPET) | [Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html) |
-
-### Not Used by This Sample Application
-
-The following platform capabilities are available on Open Edge Platform but are **not** part
-of this sample application's stack: OpenVINO™, DL Streamer, Intel® Geti™, Generative AI / LLM
-models, RAG or chat microservices, and ROS-based robotics middleware.
+See [System Requirements](./get-started/system-requirements.md) for the minimum hardware and
+software configuration for this sample application.
 
 <!--hide_directive
 :::{toctree}

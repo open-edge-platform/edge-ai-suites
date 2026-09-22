@@ -126,27 +126,16 @@ Windows®-hosted HMI, split across a Type-2 hypervisor host and a guest VM.
 > for the specific microservices (LLM serving, embedding, retriever, reranker) it deploys.
 > This repository does not modify or redeploy that stack.
 
-### Stack Component System Requirements
-
-Each shared component brings its own hardware/software requirements, documented at the
-source rather than repeated here:
-
-| Component | System Requirements |
-|---|---|
-| Chat Question & Answer Core | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/get-started/system-requirements.html) |
-| Edge Microvisor Toolkit (EMT) | [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-microvisor-toolkit/emt-system-requirements.html) |
-
 ### Optional Add-ons
 
 None — this sample application does not define optional deployment add-ons beyond the
 `Chat Q&A Core` configuration options (model/embedding/reranker choice), which are documented
 in `Chat Q&A Core`'s own guides.
 
-### Not Used by This Sample Application
+### Minimum Configuration
 
-The following platform capabilities are available on Open Edge Platform but are **not** part
-of this sample application's stack: DL Streamer, OpenVINO™ vision pipelines, Intel® Geti™,
-time-series analytics (TICK stack), and ROS-based robotics middleware.
+See [System Requirements](./get-started/system-requirements.md) for the minimum hardware and
+software configuration for this sample application.
 
 <!--hide_directive
 :::{toctree}
