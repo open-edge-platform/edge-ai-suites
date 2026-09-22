@@ -112,7 +112,3 @@ make clean-all              # Destructive: removes volumes + images
 - [docs/user-guide/benchmarking.md](../../docs/user-guide/benchmarking.md) — Benchmark methodology
 - [docs/user-guide/ethernet-px4.md](../../docs/user-guide/ethernet-px4.md) — Remote PX4 setup
 - [docs/user-guide/ports.md](../../docs/user-guide/ports.md) — All ports and endpoints
-
----
-
-**Status**: ✅ Production-Ready | **Version**: 1.0
