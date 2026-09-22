@@ -4,6 +4,10 @@ This section shows detailed hardware, software, and platform requirements for In
 
 See the specific system requirements for **HMI Augmented Worker** and **Win Vision AI** in their respective sections.
 
+For quick deployment of hardware components, you can use
+[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
+provided as part of Open Edge Platform.
+
 ## Minimum Requirements
 
 | Component | Specification |
@@ -42,10 +46,6 @@ See the list of certified edge AI systems as enabled through the  Intel® Edge S
 > [!NOTE]
 > You can also create apps tailored to your use case using models supported by DL Streamer.
 > Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
-
-For quick deployment of hardware components (GPU / NPU), you can use
-[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
-provided as part of Open Edge Platform.
 
 ## Validation
 
