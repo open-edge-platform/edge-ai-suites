@@ -45,6 +45,7 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 
 ---------------------------------------------------------------------------------------------------------------------------
 
+
 apps/wind-turbine-anomaly-detection/training/requirements.txt
 ================================================================
 License-Identifier: Apache-2.0
@@ -60,14 +61,14 @@ scikit-learn==1.6.1
 
 License-Identifier: MIT
 setuptools==83.0.0
-----------------------------------------------------------------------
 
 ---------------------------------------------------------------------------------------------------------------------------
+
 
 ia-opcua-server microservice:
 =============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF-2.0
 
 2. requirements.txt
@@ -99,7 +100,7 @@ python-dateutil==2.9.0.post0
 ----------------------------------------------------------------------
 
 License-Identifier: BSD-3-Clause
-pandas==2.2.3
+pandas==2.3.3
 pycparser==3.0
 ----------------------------------------------------------------------
 
@@ -117,12 +118,14 @@ pip==26.2.1
 
 License-Identifier: BSD License or Apache License 2.0
 cryptography==50.0.0
+
 ---------------------------------------------------------------------------------------------------------------------------
+
 
 ia-mqtt-publisher microservice:
 ===============================
 
-1. Base docker image: python:3.13-slim
+1. Base docker image: python:3.14-slim
 License-Identifier: PSF-2.0
 
 2. requirements.txt
@@ -141,7 +144,7 @@ python-dateutil==2.9.0.post0
 ----------------------------------------------------------------------
 
 License-Identifier: BSD-3-Clause
-pandas==2.3.1
+pandas==2.3.3
 ----------------------------------------------------------------------
 
 License-Identifier: MIT OR LicenseRef-Proprietary
@@ -158,6 +161,7 @@ License-Identifier: BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0
 numpy==2.5.1
 
 ---------------------------------------------------------------------------------------------------------------------------
+
 
 tests/requirements.txt
 ================================================================
@@ -187,6 +191,7 @@ License-Identifier: MPL-2.0
 pytest-html==4.2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
+
 
 Dataset:
 ========
