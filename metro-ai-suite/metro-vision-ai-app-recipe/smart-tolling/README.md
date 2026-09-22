@@ -28,7 +28,7 @@ To see the system requirements and other installations, see the following guides
 ## How It Works
 This section provides a high-level view of how the application integrates with a typical system architecture.
 
-![High-Level System Diagram](./docs/user-guide/_assets/smart-intersection-architecture.drawio.svg)
+![High-Level System Diagram](./docs/user-guide/_assets/smart_tolling_architecture.png)
 
 ### Diagram Description
 
@@ -48,7 +48,6 @@ For more details, see [Overview](./docs/user-guide/index.md)
 
 ## Learn More
 
-- [How to Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
 - [Support and Troubleshooting](./docs/user-guide/troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 ## License
