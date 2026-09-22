@@ -1,5 +1,5 @@
 ---
-name: uav-mission-compute-user
+name: uav-mission-compute-sdk
 description: >
   Operate and troubleshoot the UAV Mission Compute SDK for PX4 telemetry, camera streaming, missions, computer vision, and edge AI demonstrations. USE FOR: SDK setup, infrastructure validation, camera profile switching (sim/USB/RealSense), mission execution, telemetry benchmarking, Ethernet remote PX4 deployment. DO NOT USE FOR: General PX4 flight control beyond MQTT/REST, custom hardware integration details, or production flight planning.
 license: Apache-2.0
