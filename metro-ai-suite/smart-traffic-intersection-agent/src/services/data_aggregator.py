@@ -56,31 +56,11 @@ class DataAggregatorService:
         # Current state
         self.current_vlm_analysis: Optional[VLMAnalysisData] = None
         self.last_analysis_time: float = 0.0
-
-        # Live geolocation derived from Scenescape's geospatial (lat_long_alt)
-        # scene output, when map_corners_lla calibration is configured.
-        # None until the first such message is received; falls back to the
-        # static coordinates in deployment_instance.json until then.
-        self.live_latitude: Optional[float] = None
-        self.live_longitude: Optional[float] = None
-
+        
         # Event to notify WebSocket clients when new VLM-analyzed data is available
         self.new_data_event: asyncio.Event = asyncio.Event()
         
         logger.info("Data aggregator service initialized")
-
-    def update_live_geolocation(self, latitude: float, longitude: float) -> None:
-        """Update the live intersection geolocation derived from Scenescape's
-        geospatial scene output (lat_long_alt on tracked objects).
-
-        Once set, this overrides the static latitude/longitude from
-        deployment_instance.json for all subsequently built IntersectionData
-        snapshots.
-        """
-        self.live_latitude = latitude
-        self.live_longitude = longitude
-        logger.debug("Live geolocation updated from Scenescape",
-                   latitude=latitude, longitude=longitude)
 
     
     async def process_camera_image(self, camera_image: CameraImage) -> None:
@@ -137,14 +117,7 @@ class DataAggregatorService:
         """Update temporary intersection data from camera inputs."""
         intersection_id = self.config.get_intersection_id()
         intersection_name = self.config.get_intersection_name()
-
-        # Prefer live geolocation derived from Scenescape's geospatial
-        # (lat_long_alt) scene output, when available; otherwise fall back
-        # to the static coordinates in deployment_instance.json.
-        if self.live_latitude is not None and self.live_longitude is not None:
-            lat, lon = self.live_latitude, self.live_longitude
-        else:
-            lat, lon = self.config.get_intersection_coordinates()
+        lat, lon = self.config.get_intersection_coordinates()
         
         # Calculate directional counts from temporary data
         north_count = self.temp_camera_data.get('north', CameraDataMessage('', '', 'north', 0)).vehicle_count

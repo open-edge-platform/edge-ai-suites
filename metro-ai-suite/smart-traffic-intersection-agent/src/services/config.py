@@ -199,26 +199,6 @@ class ConfigService:
             "scenescape/data/camera/camera4"
         ])
 
-    def get_scene_id(self) -> str:
-        """Get the Scenescape scene UID, if configured.
-
-        Set via SCENESCAPE_SCENE_ID by setup.sh once Scenescape's
-        map_corners_lla geospatial calibration is applied. Empty string
-        means live geolocation is disabled and static coordinates from
-        deployment_instance.json continue to be used.
-        """
-        return os.getenv("SCENESCAPE_SCENE_ID", "").strip()
-
-    def get_scene_output_topic(self) -> Optional[str]:
-        """Get the Scenescape scene output MQTT topic (wildcard over thing types).
-
-        Returns None when no scene_id is configured (feature disabled).
-        """
-        scene_id = self.get_scene_id()
-        if not scene_id:
-            return None
-        return f"scenescape/data/scene/{scene_id}/+"
-
     def get_image_topics(self) -> List[str]:
         """Get MQTT image topics."""
         return self.config.get("mqtt", {}).get("image_topics", [

@@ -78,11 +78,6 @@ services:
       INTERSECTION_NAME: ${INTERSECTION_NAME:-}
       INTERSECTION_LATITUDE: ${INTERSECTION_LATITUDE:-}
       INTERSECTION_LONGITUDE: ${INTERSECTION_LONGITUDE:-}
-
-      # Scenescape scene UID (set by setup.sh once map_corners_lla is
-      # configured); enables subscribing to the scene's geospatial output
-      # topic so live lat/long/alt overrides the static values above.
-      SCENESCAPE_SCENE_ID: ${SCENESCAPE_SCENE_ID:-}
       
       # Weather configuration (overrides src/config/traffic_agent.json)
       WEATHER_MOCK: ${WEATHER_MOCK:-false}
