@@ -428,7 +428,7 @@ class SummarizerComponent(PipelineComponent):
                 if not run.first_token:
                     run.first_token = time.perf_counter()
                 raw_tokens.append(token)
-                StorageManager.save_async(summary_path, token, append=True)
+                StorageManager.save(summary_path, token, append=True)
                 yield token
 
         finally:
