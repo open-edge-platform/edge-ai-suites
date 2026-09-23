@@ -103,7 +103,7 @@ to benefit from it.
 For more comprehensive guidance on beginning, see the [Get Started Guide](./get-started.md).
 You can also check the [system requirements](./get-started/system-requirements.md).
 
-## Blueprint
+## Software Stack
 
 This section documents the minimum software stack that **HMI Augmented Worker** uses from the
 broader Open Edge Platform (Edge AI Libraries, tools, and microservices), so you can see

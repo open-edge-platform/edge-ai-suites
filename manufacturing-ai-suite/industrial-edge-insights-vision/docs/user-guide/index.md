@@ -12,7 +12,7 @@ real-time analytics, edge devices can detect manufacturing defects and anomalies
 that could impact quality, efficiency and safety of manufacturing operations. See
 [Get Started](./get-started.md) for installation instructions.
 
-## Blueprint
+## Software Stack
 
 This section documents the minimum software stack that **Pallet Defect Detection** and **PCB
 Anomaly Detection** use from the broader Open Edge Platform (Edge AI Libraries, tools, and

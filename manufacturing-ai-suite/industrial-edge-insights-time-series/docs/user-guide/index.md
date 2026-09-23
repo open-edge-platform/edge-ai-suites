@@ -19,7 +19,7 @@ simulators (can act as data destinations if configured) would, of course, be rep
 physical devices, in a real deployment scenario. If you are interested, documents for each
 sample application provide detailed architectural descriptions.
 
-## Blueprint
+## Software Stack
 
 This section documents the minimum software stack that **Wind Turbine Anomaly Detection** uses
 from the broader Open Edge Platform (Edge AI Libraries, tools, and microservices), so you can

@@ -33,7 +33,7 @@ improving both accuracy and efficiency.
 [The application](./weld-defect-detection/index.md) utilizes camera-based
 visual inspection and sensor data analysis to identify anomalies in welding data.
 
-## Blueprint
+## Software Stack
 
 This section documents the minimum software stack that **Multimodal Weld Defect Detection**
 uses from the broader Open Edge Platform (Edge AI Libraries, tools, and microservices), so
