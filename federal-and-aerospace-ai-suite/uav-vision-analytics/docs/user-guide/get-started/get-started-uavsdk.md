@@ -17,14 +17,25 @@ A minimal single-container stack. Telemetry is received via MQTT from the `uav-m
 
 ```mermaid
 sequenceDiagram
+    participant Client as curl / QGroundControl / ffplay
+    participant Nginx as nginx (TLS :443, RTSP :8555)
+    participant DLSPS as DL Streamer Pipeline Server
     participant SDK as uav-mission-compute-sdk
     participant OVL as gvapython (MavlinkReceiver)
     participant Frame as Video Frame
+
+    Client->>Nginx: POST /pipelines/... (HTTPS :443)
+    Nginx->>DLSPS: proxy_pass REST :8081
+    DLSPS-->>Nginx: 200 instance_id
+    Nginx-->>Client: 200 instance_id
 
     SDK->>OVL: broadcast MQTT Telemetry :1883
     Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
     Frame->>OVL: process_frame() per frame
     OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
+
+    Frame->>Nginx: annotated RTSP :8555 (stream {} passthrough)
+    Nginx->>Client: rtsp://<HOST_IP>:8555/...
 ```
 
 **Services:**

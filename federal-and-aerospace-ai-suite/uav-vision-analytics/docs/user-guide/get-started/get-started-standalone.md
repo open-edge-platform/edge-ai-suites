@@ -17,16 +17,27 @@ A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manag
 
 ```mermaid
 sequenceDiagram
+    participant Client as curl / QGroundControl / ffplay
+    participant Nginx as nginx (TLS :443, RTSP :8555)
+    participant DLSPS as DL Streamer Pipeline Server
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
     participant OVL as gvapython MavlinkReceiver
     participant Frame as Video Frame
+
+    Client->>Nginx: POST /pipelines/... (HTTPS :443)
+    Nginx->>DLSPS: proxy_pass REST :8081
+    DLSPS-->>Nginx: 200 instance_id
+    Nginx-->>Client: 200 instance_id
 
     PX4->>RTR: MAVLink stream (UDP :14550)
     RTR->>OVL: broadcast UDP :14541
     Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
     Frame->>OVL: process_frame() per frame
     OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
+
+    Frame->>Nginx: annotated RTSP :8555 (stream {} passthrough)
+    Nginx->>Client: rtsp://<HOST_IP>:8555/...
 ```
 
 **Services:**
