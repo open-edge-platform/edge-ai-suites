@@ -32,6 +32,10 @@ sequenceDiagram
 | Service | Image | Ports | Role |
 | --- | --- | --- | --- |
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` | `8081`, `8555` | AI inference, RTSP output |
+| `nginx` | `nginx:1.27-alpine` | `80` (redirects to 443), `443` (HTTPS, self-signed cert), `8555` (RTSP passthrough) — published to `HOST_IP` | Reverse proxy / TLS termination — the only service that publishes ports to the host |
+
+> `dlstreamer-pipeline-server` no longer publishes ports directly — it is reachable only
+> through `nginx` on the internal `app_network`.
 
 ---
 
@@ -342,10 +346,15 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 ## Port Reference
 
-| Port | Protocol | Service | Mode |
-| --- | --- | --- | --- |
-| `8081` | HTTP | DL Streamer REST API | All modes |
-| `8555` | RTSP | Annotated video output | All modes |
+`nginx` is the only service that publishes ports to the host (bound to `HOST_IP`, not
+`0.0.0.0`). `dlstreamer-pipeline-server` is reachable only on the internal `app_network`.
+
+| Port | Protocol | Service | Published to host? | Mode |
+| --- | --- | --- | --- | --- |
+| `80` | HTTP | `nginx` → `301` redirect to HTTPS (no application traffic) | Yes | All modes |
+| `443` | HTTPS | `nginx` → proxies to `dlstreamer-pipeline-server:8081` (REST API); self-signed cert, use `curl -k` | Yes | All modes |
+| `8555` | RTSP | `nginx` → raw TCP passthrough to `dlstreamer-pipeline-server:8555` | Yes | All modes |
+| `8081` | HTTP | DL Streamer REST API | No (internal only) | All modes |
 
 ---
 

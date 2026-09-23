@@ -9,10 +9,14 @@ export PATH="$HOME/.local/bin:$PATH"
 # to the same address the stack is actually published on, without requiring the
 # caller to pass DLSPS_NODE_IP=<HOST_IP> manually every time.
 if [ -f "$SCRIPT_DIR/../.env" ]; then
-  set -a
-  # shellcheck disable=SC1091
-  source "$SCRIPT_DIR/../.env"
-  set +a
+  # Parse KEY=VALUE lines directly instead of sourcing the file, since sourcing
+  # would execute arbitrary shell code if .env is ever tampered with.
+  while IFS='=' read -r k v; do
+    case "$k" in ''|\#*) continue ;; esac
+    if [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      export "$k=$v"
+    fi
+  done < "$SCRIPT_DIR/../.env"
 fi
 
 # calc_stream_density.sh — UAV Vision Analytics Pipeline Benchmark
@@ -1127,7 +1131,7 @@ function usage() {
     echo "  -nstreams <N1> [N2 ...] Fixed stream count per pipeline (nstreams mode)."
     echo
     echo "HW Metrics (metrics-manager — reached via nginx, no -m/-M needed by default):"
-    echo "  -m <url>             metrics-manager base URL (default: http://<HOST_IP from .env>, falls back to http://localhost)."
+    echo "  -m <url>             metrics-manager base URL (default: https://<HOST_IP from .env> (port 443), falls back to https://localhost)."
     echo "  -M <seconds>         HW polling interval in seconds (default: 2)."
     echo "  --no-hw-metrics      Disable HW metrics collection entirely."
     echo

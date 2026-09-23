@@ -187,9 +187,9 @@ or scripts is a syntax error.
 2. `make model` succeeds: OpenVINO IR model present at
    `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml`.
 3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`, including `nginx`.
-4. `curl http://localhost/pipelines` returns the registered pipeline definitions
+4. `curl -k https://localhost/pipelines` returns the registered pipeline definitions
    (`dlstreamer-pipeline-server` no longer publishes a host port directly — it is reached
-   only through the `nginx` reverse proxy on `80`).
+   only through the `nginx` reverse proxy on `443`; self-signed cert requires `-k`).
 5. Pipeline manager starts with `make start-rtsp` and connects to MAVLink/MQTT.
 6. On ARMED signal: pipelines start; RTSP streams appear at `:8555`.
 7. `ffplay rtsp://localhost:8555/{{RTSP_PATH}}` shows annotated video with telemetry overlay.

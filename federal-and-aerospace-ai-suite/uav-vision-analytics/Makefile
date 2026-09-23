@@ -111,11 +111,12 @@ _check_certs: ## Generate a self-signed TLS certificate for nginx if missing
 		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
 		  -keyout $(SSL_DIR)/server.key -out $(SSL_DIR)/server.crt \
 		  -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"; \
+		chmod 600 $(SSL_DIR)/server.key 2>/dev/null || true; \
 		chown -R "$$(id -u):$$(id -g)" $(SSL_DIR)/server.key $(SSL_DIR)/server.crt 2>/dev/null || true; \
 	fi
 # ── Model ────────────────────────────────────────────────────────────────────
 
-_check_venv_pkg: ## Verify python3-venv (ensurepip) is installed; offer to install it if missing
+_check_venv_pkg: ## Verify python3-venv (ensurepip) is installed; fail fast with install instructions if missing
 	@if python3 -c "import ensurepip" >/dev/null 2>&1; then \
 		exit 0; \
 	fi; \
@@ -125,24 +126,8 @@ _check_venv_pkg: ## Verify python3-venv (ensurepip) is installed; offer to insta
 		VENV_PKG="python$${PY_VER}-venv"; \
 	fi; \
 	echo "⚠  'python3 -m venv' requires the '$$VENV_PKG' package (ensurepip module not found), which is not installed."; \
-	if ! command -v apt-get >/dev/null 2>&1; then \
-		echo "❌ 'apt-get' not found — install '$$VENV_PKG' (or your distro's equivalent) manually and re-run 'make model'."; \
-		exit 1; \
-	fi; \
-	printf "Install '%s' now via 'sudo apt install %s'? [y/N] " "$$VENV_PKG" "$$VENV_PKG"; \
-	read -r REPLY; \
-	case "$$REPLY" in \
-		[yY]*) \
-			sudo apt-get update && sudo apt-get install -y "$$VENV_PKG" || { \
-				echo "❌ Failed to install $$VENV_PKG. Install it manually and re-run 'make model'."; \
-				exit 1; \
-			}; \
-			;; \
-		*) \
-			echo "❌ '$$VENV_PKG' is required to create the model virtualenv. Install it manually (sudo apt install $$VENV_PKG) and re-run 'make model'."; \
-			exit 1; \
-			;; \
-	esac
+	echo "❌ Install it manually (e.g., sudo apt-get update && sudo apt-get install -y $$VENV_PKG) and re-run 'make model'."; \
+	exit 1
 
 model: _check_venv_pkg ## Download YOLO11s (COCO-pretrained) and export to OpenVINO FP16
 	@echo "[model] Creating virtualenv..."

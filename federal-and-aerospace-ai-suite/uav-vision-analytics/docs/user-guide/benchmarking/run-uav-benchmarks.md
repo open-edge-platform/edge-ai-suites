@@ -465,7 +465,7 @@ Usage (nstreams — fixed concurrent streams):
 # Remote machine (e.g., run benchmark from a different host than the one hosting the stack)
 DLSPS_NODE_IP=x.x.x.x ./benchmark/calc_stream_density.sh \
   -p uav_object_detection_gpu \
-  -m http://x.x.x.x \
+  -m https://x.x.x.x \
   -t 20
 ```
 

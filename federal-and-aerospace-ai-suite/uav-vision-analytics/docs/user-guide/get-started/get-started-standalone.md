@@ -37,6 +37,10 @@ sequenceDiagram
 | `px4` | `px4io/px4-sitl` | `14550` | Flight controller simulator |
 | `mavlink-router` | custom build | `14551` | MAVLink UDP routing (:14550 → :14541) |
 | `metrics-manager` | `intel/metrics-manager` | `9090` | CPU/GPU/NPU/power metrics |
+| `nginx` | `nginx:1.27-alpine` | `80` (redirects to 443), `443` (HTTPS, self-signed cert), `8555` (RTSP passthrough) — published to `HOST_IP` | Reverse proxy / TLS termination — the only service that publishes ports to the host |
+
+> `dlstreamer-pipeline-server` and `metrics-manager` no longer publish ports directly —
+> both are reachable only through `nginx` on the internal `app_network`.
 
 ---
 
@@ -249,12 +253,17 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 ## Port Reference
 
-| Port | Protocol | Service | Mode |
-| --- | --- | --- | --- |
-| `8081` | HTTP | DL Streamer REST API | All modes |
-| `8555` | RTSP | Annotated video output | All modes |
-| `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes |
-| `9090` | HTTP | metrics-manager (HW metrics) | pymavlink modes |
+`nginx` is the only service that publishes ports to the host (bound to `HOST_IP`, not
+`0.0.0.0`). Everything else below is reachable only on the internal `app_network`.
+
+| Port | Protocol | Service | Published to host? | Mode |
+| --- | --- | --- | --- | --- |
+| `80` | HTTP | `nginx` → `301` redirect to HTTPS (no application traffic) | Yes | All modes |
+| `443` | HTTPS | `nginx` → proxies to `dlstreamer-pipeline-server:8081` (REST API) and `metrics-manager:9090` (metrics); self-signed cert, use `curl -k` | Yes | All modes |
+| `8555` | RTSP | `nginx` → raw TCP passthrough to `dlstreamer-pipeline-server:8555` | Yes | All modes |
+| `8081` | HTTP | DL Streamer REST API | No (internal only) | All modes |
+| `14541` | UDP | MAVLink broadcast (mavlink-router) | No (internal only) | pymavlink modes |
+| `9090` | HTTP | metrics-manager (HW metrics) | No (internal only) | pymavlink modes |
 
 ---
 

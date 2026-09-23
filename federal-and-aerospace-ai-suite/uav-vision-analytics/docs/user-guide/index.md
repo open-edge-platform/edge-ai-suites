@@ -77,7 +77,7 @@ application creation (scaffolding new pymavlink or UAVSDK stacks). See
 
 ### Intended Use
 
-This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only and is not intended to be deployed as-is or for alternate use cases or applications. `nginx` consolidates host-facing traffic behind a single reverse proxy, but the application does not implement TLS or authentication/authorization between the app and external interfaces, and network exposure is LAN-wide by default. Additional security measures should be provided by the solution builder.
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only and is not intended to be deployed as-is or for alternate use cases or applications. `nginx` consolidates host-facing traffic behind a single reverse proxy and terminates TLS using a self-signed certificate, but the application does not implement authentication/authorization between the app and external interfaces, and network exposure is LAN-wide by default. Additional security measures should be provided by the solution builder.
 
 ### Responsible Use
 
