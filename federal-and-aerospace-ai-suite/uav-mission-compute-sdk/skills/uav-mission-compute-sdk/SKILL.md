@@ -6,12 +6,7 @@ license: Apache-2.0
 compatibility: Requires Docker Engine 24+, Docker Compose v2, Python 3.10+, Ubuntu 24.04, Intel GPU recommended
 metadata:
   author: Intel Open Edge Platform Team
-  tags:
-    - uav
-    - px4
-    - mavlink
-    - mqtt
-    - docker
+  tags: uav, px4, mavlink, mqtt, docker
 ---
 
 # UAV Mission Compute SDK Skill
@@ -107,8 +102,8 @@ make clean-all              # Destructive: removes volumes + images
 
 ## References
 
-- [CLAUDE.md](../../CLAUDE.md) — MQTT topics, RTSP paths, ports, gotchas
-- [docs/user-guide/](../../docs/user-guide/) — Detailed procedures
-- [docs/user-guide/benchmarking.md](../../docs/user-guide/benchmarking.md) — Benchmark methodology
-- [docs/user-guide/ethernet-px4.md](../../docs/user-guide/ethernet-px4.md) — Remote PX4 setup
-- [docs/user-guide/ports.md](../../docs/user-guide/ports.md) — All ports and endpoints
+- `CLAUDE.md` — MQTT topics, RTSP paths, ports, gotchas
+- `docs/user-guide/` — Detailed procedures
+- `docs/user-guide/benchmarking.md` — Benchmark methodology
+- `docs/user-guide/ethernet-px4.md` — Remote PX4 setup
+- `docs/user-guide/ports.md` — All ports and endpoints
