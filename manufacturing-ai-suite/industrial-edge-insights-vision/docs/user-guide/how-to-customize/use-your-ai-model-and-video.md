@@ -3,7 +3,8 @@
 You can use your own model and run it with the sample applications provided.
 You can also bring your own video file source. This article will show you how to do it.
 
-> **Important:** If you have previously run the setup for the sample app using `setup.sh`,
+> [!IMPORTANT]
+> If you have previously run the setup for the sample app using `setup.sh`,
 > the default sample model and video are downloaded under `resource/<app_name>` in your repo.
 > You can manually add your files next to them.
 >
@@ -57,7 +58,7 @@ the `model` and `video` directories:
 ::::
 hide_directive-->
 
-> **Note:**
+> [!NOTE]
 > You can customize the directory structure for different resources and use cases.
 
 ## Docker compose deployment
@@ -71,8 +72,9 @@ hide_directive-->
    - ./resources/${SAMPLE_APP}/:/home/pipeline-server/resources/
    ```
 
-   > **Note:** The value of `${SAMPLE_APP}` is fetched from the `.env` file specifying the
-     particular sample app you are running.
+   > [!NOTE]
+   > The value of `${SAMPLE_APP}` is fetched from the `.env` file specifying the
+   > particular sample app you are running.
 
 2. Make sure to adjust the pipeline to the model you are using. See the
    `pipeline-server-config.json` included in the repository.
@@ -93,12 +95,13 @@ hide_directive-->
 4. Provide the model path and video file path in the REST/curl command to start an inference
    workload. For example:
 
-   > **Note:** If you are running multiple instances of the application, make sure to provide
+   > [!NOTE]
+   > If you are running multiple instances of the application, make sure to provide
    > `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with
-     `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   > `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the
-     default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
@@ -169,11 +172,12 @@ hide_directive-->
    `dlstreamer-pipeline-server` pod to make them available for application while launching
    pipelines.
 
-   > **Note:** This guide assumes that the sample app is already deployed in the cluster
+   > [!NOTE]
+   > This guide assumes that the sample app is already deployed in the cluster
    >
    > For multi-instance app deployment, use the instance name in the name space, i.e.,
-     `-n <INSTANCE_NAME>` instead of `-n app`. `<INSTANCE_NAME>` is present in config.yml
-     for multi instance app deployment.
+   > `-n <INSTANCE_NAME>` instead of `-n app`. `<INSTANCE_NAME>` is present in config.yml
+   > for multi instance app deployment.
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**
@@ -232,12 +236,13 @@ hide_directive-->
 4. Provide the model path and video file path in the REST/curl command to start an inference
    workload. For example:
 
-   > **Note:** If you are running multiple instances of the application, make sure to provide
+   > [!NOTE]
+   > If you are running multiple instances of the application, make sure to provide
    > `NGINX_HTTPS_PORT` number in the URL for the application instance, i.e., replace `<HOST_IP>` with
-     `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   > `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the
-     default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive::::{tab-set} hide_directive-->
    <!--hide_directive:::{tab-item} hide_directive-->**Pallet Defect Detection**

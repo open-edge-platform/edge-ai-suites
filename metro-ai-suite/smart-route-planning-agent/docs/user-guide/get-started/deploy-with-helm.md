@@ -57,10 +57,11 @@ Set the required values:
 - `trafficIntersections.hosts`: add 2 or more Smart Traffic Intersection Agent endpoints.
 - `httpProxy`, `httpsProxy`, `noProxy`: set these only if you are behind a proxy.
 
-Important proxy note:
-
-- If Smart-Traffic-Intersection-Agent instances are on the same private network, add their IPs to `noProxy`.
-- Private subnets are already included by default in `values_override.yaml`, but better add explicit IPs when needed.
+> [!IMPORTANT]
+> Proxy settings:
+>
+> - If Smart-Traffic-Intersection-Agent instances are on the same private network, add their IPs to `noProxy`.
+> - Private subnets are already included by default in `values_override.yaml`, but better add explicit IPs when needed.
 
 Example:
 
@@ -90,7 +91,8 @@ namespace=<namespace_name>
 helm upgrade --install srpa . -n ${namespace} --create-namespace -f values_override.yaml
 ```
 
-> **Note:** If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace variable to the required value in step 3.)
+> [!NOTE]
+> If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace variable to the required value in step 3.)
 
 ### Step 5: Wait for Ready Pods
 

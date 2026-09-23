@@ -27,7 +27,7 @@ compatibility: >-
 
 Build an end-to-end aerial object detection and telemetry overlay application
 using Intel DL Streamer Pipeline Server. The stack detects objects in video
-from a UAV camera using YOLOv8n-VisDrone (or a custom OpenVINO model),
+from a UAV camera using YOLO11s (or a custom OpenVINO model),
 overlays live MAVLink flight telemetry (altitude, speed, heading, GPS) onto the
 annotated RTSP stream, and automatically starts/stops inference pipelines in
 sync with the UAV armed/disarmed state.
@@ -39,7 +39,7 @@ Video Source (file/RealSense/RTSP)
     │
     ▼
 DL Streamer Pipeline Server
-  ├── gvadetect (OpenVINO YOLOv8n-VisDrone, CPU/GPU/NPU)
+  ├── gvadetect (OpenVINO YOLO11s, CPU/GPU/NPU)
   ├── gvapython (telemetry overlay — altitude, speed, heading, GPS)
   ├── gvametaconvert → gvametapublish → MQTT
   └── appsink → RTSP :8555
@@ -73,7 +73,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | [`references/PIPELINE.md`](references/PIPELINE.md) | DL Streamer config.json, pipeline variants, REST launcher, payload format |
 | [`references/TELEMETRY.md`](references/TELEMETRY.md) | MAVLink/UAVSDK telemetry overlay (gvapython), pipeline manager scripts |
 | [`references/DEPLOY.md`](references/DEPLOY.md) | Docker Compose services, env vars, Makefile targets, volumes, device access |
-| [`references/MODEL.md`](references/MODEL.md) | YOLOv8n-VisDrone download + OpenVINO export, custom model substitution |
+| [`references/MODEL.md`](references/MODEL.md) | YOLO11s download + OpenVINO export, custom model substitution |
 | [`references/TESTS.md`](references/TESTS.md) | pytest structure, REST API tests, RTSP stream validation, MQTT checks |
 
 ## Parameters (from invoking prompt)
@@ -83,7 +83,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | `{{DEPLOYMENT_MODE}}` | `pymavlink` \| `uavsdk` |
 | `{{VIDEO_SOURCE}}` | `file` (gazebo.avi loop) \| `realsense` (v4l2src) \| `rtsp` (rtspsrc) \| `gazebo-rtsp` (RTSP from SDK sim) |
 | `{{DEVICE}}` | `CPU` \| `GPU` \| `NPU` \| `all` (generates CPU+GPU+NPU variants) |
-| `{{MODEL}}` | `yolov8n-visdrone` (default) \| path to custom OpenVINO IR `.xml` |
+| `{{MODEL}}` | `yolo11s` (default) \| path to custom OpenVINO IR `.xml` |
 | `{{PIPELINE_PREFIX}}` | prefix for pipeline names, e.g. `uav_object_detection` |
 | `{{RTSP_PATHS}}` | RTSP stream path(s) published by DLSPS, e.g. `uav-cpu`, `uav-gpu` |
 | `{{UAV_ID}}` | UAV identifier for UAVSDK MQTT topic, e.g. `uav-1` |
@@ -95,7 +95,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 1. Deployment mode [`pymavlink`] (`pymavlink` or `uavsdk`)
 2. Video source [`file`] (`file` for gazebo.avi loop, `realsense` for Intel RealSense, `rtsp` for external RTSP, `gazebo-rtsp` for SDK simulation streams)
 3. Inference device [`CPU`] (`GPU`, `NPU`, or `all` to generate all three variants)
-4. Model [`yolov8n-visdrone`] (or path to a custom OpenVINO IR `.xml` file)
+4. Model [`yolo11s`] (or path to a custom OpenVINO IR `.xml` file)
 5. Output directory [`./uav-stack`]
 6. UAV ID (UAVSDK mode only) [`uav-1`]
 
@@ -165,7 +165,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 │   ├── Dockerfile                         # self-contained build (pymavlink only — never reference an external path)
 │   └── main.conf                          # mavlink-router config (pymavlink only)
 ├── resources/
-│   ├── models/yolov8n-visdrone/          # exported OpenVINO model
+│   ├── models/yolo11s/          # exported OpenVINO model
 │   └── videos/gazebo.avi                 # sample video (file source)
 └── tests/
     ├── conftest.py
@@ -185,7 +185,7 @@ or scripts is a syntax error.
 
 1. `make init` succeeds: `.env` created with auto-detected GPU/NPU device paths.
 2. `make model` succeeds: OpenVINO IR model present at
-   `resources/models/yolov8n-visdrone/best_openvino_model/best.xml`.
+   `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml`.
 3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`.
 4. `curl http://localhost:8081/pipelines` returns the registered pipeline definitions.
 5. Pipeline manager starts with `make start-rtsp` and connects to MAVLink/MQTT.

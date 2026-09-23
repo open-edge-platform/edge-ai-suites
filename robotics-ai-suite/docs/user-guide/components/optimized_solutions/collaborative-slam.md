@@ -83,7 +83,7 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
 The tutorials below should work for any compatible version of Collaborative Visual SLAM that is installed.
 Use the instructions above to switch between version to experiment with different accelerations.
 
-> **Note**:
+> [!NOTE]
 > When installing a collaborative SLAM package, use the specified command line tool
 > below to identify the integrated GPU on your system. Once determined, select
 > the GPU during the installation process. Select option `3. gen12lp`, if unsure.
@@ -165,7 +165,8 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   > **Note:** In this installation package, there are two substantial ROS 2
+   > [!NOTE]
+   > In this installation package, there are two substantial ROS 2
    > bag files, which are approximately 6.8 GB and 2.6 GB in size.
 
 2. Run the Collaborative Visual SLAM algorithm using two bags simulating two
@@ -232,7 +233,8 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   > **Note**: In this installation package, there is a substantial ROS 2
+   > [!NOTE]
+   > In this installation package, there is a substantial ROS 2
    > bag file, which is approximately 6.8 GB in size.
 
 2. Run the collaborative visual SLAM algorithm with FastMapping enabled:
@@ -298,7 +300,8 @@ Use the instructions above to switch between version to experiment with differen
 
 ### Collaborative Visual SLAM with Multi-Camera Feature
 
-> **Note**: The following part illustrates part of the multi-camera feature in Collaborative SLAM that
+> [!NOTE]
+> The following part illustrates part of the multi-camera feature in Collaborative SLAM that
 > uses Kalman Filter to fuse SLAM poses from different trackers in a loosely-coupled manner,
 > and we treat each individual camera as a separate tracker (ROS 2 node). For other parts of the multi-camera feature,
 > they are not yet ready and will be integrated later.
@@ -324,7 +327,8 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   > **Note**: In this installation package, there is a substantial ROS 2
+   > [!NOTE]
+   > In this installation package, there is a substantial ROS 2
    > bag file, which is approximately 206 MB in size.
 
 2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion
@@ -423,7 +427,8 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   > **Note**: In this tutorial installation, there is a substantial ROS 2
+   > [!NOTE]
+   > In this tutorial installation, there is a substantial ROS 2
    > bag file, which is approximately 3.7 GB in size.
 
 2. Run the collaborative visual SLAM algorithm with auxiliary Lidar data input:
@@ -506,7 +511,8 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   > **Note**: In this tutorial installation, there is a substantial ROS 2
+   > [!NOTE]
+   > In this tutorial installation, there is a substantial ROS 2
    > bag file, which is approximately 2.6 GB in size.
 
 2. Run the collaborative visual SLAM algorithm tracker frame-level pose fusion

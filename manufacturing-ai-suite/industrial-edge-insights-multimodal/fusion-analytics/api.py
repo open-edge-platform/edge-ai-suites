@@ -104,6 +104,7 @@ def get_detections(
     global _api_request_count
     _api_request_count += 1
 
+    logger.info(f"Detections request: label={label}, min_confidence={min_confidence}, min_id={min_id}, max_id={max_id}, limit={limit}")
     conditions = []
     if label is not None:
         conditions.append(f"fusion_classification = '{label}'")
@@ -126,6 +127,8 @@ def get_summary(
     max_id: int | None = Query(None, ge=0, description="Upper row bound for the summary window"),
 ):
     """Return per-class statistics aggregated from stored vision weld classification results."""
+
+    logger.info(f"Summary request: min_id={min_id}, max_id={max_id}")
     conditions = []
     if min_id is not None:
         conditions.append(f"time > {min_id}")
@@ -154,6 +157,7 @@ def get_summary(
         summary[label]["max_confidence"] = float(p.get("max_confidence") or 0.0)
         summary[label]["min_confidence"] = float(p.get("min_confidence") or 0.0)
         summary[label]["label"] = label
+        summary[label]["fusion_mode"] = str(os.getenv("FUSION_MODE", "OR"))
     return summary
 
 

@@ -137,7 +137,8 @@ ffmpeg \
     rtsp://<machine2-tsn-vlan1-ip>:8554/hota-metrics-cam2
 ```
 
-> **Note:** The `-stream_loop -1` flag loops the video indefinitely. The capture script on Machine 1 stops automatically after collecting the required number of frames.
+> [!NOTE]
+> The `-stream_loop -1` flag loops the video indefinitely. The capture script on Machine 1 stops automatically after collecting the required number of frames.
 
 ---
 
@@ -153,7 +154,8 @@ cd scenescape
 make demo
 ```
 
-> **Note:** Use the instructions in the [Scenescape prebuilt containers guide](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/deploy-scenescape-using-prebuilt-containers.html) to use the prebuilt images.
+> [!NOTE]
+> Use the instructions in the [Scenescape prebuilt containers guide](https://docs.openedgeplatform.intel.com/dev/scenescape/how-to-guides/deploy-scenescape-using-prebuilt-containers.html) to use the prebuilt images.
 
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
@@ -162,7 +164,8 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection
 bash usecases/scenescape-deterministic-inference/hota/scripts/setup-hota-scene.sh
 ```
 
-> **Note:** If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
+> [!NOTE]
+> If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
 
 This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the Scenescape REST API. See the [Scenescape API Reference](https://docs.openedgeplatform.intel.com/dev/scenescape/api-reference.html) for details.
 
@@ -284,7 +287,8 @@ python mqtt_camera_capture_processor.py
 
 ### Machine 3: Start the Traffic Generator (Congestion Test Only)
 
-> **Note:** Skip this step for the **baseline** (no-congestion) run. Run it only when measuring the effect of network congestion.
+> [!NOTE]
+> Skip this step for the **baseline** (no-congestion) run. Run it only when measuring the effect of network congestion.
 
 ```bash
 cd usecases/scenescape-deterministic-inference/hota/scripts
@@ -310,7 +314,8 @@ The traffic generator:
 
 ### Machine 2: Enable TSN Traffic Shaping (TSN Test Only)
 
-> **Note:** Skip this step for the **congestion without TSN** run. Enable it only for the **congestion with TSN** comparison run.
+> [!NOTE]
+> Skip this step for the **congestion without TSN** run. Enable it only for the **congestion with TSN** comparison run.
 
 Configure the Time-Aware Shaper (IEEE 802.1Qbv) on the MOXA switch to protect the camera stream traffic from the `iperf3` background traffic.
 

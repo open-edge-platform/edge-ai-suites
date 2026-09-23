@@ -22,7 +22,7 @@ TOPIC = "uav/uav-1/telemetry/status"
 PIPELINE_BASE_URL = "http://localhost:8081/pipelines/user_defined_pipelines"
 PIPELINE_DELETE_URL_TMPL = "http://localhost:8081/pipelines/{instance_id}"
 
-MODEL_PATH = "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"
+MODEL_PATH = "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml"
 
 RTSP_BASE_URL = f"rtsp://{BROKER}:8554/uav-1"
 RTSP_OUTPUT_BASE_URL = f"rtsp://localhost:8555/"

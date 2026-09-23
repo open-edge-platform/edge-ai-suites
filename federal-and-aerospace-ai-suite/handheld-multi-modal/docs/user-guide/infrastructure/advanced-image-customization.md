@@ -11,7 +11,8 @@ To get a bootable RAW or ISO image, you define the target OS, packages, kernel, 
 ICT supports multiple distributions including Ubuntu, Azure Linux, and Red Hat compatible
 distros on x86_64.
 
-> Note that this path is intended for advanced users who need fine-grained control over disk
+> [!NOTE]
+> This path is intended for advanced users who need fine-grained control over disk
 > layout, installed packages, and package repositories. Most users can start with the simpler
 > path, [using the standard build](../infrastructure-setup.md#step-2-build-the-os-image).
 
@@ -58,7 +59,8 @@ sudo apt install systemd-ukify mmdebstrap
 
 Follow the instructions at [Image Composition Prerequisites](https://docs.openedgeplatform.intel.com/dev/image-composer-tool/get-started/installation.html#image-composition-prerequisites) if you face issues installing packages using apt.
 
-> **Note:** `mmdebstrap` version 0.8.x (shipped with Ubuntu OS version 22.04) has known
+> [!NOTE]
+> `mmdebstrap` version 0.8.x (shipped with Ubuntu OS version 22.04) has known
 > issues. Ensure you have version 1.4.3 or later. On Ubuntu OS version 23.04 or later, the
 > repository version is sufficient.
 

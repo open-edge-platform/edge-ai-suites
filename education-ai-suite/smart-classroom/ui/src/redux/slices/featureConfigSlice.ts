@@ -1,13 +1,16 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { FeatureId, SessionStage } from '../../generated/pipeline';
 
 /**
- * Feature descriptor shape from backend /features endpoint
+ * Feature descriptor shape from backend /features endpoint.
  */
 export interface FeatureDescriptor {
-  id: string;
-  dependency: string[];
+  id: FeatureId;
+  dependency: FeatureId[];
   requires: string[];
-  
+  /** The pipeline stage this feature owns, if any. */
+  stage?: SessionStage | null;
+
   // Optional UI-specific fields
   endpoints?: Record<string, string>;
   mode?: string;

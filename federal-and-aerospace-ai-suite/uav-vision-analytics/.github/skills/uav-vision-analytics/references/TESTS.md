@@ -121,7 +121,7 @@ def test_pipeline_start_stop(rest_base):
         },
         "parameters": {
             "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+                "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
                 "device": "CPU"
             }
         }
@@ -181,7 +181,7 @@ def _start_pipeline(rest_base, pipeline_name, rtsp_path):
         },
         "parameters": {
             "detection-properties": {
-                "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+                "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
                 "device": "CPU"
             }
         }
@@ -269,7 +269,7 @@ def test_model_file_exists():
     result = subprocess.run(
         ["docker", "exec", "dlstreamer-pipeline-server",
          "test", "-f",
-         "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml"],
+         "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml"],
         capture_output=True
     )
     assert result.returncode == 0, "Model file not found in container"

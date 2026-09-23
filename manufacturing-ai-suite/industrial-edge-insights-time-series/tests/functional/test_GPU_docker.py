@@ -52,15 +52,16 @@ def _run_gpu_config_test(context, ingestion_type):
     logger.info(f"Grace period {constants.WIND_TURBINE_GPU_RESTART_GRACE}s for kapacitor UDF to bind GPU...")
     time.sleep(constants.WIND_TURBINE_GPU_RESTART_GRACE)
 
-    logger.info("Verifying if logs contain GPU keywords...")
+    logger.info("Verifying sklearnex actually accelerated on GPU...")
     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
-    gpu_result = docker_utils.check_log_gpu(
+    gpu_result = docker_utils.verify_sklearnex_device_offload(
         container_name,
+        device="gpu",
         timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT,
         interval=10,
     )
-    logger.info(f"GPU log check result: {gpu_result}")
-    assert_condition(gpu_result is True, "GPU keywords not found in logs")
+    logger.info(f"GPU offload verification result: {gpu_result}")
+    assert_condition(gpu_result is True, "sklearnex did not confirm accelerated GPU inference in logs")
 
 
 @pytest.mark.gpu

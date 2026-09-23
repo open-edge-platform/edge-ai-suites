@@ -100,7 +100,8 @@ Verify the REST API is accessible from the Ubuntu VAP host:
 curl -k -s https://<NX_HOST_IP>:7001/rest/v4/info | python3 -m json.tool | grep '"name"\|"version"'
 ```
 
-> **Note:** Replace `<NX_HOST_IP>` with the Windows machine's LAN IP address.
+> [!NOTE]
+> Replace `<NX_HOST_IP>` with the Windows machine's LAN IP address.
 
 ### 2.2 Add Cameras to Nx Witness
 
@@ -183,7 +184,8 @@ NX_PASSWORD=<nx_admin_password>
 UI_HTTPS_PORT=3443
 ```
 
-> **Note:** Replace `host.docker.internal` with the actual IP address if LVC runs on a different host.
+> [!NOTE]
+> Replace `host.docker.internal` with the actual IP address if LVC runs on a different host.
 
 ### 3.2 Verify `config/config.yaml`
 
@@ -238,7 +240,8 @@ cd metro-ai-suite/vms-adapter-plugin
 ```bash
 docker compose build
 ```
-> **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+> [!NOTE]
+> You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
 
 #### 4.1.2 Start VAP
 ```bash
@@ -333,7 +336,8 @@ Expected log output:
 [info] nx_pipeline_stopped        device_id=<device-uuid>  run_id=<hex-instance-id>  success=True
 ```
 
-> **Note:** To run Live Video Captioning and Loitering Detection simultaneously, see the
+> [!NOTE]
+> To run Live Video Captioning and Loitering Detection simultaneously, see the
 > [Run Both Applications Simultaneously](./run-simultaneous-apps.md) guide.
 
 ### 5.2 Start a Captioning Run from the VAP Dashboard (Optional)
@@ -378,7 +382,8 @@ curl -k -X POST https://localhost:3443/v1/cameras/enable \
    | **Device**       | Dropdown for selecting the inference device |
    | **Enter Prompt** | Instruction sent to the VLM for each frame  |
 
-   > **Note:** Additional configurable fields are available in the form. This tutorial focuses on the three fields above.
+   > [!NOTE]
+   > Additional configurable fields are available in the form. This tutorial focuses on the three fields above.
 
 3. Select the target camera from the **Camera** dropdown.
 
