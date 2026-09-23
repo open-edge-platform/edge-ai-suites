@@ -108,7 +108,7 @@ Endpoints that accept path, query, or body parameters return `422 Unprocessable 
 curl http://<HOST_IP>:8000/openapi.json
 
 # From repo
-cat docs/user-guide/api-docs/smart-nvr.yaml
+cat docs/user-guide/api-docs/smart-event-router.yaml
 ```
 
 Import into [Swagger Editor](https://editor.swagger.io/), [Bruno](https://www.usebruno.com/), or [Insomnia](https://insomnia.rest/) for offline exploration.

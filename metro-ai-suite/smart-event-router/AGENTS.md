@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Smart NVR is a Python application for edge video analytics. It has a FastAPI backend,
+Smart Event Router is a Python application for edge video analytics. It has a FastAPI backend,
 a Gradio-based UI, and Docker/Helm deployment assets for running with Frigate, MQTT,
 Redis, VSS Search, VSS Summary, and optional VLM/Scenescape integrations.
 

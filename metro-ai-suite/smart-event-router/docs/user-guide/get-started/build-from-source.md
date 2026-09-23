@@ -1,10 +1,10 @@
 # Build from Source
 
-This comprehensive guide provides detailed instructions for building the Smart NVR application container images from source code. Whether you're a developer looking to customize the application or troubleshoot issues, this guide will walk you through the complete build and deployment process.
+This comprehensive guide provides detailed instructions for building the Smart Event Router application container images from source code. Whether you're a developer looking to customize the application or troubleshoot issues, this guide will walk you through the complete build and deployment process.
 
 ## Overview
 
-The Smart NVR application consists of multiple components that work together to provide GenAI-powered video analytics:
+The Smart Event Router application consists of multiple components that work together to provide GenAI-powered video analytics:
 
 - **NVR Event Router**: Core backend service that processes events and coordinates between services.
 - **UI Component**: Gradio-based web interface for interacting with the system.
@@ -14,11 +14,11 @@ The Smart NVR application consists of multiple components that work together to 
 
 ## Step 1: Clone the Repository
 
-First, clone the repository and navigate to the Smart NVR directory:
+First, clone the repository and navigate to the Smart Event Router directory:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
-cd edge-ai-suites/metro-ai-suite/smart-nvr
+cd edge-ai-suites/metro-ai-suite/smart-event-router
 ```
 
 ## Step 2: Build the Docker Images

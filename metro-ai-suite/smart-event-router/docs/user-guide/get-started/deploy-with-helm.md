@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-This section shows how to deploy the Smart NVR Application using Helm chart.
+This section shows how to deploy the Smart Event Router Application using Helm chart.
 
 ## Prerequisites
 
@@ -15,7 +15,7 @@ Before you begin, ensure that you have the following:
 configuration. (This should change with choice of models and needs to be properly configured).
 Please make sure that required storage is available in you cluster.
 
-Before setting up Smart NVR, ensure these services are running on their respective devices:
+Before setting up Smart Event Router, ensure these services are running on their respective devices:
 
 ### 1. Video Search and Summarization (VSS) Services
 
@@ -79,7 +79,7 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 Navigate to the chart directory:
 
 ```bash
-cd edge-ai-suites/metro-ai-suite/smart-nvr
+cd edge-ai-suites/metro-ai-suite/smart-event-router
 ```
 
 ### 2. Configure Required Values
@@ -137,7 +137,7 @@ accessible on your shell with the desired namespace as its value.
 
 ### 5. Deploy the Helm Chart
 
-Deploy the Smart NVR Application:
+Deploy the Smart Event Router Application:
 
 ```bash
 helm install smart-nvr . -f user_value_override.yaml -n $my_namespace
@@ -184,7 +184,7 @@ smart_nvr_port=$(kubectl get service nvr-event-router-ui-nginx -n $my_namespace 
 echo "http://${smart_nvr_ip}:${smart_nvr_port}"
 ```
 
-Copy the output of above bash snippet and paste it into your browser to access the **Smart NVR Application**.
+Copy the output of above bash snippet and paste it into your browser to access the **Smart Event Router Application**.
 
 ### Step 8: Update Helm Dependencies
 
@@ -197,7 +197,7 @@ helm dependency update
 
 ### Step 9: Uninstall Helm chart
 
-To uninstall the Smart NVR Helm chart, use the following command:
+To uninstall the Smart Event Router Helm chart, use the following command:
 
 ```bash
 helm uninstall smart-nvr -n $my_namespace
@@ -206,7 +206,7 @@ helm uninstall smart-nvr -n $my_namespace
 ## Verification
 
 - Ensure that all pods are running and the services are accessible.
-- Access the Smart NVR application dashboard and verify that it is functioning as expected.
+- Access the Smart Event Router application dashboard and verify that it is functioning as expected.
 - Check that all components (Frigate, MQTT Broker, Redis, NVR Event Router, NVR Event Router UI) are functioning properly.
 
 ## Troubleshooting

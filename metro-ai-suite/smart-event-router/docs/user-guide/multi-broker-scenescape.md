@@ -1,12 +1,12 @@
 # Multiple Scenescape Deployment
 
-Smart NVR with Scenescape running on separate machines: Smart Intersection (SI) on
-System 1, NVR stack on System 2. For single-node deployment, see
-[Integrate Scenescape with Smart NVR](./scenescape-integration.md).
+Smart Event Router with Scenescape running on separate machines: Smart Intersection (SI) on
+System 1, Event Router stack on System 2. For single-node deployment, see
+[Integrate Scenescape with Smart Event Router](./scenescape-integration.md).
 
 ## Overview
 
-Smart NVR maintains a persistent, independent MQTT connection to each SI node.
+Smart Event Router maintains a persistent, independent MQTT connection to each SI node.
 Events are tagged with the broker `id` to route them to the correct Frigate camera.
 
 - **One entry per SI node.** In `brokers.yaml`, `host` is the MQTT broker IP used at

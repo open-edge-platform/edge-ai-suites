@@ -4,7 +4,7 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 ## Supported Platforms
 
-The base requirements for Smart NVR is dependent on the respective video analytics pipeline being utilized. Below is the list of requirements as mapped to each constituent components of the Smart NVR application
+The base requirements for Smart Event Router is dependent on the respective video analytics pipeline being utilized. Below is the list of requirements as mapped to each constituent components of the Smart Event Router application
 
 - Frigate NVR: Refer to Frigate documentation, specifically the section that maps to
   [OpenVINO](https://docs.frigate.video/frigate/hardware/#openvino---intel).

@@ -1,10 +1,10 @@
-# Integrate Scenescape with Smart NVR
+# Integrate Scenescape with Smart Event Router
 
-This guide describes how to integrate Intel® Scenescape with Smart NVR for enhanced traffic monitoring using live data from the Smart Intersection application.
+This guide describes how to integrate Intel® Scenescape with Smart Event Router for enhanced traffic monitoring using live data from the Smart Intersection application.
 
 ## Overview
 
-Smart NVR integrates with Intel® Scenescape to enable:
+Smart Event Router integrates with Intel® Scenescape to enable:
 
 - Real-time object counting and tracking (vehicles, pedestrians)
 - Traffic flow analysis
@@ -18,7 +18,7 @@ Smart NVR integrates with Intel® Scenescape to enable:
 
 ## Deployment Modes
 
-Smart NVR with Scenescape supports two deployment modes:
+Smart Event Router with Scenescape supports two deployment modes:
 
 | Mode | Description | Command |
 |------|-------------|---------|
@@ -172,4 +172,4 @@ When reporting issues, verify the following:
 4. **Distributed node** — See [Multiple Scenescape Deployment](./multi-broker-scenescape.md) for connectivity and broker troubleshooting.
 5. **Resource utilization** — Run `docker stats --no-stream` to identify resource-constrained containers
 
-For general Smart NVR issues, refer to the [Troubleshooting Guide](./troubleshooting.md).
+For general Smart Event Router issues, refer to the [Troubleshooting Guide](./troubleshooting.md).

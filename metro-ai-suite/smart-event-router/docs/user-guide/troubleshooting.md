@@ -1,6 +1,6 @@
 # Troubleshooting
 
-This page provides comprehensive support and troubleshooting information for the Smart NVR Sample Application. It is divided into the following sections:
+This page provides comprehensive support and troubleshooting information for the Smart Event Router Sample Application. It is divided into the following sections:
 
 - [Common Issues](#common-issues): General troubleshooting steps for resolving issues like container failures, port conflicts, and missing dependencies.
 - [Troubleshooting Docker Deployments](#troubleshooting-docker-deployments): Steps to address problems specific to Docker deployments.

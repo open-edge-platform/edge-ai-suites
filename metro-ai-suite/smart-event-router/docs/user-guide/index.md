@@ -1,24 +1,24 @@
-# Smart NVR
+# Smart Event Router
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-nvr">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-event-router">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-event-router/README.md">
      Readme
   </a>
 </div>
 hide_directive-->
 
 The sample application showcases the use of GenAI-powered vision analytics to
-transform a traditional NVR into a Smart NVR, unlocking advanced insights and
+transform a traditional NVR into a Smart Event Router, unlocking advanced insights and
 automation at the edge. It is designed to help developers understand the architecture, setup,
 and customization of the sample application.
 
 ## Overview
 
-The **Smart NVR** leverages GenAI-enabled vision analytics pipelines to convert conventional network video recorders into intelligent, context-aware systems. By processing video streams directly at the edge, the Smart NVR dramatically reduces the volume of data that needs to be transmitted or stored, while enabling real-time detection, summarization, and actionable insights. This approach not only optimizes bandwidth and storage but also empowers organizations to respond faster to critical events and extract more value from their video infrastructure.
+The **Smart Event Router** leverages GenAI-enabled vision analytics pipelines to convert conventional network video recorders into intelligent, context-aware systems. By processing video streams directly at the edge, the Smart Event Router dramatically reduces the volume of data that needs to be transmitted or stored, while enabling real-time detection, summarization, and actionable insights. This approach not only optimizes bandwidth and storage but also empowers organizations to respond faster to critical events and extract more value from their video infrastructure.
 
 ### Example Use Cases
 
@@ -38,25 +38,25 @@ The **Smart NVR** leverages GenAI-enabled vision analytics pipelines to convert 
 
 ## How it Works
 
-This section provides a high-level architecture view of the Smart NVR application and how it integrates with different video analytics pipelines.
+This section provides a high-level architecture view of the Smart Event Router application and how it integrates with different video analytics pipelines.
 
 ![High-Level System Diagram](./_assets/smartnvr-architecture.png)
 
 ### Key Components
 
-The diagram shows the key components of the Smart NVR application. The description below
+The diagram shows the key components of the Smart Event Router application. The description below
 provides a high-level description of the components and how these components come together to
 support the features.
 
 - **Frigate NVR**:
-  - Frigate NVR is used as reference NVR as a proxy for any NVR that can be converted to Smart NVR. Refer to [Frigate](https://frigate.video/) documentation for details on Frigate.
+  - Frigate NVR is used as reference NVR as a proxy for any NVR that can be converted to Smart Event Router. Refer to [Frigate](https://frigate.video/) documentation for details on Frigate.
   - Frigate is responsible for accepting live video input from different _Cameras_ and store the same in _Video store_. Frigate supports [APIs](https://docs.frigate.video/integrations/api/frigate-http-api) that can be used to get access to the videos stored in the Video store.
 
 - **NVR Event Router**:
 
   NVR Event Router is the glue layer between the (Frigate) NVR and the video analytics pipeline. This component serves two primary objectives.
   - It helps track the events raised by the NVR and connect the events of interest to the Video analytics pipeline like the [Video Search and Summarization](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html) application. The events of interest are determined by the query raised by the user. Video associated with the event can be further processed by the video analytics pipelines.
-  - It provides mechanism to configure the applications available under video analytics category as appropriate to the target use cases. The [Video Search and Summarization](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html) sample application and [Image-based Video Search](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/image-based-video-search/index.html) sample application are two example pipelines. The latter is not integrated yet as part of Smart NVR offering.
+  - It provides mechanism to configure the applications available under video analytics category as appropriate to the target use cases. The [Video Search and Summarization](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html) sample application and [Image-based Video Search](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/image-based-video-search/index.html) sample application are two example pipelines. The latter is not integrated yet as part of Smart Event Router offering.
 
 - **Reference UI**
 
@@ -68,7 +68,7 @@ support the features.
 
 - **Feature 1**: Architecture based on modular microservices enables composability and reconfiguration.
 - **Feature 2**: Connects to available video analytics pipeline applications like [Video Search and Summarization](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html) sample application and [Image-based Video Search](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/image-based-video-search/index.html) sample application.
-- **Feature 3**: Independent Gradio based UI allows extending the capability of Smart NVR sample application independent of the integrated video analytics sample applications.
+- **Feature 3**: Independent Gradio based UI allows extending the capability of Smart Event Router sample application independent of the integrated video analytics sample applications.
 
 ## Learn More
 
@@ -77,7 +77,7 @@ support the features.
 - [Build from source](./get-started/build-from-source.md): How to build and deploy the application using Docker Compose.
 - [Deploy with Helm](./get-started/deploy-with-helm.md): How to deploy the application with Helm.
 - [How to Use the Application](./how-to-use-application.md): Explore the application's features and verify its functionality.
-- [Development Guide](./development-guide.md): Quick reference for developers contributing to Smart NVR.
+- [Development Guide](./development-guide.md): Quick reference for developers contributing to Smart Event Router.
 - [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 <!--hide_directive
@@ -87,7 +87,7 @@ support the features.
 get-started
 how-to-use-application
 development-guide
-Integrate Scenescape with Smart NVR <scenescape-integration.md>
+Integrate Scenescape with Smart Event Router <scenescape-integration.md>
 Multiple Scenescape Deployment <multi-broker-scenescape.md>
 api-reference
 troubleshooting

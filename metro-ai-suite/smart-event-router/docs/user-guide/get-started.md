@@ -1,6 +1,6 @@
 # Get Started
 
-Smart NVR is a GenAI-powered video analytics application that transforms traditional network
+Smart Event Router is a GenAI-powered video analytics application that transforms traditional network
 video recorders with intelligent event detection and real-time insights at the edge. This guide
 will walk you through deploying and configuring the application to extract valuable insights
 from your video data.
@@ -10,14 +10,14 @@ from your video data.
 ### System Requirements
 
 - System must meet [minimum requirements](./get-started/system-requirements.md).
-- VSS and Smart NVR can run on the same device using VSS Dual Mode, or on separate devices.
+- VSS and Smart Event Router can run on the same device using VSS Dual Mode, or on separate devices.
 
 | Deployment Option | VSS Mode | Minimum Devices |
 | ----------------- | -------- | --------------- |
 | Single device | Dual Mode (`--summary --search`) | 1 |
 | Separate VSS device | Any mode | 2 |
 
-Deploy VSS before starting Smart NVR. See [VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html) for setup instructions.
+Deploy VSS before starting Smart Event Router. See [VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html) for setup instructions.
 
 ### Software Dependencies
 
@@ -37,7 +37,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set metro-ai-suite
-cd metro-ai-suite/smart-nvr
+cd metro-ai-suite/smart-event-router
 ```
 
 ### Step 2: Configure Environment
