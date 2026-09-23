@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/skills/**"
       - "**/.github/skills/**"
+      - "**/skills/**"
       - ".github/workflows/skill-scan.yaml"
   push:
     branches: ["main"]
