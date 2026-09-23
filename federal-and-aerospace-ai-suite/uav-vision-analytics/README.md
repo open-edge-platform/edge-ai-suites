@@ -107,10 +107,11 @@ and `metrics-manager` no longer publish ports directly to the host.
 `<HOST_IP>` is auto-detected and written to `.env` by `make init` (defaults to `localhost`/`127.0.0.1` when run locally). The self-signed TLS certificate is generated automatically into `configs/nginx/ssl/` the first time `make pymav-up`/`make uavsdk-up` runs — use `curl -k` to skip verification.
 
 > [!IMPORTANT]
-> `nginx`'s ports (`80`, `8555`) are published on `HOST_IP`, so they are reachable from
-> your LAN by default (needed for QGroundControl/VLC/ffplay on other devices) — not just
-> `localhost`. Traffic is unencrypted and neither the REST API nor the RTSP stream is
-> authenticated. Set `HOST_IP=127.0.0.1` in `.env` to restrict access to the local host only.
+> `nginx`'s ports (`80`, `443`, `8555`) are published on `HOST_IP`, so they are reachable
+> from your LAN by default (needed for QGroundControl/VLC/ffplay on other devices) — not
+> just `localhost`. RTSP traffic is unencrypted, and neither the REST API nor the RTSP
+> stream is authenticated. Set `HOST_IP=127.0.0.1` in `.env` to restrict access to the
+> local host only.
 
 ## Make Targets
 
