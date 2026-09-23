@@ -247,7 +247,11 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 ### NodeRED Editor
 - **URL**: `https://<HOST_IP>:30443/nodered/`
-- **No login required** - Visual programming interface
+- **Username**: `admin`
+- **Password**: Get from secrets:
+  ```bash
+  kubectl get secret smart-intersection-nodered-secrets -n smart-intersection -o jsonpath='{.data.nodered-admin-password}' | base64 -d && echo
+  ```
 
 ### DL Streamer Pipeline Server
 - **URL**: `https://<HOST_IP>:30443/api/pipelines/status`
