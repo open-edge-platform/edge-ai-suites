@@ -102,8 +102,8 @@ make clean-all              # Destructive: removes volumes + images
 
 ## References
 
-- `CLAUDE.md` — MQTT topics, RTSP paths, ports, gotchas
-- `docs/user-guide/` — Detailed procedures
-- `docs/user-guide/benchmarking.md` — Benchmark methodology
-- `docs/user-guide/ethernet-px4.md` — Remote PX4 setup
-- `docs/user-guide/ports.md` — All ports and endpoints
+- [CLAUDE.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/CLAUDE.md) — MQTT topics, RTSP paths, ports, gotchas
+- [docs/user-guide/](https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide) — Detailed procedures
+- [docs/user-guide/benchmarking.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/benchmarking.md) — Benchmark methodology
+- [docs/user-guide/ethernet-px4.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/ethernet-px4.md) — Remote PX4 setup
+- [docs/user-guide/ports.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/ports.md) — All ports and endpoints
