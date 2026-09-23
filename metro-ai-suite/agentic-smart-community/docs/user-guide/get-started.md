@@ -118,6 +118,8 @@ It always uses `$SMART_COMMUNITY_DATA_DIR/config.yaml` and `$SMART_COMMUNITY_DAT
 docker compose -f docker/compose.yaml up -d --force-recreate smart-community-mcp-server
 ```
 
+By default, the MCP server binds to `127.0.0.1`. To allow access from another machine, set `MCP_BIND_HOST=0.0.0.0` before starting the stack. Keep `EVENTS_BIND_HOST` at its default `127.0.0.1`; the events webhook is unauthenticated and writes directly to the database. Restrict port `3100` to trusted clients with your network firewall or a reverse proxy with authentication.
+
 Verify that the MCP endpoint, events webhook, and data root are available:
 
 ```bash

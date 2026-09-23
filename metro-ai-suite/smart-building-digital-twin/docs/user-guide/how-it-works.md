@@ -16,56 +16,9 @@ The sample application provides:
 The sample application has the following architecture elements:
 
 - Video and sensor sources
-- Scenescape components for MediaMTX media router, Deep Learning Streamer (DL Streamer),
+- Scenescape components for MediaMTX media router, the DL Streamer Pipeline Server (DLSPS),
   scene controller, and MQTT broker
-- An analytics container that runs narrator and dashboard services
+- A scene-narrator container that runs narrator and dashboard services
 - A browser dashboard that shows scene state, narrator feed, and event detail
 
-```mermaid
-flowchart BT
-    subgraph src["Video &amp; Sensor Sources"]
-        TS[".ts files<br/>looped video"]
-        SJSON["sensors.json<br/>badge / FaceID / light"]
-    end
-
-    subgraph ss["Scenescape"]
-        direction BT
-        MTX["MediaMTX<br/>RTSP server"]
-        DLS["DLStreamer<br/>YOLOX-S or ATSS-MobileNetV2 detection"]
-        CTRL["scene controller<br/>track fusion"]
-        BROKER["MQTT broker"]
-        MTX --> DLS -->|detections| BROKER
-        CTRL -->|tracked objects| BROKER
-        BROKER --> CTRL
-    end
-
-    subgraph analytics["Analytics Container"]
-        direction BT
-        NAR["narrator.py<br/>event narration + alerts"]
-        DASH["dashboard.py<br/>FastAPI"]
-        NAR --> DASH
-    end
-
-    subgraph ui["Browser  DASHBOARD_URL"]
-        STATE["Scene State<br/>live counts &amp; regions"]
-        FEED["Narrator Feed<br/>events &amp; snapshots"]
-        DETAIL["Event Detail<br/>expanded view"]
-    end
-
-    TS --> MTX
-    SJSON -->|sensor_replay.py| BROKER
-    BROKER -->|MQTT tracks| NAR
-    DASH -->|SSE /stream/scene-state| STATE
-    DASH -->|SSE /stream/narrator| FEED
-    FEED --> DETAIL
-
-    classDef source  fill:#2d4a6b,stroke:#4a7aab,color:#cce0ff
-    classDef infra   fill:#3a3a5c,stroke:#6060a0,color:#d0d0ff
-    classDef app     fill:#1e4d3a,stroke:#3a8a5a,color:#c0ffdc
-    classDef browser fill:#4a3000,stroke:#c08000,color:#ffe0a0
-
-    class TS,SJSON source
-    class MTX,DLS,CTRL,BROKER infra
-    class NAR,DASH app
-    class STATE,FEED,DETAIL browser
-```
+![High-Level Architecture](./_assets/SmartBuildingDigitalTwin-architecture.svg "high-level architecture")

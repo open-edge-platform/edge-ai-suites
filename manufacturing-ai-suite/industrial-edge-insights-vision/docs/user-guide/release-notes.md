@@ -1,13 +1,8 @@
 # Release Notes: Pallet Defect Detection and PCB Anomaly Detection
 
-## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
+## Version 2.8.1 (Pallet Defect Detection) and Version 1.4.1 (PCB Anomaly Detection)
 
-**Release Date**: September 10, 2026
-
-**New**:
-
-- Fixed coturn server configuration for WebRTC relay.
-- Fixed Grafana MQTT datasource version to avoid errors with the latest version.
+**Release Date**: September 18, 2026
 
 **Fixed**:
 
@@ -16,6 +11,15 @@
   `S3_STORAGE_USERNAME`/`S3_STORAGE_PASSWORD`; update your `.env`/`helm/values*.yaml` files.
   The frame browsing console moved from `/minio/` to `/storage/`, protected by HTTP Basic Auth
   using the same credentials.
+
+## Version 2.8.0 (Pallet Defect Detection) and Version 1.4.0 (PCB Anomaly Detection)
+
+**Release Date**: September 10, 2026
+
+**New**:
+
+- Fixed coturn server configuration for WebRTC relay.
+- Fixed Grafana MQTT datasource version to avoid errors with the latest version.
 
 **Improved**:
 
