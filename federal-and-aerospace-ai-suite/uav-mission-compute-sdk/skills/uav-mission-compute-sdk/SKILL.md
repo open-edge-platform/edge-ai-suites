@@ -1,17 +1,12 @@
 ---
-name: uav-mission-compute-user
+name: uav-mission-compute-sdk
 description: >
   Operate and troubleshoot the UAV Mission Compute SDK for PX4 telemetry, camera streaming, missions, computer vision, and edge AI demonstrations. USE FOR: SDK setup, infrastructure validation, camera profile switching (sim/USB/RealSense), mission execution, telemetry benchmarking, Ethernet remote PX4 deployment. DO NOT USE FOR: General PX4 flight control beyond MQTT/REST, custom hardware integration details, or production flight planning.
 license: Apache-2.0
 compatibility: Requires Docker Engine 24+, Docker Compose v2, Python 3.10+, Ubuntu 24.04, Intel GPU recommended
 metadata:
   author: Intel Open Edge Platform Team
-  tags:
-    - uav
-    - px4
-    - mavlink
-    - mqtt
-    - docker
+  tags: uav, px4, mavlink, mqtt, docker
 ---
 
 # UAV Mission Compute SDK Skill
@@ -107,8 +102,8 @@ make clean-all              # Destructive: removes volumes + images
 
 ## References
 
-- [CLAUDE.md](../../CLAUDE.md) — MQTT topics, RTSP paths, ports, gotchas
-- [docs/user-guide/](../../docs/user-guide/) — Detailed procedures
-- [docs/user-guide/benchmarking.md](../../docs/user-guide/benchmarking.md) — Benchmark methodology
-- [docs/user-guide/ethernet-px4.md](../../docs/user-guide/ethernet-px4.md) — Remote PX4 setup
-- [docs/user-guide/ports.md](../../docs/user-guide/ports.md) — All ports and endpoints
+- `CLAUDE.md` — MQTT topics, RTSP paths, ports, gotchas
+- `docs/user-guide/` — Detailed procedures
+- `docs/user-guide/benchmarking.md` — Benchmark methodology
+- `docs/user-guide/ethernet-px4.md` — Remote PX4 setup
+- `docs/user-guide/ports.md` — All ports and endpoints

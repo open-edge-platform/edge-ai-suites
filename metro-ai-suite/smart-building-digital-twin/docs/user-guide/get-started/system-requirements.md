@@ -20,6 +20,7 @@
 - OpenSSL toolkit
 - jq tool
 - Install the Git Large File Storage (LFS) extension **before** cloning, for video file storage:
+
   ```bash
   # Ubuntu/Debian
   sudo apt install git-lfs
