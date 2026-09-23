@@ -325,6 +325,10 @@ services:
         condition: service_started
       metrics-manager:
         condition: service_healthy
+      multimodal-embedding-serving:
+        condition: service_started
+      vdms-vector-db:
+        condition: service_healthy
     networks:
       - rag_network
 
