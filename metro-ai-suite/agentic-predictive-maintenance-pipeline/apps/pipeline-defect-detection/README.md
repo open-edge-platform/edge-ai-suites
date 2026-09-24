@@ -7,7 +7,7 @@ Agentic Predictive Maintenance for Critical Infrastructure Blueprint.
 ## Quick Start
 
 ```bash
-cd <edge-ai-suites>/sample-applications/agentic-predictive-maintenance
+cd <edge-ai-suites>/metro-ai-suite/agentic-predictive-maintenance-pipeline
 ./setup.sh --use-case pipeline-defect-detection \
   --use-case-dir <path-to-this-directory>
 ```
