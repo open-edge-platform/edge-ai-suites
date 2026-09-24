@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from utils.config_loader import config
 from utils.prompt_loader import load_prompt
 from utils import text_chunker
+from utils.overload_warnings import OverloadWarnings
 from utils.transcript_parser import parse_transcript_lines
 from components.segmentation import topic_merge
 
@@ -89,6 +90,7 @@ class ContentSegmentationComponent(PipelineComponent):
     def __init__(self, session_id, temperature=0.2):
         self.session_id = session_id
         self.temperature = temperature
+        self.warnings = OverloadWarnings(session_id, "segmentation")
 
     def _build_messages(self, transcript_text, language=None, *, quota=None,
                         window_start=None, window_end=None):
@@ -174,11 +176,13 @@ class ContentSegmentationComponent(PipelineComponent):
         return text
 
     @staticmethod
-    def _validate_topics(objs: list) -> str | None:
+    def _validate_topics(objs: list, quota: int | None = None) -> str | None:
         """Drop entries that fail the Topic schema, sort by time, and dump the rest.
 
         Returns None when nothing survives, which sends the caller to the next
-        recovery step.
+        recovery step. ``quota`` is the count this call asked for: a window is
+        asked for its own quota, not for the lesson's 15-25, so the band would
+        otherwise warn about every window of a split lesson.
         """
         kept, dropped = [], 0
         for obj in objs:
@@ -201,7 +205,11 @@ class ContentSegmentationComponent(PipelineComponent):
             logger.warning("Topic validation: kept %d, dropped %d invalid.", len(kept), dropped)
 
         kept.sort(key=lambda t: t.start_time)
-        if not MIN_TOPICS <= len(kept) <= MAX_TOPICS:
+        if quota is not None:
+            if len(kept) != quota:
+                logger.warning("Window returned %d topics against a quota of %d; "
+                               "the merge will reconcile it.", len(kept), quota)
+        elif not MIN_TOPICS <= len(kept) <= MAX_TOPICS:
             logger.warning(
                 "Topic count %d is outside the requested %d-%d range.",
                 len(kept), MIN_TOPICS, MAX_TOPICS
@@ -209,7 +217,7 @@ class ContentSegmentationComponent(PipelineComponent):
         return json.dumps([t.model_dump() for t in kept], ensure_ascii=False)
 
     @staticmethod
-    def _parse_topics(text: str, tolerant: bool) -> str | None:
+    def _parse_topics(text: str, tolerant: bool, quota: int | None = None) -> str | None:
         """Run one sanitize → parse → validate pass.
 
         ``tolerant`` selects json_repair, which absorbs fences, surrounding
@@ -224,10 +232,10 @@ class ContentSegmentationComponent(PipelineComponent):
         # json_repair returns "" rather than raising on unrecoverable input.
         if not isinstance(parsed, list):
             return None
-        return ContentSegmentationComponent._validate_topics(parsed)
+        return ContentSegmentationComponent._validate_topics(parsed, quota)
 
     @staticmethod
-    def _clean_topics_output(raw: str) -> str:
+    def _clean_topics_output(raw: str, quota: int | None = None) -> str:
         """
         Clean the raw output from the model to extract a valid JSON array string.
 
@@ -237,18 +245,18 @@ class ContentSegmentationComponent(PipelineComponent):
         """
         text = raw.strip()
 
-        result = ContentSegmentationComponent._parse_topics(text, tolerant=False)
+        result = ContentSegmentationComponent._parse_topics(text, tolerant=False, quota=quota)
         if result:
             return result
 
         # Fenced output is common enough to stay on the quiet path.
         stripped = re.sub(r"```[a-zA-Z]*\n?([\s\S]*?)```", r"\1", text).strip()
         if stripped != text:
-            result = ContentSegmentationComponent._parse_topics(stripped, tolerant=False)
+            result = ContentSegmentationComponent._parse_topics(stripped, tolerant=False, quota=quota)
             if result:
                 return result
 
-        result = ContentSegmentationComponent._parse_topics(text, tolerant=True)
+        result = ContentSegmentationComponent._parse_topics(text, tolerant=True, quota=quota)
         if result:
             logger.warning("_clean_topics_output: recovered malformed JSON via json_repair.")
             return result
@@ -257,7 +265,7 @@ class ContentSegmentationComponent(PipelineComponent):
         # the first balanced [...] block.
         extracted = ContentSegmentationComponent._extract_json_array(text)
         if extracted:
-            result = ContentSegmentationComponent._parse_topics(extracted, tolerant=True)
+            result = ContentSegmentationComponent._parse_topics(extracted, tolerant=True, quota=quota)
             if result:
                 logger.warning("_clean_topics_output: recovered array from surrounding text.")
                 return result
@@ -343,9 +351,11 @@ class ContentSegmentationComponent(PipelineComponent):
 
         total = sum(text_chunker.count_tokens(l, tokenizer) + 1
                     for l in text_chunker.render_transcript_lines(lines))
-        if total <= text_chunker.usable_tokens(budget, reserve):
+        if total <= text_chunker.usable_tokens(budget, reserve,
+                                               on_cap=self.warnings.on_cap):
             text_chunker.warn_if_short_of_memory(
-                total + reserve, device, what="segmentation call"
+                total + reserve, device, what="segmentation call",
+                on_short=self.warnings.on_short,
             )
             return []
 
@@ -357,6 +367,8 @@ class ContentSegmentationComponent(PipelineComponent):
             reserve_tokens=reserve,
             stage_reserve_tokens=stage_reserve,
             label="window",
+            on_cap=self.warnings.on_cap,
+            on_oversize=self.warnings.on_oversize,
         )
 
         if len(windows) < 2:
@@ -370,6 +382,7 @@ class ContentSegmentationComponent(PipelineComponent):
         text_chunker.warn_if_short_of_memory(
             max(w.tokens for w in windows) + stage_reserve, device,
             what="largest segmentation window",
+            on_short=self.warnings.on_short,
         )
         return windows
 
@@ -401,7 +414,8 @@ class ContentSegmentationComponent(PipelineComponent):
         )
         try:
             raw = self._generate(messages, max_new_tokens=max_new_tokens)
-            topics = json.loads(self._clean_topics_output(raw))
+            # This window was asked for its quota, not for the lesson's band.
+            topics = json.loads(self._clean_topics_output(raw, quota=quota))
         except Exception as e:  # noqa: BLE001
             logger.warning(
                 "Window %d/%d (%.0fs-%.0fs) failed to segment: %s",

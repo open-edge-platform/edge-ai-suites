@@ -120,7 +120,8 @@ def _tokens(items):
 
 
 def _progress(items):
-    return [i for i in items if isinstance(i, dict)]
+    return [i for i in items
+            if isinstance(i, dict) and i.get("event") == "progress"]
 
 
 # ------------------------------------------------------------ single-shot path
@@ -586,6 +587,10 @@ def test_fold_progress_in_the_full_stream_precedes_its_own_call():
     announced = None
     for kind, payload in handler.timeline:
         if kind == "yield" and isinstance(payload, dict):
+            # Warnings announce no call of their own, so they do not take part
+            # in the interleaving this asserts.
+            if payload.get("event") != "progress":
+                continue
             if payload["stage"] == "reduce":
                 break
             assert announced is None, (

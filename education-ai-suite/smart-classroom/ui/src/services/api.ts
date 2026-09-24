@@ -414,6 +414,16 @@ export async function* streamSummary(sessionId: string, opts: StreamOptions = {}
           chunk: Number(chunk.chunk ?? 0),
           chunks: Number(chunk.chunks),
         };
+        continue;
+      }
+      // An overload the budget detected but deliberately did not act on: the
+      // call still runs, so this annotates the summary rather than aborting it.
+      if (chunk.event === 'warning' && typeof chunk.code === 'string') {
+        yield {
+          type: 'summary_warning',
+          code: chunk.code,
+          detail: String(chunk.detail ?? ''),
+        };
       }
     }
   }
