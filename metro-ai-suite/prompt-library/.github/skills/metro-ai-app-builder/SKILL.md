@@ -117,14 +117,9 @@ refresh the live index and check what is already installed. Routing summary:
 
 | Business objective (what the user says) | Route to |
 |---|---|
-<<<<<<< HEAD:metro-ai-suite/prompt-library/.github/skills/metro-ai-apps-builder/SKILL.md
 | "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full **end-to-end** analytics stack + dashboard | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
 | "Quick **demo** / simple app that just proves a model runs and emits detections" (single lightweight vision app, no full stack) | **`dlstreamer-coding-agent`** |
 | "Multi-camera / spatial / cross-camera tracking of a scene" (whole-scene view) | **`scenescape-setup`** (directly — multi-camera spatial analytics) |
-=======
-| "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full analytics stack + dashboard | **`metro-ai-app-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
-| "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-app-recipe` Scenescape path) |
->>>>>>> 2c92c9c06eab197f4392d7eead0a7118e3372102:metro-ai-suite/prompt-library/.github/skills/metro-ai-app-builder/SKILL.md
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
 | "Migrate / convert / port an NVIDIA DeepStream pipeline to Intel DL Streamer" | **`dlstreamer-coding-agent`** |
 | "Chatbot / Q&A / RAG over my documents" — Docker | **`chatqna-docker-deploy`**; Kubernetes → **`chatqna-helm-deploy`** |
@@ -235,19 +230,12 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 
 - This skill wraps the prompt library (`metro-ai-suite/prompt-library`); the minimal
   `prompts/*.yaml` files state only a business objective and hand off here.
-<<<<<<< HEAD:metro-ai-suite/prompt-library/.github/skills/metro-ai-apps-builder/SKILL.md
 - Vision objectives split three ways: **`metro-ai-apps-recipe`**
   (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/`,
   in this same repository) builds the **end-to-end** analytics stack;
   **`scenescape-setup`** handles **multi-camera / spatial** whole-scene analytics
   directly; **`dlstreamer-coding-agent`** builds a **quick demo / simple** or
   custom-code vision app. All delegates other than `metro-ai-apps-recipe` live in
-=======
-- The delegate that builds the end-to-end vision stack is
-  `metro-ai-app-recipe`
-  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-app-recipe/`)
-  in this same repository; all other delegates live in
->>>>>>> 2c92c9c06eab197f4392d7eead0a7118e3372102:metro-ai-suite/prompt-library/.github/skills/metro-ai-app-builder/SKILL.md
   `open-edge-platform/skills`.
 - Keep the catalog in [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)
   in sync with the upstream `skills-config.json` — see
