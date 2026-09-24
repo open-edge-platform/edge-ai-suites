@@ -56,7 +56,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="APM Storage Service",
-    description="SQLite REST API for agentic predictive maintenance detections",
+    description="SQLite REST API for agentic predictive maintenance for critical infrastructure detections",
     version="1.0.0",
     lifespan=lifespan,
 )
