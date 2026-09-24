@@ -50,6 +50,20 @@ export SI_SETUP_BRANCH="${SI_SETUP_BRANCH:-svamsik/si-rtsp-config}"
 export RTSP_STREAM_IP="${RTSP_STREAM_IP:-${SI_RTSP_HOST:-}}"
 export RTSP_STREAM_PORT="${RTSP_STREAM_PORT:-8554}"
 
+# Opt-in demo/synthetic-data flow: unset by default, so the standard STIA
+# flow (RI's own default scene + DLSPS config, no RTSP source required) is
+# completely untouched. When set to a known intersection name (e.g.
+# "intersection_1", matching a subdirectory under STIA_OVERRIDES_DIR and a
+# video-file prefix at the download URL below), setup.sh will additionally:
+#   1. download that intersection's 4 demo videos,
+#   2. apply its Scenescape scene bundle + DLSPS pipeline config overrides,
+#   3. start a local RTSP streamer built into STIA (docker/streamer-compose.yaml)
+#      unless RTSP_STREAM_IP/SI_RTSP_HOST already points at an external source,
+#   4. start the RTSP-backed DLSPS pipelines against it.
+export STIA_DEMO_INTERSECTION="${STIA_DEMO_INTERSECTION:-}"
+export STIA_DEMO_VIDEO_URL="${STIA_DEMO_VIDEO_URL:-https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos/synthetic_data}"
+export STIA_DEMO_VIDEOS_DIR="${APP_DIR}/resources/videos"
+
 if [ "$ENABLE_TC" = "true" ]; then
     TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
     if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
@@ -89,6 +103,11 @@ if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
     echo -e "  --setenv:                 Set environment variables without building image or starting any containers"
     echo -e "                              • RTSP_STREAM_IP or SI_RTSP_HOST enables RTSP-backed Smart Intersection pipelines"
     echo -e "                              • RTSP_STREAM_PORT sets the RTSP server port (default: 8554)"
+    echo -e "                              • STIA_DEMO_INTERSECTION=<name> (e.g. intersection_1) opts into the full"
+    echo -e "                                self-contained demo flow: downloads that intersection's videos, applies"
+    echo -e "                                its scene/DLSPS overrides, and starts a local RTSP streamer automatically"
+    echo -e "                                unless RTSP_STREAM_IP/SI_RTSP_HOST already points at an external source."
+    echo -e "                                Unset (default): standard flow, no RTSP source required."
     echo -e "  --build:                  Build the service images without starting containers"
     echo -e "  --setup:                  Build and run the services"
     echo -e "  --run:                    Start the services without building image (if already built)"
@@ -129,6 +148,15 @@ elif [ "$1" = "--restart" ] && [ "$#" -eq 2 ] && [ "$2" != "agent" ] && [ "$2" !
 
 elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${YELLOW}... ${NC}"
+
+    # Stop STIA's own local RTSP streamer, if it was ever started for the
+    # opt-in demo flow (STIA_DEMO_INTERSECTION). Inlined here (rather than
+    # calling stop_stia_rtsp_streamer(), defined later in this file) since
+    # this early --stop/--clean branch runs and returns before later
+    # function definitions are sourced. Safe/no-op if it was never started.
+    if [ -n "$STIA_DEMO_INTERSECTION" ] && [ -f "${APP_DIR}/docker/streamer-compose.yaml" ]; then
+        docker compose --project-directory "$APP_DIR" -f "${APP_DIR}/docker/streamer-compose.yaml" -p "${PROJECT_NAME}-streamer" down 2>/dev/null || true
+    fi
 
     # check if ri-compose.yaml exists and run docker compose down accordingly
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
@@ -194,21 +222,27 @@ fi
 
 # Copy tracked site-specific Smart Intersection overrides (DL Streamer Pipeline Server
 # config and Scenescape scene bundle) into the vendored RI dependency. These live under
-# version-controlled $STIA_OVERRIDES_DIR (not in deps/metro-vision, which is gitignored and
-# recreated on every re-clone/upgrade), so this step must run every time dependencies are
-# checked/installed to keep the RI in sync.
+# version-controlled $STIA_OVERRIDES_DIR/$STIA_DEMO_INTERSECTION (not in deps/metro-vision,
+# which is gitignored and recreated on every re-clone/upgrade). Opt-in only: no-op unless
+# STIA_DEMO_INTERSECTION is set, so the standard flow keeps the RI's own default scene/config.
 apply_stia_overrides() {
-    local dlsps_config_src="${STIA_OVERRIDES_DIR}/dlstreamer-pipeline-server/config.json"
-    local dlsps_config_dst="${RI_DIR}/src/dlstreamer-pipeline-server/config.json"
-    local scene_src="${STIA_OVERRIDES_DIR}/webserver/smart-intersection-ri.tar.bz2"
-    local scene_dst="${RI_DIR}/src/webserver/smart-intersection-ri.tar.bz2"
-
-    if [ ! -f "$dlsps_config_src" ] && [ ! -f "$scene_src" ]; then
-        # No overrides tracked yet; keep the RI defaults untouched.
+    if [ -z "$STIA_DEMO_INTERSECTION" ]; then
         return 0
     fi
 
-    echo -e "${BLUE}==> Applying Smart Intersection overrides from ${STIA_OVERRIDES_DIR} ...${NC}"
+    local overrides_dir="${STIA_OVERRIDES_DIR}/${STIA_DEMO_INTERSECTION}"
+    local dlsps_config_src="${overrides_dir}/dlstreamer-pipeline-server/config.json"
+    local dlsps_config_dst="${RI_DIR}/src/dlstreamer-pipeline-server/config.json"
+    local scene_src="${overrides_dir}/webserver/smart-intersection-ri.tar.bz2"
+    local scene_dst="${RI_DIR}/src/webserver/smart-intersection-ri.tar.bz2"
+
+    if [ ! -f "$dlsps_config_src" ] && [ ! -f "$scene_src" ]; then
+        echo -e "${RED}ERROR: No Smart Intersection overrides tracked for STIA_DEMO_INTERSECTION='${STIA_DEMO_INTERSECTION}' under ${overrides_dir}.${NC}"
+        return 1
+    fi
+
+    echo -e "${BLUE}==> Applying Smart Intersection overrides for '${STIA_DEMO_INTERSECTION}' from ${overrides_dir} ...${NC}"
+
 
     if [ -f "$dlsps_config_src" ]; then
         cp -f "$dlsps_config_src" "$dlsps_config_dst" || {
@@ -314,6 +348,77 @@ validate_rtsp_stream_config() {
         echo -e "${RED}ERROR: RTSP_STREAM_PORT must be a TCP port between 1 and 65535.${NC}"
         return 1
     fi
+}
+
+# Download the demo intersection's 4 synthetic RTSP videos from the shared
+# edge-ai-resources bucket (same source smart-nvr's own streamer uses).
+# Opt-in only: no-op unless STIA_DEMO_INTERSECTION is set. Skips files
+# already present so re-running setup.sh doesn't re-download every time.
+download_stia_demo_videos() {
+    if [ -z "$STIA_DEMO_INTERSECTION" ]; then
+        return 0
+    fi
+
+    mkdir -p "$STIA_DEMO_VIDEOS_DIR"
+
+    local camera_number
+    local video
+    for camera_number in 1 2 3 4; do
+        video="${STIA_DEMO_INTERSECTION}_${camera_number}.ts"
+        if [ -f "${STIA_DEMO_VIDEOS_DIR}/${video}" ]; then
+            continue
+        fi
+        echo -e "${BLUE}==> Downloading demo video ${video} ...${NC}"
+        if ! curl -fL "${STIA_DEMO_VIDEO_URL}/${video}" -o "${STIA_DEMO_VIDEOS_DIR}/${video}"; then
+            echo -e "${RED}ERROR: Failed to download demo video ${video} from ${STIA_DEMO_VIDEO_URL}.${NC}"
+            rm -f "${STIA_DEMO_VIDEOS_DIR}/${video}"
+            return 1
+        fi
+    done
+}
+
+# Start STIA's own local RTSP streamer (mediamtx + ffmpeg publisher, defined
+# in docker/streamer-compose.yaml) so the demo flow is fully self-contained
+# and doesn't need smart-nvr or any other external RTSP source running.
+# Opt-in only: no-op unless STIA_DEMO_INTERSECTION is set. If RTSP_STREAM_IP
+# or SI_RTSP_HOST is already set (an external RTSP source was explicitly
+# provided), this is skipped and the external source is used instead. On
+# success, exports RTSP_STREAM_IP=$HOST_IP so start_si_dlsps_rtsp_pipelines()
+# picks up the local streamer automatically.
+start_stia_rtsp_streamer() {
+    if [ -z "$STIA_DEMO_INTERSECTION" ]; then
+        return 0
+    fi
+
+    if [ -n "$RTSP_STREAM_IP" ]; then
+        echo -e "${BLUE}==> External RTSP source detected (${RTSP_STREAM_IP}); skipping local STIA streamer.${NC}"
+        return 0
+    fi
+
+    download_stia_demo_videos || return 1
+
+    echo -e "${BLUE}==> Starting local RTSP streamer for demo '${STIA_DEMO_INTERSECTION}' ...${NC}"
+    STIA_DEMO_INTERSECTION="$STIA_DEMO_INTERSECTION" \
+    RTSP_STREAM_BIND_IP="${RTSP_STREAM_BIND_IP:-0.0.0.0}" \
+    RTSP_STREAM_PORT="$RTSP_STREAM_PORT" \
+        docker compose --project-directory "$APP_DIR" -f "${APP_DIR}/docker/streamer-compose.yaml" -p "${PROJECT_NAME}-streamer" up -d
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}ERROR: Failed to start local STIA RTSP streamer.${NC}"
+        return 1
+    fi
+
+    export RTSP_STREAM_IP="$HOST_IP"
+    echo -e "${GREEN}Local RTSP streamer for '${STIA_DEMO_INTERSECTION}' running at ${RTSP_STREAM_IP}:${RTSP_STREAM_PORT}.${NC}"
+}
+
+# Stop STIA's local RTSP streamer, if it was started. No-op unless
+# STIA_DEMO_INTERSECTION is set - safe to call unconditionally from the
+# --stop/--clean paths.
+stop_stia_rtsp_streamer() {
+    if [ -z "$STIA_DEMO_INTERSECTION" ]; then
+        return 0
+    fi
+    docker compose --project-directory "$APP_DIR" -f "${APP_DIR}/docker/streamer-compose.yaml" -p "${PROJECT_NAME}-streamer" down 2>/dev/null || true
 }
 
 verify_si_rtsp_config() {
@@ -827,6 +932,7 @@ build_and_start_service() {
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
+        start_stia_rtsp_streamer || return 1
         start_si_dlsps_rtsp_pipelines || return 1
         print_all_service_host_endpoints
     else
@@ -847,6 +953,7 @@ start_service() {
 
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
+        start_stia_rtsp_streamer || return 1
         start_si_dlsps_rtsp_pipelines || return 1
         print_all_service_host_endpoints
     else
@@ -910,6 +1017,7 @@ restart_service() {
 
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Dependencies restarted successfully!${NC}"
+                start_stia_rtsp_streamer || return 1
                 start_si_dlsps_rtsp_pipelines || return 1
                 print_all_service_host_endpoints
             else
@@ -939,6 +1047,7 @@ restart_service() {
 
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"
+                start_stia_rtsp_streamer || return 1
                 start_si_dlsps_rtsp_pipelines || return 1
             else
                 echo -e "${RED}Failed to restart dependencies and Backend/UI services!${NC}"
