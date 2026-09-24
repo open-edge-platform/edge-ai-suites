@@ -138,6 +138,7 @@ async def load_yaml_brokers(path: str = BROKERS_CONFIG_PATH, request=None):
             topic=SCENESCAPE_MQTT_TOPIC,
             type="scenescape",
             use_tls=True,
+            rtsp_host=SCENESCAPE_MQTT_BROKER,
         )
         await redis_store.save_broker(legacy.id, legacy.model_dump(), request)
         logger.info("Seeded default si1 broker from environment")
