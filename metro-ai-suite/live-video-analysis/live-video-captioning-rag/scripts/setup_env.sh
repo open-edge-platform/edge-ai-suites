@@ -59,6 +59,12 @@ VIDEO_GROUP_ID="$(getent group video | awk -F: '{print $3; exit}' || true)"
 RENDER_GROUP_ID="$(getent group render | awk -F: '{print $3; exit}' || true)"
 MODEL_CACHE_PATH="${ROOT_DIR}/llm_models"
 EMBEDDING_MODEL_NAME="${EMBEDDING_MODEL_NAME:-QwenText/qwen3-embedding-0.6b}"
+HAS_NPU_DEVICE=false
+NPU_DEVICE_PATH=""
+if [[ -e /dev/accel ]]; then
+	HAS_NPU_DEVICE=true
+	NPU_DEVICE_PATH="/dev/accel"
+fi
 
 if [[ -r /etc/os-release ]]; then
 	# shellcheck disable=SC1091
@@ -100,6 +106,8 @@ while IFS= read -r line || [[ -n "$line" ]]; do
 			;;
 	esac
 done < "${ENV_EXAMPLE}"
+
+printf 'NPU_DEVICE_PATH=%s\n' "${NPU_DEVICE_PATH}" >> "${tmp_file}"
 
 mv "${tmp_file}" "${ENV_FILE}"
 trap - EXIT

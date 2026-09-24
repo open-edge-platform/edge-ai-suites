@@ -39,6 +39,9 @@ env:
     useGPU:
       enabled: false
       key: ""  # GPU resource key for your cluster, e.g. "gpu.intel.com/i915"
+    useNPU:
+      enabled: false
+      key: "npu.intel.com/accel"  # NPU resource key for your cluster
 
   # Number of output tokens for the LLM response.
   # Type: integer
@@ -47,6 +50,15 @@ env:
   # Number of candidate captions returned by the RAG retriever.
   # Type: int
   topK: 1
+
+  # Minimum confidence score for the RAG retriever to consider a candidate caption.
+  # Type: float
+  scoreThreshold: 0.5
+
+  # NPU-specific configuration for the RAG chatbot.
+  # Defines the maximum number of tokens that the LLM pipeline can process for the input prompt when using NPU device.
+  # Type: int
+  maxPromptLen: 1024
 
   # Multimodal embedding model for RAG (must be compatible with the multimodal-embedding subchart).
   embeddingModel:
@@ -63,6 +75,10 @@ env:
   # Type: integer
   embeddingHostPort: 8000
 
+  # RAG Chatbot mode.
+  # Type: string
+  ragChatbotMode: "embedded"
+
   # VDMS Host (vdms-vectordb subchart service).
   # Type: string
   vdmsHost: "vdms-vectordb"
@@ -71,7 +87,12 @@ env:
   # Type: integer
   vdmsPort: 55555
 
-podSecurityContext: {}
+podSecurityContext:
+  supplementalGroups:
+    - 1000
+    - 109
+    - 110
+    - 992
 securityContext: {}
 
 podAnnotations: {}

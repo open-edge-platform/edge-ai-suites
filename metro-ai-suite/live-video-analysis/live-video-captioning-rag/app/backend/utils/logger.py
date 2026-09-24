@@ -1,4 +1,7 @@
-from .config import APP_DISPLAY_NAME, DEBUG
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+from ..config import APP_DISPLAY_NAME, DEBUG
 from typing import Optional
 import logging
 import sys

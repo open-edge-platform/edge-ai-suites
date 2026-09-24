@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from ..config import EMBEDDING_LENGTH
-from ..logger import logger
+from ..utils.logger import logger
 
 import os
 import json

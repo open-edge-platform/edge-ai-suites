@@ -14,6 +14,14 @@ def _read_non_negative_int(var_name: str, default: int) -> int:
     except (TypeError, ValueError):
         return default
 
+
+def _read_rag_chatbot_mode(enable_embedding: bool) -> str:
+    """Return canonical RAG chatbot mode: 'embedded' or 'detached'."""
+    default_mode = "embedded" if enable_embedding else "detached"
+    raw = os.environ.get("RAG_CHATBOT_MODE", default_mode)
+    mode = (raw or default_mode).strip().lower()
+    return mode if mode in {"embedded", "detached"} else default_mode
+
 APP_PORT = int(os.environ.get("DASHBOARD_PORT", "4173"))
 PEER_ID = os.environ.get("WEBRTC_PEER_ID", "video_captioning_pipeline")
 SIGNALING_URL = os.environ.get("SIGNALING_URL", "http://localhost:8889")
@@ -62,6 +70,7 @@ VLM_CACHE_SIZE = os.environ.get("VLM_CACHE_SIZE", "4")
 
 # Enable/Disable Embedding
 ENABLE_EMBEDDING = os.environ.get("ENABLE_EMBEDDING", "false").lower() in ("true", "1", "yes")
+RAG_CHATBOT_MODE = _read_rag_chatbot_mode(ENABLE_EMBEDDING)
 
 # NPU-specific token length controls for static-shape LLM pipelines.
 # Defaults follow documented behavior: prompt up to 1024 tokens and response
