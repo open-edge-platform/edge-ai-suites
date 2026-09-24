@@ -19,16 +19,43 @@ simulators (can act as data destinations if configured) would, of course, be rep
 physical devices, in a real deployment scenario. If you are interested, documents for each
 sample application provide detailed architectural descriptions.
 
-<!--hide_directive
-::::{grid} 1 2 2 2
-:::{grid-item-card} Wind Turbine Anomaly Detection
-:class-card: homepage-card-container-big
-:link: ./wind-turbine-anomaly-detection/index.html
+## Software Stack
 
-Monitoring power generation anomalies for preventive maintenance.
-:::
-::::
-hide_directive-->
+This section documents the minimum software stack that **Wind Turbine Anomaly Detection** uses
+from the broader Open Edge Platform (Edge AI Libraries, tools, and microservices), so you can
+see exactly what is required to run this sample application versus what the platform
+additionally offers.
+
+### Core Stack
+
+The following components are deployed by default through `docker-compose.yml` (or the
+equivalent Helm chart in `helm/`):
+
+| Category | Component | Role in this sample application |
+|---|---|---|
+| Data ingestion | Telegraf | Collects/forwards simulated turbine sensor data (power, wind speed) |
+| Data storage | InfluxDB | Time-series database used by the TICK stack |
+| AI microservice | Time Series Analytics Microservice (built on Kapacitor) | Runs the anomaly-detection UDF (scikit-learn `RandomForestClassifier`) against streaming data |
+| Visualization | Grafana | Dashboards for turbine data and detected anomalies |
+| Microservice | Eclipse Mosquitto (MQTT broker) | Transports sensor data and alert messages |
+| Microservice | OPC UA server, MQTT publisher | Simulate/publish turbine data over OPC-UA and MQTT protocols |
+| Microservice | nginx | Reverse proxy for the application endpoints |
+
+### Optional Add-ons
+
+| Component | Role | Enabled via |
+|---|---|---|
+| Visual Pipeline and Platform Evaluation Tool (ViPPET) | Deploys and benchmarks the Time Series Analytics Microservice as part of the ViPPET stack | ViPPET integration (see [Release Notes](./release-notes.md)) |
+| Helm / Kubernetes | Alternative deployment path for the same microservices on a Kubernetes cluster | [Deploy with Helm](./get-started/deploy-with-helm.md) |
+
+> **Note:** This sample application uses a classical machine learning model
+> (scikit-learn `RandomForestClassifier`), not OpenVINO™ or DL Streamer — there is no
+> vision/inference-accelerator component in this stack.
+
+### Minimum Configuration
+
+See [System Requirements](./get-started/system-requirements.md) for the minimum hardware and
+software configuration for this sample application.
 
 <!--hide_directive
 :::{toctree}
