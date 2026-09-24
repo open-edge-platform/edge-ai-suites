@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/skills/**"
       - "**/.github/skills/**"
+      - "**/skills/**"
       - ".github/workflows/skill-scan.yaml"
   push:
     branches: ["main"]
@@ -44,12 +45,12 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-
-      - name: Find all .github/skills directories
+      - name: Find all .github/skills and skills directories
         id: find-paths
         run: |
-          paths=$(find . -path '*/.github/skills' -type d \
+          paths=$( { find . -path '*/.github/skills' -type d; find . -path '*/skills' -type d; } \
             | sed 's|^\./||' \
+            | sort -u \
             | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "matrix=$paths" >> "$GITHUB_OUTPUT"
 
