@@ -49,7 +49,7 @@ miss() { printf '  [MISSING] %s\n' "$*"; }
 info() { printf '  [INFO]    %s\n' "$*"; }
 
 # Track summary
-declare -a SUMMARY
+declare -a SUMMARY=()
 
 run() {
   # Log the command; execute it unless --dry-run

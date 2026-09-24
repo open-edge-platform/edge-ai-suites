@@ -21,7 +21,7 @@ The following are needed only when you build the OpenVINO IR locally via
 |---|---|
 | Python 3.10–3.12 with `python3-venv` | Host-side training venv (`.venv-backend`). Installed by `make setup-prerequisites`. |
 | REAL-Colon dataset subset (~74 GB) | Downloaded via `make download-dataset` from figshare article `22202866`. Full 60-study, ~880 GB corpus available via `datasets/REAL-Colon/helper/download_dataset.sh`. |
-| Disk space | ~80 GB free for the REAL-Colon subset + derived labels + trained artifacts. Plan more for the full corpus. |
+| Disk space | ~200 GB free for the REAL-Colon subset + derived labels + trained artifacts. Plan more for the full corpus. |
 | `torch==2.7.1+xpu` and `torchvision==0.22.1+xpu` | Installed automatically by `make backend-venv` from the `https://download.pytorch.org/whl/xpu` index. Older CPU/CUDA torch builds do not expose `torch.xpu`. |
 
 Verify iGPU visibility on the host before starting:
