@@ -182,9 +182,6 @@ dlstreamer-pipeline-server:
     - "a 189:* rwm"
   devices:
     - "/dev:/dev"
-  expose:
-    - "8081"
-    - "8555"
   networks:
     - app_network
   extra_hosts:

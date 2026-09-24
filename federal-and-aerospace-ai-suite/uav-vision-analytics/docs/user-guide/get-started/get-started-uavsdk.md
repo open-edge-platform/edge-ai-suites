@@ -11,7 +11,7 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
-![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.drawio.svg)
+![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.svg)
 
 **Telemetry / pipeline lifecycle flow:**
 
