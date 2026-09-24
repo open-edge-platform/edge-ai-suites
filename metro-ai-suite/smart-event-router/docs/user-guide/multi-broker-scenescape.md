@@ -79,7 +79,7 @@ brokers:
 | `VSS_PORT` | — | `12345` | VSS service port. |
 | `MQTT_USER` | — | auto-generated | Local Mosquitto username (Frigate ↔ NVR). |
 | `MQTT_PASSWORD` | — | auto-generated | Local Mosquitto password. |
-| `SI_RTSP_HOST` | — | `brokers.yaml` | RTSP IP for si1. Overrides `rtsp_host` for `si1`. Auto-detected for `start` (single-node) if unset everywhere. |
+| `SI_RTSP_HOST` | — | `brokers.yaml` | RTSP IP for si1. Overrides `rtsp_host` for `si1`. Ignored by `start` (single-node), which always uses this machine's IP. |
 | `SI{N}_RTSP_HOST` | — | `brokers.yaml` | RTSP IP for siN (N ≥ 2). Overrides `rtsp_host` for `siN`. |
 | `SI_NODE_COUNT` | — | highest `siN` in `brokers.yaml` | Number of SI nodes to generate Frigate cameras for (max 20). |
 | `RTSP_STREAM_PORT` | — | `8554` | RTSP port for all SI streams. |
@@ -125,14 +125,8 @@ Frigate camera list, and connects to the brokers listed in it. Brokers can still
 added later via `POST /brokers/`.
 
 > [!NOTE]
-> If `rtsp_host` is missing for `si1` and `SI_RTSP_HOST` is not set, `start-nvr`
-> exits with an error. For `si2` and above, a missing `rtsp_host` skips that node
-> with a warning.
-
-> [!NOTE]
-> If `brokers.yaml` is absent and `SCENESCAPE_MQTT_BROKER` is not set,
-> no MQTT connections are established on startup. Add brokers via `POST /brokers/`
-> after the stack is running.
+> Any SI node without an RTSP IP (`rtsp_host` or `SI{N}_RTSP_HOST`) is skipped with
+> a warning. `start-nvr` exits with an error only if no node has one.
 
 ## Stop
 
@@ -209,10 +203,11 @@ per node (`{broker_id}-camera1` through `camera4`):
 
 | SI node | RTSP IP source (in priority order) |
 |---------|------------------------------------|
-| si1 | `SI_RTSP_HOST` → `rtsp_host` → auto-detected local IP (`start` only; `start-nvr` errors) |
+| si1 | `SI_RTSP_HOST` → `rtsp_host` → node skipped with a warning (`start` always uses this machine's IP) |
 | si2..siN | `SI{N}_RTSP_HOST` → `rtsp_host` → node skipped with a warning |
 
-All cameras use `RTSP_STREAM_PORT` (default `8554`).
+All cameras use `RTSP_STREAM_PORT` (default `8554`). If every node is skipped,
+`start-nvr` exits with an error.
 
 ## Verify integration
 

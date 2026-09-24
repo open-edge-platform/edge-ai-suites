@@ -140,7 +140,7 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
-# Generate Frigate config for scenescape mode; si1..siN RTSP hosts come from brokers.yaml/SI{N}_RTSP_HOST only (si1 falls back to local auto-detect for `start`).
+# Generate Frigate config for scenescape mode; siN RTSP hosts come from SI{N}_RTSP_HOST/brokers.yaml (`start` uses the local IP for si1). Unresolved nodes are skipped; fails only if none resolve.
 generate_scenescape_config() {
     local config_file="./resources/frigate-config/config.yml"
     local port="${RTSP_STREAM_PORT:-8554}"
@@ -161,33 +161,24 @@ generate_scenescape_config() {
     cp "./resources/frigate-config/config-scenescape.yml" "${config_file}"
     printf '\ncameras:\n' >> "${config_file}"
 
+    local added_nodes=0
     # Loop through all SI nodes (si1 to siN)
     for node_num in $(seq 1 "${total_nodes}"); do
         local si_id="si${node_num}"
         local rtsp_ip
+        local env_var="SI${node_num}_RTSP_HOST"
+        [ "${node_num}" -eq 1 ] && env_var="SI_RTSP_HOST"
 
-        if [ "${node_num}" -eq 1 ]; then
-            rtsp_ip="${SI_RTSP_HOST:-${_SI_YAML_RTSP[1]:-}}"
-            if [ -z "${rtsp_ip}" ]; then
-                if [ "${SCENESCAPE_NVR_ONLY}" = "true" ]; then
-                    # NVR-only (System 2): SI is remote, IP must come from brokers.yaml or SI_RTSP_HOST
-                    print_error "Please populate ${BROKERS_CONFIG_FILE} with rtsp_host for id 'si1' to add its RTSP stream to Frigate and its MQTT broker subscription."
-                    return 1
-                fi
-                # Single-node (start): SI is local, auto-detect
-                rtsp_ip="$(get_host_ip)"
-            fi
-            if [ -z "${rtsp_ip}" ]; then
-                print_error "RTSP IP for si1 is required."
-                return 1
-            fi
+        if [ "${node_num}" -eq 1 ] && [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
+            # Single-node (start): SI is local; SI_RTSP_HOST is ignored.
+            rtsp_ip="${_SI_YAML_RTSP[1]:-$(get_host_ip)}"
         else
-            local env_var="SI${node_num}_RTSP_HOST"
             rtsp_ip="${!env_var:-${_SI_YAML_RTSP[$node_num]:-}}"
-            if [ -z "${rtsp_ip}" ]; then
-                print_warning "Please populate ${BROKERS_CONFIG_FILE} with rtsp_host for id '${si_id}' to add its RTSP stream to Frigate and its MQTT broker subscription. Skipping ${si_id}."
-                continue
-            fi
+        fi
+
+        if [ -z "${rtsp_ip}" ]; then
+            print_warning "No rtsp_host for id '${si_id}' in ${BROKERS_CONFIG_FILE} (or ${env_var}); skipping its Frigate cameras."
+            continue
         fi
 
         for cam_num in 1 2 3 4; do
@@ -216,8 +207,14 @@ generate_scenescape_config() {
 CAMERA_BLOCK
         done
 
+        added_nodes=$((added_nodes + 1))
         print_success "Added ${si_id} (cameras 1-4, RTSP: ${rtsp_ip}:${port})"
     done
+
+    if [ "${added_nodes}" -eq 0 ]; then
+        print_error "No SI node has a resolvable rtsp_host; populate ${BROKERS_CONFIG_FILE} (host/rtsp_host) or set SI_RTSP_HOST/SI{N}_RTSP_HOST for at least one node."
+        return 1
+    fi
 
     printf '\nversion: 0.15-1\n' >> "${config_file}"
 }
@@ -231,7 +228,8 @@ configure_scenescape_setup() {
         metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
         # Keep in sync with si1's lookup in generate_scenescape_config so the DL Streamer's
         # advertised IP always matches what Frigate is configured to pull from.
-        local rtsp_ip="${SI_RTSP_HOST:-${_SI_YAML_RTSP[1]:-$(get_host_ip)}}"
+        local rtsp_ip="${_SI_YAML_RTSP[1]:-$(get_host_ip)}"
+        [ "${SCENESCAPE_SI_ONLY}" = "true" ] && rtsp_ip="${SI_RTSP_HOST:-${rtsp_ip}}"
 
         if [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
             # Configure SI stack: compose + DL Streamer
@@ -315,6 +313,25 @@ stop_scenescape() {
     fi
 }
 
+# Resets brokers.yaml to a single local si1 entry for single-node `start`.
+reset_scenescape_brokers_to_local() {
+    mkdir -p "$(dirname "${BROKERS_CONFIG_FILE}")"
+    cat > "${BROKERS_CONFIG_FILE}" <<EOF
+brokers:
+- id: si1
+  name: SI Node 1
+  host: ${HOST_IP}
+  port: ${SCENESCAPE_MQTT_PORT:-1883}
+  topic: ${SCENESCAPE_MQTT_TOPIC:-scenescape/data/camera/#}
+  type: scenescape
+  use_tls: true
+  throttle_interval: ${SCENESCAPE_THROTTLE_INTERVAL:-2.0}
+  enabled: true
+  rtsp_host: ${HOST_IP}
+EOF
+    print_info "Reset ${BROKERS_CONFIG_FILE} to single-node default (si1 @ ${HOST_IP})"
+}
+
 validate_environment() {
     export NVR_SCENESCAPE="${NVR_SCENESCAPE:-false}"
 
@@ -343,6 +360,12 @@ start_services() {
     if ! validate_environment; then
         print_error "Environment validation failed. Please set the required variables."
         return 1
+    fi
+
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        reset_scenescape_brokers_to_local
+        # Re-parse: the source-time parse still holds the pre-reset file contents.
+        load_si_rtsp_from_brokers
     fi
 
     if ! configure_scenescape_setup; then
