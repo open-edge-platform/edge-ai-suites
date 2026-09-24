@@ -10,6 +10,13 @@ and Controls Demo**. It couples camera-based perception, grasp selection, task
 orchestration, and arm control so developers can evaluate the complete path
 from detecting an object to placing it at a target.
 
+:::{figure} images/RVC-Architecture.svg
+:alt: Stationary Arm pick-and-place solution architecture with a UR5e
+
+Stationary Robot Toolkit Vision and Controls Demo architecture for a
+vision-guided pick-and-place solution with a UR5e.
+:::
+
 ## Stationary Arm Platform and Integration
 
 The Stationary Robotics Toolkit provides modular components that you can
