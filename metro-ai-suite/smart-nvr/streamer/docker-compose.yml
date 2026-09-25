@@ -1,6 +1,6 @@
 services:
   mediamtx:
-    image: bluenviron/mediamtx:latest
+    image: bluenviron/mediamtx:1.20.1
     container_name: mediamtx
     restart: unless-stopped
     ports:
@@ -55,10 +55,10 @@ services:
             pids="$$pids $$!"
           }
 
-          publish_stream camera1 /videos/intersection_1_1.ts
-          publish_stream camera2 /videos/intersection_1_2.ts
-          publish_stream camera3 /videos/intersection_1_3.ts
-          publish_stream camera4 /videos/intersection_1_4.ts
+          publish_stream camera1 /videos/1122north_h264.ts
+          publish_stream camera2 /videos/1122east_h264.ts
+          publish_stream camera3 /videos/1122south_h264.ts
+          publish_stream camera4 /videos/1122west_h264.ts
 
           trap 'kill $$pids' INT TERM
           wait
