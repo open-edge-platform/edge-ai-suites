@@ -95,7 +95,7 @@ One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a
 > Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
 The ROS 2 launch file provides additional arguments, for example to run the ROS 2 node only together with a camera,
-or with rviz. These can be activated as follows:
+or with RViz. These can be activated as follows:
 
 ::::{tab-set}
 :::{tab-item} **Jazzy**
@@ -138,11 +138,11 @@ ros2 launch pointcloud_groundfloor_segmentation realsense_groundfloor_segmentati
 
 The commandline option '-s' will show all available flags.
 
-In case of the standalone execution, the rviz view for the labeled pointcloud should look as follows:
+In case of the standalone execution, the RViz view for the labeled pointcloud should look as follows:
 
 ![pointcloud_groundfloor_segmentation_demo_camera_labeled_points](../../../hardware_blueprints/amr/images/pointcloud_groundfloor_segmentation_demo_camera_labeled_points.png)
 
-In case of the standalone execution, the rviz view for the filtered pointcloud should look as follows:
+In case of the standalone execution, the RViz view for the filtered pointcloud should look as follows:
 
 ![pointcloud_groundfloor_segmentation_demo_camera_obstacle_points](../../../hardware_blueprints/amr/images/pointcloud_groundfloor_segmentation_demo_camera_obstacle_points.png)
 
