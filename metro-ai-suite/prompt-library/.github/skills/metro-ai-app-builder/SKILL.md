@@ -90,10 +90,18 @@ Adapt the wording to the stated outcome, but cover these axes:
    sample video; a folder of videos; a document set/PDF corpus; a dataset for
    training; a robot + policy). For live camera use cases assume **ONVIF** unless
    the user says otherwise.
-3. **Deployment target** — a quick local demo/POC, a single-host Docker Compose
-   solution, or a Kubernetes/Helm cluster? [Docker Compose]
-4. **Hardware** — Intel GPU (default), or Intel CPU/NPU? [Intel GPU]
-5. **Scale / operations** — one stream vs many; interactive vs batch; needs a
+3. **Camera coverage** *(vision use cases)* — is this **one camera / one view**,
+   or **several cameras covering one physical space** where you care about
+   tracking a subject *across* cameras (a whole-scene / spatial view)? [one
+   camera] A multi-camera whole-scene answer routes to the Scenescape path.
+4. **Depth of solution** *(vision use cases)* — do you want a **quick demo /
+   simple app** that just proves the model runs and emits detections, or a
+   **full end-to-end solution** with live annotated video, dashboards and alerts
+   you can operate? [full end-to-end] This picks demo vs. end-to-end routing.
+5. **Deployment target** — a single-host Docker Compose solution, or a
+   Kubernetes/Helm cluster? [Docker Compose]
+6. **Hardware** — Intel GPU (default), or Intel CPU/NPU? [Intel GPU]
+7. **Scale / operations** — one stream vs many; interactive vs batch; needs a
    dashboard/UI vs an API? [reasonable default per domain]
 
 Keep it to what changes the routing decision. Never ask which model, framework,
@@ -109,8 +117,9 @@ refresh the live index and check what is already installed. Routing summary:
 
 | Business objective (what the user says) | Route to |
 |---|---|
-| "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full analytics stack + dashboard | **`metro-ai-app-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
-| "Multi-camera / spatial / cross-camera tracking of a scene" | **`scenescape-setup`** (via `metro-ai-app-recipe` Scenescape path) |
+| "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full **end-to-end** analytics stack + dashboard | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
+| "Quick **demo** / simple app that just proves a model runs and emits detections" (single lightweight vision app, no full stack) | **`dlstreamer-coding-agent`** |
+| "Multi-camera / spatial / cross-camera tracking of a scene" (whole-scene view) | **`scenescape-setup`** (directly — multi-camera spatial analytics) |
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
 | "Migrate / convert / port an NVIDIA DeepStream pipeline to Intel DL Streamer" | **`dlstreamer-coding-agent`** |
 | "Chatbot / Q&A / RAG over my documents" — Docker | **`chatqna-docker-deploy`**; Kubernetes → **`chatqna-helm-deploy`** |
@@ -221,10 +230,12 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 
 - This skill wraps the prompt library (`metro-ai-suite/prompt-library`); the minimal
   `prompts/*.yaml` files state only a business objective and hand off here.
-- The delegate that builds the end-to-end vision stack is
-  `metro-ai-app-recipe`
-  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-app-recipe/`)
-  in this same repository; all other delegates live in
+- Vision objectives split three ways: **`metro-ai-apps-recipe`**
+  (`metro-ai-suite/metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/`,
+  in this same repository) builds the **end-to-end** analytics stack;
+  **`scenescape-setup`** handles **multi-camera / spatial** whole-scene analytics
+  directly; **`dlstreamer-coding-agent`** builds a **quick demo / simple** or
+  custom-code vision app. All delegates other than `metro-ai-apps-recipe` live in
   `open-edge-platform/skills`.
 - Keep the catalog in [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md)
   in sync with the upstream `skills-config.json` — see
