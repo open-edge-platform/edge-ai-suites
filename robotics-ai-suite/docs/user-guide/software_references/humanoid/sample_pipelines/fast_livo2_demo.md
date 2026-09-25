@@ -120,7 +120,7 @@ before reusing these defaults on a different PTL SKU or platform.
 | `rviz2` (when `USE_RVIZ=true`) | P-core `2` (`CPUSET_RVIZ`) | Point-cloud rendering is bursty GUI work best kept off the algorithm's isolated cores; a P-core has the headroom for it. |
 
 These three assignments are independent of each other and of `USE_RVIZ`:
-the algorithm always runs on `12,13` whether or not rviz is enabled, and
+the algorithm always runs on `12,13` whether or not RViz is enabled, and
 `rviz2` always runs as its own separate process on P-core `2` (never as a
 child of the algorithm's `ros2 launch`, so it never shares or inherits the
 algorithm's affinity).

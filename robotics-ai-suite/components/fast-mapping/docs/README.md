@@ -68,7 +68,7 @@ The source code of this component can be found here:
 
 Once the tutorial is launched, the input from the Intel® RealSense™
 camera is used and a 3D voxel map of the environment can be viewed in
-rviz.
+RViz.
 
 To close this application, type `Ctrl-c` in the terminal where you ran
 the launch script.

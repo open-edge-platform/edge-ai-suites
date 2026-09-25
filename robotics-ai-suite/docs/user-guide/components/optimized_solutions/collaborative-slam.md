@@ -353,7 +353,7 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   **Expected result:** On the opened rviz windows, you see the pose trajectory
+   **Expected result:** On the opened RViz windows, you see the pose trajectory
    outputs for each camera.
 
 3. You may stop execution of the script any time by pressing CTRL-C.
@@ -462,7 +462,7 @@ Use the instructions above to switch between version to experiment with differen
    ```
 
    Expected result: the values of `pose_failure_count` and `feature_failure_count` should not be 0,
-   since they are the default values and should increase over time. On the opened rviz,
+   since they are the default values and should increase over time. On the opened RViz,
    you see the pose trajectory when Lidar data is used.
 
    ```console
@@ -537,12 +537,12 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   Expected result: On the opened server rviz, you see the keyframe and landmark
+   Expected result: On the opened server RViz, you see the keyframe and landmark
    constructed in mapping mode.
 
    ![constructed_keyframes](images/constructed_keyframes_and_landmarks_map.png)
 
-   On the opened tracker rviz, you see the 3D octree map constructed in mapping mode.
+   On the opened tracker RViz, you see the 3D octree map constructed in mapping mode.
 
    ![constructed_octree_map](images/constructed_octree_map.png)
 
@@ -579,16 +579,16 @@ Use the instructions above to switch between version to experiment with differen
    :::
    ::::
 
-   **Expected result**: On the opened server rviz, you see the loaded pre-constructed keyframe/landmark map
+   **Expected result**: On the opened server RViz, you see the loaded pre-constructed keyframe/landmark map
    in mapping mode. Within the remapping region, corresponding map will be deleted.
 
    ![loaded_keyframes](images/loaded_keyframes_and_landmarks_map.png)
 
-   On the opened tracker rviz, initially you see the loaded 3D octree map.
+   On the opened tracker RViz, initially you see the loaded 3D octree map.
 
    ![loaded_octree_map](images/loaded_octree_map.png)
 
-   On the opened tracker rviz, after bag playing is done, you see the 3D octree map inside the remapping region will be updated.
+   On the opened tracker RViz, after bag playing is done, you see the 3D octree map inside the remapping region will be updated.
 
    ![updated_map](images/updated_map_after_remapping.png)
 
