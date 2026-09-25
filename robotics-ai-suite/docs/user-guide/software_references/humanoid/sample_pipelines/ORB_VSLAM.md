@@ -31,7 +31,7 @@ Please make sure you have all the prerequisites and installation in [Get Started
    sudo apt install librealsense2
    ```
 
-2. Install the ORB-SLAM3 packages by following the below command:
+2. Install the ORB-SLAM3 packages by using the following command:
 
    ```bash
    sudo apt install orb-slam3
@@ -64,9 +64,9 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
    >
    > Please download EUROC Machine Hall datasets from <https://www.research-collection.ethz.ch/entities/researchdata/bcaf173e-5dac-484b-bc37-faf97a594f1f> if there are any issues with the above links.
 
-2. Launch ORB-SLAM3 Demo pipeline
+2. Launch the ORB-SLAM3 demo pipeline.
 
-   Run the below commands in a bash terminal:
+   Run the following commands in a bash terminal:
 
    ```bash
    mkdir -p ~/orb-slam3/log
@@ -85,9 +85,9 @@ This Demo uses Intel Realsense Camera as stereo inputs.
 
 1. Connect a Realsense D435 or D435i Camera to the test machine
 
-2. Launch ORB-SLAM3 Demo pipeline
+2. Launch the ORB-SLAM3 demo pipeline.
 
-   Run the below command in a bash terminal:
+   Run the following command in a bash terminal:
 
    ```bash
    /opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml

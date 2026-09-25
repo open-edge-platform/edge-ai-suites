@@ -28,7 +28,7 @@ Intel® Core™ i7-1270PE processor or a 13th Gen Intel® Core™ i7-1370PE
 processor, both with 28W TDP and an Intel® Iris® X^e^ Integrated
 Graphics Processing Unit.
 
-The setup looks like as described in the table below.
+The setup is as described in the table below.
 
   | Camera    | AI model          | AI Workload                     | Device |
   | --------- | ----------------- | ------------------------------- | -------|
@@ -57,9 +57,9 @@ The source code of this component can be found here:
 - [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#6-install-robotics-ai-suite-deb-packages)
 - [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started/step_by_step.html#7-install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
-Connect four RealSense Depth Camera D457 to the Axiomtek
-Robox500 ROS2 AMR Controller as shown in the below picture. Now,
-power-on the target.
+Connect the four RealSense Depth Camera D457 units to the Axiomtek
+Robox500 ROS2 AMR Controller, as shown in the picture below. Then
+power on the target.
 
 ![image](images/Axiomtek_GMSL_Camera.jpg)
 
@@ -171,7 +171,7 @@ sudo apt install -y ros-humble-pyrealsense2-ai-demo
 
 ## Run the tutorial
 
-Run the below commands to start the tutorial.
+Run the following commands to start the tutorial.
 
 ``` bash
 # Activate the pyrealsense2-ai-demo python environment
@@ -184,8 +184,8 @@ source /opt/ros/humble/setup.bash
 python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
-All the four cameras are started after approximately 15-20 secs, as
-shown in the below picture.
+All four cameras start after approximately 15-20 seconds, as shown in
+the picture below.
 
 ![image](images/multicam_demo_SDK2.2_1.png)
 

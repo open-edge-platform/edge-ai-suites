@@ -43,35 +43,34 @@ to install VTune™ Profiler by choosing one of the following two options:
      [Set Up System for GPU Analysis](https://www.intel.com/content/www/us/en/docs/vtune-profiler/user-guide/2024-0/set-up-system-for-gpu-analysis.html),
      to build and install the Intel Metric Discovery(MD) API Library.
 
-   - Run the below command to grant relevant permission to enable the
-     collecting of GPU hardware metrics for non-privileged users.
+   - Run the following command to grant the relevant permissions needed to collect GPU hardware metrics for non-privileged users.
 
      ```bash
      sudo sysctl -w dev.i915.perf_stream_paranoid=0
      ```
 
-   - Run the below command to remove the limited scope of the
+   - Run the following command to remove the limited scope of the
      "ptrace()" system call.
 
      ```bash
      sudo sysctl -w kernel.yama.ptrace_scope=0
      ```
 
-   - Run the below command to disallow raw tracepoint access to
+   - Run the following command to disallow raw tracepoint access to
      unprivileged users.
 
      ```bash
      sudo sysctl -w kernel.perf_event_paranoid=0
      ```
 
-   - Run the below command to remove the restrictions are placed on
+   - Run the following command to remove the restrictions placed on
      exposing kernel addresses via /proc and other interfaces.
 
      ```bash
      sudo sysctl -w kernel.kptr_restrict=0
      ```
 
-   - Run the below command to add the user to the video and render
+   - Run the following command to add the user to the video and render
      group.
 
      ```bash
@@ -112,7 +111,7 @@ The CPU Hotspots Analysis is carried out with the following parameters:
    [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
    tutorial.
 
-2. Run the below command to source the ROS 2 setup files.
+2. Run the following command to source the ROS 2 setup files.
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -133,20 +132,20 @@ The CPU Hotspots Analysis is carried out with the following parameters:
    :::
    ::::
 
-3. Run the below command to set the ROS_DOMAIN_ID.
+3. Run the following command to set the `ROS_DOMAIN_ID`.
 
    ```bash
    export ROS_DOMAIN_ID=67
    ```
 
-4. Run the below command to source the VTune environment
+4. Run the following command to source the VTune environment.
 
    ```bash
    source /opt/intel/oneapi/vtune/latest/env/vars.sh
    ```
 
-5. Run the below command on the terminal to start the CPU Hotspots
-   Analysis of the "Collaborative visual slam with fastmapping
+5. Run the following command in the terminal to start the CPU Hotspots
+   analysis of the "Collaborative visual slam with fastmapping
    enabled" application from the
    [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
    tutorial.
@@ -202,9 +201,9 @@ for more details on the CPU Hotspots Analysis using VTune™ Profiler.
 
 ###### Top Hotspots and the Top Tasks
 
-The below picture showcases the most active functions in the
-application, the total CPU time it has run and the % of CPU time it has
-utilized. For example, here, it can be observed that from the
+The picture below showcases the most active functions in the
+application, the total CPU time it has run, and the percentage of CPU time
+it has utilized. For example, it can be observed that from the
 "Collaborative visual slam with fastmapping enabled" application from
 the [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
 tutorial, the function
@@ -217,8 +216,8 @@ called 27,872 times as shown under "Task Count" column.
 
 ###### Effective CPU Utilization Histogram
 
-The below histogram shows the effective CPU core utilization when the
-application is running. From the below picture it can be observed that
+The histogram below shows the effective CPU core utilization when the
+application is running. From the picture below, it can be observed that
 the effective elapsed time wherein two logical CPU cores are utilized is
 slightly above 8 seconds. On the other hand, the effective elapsed time
 wherein four logical CPU cores are utilized is slightly greater than 0.5
@@ -229,10 +228,7 @@ cores are utilized simultaneously.
 
 ###### Additional Insights
 
-Under "Explore Additional Insights" section, an overview of the
-following can be observed. This will encourage to further explore the
-relevant analysis types which further helps in the optimization of the
-application.
+Under the "Explore Additional Insights" section, you can review an overview of the following items. This encourages further exploration of the relevant analysis types, which helps optimize the application.
 
 - Parallelism: On an average how many CPUs out of total available CPUs
   were utilized. Here 1.407 out of available 20 logical CPUs were
@@ -260,7 +256,7 @@ parameters:
    [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
    tutorial.
 
-2. Run the below command to source the ROS 2 setup files.
+2. Run the following command to source the ROS 2 setup files.
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -281,20 +277,20 @@ parameters:
    :::
    ::::
 
-3. Run the below command to set the ROS_DOMAIN_ID.
+3. Run the following command to set the `ROS_DOMAIN_ID`.
 
    ```bash
    export ROS_DOMAIN_ID=67
    ```
 
-4. Run the below command to source the VTune environment
+4. Run the following command to source the VTune environment.
 
    ```bash
    source /opt/intel/oneapi/vtune/latest/env/vars.sh
    ```
 
-5. Run the below command on the terminal to start the CPU
-   Microarchitecture Exploration of the "Collaborative visual slam
+5. Run the following command in the terminal to start the CPU
+   microarchitecture exploration of the "Collaborative visual slam
    with fastmapping enabled" application from the
    [Collaborative Visual SLAM](../../components/optimized_solutions/collaborative-slam.md)
    tutorial.
@@ -351,20 +347,17 @@ Profiler.
 
 ###### P-core and E-core execution summary
 
-The below picture showcases the execution summary of the application
-running on P-cores and E-cores. This gives an overview on percentage of
-retired instructions on P-core and E-core respectively, percentage of
-slots during which the CPU was waiting due to front-end bound and
-back-end bound latencies on P-core and E-core respectively and many
-other parameters giving a comparison between the tasks executing on
-P-core and E-core respectively.
+The picture below showcases the execution summary of the application
+running on P-cores and E-cores. It gives an overview of the percentage of
+retired instructions on P-cores and E-cores, the percentage of time the
+CPU was waiting due to front-end and back-end bound latencies on P-cores
+and E-cores, and many other parameters that compare tasks executing on
+P-cores and E-cores.
 
 ![CPU_uarch_exploration](../../images/vtune/CPU_uarch_exploration.png)
 
 ###### CPU Bandwidth utilization
 
-Click on `Platform` tab to see the CPU Bandwidth utilization. The below
-picture shows the CPU bandwidth usage by different threads of the
-running application.
+Click the `Platform` tab to see CPU bandwidth utilization. The figure below shows the CPU bandwidth usage by different threads of the running application.
 
 ![CPU_uarch_bandwidth](../../images/vtune/CPU_uarch_cpu_bandwidth_utilization.png)

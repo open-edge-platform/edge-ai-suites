@@ -74,7 +74,7 @@ sudo apt install ./*.deb
 
 ### Test
 
-To run unit tests (implemented with ``colcon``) execute the below command with target ``ROS_DISTRO`` (example for Jazzy):
+To run the unit tests (implemented with ``colcon``), execute the following command with the target ``ROS_DISTRO`` (example for Jazzy):
 
 ```bash
 ROS_DISTRO=jazzy make test

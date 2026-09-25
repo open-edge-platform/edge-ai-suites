@@ -288,7 +288,7 @@ clip_model_path = os.path.join(home_dir, "ov_models/clip-vit-base-patch16/FP16/o
 
 ### Setup the `Phi-4-mini-instruct-int8-ov` model
 
-Follow the below commands to download `Phi-4-mini-instruct-int8-ov`
+Use the following commands to download the `Phi-4-mini-instruct-int8-ov`
 models:
 
 ```bash

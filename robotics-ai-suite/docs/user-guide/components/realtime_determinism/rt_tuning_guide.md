@@ -1,6 +1,6 @@
 # Real-time Tuning Guide
 
-For the improved performance with real-time, follow the below guide to set boot paramaters and learn how to optimize your solution for determinisitic workloads.
+For improved real-time performance, follow this guide to adjust boot parameters and learn how to optimize your solution for deterministic workloads.
 
 ## UEFI Setup
 
@@ -323,7 +323,7 @@ four cores per module and the P-state can be selected per module.
 
 Refer to [UEFI Setup](#uefi-setup) for BIOS optimization and Linux boot parameter optimization on real-time performance, Intel C-state and P-state are enabled. It brings more power consumption to improve on GPU AI performance, but C-state can introduce jitter due to the varying times required to transition between states in isolated cores. **Per-core C-state Disable** helps minimize this jitter, providing a more stable environment for real-time task.
 
-Follow with below command to disable C-state in isolated core:
+Use the following command to disable C-states on the isolated core:
 
 (e.g. core 13 as isolated core)
 
@@ -452,7 +452,7 @@ As the Xe driver does not support disabling RC6, there is no parameter for it. T
 After installing the real-time Linux kernel, it is a good idea to benchmark the system to confirm that the system is properly configured. Perform either of the following commands to install [Cyclictest](https://git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git). Cyclictest is most commonly used for benchmarking real-time systems. It is one of the most frequently used tools for evaluating the relative performance of an RT. Cyclictest accurately and repeatedly measures the difference between a thread's intended wake-up time and the time at which it actually wakes up to provide statistics about the system's latency. It can measure latency in real-time systems caused by the hardware, the firmware, and the operating system.
 Please use `rt-tests v2.6` to collect performance, which support pinning threads to a specific isolated core and avoid the main thread in the core with the measurement threads.
 
-Follow with below steps, you can find `cyclictest v2.6` in `rt-tests-2.6`:
+Following these steps, you can find `cyclictest v2.6` in `rt-tests-2.6`:
 
 ```bash
 wget https://web.git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-2.6.tar.gz
