@@ -13,19 +13,19 @@ The core of the benchmarking process is the `calc_stream_density.sh` script, loc
 
 ### Stream Density Logic
 
-The script uses a binary search algorithm to efficiently find the optimal stream count within a given range (`lower_bound` and `upper_bound`). Here is a summary of the logic from the `calc_stream_density.sh` script:
+The script determines the maximum stream density automatically: you supply only the pipeline name and the FPS target, and the script discovers the search range itself using an exponential ramp-up followed by a bisect. Here is a summary of the logic from the `calc_stream_density.sh` script:
 
-1.  **Initialization:** The script starts with a lower bound (`lns`) and an upper bound (`uns`) for the number of streams. The current number of streams to test (`ns`) is initialized to the lower bound. A variable (`tns`) tracks the highest successful stream count found so far.
+1.  **Initialization:** The script starts at 1 stream. It tracks the highest stream count that met the target (`lo`, also reported as `tns`) and the lowest stream count that failed it (`hi`). No user-provided bounds are needed.
 
-2.  **Binary Search Loop:** The script iterates until the range between the lower and upper bounds is 1, and both bounds have been tested. In each iteration:
+2.  **Phase 1 - Exponential ramp-up:** The script measures 1, 2, 4, 8, 16, ... streams. In each iteration:
     -   It runs a workload with the current number of streams (`ns`).
     -   It measures the `throughput min` (the lowest FPS achieved among all streams) and compares it to the `target_fps`.
+    -   If the target is met, the stream count is doubled and the search continues.
+    -   The first stream count that fails the target becomes the upper edge (`hi`) and ends this phase.
 
-3.  **Adjusting the Range:**
-    -   **If Performance Target is NOT Met** (`throughput min` < `target_fps`): The current stream count (`ns`) is too high. It becomes the new upper bound (`uns = ns`). The next stream count to test is calculated as the midpoint between the old lower bound and this new upper bound.
-    -   **If Performance Target is Met** (`throughput min` >= `target_fps`): The system can handle this workload. The current stream count (`ns`) becomes the new lower bound (`lns = ns`), and the highest successful stream count (`tns`) is updated. The next stream count to test is calculated as the midpoint between this new lower bound and the old upper bound.
+3.  **Phase 2 - Bisect:** The script binary-searches between the last passing count (`lo`) and the first failing count (`hi`), testing the midpoint each time and narrowing the interval, until the two are adjacent.
 
-4.  **Convergence:** This process of testing midpoints and narrowing the search range continues until the loop condition is met. The final value of `tns` represents the highest number of streams that successfully met the performance target, which is reported as the final stream density.
+4.  **Convergence:** The final value of `lo` is the highest number of streams that met the performance target, reported as the final stream density. If even a single stream fails the target, the script reports that the target is not achievable. A safety ceiling (default 64 streams, override with the `MAX_STREAMS` environment variable) bounds the ramp-up on very capable hardware.
 
 ### Average FPS Calculation
 
@@ -89,7 +89,7 @@ inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THRO
 > [!NOTE]
 > The default parameters are set based on best know methods recommended by Edge Workloads and Benchamarks group for a workload with similar characteristics. These parameters can be modified when starting the pipelines.
 
-The `calc_stream_density.sh` script requires a pipeline name and stream count boundaries to run. The available pipelines are defined in the `benchmark_app_payload.json` file located within each application's directory (e.g., `smart-parking/`).
+The `calc_stream_density.sh` script requires only a pipeline name; the stream count range is determined automatically. The available pipelines are defined in the `benchmark_app_payload.json` file located within each application's directory (e.g., `smart-parking/`).
 
 <details>
 <summary>Example Payload with Detection and Classification</summary>
@@ -152,12 +152,12 @@ Here is an example of a GPU pipeline configuration that includes both `detection
 
 This example will find the maximum number of smart parking streams that can run on the CPU while maintaining at least 15 FPS.
 
-1.  Execute the `calc_stream_density.sh` script, providing the desired pipeline name (`yolov11s_gpu` in this case). Here, we test a range of 1 to 16 streams.
+1.  Execute the `calc_stream_density.sh` script, providing the desired pipeline name (`yolov11s_gpu` in this case). The script finds the stream count on its own.
 
     ```bash
-    # Usage: ./calc_stream_density.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> -t <target_fps>
+    # Usage: ./calc_stream_density.sh -p <pipeline_name> -t <target_fps>
 
-    ./calc_stream_density.sh -p yolov11s_gpu -l 1 -u 16 -t 15
+    ./calc_stream_density.sh -p yolov11s_gpu -t 15
     ```
 
 2.  The script will output its progress as it tests different stream counts. The final output will show the optimal stream density found.

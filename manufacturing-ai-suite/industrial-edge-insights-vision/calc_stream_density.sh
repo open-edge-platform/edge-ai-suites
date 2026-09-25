@@ -359,43 +359,228 @@ run_workload_with_retries () {
   echo "$throughput_max"
 }
 
+# Starts one or more pipeline types with fixed stream counts (nstreams mode; no search).
+function run_concurrent_workload() {
+  local pipelines_csv=$1
+  local nstreams_csv=$2
+  local payload_file=$3
+
+  IFS=',' read -ra pipeline_names <<< "$pipelines_csv"
+  IFS=',' read -ra nstreams_list <<< "$nstreams_csv"
+  unset IFS
+
+  local total_streams=0
+  for n in "${nstreams_list[@]}"; do
+    total_streams=$((total_streams + n))
+  done
+
+  local outdir="benchmark-multi"
+  rm -rf "$outdir" && mkdir -p "$outdir"
+
+  for i in "${!pipeline_names[@]}"; do
+    local pname="${pipeline_names[$i]}"
+    local nstreams="${nstreams_list[$i]}"
+
+    local payload_body
+    payload_body=$(jq -r --arg name "$pname" '.[] | select(.pipeline == $name) | .payload' "$payload_file")
+    if [ -z "$payload_body" ]; then
+      echo "Error: Pipeline '$pname' not found in $payload_file" >&2
+      return 1
+    fi
+
+    check_and_loop_video "$payload_body"
+    if [ $? -ne 0 ]; then
+      echo "Error: Video preparation failed for '$pname'." >&2
+      return 1
+    fi
+
+    echo >&2
+    echo -n ">>>>> Starting $nstreams stream(s) for pipeline '$pname'..." >&2
+    for (( x=1; x<=nstreams; x++ )); do
+      local current_payload
+      # Unique peer-id/topic per stream so concurrent pipelines never collide.
+      current_payload=$(echo "$payload_body" | jq --arg id "${pname}_${x}" '
+        (if .destination.frame."peer-id" then .destination.frame."peer-id" = $id else . end)
+        | (if .destination.metadata.topic then .destination.metadata.topic = $id else . end)')
+
+      local response
+      response=$(curl -k -s -w "\nHTTP_CODE:%{http_code}" \
+        "https://$DLSPS_NODE_IP/api/pipelines/user_defined_pipelines/${pname}" \
+        -X POST -H "Content-Type: application/json" -d "$current_payload")
+
+      local http_code
+      http_code=$(echo "$response" | grep "HTTP_CODE:" | cut -d: -f2)
+      local response_body
+      response_body=$(echo "$response" | sed '/HTTP_CODE:/d')
+
+      if [ "$http_code" != "200" ] && [ "$http_code" != "201" ]; then
+        echo >&2
+        echo "Error: Failed to start '$pname' stream $x (HTTP $http_code): $response_body" >&2
+        return 1
+      fi
+      sleep 1
+    done
+    echo " done." >&2
+  done
+
+  echo -n ">>>>> Waiting for all $total_streams pipeline(s) to reach RUNNING state..." >&2
+  local running_count=0
+  local attempts=0
+  while [ "$running_count" -lt "$total_streams" ] && [ "$attempts" -lt 120 ]; do
+    local status_output
+    status_output=$(get_pipeline_status)
+    running_count=$(echo "$status_output" | jq '[.[] | select(.state=="RUNNING")] | length')
+    echo -n "." >&2
+    attempts=$((attempts + 1))
+    sleep 2
+  done
+
+  if [ "$running_count" -lt "$total_streams" ]; then
+    echo " Error: Only $running_count / $total_streams pipelines reached RUNNING state." >&2
+    get_pipeline_status | jq . >&2
+    return 1
+  fi
+  echo " All $total_streams pipeline(s) running." >&2
+
+  echo ">>>>> Monitoring all $total_streams nstreams-mode stream(s) for $MAX_DURATION seconds..." >&2
+  local start_time=$SECONDS
+  while (( SECONDS - start_time < MAX_DURATION )); do
+    local elapsed_time=$((SECONDS - start_time))
+    echo -ne "Monitoring... ${elapsed_time}s / ${MAX_DURATION}s\r" >&2
+    get_pipeline_status >> "$outdir/sample.logs" 2>/dev/null
+    sleep 1
+  done
+  echo -ne "\n" >&2
+
+  stop_all_pipelines
+
+  gawk -v ns=$total_streams -v percentile="${THROUGHPUT_PERCENTILE:-0.9}" "$awk_utils"'
+  /^\[/ {
+    split("",fps_running)
+    ns_running=0
+  }
+  /"avg_fps":/ {
+    fps=$2*1
+  }
+  /"state": "RUNNING"/ {
+    fps_running[++ns_running]=fps
+  }
+  /^\]/ && ns_running==ns {
+    for (i=1;i<=ns;i++)
+      throughput[i][++throughput_ct[i]]=fps_running[i]
+  }
+  END {
+    ns=length(throughput)
+    if (ns>0) {
+      ns1=0
+      for (i=1;i<=ns;i++) {
+        throughput_p[i]=calc_percentile(throughput[i],percentile)
+        if (throughput_p[i]>0) {
+          throughput_std[i]=calc_stdev(throughput[i])
+          print "throughput #"i": "throughput_p[i]
+          ns1++
+        }
+      }
+      print "throughput median: "calc_median(throughput_p)
+      print "throughput average: "calc_avg(throughput_p)
+      print "throughput stdev: "calc_max(throughput_std)
+      print "throughput cumulative: "calc_sum(throughput_p)
+      mm=(ns1<ns)?0:calc_min(throughput_p)
+      print "throughput min: "mm
+    }
+  }
+  ' "$outdir/sample.logs" > "$outdir/kpi.txt"
+}
+
 # --- Main Script ---
 
 function usage() {
-    echo "Usage: $0 -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "Usage (stream-density mode — automatic, no search range needed):"
+    echo "  $0 -p <pipeline_name> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "  Example: $0 -p pallet_defect_detection_gpu -t 28.5 -i 60"
+    echo
+    echo "Usage (nstreams mode):"
+    echo "  $0 -p <p1> [p2 ...] -nstreams <N1> [N2 ...] [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "  Example: $0 -p pallet_defect_detection_gpu pcb_anomaly_classification_gpu -nstreams 6 4"
     echo
     echo "Arguments:"
-    echo "  -p <pipeline_name>   : (Required) The name of the pipeline to benchmark (e.g., object_tracking_cpu)."
-    echo "  -l <lower_bound>     : (Required) The starting lower bound for the number of streams."
-    echo "  -u <upper_bound>     : (Required) The starting upper bound for the number of streams."
-    echo "  -t <target_fps>      : Target FPS for stream-density mode (default: 14.95)."
+    echo "  -p <pipeline_name>   : (Required) Pipeline name(s). Provide one or more names for nstreams mode."
+    echo "  -nstreams <N1> [N2 ...] : (Required for nstreams mode) Fixed stream count per pipeline, in the same order as -p."
+    echo "  -t <target_fps>      : Target FPS threshold (default: 14.95); used for stream-density mode and accepted in nstreams mode for CLI consistency."
     echo "  -i <interval>        : Monitoring duration in seconds for each test run (default: 60)."
     echo "  -c <throughput_percentile> : Throughput percentile for KPI calculation (default: 0.9)."
+    echo
+    echo "Notes:"
+    echo "  Stream density is discovered automatically (exponential ramp-up, then bisect)."
+    echo "  Set MAX_STREAMS=<n> in the environment to change the internal safety ceiling (default: 64)."
     exit 1
 }
 
-pipeline_name_arg=""
+pipeline_names=()
+nstreams_list=()
 target_fps="14.95"
 MAX_DURATION=60
 THROUGHPUT_PERCENTILE="0.9"
-lower_bound=""
-upper_bound=""
+# Safety ceiling for the automatic search; env-only, not a CLI argument.
+max_streams_cap=${MAX_STREAMS:-64}
 
-while getopts "p:l:u:t:i:c:" opt; do
-  case ${opt} in
-    p ) pipeline_name_arg=$OPTARG ;;
-    l ) lower_bound=$OPTARG ;;
-    u ) upper_bound=$OPTARG ;;
-    t ) target_fps=$OPTARG ;;
-    i ) MAX_DURATION=$OPTARG ;;
-    c ) THROUGHPUT_PERCENTILE=$OPTARG ;;
-    \? ) usage ;;
+_idx=1
+while (( _idx <= $# )); do
+  _arg="${!_idx}"
+  case "$_arg" in
+    -p)
+      _idx=$((_idx + 1))
+      while (( _idx <= $# )) && [[ "${!_idx}" != -* ]]; do
+        pipeline_names+=("${!_idx}")
+        _idx=$((_idx + 1))
+      done ;;
+    -nstreams)
+      _idx=$((_idx + 1))
+      while (( _idx <= $# )) && [[ "${!_idx}" != -* ]]; do
+        nstreams_list+=("${!_idx}")
+        _idx=$((_idx + 1))
+      done ;;
+    -t) _idx=$((_idx + 1)); target_fps="${!_idx}";            _idx=$((_idx + 1)) ;;
+    -i) _idx=$((_idx + 1)); MAX_DURATION="${!_idx}";          _idx=$((_idx + 1)) ;;
+    -c) _idx=$((_idx + 1)); THROUGHPUT_PERCENTILE="${!_idx}"; _idx=$((_idx + 1)) ;;
+    -l|-u)
+      echo "Warning: $_arg is deprecated and ignored; stream density is determined automatically." >&2
+      _idx=$((_idx + 2)) ;;
+    --trace) _idx=$((_idx + 1)) ;;
+    *)
+      echo "Error: Unknown argument '$_arg'." >&2
+      usage ;;
   esac
 done
 
-if [ -z "$pipeline_name_arg" ] || [ -z "$lower_bound" ] || [ -z "$upper_bound" ]; then
-    echo "Error: Pipeline name, lower bound, and upper bound are required." >&2
+if [ ${#pipeline_names[@]} -eq 0 ]; then
+    echo "Error: Pipeline name is required." >&2
     usage
+fi
+
+NSTREAMS_MODE=false
+if [ ${#nstreams_list[@]} -gt 0 ]; then
+    NSTREAMS_MODE=true
+    if [ ${#pipeline_names[@]} -ne ${#nstreams_list[@]} ]; then
+        echo "Error: Number of pipeline names (${#pipeline_names[@]}) must match number of -nstreams values (${#nstreams_list[@]})." >&2
+        usage
+    fi
+    for _n in "${nstreams_list[@]}"; do
+        if ! [[ "$_n" =~ ^[0-9]+$ ]] || [ "$_n" -lt 1 ]; then
+            echo "Error: -nstreams values must be positive integers (got '$_n')." >&2
+            usage
+        fi
+    done
+else
+    pipeline_name_arg="${pipeline_names[0]}"
+    if [ ${#pipeline_names[@]} -gt 1 ]; then
+        echo "Warning: stream-density mode benchmarks one pipeline; using '$pipeline_name_arg' and ignoring the rest." >&2
+    fi
+fi
+
+if ! [[ "$max_streams_cap" =~ ^[0-9]+$ ]] || [ "$max_streams_cap" -lt 1 ]; then
+    echo "Error: MAX_STREAMS must be a positive integer (got '$max_streams_cap')." >&2
+    exit 1
 fi
 
 # Path to the .env file
@@ -444,36 +629,87 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-records=""
-ns=$lower_bound
+# ---------------------------------------------------------------------------
+# NStreams mode: run the requested pipelines concurrently at fixed stream
+# counts, report the combined KPIs, and exit. No search is performed.
+# ---------------------------------------------------------------------------
+if $NSTREAMS_MODE; then
+  _total_concurrent=0
+  for _n in "${nstreams_list[@]}"; do
+    _total_concurrent=$((_total_concurrent + _n))
+  done
+
+  echo ">>>>> Starting nstreams-mode pipeline workload:" >&2
+  for _i in "${!pipeline_names[@]}"; do
+    echo "       ${pipeline_names[$_i]}: ${nstreams_list[$_i]} stream(s)" >&2
+  done
+
+  if run_concurrent_workload \
+      "$(IFS=,; echo "${pipeline_names[*]}")" \
+      "$(IFS=,; echo "${nstreams_list[*]}")" \
+      "$payload_file"; then
+    echo >&2
+    echo "======================================================" >&2
+    echo "✅ FINAL RESULT: Nstreams-mode Pipeline Run Completed!" >&2
+    echo "   Pipelines : ${pipeline_names[*]}" >&2
+    echo "   Streams   : ${nstreams_list[*]}" >&2
+    echo "   Total     : $_total_concurrent streams" >&2
+    echo "======================================================" >&2
+    echo >&2
+    echo "KPIs (all $_total_concurrent streams combined):"
+    cat "benchmark-multi/kpi.txt" 2>/dev/null
+  else
+    echo "❌ FINAL RESULT: Nstreams-mode pipeline run failed." >&2
+    exit 1
+  fi
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Automatic stream-density search: exponential ramp-up, then bisect.
+#   Phase 1 - measure N = 1, 2, 4, 8, ... until throughput drops below
+#             target_fps, or the safety ceiling (MAX_STREAMS) is reached.
+#   Phase 2 - bisect between the last passing N (lo) and the first failing N
+#             (hi) until they are adjacent; lo is the maximum sustainable density.
+# ---------------------------------------------------------------------------
+echo ">>>>> Automatic stream-density search: target ${target_fps} fps/stream, window ${MAX_DURATION}s, ceiling ${max_streams_cap} streams." >&2
+
+ns=1
+lo=0
+hi=-1
 tns=0
-lns=$lower_bound
-uns=$upper_bound
+exp_phase=true
 
-[[ "$*" = *"--trace"* && $lns -lt $uns ]] || echo "Start-Trace:"
-while [ $((uns - lns)) -gt 1 ] || [[ "$records" != *" $lns:"* ]] || [[ "$records" != *" $uns:"* ]]; do
-  if [[ "$records" = *" $ns:"* ]]; then
-    throughput=${records##* $ns:}
-    throughput=${throughput%% *}
+[[ "$*" = *"--trace"* ]] || echo "Start-Trace:"
+while true; do
+  throughput=$(run_workload_with_retries "$ns" "$pipeline_name_arg" "$payload_file")
+
+  if [ $hi -gt 0 ]; then hi_display=$hi; else hi_display=$max_streams_cap; fi
+  echo "streams: $ns throughput: $throughput range: [$lo,$hi_display]"
+
+  if echo "${throughput:-0} $target_fps" | gawk '{exit($1>=$2?0:1)}'; then
+    tns=$ns
+    lo=$ns
+    if $exp_phase; then
+      [ $ns -ge $max_streams_cap ] && break
+      ns=$((ns * 2))
+      [ $ns -gt $max_streams_cap ] && ns=$max_streams_cap
+      continue
+    fi
   else
-    throughput=$(run_workload_with_retries "$ns" "$pipeline_name_arg" "$payload_file")
+    hi=$ns
+    if $exp_phase; then
+      [ $ns -eq 1 ] && break
+      exp_phase=false
+    fi
   fi
-  records="$records $ns:$throughput"
 
-  echo "streams: $ns throughput: $throughput range: [$lns,$uns]"
-
-  if echo "${throughput:-0} $target_fps" | gawk '{exit($1<$2?0:1)}'; then
-    uns=$ns
-    ns=$(echo "$lns $ns" | gawk '{n=int(($1+$2)/2);m=int($2/2);n=(n<m?m:n);print (n<1?1:n)}')
-  else
-    [ $ns -le $tns ] || tns=$ns
-    lns=$ns
-    ns=$(echo "$ns $uns" | gawk '{n=int(($1+$2)/2+0.5);m=$1*2;print (n>m?m:n)}')
-  fi
+  [ $hi -lt 0 ] && break
+  [ $((hi - lo)) -le 1 ] && break
+  ns=$(( (lo + hi) / 2 ))
 done
-tns=$lns
 
-if [[ "$*" = *"--trace"* && $lns -lt $uns ]]; then
+if [[ "$*" = *"--trace"* ]] && [ "$tns" -gt 0 ]; then
   echo "Start-Trace:"
   throughput=$(run_workload_with_retries "$tns" "$pipeline_name_arg" "$payload_file")
 fi
@@ -483,6 +719,7 @@ echo
 echo "======================================================" >&2
 if [ "$tns" -gt 0 ]; then
     echo "✅ FINAL RESULT: Stream-Density Benchmark Completed!" >&2
+    [ "$tns" -ge "$max_streams_cap" ] && echo "   Note: the safety ceiling ($max_streams_cap) was reached; raise MAX_STREAMS to search higher." >&2
     # The primary result goes to stdout
     echo "stream density: $tns"
     echo "======================================================" >&2
@@ -491,6 +728,6 @@ if [ "$tns" -gt 0 ]; then
     # The KPI details go to stdout
     cat "benchmark-$tns/kpi.txt" 2> /dev/null
 else
-    echo "❌ FINAL RESULT: Target FPS Not Achievable in the given range." >&2
+    echo "❌ FINAL RESULT: Target FPS $target_fps not achievable even with a single stream." >&2
     echo "======================================================" >&2
 fi
