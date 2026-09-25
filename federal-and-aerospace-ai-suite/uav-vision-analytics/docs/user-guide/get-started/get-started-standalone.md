@@ -11,22 +11,33 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manager are all started together (`docker-compose-pymavlink.yml`). Telemetry flows from PX4 SITL through `mavlink-router` to the DL Streamer container, where `pymavlink` reads it directly over UDP.
 
-![uav vision analytics standalone](../_assets/FedAero-uav-vision-pymavlink.drawio.svg)
+![uav vision analytics standalone](../_assets/FedAero-uav-vision-pymavlink.svg)
 
 **Telemetry flow:**
 
 ```mermaid
 sequenceDiagram
+    participant Client as curl / QGroundControl / ffplay
+    participant Nginx as nginx (TLS :443, RTSP :8555)
+    participant DLSPS as DL Streamer Pipeline Server
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
     participant OVL as gvapython MavlinkReceiver
     participant Frame as Video Frame
+
+    Client->>Nginx: POST /pipelines/... (HTTPS :443)
+    Nginx->>DLSPS: proxy_pass REST :8081
+    DLSPS-->>Nginx: 200 instance_id
+    Nginx-->>Client: 200 instance_id
 
     PX4->>RTR: MAVLink stream (UDP :14550)
     RTR->>OVL: broadcast UDP :14541
     Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
     Frame->>OVL: process_frame() per frame
     OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
+
+    Frame->>Nginx: annotated RTSP :8555 (stream {} passthrough)
+    Nginx->>Client: rtsp://<HOST_IP>:8555/...
 ```
 
 **Services:**
@@ -37,6 +48,10 @@ sequenceDiagram
 | `px4` | `px4io/px4-sitl` | `14550` | Flight controller simulator |
 | `mavlink-router` | custom build | `14551` | MAVLink UDP routing (:14550 → :14541) |
 | `metrics-manager` | `intel/metrics-manager` | `9090` | CPU/GPU/NPU/power metrics |
+| `nginx` | `nginx:1.27-alpine` | `80` (redirects to 443), `443` (HTTPS, self-signed cert), `8555` (RTSP passthrough) — published to `HOST_IP` | Reverse proxy / TLS termination — the only service that publishes ports to the host |
+
+> `dlstreamer-pipeline-server` and `metrics-manager` no longer publish ports directly —
+> both are reachable only through `nginx` on the internal `app_network`.
 
 ---
 
@@ -129,14 +144,14 @@ Start a single pipeline directly without the pipeline manager. Useful for testin
 
 ```bash
 # CPU pipeline
-INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_cpu.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -154,11 +169,11 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 ```
 
-Change following **three values** to switch between CPU / GPU / NPU:
-
+Change following **four values** to switch between CPU / GPU / NPU:
 1. **Pipeline name** in the URL path (`uav_object_detection_cpu` → `_gpu` / `_npu`)
 2. **RTSP path** in the request body (`uav-mavlink-cpu` → `uav-mavlink-gpu` / `uav-mavlink-npu`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+4. **JSONL log path** in the request body (`/tmp/results_cpu.jsonl` → `/tmp/results_gpu.jsonl` / `/tmp/results_npu.jsonl`) — each device pipeline logs detections to its own file so events from concurrently-running pipelines are never mixed together.
 
 ### 5. View the output stream
 
@@ -174,6 +189,18 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ```
 
+#### View detection logs
+
+Each device pipeline writes its detection events (with GPS/telemetry enrichment) to a
+separate JSONL file, so CPU/GPU/NPU logs never collide even when multiple pipelines run
+at once:
+
+```bash
+tail -f /tmp/results_cpu.jsonl   # CPU pipeline detections
+tail -f /tmp/results_gpu.jsonl   # GPU pipeline detections
+tail -f /tmp/results_npu.jsonl   # NPU pipeline detections
+```
+
 The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -187,7 +214,7 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 4](#4-start-inference-pipelines)):
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### 6. Stop all services
@@ -237,12 +264,17 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 ## Port Reference
 
-| Port | Protocol | Service | Mode |
-| --- | --- | --- | --- |
-| `8081` | HTTP | DL Streamer REST API | All modes |
-| `8555` | RTSP | Annotated video output | All modes |
-| `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes |
-| `9090` | HTTP | metrics-manager (HW metrics) | pymavlink modes |
+`nginx` is the only service that publishes ports to the host (bound to `HOST_IP`, not
+`0.0.0.0`). Everything else below is reachable only on the internal `app_network`.
+
+| Port | Protocol | Service | Published to host? | Mode |
+| --- | --- | --- | --- | --- |
+| `80` | HTTP | `nginx` → `301` redirect to HTTPS (no application traffic) | Yes | All modes |
+| `443` | HTTPS | `nginx` → proxies to `dlstreamer-pipeline-server:8081` (REST API) and `metrics-manager:9090` (metrics); self-signed cert, use `curl -k` | Yes | All modes |
+| `8555` | RTSP | `nginx` → raw TCP passthrough to `dlstreamer-pipeline-server:8555` | Yes | All modes |
+| `8081` | HTTP | DL Streamer REST API | No (internal only) | All modes |
+| `14541` | UDP | MAVLink broadcast (mavlink-router) | No (internal only) | pymavlink modes |
+| `9090` | HTTP | metrics-manager (HW metrics) | No (internal only) | pymavlink modes |
 
 ---
 

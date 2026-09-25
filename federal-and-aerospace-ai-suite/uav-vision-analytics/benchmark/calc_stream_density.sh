@@ -2,6 +2,23 @@
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # Ensure ~/.local/bin (jq wrapper) is in PATH
 export PATH="$HOME/.local/bin:$PATH"
+
+# Pick up HOST_IP (and other vars) from the app's .env if present. nginx only
+# binds to HOST_IP (not 0.0.0.0), so 'localhost'/'127.0.0.1' won't reach it once
+# HOST_IP is set to a real address — this lets DLSPS_NODE_IP/METRICS_URL default
+# to the same address the stack is actually published on, without requiring the
+# caller to pass DLSPS_NODE_IP=<HOST_IP> manually every time.
+if [ -f "$SCRIPT_DIR/../.env" ]; then
+  # Parse KEY=VALUE lines directly instead of sourcing the file, since sourcing
+  # would execute arbitrary shell code if .env is ever tampered with.
+  while IFS='=' read -r k v; do
+    case "$k" in ''|\#*) continue ;; esac
+    if [[ "$k" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      export "$k=$v"
+    fi
+  done < "$SCRIPT_DIR/../.env"
+fi
+
 # calc_stream_density.sh — UAV Vision Analytics Pipeline Benchmark
 #
 # Modes:
@@ -12,8 +29,9 @@ export PATH="$HOME/.local/bin:$PATH"
 #                    (CPU + GPU + NPU) and print a unified claim-statement table.
 #
 # HW Metrics Integration (metrics-manager):
-#   Polls intel/metrics-manager at METRICS_URL (default: http://localhost:9090).
-#   Tries SSE endpoint (/metrics/stream) FIRST, falls back to REST
+#   Polls intel/metrics-manager at METRICS_URL (default: http://<HOST_IP from .env>,
+#   falls back to http://localhost, proxied by nginx). Tries SSE endpoint
+#   (/metrics/stream) FIRST, falls back to REST
 #   (/api/v1/metrics/latest). Metrics are collected only while are in RUNNING
 #   state (not during GPU warmup / pipeline init).
 #   Results are appended to kpi.txt as hw_<metric> avg/min/max lines.
@@ -80,8 +98,11 @@ awk_utils='
 # ═══════════════════════════════════════════════════════════════════════════════
 #  HW Metrics Configuration
 #  Override via environment variables or the -m / -M CLI flags.
+#  metrics-manager no longer publishes a host port directly — it is reached
+#  through the nginx reverse proxy over HTTPS (self-signed cert; curl/python
+#  calls below skip certificate verification accordingly).
 # ═══════════════════════════════════════════════════════════════════════════════
-METRICS_URL="${METRICS_URL:-http://localhost:9090}"
+METRICS_URL="${METRICS_URL:-https://${HOST_IP:-localhost}}"
 METRICS_INTERVAL="${METRICS_INTERVAL:-2}"   # seconds between polls
 HW_MONITOR_ENABLED=true                     # set false to skip entirely
 HW_POLL_PID=""                              # PID of background poller subshell
@@ -115,12 +136,12 @@ function _check_metrics_manager() {
   local resp
 
   # SSE primary check — any response from the event-stream means it's up
-  resp=$(curl -s --connect-timeout 3 --max-time 4 -N \
+  resp=$(curl -k -s --connect-timeout 3 --max-time 4 -N \
     "${METRICS_URL}/metrics/stream" 2>/dev/null | head -1)
   [ -n "$resp" ] && return 0
 
   # REST fallback check
-  resp=$(curl -s --connect-timeout 3 --max-time 5 \
+  resp=$(curl -k -s --connect-timeout 3 --max-time 5 \
     "${METRICS_URL}/api/v1/metrics/latest" 2>/dev/null)
   echo "$resp" | grep -q '"metrics"' && return 0
 
@@ -154,10 +175,12 @@ function start_hw_monitor() {
   # Python3 SSE streamer: events arrive as fast as metrics-manager sends them,
   # killed cleanly via kill $HW_POLL_PID.
   cat > "$_HW_STREAM_PY" << 'PYEOF'
-import sys, json, urllib.request, time
+import sys, json, ssl, urllib.request, time
 outfile, base_url, interval = sys.argv[1], sys.argv[2].rstrip("/"), float(sys.argv[3])
 sse_url  = base_url + "/metrics/stream"
 rest_url = base_url + "/api/v1/metrics/latest"
+# nginx terminates TLS with a self-signed cert — skip verification here.
+_SSL_CTX = ssl._create_unverified_context()
 
 def _key(name, labels):
     tag = labels.get("type") or labels.get("engine") or labels.get("domain") or ""
@@ -177,7 +200,7 @@ def _write(mlist, f):
     f.flush()
 
 def _sse(f):
-    req = urllib.request.urlopen(sse_url)
+    req = urllib.request.urlopen(sse_url, context=_SSL_CTX)
     for raw in req:
         line = raw.decode("utf-8", errors="replace").strip()
         if line.startswith("data: "):
@@ -192,7 +215,7 @@ def _sse(f):
 def _rest(f):
     while True:
         try:
-            with urllib.request.urlopen(rest_url, timeout=5) as r:
+            with urllib.request.urlopen(rest_url, timeout=5, context=_SSL_CTX) as r:
                 md = json.loads(r.read()).get("metrics", {})
                 ml = []
                 for k, e in md.items():
@@ -440,12 +463,13 @@ function get_hw_metrics_summary() {
 #  Pipeline runner functions
 # ═══════════════════════════════════════════════════════════════════════════════
 
-DLSPS_NODE_IP="${DLSPS_NODE_IP:-localhost}"
-DLSPS_PORT="${DLSPS_PORT:-8081}"
-DLSPS_BASE_URL="http://${DLSPS_NODE_IP}:${DLSPS_PORT}"
+DLSPS_NODE_IP="${DLSPS_NODE_IP:-${HOST_IP:-localhost}}"
+DLSPS_PORT="${DLSPS_PORT:-443}"
+DLSPS_SCHEME="${DLSPS_SCHEME:-https}"
+DLSPS_BASE_URL="${DLSPS_SCHEME}://${DLSPS_NODE_IP}:${DLSPS_PORT}"
 
 function get_pipeline_status() {
-    curl -s "${DLSPS_BASE_URL}/pipelines/status" "$@"
+    curl -k -s "${DLSPS_BASE_URL}/pipelines/status" "$@"
 }
 
 function check_and_loop_video() {
@@ -671,7 +695,7 @@ function stop_all_pipelines() {
   echo "Found ${#pipelines[@]} running pipelines to stop." >&2
 
   for pipeline_id in "${pipelines[@]}"; do
-    curl -s --location -X DELETE "${DLSPS_BASE_URL}/pipelines/${pipeline_id}" >/dev/null &
+    curl -k -s --location -X DELETE "${DLSPS_BASE_URL}/pipelines/${pipeline_id}" >/dev/null &
   done
 
   wait
@@ -1106,8 +1130,8 @@ function usage() {
     echo "                       and print a unified claim-statement summary table."
     echo "  -nstreams <N1> [N2 ...] Fixed stream count per pipeline (nstreams mode)."
     echo
-    echo "HW Metrics (metrics-manager — no -m/-M needed for localhost:9090):"
-    echo "  -m <url>             metrics-manager base URL (default: http://localhost:9090)."
+    echo "HW Metrics (metrics-manager — reached via nginx, no -m/-M needed by default):"
+    echo "  -m <url>             metrics-manager base URL (default: https://<HOST_IP from .env> (port 443), falls back to https://localhost)."
     echo "  -M <seconds>         HW polling interval in seconds (default: 2)."
     echo "  --no-hw-metrics      Disable HW metrics collection entirely."
     echo
@@ -1164,7 +1188,7 @@ if [[ " $* " == *" -nstreams "* ]]; then
   if [ ! -f "$payload_file" ]; then echo "Error: Payload file not found: $payload_file" >&2; exit 1; fi
 
   echo ">>>>> Performing pre-flight checks..." >&2
-  if ! curl -s --fail "${DLSPS_BASE_URL}/pipelines/status" > /dev/null; then
+  if ! curl -k -s --fail "${DLSPS_BASE_URL}/pipelines/status" > /dev/null; then
     echo "Error: DLSPS not reachable at ${DLSPS_BASE_URL}" >&2; exit 1
   fi
   echo "DLSPS is reachable." >&2
@@ -1268,7 +1292,7 @@ payload_file="${SCRIPT_DIR}/benchmark_app_payload.json"
 if [ ! -f "$payload_file" ]; then echo "Error: Payload file not found: $payload_file" >&2; exit 1; fi
 
 echo ">>>>> Performing pre-flight checks..." >&2
-if ! curl -s --fail "${DLSPS_BASE_URL}/pipelines/status" > /dev/null; then
+if ! curl -k -s --fail "${DLSPS_BASE_URL}/pipelines/status" > /dev/null; then
   echo "Error: DLSPS not reachable at ${DLSPS_BASE_URL}" >&2; exit 1
 fi
 echo "DLSPS is reachable." >&2

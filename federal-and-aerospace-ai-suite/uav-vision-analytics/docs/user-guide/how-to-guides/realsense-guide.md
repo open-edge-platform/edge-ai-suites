@@ -70,18 +70,20 @@ Use the Pipeline Server REST API to start a pipeline. The POST response body is
 the UUID of the running instance — save it to stop the pipeline later.
 
 Replace `<pipeline-name>` with one of the pipeline names from the table above,
-`<rtsp-stream-name>` with the desired RTSP path (e.g. `realsense`), and
-`device` with the matching value.
+`<rtsp-stream-name>` with the desired RTSP path (e.g. `realsense`), `device` with the
+matching value, and `<device-suffix>` in the JSONL log path with the matching lowercase
+device name (`cpu` / `gpu` / `npu`) — each device pipeline must log to its own file so
+detection events from concurrently-running pipelines are never mixed together.
 
 ```bash
-INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/<pipeline-name> \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/<pipeline-name> \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_<device-suffix>.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -102,14 +104,14 @@ echo "Instance ID: $INSTANCE_ID"
 **Example** — start the CPU pipeline and publish the stream at `rtsp://<HOST_IP>:8555/realsense`:
 
 ```bash
-INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/uav_realsense_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/uav_realsense_cpu \
   -H 'Content-Type: application/json' \
   -d '{
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_cpu.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -132,9 +134,14 @@ View the annotated stream:
 ```bash
 ffplay rtsp://<HOST_IP>:8555/realsense
 ```
+View the detection log (GPS/telemetry-enriched, this device only):
+
+```bash
+tail -f /tmp/results_cpu.jsonl
+```
 
 To stop the pipeline:
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```

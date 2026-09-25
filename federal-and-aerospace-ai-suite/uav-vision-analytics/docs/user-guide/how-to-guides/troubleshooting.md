@@ -320,18 +320,23 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 sudo apt-get install -y gawk
 ```
 
-### `Error: DLSPS not reachable at http://localhost:8081`
+### `Error: DLSPS not reachable at https://localhost:443`
 
-The `dlstreamer-pipeline-server` container is not running. Start the full stack:
+`calc_stream_density.sh` auto-sources `../.env` and defaults `DLSPS_NODE_IP` to that file's
+`HOST_IP` — if you still see `localhost` in the error, either `.env` doesn't exist yet
+(run `make init` first) or `dlstreamer-pipeline-server`/`nginx` aren't running. `nginx`
+binds only to `HOST_IP` (not `0.0.0.0`), so `localhost`/`127.0.0.1` never reach it once
+`HOST_IP` is set to a real address. Start the full stack:
 
 ```bash
 make pymav-up
 ```
 
-If the port mapping differs from the default `8081`, override:
+If you're running the benchmark from a **different machine** than the one hosting the
+stack, point it at that host explicitly:
 
 ```bash
-DLSPS_PORT=8080 ./benchmark/calc_stream_density.sh ...
+DLSPS_NODE_IP=<HOST_IP> ./benchmark/calc_stream_density.sh ...
 ```
 
 ### `fps=0` / `throughput min: 0` after a run
@@ -352,14 +357,23 @@ Possible causes:
     /home/pipeline-server/resources/videos/
   ```
 
-### `HW Monitor: metrics-manager not reachable at http://localhost:9090`
+### `HW Monitor: metrics-manager not reachable at https://localhost`
 
-The `metrics-manager` container is not running. It is included in
-`docker-compose-pymavlink.yml` — ensure the full stack is up:
+`calc_stream_density.sh` auto-sources `../.env` and defaults `METRICS_URL` to
+`https://<HOST_IP>` from that file — if you still see `localhost`, either `.env` doesn't
+exist yet (run `make init` first) or `metrics-manager`/`nginx` aren't running. It is
+included in `docker-compose-pymavlink.yml` — ensure the full stack is up:
 
 ```bash
 make pymav-up
 docker ps | grep metrics-manager
+```
+
+If you're running the benchmark from a **different machine** than the one hosting the
+stack, point it at that host explicitly:
+
+```bash
+METRICS_URL=https://<HOST_IP> ./benchmark/calc_stream_density.sh ...
 ```
 
 The benchmark continues with FPS-only results when metrics-manager is unavailable.
