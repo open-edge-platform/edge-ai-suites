@@ -247,10 +247,11 @@ fi
 # which is gitignored and recreated on every re-clone/upgrade). Opt-in only: no-op unless
 # STIA_DEMO_INTERSECTION is set, so the standard flow keeps the RI's own default scene/config.
 #
-# Each intersection's overrides are a flat directory containing exactly one *.json
-# (DLSPS pipeline config) and one *.tar.bz2 (Scenescape scene bundle), e.g.
-# intersection_1/intersection_1.json + intersection_1/Intersection_1.tar.bz2. File name
-# casing is not significant; the files are located by extension via glob.
+# Each intersection's overrides are a flat directory containing one *.json (DLSPS
+# pipeline config, matched by glob excluding this dir's own deployment_instance.json)
+# and one *.tar.bz2 (Scenescape scene bundle), e.g. intersection_1/intersection_1.json
+# + intersection_1/Intersection_1.tar.bz2 + intersection_1/deployment_instance.json.
+# File name casing is not significant; the files are located by extension via glob.
 apply_stia_overrides() {
     if [ -z "$STIA_DEMO_INTERSECTION" ]; then
         return 0
@@ -265,7 +266,10 @@ apply_stia_overrides() {
 
     if [ -d "$overrides_dir" ]; then
         for match in "$overrides_dir"/*.json; do
-            [ -f "$match" ] && dlsps_config_src="$match" && break
+            # Skip this dir's own deployment_instance.json (name/lat/long identity
+            # file) - it lives alongside the DLSPS pipeline config *.json but must
+            # never be mistaken for it.
+            [ -f "$match" ] && [ "$(basename "$match")" != "deployment_instance.json" ] && dlsps_config_src="$match" && break
         done
         for match in "$overrides_dir"/*.tar.bz2; do
             [ -f "$match" ] && scene_src="$match" && break
