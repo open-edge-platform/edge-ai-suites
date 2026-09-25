@@ -1,4 +1,0 @@
-# Scenescape-mode MQTT brokers. Active when NVR_SCENESCAPE=true.
-# host = MQTT broker IP only. RTSP is configured separately in the Frigate config.
-# Broker id must match the SI node prefix in Frigate camera names (e.g. si1 -> si1-camera1).
-brokers: []
