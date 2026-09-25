@@ -20,9 +20,23 @@ services:
 
   # Override hardcoded container_name so each STIA instance gets a unique nginx
   # container name scoped to its INTERSECTION_NAME project.
-  # No ports override — base compose already uses ephemeral ports ("80", "443").
   nginx:
     container_name: ${INTERSECTION_NAME:-trafficagent}-nginx-reverse-proxy
     ports: !override
       - ":80"
       - ":443"
+    volumes: !override
+      - "${APP_DIR}/docker/nginx.conf.template:/etc/nginx/nginx.conf.template:ro"
+      - "${RI_DIR}/src/nginx/ssl:/etc/nginx/ssl:ro"
+    environment:
+      - NGINX_CLIENT_MAX_BODY_SIZE=${NGINX_CLIENT_MAX_BODY_SIZE:-150m}
+    # The base image only auto-renders files under /etc/nginx/templates/*.template into
+    # /etc/nginx/conf.d/. Our template replaces the whole nginx.conf (events/http blocks),
+    # so it must be rendered explicitly with envsubst before nginx starts, otherwise nginx
+    # silently falls back to its built-in default config (HTTP-only, no SSL, no proxying).
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - envsubst '$$NGINX_CLIENT_MAX_BODY_SIZE' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'
+  broker:
+    ports: !override
+      - ":1883"
