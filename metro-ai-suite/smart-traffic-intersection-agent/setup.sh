@@ -25,8 +25,29 @@ if [ ! -f "$DEPLOYMENT_CONFIG" ]; then
     return 1
 fi
 
-# set agent instance specific environment variables based on deployment_instance.json
-export INTERSECTION_NAME=$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CONFIG")
+# When the opt-in demo flow (STIA_DEMO_INTERSECTION) is set and that intersection
+# ships its own deployment_instance.json (name/lat/long) under the overrides dir,
+# prefer it over the default deployment_instance.json so each demo intersection
+# reports its own identity/coordinates instead of inheriting intersection_1's.
+STIA_DEMO_DEPLOYMENT_CONFIG="$APP_DIR/src/config/smart-intersection-overrides/${STIA_DEMO_INTERSECTION}/deployment_instance.json"
+if [ -n "$STIA_DEMO_INTERSECTION" ] && [ -f "$STIA_DEMO_DEPLOYMENT_CONFIG" ]; then
+    DEPLOYMENT_CONFIG="$STIA_DEMO_DEPLOYMENT_CONFIG"
+fi
+
+# set agent instance specific environment variables based on deployment_instance.json.
+# Precedence: if the opt-in demo flow (STIA_DEMO_INTERSECTION) is set, its value
+# scopes this deployment's PROJECT_NAME/container/network names so it runs as an
+# independent stack instead of reusing/restarting deployment_instance.json's default
+# "intersection_1" stack; otherwise fall back to deployment_instance.json's "name"
+# (unchanged default behavior). Always recomputed (not "${INTERSECTION_NAME:-...}")
+# because this script is meant to be `source`d: exported vars from a prior run in
+# the same shell would otherwise stick around and mask a newly-set
+# STIA_DEMO_INTERSECTION on a later `source setup.sh` call in that same shell.
+if [ -n "$STIA_DEMO_INTERSECTION" ]; then
+    export INTERSECTION_NAME="$STIA_DEMO_INTERSECTION"
+else
+    export INTERSECTION_NAME="$(grep -oP '"name"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CONFIG")"
+fi
 PROJECT_NAME=${INTERSECTION_NAME:-trafficagent}
 export INTERSECTION_LATITUDE=$(grep -oP '"latitude"\s*:\s*\K-?[\d.]+(?=,|$)' "$DEPLOYMENT_CONFIG")
 export INTERSECTION_LONGITUDE=$(grep -oP '"longitude"\s*:\s*\K-?[\d.]+' "$DEPLOYMENT_CONFIG")
@@ -225,18 +246,33 @@ fi
 # version-controlled $STIA_OVERRIDES_DIR/$STIA_DEMO_INTERSECTION (not in deps/metro-vision,
 # which is gitignored and recreated on every re-clone/upgrade). Opt-in only: no-op unless
 # STIA_DEMO_INTERSECTION is set, so the standard flow keeps the RI's own default scene/config.
+#
+# Each intersection's overrides are a flat directory containing exactly one *.json
+# (DLSPS pipeline config) and one *.tar.bz2 (Scenescape scene bundle), e.g.
+# intersection_1/intersection_1.json + intersection_1/Intersection_1.tar.bz2. File name
+# casing is not significant; the files are located by extension via glob.
 apply_stia_overrides() {
     if [ -z "$STIA_DEMO_INTERSECTION" ]; then
         return 0
     fi
 
     local overrides_dir="${STIA_OVERRIDES_DIR}/${STIA_DEMO_INTERSECTION}"
-    local dlsps_config_src="${overrides_dir}/dlstreamer-pipeline-server/config.json"
     local dlsps_config_dst="${RI_DIR}/src/dlstreamer-pipeline-server/config.json"
-    local scene_src="${overrides_dir}/webserver/smart-intersection-ri.tar.bz2"
     local scene_dst="${RI_DIR}/src/webserver/smart-intersection-ri.tar.bz2"
+    local dlsps_config_src=""
+    local scene_src=""
+    local match
 
-    if [ ! -f "$dlsps_config_src" ] && [ ! -f "$scene_src" ]; then
+    if [ -d "$overrides_dir" ]; then
+        for match in "$overrides_dir"/*.json; do
+            [ -f "$match" ] && dlsps_config_src="$match" && break
+        done
+        for match in "$overrides_dir"/*.tar.bz2; do
+            [ -f "$match" ] && scene_src="$match" && break
+        done
+    fi
+
+    if [ -z "$dlsps_config_src" ] && [ -z "$scene_src" ]; then
         echo -e "${RED}ERROR: No Smart Intersection overrides tracked for STIA_DEMO_INTERSECTION='${STIA_DEMO_INTERSECTION}' under ${overrides_dir}.${NC}"
         return 1
     fi
@@ -422,7 +458,7 @@ stop_stia_rtsp_streamer() {
 }
 
 verify_si_rtsp_config() {
-    if [ -z "$RTSP_STREAM_IP" ]; then
+    if [ -z "$STIA_DEMO_INTERSECTION" ] || [ -z "$RTSP_STREAM_IP" ]; then
         return 0
     fi
 
@@ -838,7 +874,7 @@ if candidates:
 }
 
 start_si_dlsps_rtsp_pipelines() {
-    if [ -z "$RTSP_STREAM_IP" ]; then
+    if [ -z "$STIA_DEMO_INTERSECTION" ] || [ -z "$RTSP_STREAM_IP" ]; then
         return 0
     fi
 
