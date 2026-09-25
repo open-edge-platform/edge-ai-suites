@@ -93,13 +93,13 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
 - **Using OPC-UA ingestion**:
 
    ```bash
-   make up_opcua_ingestion app="wind-turbine-anomaly-detection"
+   make up_opcua_ingestion
    ```
 
 - **Using MQTT ingestion**:
 
    ```bash
-   make up_mqtt_ingestion app="wind-turbine-anomaly-detection"
+   make up_mqtt_ingestion
    ```
 
 
