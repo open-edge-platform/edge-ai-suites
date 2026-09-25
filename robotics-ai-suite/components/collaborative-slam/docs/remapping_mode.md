@@ -19,8 +19,7 @@ Currently, we only support updating the maps constructed by Collaborative SLAM i
 pre-constructed keyframe/landmark map together with an octree map, you can load them in localization mode and visualize
 them through the server rviz. It will help you to determine the remapping region by publishing points in the rviz window.
 For saving keyframe/landmark map in mapping mode, you can refer to [geekplus_doc.md](geekplus_doc.md). For saving octree map in mapping mode, you
-can use `octree_store_path` parameter when launching tracker node. The usage of such parameter is the same as it in
-remapping mode in the below section.
+can use `octree_store_path` parameter when launching tracker node. The usage of this parameter is the same as in the remapping mode section below.
 
 The recommended commands to visualize the pre-constructed maps are:
 
@@ -32,11 +31,7 @@ ros2 launch univloc_tracker tracker.launch.py slam_mode:=localization queue_size
 ros2 launch univloc_server server.launch.py server_mode:=localization load_map_path:=/path_to_saved_keyframe_landmark_map/xx.msg
 ```
 
-Once the tracker node successfully starts up, it will send the loaded octree map to the server node. Then, you can see it
-together with the keyframe/landmark map in the server rviz. To determine the vertexes of your remapping region, you can
-first click on the **Publish Point** button in the top toolbar, then move your cursor to the point which you want to
-select as the remapping region vertex, and finally click your mouse to publish it. To get the detailed coordinate value
-of such point, you can use below command:
+Once the tracker node starts successfully, it sends the loaded octree map to the server node. You can then view it together with the keyframe/landmark map in the server rviz. To determine the vertexes of your remapping region, first click the **Publish Point** button in the top toolbar. Then move the cursor to the point you want to select as a remapping region vertex and click to publish it. To get the detailed coordinate value of that point, use the following command:
 
 ```bash
 # Subscribe to the published point
