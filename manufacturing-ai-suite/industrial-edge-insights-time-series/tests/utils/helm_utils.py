@@ -2310,42 +2310,16 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         else:
             logger.warning("DL Streamer models directory not found, skipping...")
 
-        logger.info("Step 2: Setting up Time Series Analytics UDF package")
-        ts_config_path = "configs/time-series-analytics-microservice"
-        if not os.path.exists(ts_config_path):
-            logger.error("Time Series Analytics config directory not found.")
+        logger.info("Step 2: Uploading Time Series Analytics UDF package")
+        ts_config_path = Path("configs/time-series-analytics-microservice").resolve()
+        if not _upload_udf_tar_via_api(ts_config_path, constants.MULTIMODAL_SAMPLE_APP):
+            logger.error("Failed to upload Time Series UDF package.")
             return False
 
-        os.chdir(ts_config_path)
-        os.makedirs("weld_defect_detector", exist_ok=True)
-        for item in ["models", "tick_scripts", "udfs"]:
-            if os.path.exists(item):
-                result = common_utils.exec_command(['cp', '-r', item, 'weld_defect_detector/.'], capture_output=True, text=True)
-                if result.returncode == 0:
-                    logger.info(f"Copied {item} to weld_defect_detector directory.")
-                else:
-                    logger.error(f"Error copying {item}: {result.stderr}")
-                    return False
-
-        pod_names = get_pod_names(namespace)
-        ts_pod = next((name for name in pod_names if "deployment-time-series-analytics-microservice" in name), "")
-        if ts_pod:
-            logger.info(f"Found Time Series Analytics pod: {ts_pod}")
-        else:
-            logger.error("Time Series Analytics pod not found.")
+        ts_pod = _get_multimodal_pod(namespace, "deployment-time-series-analytics-microservice")
+        if not ts_pod:
             return False
-
-        kubectl_cp_ts = [
-            'kubectl', 'cp', 'weld_defect_detector',
-            f'{ts_pod}:/tmp/', '-n', namespace
-        ]
-        logger.info(f"Copying Time Series UDF package: {' '.join(kubectl_cp_ts)}")
-        result = common_utils.exec_command(kubectl_cp_ts, capture_output=True)
-        if result.returncode == 0:
-            logger.info("Time Series UDF package copied successfully.")
-        else:
-            logger.error(f"Error copying Time Series UDF package: {result.stderr}")
-            return False
+        logger.info(f"Found Time Series Analytics pod: {ts_pod}")
 
         logger.info("Step 3: Activating Time Series Analytics UDF")
         # Use external nginx proxy approach (exactly like Docker does)
