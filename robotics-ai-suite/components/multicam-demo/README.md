@@ -16,7 +16,7 @@ In this demo four instances of AI applications for object detection are run in p
 
 The multicamera usecase is demonstrated using an Axiomtek Robox500 Industrial PC and 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457. The Axiomtek Robox500 industrial PC consists of an 12th Gen Intel® Core™ i7-1270PE, 28W Alderlake P Processor and an Intel® Iris® Xe Graphics iGPU. However, this demo can be run on any Intel® platform which has a GPU and also with 4x USB Intel® RealSense™ cameras.
 
-The setup looks like as described in the table below.
+The setup is as described in the table below.
 <!-- markdownlint-disable MD033 -->
 |Camera  |AI Model          |AI Workload                     |Device|
 |--------|------------------|--------------------------------|------|
@@ -33,7 +33,7 @@ Prepare the target system following the [official documentation](https://docs.op
 
 ### Build
 
-To build debian packages, export `ROS_DISTRO` env variable to desired platform and run `make package` command. After build process successfully finishes, built packages will be available in the root directory. The following command is an example for `Humble` distribution.
+To build Debian packages, export the `ROS_DISTRO` environment variable for the target platform and run the `make package` command. After the build finishes successfully, the built packages will be available in the root directory. The following command is an example for the `Humble` distribution.
 
 ```bash
 ROS_DISTRO=humble make package
@@ -97,7 +97,7 @@ The installation will run for 25-30 minutes and consumes approx 2GB of the disk 
 
 ### Test
 
-To run unit tests execute the below command:
+To run the unit tests, execute the following command:
 
 ```bash
 make test
@@ -169,7 +169,7 @@ clean                Remove Docker image
 
 The following steps are required in order to enable Axiomtek Robox500 platform to support 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457.
 
-To start with, connect the 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457 to the Axiomtek Robox500 platform as shown in the below picture. Remove any USB Intel® RealSense™ cameras if connected. Now, power-on the target.
+Start by connecting the 4x Intel® RealSense™ GMSL/FAKRA Stereo Camera D457 to the Axiomtek Robox500 platform, as shown in the picture below. Remove any USB Intel® RealSense™ cameras if connected, then power on the target.
 
 ![RealSense D457 GMSL Connection](images/Realsense_D457_GMSL_Connection_to_Axiomtek.jpg)
 
@@ -200,7 +200,7 @@ Press "Del" or "Esc" button at boot to go into the BIOS. Once in the BIOS, set t
 
 ##### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
 
-Run the below command to check for the iGPU driver on 12th Gen Intel® Core™ i7 processor.
+Run the following command to check for the iGPU driver on a 12th Gen Intel® Core™ i7 processor.
 
 ```bash
 # Install clinfo
@@ -221,9 +221,9 @@ clinfo | grep -i "Device Name"
 
 
 
-Follow the below steps only in case the above iGPU driver is not installed.
+Follow these steps only if the above iGPU driver is not installed.
 
-1. The steps to install iGPU driver on 12th Gen Intel® Core™ i7 processor is described here:
+1. The steps to install the iGPU driver on a 12th Gen Intel® Core™ i7 processor are described here:
 [Configurations for Intel® Processor Graphics (GPU) with OpenVINO™](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html)
 
 2. Reboot the target after installation.
@@ -264,7 +264,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
      sudo modprobe intel-ipu6-isys
    ```
 
-7. Once installed check the status of the intel-ipu6 driver using the below command. The file loaded must be: ***/lib/modules/5.15.0-1048-intel-iotg/updates/dkms/intel-ipu6-isys.ko*** as shown below.
+7. Once installed, check the status of the intel-ipu6 driver using the following command. The loaded file must be: ***/lib/modules/5.15.0-1048-intel-iotg/updates/dkms/intel-ipu6-isys.ko***, as shown below.
 
    ```bash
    modinfo intel-ipu6-isys | head -3
@@ -278,7 +278,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
 
 ##### Install librealsense2 and RealSense tools
 
-Install the librealsense2 and the RealSense tools using the below commands.
+Install the librealsense2 and RealSense tools using the following commands.
 
 ```bash
 sudo apt install ros-humble-librealsense2-tools
@@ -329,7 +329,7 @@ python3 pyrealsense2_ai_demo_launcher.py --config=../config/<your-config-file>.j
 
 #### Using Installed Package (Axiomtek Robox500 with 4x RealSense GMSL Cameras)
 
-Run the below command to start the application.
+Run the following command to start the application.
 
 ```bash
 . /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
@@ -339,7 +339,7 @@ source /opt/ros/humble/setup.bash
 python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
-All the four cameras are started, after approx 15-20sec, as shown in the below picture.
+All four cameras start after approximately 15-20 seconds, as shown in the picture below.
 ![4x_RSD457_Object_detection](images/4x_RSD457_Object_detection.png)
 
 ### Troubleshooting

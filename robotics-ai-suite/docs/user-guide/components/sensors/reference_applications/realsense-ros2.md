@@ -76,7 +76,7 @@ Connect the RealSense Depth Camera D457 to a GMSL-enabled platform, then power o
 
 > [!NOTE]
 > Select the "MIPI" mode of the RealSense Depth Camera D457
-> by moving the select switch on the camera to "M", as shown in the below picture:
+> by moving the selector switch on the camera to "M", as shown in the picture below:
 > ![MIPI_USB_Switch_in_D457](../../../hardware_blueprints/amr/images/MIPI_USB_Switch_in_D457.jpeg)
 
 Follow the [GMSL Cameras guide](../cameras/gmsl/index.md) to configure the BIOS,

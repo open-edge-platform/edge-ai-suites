@@ -470,7 +470,7 @@ sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lida
 :::
 ::::
 
-You will see two panels side-by-side: `Gazebo` GUI on the left and ROS 2 rviz
+You will see two panels side-by-side: `Gazebo` GUI on the left and ROS 2 RViz
 display on the right.
 
 ![screenshot_followme_w_gesture_demo](images/follow_me_demo_gazebo_rviz.png)

@@ -73,9 +73,9 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
    > This demo uses `MH_04_difficult dataset`. If you want to try other dataset, you may download them from the link:
    > <https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets>.
 
-2. Launch ORB-SLAM3 Demo pipeline
+2. Launch the ORB-SLAM3 demo pipeline.
 
-   Run the below commands in a bash terminal:
+   Run the following commands in a bash terminal:
 
    ```bash
    mkdir -p ~/orb-slam3/log
@@ -95,9 +95,9 @@ This Demo uses Intel Realsense Camera as stereo inputs.
 
 1. Connect a Realsense D435 or D435i Camera to the test machine
 
-2. Launch ORB-SLAM3 Demo pipeline
+2. Launch the ORB-SLAM3 demo pipeline.
 
-   Run the below command in a bash terminal:
+   Run the following command in a bash terminal:
 
    ```bash
    /opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml
