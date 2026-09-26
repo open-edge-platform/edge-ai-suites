@@ -1,0 +1,162 @@
+{{- if and .Values.trustedCompute.enabled .Values.dlstreamerPipelineServer.gpu.enabled -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and dlstreamerPipelineServer.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-dlstreamer-pipeline-server
+  labels:
+    app: {{ .Release.Name }}-dlstreamer-pipeline-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-dlstreamer-pipeline-server
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-dlstreamer-pipeline-server
+    spec:
+      {{- if .Values.trustedCompute.enabled }}
+      runtimeClassName: kata-qemu
+      {{- end }}
+      securityContext:
+        supplementalGroups: [44,109,110,990,992,993,994,996]
+      volumes:
+      - name: dev-shm
+        hostPath:
+          path: /dev/shm
+      - name: dlstreamer-pipeline-server-videos-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-videos-pvc
+      - name: dlstreamer-pipeline-server-models-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-models-pvc
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-pipeline-root
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-tmp
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-config
+        configMap:
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-config
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
+        configMap:
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: root-cert
+      initContainers:
+      - name: init-dlstreamer-pipeline-server-videos
+        image: "{{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          {{- tpl (include "dlstreamer-pipeline-server.init-videos-script" .) . | nindent 10 }}
+        volumeMounts:
+        - mountPath: /data/videos
+          name: dlstreamer-pipeline-server-videos-data
+      - name: init-dlstreamer-pipeline-server-models
+        image: "{{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          {{- tpl (include "dlstreamer-pipeline-server.init-models-script" .) . | nindent 10 }}
+        volumeMounts:
+        - mountPath: /data/models
+          name: dlstreamer-pipeline-server-models-data
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
+        image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
+        name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
+        resources:
+          requests:
+             memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+             cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+          limits:
+             memory: {{ (.Values.resources.limits).memory | default "16Gi" | quote }}
+             cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
+        {{- end }}
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        terminationMessagePath: /tmp/termination-log
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            {{- tpl (include "dlstreamer-pipeline-server.startup-script" .) . | nindent 12 }}
+        volumeMounts:
+        - name: dev-shm
+          mountPath: /dev/shm
+        - mountPath: /home/pipeline-server/videos
+          name: dlstreamer-pipeline-server-videos-data
+        - mountPath: /home/pipeline-server/models/object_detection
+          name: dlstreamer-pipeline-server-models-data
+        - mountPath: /var/cache/pipeline_root
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-pipeline-root
+        - mountPath: /tmp
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-tmp
+        - mountPath: /tmp/pipeline
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-config
+        - mountPath: /tmp/udf
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
+        - mountPath: /home/pipeline-server/certs
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
+          readOnly: true
+        ports:
+          - containerPort: 8080
+          - containerPort: 8555
+      {{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
+        resources:
+          limits:
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
+      {{- else if .Values.dlstreamerPipelineServer.npu.enabled }}
+        resources:
+          limits:
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
+            {{ .Values.dlstreamerPipelineServer.npu.type }}: {{ .Values.dlstreamerPipelineServer.npu.count }}
+      {{- end }}
+      restartPolicy: Always
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

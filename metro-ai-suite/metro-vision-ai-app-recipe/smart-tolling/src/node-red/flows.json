@@ -1,0 +1,209 @@
+[
+    {
+        "id": "c405d98cd99a114d",
+        "type": "tab",
+        "label": "Flow 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "6482b457033d9512",
+        "type": "mqtt in",
+        "z": "c405d98cd99a114d",
+        "name": "",
+        "topic": "scenescape/event/region/+/+/objects",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "8cd7a0bff00dfccc",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 440,
+        "y": 380,
+        "wires": [
+            [
+                "5d3d067fb34b3fee",
+                "67da06a720d8d720",
+                "896aa011ae3ce40a"
+            ]
+        ]
+    },
+    {
+        "id": "896aa011ae3ce40a",
+        "type": "function",
+        "z": "c405d98cd99a114d",
+        "name": "Process message",
+        "func": "var msg_payload = msg.payload;\n\n// ---------- BASIC VALIDATION ----------\nif (!msg_payload || !Array.isArray(msg_payload.exited) || msg_payload.exited.length === 0) {\n    return null;\n}\n\n// ---------- ROOT METADATA ----------\nvar timestamp = msg_payload.timestamp;\nvar scene_name = msg_payload.scene_name || \"unknown_scene\";\nvar region_name = msg_payload.region_name || \"unknown_region\";\n\nvar ts = new Date(timestamp);\nvar dateStr = ts.toISOString().split(\"T\")[0];\nvar timeStr = ts.toTimeString().split(\" \")[0].replace(/:/g, \"\");\n\n// ---------- PROCESS EXITED VEHICLES ----------\nmsg_payload.exited.forEach(function (exitItem) {\n\n    var obj = exitItem.object;\n    if (!obj || obj.category !== \"vehicle\") return;\n\n    // ---------- SPEED ----------\n    var velocity = obj.velocity || [0, 0, 0];\n    var vx = velocity[0] || 0;\n    var vy = velocity[1] || 0;\n    var speed = Math.sqrt(vx * vx + vy * vy) * 3.6;\n\n    // ---------- BASE FIELDS ----------\n    var fields = {\n        object_id: obj.object_id ?? null,\n        speed: parseFloat(speed.toFixed(2)),\n        dwell: exitItem.dwell ? parseFloat(exitItem.dwell.toFixed(2)) : null,\n        first_seen: obj.first_seen ?? null,\n        confidence: obj.confidence ?? null\n    };\n\n    // ---------- TAGS ----------\n    var tags = {\n        scene_name: scene_name,\n        region_name: region_name,\n        category: obj.category,\n        vehicle_type: obj.vehicle_type || \"unknown\"\n    };\n\n    // ---------- IMAGE DIRECTORY ----------\n    var baseDir = `/images_data/vehicle-events/${dateStr}/${scene_name}`;\n    fs.mkdirSync(baseDir, { recursive: true });\n\n    // =====================================================\n    // FRONT / REAR CAMERA (ANPR DATA)\n    // =====================================================\n\n    // Save front vehicle image if present\n    if (obj.front_vehicle_image_b64) {\n        var frontVehicleImgName = `vehicle_front_${obj.object_id}_${timeStr}.jpg`;\n        fs.writeFileSync(`${baseDir}/${frontVehicleImgName}`, Buffer.from(obj.front_vehicle_image_b64, \"base64\"));\n        fields.vehicle_front_image_url = `/images/vehicle-events/${dateStr}/${scene_name}/${frontVehicleImgName}`;\n    }\n\n    // Save rear vehicle image if present\n    if (obj.rear_vehicle_image_b64) {\n        var rearVehicleImgName = `vehicle_rear_${obj.object_id}_${timeStr}.jpg`;\n        fs.writeFileSync(`${baseDir}/${rearVehicleImgName}`, Buffer.from(obj.rear_vehicle_image_b64, \"base64\"));\n        fields.vehicle_rear_image_url = `/images/vehicle-events/${dateStr}/${scene_name}/${rearVehicleImgName}`;\n    }\n\n    // ---------- LICENSE PLATE: prefer front, fall back to rear ----------\n    // If both cameras have a plate, pick the one with higher confidence.\n    var frontPlate = obj.front_license_plate || null;\n    var rearPlate  = obj.rear_license_plate  || null;\n    var bestPlate  = null;\n\n    // Store raw front/rear reads separately for audit/mismatch detection.\n    if (frontPlate && frontPlate.text) {\n        fields.front_plate_text       = frontPlate.text;\n        fields.front_plate_confidence = frontPlate.confidence ?? null;\n    }\n    if (rearPlate && rearPlate.text) {\n        fields.rear_plate_text       = rearPlate.text;\n        fields.rear_plate_confidence = rearPlate.confidence ?? null;\n    }\n\n    if (frontPlate && rearPlate) {\n        bestPlate = ((frontPlate.confidence || 0) >= (rearPlate.confidence || 0)) ? frontPlate : rearPlate;\n    } else {\n        bestPlate = frontPlate || rearPlate;\n    }\n\n    if (bestPlate && bestPlate.text && bestPlate.text.length >= 6) {\n        fields.license_plate_text       = bestPlate.text;\n        fields.license_plate_confidence = bestPlate.confidence ?? null;\n    }\n\n    // Save front plate image if present\n    if (frontPlate && frontPlate.image_b64) {\n        var frontPlateLabel = ((frontPlate.text || \"unknown\").replace(/[^A-Z0-9]/gi, \"\")) || \"unknown\";\n        var frontPlateImgName = `plate_front_${frontPlateLabel}_${timeStr}.jpg`;\n        fs.writeFileSync(`${baseDir}/${frontPlateImgName}`, Buffer.from(frontPlate.image_b64, \"base64\"));\n        fields.front_plate_image_url = `/images/vehicle-events/${dateStr}/${scene_name}/${frontPlateImgName}`;\n    }\n\n    // Save rear plate image if present\n    if (rearPlate && rearPlate.image_b64) {\n        var rearPlateLabel = ((rearPlate.text || \"unknown\").replace(/[^A-Z0-9]/gi, \"\")) || \"unknown\";\n        var rearPlateImgName = `plate_rear_${rearPlateLabel}_${timeStr}.jpg`;\n        fs.writeFileSync(`${baseDir}/${rearPlateImgName}`, Buffer.from(rearPlate.image_b64, \"base64\"));\n        fields.rear_plate_image_url = `/images/vehicle-events/${dateStr}/${scene_name}/${rearPlateImgName}`;\n    }\n\n    // =====================================================\n    // SIDE VIEW CAMERA (AXLE DATA)\n    // =====================================================\n    if (obj.vehicle_color !== undefined) {\n        fields.vehicle_color      = obj.vehicle_color      ?? null;\n        fields.axle_count         = obj.axle_count         ?? null;\n        fields.wheel_count        = obj.wheel_count        ?? null;\n        fields.touching_ground    = obj.touching_ground    ?? null;\n        fields.not_touching_ground = obj.not_touching_ground ?? null;\n    }\n\n    // Save left side-view image (currently the only side angle; right added when available)\n    if (obj.left_vehicle_side_view_b64) {\n        var sideImgName = `side_left_${obj.object_id}_${timeStr}.jpg`;\n        fs.writeFileSync(`${baseDir}/${sideImgName}`, Buffer.from(obj.left_vehicle_side_view_b64, \"base64\"));\n        fields.vehicle_side_view_url = `/images/vehicle-events/${dateStr}/${scene_name}/${sideImgName}`;\n    }\n\n    // ---------- SEND TO INFLUX ----------\n    node.send({\n        measurement: \"smart_tolling_events\",\n        payload: [fields, tags],\n        timestamp: timestamp\n    });\n});\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [
+            {
+                "var": "fs",
+                "module": "fs"
+            },
+            {
+                "var": "path",
+                "module": "path"
+            }
+        ],
+        "x": 330,
+        "y": 540,
+        "wires": [
+            [
+                "ed59ab264c6f7543",
+                "c13277c286621bef"
+            ]
+        ]
+    },
+    {
+        "id": "5d3d067fb34b3fee",
+        "type": "debug",
+        "z": "c405d98cd99a114d",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 350,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "ed59ab264c6f7543",
+        "type": "debug",
+        "z": "c405d98cd99a114d",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "payload",
+        "statusType": "auto",
+        "x": 870,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "c13277c286621bef",
+        "type": "influxdb out",
+        "z": "c405d98cd99a114d",
+        "influxdb": "eb84a11cbb71c428",
+        "name": "myinflux",
+        "measurement": "",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "s",
+        "retentionPolicyV18Flux": "",
+        "org": "ITM",
+        "bucket": "smart-toll-bucket",
+        "x": 860,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "67da06a720d8d720",
+        "type": "function",
+        "z": "c405d98cd99a114d",
+        "name": "function 1",
+        "func": "// Check if exited exists and has at least one element\nif (msg.payload && Array.isArray(msg.payload.exited) && msg.payload.exited.length > 0) {\n    // Send only exited array to debug\n    msg.payload = msg.payload;\n    return msg;\n}\n\n// If no exited data, do nothing\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 340,
+        "wires": [
+            [
+                "7c01c1b0686c1e55"
+            ]
+        ]
+    },
+    {
+        "id": "7c01c1b0686c1e55",
+        "type": "debug",
+        "z": "c405d98cd99a114d",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 900,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "8cd7a0bff00dfccc",
+        "type": "mqtt-broker",
+        "name": "MQTT Broker",
+        "broker": "broker.scenescape.intel.com",
+        "port": "1883",
+        "tls": "9c1dd4dad8b11701",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": true,
+        "compatmode": false,
+        "protocolVersion": 4,
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "eb84a11cbb71c428",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": 8086,
+        "protocol": "http",
+        "database": "database",
+        "name": "influx",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "2.0",
+        "url": "http://influxdb2:8086",
+        "timeout": 10,
+        "rejectUnauthorized": false
+    },
+    {
+        "id": "9c1dd4dad8b11701",
+        "type": "tls-config",
+        "name": "Broker TLS",
+        "cert": "/run/secrets/broker-cert",
+        "key": "/run/secrets/broker-key",
+        "ca": "/run/secrets/root-cert",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    }
+]
