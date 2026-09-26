@@ -4,12 +4,17 @@
 FROM python:3.12-slim AS base
 
 # Install system dependencies needed for building, upgrade to apply security patches
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends curl v4l-utils \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends v4l-utils \
     && python -m pip install --upgrade --no-cache-dir pip==26.1.2 \
     && rm -rf /var/lib/apt/lists/*
 
 # Build stage
 FROM base AS builder
+
+# Install curl for downloading Chart.js during build
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install uv
 COPY --from=ghcr.io/astral-sh/uv:0.11.21 /uv /usr/local/bin/uv

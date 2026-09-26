@@ -47,6 +47,9 @@ global:
   httpsProxy: ""
   noProxy: ""
 
+  # LLM model configuration for the RAG chatbot.
+  # Priority: NPU > GPU > CPU
+  # If both useGPU and useNPU are enabled, the LLM model will prioritize NPU first, then GPU, and finally CPU
   llmModel:
     modelId: "microsoft/Phi-3.5-mini-instruct"
     modelType: "llm"
@@ -54,12 +57,22 @@ global:
     useGPU:
       enabled: false
       key: ""
+    useNPU:
+      enabled: false
+      key: "npu.intel.com/accel"
 
+  # Embedding model configuration for the embedding service.
   embeddingModel:
     modelId: "QwenText/qwen3-embedding-0.6b"
     useGPU:
       enabled: false
       key: ""
+
+  # RAG chatbot mode.
+  # Options: "embedded" or "detached"
+  # embedded mode means the RAG chatbot opened in a pop out window in the live-video-captioning dashboard.
+  # detached mode means the RAG chatbot opened in a separate tab in the browser.
+  ragChatbotMode: "embedded"
 
 # 2) LIVE-VIDEO-CAPTIONING OVERRIDES
 # These must be nested under live-video-captioning because this chart is a dependency.
@@ -90,3 +103,7 @@ live-video-captioning-rag:
   env:
     maxTokens: 1024
     topK: 1
+    scoreThreshold: 0.5
+    # NPU-specific configuration for the RAG chatbot.
+    # Defines the maximum number of tokens that the LLM pipeline can process for the input prompt when using NPU device.
+    maxPromptLen: 1024

@@ -156,6 +156,13 @@ data:
                 ;;
         esac
 
+        # Align with local download_models.sh behavior: NPU currently supports
+        # int4 precision only for LLM conversion.
+        if [ "$device" = "NPU" ] && [ "$weight_format" != "int4" ]; then
+            echo "WARN: Device NPU only supports int4 today; overriding requested precision '${weight_format}' to 'int4'."
+            weight_format="int4"
+        fi
+
         if [ -z "$output_name" ]; then
             output_name="$model_basename"
             output_name="${output_name%-it}"
