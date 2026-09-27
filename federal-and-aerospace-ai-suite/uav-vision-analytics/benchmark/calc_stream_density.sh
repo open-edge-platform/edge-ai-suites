@@ -553,7 +553,7 @@ function get_current_pipeline_status() {
 # This avoids launching jq repeatedly inside the stream POST loop.
 function generate_stream_payloads() {
         # Make RTSP path, metadata file, topic, and peer-id unique per stream.
-        # DLSPS errors if two pipelines share the same RTSP frame path.
+        # DL Streamer Pipeline Server errors if two pipelines share the same RTSP frame path.
   local payload_data=$1
   local pipeline_name=$2
   local count=$3
@@ -624,7 +624,7 @@ function run_pipelines() {
   # Reset tracked IDs for this run
   CURRENT_RUN_IDS=()
   # Unique timestamp for this specific run invocation — ensures RTSP paths never
-  # conflict with paths from previous runs (DLSPS keeps ABORTED paths registered)
+  # conflict with paths from previous runs (DL Streamer Pipeline Server keeps ABORTED paths registered)
   local RUN_TS
   RUN_TS=$(date +%s%N | tail -c 8)
 
@@ -637,7 +637,7 @@ function run_pipelines() {
     x=$((x + 1))
 
     # Make RTSP path, metadata file, topic, and peer-id unique per stream.
-    # DLSPS errors if two pipelines share the same RTSP frame path.
+    # DL Streamer Pipeline Server errors if two pipelines share the same RTSP frame path.
     # ── Unique model-instance-id per stream ────────────────────────────────
     # The pipeline template uses a shared model-instance-id (instcpu0/instgpu0/instnpu0).
     # Running N concurrent streams all with the same ID causes stream 2+ to ERROR.
@@ -1189,9 +1189,9 @@ if [[ " $* " == *" -nstreams "* ]]; then
 
   echo ">>>>> Performing pre-flight checks..." >&2
   if ! curl -k -s --fail "${DLSPS_BASE_URL}/pipelines/status" > /dev/null; then
-    echo "Error: DLSPS not reachable at ${DLSPS_BASE_URL}" >&2; exit 1
+    echo "Error: DL Streamer Pipeline Server not reachable at ${DLSPS_BASE_URL}" >&2; exit 1
   fi
-  echo "DLSPS is reachable." >&2
+  echo "DL Streamer Pipeline Server is reachable." >&2
   if $HW_MONITOR_ENABLED; then
     echo "HW metrics: ${METRICS_URL}" >&2
   fi
@@ -1293,9 +1293,9 @@ if [ ! -f "$payload_file" ]; then echo "Error: Payload file not found: $payload_
 
 echo ">>>>> Performing pre-flight checks..." >&2
 if ! curl -k -s --fail "${DLSPS_BASE_URL}/pipelines/status" > /dev/null; then
-  echo "Error: DLSPS not reachable at ${DLSPS_BASE_URL}" >&2; exit 1
+  echo "Error: DL Streamer Pipeline Server not reachable at ${DLSPS_BASE_URL}" >&2; exit 1
 fi
-echo "DLSPS is reachable." >&2
+echo "DL Streamer Pipeline Server is reachable." >&2
 if $HW_MONITOR_ENABLED; then
   echo "HW metrics: ${METRICS_URL}" >&2
 fi

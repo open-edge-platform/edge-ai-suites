@@ -85,7 +85,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | `{{DEVICE}}` | `CPU` \| `GPU` \| `NPU` \| `all` (generates CPU+GPU+NPU variants) |
 | `{{MODEL}}` | `yolo11s` (default) \| path to custom OpenVINO IR `.xml` |
 | `{{PIPELINE_PREFIX}}` | prefix for pipeline names, e.g. `uav_object_detection` |
-| `{{RTSP_PATHS}}` | RTSP stream path(s) published by DLSPS, e.g. `uav-cpu`, `uav-gpu` |
+| `{{RTSP_PATHS}}` | RTSP stream path(s) published by DL Streamer Pipeline Server, e.g. `uav-cpu`, `uav-gpu` |
 | `{{UAV_ID}}` | UAV identifier for UAVSDK MQTT topic, e.g. `uav-1` |
 | `{{STACK_DIR}}` | output directory for the new application stack |
 | `{{OVERLAY_NAME}}` | label shown in the telemetry overlay, e.g. `MyUAV-CPU` |
@@ -106,7 +106,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | `DEPLOYMENT_MODE` | `pymavlink`\|`uavsdk` | wrong compose file selected |
 | `VIDEO_SOURCE` | `file`\|`realsense`\|`rtsp`\|`gazebo-rtsp` | pipeline GStreamer string invalid |
 | `DEVICE` | `CPU`\|`GPU`\|`NPU`\|`all` | unknown device in gvadetect |
-| `MODEL` | ends in `.xml`, file exists (if custom) | DLSPS fails to load model |
+| `MODEL` | ends in `.xml`, file exists (if custom) | DL Streamer Pipeline Server fails to load model |
 | `UAV_ID` | `^[a-z0-9-]+$`, no spaces | MQTT topic invalid |
 | `PIPELINE_PREFIX` | `^[a-z0-9_]+$` | REST path + MQTT topic break |
 
@@ -156,7 +156,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 ├── .env.example                     # template copied by make init
 ├── Makefile                         # init, model, stack up/down, pipeline start/stop
 ├── configs/
-│   └── config-{{PIPELINE_PREFIX}}.json   # DLSPS pipeline definitions
+│   └── config-{{PIPELINE_PREFIX}}.json   # DL Streamer Pipeline Server pipeline definitions
 ├── gvapython/
 │   └── telemetry-overlay-{{MODE}}.py     # gvapython telemetry overlay
 ├── scripts/

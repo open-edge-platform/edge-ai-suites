@@ -11,11 +11,11 @@ The application is built on Intel DL Streamer Pipeline Server and supports two d
 ## Project Structure
 
 ```text
-docker-compose-pymavlink.yml  Standalone mode: PX4 SITL, mavlink-router, broker, DLSPS, metrics-manager, nginx.
-docker-compose-uavsdk.yml     UAV Mission Compute SDK mode: DLSPS + nginx (connects to an external SDK stack).
+docker-compose-pymavlink.yml  Standalone mode: PX4 SITL, mavlink-router, broker, DL Streamer Pipeline Server, metrics-manager, nginx.
+docker-compose-uavsdk.yml     UAV Mission Compute SDK mode: DL Streamer Pipeline Server + nginx (connects to an external SDK stack).
 .env.example                  Template for .env — HOST_IP, GPU/NPU/camera device paths, and image tags.
 Makefile                      Operational targets (init, model, pymav-*, uavsdk-*, start-rtsp).
-configs/                      Mosquitto and mavlink-router configuration, DLSPS pipeline configs, nginx reverse-proxy configs.
+configs/                      Mosquitto and mavlink-router configuration, DL Streamer Pipeline Server pipeline configs, nginx reverse-proxy configs.
 gvapython/                    Telemetry overlay Python scripts (pymavlink and UAVSDK variants).
 scripts/                      Pipeline manager and MAVLink listener scripts.
 resources/                    Python requirements for `make model`, sample input video, and the exported YOLO11s model (after running `make model`).
@@ -118,7 +118,7 @@ and `metrics-manager` no longer publish ports directly to the host.
 ```text
 make init          Create .env from template, auto-detect HOST_IP, and auto-detect GPU/NPU/camera device paths
 make model         Download YOLO11s and export to OpenVINO FP16
-make pymav-up       Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + metrics-manager + nginx)
+make pymav-up       Start standalone pymavlink stack (PX4 SITL + broker + DL Streamer Pipeline Server + metrics-manager + nginx)
 make pymav-down     Stop and remove pymavlink stack (includes volumes)
 make uavsdk-up      Start UAV Mission Compute SDK stack (requires uav-mission-compute-sdk running first)
 make uavsdk-down    Stop and remove UAV Mission Compute SDK stack (includes volumes)

@@ -13,7 +13,7 @@ overlay application using Intel DL Streamer Pipeline Server. The key
 differentiator is correct wiring of:
 
 - `gvapython` telemetry overlay (MAVLink thread → frame labels → `gvawatermark`)
-- Correct DLSPS REST API paths (`/pipelines/user_defined_pipelines/{name}`, integer `instance_id` for DELETE)
+- Correct DL Streamer Pipeline Server REST API paths (`/pipelines/user_defined_pipelines/{name}`, integer `instance_id` for DELETE)
 - pymavlink armed/disarmed pipeline lifecycle
 - UAVSDK MQTT-triggered lifecycle with `ffprobe` RTSP pre-flight check
 - OpenVINO device variants (CPU/GPU/NPU) with correct GStreamer elements

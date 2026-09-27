@@ -9,7 +9,7 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 ## How It Works
 
-A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
+A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DL Streamer Pipeline Server container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
 ![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.svg)
 
@@ -19,14 +19,14 @@ A minimal single-container stack. Telemetry is received via MQTT from the `uav-m
 sequenceDiagram
     participant Client as curl / QGroundControl / ffplay
     participant Nginx as nginx (TLS :443, RTSP :8555)
-    participant DLSPS as DL Streamer Pipeline Server
+    participant DL_Streamer_Pipeline_Server as DL Streamer Pipeline Server
     participant SDK as uav-mission-compute-sdk
     participant OVL as gvapython (MavlinkReceiver)
     participant Frame as Video Frame
 
     Client->>Nginx: POST /pipelines/... (HTTPS :443)
-    Nginx->>DLSPS: proxy_pass REST :8081
-    DLSPS-->>Nginx: 200 instance_id
+    Nginx->>DL_Streamer_Pipeline_Server: proxy_pass REST :8081
+    DL_Streamer_Pipeline_Server-->>Nginx: 200 instance_id
     Nginx-->>Client: 200 instance_id
 
     SDK->>OVL: broadcast MQTT Telemetry :1883
@@ -100,7 +100,7 @@ Then, for either option, initialize the environment:
 make init                # create .env, detect GPU
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DL Streamer Pipeline Server.
 
 The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and all other published ports to loopback only. Since `uav-vision-analytics` runs in a separate Docker container/network, it cannot reach loopback-bound ports. Set the SDK's `.env` to bind on all interfaces before starting it:
 
@@ -180,7 +180,7 @@ Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
-Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
+Runs `pipeline_manager.py` inside the DL Streamer Pipeline Server container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
 `make start-rtsp` starts **one camera pipeline at a time** (default: GPU/forward camera). Pass `DEVICE=cpu|gpu|npu|all` to choose:
 

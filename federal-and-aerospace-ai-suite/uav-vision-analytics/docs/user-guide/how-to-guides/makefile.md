@@ -123,7 +123,7 @@ make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 
 `DEVICE=npu` falls back to GPU if `NPU_DEVICE` was not detected during `make init`.
 
-Requires the DLSPS container to already be running (`make pymav-up` or `make uavsdk-up` first).
+Requires the DL Streamer Pipeline Server container to already be running (`make pymav-up` or `make uavsdk-up` first).
 
 ### `make build`
 

@@ -3,14 +3,14 @@
 
 # Pipeline Reference — UAV Vision Analytics
 
-## DLSPS Configuration
+## DL Streamer Pipeline Server Configuration
 
 DL Streamer Pipeline Server reads `/home/pipeline-server/config.json` at startup.
 Pipeline definitions use `"source": "gstreamer"` which registers them under the
 `user_defined_pipelines` namespace.
 
 **Critical schema rule:** Set variant names in the `"name"` field only — do NOT
-add a `"version"` field. DLSPS maps the `name` to the pipeline version internally.
+add a `"version"` field. DL Streamer Pipeline Server maps the `name` to the pipeline version internally.
 REST path and MQTT topic suffix are derived from the `name` field.
 
 - Launch path: `POST /pipelines/user_defined_pipelines/{name}`
@@ -195,7 +195,7 @@ volumes:
 
 ## RTSP Output
 
-Annotated streams are served by DLSPS on port `8555`. The path is the
+Annotated streams are served by DL Streamer Pipeline Server on port `8555`. The path is the
 `frame.path` value from the REST POST body:
 - `rtsp://<host-ip>:8555/{{RTSP_PATH}}`
 

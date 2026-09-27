@@ -132,7 +132,7 @@ endpoints, see `references/TELEMETRY.md`) always takes effect.
 
 ---
 
-## DLSPS Docker Compose Fragment
+## DL Streamer Pipeline Server Docker Compose Fragment
 
 ```yaml
 dlstreamer-pipeline-server:
@@ -271,7 +271,7 @@ Full Makefile is in `uav-vision-analytics/Makefile`.
 ```
 PX4 SITL ──MAVLink──▶ mavlink-router (:14550 server → :14541 broadcast)
                                            │
-                           DLSPS ◀─UDP :14541─┘
+                DL Streamer Pipeline Server ◀─UDP :14541─┘
                              │
                         ┌────┤
                         │    └──▶ RTSP :8555 → QGC / ffplay rtsp://...
@@ -286,7 +286,7 @@ uav-mission-compute-sdk:
   PX4+Gazebo → companion-bridge → MQTT broker (:1884)
                                → RTSP server (:8554) [camera streams]
 
-DLSPS container:
+DL Streamer Pipeline Server container:
   MQTT subscriber → on ARMED → POST pipelines
   rtspsrc ← RTSP (:8554) [nadir/forward/rear]
   appsink → RTSP output :8555

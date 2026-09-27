@@ -292,7 +292,7 @@ Replace `vah264enc` with `vah264lpenc`
 # Option 1: install via apt (requires sudo)
 sudo apt-get install -y jq
 
-# Option 2: docker exec wrapper (no root needed, works when DLSPS container is running)
+# Option 2: docker exec wrapper (no root needed, works when DL Streamer Pipeline Server container is running)
 mkdir -p ~/.local/bin
 cat > ~/.local/bin/jq << 'EOF'
 #!/usr/bin/env bash
@@ -320,7 +320,7 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 sudo apt-get install -y gawk
 ```
 
-### `Error: DLSPS not reachable at https://localhost:443`
+### `Error: DL Streamer Pipeline Server not reachable at https://localhost:443`
 
 `calc_stream_density.sh` auto-sources `../.env` and defaults `DLSPS_NODE_IP` to that file's
 `HOST_IP` — if you still see `localhost` in the error, either `.env` doesn't exist yet
@@ -343,13 +343,13 @@ DLSPS_NODE_IP=<HOST_IP> ./benchmark/calc_stream_density.sh ...
 
 Possible causes:
 
-- **DLSPS pipeline in ERROR state** — often a shared `model-instance-id` from a previous aborted run:
+- **DL Streamer Pipeline Server pipeline in ERROR state** — often a shared `model-instance-id` from a previous aborted run:
 
   ```bash
   docker restart dlstreamer-pipeline-server
   ```
 
-- **RTSP path conflict** — restart DLSPS to clear leftover path registrations.
+- **RTSP path conflict** — restart DL Streamer Pipeline Server to clear leftover path registrations.
 - **Video file missing inside the container:**
 
   ```bash

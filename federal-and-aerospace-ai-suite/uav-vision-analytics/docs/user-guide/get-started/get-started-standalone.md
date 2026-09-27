@@ -19,15 +19,15 @@ A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manag
 sequenceDiagram
     participant Client as curl / QGroundControl / ffplay
     participant Nginx as nginx (TLS :443, RTSP :8555)
-    participant DLSPS as DL Streamer Pipeline Server
+    participant DL_Streamer_Pipeline_Server as DL Streamer Pipeline Server
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
     participant OVL as gvapython MavlinkReceiver
     participant Frame as Video Frame
 
     Client->>Nginx: POST /pipelines/... (HTTPS :443)
-    Nginx->>DLSPS: proxy_pass REST :8081
-    DLSPS-->>Nginx: 200 instance_id
+    Nginx->>DL_Streamer_Pipeline_Server: proxy_pass REST :8081
+    DL_Streamer_Pipeline_Server-->>Nginx: 200 instance_id
     Nginx-->>Client: 200 instance_id
 
     PX4->>RTR: MAVLink stream (UDP :14550)
@@ -125,7 +125,7 @@ Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
-Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
+Runs `pipeline_manager.py` inside the DL Streamer Pipeline Server container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
 `make start-rtsp` starts **one device pipeline at a time** (default: GPU). Pass `DEVICE=cpu|gpu|npu|all` to choose:
 

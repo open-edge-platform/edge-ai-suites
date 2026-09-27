@@ -79,10 +79,10 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 
 | Tool | Used for | Install |
 | --- | --- | --- |
-| `curl` | DLSPS API calls, metrics polling | `sudo apt-get install -y curl` |
+| `curl` | DL Streamer Pipeline Server API calls, metrics polling | `sudo apt-get install -y curl` |
 | `gawk` | FPS and HW metrics statistical aggregation | `sudo apt-get install -y gawk` |
 | `python3` | Continuous SSE metrics streamer | `sudo apt install python3` |
-| `jq` | JSON parsing of DLSPS status responses | `sudo apt-get install -y jq` |
+| `jq` | JSON parsing of DL Streamer Pipeline Server status responses | `sudo apt-get install -y jq` |
 | `ffmpeg` | Creating looped video files (optional) | `sudo apt-get install -y ffmpeg` |
 
 
@@ -107,7 +107,7 @@ curl -k -s https://<HOST_IP>/api/v1/metrics/latest | head -3
 
 The benchmarking script (`benchmark/calc_stream_density.sh`) automates three tasks:
 
-1. **Start N concurrent pipeline instances** via the DLSPS REST API
+1. **Start N concurrent pipeline instances** via the DL Streamer Pipeline Server REST API
    (`POST /pipelines/user_defined_pipelines/<name>`), each with a unique RTSP
    path, metadata topic, and `model-instance-id` so concurrent streams
    do not conflict.
@@ -134,7 +134,7 @@ Phase 2 — Bisect:
 
 ### FPS Statistics (p90)
 
-During each N-stream test, DLSPS reports the `avg_fps` for every running
+During each N-stream test, DL Streamer Pipeline Server reports the `avg_fps` for every running
 pipeline instance every second. After the measurement window ends
 (`-i`, default 60 s), `gawk` computes:
 
@@ -195,7 +195,7 @@ utilization measurements.
 ## Available Pipelines
 
 Pipeline names are defined in `benchmark/benchmark_app_payload.json`. Each entry
-maps a pipeline name to the DLSPS POST payload (source URI, destination,
+maps a pipeline name to the DL Streamer Pipeline Server POST payload (source URI, destination,
 inference device, model path).
 
 ### File-source pipelines (recommended for benchmarking)
@@ -250,7 +250,7 @@ Finds the maximum number of concurrent streams for a **single pipeline** while s
 
 **What happens:**
 
-1. Pre-flight check: verifies DLSPS (`https://<HOST_IP>/`) and metrics-manager (`https://<HOST_IP>/api/v1/metrics/latest`) are reachable through nginx.
+1. Pre-flight check: verifies DL Streamer Pipeline Server (`https://<HOST_IP>/`) and metrics-manager (`https://<HOST_IP>/api/v1/metrics/latest`) are reachable through nginx.
 2. Stops any previously running pipelines.
 3. Tests N=1 → 2 → 4 → 8 … (exponential), then bisects to find the exact max.
 4. At each N: starts streams, waits for RUNNING, collects FPS + HW metrics for 60 s, stops streams.
@@ -260,7 +260,7 @@ Finds the maximum number of concurrent streams for a **single pipeline** while s
 
 ```text
 >>>>> Performing pre-flight checks...
-DLSPS is reachable.
+DL Streamer Pipeline Server is reachable.
 HW metrics: https://192.168.x.x
 
 >>>>> Attempting to stop all running pipelines.
@@ -308,7 +308,7 @@ Runs the density search **sequentially** for multiple pipelines (typically CPU, 
 
 **What happens:**
 
-1. Pre-flight checks (DLSPS + metrics-manager).
+1. Pre-flight checks (DL Streamer Pipeline Server + metrics-manager).
 2. Runs the density search for each pipeline in order: CPU → GPU → NPU.
 3. 10-second thermal cooldown between pipeline types.
 4. Prints a unified results table to the terminal.
@@ -536,7 +536,7 @@ uav-vision-analytics/
 ├── benchmark-density-uav_object_detection_cpu/   ← best run for CPU pipeline
 │   ├── kpi.txt          ← FPS stats + hw_* metrics (avg/min/max)
 │   ├── hw_samples.log   ← raw HW snapshots (key=value lines, "---" per sample)
-│   └── sample.logs      ← raw DLSPS /pipelines/status JSON per second
+│   └── sample.logs      ← raw DL Streamer Pipeline Server /pipelines/status JSON per second
 │
 ├── benchmark-density-uav_object_detection_gpu/   ← best run for GPU pipeline
 │   ├── kpi.txt
