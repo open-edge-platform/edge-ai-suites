@@ -18,9 +18,6 @@ data:
   EMBEDDING_USE_OV: {{ .Values.env.embeddingUseOV | quote }}
   EMBEDDING_OV_MODELS_DIR: {{ .Values.env.embeddingOVModelsDir | quote }}
   OV_MODELS_DIR: {{ .Values.env.embeddingOVModelsDir | quote }}
-  DEFAULT_START_OFFSET_SEC: {{ .Values.env.defaultStartOffsetSec | quote }}
-  DEFAULT_CLIP_DURATION: {{ .Values.env.defaultClipDuration | quote }}
-  DEFAULT_NUM_FRAMES: {{ .Values.env.defaultNumFrames | quote }}
   OV_PERFORMANCE_MODE: {{ .Values.env.ovPerformanceMode | quote }}
   HF_HOME: "/home/appuser/.cache/huggingface"
   TRANSFORMERS_CACHE: "/home/appuser/.cache/huggingface"

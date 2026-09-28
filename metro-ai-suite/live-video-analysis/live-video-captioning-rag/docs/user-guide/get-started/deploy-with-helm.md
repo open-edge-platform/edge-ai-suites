@@ -186,22 +186,23 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 | `global.models` | VLM model entries for captioning (`modelId`, `modelType`, `weightFormat`, `device`) | `OpenGVLab/InternVL2-1B` |
 | `global.huggingface.apiToken` | Hugging Face token for gated models (if needed) | `<your_huggingfacehub_token>` |
 | `global.llmModel.modelId` | LLM model for RAG chatbot | `microsoft/Phi-3.5-mini-instruct` |
-| `gloval.llmModel.weightFormat` | Precision of model weights for conversion | `int8 / int4 / fp16` |
+| `global.llmModel.weightFormat` | Precision of model weights for conversion | `int8 / int4 / fp16` |
 | `global.llmModel.useGPU.enabled` | Enable GPU scheduling for LLM model runtime | `true / false` |
 | `global.llmModel.useGPU.key` | GPU resource key used to schedule the LLM workload | `gpu.intel.com/i915` |
+| `global.llmModel.useNPU.enabled` | Enable NPU scehduling for LLM model runtime | `true / false` |
+| `global.llmModel.useNPU.key` | NPU resource key used to schedule the LLM workload | `npu.intel.com/accel` |
+| `global.ragChatbotMode` | RAG chatbot mode: `embedded (in-dashboard)` or `detached (browser tab)` | `embedded / detached` |
 | `global.embeddingModel.useGPU.enabled` | Enable GPU scheduling for embedding model runtime | `true / false` |
 | `global.embeddingModel.useGPU.key` | GPU resource key used to schedule embedding workload | `gpu.intel.com/i915 / gpu.intel.com/xe` |
 | `live-video-captioning-rag.env.maxTokens` | Max generated tokens for RAG response | `1024` |
 | `live-video-captioning-rag.env.topK` | Number of retrieved context candidates | `1` |
+| `live-video-captioning-rag.env.scoreThreshold` | Minimum retrieval score for including RAG search results | `0.5` |
+| `live-video-captioning-rag.env.maxPromptLen` | Maximum token limit accepted by the LLM pipeline on NPU devices. | `1024` |
 
 > [!NOTE]
 > You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
 >
-> [!NOTE]
-> If `NPU` is selected in `global.models[].device` for VLM models, `weightFormat` is automatically forced to `int4`.
->
-> [!NOTE]
-> LLM models in the Live-Video-Captioning-RAG application currently do not support NPU inference.
+> **Note:** If `NPU` is selected in `global.models[].device` for VLM models, `weightFormat` is automatically forced to `int4`.
 
 #### Optional: Proxy configuration
 
@@ -278,6 +279,8 @@ By default, the chart exposes:
 
 - Live Video Captioning dashboard: `http://<global.hostIP>:4173`
 - Live Video Captioning RAG dashboard/API: `http://<global.hostIP>:4172`
+
+> **Note:** The Live Video Captioning RAG dashboard is accessible via `http://<global.hostIP>:4172` only when the RAG chatbot is deployed in `detached` mode.
 
 To start:
 

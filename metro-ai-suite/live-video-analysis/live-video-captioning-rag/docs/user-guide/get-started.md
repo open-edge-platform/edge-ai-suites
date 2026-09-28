@@ -61,29 +61,22 @@ This script sets the following important values:
 | `ENABLE_DETECTION_PIPELINE` | `false` | Enables optional object-detection pre-filtering when set to `true`. |
 | `ALERT_MODE` | `false` | Enables alert-style visual highlighting based on keyword rules when set to `true`. |
 | `CAPTION_HISTORY` | `3` | Number of previous captions shown in the UI. |
+| `RAG_CHATBOT_MODE` | `embedded` | RAG chatbot mode: `embedded (in-dashboard)` or `detached (browser tab)` |
 | `DEFAULT_RTSP_URL` | *(empty)* | Pre-fills the RTSP URL field in the dashboard on load. |
 | `HUGGINGFACEHUB_API_TOKEN` | *(empty)* | Required for downloading gated Hugging Face models. |
 | `MODEL_CACHE_PATH` | `<repo>/llm_models` | Host path used for cached/downloaded model artifacts. |
 | `EMBEDDING_MODEL_NAME` | `QwenText/qwen3-embedding-0.6b` | Embedding model identifier used by embedding service configuration. |
-| `EMBEDDING_DEVICE` | `CPU` | Target device for embedding inference runtime (for example `CPU`, `GPU`, or `NPU`). |
-| `LLM_MODEL_ID` | `Qwen/Qwen2.5-3B-Instruct` | LLM model identifier used for RAG response generation. |
+| `EMBEDDING_DEVICE` | `CPU` | Target device for embedding inference runtime (for example `CPU`, `GPU`). |
+| `LLM_MODEL_ID` | `microsoft/Phi-3.5-mini-instruct` | LLM model identifier used for RAG response generation. |
 | `LLM_DEVICE` | `CPU` | Target device for LLM inference runtime (for example `CPU`, `GPU`, or `NPU`). |
 | `MAX_TOKENS` | `1024` | Maximum number of generated output tokens per response. |
 | `TOP_K` | `1` | Number of top retrieved context entries used during RAG answering. |
-| `SCORE_THRESHOLD` | `0.3` | Minimum retrieval similarity score required to include context. |
+| `SCORE_THRESHOLD` | `0.5` | Minimum retrieval similarity score required to include context. |
+| `MAX_PROMPT_LEN` | `1024` | Maximum token limit accepted by the LLM pipeline on NPU devices. |
 | `VDMS_HOST` | `vdms-vector-db` | Hostname of the VDMS vector database service used by the app. |
 | `VDMS_VDB_HOST` | `vdms-vector-db` | Vector DB hostname used by compatibility paths in the backend stack. |
 
 ### 3. Download models (one-time)
-
-Download a VLM model that required to generate captions for LVC. For default `CPU` example:
-
-```bash
-./model_download_scripts/download_models.sh \
-  --model OpenGVLab/InternVL2-1B \
-  --type vlm \
-  --weight-format int8
-```
 
 #### Gated Hugging Face models
 
@@ -108,33 +101,39 @@ By default the model is converted on CPU. To explicitly set the device:
 > [!NOTE]
 > NPU currently requires `int4` quantization for VLM/LLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
 
+#### Download a VLM model
+
+Download the VLM model used for generating captions in Live Video Captioning (LVC). The following example demonstrates deployment on a `CPU` device:
+
+```bash
+./model_download_scripts/download_models.sh \
+  --model OpenGVLab/InternVL2-1B \
+  --type vlm \
+  --weight-format int8
+```
+
 The VLM models stored under `ov_models`.
 
-See [Model Preparation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) for detailed usage.
+#### Download a LLM model
 
-Download a LLM model for RAG.
+Download the LLM model used for Retrieval-Augmented Generation (RAG). The following example demonstrates deployment on a `CPU` device:
 
 ```bash
 # Set --model to the Hugging Face model you want to convert.
 # Set --device to the preferred conversion target (for example, CPU or GPU).
 # Set --weight-format to the precision/quantization format (`int4`, `int8`, or `fp16`).
 ./model_download_scripts/download_models.sh \
-  --model Qwen/Qwen2.5-3B-Instruct \
+  --model microsoft/Phi-3.5-mini-instruct \
   --type llm \
   --device CPU \
   --weight-format int8
 ```
 
-> [!NOTE]
-> LLM model support for NPU is not yet enabled in Live-Video-Captioning-RAG application.
+> Note: NPU support is limited to a subset of LLMs. Refer to the [OpenVINO LLMs Hugging Face collection](https://huggingface.co/collections/OpenVINO/llms-optimized-for-npu) for supported models. Open the model card, identify the `Original model`, and use that model name when downloading the model with the download script.
 
 This stores the model under `llm_models/`.
 
-For gated Hugging Face models, set a token first:
-
-```bash
-export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
-```
+See [Model Preparation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) for detailed usage.
 
 ### 4. Start the application
 
@@ -158,15 +157,14 @@ Follow these steps to use the application:
 2. Start a captioning run with a valid RTSP stream.
 3. Confirm that captions are being generated.
 4. Click the `chat icon` in the top bar (visible only when embedding is enabled).
-5. This opens the Live Caption RAG dashboard at `http://<HOST_IP>:4172`.
-6. Ask questions related to the current or recent scene.
+5. This opens the Live Caption RAG chatbot.
+6. Use the chat panel to ask questions based on the generated scene captions.
 
 ### 6. Stop the application
 
 ```bash
 docker compose down
 ```
-
 
 ## Troubleshooting
 
