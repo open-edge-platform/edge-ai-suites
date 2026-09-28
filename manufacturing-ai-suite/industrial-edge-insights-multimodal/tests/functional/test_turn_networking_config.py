@@ -61,6 +61,8 @@ def test_coturn_docker_compose_uses_host_networking():
     rendered = _run("docker", "compose", "-f", "docker-compose.yml", "config")
     coturn_body = _compose_service_block(rendered, "coturn")
     assert "network_mode: host" in coturn_body
+    assert "--listening-port=${COTURN_UDP_PORT}" not in coturn_body
+    assert "--listening-port=3478" in coturn_body
     assert "ports:" not in coturn_body
     assert "networks:" not in coturn_body
 
@@ -73,9 +75,6 @@ def test_coturn_helm_template_uses_host_networking():
         for doc in rendered.split("---")
         if "kind: Deployment" in doc and "name: deployment-coturn" in doc
     )
-    coturn_service = next(
-        doc for doc in rendered.split("---") if "kind: Service" in doc and "\n  name: coturn\n" in doc
-    )
     mediamtx_deployment = next(
         doc
         for doc in rendered.split("---")
@@ -84,5 +83,5 @@ def test_coturn_helm_template_uses_host_networking():
 
     assert "hostNetwork: true" in coturn_deployment
     assert "dnsPolicy: ClusterFirstWithHostNet" in coturn_deployment
-    assert "nodePort:" in coturn_service
-    assert 'value: "turn:localhost:30478"' in mediamtx_deployment
+    assert '--listening-port=3478' in coturn_deployment
+    assert 'value: "turn:localhost:3478"' in mediamtx_deployment

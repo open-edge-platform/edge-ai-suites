@@ -72,8 +72,8 @@ You can either generate or download the Helm charts.
 
    > [!NOTE]
    > Set `HOST_IP` to a host-reachable, non-loopback node IP address for WebRTC/TURN flows.
-   > Allow TCP/UDP traffic on the coturn external port configured in `values.yaml`
-   > (`config.coturn.ext.coturn_udp_port`, `30478` by default) through the host firewall.
+   > Allow TCP/UDP traffic on the coturn listening port configured in `values.yaml`
+   > (`config.coturn.int.coturn_udp_port`, `3478` by default) through the host firewall.
 
 ## Step 3: Install Helm charts
 
