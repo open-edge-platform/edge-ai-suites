@@ -10,6 +10,7 @@ instantiating the engine.
 
 from __future__ import annotations
 
+import json
 import queue
 import threading
 import uuid
@@ -64,6 +65,23 @@ class TestMarkBoundedCache:
 
 
 class TestDeepAnalyzerSubmitFlow:
+    def test_structured_output_requires_confirmation(self):
+        schema = json.loads(
+            deep_analyzer_module.DeepAnalyzerEngine._structured_output_config().json_schema
+        )
+
+        assert schema["required"] == ["confirmed", "summary"]
+        assert schema["properties"]["confirmed"] == {"type": "boolean"}
+
+    def test_parse_analysis_result_returns_confirmation_and_summary(self):
+        assert DeepAnalyzerEngine._parse_analysis_result(
+            '{"confirmed": true, "summary": "Fire remains visible."}'
+        ) == (True, "Fire remains visible.")
+
+        assert DeepAnalyzerEngine._parse_analysis_result(
+            '{"confirmed": false, "summary": "No fire is visible."}'
+        ) == (False, "No fire is visible.")
+
     def test_submit_defers_job_until_segment_finalizes(self):
         engine = object.__new__(DeepAnalyzerEngine)
         engine._lock = threading.Lock()
@@ -239,5 +257,7 @@ class TestDeepAnalyzerSubmitFlow:
         )
         engine._analyze(job)
 
-        assert captured["prompt"].startswith("Threat: Visible smoke near the ATM.")
+        assert "confirmed` field" in captured["prompt"]
+        assert captured["prompt"].startswith("Return JSON with a boolean")
+        assert "Threat Context: Visible smoke near the ATM." in captured["prompt"]
         assert "Analyze the provided sequence of video frames chronologically for the threat." in captured["prompt"]

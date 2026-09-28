@@ -41,7 +41,7 @@ class TestVLMGenerate:
 
         assert caption == "Decision: Yes\nDescription: Person near door."
         assert metrics == {"ttft_ms": 4.0}
-        assert captured["prompt"] == "watch the door"
+        assert captured["prompt"] == "watch the door" + vlm._RESPONSE_FORMAT_SUFFIX
         assert captured["tensor"].shape == (1, 2, 3, 3)
         assert captured["images"]
 

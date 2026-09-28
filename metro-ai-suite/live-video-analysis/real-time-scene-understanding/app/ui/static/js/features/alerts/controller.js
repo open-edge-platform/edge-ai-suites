@@ -8,6 +8,32 @@
 
 import { fetchAlertDetail, fetchAlertPage } from "../../services/api.js";
 
+function parseDeepAnalysisResult(description) {
+    if (description && typeof description === "object") {
+        return {
+            confirmed: typeof description.confirmed === "boolean" ? description.confirmed : null,
+            summary: String(description.summary || "").trim(),
+        };
+    }
+
+    const text = String(description || "").trim();
+    if (!text) return { confirmed: null, summary: "" };
+
+    try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed === "object") {
+            return {
+                confirmed: typeof parsed.confirmed === "boolean" ? parsed.confirmed : null,
+                summary: String(parsed.summary || "").trim() || text,
+            };
+        }
+    } catch (_err) {
+        // Older alerts contain plain-text descriptions.
+    }
+
+    return { confirmed: null, summary: text };
+}
+
 export function createAlertsController(elements) {
     const state = { streamId: null, offset: 0, total: 0 };
 
@@ -48,6 +74,8 @@ export function createAlertsController(elements) {
 
         try {
             const data = await fetchAlertDetail(streamId, frameId);
+            const analysis = parseDeepAnalysisResult(data.description);
+            const confirmed = typeof data.confirmed === "boolean" ? data.confirmed : analysis.confirmed;
 
             if (alertModalVideo && data.video_url) {
                 alertModalVideo.src = data.video_url;
@@ -58,6 +86,14 @@ export function createAlertsController(elements) {
                 ["Stream", data.stream_id || streamId],
                 ["Uploaded", data.uploaded_at ? new Date(data.uploaded_at).toLocaleString() : "-"],
                 ["Frame", data.frame_id || "-"],
+                [
+                    "Deep analysis",
+                    confirmed === true
+                        ? "Event confirmed"
+                        : confirmed === false
+                            ? "Event not confirmed"
+                            : "Confirmation unavailable",
+                ],
             ];
 
             if (alertModalMeta) {
@@ -75,7 +111,7 @@ export function createAlertsController(elements) {
             }
 
             if (alertModalSummary) {
-                alertModalSummary.textContent = data.description || "No deep analyzer summary available yet.";
+                alertModalSummary.textContent = analysis.summary || "No deep analyzer summary available yet.";
             }
             if (alertModalStatus) alertModalStatus.textContent = "";
         } catch (_err) {

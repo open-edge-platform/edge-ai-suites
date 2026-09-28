@@ -776,6 +776,13 @@ body {
     overflow-wrap: anywhere;
 }
 
+.stream-vlm-response__item--alert {
+    border-color: rgba(248, 81, 73, 0.95);
+    border-left-color: rgba(248, 81, 73, 0.95);
+    background: rgba(248, 81, 73, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(248, 81, 73, 0.3), 0 0 10px rgba(248, 81, 73, 0.14);
+}
+
 .stream-vlm-response__meta {
     margin: 0 0 0.24rem;
     color: var(--muted);
@@ -789,6 +796,11 @@ body {
     font-size: 0.79rem;
     line-height: 1.34;
     white-space: pre-line;
+}
+
+.stream-vlm-response__item--alert .stream-vlm-response__meta,
+.stream-vlm-response__item--alert .stream-vlm-response__text {
+    color: #ffd8d5;
 }
 
 .stream-vlm-response__item--placeholder {

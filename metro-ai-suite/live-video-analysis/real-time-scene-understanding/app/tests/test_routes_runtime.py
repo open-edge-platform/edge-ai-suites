@@ -20,7 +20,7 @@ def _fake_settings() -> SimpleNamespace:
         METRICS_SERVICE_PORT=9090,
         ALERT_VLM_MODEL="InternVL2-1B",
         ALERT_VLM_DEVICE="NPU",
-        ALERT_VLM_MAX_TOKENS=20,
+        ALERT_VLM_MAX_TOKENS=32,
         DEEP_ANALYZER_ENABLED=True,
         DEEP_ANALYZER_MODEL="Qwen3.5-2B-int4-ov",
         DEEP_ANALYZER_DEVICE="GPU",

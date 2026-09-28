@@ -14,11 +14,11 @@ from backend.services.vlm import parse_yes_no
 
 
 class TestBuildAlertVerdictSchema:
-    def test_schema_requires_decision_and_description(self):
+    def test_schema_orders_description_before_decision(self):
         schema = _build_alert_verdict_schema(32)
 
         assert schema["type"] == "object"
-        assert schema["required"] == ["decision", "description"]
+        assert schema["required"] == ["description", "decision"]
         assert schema["additionalProperties"] is False
         assert schema["properties"]["decision"]["enum"] == ["Yes", "No"]
 

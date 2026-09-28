@@ -810,7 +810,10 @@ class StreamManager:
                 continue
 
             logger.info(
-                "[%s] VLM inference done for frame_id=%s: %s", stream_id, frame_id, caption
+                "[%s] VLM inference done for frame_id=%s: %s",
+                stream_id,
+                frame_id,
+                caption.replace("\n", " | "),
             )
 
             # Resolve everything before taking the lock so the health lock is

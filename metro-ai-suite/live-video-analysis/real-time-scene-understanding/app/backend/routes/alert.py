@@ -26,6 +26,7 @@ def build_alert_router(alert_index, get_alert_s3_client, settings) -> APIRouter:
                 {
                     "frame_id": r.get("frame_id", ""),
                     "trigger_caption": r.get("trigger_caption", ""),
+                    "confirmed": r.get("confirmed", False),
                     "thumbnail_url": (
                         f"/api/streams/{stream_id}/alerts/{r.get('frame_id', '')}/thumbnail"
                         if r.get("thumbnail_object_key") else ""
@@ -46,10 +47,12 @@ def build_alert_router(alert_index, get_alert_s3_client, settings) -> APIRouter:
             "stream_id": record.get("stream_id", stream_id),
             "frame_id": record.get("frame_id", ""),
             "trigger_caption": record.get("trigger_caption", ""),
+            "confirmed": record.get("confirmed", False),
             "thumbnail_url": (
                 f"/api/streams/{stream_id}/alerts/{frame_id}/thumbnail"
                 if record.get("thumbnail_object_key") else ""
             ),
+            "confirmed": record.get("confirmed", False),
             "description": record.get("description", ""),
             "metrics": record.get("metrics", {}),
             "model": record.get("model", ""),

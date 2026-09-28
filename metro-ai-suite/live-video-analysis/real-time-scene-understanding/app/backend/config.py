@@ -102,7 +102,7 @@ class Settings:
 
     # Seconds between inferences per stream and the token budget per caption.
     ALERT_VLM_INTERVAL: float = _float("ALERT_VLM_INTERVAL", 2.0)
-    ALERT_VLM_MAX_TOKENS: int = _int("ALERT_VLM_MAX_TOKENS", 20)
+    ALERT_VLM_MAX_TOKENS: int = _int("ALERT_VLM_MAX_TOKENS", 32)
     ALERT_VLM_DO_SAMPLE: bool = _bool("ALERT_VLM_DO_SAMPLE", False)
 
     # VLM NPU-specific configuration. Only used when runnning VLM inference on NPU device.

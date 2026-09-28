@@ -42,6 +42,11 @@ logger = logging.getLogger(__name__)
 # The field is named 'decision' (not 'threat') so its meaning is "does the
 # prompt's described event match?" -- a 'threat' key biases the model toward
 # judging danger instead of answering the prompt's actual visibility question.
+# NOTE: StructuredOutputConfig is grammar-constrained decoding -- it enforces
+# type/enum/maxLength at the token level but does not surface each property's
+# JSON-schema 'description' text to the model. Anything the model actually
+# needs to know about what 'decision' means has to be in the plain-text prompt
+# (see _RESPONSE_FORMAT_SUFFIX), not just in the schema's metadata.
 # description's maxLength is derived from ALERT_VLM_MAX_TOKENS (see
 # _build_alert_verdict_schema), not fixed, so it never asks for more text than
 # the configured token budget can actually finish writing.
@@ -52,6 +57,19 @@ _CHARS_PER_TOKEN = 4
 # Tokens reserved for the 'decision' field plus JSON punctuation/keys, leaving
 # the remainder of ALERT_VLM_MAX_TOKENS for the description text itself.
 _JSON_OVERHEAD_TOKENS = 20
+
+# Appended (visibly, in-prompt) to every alert prompt so 'decision' is tied to
+# whatever question the prompt itself ends on, instead of the model guessing
+# a meaning for the JSON key from training-data conventions. 'decision' is
+# scoped to the prompt's own question answered against the image directly --
+# not derived from re-reading 'description' -- so it isn't hostage to whatever
+# wording the model happened to use for the free-text description.
+_RESPONSE_FORMAT_SUFFIX = (
+    "\n\nRespond with JSON only. Fill 'description' first, following the "
+    "instructions above. Then fill 'decision' by directly answering, from the "
+    "image itself, the specific yes/no question asked in the instructions "
+    "above."
+)
 
 
 def _build_alert_verdict_schema(max_new_tokens: int) -> dict[str, Any]:
@@ -64,13 +82,25 @@ def _build_alert_verdict_schema(max_new_tokens: int) -> dict[str, Any]:
     """
     available_tokens = max(max_new_tokens - _JSON_OVERHEAD_TOKENS, 5)
     max_length = available_tokens * _CHARS_PER_TOKEN
+    # 'description' is listed (and thus generated) before 'decision': structured
+    # output fills object keys in property order, so putting the verdict first
+    # would force the model to commit Yes/No before it has "reasoned" through
+    # what's actually visible, decoupling the decision from its own description.
     return {
         "type": "object",
         "properties": {
-            "decision": {"type": "string", "enum": ["Yes", "No"]},
-            "description": {"type": "string", "maxLength": max_length},
+            "description": {
+                "type": "string",
+                "description": "One short sentence describing only what is visibly relevant to the prompt's question.",
+                "maxLength": max_length,
+            },
+            "decision": {
+                "type": "string",
+                "enum": ["Yes", "No"],
+                "description": "Yes if the image confirms the prompt's question; No otherwise.",
+            },
         },
-        "required": ["decision", "description"],
+        "required": ["description", "decision"],
         "additionalProperties": False,
     }
 
@@ -235,7 +265,7 @@ class VLMEngine:
         tensor = ov.Tensor(np.expand_dims(rgb_frame, axis=0))
         t0 = time.perf_counter()
         result = self._pipe.generate(
-            prompt_text,
+            prompt_text + _RESPONSE_FORMAT_SUFFIX,
             images=[tensor],
             generation_config=self._gen_config,
         )

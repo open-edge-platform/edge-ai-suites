@@ -43,6 +43,19 @@ export function parseAlertCaption(captionText) {
     const text = String(captionText || "").trim();
     if (!text) return { decision: null, description: "" };
 
+    try {
+        const parsed = JSON.parse(text);
+        if (parsed && typeof parsed === "object") {
+            const decision = String(parsed.decision || "").toLowerCase();
+            const description = String(parsed.description || "").trim();
+            if (decision === "yes" || decision === "no") {
+                return { decision, description: description || text };
+            }
+        }
+    } catch (_err) {
+        // Captions normally use the formatted Decision/Description form.
+    }
+
     const decisionMatch = DECISION_RE.exec(text);
     const descriptionMatch = DESCRIPTION_RE.exec(text);
 

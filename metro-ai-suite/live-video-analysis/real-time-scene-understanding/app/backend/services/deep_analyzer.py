@@ -56,6 +56,11 @@ logger = logging.getLogger(__name__)
 
 _SEGMENT_INDEX_RE = re.compile(r"(\d+)(?=\.[^.]+$)")
 _DESCRIPTION_LINE_RE = re.compile(r"\bdescription\s*:\s*(.+)$", flags=re.IGNORECASE | re.DOTALL)
+_CONFIRMATION_INSTRUCTION = (
+    "Return JSON with a boolean `confirmed` field and a concise `summary` field. "
+    "Set `confirmed` to true only when the requested event is definitively supported "
+    "by the video; set it to false when the event is absent, ambiguous, or unsupported."
+)
 
 
 def _next_segment_path(segment_path: str) -> Optional[str]:
@@ -99,14 +104,13 @@ def _extract_trigger_description(trigger_caption: str) -> str:
 
 
 def _build_deep_prompt(job: _AnalysisJob) -> str:
-    """Render a per-job deep prompt and prepend trigger description context."""
+    """Render a per-job prompt with explicit confirmation criteria and alert context."""
     template = str(job.deep_prompt or "").strip()
     base_prompt = template
 
     description = _extract_trigger_description(job.trigger_caption)
-    if not description:
-        return base_prompt
-    return f"Threat Context: {description}\n\n{base_prompt.lstrip()}"
+    context = f"Threat Context: {description}\n\n" if description else ""
+    return f"{_CONFIRMATION_INSTRUCTION}\n\n{context}{base_prompt.lstrip()}"
 
 
 def _sample_segment_frames(segment_path: str, max_frames: int) -> "np.ndarray":
@@ -242,12 +246,30 @@ class DeepAnalyzerEngine:
         schema = {
             "type": "object",
             "properties": {
+                "confirmed": {"type": "boolean"},
                 "summary": {"type": "string", "minLength": 1, "maxLength": 1000},
             },
-            "required": ["summary"],
+            "required": ["confirmed", "summary"],
             "additionalProperties": False,
         }
         return ov_genai.StructuredOutputConfig(json_schema=json.dumps(schema))
+
+    @staticmethod
+    def _parse_analysis_result(raw_text: str) -> tuple[bool, str]:
+        """Extract the definitive event verdict and summary from model JSON."""
+        text = str(raw_text or "")
+        try:
+            result = json.loads(text[text.find("{") : text.rfind("}") + 1])
+        except (json.JSONDecodeError, ValueError):
+            return False, text
+
+        if not isinstance(result, dict):
+            return False, text
+        confirmed = result.get("confirmed")
+        summary = result.get("summary")
+        if not isinstance(confirmed, bool) or not isinstance(summary, str) or not summary.strip():
+            return False, text
+        return confirmed, summary.strip()
 
     # ------------------------------------------------------------------ #
     # Bounded set helpers
@@ -452,7 +474,8 @@ class DeepAnalyzerEngine:
         total_duration_ms = (time.perf_counter() - t0) * 1000.0
 
         texts = getattr(result, "texts", None)
-        description = str(texts[0]).strip() if isinstance(texts, (list, tuple)) and texts else str(result).strip()
+        raw_description = str(texts[0]).strip() if isinstance(texts, (list, tuple)) and texts else str(result).strip()
+        confirmed, description = self._parse_analysis_result(raw_description)
 
         metrics = utils._extract_perf_metrics(result)
         metrics["total_duration_ms"] = total_duration_ms
@@ -483,6 +506,7 @@ class DeepAnalyzerEngine:
                 frame_id=job.frame_id,
                 trigger_caption=job.trigger_caption,
                 trigger_thumbnail_jpeg=job.trigger_thumbnail_jpeg,
+                confirmed=confirmed,
                 description=description,
                 metrics=metrics,
                 deep_model=settings.DEEP_ANALYZER_MODEL,
