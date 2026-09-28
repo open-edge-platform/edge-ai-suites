@@ -46,7 +46,7 @@ Choose **one** of the following approaches to get the Helm charts:
 2. Generate the charts:
 
    ```bash
-   make gen_helm_charts app=wind-turbine-anomaly-detection
+   make gen_helm_charts
    cd helm/
    ```
 
