@@ -35,6 +35,7 @@ All notable changes to this project are documented in this file.
 ### Fixed
 - Fixed RAM bloating issue and updated related documentation. ([#3484])
 - Fixed nginx health check for Docker Compose deployment. ([#3355])
+- Fixed coturn `CreatePermission` 400 errors when `HOST_IP` is set to a non-localhost IP address by switching coturn to host networking mode.
 
 ## [2026.1] - June 2026
 

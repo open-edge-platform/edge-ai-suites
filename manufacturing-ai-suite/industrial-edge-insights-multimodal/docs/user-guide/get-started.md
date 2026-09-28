@@ -75,7 +75,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    - `VISUALIZER_GRAFANA_PASSWORD`
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`
    - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
-   - `HOST_IP`
+   - `HOST_IP` (set this to a host-reachable, non-loopback IP address for WebRTC/TURN flows)
    - `S3_STORAGE_USERNAME`
    - `S3_STORAGE_PASSWORD`
 
@@ -98,6 +98,8 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    > - Fusion Analytics starts once the RTP sender timestamp is available in the metadata packet from the DL Streamer Pipeline Server.
    > - **Known issue:** DL Streamer Pipeline Server may not send RTP sender timestamps for the first ~300 packets.
    >   This may result in a delay before Fusion Analytics becomes fully operational.
+   > - For WebRTC/TURN support, set `HOST_IP` in `.env` to a host-reachable, non-loopback IP address and allow TCP/UDP
+   >   traffic on `COTURN_UDP_PORT` (default `3478`) through the host firewall.
 
    ```bash
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
@@ -212,7 +214,7 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
    > [!NOTE]
    > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
-   > - For remote access, set `HOST_IP` in `.env` to the host system IP address and access `https://<HOST_IP>:3000` (or `https://<HOST_IP>:30001` for Helm).
+   > - For remote access or WebRTC/TURN support, set `HOST_IP` in `.env` to a host-reachable, non-loopback IP address and access `https://<HOST_IP>:3000` (or `https://<HOST_IP>:30001` for Helm).
 
    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.

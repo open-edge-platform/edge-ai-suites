@@ -65,10 +65,15 @@ You can either generate or download the Helm charts.
    HTTPS_PROXY:  # example: http_proxy: http://proxy.example.com:891
    MTX_WEBRTCICESERVERS2_0_USERNAME:
    MTX_WEBRTCICESERVERS2_0_PASSWORD:
-   HOST_IP:  # defaults to localhost; set it to the host system IP address if you want to access the UI remotely
+   HOST_IP:  # set this to a host-reachable, non-loopback node IP address for remote UI access and WebRTC/TURN
    S3_STORAGE_USERNAME:
    S3_STORAGE_PASSWORD:
    ```
+
+   > [!NOTE]
+   > Set `HOST_IP` to a host-reachable, non-loopback node IP address for WebRTC/TURN flows.
+   > Allow TCP/UDP traffic on the coturn external port configured in `values.yaml`
+   > (`config.coturn.ext.coturn_udp_port`, `30478` by default) through the host firewall.
 
 ## Step 3: Install Helm charts
 

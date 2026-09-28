@@ -42,6 +42,8 @@ spec:
       labels:
         app: coturn
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
