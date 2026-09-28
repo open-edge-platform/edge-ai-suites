@@ -305,7 +305,11 @@ class VLMEngine:
 
         if request.error is not None:
             raise request.error
-        assert request.result is not None
+        if request.result is None:
+            raise RuntimeError(
+                "Internal error: caption worker signalled completion without a "
+                "result or an error."
+            )
         return request.result
 
     def caption(self, rgb_frame: np.ndarray, prompt: Optional[str] = None) -> Optional[str]:

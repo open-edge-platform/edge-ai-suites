@@ -24,6 +24,7 @@ from botocore.config import Config
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 setup_logging()
@@ -69,6 +70,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    """SDL423: catch-all handler — logs full detail internally, never leaks
+    internals (stack trace, file paths, exception class) to the client."""
+    logger.error(
+        "Unhandled exception on %s %s: %s",
+        request.method,
+        request.url.path,
+        exc,
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal error occurred. Please try again."},
+    )
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -105,7 +124,7 @@ async def index():
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
+        host=settings.DASHBOARD_HOST,
         port=settings.DASHBOARD_PORT,
         log_level=settings.LOG_LEVEL.lower(),
     )

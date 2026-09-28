@@ -62,6 +62,10 @@ def _frame_size_default(key: str, default: tuple[int, int]) -> tuple[int, int]:
 
 class Settings:
     # ---- server ----
+    # Bind address for the dashboard/API server. Defaults to all interfaces so the
+    # service is reachable when deployed in a container (see app/Dockerfile); set
+    # DASHBOARD_HOST=127.0.0.1 to restrict to localhost for non-containerized/dev use.
+    DASHBOARD_HOST: str = os.getenv("DASHBOARD_HOST", "0.0.0.0")  # nosec B104 - configurable, defaults to all-interfaces for container reachability
     DASHBOARD_PORT: int = _int("DASHBOARD_PORT", 9100)
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
 

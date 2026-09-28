@@ -87,12 +87,12 @@ _PACING_RESET_LAG = 1.0  # seconds behind real time before the clock is re-based
 
 
 def _close_quietly(container) -> None:
-    """Close a container, swallowing teardown errors."""
+    """Close a container, logging (but not propagating) teardown errors."""
     if container is not None:
         try:
             container.close()
         except Exception:  # noqa: BLE001
-            pass
+            logger.debug("Ignoring error while closing container during teardown", exc_info=True)
 
 
 def _encode_frame_jpeg_bytes(frame, *, max_width: int = 160) -> bytes:
@@ -918,7 +918,13 @@ class StreamManager:
             return False
         try:
             return get_deep_analyzer().is_segment_active(segment_path)
-        except Exception:  # noqa: BLE001 - model may be missing/misconfigured
+        except Exception as exc:  # noqa: BLE001 - model may be missing/misconfigured
+            logger.warning(
+                "[%s] deep analyzer unavailable while checking segment reservation for %s: %s",
+                self.stream_id,
+                segment_path,
+                exc,
+            )
             return False
 
     def _notify_segment_finalized(self, finalized_segment_path: str) -> None:

@@ -11,7 +11,7 @@ RUN chmod +x /tmp/drivers/install_gpu_drivers.sh
 RUN echo "Installing GPU drivers version $INSTALL_DRIVER_VERSION" \
     && apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl libxml2 \
-    && python -m pip install --upgrade --no-cache-dir pip==26.1.2 \
+    && python -m pip install --upgrade --no-cache-dir pip==26.2.1 \
     && /tmp/drivers/install_gpu_drivers.sh \
     && apt-get clean \
     && rm -rf /tmp/drivers /var/lib/apt/lists/* /tmp/*
@@ -25,8 +25,8 @@ ARG NPU_DRIVER_BUILD="v1.35.0.20260722-29947505341-ubuntu2404"
 ARG LEVEL_ZERO_VERSION="1.28.2-1~24.04~ppa1"
 ARG LEVEL_ZERO_PPA_SNAPSHOT="20260606T100000Z"
 
-RUN mkdir -p /tmp/npu_deps && cd /tmp/npu_deps \
-    && apt-get update && apt-get install -y --no-install-recommends curl ca-certificates libtbb12 \
+WORKDIR /tmp/npu_deps
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates libtbb12 \
     && curl -L --retry 5 --retry-delay 5 --retry-all-errors -O https://github.com/intel/linux-npu-driver/releases/download/v${NPU_DRIVER_VERSION}/linux-npu-driver-${NPU_DRIVER_BUILD}.tar.gz \
     && tar -xf linux-npu-driver-${NPU_DRIVER_BUILD}.tar.gz \
     && curl -L --retry 5 --retry-delay 5 --retry-all-errors -O https://snapshot.ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu/${LEVEL_ZERO_PPA_SNAPSHOT}/pool/main/l/level-zero-loader/libze1_${LEVEL_ZERO_VERSION}_amd64.deb \
@@ -115,12 +115,33 @@ RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
         apt-get remove --purge -y gcc build-essential libffi-dev python3-dev; \
     fi
 
+# The application runs entirely out of /opt/venv (a self-contained venv with
+# no pip installed — see `uv sync --no-install-project` in the builder
+# stage). The system Python's pip (installed earlier in the `base` stage
+# purely to run the GPU driver installer script, and by the COPYLEFT_SOURCES
+# block above when enabled) is not needed at runtime, and its bundled/
+# vendored copies of setuptools and msgpack only add unmaintained CVE
+# surface to the shipped image. Only strip it for the default (non-copyleft)
+# build, since the COPYLEFT_SOURCES=true path still needs pip3 during build.
+RUN if [ "$COPYLEFT_SOURCES" != "true" ]; then \
+        python -m pip uninstall -y pip setuptools wheel 2>/dev/null; \
+        rm -rf /usr/local/lib/python3.12/ensurepip \
+               /usr/local/lib/python3.12/site-packages/pip* \
+               /usr/local/lib/python3.12/site-packages/setuptools* \
+               /usr/local/lib/python3.12/site-packages/wheel* \
+               /usr/local/lib/python3.12/site-packages/_distutils_hack \
+               /usr/local/lib/python3.12/site-packages/distutils-precedence.pth; \
+    fi
+
 # Fixes bind-mounted segments-dir ownership at startup, then drops to
 # appuser — see entrypoint.sh for why this can't just be USER appuser.
 COPY entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
 
 EXPOSE 9100
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:9100/api/health', timeout=4)" || exit 1
 
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9100"]

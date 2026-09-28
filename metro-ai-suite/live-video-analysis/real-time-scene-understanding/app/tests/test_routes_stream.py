@@ -152,6 +152,55 @@ class TestAddStream:
         assert response.status_code == 400
         registry.add.assert_not_called()
 
+    def test_rejects_disallowed_url_scheme(self):
+        registry = MagicMock()
+        alert_index = MagicMock()
+
+        response = _client(registry, alert_index).post(
+            "/api/streams",
+            json={
+                "url": "file:///etc/passwd",
+                "alert_prompt": "Look for smoke.",
+                "deep_analyzer_prompt": "Summarize the scene evidence for smoke.",
+            },
+        )
+
+        assert response.status_code == 400
+        registry.add.assert_not_called()
+
+    def test_rejects_stream_id_with_path_traversal(self):
+        registry = MagicMock()
+        alert_index = MagicMock()
+
+        response = _client(registry, alert_index).post(
+            "/api/streams",
+            json={
+                "url": "rtsp://example/cam1",
+                "stream_id": "../../etc/cron.d/evil",
+                "alert_prompt": "Look for smoke.",
+                "deep_analyzer_prompt": "Summarize the scene evidence for smoke.",
+            },
+        )
+
+        assert response.status_code == 400
+        registry.add.assert_not_called()
+
+    def test_rejects_oversized_prompt(self):
+        registry = MagicMock()
+        alert_index = MagicMock()
+
+        response = _client(registry, alert_index).post(
+            "/api/streams",
+            json={
+                "url": "rtsp://example/cam1",
+                "alert_prompt": "x" * 5000,
+                "deep_analyzer_prompt": "Summarize the scene evidence for smoke.",
+            },
+        )
+
+        assert response.status_code == 422
+        registry.add.assert_not_called()
+
     def test_returns_409_when_registry_rejects_duplicate(self):
         registry = MagicMock()
         registry.add.side_effect = ValueError("Stream 'cam-1' already exists")
