@@ -45,7 +45,7 @@ spec:
           - "--no-dtls"
           - "--lt-cred-mech"
         ports:
-        - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
+        - containerPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
           protocol: TCP
         - containerPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
           protocol: UDP

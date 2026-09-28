@@ -156,11 +156,7 @@ config:
   coturn:
     name: coturn
     int:
-      coturn_tcp_port: "3478"
       coturn_udp_port: "3478"
-    ext:
-      coturn_tcp_port: "30478"
-      coturn_udp_port: "30478"
 volumes:
   pipelines:
     name: vol-pipelines
