@@ -2031,11 +2031,10 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
 
 def _wait_for_ts_api_ready(timeout=180, interval=5,
                            probe_url="https://localhost:30001/ts-api/config"):
-    """Poll the ts-api NodePort until nginx accepts the connection.
+    """Poll the ts-api NodePort until it answers with a usable status.
 
-    More reliable than a fixed sleep or a blind retry loop: returns as soon as the
-    endpoint responds with any HTTP status (curl rc 0). Connection-refused (rc 7)
-    means nginx is not yet bound to the NodePort and we keep waiting.
+    Connection-refused (rc 7) means nginx is not yet bound to the NodePort, and a
+    5xx means nginx is up but ts-api is still starting; both keep waiting.
 
     Args:
         timeout (int): Total seconds to wait before giving up.
@@ -2043,7 +2042,7 @@ def _wait_for_ts_api_ready(timeout=180, interval=5,
         probe_url (str): URL to probe (defaults to the ts-api config endpoint).
 
     Returns:
-        bool: True when the endpoint becomes reachable, False on timeout.
+        bool: True when the endpoint becomes usable, False on timeout.
     """
     deadline = time.time() + timeout
     attempt = 0
@@ -2059,12 +2058,13 @@ def _wait_for_ts_api_ready(timeout=180, interval=5,
             logger.debug("ts-api probe subprocess error: %s", exc)
             time.sleep(interval)
             continue
-        if result.returncode == 0 and result.stdout.strip().isdigit():
+        http_code = result.stdout.strip()
+        if result.returncode == 0 and http_code.isdigit() and int(http_code) < 500:
             logger.info("ts-api endpoint reachable on attempt %s (HTTP %s).",
-                        attempt, result.stdout.strip())
+                        attempt, http_code)
             return True
-        logger.info("ts-api not ready (attempt %s, curl rc=%s). Retrying in %ss...",
-                    attempt, result.returncode, interval)
+        logger.info("ts-api not ready (attempt %s, curl rc=%s, HTTP %s). Retrying in %ss...",
+                    attempt, result.returncode, http_code or "n/a", interval)
         time.sleep(interval)
     logger.error("ts-api endpoint not reachable after %ss.", timeout)
     return False
@@ -2162,29 +2162,38 @@ def _upload_udf_tar_via_api(config_dir, sample_app):
                 "-X", "POST", upload_endpoint,
                 "-F", f"file=@{tar_path}",
             ]
-            try:
-                result = common_utils.exec_command(
-                    curl_command, capture_output=True, text=True, timeout=60
-                )
-            except subprocess.SubprocessError as exc:
-                logger.error("curl subprocess error during UDF upload: %s", exc)
-                return False
+            max_attempts, backoff = 4, 5
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    result = common_utils.exec_command(
+                        curl_command, capture_output=True, text=True, timeout=60
+                    )
+                except subprocess.SubprocessError as exc:
+                    logger.error("curl subprocess error during UDF upload: %s", exc)
+                    return False
 
-            if result and result.returncode == 0:
+                if not result or result.returncode != 0:
+                    logger.error("UDF upload: curl command failed.")
+                    return False
+
                 http_code = result.stdout.strip()
                 if http_code == "200":
                     logger.info("UDF tar package uploaded successfully (HTTP 200).")
                     return True
+
                 try:
                     with open(tmp_response) as fh:
-                        logger.error(
-                            "UDF upload returned HTTP %s. Response: %s",
-                            http_code, fh.read().strip(),
-                        )
+                        body = fh.read().strip()
                 except OSError:
-                    logger.error("UDF upload returned HTTP %s.", http_code)
-            else:
-                logger.error("UDF upload: curl command failed.")
+                    body = ""
+                logger.error("UDF upload returned HTTP %s. Response: %s", http_code, body)
+
+                # Only a 5xx is transient (ts-api still starting behind nginx).
+                if not (http_code.isdigit() and int(http_code) >= 500) or attempt == max_attempts:
+                    return False
+                logger.info("Retrying UDF upload in %ss...", backoff)
+                time.sleep(backoff)
+                backoff = min(backoff * 2, 30)
             return False
         finally:
             try:
