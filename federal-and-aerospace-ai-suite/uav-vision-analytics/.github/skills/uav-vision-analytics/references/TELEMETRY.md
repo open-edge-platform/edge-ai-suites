@@ -65,7 +65,7 @@ The `arg` list is passed to `DrawDynamicText.__init__` as the `name` parameter.
 ### MAVLink routing (pymavlink mode)
 
 ```
-PX4 SITL → mavlink-router (server :14550) → broadcast UDP :14541 → pymavlink in DLSPS
+PX4 SITL → mavlink-router (server :14550) → broadcast UDP :14541 → pymavlink in DL Streamer Pipeline Server
 ```
 
 `mavlink-router/main.conf`:
@@ -168,7 +168,7 @@ PIPELINES = [
 
 ## MQTT Topics (pymavlink mode)
 
-DLSPS publishes detection metadata to MQTT when configured with:
+DL Streamer Pipeline Server publishes detection metadata to MQTT when configured with:
 ```yaml
 environment:
   - MQTT_HOST=broker
@@ -176,7 +176,7 @@ environment:
   - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
 ```
 
-Detection topic pattern: `{pipeline_name}` (populated by DLSPS from pipeline name).
+Detection topic pattern: `{pipeline_name}` (populated by DL Streamer Pipeline Server from pipeline name).
 
 ---
 
@@ -184,7 +184,7 @@ Detection topic pattern: `{pipeline_name}` (populated by DLSPS from pipeline nam
 
 | Variable | Value | Purpose |
 |----------|-------|---------|
-| `ENABLE_RTSP` | `true` | Enable DLSPS RTSP server |
+| `ENABLE_RTSP` | `true` | Enable DL Streamer Pipeline Server RTSP server |
 | `RTSP_PORT` | `8555` | RTSP output port |
 | `MQTT_HOST` | `broker` | Mosquitto broker hostname |
 | `MQTT_PORT` | `1883` | Mosquitto broker port |

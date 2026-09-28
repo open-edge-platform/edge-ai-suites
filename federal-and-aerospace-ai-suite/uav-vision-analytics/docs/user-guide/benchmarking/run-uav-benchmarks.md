@@ -79,31 +79,35 @@ Expected services: `dlstreamer-pipeline-server`, `broker`, `mavlink-router`, `px
 
 | Tool | Used for | Install |
 | --- | --- | --- |
-| `curl` | DLSPS API calls, metrics polling | `sudo apt-get install -y curl` |
+| `curl` | DL Streamer Pipeline Server API calls, metrics polling | `sudo apt-get install -y curl` |
 | `gawk` | FPS and HW metrics statistical aggregation | `sudo apt-get install -y gawk` |
 | `python3` | Continuous SSE metrics streamer | `sudo apt install python3` |
-| `jq` | JSON parsing of DLSPS status responses | `sudo apt-get install -y jq` |
+| `jq` | JSON parsing of DL Streamer Pipeline Server status responses | `sudo apt-get install -y jq` |
 | `ffmpeg` | Creating looped video files (optional) | `sudo apt-get install -y ffmpeg` |
 
 
 
 ### 4. Verify services are reachable
 
+`dlstreamer-pipeline-server` and `metrics-manager` no longer publish ports directly to the
+host — both are reached through the `nginx` reverse proxy on port `443` (HTTPS, self-signed
+cert; plain HTTP on port `80` redirects to HTTPS).
+
 | Service | URL | Description |
 | --- | --- | --- |
-| DL Streamer Pipeline Server | `http://localhost:8081` | Pipeline REST API |
-| metrics-manager | `http://localhost:9090` | HW metrics SSE + REST endpoint |
+| DL Streamer Pipeline Server | `https://<HOST_IP>/` | Pipeline REST API |
+| metrics-manager | `https://<HOST_IP>/api/v1/metrics/latest` | HW metrics SSE + REST endpoint |
 
 ```bash
-curl -s http://localhost:8081/pipelines/status | head -3
-curl -s http://localhost:9090/api/v1/metrics/latest | head -3
+curl -k -s https://<HOST_IP>/pipelines/status | head -3
+curl -k -s https://<HOST_IP>/api/v1/metrics/latest | head -3
 ```
 
 ## How the Script Works
 
 The benchmarking script (`benchmark/calc_stream_density.sh`) automates three tasks:
 
-1. **Start N concurrent pipeline instances** via the DLSPS REST API
+1. **Start N concurrent pipeline instances** via the DL Streamer Pipeline Server REST API
    (`POST /pipelines/user_defined_pipelines/<name>`), each with a unique RTSP
    path, metadata topic, and `model-instance-id` so concurrent streams
    do not conflict.
@@ -130,7 +134,7 @@ Phase 2 — Bisect:
 
 ### FPS Statistics (p90)
 
-During each N-stream test, DLSPS reports the `avg_fps` for every running
+During each N-stream test, DL Streamer Pipeline Server reports the `avg_fps` for every running
 pipeline instance every second. After the measurement window ends
 (`-i`, default 60 s), `gawk` computes:
 
@@ -191,7 +195,7 @@ utilization measurements.
 ## Available Pipelines
 
 Pipeline names are defined in `benchmark/benchmark_app_payload.json`. Each entry
-maps a pipeline name to the DLSPS POST payload (source URI, destination,
+maps a pipeline name to the DL Streamer Pipeline Server POST payload (source URI, destination,
 inference device, model path).
 
 ### File-source pipelines (recommended for benchmarking)
@@ -246,7 +250,7 @@ Finds the maximum number of concurrent streams for a **single pipeline** while s
 
 **What happens:**
 
-1. Pre-flight check: verifies DLSPS (`http://localhost:8081`) and metrics-manager (`http://localhost:9090`) are reachable.
+1. Pre-flight check: verifies DL Streamer Pipeline Server (`https://<HOST_IP>/`) and metrics-manager (`https://<HOST_IP>/api/v1/metrics/latest`) are reachable through nginx.
 2. Stops any previously running pipelines.
 3. Tests N=1 → 2 → 4 → 8 … (exponential), then bisects to find the exact max.
 4. At each N: starts streams, waits for RUNNING, collects FPS + HW metrics for 60 s, stops streams.
@@ -256,8 +260,8 @@ Finds the maximum number of concurrent streams for a **single pipeline** while s
 
 ```text
 >>>>> Performing pre-flight checks...
-DLSPS is reachable.
-HW metrics: http://localhost:9090
+DL Streamer Pipeline Server is reachable.
+HW metrics: https://192.168.x.x
 
 >>>>> Attempting to stop all running pipelines.
 No running pipelines found.
@@ -304,7 +308,7 @@ Runs the density search **sequentially** for multiple pipelines (typically CPU, 
 
 **What happens:**
 
-1. Pre-flight checks (DLSPS + metrics-manager).
+1. Pre-flight checks (DL Streamer Pipeline Server + metrics-manager).
 2. Runs the density search for each pipeline in order: CPU → GPU → NPU.
 3. 10-second thermal cooldown between pipeline types.
 4. Prints a unified results table to the terminal.
@@ -415,17 +419,26 @@ Usage (nstreams — fixed concurrent streams):
 | `-l <lower_bound>` | `1` | Accepted for compatibility; **ignored** — exp+bisect always starts from N=1. |
 | `-c <percentile>` | `0.9` | Throughput percentile for KPI (0.9 = p90). |
 | `--no-hw-metrics` | off | Skip metrics-manager collection entirely (faster, FPS-only benchmark). |
-| `-m <url>` | `http://localhost:9090` | metrics-manager base URL. Only needed if not on `localhost:9090`. |
+| `-m <url>` | `https://<HOST_IP>` | metrics-manager base URL, proxied by nginx over HTTPS. Auto-detected from `../.env`'s `HOST_IP` (falls back to `localhost`). Only needed to override for a remote host. |
 | `-M <seconds>` | `2` | REST fallback poll interval. Irrelevant when SSE is available. |
 
 ### Environment variable overrides
 
 | Variable | Equivalent flag | Default |
 | --- | --- | --- |
-| `METRICS_URL` | `-m` | `http://localhost:9090` |
+| `METRICS_URL` | `-m` | `https://<HOST_IP>` (from `.env`, falls back to `https://localhost`) |
 | `METRICS_INTERVAL` | `-M` | `2` |
-| `DLSPS_NODE_IP` | — | `localhost` |
-| `DLSPS_PORT` | — | `8081` |
+| `DLSPS_NODE_IP` | — | `<HOST_IP>` (from `.env`, falls back to `localhost`) |
+| `DLSPS_PORT` | — | `443` |
+| `DLSPS_SCHEME` | — | `https` |
+
+> [!NOTE]
+> The script sources `../.env` automatically, so `DLSPS_NODE_IP`/`METRICS_URL` default to
+> the same `HOST_IP` nginx is published on — `localhost`/`127.0.0.1` won't reach it, since
+> nginx binds only to `HOST_IP`. All `curl`/Python HTTPS calls skip certificate verification
+> (`-k` / unverified SSL context) since nginx uses a self-signed cert.
+> You normally don't need to set these manually unless running the benchmark from a
+> different machine than the one hosting the stack.
 
 ### Common command examples
 
@@ -449,10 +462,10 @@ Usage (nstreams — fixed concurrent streams):
 ./benchmark/calc_stream_density.sh \
   -p uav_object_detection_npu -t 20 -u 32 -i 60
 
-# Remote machine (e.g., run benchmark from a different host)
+# Remote machine (e.g., run benchmark from a different host than the one hosting the stack)
 DLSPS_NODE_IP=x.x.x.x ./benchmark/calc_stream_density.sh \
   -p uav_object_detection_gpu \
-  -m http://x.x.x.x:9090 \
+  -m https://x.x.x.x \
   -t 20
 ```
 
@@ -523,7 +536,7 @@ uav-vision-analytics/
 ├── benchmark-density-uav_object_detection_cpu/   ← best run for CPU pipeline
 │   ├── kpi.txt          ← FPS stats + hw_* metrics (avg/min/max)
 │   ├── hw_samples.log   ← raw HW snapshots (key=value lines, "---" per sample)
-│   └── sample.logs      ← raw DLSPS /pipelines/status JSON per second
+│   └── sample.logs      ← raw DL Streamer Pipeline Server /pipelines/status JSON per second
 │
 ├── benchmark-density-uav_object_detection_gpu/   ← best run for GPU pipeline
 │   ├── kpi.txt

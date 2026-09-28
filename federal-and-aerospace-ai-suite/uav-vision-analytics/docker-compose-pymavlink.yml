@@ -99,12 +99,6 @@ services:
       - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
       - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
       - ${NPU_DEVICE:-/dev/null}:${NPU_DEVICE:-/dev/null}
-    ports:
-      - '8081:8081'
-      - "8555:8555"
-      - "5600:5600"
-      - "5601:5601"
-      - "5602:5602"
     networks:
       - app_network
     deploy:
@@ -126,8 +120,26 @@ services:
     restart: unless-stopped
     networks:
       - app_network
+
+  # Nginx reverse proxy / TLS — the only service that publishes
+  # ports to the host. Binds to HOST_IP (falls back to loopback-only when
+  # HOST_IP is unset) rather than all interfaces.
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx
+    restart: unless-stopped
+    volumes:
+      - ./configs/nginx/nginx-pymavlink.conf:/etc/nginx/nginx.conf:ro
+      - ./configs/nginx/ssl:/etc/nginx/ssl:ro
     ports:
-      - "9090:9090"
+      - "${HOST_IP:-127.0.0.1}:80:80"
+      - "${HOST_IP:-127.0.0.1}:443:443"
+      - "${HOST_IP:-127.0.0.1}:8555:8555"
+    networks:
+      - app_network
+    depends_on:
+      - dlstreamer-pipeline-server
+      - metrics-manager
 
 networks:
   app_network:
