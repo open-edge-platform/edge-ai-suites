@@ -232,7 +232,8 @@ then `register` after the prompt and final schema have been confirmed.
 | `video_summary_task` | string | No | Defaults to `<use_case>_monitor` |
 | `description` | string | No | Human-readable task description |
 | `prompt_text` | string | For `generate_task` | Full four-section prompt text without Markdown code fences |
-| `evaluate_rules_path` | string | For extended schema or custom alert behavior | Path to a Python rule override to stage and validate |
+| `evaluate_rules_path` | string | For extended schema or custom alert behavior | Server-local path to a Python rule override; mutually exclusive with `evaluate_rules_content` |
+| `evaluate_rules_content` | string | For extended schema or custom alert behavior | Python rule source for remote MCP clients; written, validated, and staged by the MCP server |
 | `schema_extensions` | array | No | Extra fields `{name, type, required}`; normally inferred from `LOCAL_PROMPT`, so pass only to set a non-text type or override `required` |
 | `reports`, `summarize` | object | No | Use-case report and per-clip summary configuration |
 | `overwrite` | boolean | No | Replace an existing use-case entry; default false |

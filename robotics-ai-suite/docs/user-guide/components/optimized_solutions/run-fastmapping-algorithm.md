@@ -55,7 +55,7 @@ Complete the [Getting Started](../../platform_foundation/getting_started.md) gui
    :::
    ::::
 
-   > **Note**:
+   > [!NOTE]
    >
    > The `ros-jazzy-fast-mapping` package includes a ROS 2 bag, which will be used for this tutorial.
    > After the installation, the ROS 2 bag can be found at `/opt/ros/jazzy/share/bagfiles/spinning/`.

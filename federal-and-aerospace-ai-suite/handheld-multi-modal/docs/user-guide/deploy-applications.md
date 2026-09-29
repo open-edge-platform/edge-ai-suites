@@ -5,7 +5,8 @@ local machine.
 
 ## (Optional) Configuring the Proxy
 
-> **Note**: If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
+> [!NOTE]
+> If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
 
 Depending on the system's network configuration, you may need an additional proxy configuration.
 Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a
@@ -81,7 +82,7 @@ Decompress the downloaded file:
 unzip handheld-multi-modal.zip
 ```
 
-Run the script that installs all dependencies, downloads models, and starts applications.
+Run the makefile target that installs all dependencies, downloads models, and starts applications.
 During installation, a single prompt asking to accept licenses of models will appear.
 Depending on network bandwidth, it takes around 10-15 minutes. If an error occurs during
 installation, see the [proxy configuration step](#optional-configuring-the-proxy):

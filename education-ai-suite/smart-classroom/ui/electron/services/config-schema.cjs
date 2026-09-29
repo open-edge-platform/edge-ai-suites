@@ -32,28 +32,14 @@
 const CONFIG = 'config'; // config.yaml
 const PROXY = 'proxy'; // .proxy-config (JSON)
 
-// The features in config.yaml's `features:` block, in the order their toggles
-// render.
+// The features in config.yaml's `features:` block, in toggle order — label and
+// dependency graph both, generated from utils/pipeline_catalog.py. A copy rather
+// than a fetch because this screen is what you use before the backend starts.
 //
-// `dependsOn` mirrors `depends_on` in model_manager/features/*_feature.py.
-// features/resolver.py walks that graph at startup and silently enables anything
-// a live feature needs, so a toggle left off here is not necessarily off at run
-// time — which is what the featureDependencies rule below reports. Label and
-// graph share one table so the two cannot drift from each other, and
-// tests/unit/test_feature_dependencies.py parses this table out of this file and
-// fails if it drifts from the Python.
-const FEATURES = {
-  asr: { label: 'Speech recognition', dependsOn: [] },
-  summary: { label: 'Summary', dependsOn: ['asr'] },
-  mindmap: { label: 'Mind map', dependsOn: ['summary'] },
-  topic_segmentation: { label: 'Topic segmentation', dependsOn: ['asr', 'content_search'] },
-  video_analytics: { label: 'Video analytics', dependsOn: [] },
-  board_ocr: { label: 'Board OCR', dependsOn: ['video_analytics'] },
-  content_search: { label: 'Content search', dependsOn: [] },
-  qa: { label: 'Question answering', dependsOn: ['content_search'] },
-  grading: { label: 'Grading', dependsOn: [] },
-  report: { label: 'Report', dependsOn: ['summary', 'mindmap', 'topic_segmentation', 'video_analytics'] },
-};
+// `dependsOn` is what has to be ENABLED: features/resolver.py silently enables
+// anything a live feature needs, so a toggle left off here is not necessarily
+// off at run time — which is what the featureDependencies rule below reports.
+const { FEATURES } = require('./feature-catalog.cjs');
 
 const featurePath = (id) => `features.${id}.enabled`;
 

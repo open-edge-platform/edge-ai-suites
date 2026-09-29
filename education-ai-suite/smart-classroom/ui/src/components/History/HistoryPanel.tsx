@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import '../../assets/css/History.css';
 import { useTitleBarTheme } from '../../hooks/useTitleBarTheme';
@@ -9,23 +9,21 @@ import {
   deleteSession,
   finalizeSession,
   getSessionEvents,
+  listSessionArtifacts,
   listSessions,
+  type SessionArtifact,
   type SessionSummary,
   type StageEvent,
 } from '../../services/api';
+import { SESSION_STATES, STAGE_ORDER } from '../../generated/pipeline';
+import StageArtifactModal from './StageArtifactModal';
 
 const PAGE_SIZE = 20;
 
-/** Stage pip order, matching the order the pipeline runs them in. */
-const STAGE_ORDER = ['transcribe', 'summarize', 'mindmap', 'va', 'segmentation', 'report'] as const;
-
-const STATE_LABELS: Record<string, string> = {
-  pending: 'history.state.pending',
-  running: 'history.state.running',
-  completed: 'history.state.completed',
-  failed: 'history.state.failed',
-  cancelled: 'history.state.cancelled',
-};
+/** Keyed off the generated vocabulary, so a new stage or state needs no edit here. */
+const STATE_LABELS: Record<string, string> = Object.fromEntries(
+  SESSION_STATES.map((state) => [state, `history.state.${state}`]),
+);
 
 function formatTimestamp(iso: string | null): string {
   if (!iso) return '—';
@@ -79,6 +77,15 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
   const [eventsLoading, setEventsLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // What the expanded row's stages left on disk, so a stage name knows whether
+  // it opens anything. Keyed by stage; a stage that wrote nothing is absent.
+  const [artifacts, setArtifacts] = useState<Map<string, SessionArtifact>>(new Map());
+  const [preview, setPreview] = useState<{ sessionId: string; artifact: SessionArtifact } | null>(
+    null,
+  );
+  /** The row whose detail is in flight, so a slower earlier one cannot land. */
+  const detailRequest = useRef<string | null>(null);
+
   const load = useCallback(async (pageIndex: number) => {
     setLoading(true);
     setError(null);
@@ -98,20 +105,27 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
   // visits, and a session that finished while it was closed must show up.
   useEffect(() => {
     if (isOpen) void load(page);
+    // A preview left open when the panel closed must not be waiting there when
+    // it opens again.
+    else setPreview(null);
   }, [isOpen, load, page]);
 
-  // Close on Escape, like every other overlay in the app.
+  // Close on Escape, like every other overlay in the app — innermost first, so
+  // a file preview does not take the whole panel with it.
   useEffect(() => {
     if (!isOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key !== 'Escape') return;
+      if (preview) setPreview(null);
+      else onClose();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, preview]);
 
-  // Stage timings are a second request, so only fetch them for the row the user
-  // actually opened rather than for every row in the page.
+  // Stage timings and the files they produced are two more requests, so only
+  // fetch them for the row the user actually opened rather than for every row
+  // in the page.
   const toggleRow = async (sessionId: string) => {
     if (expandedId === sessionId) {
       setExpandedId(null);
@@ -119,14 +133,21 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
     }
     setExpandedId(sessionId);
     setEvents(null);
+    setArtifacts(new Map());
     setEventsLoading(true);
-    try {
-      setEvents(await getSessionEvents(sessionId));
-    } catch {
-      setEvents([]);
-    } finally {
-      setEventsLoading(false);
-    }
+    detailRequest.current = sessionId;
+    const [timings, files] = await Promise.all([
+      getSessionEvents(sessionId).catch(() => [] as StageEvent[]),
+      // A session with no files is the normal case for a failed run, so this
+      // failing must not keep the timings off the screen.
+      listSessionArtifacts(sessionId).catch(() => [] as SessionArtifact[]),
+    ]);
+    // Opening a second row before the first answered must not repaint the one
+    // now on screen with the other one's detail.
+    if (detailRequest.current !== sessionId) return;
+    setEvents(timings);
+    setArtifacts(new Map(files.map((f) => [f.stage, f])));
+    setEventsLoading(false);
   };
 
   const withBusy = async (sessionId: string, action: () => Promise<unknown>) => {
@@ -284,18 +305,42 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {events.map((ev, i) => (
-                            <tr key={`${ev.stage}-${i}`}>
-                              <td>{ev.stage}</td>
-                              <td className={`stage-text-${ev.status}`}>{ev.status}</td>
-                              <td>{formatDuration(ev.duration_sec)}</td>
-                              <td className="history-events-detail">
-                                {ev.error_detail
-                                  ? `${ev.error_class}: ${ev.error_detail}`
-                                  : formatTimestamp(ev.ended_at)}
-                              </td>
-                            </tr>
-                          ))}
+                          {events.map((ev, i) => {
+                            // The stage name is the handle on its output: a
+                            // stage that wrote a file opens it, one that did not
+                            // stays plain text rather than a button that
+                            // apologises.
+                            const artifact = ev.stage ? artifacts.get(ev.stage) : undefined;
+                            return (
+                              <tr key={`${ev.stage}-${i}`}>
+                                <td>
+                                  {artifact ? (
+                                    <button
+                                      type="button"
+                                      className="history-stage-link"
+                                      title={t('history.openFile', 'Open {{file}}', {
+                                        file: artifact.filename,
+                                      })}
+                                      onClick={() =>
+                                        setPreview({ sessionId: session.session_id, artifact })
+                                      }
+                                    >
+                                      {ev.stage}
+                                    </button>
+                                  ) : (
+                                    ev.stage
+                                  )}
+                                </td>
+                                <td className={`stage-text-${ev.status}`}>{ev.status}</td>
+                                <td>{formatDuration(ev.duration_sec)}</td>
+                                <td className="history-events-detail">
+                                  {ev.error_detail
+                                    ? `${ev.error_class}: ${ev.error_detail}`
+                                    : formatTimestamp(ev.ended_at)}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     )}
@@ -328,6 +373,14 @@ const HistoryPanel: React.FC<HistoryPanelProps> = ({ isOpen, onClose }) => {
           </div>
         )}
       </div>
+
+      {preview && (
+        <StageArtifactModal
+          sessionId={preview.sessionId}
+          artifact={preview.artifact}
+          onClose={() => setPreview(null)}
+        />
+      )}
     </>
   );
 };

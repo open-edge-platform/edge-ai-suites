@@ -1,5 +1,7 @@
 import type { StreamEvent, StreamOptions } from './streamSimulator';
 import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
+import type { SessionStage } from '../generated/pipeline';
+import type { FeatureDescriptor } from '../redux/slices/featureConfigSlice';
 
 export type ProjectConfig = {
   name: string;
@@ -47,14 +49,8 @@ const CS_SUCCESS_CODE = 20000;
 // FEATURE CONFIGURATION API
 // ============================================================================
 
-export interface FeatureDescriptor {
-  id: string;
-  dependency: string[];
-  requires: string[];
-  endpoints?: Record<string, string>;
-  mode?: string;
-  chunking?: boolean;
-}
+// Declared with the slice that stores it; re-exported for existing callers.
+export type { FeatureDescriptor };
 
 /**
  * Fetch enabled features with full UI descriptors from backend
@@ -1004,13 +1000,7 @@ export async function createSession(): Promise<{ sessionId: string }> {
 }
 
 /** The pipeline stages the session API knows about. */
-export type SessionStage =
-  | 'transcribe'
-  | 'summarize'
-  | 'mindmap'
-  | 'va'
-  | 'segmentation'
-  | 'report';
+export type { SessionStage };
 
 /**
  * Put a session on the books so it shows up in the history.
@@ -1168,6 +1158,53 @@ export async function getSessionEvents(sessionId: string): Promise<StageEvent[]>
     const res = await fetch(`${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/events`);
     if (!res.ok) throw new Error(await errorDetail(res, `Failed to load stage events (${res.status})`));
     return (await res.json()).events ?? [];
+  });
+}
+
+/** How a stage's output should be rendered, not what it is on disk. */
+export type SessionArtifactKind = 'transcript' | 'markdown' | 'mindmap' | 'topics' | 'stats';
+
+export interface SessionArtifact {
+  stage: string;
+  kind: SessionArtifactKind;
+  filename: string;
+  size_bytes: number;
+}
+
+export interface SessionArtifactText extends SessionArtifact {
+  content: string;
+  /** The file was longer than one preview response; `content` is the head of it. */
+  truncated: boolean;
+}
+
+/**
+ * The stage outputs a past session left on disk.
+ *
+ * Only what exists, so the history panel can tell up front which stage names
+ * open something and which are just a timing. A stage that failed or wrote
+ * nothing is absent rather than listed-and-broken.
+ */
+export async function listSessionArtifacts(sessionId: string): Promise<SessionArtifact[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/artifacts`,
+    );
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load files (${res.status})`));
+    return (await res.json()).artifacts ?? [];
+  });
+}
+
+/** One stage's output, as the text it was written as. */
+export async function getSessionArtifactText(
+  sessionId: string,
+  stage: string,
+): Promise<SessionArtifactText> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${BASE_URL}/api/v1/sessions/${encodeURIComponent(sessionId)}/artifacts/${encodeURIComponent(stage)}`,
+    );
+    if (!res.ok) throw new Error(await errorDetail(res, `Failed to load file (${res.status})`));
+    return res.json();
   });
 }
 

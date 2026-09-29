@@ -142,7 +142,8 @@ The Smart Route Planning Agent works in a multi-node setup with one central _Sma
 3. Note the IP address and port of each Smart Traffic Intersection Agent.
 4. Update the `api_hosts` field in the `src/data/config.json` file with all the edge node's IP address and port. See [this](#quick-start-with-setup-script) for example configuration.
 
-> **NOTE :** We can add `api_hosts` for even just one instance, however minimum three instances of Smart Traffic Intersection Agent is recommended for proper route planning in the application.
+> [!NOTE]
+> We can add `api_hosts` for even just one instance, however minimum three instances of Smart Traffic Intersection Agent is recommended for proper route planning in the application.
 
 ### Deploy the Route Planning Agent
 

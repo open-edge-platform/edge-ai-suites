@@ -303,7 +303,8 @@ flowchart LR
     style MQTT fill:#fff4e1,stroke:#f57c00
 ```
 
-> **Note**: this bridge only captures IR + depth. Depending on the specific D400 model, the camera hardware
+> [!NOTE]
+> this bridge only captures IR + depth. Depending on the specific D400 model, the camera hardware
 > may also support a Color/RGB stream and, on IMU-equipped models (e.g. D435i, D455), Gyro/Accel motion
 > streams. Enabling any of these would require extending `realsense_camera_bridge.py` with the corresponding
 > `rs.stream.*` config — they are not wired up today.

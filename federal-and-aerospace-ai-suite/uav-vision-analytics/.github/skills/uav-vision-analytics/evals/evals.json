@@ -24,7 +24,7 @@
       "prompt_file": "example-prompts/02-mavsdk-three-camera.md",
       "should_trigger": true,
       "expectations": [
-        "docker-compose-uavsdk.yml with single DLSPS container, no broker/px4 services",
+        "docker-compose-uavsdk.yml with single DL Streamer Pipeline Server container, no broker/px4 services",
         "config-uavsdk.json with nadir_camera_rtsp_cpu, forward_camera_rtsp_gpu, rear_camera_rtsp_npu pipelines using rtspsrc",
         "uavsdk_pipeline_manager.py subscribes to MQTT uav/{id}/telemetry/status and parses armed boolean",
         "ffprobe RTSP probe before starting each pipeline (wait_for_rtsp_stream with retries)",

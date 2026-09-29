@@ -171,7 +171,7 @@ in the **STATUS** column.
 2. Ensure all containers in each pod are _Ready_. As all pods are running single container
 only, this is typically denoted by mentioning **1/1** in the **READY** column.
 
-> **Important:**
+> [!IMPORTANT]
 >
 > - When deployed for first time, it may take up-to around 5 Mins to bring all the
 >   pods/containers in running and ready state, as several containers try to download

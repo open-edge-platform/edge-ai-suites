@@ -52,7 +52,8 @@ DL Streamer document for selecting the GPU render device of your choice for VA c
 
 ## Tutorial on how to use GPU specific pipelines
 
-> **Note:** This sample application already provides a default `compose-without-scenescape.yml`
+> [!NOTE]
+> This sample application already provides a default `compose-without-scenescape.yml`
 > file that includes the necessary GPU access to the containers.
 
 The pipeline `object_tracking_gpu` in [pipeline-server-config](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/src/dlstreamer-pipeline-server/config.json)

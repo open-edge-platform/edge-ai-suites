@@ -7,6 +7,7 @@ from dto.transcription_dto import TranscriptionRequest
 from dto.audiosource import AudioSource
 from utils.config_loader import config
 from utils.storage_manager import StorageManager
+from utils.pipeline_catalog import ALL_STAGES, FEATURE_STAGE, STAGE_RUN_AFTER
 from utils.session_manager import generate_session_id
 from utils import session_store
 from utils.session_paths import SessionPaths
@@ -114,7 +115,7 @@ def _run_inner(session_id: str, request: dict, stages: list) -> None:
     va_error = []
     va_thread = None
     try:
-        if "va" in stages:
+        if FEATURE_STAGE["video_analytics"] in stages:
             va_thread = threading.Thread(
                 target=_run_va_safe,
                 args=(session_id, request, stages, va_error),
@@ -162,46 +163,47 @@ def _run_va_safe(session_id: str, request: dict, stages: list, errors: list) -> 
 
 def _run_audio_chain(session_id: str, request: dict, stages: list,
                      va_thread=None, va_error=None) -> None:
+    """Run the requested audio stages, in the order and with the waits
+    utils/pipeline_catalog.py declares.
+
+    stage_tracker owns the running/done/failed transitions on the session row;
+    this function only decides which stages run and when.
+    """
     pipeline = Pipeline(session_id)
 
-    # stage_tracker owns the running/done/failed transitions on the session row;
-    # this function only decides which stages run and in what order.
-    if "transcribe" in stages:
-        _check_cancel(session_id)
-        audio_path = request.get("audio_path")
-        if not audio_path:
-            raise _OrchestrationError("stage transcribe requires audio_path")
-        tr = TranscriptionRequest(audio_filename=audio_path, source_type=AudioSource.AUDIO_FILE)
-        _touch_heartbeat(session_id)
-        with stage_tracker(session_id, "transcribe"):
-            _drain(pipeline.run_transcription(tr))
-        _await_pending_writes()
+    def _transcribe() -> None:
+        tr = TranscriptionRequest(
+            audio_filename=request.get("audio_path"),
+            source_type=AudioSource.AUDIO_FILE,
+        )
+        _drain(pipeline.run_transcription(tr))
 
-    if "summarize" in stages:
-        _check_cancel(session_id)
-        _touch_heartbeat(session_id)
-        with stage_tracker(session_id, "summarize"):
-            _drain(pipeline.run_summarizer())
-        _await_pending_writes()
+    if FEATURE_STAGE["asr"] in stages and not request.get("audio_path"):
+        raise _OrchestrationError(f"stage {FEATURE_STAGE['asr']} requires audio_path")
 
-    if "mindmap" in stages:
-        _check_cancel(session_id)
-        _touch_heartbeat(session_id)
-        with stage_tracker(session_id, "mindmap"):
-            pipeline.run_mindmap()
+    # Stage -> what to run, and whether writes must land before the next stage
+    # reads them. `va` is absent: it runs on its own thread from _run_inner.
+    runners = {
+        FEATURE_STAGE["asr"]: (_transcribe, True),
+        FEATURE_STAGE["summary"]: (lambda: _drain(pipeline.run_summarizer()), True),
+        FEATURE_STAGE["mindmap"]: (pipeline.run_mindmap, False),
+        FEATURE_STAGE["topic_segmentation"]: (pipeline.run_content_segmentation, False),
+        FEATURE_STAGE["report"]: (lambda: _drain(pipeline.run_report_generator()), False),
+    }
+    va_stage = FEATURE_STAGE["video_analytics"]
 
-    if "segmentation" in stages:
-        _join_va(va_thread, va_error)
+    for stage in ALL_STAGES:
+        if stage not in stages or stage not in runners:
+            continue
+        run, await_writes = runners[stage]
+        if va_stage in STAGE_RUN_AFTER[stage]:
+            _join_va(va_thread, va_error)
         _check_cancel(session_id)
         _touch_heartbeat(session_id)
-        with stage_tracker(session_id, "segmentation"):
-            pipeline.run_content_segmentation()
-
-    if "report" in stages:
-        _check_cancel(session_id)
-        _touch_heartbeat(session_id)
-        with stage_tracker(session_id, "report"):
-            _drain(pipeline.run_report_generator())
+        with stage_tracker(session_id, stage):
+            run()
+        if await_writes:
+            _await_pending_writes()
 
 
 def _join_va(va_thread, va_error) -> None:
@@ -215,14 +217,14 @@ def _join_va(va_thread, va_error) -> None:
 
 
 def _run_va_if_needed(session_id: str, request: dict, stages: list) -> None:
-    if "va" not in stages:
+    if FEATURE_STAGE["video_analytics"] not in stages:
         return
     video_sources = request.get("video_sources") or {}
     wanted = {k: v for k, v in video_sources.items() if v}
     if not wanted:
         raise _OrchestrationError("stage va requires video_sources")
 
-    with stage_tracker(session_id, "va"):
+    with stage_tracker(session_id, FEATURE_STAGE["video_analytics"]):
         va_out_dir = _va_output_dir(session_id)
         os.makedirs(va_out_dir, exist_ok=True)
 

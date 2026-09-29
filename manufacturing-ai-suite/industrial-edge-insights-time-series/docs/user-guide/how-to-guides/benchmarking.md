@@ -15,7 +15,8 @@ To enable benchmarking:
 - `num_of_streams=<NUMBER_OF_STREAMS>`: Number of parallel ingestion streams.
 - `number_of_data_points_per_stream=<NUM_POINTS>`: Number of points ingested per stream.
 
-> **Note:** If `num_of_streams` is not set, the default value is `1`.
+> [!NOTE]
+> If `num_of_streams` is not set, the default value is `1`.
 
 
 ## With Stream Processing User Defined Function (UDF)
@@ -57,7 +58,7 @@ make up_mqtt_ingestion batch app=wind-turbine-anomaly-detection num_of_streams=4
 - For troubleshooting or monitoring, use `make status` to verify container health and logs.
 - For batch benchmarking, confirm your app package includes batch UDF artifacts before deployment.
 
-    > **Note:**
+    > [!NOTE]
     > 1. The command `make status` may show errors in containers like ia-grafana when users have not logged in yet,
     > or after a session timeout.
     > 2. Log in to Grafana again and, if functionality is working, ignore `user token not found` errors and other minor Grafana log errors.

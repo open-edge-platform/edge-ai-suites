@@ -14,16 +14,19 @@
 const path = require('path');
 const paths = require('./paths.cjs');
 const config = require('./config-store.cjs');
+const { REQUIRED_BY } = require('./feature-catalog.cjs');
 
 const HOST = '127.0.0.1';
 
-// Content search boots when any of its three consumer features is on
-const contentSearchEnabled = () =>
-  config.featureEnabled('content_search') ||
-  config.featureEnabled('topic_segmentation') ||
-  config.featureEnabled('qa');
+// Whether a feature will actually run: switched on itself, or dragged in by
+// something that is. REQUIRED_BY is the transitive reverse of the dependency
+// graph, so this matches what features/resolver.py auto-enables at startup.
+const effectivelyEnabled = (id) =>
+  config.featureEnabled(id) || REQUIRED_BY[id].some((consumer) => config.featureEnabled(consumer));
 
-const gradingEnabled = () => config.featureEnabled('grading');
+const contentSearchEnabled = () => effectivelyEnabled('content_search');
+
+const gradingEnabled = () => effectivelyEnabled('grading');
 
 const SERVICES = [
   {

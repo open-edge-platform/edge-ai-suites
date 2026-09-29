@@ -111,15 +111,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
   const { audioBusy, videoBusy, isUploadEnabled, blocker: uploadBlocker } = usePipelineGate();
 
   // Check if video_analytics feature is enabled in backend
-  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasVideoAnalyticsFeature = featureGuard.hasAnyFeatureForInput('video');
   const hasReportFeature = featureGuard.hasFeature('report');
-  
+
   // Check if audio features are enabled
-  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
-                           featureGuard.hasFeature('summary') ||
-                           featureGuard.hasFeature('mindmap') ||
-                           featureGuard.hasFeature('topic_segmentation') ||
-                           featureGuard.hasFeature('report');
+  const hasAudioFeatures = featureGuard.hasAnyFeatureForInput('audio');
 
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
@@ -137,10 +133,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
     stopExistingMonitoring();
     
     // Only check audio devices if audio features are enabled
-    const hasAudioFeatures = featureGuard.hasFeature('asr') ||
-                             featureGuard.hasFeature('summary') ||
-                             featureGuard.hasFeature('mindmap');
-    
     if (hasAudioFeatures) {
       const checkAudioDevices = async () => {
         try {
@@ -164,7 +156,7 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ featureGuard, onViewReport, onVie
 
       checkAudioDevices();
     }
-  }, [dispatch, featureGuard]);
+  }, [dispatch, hasAudioFeatures]);
 
   useEffect(() => {
     if (justStoppedRecording) {

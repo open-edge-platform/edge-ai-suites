@@ -32,7 +32,8 @@ Key settings:
 
 ## Synchronize the Host Clock
 
-> **Note:** Replace `enp1s0` with the actual network interface name of the Intel i226
+> [!NOTE]
+> Replace `enp1s0` with the actual network interface name of the Intel i226
 > TSN-capable NIC connected to the TSN switch. Also ensure the interface has an IP address
 > assigned within the camera subnet before starting `ptp4l`; the UDP transport requires a
 > routable address to discover the Grandmaster.
@@ -49,7 +50,7 @@ Run the following two commands in **separate terminals**:
    sudo ptp4l -i enp1s0 -4 -E -s -m --priority1=255 --domain=0
    ```
 
-   > **Important Notes:**
+   > [!IMPORTANT]
    >
    > **IP Address on Host Interface:** If you are using VLANs, ensure that your host's network
    > interface (e.g., `enp1s0`) has some IP address assigned before

@@ -2,7 +2,7 @@
 
 ## Version 2026.2
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 This release removes the deprecated **Weld Defect Detection sample app**, adds **ViPPET
 integration** for deploying the Time Series Analytics Microservice, aligns naming for
@@ -35,7 +35,6 @@ various fixes and documentation improvements.
   upgraded to the latest available third-party versions in all applicable manifests.
 - **Documentation**: Multiple language, formatting, and editorial fixes applied across the
   Time Series user guides.
-
 
 ## Version 2026.1
 

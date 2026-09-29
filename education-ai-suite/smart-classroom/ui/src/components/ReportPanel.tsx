@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import {
   clearReportStartRequest,
@@ -22,22 +22,9 @@ import { useTranslation } from 'react-i18next';
 import type { FeatureGuard } from '../utils/featureGuards';
 import '../assets/css/ReportPanel.css';
 import { useTitleBarTheme } from '../hooks/useTitleBarTheme';
+import { reportUrlTransform } from '../utils/reportMarkdown';
 
 const activeReportSessions = new Set<string>();
-
-const env = (import.meta as any).env ?? {};
-const API_BASE_URL: string = (env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
-
-const reportUrlTransform = ((url: string) => {
-  if (url.startsWith('data:image/')) return url;
-  // Report markdown may contain image URLs like /report/{session}/mindmap-image.
-  // In dev/proxy setups those need an explicit backend base URL to avoid
-  // resolving against the frontend origin and returning 404.
-  if (url.startsWith('/report/')) {
-    return `${API_BASE_URL}${url}`;
-  }
-  return defaultUrlTransform(url);
-}) as any;
 
 const isManual = (f: TemplateFieldMeta) => f.input === 'manual';
 const isAlwaysOn = (f: TemplateFieldMeta) => !!f.always_on;

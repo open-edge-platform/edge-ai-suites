@@ -60,7 +60,8 @@ info field:
 Some metadata (such as the report generation time) is added automatically and is not shown as
 a toggleable field.
 
-> **Note:** Fields are split into two kinds. **Raw** fields (numbers, names, keywords, mind
+> [!NOTE]
+> Fields are split into two kinds. **Raw** fields (numbers, names, keywords, mind
 > map) are filled directly from measured data and are never invented by the AI. Only the
 > **Teaching Effectiveness** fields are written by the language model, using the class summary,
 > mind map, and segmentation as context.

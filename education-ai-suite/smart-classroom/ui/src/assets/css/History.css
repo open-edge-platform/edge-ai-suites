@@ -313,6 +313,24 @@
   word-break: break-word;
 }
 
+/* A stage whose output is still on disk: the name itself opens it, so the row
+   needs no extra column of "view" buttons. Stages with nothing to show stay
+   plain text, which is the only difference the teacher has to read. */
+.history-stage-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: var(--color-theme);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.history-stage-link:hover {
+  text-decoration-thickness: 2px;
+}
+
 .stage-text-done { color: #1e8449; }
 .stage-text-failed { color: #a93226; }
 .stage-text-interrupted { color: #b9770e; }

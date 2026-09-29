@@ -4,7 +4,7 @@
 
 Humanoid Toolkit v25.36 enhances model optimization capabilities with OpenVINO™ toolkit and provides typical workflows and examples, including Diffusion Policy (DP), Robotic Diffusion Transformer (RDT), Improved 3D Diffusion Policy (IDP3), Visual Servoing (CNS) and LLM Robotic Demo. This release has also updated the real-time optimized best-known configuration (BKC) on improving AI and control performance, and supporting the Intel® Arc™ B-series graphics card (B570).
 
-**New**
+**New**:
 
 - Updated real-time optimization BKC, including BIOS and runtime optimization, balancing performance with AI and control consolidation.
 - Added support for Intel® Arc™ B-series (Battlemage) graphics card (B570).
@@ -25,8 +25,7 @@ Humanoid Toolkit v25.36 enhances model optimization capabilities with OpenVINO�
   | Robotics Diffusion Transformer (RDT) ****robotics_diffusion_transformer**** | A RDT pipeline provided for evaluating the VLA model on the simulation   task                                                                                     |
   | LLM Robotics Demo ****llm_robotics_demo****                                 | A code generation demo for robotics, interacting with a chatbot utilizing AI   technologies such as large language models (Phi-4) and computer vision (SAM, CLIP) |
 
-
-**Improved**
+**Improved**:
 
 The following model algorithms were added and optimized by OpenVINO™ toolkit:
 
@@ -40,7 +39,7 @@ The following model algorithms were added and optimized by OpenVINO™ toolkit:
 | Improved 3D Diffusion Policy (iDP3) ****model_idp3****   | A diffusion policy model enhancing capabilities for 3D robotic manipulation tasks                                                                             |
 | Robotic Diffusion Transformer (RDT-1B) ****model_rdt**** | A diffusion-based foundation model for robotic manipulation                                                                                                   |
 
-**Known Issues**
+**Known Issues**:
 
 - ACRN hypervisor feature and performance
 

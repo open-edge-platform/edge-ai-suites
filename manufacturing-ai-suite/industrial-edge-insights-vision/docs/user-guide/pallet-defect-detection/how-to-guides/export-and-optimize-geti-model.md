@@ -14,7 +14,8 @@ Before you begin, ensure you have the following:
 
   ![Download PyTorch Weights from Geti™](../_assets/download_model_pytorch_weights.png)
 
-  _Note: Image is for illustration purposes only._
+  > [!NOTE]
+  > Image is for illustration purposes only.
 
 - A **COCO-format dataset** (`.zip`) used during training (required for post-training optimization)
 
@@ -22,7 +23,8 @@ Before you begin, ensure you have the following:
 
   ![Download COCO Dataset - Step 2](../_assets/download_coco_datasets2.png)
 
-  _Note: Images are for illustration purposes only._
+  > [!NOTE]
+  > Images are for illustration purposes only.
 
 - [Git](https://git-scm.com/) installed
 - Internet access to download dependencies
@@ -188,7 +190,8 @@ Both files can be used directly with the OpenVINO™ inference engine. The INT8 
 
 ![Generated Model Output](../_assets/generated_model.png)
 
-_Note: Image is for illustration purposes only._
+> [!NOTE]
+> Image is for illustration purposes only.
 
 ---
 

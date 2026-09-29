@@ -9,6 +9,7 @@ from fastapi.responses import StreamingResponse
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
 from utils.config_loader import config
+from utils.pipeline_catalog import FEATURE_STAGE
 from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ async def summarize_audio(request: SummaryRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
-        with stage_tracker(pipeline.session_id, "summarize") as stage:
+        with stage_tracker(pipeline.session_id, FEATURE_STAGE["summary"]) as stage:
             warned_partial_board = False
             for item in pipeline.run_summarizer():
                 # A segmented summary yields progress dicts before any token.
@@ -52,7 +53,7 @@ class SummaryFeature:
 
     id: str = "summary"
     requires: List[str] = ["text_gen"]
-    depends_on: List[str] = ["asr"]
+    # label / depends_on / stage: utils/pipeline_catalog.py
     router: APIRouter = router
 
     def __init__(self) -> None:

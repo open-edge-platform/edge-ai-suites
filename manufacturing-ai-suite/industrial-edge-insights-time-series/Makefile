@@ -240,6 +240,7 @@ up_mqtt_ingestion: check_env_variables down
 		for i in $$(seq 1 $(num_of_streams)); do \
 			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP";\
 			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
+			docker update --restart unless-stopped ia-mqtt-publisher-$$i; \
 		done; \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi
@@ -353,8 +354,10 @@ gen_helm_charts_targz: gen_helm_charts
 .PHONY: push_helm_charts
 push_helm_charts: gen_helm_charts_targz
 	@echo "Pushing helm charts for ${SAMPLE_APP}"
-	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
-	cd ..
+	@set -eu; \
+	set -- helm-packages/*.tgz; \
+	[ "$$#" -eq 1 ] && [ -e "$$1" ] || { echo "Expected exactly one Helm chart package in helm-packages/ (run 'make gen_helm_charts_targz')" >&2; exit 1; }; \
+	helm push "$$1" "$(HELM_REGISTRY)" && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"
 
 # Help
 .PHONY: help

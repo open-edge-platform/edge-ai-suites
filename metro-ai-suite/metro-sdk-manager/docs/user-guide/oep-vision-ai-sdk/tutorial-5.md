@@ -130,7 +130,8 @@ echo "OEP Vision AI pipeline started with PID: $PIPELINE_PID"
 echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
-> **Note:** This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
+> [!NOTE]
+> This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
 
 **Expected Console Output:**
 

@@ -10,6 +10,7 @@ from pipeline import Pipeline
 from utils.runtime_config_loader import RuntimeConfig
 from utils.scp_sender import get_scp_sender
 from utils.session_state_manager import SessionState
+from utils.pipeline_catalog import FEATURE_STAGE
 from utils.stage_tracker import stage_tracker
 from utils.telegram_sender import get_sender
 
@@ -28,7 +29,7 @@ def content_segmentation(request: SummaryRequest):
     logger.info(f"   Session state: {session_state}")
 
     try:
-        with stage_tracker(pipeline.session_id, "segmentation"):
+        with stage_tracker(pipeline.session_id, FEATURE_STAGE["topic_segmentation"]):
             contents_json = pipeline.run_content_segmentation()
         logger.info("✅ content segmentation generated successfully.")
 
@@ -62,7 +63,7 @@ class SegmentationFeature:
 
     id: str = "topic_segmentation"
     requires: List[str] = ["text_gen"]
-    depends_on: List[str] = ["asr", "content_search"]
+    # label / depends_on / stage: utils/pipeline_catalog.py
     router: APIRouter = router
 
     def build(self) -> None:

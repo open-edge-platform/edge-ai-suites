@@ -1,9 +1,9 @@
 # NICU Warmer — Intelligent Patient Monitoring
 
-> Note:
+> [!NOTE]
 > This application is for **reference and evaluation purposes only**. It is
-  **not intended for direct use in clinical or diagnostic environments** and is not
-  validated for such a purpose.
+> **not intended for direct use in clinical or diagnostic environments** and is not
+> validated for such a purpose.
 
 The NICU Warmer application is a reference solution that demonstrates how
 **multiple AI models can run simultaneously in a single GStreamer pipeline on Intel® hardware**,

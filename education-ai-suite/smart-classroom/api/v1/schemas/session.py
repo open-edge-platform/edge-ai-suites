@@ -75,6 +75,26 @@ class StageEventsResponse(BaseModel):
     events: list[StageEvent]
 
 
+class SessionArtifact(BaseModel):
+    stage: str
+    kind: Literal["transcript", "markdown", "mindmap", "topics", "stats"]
+    filename: str
+    size_bytes: int
+
+
+class ArtifactListResponse(BaseModel):
+    session_id: str
+    # Only the artifacts that exist; a stage that never ran contributes nothing.
+    artifacts: list[SessionArtifact]
+
+
+class ArtifactTextResponse(SessionArtifact):
+    session_id: str
+    content: str
+    # True when the file was longer than the preview will hand back in one go.
+    truncated: bool = False
+
+
 class ProcessResponse(BaseModel):
     session_id: str
     stages: dict | list | None = None

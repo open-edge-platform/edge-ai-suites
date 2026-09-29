@@ -14,7 +14,8 @@ git clone https://github.com/open-edge-platform/edge-node-infrastructure-bluepri
 cd edge-node-infrastructure-blueprint
 ```
 
-> **Note:** If your development environment is behind a firewall, add proxy settings to `proxy.env` in the repository root before building. To skip proxy entirely, pass `skip-proxy=true` to `make`.
+> [!NOTE]
+> If your development environment is behind a firewall, add proxy settings to `proxy.env` in the repository root before building. To skip proxy entirely, pass `skip-proxy=true` to `make`.
 
 ## Step 2: Build the OS image
 

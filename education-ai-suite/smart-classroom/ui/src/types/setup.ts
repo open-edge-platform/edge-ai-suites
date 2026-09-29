@@ -34,6 +34,15 @@ export interface SetupStep {
   hint: string | null;
 }
 
+/**
+ * Codes a failed setup action can carry, for failures the screen can offer a
+ * way out of. Mirrors SETUP_ERROR in electron/services/setup-runner.cjs.
+ */
+export const SETUP_ERROR = {
+  /** The Python environment cannot be touched while the backend is using it. */
+  BACKEND_RUNNING: 'backend-running',
+} as const;
+
 export interface SetupDescription {
   sections: SetupSection[];
   steps: SetupStep[];

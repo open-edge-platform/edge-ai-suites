@@ -410,7 +410,8 @@ uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ros -
 uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
-> **Note:** CycloneDDS peer discovery over a LAN typically takes **30–60 seconds** before the remote graph is visible and topic messages start being logged. Use `DURATION=180` or longer for remote sessions to ensure meaningful data capture.
+> [!NOTE]
+> CycloneDDS peer discovery over a LAN typically takes **30–60 seconds** before the remote graph is visible and topic messages start being logged. Use `DURATION=180` or longer for remote sessions to ensure meaningful data capture.
 
 Results are stored and visualized locally on the monitoring machine.
 

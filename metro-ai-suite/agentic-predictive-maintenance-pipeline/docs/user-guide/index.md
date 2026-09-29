@@ -63,6 +63,7 @@ build-from-source
 training-with-geti
 api-reference
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
+
 :::
 hide_directive-->

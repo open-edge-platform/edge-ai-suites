@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { LogLine } from '../types/services';
 import type { SetupSection, SetupStep } from '../types/setup';
-import { toMessage, unwrap } from './ipcResult';
+import { toCode, toMessage, unwrap } from './ipcResult';
 
 export const isSetupManagerAvailable = (): boolean => !!window.electronAPI?.setup;
 
@@ -25,6 +25,9 @@ export function useSetup() {
   const [sections, setSections] = useState<SetupSection[]>([]);
   const [steps, setSteps] = useState<SetupStep[]>([]);
   const [error, setError] = useState('');
+  // Set alongside the message when the main process named the failure, so the
+  // screen can offer the fix instead of only describing it.
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -53,10 +56,12 @@ export function useSetup() {
   const check = useCallback(async () => {
     setChecking(true);
     setError('');
+    setErrorCode(null);
     try {
       setSteps(await checkSetup());
     } catch (e) {
       setError(toMessage(e));
+      setErrorCode(toCode(e));
     } finally {
       setChecking(false);
     }
@@ -65,18 +70,34 @@ export function useSetup() {
   const run = useCallback(async (stepId: string, actionId: string) => {
     setBusyId(stepId);
     setError('');
+    setErrorCode(null);
     try {
       await runSetupStep(stepId, actionId);
       return true;
     } catch (e) {
       setError(toMessage(e));
+      setErrorCode(toCode(e));
       return false;
     } finally {
       setBusyId(null);
     }
   }, []);
 
-  return { sections, steps, error, busyId, checking, check, run, cancel: cancelSetup, clearError: () => setError('') };
+  return {
+    sections,
+    steps,
+    error,
+    errorCode,
+    busyId,
+    checking,
+    check,
+    run,
+    cancel: cancelSetup,
+    clearError: () => {
+      setError('');
+      setErrorCode(null);
+    },
+  };
 }
 
 /** Output of the running setup step, seeded from the main-process buffer. */

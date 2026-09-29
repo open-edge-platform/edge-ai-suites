@@ -120,7 +120,8 @@ benchmark. You can stop any running pipelines with the `sample_stop.sh` script.
 
 ## Step 3: Run the Benchmark
 
-> **Note:** The default parameters are set based on best know methods recommended by Edge
+> [!NOTE]
+> The default parameters are set based on best know methods recommended by Edge
 > Workloads and Benchamarks group for workload with similar characteristics. These parameters
 > can be modified when starting the pipelines.
 

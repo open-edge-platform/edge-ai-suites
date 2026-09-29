@@ -69,6 +69,7 @@ services:
   postgres:
     image: postgres:15
     container_name: vms-adapter-postgres
+    user: "999:999"
     command: ["postgres", "-p", "${PG_PORT:-5434}"]
     volumes:
       - pgdata:/var/lib/postgresql/data

@@ -49,21 +49,17 @@ const App: React.FC = () => {
   useStageDrivenChain(guard);
 
   // Check if any main features are enabled
-  const hasMainFeatures = featuresLoaded && guard ? 
-    ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'].some(f => guard.hasFeature(f)) : 
+  const hasMainFeatures = featuresLoaded && guard ?
+    guard.hasAnyFeatureForScreen('main') :
     true; // Default to true during loading
 
   // Auto-switch to content-search or grading screen if only those features are enabled
   useEffect(() => {
     if (!featuresLoaded || !guard) return;
 
-    const mainFeatures = ['asr', 'summary', 'mindmap', 'topic_segmentation', 'video_analytics', 'report'];
-    const contentSearchFeatures = ['content_search', 'qa'];
-    const gradingFeatures = ['grading'];
-
-    const hasMainFeature = mainFeatures.some(f => guard.hasFeature(f));
-    const hasContentSearchFeature = contentSearchFeatures.some(f => guard.hasFeature(f));
-    const hasGradingFeature = gradingFeatures.some(f => guard.hasFeature(f));
+    const hasMainFeature = guard.hasAnyFeatureForScreen('main');
+    const hasContentSearchFeature = guard.hasAnyFeatureForScreen('content_search');
+    const hasGradingFeature = guard.hasAnyFeatureForScreen('grading');
 
     // If main features are disabled, auto-switch based on what's available
     if (!hasMainFeature) {

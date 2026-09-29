@@ -20,6 +20,7 @@ CI/CD pipeline.
 
    Intel Optimized Robotics Solutions and Ingredients <components/optimized_solutions/index>
    Real-time Determinism <components/realtime_determinism/index>
+   KVM Virtualization <components/virtualization/index>
    Benchmarking <components/benchmarking/index>
    Security <components/security/index>
    Middleware <components/middleware/index>

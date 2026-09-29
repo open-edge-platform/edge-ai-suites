@@ -60,6 +60,7 @@
       "allReadyRunning": "Everything is ready and the backend is running.",
       "startBackend": "Start backend",
       "backToGetStarted": "Back to Get started",
+      "openServices": "Open Services",
       "sections": {
         "system": "System and drivers",
         "software": "Software and environment"
@@ -793,6 +794,23 @@
     "detail": "Detail",
     "loading": "Loading…",
     "noEvents": "No stage timings were recorded for this session.",
+    "openFile": "Open {{file}}",
+    "fileEmpty": "This file is empty.",
+    "fileTruncated": "This file is too long to show in full; the beginning is below.",
+    "fileUnreadable": "This file could not be read: {{reason}}",
+    "kindUnknown": "This app cannot lay out {{kind}} files yet; showing it raw.",
+    "mindmapUnreadable": "This mind map could not be drawn from its file.",
+    "topicTime": "When",
+    "topic": "Topic",
+    "mostHands": "Most hands raised",
+    "stageName": {
+      "transcribe": "Transcript",
+      "summarize": "Summary",
+      "mindmap": "Mind map",
+      "va": "Video analytics",
+      "segmentation": "Topic segmentation",
+      "report": "Report"
+    },
     "delete": "Delete",
     "confirmDelete": "Delete this session and every file it produced? This cannot be undone.",
     "markFailed": "Mark failed",

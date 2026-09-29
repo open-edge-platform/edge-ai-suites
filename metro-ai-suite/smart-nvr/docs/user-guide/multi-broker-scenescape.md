@@ -118,7 +118,8 @@ source setup.sh start-nvr
 after startup via `POST /brokers/`, or pre-populate `brokers.yaml` before running
 `start-nvr` to load them automatically.
 
-> **Note:** If `brokers.yaml` is absent and `SCENESCAPE_MQTT_BROKER` is not set,
+> [!NOTE]
+> If `brokers.yaml` is absent and `SCENESCAPE_MQTT_BROKER` is not set,
 > no MQTT connections are established on startup. Add brokers via `POST /brokers/`
 > after the stack is running.
 

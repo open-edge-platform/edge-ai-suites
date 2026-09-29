@@ -55,9 +55,10 @@ corresponding `make up-*` target (each rewrites the relevant `.env` vars).
 - `rtsp://localhost:8554/uav-1/ir` — Active-IR stereo stream — RealSense mode only
 - `rtsp://localhost:8554/uav-1/depth` — Colorized depth stream — RealSense mode only
 
-Note: `realsense_camera_bridge.py` only wires up IR + depth today. Color/IMU (Gyro/Accel)/Pose are additional
-`librealsense2` streams the camera hardware may support (model-dependent) but are not currently captured —
-enabling them would require extending the bridge with the corresponding `rs.stream.*` config.
+> [!NOTE]
+> `realsense_camera_bridge.py` only wires up IR + depth today. Color/IMU (Gyro/Accel)/Pose are additional
+> `librealsense2` streams the camera hardware may support (model-dependent) but are not currently captured —
+> enabling them would require extending the bridge with the corresponding `rs.stream.*` config.
 
 ## MQTT Topics
 All topics use the pattern `uav/{uav_id}/...` (default `uav_id` = `uav-1`) on broker `localhost:1884`.

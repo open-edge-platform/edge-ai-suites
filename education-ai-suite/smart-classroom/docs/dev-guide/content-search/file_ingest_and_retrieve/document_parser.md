@@ -40,7 +40,8 @@ Pass a LlamaIndex-compatible embedding model to enable `SemanticSplitterNodePars
 
 A bilingual sentence splitter is used internally, supporting both **Chinese** (。！？；……) and **English** (`. ! ?`) punctuation boundaries.
 
-> **Note:** When `embed_model` is provided, `chunk_size` and `chunk_overlap` are ignored.
+> [!NOTE]
+> When `embed_model` is provided, `chunk_size` and `chunk_overlap` are ignored.
 
 | Parameter | Default | Description |
 |---|---|---|

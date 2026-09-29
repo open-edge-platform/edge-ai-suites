@@ -44,7 +44,8 @@
    docker compose -f compose_milvus.yaml up -d
    ```
 
-> **Note**: Removing the `ov-models` volume will delete any previously
+> [!NOTE]
+> Removing the `ov-models` volume will delete any previously
 > cached/converted models. The VLM service will automatically re-download and
 > convert models on the next startup, which may take additional time depending
 > on your internet connection and the model size.

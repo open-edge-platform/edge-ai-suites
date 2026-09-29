@@ -29,6 +29,11 @@ This section lists the hardware, software, and network requirements for running 
     - Intel Arc Graphics (Meteor Lake iGPU) for detection workloads.
     - Intel NPU (AI Boost) for action recognition workload.
 
+  - **NPU Requirements (for Intel Core Ultra and newer platforms):**
+    - Intel NPU supported by the `linux-npu-driver` stack (minimum version 1.34+ recommended for NVL/Wildcat Lake platforms).
+    - Level Zero loader (`libze1`) version 1.27.0 or newer.
+    - The containerized NPU workloads require Level Zero to load the NPU driver via the `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` environment variable (automatically configured by `run_compose.sh`).
+
   - The host must expose GPU and NPU devices to Docker:
     - `/dev/dri` (GPU)
     - `/dev/accel/accel0` (NPU)
@@ -115,3 +120,50 @@ The application uses several AI workloads, each with its own model:
 
 - Any modern browser (Chrome, Firefox, Edge) with JavaScript enabled.
 - WebSocket/SSE support required for real-time data streaming.
+
+## Troubleshooting NPU Issues
+
+### Segmentation Fault with NPU Workloads
+
+If the application crashes with a segmentation fault when using NPU devices:
+
+1. **Verify NPU driver version:**
+   ```bash
+   # Check if NPU device exists
+   ls -la /dev/accel/accel0
+   
+   # Check driver version (if available)
+   cat /sys/module/intel_vpu/version
+   ```
+
+2. **Ensure Level Zero NPU driver is properly configured:**
+   - The `ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so` environment variable is required for containerized NPU workloads.
+   - This is automatically set by the `run_compose.sh` script when NPU devices are detected.
+
+3. **Verify render group permissions:**
+   ```bash
+   # Check render group exists
+   getent group render
+   
+   # Verify your user is in render group (or docker has access)
+   groups $(whoami)
+   ```
+
+4. **Check device permissions:**
+   ```bash
+   ls -la /dev/dri /dev/accel/accel0
+   ```
+   Both devices should be accessible (typically `crw-rw----` with `root:render` ownership).
+
+5. **Fallback to CPU:**
+   If NPU issues persist, you can temporarily disable NPU by using a different device profile:
+   ```bash
+   export DEVICE_ENV=configs/res/all-gpu.env
+   make run
+   ```
+
+For additional support, check the application logs:
+```bash
+docker logs nicu-dlsps
+docker logs nicu-backend
+```

@@ -24,6 +24,7 @@ from utils.audio_util import save_audio_file
 from utils.locks import video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from components.va.media_service import ensure_media_service_running
+from utils.pipeline_catalog import FEATURE_STAGE
 from utils.session_manager import PATH_SAFE_SESSION_ID, generate_session_id
 from dto.search_dto import SearchRequest
 from utils.session_state_manager import SessionState
@@ -42,19 +43,20 @@ def _set_va_stage(session_id, status: str, detail: str | None = None) -> None:
     """Record the video-analytics stage, both on the session row and as an event."""
     if not session_id:
         return
+    stage = FEATURE_STAGE["video_analytics"]
     try:
         from utils.stage_tracker import stage_finished, stage_started
         if status == "running":
-            stage_started(session_id, "va")
+            stage_started(session_id, stage)
         else:
             stage_finished(
-                session_id, "va", status,
+                session_id, stage, status,
                 error_class="VideoAnalyticsError" if detail else None,
                 error_detail=detail,
             )
     except Exception:
         logger.warning(
-            f"[stage] {session_id} va: failed to record '{status}'", exc_info=True
+            f"[stage] {session_id} {stage}: failed to record '{status}'", exc_info=True
         )
 
 
@@ -89,6 +91,7 @@ def get_features(request: Request):
         descriptor = feature.ui_descriptor()
         descriptor["dependency"] = list(feature.depends_on)
         descriptor["requires"] = list(feature.requires)
+        descriptor["stage"] = feature.stage
         features.append(descriptor)
 
     return JSONResponse(

@@ -27,7 +27,7 @@ class BoardOCRFeature:
 
     id: str = "board_ocr"
     requires: List[str] = ["ocr", "text_gen"]
-    depends_on: List[str] = ["video_analytics"]
+    # label / depends_on / stage: utils/pipeline_catalog.py
     router: APIRouter = board_ocr_router
 
     def build(self) -> None:

@@ -509,7 +509,8 @@ website. The driver consists of the following packages:
   this library implements the Level Zero API to interact with the NPU
   hardware.
 
-> **Note:** The installation instructions on the
+> [!NOTE]
+> The installation instructions on the
 > [Linux NPU Driver](https://github.com/intel/linux-npu-driver/releases)
 > website download the ``*.deb`` files for these components,
 > and install the packages from the downloaded files. Installation through this method

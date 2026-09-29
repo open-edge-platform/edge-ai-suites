@@ -28,14 +28,16 @@ Before You Begin, ensure the following:
 - Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
-> **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
+> [!NOTE]
+> When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 **Additional Prerequisites for NPU Deployment:**
 
 - Intel CPU with VT-x, VT-d, integrated GPU, and NPU (e.g. Meteor Lake or later), with IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, DRM/i915 or xe driver support, and Intel NPU driver
 
-> **Note**: When NPU passthrough is enabled with Trusted Compute, both the iGPU and the NPU are exclusively bound to the Trusted Compute VM and are unavailable to the host or other workloads. The GPU is required alongside the NPU for video decoding.
+> [!NOTE]
+> When NPU passthrough is enabled with Trusted Compute, both the iGPU and the NPU are exclusively bound to the Trusted Compute VM and are unavailable to the host or other workloads. The GPU is required alongside the NPU for video decoding.
 
 ## 1. Install Trusted Compute
 
@@ -60,7 +62,8 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
 **Optional:** Pull the helm chart and replace the existing helm-chart folder with it.
-> **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/chart`
+> [!NOTE]
+> The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/chart`
 
 ```bash
 # Navigate to Smart Intersection directory
@@ -170,7 +173,8 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
 
-> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
+> [!NOTE]
+> Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
 
 ---
 
@@ -178,7 +182,8 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 #### Step 1: Bind GPU to vfio-pci
 
-> **Note:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+> [!NOTE]
+> Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
 
 Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver on each GPU-enabled k3s host.
 
@@ -208,7 +213,8 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
 
-> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
+> [!NOTE]
+> Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
 
 ---
 
@@ -216,7 +222,8 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 
 #### Step 1: Bind GPU to vfio-pci
 
-> **Warning:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+> [!WARNING]
+> Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
 
 Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver:
 
@@ -262,7 +269,8 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
 
-> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
+> [!NOTE]
+> Using `global.storageClassName=""` makes the deployment use whatever default storage class exists on your cluster.
 
 ---
 
@@ -311,7 +319,8 @@ You should see the DL Streamer Pipeline Server pods running with the Trusted Com
 - **URL**: `https://<HOST_IP>:30443/api/pipelines/status`
 - **API Access**: No authentication required for status endpoints
 
-> **Note:** For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
+> [!NOTE]
+> For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
 
 > **Security Note:** The application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
 
@@ -368,7 +377,8 @@ kubectl get pvc -n smart-intersection --no-headers | awk '{print $1}' | xargs -I
 kubectl delete storageclass hostpath local-storage standard local-path
 ```
 
-> **Note:** This complete cleanup will remove storage provisioning from your cluster. You will need to reinstall the storage provisioner for future deployments that require persistent volumes.
+> [!NOTE]
+> This complete cleanup will remove storage provisioning from your cluster. You will need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
 ## Learn More
 

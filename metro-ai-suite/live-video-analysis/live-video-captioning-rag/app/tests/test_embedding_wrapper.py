@@ -7,6 +7,7 @@ from pathlib import Path
 from types import ModuleType
 import importlib.util
 import sys
+import pytest
 
 
 class _DummyLogger:
@@ -29,7 +30,7 @@ def _load_embedding_wrapper_module(monkeypatch, embedding_length=0, no_proxy_val
     cfg_mod = ModuleType("backend.config")
     cfg_mod.EMBEDDING_LENGTH = embedding_length
 
-    logger_mod = ModuleType("backend.logger")
+    logger_mod = ModuleType("backend.utils.logger")
     logger_mod.logger = _DummyLogger()
 
     if no_proxy_value is not None:
@@ -38,7 +39,7 @@ def _load_embedding_wrapper_module(monkeypatch, embedding_length=0, no_proxy_val
     monkeypatch.setitem(sys.modules, "backend", backend_pkg)
     monkeypatch.setitem(sys.modules, "backend.services", services_pkg)
     monkeypatch.setitem(sys.modules, "backend.config", cfg_mod)
-    monkeypatch.setitem(sys.modules, "backend.logger", logger_mod)
+    monkeypatch.setitem(sys.modules, "backend.utils.logger", logger_mod)
 
     spec = importlib.util.spec_from_file_location("backend.services.embedding_wrapper", module_path)
     module = importlib.util.module_from_spec(spec)
@@ -123,3 +124,45 @@ class TestEmbeddingAPI:
 
         api = mod.EmbeddingAPI(api_url="http://embeddings:8000/embeddings", model_name="m")
         assert api.get_embedding_length() == 4
+
+    def test_post_embeddings_raises_for_non_list_payload(self, monkeypatch):
+        """A non-list embedding payload should raise ValueError."""
+        mod = _load_embedding_wrapper_module(monkeypatch)
+
+        class _Response:
+            status_code = 200
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                return {"embedding": "not-a-list"}
+
+        monkeypatch.setattr(mod.requests, "post", lambda *_a, **_kw: _Response())
+
+        api = mod.EmbeddingAPI(api_url="http://embeddings:8000/embeddings", model_name="m")
+        with pytest.raises(ValueError, match="unexpected payload"):
+            api.embed_documents(["hello"])
+
+    def test_post_embeddings_wraps_request_exception(self, monkeypatch):
+        """Request exceptions should be wrapped with a stable service-level error message."""
+        mod = _load_embedding_wrapper_module(monkeypatch)
+
+        def _raise_request_exception(*_a, **_kw):
+            raise mod.requests.RequestException("boom")
+
+        monkeypatch.setattr(mod.requests, "post", _raise_request_exception)
+
+        api = mod.EmbeddingAPI(api_url="http://embeddings:8000/embeddings", model_name="m")
+        with pytest.raises(Exception, match="Error creating embedding"):
+            api.embed_documents(["hello"])
+
+    def test_get_embedding_length_raises_for_invalid_probe_response(self, monkeypatch):
+        """Probe responses must be a non-empty list of vectors."""
+        mod = _load_embedding_wrapper_module(monkeypatch, embedding_length=0)
+        api = mod.EmbeddingAPI(api_url="http://embeddings:8000/embeddings", model_name="m")
+
+        monkeypatch.setattr(api, "embed_documents", lambda _texts: [])
+
+        with pytest.raises(ValueError, match="invalid probe response"):
+            api.get_embedding_length()

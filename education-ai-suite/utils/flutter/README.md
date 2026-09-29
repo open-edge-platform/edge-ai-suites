@@ -151,8 +151,8 @@ The Flutter app acts as a REST API client to the Content Search backend, which d
 
 **For end users who prefer graphical interfaces:**
 
-> **Important — PowerShell required**
-> All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
+> [!IMPORTANT]
+> PowerShell required — all `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
 
 1. **Setup** (one-time):
    ```powershell
@@ -277,8 +277,8 @@ content_search:
 
 ## Quick Start
 
-> **Important — PowerShell required**
-> All `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
+> [!IMPORTANT]
+> PowerShell required — all `.ps1` scripts must be run in **PowerShell (Admin Mode)**.
 
 ```powershell
 # Clone the repository (if not already done)

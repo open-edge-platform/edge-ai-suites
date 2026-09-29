@@ -232,7 +232,7 @@ Edit your Telegraf configuration file:
 - `IDENTIFIER` with your OPC UA server node identifier
 - `USERNAME` and `PASSWORD` with your OPC UA server credentials
 
-> **Note:**
+> [!NOTE]
 > Make sure your OPC UA server exposes nodes for both `wind_speed` and `grid_active_power`.
 > These nodes must be available for data collection.
 

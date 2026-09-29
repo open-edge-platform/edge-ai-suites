@@ -4,7 +4,7 @@
 
 Humanoid Toolkit v25.15 provides necessary software framework, libraries, tools, BKC, tutorials and example codes to facilitate humanoid solution development on Intel® Core™ Ultra Series 2 processors (Arrow Lake-H), It provides Intel Linux LTS kernel v6.12.8 with Preempt-RT, and supports for Canonical Ubuntu OS 22.04, introduces initial support for ROS2 Humble software libraries and tools. It supports many models optimization with OpenVINO™ toolkit, and provides typical workflows and examples including ACT manipulation, ORB-SLAM3, etc.
 
-**New**
+**New**:
 
 - Provided Linux OS 6.12.8 BSP with Preempt-RT
 - Provided Real-time optimization BKC
@@ -19,8 +19,7 @@ Humanoid Toolkit v25.15 provides necessary software framework, libraries, tools,
   | [Imitation Learning - ACT](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html) | Imitation learning pipeline using Action Chunking with Transformers(ACT) algorithm to train and evaluate in simulator or real robot environment with Intel optimization |
   | [VSLAM: ORB-SLAM3](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/ORB_VSLAM.html) | One of popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models |
 
-
-**Improved**
+**Improved**:
 
 The following model algorithms were optimized by OpenVINO™ toolkit:
 
@@ -43,6 +42,6 @@ The following model algorithms were optimized by OpenVINO™ toolkit:
 | Bird's Eye View Perception: Fast-BEV ****model_fastbev****                  | Obtaining a BEV perception is to gain a comprehensive understanding of the spatial layout and relationships between objects in a scene                                |
 | Monocular Depth Estimation: Depth Anything V2 ****model_depthanythingv2**** | A powerful tool that leverages deep learning to infer 3D information from 2D images                                                                                   |
 
-**Known Issues**
+**Known Issues**:
 
 - There is a known deadlock risk and limitation to use ``intel_gpu_top`` to read i915 perf event in Preempt-RT kernel, it will be fixed with next release.

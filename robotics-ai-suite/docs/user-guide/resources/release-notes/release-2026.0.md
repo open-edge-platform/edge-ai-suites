@@ -2,13 +2,13 @@
 
 ## Autonomous Mobile Robot 2026.0
 
-**April 01, 2026**
+**Release Date**: April 01, 2026
 
 Autonomous Mobile Robot has been updated to fully support ROS 2 Jazzy. This brings latest
 generation ROS support on the latest Intel silicon, enabling workloads to take the
 advantage of hardware accelerators such as the GPU and NPU.
 
-**New**
+**New**:
 
 - Add support for ROS 2 Jazzy across all components.
 - **Warehouse Pick-and-Place Simulation**
@@ -81,7 +81,7 @@ advantage of hardware accelerators such as the GPU and NPU.
   - Unified entry point (`monitor_stack.py`) and an interactive `quickstart` launcher for guided onboarding.
   - Supports ROS2 Humble and Jazzy.
 
-**Improved**
+**Improved**:
 
 - **Robot configuration (robot_config)**
   - Refactor robot configuration for Gazebo Harmonic compatibility.
@@ -116,7 +116,7 @@ advantage of hardware accelerators such as the GPU and NPU.
   - Update `CMakeLists.txt` to support both Humble and Jazzy with Gazebo Harmonic on Ubuntu 22.04 and 24.04 respectively.
   - Update Makefile to include the `turtlebot3_simulations` package for Jazzy builds.
 
-**Fixed**
+**Fixed**:
 
 - **Debian Packaging**
   - Fix debian/rules executable permissions (from 644 to 755) across all packages
@@ -137,7 +137,7 @@ designed to serve as a "general-purpose AI brain" for diverse robotic hardware.
 The model represents a significant progress in integrating advanced reasoning
 with precise physical control capabilities.
 
-**New**
+**New**:
 
 - [OpenVINO](https://docs.openvino.ai) Integration: Enable Pi0.5
   pipeline policy with OpenVINO inference optimized on Intel integrated GPU
@@ -149,7 +149,7 @@ with precise physical control capabilities.
 - Real-Time Chunking Demo: Demonstrate Pi0.5 with Real-Time
   Chunking (RTC) for accelerated inference on Intel Platforms.
 
-**Known Issues**
+**Known Issues**:
 
 - `CL_OUT_OF_RESOURCES` throws an exception when running the Pi0.5
   model inference with the i915 driver on an Intel Ultra 2 Platform.

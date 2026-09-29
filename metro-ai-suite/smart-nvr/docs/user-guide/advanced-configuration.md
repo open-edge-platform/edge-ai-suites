@@ -24,7 +24,7 @@ export VLM_SERVING_PORT=<vlm-serving-port>
 
 Re-run the application after [configuring the base environment](./get-started.md#step-2-configure-environment).
 
-> **Important:**
+> [!IMPORTANT]
 >
 > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
 > - Requires VLM microservice to be running.

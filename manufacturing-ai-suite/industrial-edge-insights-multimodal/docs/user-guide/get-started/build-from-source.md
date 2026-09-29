@@ -18,7 +18,7 @@ before proceeding with the following steps.
    docker compose build
    ```
 
-   > **Note:**
+   > [!NOTE]
    > To include copyleft licensed sources when building the Docker image, use the below command:
    >
    > ```bash
@@ -32,10 +32,10 @@ before proceeding with the following steps.
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
    # build
-   make build # builds only data simulator and fusion analytics docker images
+   make build # builds only weld data simulator, fusion analytics, insights workbench and multimodal agent ui images
    ```
 
-   > **Note:**
+   > [!NOTE]
    > To include copyleft licensed sources when building the Docker images, use the below command:
    >
    > ```bash

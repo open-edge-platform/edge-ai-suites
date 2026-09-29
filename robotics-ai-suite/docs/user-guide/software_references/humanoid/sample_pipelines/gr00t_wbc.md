@@ -39,7 +39,8 @@ python3 download_from_hf.py
 
 This downloads the default deployment models — planner, encoder, and decoder — into `gear_sonic_deploy/`.
 
-> **Tip:** If the download fails or stalls due to a proxy/network issue reaching Hugging Face, try switching to a mirror endpoint before re-running the script:
+> [!TIP]
+> If the download fails or stalls due to a proxy/network issue reaching Hugging Face, try switching to a mirror endpoint before re-running the script:
 > ```bash
 > export HF_ENDPOINT="https://hf-mirror.com"
 > ```
@@ -72,7 +73,8 @@ bash install_scripts/install_mujoco_sim.sh --ov
 
 This creates a lightweight `.venv_sim` virtual environment with only the packages needed for the simulator (MuJoCo, Unitree SDK2, etc.).
 
-> **Tip:** Suggest run the MuJoCo simulator on a local display, not over a remote connection (SSH X11 forwarding, remote desktop, etc.). Remote rendering adds its own latency/jitter, which can make a correct motion (walking, running, dancing) look wrong.
+> [!TIP]
+> Suggest run the MuJoCo simulator on a local display, not over a remote connection (SSH X11 forwarding, remote desktop, etc.). Remote rendering adds its own latency/jitter, which can make a correct motion (walking, running, dancing) look wrong.
 
 ### Run the basic SONIC test
 

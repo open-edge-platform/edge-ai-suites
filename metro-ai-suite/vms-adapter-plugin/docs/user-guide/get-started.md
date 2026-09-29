@@ -33,7 +33,8 @@ Check the [folder layout](#folder-layout) to familiarize yourself with the code 
 
 ## Step 1 — Start Live Video Captioning (LVC)
 
-> **Note:** Skip this step if you are only using Loitering Detection.
+> [!NOTE]
+> Skip this step if you are only using Loitering Detection.
 
 Clone and start the LVC application from its own directory. LVC must be running before VAP
 starts, because VAP fetches the LVC OpenAPI schema at startup to build the analytics
@@ -61,7 +62,8 @@ curl http://localhost:4173/health
 
 ## Step 2 — Start Loitering Detection
 
-> **Note:** Skip this step if you are only using Live Video Captioning.
+> [!NOTE]
+> Skip this step if you are only using Live Video Captioning.
 
 Loitering Detection is a user-provided application based on the DL Streamer Pipeline Server. Follow the [Loitering Detection Get Started guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/get-started.html) to bring up the application. Ensure all containers are running, but do not start the pipelines yet. The following services must be reachable from the VAP backend container:
 
@@ -111,7 +113,8 @@ Open `.env` and update the variables for your environment. Variables are grouped
 | `DLS_VISION_TLS_VERIFY` / `DLS_VISION_CA_BUNDLE` | DL Streamer TLS verification toggle and optional CA bundle path (default: `false`) | Optional |
 | `MQTT_TLS_ENABLED` / `MQTT_CA_BUNDLE` / `MQTT_CLIENT_CERT` / `MQTT_CLIENT_KEY` | MQTT TLS, CA bundle, and optional mutual TLS client certificate for the dls_vision subscriber | Optional |
 
-> **Note:** If Live Video Captioning or Loitering Detection is running on the same host as VAP, use `host.docker.internal`
+> [!NOTE]
+> If Live Video Captioning or Loitering Detection is running on the same host as VAP, use `host.docker.internal`
 > (Linux/Mac). Otherwise, use the actual IP address.
 
 For certificate path examples and TLS behavior details, see

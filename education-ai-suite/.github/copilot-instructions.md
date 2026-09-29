@@ -114,6 +114,11 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 - Target `http://127.0.0.1:9011` for the Content Search API
 - Target `http://127.0.0.1:8000` for the main backend API
 - Every new source/config file carries the SPDX header used across the repo
+- **Features, pipeline stages and platform requirements are declared once**, in
+  `smart-classroom/utils/pipeline_catalog.py` and `smart-classroom/utils/requirements.py`.
+  After editing either, run `python Scripts/gen_catalog.py` from `smart-classroom/` to
+  refresh the UI's copies — `tests/unit/test_catalog_generated.py` fails if you forget.
+  Never hand-edit `ui/src/generated/*` or a `*-catalog.cjs`.
 
 ---
 

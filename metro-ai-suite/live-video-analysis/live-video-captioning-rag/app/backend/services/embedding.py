@@ -3,7 +3,6 @@
 
 from langchain_vdms.vectorstores import VDMS, VDMS_Client
 from typing import Any, Dict, Optional
-import logging
 import requests
 import uuid
 
@@ -17,8 +16,7 @@ from ..config import (
     TOP_K,
 )
 from .embedding_wrapper import EmbeddingAPI
-
-logger = logging.getLogger("app.embedding")
+from ..utils.logger import logger
 
 class CaptionEmbeddings:
     """

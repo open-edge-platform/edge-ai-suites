@@ -74,14 +74,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
 
   // Check if video_analytics feature is enabled
-  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasVideoAnalyticsFeature = featureGuard.hasAnyFeatureForInput('video');
 
   // Check if any audio-related features are enabled
-  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
-    featureGuard.hasFeature('summary') ||
-    featureGuard.hasFeature('mindmap') ||
-    featureGuard.hasFeature('topic_segmentation') ||
-    featureGuard.hasFeature('report');
+  const hasAudioFeatures = featureGuard.hasAnyFeatureForInput('audio');
 
   const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 

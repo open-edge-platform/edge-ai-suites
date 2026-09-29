@@ -18,7 +18,9 @@ The OpenClaw based agent functions as the "Teacher Assistant" persona that enabl
 └──────────────────────────────────────────────────────────────────────┘
 
 ```
-Note: In the figure, Smart Classroom is abbreviated as SC.
+
+> [!NOTE]
+> In the figure, Smart Classroom is abbreviated as SC.
 
 ## Pre-requisites
 
@@ -158,7 +160,8 @@ This script creates the following structure:
         └── SKILL.md                 # Smart Classroom skill definition
 ```
 
-> **Note:** The `smart_classroom_incoming/` directory is where the Smart Classroom application deposits lesson reports for the agent to analyze. A sample file (`lesson1.md`) is included as an example. You can add additional lesson reports to `~/.openclaw/workspace/smart_classroom_incoming/` at any time — the agent will pick them up automatically when answering questions or generating reports.
+> [!NOTE]
+> The `smart_classroom_incoming/` directory is where the Smart Classroom application deposits lesson reports for the agent to analyze. A sample file (`lesson1.md`) is included as an example. You can add additional lesson reports to `~/.openclaw/workspace/smart_classroom_incoming/` at any time — the agent will pick them up automatically when answering questions or generating reports.
 
 ### Step 5: Run OpenClaw agent
 
