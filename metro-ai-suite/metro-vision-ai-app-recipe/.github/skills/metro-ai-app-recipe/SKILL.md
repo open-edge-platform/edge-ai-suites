@@ -23,23 +23,20 @@ compatibility: >-
 
 Build an end-to-end `{{OBJECT}}`-analytics stack on Intel hardware in
 `./{{STACK_DIR}}/` with Docker Compose. **Vertical-agnostic:** the same
-seven-container topology (Nginx, DLSPS, Mosquitto, Node-RED, Grafana, MediaMTX,
-Coturn) serves any DL Streamer / OpenVINO CV pipeline — only the model, class
-filter, alert rule, dashboard, and topics differ. Follows the open-edge-platform
+seven-container topology serves any DL Streamer / OpenVINO CV pipeline — only the
+model, class filter, alert rule, dashboard, and topics differ. Follows the
+open-edge-platform
 [Metro Vision AI App Recipe](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe)
 **MediaMTX + Coturn + WebRTC** path, streamlined (**no Prometheus/OTel**).
-Scenescape is **off by default** (opt-in multi-camera analysis). Metadata flows
-DLSPS→MQTT→Node-RED→Grafana; video is decoupled (DLSPS overlays via
-`gvawatermark`, WHIP-pushes each source to MediaMTX, `ENABLE_WEBRTC=true`,
-per-source `peer-id`) — see architecture below.
+Scenescape is **off by default** (opt-in multi-camera analysis). Data-flow and
+routing are detailed in **Reference architecture** below.
 
 ## When to use this skill
 
 **Use when** building an object-detection, classification, object-counting, or
-zone/line-crossing alerting pipeline for any vertical (smart city/ITS, retail,
-industrial, logistics, healthcare, or a custom OpenVINO/ONNX model). Optionally
-adds a Scenescape multi-camera path, or a lightweight demo/PoC single app when
-no full stack is needed.
+zone/line-crossing alerting pipeline for any vertical (see table below).
+Optionally adds a Scenescape multi-camera path, or a lightweight demo/PoC single
+app when no full stack is needed.
 
 **Not for:** non-Intel or cloud-only deployments, Prometheus/OpenTelemetry
 metrics stacks, or training/exporting models.
@@ -61,17 +58,17 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 ## How to use this skill
 
 1. Read this file end-to-end.
-2. Ask **Question 0 (mode)** first. If **demo**, branch to
-   [Demo/PoC mode](#demopoc-mode) + load
+2. Ask **Question 0 (packaging)** first. If **demo/function/port** (single-app
+   path), branch to [Demo/PoC mode](#demopoc-mode) + load
    [`references/DEMO_POC.md`](references/DEMO_POC.md), skip questions 1–7; else
-   (**production**, default) continue.
+   (**microservice**, the default full stack) continue.
 3. Ask the 7 questions in ONE batched message (defaults in brackets); accept
    `go`/`defaults`/empty. Question 7 selects the **Scenescape** path.
 4. Run parameter validation (below); refuse to proceed on any failure.
 5. Load reference file(s) on demand — **not all up front** (per the *Reference
-   files* table): Scenescape only when `{{SCENESCAPE}}=yes`; PIPELINE for
-   GPU/NPU, RTSP/`/dev/video`, or classifier; NODE_RED for `<`/`<=`/`>=` rules
-   or a non-empty `{{CLASS_FILTER_IDS}}`.
+   files* table): Scenescape when `{{SCENESCAPE}}=yes`; PIPELINE for GPU/NPU,
+   RTSP/`/dev/video`, or classifier; NODE_RED for `<`/`<=`/`>=` rules or a
+   non-empty `{{CLASS_FILTER_IDS}}`.
 6. Verify against completion criteria before declaring success (record
    throughput/latency vs `benchmark.md`); `validate_env.sh` is **step 0 of
    `install.sh`**.
@@ -86,16 +83,18 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 | [`references/INSTALL.md`](references/INSTALL.md) | file layout, `.env`, `validate_env.sh` + rules, `install.sh`, `docker-compose.yml` volumes |
 | [`references/TESTS.md`](references/TESTS.md) | `conftest.py`, `test_webrtc_stream.py`, assertion contracts |
 | [`references/SCENESCAPE.md`](references/SCENESCAPE.md) | **`{{SCENESCAPE}}=yes` only** — multi-camera scene-fusion via `scenescape-setup` skill |
-| [`references/DEMO_POC.md`](references/DEMO_POC.md) | **`{{MODE}}=demo` only** — lightweight single-app path (DL Streamer or OpenVINO); no full stack |
+| [`references/DEMO_POC.md`](references/DEMO_POC.md) | **single-app packaging only** (`{{PACKAGING}}`∈`demo`/`function`/`port`) — lightweight single-app path (DL Streamer or OpenVINO); no full stack |
 
 ## Parameters (from invoking prompt)
 
 | Param | Purpose |
 |---|---|
-| `{{MODE}}` | `demo` \| `production` (default `production`). `demo` = single-app path ([DEMO_POC](references/DEMO_POC.md)); rows below are `production`-only |
+| `{{PACKAGING}}` | `demo` \| `function` \| `microservice` \| `port` (default `microservice`). `demo`/`function`/`port` = single-app path ([DEMO_POC](references/DEMO_POC.md)); `microservice` = full stack (rows below are `microservice`-only) |
+| `{{MODE}}` | Back-compat alias derived from `{{PACKAGING}}`: `demo` (single-app) \| `production` (= `microservice`) |
+| `{{HW_TARGET}}` | Intel inference device: `CPU`\|`GPU`\|`NPU`\|`AUTO` (default `CPU`; `AUTO` = pick). Drives `sample_start.sh <cpu\|gpu\|npu>` + `_gpu`/`_npu` variants; no platform/generation naming |
 | `{{OBJECT}}` | class label in dashboard/alerts (e.g. `person`, `vehicle`, `defect`, `fall`); any MQTT/Grafana-safe string |
 | `{{STACK_DIR}}` | e.g. `person-detect-stack`, `ppe-compliance-stack`, `anpr-stack` |
-| `{{DEFAULT_MODEL}}`, `{{OTHER_MODELS}}` | allowed model options |
+| `{{DEFAULT_MODEL}}`, `{{OTHER_MODELS}}` | allowed model options; when `auto`, suggest from OpenVINO / Intel / Metro Analytics Catalog HF collections per a performance goal |
 | `{{PIPELINE_NAME}}` | canonical DLSPS pipeline `name` (e.g. `yolov11s`); variants `<name>`/`_gpu`/`_npu`; topic `{{DETECTIONS_TOPIC_PREFIX}}_X/<name>` |
 | `{{CLASSIFIER}}` | secondary model or `none`; if set, also `{{CLASSIFIER_URL}}` + `{{CLASSIFIER_XML}}` |
 | `{{CLASS_FILTER_IDS}}` | JSON array of class IDs to keep (`[]`=all). Filtered in Node-RED |
@@ -114,13 +113,17 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 
 ## Questions (single batched prompt)
 
-**Question 0 — Mode** [`production`]: `demo` (single-app PoC) or `production`
-(full stack). If `demo`, STOP and follow [Demo/PoC mode](#demopoc-mode); skip
-questions 1–7 (they apply to `production` only).
+**Question 0 — Packaging** [`microservice`]: `demo`/`function`/`port`
+(single-app: PoC, one-shot job, or migrate a pipeline) or `microservice` (full
+stack, **default**). For `demo`/`function`/`port`, STOP → follow
+[Demo/PoC mode](#demopoc-mode); skip questions 1–7 (`microservice` only).
 
-1. Model [`{{DEFAULT_MODEL}}`] (also: `{{OTHER_MODELS}}`)
+1. Model [`{{DEFAULT_MODEL}}`] (also: `{{OTHER_MODELS}}`; or `auto` — give a
+   performance goal, I'll suggest one from the OpenVINO / Intel / Metro Analytics
+   Catalog HF collections via `model-download`)
 2. Classifier [`{{CLASSIFIER}}`] (or `none`)
-3. Device [CPU] (GPU, NPU, AUTO)
+3. Target hardware [CPU] — Intel `CPU`/`GPU`/`NPU`/`AUTO` (I pick). Multi-vendor
+   noted as *suggestions only*; no platform/generation naming.
 4. Inputs [{{NUM_SOURCES}}× sample-video] (or RTSP URLs / `/dev/videoN` / local
    paths); sets `INPUT_TYPE`. RTSP/device are **continuous** → no sample-video
    download, no file:// watchdog (see [PIPELINE](references/PIPELINE.md)).
@@ -133,34 +136,29 @@ questions 1–7 (they apply to `production` only).
 ## Parameter validation (enforce BEFORE `install.sh` runs)
 
 Ship `validate_env.sh` and call it as step 0 of `install.sh`; reject on any
-failure. The script body and full **validation rules table** (`MODE`, `HOST_IP`,
-`NUM_SOURCES`, `DEVICE`, `PIPELINE_NAME`, topics, TURN creds, inputs, Scenescape
-params, …) are in [`references/INSTALL.md`](references/INSTALL.md).
+failure. The script body and full **validation rules table** (`PACKAGING`/`MODE`,
+`HOST_IP`, `NUM_SOURCES`, `HW_TARGET`/`DEVICE`, `PIPELINE_NAME`, topics, TURN
+creds, inputs, Scenescape params, …) are in
+[`references/INSTALL.md`](references/INSTALL.md); validate `{{PACKAGING}}` ∈
+`demo`/`function`/`microservice`/`port` and `{{HW_TARGET}}` ∈ `CPU`/`GPU`/`NPU`/`AUTO`.
 
 ## Reference architecture
 
 Single Compose network `app_network`. Nginx publishes 80/443; **Coturn also
-publishes `3478/udp`** (WebRTC TURN). Nginx routes: `/api/`→DLSPS REST,
-`/grafana/`→Grafana, `/nodered/`→Node-RED, `/mediamtx/<pid>/`→WHEP iframe,
-`/<pid>/whep|whip`→signalling, `/webrtc/`→MediaMTX TCP (ICE 8189). Data:
+publishes `3478/udp`** (WebRTC TURN). Nginx reverse-proxies DLSPS REST, Grafana,
+Node-RED, and MediaMTX WHEP/WHIP signalling (ICE 8189) — full route map in
+[`references/PROXY_UI.md`](references/PROXY_UI.md). Data:
 DLSPS→MQTT→Mosquitto→Node-RED→Grafana; DLSPS→WHIP→MediaMTX (peer-id
 `{{DETECTIONS_TOPIC_PREFIX}}_N`, ICE/TURN via Coturn); Grafana embeds
 `<iframe src="/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_N/">`.
 
 ## Demo/PoC mode
 
-When Question 0 selects `demo`, **do not build the full stack** (no Compose
-topology, no MediaMTX/Coturn/Node-RED/Grafana/Nginx, no Scenescape). Produce one
-lightweight app proving a model runs on Intel hardware. Two sub-paths (ask which):
-
-- **DL Streamer app** — a simple DL Streamer / GStreamer pipeline; delegate to
-  the `dlstreamer-coding-agent` skill.
-- **OpenVINO app** — a minimal Python script (load → `compile_model` → infer →
-  post-process); no dedicated skill, follow the OpenVINO 2026 docs.
-
-Full guidance + lightweight criteria are in
-[`references/DEMO_POC.md`](references/DEMO_POC.md) — load only on this branch;
-production criteria (1–11) do **not** apply in demo mode.
+When Question 0 selects `demo`/`function`/`port` (single-app packaging), **do not
+build the full stack** — produce one lightweight app proving a model runs on
+Intel HW (DL Streamer app or minimal OpenVINO script). Follow
+[`references/DEMO_POC.md`](references/DEMO_POC.md) (load only on this branch);
+production criteria (1–11) do **not** apply.
 
 ## Scenescape spatial-analysis path (optional, `{{SCENESCAPE}}=yes`)
 
@@ -186,24 +184,21 @@ the repo's `tags` API with `ordering=last_updated`), pin it, and ignore
 - `bluenviron/mediamtx:1.20.0` (WebRTC: WHIP in, WHEP out)
 - `coturn/coturn:4.17.0` (ICE/TURN)
 - `grafana/grafana:11.5.4` (**pinned — do not upgrade**) with `GF_INSTALL_PLUGINS="grafana-mqtt-datasource 1.3.3,yesoreyeram-infinity-datasource 3.11.1"` — a bad plugin version kills the container → Nginx 502
-- `intel/dlstreamer:2026.2.0-ubuntu24` (one-shot in `install.sh`: model download + INT8 quantize + TLS cert)
+- `intel/dlstreamer:2026.2.0-ubuntu24` (one-shot in `install.sh`: model dl + INT8 quantize + TLS cert)
 
 ## Layout (flat)
 
 Generate a flat `{{STACK_DIR}}/`: `README.md`, `docker-compose.yml`, `.env`,
 `validate_env.sh`, `install.sh`, `sample_*.sh`/`update_dashboard.sh`, a `src/`
-tree (`dlstreamer-pipeline-server/`, `mosquitto/`, `node-red/`, `grafana/`,
-`nginx/`), and `tests/`. Full annotated tree in
+tree (per-service dirs), and `tests/`. Full annotated tree in
 [`references/INSTALL.md`](references/INSTALL.md).
 
 ### `README.md` (required content)
 
 The generated `README.md` MUST document, at minimum:
 
-- **Architecture** — `DLSPS → MQTT (Mosquitto) → Node-RED → Grafana` + decoupled
-  video `DLSPS WHIP → MediaMTX → browser WHEP (Grafana <iframe>)`, Coturn
-  ICE/TURN, behind the Nginx TLS proxy; include the ASCII diagram + seven
-  containers.
+- **Architecture** — the data + video flow from *Reference architecture* above;
+  include the ASCII diagram + seven containers.
 - **Quick start** — `./install.sh` → `docker compose up -d` →
   `./sample_start.sh <cpu|gpu|npu>`, plus stop/status scripts.
 - **Access URLs + credentials** — dashboard `https://<HOST_IP>/grafana/`
@@ -215,9 +210,9 @@ The generated `README.md` MUST document, at minimum:
 
 ## Template variable substitution
 
-Every `{{VAR}}` MUST be substituted with its concrete value BEFORE writing the
-file — a literal `{{...}}` left in `nginx.conf`, `config.json`, `flows.json`,
-the dashboard JSON, or a test file is a syntax error.
+Substitute every `{{VAR}}` with its concrete value BEFORE writing any file — a
+literal `{{...}}` left in `nginx.conf`, `config.json`, `flows.json`, the
+dashboard JSON, or a test is a syntax error.
 
 ## Execution guardrails
 
@@ -232,15 +227,17 @@ the dashboard JSON, or a test file is a syntax error.
   host` / 502). Every curl in `sample_*.sh` MUST use `--noproxy '*'` + `--cacert
   src/nginx/ssl/server.crt` (generated by `install.sh`); tests set `NO_PROXY=*`
   in `conftest.py`.
-- Test WebRTC signalling: `curl --cacert src/nginx/ssl/server.crt --noproxy '*' -sf -o /dev/null -w '%{http_code}' https://<HOST>/mediamtx/{{DETECTIONS_TOPIC_PREFIX}}_1/` (expect `200`; stream exists only after `sample_start.sh`).
-- Test MQTT: `docker run --rm --network <project>_app_network eclipse-mosquitto:2.1.2-alpine mosquitto_sub -h broker -t '#' -v` (image tag `2.1.2-alpine` is an intentional pin — never `:latest`).
+- Test WebRTC signalling with the criterion-7 curl (expect `200`; stream exists
+  only after `sample_start.sh`). Test MQTT via `docker run --rm --network
+  <project>_app_network eclipse-mosquitto:2.1.2-alpine mosquitto_sub -h broker -t
+  '#' -v` (tag `2.1.2-alpine` is an intentional pin — never `:latest`).
 - pytest venv at `./.venv` inside stack dir (`python -m venv .venv`) — system
   pip is PEP-668 blocked; `/tmp` may be `noexec`.
 
 ## Optional external skills
 
 If available, invoke; otherwise write files from the reference templates.
-- `dlstreamer-coding-agent` — pipeline JSON (+ demo/PoC DL Streamer app when `{{MODE}}=demo`)
+- `dlstreamer-coding-agent` — pipeline JSON (+ single-app DL Streamer app when `{{PACKAGING}}`∈`demo`/`function`/`port`)
 - `dlsps-user` — DLSPS deploy/config/REST; default `production` path ([PIPELINE](references/PIPELINE.md))
 - `model-download` — OMZ model IR
 - `scenescape-setup` — **only when `{{SCENESCAPE}}=yes`** ([SCENESCAPE](references/SCENESCAPE.md))
@@ -296,9 +293,7 @@ recipe uses the same path — consult it for `config.json`, `mosquitto.conf`,
 Graders see only your **final message** + tool *names*, not file contents. An
 expectation counts as met only if you **state it and quote the one decisive
 line** in your closing summary — walk every completion criterion plus the
-proof-point checklist (topology, WebRTC, pinned tags incl. `grafana:11.5.4`,
-MQTT/class filter, no literal `{{...}}`, `validate_env.sh` step 0, cert
-`subjectAltName`, curl `--noproxy '*'` + `--cacert`, inputs/watchdog, parsed
-rule, classifier, GPU `group_add`, Scenescape) detailed in
-[`references/INSTALL.md`](references/INSTALL.md) → *Final-summary proof points*.
-A claim with no quoted evidence is treated as unmet.
+proof-point checklist (topology, WebRTC, pinned tags, MQTT/class filter, no
+literal `{{...}}`, certs, curl guards, watchdog, rule, classifier, Scenescape)
+detailed in [`references/INSTALL.md`](references/INSTALL.md) →
+*Final-summary proof points*. A claim with no quoted evidence is treated as unmet.
