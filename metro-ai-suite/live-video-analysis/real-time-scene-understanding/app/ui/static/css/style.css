@@ -532,14 +532,6 @@ body {
     transition: border-color 180ms ease, box-shadow 220ms ease;
 }
 
-.stream-card--alert {
-    border-color: rgba(248, 81, 73, 0.9);
-    box-shadow:
-        0 0 0 1px rgba(248, 81, 73, 0.35),
-        0 0 16px rgba(248, 81, 73, 0.32),
-        0 0 28px rgba(248, 81, 73, 0.2);
-}
-
 .stream-head {
     display: flex;
     justify-content: space-between;

@@ -140,8 +140,5 @@ RUN chmod +x ./entrypoint.sh
 
 EXPOSE 9100
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-    CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:9100/api/health', timeout=4)" || exit 1
-
 ENTRYPOINT ["./entrypoint.sh"]
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9100"]

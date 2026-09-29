@@ -391,8 +391,6 @@ export function createStreamsController(elements, { openAlertDrawer }) {
 
         if (player.vlmResponseHistory) {
             const history = formatVlmResponseHistory(stream, VLM_HISTORY_LIMIT);
-            const hasAlertInHistory = history.some((response) => Boolean(response.alert));
-            player.card.classList.toggle("stream-card--alert", hasAlertInHistory);
             player.vlmResponseHistory.innerHTML = "";
 
             if (history.length === 0) {
