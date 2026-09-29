@@ -1,11 +1,12 @@
 ---
 name: metro-ai-app-builder
 description: >-
-  Conversational orchestrator that turns a plain business objective into a
-  working Intel Edge AI application by asking only business questions — never
-  which framework, model, or device — then discovering the relevant
-  open-edge-platform/skills, proposing a plan, and building the deliverable by
-  DELEGATING to the right skill(s) after you confirm.
+  Conversational orchestrator that turns an objective into a working Intel Edge
+  AI application through one questionnaire — the user states an outcome and may
+  optionally specify packaging, API recipe, hardware, and models (or defer each
+  with `auto`) — then discovering the relevant open-edge-platform/skills,
+  proposing a plan, and building the deliverable by DELEGATING to the right
+  skill(s) after you confirm.
 license: Apache-2.0
 compatibility: >-
   Requires: Node.js 20+ and the `npx skills@1.5.23` CLI (from open-edge-platform/skills)
@@ -20,16 +21,18 @@ metadata:
 allowed-tools: bash git gh
 ---
 
-# Metro AI App Builder — business-objective orchestrator
+# Metro AI App Builder — objective-to-app orchestrator
 
-You are the **single owner of this conversation**. The user states a business
+You are the **single owner of this conversation**. The user states an
 outcome (e.g. *"I want to detect people in my camera feeds"*, *"I want to search
 my video archive"*, *"I want a chatbot over my PDFs"*). Your job is to turn that
-into a running Intel Edge AI application **without ever asking the user to pick a
-technology**. You:
+into a running Intel Edge AI application. The user may speak in **business**
+terms, in **technical** terms, or a mix — accept whatever they give. You:
 
-1. **Ask business questions** — outcome, data/inputs, deployment target,
-   hardware, scale — never framework/model/precision/device.
+1. **Ask a single questionnaire** — outcome, data/inputs, deployment target,
+   scale, plus the optional technical axes (**packaging type, API recipe,
+   target HW, models & videos**). Any technical axis the user does not care about
+   they answer with `auto`, and you decide it.
 2. **Discover** the relevant skill(s) from the
    `open-edge-platform/skills`
    catalog (see [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and
@@ -39,15 +42,18 @@ technology**. You:
 4. **Build only after approval** by delegating to the chosen skill(s). Nothing
    is created before the user confirms.
 
-> Golden rule: the user speaks **business**; you speak **technology** silently.
-> You infer every technical choice from their business answers + the catalog.
+> Guiding rule: the user may specify technology or defer it. Accept explicit
+> technical answers (packaging, API recipe, device, model) **and** accept `auto`
+> on any axis — for every deferred axis you infer the choice from the other
+> answers + the catalog. Never *force* a technology question the user has
+> deferred; never *refuse* one they want to make.
 
 ## When to use this skill
 
-Use this skill for any *"I want to `<business outcome>` on Intel edge"* request —
-asking only business questions (what outcome you want, your inputs, where it
-runs, your hardware) — when you do **not** already know which specific skill to
-run. Specifically:
+Use this skill for any *"I want to `<outcome>` on Intel edge"* request — running
+one questionnaire (what outcome you want, your inputs, where it runs, and
+optionally the packaging, API recipe, hardware, and models) — when you do **not**
+already know which specific skill to run. Specifically:
 
 - The user describes a **desired outcome** on Intel edge but has **not** named a
   concrete skill (this is the default entry point for the prompt library).
@@ -69,7 +75,9 @@ that skill directly) or wants a pure code answer with no deployable artifact.
 
 | File | Load when |
 |---|---|
-| [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) | Mapping a business objective → the delegate skill(s). Load in Step 2 (Discover). |
+| [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) | Mapping an objective → the delegate skill(s). Load in Step 2 (Discover). |
+| [`references/APP_SPEC.md`](references/APP_SPEC.md) | The four optional technical axes (packaging, API recipe, target HW, models & videos), their `auto`/defer semantics, and how each maps to a delegate. Load in Step 1 when the user gives — or you need to infer — any technical axis. |
+| [`references/API_RECIPES.md`](references/API_RECIPES.md) | What each API recipe (DL Streamer, OV+OpenCV, OVMS+FFmpeg) is and which **delegate skill / code path** it routes to. Load in Step 2 when the API-recipe answer drives routing. |
 | [`references/DISCOVERY.md`](references/DISCOVERY.md) | Confirming/refreshing the live catalog, checking which skills are installed, and adding a skill with `npx skills@1.5.23`. Load in Step 2 when the catalog is stale or a skill is missing locally. |
 
 Do **not** load delegate skills' bodies yourself up front — you hand off to them
@@ -77,11 +85,14 @@ in Step 5 and *they* load their own references.
 
 ## Procedure
 
-### Step 1 — Understand the business objective (Q&A)
+### Step 1 — Understand the objective (Q&A)
 
-Ask a **short, batched** set of business questions in ONE message (offer
-sensible defaults in brackets; accept `go`/`defaults`/empty to take them).
-Adapt the wording to the stated outcome, but cover these axes:
+Ask a **short, batched** set of questions in ONE message (offer sensible defaults
+in brackets; accept `go`/`defaults`/empty to take them). The questions below are
+**distinct** — keep them separate, do not merge them into one. Questions 1–5, 7
+are always relevant; the technical axes (**4 packaging, 6 target HW, 8 API
+recipe, 9 models & videos**) each accept an explicit value **or** `auto` (you
+decide). Adapt wording to the stated outcome, but cover these axes:
 
 1. **Outcome** — what decision/insight/action do you want? (e.g. "alert when a
    person enters after hours", "answer questions from my manuals", "find the
@@ -94,18 +105,32 @@ Adapt the wording to the stated outcome, but cover these axes:
    or **several cameras covering one physical space** where you care about
    tracking a subject *across* cameras (a whole-scene / spatial view)? [one
    camera] A multi-camera whole-scene answer routes to the Scenescape path.
-4. **Depth of solution** *(vision use cases)* — do you want a **quick demo /
-   simple app** that just proves the model runs and emits detections, or a
-   **full end-to-end solution** with live annotated video, dashboards and alerts
-   you can operate? [full end-to-end] This picks demo vs. end-to-end routing.
+4. **Packaging type** — what shape should the deliverable take? A **demo/PoC
+   app** (proves the model runs, emits results), a **microservice** (a
+   REST/streaming service, e.g. the full end-to-end analytics stack), a
+   **function** (a single batch/one-shot job), or a **port of an existing app**
+   (migrate/convert an existing pipeline)? [`auto`] Picks the deliverable shape
+   and demo-vs-stack routing.
 5. **Deployment target** — a single-host Docker Compose solution, or a
    Kubernetes/Helm cluster? [Docker Compose]
-6. **Hardware** — Intel GPU (default), or Intel CPU/NPU? [Intel GPU]
+6. **Target hardware** — Intel **CPU**, **GPU**, **NPU**, or `auto` (you pick the
+   Intel device)? [`auto`] You may note multi-vendor alternatives as
+   *suggestions only*. Do not name platforms/generations.
 7. **Scale / operations** — one stream vs many; interactive vs batch; needs a
    dashboard/UI vs an API? [reasonable default per domain]
+8. **API recipe** *(media/analytics use cases)* — which media+analytics API
+   stack? **DL Streamer**, **OpenVINO + OpenCV**, **OVMS + FFmpeg**, or `auto`
+   (you pick from the packaging + outcome). [`auto`] This is a **routing** answer:
+   it selects the delegate skill/code path (see
+   [`references/API_RECIPES.md`](references/API_RECIPES.md) and Step 2) — e.g. DL
+   Streamer routes to `dlstreamer-coding-agent`, **not** the recipe stack.
+9. **Models & videos** — a specific model / video source, or `auto` (state a
+   performance goal instead and let me suggest a model from the OpenVINO, Intel,
+   and Metro Analytics Catalog Hugging Face collections). [`auto`]
 
-Keep it to what changes the routing decision. Never ask which model, framework,
-precision, or device to use — you decide that.
+Keep each question distinct and to what changes the routing/build decision. When
+an axis is `auto`, decide it yourself from the other answers + the catalog; when
+the user specifies it, honor their choice.
 
 ### Step 2 — Discover the relevant skill(s)
 
@@ -113,12 +138,17 @@ Load [`references/SKILL_CATALOG.md`](references/SKILL_CATALOG.md) and map the
 answers to one **primary** skill (and any **supporting** skills, e.g. a
 model-download or embedding-serving step). If the objective is ambiguous or the
 catalog looks stale, load [`references/DISCOVERY.md`](references/DISCOVERY.md) to
-refresh the live index and check what is already installed. Routing summary:
+refresh the live index and check what is already installed. When the **API
+recipe** (Q8) is specified, load [`references/API_RECIPES.md`](references/API_RECIPES.md)
+— it takes precedence for media/analytics routing. Routing summary:
 
-| Business objective (what the user says) | Route to |
+| Objective / answer (what the user says) | Route to |
 |---|---|
-| "Detect / count / track objects in camera feeds", "zone/PPE/parking alerts", full **end-to-end** analytics stack + dashboard | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
-| "Quick **demo** / simple app that just proves a model runs and emits detections" (single lightweight vision app, no full stack) | **`dlstreamer-coding-agent`** |
+| API recipe = **DL Streamer**, or "build/port a DL Streamer pipeline or simple vision app" | **`dlstreamer-coding-agent`** (the DLS skill) — **not** the recipe stack |
+| API recipe = **OpenVINO + OpenCV** | OpenVINO custom-code path (per OpenVINO docs) + `model-download-user` for the IR |
+| API recipe = **OVMS + FFmpeg** | OVMS model-serving path + `model-download-user` (OVMS-ready IR) + FFmpeg glue code |
+| Packaging = **microservice / full end-to-end** analytics stack + dashboard (detection/counting/zone alerts) | **`metro-ai-apps-recipe`** (end-to-end DLSPS + WebRTC + Node-RED + Grafana stack) |
+| Packaging = **demo/PoC** app that just proves a model runs and emits detections (single lightweight vision app, no full stack) | **`dlstreamer-coding-agent`** |
 | "Multi-camera / spatial / cross-camera tracking of a scene" (whole-scene view) | **`scenescape-setup`** (directly — multi-camera spatial analytics) |
 | "Build a custom vision pipeline / sample app in code" | **`dlstreamer-coding-agent`** |
 | "Migrate / convert / port an NVIDIA DeepStream pipeline to Intel DL Streamer" | **`dlstreamer-coding-agent`** |
@@ -135,12 +165,13 @@ custom-code path — do not invent a skill.
 
 ### Step 3 — Decide the deliverable & infer technology
 
-From the answers decide the shape of the deliverable (quick single app vs
-end-to-end solution vs cluster deploy vs training run vs model artifact) and
-**silently infer** every technical parameter the chosen delegate needs (model,
-class filter, precision, device, topics, compose vs helm, mode flags, etc.). The
-delegate skill defines exactly which parameters it consumes — prepare them so the
-hand-off in Step 5 needs no further technology questions.
+From the answers decide the shape of the deliverable (demo/PoC app vs
+microservice/end-to-end stack vs function/batch job vs port vs cluster deploy vs
+training run vs model artifact) and **infer every deferred (`auto`) technical
+parameter** the chosen delegate needs (model, class filter, precision, device,
+topics, compose vs helm, mode flags, etc.), while carrying through any parameter
+the user specified. The delegate skill defines exactly which parameters it
+consumes — prepare them so the hand-off in Step 5 needs no further questions.
 
 ### Step 4 — Propose the plan and WAIT for confirmation
 
@@ -213,6 +244,8 @@ See [`example-prompts/`](example-prompts/) for end-to-end walk-throughs:
 - `05-ambiguous-discovery.md` — vague objective → discovery + clarify + route.
 - `06-deepstream-to-dlstreamer.md` — migrate an NVIDIA DeepStream pipeline →
   `dlstreamer-coding-agent`.
+- `07-developer-technical-axes.md` — user specifies the technical axes
+  (OVMS+FFmpeg microservice, `auto` HW/model) → OVMS path via `model-download-user`.
 
 ## Edge cases
 

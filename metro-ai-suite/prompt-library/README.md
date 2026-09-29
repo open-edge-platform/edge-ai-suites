@@ -23,9 +23,11 @@ technical decision to the orchestrator skill.
    violations"), or simply describe your goal in your own words.
 2. **The orchestrator takes over.** The
    [`metro-ai-app-builder`](https://github.com/open-edge-platform/skills)
-   skill runs a short **business** Q&A — what you want to achieve, your inputs,
-   where it runs, and your hardware — never asking you to choose a framework,
-   model, or device.
+   skill runs one Q&A — what you want to achieve, your inputs, where it runs, and
+   your scale — **plus optional technical axes** (packaging type, API recipe,
+   target hardware, and models/videos). You may specify any of these directly, or
+   answer `auto` to let the orchestrator choose. The library's own prompts stay
+   business-only; the technical axes are for when you want to steer the build.
 3. **Skill discovery.** From your answers the orchestrator discovers the relevant
    open-edge-platform skill(s) — vision analytics, multi-camera scene analysis,
    conversational Q&A/RAG, video search and summarization, multimodal embeddings,

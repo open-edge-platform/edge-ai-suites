@@ -61,10 +61,10 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 ## How to use this skill
 
 1. Read this file end-to-end.
-2. Ask **Question 0 (mode)** first. If **demo**, branch to
-   [Demo/PoC mode](#demopoc-mode) + load
+2. Ask **Question 0 (packaging)** first. If **demo/function/port** (single-app
+   path), branch to [Demo/PoC mode](#demopoc-mode) + load
    [`references/DEMO_POC.md`](references/DEMO_POC.md), skip questions 1–7; else
-   (**production**, default) continue.
+   (**microservice**, the default full stack) continue.
 3. Ask the 7 questions in ONE batched message (defaults in brackets); accept
    `go`/`defaults`/empty. Question 7 selects the **Scenescape** path.
 4. Run parameter validation (below); refuse to proceed on any failure.
@@ -86,16 +86,18 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 | [`references/INSTALL.md`](references/INSTALL.md) | file layout, `.env`, `validate_env.sh` + rules, `install.sh`, `docker-compose.yml` volumes |
 | [`references/TESTS.md`](references/TESTS.md) | `conftest.py`, `test_webrtc_stream.py`, assertion contracts |
 | [`references/SCENESCAPE.md`](references/SCENESCAPE.md) | **`{{SCENESCAPE}}=yes` only** — multi-camera scene-fusion via `scenescape-setup` skill |
-| [`references/DEMO_POC.md`](references/DEMO_POC.md) | **`{{MODE}}=demo` only** — lightweight single-app path (DL Streamer or OpenVINO); no full stack |
+| [`references/DEMO_POC.md`](references/DEMO_POC.md) | **single-app packaging only** (`{{PACKAGING}}`∈`demo`/`function`/`port`) — lightweight single-app path (DL Streamer or OpenVINO); no full stack |
 
 ## Parameters (from invoking prompt)
 
 | Param | Purpose |
 |---|---|
-| `{{MODE}}` | `demo` \| `production` (default `production`). `demo` = single-app path ([DEMO_POC](references/DEMO_POC.md)); rows below are `production`-only |
+| `{{PACKAGING}}` | `demo` \| `function` \| `microservice` \| `port` (default `microservice`). `demo`/`function`/`port` = single-app path ([DEMO_POC](references/DEMO_POC.md)); `microservice` = full stack (rows below are `microservice`-only) |
+| `{{MODE}}` | Back-compat alias: `demo` (any single-app packaging) \| `production` (= `microservice`). Derived from `{{PACKAGING}}` |
+| `{{HW_TARGET}}` | Intel device for inference: `CPU` \| `GPU` \| `NPU` \| `AUTO` (default `CPU`). `AUTO` = pick the Intel device; used by `sample_start.sh <cpu\|gpu\|npu>` and pipeline `_gpu`/`_npu` variants. No platform/generation naming |
 | `{{OBJECT}}` | class label in dashboard/alerts (e.g. `person`, `vehicle`, `defect`, `fall`); any MQTT/Grafana-safe string |
 | `{{STACK_DIR}}` | e.g. `person-detect-stack`, `ppe-compliance-stack`, `anpr-stack` |
-| `{{DEFAULT_MODEL}}`, `{{OTHER_MODELS}}` | allowed model options |
+| `{{DEFAULT_MODEL}}`, `{{OTHER_MODELS}}` | allowed model options; when `auto`, suggest from the OpenVINO / Intel / Metro Analytics Catalog HF collections per a performance goal |
 | `{{PIPELINE_NAME}}` | canonical DLSPS pipeline `name` (e.g. `yolov11s`); variants `<name>`/`_gpu`/`_npu`; topic `{{DETECTIONS_TOPIC_PREFIX}}_X/<name>` |
 | `{{CLASSIFIER}}` | secondary model or `none`; if set, also `{{CLASSIFIER_URL}}` + `{{CLASSIFIER_XML}}` |
 | `{{CLASS_FILTER_IDS}}` | JSON array of class IDs to keep (`[]`=all). Filtered in Node-RED |
@@ -114,13 +116,21 @@ The invoking prompt maps its vertical to concrete `{{OBJECT}}`,
 
 ## Questions (single batched prompt)
 
-**Question 0 — Mode** [`production`]: `demo` (single-app PoC) or `production`
-(full stack). If `demo`, STOP and follow [Demo/PoC mode](#demopoc-mode); skip
-questions 1–7 (they apply to `production` only).
+**Question 0 — Packaging** [`microservice`]: what shape is the deliverable —
+`demo`/`function` (single-app PoC or one-shot job), `microservice` (the full
+end-to-end stack, **default**), or `port` (migrate an existing pipeline)?
+`demo`, `function`, and `port` all take the **single-app path** → STOP and follow
+[Demo/PoC mode](#demopoc-mode); skip questions 1–7 (they apply to the
+`microservice`/full-stack path only). `microservice` continues below.
 
-1. Model [`{{DEFAULT_MODEL}}`] (also: `{{OTHER_MODELS}}`)
+1. Model [`{{DEFAULT_MODEL}}`] (also: `{{OTHER_MODELS}}`; or `auto` — give a
+   performance goal and I'll suggest a model from the **OpenVINO**, **Intel**, and
+   **Metro Analytics Catalog** Hugging Face collections, fetched via
+   `model-download`)
 2. Classifier [`{{CLASSIFIER}}`] (or `none`)
-3. Device [CPU] (GPU, NPU, AUTO)
+3. Target hardware [CPU] — Intel `CPU`, `GPU`, `NPU`, or `AUTO` (I pick the Intel
+   device). Multi-vendor alternatives are noted as *suggestions only*; no
+   platform/generation naming.
 4. Inputs [{{NUM_SOURCES}}× sample-video] (or RTSP URLs / `/dev/videoN` / local
    paths); sets `INPUT_TYPE`. RTSP/device are **continuous** → no sample-video
    download, no file:// watchdog (see [PIPELINE](references/PIPELINE.md)).
@@ -133,9 +143,12 @@ questions 1–7 (they apply to `production` only).
 ## Parameter validation (enforce BEFORE `install.sh` runs)
 
 Ship `validate_env.sh` and call it as step 0 of `install.sh`; reject on any
-failure. The script body and full **validation rules table** (`MODE`, `HOST_IP`,
-`NUM_SOURCES`, `DEVICE`, `PIPELINE_NAME`, topics, TURN creds, inputs, Scenescape
-params, …) are in [`references/INSTALL.md`](references/INSTALL.md).
+failure. The script body and full **validation rules table** (`PACKAGING`/`MODE`,
+`HOST_IP`, `NUM_SOURCES`, `HW_TARGET`/`DEVICE`, `PIPELINE_NAME`, topics, TURN
+creds, inputs, Scenescape params, …) are in
+[`references/INSTALL.md`](references/INSTALL.md). Validate `{{PACKAGING}}` ∈
+`demo`/`function`/`microservice`/`port` and `{{HW_TARGET}}` ∈ `CPU`/`GPU`/`NPU`/
+`AUTO`.
 
 ## Reference architecture
 
@@ -149,8 +162,9 @@ DLSPS→MQTT→Mosquitto→Node-RED→Grafana; DLSPS→WHIP→MediaMTX (peer-id
 
 ## Demo/PoC mode
 
-When Question 0 selects `demo`, **do not build the full stack** (no Compose
-topology, no MediaMTX/Coturn/Node-RED/Grafana/Nginx, no Scenescape). Produce one
+When Question 0 selects `demo`, `function`, or `port` (any single-app packaging),
+**do not build the full stack** (no Compose topology, no
+MediaMTX/Coturn/Node-RED/Grafana/Nginx, no Scenescape). Produce one
 lightweight app proving a model runs on Intel hardware. Two sub-paths (ask which):
 
 - **DL Streamer app** — a simple DL Streamer / GStreamer pipeline; delegate to
@@ -240,7 +254,7 @@ the dashboard JSON, or a test file is a syntax error.
 ## Optional external skills
 
 If available, invoke; otherwise write files from the reference templates.
-- `dlstreamer-coding-agent` — pipeline JSON (+ demo/PoC DL Streamer app when `{{MODE}}=demo`)
+- `dlstreamer-coding-agent` — pipeline JSON (+ demo/PoC DL Streamer app for single-app packaging, `{{PACKAGING}}`∈`demo`/`function`/`port`)
 - `dlsps-user` — DLSPS deploy/config/REST; default `production` path ([PIPELINE](references/PIPELINE.md))
 - `model-download` — OMZ model IR
 - `scenescape-setup` — **only when `{{SCENESCAPE}}=yes`** ([SCENESCAPE](references/SCENESCAPE.md))
