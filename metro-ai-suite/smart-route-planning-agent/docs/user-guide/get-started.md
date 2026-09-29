@@ -51,7 +51,7 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 3. **Set the required environment variables :**
 
     ```bash
-    export REASONING_MODEL_NAME=<model-name>    # e.g. OpenVINO/Qwen3.5-9B-int8-ov, OpenVINO/Qwen3.6-35B-A3B-int4-ov, OpenVINO/Qwen2.5-14B-Instruct-int4-ov
+    export REASONING_MODEL_NAME=<model-name>    # e.g. OpenVINO/Qwen3.6-35B-A3B-int4-ov, OpenVINO/Qwen3.5-9B-int8-ov, OpenVINO/Qwen2.5-14B-Instruct-int4-ov
     export TAG=latest   # Make sure TAG is set to latest to pull the latest image.
     ```
 
@@ -106,7 +106,7 @@ The agent automatically falls back to rule based planning for that update, whene
 
 - the model server is unreachable, still loading, or times out,
 - the model could not make a decision
-- the model hullucinates (For example, names a route that does not exist or has no live traffic data.)
+- the model hallucinates (For example, names a route that does not exist or has no live traffic data.)
 
 ## Manual Setup for Advanced Users
 
