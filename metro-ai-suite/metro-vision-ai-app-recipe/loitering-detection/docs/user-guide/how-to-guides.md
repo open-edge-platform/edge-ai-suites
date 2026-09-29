@@ -20,6 +20,7 @@ This section collects guides for the Loitering Detection sample application.
 ./how-to-guides/view-telemetry-data
 ./how-to-guides/system-performance-dashboard
 ./how-to-guides/benchmark
+ GPU and NPU Stream Density Benchmark <./how-to-guides/gpu-npu-stream-density-benchmark>
 
 :::
 hide_directive-->
