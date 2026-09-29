@@ -128,7 +128,7 @@
                             data-tooltip="Enter a prompt for video-segment-level deep analyzer follow-up. VLM will use this to analyze and summarize detected events from the alert.">?</button>
                     </div>
                     <textarea id="deep-analyzer-prompt" name="deep_analyzer_prompt" rows="4" maxlength="2400"
-                        placeholder="Analyze the frame sequence chronologically and determine whether the visible evidence supports the event context. Summarize with event summary and key evidence. Use only visible evidence. Do not guess intent, identity, or anything outside the frames."
+                        placeholder="Summarize what is visibly happening across the frames in chronological order, focusing on key evidence and scene changes. Then decide whether the context event is clearly visible in the frames and set confirmed accordingly. Use only visible evidence. Do not infer intent, identity, or facts outside the frames."
                         required></textarea>
                 </div>
             </section>

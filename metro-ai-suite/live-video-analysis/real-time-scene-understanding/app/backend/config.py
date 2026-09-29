@@ -71,7 +71,7 @@ class Settings:
 
     # ---- stream source ----
     # Socket open/read timeout in seconds for PyAV.
-    RTSP_TIMEOUT: float = _float("RTSP_TIMEOUT", 15.0)
+    RTSP_TIMEOUT: float = _float("RTSP_TIMEOUT", 30.0)
 
     # ---- WebRTC rendering (via MediaMTX relay) ----
     # When true, each source is remuxed (stream-copy) into MediaMTX with PyAV

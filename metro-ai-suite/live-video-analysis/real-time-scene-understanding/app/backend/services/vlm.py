@@ -22,6 +22,7 @@ import logging
 import os
 import queue
 import re
+import tempfile
 import threading
 import time
 from typing import Any
@@ -71,6 +72,19 @@ _RESPONSE_FORMAT_SUFFIX = (
     "above."
 )
 
+# Regular expressions and instructions for deep analyzer structured output.
+# The regular expression `_DEEP_DESCRIPTION_LINE_RE` matches lines starting with "description:"
+# and captures the rest of the line as the description text. `_DEEP_CONFIRMATION_INSTRUCTION`
+# requires a summary-first output and then a context-grounded confirmed verdict.
+_DEEP_DESCRIPTION_LINE_RE = re.compile(r"\bdescription\s*:\s*(.+)$", flags=re.IGNORECASE | re.DOTALL)
+_DEEP_CONFIRMATION_INSTRUCTION = (
+    "Return JSON with a boolean `confirmed` field and a concise `summary` field. "
+    "Write `summary` first as a chronological account using only visible evidence in the video frames. "
+    "Then set `confirmed` by checking whether the provided context event is clearly visible in the frames: "
+    "set true only when clearly supported; set false when absent, ambiguous, or unsupported. "
+    "Do not infer intent, identity, or facts outside the frames."
+)
+
 
 def _build_alert_verdict_schema(max_new_tokens: int) -> dict[str, Any]:
     """Build ALERT_VERDICT_SCHEMA with a description cap sized to max_new_tokens.
@@ -101,6 +115,33 @@ def _build_alert_verdict_schema(max_new_tokens: int) -> dict[str, Any]:
             },
         },
         "required": ["description", "decision"],
+        "additionalProperties": False,
+    }
+
+
+def _build_deep_analysis_schema(max_new_tokens: int) -> dict[str, Any]:
+    """Build deep-analyzer schema with a summary cap sized to max_new_tokens.
+
+    Keeps summary's JSON-schema maxLength aligned with the configured decoding
+    budget so generation is not asked for text the token limit cannot finish.
+    """
+    available_tokens = max(max_new_tokens - _JSON_OVERHEAD_TOKENS, 5)
+    max_length = available_tokens * _CHARS_PER_TOKEN
+    return {
+        "type": "object",
+        "properties": {
+            "summary": {
+                "type": "string",
+                "description": "Concise summary of visual evidence relevant to the requested event.",
+                "minLength": 1,
+                "maxLength": max_length,
+            },
+            "confirmed": {
+                "type": "boolean",
+                "description": "True only when the requested event is definitively supported by the video; false otherwise.",
+            },
+        },
+        "required": ["confirmed", "summary"],
         "additionalProperties": False,
     }
 
@@ -158,6 +199,107 @@ class _CaptionRequest:
         self.event = threading.Event()
         self.result: Optional[tuple[Optional[str], dict[str, Optional[float]]]] = None
         self.error: Optional[BaseException] = None
+
+
+class DeepAnalyzerVLMRuntime:
+    """Shared DeepAnalyzer VLM setup and parsing helpers.
+
+    Keeps deep-analyzer-specific GenAI setup in this module so both alert and
+    deep pipelines are served from one VLM service layer.
+    """
+
+    @staticmethod
+    def model_path() -> str:
+        """Return the filesystem path to the deep analyzer model."""
+        return os.path.join(
+            settings.VLM_MODELS_DIR,
+            settings.DEEP_ANALYZER_DEVICE.lower(),
+            settings.DEEP_ANALYZER_MODEL,
+        )
+
+    @staticmethod
+    def build_pipeline(model_path: str) -> Any:
+        """Build and return a VLMPipeline instance for the deep analyzer model."""
+        pipeline_config = None
+        vlm_cache_dir = os.path.join(tempfile.gettempdir(), settings.DEEP_ANALYZER_DEVICE.lower(), "vlm_cache")
+        os.makedirs(vlm_cache_dir, exist_ok=True)
+        if str(settings.DEEP_ANALYZER_DEVICE).upper() == "NPU":
+            pipeline_config = {
+                "MAX_PROMPT_LEN": settings.DEEP_ANALYZER_NPU_MAX_PROMPT_LEN,
+                "MIN_RESPONSE_LEN": settings.DEEP_ANALYZER_NPU_MIN_RESPONSE_LEN,
+            }
+
+        if pipeline_config is None:
+            return ov_genai.VLMPipeline(model_path, settings.DEEP_ANALYZER_DEVICE, **{"CACHE_DIR": vlm_cache_dir})
+        return ov_genai.VLMPipeline(model_path, settings.DEEP_ANALYZER_DEVICE, **pipeline_config)
+
+    @staticmethod
+    def build_generation_config(pipe: Any) -> "ov_genai.GenerationConfig":
+        """Build and return a GenerationConfig for the deep analyzer model, starting from model defaults and applying deep-analyzer decoding settings."""
+        try:
+            config = pipe.get_generation_config()
+        except Exception:  # noqa: BLE001 - older GenAI builds don't expose it
+            logger.warning("VLMPipeline.get_generation_config() unavailable; using library defaults")
+            config = ov_genai.GenerationConfig()
+
+        config.max_new_tokens = settings.DEEP_ANALYZER_MAX_TOKENS
+        config.min_new_tokens = min(settings.DEEP_ANALYZER_MIN_TOKENS, settings.DEEP_ANALYZER_MAX_TOKENS)
+        config.num_beams = 1
+        config.do_sample = settings.DEEP_ANALYZER_DO_SAMPLE
+        if config.do_sample:
+            config.temperature = settings.DEEP_ANALYZER_TEMPERATURE
+            config.top_p = settings.DEEP_ANALYZER_TOP_P
+            config.top_k = settings.DEEP_ANALYZER_TOP_K
+        config.repetition_penalty = settings.DEEP_ANALYZER_REPETITION_PENALTY
+        if settings.DEEP_ANALYZER_NO_REPEAT_NGRAM_SIZE > 0:
+            config.no_repeat_ngram_size = settings.DEEP_ANALYZER_NO_REPEAT_NGRAM_SIZE
+        config.apply_chat_template = True
+        return config
+
+    @staticmethod
+    def structured_output_config() -> object:
+        """Build and return a StructuredOutputConfig for the deep analyzer model."""
+        schema = _build_deep_analysis_schema(settings.DEEP_ANALYZER_MAX_TOKENS)
+        return ov_genai.StructuredOutputConfig(json_schema=json.dumps(schema))
+
+    @staticmethod
+    def parse_analysis_result(raw_text: str) -> tuple[bool, str]:
+        """Extract deep-analyzer (confirmed, summary) from model JSON output."""
+        text = str(raw_text or "")
+        try:
+            result = json.loads(text[text.find("{") : text.rfind("}") + 1])
+        except (json.JSONDecodeError, ValueError):
+            return False, text
+
+        if not isinstance(result, dict):
+            return False, text
+        confirmed = result.get("confirmed")
+        summary = result.get("summary")
+        if not isinstance(confirmed, bool) or not isinstance(summary, str) or not summary.strip():
+            return False, text
+        return confirmed, summary.strip()
+
+    @staticmethod
+    def extract_text(result: Any) -> str:
+        """Extract and return the primary text from a VLM result object."""
+        texts = getattr(result, "texts", None)
+        if isinstance(texts, (list, tuple)) and texts:
+            return str(texts[0]).strip()
+        return str(result).strip()
+
+    @staticmethod
+    def build_deep_analyzer_prompt(deep_prompt: str = "", trigger_caption: str = "") -> str:
+        """Build and return the deep-analyzer prompt, incorporating confirmation criteria and alert context."""
+        template = str(deep_prompt or "").strip()
+        text = str(trigger_caption or "").strip()
+
+        description = ""
+        if text:
+            description_match = _DEEP_DESCRIPTION_LINE_RE.search(text)
+            description = description_match.group(1).strip() if description_match else text
+
+        context = f"Context Event: {description}\n\n" if description else ""
+        return f"{_DEEP_CONFIRMATION_INSTRUCTION}\n\n{context}{template.lstrip()}"
 
 
 class VLMEngine:

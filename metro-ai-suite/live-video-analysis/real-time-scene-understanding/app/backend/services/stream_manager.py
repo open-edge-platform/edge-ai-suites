@@ -464,8 +464,6 @@ class StreamManager:
         pattern_head, _, pattern_tail = self._segment_output_pattern.partition("%04d")
 
         last_vlm_sample = 0.0
-        last_segment_idx = -1
-        last_segment_path: Optional[str] = None
 
         backoff = 1.0
         max_backoff = 20.0
@@ -477,6 +475,10 @@ class StreamManager:
             relay_encode = None
             relay_mux = None
             seg = None
+            # Segment numbering/finalization state is scoped to one source
+            # connection attempt. Reset on each reconnect.
+            last_segment_idx = -1
+            last_segment_path: Optional[str] = None
             try:
                 input_container = av.open(
                     source_url,
@@ -613,8 +615,7 @@ class StreamManager:
 
                         if segment_idx != last_segment_idx:
                             if last_segment_path is not None:
-                                self._reclaim_old_segments(last_segment_path)
-                                self._notify_segment_finalized(last_segment_path)
+                                self._finalize_open_segment(last_segment_path)
                             last_segment_idx = segment_idx
                             last_segment_path = (
                                 f"{pattern_head}{segment_idx:04d}{pattern_tail}"
@@ -732,6 +733,10 @@ class StreamManager:
                 _close_quietly(relay_output)
                 _close_quietly(segment_output)
                 _close_quietly(input_container)
+                # If the connection drops before the next segment roll-over,
+                # finalize the current segment now so deferred deep-analysis
+                # jobs do not remain stuck in pending state forever.
+                self._finalize_open_segment(last_segment_path)
 
             if not self._running:
                 break
@@ -911,6 +916,18 @@ class StreamManager:
             self._delete_segment(path)
             deleted += 1
         self._finalized_segments = survivors
+
+    def _finalize_open_segment(self, segment_path: Optional[str]) -> None:
+        """Handle rotation/finalization callbacks for a segment path.
+
+        This is called both on normal segment rollover and on reconnect
+        teardown to avoid leaving deep-analysis jobs pending when a stream
+        disconnects before the next rollover boundary.
+        """
+        if segment_path is None:
+            return
+        self._reclaim_old_segments(segment_path)
+        self._notify_segment_finalized(segment_path)
 
     def _segment_reserved(self, segment_path: str) -> bool:
         """Whether the deep analyzer still needs `segment_path` on disk."""

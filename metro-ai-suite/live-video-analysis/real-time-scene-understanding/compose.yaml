@@ -14,6 +14,8 @@ services:
       - http_proxy=${http_proxy:-}
       - https_proxy=${https_proxy:-}
       - MTX_LOGLEVEL=info
+      - MTX_READTIMEOUT=${MTX_READTIMEOUT:-30s}
+      - MTX_WRITETIMEOUT=${MTX_WRITETIMEOUT:-30s}
       - MTX_API=no
       - MTX_RTSP=yes
       - MTX_RTMP=no
@@ -126,7 +128,7 @@ services:
       - DASHBOARD_PORT=9100
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       # ---- stream source ----
-      - RTSP_TIMEOUT=${RTSP_TIMEOUT:-15.0}
+      - RTSP_TIMEOUT=${RTSP_TIMEOUT:-30.0}
       # ---- WebRTC rendering ----
       - WEBRTC_AUTO_PUBLISH=${WEBRTC_AUTO_PUBLISH:-true}
       - WEBRTC_RELAY_URL=${WEBRTC_RELAY_URL:-rtsp://mediamtx:8554}

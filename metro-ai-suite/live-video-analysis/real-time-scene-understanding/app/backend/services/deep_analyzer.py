@@ -30,11 +30,9 @@ Flow, driven by :class:`backend.services.stream_manager.StreamManager`:
 from __future__ import annotations
 
 import logging
-import json
 import os
 import queue
 import re
-import tempfile
 import threading
 import time
 import uuid
@@ -45,22 +43,16 @@ from typing import Optional
 import av
 import numpy as np
 import openvino as ov
-import openvino_genai as ov_genai
 
 from ..config import settings
 from . import utils
 from .alert_index import get_alert_index
 from .object_storage import SeaweedFSStorage
+from .vlm import DeepAnalyzerVLMRuntime
 
 logger = logging.getLogger(__name__)
 
 _SEGMENT_INDEX_RE = re.compile(r"(\d+)(?=\.[^.]+$)")
-_DESCRIPTION_LINE_RE = re.compile(r"\bdescription\s*:\s*(.+)$", flags=re.IGNORECASE | re.DOTALL)
-_CONFIRMATION_INSTRUCTION = (
-    "Return JSON with a boolean `confirmed` field and a concise `summary` field. "
-    "Set `confirmed` to true only when the requested event is definitively supported "
-    "by the video; set it to false when the event is absent, ambiguous, or unsupported."
-)
 
 
 def _next_segment_path(segment_path: str) -> Optional[str]:
@@ -90,27 +82,6 @@ class _AnalysisJob:
     deep_prompt: str = ""
     trigger_caption: str = ""
     trigger_thumbnail_jpeg: bytes = b""
-
-
-def _extract_trigger_description(trigger_caption: str) -> str:
-    """Extract the description field from the single-frame alert caption text."""
-    text = str(trigger_caption or "").strip()
-    if not text:
-        return ""
-
-    description_match = _DESCRIPTION_LINE_RE.search(text)
-    description = description_match.group(1).strip() if description_match else text
-    return description
-
-
-def _build_deep_prompt(job: _AnalysisJob) -> str:
-    """Render a per-job prompt with explicit confirmation criteria and alert context."""
-    template = str(job.deep_prompt or "").strip()
-    base_prompt = template
-
-    description = _extract_trigger_description(job.trigger_caption)
-    context = f"Threat Context: {description}\n\n" if description else ""
-    return f"{_CONFIRMATION_INSTRUCTION}\n\n{context}{base_prompt.lstrip()}"
 
 
 def _sample_segment_frames(segment_path: str, max_frames: int) -> "np.ndarray":
@@ -184,11 +155,7 @@ class DeepAnalyzerEngine:
         self._object_storage: SeaweedFSStorage = SeaweedFSStorage()
 
     def _load(self) -> None:
-        model_path = os.path.join(
-            settings.VLM_MODELS_DIR,
-            settings.DEEP_ANALYZER_DEVICE.lower(),
-            settings.DEEP_ANALYZER_MODEL,
-        )
+        model_path = DeepAnalyzerVLMRuntime.model_path()
         if not os.path.isdir(model_path):
             raise FileNotFoundError(f"Deep analyzer model not found at '{model_path}'")
 
@@ -198,78 +165,22 @@ class DeepAnalyzerEngine:
             settings.DEEP_ANALYZER_DEVICE,
             model_path,
         )
-        pipeline_config = None
-        vlm_cache_dir = os.path.join(tempfile.gettempdir(), settings.DEEP_ANALYZER_DEVICE.lower(), "vlm_cache")
-        os.makedirs(vlm_cache_dir, exist_ok=True)
-        if str(settings.DEEP_ANALYZER_DEVICE).upper() == "NPU":
-            pipeline_config = {
-                "MAX_PROMPT_LEN": settings.DEEP_ANALYZER_NPU_MAX_PROMPT_LEN,
-                "MIN_RESPONSE_LEN": settings.DEEP_ANALYZER_NPU_MIN_RESPONSE_LEN,
-            }
-
-        if pipeline_config is None:
-            self._pipe = ov_genai.VLMPipeline(model_path, settings.DEEP_ANALYZER_DEVICE, **{"CACHE_DIR": vlm_cache_dir})
-        else:
-            self._pipe = ov_genai.VLMPipeline(model_path, settings.DEEP_ANALYZER_DEVICE, **pipeline_config)
+        self._pipe = DeepAnalyzerVLMRuntime.build_pipeline(model_path)
         self._gen_config = self._build_generation_config()
         logger.info("Deep analyzer pipeline ready")
 
     def _build_generation_config(self) -> "ov_genai.GenerationConfig":
-        """Start from the model's own generation_config.json, then override decoding.
-
-        A bare ``ov_genai.GenerationConfig()`` drops the model's eos/stop token
-        ids, which is what lets generation run past its natural stop and repeat
-        lines until the token budget is exhausted.
-        """
-        try:
-            config = self._pipe.get_generation_config()
-        except Exception:  # noqa: BLE001 - older GenAI builds don't expose it
-            logger.warning("VLMPipeline.get_generation_config() unavailable; using library defaults")
-            config = ov_genai.GenerationConfig()
-
-        config.max_new_tokens = settings.DEEP_ANALYZER_MAX_TOKENS
-        config.min_new_tokens = min(settings.DEEP_ANALYZER_MIN_TOKENS, settings.DEEP_ANALYZER_MAX_TOKENS)
-        config.num_beams = 1
-        config.do_sample = settings.DEEP_ANALYZER_DO_SAMPLE
-        if config.do_sample:
-            config.temperature = settings.DEEP_ANALYZER_TEMPERATURE
-            config.top_p = settings.DEEP_ANALYZER_TOP_P
-            config.top_k = settings.DEEP_ANALYZER_TOP_K
-        config.repetition_penalty = settings.DEEP_ANALYZER_REPETITION_PENALTY
-        if settings.DEEP_ANALYZER_NO_REPEAT_NGRAM_SIZE > 0:
-            config.no_repeat_ngram_size = settings.DEEP_ANALYZER_NO_REPEAT_NGRAM_SIZE
-        config.apply_chat_template = True
-        return config
+        """Start from model defaults, then apply deep-analyzer decoding settings."""
+        return DeepAnalyzerVLMRuntime.build_generation_config(self._pipe)
 
     @staticmethod
     def _structured_output_config() -> object:
-        schema = {
-            "type": "object",
-            "properties": {
-                "confirmed": {"type": "boolean"},
-                "summary": {"type": "string", "minLength": 1, "maxLength": 1000},
-            },
-            "required": ["confirmed", "summary"],
-            "additionalProperties": False,
-        }
-        return ov_genai.StructuredOutputConfig(json_schema=json.dumps(schema))
+        return DeepAnalyzerVLMRuntime.structured_output_config()
 
     @staticmethod
     def _parse_analysis_result(raw_text: str) -> tuple[bool, str]:
         """Extract the definitive event verdict and summary from model JSON."""
-        text = str(raw_text or "")
-        try:
-            result = json.loads(text[text.find("{") : text.rfind("}") + 1])
-        except (json.JSONDecodeError, ValueError):
-            return False, text
-
-        if not isinstance(result, dict):
-            return False, text
-        confirmed = result.get("confirmed")
-        summary = result.get("summary")
-        if not isinstance(confirmed, bool) or not isinstance(summary, str) or not summary.strip():
-            return False, text
-        return confirmed, summary.strip()
+        return DeepAnalyzerVLMRuntime.parse_analysis_result(raw_text)
 
     # ------------------------------------------------------------------ #
     # Bounded set helpers
@@ -454,27 +365,21 @@ class DeepAnalyzerEngine:
                 return
             time.sleep(settings.DEEP_ANALYZER_SEGMENT_READ_RETRY_DELAY)
 
-    def _analyze(self, job: _AnalysisJob) -> None:
-        """Read frames from a finalized segment and call the VLM pipeline on them."""
-        frames = self._read_segment_frames(job)
+    def _run_vlm_analysis(self, job: _AnalysisJob, frames: np.ndarray) -> tuple[bool, str, dict[str, object]]:
+        """Run deep-analyzer VLM inference and return parsed result plus metrics."""
         tensor = ov.Tensor(frames)
-        prompt = _build_deep_prompt(job)
+        prompt = DeepAnalyzerVLMRuntime.build_deep_analyzer_prompt(
+            deep_prompt=job.deep_prompt,
+            trigger_caption=job.trigger_caption,
+        )
         if settings.DEEP_ANALYZER_STRUCTURED_OUTPUT:
             self._gen_config.structured_output_config = self._structured_output_config()
 
-        logger.info(
-            "[%s] deep-analyzing segment=%s frame_id=%s (%d frames)",
-            job.stream_id,
-            job.segment_path,
-            job.frame_id,
-            frames.shape[0],
-        )
         t0 = time.perf_counter()
         result = self._pipe.generate(prompt, videos=[tensor], generation_config=self._gen_config)
         total_duration_ms = (time.perf_counter() - t0) * 1000.0
 
-        texts = getattr(result, "texts", None)
-        raw_description = str(texts[0]).strip() if isinstance(texts, (list, tuple)) and texts else str(result).strip()
+        raw_description = DeepAnalyzerVLMRuntime.extract_text(result)
         confirmed, description = self._parse_analysis_result(raw_description)
 
         metrics = utils._extract_perf_metrics(result)
@@ -483,6 +388,20 @@ class DeepAnalyzerEngine:
         metrics["tensor_shape"] = str(frames.shape)
         metrics["tensor_dtype"] = str(frames.dtype)
         metrics["segment_path"] = str(job.segment_path)
+        return confirmed, description, metrics
+
+    def _analyze(self, job: _AnalysisJob) -> None:
+        """Read frames from a finalized segment and call the VLM pipeline on them."""
+        frames = self._read_segment_frames(job)
+
+        logger.info(
+            "[%s] deep-analyzing segment=%s frame_id=%s (%d frames)",
+            job.stream_id,
+            job.segment_path,
+            job.frame_id,
+            frames.shape[0],
+        )
+        confirmed, description, metrics = self._run_vlm_analysis(job, frames)
 
         logger.info(
             "[%s] deep-analysis result segment=%s frame_id=%s: %s",
