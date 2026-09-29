@@ -150,6 +150,7 @@ _YAML_HEADER = (
     "# Scenescape-mode MQTT brokers. Active when NVR_SCENESCAPE=true.\n"
     "# host = MQTT broker IP only.\n"
     "# rtsp_host = optional SI RTSP stream IP, read by setup.sh to build the Frigate camera list.\n"
+    "# rtsp_port = SI RTSP stream port, read by setup.sh. Required for start-nvr (or set SI{N}_RTSP_PORT); ignored by start (uses RTSP_STREAM_PORT).\n"
     "# Broker id must match the SI node prefix in Frigate camera names (e.g. si1 -> si1-camera1).\n"
 )
 

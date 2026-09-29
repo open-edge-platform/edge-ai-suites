@@ -60,29 +60,43 @@ MQTT_SECRETS_FILE="./resources/mqtt-secrets"
 BROKERS_CONFIG_FILE="${BROKERS_CONFIG_FILE:-./resources/broker-config/brokers.yaml}"
 SI_MAX_NODES=20
 declare -A _SI_YAML_RTSP
+declare -A _SI_YAML_RTSP_PORT
 
-# Parses one "- id: x" / "  rtsp_host: y" block into _SI_YAML_RTSP[node].
+_is_valid_port() {
+    [[ "$1" =~ ^[1-9][0-9]{0,4}$ ]] && [ "$1" -le 65535 ]
+}
+
+# Parses one "- id: x" / "  rtsp_host: y" / "  rtsp_port: z" block into _SI_YAML_RTSP[node]/_SI_YAML_RTSP_PORT[node].
 _si_apply_broker_host() {
     local id_re='^si([0-9]+)$'
     local host_re='^[A-Za-z0-9._:-]+$'
     [[ "${_si_cur_id}" =~ ${id_re} ]] || return 0
     local node="${BASH_REMATCH[1]}"
     [ "${node}" -ge 1 ] && [ "${node}" -le "${SI_MAX_NODES}" ] || return 0
+    if [ -n "${_si_cur_port}" ]; then
+        if _is_valid_port "${_si_cur_port}"; then
+            _SI_YAML_RTSP_PORT["${node}"]="${_si_cur_port}"
+        else
+            print_warning "Ignoring invalid rtsp_port '${_si_cur_port}' for id '${_si_cur_id}' in ${BROKERS_CONFIG_FILE}."
+        fi
+    fi
     [[ -n "${_si_cur_host}" && "${_si_cur_host}" =~ ${host_re} ]] || return 0
     _SI_YAML_RTSP["${node}"]="${_si_cur_host}"
     [ "${node}" -gt "${_si_max_node}" ] && _si_max_node="${node}"
 }
 
-# Rebuilds _SI_YAML_RTSP/_SI_YAML_NODE_COUNT from brokers.yaml; env exports (checked
-# separately at point of use) always take priority over these.
+# Rebuilds _SI_YAML_RTSP/_SI_YAML_RTSP_PORT/_SI_YAML_NODE_COUNT from brokers.yaml; env exports
+# (checked separately at point of use) always take priority over these.
 load_si_rtsp_from_brokers() {
     _SI_YAML_RTSP=()
+    _SI_YAML_RTSP_PORT=()
     unset _SI_YAML_NODE_COUNT
     [ -f "${BROKERS_CONFIG_FILE}" ] || return 0
 
-    local line _si_cur_id="" _si_cur_host="" _si_max_node=0
+    local line _si_cur_id="" _si_cur_host="" _si_cur_port="" _si_max_node=0
     local list_item_re='^[[:space:]]*-[[:space:]]*id:[[:space:]]*["'"'"']?([A-Za-z0-9_-]+)["'"'"']?[[:space:]]*$'
     local host_line_re='^[[:space:]]*rtsp_host:[[:space:]]*["'"'"']?([A-Za-z0-9._:-]+)["'"'"']?[[:space:]]*$'
+    local port_line_re='^[[:space:]]*rtsp_port:[[:space:]]*["'"'"']?([A-Za-z0-9._-]+)["'"'"']?[[:space:]]*$'
 
     while IFS= read -r line || [ -n "${line}" ]; do
         if [[ "${line}" =~ ${list_item_re} ]]; then
@@ -90,13 +104,31 @@ load_si_rtsp_from_brokers() {
             _si_apply_broker_host
             _si_cur_id="${next_id}"
             _si_cur_host=""
+            _si_cur_port=""
         elif [[ "${line}" =~ ${host_line_re} ]]; then
             _si_cur_host="${BASH_REMATCH[1]}"
+        elif [[ "${line}" =~ ${port_line_re} ]]; then
+            _si_cur_port="${BASH_REMATCH[1]}"
+            # The backend writes an unset rtsp_port back as YAML null.
+            [ "${_si_cur_port}" = "null" ] && _si_cur_port=""
         fi
     done < "${BROKERS_CONFIG_FILE}"
     _si_apply_broker_host
 
     [ "${_si_max_node}" -gt 0 ] && _SI_YAML_NODE_COUNT="${_si_max_node}"
+}
+
+# Prints siN's RTSP port: SI{N}_RTSP_PORT (SI_RTSP_PORT for si1) -> brokers.yaml rtsp_port; empty if neither is set.
+_si_rtsp_port() {
+    local node="$1"
+    local env_var="SI${node}_RTSP_PORT"
+    [ "${node}" -eq 1 ] && env_var="SI_RTSP_PORT"
+    local port="${!env_var:-}"
+    if [ -n "${port}" ] && ! _is_valid_port "${port}"; then
+        print_warning "Ignoring invalid ${env_var}='${port}'." >&2
+        port=""
+    fi
+    echo "${port:-${_SI_YAML_RTSP_PORT[$node]:-}}"
 }
 
 load_si_rtsp_from_brokers
@@ -140,10 +172,10 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
-# Generate Frigate config for scenescape mode; siN RTSP hosts come from SI{N}_RTSP_HOST/brokers.yaml (`start` uses the local IP for si1). Unresolved nodes are skipped; fails only if none resolve.
+# Generate Frigate config for scenescape mode; siN RTSP host/port come from SI{N}_RTSP_HOST/SI{N}_RTSP_PORT/brokers.yaml (`start` uses the local IP/RTSP_STREAM_PORT for si1). Nodes without an rtsp_host are skipped; fails if none resolve, or if a resolved node has no rtsp_port.
 generate_scenescape_config() {
     local config_file="./resources/frigate-config/config.yml"
-    local port="${RTSP_STREAM_PORT:-8554}"
+    local port
 
     local total_nodes="${SI_NODE_COUNT:-${_SI_YAML_NODE_COUNT:-1}}"
     if [ "${#_SI_YAML_RTSP[@]}" -gt 0 ]; then
@@ -170,15 +202,24 @@ generate_scenescape_config() {
         [ "${node_num}" -eq 1 ] && env_var="SI_RTSP_HOST"
 
         if [ "${node_num}" -eq 1 ] && [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
-            # Single-node (start): SI is local; SI_RTSP_HOST is ignored.
+            # Single-node (start): SI is local and served on RTSP_STREAM_PORT; SI_RTSP_HOST/SI_RTSP_PORT are ignored.
             rtsp_ip="${_SI_YAML_RTSP[1]:-$(get_host_ip)}"
+            port="${RTSP_STREAM_PORT}"
         else
             rtsp_ip="${!env_var:-${_SI_YAML_RTSP[$node_num]:-}}"
+            port="$(_si_rtsp_port "${node_num}")"
         fi
 
         if [ -z "${rtsp_ip}" ]; then
             print_warning "No rtsp_host for id '${si_id}' in ${BROKERS_CONFIG_FILE} (or ${env_var}); skipping its Frigate cameras."
             continue
+        fi
+
+        if [ -z "${port}" ]; then
+            local port_env_var="SI${node_num}_RTSP_PORT"
+            [ "${node_num}" -eq 1 ] && port_env_var="SI_RTSP_PORT"
+            print_error "No rtsp_port for id '${si_id}' in ${BROKERS_CONFIG_FILE} (or ${port_env_var}); please add rtsp_port for ${si_id} and retry."
+            return 1
         fi
 
         for cam_num in 1 2 3 4; do
@@ -328,6 +369,7 @@ brokers:
   throttle_interval: ${SCENESCAPE_THROTTLE_INTERVAL:-2.0}
   enabled: true
   rtsp_host: ${HOST_IP}
+  rtsp_port: ${RTSP_STREAM_PORT}
 EOF
     print_info "Reset ${BROKERS_CONFIG_FILE} to single-node default (si1 @ ${HOST_IP})"
 }
@@ -385,6 +427,8 @@ start_services() {
     fi
 
     print_info "Starting Docker Compose services..."
+    # frigate's config is bind-mounted; force-recreate so a config.yml regenerated by a prior start/start-nvr run isn't left running stale.
+    docker compose -f docker/compose.yaml up -d --force-recreate frigate
     docker compose -f docker/compose.yaml up -d
     if [ $? -eq 0 ]; then
     sleep 5
@@ -461,7 +505,7 @@ start_si_services() {
     print_info "SI1 RTSP: ${CYAN}${nvr_rtsp_host}:${RTSP_STREAM_PORT}${NC}  |  SI1 MQTT: ${CYAN}${HOST_IP}:1883${NC}"
     print_info "On System 2, add the MQTT broker via POST /brokers/ API (or edit brokers.yaml before running start-nvr)."
     echo -e "  ${CYAN}# Optional: export SI_RTSP_HOST=${nvr_rtsp_host}   # skip editing brokers.yaml for si1${NC}"
-    echo -e "  ${CYAN}# Optional: export RTSP_STREAM_PORT=<port>             # default ${RTSP_STREAM_PORT}${NC}"
+    echo -e "  ${CYAN}# Optional: export SI_RTSP_PORT=${RTSP_STREAM_PORT}        # skip editing brokers.yaml for si1${NC}"
 }
 
 stop_si_services() {
@@ -501,6 +545,8 @@ start_nvr_services() {
     fi
 
     print_info "Starting Docker Compose services..."
+    # frigate's config is bind-mounted; force-recreate so a config.yml regenerated by a prior start/start-nvr run isn't left running stale.
+    docker compose -f docker/compose.yaml up -d --force-recreate frigate
     docker compose -f docker/compose.yaml up -d
     if [ $? -eq 0 ]; then
         sleep 5
