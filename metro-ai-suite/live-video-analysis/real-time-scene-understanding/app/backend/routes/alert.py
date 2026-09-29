@@ -52,7 +52,6 @@ def build_alert_router(alert_index, get_alert_s3_client, settings) -> APIRouter:
                 f"/api/streams/{stream_id}/alerts/{frame_id}/thumbnail"
                 if record.get("thumbnail_object_key") else ""
             ),
-            "confirmed": record.get("confirmed", False),
             "description": record.get("description", ""),
             "metrics": record.get("metrics", {}),
             "model": record.get("model", ""),

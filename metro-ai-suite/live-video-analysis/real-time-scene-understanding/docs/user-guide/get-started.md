@@ -33,7 +33,7 @@ Run the setup helper:
 bash scripts/setup_env.sh
 ```
 
-The helper creates `.env` from `.env.example`, detects `HOST_IP`, and stores image settings such as `REGISTRY` and `TAG` in the file.
+The helper copies `.env.example` to `.env` and fills host-specific values such as `HOST_IP`, `WEBRTC_SIGNALING_URL`, and `RENDER_GROUP_ID`.
 
 Use `--force` only if you want to overwrite an existing `.env`:
 
@@ -41,23 +41,22 @@ Use `--force` only if you want to overwrite an existing `.env`:
 bash scripts/setup_env.sh --force
 ```
 
-This scipts sets these important values:
+The setup template sets these important values:
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `HOST_IP` | Detected automatically | Host address reachable by the browser for WebRTC signaling. |
-| `REGISTRY` | `docker.io` | Docker image registry. |
 | `TAG` | `latest` | Docker image tag. |
-| `DASHBOARD_PORT` | `9100` | Port for the application web dashboard. |
-| `ALERT_VLM_MODEL` | `Qwen3.5-0.8B` | Model used for the alert pipeline VLM inference. |
+| `PORT` | `9100` | Host port for the dashboard and REST API. Add this to `.env` to change the published host port; the container port remains `9100`. |
+| `DASHBOARD_PORT` | `9100` | Internal backend port. Compose currently fixes this to `9100`; changing the `.env.example` value does not change the published host port. |
+| `ALERT_VLM_MODEL` | `Qwen3-VL-2B-Instruct` | Model used for the alert pipeline VLM inference. |
 | `ALERT_VLM_DEVICE` | `CPU` | Device used for the alert pipeline VLM inference. |
-| `ALERT_VLM_INTERVAL` | `1.0` | Interval (in seconds) between alert pipeline VLM inferences. |
+| `ALERT_VLM_INTERVAL` | `2.0` | Interval (in seconds) between alert pipeline VLM inferences. |
 | `ALERT_VLM_MAX_TOKENS` | `128` | Maximum number of tokens for the alert pipeline VLM inference. |
-| `DEEP_ANALYZER_ENABLED` | `true` | Enable or disable the deep analyzer. |
-| `DEEP_ANALYZER_MODEL` | `Qwen3.5-2B` | Model used for the deep analyzer. |
+| `DEEP_ANALYZER_MODEL` | `Qwen3-VL-8B-Instruct` | Model used for the deep analyzer. |
 | `DEEP_ANALYZER_DEVICE` | `GPU` | Device used for the deep analyzer. |
 | `DEEP_ANALYZER_MAX_FRAMES` | `8` | Maximum number of frames for the deep analyzer to process. |
-| `DEEP_ANALYZER_MAX_TOKENS` | `128` | Maximum number of tokens for the deep analyzer. |
+| `DEEP_ANALYZER_MAX_TOKENS` | `256` | Maximum number of tokens for the deep analyzer. |
 | `DEEP_ANALYZER_DEDUP_CACHE_SIZE` | `500` | Size of the deduplication cache for the deep analyzer. |
 | `FRAME_REGISTRY_MAX_RECORDS_PER_STREAM` | `500` | Maximum number of records per stream in the frame registry. |
 | `SEGMENT_MAX_ON_DISK` | `50` | Maximum number of finalized segments retained on disk per stream. |
@@ -75,7 +74,7 @@ You are required to download two Vision Language Models (VLMs) for real-time sce
 If a model is gated on Hugging Face, set your token first:
 
 ```bash
-export HUGGINGFACEHUB_API_TOKEN=<your-token>
+export HUGGINGFACEHUB_API_TOKEN="your-token"
 ```
 
 ### Specifying the conversion device
@@ -89,9 +88,7 @@ By default, conversion runs on CPU. To target another device:
 	--weight-format int8 \
 	--device <CPU|GPU|NPU>
 ```
-
 > **Note:** NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`.
-
 > **Note**: NPU compatibility varies by model. Before selecting a model, confirm NPU support in [OpenVINO Supported Models](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html).
 
 ### Downloading the Models
@@ -101,18 +98,23 @@ Run:
 ```bash
 # Download "ALERT_VLM_MODEL" for single-frame based scene understanding
 ./model_download_scripts/download_models.sh \
-	--model Qwen/Qwen3.5-0.8B \
+	--model Qwen/Qwen3-VL-2B-Instruct \
 	--type vlm \
-	--weight-format int4
+	--weight-format int4 \
+	--device CPU
 
 # Download "DEEP_ANALYZER_MODEL" for temporal-based understanding on consecutive frames
+
 ./model_download_scripts/download_models.sh \
-	--model Qwen/Qwen3.5-2B \
+	--model Qwen/Qwen3-VL-8B-Instruct \
 	--type vlm \
-	--weight-format int4
+	--weight-format int4 \
+	--device GPU
 ```
 
 > Note: `DEEP_ANALYZER_MODEL` must support video input because deep analysis relies on temporal understanding across consecutive frames. Support is model-specific in OpenVINO GenAI: some VLMs are image-only. Before choosing a model, verify it in the official [Supported Models (VLM)](https://openvinotoolkit.github.io/openvino.genai/docs/supported-models/#vision-language-models-vlms) page and review [Visual Processing Using VLMs](https://openvinotoolkit.github.io/openvino.genai/docs/use-cases/visual-processing/) for image/video input behavior.
+
+The model names and devices in `.env.example` match the downloads above. The converted model directories must be under `ov_models/<device-lowercase>/<model-name>/`.
 
 ### 4. Start the Application
 
@@ -141,7 +143,7 @@ http://<YOUR_IP>:9100
 #### Using the Dashboard
 
 - Enter a video source (RTSP URL).
-- Enter the alert event.
+- Enter the alert prompt and the deep-analysis prompt.
 - Click "Start" to begin the pipeline.
 
 ### 6. Stop the Application

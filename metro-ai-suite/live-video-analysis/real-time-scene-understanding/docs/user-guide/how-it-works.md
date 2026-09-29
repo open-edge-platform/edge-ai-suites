@@ -1,6 +1,6 @@
 # How It Works
 
-Real Time Scene Intelligence is a suite of applications that ingest RTSP camera streams, relay low-latency WebRTC video to the browser through MediaMTX, and in parallel sample frames for VLM-based alert gating. When an alert is detected, a deep multi-frame analyzer processes finalized segments, stores artifacts in SeaweedFS, and delivers alert history and details to the dashboard through API endpoints.
+Real Time Scene Understanding ingests RTSP camera streams, relays low-latency WebRTC video to the browser through MediaMTX, and samples frames in parallel for VLM-based alert gating. When an alert is detected, a deep multi-frame analyzer processes finalized segments, stores artifacts in SeaweedFS, and delivers alert history and details to the dashboard through API endpoints.
 
 ## Architecture Overview
 
@@ -14,7 +14,7 @@ Real Time Scene Understanding is the main application service that orchestrates 
 - MediaMTX: RTSP ingest target and WebRTC/WHEP playback service.
 - Coturn: TURN server used by WebRTC.
 - Metrics-Manager: SSE metrics endpoint for CPU, RAM, GPU, and NPU visualization.
-- Seaweedfs Object Storage: S3-compatible object storage for alert artifacts.
+- SeaweedFS object storage: S3-compatible object storage for alert artifacts.
 
 ## Data Flow
 

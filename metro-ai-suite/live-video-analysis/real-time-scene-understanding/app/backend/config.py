@@ -97,16 +97,16 @@ class Settings:
     # Root of the mounted model tree. Fixed to /models to match container
     # volume mounts and shared by both VLM and deep-analyzer pipelines.
     # Models are organised as
-    # <VLM_MODELS_DIR>/<device>/<VLM_MODEL>, e.g. /models/cpu/InternVL2-1B.
+    # <VLM_MODELS_DIR>/<device>/<VLM_MODEL>, e.g. /models/cpu/Qwen3-VL-2B-Instruct.
     VLM_MODELS_DIR: str = "/models"
-    ALERT_VLM_MODEL: str = os.getenv("ALERT_VLM_MODEL", "InternVL2-1B")
+    ALERT_VLM_MODEL: str = os.getenv("ALERT_VLM_MODEL", "Qwen3-VL-2B-Instruct")
 
     # Inference device: CPU, GPU or NPU (selects the matching model subfolder).
-    ALERT_VLM_DEVICE: str = os.getenv("ALERT_VLM_DEVICE", "NPU")
+    ALERT_VLM_DEVICE: str = os.getenv("ALERT_VLM_DEVICE", "CPU")
 
     # Seconds between inferences per stream and the token budget per caption.
     ALERT_VLM_INTERVAL: float = _float("ALERT_VLM_INTERVAL", 2.0)
-    ALERT_VLM_MAX_TOKENS: int = _int("ALERT_VLM_MAX_TOKENS", 32)
+    ALERT_VLM_MAX_TOKENS: int = _int("ALERT_VLM_MAX_TOKENS", 128)
     ALERT_VLM_DO_SAMPLE: bool = _bool("ALERT_VLM_DO_SAMPLE", False)
 
     # VLM NPU-specific configuration. Only used when runnning VLM inference on NPU device.
@@ -155,12 +155,12 @@ class Settings:
 
     # Model tree layout reuses VLM_MODELS_DIR:
     # <VLM_MODELS_DIR>/<device>/<DEEP_ANALYZER_MODEL>.
-    DEEP_ANALYZER_MODEL: str = os.getenv("DEEP_ANALYZER_MODEL", "Qwen3.5-2B-int4-ov")
+    DEEP_ANALYZER_MODEL: str = os.getenv("DEEP_ANALYZER_MODEL", "Qwen3-VL-8B-Instruct")
     DEEP_ANALYZER_DEVICE: str = os.getenv("DEEP_ANALYZER_DEVICE", "GPU")
 
     # Frames uniformly sampled from a finalized segment per deep-analysis run.
     DEEP_ANALYZER_MAX_FRAMES: int = _int("DEEP_ANALYZER_MAX_FRAMES", 8)
-    DEEP_ANALYZER_MAX_TOKENS: int = _int("DEEP_ANALYZER_MAX_TOKENS", 128)
+    DEEP_ANALYZER_MAX_TOKENS: int = _int("DEEP_ANALYZER_MAX_TOKENS", 256)
 
     # PyAV pixel format for sampled segment frames. Qwen3.5 (like every VLM
     # preprocessor) expects RGB; feeding BGR swaps red/blue and produces

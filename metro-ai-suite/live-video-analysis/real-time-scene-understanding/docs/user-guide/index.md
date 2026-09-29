@@ -15,7 +15,7 @@ hide_directive-->
 
 The key features are:
 
-**VLM Model Support**: Switch between validated VLMs with automatic model discovery from `ov_models/`.
+**VLM Model Support**: Configure separate alert and deep-analysis OpenVINO VLMs through environment settings, with model files mounted from `ov_models/`.
 
 **Real-Time Streaming**: WebRTC-based low-latency video preview for live monitoring workflows.
 
@@ -23,7 +23,7 @@ The key features are:
 
 **Performance Metrics**: Live charts for CPU/GPU/RAM plus inference metrics such as TTFT, TPOT, and throughput.
 
-**Modular Architecture**: Containerized backend, frontend, and pipeline services with clear component boundaries.
+**Modular Architecture**: Containerized application, streaming, metrics, and object-storage services.
 
 **Alert Mode**: Alert-oriented output styling for binary prompt responses (for example, "Yes"/"No").
 
@@ -43,10 +43,13 @@ The key features are:
 
 get-started.md
 quick-start-guide.md
-how-to-guides.md
 how-it-works.md
 api-reference.md
 known-issues.md
+get-started/system-requirements.md
+get-started/model-preparation.md
+get-started/build-from-source.md
+get-started/run-unit-tests.md
 Release Notes <release-notes.md>
 
 :::

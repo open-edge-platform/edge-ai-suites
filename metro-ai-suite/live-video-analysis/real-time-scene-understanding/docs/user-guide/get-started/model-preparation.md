@@ -1,6 +1,6 @@
 # Model Preparation
 
-Real Time Scene Understanding requires at least one Vision Language Model (VLM) under `ov_models/`.
+Real Time Scene Understanding requires an alert VLM and a second, video-capable VLM for deep analysis under `ov_models/`.
 
 The provided helper uses the ephemeral model-download container flow from the [Model Download project](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) in Open Edge Platform. It starts a temporary container, downloads or converts the model, writes the files to this repository, and removes the container when finished. No separate model-download setup is required.
 
@@ -12,7 +12,7 @@ The provided helper uses the ephemeral model-download container flow from the [M
 - For gated Hugging Face models, set a token first:
 
 	```bash
-	export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
+	export HUGGINGFACEHUB_API_TOKEN="your-huggingface-token"
 	```
 
 ## Usage
@@ -28,7 +28,7 @@ Use the helper script with the following arguments:
 ```
 
 **Parameters:**
-- `--model`: Hugging Face model identifier (for example, `OpenGVLab/InternVL2-1B`).
+- `--model`: Hugging Face model identifier (for example, `Qwen/Qwen3-VL-2B-Instruct`).
 - `--type`: Model category. Use `vlm` for Vision Language Models.
 - `--weight-format`: Precision/quantization format. Supported values are `int4`, `int8`, and `fp16`.
 - `--device`: Target conversion device (for example, `CPU`, `GPU`, or `NPU`, depending on host support).
@@ -51,7 +51,7 @@ Use the following commands to run conversion for the desired target device. Gene
 
 	```bash
 	./model_download_scripts/download_models.sh \
-		--model Qwen/Qwen3.5-0.8B \
+		--model Qwen/Qwen3-VL-2B-Instruct \
 		--type vlm \
 		--weight-format int4 \
 		--device CPU
@@ -61,7 +61,7 @@ Use the following commands to run conversion for the desired target device. Gene
 
 	```bash
 	./model_download_scripts/download_models.sh \
-		--model Qwen/Qwen3.5-0.8B \
+		--model Qwen/Qwen3-VL-8B-Instruct \
 		--type vlm \
 		--weight-format int4 \
 		--device GPU
@@ -71,20 +71,20 @@ Use the following commands to run conversion for the desired target device. Gene
 
 	```bash
 	./model_download_scripts/download_models.sh \
-		--model OpenGVLab/InternVL2-1B \
+		--model Qwen/Qwen3-VL-2B-Instruct \
 		--type vlm \
 		--weight-format int4 \
 		--device NPU
 	```
 
 	> Note: NPU currently requires `int4` quantization for VLM conversion. If you pass `--device NPU` with `int8` or `fp16`, the script automatically overrides it to `int4`.
-	> Note: Not all models are supported on NPU. See the [OpenVINO Model Support Page](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html) for model and device compatibility details.
+	> Note: Use this NPU conversion only if `Qwen/Qwen3-VL-2B-Instruct` is supported for your hardware and OVMS/OpenVINO version. NPU support varies by model; check the [OpenVINO Model Support Page](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html) before converting.
 
 You can also download and convert for multiple target devices in a single command by passing a comma-separated `--device` list:
 
 ```bash
 ./model_download_scripts/download_models.sh \
-	--model Qwen/Qwen3.5-0.8B \
+	--model Qwen/Qwen3-VL-2B-Instruct \
 	--type vlm \
 	--weight-format int4 \
 	--device CPU,GPU
@@ -92,27 +92,28 @@ You can also download and convert for multiple target devices in a single comman
 
 Downloaded VLM models are stored under per-device directories in `ov_models/`.
 
-Each VLM output directory is placed under its target device path so the UI can automatically associate models with the selected VLM device.
+Set `ALERT_VLM_MODEL`, `ALERT_VLM_DEVICE`, `DEEP_ANALYZER_MODEL`, and `DEEP_ANALYZER_DEVICE` in `.env` to match the downloaded directory names and device folders. The alert model is used for frame-level filtering; the deep-analyzer model must support video input.
+
+The application loads each VLM from the device-specific directory that matches its model and device settings in `.env`.
 
 Example:
 
 | `--device` flag | Example output directory | VLM device tag |
 |---|---|---|
-| `CPU` (or omitted) | `ov_models/cpu/InternVL2-1B` | `CPU` |
-| `GPU` | `ov_models/gpu/InternVL2-1B` | `GPU` |
-| `NPU` | `ov_models/npu/InternVL2-1B` | `NPU` |
+| `CPU` (or omitted) | `ov_models/cpu/Qwen3-VL-2B-Instruct` | `CPU` |
+| `GPU` | `ov_models/gpu/Qwen3-VL-8B-Instruct` | `GPU` |
+| `NPU` | `ov_models/npu/Qwen3-VL-2B-Instruct` | `NPU` |
 
-### VLM Models Validated
+### Models Used in This Guide
 
-The following VLM models are validated:
+The setup examples use these VLMs:
 
-| Model Name | Supported Hardware Devices | OVMS Release TAG Version |
+| Pipeline | Model Name | Device |
 | --- | --- | --- |
-| OpenGVLab/InternVL2-1B | CPU, GPU, NPU | v2026.1 |
-| Qwen/Qwen3.5-0.8B | CPU, GPU | v2026.1 |
-| Qwen/Qwen3.5-2B | CPU, GPU | v2026.1 |
+| Alert VLM | Qwen/Qwen3-VL-2B-Instruct | CPU |
+| Deep analyzer | Qwen/Qwen3-VL-8B-Instruct | GPU |
 
-> Note: `OVMS_RELEASE_TAG` in `.env` controls the OVMS image version used by the model download/conversion flow. Refer to the validated-model table above, or consult official OpenVINO documentation for supported models and corresponding OVMS versions. Using a different tag can change the bundled `transformers`/OpenVINO toolchain and may cause conversion failures.
+> Note: `OVMS_RELEASE_TAG` in `.env` controls the OVMS image version used by the model download/conversion flow. Consult the official OpenVINO documentation for supported models and corresponding OVMS versions. Using a different tag can change the bundled `transformers`/OpenVINO toolchain and may cause conversion failures.
 >
 > Note: If you want to use newer Hugging Face models, you may need a newer OVMS/OpenVINO stack for conversion, which means updating `OVMS_RELEASE_TAG`.
 

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # must be restricted to a safe allowlist — no "/", "..", or other path/URL
 # metacharacters.
 _STREAM_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
-_ALLOWED_URL_SCHEMES = {"rtsp", "rtsps", "http", "https"}
+_ALLOWED_URL_SCHEMES = {"rtsp", "rtsps"}
 _MAX_URL_LENGTH = 2048
 _MAX_PROMPT_LENGTH = 4096
 
@@ -80,7 +80,7 @@ def build_stream_router(registry, alert_index) -> APIRouter:
         parsed_url = urlparse(source_url)
         if parsed_url.scheme.lower() not in _ALLOWED_URL_SCHEMES:
             logger.warning("Rejected add_stream request with disallowed URL scheme: %r", parsed_url.scheme)
-            raise HTTPException(status_code=400, detail="'url' must use rtsp(s):// or http(s)://")
+            raise HTTPException(status_code=400, detail="'url' must use rtsp:// or rtsps://")
 
         # SDL425: stream_id becomes part of a filesystem path (segment files)
         # and a URL path (WHEP endpoint) — restrict to a safe allowlist to

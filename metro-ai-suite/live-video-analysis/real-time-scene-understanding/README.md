@@ -7,9 +7,10 @@ Real Time Scene Understanding is a real-time video monitoring application that i
 
 To see the system requirements and other installation, see the following guides:
 
-- [System Requirements](): Check the hardware and software requirements for deploying the application.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 
 - [Get Started](./docs/user-guide/get-started.md): Step-by-step instructions to set up the application.
+- [Quick Start](./docs/user-guide/quick-start-guide.md): Deploy the application with the example model configuration.
 
 
 ## How It Works
@@ -43,9 +44,12 @@ For a detailed view of Real Time Scene Intelligence internal processing, see [do
 
 ## Learn More
 
-- [Get Started](./docs/user-guide/get-started.md) - Quick deployment guide
 - [Overview](./docs/user-guide/index.md) - Features and architecture
+- [Quick Start Guide](./docs/user-guide/quick-start-guide.md) - Deploy the application with the example configuration
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md) - Hardware and software needs
+- [Get Started](./docs/user-guide/get-started.md) - Detailed setup and configuration guide
+- [How It Works](./docs/user-guide/how-it-works.md) - Application architecture and data flow
 - [Build from Source](./docs/user-guide/get-started/build-from-source.md) - Custom build instructions
-- [Release Notes](./docs/user-guide/release-notes.md) - Changelog and known issues
 - [API Reference](./docs/user-guide/api-reference.md) - REST API endpoints
+- [Known Issues](./docs/user-guide/known-issues.md) - Compatibility notes and troubleshooting
+- [Release Notes](./docs/user-guide/release-notes.md) - Version history

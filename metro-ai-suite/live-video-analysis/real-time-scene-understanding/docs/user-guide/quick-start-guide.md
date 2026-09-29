@@ -67,7 +67,7 @@ You need two Vision Language Models (VLMs) for real-time scene understanding:
 If a model is gated on Hugging Face, set your token first:
 
 ```bash
-export HUGGINGFACEHUB_API_TOKEN=<your-token>
+export HUGGINGFACEHUB_API_TOKEN="your-token"
 ```
 
 ### Specifying the conversion device
@@ -83,7 +83,6 @@ By default, conversion runs on CPU. To target another device:
 ```
 
 > **Note:** NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`.
-
 > **Note**: NPU compatibility varies by model. Before selecting a model, confirm NPU support in [OpenVINO Supported Models](https://docs.openvino.ai/2026/documentation/compatibility-and-support/supported-models.html).
 
 ### Downloading the Models
@@ -93,18 +92,31 @@ Run:
 ```bash
 # Download "ALERT_VLM_MODEL" for single-frame based scene understanding
 ./model_download_scripts/download_models.sh \
-	--model Qwen/Qwen3.5-0.8B \
+	--model Qwen/Qwen3-VL-2B-Instruct \
 	--type vlm \
-	--weight-format int4
+	--weight-format int4 \
+	--device CPU
 
 # Download "DEEP_ANALYZER_MODEL" for temporal-based understanding on consecutive frames
 ./model_download_scripts/download_models.sh \
-	--model Qwen/Qwen3.5-2B \
+	--model Qwen/Qwen3-VL-8B-Instruct \
 	--type vlm \
-	--weight-format int4
+	--weight-format int4 \
+	--device GPU
 ```
 
 > Note: `DEEP_ANALYZER_MODEL` must support video input because deep analysis relies on temporal understanding across consecutive frames. Support is model-specific in OpenVINO GenAI: some VLMs are image-only. Before choosing a model, verify it in the official [Supported Models (VLM)](https://openvinotoolkit.github.io/openvino.genai/docs/supported-models/#vision-language-models-vlms) page and review [Visual Processing Using VLMs](https://openvinotoolkit.github.io/openvino.genai/docs/use-cases/visual-processing/) for image/video input behavior.
+
+The downloaded model names and devices must match the settings in `.env`. For the two example downloads above, set:
+
+```dotenv
+ALERT_VLM_MODEL=Qwen3-VL-2B-Instruct
+ALERT_VLM_DEVICE=CPU
+DEEP_ANALYZER_MODEL=Qwen3-VL-8B-Instruct
+DEEP_ANALYZER_DEVICE=GPU
+```
+
+These model names and devices match the setup template. Model files must be under `ov_models/<device-lowercase>/<model-name>/`.
 
 ---
 
@@ -135,7 +147,7 @@ http://<YOUR_IP>:9100
 ### Using the Dashboard
 
 - Enter a video source (RTSP URL).
-- Enter the alert event.
+- Enter the alert prompt and the deep-analysis prompt.
 - Click "Start" to begin the pipeline.
 
 ---
@@ -168,5 +180,5 @@ docker compose down
 Once you are familiar with the basic usage of the application, you can explore the following next steps:
 
 - [System Requirements](./get-started/system-requirements.md) - full hardware and software requirements for running the application.
-- [Get Started](./get-started/get-started.md) - a more complete and detailed setup guide with all configuration options to get the application up and running.
+- [Get Started](./get-started.md) - a more complete and detailed setup guide with all configuration options to get the application up and running.
 - [How It Works](./how-it-works.md) - an overview of the application's architecture and workflow.

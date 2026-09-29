@@ -45,16 +45,19 @@ This endpoint is consumed by the UI to resolve WebRTC signaling and metrics serv
 {
 	"stream_id": "camera-lobby",
 	"url": "rtsp://example.com/stream",
-	"alert_event": "fire"
+	"alert_prompt": "Look for visible fire and describe its location.",
+	"deep_analyzer_prompt": "Review the clip for evidence of fire and summarize what happens."
 }
 ```
 
 Notes:
 
 - `url` is required.
-- `alert_event` is required.
+- `alert_prompt` and `deep_analyzer_prompt` are required.
 - `stream_id` defaults to `default` if omitted/empty.
-- `alert_event` must describe one event only (multi-event delimiters such as `,`, `;`, `|`, `/` are rejected).
+- `url` must use `rtsp://` or `rtsps://`. HTTP and HTTPS URLs are not supported.
+- `stream_id`, when provided, must contain 1-64 letters, digits, underscores, or hyphens.
+- Each prompt is limited to 4096 characters.
 
 #### Create Stream Response Schema
 
@@ -73,7 +76,8 @@ Notes:
 		{
 			"stream_id": "camera-lobby",
 			"url": "rtsp://example.com/stream",
-			"alert_event": "fire",
+			"alert_prompt": "Look for visible fire and describe its location.",
+			"deep_analyzer_prompt": "Review the clip for evidence of fire and summarize what happens.",
 			"publishing": true,
 			"codec": "h264",
 			"resolution": "576x320",
@@ -114,8 +118,8 @@ Notes:
 	"alerts": [
 		{
 			"frame_id": "9dd96a2f-17b9-41a0-a1c5-e3f8f76b07a7",
-			"alert_event": "fire",
 			"trigger_caption": "Yes",
+			"confirmed": true,
 			"thumbnail_url": "/api/streams/camera-lobby/alerts/9dd96a2f-17b9-41a0-a1c5-e3f8f76b07a7/thumbnail",
 			"uploaded_at": "2026-09-07T10:17:40.100000+00:00"
 		}
@@ -129,15 +133,15 @@ Notes:
 {
 	"stream_id": "camera-lobby",
 	"frame_id": "9dd96a2f-17b9-41a0-a1c5-e3f8f76b07a7",
-	"alert_event": "fire",
 	"trigger_caption": "Yes",
+	"confirmed": true,
 	"thumbnail_url": "/api/streams/camera-lobby/alerts/9dd96a2f-17b9-41a0-a1c5-e3f8f76b07a7/thumbnail",
 	"description": "Short multi-frame analysis summary.",
 	"metrics": {
 		"ttft_ms": 70.2,
 		"throughput_tps": 50.4
 	},
-	"model": "Qwen3.5-2B-int4-ov",
+	"model": "Qwen3-VL-8B-Instruct",
 	"device": "GPU",
 	"uploaded_at": "2026-09-07T10:17:40.100000+00:00",
 	"video_url": "/api/streams/camera-lobby/alerts/9dd96a2f-17b9-41a0-a1c5-e3f8f76b07a7/video"
@@ -152,7 +156,6 @@ Notes:
 ### Frame Registry
 
 - `GET /api/registry/stats` - Registry totals and per-stream counts
-- `GET /api/registry/streams/{stream_id}` - Full in-memory frame records for one stream
 - `GET /api/registry/stream/{stream_id}` - Latest frame records for one stream (`limit` query param)
 - `GET /api/registry/frame/{frame_id}` - Lookup a specific frame record by UUID
 
@@ -171,10 +174,7 @@ Notes:
 
 #### Registry Records Response Schema
 
-Returned by:
-
-- `GET /api/registry/streams/{stream_id}`
-- `GET /api/registry/stream/{stream_id}`
+Returned by `GET /api/registry/stream/{stream_id}` (`limit` defaults to `50`).
 
 ```json
 {
@@ -235,6 +235,7 @@ Related metrics capability endpoint:
 Typical API error codes:
 
 - `400` - invalid request payload or malformed path/query values
+- `422` - request body violates schema limits (for example, a prompt exceeds 4096 characters)
 - `404` - stream, alert, thumbnail, video, or frame record not found
 - `409` - stream conflict (for example, duplicate `stream_id`)
 

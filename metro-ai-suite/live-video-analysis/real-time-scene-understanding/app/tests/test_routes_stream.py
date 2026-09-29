@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
 from backend.routes.stream import build_stream_router
 from backend.services.stream_manager import StreamHealth
 from fastapi import FastAPI
@@ -140,6 +141,23 @@ class TestAddStream:
         assert response.status_code == 400
         registry.add.assert_not_called()
 
+    @pytest.mark.parametrize("prompt_field", ["alert_prompt", "deep_analyzer_prompt"])
+    def test_rejects_whitespace_only_prompt(self, prompt_field):
+        registry = MagicMock()
+        alert_index = MagicMock()
+        payload = {
+            "url": "rtsp://example/cam1",
+            "alert_prompt": "Look for smoke.",
+            "deep_analyzer_prompt": "Summarize the scene evidence for smoke.",
+        }
+        payload[prompt_field] = " \t\n"
+
+        response = _client(registry, alert_index).post("/api/streams", json=payload)
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == f"'{prompt_field}' is required"
+        registry.add.assert_not_called()
+
     def test_rejects_missing_deep_analyzer_prompt(self):
         registry = MagicMock()
         alert_index = MagicMock()
@@ -166,6 +184,23 @@ class TestAddStream:
         )
 
         assert response.status_code == 400
+        registry.add.assert_not_called()
+
+    def test_rejects_http_url(self):
+        registry = MagicMock()
+        alert_index = MagicMock()
+
+        response = _client(registry, alert_index).post(
+            "/api/streams",
+            json={
+                "url": "https://example.com/camera.m3u8",
+                "alert_prompt": "Look for smoke.",
+                "deep_analyzer_prompt": "Summarize the scene evidence for smoke.",
+            },
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "'url' must use rtsp:// or rtsps://"
         registry.add.assert_not_called()
 
     def test_rejects_stream_id_with_path_traversal(self):

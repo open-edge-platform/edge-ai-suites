@@ -5,7 +5,7 @@ This page summarizes the recommended environment for running Real Time Scene Und
 ## Hardware Platforms used for validation
 
 - This application is specifically targeting Intel&reg; Core&trade; platforms. Intel&reg; Core&trade; Ultra 2 and 3 with integrated GPU are currently supported.
-- Intel&reg; Core&trade; Ultra platforms with integrated NPU are supported for LLM inference offloading.
+- Intel&reg; Core&trade; Ultra platforms with integrated NPU can run compatible VLMs; model and resolution support vary by device.
 - While there is no hard restriction in using this application on Intel&reg; Xeon&reg; platforms with or without Intel&reg; Arc&trade; GPUs, users are requested to raise a feature ticket in case of any requirement.
 
 ## Operating Systems used for validation
@@ -27,33 +27,35 @@ This page summarizes the recommended environment for running Real Time Scene Und
 
 ## Network / Ports
 
-Default ports (configurable via environment variables):
+Default host ports (configurable in `.env`):
 
-- `PORT=9100` (Dashboard UI and REST API)
-- `METRICS_PORT=9090` (Live metrics WebSocket service)
+- `PORT=9100` (Dashboard UI and REST API; Compose maps this host port to container port `9100`)
+- `METRICS_SERVICE_PORT=9090` (Live metrics SSE service)
+- `WEBRTC_SIGNALING_PORT=8889` (MediaMTX WebRTC/WHEP signaling)
+- `8189/udp` (MediaMTX WebRTC media)
+- `3478/udp` (Coturn TURN service)
+
+Compose publishes the dashboard host port through `PORT` (default `9100`); add `PORT` to `.env` to change it. The container listens on port `9100`. The `DASHBOARD_PORT` value in `.env.example` does not change the host port mapping.
 
 ## Model Requirements
 
-The application requires two VLM models. One model is used by the alert-filtering pipeline for frame-level alert gating, and the other is used by the multi-frame deep-analyzer pipeline to analyze video tensors from segmented clips. The deep-analyzer model must support video modality, and compatibility is model-specific. The Qwen3.5 model family has been validated for this application.
+The application uses two VLM models. The alert model performs frame-level alert gating, and the deep-analyzer model processes segmented clips. The deep-analyzer model must support video input. The configured models are `Qwen3-VL-2B-Instruct` for the alert pipeline and `Qwen3-VL-8B-Instruct` for deep analysis.
 
 Configure model selection via `.env` file as below:
 
-- ALERT_VLM_MODEL=Qwen3.5-0.8B
-- DEEP_ANALYZER_MODEL=Qwen3.5-2B
+- ALERT_VLM_MODEL=Qwen3-VL-2B-Instruct
+- ALERT_VLM_DEVICE=CPU
+- DEEP_ANALYZER_MODEL=Qwen3-VL-8B-Instruct
+- DEEP_ANALYZER_DEVICE=GPU
 
-The application can use pre-converted OpenVINO models. Example model options:
+These are the values in `.env.example` and match the model-preparation commands. Download or prepare them for the configured device and make sure their directory names match the model settings under `ov_models/<device-lowercase>/<model-name>/`. The application can use pre-converted OpenVINO models. The model directory names are:
 
-- `OpenVINO/Qwen3.5-0.8B-int4-ov`
-- `OpenVINO/Qwen3.5-2B-int4-ov`
+- `Qwen3-VL-2B-Instruct`
+- `Qwen3-VL-8B-Instruct`
 
-Model files can also be prepared using the provided scripts and model directories in this repository (for example, `model_download_scripts/download_models.sh` and `ov_models/`). Pleasae refer to [Model Preparion Guide](./model-preparation.md) for the steps.
+Model files can also be prepared using the provided scripts and model directories in this repository (for example, `model_download_scripts/download_models.sh` and `ov_models/`). Please refer to the [Model Preparation Guide](./model-preparation.md) for the steps.
 
-> **Note:** Use pre-converted OpenVINO IR VLM models from the
-> [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO)
-> for best compatibility with OVMS. These models are already optimized and
-> require no additional conversion. Browse the available models at
-> [OpenVINO VLM Models](https://huggingface.co/collections/OpenVINO/visual-language-models) and select the variant that matches
-> your target device and quantization requirements.
+> **Note:** Pre-converted OpenVINO IR VLMs can avoid local model conversion. When choosing one, verify compatibility with the OpenVINO GenAI runtime and target device used by this application. Browse models from the [OpenVINO organization on Hugging Face](https://huggingface.co/OpenVINO) and its [VLM collection](https://huggingface.co/collections/OpenVINO/visual-language-models).
 
 ## Validation
 
