@@ -155,6 +155,19 @@ class TestVLMLoading:
 
         assert vlm.get_vlm_engine() is sentinel
 
+    def test_get_vlm_engine_initializes_singleton_when_missing(self, monkeypatch):
+        class _FakeEngine:
+            pass
+
+        monkeypatch.setattr(vlm, "_engine", None)
+        monkeypatch.setattr(vlm, "VLMEngine", _FakeEngine)
+
+        first = vlm.get_vlm_engine()
+        second = vlm.get_vlm_engine()
+
+        assert isinstance(first, _FakeEngine)
+        assert first is second
+
 
 class TestVLMRequestAPI:
     def test_caption_with_metrics_rejects_blank_prompt(self):
@@ -196,6 +209,35 @@ class TestVLMRequestAPI:
 
         assert result[0].startswith("Decision: Yes")
         assert captured["item"][:2] == (0, 7)
+
+    def test_caption_with_metrics_raises_worker_error(self):
+        engine = object.__new__(VLMEngine)
+
+        class _Queue:
+            def put(self, item):
+                item[2].error = RuntimeError("worker failed")
+                item[2].event.set()
+
+        engine._queue = _Queue()
+        engine._seq_counter = iter([1])
+        frame = np.zeros((1, 1, 3), dtype="uint8")
+
+        with pytest.raises(RuntimeError, match="worker failed"):
+            engine.caption_with_metrics(frame, prompt="prompt")
+
+    def test_caption_with_metrics_raises_when_result_missing_without_error(self):
+        engine = object.__new__(VLMEngine)
+
+        class _Queue:
+            def put(self, item):
+                item[2].event.set()
+
+        engine._queue = _Queue()
+        engine._seq_counter = iter([2])
+        frame = np.zeros((1, 1, 3), dtype="uint8")
+
+        with pytest.raises(RuntimeError, match="without a result or an error"):
+            engine.caption_with_metrics(frame, prompt="prompt")
 
     def test_dispatch_loop_records_generation_error(self):
         engine = object.__new__(VLMEngine)

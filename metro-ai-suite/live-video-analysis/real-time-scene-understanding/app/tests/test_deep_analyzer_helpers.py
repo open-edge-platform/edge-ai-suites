@@ -11,13 +11,17 @@ instantiating the engine.
 from __future__ import annotations
 
 import json
+import os
 import queue
 import threading
 import uuid
 from collections import OrderedDict
+from types import SimpleNamespace
 
+import numpy as np
 import pytest
 from backend.services import deep_analyzer as deep_analyzer_module
+from backend.services import vlm as vlm_module
 from backend.services.deep_analyzer import DeepAnalyzerEngine
 from backend.services.deep_analyzer import _AnalysisJob
 from backend.services.deep_analyzer import _next_segment_path
@@ -71,7 +75,16 @@ class TestDeepAnalyzerSubmitFlow:
         )
 
         assert schema["required"] == ["confirmed", "summary"]
-        assert schema["properties"]["confirmed"] == {"type": "boolean"}
+        assert schema["properties"]["confirmed"]["type"] == "boolean"
+        assert schema["properties"]["confirmed"]["description"]
+        assert schema["properties"]["summary"]["type"] == "string"
+        assert schema["properties"]["summary"]["description"]
+        assert schema["properties"]["summary"]["minLength"] == 1
+        expected_max = max(
+            deep_analyzer_module.settings.DEEP_ANALYZER_MAX_TOKENS - vlm_module._JSON_OVERHEAD_TOKENS,
+            5,
+        ) * vlm_module._CHARS_PER_TOKEN
+        assert schema["properties"]["summary"]["maxLength"] == expected_max
 
     def test_parse_analysis_result_returns_confirmation_and_summary(self):
         assert DeepAnalyzerEngine._parse_analysis_result(
@@ -259,5 +272,300 @@ class TestDeepAnalyzerSubmitFlow:
 
         assert "confirmed` field" in captured["prompt"]
         assert captured["prompt"].startswith("Return JSON with a boolean")
-        assert "Threat Context: Visible smoke near the ATM." in captured["prompt"]
+        assert "Context Event: Visible smoke near the ATM." in captured["prompt"]
         assert "Analyze the provided sequence of video frames chronologically for the threat." in captured["prompt"]
+
+    def test_sample_segment_frames_with_known_total_uses_uniform_indices(self, monkeypatch):
+        class _Frame:
+            def __init__(self, idx):
+                self.idx = idx
+
+            def to_ndarray(self, format="rgb24"):
+                assert format == deep_analyzer_module.settings.DEEP_ANALYZER_FRAME_FORMAT
+                return np.array([[self.idx]], dtype="uint8")
+
+        class _Container:
+            def __init__(self):
+                self.streams = SimpleNamespace(video=[SimpleNamespace(frames=5)])
+                self.closed = False
+
+            def decode(self, _stream):
+                return [_Frame(i) for i in range(5)]
+
+            def close(self):
+                self.closed = True
+
+        container = _Container()
+        monkeypatch.setattr(deep_analyzer_module.av, "open", lambda _path: container)
+
+        sampled = deep_analyzer_module._sample_segment_frames("segments/s.mp4", max_frames=3)
+
+        assert sampled.shape == (3, 1, 1)
+        assert {int(v[0][0]) for v in sampled.tolist()} == {0, 1, 3}
+        assert container.closed is True
+
+    def test_sample_segment_frames_without_metadata_decodes_all_then_trims(self, monkeypatch):
+        class _Frame:
+            def __init__(self, idx):
+                self.idx = idx
+
+            def to_ndarray(self, format="rgb24"):
+                assert format == deep_analyzer_module.settings.DEEP_ANALYZER_FRAME_FORMAT
+                return np.array([[self.idx]], dtype="uint8")
+
+        class _Container:
+            def __init__(self):
+                self.streams = SimpleNamespace(video=[SimpleNamespace(frames=0)])
+
+            def decode(self, _stream):
+                return [_Frame(i) for i in range(6)]
+
+            def close(self):
+                return None
+
+        monkeypatch.setattr(deep_analyzer_module.av, "open", lambda _path: _Container())
+
+        sampled = deep_analyzer_module._sample_segment_frames("segments/s.mp4", max_frames=3)
+
+        assert sampled.shape == (3, 1, 1)
+        assert {int(v[0][0]) for v in sampled.tolist()} == {0, 2, 5}
+
+    def test_sample_segment_frames_raises_when_empty(self, monkeypatch):
+        class _Container:
+            def __init__(self):
+                self.streams = SimpleNamespace(video=[SimpleNamespace(frames=0)])
+
+            def decode(self, _stream):
+                return []
+
+            def close(self):
+                return None
+
+        monkeypatch.setattr(deep_analyzer_module.av, "open", lambda _path: _Container())
+
+        with pytest.raises(ValueError):
+            deep_analyzer_module._sample_segment_frames("segments/empty.mp4", max_frames=3)
+
+    def test_engine_init_initializes_dispatch_and_storage(self, monkeypatch):
+        monkeypatch.setattr(DeepAnalyzerEngine, "_load", lambda self: None)
+        started = {"called": False}
+
+        class _Thread:
+            def __init__(self, **kwargs):
+                self.kwargs = kwargs
+
+            def start(self):
+                started["called"] = True
+
+        monkeypatch.setattr(deep_analyzer_module.threading, "Thread", _Thread)
+        monkeypatch.setattr(deep_analyzer_module, "SeaweedFSStorage", lambda: "storage")
+
+        engine = DeepAnalyzerEngine()
+
+        assert started["called"] is True
+        assert engine._dispatch_thread.kwargs["name"] == "deep-analyzer-dispatch"
+        assert engine._object_storage == "storage"
+
+    def test_load_raises_when_model_path_missing(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(deep_analyzer_module.DeepAnalyzerVLMRuntime, "model_path", lambda: "/missing/model")
+        monkeypatch.setattr(deep_analyzer_module.os.path, "isdir", lambda _path: False)
+
+        with pytest.raises(FileNotFoundError):
+            engine._load()
+
+    def test_load_builds_pipeline_and_generation_config(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(deep_analyzer_module.DeepAnalyzerVLMRuntime, "model_path", lambda: "/ok/model")
+        monkeypatch.setattr(deep_analyzer_module.os.path, "isdir", lambda _path: True)
+        monkeypatch.setattr(
+            deep_analyzer_module.DeepAnalyzerVLMRuntime,
+            "build_pipeline",
+            lambda _path: "pipe",
+        )
+        monkeypatch.setattr(engine, "_build_generation_config", lambda: "cfg")
+
+        engine._load()
+
+        assert engine._pipe == "pipe"
+        assert engine._gen_config == "cfg"
+
+    def test_get_metrics_adds_active_count(self):
+        engine = object.__new__(DeepAnalyzerEngine)
+        engine._lock = threading.Lock()
+        engine._stats = {"stream-1": {"submitted": 1, "queued": 2, "in_flight": 3, "completed": 4, "failed": 5, "max_in_flight": 3}}
+
+        metrics = engine.get_metrics("stream-1")
+
+        assert metrics["active"] == 5
+        assert metrics["submitted"] == 1
+
+    def test_submit_queues_immediately_when_segment_already_finalized(self):
+        engine = object.__new__(DeepAnalyzerEngine)
+        engine._lock = threading.Lock()
+        engine._dedup = OrderedDict()
+        engine._finalized = OrderedDict({"segments/default_segment_0006.mp4": None})
+        engine._pending = {}
+        engine._active = set()
+        engine._stats = {}
+        engine._queue = queue.Queue()
+
+        engine.submit("stream-10", "segments/default_segment_0006.mp4", "smoke", uuid.uuid4())
+
+        queued = engine._queue.get_nowait()
+        assert queued.segment_path == "segments/default_segment_0006.mp4"
+        assert not engine._pending
+
+    def test_is_segment_active_reflects_active_set(self):
+        engine = object.__new__(DeepAnalyzerEngine)
+        engine._lock = threading.Lock()
+        engine._active = {"segments/a.mp4"}
+
+        assert engine.is_segment_active("segments/a.mp4") is True
+        assert engine.is_segment_active("segments/b.mp4") is False
+
+    def test_dispatch_loop_success_updates_stats_and_clears_active(self):
+        engine = object.__new__(DeepAnalyzerEngine)
+        engine._lock = threading.Lock()
+        engine._stats = {"stream-1": {"submitted": 0, "queued": 1, "in_flight": 0, "completed": 0, "failed": 0, "max_in_flight": 0}}
+        job = _AnalysisJob("stream-1", "segments/s1.mp4", "fire", uuid.uuid4())
+        engine._active = {job.segment_path}
+
+        class _Queue:
+            def __init__(self):
+                self.calls = 0
+
+            def get(self):
+                self.calls += 1
+                if self.calls == 1:
+                    return job
+                raise StopIteration()
+
+        engine._queue = _Queue()
+        monkeypatch = pytest.MonkeyPatch()
+        try:
+            monkeypatch.setattr(engine, "_analyze", lambda _job: None)
+            with pytest.raises(StopIteration):
+                engine._dispatch_loop()
+        finally:
+            monkeypatch.undo()
+
+        stats = engine._stream_stats("stream-1")
+        assert stats["queued"] == 0
+        assert stats["completed"] == 1
+        assert stats["failed"] == 0
+        assert stats["in_flight"] == 0
+        assert stats["max_in_flight"] == 1
+        assert job.segment_path not in engine._active
+
+    def test_dispatch_loop_failure_tracks_failed_jobs(self):
+        engine = object.__new__(DeepAnalyzerEngine)
+        engine._lock = threading.Lock()
+        engine._stats = {"stream-2": {"submitted": 0, "queued": 1, "in_flight": 0, "completed": 0, "failed": 0, "max_in_flight": 0}}
+        job = _AnalysisJob("stream-2", "segments/s2.mp4", "fire", uuid.uuid4())
+        engine._active = {job.segment_path}
+
+        class _Queue:
+            def __init__(self):
+                self.calls = 0
+
+            def get(self):
+                self.calls += 1
+                if self.calls == 1:
+                    return job
+                raise StopIteration()
+
+        engine._queue = _Queue()
+        monkeypatch = pytest.MonkeyPatch()
+        try:
+            monkeypatch.setattr(engine, "_analyze", lambda _job: (_ for _ in ()).throw(RuntimeError("boom")))
+            with pytest.raises(StopIteration):
+                engine._dispatch_loop()
+        finally:
+            monkeypatch.undo()
+
+        stats = engine._stream_stats("stream-2")
+        assert stats["completed"] == 0
+        assert stats["failed"] == 1
+        assert stats["in_flight"] == 0
+        assert job.segment_path not in engine._active
+
+    def test_read_segment_frames_retries_then_succeeds(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(engine, "_wait_for_next_segment", lambda _job: None)
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_MAX_RETRIES", 3)
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_RETRY_DELAY", 0.01)
+
+        calls = {"n": 0}
+
+        def fake_sample(_path, _max_frames):
+            calls["n"] += 1
+            if calls["n"] < 3:
+                raise RuntimeError("not ready")
+            return np.array([[1]], dtype="uint8")
+
+        sleeps = []
+        monkeypatch.setattr(deep_analyzer_module, "_sample_segment_frames", fake_sample)
+        monkeypatch.setattr(deep_analyzer_module.time, "sleep", lambda delay: sleeps.append(delay))
+
+        frames = engine._read_segment_frames(
+            _AnalysisJob("stream-1", "segments/s.mp4", "fire", uuid.uuid4())
+        )
+
+        assert frames.shape == (1, 1)
+        assert calls["n"] == 3
+        assert sleeps == [0.01, 0.01]
+
+    def test_read_segment_frames_raises_after_max_retries(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(engine, "_wait_for_next_segment", lambda _job: None)
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_MAX_RETRIES", 2)
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_RETRY_DELAY", 0.01)
+        monkeypatch.setattr(
+            deep_analyzer_module,
+            "_sample_segment_frames",
+            lambda _path, _max_frames: (_ for _ in ()).throw(RuntimeError("bad segment")),
+        )
+
+        with pytest.raises(RuntimeError):
+            engine._read_segment_frames(_AnalysisJob("stream-1", "segments/s.mp4", "fire", uuid.uuid4()))
+
+    def test_wait_for_next_segment_returns_when_path_unavailable(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(deep_analyzer_module, "_next_segment_path", lambda _path: None)
+
+        engine._wait_for_next_segment(_AnalysisJob("stream-1", "segments/s.mp4", "fire", uuid.uuid4()))
+
+    def test_wait_for_next_segment_retries_then_gives_up(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(deep_analyzer_module, "_next_segment_path", lambda _path: "segments/s2.mp4")
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_MAX_RETRIES", 3)
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_RETRY_DELAY", 0.02)
+        monkeypatch.setattr(deep_analyzer_module.os.path, "exists", lambda _path: False)
+        sleeps = []
+        monkeypatch.setattr(deep_analyzer_module.time, "sleep", lambda delay: sleeps.append(delay))
+
+        engine._wait_for_next_segment(_AnalysisJob("stream-1", "segments/s1.mp4", "fire", uuid.uuid4()))
+
+        assert sleeps == [0.02, 0.02]
+
+    def test_wait_for_next_segment_returns_when_next_exists(self, monkeypatch):
+        engine = object.__new__(DeepAnalyzerEngine)
+        monkeypatch.setattr(deep_analyzer_module, "_next_segment_path", lambda _path: "segments/s2.mp4")
+        monkeypatch.setattr(deep_analyzer_module.settings, "DEEP_ANALYZER_SEGMENT_READ_MAX_RETRIES", 3)
+        monkeypatch.setattr(deep_analyzer_module.os.path, "exists", lambda _path: True)
+
+        engine._wait_for_next_segment(_AnalysisJob("stream-1", "segments/s1.mp4", "fire", uuid.uuid4()))
+
+    def test_get_deep_analyzer_lazy_singleton(self, monkeypatch):
+        class _FakeEngine:
+            pass
+
+        deep_analyzer_module._engine = None
+        monkeypatch.setattr(deep_analyzer_module, "DeepAnalyzerEngine", _FakeEngine)
+
+        first = deep_analyzer_module.get_deep_analyzer()
+        second = deep_analyzer_module.get_deep_analyzer()
+
+        assert isinstance(first, _FakeEngine)
+        assert first is second
