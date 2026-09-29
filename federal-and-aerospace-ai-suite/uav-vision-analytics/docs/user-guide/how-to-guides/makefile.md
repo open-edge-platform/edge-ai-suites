@@ -78,11 +78,12 @@ resources/
 
 Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), which includes:
 
-- `dlstreamer-pipeline-server` — AI inference, REST API (:8081), RTSP output (:8555)
+- `dlstreamer-pipeline-server` — AI inference, REST API (:8081), RTSP output (:8555) — reached via `nginx`
 - `broker` — Eclipse Mosquitto MQTT broker (:1883)
 - `px4` — PX4 SITL flight controller simulator
 - `mavlink-router` — MAVLink routing sidecar (receives on :14550, broadcasts to :14541)
-- `metrics-manager` — system metrics endpoint (:9090)
+- `metrics-manager` — system metrics endpoint (:9090) — reached via `nginx`
+- `nginx` — reverse proxy; the only service publishing ports to the host (`:80`, `:8555`)
 
 `down` passes `-v` to also remove named volumes (pipeline cache).
 
@@ -122,7 +123,7 @@ make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 
 `DEVICE=npu` falls back to GPU if `NPU_DEVICE` was not detected during `make init`.
 
-Requires the DLSPS container to already be running (`make pymav-up` or `make uavsdk-up` first).
+Requires the DL Streamer Pipeline Server container to already be running (`make pymav-up` or `make uavsdk-up` first).
 
 ### `make build`
 
