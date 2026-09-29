@@ -1312,6 +1312,42 @@ Write-Host 'Activating virtual environment...' -ForegroundColor Gray
 Set-Location '$ScriptDir'
 Write-Host "Changed to: `$PWD" -ForegroundColor Gray
 
+`$prepareContentSearchModels = [System.Convert]::ToBoolean('$contentSearchEnabled')
+if (`$prepareContentSearchModels) {
+    Write-Host ''
+    Write-Host 'Preparing Content Search embedding models...' -ForegroundColor Yellow
+    `$previousPythonPath = `$env:PYTHONPATH
+    `$env:PYTHONUNBUFFERED = '1'
+    `$env:PYTHONIOENCODING = 'utf-8'
+    `$env:PYTHONUTF8 = '1'
+    `$env:PYTHONPATH = '$ScriptDir\content_search;$ScriptDir'
+    if (`$previousPythonPath) {
+        `$env:PYTHONPATH += ";`$previousPythonPath"
+    }
+
+    Push-Location '$ScriptDir\content_search'
+    try {
+        Write-Host '  Preparing visual embedding model...' -ForegroundColor Gray
+        python -c "from start_services import _load_config_to_env; _load_config_to_env(); from providers.file_ingest_and_retrieve.models import get_visual_embedding_model; get_visual_embedding_model()"
+        if (`$LASTEXITCODE -ne 0) {
+            Write-Host 'Visual embedding model preparation failed.' -ForegroundColor Red
+            exit 1
+        }
+
+        Write-Host '  Preparing document embedding model...' -ForegroundColor Gray
+        python -c "from start_services import _load_config_to_env; _load_config_to_env(); from providers.file_ingest_and_retrieve.models import get_document_embedding_model; get_document_embedding_model()"
+        if (`$LASTEXITCODE -ne 0) {
+            Write-Host 'Document embedding model preparation failed.' -ForegroundColor Red
+            exit 1
+        }
+    } finally {
+        Pop-Location
+        `$env:PYTHONPATH = `$previousPythonPath
+    }
+
+    Write-Host 'Content Search embedding models are ready.' -ForegroundColor Green
+}
+
 Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
 Write-Host ''
@@ -1319,9 +1355,23 @@ python main.py
 "@
     $backendEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($backendScript))
 
-    $script:backendProcess = Start-Process powershell -NoNewWindow -PassThru -ArgumentList "-ExecutionPolicy Bypass -EncodedCommand $backendEncoded"
+    if ($NoWindowsTerminal) {
+        $backendLaunch = Invoke-WmiMethod -Path win32_process -Name create -ArgumentList "powershell.exe -ExecutionPolicy Bypass -EncodedCommand $backendEncoded"
+        if ($backendLaunch.ReturnValue -ne 0) {
+            Write-Host "Failed to start Backend through WMI (code $($backendLaunch.ReturnValue))." -ForegroundColor Red
+            exit 1
+        }
 
-    Write-Host "  Backend started in this terminal" -ForegroundColor Green
+        $script:backendProcess = Get-Process -Id $backendLaunch.ProcessId -ErrorAction SilentlyContinue
+    } else {
+        $script:backendProcess = Start-Process powershell -NoNewWindow -PassThru -ArgumentList "-ExecutionPolicy Bypass -EncodedCommand $backendEncoded"
+    }
+
+    if ($NoWindowsTerminal) {
+        Write-Host "  Backend started in a detached PowerShell process" -ForegroundColor Green
+    } else {
+        Write-Host "  Backend started in this terminal" -ForegroundColor Green
+    }
     Write-Host ""
     } 
     
