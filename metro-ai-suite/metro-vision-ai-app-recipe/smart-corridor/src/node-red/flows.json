@@ -1,0 +1,245 @@
+[
+  {
+    "id": "f6f2187d.f17ca8",
+    "type": "tab",
+    "label": "Flow 1",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "mqtt_broker",
+    "type": "mqtt-broker",
+    "name": "MQTT Broker",
+    "broker": "broker.scenescape.intel.com",
+    "port": "1883",
+    "tls": "f5cfea783bb942f1",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": true,
+    "compatmode": false,
+    "protocolVersion": 4,
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  },
+  {
+    "id": "c2dff2cbcb5e51e0",
+    "type": "influxdb",
+    "hostname": "127.0.0.1",
+    "port": 8086,
+    "protocol": "http",
+    "database": "database",
+    "name": "influx",
+    "usetls": false,
+    "tls": "",
+    "influxdbVersion": "2.0",
+    "url": "http://influxdb2:8086",
+    "timeout": 10,
+    "rejectUnauthorized": false
+  },
+  {
+    "id": "f5cfea783bb942f1",
+    "type": "tls-config",
+    "name": "Broker TLS",
+    "cert": "/run/secrets/broker-cert",
+    "key": "/run/secrets/broker-key",
+    "ca": "/run/secrets/root-cert",
+    "certname": "",
+    "keyname": "",
+    "caname": "",
+    "servername": "",
+    "verifyservercert": false,
+    "alpnprotocol": ""
+  },
+  {
+    "id": "mqtt_in",
+    "type": "mqtt in",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "topic": "scenescape/event/region/+/+/objects",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "mqtt_broker",
+    "nl": false,
+    "rap": false,
+    "inputs": 0,
+    "x": 220,
+    "y": 300,
+    "wires": [
+      [
+        "process_message"
+      ]
+    ]
+  },
+  {
+    "id": "process_message",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "Process Message",
+    "func": "var msg_payload = msg.payload;\n\nif (msg_payload.scene_name) {\n    var region_name = msg_payload.region_name;\n    var timestamp = msg_payload.timestamp;\n    var counts = msg_payload.counts;\n    var count_keys = Object.keys(counts);\n\n    count_keys.forEach(function (key) {\n        var json_body = [\n            { count: counts[key] + \"i\" },\n            {\n                location: msg_payload.scene_name || \"Anthem\",\n                region: region_name,\n                object: key\n            }\n        ];\n        node.send({ payload: json_body, measurement: \"region_obj_count_2\", timestamp: timestamp });\n    });\n\n    var objects_exited = msg_payload.exited;\n    var items_exited = objects_exited.length;\n    if (items_exited > 0) {\n        objects_exited.forEach(function (obj) {\n            var json_body2 = [\n                { dwell_time: parseFloat(obj.dwell.toFixed(2)) },\n                {\n                    location: msg_payload.scene_name || \"Anthem\",\n                    region: region_name,\n                    object: obj.object.category\n                }\n            ];\n            node.send({ payload: json_body2, measurement: \"region_obj_dwell_2\", timestamp: timestamp });\n        });\n    }\n\n    var pedestrian_noped_count = Number((counts || {}).pedestrian || 0);\n    var vehicle_noped_count = Number((counts || {}).vehicle || 0);\n    var jaywalking_detected = region_name === \"NOPED\" && pedestrian_noped_count > 0;\n    var collision_count = jaywalking_detected ? vehicle_noped_count : 0;\n\n    var collision_body = [\n        {\n            count: collision_count + \"i\",\n            trigger: (collision_count > 0 ? 1 : 0) + \"i\"\n        },\n        {\n            location: msg_payload.scene_name || \"Anthem\",\n            region: \"NOPED\",\n            object: \"vehicle\"\n        }\n    ];\n    node.send({ payload: collision_body, measurement: \"collision_events_2\", timestamp: timestamp });\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 300,
+    "wires": [
+      [
+        "d013192f8325ddd9"
+      ]
+    ]
+  },
+  {
+    "id": "d013192f8325ddd9",
+    "type": "influxdb out",
+    "z": "f6f2187d.f17ca8",
+    "influxdb": "c2dff2cbcb5e51e0",
+    "name": "myinflux",
+    "measurement": "",
+    "precision": "",
+    "retentionPolicy": "",
+    "database": "database",
+    "precisionV18FluxV20": "s",
+    "retentionPolicyV18Flux": "",
+    "org": "ITM",
+    "bucket": "SS-Anthem",
+    "x": 860,
+    "y": 300,
+    "wires": []
+  },
+  {
+    "id": "da48cf024c809e81",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "Process Message",
+    "func": "var msg_payload = msg.payload;\n\nif (msg_payload.name === 'Intersection-Demo') {\n    var timestamp = msg_payload.timestamp;\n    // Handle pedestrian tracking data\n    if (msg_payload.objects && Array.isArray(msg_payload.objects)) {\n        msg_payload.objects.forEach(function (obj) {\n            if (obj.category === \"pedestrian\" && (\"lat_long_alt\" in obj)) {\n                // Calculate speed (velocity magnitude)\n                var vel = obj.velocity || [0, 0, 0];\n                var speed = Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1] + vel[2] * vel[2]);\n\n                var json_body3 = [\n                    {\n                        pedid: obj.id,\n                        latitude: obj.lat_long_alt ? obj.lat_long_alt[0] : 0,\n                        longitude: obj.lat_long_alt ? obj.lat_long_alt[1] : 0,\n                        heading: obj.heading || 0,\n                        velocity: speed.toFixed(2)\n                    },\n                    {\n                        location: msg_payload.name || msg_payload.scene_name || \"Anthem\"\n                    }\n                ];\n\n                node.send({\n                    payload: json_body3,\n                    measurement: \"pedestrian_loc\",\n                    timestamp: timestamp\n                });\n            }\n        });\n    }\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 460,
+    "wires": [
+      [
+        "d013192f8325ddd9"
+      ]
+    ]
+  },
+  {
+    "id": "5aae86b5734fd608",
+    "type": "mqtt in",
+    "z": "f6f2187d.f17ca8",
+    "name": "",
+    "topic": "scenescape/data/region/+/+/pedestrian",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "mqtt_broker",
+    "nl": false,
+    "rap": false,
+    "inputs": 0,
+    "x": 230,
+    "y": 460,
+    "wires": [
+      [
+        "da48cf024c809e81"
+      ]
+    ]
+  },
+  {
+    "id": "wrong_way_detection",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "Wrong Way Detection (Tripwire)",
+    "func": "var msg_payload = msg.payload;\n\nvar tripwire_name = msg_payload.tripwire_name;\nvar timestamp = msg_payload.timestamp;\nvar objects = msg_payload.objects || [];\nvar fs = global.get('fs');\n\nvar wrong_way_direction = {\n    'NBLANE_START_TW': 1,\n    'NBLANE_END_TW': 1,\n    'SBLANE_START_TW': 1,\n    'SBLANE_END_TW': 1,\n    'EBLANE_START_TW': 1,\n    'EBLANE_END_TW': 1,\n    'WBLANE_START_TW': 1,\n    'WBLANE_END_TW': 1\n};\n\nvar bad_dir = wrong_way_direction[tripwire_name];\nif (bad_dir === undefined) { return null; }\n\nvar lane = tripwire_name.replace('_START_TW', '').replace('_END_TW', '');\n\nvar ts = new Date();\ntry { ts = new Date(timestamp); } catch (e) {}\nvar dateStr = ts.toISOString().split(\"T\")[0];\nvar timeStr = ts.toTimeString().split(\" \")[0].replace(/:/g, \"\");\n\nobjects.forEach(function (obj) {\n    if (obj.direction === bad_dir) {\n        var vel = obj.velocity || [0, 0, 0];\n        var speed = Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1]);\n\n        if (speed < 0.5) { return; }\n\n        var imageUrl = \"\";\n        var frameUrl = \"\";\n        var baseDir = `/images_data/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}`;\n\n        if (obj.image_b64) {\n            try {\n                fs.mkdirSync(baseDir, { recursive: true });\n                var imgName = `wrongway_${obj.id || 'unknown'}_${timeStr}.jpg`;\n                fs.writeFileSync(`${baseDir}/${imgName}`, Buffer.from(obj.image_b64, \"base64\"));\n                imageUrl = `/images/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}/${imgName}`;\n            } catch (err) {}\n        }\n\n        var f_b64 = obj.frame_b64 || msg_payload.frame_b64;\n        if (f_b64) {\n            try {\n                fs.mkdirSync(baseDir, { recursive: true });\n                var frameName = `wrongway_frame_${obj.id || 'unknown'}_${timeStr}.jpg`;\n                fs.writeFileSync(`${baseDir}/${frameName}`, Buffer.from(f_b64, \"base64\"));\n                frameUrl = `/images/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}/${frameName}`;\n            } catch (err) {}\n        }\n\n        var json_body = [\n            {\n                object_id: String(obj.uuid || obj.global_id || obj.id || 'unknown'),\n                heading: obj.heading || 0,\n                speed: parseFloat(speed.toFixed(2)),\n                wrong_way: 1,\n                event_url: imageUrl,\n                frame_url: frameUrl\n            },\n            {\n                location: msg_payload.scene_name || 'Anthem',\n                region: lane,\n                object: obj.category || 'vehicle'\n            }\n        ];\n\n        node.send({\n            payload: json_body,\n            measurement: 'wrong_way_alert',\n            timestamp: timestamp\n        });\n    }\n});\n\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 620,
+    "wires": [
+      [
+        "d013192f8325ddd9"
+      ]
+    ]
+  },
+  {
+    "id": "wrong_way_mqtt_in",
+    "type": "mqtt in",
+    "z": "f6f2187d.f17ca8",
+    "name": "Tripwire Events",
+    "topic": "scenescape/event/tripwire/+/+/objects",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "mqtt_broker",
+    "nl": false,
+    "rap": false,
+    "inputs": 0,
+    "x": 230,
+    "y": 620,
+    "wires": [
+      [
+        "wrong_way_detection"
+      ]
+    ]
+  },
+  {
+    "id": "stalled_vehicle_mqtt_in",
+    "type": "mqtt in",
+    "z": "f6f2187d.f17ca8",
+    "name": "Vehicle Region Data",
+    "topic": "scenescape/event/region/+/+/objects",
+    "qos": "2",
+    "datatype": "auto-detect",
+    "broker": "mqtt_broker",
+    "nl": false,
+    "rap": false,
+    "inputs": 0,
+    "x": 230,
+    "y": 780,
+    "wires": [
+      [
+        "stalled_vehicle_detection"
+      ]
+    ]
+  },
+  {
+    "id": "stalled_vehicle_detection",
+    "type": "function",
+    "z": "f6f2187d.f17ca8",
+    "name": "Stalled Vehicle Detection",
+    "func": "var msg_payload = msg.payload;\n\nvar REGION_CONFIG = {\n    'NBLANE':  { stall_threshold_sec: 15 },\n    'SBLANE':  { stall_threshold_sec: 15 },\n    'EBLANE':  { stall_threshold_sec: 15 },\n    'WBLANE':  { stall_threshold_sec: 15 },\n    'NOPED':   { stall_threshold_sec: 15 },\n    'INTERSECTION': { stall_threshold_sec: 15 }\n};\n\nvar SPEED_THRESHOLD = 0.5;\nvar CLEANUP_TIMEOUT_SEC = 60;\nvar fs = global.get('fs');\n\nvar tracker = flow.get('stalledVehicleTracker') || {};\n\nvar timestamp    = msg_payload.timestamp;\nvar region_name  = msg_payload.region_name || msg_payload.scene_name;\nvar objects      = msg_payload.objects || [];\n\nif (!region_name) { return null; }\n\nvar DEFAULT_STALL_THRESHOLD_SEC = 15;\nvar threshold_sec = (REGION_CONFIG[region_name] || {}).stall_threshold_sec || DEFAULT_STALL_THRESHOLD_SEC;\n\nvar ts = new Date();\ntry { ts = new Date(timestamp); } catch (e) {}\nvar now_sec = ts.getTime() / 1000;\nvar dateStr = ts.toISOString().split(\"T\")[0];\nvar timeStr = ts.toTimeString().split(\" \")[0].replace(/:/g, \"\");\n\nobjects.forEach(function (obj) {\n    if (obj.category !== 'vehicle') { return; }\n\n    var id  = obj.id;\n    var vel = obj.velocity || [0, 0, 0];\n    var speed = Math.sqrt(vel[0] * vel[0] + vel[1] * vel[1]);\n\n    if (!tracker[id]) {\n        tracker[id] = {\n            firstStationarySec: speed < SPEED_THRESHOLD ? now_sec : null,\n            lastSeenSec:        now_sec,\n            region:             region_name,\n            alertSent:          false,\n            speed:              parseFloat(speed.toFixed(2))\n        };\n    } else {\n        var rec = tracker[id];\n        rec.lastSeenSec = now_sec;\n        rec.speed       = parseFloat(speed.toFixed(2));\n\n        if (speed >= SPEED_THRESHOLD) {\n            rec.firstStationarySec = null;\n            rec.alertSent          = false;\n            rec.region             = region_name;\n        } else {\n            if (rec.firstStationarySec === null) {\n                rec.firstStationarySec = now_sec;\n            }\n\n            var stalled_duration_sec = now_sec - rec.firstStationarySec;\n\n            if (stalled_duration_sec >= threshold_sec && !rec.alertSent) {\n                rec.alertSent = true;\n\n                var imageUrl = \"\";\n                var frameUrl = \"\";\n                var baseDir = `/images_data/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}`;\n\n                if (obj.image_b64) {\n                    try {\n                        fs.mkdirSync(baseDir, { recursive: true });\n                        var imgName = `stalled_${id}_${timeStr}.jpg`;\n                        fs.writeFileSync(`${baseDir}/${imgName}`, Buffer.from(obj.image_b64, \"base64\"));\n                        imageUrl = `/images/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}/${imgName}`;\n                    } catch (err) {}\n                }\n\n                var frameB64 = obj.frame_b64 || msg_payload.frame_b64;\n                if (frameB64) {\n                    try {\n                        fs.mkdirSync(baseDir, { recursive: true });\n                        var frameName = `stalled_frame_${id}_${timeStr}.jpg`;\n                        fs.writeFileSync(`${baseDir}/${frameName}`, Buffer.from(frameB64, \"base64\"));\n                        frameUrl = `/images/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}/${frameName}`;\n                    } catch (err) {}\n                }\n\n                var json_body = [\n                    {\n                        stalled_duration: parseFloat(stalled_duration_sec.toFixed(2)),\n                        speed:            rec.speed,\n                        trigger:          1,\n                        event_url:        imageUrl,\n                        frame_url:        frameUrl\n                    },\n                    {\n                        location:   msg_payload.scene_name || msg_payload.name || 'Anthem',\n                        region:     region_name,\n                        object:     'vehicle',\n                        vehicle_id: String(id)\n                    }\n                ];\n                node.send({\n                    payload:     json_body,\n                    measurement: 'stalled_vehicle_alert',\n                    timestamp:   timestamp\n                });\n            }\n        }\n    }\n});\n\nObject.keys(tracker).forEach(function (id) {\n    if ((now_sec - tracker[id].lastSeenSec) > CLEANUP_TIMEOUT_SEC) {\n        delete tracker[id];\n    }\n});\n\nflow.set('stalledVehicleTracker', tracker);\n\n// === CONGESTION DETECTION LOGIC (Low average speed over n seconds) ===\nvar CONGESTION_CONFIG = {\n    'NBLANE':       { speed_threshold: 3.0, duration_sec: 10, min_vehicles: 2 },\n    'SBLANE':       { speed_threshold: 3.0, duration_sec: 10, min_vehicles: 2 },\n    'EBLANE':       { speed_threshold: 3.0, duration_sec: 10, min_vehicles: 2 },\n    'WBLANE':       { speed_threshold: 3.0, duration_sec: 10, min_vehicles: 2 },\n    'INTERSECTION': { speed_threshold: 2.0, duration_sec: 10, min_vehicles: 3 }\n};\n\nvar congTracker = flow.get('congestionTracker') || {};\nvar cfg = CONGESTION_CONFIG[region_name] || { speed_threshold: 3.0, duration_sec: 10, min_vehicles: 2 };\n\nvar regVehicles = [];\nvar congFrameB64 = null;\n\nobjects.forEach(function (o) {\n    if (o.category === 'vehicle') {\n        var v = o.velocity || [0, 0, 0];\n        var s = Math.sqrt(v[0] * v[0] + v[1] * v[1]);\n        regVehicles.push(s);\n\n        if (!congFrameB64) {\n            if (o.frame_b64) { congFrameB64 = o.frame_b64; }\n            else if (msg_payload.frame_b64) { congFrameB64 = msg_payload.frame_b64; }\n        }\n    }\n});\n\nif (!congTracker[region_name]) {\n    congTracker[region_name] = { firstLowSpeedSec: null, alertSent: false };\n}\nvar cState = congTracker[region_name];\n\nif (regVehicles.length >= cfg.min_vehicles) {\n    var totSpeed = regVehicles.reduce(function(a, b) { return a + b; }, 0);\n    var avgSpeed = totSpeed / regVehicles.length;\n\n    if (avgSpeed < cfg.speed_threshold) {\n        if (cState.firstLowSpeedSec === null) {\n            cState.firstLowSpeedSec = now_sec;\n        }\n        var congDurationSec = now_sec - cState.firstLowSpeedSec;\n\n        if (congDurationSec >= cfg.duration_sec && !cState.alertSent) {\n            cState.alertSent = true;\n\n            var congFrameUrl = \"\";\n            if (congFrameB64) {\n                try {\n                    var cBaseDir = `/images_data/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}`;\n                    fs.mkdirSync(cBaseDir, { recursive: true });\n                    var cFrameName = `congestion_frame_${region_name}_${timeStr}.jpg`;\n                    fs.writeFileSync(`${cBaseDir}/${cFrameName}`, Buffer.from(congFrameB64, \"base64\"));\n                    congFrameUrl = `/images/vehicle-events/${dateStr}/${msg_payload.scene_name || 'Anthem'}/${cFrameName}`;\n                } catch (err) {}\n            }\n\n            var congBody = [\n                {\n                    avg_speed:     parseFloat(avgSpeed.toFixed(2)),\n                    dwell_time:    parseFloat(congDurationSec.toFixed(2)),\n                    vehicle_count: regVehicles.length,\n                    trigger:       1,\n                    frame_url:     congFrameUrl\n                },\n                {\n                    location: msg_payload.scene_name || msg_payload.name || 'Anthem',\n                    region:   region_name,\n                    object:   'vehicle'\n                }\n            ];\n\n            node.send({\n                payload:     congBody,\n                measurement: 'congestion_events',\n                timestamp:   timestamp\n            });\n        }\n    } else {\n        cState.firstLowSpeedSec = null;\n        cState.alertSent = false;\n    }\n} else {\n    cState.firstLowSpeedSec = null;\n    cState.alertSent = false;\n}\n\nflow.set('congestionTracker', congTracker);\nreturn null;",
+    "outputs": 1,
+    "timeout": "",
+    "noerr": 0,
+    "initialize": "flow.set('stalledVehicleTracker', {});",
+    "finalize": "",
+    "libs": [],
+    "x": 590,
+    "y": 780,
+    "wires": [
+      [
+        "d013192f8325ddd9"
+      ]
+    ]
+  }
+]
