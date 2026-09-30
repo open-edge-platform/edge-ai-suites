@@ -70,11 +70,6 @@ You can either generate or download the Helm charts.
    S3_STORAGE_PASSWORD:
    ```
 
-   > [!NOTE]
-   > Set `HOST_IP` to a host-reachable, non-loopback node IP address for WebRTC/TURN flows.
-   > Allow TCP/UDP traffic on the coturn NodePort configured in `values.yaml`
-   > (`config.coturn.ext.coturn_udp_port`, `30478` by default) through the host firewall.
-
 ## Step 3: Install Helm charts
 
 > [!NOTE]
