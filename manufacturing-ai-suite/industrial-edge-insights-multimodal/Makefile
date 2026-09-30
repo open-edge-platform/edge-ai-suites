@@ -35,6 +35,7 @@ LLM_DEVICE_LOWER := $(shell printf '%s' "$(LLM_DEVICE)" | tr '[:upper:]' '[:lowe
 LLM_WEIGHT_FORMAT_LOWER := $(shell printf '%s' "$(LLM_WEIGHT_FORMAT)" | tr '[:upper:]' '[:lower:]')
 MODEL_PATH ?= /model/llm_model_agentic/openvino_models/$(LLM_DEVICE_LOWER)/$(LLM_WEIGHT_FORMAT_LOWER)/$(LLM_MODEL_NAME)
 export MODEL_PATH
+PLATFORM_CHECK ?= true
 
 # Build Docker containers
 .PHONY: build
@@ -230,7 +231,11 @@ check_models:
 
 .PHONY: check_hardware
 check_hardware:
-	@echo "Checking hardware compatibility (Intel Panther Lake / Core Ultra 3xx required)..."; \
+	@if [ "$$(printf '%s' '$(PLATFORM_CHECK)' | tr '[:upper:]' '[:lower:]')" = "false" ]; then \
+		echo "WARNING: PLATFORM_CHECK=false, skipping Panther Lake hardware check (CI/validation use only)."; \
+		exit 0; \
+	fi; \
+	echo "Checking hardware compatibility (Intel Panther Lake / Core Ultra 3xx required)..."; \
 	cpu_model=$$(lscpu | awk -F: '/Model name:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
 	cpu_vendor=$$(lscpu | awk -F: '/Vendor ID:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
 	cpu_family=$$(lscpu | awk -F: '/CPU family:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \

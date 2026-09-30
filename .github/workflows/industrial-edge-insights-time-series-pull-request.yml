@@ -155,6 +155,104 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
         make down
 
+  industrial-edge-insights-multimodal-vllm-agentic-cpu:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-22.04-32core-128GB
+    env:
+      PLATFORM_CHECK: "false"
+      HF_TOKEN: ${{ secrets.HUGGINGFACE_API_TOKEN }}
+      # CPU overrides appended after each base compose file.
+      VLLM_OVR: DOCKER_COMPOSE_FILE_VLLM=./docker-compose-vllm.yml -f ${{ github.workspace }}/vllm-cpu.yml
+      AGENTIC_OVR: DOCKER_COMPOSE_FILE_AGENTIC=./docker-compose-agentic.yml -f ${{ github.workspace }}/agentic-cpu.yml
+    defaults:
+      run:
+        working-directory: timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
+    steps:
+    - name: Checkout edge-ai-libraries (main)
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        repository: open-edge-platform/edge-ai-libraries
+        ref: main
+        path: edge-ai-libraries
+        persist-credentials: false
+    - name: Building Time Series Analytics microservices
+      working-directory: edge-ai-libraries/microservices/time-series-analytics/docker
+      run: docker compose build
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+          path: timeseries
+          persist-credentials: false
+    - name: Setup
+      run: |
+        pw=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)1
+        for v in INFLUXDB_USERNAME VISUALIZER_GRAFANA_USER MTX_WEBRTCICESERVERS2_0_USERNAME S3_STORAGE_USERNAME; do
+          sed -i "s/^$v=.*/$v=$(tr -dc 'a-zA-Z' </dev/urandom | head -c8)/" .env
+        done
+        for v in INFLUXDB_PASSWORD VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_PASSWORD; do
+          sed -i "s/^$v=.*/$v=$pw/" .env
+        done
+        sed -i "s/^HOST_IP=.*/HOST_IP=$(hostname -I | awk '{print $1}')/" .env
+        # intel/vllm is XPU-only; agentic services hard-code /dev/dri and /dev/accel.
+        cat > "${{ github.workspace }}/vllm-cpu.yml" <<'EOF'
+        services:
+          vllm-server:
+            image: vllm/vllm-openai-cpu:v0.21.0-x86_64
+            entrypoint: ["vllm"]
+            devices: !reset []
+            environment:
+              USER: ubuntu  # image has no passwd entry for UID 1000
+              VLLM_CPU_KVCACHE_SPACE: "16"
+            command: !override
+              - serve
+              - ${VLLM_HOME_DIR}/${VLLM_CACHE_DIR}/${VLLM_MODEL_DIR}
+              - --dtype=bfloat16
+              - --enforce-eager
+              - --port
+              - ${VLLM_PORT}
+              - --no-enable-prefix-caching
+              - --trust-remote-code
+              - --max-num-batched-tokens=${VLLM_MAX_NUM_BATCHED_TOKENS}
+              - --max-model-len
+              - ${VLLM_MAX_MODEL_LEN}
+              - --served-model-name
+              - ${VLLM_SERVED_MODEL_NAME}
+              - --enable-lora
+              - --lora-modules
+              - ${VLLM_ADAPTER_NAME}=${VLLM_HOME_DIR}/${VLLM_ADAPTER_DIR}
+        EOF
+        cat > "${{ github.workspace }}/agentic-cpu.yml" <<'EOF'
+        services:
+          apm-llm:
+            devices: !reset []
+          apm-metrics:
+            devices: !reset []
+        EOF
+        pip install -q huggingface_hub==1.23.0
+        hf download unsloth/Qwen3.5-2B --local-dir configs/vllm/huggingface/Qwen3.5-2B
+        hf download Intel/qwen3.5-2b-vlm-weld-explainability-lora --local-dir configs/vllm/models/qwen3.5-2b-vlm-weld-explainability-lora
+        chmod -R a+rX configs/vllm
+        make build
+    - name: Deploy and test vLLM
+      run: |
+        make up_vllm "$VLLM_OVR" "$AGENTIC_OVR"
+        timeout 20m bash -c 'until docker exec vllm-server curl -sf localhost:8000/v1/models; do sleep 10; done'
+        docker exec vllm-server curl -sf localhost:8000/v1/chat/completions -H 'Content-Type: application/json' \
+          -d '{"model":"qwen3.5-2b-adapter","messages":[{"role":"user","content":"What causes weld porosity?"}],"max_tokens":32}' | grep '"content"'
+    - name: Deploy and test agentic
+      run: |
+        make up_agentic "$VLLM_OVR" "$AGENTIC_OVR"
+        timeout 20m bash -c 'until [ "$(docker inspect -f {{.State.Health.Status}} apm-llm)" = healthy ] && [ "$(docker inspect -f {{.State.Health.Status}} apm-agent)" = healthy ]; do sleep 10; done'
+        curl -sf localhost:8010/v3/chat/completions -H 'Content-Type: application/json' \
+          -d '{"model":"microsoft/Phi-4-mini-instruct","messages":[{"role":"user","content":"Reply OK"}],"max_tokens":8}' | grep '"content"'
+    - name: Logs
+      if: failure()
+      run: for c in $(docker ps -a --format '{{.Names}}'); do echo "=== $c"; docker logs --tail 200 "$c"; done
+    - name: Cleanup
+      if: always()
+      run: make down "$VLLM_OVR" "$AGENTIC_OVR"
+
   industrial-edge-insights-time-series-scans:
     permissions:
       contents: read
