@@ -100,7 +100,6 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    >   This may result in a delay before Fusion Analytics becomes fully operational.
    > - For WebRTC/TURN support, set `HOST_IP` in `.env` to a host-reachable, non-loopback IP address and allow TCP/UDP
    >   traffic on `COTURN_UDP_PORT` (default `3478`) through the host firewall.
-
    ```bash
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make up

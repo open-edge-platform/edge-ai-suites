@@ -525,10 +525,15 @@ services:
     image: coturn/coturn:4.17.2-alpine
     container_name: coturn
     read_only: true
-    network_mode: host
     security_opt:
     - no-new-privileges
-    command: ["-v", "--external-ip=${HOST_IP}", "--listening-port=${COTURN_UDP_PORT}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
+    ports:
+      - "${COTURN_UDP_PORT}:3478"
+      - "${COTURN_UDP_PORT}:3478/udp"
+    # docker-entrypoint.sh evaluates each arg, so $$(hostname -i) resolves to this container's own IP at startup
+    command: ["-v", "--external-ip=${HOST_IP}/$$(hostname -i)", "--listening-port=${COTURN_UDP_PORT}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
+    networks:
+    - timeseries_network
 
 networks:
   timeseries_network:

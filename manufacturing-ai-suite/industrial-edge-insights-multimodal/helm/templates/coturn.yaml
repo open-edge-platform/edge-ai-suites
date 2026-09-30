@@ -4,6 +4,27 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: coturn
+  namespace: {{ .Values.namespace }}
+spec:
+  type: NodePort  # Exposes the service externally
+  selector:
+    app: coturn
+  ports:
+    - name: "coturn-tcp"
+      protocol: TCP
+      port: {{ $.Values.config.coturn.int.coturn_tcp_port }}
+      targetPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
+      nodePort: {{ $.Values.config.coturn.ext.coturn_tcp_port }}  # Exposed on the node
+    - name: "coturn-udp"
+      protocol: UDP
+      port: {{ $.Values.config.coturn.int.coturn_udp_port }}
+      targetPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
+      nodePort: {{ $.Values.config.coturn.ext.coturn_udp_port }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,8 +42,6 @@ spec:
       labels:
         app: coturn
     spec:
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -35,9 +54,17 @@ spec:
       containers:
       - name: coturn
         image: coturn/coturn:4.12.0
+        env:
+          - name: HOST_IP
+            value: "{{ $.Values.env.HOST_IP }}"
+          # Resolved via the Downward API so no pod IP is hardcoded
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
         args:
           - "-v"
-          - "--external-ip={{ $.Values.env.HOST_IP }}"
+          - "--external-ip=$(HOST_IP)/$(POD_IP)"
           - "--listening-port={{ $.Values.config.coturn.int.coturn_udp_port }}"
           - "--user={{ $.Values.env.MTX_WEBRTCICESERVERS2_0_USERNAME }}:{{ $.Values.env.MTX_WEBRTCICESERVERS2_0_PASSWORD }}"
           - "--realm=turn.local"
@@ -45,7 +72,7 @@ spec:
           - "--no-dtls"
           - "--lt-cred-mech"
         ports:
-        - containerPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
+        - containerPort: {{ $.Values.config.coturn.int.coturn_tcp_port }}
           protocol: TCP
         - containerPort: {{ $.Values.config.coturn.int.coturn_udp_port }}
           protocol: UDP
