@@ -91,6 +91,9 @@ jobs:
             echo "❌ Not found within 30s"
             exit 1
         fi
+        make status | tee status.log
+        # Grafana logs "user token not found" until first login (see user guide).
+        if grep -i error status.log | grep -viE 'found errors in container|containers have errors|without errors|user token not found'; then exit 1; fi
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
         timeout 30s bash -c '
@@ -109,6 +112,8 @@ jobs:
             echo "❌ Not found within 30s"
             exit 1
         fi
+        make status | tee status.log
+        ! grep -i error status.log | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -150,7 +155,7 @@ jobs:
         echo "Deploying Multimodal Weld Defect Detection Sample App"
         make up
         make status | tee status.log
-        ! grep "Found errors in container" status.log
+        ! grep -i error status.log | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
     - name: Undeploying Multimodal Weld Defect Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -174,7 +179,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         repository: open-edge-platform/edge-ai-libraries
-        ref: 30d52c4cdec2df181497a91c86b29b93020d4636 # main @ 2026-09-30
+        ref: main
         path: edge-ai-libraries
         persist-credentials: false
     - name: Building Time Series Analytics microservices
@@ -204,12 +209,14 @@ jobs:
         EOF
         # vllm-server is expected to fail without a GPU; check_models only needs non-empty dirs.
         mkdir -p configs/vllm/models/placeholder configs/vllm/huggingface/placeholder
+        # model-download runs as UID 1000; the runner user is 1001.
+        mkdir -p configs/agentic/models && sudo chown 1000:1000 configs/agentic/models
         make build
     - name: Deploy vLLM
       run: |
         make up_vllm
         make status | tee status.log
-        ! grep "Found errors in container" status.log | grep -v vllm-server
+        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
     - name: Deploy and test agentic
       run: |
         make up_agentic "$AGENTIC_OVR"
@@ -217,7 +224,7 @@ jobs:
         curl -sf localhost:8010/v3/chat/completions -H 'Content-Type: application/json' \
           -d '{"model":"microsoft/Phi-4-mini-instruct","messages":[{"role":"user","content":"Reply OK"}],"max_tokens":8}' | grep '"content"'
         make status | tee status.log
-        ! grep "Found errors in container" status.log | grep -v vllm-server
+        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
     - name: Logs
       if: failure()
       run: for c in $(docker ps -a --format '{{.Names}}'); do echo "=== $c"; docker logs --tail 200 "$c"; done
