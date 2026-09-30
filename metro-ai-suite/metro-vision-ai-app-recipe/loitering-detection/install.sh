@@ -30,6 +30,37 @@ for model in "\${OMZ_MODELS[@]}"; do
 done
 
 ##############################################################################
+# Download and convert Ultralytics models to static-shape OpenVINO IRs.
+#
+# This is what the UI's "model comparison" mode compares the OMZ pedestrian
+# detector against. dynamic=False is required: gvadetect's GPU/NPU plugins
+# reject a dynamic spatial input shape outright, and on CPU the pipeline
+# runs but silently returns no detections. To add another Ultralytics model
+# for comparison, add its .pt name (without extension) to ULTRALYTICS_MODELS
+# below - the same export call applies to any of them.
+##############################################################################
+ULTRALYTICS_MODELS=(yolo11s)
+ULTRALYTICS_IMGSZ=640
+for model in "\${ULTRALYTICS_MODELS[@]}"; do
+  ir_dir="src/dlstreamer-pipeline-server/models/\${model}/\${model}_static/FP16"
+  if [ ! -e "\${ir_dir}/\${model}.xml" ]; then
+    echo "Installing ultralytics and exporting \$model to a static-shape OpenVINO IR..."
+    if pip install --break-system-packages --quiet --no-cache-dir ultralytics; then
+      ( cd /tmp && python3 -c "
+from ultralytics import YOLO
+YOLO('\${model}.pt').export(format='openvino', imgsz=\${ULTRALYTICS_IMGSZ}, dynamic=False, half=True)
+" && mkdir -p "/opt/project/\${ir_dir}" \
+      && mv "\${model}_openvino_model/\${model}.xml" "\${model}_openvino_model/\${model}.bin" "/opt/project/\${ir_dir}/" \
+      && mv "\${model}_openvino_model/metadata.yaml" "/opt/project/\${ir_dir}/metadata.yaml" \
+      && rm -rf "\${model}_openvino_model" "\${model}.pt" ) \
+      || echo "WARNING: \$model export failed (see above) - place a static-shape IR under \${ir_dir}/ manually if you need it."
+    else
+      echo "WARNING: could not install ultralytics - place a static-shape IR under \${ir_dir}/ manually if you need it."
+    fi
+  fi
+done
+
+##############################################################################
 # Download and setup videos
 ##############################################################################
 mkdir -p src/dlstreamer-pipeline-server/videos
@@ -45,6 +76,7 @@ for video_name in "\${!video_urls[@]}"; do
         curl -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
+
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" src/dlstreamer-pipeline-server/models src/dlstreamer-pipeline-server/videos 2>/dev/null || true

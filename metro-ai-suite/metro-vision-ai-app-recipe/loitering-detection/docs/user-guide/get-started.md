@@ -68,7 +68,7 @@ By following this guide, you will learn how to:
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Scenescape)
+     - Loitering Detection Console (operator UI)
      - Scenescape services (for Smart Intersection only)
 
      </details>
@@ -132,9 +132,10 @@ By following this guide, you will learn how to:
   > image features, the same object may receive different IDs over time due to
   > lack of re-identification.
 
-### **NodeRED UI**
+### **Loitering Detection Console UI**
 
-- **URL**: `https://localhost/nodered/`
+- **URL**: `https://localhost/console/`
+- Start/stop streams, discover models, draw a zone and view live per-stream loitering analytics.
 
 ### **DL Streamer Pipeline Server**
 

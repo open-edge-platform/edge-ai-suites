@@ -1,6 +1,37 @@
 #!/bin/bash
 
 DLSPS_NODE_IP="localhost"
+ZONE_CONFIG="$(dirname "$(readlink -f "$0")")/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json"
+# The pipelines bake in no model, so that a different one can be selected per
+# request without inheriting this model's post-processing.
+MODEL_DIR="/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001"
+MODEL_XML="$MODEL_DIR/FP16/pedestrian-and-vehicle-detector-adas-0001.xml"
+MODEL_PROC="$MODEL_DIR/pedestrian-and-vehicle-detector-adas-0001.json"
+
+# The pipelines deliberately bake in no zone: gvaanalytics does not cleanly
+# replace a zone already loaded from a config= file, so a baked zone could
+# never be overridden by the console. The zone is therefore always supplied
+# at start time, and this file is its single source of truth - edit it to
+# change the zone the sample pipelines evaluate.
+if [ ! -f "$ZONE_CONFIG" ]; then
+  echo "Error: zone configuration not found at $ZONE_CONFIG"
+  exit 1
+fi
+ZONES_JSON=$(python3 -c "import json,sys; print(json.dumps(json.dumps(json.load(open(sys.argv[1]))['zones'])))" "$ZONE_CONFIG") || {
+  echo "Error: could not read zones from $ZONE_CONFIG"
+  exit 1
+}
+# gvaattachroi restricts inference to the zone (the pipeline sets
+# inference-region=1), and takes opposite corners rather than x/y/w/h.
+ATTACH_ROI=$(python3 -c "
+import json,sys
+pts = json.load(open(sys.argv[1]))['zones'][0]['points']
+xs = [p['x'] for p in pts]; ys = [p['y'] for p in pts]
+print('%d,%d,%d,%d' % (min(xs), min(ys), max(xs), max(ys)))
+" "$ZONE_CONFIG") || {
+  echo "Error: could not derive the inference ROI from $ZONE_CONFIG"
+  exit 1
+}
 
 function run_sample() {
   pipelines=$1
@@ -31,11 +62,19 @@ function run_sample() {
         },
         "frame": {
             "type": "webrtc",
-            "peer-id": "object_tracking_$x",
-            "overlay-properties": {
-                "font-scale": 1.0,
-                "draw-txt-bg": false
-            }
+            "peer-id": "object_tracking_$x"
+        }
+    },
+    "parameters": {
+        "detection-properties": {
+            "model": "$MODEL_XML",
+            "model_proc": "$MODEL_PROC"
+        },
+        "analytics-properties": {
+            "zones": $ZONES_JSON
+        },
+        "attachroi-properties": {
+            "roi": "$ATTACH_ROI"
         }
     }
   }

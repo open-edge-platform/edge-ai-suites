@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!-- SPDX-FileCopyrightText: (C) 2026 Intel Corporation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <script>
+    (function () {
+      var pth = location.pathname;
+      if (pth.charAt(pth.length - 1) !== "/") pth = pth.slice(0, pth.lastIndexOf("/") + 1);
+      var b = document.createElement("base");
+      b.href = pth;
+      document.head.appendChild(b);
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metro Vision AI APP - Loitering Detection</title>
+  <link rel="stylesheet" href="static/styles.css">
+  <link rel="stylesheet" href="static/panels.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dot"></span>
+      <span class="title">Loitering Detection</span>
+    </div>
+    <div class="topbar-right">
+      <label class="compare-toggle">
+        <input type="checkbox" id="compareMode">
+        Model compare (side-by-side)
+      </label>
+      <span id="connState" class="conn conn-ok">DLSPS: connecting&hellip;</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="rail">
+      <div class="card">
+        <h2>Source</h2>
+        <div class="field">
+          <label for="sourceSel">Camera / stream</label>
+          <select id="sourceSel"></select>
+        </div>
+        <div class="field">
+          <label for="rtspInput">&hellip;or RTSP URL</label>
+          <input id="rtspInput" type="text" placeholder="rtsp://...">
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Model <button id="refreshModels" class="mini-btn" title="Re-scan model store">&#x27F3;</button></h2>
+        <div class="field">
+          <label for="modelSelA">Primary model</label>
+          <select id="modelSelA"></select>
+        </div>
+        <div class="field" id="modelBWrap" hidden>
+          <label for="modelSelB">Compare model</label>
+          <select id="modelSelB"></select>
+        </div>
+        <div class="field">
+          <label for="deviceSel">Device</label>
+          <select id="deviceSel"></select>
+        </div>
+        <p class="hint" id="modelSrcHint">Models are discovered automatically from the mounted model store.</p>
+      </div>
+
+      <div class="card">
+        <h2>Zone (ROI)</h2>
+        <label class="draw-toggle">
+          <input type="checkbox" id="drawZone">
+          &#9998; Draw zone on video
+        </label>
+        <div class="roi-grid">
+          <input id="roiX" type="number" value="0" placeholder="x">
+          <input id="roiY" type="number" value="200" placeholder="y">
+          <input id="roiW" type="number" value="300" placeholder="w">
+          <input id="roiH" type="number" value="400" placeholder="h">
+        </div>
+        <button id="applyZoneAll" class="btn btn-ghost btn-sm">Apply zone to live streams</button>
+        <p class="hint">Rectangle zone only for now. Applying a zone updates every live stream.</p>
+        <p class="hint">A track loiters once its dwell time in the zone reaches <span id="loiterThr">5.0</span>s.</p>
+      </div>
+
+      <div class="actions">
+        <button id="startBtn" class="btn btn-primary">&#9654; Start stream</button>
+        <button id="stopAllBtn" class="btn btn-ghost">&#9632; Stop all</button>
+      </div>
+
+      <div class="card util">
+        <h2>System Utilization</h2>
+        <div class="gauge" data-key="cpu">
+          <span class="g-label">CPU</span>
+          <div class="bar"><i></i></div>
+          <span class="g-val">&ndash;</span>
+          <span class="g-sub"></span>
+        </div>
+        <div class="gauge" data-key="gpu">
+          <span class="g-label">GPU</span>
+          <div class="bar"><i></i></div>
+          <span class="g-val">&ndash;</span>
+          <span class="g-sub"></span>
+        </div>
+        <div class="gauge" data-key="npu">
+          <span class="g-label">NPU</span>
+          <div class="bar"><i></i></div>
+          <span class="g-val">&ndash;</span>
+          <span class="g-sub"></span>
+        </div>
+        <div class="gauge" data-key="mem">
+          <span class="g-label">MEM</span>
+          <div class="bar"><i></i></div>
+          <span class="g-val">&ndash;</span>
+          <span class="g-sub"></span>
+        </div>
+      </div>
+    </aside>
+
+    <section class="stage">
+      <div id="grid" class="grid"></div>
+      <div id="emptyState" class="empty">
+        <p>No streams yet. Choose a source and model, then start a stream.</p>
+      </div>
+    </section>
+  </main>
+
+
+  <template id="panelTpl">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="p-title"></span>
+        <span class="p-actions">
+          <button class="p-close">&#10005;</button>
+        </span>
+      </div>
+      <div class="video-wrap">
+        <video autoplay playsinline muted></video>
+        <div class="roi-overlay">
+          <div class="roi-current"></div>
+          <div class="roi-draw"></div>
+        </div>
+      </div>
+      <div class="p-status">connecting&hellip;</div>
+      <div class="p-analytics">
+        <div class="p-stats"></div>
+        <table class="p-loiter">
+          <thead><tr>
+            <th>Object ID</th><th>Type</th><th>Status</th>
+            <th>Entry Time</th><th>Dwell (s)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="p-empty-rows">No object currently inside the zone.</p>
+      </div>
+    </div>
+  </template>
+
+  <script src="static/whep.js"></script>
+  <script src="static/panels.js"></script>
+  <script src="static/zones.js"></script>
+  <script src="static/telemetry.js"></script>
+  <script src="static/app.js"></script>
+</body>
+</html>
