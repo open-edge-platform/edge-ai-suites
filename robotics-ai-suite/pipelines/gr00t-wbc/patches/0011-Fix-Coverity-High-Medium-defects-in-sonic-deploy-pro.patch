@@ -1,0 +1,95 @@
+From 3f785e96bd9e9ee1cb5ee12cd1d8b25bfd0fbf40 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Sun, 9 Aug 2026 18:11:14 +0800
+Subject: [PATCH 11/13]  Fix Coverity High/Medium defects in sonic deploy
+ project   High/Medium:   - UNCAUGHT_EXCEPT (main): extend the try/catch to
+ wrap the whole     function body so arg parsing and setup are guarded, not
+ just the     deployment lifecycle.   - FORWARD_NULL (keyboard_handler.hpp,
+ gamepad.hpp): null-check     current_motion before dereferencing ->name in
+ the planner-wait loop.   - CHECKED_RETURN (keyboard_handler.hpp): check
+ fcntl(F_SETFL) return and     warn on failure; add <cstring>/<cerrno>.
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../include/input_interface/gamepad.hpp                  | 2 +-
+ .../include/input_interface/keyboard_handler.hpp         | 9 +++++++--
+ .../src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp | 9 +++++----
+ 3 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/gamepad.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/gamepad.hpp
+index 0e83fe9..e6192d9 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/gamepad.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/gamepad.hpp
+@@ -629,7 +629,7 @@ class Gamepad : public InputInterface {
+           while (planner_state.enabled) {
+             {
+               std::lock_guard<std::mutex> lock(current_motion_mutex);
+-              if (current_motion->name == "planner_motion") {
++              if (current_motion && current_motion->name == "planner_motion") {
+                 std::cout << "[Gamepad] motion name is planner_motion" << std::endl;
+                 break;
+               }
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/keyboard_handler.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/keyboard_handler.hpp
+index d1ee8bd..ce9a542 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/keyboard_handler.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/input_interface/keyboard_handler.hpp
+@@ -55,6 +55,8 @@
+ #include <thread>
+ #include <chrono>
+ #include <cstdlib>
++#include <cstring>
++#include <cerrno>
+ #include "input_interface.hpp"
+ 
+ /**
+@@ -129,7 +131,10 @@ class SimpleKeyboard : public InputInterface {
+       struct termios new_termios = old_termios_;
+       new_termios.c_lflag &= ~(ICANON | ECHO);  // Disable line buffering and echo
+       tcsetattr(STDIN_FILENO, TCSANOW, &new_termios);
+-      fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);  // Non-blocking reads
++      if (fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK) == -1) {  // Non-blocking reads
++        std::cerr << "[SimpleKeyboard] Warning: failed to set stdin non-blocking: "
++                  << std::strerror(errno) << std::endl;
++      }
+       type_ = InputType::KEYBOARD;
+     }
+ 
+@@ -485,7 +490,7 @@ class SimpleKeyboard : public InputInterface {
+           while (planner_state.enabled) {
+             {
+               std::lock_guard<std::mutex> lock(current_motion_mutex);
+-              if (current_motion->name == "planner_motion") {
++              if (current_motion && current_motion->name == "planner_motion") {
+                 std::cout << "[Keyboard] motion name is planner_motion" << std::endl;
+                 break;
+               }
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+index 21df774..0b35a11 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+@@ -4295,6 +4295,11 @@ class G1Deploy {
+  */
+ 
+ int main(int argc, char const* argv[]) {
++ // Guard the entire program: argument handling, deployment construction, the
++ // main loop and shutdown can all throw (file/regex parsing, ZMQ, Unitree SDK,
++ // bad_alloc, invalid transport). An uncaught exception would call
++ // std::terminate instead of exiting cleanly (Coverity UNCAUGHT_EXCEPT).
++ try {
+   std::cout << "[DEBUG] Program starting..." << std::endl;
+   if (argc < 4) {
+     std::cout << "Usage: " << argv[0] << " <network_interface> <policy_file> <motion_data_path> [OPTIONS]"
+@@ -4614,10 +4619,6 @@ int main(int argc, char const* argv[]) {
+   }
+ 
+   std::cout << "[DEBUG] Creating G1Deploy object..." << std::endl;
+-  // Guard the whole deployment lifecycle: construction, main loop and shutdown
+-  // can throw (file/regex parsing, ZMQ, Unitree SDK, bad_alloc). An uncaught
+-  // exception here would call std::terminate instead of a clean exit.
+-  try {
+   G1Deploy custom(
+     networkInterface,
+     modelFile,
+-- 
+2.43.0
+

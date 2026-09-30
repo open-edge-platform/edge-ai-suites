@@ -10,7 +10,7 @@ This folder contains a complete, self-contained setup for running the DetectNet 
 ## Contents
 
 - **setup_detectnet_intel.sh** — One-command setup script that configures entire environment
-- **isaac_ros_detectnet_intel.py** — Benchmark test script  
+- **isaac_ros_detectnet_intel.py** — Benchmark test script
 - **plugin_scaffold/** — Minimal Intel DetectNetOpenVINONode plugin implementation
   - `detectnet_openvino_node.hpp` — Plugin header
   - `detectnet_openvino_node.cpp` — Plugin implementation (publishes Detection2DArray)
@@ -62,7 +62,7 @@ cat /tmp/r2b-log-*.json | python3 -m json.tool | grep -E "MEAN_FRAME_RATE|CPU_UT
 
 The benchmark respects these OpenVINO environment variables:
 
-- `OV_DEVICE` — Device target: `"CPU"` (default), `"GPU"`, `"AUTO:GPU,CPU"`  
+- `OV_DEVICE` — Device target: `"CPU"` (default), `"GPU"`, `"AUTO:GPU,CPU"`
 - `OV_NUM_INFER_THREADS` — Manual thread count (0 = auto, default)
 - `R2B_PUBLISHER_UPPER_FPS` — Data publication rate upper limit (default: 80)
 - `R2B_PLAYBACK_BUFFER_SIZE` — Message sync buffer (default: 100)
@@ -74,16 +74,16 @@ The scaffolded plugin included here makes the benchmark pipeline runnable and me
 ## Dataset Source
 
 The r2b_dataset is downloaded from NVIDIA® NGC:
-- Metadata: https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/metadata.yaml
-- Data file (2.9GB): https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/r2b_storage_0.db3
+- Metadata: <https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/metadata.yaml>
+- Data file (2.9GB): <https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/r2b_storage_0.db3>
 
 ## Troubleshooting
 
-**Build fails with "isaac_ros_common not found"**  
+**Build fails with "isaac_ros_common not found"**
 This is expected and handled by the CMake patches. The build continues without the NVIDIA®-only dependency.
 
-**Benchmark script not found**  
+**Benchmark script not found**
 Ensure `colcon build` completed successfully and you sourced `install/setup.bash`.
 
-**Import errors in benchmark script**  
+**Import errors in benchmark script**
 Verify `openvino`, `numpy`, and `opencv-python` are installed: `pip3 show openvino`

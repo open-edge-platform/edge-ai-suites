@@ -28,16 +28,16 @@ $(OUT_DIR):
 VENV_DIR     := venv_$(PROJECT_NAME)
 
 # virtualenv activate script has undefined variables, disable then re-enable in bash
-$(VENV_DIR): docs/requirements.txt
+$(VENV_DIR): docs/user-guide/requirements.txt
 	python3 -m venv $@ ;\
   set +u; . ./$@/bin/activate; set -u ;\
   python -m pip install --upgrade pip ;\
-  python -m pip install -r docs/requirements.txt
+  python -m pip install -r docs/user-guide/requirements.txt
 
 check: | $(VENV_DIR) ## Check for and/or install prerequisite tools
 
 index: ## rename index.rst
-	mv docs/index.rst_ docs/index.rst || :
+	mv docs/user-guide/index.rst_ docs/user-guide/index.rst || :
 
 # Eventually we want:
 # lint: license yamllint pylint black doc8 sphinx-spelling sphinx-linkcheck markdownlint ## Lint all tooling and docs
@@ -106,7 +106,7 @@ docs/shared/shared_iam_groups.rst: $(VENV_DIR) generate/role_docs.py generate/so
 
 ### Sphinx-specific targets ###
 SPHINXBUILD   := sphinx-build
-SOURCEDIR     := docs/
+SOURCEDIR     := docs/user-guide/
 
 sphinx-serve: $(VENV_DIR) $(OUT_DIR)
 	set +u;	. ./$</bin/activate; set -u ;\

@@ -136,17 +136,6 @@ validate_env() {
         export RENDER_GROUP_ID
         RENDER_GROUP_ID=$(stat -c "%g" "${render_devices[0]}")
     fi
-
-    # LLM_MODEL_PATH is stored relative to the repo root in the use-case env
-    # file (e.g. "./apps/.../Phi-4-mini-instruct") for portability across
-    # machines/users. Docker Compose resolves relative volume host paths
-    # against the compose file's directory (docker/), not the caller's CWD —
-    # so a relative LLM_MODEL_PATH silently binds an empty/auto-created stub
-    # directory instead of the real model, and OVMS then fails to serve any
-    # model ("No version found for model in path" / "Mediapipe graph
-    # definition with requested name is not found"). Normalize it to an
-    # absolute path here (anchored at the repo root, same convention as
-    # USE_CASE_DIR below) before it reaches docker compose.
     if [ -n "${LLM_MODEL_PATH:-}" ] && [[ "${LLM_MODEL_PATH}" != /* ]]; then
         export LLM_MODEL_PATH="$(cd "${PWD}" && realpath -m "${LLM_MODEL_PATH}")"
     fi

@@ -20,7 +20,8 @@ to file new tickets there (after learning about the guidelines for [Contributing
   - Check VLM microservice logs for connectivity issues: `docker logs <vlm-container-id>`
   - Verify the model specified in Frigate config matches the one deployed in VLM service
 
-> **Note:** This is an experimental feature with known stability issues
+> [!NOTE]
+> This is an experimental feature with known stability issues
 
 ### 2. Object not getting detected
 

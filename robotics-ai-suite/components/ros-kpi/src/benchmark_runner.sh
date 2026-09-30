@@ -14,10 +14,12 @@
 #   --timeout SECS       Hard stop in seconds (overrides yaml stop.timeout; 0=off)
 #   --record             Record KPI topics to an MCAP bag
 #   --plot               Save trigger-timeline PNGs after analysis
+#   --show               Plot and display trigger timeline window after analysis
 #   --output-parent DIR  Session parent directory (overrides yaml session.output_subdir)
 #   --side-terminals     Open htop + qmassa in Terminator windows
+#   --no-prompt          Export default KPI outputs and skip interactive menus
 #
-#   All scenario behaviour (launch command, bag topics, stop condition, sweep
+#   All scenario behavior (launch command, bag topics, stop condition, sweep
 #   pattern, Gazebo play button, etc.) is controlled by the YAML run profile.
 #   GPU/NPU monitoring is auto-detected; no flag needed.
 
@@ -25,6 +27,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Prefer uv when available (dev machines); fall back to plain python3 on
+# deployed boxes where uv isn't installed.
+_PYTHON=$(command -v uv >/dev/null 2>&1 && echo "uv run python" || echo "python3")
+
+# shellcheck source=./_session_menu.sh disable=SC1091
+source "$SCRIPT_DIR/_session_menu.sh"
 
 # ── ROS 2 environment check ───────────────────────────────────────────────────
 if ! command -v ros2 &>/dev/null; then
@@ -98,12 +107,14 @@ _cleanup() {
 trap _cleanup EXIT
 
 # ── Locate --run-config before full arg parsing so we can load YAML first ────
+# Scenario wrappers (e.g. wandering_run.sh) prepend their own default
+# --run-config before forwarding "$@"; take the LAST occurrence so a
+# caller-supplied --run-config overrides the wrapper's default.
 RUN_CONFIG=""
 for (( _i=1; _i<=$#; _i++ )); do
   if [[ "${!_i}" == "--run-config" ]]; then
     _next=$(( _i + 1 ))
     RUN_CONFIG="${!_next:-}"
-    break
   fi
 done
 
@@ -118,7 +129,7 @@ if [[ ! -f "$RUN_CONFIG" ]]; then
 fi
 
 # ── Load all YAML config values into CONF_* shell variables ──────────────────
-eval "$(uv run python "$SCRIPT_DIR/benchmark_profiler.py" --config "$RUN_CONFIG" --export-bash)"
+eval "$($_PYTHON "$SCRIPT_DIR/benchmark_profiler.py" --config "$RUN_CONFIG" --export-bash)"
 
 # ── CLI defaults from YAML (CLI flags below may override) ─────────────────────
 GOAL_TARGET=$CONF_GOAL_COUNT
@@ -127,6 +138,7 @@ RECORD_MODE=0
 PLOT_MODE=0
 SHOW_MODE=0
 SIDE_TERMINALS=0
+NO_PROMPT=0
 OUTPUT_PARENT=""
 
 while [[ $# -gt 0 ]]; do
@@ -139,8 +151,9 @@ while [[ $# -gt 0 ]]; do
     --show)            SHOW_MODE=1; RECORD_MODE=1; PLOT_MODE=1; shift ;;
     --output-parent)   OUTPUT_PARENT="$2"; shift 2 ;;
     --side-terminals)  SIDE_TERMINALS=1; shift ;;
+    --no-prompt)       NO_PROMPT=1; shift ;;
     -h|--help)
-      sed -n '10,21p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+      sed -n '10,23p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
       trap - EXIT; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
@@ -204,7 +217,7 @@ if [[ "$RECORD_MODE" -eq 1 ]]; then
 fi
 
 echo ""
-echo "Waiting ${CONF_INIT_SLEEP}s for simulation to initialise..."
+echo "Waiting ${CONF_INIT_SLEEP}s for simulation to initialize..."
 sleep "$CONF_INIT_SLEEP"
 
 # ── Optional: press Gazebo play button ───────────────────────────────────────
@@ -222,9 +235,10 @@ fi
 # GPU and NPU are enabled automatically by monitor_stack.py when the correct
 # drivers and tools are present (xe/qmassa, i915/qmassa, Intel NPU sysfs).
 echo "[3/6] Starting monitor stack..."
-MONITOR_ARGS=("--interval" "0.5" "--output-dir" "$SESSION_DIR" "--use-sim-time" "--power")
+MONITOR_ARGS=("--interval" "0.5" "--output-dir" "$SESSION_DIR" "--use-sim-time")
 [[ "$CONF_GRAPH_ONLY" -eq 1 ]] && MONITOR_ARGS+=("--graph-only")
-python3 "$SCRIPT_DIR/monitor_stack.py" "${MONITOR_ARGS[@]}" \
+[[ "$LAUNCH_PID" -gt 0 ]] && MONITOR_ARGS+=("--root-pid" "$LAUNCH_PID")
+$_PYTHON "$SCRIPT_DIR/monitor_stack.py" "${MONITOR_ARGS[@]}" \
   > "$SESSION_DIR/monitor_stack.log" 2>&1 &
 MONITOR_PID=$!
 echo "  Monitor PID : $MONITOR_PID"
@@ -266,8 +280,19 @@ GOAL_COUNT=0
 TASK_COUNT=0
 DONE_COMPLETE=0
 
+# Catch Ctrl-C here so the run stops gracefully into the normal shutdown +
+# post-run analysis menu below, instead of the default SIGINT disposition
+# terminating the script immediately (which would skip straight to the
+# _cleanup EXIT trap and never show the menu).
+_INTERRUPTED=0
+trap '_INTERRUPTED=1' SIGINT
+
 while true; do
-  sleep 1
+  sleep 1 || true
+  if [[ "$_INTERRUPTED" -eq 1 ]]; then
+    echo "Interrupted by user (Ctrl-C) — stopping run early."
+    break
+  fi
   ELAPSED=$(( $(date +%s) - START ))
 
   # ── Goal tracking (e.g. wandering) ───────────────────────────────────────
@@ -316,6 +341,10 @@ while true; do
     && { echo "Timeout: ${MAX_TIMEOUT}s elapsed (goals: ${GOAL_COUNT})."; break; }
 done
 
+# Restore default SIGINT handling now that we're past the wait loop, so a
+# further Ctrl-C (e.g. at the analysis menu prompt) behaves normally.
+trap - SIGINT
+
 ELAPSED=$(( $(date +%s) - START ))
 echo ""
 echo "--- Summary ---"
@@ -324,13 +353,6 @@ echo "--- Summary ---"
 [[ -n "$CONF_DONE_PATTERN" ]] && \
   echo "  Demo complete   : $([ $DONE_COMPLETE -eq 1 ] && echo yes || echo no)"
 echo "  Elapsed         : ${ELAPSED}s"
-
-# ── Bag reindex safety-net ────────────────────────────────────────────────────
-if [[ "$RECORD_MODE" -eq 1 && -d "$SESSION_DIR/bag" && ! -f "$SESSION_DIR/bag/metadata.yaml" ]]; then
-  echo ""
-  echo "  ⚠ Bag metadata missing — reindexing..."
-  ros2 bag reindex "$SESSION_DIR/bag" 2>&1 | grep -v '^\[INFO\]' || true
-fi
 
 # ── Post-run log analysis (scenario-specific, e.g. analyze_fastmapping_log) ──
 if [[ -n "${CONF_POST_RUN_CMD:-}" ]]; then
@@ -341,9 +363,11 @@ if [[ -n "${CONF_POST_RUN_CMD:-}" ]]; then
   eval "$_post_cmd" || echo "  ⚠ Post-run analysis failed (exit $?)"
 fi
 
-# ── Trigger-latency analysis ──────────────────────────────────────────────────
-echo ""
-echo "[6/6] Trigger-Latency Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# ── Analysis functions ────────────────────────────────────────────────────────
+# _run_trigger_analysis, _run_kpi_export, _run_e2e_analysis, _run_resource_summary,
+# and _show_analysis_menu are defined in _session_menu.sh (sourced above), shared
+# with bench_menu.sh so both callers stay in sync.
+
 
 # Stop the monitor so it flushes CSV + topology before we read them
 if [[ "$MONITOR_PID" -gt 0 ]]; then
@@ -352,52 +376,74 @@ if [[ "$MONITOR_PID" -gt 0 ]]; then
   MONITOR_PID=0
 fi
 
-TIMING_CSV="$SESSION_DIR/graph_timing.csv"
-TOPO_JSON="$SESSION_DIR/graph_topology.json"
+# Shut down simulation and bag recorder fully before showing the menu so the
+# user sees a clean prompt on a completed session (not a live one).
+echo ""
+echo "Shutting down..."
+if [[ "$RECORD_PID" -gt 0 ]]; then
+  kill -SIGINT "$RECORD_PID" 2>/dev/null || true
+  echo "  Waiting for bag recorder to flush (max 15s)..."
+  for _i in $(seq 1 15); do
+    kill -0 "$RECORD_PID" 2>/dev/null || break
+    sleep 1
+  done
+  kill -SIGKILL "$RECORD_PID" 2>/dev/null || true
+  RECORD_PID=0
+fi
+if [[ "$LAUNCH_PID" -gt 0 ]]; then
+  kill -SIGINT  -- -"$LAUNCH_PID" 2>/dev/null || true
+  kill -SIGINT         "$LAUNCH_PID" 2>/dev/null || true
+  sleep 2
+  kill -SIGKILL -- -"$LAUNCH_PID" 2>/dev/null || true
+  kill -SIGKILL        "$LAUNCH_PID" 2>/dev/null || true
+  LAUNCH_PID=0
+fi
+sleep 1
+_pkill_sweep -SIGINT
+sleep 2
+_pkill_sweep -SIGKILL
+echo "  Done."
 
-if [[ -f "$TIMING_CSV" && -f "$TOPO_JSON" ]]; then
-  PLOT_ARGS=()
-  [[ "$PLOT_MODE" -eq 1 ]] && PLOT_ARGS+=("--plot" "--no-show")
-  python3 "$SCRIPT_DIR/analyze_trigger_latency.py" \
-    --session "$SESSION_DIR" \
-    --summary-only \
-    "${PLOT_ARGS[@]}"
+# ── Bag reindex safety-net ────────────────────────────────────────────────────
+# Must run after the recorder above has actually stopped and flushed — running
+# this while the recorder is still writing produces a stale/incomplete
+# metadata.yaml that then blocks this check from re-running later, even after
+# the bag is fully flushed (causing KPI export below to read partial data).
+if [[ "$RECORD_MODE" -eq 1 && -d "$SESSION_DIR/bag" && ! -f "$SESSION_DIR/bag/metadata.yaml" ]]; then
   echo ""
-  echo "  Full detail:"
-  echo "    python3 src/analyze_trigger_latency.py --session $SESSION_DIR"
-
-  # Copy topology into bag/ so --bag analysis works without --topology flag
-  if [[ "$RECORD_MODE" -eq 1 && -d "$SESSION_DIR/bag" ]]; then
-    cp "$TOPO_JSON" "$SESSION_DIR/bag/graph_topology.json"
-    echo ""
-    echo "  Bag analysis:"
-    echo "    python3 src/analyze_trigger_latency.py --bag $SESSION_DIR/bag"
-    echo ""
-    echo "  Running bag-based KPI analysis (for benchmark aggregation)..."
-    python3 "$SCRIPT_DIR/analyze_trigger_latency.py" \
-      --bag "$SESSION_DIR/bag" \
-      --summary-only \
-      --json-out "$SESSION_DIR/kpi.json" \
-      "${PLOT_ARGS[@]}" 2>/dev/null || \
-      echo "  ⚠ Bag analysis failed (bag may still be flushing)"
-  fi
-else
-  echo "  ⚠ Monitor data missing (graph_timing.csv or graph_topology.json not found)"
-  echo "    Session dir: $SESSION_DIR"
+  echo "  ⚠ Bag metadata missing — reindexing..."
+  ros2 bag reindex "$SESSION_DIR/bag" 2>&1 | grep -v '^\[INFO\]' || true
 fi
 
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Results ready — view KPI charts + HTML report:"
-echo ""
-echo "    make results SESSION=$SESSION_DIR"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+# Manual shutdown is complete — disable the EXIT trap so _cleanup doesn't
+# run again (which would duplicate "Shutting down..." output and sleeps).
+trap - EXIT
+
+if [[ "$NO_PROMPT" -eq 1 ]]; then
+  # Non-interactive (CI / --no-prompt): silently write kpi.json if bag exists
+  if [[ "$RECORD_MODE" -eq 1 && -d "$SESSION_DIR/bag" ]]; then
+    _run_kpi_export "$SESSION_DIR"
+  fi
+else
+  echo ""
+  echo "[6/6] Post-Run Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  echo ""
+  _show_analysis_menu "$SESSION_DIR"
+  echo ""
+  for _choice in "${_MENU_CHOICES[@]}"; do
+    case "$_choice" in
+      trigger)   _run_trigger_analysis "$SESSION_DIR" ;;
+      kpi)       echo ""; _run_kpi_export "$SESSION_DIR" ;;
+      e2e)       echo ""; _run_e2e_analysis "$SESSION_DIR" ;;
+      resources) echo ""; _run_resource_summary "$SESSION_DIR" ;;
+      results)   echo ""; _run_results "$SESSION_DIR" "$REPO_ROOT" ;;
+    esac
+  done
+fi
 
 # ── Auto-open results (--show flag) ──────────────────────────────────────────
 if [[ "$SHOW_MODE" -eq 1 ]]; then
   echo ""
   echo "Auto-opening results (--show)..."
-  make -C "$REPO_ROOT" results SESSION="$SESSION_DIR" 2>/dev/null || \
-    echo "  ⚠ make results failed — open manually: $SESSION_DIR/report.html"
+  _run_results "$SESSION_DIR" "$REPO_ROOT"
 fi

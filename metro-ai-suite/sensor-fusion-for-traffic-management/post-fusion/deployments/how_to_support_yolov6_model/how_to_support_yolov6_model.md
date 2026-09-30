@@ -42,7 +42,7 @@ cd ..
 
 Newer versions of pytorch will report the following error when loading the yolov6 model:
 
-> _pickle.UnpicklingError: Weights only load failed. This file can still be loaded, to do so you have two options, do those steps only if you trust the source of the checkpoint. 
+> _pickle.UnpicklingError: Weights only load failed. This file can still be loaded, to do so you have two options, do those steps only if you trust the source of the checkpoint.
 >         (1) In PyTorch 2.6, we changed the default value of the `weights_only` argument in `torch.load` from `False` to `True`. Re-running `torch.load` with `weights_only` set to `False` will likely succeed, but it can result in arbitrary code execution. Do it only if you got the file from a trusted source.
 >         (2) Alternatively, to load with `weights_only=True` please check the recommended steps in the following error message.
 >         WeightsUnpickler error: Unsupported global: GLOBAL yolov6.models.yolo.Model was not an allowed global by default. Please use `torch.serialization.add_safe_globals([Model])` or the `torch.serialization.safe_globals([Model])` context manager to allowlist this global if you trust this class/function.
@@ -263,7 +263,8 @@ python3 tools/train.py --batch 32 --conf configs/yolov6s_finetune.py --img-size 
 
 
 
-Note if the downloaded model weights are placed in other directories, please modify `pretrained="weights/yolov6s.pt"` in `yolov6s_finetune.py`.
+> [!NOTE]
+> If the downloaded model weights are placed in other directories, please modify `pretrained="weights/yolov6s.pt"` in `yolov6s_finetune.py`.
 
 
 
@@ -1352,8 +1353,8 @@ Prepare your own customized dataset yaml file `$YOLOv6_DIR/data/coco128.yaml` ba
 # train: d:\dataset\coco\images\train2017
 # because windows use "\" as separator, linux use "/" as separator.
 
-train: /paht/to/coco128/images/train2017 
-val: /paht/to/coco128/images/train2017 
+train: /paht/to/coco128/images/train2017
+val: /paht/to/coco128/images/train2017
 test: /paht/to/coco128/images/train2017
 anno_path: /paht/to/coco128/annotations/instances_train2017.json
 
@@ -1653,8 +1654,8 @@ Two examples are provided below:
                 "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard",
                 "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
                 "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
-                "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", 
-                "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", 
+                "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard",
+                "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase",
                 "scissors", "teddy bear", "hair drier", "toothbrush"
             ]
         }

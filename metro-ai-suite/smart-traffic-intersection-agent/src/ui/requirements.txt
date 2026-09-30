@@ -3,3 +3,6 @@ pillow>=9.0.0
 markdown>=3.4.0
 requests>=2.25.0
 websockets>=15.0.0
+# Explicit floors for transitive dependencies with known CVEs
+msgpack>=1.2.1
+setuptools>=78.1.1

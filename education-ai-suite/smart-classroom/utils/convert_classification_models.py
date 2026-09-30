@@ -1,5 +1,9 @@
 from pathlib import Path
 import urllib.request
+import urllib.error
+import http.client
+import socket
+import time
 import torch
 import torch.nn as nn
 import torchvision.models as models
@@ -12,7 +16,6 @@ import os
 import tarfile
 import ssl
 import certifi
-import urllib.request
 
 
 # Model URLs
@@ -28,23 +31,92 @@ DATASET_CLASSES = 10
 
 SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
+CHUNK_SIZE = 1024 * 1024
+DOWNLOAD_TIMEOUT = 60
+DOWNLOAD_RETRIES = 8
+
+# Errors that mean "the transfer broke, but retrying/resuming may work".
+TRANSIENT_ERRORS = (
+    http.client.IncompleteRead,
+    http.client.HTTPException,
+    urllib.error.URLError,
+    ConnectionError,
+    socket.timeout,
+    TimeoutError,
+    ssl.SSLError,
+)
+
 
 def download(url, filename, output_dir):
-    """Download model weights if not already present."""
+    """Download a file if not already present, resuming interrupted transfers."""
     filepath = output_dir / filename
 
     if filepath.exists():
         return filepath
 
     print(f"Downloading {filename}...")
-
-    ssl_context = ssl.create_default_context(cafile=certifi.where())
-
-    with urllib.request.urlopen(url, context=ssl_context) as response:
-        with open(filepath, "wb") as f:
-            f.write(response.read())
+    _download_resumable(url, filepath)
 
     return filepath
+
+
+def _download_resumable(url, filepath):
+    """Stream `url` into `filepath`, retrying with HTTP range resume on failure.
+
+    Write to a `.part` file in chunks so a broken connection only costs the
+    remaining bytes, and only publish the final file once the expected number
+    of bytes has actually arrived.
+    """
+    part_path = filepath.with_suffix(filepath.suffix + ".part")
+    last_error = None
+
+    for attempt in range(1, DOWNLOAD_RETRIES + 1):
+        downloaded = part_path.stat().st_size if part_path.exists() else 0
+
+        request = urllib.request.Request(url)
+        if downloaded:
+            request.add_header("Range", f"bytes={downloaded}-")
+
+        try:
+            with urllib.request.urlopen(request, context=SSL_CONTEXT, timeout=DOWNLOAD_TIMEOUT) as response:
+                # Server ignored the range request, so start over from zero.
+                resuming = response.status == 206
+                if downloaded and not resuming:
+                    downloaded = 0
+
+                remaining = response.headers.get("Content-Length")
+                total = downloaded + int(remaining) if remaining is not None else None
+
+                with open(part_path, "ab" if downloaded else "wb") as f:
+                    while True:
+                        chunk = response.read(CHUNK_SIZE)
+                        if not chunk:
+                            break
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total:
+                            print(f"\r  {downloaded * 100 // total}% "
+                                  f"({downloaded / 1048576:.1f}/{total / 1048576:.1f} MB)", end="")
+
+            if total:
+                print()
+
+            if total is not None and downloaded < total:
+                raise http.client.IncompleteRead(b"", total - downloaded)
+
+            os.replace(part_path, filepath)
+            return filepath
+
+        except TRANSIENT_ERRORS as e:
+            last_error = e
+            if attempt == DOWNLOAD_RETRIES:
+                break
+            backoff = min(2 ** attempt, 30)
+            print(f"\n  Download interrupted ({type(e).__name__}: {e}); "
+                  f"retrying in {backoff}s [attempt {attempt + 1}/{DOWNLOAD_RETRIES}]...")
+            time.sleep(backoff)
+
+    raise RuntimeError(f"Failed to download {url} after {DOWNLOAD_RETRIES} attempts: {last_error}") from last_error
 
 def download_labels():
     """Extract labels from model metadata."""
@@ -76,13 +148,15 @@ def download_dataset(url, dataset_path):
 
     if not (dataset_path / "imagenette2-320/val").exists():
         print(f"Downloading dataset from {url}...")
+        _download_resumable(url, archive_path)
 
-        with urllib.request.urlopen(url, context=SSL_CONTEXT) as response:
-            with open(archive_path, "wb") as f:
-                f.write(response.read())
-
-        with tarfile.open(archive_path, "r:*") as tar:
-            safe_extract(tar, dataset_path)
+        try:
+            with tarfile.open(archive_path, "r:*") as tar:
+                safe_extract(tar, dataset_path)
+        except tarfile.ReadError as e:
+            # A corrupt archive can never extract; drop it so the next run refetches.
+            os.remove(archive_path)
+            raise RuntimeError(f"Dataset archive from {url} is corrupt, please re-run: {e}") from e
 
         os.remove(archive_path)
 

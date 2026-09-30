@@ -118,7 +118,7 @@ monitoring_sessions/
 └── 20260209_143022/              # Auto-generated timestamp
     ├── session_info.txt          # Session details
     ├── graph_timing.csv          # Message timing data
-    ├── resource_usage.log        # CPU/memory logs
+    ├── resource_usage.json        # CPU/memory logs
     └── visualizations/           # All plots (auto-generated)
         ├── timing_delays.png
         ├── message_frequencies.png

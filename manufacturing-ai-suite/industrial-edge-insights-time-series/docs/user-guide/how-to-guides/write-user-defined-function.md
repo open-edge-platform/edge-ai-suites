@@ -17,14 +17,7 @@ The Python Kapacitor agent handles all communication details and exposes a simpl
 
 ## UDF Architecture
 
-```text
-┌─────────────┐          Protocol Buffers         ┌──────────────────┐
-│             │  ◄────── (STDIN/STDOUT) ────────► │                  │
-│  Kapacitor  │                                   │   UDF Agent      │
-│             │          Data Points              │   (Your Python   │
-│             │   ─────────────────────────────►  │    Handler)      │
-└─────────────┘                                   └──────────────────┘
-```
+![UDF Architecture Diagram](../_assets/IEI-Time-UDF-Arch.drawio.svg)
 
 ## The Handler Interface
 

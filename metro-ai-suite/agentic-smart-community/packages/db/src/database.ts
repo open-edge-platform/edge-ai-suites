@@ -490,10 +490,21 @@ export class SmartCommunityDB {
     }));
   }
 
-  ackAlertWithUser(alertId: number, ackBy: string): void {
-    this.db.prepare(
-      "UPDATE alerts SET ack_at = datetime('now', 'localtime'), ack_by = ? WHERE id = ?"
-    ).run(ackBy, alertId);
+  /**
+   * Ack an alert. When monitorId is given the ack is scoped to alerts of that
+   * monitor. Returns false when no row matched (unknown id, or the alert
+   * belongs to another monitor) so callers can report failure instead of
+   * silently succeeding.
+   */
+  ackAlertWithUser(alertId: number, ackBy: string, monitorId?: string): boolean {
+    const info = monitorId === undefined
+      ? this.db.prepare(
+          "UPDATE alerts SET ack_at = datetime('now', 'localtime'), ack_by = ? WHERE id = ?"
+        ).run(ackBy, alertId)
+      : this.db.prepare(
+          "UPDATE alerts SET ack_at = datetime('now', 'localtime'), ack_by = ? WHERE id = ? AND monitor_id = ?"
+        ).run(ackBy, alertId, monitorId);
+    return info.changes > 0;
   }
 
   getAlertStats(
@@ -585,11 +596,15 @@ export class SmartCommunityDB {
     return rowToRecording(row);
   }
 
-  listRecordings(monitorId: string, options: { since?: string; limit?: number } = {}): Recording[] {
+  listRecordings(
+    monitorId: string,
+    options: { since?: string; until?: string; limit?: number; order?: "asc" | "desc" } = {},
+  ): Recording[] {
     let sql = "SELECT * FROM recordings WHERE monitor_id = ?";
     const bindings: any[] = [monitorId];
     if (options.since) { sql += " AND start_time >= ?"; bindings.push(options.since); }
-    sql += " ORDER BY start_time DESC";
+    if (options.until) { sql += " AND start_time < ?"; bindings.push(options.until); }
+    sql += options.order === "asc" ? " ORDER BY start_time ASC" : " ORDER BY start_time DESC";
     if (options.limit) { sql += " LIMIT ?"; bindings.push(options.limit); }
     return (this.db.prepare(sql).all(...bindings) as any[]).map(rowToRecording);
   }
@@ -619,6 +634,19 @@ export class SmartCommunityDB {
     return (this.db.prepare(
       "SELECT * FROM video_summary_tasks WHERE monitor_id = ? AND status = 'pending' ORDER BY created_at ASC LIMIT ?"
     ).all(monitorId, limit) as any[]).map(rowToTask);
+  }
+
+  /**
+   * Requeue tasks stranded in `processing` by a crash/kill mid-summarize.
+   * Call only when no poll for this monitor can be in flight (worker start) —
+   * at that point any `processing` row is by definition stale. Returns the
+   * number of requeued tasks.
+   */
+  resetProcessingTasks(monitorId: string): number {
+    const info = this.db.prepare(
+      "UPDATE video_summary_tasks SET status = 'pending' WHERE monitor_id = ? AND status = 'processing'"
+    ).run(monitorId);
+    return info.changes;
   }
 
   /**

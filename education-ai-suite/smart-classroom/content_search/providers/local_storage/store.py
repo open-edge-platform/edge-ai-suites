@@ -5,8 +5,117 @@ import json
 import pathlib
 import shutil
 import os
-from io import BytesIO
 from typing import Any, BinaryIO, Iterator, Optional, Union
+
+
+class UnsafeObjectKeyError(ValueError):
+    """Raised when a bucket or object name would resolve outside the storage root."""
+
+
+def _has_control_chars(value: str) -> bool:
+    return any(ord(ch) < 32 or ord(ch) == 127 for ch in value)
+
+
+def _validate_segment(segment: str, *, kind: str) -> str:
+    """Validate a single path component (bucket name or one object-key segment)."""
+    if not segment or segment in (".", ".."):
+        raise UnsafeObjectKeyError(f"Invalid {kind}: {segment!r}")
+    if _has_control_chars(segment):
+        raise UnsafeObjectKeyError(f"Invalid {kind}: control characters are not allowed")
+    if "/" in segment or "\\" in segment:
+        raise UnsafeObjectKeyError(f"Invalid {kind}: path separators are not allowed: {segment!r}")
+    # A colon would introduce a drive reference ("C:") or an NTFS alternate data
+    # stream ("file.txt:evil.exe"), both of which escape the intended target.
+    if ":" in segment:
+        raise UnsafeObjectKeyError(f"Invalid {kind}: {segment!r}")
+    # Windows silently strips trailing dots and spaces, so "foo." and "foo" would
+    # name the same entry while comparing as different keys.
+    if segment != segment.rstrip(". "):
+        raise UnsafeObjectKeyError(f"Invalid {kind}: trailing dots or spaces are not allowed: {segment!r}")
+    return segment
+
+
+def _normalize_object_name(object_name: Any, *, allow_empty: bool = False) -> str:
+    """Return a validated bucket-relative POSIX key, or raise ``UnsafeObjectKeyError``.
+
+    Backslashes are treated as separators because this service also runs on
+    Windows, where ``..\\..\\evil.py`` is a traversal rather than a plain filename.
+    """
+    if object_name is None:
+        raise UnsafeObjectKeyError("Object name is required")
+    raw = str(object_name)
+    if not raw:
+        if allow_empty:
+            return ""
+        raise UnsafeObjectKeyError("Object name must not be empty")
+    if _has_control_chars(raw):
+        raise UnsafeObjectKeyError("Invalid object name: control characters are not allowed")
+
+    normalized = raw.replace("\\", "/")
+    if normalized.startswith("/"):
+        raise UnsafeObjectKeyError(f"Absolute object names are not allowed: {raw!r}")
+
+    segments = [
+        _validate_segment(segment, kind="object name segment")
+        for segment in normalized.split("/")
+        if segment not in ("", ".")
+    ]
+    if not segments:
+        if allow_empty:
+            return ""
+        raise UnsafeObjectKeyError(f"Object name must not be empty: {raw!r}")
+    return "/".join(segments)
+
+
+def _is_within(base: pathlib.Path, candidate: pathlib.Path) -> bool:
+    """True if ``candidate`` resolves to ``base`` or somewhere beneath it."""
+    base_resolved = base.resolve()
+    candidate_resolved = candidate.resolve()
+    return candidate_resolved == base_resolved or candidate_resolved.is_relative_to(base_resolved)
+
+
+# Names Windows resolves to devices rather than files, with or without a suffix.
+_WINDOWS_RESERVED_NAMES = frozenset(
+    {"CON", "PRN", "AUX", "NUL"}
+    | {f"COM{i}" for i in range(1, 10)}
+    | {f"LPT{i}" for i in range(1, 10)}
+)
+
+_ILLEGAL_FILENAME_CHARS = '<>:"/\\|?*'
+
+# Leaves room for the "runs/<uuid>/raw/<type>/<id>/" prefix inside Windows' path limit.
+_MAX_FILENAME_LENGTH = 180
+
+
+def safe_filename(filename: Any, *, fallback: str = "unnamed") -> str:
+    """Reduce a client-supplied filename to one safe path component.
+
+    The basename is taken for both separator conventions because an upload may be
+    sent by any client, and this service runs on Windows where ``\\`` separates
+    directories. The extension is preserved: downstream validation and content-type
+    routing key off it.
+    """
+    raw = "" if filename is None else str(filename)
+    base = raw.replace("\\", "/").rsplit("/", 1)[-1]
+    cleaned = "".join(
+        "_" if ch in _ILLEGAL_FILENAME_CHARS or ord(ch) < 32 or ord(ch) == 127 else ch
+        for ch in base
+    ).rstrip(". ")
+    if cleaned in ("", ".", ".."):
+        return fallback
+
+    if cleaned.partition(".")[0].upper() in _WINDOWS_RESERVED_NAMES:
+        cleaned = f"_{cleaned}"
+
+    if len(cleaned) > _MAX_FILENAME_LENGTH:
+        stem, dot, ext = cleaned.rpartition(".")
+        if not dot or len(ext) > 20:
+            stem, ext = cleaned, ""
+        stem = stem[: max(1, _MAX_FILENAME_LENGTH - len(ext) - 1)].rstrip(". ")
+        if not stem:
+            return fallback
+        cleaned = f"{stem}.{ext}" if ext else stem
+    return cleaned
 
 
 class LocalStore:
@@ -32,10 +141,23 @@ class LocalStore:
         return self._bucket
 
     def _bucket_path(self, bucket: Optional[str] = None) -> pathlib.Path:
-        return self._data_dir / (bucket or self._bucket)
+        name = _validate_segment(str(bucket or self._bucket), kind="bucket name")
+        return self._data_dir / name
+
+    def _contained_path(self, base: pathlib.Path, relative: str) -> pathlib.Path:
+        """Join ``relative`` onto ``base`` and assert the result stays inside ``base``.
+
+        The resolved comparison is the actual containment guarantee: it also covers
+        symlinks and platform-specific normalisation that plain string checks miss.
+        """
+        candidate = base / relative if relative else base
+        if not _is_within(base, candidate):
+            raise UnsafeObjectKeyError(f"Object name escapes the storage root: {relative!r}")
+        return candidate
 
     def _object_path(self, object_name: str, bucket: Optional[str] = None) -> pathlib.Path:
-        return self._bucket_path(bucket) / object_name
+        key = _normalize_object_name(object_name)
+        return self._contained_path(self._bucket_path(bucket), key)
 
     # ---- bucket operations ------------------------------------------------
 
@@ -43,7 +165,10 @@ class LocalStore:
         self._bucket_path().mkdir(parents=True, exist_ok=True)
 
     def bucket_exists(self, bucket_name: str) -> bool:
-        return self._bucket_path(bucket_name).is_dir()
+        try:
+            return self._bucket_path(bucket_name).is_dir()
+        except UnsafeObjectKeyError:
+            return False
 
     def list_buckets(self) -> list[str]:
         if not self._data_dir.exists():
@@ -53,7 +178,10 @@ class LocalStore:
     # ---- object existence -------------------------------------------------
 
     def object_exists(self, object_name: str) -> bool:
-        return self._object_path(object_name).is_file()
+        try:
+            return self._object_path(object_name).is_file()
+        except UnsafeObjectKeyError:
+            return False
 
     # ---- read operations --------------------------------------------------
 
@@ -119,8 +247,12 @@ class LocalStore:
 
     def list_object_names(self, prefix: str, *, recursive: bool = True) -> Iterator[str]:
         base = self._bucket_path()
-        search_dir = base / prefix if (base / prefix).is_dir() else (base / prefix).parent
-        if not search_dir.exists():
+        prefix = _normalize_object_name(prefix, allow_empty=True)
+        target = self._contained_path(base, prefix)
+        search_dir = target if target.is_dir() else target.parent
+        # A partial prefix walks up to the parent directory, which must not be
+        # allowed to step above the bucket root.
+        if not search_dir.exists() or not _is_within(base, search_dir):
             return
         if recursive:
             for p in sorted(search_dir.rglob("*")):
@@ -148,7 +280,9 @@ class LocalStore:
     def delete_prefix(self, prefix: str, *, bucket_name: Optional[str] = None,
                       recursive: bool = True) -> int:
         base = self._bucket_path(bucket_name)
-        target = base / prefix
+        # An empty prefix would resolve to the bucket root and wipe the whole bucket.
+        prefix = _normalize_object_name(prefix)
+        target = self._contained_path(base, prefix)
         if target.is_dir():
             count = sum(1 for _ in target.rglob("*") if _.is_file())
             shutil.rmtree(str(target))
@@ -160,22 +294,39 @@ class LocalStore:
             count += 1
         return count
 
-    # ---- key builders (unchanged) -----------------------------------------
+    # ---- key builders -----------------------------------------------------
+
+    def run_path(self, run_id: str, *, bucket_name: Optional[str] = None) -> pathlib.Path:
+        """Return the directory holding every object of one run.
+
+        Callers delete this directory recursively, so the ``run_id`` must never be
+        able to point outside the bucket; building the path here keeps that check
+        in the same place as every other path this store hands out.
+        """
+        run_id = _validate_segment(str(run_id), kind="run id")
+        return self._object_path(f"runs/{run_id}", bucket=bucket_name)
 
     @staticmethod
     def build_raw_object_key(run_id: str, asset_type: str, asset_id: str, filename: str) -> str:
-        return (
-            pathlib.PurePosixPath("runs") / str(run_id) / "raw"
-            / str(asset_type) / str(asset_id) / pathlib.PurePosixPath(str(filename)).name
-        ).as_posix()
+        return "/".join([
+            "runs",
+            _validate_segment(str(run_id), kind="run id"),
+            "raw",
+            _validate_segment(str(asset_type), kind="asset type"),
+            _validate_segment(str(asset_id), kind="asset id"),
+            safe_filename(filename),
+        ])
 
     @staticmethod
     def build_derived_object_key(run_id: str, asset_type: str, asset_id: str,
                                   relative_path: Union[str, pathlib.PurePosixPath]) -> str:
-        rel = pathlib.PurePosixPath(str(relative_path))
-        if rel.is_absolute():
-            rel = pathlib.PurePosixPath(*rel.parts[1:])
-        return (
-            pathlib.PurePosixPath("runs") / str(run_id) / "derived"
-            / str(asset_type) / str(asset_id) / rel
-        ).as_posix()
+        # Validates every segment and rejects "..", absolute and Windows-style paths.
+        rel = _normalize_object_name(relative_path)
+        return "/".join([
+            "runs",
+            _validate_segment(str(run_id), kind="run id"),
+            "derived",
+            _validate_segment(str(asset_type), kind="asset type"),
+            _validate_segment(str(asset_id), kind="asset id"),
+            rel,
+        ])

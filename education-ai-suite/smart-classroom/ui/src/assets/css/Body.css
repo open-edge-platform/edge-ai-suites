@@ -4,17 +4,7 @@
   flex: 1 1 auto;
   min-height: 0;
   position: relative;
-  height: 100%;
   background: #f5f7fa;
-  gap: 12px;
-  z-index: 1000;
-}
-
-/* Fullscreen state (video floated over panels) */
-.container.fullscreen {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
   z-index: 1000;
 }
 
@@ -22,9 +12,9 @@
 .left-panel,
 .right-panel {
   overflow-y: auto;
-  height: calc(100vh - var(--top-panel-height) - var(--header-bar-height) - var(--footer-height));
+  min-height: 0;
   box-sizing: border-box;
-  padding: 12px 8px;
+  padding: 12px 12px 12px 18px;
 }
 
 .left-panel {
@@ -32,45 +22,12 @@
   background-color: #f8f8f8;
 }
 
-/* When video is fullscreen, push panels below it */
-.container.fullscreen .left-panel,
-.container.fullscreen .right-panel {
-  margin-top: calc(70vh - var(--top-panel-height) - var(--header-bar-height));
-  position: relative;
-  /* //z-index: 10000; */
-}
-
-/* Wrapper holding panels */
-.panels-wrapper {
+.right-panel-slot {
   display: flex;
-  flex: 1;
-  width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.container.fullscreen .panels-wrapper {
-  margin-top: calc(70vh - var(--top-panel-height) - var(--header-bar-height));
-  align-items: stretch;
-}
-
-/* Video */
-.video-wrapper {
-  width: 100%;
-}
-
-.video-wrapper.fullscreen {
-  position: fixed;
-  top: calc(var(--top-panel-height) + var(--header-bar-height)); /* Header + top bar */
-  left: 0;
-  right: 0;
-  height: 70vh;
-  /* z-index: 100; */
-  background: #000;
-}
-
-/* Divider (hidden by design) */
-.divider {
-  display: none;
-}
 
 /* Collapse arrow */
 .arrow {
@@ -79,7 +36,9 @@
   left: calc(50% - 14px);
   transform: translateY(-50%);
   cursor: pointer;
-  z-index: 20;
+  /* Must beat `.left-panel`'s z-index: 1000 (it is positioned, so it would
+     otherwise paint over the toggle) while staying below modals (10001+). */
+  z-index: 1100;
   color: #0071c5;
   background: #fff;
   border-radius: 50%;
@@ -89,7 +48,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   transition: left 0.3s ease;
 }
 

@@ -1,9 +1,27 @@
+ros-jazzy-pyrealsense2-ai-demo (2.4-5) UNRELEASED; urgency=low
+
+  * Use dynamic paths
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 17 Aug 2026 00:00:00 +0000
+
+ros-jazzy-pyrealsense2-ai-demo (2.4-4) UNRELEASED; urgency=low
+
+  * Add runtime dependency and use dynamically created config file.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 12 Aug 2026 00:00:00 +0000
+
+ros-jazzy-pyrealsense2-ai-demo (2.4-3) UNRELEASED; urgency=low
+
+  * Fix model conversion
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 30 Jul 2026 00:00:00 +0000
+
 ros-jazzy-pyrealsense2-ai-demo (2.4-2) UNRELEASED; urgency=low
 
   * add ci/cd support and fix low fps
 
  -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 29 Apr 2026 00:00:00 +0000
- 
+
 ros-jazzy-pyrealsense2-ai-demo (2.4-1) UNRELEASED; urgency=low
 
   * add isx camera support and fix dependencies

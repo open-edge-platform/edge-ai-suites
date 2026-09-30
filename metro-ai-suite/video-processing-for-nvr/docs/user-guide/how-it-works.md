@@ -79,7 +79,8 @@ state.
 
 ## SVET2 Application Architecture
 
-> **Note:** SVET2 is a legacy solution. You can see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md) for details on how to use it.
+> [!NOTE]
+> SVET2 is a legacy solution. You can see the [SVET2 Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docs/user-guide/svet-guide.md) for details on how to use it.
 
 **SVET2 (Smart Video Evaluation Tool 2)** is the reference NVR application built on the Video
 Processing Platform SDK. Its binary is `svet_app`. SVET2 is configuration-driven: instead of

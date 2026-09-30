@@ -1,16 +1,24 @@
 #!/usr/bin/env bash
+# start.sh – entrypoint for the metrics-collector container.
+#
+# Starts the supervisord bundled inside intel/retail-benchmark (which manages
+# qmassa, Intel NPU tool, Intel PCM, sar, and free) then runs the HTTP
+# metrics server in the foreground so Docker receives SIGTERM correctly.
 
-# Start the existing metrics collectors (supervisord in base image)
-# and then run the HTTP metrics API.
+set -euo pipefail
 
-# Clean previous metrics from the shared metrics directory on container start.
-# This corresponds to the host ./metrics folder mounted at /tmp/results.
-METRICS_DIR=${METRICS_DIR:-/tmp/results}
+METRICS_DIR="${METRICS_DIR:-/tmp/results}"
 mkdir -p "${METRICS_DIR}"
-rm -rf "${METRICS_DIR}"/* || true
 
-# Run supervisord in the background to start GPU/NPU/platform collectors
+# Clear stale data from a previous run so all series start fresh.
+rm -rf "${METRICS_DIR}"/* 2>/dev/null || true
+
+echo "[metrics-collector] metrics directory: ${METRICS_DIR}"
+echo "[metrics-collector] starting supervisord (qmassa / NPU / PCM / sar / free)"
+
+# Start supervisord in the background – this launches all OS-level collectors
+# that are pre-configured inside the intel/retail-benchmark base image.
 /usr/bin/supervisord -c /supervisord.conf &
 
-# Start the lightweight Python HTTP server exposing /metrics on port 9000
+# Start the HTTP metrics server in the foreground (PID 1 receives SIGTERM).
 exec python3 /app/app.py

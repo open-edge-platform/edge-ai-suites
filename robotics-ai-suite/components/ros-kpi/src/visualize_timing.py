@@ -15,6 +15,10 @@ import sys
 from datetime import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
+
+from log_config import get_logger
+
+logger = get_logger(__name__)
 try:
     from ._accel import np, ne  # type: ignore[import-not-found]
 except ImportError:  # running as a script (e.g., `python src/visualize_timing.py`)
@@ -97,7 +101,7 @@ def parse_timing_log(log_file):
                     topic_data['is_output'] = row['is_output'] == 'True'
 
     except Exception as e:
-        print(f"Error parsing log file: {e}", file=sys.stderr)
+        logger.error(f"Parsing log file: {e}")
         sys.exit(1)
 
     return data
@@ -110,7 +114,7 @@ def plot_message_timestamps(data, output_file=None):
     topics = data['topics']
 
     if not topics:
-        print("No topic data found in log file")
+        logger.warning("No topic data found in log file")
         return
 
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -165,7 +169,7 @@ def plot_message_timestamps(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def plot_topic_frequencies(data, output_file=None):
@@ -175,7 +179,7 @@ def plot_topic_frequencies(data, output_file=None):
     topics = data['topics']
 
     if not topics:
-        print("No topic data found in log file")
+        logger.warning("No topic data found in log file")
         return
 
     # Check if any topic has frequency data
@@ -185,7 +189,7 @@ def plot_topic_frequencies(data, output_file=None):
     )
 
     if not has_frequency_data:
-        print("No frequency data found in log file (need at least 2 messages per topic to calculate frequency)")
+        logger.warning("No frequency data found in log file (need at least 2 messages per topic to calculate frequency)")
         return
 
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -220,7 +224,7 @@ def plot_topic_frequencies(data, output_file=None):
 
     if plot_count == 0:
         plt.close(fig)
-        print("No frequency data to plot")
+        logger.info("No frequency data to plot")
         return
 
     ax.set_xlabel('Time (seconds from start)', fontsize=12)
@@ -251,7 +255,7 @@ def plot_topic_frequencies(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def plot_processing_delays(data, output_file=None):
@@ -265,7 +269,7 @@ def plot_processing_delays(data, output_file=None):
                      if tdata['is_output'] and any(d is not None for d in tdata['processing_delays'])}
 
     if not output_topics:
-        print("No processing delay data found in log file")
+        logger.warning("No processing delay data found in log file")
         return
 
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -312,7 +316,7 @@ def plot_processing_delays(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def plot_inter_arrival_times(data, output_file=None):
@@ -322,7 +326,7 @@ def plot_inter_arrival_times(data, output_file=None):
     topics = data['topics']
 
     if not topics:
-        print("No topic data found in log file")
+        logger.warning("No topic data found in log file")
         return
 
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -378,7 +382,7 @@ def plot_inter_arrival_times(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def plot_io_correlation(data, output_file=None):
@@ -391,7 +395,7 @@ def plot_io_correlation(data, output_file=None):
     output_topics = {name: tdata for name, tdata in topics.items() if tdata['is_output']}
 
     if not input_topics or not output_topics:
-        print("Need both input and output topics for correlation plot")
+        logger.info("Need both input and output topics for correlation plot")
         return
 
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -440,7 +444,7 @@ def plot_io_correlation(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def print_summary(data):
@@ -449,30 +453,30 @@ def print_summary(data):
     """
     topics = data['topics']
 
-    print("\n" + "="*80)
-    print("TIMING DATA SUMMARY")
-    print("="*80)
+    logger.info("\n" + "="*80)
+    logger.info("TIMING DATA SUMMARY")
+    logger.info("="*80)
 
     total_messages = sum(tdata['message_counts'][-1] if tdata['message_counts'] else 0
                          for tdata in topics.values())
 
     duration = data['end_time'] - data['start_time'] if data['start_time'] and data['end_time'] else 0
 
-    print(f"\nTotal topics monitored: {len(topics)}")
-    print(f"Total messages logged: {total_messages}")
-    print(f"Monitoring duration: {duration:.2f} seconds")
+    logger.info(f"\nTotal topics monitored: {len(topics)}")
+    logger.info(f"Total messages logged: {total_messages}")
+    logger.info(f"Monitoring duration: {duration:.2f} seconds")
 
     if data['start_time']:
-        print(f"Start time: {datetime.fromtimestamp(data['start_time']).strftime('%Y-%m-%d %H:%M:%S.%f')}")
+        logger.info(f"Start time: {datetime.fromtimestamp(data['start_time']).strftime('%Y-%m-%d %H:%M:%S.%f')}")
     if data['end_time']:
-        print(f"End time: {datetime.fromtimestamp(data['end_time']).strftime('%Y-%m-%d %H:%M:%S.%f')}")
+        logger.info(f"End time: {datetime.fromtimestamp(data['end_time']).strftime('%Y-%m-%d %H:%M:%S.%f')}")
 
     # Per-topic statistics
-    print(f"\n{'='*80}")
-    print("TOPIC STATISTICS")
-    print(f"{'='*80}")
-    print(f"{'Topic':<40} {'Type':<6} {'Msgs':<8} {'Avg Freq':<12} {'Avg Delay':<12}")
-    print("-"*80)
+    logger.info(f"\n{'='*80}")
+    logger.info("TOPIC STATISTICS")
+    logger.info(f"{'='*80}")
+    logger.info(f"{'Topic':<40} {'Type':<6} {'Msgs':<8} {'Avg Freq':<12} {'Avg Delay':<12}")
+    logger.info("-"*80)
 
     for topic_name, topic_data in sorted(topics.items()):
         io_type = "IN" if topic_data['is_input'] else ("OUT" if topic_data['is_output'] else "-")
@@ -492,9 +496,9 @@ def print_summary(data):
         # Truncate long topic names
         display_name = topic_name if len(topic_name) <= 38 else topic_name[:35] + "..."
 
-        print(f"{display_name:<40} {io_type:<6} {msg_count:<8} {freq_str:<12} {delay_str:<12}")
+        logger.info(f"{display_name:<40} {io_type:<6} {msg_count:<8} {freq_str:<12} {delay_str:<12}")
 
-    print("\n")
+    logger.info("\n")
 
 
 def categorize_topic(topic_name: str, msg_type: str) -> str:
@@ -569,7 +573,7 @@ def plot_category_statistics(data, output_file=None):
     topics = data['topics']
 
     if not topics:
-        print("No topic data found in log file")
+        logger.warning("No topic data found in log file")
         return
 
     # Categorize topics and collect statistics
@@ -604,7 +608,7 @@ def plot_category_statistics(data, output_file=None):
     category_stats = {k: v for k, v in category_stats.items() if v['topics']}
 
     if not category_stats:
-        print("No categorized topics found")
+        logger.warning("No categorized topics found")
         return
 
     # Create subplots
@@ -690,7 +694,7 @@ def plot_category_statistics(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def plot_topic_activity_heatmap(data, output_file=None):
@@ -701,7 +705,7 @@ def plot_topic_activity_heatmap(data, output_file=None):
     topics = data['topics']
 
     if not topics:
-        print("No topic data found in log file")
+        logger.warning("No topic data found in log file")
         return
 
     # Filter topics with frequency data
@@ -709,7 +713,7 @@ def plot_topic_activity_heatmap(data, output_file=None):
                        if tdata['frequencies'] and any(f is not None for f in tdata['frequencies'])}
 
     if not topics_with_data:
-        print("No frequency data available for heatmap")
+        logger.info("No frequency data available for heatmap")
         return
 
     # Sort topics by average frequency (most active first)
@@ -793,7 +797,7 @@ def plot_topic_activity_heatmap(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def plot_topic_delay_heatmap(data, output_file=None):
@@ -804,7 +808,7 @@ def plot_topic_delay_heatmap(data, output_file=None):
     topics = data['topics']
 
     if not topics:
-        print("No topic data found in log file")
+        logger.warning("No topic data found in log file")
         return
 
     # Filter topics with delay data
@@ -812,7 +816,7 @@ def plot_topic_delay_heatmap(data, output_file=None):
                        if tdata['processing_delays'] and any(d is not None for d in tdata['processing_delays'])}
 
     if not topics_with_data:
-        print("No processing delay data available for heatmap")
+        logger.info("No processing delay data available for heatmap")
         return
 
     # Sort topics by average delay (highest delay first)
@@ -896,7 +900,7 @@ def plot_topic_delay_heatmap(data, output_file=None):
 
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
-        print(f"Saved plot to {output_file}")
+        logger.info(f"Saved plot to {output_file}")
 
 
 def main():
@@ -947,11 +951,11 @@ Examples:
     args = parser.parse_args()
 
     # Parse log file
-    print(f"Parsing timing log: {args.log_file}")
+    logger.info(f"Parsing timing log: {args.log_file}")
     data = parse_timing_log(args.log_file)
 
     if not data['topics']:
-        print("No data found in log file")
+        logger.warning("No data found in log file")
         sys.exit(1)
 
     # Print summary
@@ -978,56 +982,56 @@ Examples:
     if output_dir:
         import os
         os.makedirs(output_dir, exist_ok=True)
-        print(f"\nSaving plots to: {output_dir}")
+        logger.info(f"\nSaving plots to: {output_dir}")
 
     # Generate plots
     if generate_all or args.timestamps:
-        print("\nGenerating message timestamps plot...")
+        logger.info("\nGenerating message timestamps plot...")
         output_file = f"{output_dir}/message_timestamps.png" if output_dir else None
         plot_message_timestamps(data, output_file)
 
     if generate_all or args.frequencies:
-        print("\nGenerating topic frequencies plot...")
+        logger.info("\nGenerating topic frequencies plot...")
         output_file = f"{output_dir}/topic_frequencies.png" if output_dir else None
         plot_topic_frequencies(data, output_file)
 
     if generate_all or args.delays:
-        print("\nGenerating processing delays plot...")
+        logger.info("\nGenerating processing delays plot...")
         output_file = f"{output_dir}/processing_delays.png" if output_dir else None
         plot_processing_delays(data, output_file)
 
     if generate_all or args.inter_arrival:
-        print("\nGenerating inter-arrival times plot...")
+        logger.info("\nGenerating inter-arrival times plot...")
         output_file = f"{output_dir}/inter_arrival_times.png" if output_dir else None
         plot_inter_arrival_times(data, output_file)
 
     if generate_all or args.io_correlation:
-        print("\nGenerating I/O correlation plot...")
+        logger.info("\nGenerating I/O correlation plot...")
         output_file = f"{output_dir}/io_correlation.png" if output_dir else None
         plot_io_correlation(data, output_file)
 
     if generate_all or args.categories:
-        print("\nGenerating category statistics plot...")
+        logger.info("\nGenerating category statistics plot...")
         output_file = f"{output_dir}/category_statistics.png" if output_dir else None
         plot_category_statistics(data, output_file)
 
     if generate_all or args.activity_heatmap:
-        print("\nGenerating topic activity heatmap...")
+        logger.info("\nGenerating topic activity heatmap...")
         output_file = f"{output_dir}/topic_activity_heatmap.png" if output_dir else None
         plot_topic_activity_heatmap(data, output_file)
 
     if generate_all or args.delay_heatmap:
-        print("\nGenerating topic delay heatmap...")
+        logger.info("\nGenerating topic delay heatmap...")
         output_file = f"{output_dir}/topic_delay_heatmap.png" if output_dir else None
         plot_topic_delay_heatmap(data, output_file)
 
     # Display plots interactively if requested or if no output directory
     if args.show or not output_dir:
-        print("\nDisplaying plots interactively. Close windows to exit.")
+        logger.info("\nDisplaying plots interactively. Close windows to exit.")
         plt.show()
 
     if output_dir:
-        print("\nAll plots saved successfully!")
+        logger.info("\nAll plots saved successfully!")
 
 
 if __name__ == '__main__':

@@ -26,8 +26,6 @@ if str(REPO_ROOT) not in sys.path:
 
 os.chdir(CONTENT_SEARCH_DIR)
 
-from utils.config import DEFAULT_VLM_MODEL  
-
 def _load_config_to_env(config_path: str = "config.yaml") -> None:
     path = REPO_ROOT / config_path
     if not path.exists():
@@ -61,8 +59,6 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         vlm = cs.get("vlm", {})
         _set("VLM_HOST", vlm.get("host_addr", "127.0.0.1"))
         _set("VLM_PORT", vlm.get("port", "8000"))
-        _set("VLM_MODEL_NAME", vlm.get("model_name", DEFAULT_VLM_MODEL))
-        _set("VLM_DEVICE", vlm.get("device", "CPU"))
 
         main_app = cs.get("main_app", {})
         _set("MAIN_APP_HOST", main_app.get("host_addr", "127.0.0.1"))
@@ -73,6 +69,14 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         pre = cs.get("video_preprocess", {})
         _set("PREPROCESS_HOST", pre.get("host_addr", "127.0.0.1"))
         _set("PREPROCESS_PORT", pre.get("port", "8001"))
+        _set("VLM_TIMEOUT_SECONDS", pre.get("vlm_timeout_seconds", 300))
+        _set("VIDEO_PREPROCESS_MAX_COMPLETION_TOKENS", pre.get("max_completion_tokens", 500))
+        _set("VIDEO_PREPROCESS_MAX_IMAGE_PIXELS", pre.get("max_image_pixels", 1048576))
+        _set("CHUNK_DURATION_S", pre.get("chunk_duration_s", 30))
+        _set("CHUNK_OVERLAP_S", pre.get("chunk_overlap_s", 4))
+        _set("MAX_NUM_FRAMES", pre.get("max_num_frames", 8))
+        _set("FRAME_WIDTH", pre.get("frame_width", 0))
+        _set("FRAME_HEIGHT", pre.get("frame_height", 0))
 
         # File Ingest
         ingest = cs.get("file_ingest", {})
@@ -328,6 +332,10 @@ def main() -> None:
                     "--port", _env("INGEST_PORT", "9990")],
             "cwd": CONTENT_SEARCH_DIR,
             "health": (_env("INGEST_HOST", "127.0.0.1"), int(_env("INGEST_PORT", "9990")), "/v1/dataprep/health"),
+            # Binds :9990 only after CLIP + the document embedding model are
+            # loaded and the id maps are rebuilt from ChromaDB, all at import;
+            # warm starts take ~40s, a first run that downloads the models needs
+            # the rest of this budget.
             "health_timeout": 300,
         },
         "main_app": {
@@ -335,7 +343,11 @@ def main() -> None:
                     "--host", _env("CS_HOST", "127.0.0.1"),
                     "--port", _env("CS_PORT", "9011")],
             "cwd": CONTENT_SEARCH_DIR,
-            "health": (_env("CS_HOST", "127.0.0.1"), int(_env("CS_PORT", "9011")), "/api/v1/system/health"),
+            # Liveness, not the aggregate /api/v1/system/health: that one only
+            # turns 200 once chromadb/ingest/preprocess are ready too, which is
+            # what the loop below is separately waiting for (ingest alone gets
+            # 300s). Gating main_app on it would time out on a slow ingest.
+            "health": (_env("CS_HOST", "127.0.0.1"), int(_env("CS_PORT", "9011")), "/api/v1/system/ping"),
             "health_timeout": 120,
         },
     }

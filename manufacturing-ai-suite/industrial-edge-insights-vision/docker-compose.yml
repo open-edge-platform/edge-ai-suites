@@ -16,14 +16,14 @@ services:
       ENABLE_RTSP: false
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME}
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME}
+      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${S3_STORAGE_HOST},${no_proxy}
+      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${S3_STORAGE_HOST},${no_proxy}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
-      S3_STORAGE_HOST: ${MINIO_HOSTNAME}
-      S3_STORAGE_PORT: ${MINIO_SERVER_PORT}
-      S3_STORAGE_USER: ${MINIO_ACCESS_KEY}
-      S3_STORAGE_PASS: ${MINIO_SECRET_KEY}
+      S3_STORAGE_HOST: ${S3_STORAGE_HOST}
+      S3_STORAGE_PORT: ${S3_STORAGE_PORT}
+      S3_STORAGE_USER: ${S3_STORAGE_USERNAME}
+      S3_STORAGE_PASS: ${S3_STORAGE_PASSWORD}
       SERVICE_NAME: "dlstreamer-pipeline-server"
       ENABLE_OPEN_TELEMETRY: true
       OTEL_COLLECTOR_HOST: ${OTEL_COLLECTOR_HOST}
@@ -120,7 +120,7 @@ services:
       - dlstreamer-pipeline-server
       - mediamtx
       - prometheus
-      - minio
+      - seaweedfs-s3
       - mqtt-broker
     environment:
       - http_proxy=${http_proxy}
@@ -129,27 +129,91 @@ services:
       - NO_PROXY=${no_proxy},${HOST_IP}
     restart: on-failure:5
 
-  minio:
-    image: minio/minio:RELEASE.2020-12-12T08-39-07Z
-    hostname: ${MINIO_HOSTNAME}
-    ipc: "none"
-    expose:
-      - ${MINIO_SERVER_PORT}
-    volumes:
-      - ${APP_DIR}/Certificates/ssl/:/certs/:rw
-      - "vol_minio_data:/data"
+  seaweedfs-master:
+    image: ${SEAWEEDFS_IMAGE}
+    hostname: seaweedfs-master
     networks:
       - industrial-edge-vision
     restart: unless-stopped
     security_opt:
       - no-new-privileges
-    ports:
-      - '${MINIO_SERVER_PORT}:8000'
+    volumes:
+      - vol_seaweed_master_data:/data
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BROWSER_REDIRECT_URL: https://${HOST_IP}/minio/
-    command: server --address ":8000" --certs-dir /certs /data
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+    command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
+
+  seaweedfs-volume:
+    image: ${SEAWEEDFS_IMAGE}
+    hostname: seaweedfs-volume
+    networks:
+      - industrial-edge-vision
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    volumes:
+      - vol_seaweed_volume_data:/data
+    environment:
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+    command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
+    depends_on:
+      - seaweedfs-master
+
+  seaweedfs-filer:
+    image: ${SEAWEEDFS_IMAGE}
+    hostname: seaweedfs-filer
+    networks:
+      - industrial-edge-vision
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    volumes:
+      - vol_seaweed_filer_data:/data
+    environment:
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+    command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  seaweedfs-s3:
+    image: ${SEAWEEDFS_IMAGE}
+    hostname: seaweedfs-s3
+    networks:
+      - industrial-edge-vision
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    expose:
+      - ${S3_STORAGE_PORT}
+    ports:
+      - '${S3_STORAGE_HOST_PORT}:${S3_STORAGE_PORT}'
+    environment:
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,${no_proxy}
+      - S3_STORAGE_USER=${S3_STORAGE_USERNAME}
+      - S3_STORAGE_PASS=${S3_STORAGE_PASSWORD}
+    entrypoint: ["/bin/sh", "/s3-entrypoint.sh"]
+    command: s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -port=${S3_STORAGE_PORT} -config=/tmp/s3_config.json
+    depends_on:
+      seaweedfs-filer:
+        condition: service_healthy
+      seaweedfs-master:
+        condition: service_started
+      seaweedfs-volume:
+        condition: service_started
+    volumes:
+      - ${APP_DIR}/configs/seaweedfs-s3/seaweedfs_s3_config.json.template:/etc/seaweedfs/s3_config.json.template:ro
+      - ${APP_DIR}/configs/seaweedfs-s3/s3-entrypoint.sh:/s3-entrypoint.sh:ro
 
   prometheus:
     image: prom/prometheus:v3.12.0
@@ -190,7 +254,11 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-  vol_minio_data:
+  vol_seaweed_master_data:
+    driver: local
+  vol_seaweed_volume_data:
+    driver: local
+  vol_seaweed_filer_data:
     driver: local
   prometheus_data:
     driver: local

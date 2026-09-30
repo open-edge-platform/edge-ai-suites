@@ -1,16 +1,20 @@
-# Metrics Service
+# Metrics Collector
 
 This service wraps the prebuilt Intel metrics collectors and exposes a simple
 HTTP API for system metrics and platform information. It is intended to be
-used by the aggregator‑service (and indirectly by the web UI).
+used by the `patient-monitoring-aggregator` (and indirectly by the web UI).
 
 Main responsibilities:
 
 - Start the underlying collectors from the `intel/retail-benchmark` image
-	(CPU, memory, NPU, PCM power, GPU/SPU where available).
+	(CPU, memory, NPU, PCM power, GPU/SPU where available), using a
+	bounded-cycle GPU collector override (`collect_gpu.sh`) that recycles
+	qmassa's JSON output periodically instead of letting it grow unbounded.
 - Read the log/CSV files written under `/tmp/results`.
 - Provide a JSON `/metrics` endpoint with time‑series data.
-- Provide `/platform-info` and `/memory` helper endpoints.
+- Provide `/platform-info`, `/memory`, `/device-config`, and `/health`
+	helper endpoints.
+- Served via FastAPI + uvicorn (see `app.py` / `api/endpoints.py`).
 
 ---
 
@@ -21,7 +25,7 @@ Main responsibilities:
 From this directory:
 
 ```bash
-docker build -t hl-metrics-service .
+docker build -t hl-metrics-collector .
 
 docker run --rm \
 	--privileged \
@@ -31,8 +35,7 @@ docker run --rm \
 	-v "$(pwd)/../../metrics:/tmp/results" \
 	-v /sys:/sys \
 	-v /dev:/dev \
-	-v /run:/run \
-	hl-metrics-service
+	hl-metrics-collector
 ```
 
 This starts the collectors (via `supervisord`) and the HTTP API on port `9000`.
@@ -40,11 +43,11 @@ This starts the collectors (via `supervisord`) and the HTTP API on port `9000`.
 ### Option 2: docker-compose (suite integration)
 
 From the top‑level suite directory, use the provided compose file which wires
-metrics‑service to the host and shares the metrics directory used by
-aggregator‑service:
+metrics‑collector to the host and shares the metrics directory used by
+`patient-monitoring-aggregator`:
 
 ```bash
-docker compose up metrics-service
+docker compose up metrics-collector
 ```
 
 ---
@@ -54,10 +57,14 @@ docker compose up metrics-service
 Environment variables:
 
 - `METRICS_DIR` (default: `/tmp/results`)
-	- Directory where the collectors write metrics logs.
+  - Directory where the collectors write metrics logs.
 - `NPU_LOG` (optional)
-	- Path to the NPU CSV file if it differs from the default
-		`${METRICS_DIR}/npu_usage.csv`.
+  - Path to the NPU CSV file if it differs from the default
+    `${METRICS_DIR}/npu_usage.csv`.
+- `METRICS_HTTP_PORT` (default: `9000`)
+  - Port the FastAPI/uvicorn server listens on.
+- `DEVICE_ENV_PATH` (default: `/configs/device.env`)
+  - Path to the per-workload device config file consumed by `/device-config`.
 
 Expected files (relative to `METRICS_DIR`):
 
@@ -83,26 +90,26 @@ Aggregated time‑series metrics built from the log/CSV files.
 
 ```json
 {
-	"cpu_utilization": [["2026-01-28T11:09:28.671", 12.3]],
-	"gpu_utilization": [],
-	"memory": [["2026-01-28T11:09:28.671", 32.0, 12.3, 19.7, 38.4]],
-	"power": [["2026-01-28T11:09:28.671", 5.1, 2.2]],
-	"npu_utilization": [["2026-01-28T11:09:28.671", 23.4]]
+    "cpu_utilization": [["2026-01-28T11:09:28.671", 12.3]],
+    "gpu_utilization": [],
+    "memory": [["2026-01-28T11:09:28.671", 32.0, 12.3, 19.7, 38.4]],
+    "power": [["2026-01-28T11:09:28.671", 5.1, 2.2]],
+    "npu_utilization": [["2026-01-28T11:09:28.671", 23.4]]
 }
 ```
 
 Notes:
 
 - `cpu_utilization`: `[timestamp_iso, usage_percent]` derived from
-	`cpu_usage.log`.
+  `cpu_usage.log`.
 - `gpu_utilization`: reserved for GPU/SPU metrics parsed from qmassa JSON
-	(may currently be empty).
+  (may currently be empty).
 - `memory`: `[timestamp_iso, total_gb, used_gb, free_gb, usage_percent]`
-	derived from `memory_usage.log`.
+  derived from `memory_usage.log`.
 - `power`: `[timestamp_iso, package0_watts, package1_watts, ...]` computed
-	from energy deltas in `pcm.csv`.
+  from energy deltas in `pcm.csv`.
 - `npu_utilization`: `[timestamp_iso, usage_percent]` derived from
-	`npu_usage.csv`.
+  `npu_usage.csv`.
 
 ### `GET /platform-info` — platform configuration
 
@@ -114,11 +121,11 @@ High‑level summary of the host platform.
 
 ```json
 {
-	"Processor": "Intel(R) Core(TM) Ultra 7 155H",
-	"NPU": "Intel AI Boost",
-	"iGPU": "Intel Arc Graphics",
-	"Memory": "32 GB",
-	"Storage": "1 TB"
+    "Processor": "Intel(R) Core(TM) Ultra 7 155H",
+    "NPU": "Intel AI Boost",
+    "iGPU": "Intel Arc Graphics",
+    "Memory": "32 GB",
+    "Storage": "1 TB"
 }
 ```
 
@@ -135,11 +142,39 @@ Convenience endpoint exposing the most recent memory sample.
 
 ```json
 {
-	"total_kib": 32859780.0,
-	"used_kib": 12345678.0,
-	"usage_percent": 37.5,
-	"raw": "Mem:  32859780 12345678 ..."
+    "total_kib": 32859780.0,
+    "used_kib": 12345678.0,
+    "usage_percent": 37.5,
+    "raw": "Mem:  32859780 12345678 ..."
 }
 ```
 
 If no memory data is available, this endpoint returns HTTP 404.
+
+### `GET /device-config` — per-workload device configuration
+
+Summarizes which OpenVINO device (CPU/GPU/NPU/AUTO) each suite workload is
+configured to use, resolved to a human-readable platform detail string.
+Consumed by `patient-monitoring-aggregator`'s `GET /device-config`.
+
+- Method: `GET`
+- URL: `/device-config`
+- Response (shape):
+
+```json
+{
+	"workloads": {
+		"rppg":    {"env_key": "RPPG_DEVICE",    "configured_device": "GPU", "resolved_detail": "Intel Arc Graphics"},
+		"ai_ecg":  {"env_key": "ECG_DEVICE",     "configured_device": "CPU", "resolved_detail": "Intel(R) Core(TM) Ultra 7 155H"},
+		"mdpnp":   {"env_key": "MDPNP_DEVICE",   "configured_device": "AUTO", "resolved_detail": "AUTO (platform decides: CPU/GPU/NPU)"},
+		"pose_3d": {"env_key": "POSE_3D_DEVICE", "configured_device": "NPU", "resolved_detail": "Intel AI Boost"}
+	}
+}
+```
+
+Reads `DEVICE_ENV_PATH` (default `/configs/device.env`); if the file is
+missing, `configured_device` is `null` and `resolved_detail` is `"Unknown"`.
+
+### `GET /health` — liveness probe
+
+Returns `{"status": "ok"}` with HTTP 200 when the FastAPI app is up.

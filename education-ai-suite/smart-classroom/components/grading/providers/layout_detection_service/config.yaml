@@ -1,8 +1,11 @@
 layout_detection:
-  # source：smart-classroom/config.yaml → models.model_hub (huggingface / modelscope)
+  # model_hub default lives in the grading component config.yaml (models.model_hub);
+  # with config_source=parent-override the parent smart-classroom value wins if set.
   repo_id: "PaddlePaddle/PP-DocLayoutV2"
-  download_dir: "models/detection_model/PP-DocLayoutV2"
-  model_dir: "models/detection_model/PP-DocLayoutV2-ov"
+  # paths are absolute, or relative to the grading component root.
+  # defaults point at the shared smart-classroom/models/detection_model.
+  download_dir: "../../models/detection_model/PP-DocLayoutV2"
+  model_dir: "../../models/detection_model/PP-DocLayoutV2-ov"
 
   precision: "fp16"
   npu_compatible: true

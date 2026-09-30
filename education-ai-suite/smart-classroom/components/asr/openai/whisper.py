@@ -61,7 +61,7 @@ class Whisper(BaseASR):
 
         return True
 
-    def transcribe(self, audio_path: str, temperature: float = 0.0) -> Dict[str, Any]:
+    def transcribe(self, audio_path: str, temperature: float = 0.0) -> dict:
         """
         Transcribe audio with strong silence suppression and zero speech loss.
         """

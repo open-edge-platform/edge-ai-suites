@@ -8,8 +8,8 @@
 
 To see the system requirements and other installations, see the following guides:
 
-  - [Get Started](./docs/user-guide/get-started.md): Step‑by‑step setup.
-  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements.
+- [Get Started](./docs/user-guide/get-started.md): Step‑by‑step setup.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements.
 
 ## How It Works
 
@@ -34,11 +34,11 @@ graph TD
 
 ## Learn More
 
-  - [Architecture](./docs/user-guide/how-it-works.md): End‑to‑end architecture.
-  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements.
-  - [Build from Source](./docs/user-guide/get-started/build-from-source.md): Build images for the stack.
-  - [API Reference](./docs/user-guide/api-reference.md): Key endpoints and references.
-  - [Release Notes](./docs/user-guide/release-notes.md): Updates and fixes.
+- [Architecture](./docs/user-guide/how-it-works.md): End‑to‑end architecture.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements.
+- [Build from Source](./docs/user-guide/get-started/build-from-source.md): Build images for the stack.
+- [API Reference](./docs/user-guide/api-reference.md): Key endpoints and references.
+- [Release Notes](./docs/user-guide/release-notes.md): Updates and fixes.
 
 ## Notes
 

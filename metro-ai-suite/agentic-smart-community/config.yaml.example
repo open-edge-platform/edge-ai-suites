@@ -38,11 +38,19 @@
 # before POSTing /v1/summary. Drop the block entirely when both sides see the same paths.
 summary_service:
   url: http://localhost:8192
+  # From set_env.sh (MAX_MODEL_LEN / DEFAULT_MAX_TOKENS), forwarded by compose.
+  # model_context_tokens: 61440
+  # max_output_tokens: 1024
+  max_hop_ratio: 20 # compression one report call may do; raise for fewer, coarser calls
+  timeout_seconds: 600 # one clip
+  report_timeout_seconds: 600 # one whole-period report
 
-# vllm-serving-ipex (VLM for scene_query — single-frame queries)
+# VLM for scene_query (single-frame queries). These standard variables are also
+# consumed by multilevel-video-understanding. Set VLM_BASE_URL to the
+# host-reachable endpoint (including its actual published port).
 vlm_service:
-  url: http://localhost:41091/v1
-  model: Qwen/Qwen3.6-35B-A3B
+  url: ${VLM_BASE_URL:-http://localhost:41091/v1}
+  model: ${VLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}
   max_edge_px: 720 # resize longest edge to this before sending to VLM (uses ffmpeg)
 
 # videostream-analytics microservice (motion detection, RTSP processing)
@@ -58,6 +66,13 @@ keepalive:
 
 poll_interval_ms: 5000
 video_summary_max_concurrent: 2
+
+# Alert notification cooldown. A new alert for a monitor+use_case that already
+# produced a *notified* alert within this window is still written to the alerts
+# table (full audit) but with notified=false and no subscriber broadcast —
+# a persistent warn/critical scene does not spam subscribers. 0 disables.
+alerts:
+  cooldown_seconds: 60
 
 # Per-monitor log rotation (write target: logs/monitors/<monitor_id>/<YYYY-MM-DD>.log)
 logging:

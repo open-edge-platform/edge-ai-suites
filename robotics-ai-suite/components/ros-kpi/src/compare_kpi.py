@@ -31,6 +31,10 @@ import json
 import sys
 from pathlib import Path
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  KPI descriptors
@@ -106,8 +110,7 @@ def compare(baseline: dict, current: dict, threshold: float) -> list[dict]:
     elif schema.startswith('level1'):
         descriptors = _L1_KPIS
     else:
-        print(f'  WARNING: unknown schema_version "{schema}", defaulting to Level 2 KPIs',
-              file=sys.stderr)
+        logger.warning(f'  unknown schema_version "{schema}", defaulting to Level 2 KPIs')
         descriptors = _L2_KPIS
 
     results = []
@@ -148,16 +151,14 @@ def _print_table(results: list[dict], baseline_path: str, current_path: str,
                  threshold: float) -> None:
     """Print an ASCII regression table."""
     col_w = 22
-    print()
-    print('  KPI Regression Report')
-    print(f'  Baseline  : {baseline_path}')
-    print(f'  Current   : {current_path}')
-    print(f'  Threshold : {threshold:.1f}%')
-    print()
+    logger.info('\n  KPI Regression Report')
+    logger.info(f'  Baseline  : {baseline_path}')
+    logger.info(f'  Current   : {current_path}')
+    logger.info(f'  Threshold : {threshold:.1f}%\n')
     hdr = (f'  {"METRIC":<{col_w}}  {"BASELINE":>12}  {"CURRENT":>12}  '
            f'{"DELTA":>8}  STATUS')
-    print(hdr)
-    print('  ' + '─' * (len(hdr) - 2))
+    logger.info(hdr)
+    logger.info('  ' + '─' * (len(hdr) - 2))
 
     for r in results:
         unit = _unit(r['metric'])
@@ -172,15 +173,15 @@ def _print_table(results: list[dict], baseline_path: str, current_path: str,
             sign  = '+' if r['delta_pct'] >= 0 else ''
             d_str = f'{sign}{r["delta_pct"]:.1f}%'
             icon  = '✅ PASS' if r['passed'] else '❌ FAIL'
-        print(f'  {r["metric"]:<{col_w}}  {b_str:>12}  {c_str:>12}  {d_str:>8}  {icon}')
+        logger.info(f'  {r["metric"]:<{col_w}}  {b_str:>12}  {c_str:>12}  {d_str:>8}  {icon}')
 
-    print()
+    logger.info("")
     fails = [r for r in results if not r['passed']]
     if fails:
-        print(f'  OVERALL: {len(fails)} regression(s) found  [threshold={threshold:.1f}%]')
+        logger.info(f'  OVERALL: {len(fails)} regression(s) found  [threshold={threshold:.1f}%]')
     else:
-        print(f'  OVERALL: All KPIs within threshold ({threshold:.1f}%)')
-    print()
+        logger.info(f'  OVERALL: All KPIs within threshold ({threshold:.1f}%)')
+    logger.info("")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -216,7 +217,7 @@ def main(argv=None) -> int:
         with open(current_path) as f:
             current = json.load(f)
     except (OSError, json.JSONDecodeError) as exc:
-        print(f'  ERROR: {exc}', file=sys.stderr)
+        logger.error(f'  {exc}')
         return 2
 
     results = compare(baseline, current, args.threshold)
@@ -237,7 +238,7 @@ def main(argv=None) -> int:
         }
         with open(report_path, 'w') as f:
             json.dump(report, f, indent=2)
-        print(f'  Report written → {report_path}')
+        logger.info(f'  Report written → {report_path}')
 
     fails = [r for r in results if not r['passed']]
     return 1 if fails else 0

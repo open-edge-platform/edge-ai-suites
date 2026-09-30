@@ -1,0 +1,83 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Run profile for the ADB Scan benchmark scenario.
+# Scenario name is derived from the ROS package in launch.cmd: "adbscan".
+#
+# NOTE: This is a bag-REPLAY scenario.  adbscan.launch.py starts both
+#       adbscan_node and a ros2 bag play of the bundled laster pointcloud bag at
+#       /opt/ros/jazzy/share/bagfiles/laser-pointcloud/.  The bag is not recorded
+#       during the run; the 'bag.topics' section documents the topics present
+#       in the input bag for reference.
+#
+# Load with:
+#   uv run python src/benchmark_profiler.py --config config/adbscan_run.yaml --show
+#
+# Use in bash run scripts:
+#   TOPICS=$(uv run python src/benchmark_profiler.py --config config/adbscan_run.yaml --topics)
+#   LAUNCH=$(uv run python src/benchmark_profiler.py --config config/adbscan_run.yaml --launch-cmd)
+#   SLEEP=$(uv run python src/benchmark_profiler.py  --config config/adbscan_run.yaml --init-sleep)
+---
+launch:
+  # play_demo_lidar_launch.py starts adbscan_node + ros2 bag play together.
+  # Scenario is derived from package name: "adbscan_ros2".
+  cmd: "ros2 launch adbscan_ros2 play_demo_lidar_launch.py"
+
+  # Optional extra arguments appended to cmd (e.g. ["bag_path:=/path/to/bag"])
+  args: []
+
+  # Seconds to wait after launch before starting monitoring.
+  # The launch file starts the node and bag replay together; allow time
+  # for the node to initialise and TF tree to settle before the first frames arrive.
+  # On WSL ~5s is enough for the bag to start but TF errors appear briefly;
+  # 10s avoids the unconnected-tree errors at startup.
+  init_sleep: 5
+
+stop:
+  # No goal events in adbscan; the run completes when the bag finishes.
+  goal_pattern: ""
+  goal_count: 0
+
+  # Hard stop after N seconds (0 = off).
+  timeout: 20
+
+monitor:
+  # Full resource monitoring (CPU, memory, GPU, NPU) enabled alongside the
+  # graph timing monitor so we can correlate image throughput with system load.
+  graph_only: false
+
+gazebo:
+  # No Gazebo — this is a bag-replay pipeline.
+  press_play: false
+
+cleanup:
+  # Sweep pattern for pkill -f used before and after each run.
+  sweep: "ros2|adbscan_ros2|adbscan_sub|play_demo_lidar_launch|rosbag2_player"
+
+session:
+  # Subdirectory under monitoring_sessions/ where sessions are stored.
+  output_subdir: "adbscan"
+  # Prefix for log filenames.
+  log_prefix: "adbscan"
+  # Path for the ros2 bag record stderr log (unused in replay mode).
+  record_log: "/tmp/adbscan_record.log"
+
+post_run: # No post-run commands needed for this bag-replay scenario.
+
+bag:
+  # Topics present in the input bag (e.g. the bundled spinning bag).
+  # These are replayed into adbscan_node; they are not recorded.
+  # Update this list if your input bag uses different topic names.
+  topics:
+    # ── RGB-D camera inputs (primary camera) ─────────────────────────────────
+    - /camera/color/image_raw
+    - /camera/depth/color/points
+    # ── ADBScan ──────────────────────────────────────────────────────────────
+    - /events/read_split
+    - /marker_array
+    - /obstacle_array
+    - /rosout
+    - /scan
+    # ── Transforms ───────────────────────────────────────────────────────────
+    - /tf
+    - /tf_static

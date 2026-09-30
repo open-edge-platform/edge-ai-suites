@@ -11,6 +11,10 @@ import psutil
 from datetime import datetime
 from collections import defaultdict
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -95,13 +99,12 @@ try:
 except Exception:
     pass
 
-print("=" * 80)
-print("HOST SYSTEM INFORMATION")
-print("=" * 80)
-print(f"CPU Model: {cpu_model}")
-print(f"CPU Max Speed: {cpu_freq.max:.1f} MHz")
-print(f"CPU Cycles per ms: {cpu_freq.max * 1000:.0f} cycles")
-print()
+logger.info("=" * 80)
+logger.info("HOST SYSTEM INFORMATION")
+logger.info("=" * 80)
+logger.info(f"CPU Model: {cpu_model}")
+logger.info(f"CPU Max Speed: {cpu_freq.max:.1f} MHz")
+logger.info(f"CPU Cycles per ms: {cpu_freq.max * 1000:.0f} cycles\n")
 
 
 def format_duration_with_cycles(duration_s, cpu_mhz):
@@ -121,9 +124,9 @@ def format_gap_with_cycles(gap_ms, cpu_mhz):
 cursor.execute("SELECT id, name, type FROM topics")
 topics = {row[0]: {'name': row[1], 'type': row[2]} for row in cursor.fetchall()}
 
-print("=" * 80)
-print("ROSBAG ANALYSIS - All Topics with CPU Timing")
-print("=" * 80)
+logger.info("=" * 80)
+logger.info("ROSBAG ANALYSIS - All Topics with CPU Timing")
+logger.info("=" * 80)
 
 # Categorize topics as input or output
 input_topics = []
@@ -140,9 +143,9 @@ for topic_id, topic_info in topics.items():
         input_topics.append(topic_id)
 
 for topic_id, topic_info in topics.items():
-    print(f"\nTopic ID: {topic_id}")
-    print(f"Topic Name: {topic_info['name']}")
-    print(f"Message Type: {topic_info['type']}")
+    logger.info(f"\nTopic ID: {topic_id}")
+    logger.info(f"Topic Name: {topic_info['name']}")
+    logger.info(f"Message Type: {topic_info['type']}")
 
     # Get message statistics
     cursor.execute("""
@@ -162,11 +165,11 @@ for topic_id, topic_info in topics.items():
         duration_s = duration_ns / 1e9
         frequency = count / duration_s if duration_s > 0 else 0
 
-        print(f"Message Count: {count}")
-        print(f"First Message: {first_ts} ({datetime.fromtimestamp(first_ts/1e9).strftime('%Y-%m-%d %H:%M:%S.%f')})")
-        print(f"Last Message:  {last_ts} ({datetime.fromtimestamp(last_ts/1e9).strftime('%Y-%m-%d %H:%M:%S.%f')})")
-        print(f"Duration: {format_duration_with_cycles(duration_s, cpu_freq.max)}")
-        print(f"Average Frequency: {frequency:.2f} Hz")
+        logger.info(f"Message Count: {count}")
+        logger.info(f"First Message: {first_ts} ({datetime.fromtimestamp(first_ts/1e9).strftime('%Y-%m-%d %H:%M:%S.%f')})")
+        logger.info(f"Last Message:  {last_ts} ({datetime.fromtimestamp(last_ts/1e9).strftime('%Y-%m-%d %H:%M:%S.%f')})")
+        logger.info(f"Duration: {format_duration_with_cycles(duration_s, cpu_freq.max)}")
+        logger.info(f"Average Frequency: {frequency:.2f} Hz")
 
         # Get time gaps between messages
         cursor.execute("""
@@ -184,14 +187,14 @@ for topic_id, topic_info in topics.items():
             min_gap = min(gaps)
             max_gap = max(gaps)
 
-            print("  Time gaps (first 99 messages):")
-            print(f"    Average: {format_gap_with_cycles(avg_gap, cpu_freq.max)}")
-            print(f"    Min: {format_gap_with_cycles(min_gap, cpu_freq.max)}")
-            print(f"    Max: {format_gap_with_cycles(max_gap, cpu_freq.max)}")
+            logger.info("  Time gaps (first 99 messages):")
+            logger.info(f"    Average: {format_gap_with_cycles(avg_gap, cpu_freq.max)}")
+            logger.info(f"    Min: {format_gap_with_cycles(min_gap, cpu_freq.max)}")
+            logger.info(f"    Max: {format_gap_with_cycles(max_gap, cpu_freq.max)}")
 
-print("\n" + "=" * 80)
-print("INPUT/OUTPUT MESSAGE FLOW WITH LATENCY ANALYSIS")
-print("=" * 80)
+logger.info("\n" + "=" * 80)
+logger.info("INPUT/OUTPUT MESSAGE FLOW WITH LATENCY ANALYSIS")
+logger.info("=" * 80)
 
 # Find input and output topics
 cursor.execute("""
@@ -208,21 +211,21 @@ sensor_topics = [t for t in all_topics_list if 'scan' in t[1] or 'odom' in t[1] 
 map_output = [t for t in all_topics_list if '/map' == t[1]]
 other_outputs = [t for t in all_topics_list if 'costmap' in t[1] or 'path' in t[1]]
 
-print("\nINPUT TOPICS (Sensors):")
+logger.info("\nINPUT TOPICS (Sensors):")
 for tid, name, mtype in sensor_topics:
     cursor.execute("SELECT COUNT(*) FROM messages WHERE topic_id = ?", (tid,))
     count = cursor.fetchone()[0]
-    print(f"  - {name} ({mtype}) - {count} messages")
+    logger.info(f"  - {name} ({mtype}) - {count} messages")
 
-print("\nOUTPUT TOPICS:")
+logger.info("\nOUTPUT TOPICS:")
 for tid, name, mtype in map_output + other_outputs:
     cursor.execute("SELECT COUNT(*) FROM messages WHERE topic_id = ?", (tid,))
     count = cursor.fetchone()[0]
-    print(f"  - {name} ({mtype}) - {count} messages")
+    logger.info(f"  - {name} ({mtype}) - {count} messages")
 
-print("\n" + "=" * 80)
-print("LATENCY ANALYSIS: Input to Output Delays")
-print("=" * 80)
+logger.info("\n" + "=" * 80)
+logger.info("LATENCY ANALYSIS: Input to Output Delays")
+logger.info("=" * 80)
 
 # For each output message, find the most recent input messages
 if map_output:
@@ -238,9 +241,9 @@ if map_output:
 
     map_timestamps = [row[0] for row in cursor.fetchall()]
 
-    print("\nAnalyzing latency for first 50 /map output messages")
-    print("Map #    Map Time (s)  Input to Output Delays")
-    print("-" * 100)
+    logger.info("\nAnalyzing latency for first 50 /map output messages")
+    logger.info("Map #    Map Time (s)  Input to Output Delays")
+    logger.info("-" * 100)
 
     for idx, map_ts in enumerate(map_timestamps):
         delays_info = []
@@ -268,13 +271,13 @@ if map_output:
         map_time_s = (map_ts - map_timestamps[0]) / 1e9
         delays_str = ", ".join(delays_info) if delays_info else "No inputs found"
 
-        print(f"{idx+1:<8} {map_time_s:<12.3f}  {delays_str}")
+        logger.info(f"{idx+1:<8} {map_time_s:<12.3f}  {delays_str}")
 
-print("\n" + "=" * 80)
-print("DETAILED MESSAGE TIMELINE (First 100 messages)")
-print("=" * 80)
-print("\nSeq    Time (ms)       Delta (ms)   Type  Topic                                    Message Type")
-print("-" * 110)
+logger.info("\n" + "=" * 80)
+logger.info("DETAILED MESSAGE TIMELINE (First 100 messages)")
+logger.info("=" * 80)
+logger.info("\nSeq    Time (ms)       Delta (ms)   Type  Topic                                    Message Type")
+logger.info("-" * 110)
 
 cursor.execute("""
     SELECT m.topic_id, m.timestamp, t.name, t.type
@@ -294,15 +297,15 @@ for seq, (topic_id, timestamp, topic_name, topic_type) in enumerate(rows, 1):
     # Mark input vs output
     marker = "IN " if any(s in topic_name for s in ['scan', 'odom', 'camera', 'image']) else "OUT"
 
-    print(f"{seq:<6} {time_ms:<15.2f} {delta_ms:<12.2f} {marker}   {topic_name:<40} {topic_type:<20}")
+    logger.info(f"{seq:<6} {time_ms:<15.2f} {delta_ms:<12.2f} {marker}   {topic_name:<40} {topic_type:<20}")
     prev_ts = timestamp
 
-print("\n" + "=" * 80)
-print("INPUT-OUTPUT CORRELATION MATRIX")
-print("=" * 80)
+logger.info("\n" + "=" * 80)
+logger.info("INPUT-OUTPUT CORRELATION MATRIX")
+logger.info("=" * 80)
 
 if sensor_topics and map_output:
-    print("\nFor each /map output, showing delay from most recent input messages:\n")
+    logger.info("\nFor each /map output, showing delay from most recent input messages:\n")
 
     # Get a sample of map messages
     cursor.execute("""
@@ -320,8 +323,8 @@ if sensor_topics and map_output:
     for _, name, _ in sensor_topics:
         short_name = name.split('/')[-1][:15]
         header += f" {short_name:<18}"
-    print(header)
-    print("-" * (18 + len(sensor_topics) * 20))
+    logger.info(header)
+    logger.info("-" * (18 + len(sensor_topics) * 20))
 
     for idx, map_ts in enumerate(sample_map_ts, 1):
         row_data = f"{idx:<8} {(map_ts - sample_map_ts[0])/1e9:<10.2f}"
@@ -342,11 +345,11 @@ if sensor_topics and map_output:
             else:
                 row_data += f" {'N/A':>18}"
 
-        print(row_data)
+        logger.info(row_data)
 
-print("\n" + "=" * 80)
-print("NODE ANALYSIS - Time Traversal")
-print("=" * 80)
+logger.info("\n" + "=" * 80)
+logger.info("NODE ANALYSIS - Time Traversal")
+logger.info("=" * 80)
 
 # Build topic to node mapping (approximate based on topic names)
 
@@ -382,37 +385,37 @@ for topic_id, topic_info in topics.items():
     else:
         node_topics[node]['subscribes'].append(topic_name)
 
-print("\nInferred Node Graph:")
-print("-" * 80)
+logger.info("\nInferred Node Graph:")
+logger.info("-" * 80)
 for node, data in sorted(node_topics.items()):
-    print(f"\nNode: {node}")
+    logger.info(f"\nNode: {node}")
     if data['publishes']:
-        print(f"  Publishes to: {', '.join(data['publishes'])}")
+        logger.info(f"  Publishes to: {', '.join(data['publishes'])}")
     if data['subscribes']:
-        print(f"  Subscribes to: {', '.join(data['subscribes'])}")
+        logger.info(f"  Subscribes to: {', '.join(data['subscribes'])}")
 
 # Interactive node traversal
-print("\n" + "=" * 80)
-print("INTERACTIVE NODE TIME TRAVERSAL")
-print("=" * 80)
-print("\nAvailable nodes:")
+logger.info("\n" + "=" * 80)
+logger.info("INTERACTIVE NODE TIME TRAVERSAL")
+logger.info("=" * 80)
+logger.info("\nAvailable nodes:")
 for i, node in enumerate(sorted(node_topics.keys()), 1):
-    print(f"  {i}. {node}")
+    logger.info(f"  {i}. {node}")
 
-print("\nEnter node name to analyze (or press Enter to skip):")
+logger.info("\nEnter node name to analyze (or press Enter to skip):")
 target_node = input("> ").strip()
 
 if target_node and target_node in node_topics:
-    print("\n" + "=" * 80)
-    print(f"TIME TRAVERSAL FOR NODE: {target_node}")
-    print("=" * 80)
+    logger.info("\n" + "=" * 80)
+    logger.info(f"TIME TRAVERSAL FOR NODE: {target_node}")
+    logger.info("=" * 80)
 
     # Get all topics associated with this node
     node_topic_names = node_topics[target_node]['publishes'] + node_topics[target_node]['subscribes']
     node_topic_ids = [tid for tid, tinfo in topics.items() if tinfo['name'] in node_topic_names]
 
     if not node_topic_ids:
-        print(f"No topics found for node {target_node}")
+        logger.warning(f"No topics found for node {target_node}")
     else:
         # Get all messages for this node's topics
         placeholders = ','.join('?' * len(node_topic_ids))
@@ -428,11 +431,11 @@ if target_node and target_node in node_topics:
         node_messages = cursor.fetchall()
 
         if not node_messages:
-            print(f"No messages found for node {target_node}")
+            logger.warning(f"No messages found for node {target_node}")
         else:
-            print(f"\nFound {len(node_messages)} messages (showing first 200)")
-            print(f"\n{'Seq':<6} {'Time (s)':<12} {'Delta (ms)':<12} {'Direction':<10} {'Topic':<40}")
-            print("-" * 90)
+            logger.info(f"\nFound {len(node_messages)} messages (showing first 200)")
+            logger.info(f"\n{'Seq':<6} {'Time (s)':<12} {'Delta (ms)':<12} {'Direction':<10} {'Topic':<40}")
+            logger.info("-" * 90)
 
             start_time = node_messages[0][0]
             prev_time = None
@@ -447,18 +450,18 @@ if target_node and target_node in node_topics:
                 else:
                     direction = "INPUT"
 
-                print(f"{seq:<6} {time_s:<12.6f} {delta_ms:<12.2f} {direction:<10} {topic_name:<40}")
+                logger.info(f"{seq:<6} {time_s:<12.6f} {delta_ms:<12.2f} {direction:<10} {topic_name:<40}")
                 prev_time = timestamp
 
             # Processing time analysis
-            print("\n" + "=" * 80)
-            print(f"PROCESSING TIME ANALYSIS FOR {target_node}")
-            print("=" * 80)
+            logger.info("\n" + "=" * 80)
+            logger.info(f"PROCESSING TIME ANALYSIS FOR {target_node}")
+            logger.info("=" * 80)
 
             # Group messages into processing cycles (input -> output)
-            print("\nInput-to-Output Processing Time:")
-            print(f"{'Cycle':<8} {'Input Time (s)':<15} {'Output Time (s)':<15} {'Processing (ms)':<15} {'CPU Cycles (M)':<15}")
-            print("-" * 80)
+            logger.info("\nInput-to-Output Processing Time:")
+            logger.info(f"{'Cycle':<8} {'Input Time (s)':<15} {'Output Time (s)':<15} {'Processing (ms)':<15} {'CPU Cycles (M)':<15}")
+            logger.info("-" * 80)
 
             input_msgs = [(ts, tn) for ts, tn, _, _ in node_messages if tn in node_topics[target_node]['subscribes']]
             output_msgs = [(ts, tn) for ts, tn, _, _ in node_messages if tn in node_topics[target_node]['publishes']]
@@ -476,13 +479,13 @@ if target_node and target_node in node_topics:
                     out_time_s = (out_ts - start_time) / 1e9
 
                     cycle += 1
-                    print(f"{cycle:<8} {in_time_s:<15.6f} {out_time_s:<15.6f} {processing_ms:<15.2f} {processing_cycles:<15.1f}")
+                    logger.info(f"{cycle:<8} {in_time_s:<15.6f} {out_time_s:<15.6f} {processing_ms:<15.2f} {processing_cycles:<15.1f}")
 
             if cycle == 0:
-                print("No input-output pairs found for processing time analysis")
+                logger.warning("No input-output pairs found for processing time analysis")
 
 conn.close()
 
-print("\n" + "=" * 80)
-print("Analysis complete!")
-print("=" * 80)
+logger.info("\n" + "=" * 80)
+logger.info("Analysis complete!")
+logger.info("=" * 80)

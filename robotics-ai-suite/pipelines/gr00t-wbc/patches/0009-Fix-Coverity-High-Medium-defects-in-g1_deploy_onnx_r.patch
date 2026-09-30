@@ -1,0 +1,186 @@
+From da38e1bb48353de5fc42836ce3ad33a6a87e98d6 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Fri, 7 Aug 2026 14:18:33 +0800
+Subject: [PATCH 09/13]  Fix Coverity High/Medium defects in g1_deploy_onnx_ref
+   - Make OperatorState flags atomic (LOCK_EVASION on stop/start/play)   -
+ Wrap main() in try/catch (UNCAUGHT_EXCEPT)   - Guard movement_state_data.data
+ derefs (FORWARD_NULL/REVERSE_INULL)   - Null-check state_logger_ before
+ output handlers (NULL_FIELD)   - Guard current_motion_copy deref/encode-mode
+ (REVERSE_INULL)
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ .../include/robot_parameters.hpp              | 10 +++-
+ .../src/g1_deploy_onnx_ref.cpp                | 59 +++++++++++++------
+ 2 files changed, 49 insertions(+), 20 deletions(-)
+
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/robot_parameters.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/robot_parameters.hpp
+index 4d6a6f4..b36d1c1 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/robot_parameters.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/robot_parameters.hpp
+@@ -20,6 +20,7 @@
+ #define ROBOT_PARAMETERS_HPP
+ 
+ #include <array>
++#include <atomic>
+ 
+ // ---------------------------------------------------------------------------
+ // Unitree SDK DDS topic names
+@@ -64,9 +65,12 @@ struct HeadingState {
+  * @brief High-level operator signals (set by input interfaces, read by control loop).
+  */
+ struct OperatorState {
+-  bool stop = false;   ///< Emergency stop requested.
+-  bool start = false;  ///< Control-system start requested.
+-  bool play = false;   ///< Motion playback active.
++  // Atomic because these flags are written by input-interface threads and read
++  // by the control/main loops concurrently (see Coverity LOCK_EVASION). Atomics
++  // give well-defined cross-thread visibility without a mutex for simple flags.
++  std::atomic<bool> stop{false};   ///< Emergency stop requested.
++  std::atomic<bool> start{false};  ///< Control-system start requested.
++  std::atomic<bool> play{false};   ///< Motion playback active.
+ };
+ 
+ /**
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+index 021dad0..21df774 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+@@ -2633,7 +2633,10 @@ class G1Deploy {
+       create_ros2 = (output_type == "ros2" || output_type == "all");
+ #endif
+ 
+-      if (create_zmq) {
++      // state_logger_ is constructed above (or the constructor re-throws), so it
++      // is non-null here; guard explicitly anyway since the output handlers hold
++      // a StateLogger& and must never be built from an empty unique_ptr.
++      if (create_zmq && state_logger_) {
+         auto zmq_handler = std::make_unique<ZMQOutputHandler>(*state_logger_, zmq_out_port, zmq_out_topic);
+         std::cout << "Initialized ZMQ output interface" << std::endl;
+         // Publish robot config so subscribers can receive it before control loop starts
+@@ -2642,7 +2645,7 @@ class G1Deploy {
+       }
+ 
+ #if HAS_ROS2
+-      if (create_ros2) {
++      if (create_ros2 && state_logger_) {
+         auto ros2_handler = std::make_unique<ROS2OutputHandler>(*state_logger_, "g1_output_handler");
+         std::cout << "Initialized ROS2 output interface" << std::endl;
+         // Publish robot config so subscribers can receive it before control loop starts
+@@ -3611,9 +3614,9 @@ class G1Deploy {
+         const auto &planner_state = has_planner ? planner_->planner_state_ : ps;
+         (*record_input_file_) << motion_reader_.current_motion_index_ << ",";
+         (*record_input_file_) << current_frame_ << ",";
+-        (*record_input_file_) << operator_state.play << ",";
+-        (*record_input_file_) << operator_state.start << ",";
+-        (*record_input_file_) << operator_state.stop << ",";
++        (*record_input_file_) << operator_state.play.load() << ",";
++        (*record_input_file_) << operator_state.start.load() << ",";
++        (*record_input_file_) << operator_state.stop.load() << ",";
+ 
+         (*record_input_file_) << planner_state.enabled << ",";
+         (*record_input_file_) << planner_state.initialized << ",";
+@@ -3742,6 +3745,12 @@ class G1Deploy {
+             // Read current movement mode from thread-safe buffer
+             auto movement_state_data = movement_state_buffer_.GetDataWithTime();
+ 
++            // Snapshot the scalar fields we need after the guard, with safe
++            // defaults for the case where no movement state is available yet.
++            // Dereferencing movement_state_data.data directly outside this guard
++            // is a null-pointer risk (the buffer may be empty).
++            int current_locomotion_mode = static_cast<int>(LocomotionMode::IDLE);
++            float current_movement_speed = 0.0f;
+             if (movement_state_data.data) {
+               // bool of checking if facing direction is changed
+               facing_direction_changed = movement_state_data.data->facing_direction[0] != last_movement_state_.facing_direction[0] || 
+@@ -3759,14 +3768,16 @@ class G1Deploy {
+                                           movement_state_data.data->movement_direction[2] != last_movement_state_.movement_direction[2];
+               // bool of checking if the last movement value is under the static motion mode
+               under_static_motion_mode = is_static_motion_mode(static_cast<LocomotionMode>(movement_state_data.data->locomotion_mode));
++              current_locomotion_mode = movement_state_data.data->locomotion_mode;
++              current_movement_speed = movement_state_data.data->movement_speed;
+             }
+-            bool is_running = movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::RUN);
+-            bool is_boxing = movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::LEFT_PUNCH) ||
+-                             movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::RIGHT_PUNCH) ||
+-                             movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::RANDOM_PUNCH) ||
+-                             movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::LEFT_HOOK) ||
+-                             movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::RIGHT_HOOK);
+-            bool is_crawling = movement_state_data.data->locomotion_mode == static_cast<int>(LocomotionMode::CRAWLING);
++            bool is_running = current_locomotion_mode == static_cast<int>(LocomotionMode::RUN);
++            bool is_boxing = current_locomotion_mode == static_cast<int>(LocomotionMode::LEFT_PUNCH) ||
++                             current_locomotion_mode == static_cast<int>(LocomotionMode::RIGHT_PUNCH) ||
++                             current_locomotion_mode == static_cast<int>(LocomotionMode::RANDOM_PUNCH) ||
++                             current_locomotion_mode == static_cast<int>(LocomotionMode::LEFT_HOOK) ||
++                             current_locomotion_mode == static_cast<int>(LocomotionMode::RIGHT_HOOK);
++            bool is_crawling = current_locomotion_mode == static_cast<int>(LocomotionMode::CRAWLING);
+             // increment replan interval counter
+             replan_interval_counter_ += planner_dt_;
+             // check if need to replan
+@@ -3802,7 +3813,7 @@ class G1Deploy {
+             
+             if (movement_mode_changed || facing_direction_changed || height_changed) {
+               need_replan = true;
+-            } else if (!under_static_motion_mode && (movement_speed_changed || movement_direction_changed || (time_to_replan && movement_state_data.data->movement_speed != 0))) {
++            } else if (!under_static_motion_mode && (movement_speed_changed || movement_direction_changed || (time_to_replan && current_movement_speed != 0))) {
+               need_replan = true;
+             }
+ 
+@@ -4057,14 +4068,17 @@ class G1Deploy {
+           // Lock mutex for observation gathering and output sending to ensure consistency
+           // This ensures all observations use the same snapshot of current_motion_ and current_frame_
+           int current_frame_copy;
+-          int current_encoder_mode_copy;
++          int current_encoder_mode_copy = -1;  // -1 = no/invalid encode mode
+           bool current_play_copy;
+           std::shared_ptr<const MotionSequence> current_motion_copy = nullptr;
+           {
+             std::lock_guard<std::mutex> lock(current_motion_mutex_);
+             current_frame_copy = current_frame_;
+             current_motion_copy = current_motion_;
+-            current_encoder_mode_copy = current_motion_copy->GetEncodeMode();
++            // current_motion_ may be null before a motion is loaded; the code
++            // below (and downstream) already null-checks current_motion_copy, so
++            // guard this deref too instead of assuming non-null here.
++            current_encoder_mode_copy = current_motion_copy ? current_motion_copy->GetEncodeMode() : -1;
+             current_play_copy = operator_state.play;
+ 
+             // reset saved frame for observation window before gathering observations so that we can get the latest value
+@@ -4157,8 +4171,8 @@ class G1Deploy {
+             }
+           }
+ 
+-          // Write target motion to file
+-          if (target_motion_file_) {
++          // Write target motion to file (only when a motion is actually loaded)
++          if (target_motion_file_ && current_motion_copy) {
+             (*target_motion_file_) << current_motion_copy->BodyPositions(current_frame_copy)[0][0] << ",";
+             (*target_motion_file_) << current_motion_copy->BodyPositions(current_frame_copy)[0][1] << ",";
+             (*target_motion_file_) << current_motion_copy->BodyPositions(current_frame_copy)[0][2] << ",";
+@@ -4600,6 +4614,10 @@ int main(int argc, char const* argv[]) {
+   }
+ 
+   std::cout << "[DEBUG] Creating G1Deploy object..." << std::endl;
++  // Guard the whole deployment lifecycle: construction, main loop and shutdown
++  // can throw (file/regex parsing, ZMQ, Unitree SDK, bad_alloc). An uncaught
++  // exception here would call std::terminate instead of a clean exit.
++  try {
+   G1Deploy custom(
+     networkInterface,
+     modelFile,
+@@ -4654,5 +4672,12 @@ int main(int argc, char const* argv[]) {
+   sleep(0.5);
+   std::cout << "[DEBUG] Program exiting normally..." << std::endl;
+   return 0;
++  } catch (const std::exception& e) {
++    std::cerr << "[FATAL] Unhandled exception: " << e.what() << std::endl;
++    return 1;
++  } catch (...) {
++    std::cerr << "[FATAL] Unhandled non-standard exception" << std::endl;
++    return 1;
++  }
+ }
+ 
+-- 
+2.43.0
+

@@ -39,6 +39,8 @@ from providers.video_preprocess.frame_sampler import FrameSampler
 
 from providers.local_storage.store import LocalStore
 
+from utils.prompt_loader import get_default_video_summary_prompt
+
 _vlm_host = os.getenv("VLM_HOST", "127.0.0.1")
 _vlm_port = os.getenv("VLM_PORT", "8000")
 VLM_ENDPOINT: str = f"http://{_vlm_host}:{_vlm_port}/v1/chat/completions"
@@ -49,19 +51,22 @@ DEFAULT_CHUNK_OVERLAP_S: int = int(os.getenv("CHUNK_OVERLAP_S", 4))
 DEFAULT_MAX_NUM_FRAMES: int = int(os.getenv("MAX_NUM_FRAMES", 8))
 DEFAULT_FRAME_WIDTH: int = int(os.getenv("FRAME_WIDTH", 0))
 DEFAULT_FRAME_HEIGHT: int = int(os.getenv("FRAME_HEIGHT", 0))
+DEFAULT_MAX_COMPLETION_TOKENS: int = int(
+    os.getenv("VIDEO_PREPROCESS_MAX_COMPLETION_TOKENS", 500)
+)
+# Per-frame pixel cap sent to the VLM. Frames larger than this are downscaled
+# (aspect-preserving) before JPEG encoding, bounding the vision-token count and
+# thus inference latency.
+DEFAULT_MAX_IMAGE_PIXELS: int = int(
+    os.getenv("VIDEO_PREPROCESS_MAX_IMAGE_PIXELS", 1048576)
+)
 
-INGEST_ENABLED = os.getenv("VLM_INGEST_ENABLED", "True").lower() in ("true", "1", "t")
+_ingest_host = os.getenv("INGEST_HOST", "127.0.0.1")
+_ingest_port = os.getenv("INGEST_PORT", "9990")
+INGEST_ENDPOINT: str = f"http://{_ingest_host}:{_ingest_port}/v1/dataprep/ingest_text"
 
-if INGEST_ENABLED:
-    _ingest_host = os.getenv("INGEST_HOST", "127.0.0.1")
-    _ingest_port = os.getenv("INGEST_PORT", "9990")
-    INGEST_ENDPOINT: Optional[str] = (
-        f"http://{_ingest_host}:{_ingest_port}/v1/dataprep/ingest_text"
-    )
-    INGEST_BUCKET: str = os.getenv("STORAGE_BUCKET", "content-search")
-else:
-    INGEST_ENDPOINT = None
-    INGEST_BUCKET = ""
+
+DEFAULT_VIDEO_SUMMARY_PROMPT = get_default_video_summary_prompt()
 
 
 class PreprocessRequest(BaseModel):
@@ -90,16 +95,9 @@ class PreprocessRequest(BaseModel):
     chunk_overlap_s: int = Field(default=DEFAULT_CHUNK_OVERLAP_S, ge=0, description="Chunk overlap in seconds")
     max_num_frames: int = Field(default=DEFAULT_MAX_NUM_FRAMES, ge=1, description="Max sampled frames per chunk")
 
-    prompt: str = Field(
-        "Please summarize this classroom video segment. "
-        "Focus on the teaching activities, lecture topics, "
-        "key knowledge points being explained, "
-        "any content written or displayed on the blackboard/screen, "
-        "student behaviors (e.g. raising hands, taking notes, discussing, distracted, leaving the classroom), "
-        "and notable student-teacher interactions.",
-        description="Prompt used per chunk",
-    )
-    max_completion_tokens: int = Field(500, ge=1, description="VLM max completion tokens")
+    prompt: str = Field(default=DEFAULT_VIDEO_SUMMARY_PROMPT, description="Prompt used per chunk")
+    max_completion_tokens: int = Field(default=DEFAULT_MAX_COMPLETION_TOKENS, ge=1, description="VLM max completion tokens")
+    max_image_pixels: int = Field(default=DEFAULT_MAX_IMAGE_PIXELS, ge=0, description="Downscale frames exceeding this pixel area before sending to the VLM (0 disables)")
 
     vlm_endpoint: Optional[str] = Field(None, description="Override VLM endpoint URL")
     vlm_timeout_seconds: Optional[int] = Field(None, ge=1, description="Override VLM timeout seconds")
@@ -139,18 +137,27 @@ class PreprocessResponse(BaseModel):
 
 
 class VlmClient:
-    def __init__(self, *, endpoint: str, timeout_seconds: int):
+    def __init__(self, *, endpoint: str, timeout_seconds: int, max_image_pixels: int = 0):
         self._endpoint = str(endpoint)
         self._timeout_seconds = int(timeout_seconds)
+        self._max_image_pixels = int(max_image_pixels)
         # Do not inherit system proxy settings for local service calls.
         # This avoids corporate proxy interception for 127.0.0.1 endpoints.
         self._session = requests.Session()
         self._session.trust_env = False
 
-    @staticmethod
-    def _frame_to_jpeg_data_url(frame) -> str:
+    def _frame_to_jpeg_data_url(self, frame) -> str:
         # frame is expected as an RGB numpy array from decord
         img = Image.fromarray(frame)
+        # Downscale (aspect-preserving) frames whose area exceeds the cap, to
+        # bound the VLM vision-token count and inference latency.
+        w, h = img.size
+        if self._max_image_pixels > 0 and w * h > self._max_image_pixels:
+            scale = (self._max_image_pixels / (w * h)) ** 0.5
+            img = img.resize(
+                (max(1, int(w * scale)), max(1, int(h * scale))),
+                Image.Resampling.LANCZOS,
+            )
         buf = io.BytesIO()
         img.save(buf, format="JPEG", quality=85)
         b64 = base64.b64encode(buf.getvalue()).decode("ascii")
@@ -303,6 +310,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
             "chunk_overlap_s": int(req.chunk_overlap_s),
             "max_num_frames": int(req.max_num_frames),
             "frame_resolution": frame_resolution,
+            "max_image_pixels": int(req.max_image_pixels),
             "prompt": str(req.prompt),
             "max_completion_tokens": int(req.max_completion_tokens),
         }
@@ -318,6 +326,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
     vlm = VlmClient(
         endpoint=endpoint,
         timeout_seconds=req.vlm_timeout_seconds or VLM_TIMEOUT_SECONDS,
+        max_image_pixels=req.max_image_pixels,
     )
 
     summaries: List[ChunkSummaryResult] = []
@@ -498,6 +507,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                     "chunk_overlap_s": int(req.chunk_overlap_s),
                     "max_num_frames": int(req.max_num_frames),
                     "frame_resolution": frame_resolution,
+                    "max_image_pixels": int(req.max_image_pixels),
                     "prompt": str(req.prompt),
                     "max_completion_tokens": int(req.max_completion_tokens),
                     "vlm_endpoint": str(req.vlm_endpoint or VLM_ENDPOINT),

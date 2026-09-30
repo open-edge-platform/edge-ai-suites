@@ -17,6 +17,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  Data loading
 # ──────────────────────────────────────────────────────────────────────────────
@@ -36,8 +40,7 @@ def load_session(session_dir, kpi_path=None, kpi2_path=None):
         d = Path(session_dir)
         kpi1 = _load_json(d / "kpi.json")
         if kpi1 is None:
-            print(f"Warning: kpi.json not found in {d} — report will be partial",
-                  file=sys.stderr)
+            logger.warning(f"kpi.json not found in {d} — report will be partial")
         kpi2_file = d / "kpi_level2.json"
         kpi2 = _load_json(kpi2_file) if kpi2_file.exists() else None
         return kpi1, kpi2, d
@@ -82,28 +85,9 @@ def _pct_bar_svg(pct, max_pct=None, width=120, height=14):
     )
 
 
-def _throttle_badge(state):
-    if state is None:
-        return "<span class='badge badge-na'>N/A</span>"
-    if state:
-        return "<span class='badge badge-bad'>THROTTLED</span>"
-    return "<span class='badge badge-good'>OK</span>"
-
-
-def _temp_class(temp_c):
-    if temp_c is None:
-        return "na"
-    if temp_c < 70:
-        return "good"
-    if temp_c < 90:
-        return "warn"
-    return "bad"
-
-
 # ──────────────────────────────────────────────────────────────────────────────
 #  CSS (embedded — no external URLs)
 # ──────────────────────────────────────────────────────────────────────────────
-
 _CSS = """
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -429,57 +413,30 @@ def _render_level2(kpi2):
 """
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  Thermal / resource section
+#  Resource utilization section
 # ──────────────────────────────────────────────────────────────────────────────
 
 
 def _render_thermal(kpi1):
-    thermal = kpi1.get("thermal", {})
     cpu_mean = kpi1.get("cpu_mean_pct")
     cpu_max = kpi1.get("cpu_max_pct")
 
-    temp_rows = [
-        ("CPU", thermal.get("cpu_temp_c"), thermal.get("cpu_throttled")),
-        ("GPU", thermal.get("gpu_temp_c"), thermal.get("gpu_throttled")),
-        ("NPU", thermal.get("npu_temp_c"), thermal.get("npu_throttled")),
-    ]
-    t_rows_html = ""
-    for label, temp, throttled in temp_rows:
-        tc = _temp_class(temp)
-        t_rows_html += (
-            f"<tr>"
-            f"<td><strong>{label}</strong></td>"
-            f'<td class="{tc}">{_fmt(temp, 1, " °C") if temp is not None else "N/A"}</td>'
-            f"<td>{_throttle_badge(throttled)}</td>"
-            f"</tr>"
-        )
-
     return f"""
 <div class="section">
-  <div class="section-header"><span class="icon">&#127777;</span> Thermal &amp; Resource Utilization</div>
+  <div class="section-header"><span class="icon">&#127777;</span> Resource Utilization</div>
   <div class="section-body">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;flex-wrap:wrap">
-      <div>
-        <h3 style="font-size:0.9rem;color:#374151;margin-bottom:8px">CPU Utilization (ROS2 processes)</h3>
-        <table>
-          <thead><tr><th>Metric</th><th>Value</th></tr></thead>
-          <tbody>
-            <tr><td>Mean</td><td>{_pct_bar_svg(cpu_mean)}</td></tr>
-            <tr><td>Max</td><td>{_pct_bar_svg(cpu_max)}</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div>
-        <h3 style="font-size:0.9rem;color:#374151;margin-bottom:8px">Thermal &amp; Throttle</h3>
-        <table>
-          <thead><tr><th>Component</th><th>Temp</th><th>Throttle</th></tr></thead>
-          <tbody>{t_rows_html}</tbody>
-        </table>
-      </div>
-    </div>
+    <h3 style="font-size:0.9rem;color:#374151;margin-bottom:8px">CPU Utilization (ROS2 processes)</h3>
+    <table>
+      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+      <tbody>
+        <tr><td>Mean</td><td>{_pct_bar_svg(cpu_mean)}</td></tr>
+        <tr><td>Max</td><td>{_pct_bar_svg(cpu_max)}</td></tr>
+      </tbody>
+    </table>
   </div>
 </div>
 """
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  Full page assembly
@@ -553,13 +510,13 @@ def main():
 
     # Validate inputs
     if args.kpi and not Path(args.kpi).exists():
-        print(f"ERROR: kpi file not found: {args.kpi}", file=sys.stderr)
+        logger.error(f"kpi file not found: {args.kpi}")
         sys.exit(1)
     if args.session and not Path(args.session).exists():
-        print(f"ERROR: session directory not found: {args.session}", file=sys.stderr)
+        logger.error(f"session directory not found: {args.session}")
         sys.exit(1)
     if args.kpi2 and not Path(args.kpi2).exists():
-        print(f"ERROR: kpi2 file not found: {args.kpi2}", file=sys.stderr)
+        logger.error(f"kpi2 file not found: {args.kpi2}")
         sys.exit(1)
 
     kpi1, kpi2, session_dir = load_session(
@@ -569,7 +526,7 @@ def main():
     )
 
     if kpi1 is None and not args.session:
-        print("ERROR: --kpi file not found or not specified", file=sys.stderr)
+        logger.error("--kpi file not found or not specified")
         sys.exit(1)
 
     # Determine output path
@@ -582,7 +539,7 @@ def main():
 
     html = render_report(kpi1, kpi2)
     out_path.write_text(html, encoding="utf-8")
-    print(f"Report written → {out_path}")
+    logger.info(f"Report written → {out_path}")
 
 
 if __name__ == "__main__":

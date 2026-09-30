@@ -66,6 +66,7 @@ psycopg2==2.9.11
 
 # Telegram userbot transport
 telethon==1.39.0
+cryptg==0.5.1
 pysocks==1.7.1
 
 # Utilities
@@ -75,8 +76,17 @@ psutil==7.1.3
 py-cpuinfo==9.0.0
 hf_xet==1.6.0
 
+# Qwen3.5 / Qwen3.6 MoE VLM export and runtime extras
+qwen-vl-utils
+einops
+timm
+sentencepiece
+
 # Vision / detection
 ultralytics==8.4.39
+
+# GStreamer Python bindings for the video analytics pipeline runner.
+gstreamer-python==1.28.2; sys_platform == "win32"
 
 # OCR / document parsing
 paddleocr==3.7.0

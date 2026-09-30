@@ -1,0 +1,917 @@
+From ab6de9d82747b82fba5749c84ea08fd63ceaf083 Mon Sep 17 00:00:00 2001
+From: yichongt <yichong.tang@intel.com>
+Date: Fri, 10 Jul 2026 15:39:58 +0800
+Subject: [PATCH 3/7] Add static LLM seq_len padding via --llm-lang-tokens
+
+Allow exporting OV with a fixed LLM seq_len: --llm-lang-tokens specifies the
+language-token reserve; total static seq_len = lang + captured visual tokens.
+LLM, VL self-attention and DiT (and the single-OV pipeline) all bake this length
+in, and inference zero-pads the input up to it, so different prompt lengths
+share one static-shape OV compilation.
+
+To avoid padding tokens contaminating the rest of the sequence, VL self-attention
+is exported through a thin wrapper that consumes an attention_mask. DiT image/
+backbone masks are padded as False so the diffusion pass already ignores padded
+slots.
+
+Verified on LIBERO_PANDA: split-OV padded vs baseline give cosine=1.0 / MAE=0;
+single-OV padded vs PyTorch matches the baseline OV-vs-PyTorch numbers exactly
+(trimmed cosine=0.999984, max_abs=0.010), so padding introduces no extra error.
+---
+ scripts/deployment/export_ov_n1d7.py          | 211 ++++++++++++++++--
+ .../deployment/export_ov_n1d7_single_ov.py    |  91 +++++++-
+ scripts/deployment/export_ov_readme.md        |  52 ++++-
+ scripts/deployment/ov_inference_readme.md     |   7 +
+ scripts/deployment/ov_n1d7_forward.py         |  73 +++++-
+ .../run_base_single_ov_inference.py           |  47 ++++
+ 6 files changed, 448 insertions(+), 33 deletions(-)
+
+diff --git a/scripts/deployment/export_ov_n1d7.py b/scripts/deployment/export_ov_n1d7.py
+index 3ee3e72c9cc8..8fa279956e4b 100755
+--- a/scripts/deployment/export_ov_n1d7.py
++++ b/scripts/deployment/export_ov_n1d7.py
+@@ -617,8 +617,14 @@ def export_vit_to_ov(policy, output_dir, captured_vit, use_fp32=True, batch_size
+ # ============================================================
+ 
+ 
+-def export_llm_to_ov(policy, captured_llm, output_dir, use_fp32=True, batch_size=1):
+-    """Export the Qwen3-VL text model (LLM) directly to OpenVINO IR format."""
++def export_llm_to_ov(policy, captured_llm, output_dir, use_fp32=True, batch_size=1, static_seq_len=None):
++    """Export the Qwen3-VL text model (LLM) directly to OpenVINO IR format.
++
++    Args:
++        static_seq_len: If provided, pad all LLM inputs to this fixed sequence length.
++            Must be >= the captured sequence length. Enables static-shape LLM inference
++            where runtime inputs are zero-padded to this length before being fed to OV.
++    """
+     logger.info("\n" + "=" * 80)
+     logger.info("Exporting LLM (Qwen3-VL Text Model) to OpenVINO IR")
+     logger.info("=" * 80)
+@@ -737,7 +743,18 @@ def export_llm_to_ov(policy, captured_llm, output_dir, use_fp32=True, batch_size
+     device = _get_device()
+ 
+     # Create dummy inputs
+-    seq_len = captured_llm.inputs_embeds.shape[1]
++    captured_seq_len = captured_llm.inputs_embeds.shape[1]
++    if static_seq_len is not None:
++        if static_seq_len < captured_seq_len:
++            raise ValueError(
++                f"static_seq_len ({static_seq_len}) must be >= captured seq_len ({captured_seq_len})"
++            )
++        seq_len = static_seq_len
++        logger.info(
++            f"  Static LLM seq_len: padding captured {captured_seq_len} → {seq_len}"
++        )
++    else:
++        seq_len = captured_seq_len
+     hidden_size = text_config.hidden_size
+ 
+     wrapper = LLMForExport(text_config, num_deepstack, batch_size, seq_len, dtype)
+@@ -764,10 +781,24 @@ def export_llm_to_ov(policy, captured_llm, output_dir, use_fp32=True, batch_size
+         attention_mask = captured_llm.attention_mask.to(device=device)
+         if attention_mask.shape[0] == 1 and batch_size > 1:
+             attention_mask = attention_mask.expand(batch_size, -1)
++        # When using a padded static seq_len, extend the attention mask with zeros (masked out)
++        if static_seq_len is not None and attention_mask.shape[1] < seq_len:
++            pad_len = seq_len - attention_mask.shape[1]
++            attention_mask = torch.cat(
++                [attention_mask, torch.zeros(attention_mask.shape[0], pad_len, dtype=attention_mask.dtype, device=device)],
++                dim=1,
++            )
+         export_inputs.append(attention_mask)
+ 
+     if num_deepstack > 0 and captured_llm.visual_pos_masks is not None:
+         vis_mask = captured_llm.visual_pos_masks.to(device=device)
++        # Pad visual_pos_masks to match static seq_len
++        if static_seq_len is not None and vis_mask.shape[1] < seq_len:
++            pad_len = seq_len - vis_mask.shape[1]
++            vis_mask = torch.cat(
++                [vis_mask, torch.zeros(vis_mask.shape[0], pad_len, dtype=vis_mask.dtype, device=device)],
++                dim=1,
++            )
+         for i in range(num_deepstack):
+             ds = captured_llm.deepstack_visual_embeds[i]
+             export_inputs.append(build_dense_token_delta(vis_mask, ds, batch_size, device, dtype))
+@@ -960,6 +991,36 @@ def _capture_inputs_without_dataset(policy: Gr00tPolicy, args):
+ # Export Functions: Action Head Components to OpenVINO IR
+ # ============================================================
+ 
++class _VLSelfAttentionMaskedWrapper(nn.Module):
++    """Wraps SelfAttentionTransformer to accept a key-padding mask.
++
++    The native SelfAttentionTransformer does not expose an attention_mask
++    argument; for static-shape inference with padded sequences we need to
++    prevent padding tokens from polluting valid-token outputs. This wrapper
++    converts a (B, L) bool/int padding mask into an additive (B, 1, 1, L)
++    mask of 0 / -inf and feeds it into each transformer block's attn1.
++    """
++
++    def __init__(self, vl_sa: nn.Module):
++        super().__init__()
++        self.vl_sa = vl_sa
++
++    def forward(self, hidden_states: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
++        # attention_mask: (B, L) where 1 = valid, 0 = padding
++        mask_bool = attention_mask.to(torch.bool)
++        # Build additive mask: 0 for valid keys, -inf for padded keys
++        additive = torch.zeros_like(mask_bool, dtype=hidden_states.dtype)
++        neg_inf = torch.finfo(hidden_states.dtype).min
++        additive = torch.where(mask_bool, additive, torch.full_like(additive, neg_inf))
++        # Shape required by SDPA: (B, 1, 1, L)
++        additive = additive[:, None, None, :]
++
++        hidden_states = hidden_states.contiguous()
++        for block in self.vl_sa.transformer_blocks:
++            hidden_states = block(hidden_states, attention_mask=additive)
++        return hidden_states
++
++
+ def export_vl_self_attention_to_ov(
+     policy,
+     output_dir,
+@@ -967,8 +1028,15 @@ def export_vl_self_attention_to_ov(
+     use_fp32=True,
+     batch_size=1,
+     captured_hidden_states=None,
++    static_seq_len=None,
+ ):
+-    """Export the vl_self_attention to OpenVINO IR."""
++    """Export the vl_self_attention to OpenVINO IR.
++
++    Args:
++        static_seq_len: When set, pad hidden_states to this length and export
++            a wrapper that also accepts an attention_mask, so padding tokens are
++            masked out in self-attention and do not contaminate valid tokens.
++    """
+     vl_sa = policy.model.action_head.vl_self_attention
+     if isinstance(vl_sa, nn.Identity):
+         logger.info("  vl_self_attention is Identity — skipping export")
+@@ -978,22 +1046,47 @@ def export_vl_self_attention_to_ov(
+     logger.info("Exporting VL Self-Attention to OpenVINO IR")
+     logger.info("=" * 80)
+ 
++    export_seq_len = static_seq_len if static_seq_len is not None else vl_seq_len
++    use_masked_wrapper = static_seq_len is not None
++    if use_masked_wrapper:
++        logger.info(f"  Static VL seq_len: padding captured {vl_seq_len} → {export_seq_len}")
++        logger.info("  Adding attention_mask input so padding tokens are masked out")
++
+     config = policy.model.action_head.config
+     dtype = torch.float32 if use_fp32 else torch.bfloat16
+     device = _get_device()
+-    model = vl_sa.to(dtype).eval().to(device)
++    base_model = vl_sa.to(dtype).eval().to(device)
++    model = _VLSelfAttentionMaskedWrapper(base_model).to(dtype).eval().to(device) if use_masked_wrapper else base_model
+ 
+     if captured_hidden_states is not None:
+         hidden_states = captured_hidden_states.to(device=device, dtype=dtype)
+         if batch_size > 1 and hidden_states.shape[0] == 1:
+             hidden_states = hidden_states.expand(batch_size, -1, -1)
++        valid_len = hidden_states.shape[1]
++        # Pad to static seq_len if needed
++        if use_masked_wrapper and valid_len < export_seq_len:
++            pad = export_seq_len - valid_len
++            hidden_states = torch.cat(
++                [hidden_states,
++                 torch.zeros(hidden_states.shape[0], pad, hidden_states.shape[2],
++                             dtype=dtype, device=device)],
++                dim=1,
++            )
+     else:
+         hidden_states = torch.randn(
+-            batch_size, vl_seq_len, config.backbone_embedding_dim, dtype=dtype, device=device
++            batch_size, export_seq_len, config.backbone_embedding_dim, dtype=dtype, device=device
+         )
++        valid_len = export_seq_len
++
++    if use_masked_wrapper:
++        attention_mask = torch.zeros(batch_size, export_seq_len, dtype=torch.int64, device=device)
++        attention_mask[:, :valid_len] = 1
++        example_input = [hidden_states, attention_mask]
++    else:
++        example_input = [hidden_states]
+ 
+     with torch.inference_mode():
+-        baseline_output = model(hidden_states)
++        baseline_output = model(*example_input)
+ 
+     baseline_flat = baseline_output.detach().float().flatten().cpu()
+ 
+@@ -1003,11 +1096,12 @@ def export_vl_self_attention_to_ov(
+ 
+     logger.info(f"  Converting to OpenVINO IR: {output_path}...")
+     with torch.inference_mode():
+-        ov_model = ov.convert_model(model, example_input=[hidden_states])
++        ov_model = ov.convert_model(model, example_input=example_input)
+ 
+     core = ov.Core()
+     compiled = core.compile_model(ov_model, "CPU")
+-    ov_result = compiled([hidden_states.detach().cpu().numpy()])
++    ov_inputs = [t.detach().cpu().numpy() for t in example_input]
++    ov_result = compiled(ov_inputs)
+     ov_output = torch.tensor(ov_result[compiled.output(0)]).float().flatten()
+ 
+     direct_cosine = torch.nn.functional.cosine_similarity(
+@@ -1105,8 +1199,13 @@ def export_action_encoder_to_ov(policy, output_dir, use_fp32=True, batch_size=1)
+     return output_path
+ 
+ 
+-def export_dit_to_ov(policy, captured_inputs, output_path, use_fp32=True, batch_size=1):
+-    """Export the DiT to OpenVINO IR."""
++def export_dit_to_ov(policy, captured_inputs, output_path, use_fp32=True, batch_size=1, static_vl_seq_len=None):
++    """Export the DiT to OpenVINO IR.
++
++    Args:
++        static_vl_seq_len: When set, pad vl_embs and masks to this length so the
++            exported model matches the fixed-length output from VL Self-Attention.
++    """
+     logger.info("\n" + "=" * 80)
+     logger.info("Exporting DiT to OpenVINO IR")
+     logger.info("=" * 80)
+@@ -1123,8 +1222,13 @@ def export_dit_to_ov(policy, captured_inputs, output_path, use_fp32=True, batch_
+     dit_model = dit_model.to(dtype).to(device)
+ 
+     # Use captured shapes but replace batch dim with batch_size
++    captured_vl_len = captured_inputs.vl_embs.shape[1]
++    export_vl_len = static_vl_seq_len if static_vl_seq_len is not None else captured_vl_len
++    if static_vl_seq_len is not None:
++        logger.info(f"  Static DiT vl_seq_len: padding captured {captured_vl_len} → {export_vl_len}")
++
+     sa_shape = (batch_size,) + captured_inputs.sa_embs.shape[1:]
+-    vl_shape = (batch_size,) + captured_inputs.vl_embs.shape[1:]
++    vl_shape = (batch_size, export_vl_len, captured_inputs.vl_embs.shape[2])
+     ts_shape = (batch_size,)
+ 
+     sa_embs = torch.randn(sa_shape, dtype=dtype, device=device)
+@@ -1139,23 +1243,35 @@ def export_dit_to_ov(policy, captured_inputs, output_path, use_fp32=True, batch_
+         # CRITICAL: Use actual captured mask pattern, not all-ones!
+         # The mask pattern matters because it affects which tokens the model attends to
+         # Keep as boolean since the model uses & operator
+-        im_shape = (batch_size,) + captured_inputs.image_mask.shape[1:]
+         if batch_size == 1:
+-            # Use the actual captured mask pattern (keep as boolean)
+             image_mask = captured_inputs.image_mask.to(device=device)
+         else:
+-            # For batch_size > 1, replicate the pattern
+             image_mask = captured_inputs.image_mask.to(device=device).repeat(batch_size, 1)
++        # Pad mask to static vl_seq_len (padding positions = False = masked out)
++        if static_vl_seq_len is not None and image_mask.shape[1] < export_vl_len:
++            pad = export_vl_len - image_mask.shape[1]
++            image_mask = torch.cat(
++                [image_mask,
++                 torch.zeros(image_mask.shape[0], pad, dtype=torch.bool, device=device)],
++                dim=1,
++            )
+         export_inputs.append(image_mask)
+ 
+     if has_backbone_mask:
+         # CRITICAL: Use actual captured mask pattern, not all-ones!
+         # Keep as boolean since the model uses & operator
+-        bm_shape = (batch_size,) + captured_inputs.backbone_attention_mask.shape[1:]
+         if batch_size == 1:
+             backbone_attention_mask = captured_inputs.backbone_attention_mask.to(device=device)
+         else:
+             backbone_attention_mask = captured_inputs.backbone_attention_mask.to(device=device).repeat(batch_size, 1)
++        # Pad mask to static vl_seq_len (padding positions = False = masked out)
++        if static_vl_seq_len is not None and backbone_attention_mask.shape[1] < export_vl_len:
++            pad = export_vl_len - backbone_attention_mask.shape[1]
++            backbone_attention_mask = torch.cat(
++                [backbone_attention_mask,
++                 torch.zeros(backbone_attention_mask.shape[0], pad, dtype=torch.bool, device=device)],
++                dim=1,
++            )
+         export_inputs.append(backbone_attention_mask)
+ 
+     logger.info("  Export input shapes:")
+@@ -1373,7 +1489,7 @@ class DiT_Fused(torch.nn.Module):
+         return actions_tensor
+ 
+ 
+-def export_dit_fused_to_ov(policy, captured_inputs, output_dir, use_fp32=False, batch_size=1):
++def export_dit_fused_to_ov(policy, captured_inputs, output_dir, use_fp32=False, batch_size=1, static_vl_seq_len=None):
+     """
+     Export the fused DiT model to OpenVINO IR.
+ 
+@@ -1403,14 +1519,17 @@ def export_dit_fused_to_ov(policy, captured_inputs, output_dir, use_fp32=False,
+     # Create example inputs
+     # state_features should be already encoded by state_encoder
+     state_seq_len = captured_inputs.sa_embs.shape[1] - config.action_horizon
+-    vl_seq_len = captured_inputs.vl_embs.shape[1]
++    captured_vl_len = captured_inputs.vl_embs.shape[1]
++    export_vl_len = static_vl_seq_len if static_vl_seq_len is not None else captured_vl_len
++    if static_vl_seq_len is not None:
++        logger.info(f"  Static Fused-DiT vl_seq_len: padding captured {captured_vl_len} → {export_vl_len}")
+ 
+     state_features = torch.randn(
+         batch_size, state_seq_len, config.input_embedding_dim,
+         dtype=dtype, device=device
+     )
+     vl_embs_tensor = torch.randn(
+-        batch_size, vl_seq_len, config.backbone_embedding_dim,
++        batch_size, export_vl_len, config.backbone_embedding_dim,
+         dtype=dtype, device=device
+     )
+     embodiment_id_tensor = torch.zeros(batch_size, dtype=torch.int64, device=device)
+@@ -1421,8 +1540,8 @@ def export_dit_fused_to_ov(policy, captured_inputs, output_dir, use_fp32=False,
+ 
+     # Optional inputs for AlternateVLDiT
+     if config.use_alternate_vl_dit:
+-        image_mask = torch.ones(batch_size, vl_seq_len, dtype=torch.bool, device=device)
+-        backbone_attention_mask = torch.ones(batch_size, vl_seq_len, dtype=torch.bool, device=device)
++        image_mask = torch.ones(batch_size, export_vl_len, dtype=torch.bool, device=device)
++        backbone_attention_mask = torch.ones(batch_size, export_vl_len, dtype=torch.bool, device=device)
+         example_inputs = [
+             state_features,
+             vl_embs_tensor,
+@@ -1619,12 +1738,43 @@ def main(args):
+     )
+     num_vis_tokens = llm_capture.deepstack_visual_embeds[0].shape[0] if num_deepstack > 0 else 0
+ 
++    # Resolve effective static LLM seq_len from --llm-lang-tokens (text-only upper bound).
++    # The user specifies how many text tokens to reserve; we add the fixed visual token count
++    # captured from the observation to get the total static seq_len baked into the OV model.
++    llm_lang_tokens = getattr(args, "llm_lang_tokens", None)
++    if llm_lang_tokens is not None:
++        # Count visual token positions in the captured sequence
++        if llm_capture and llm_capture.captured and llm_capture.visual_pos_masks is not None:
++            captured_vis_in_seq = int(llm_capture.visual_pos_masks.sum().item())
++        else:
++            captured_vis_in_seq = num_vis_tokens
++        captured_lang_tokens = llm_seq_len - captured_vis_in_seq
++        if llm_lang_tokens < captured_lang_tokens:
++            raise ValueError(
++                f"--llm-lang-tokens ({llm_lang_tokens}) must be >= captured lang token count "
++                f"({captured_lang_tokens}). "
++                f"Captured seq breakdown: total={llm_seq_len}, vis={captured_vis_in_seq}, "
++                f"lang={captured_lang_tokens}."
++            )
++        llm_static_seq_len = llm_lang_tokens + captured_vis_in_seq
++        logger.info(
++            f"  LLM seq_len breakdown: total_captured={llm_seq_len}, "
++            f"vis_tokens={captured_vis_in_seq}, lang_tokens={captured_lang_tokens}"
++        )
++        logger.info(
++            f"  Static LLM seq_len: {captured_vis_in_seq} vis + {llm_lang_tokens} lang "
++            f"= {llm_static_seq_len} total"
++        )
++    else:
++        llm_static_seq_len = None
++
+     export_metadata = {
+         "model_version": "n1d7",
+         "format": "openvino",
+         "sa_seq_len": int(sa_seq_len),
+         "vl_seq_len": int(vl_seq_len),
+         "llm_seq_len": int(llm_seq_len),
++        "llm_static_seq_len": int(llm_static_seq_len) if llm_static_seq_len is not None else None,
+         "llm_hidden_size": int(llm_hidden_size),
+         "num_deepstack": int(num_deepstack),
+         "num_vis_tokens": int(num_vis_tokens),
+@@ -1706,7 +1856,10 @@ def main(args):
+         export_vit_to_ov(policy, args.output_dir, vit_capture, use_fp32=True, batch_size=bs)
+ 
+         logger.info("\n--- [4b] LLM (Qwen3-VL Text Model) ---")
+-        export_llm_to_ov(policy, llm_capture, args.output_dir, use_fp32=use_fp32, batch_size=bs)
++        export_llm_to_ov(
++            policy, llm_capture, args.output_dir, use_fp32=use_fp32, batch_size=bs,
++            static_seq_len=llm_static_seq_len,
++        )
+ 
+         logger.info("\n--- [4c] VL Self-Attention ---")
+         export_vl_self_attention_to_ov(
+@@ -1716,6 +1869,7 @@ def main(args):
+             use_fp32=use_fp32,
+             batch_size=bs,
+             captured_hidden_states=vl_sa_capture.hidden_states,
++            static_seq_len=llm_static_seq_len,
+         )
+ 
+         logger.info("\n--- [4d] State Encoder ---")
+@@ -1723,7 +1877,10 @@ def main(args):
+ 
+         if args.use_fused_dit:
+             logger.info("\n--- [4e] Fused DiT (action_encoder + DiT + action_decoder) ---")
+-            export_dit_fused_to_ov(policy, dit_capture, args.output_dir, use_fp32=use_fp32, batch_size=bs)
++            export_dit_fused_to_ov(
++                policy, dit_capture, args.output_dir, use_fp32=use_fp32, batch_size=bs,
++                static_vl_seq_len=llm_static_seq_len,
++            )
+         else:
+             logger.info("\n--- [4e] Action Encoder ---")
+             export_action_encoder_to_ov(policy, args.output_dir, use_fp32=use_fp32, batch_size=bs)
+@@ -1736,6 +1893,7 @@ def main(args):
+                 output_path=dit_output_path,
+                 use_fp32=use_fp32,
+                 batch_size=bs,
++                static_vl_seq_len=llm_static_seq_len,
+             )
+ 
+             logger.info("\n--- [4g] Action Decoder ---")
+@@ -1788,6 +1946,13 @@ class ExportConfig:
+     num_inference_timesteps: Optional[int] = None
+     """Optional override for action-head denoising steps during export."""
+ 
++    llm_lang_tokens: Optional[int] = None
++    """Reserve this many text (language) token slots in the LLM input.
++    The total static seq_len is computed as: llm_lang_tokens + (number of visual tokens
++    captured from the observation). Must be >= the number of language tokens in the
++    captured sequence. When set, the inference runner zero-pads all LLM inputs to this
++    fixed total length, enabling static-shape compilation across varying prompt lengths."""
++
+     device: str = "cpu"
+     """Device to use for export: 'cpu' (default, no GPU needed) or 'cuda'."""
+ 
+diff --git a/scripts/deployment/export_ov_n1d7_single_ov.py b/scripts/deployment/export_ov_n1d7_single_ov.py
+index 561030fac8ae..101f673e621c 100644
+--- a/scripts/deployment/export_ov_n1d7_single_ov.py
++++ b/scripts/deployment/export_ov_n1d7_single_ov.py
+@@ -75,6 +75,13 @@ class ExportConfig:
+     num_inference_timesteps: Optional[int] = None
+     device: str = "cpu"
+ 
++    llm_lang_tokens: Optional[int] = None
++    """Reserve this many text (language) token slots in the LLM input.
++    Total static seq_len = llm_lang_tokens + (captured visual tokens). When set,
++    input_ids / attention_mask / position_ids are zero-padded to the static length
++    before tracing, so the exported single-OV graph has a fixed seq_len baked in.
++    Must be >= the number of language tokens in the captured sequence."""
++
+ 
+ def patch_diffusers_attention_for_openvino() -> bool:
+     try:
+@@ -230,7 +237,8 @@ class LLMForSingleOV(nn.Module):
+ 
+ 
+ class SingleOVWrapper(nn.Module):
+-    def __init__(self, policy: Gr00tPolicy, grid_thw: torch.Tensor, use_fp32: bool):
++    def __init__(self, policy: Gr00tPolicy, grid_thw: torch.Tensor, use_fp32: bool,
++                 use_masked_vl_sa: bool = False):
+         super().__init__()
+         backbone = policy.model.backbone
+         action_head = policy.model.action_head
+@@ -244,7 +252,14 @@ class SingleOVWrapper(nn.Module):
+         self.image_token_id = qwen_model.config.image_token_id
+         self.llm = LLMForSingleOV(inner_model.language_model, backbone.select_layer).to(dtype).eval()
+         self.vlln = action_head.vlln.to(dtype).eval()
+-        self.vl_self_attention = action_head.vl_self_attention.to(dtype).eval()
++        # When padding is used, wrap VL SA so it accepts an attention_mask to
++        # prevent padded keys from contaminating valid tokens.
++        base_vl_sa = action_head.vl_self_attention.to(dtype).eval()
++        self.use_masked_vl_sa = use_masked_vl_sa and not isinstance(base_vl_sa, nn.Identity)
++        if self.use_masked_vl_sa:
++            self.vl_self_attention = current._VLSelfAttentionMaskedWrapper(base_vl_sa).to(dtype).eval()
++        else:
++            self.vl_self_attention = base_vl_sa
+         self.state_encoder = action_head.state_encoder.to(dtype).eval()
+         self.dit_fused = current.DiT_Fused(action_head).to(dtype).eval()
+         self.state_history_length = action_head.config.state_history_length
+@@ -315,7 +330,10 @@ class SingleOVWrapper(nn.Module):
+ 
+         llm_hidden_states = self.llm(inputs_embeds, position_ids, attention_mask, *deepstack_deltas)
+         llm_hidden_states = self.vlln(llm_hidden_states)
+-        vl_embs = self.vl_self_attention(llm_hidden_states)
++        if self.use_masked_vl_sa:
++            vl_embs = self.vl_self_attention(llm_hidden_states, attention_mask)
++        else:
++            vl_embs = self.vl_self_attention(llm_hidden_states)
+ 
+         if state.shape[1] != self.state_history_length:
+             raise ValueError("state history length does not match model config")
+@@ -394,7 +412,7 @@ def _capture_export_artifacts(policy: Gr00tPolicy, collated_inputs: dict):
+     return vit_capture, llm_capture
+ 
+ 
+-def _build_example_inputs(raw_inputs: dict, llm_capture, batch_size: int, device: str, action_horizon: int, action_dim: int, compute_dtype: torch.dtype):
++def _build_example_inputs(raw_inputs: dict, llm_capture, batch_size: int, device: str, action_horizon: int, action_dim: int, compute_dtype: torch.dtype, static_seq_len: Optional[int] = None):
+     input_ids = _expand_batch_tensor(raw_inputs["input_ids"].to(device), batch_size, batch_dim=0)
+     attention_mask = _expand_batch_tensor(raw_inputs["attention_mask"].to(device), batch_size, batch_dim=0)
+ 
+@@ -406,6 +424,28 @@ def _build_example_inputs(raw_inputs: dict, llm_capture, batch_size: int, device
+     state = _expand_batch_tensor(raw_inputs["state"].to(device=device, dtype=compute_dtype), batch_size, batch_dim=0)
+     embodiment_id = _expand_batch_tensor(raw_inputs["embodiment_id"].to(device), batch_size, batch_dim=0).to(torch.int64)
+     actions = torch.zeros(batch_size, action_horizon, action_dim, dtype=compute_dtype, device=device)
++
++    if static_seq_len is not None:
++        cur_len = input_ids.shape[1]
++        if cur_len > static_seq_len:
++            raise ValueError(
++                f"static_seq_len ({static_seq_len}) must be >= captured seq_len ({cur_len})"
++            )
++        if cur_len < static_seq_len:
++            pad = static_seq_len - cur_len
++            input_ids = torch.cat(
++                [input_ids, torch.zeros(input_ids.shape[0], pad, dtype=input_ids.dtype, device=device)],
++                dim=1,
++            )
++            # attention_mask: 0 marks padding so the LLM (and our masked VL SA) ignore it.
++            attention_mask = torch.cat(
++                [attention_mask, torch.zeros(attention_mask.shape[0], pad, dtype=attention_mask.dtype, device=device)],
++                dim=1,
++            )
++            position_ids = torch.cat(
++                [position_ids, torch.zeros(position_ids.shape[0], position_ids.shape[1], pad, dtype=position_ids.dtype, device=device)],
++                dim=2,
++            )
+     return input_ids, attention_mask, pixel_values, position_ids, state, embodiment_id, actions
+ 
+ 
+@@ -463,7 +503,8 @@ def verify_openvino_single_ov(output_path: str, pytorch_module: torch.nn.Module,
+     return {"cosine": cosine, "mae": mae, "mse": mse}
+ 
+ 
+-def export_single_ov(policy: Gr00tPolicy, collated_inputs: dict, vit_capture, llm_capture, args: ExportConfig) -> str:
++def export_single_ov(policy: Gr00tPolicy, collated_inputs: dict, vit_capture, llm_capture, args: ExportConfig,
++                     static_seq_len: Optional[int] = None) -> str:
+     raw_inputs = collated_inputs["inputs"]
+     dtype = torch.float32
+     device = args.device
+@@ -472,7 +513,11 @@ def export_single_ov(policy: Gr00tPolicy, collated_inputs: dict, vit_capture, ll
+     if args.batch_size > 1:
+         grid_thw = grid_thw.repeat(args.batch_size, 1)
+ 
+-    wrapper = SingleOVWrapper(policy, grid_thw=grid_thw, use_fp32=args.precision == "fp32")
++    use_masked_vl_sa = static_seq_len is not None
++    wrapper = SingleOVWrapper(
++        policy, grid_thw=grid_thw, use_fp32=args.precision == "fp32",
++        use_masked_vl_sa=use_masked_vl_sa,
++    )
+     wrapper = wrapper.to(dtype).eval().to(device)
+ 
+     qwen_model = policy.model.backbone.model
+@@ -489,6 +534,7 @@ def export_single_ov(policy: Gr00tPolicy, collated_inputs: dict, vit_capture, ll
+             action_horizon=policy.model.action_head.config.action_horizon,
+             action_dim=policy.model.action_head.config.max_action_dim,
+             compute_dtype=dtype,
++            static_seq_len=static_seq_len,
+         )
+         input_names = [
+             "input_ids",
+@@ -567,6 +613,31 @@ def main(args: ExportConfig) -> None:
+         collated_inputs, _ = _prepare_observation_and_collated_inputs(policy, args)
+         vit_capture, llm_capture = _capture_export_artifacts(policy, collated_inputs)
+ 
++        # Compute static seq_len from --llm-lang-tokens (text-only upper bound).
++        captured_seq_len = int(llm_capture.inputs_embeds.shape[1])
++        static_seq_len: Optional[int] = None
++        if args.llm_lang_tokens is not None:
++            if llm_capture.visual_pos_masks is not None:
++                captured_vis_in_seq = int(llm_capture.visual_pos_masks.sum().item())
++            else:
++                captured_vis_in_seq = 0
++            captured_lang_tokens = captured_seq_len - captured_vis_in_seq
++            if args.llm_lang_tokens < captured_lang_tokens:
++                raise ValueError(
++                    f"--llm-lang-tokens ({args.llm_lang_tokens}) must be >= captured lang token count "
++                    f"({captured_lang_tokens}). Captured seq breakdown: total={captured_seq_len}, "
++                    f"vis={captured_vis_in_seq}, lang={captured_lang_tokens}."
++                )
++            static_seq_len = args.llm_lang_tokens + captured_vis_in_seq
++            logger.info(
++                "  LLM seq_len breakdown: total_captured=%d, vis_tokens=%d, lang_tokens=%d",
++                captured_seq_len, captured_vis_in_seq, captured_lang_tokens,
++            )
++            logger.info(
++                "  Static LLM seq_len: %d vis + %d lang = %d total",
++                captured_vis_in_seq, args.llm_lang_tokens, static_seq_len,
++            )
++
+         os.makedirs(args.output_dir, exist_ok=True)
+         metadata = {
+             "model_version": "n1d7",
+@@ -576,7 +647,8 @@ def main(args: ExportConfig) -> None:
+             "batch_size": args.batch_size,
+             "embodiment_tag": str(args.embodiment_tag),
+             "fixed_grid_thw": vit_capture.grid_thw.tolist(),
+-            "seq_len": int(llm_capture.inputs_embeds.shape[1]),
++            "seq_len": captured_seq_len,
++            "llm_static_seq_len": int(static_seq_len) if static_seq_len is not None else None,
+             "hidden_size": int(llm_capture.inputs_embeds.shape[2]),
+             "num_inference_timesteps": int(policy.model.action_head.num_inference_timesteps),
+             "notes": [
+@@ -591,7 +663,10 @@ def main(args: ExportConfig) -> None:
+             json.dump(metadata, file_obj, indent=2)
+         logger.info("  Saved export metadata to %s", metadata_path)
+ 
+-        output_path = export_single_ov(policy, collated_inputs, vit_capture, llm_capture, args)
++        output_path = export_single_ov(
++            policy, collated_inputs, vit_capture, llm_capture, args,
++            static_seq_len=static_seq_len,
++        )
+         logger.info("\nSingle-OV export complete: %s", output_path)
+     finally:
+         if attention_patched:
+diff --git a/scripts/deployment/export_ov_readme.md b/scripts/deployment/export_ov_readme.md
+index d6a58f15fb18..e6b53cc0d87e 100644
+--- a/scripts/deployment/export_ov_readme.md
++++ b/scripts/deployment/export_ov_readme.md
+@@ -334,6 +334,7 @@ python scripts/deployment/export_ov_n1d7_single_ov.py \
+ - `--precision`: `fp32` or `fp16`
+ - `--device`: export device, usually `cpu` or `cuda`
+ - `--num-inference-timesteps`: optional override for denoising steps during export
++- `--llm-lang-tokens`: optional; reserve a fixed number of language-token slots so the exported LLM (and VL self-attention / DiT) use a static seq_len — see [Static LLM Sequence Length](#static-llm-sequence-length---llm-lang-tokens) below
+ 
+ For `export_ov_n1d7_single_onnx_ov.py`, the main arguments are:
+ 
+@@ -347,7 +348,53 @@ For `export_ov_n1d7_single_onnx_ov.py`, the main arguments are:
+ - `--num-inference-timesteps`: optional denoising-step override before export
+ - `--device`: export device, usually `cpu`
+ 
+-For `export_ov_n1d7_single_ov.py`, the main arguments are the same.
++For `export_ov_n1d7_single_ov.py`, the main arguments are the same, plus `--llm-lang-tokens` (same meaning as for `export_ov_n1d7.py`). `export_ov_n1d7_single_onnx_ov.py` does not support `--llm-lang-tokens`.
++
++## Static LLM Sequence Length (`--llm-lang-tokens`)
++
++`--llm-lang-tokens` is supported by `export_ov_n1d7.py` and `export_ov_n1d7_single_ov.py`. It is optional and omitted by default, which preserves the original behavior of baking in the exact seq_len captured from the sample observation.
++
++When set, it reserves a fixed number of language-token slots so that the exported LLM, VL self-attention, and DiT (or fused DiT) all compile with one static total seq_len:
++
++```
++static_seq_len = --llm-lang-tokens + (number of visual tokens in the captured observation)
++```
++
++This lets a single exported OV model serve prompts of varying length without recompiling: at inference time, `--llm-lang-tokens` must be large enough to cover the longest language prompt you plan to run, and shorter prompts are zero-padded up to the fixed length automatically (see `ov_inference_readme.md`).
++
++Notes:
++
++- `--llm-lang-tokens` must be `>=` the number of language tokens in the captured observation used for export; otherwise export raises a `ValueError`.
++- The visual token count is fixed by the captured observation (e.g. image grid) and is added on top of `--llm-lang-tokens` automatically — you only specify the language-token reserve.
++- Padding tokens are masked out via `attention_mask` (LLM, VL self-attention) and `False` mask entries (DiT image/backbone masks), so padding does not change the output for the valid tokens.
++- The resolved static seq_len is written to `export_metadata.json` (or `*_single_ov_metadata.json`) as `llm_static_seq_len`, which the inference scripts read automatically — no separate flag is needed at inference time.
++
++Example: reserve 64 language-token slots when exporting the direct-OV full pipeline for LIBERO_PANDA:
++
++```bash
++python scripts/deployment/export_ov_n1d7.py \
++  --model-path checkpoints/GR00T-N1.7-3B \
++  --dataset-path demo_data/libero_demo \
++  --embodiment-tag LIBERO_PANDA \
++  --output-dir ~/openvino_models/libero_full_direct_static \
++  --export-mode full_pipeline \
++  --precision fp16 \
++  --device cpu \
++  --llm-lang-tokens 64
++```
++
++Same idea for the single-IR direct-OV export:
++
++```bash
++python scripts/deployment/export_ov_n1d7_single_ov.py \
++  --model-path checkpoints/GR00T-N1.7-3B \
++  --dataset-path demo_data/libero_demo \
++  --embodiment-tag LIBERO_PANDA \
++  --output-dir ~/openvino_models/libero_single_direct_ov_static \
++  --precision fp16 \
++  --device cpu \
++  --llm-lang-tokens 64
++```
+ 
+ The CLI shape is intentionally the same between `export_ov_n1d7_single_onnx_ov.py` and `export_ov_n1d7_single_ov.py`, so commands can be switched with minimal changes. The main difference is only the conversion path:
+ 
+@@ -384,6 +431,8 @@ For `export_ov_n1d7_single_ov.py`, the output directory typically contains:
+ - `gr00t_n1d7_single_from_ov_fp16.xml` / `gr00t_n1d7_single_from_ov_fp16.bin`
+ - `gr00t_n1d7_single_from_ov_metadata.json`
+ 
++When `--llm-lang-tokens` is used, the corresponding metadata JSON also includes an `llm_static_seq_len` field with the resolved static seq_len; it is `null` when `--llm-lang-tokens` is not set.
++
+ ## Notes
+ 
+ - `fp16` controls OpenVINO weight compression during save.
+@@ -395,6 +444,7 @@ For `export_ov_n1d7_single_ov.py`, the output directory typically contains:
+ - `export_ov_n1d7_single_onnx_ov.py` exports one merged learned pipeline, but runtime still has to prepare `position_ids` and the initial diffusion `actions` seed.
+ - `export_ov_n1d7_single_ov.py` exports one merged learned pipeline through the direct OpenVINO path, but runtime still has to prepare `position_ids` and the initial diffusion `actions` seed.
+ - The single-OV metadata file records the fixed vision grid and denoising-step count used during export.
++- `--llm-lang-tokens` (on `export_ov_n1d7.py` and `export_ov_n1d7_single_ov.py`) enables static-shape LLM export so one compiled OV model can serve varying prompt lengths; see [Static LLM Sequence Length](#static-llm-sequence-length---llm-lang-tokens).
+ 
+ ## Troubleshooting
+ 
+diff --git a/scripts/deployment/ov_inference_readme.md b/scripts/deployment/ov_inference_readme.md
+index e184f3f21591..7adf21a8008a 100644
+--- a/scripts/deployment/ov_inference_readme.md
++++ b/scripts/deployment/ov_inference_readme.md
+@@ -25,6 +25,12 @@ It contains:
+ 
+ It is intended to be imported by the entrypoint scripts below.
+ 
++### Static LLM Sequence Length (Automatic)
++
++If the OpenVINO model was exported with `--llm-lang-tokens` (see `export_ov_readme.md`), `export_metadata.json` in `--ov-model-dir` contains a non-null `llm_static_seq_len`. The full OpenVINO setup (`--full-ov`) reads this value automatically and zero-pads the LLM inputs (and the VL self-attention attention_mask) up to that fixed length before every forward call — there is no separate CLI flag for this on the inference side.
++
++If the actual input seq_len ever exceeds `llm_static_seq_len`, inference raises an error asking you to re-export with a larger `--llm-lang-tokens`.
++
+ ## Required Model Files
+ 
+ Your OpenVINO model directory should contain these files for the selected precision.
+@@ -289,6 +295,7 @@ python scripts/deployment/run_base_single_ov_inference.py \
+ - The `actions` input to the single-OV model is the initial denoising trajectory, not a decoded robot action
+ - `--verify-pytorch` is only meaningful when PyTorch and OV use the same checkpoint and the same `--diffusion-seed`
+ - The script logs both full-tensor metrics and trimmed active-action metrics, because some embodiments use far fewer than the padded `132` action channels
++- If the single-OV model was exported with `--llm-lang-tokens`, the script reads `llm_static_seq_len` from the `*_metadata.json` file in `--ov-model-dir` automatically and zero-pads `input_ids` / `attention_mask` / `position_ids` up to that fixed length before the OV call; there is no separate CLI flag for this
+ 
+ ---
+ 
+diff --git a/scripts/deployment/ov_n1d7_forward.py b/scripts/deployment/ov_n1d7_forward.py
+index 41d07a47f262..c17153f116b1 100644
+--- a/scripts/deployment/ov_n1d7_forward.py
++++ b/scripts/deployment/ov_n1d7_forward.py
+@@ -20,6 +20,7 @@ from __future__ import annotations
+ import argparse
+ from dataclasses import dataclass
+ from functools import partial
++import json
+ import logging
+ import time
+ from pathlib import Path
+@@ -219,6 +220,16 @@ def _resolve_backbone_masks(backbone_output, batch_size: int, seq_len: int, devi
+     return image_mask, backbone_mask
+ 
+ 
++def _load_llm_static_seq_len(ov_model_path: Path) -> int | None:
++    """Read llm_static_seq_len from export_metadata.json, if present."""
++    metadata_path = ov_model_path / "export_metadata.json"
++    if not metadata_path.exists():
++        return None
++    with open(metadata_path) as f:
++        meta = json.load(f)
++    return meta.get("llm_static_seq_len")
++
++
+ def _should_use_fused_dit(ov_model_path: Path, precision_suffix: str, requested: bool) -> bool:
+     if not requested:
+         return False
+@@ -508,6 +519,48 @@ def qwen3_backbone_openvino_forward_full(self, vl_input):
+             visual_pos_masks = visual_pos_masks[:, valid_mask]
+         image_mask_out = image_mask_out[:, valid_mask]
+         attention_mask_out = attention_mask_out[:, valid_mask]
++
++    # Pad to static LLM seq_len baked in at export time (set by --llm-lang-tokens).
++    # Record valid_seq_len so we can slice the LLM output back to this length afterwards,
++    # keeping all downstream components (VL self-attn, DiT) unaware of the padding.
++    llm_static_seq_len = getattr(self, "llm_static_seq_len", None)
++    valid_seq_len = inputs_embeds.shape[1]  # length before any padding
++    if llm_static_seq_len is not None:
++        cur_len = valid_seq_len
++        if cur_len > llm_static_seq_len:
++            raise ValueError(
++                f"Input seq_len ({cur_len}) exceeds the static LLM seq_len ({llm_static_seq_len}) "
++                "baked into the exported model. Re-export with a larger --llm-lang-tokens."
++            )
++        if cur_len < llm_static_seq_len:
++            pad = llm_static_seq_len - cur_len
++            inputs_embeds = torch.cat(
++                [inputs_embeds, torch.zeros(inputs_embeds.shape[0], pad, inputs_embeds.shape[2], dtype=inputs_embeds.dtype, device=device)],
++                dim=1,
++            )
++            # Attention mask: zeros = masked out, so padding tokens are ignored by the model
++            attention_mask = torch.cat(
++                [attention_mask, torch.zeros(attention_mask.shape[0], pad, dtype=attention_mask.dtype, device=device)],
++                dim=1,
++            )
++            position_ids = torch.cat(
++                [position_ids, torch.zeros(position_ids.shape[0], position_ids.shape[1], pad, dtype=position_ids.dtype, device=device)],
++                dim=2,
++            )
++            if visual_pos_masks is not None:
++                visual_pos_masks = torch.cat(
++                    [visual_pos_masks, torch.zeros(visual_pos_masks.shape[0], pad, dtype=visual_pos_masks.dtype, device=device)],
++                    dim=1,
++                )
++            # Pad the output masks too so downstream components (VL SA, DiT) see the full static seq_len
++            image_mask_out = torch.cat(
++                [image_mask_out, torch.zeros(image_mask_out.shape[0], pad, dtype=image_mask_out.dtype, device=device)],
++                dim=1,
++            )
++            attention_mask_out = torch.cat(
++                [attention_mask_out, torch.zeros(attention_mask_out.shape[0], pad, dtype=attention_mask_out.dtype, device=device)],
++                dim=1,
++            )
+     self._timing_stats["llm_prep_trim"] = time.perf_counter() - t0_trim
+ 
+     t0_np = time.perf_counter()
+@@ -685,7 +738,13 @@ def qwen3_backbone_openvino_forward_full(self, vl_input):
+ 
+     t0 = time.perf_counter()
+     vl_input = llm_features.to(torch.float32).cpu().numpy()
+-    vl_output = self.vl_self_attention_ov_model([vl_input])[0]
++    # If the exported VL SA expects an attention_mask (padded export path), supply it.
++    vl_sa_num_inputs = len(self.vl_self_attention_ov_model.inputs)
++    if vl_sa_num_inputs >= 2:
++        vl_mask = attention_mask.cpu().numpy().astype(np.int64)
++        vl_output = self.vl_self_attention_ov_model([vl_input, vl_mask])[0]
++    else:
++        vl_output = self.vl_self_attention_ov_model([vl_input])[0]
+     backbone_features = torch.from_numpy(vl_output).to(device)
+     self._timing_stats["vl_self_attention"] = time.perf_counter() - t0
+ 
+@@ -1001,6 +1060,12 @@ def setup_openvino_models_n1d7_full(policy, ov_model_path, device="GPU", use_fus
+         print(f"    Action Decoder running on: {policy.model.action_head.action_decoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     print("✓ All OpenVINO models loaded")
++
++    llm_static_seq_len = _load_llm_static_seq_len(ov_model_path)
++    policy.model.backbone.llm_static_seq_len = llm_static_seq_len
++    if llm_static_seq_len is not None:
++        print(f"  Static LLM seq_len: {llm_static_seq_len} (inputs will be padded to this length)")
++
+     print("[OpenVINO Full Setup] Replacing forward functions...")
+     policy.model.backbone.forward = partial(qwen3_backbone_openvino_forward_full, policy.model.backbone)
+     if use_fused_dit:
+@@ -1116,6 +1181,12 @@ def setup_openvino_models_n1d7_full_fp32(policy, ov_model_path, device="GPU", us
+         print(f"    Action Decoder running on: {policy.model.action_head.action_decoder_ov_model.get_property('EXECUTION_DEVICES')}")
+ 
+     print("✓ All OpenVINO models loaded")
++
++    llm_static_seq_len = _load_llm_static_seq_len(ov_model_path)
++    policy.model.backbone.llm_static_seq_len = llm_static_seq_len
++    if llm_static_seq_len is not None:
++        print(f"  Static LLM seq_len: {llm_static_seq_len} (inputs will be padded to this length)")
++
+     print("[OpenVINO Full Setup FP32] Replacing forward functions...")
+     policy.model.backbone.forward = partial(qwen3_backbone_openvino_forward_full, policy.model.backbone)
+     if use_fused_dit:
+diff --git a/scripts/deployment/run_base_single_ov_inference.py b/scripts/deployment/run_base_single_ov_inference.py
+index 032605af9a11..704c391cc978 100644
+--- a/scripts/deployment/run_base_single_ov_inference.py
++++ b/scripts/deployment/run_base_single_ov_inference.py
+@@ -115,6 +115,21 @@ def resolve_ov_model_xml(ov_model_dir: str) -> str:
+     return str(xml_files[0])
+ 
+ 
++def _load_static_seq_len_from_metadata(ov_model_dir: str) -> int | None:
++    """Locate the single-OV export metadata in ov_model_dir and read llm_static_seq_len if present."""
++    model_dir = Path(ov_model_dir)
++    metadata_files = sorted(model_dir.glob("*_metadata.json"))
++    if not metadata_files:
++        return None
++    try:
++        with open(metadata_files[0]) as file_obj:
++            meta = json.load(file_obj)
++    except Exception:
++        return None
++    value = meta.get("llm_static_seq_len")
++    return int(value) if value is not None else None
++
++
+ def load_modality_configs_from_checkpoint(model_path: str, embodiment_tag: str):
+     """Load modality configs directly from the checkpoint's processor_config.json."""
+     processor_config_path = Path(model_path) / "processor_config.json"
+@@ -318,6 +333,7 @@ def _prepare_single_ov_inputs(
+     collated_inputs: dict,
+     initial_actions: torch.Tensor,
+     runtime_llm_capture: _RuntimeLLMInputCapture | None = None,
++    static_seq_len: int | None = None,
+ ) -> dict[str, np.ndarray]:
+     raw_inputs = collated_inputs["inputs"]
+     input_ids = raw_inputs["input_ids"]
+@@ -381,6 +397,33 @@ def _prepare_single_ov_inputs(
+         attention_mask = attention_mask[:, valid_mask]
+         position_ids = position_ids[:, :, valid_mask]
+ 
++    # If the exported OV graph baked a static seq_len (via --llm-lang-tokens at
++    # export time), zero-pad the trimmed inputs back up to that length. The
++    # exported VL self-attention wrapper consumes attention_mask to ignore padded
++    # keys, so padding here does not change the final action output.
++    if static_seq_len is not None:
++        cur_len = input_ids.shape[1]
++        if cur_len > static_seq_len:
++            raise ValueError(
++                f"Trimmed seq_len ({cur_len}) exceeds the static LLM seq_len ({static_seq_len}) "
++                "baked into the exported model. Re-export with a larger --llm-lang-tokens."
++            )
++        if cur_len < static_seq_len:
++            pad = static_seq_len - cur_len
++            device = input_ids.device
++            input_ids = torch.cat(
++                [input_ids, torch.zeros(input_ids.shape[0], pad, dtype=input_ids.dtype, device=device)],
++                dim=1,
++            )
++            attention_mask = torch.cat(
++                [attention_mask, torch.zeros(attention_mask.shape[0], pad, dtype=attention_mask.dtype, device=device)],
++                dim=1,
++            )
++            position_ids = torch.cat(
++                [position_ids, torch.zeros(position_ids.shape[0], position_ids.shape[1], pad, dtype=position_ids.dtype, device=device)],
++                dim=2,
++            )
++
+     if initial_actions.shape[0] != input_ids.shape[0]:
+         raise ValueError(
+             f"Initial actions batch {initial_actions.shape[0]} does not match input batch {input_ids.shape[0]}"
+@@ -683,11 +726,15 @@ def main() -> None:
+             collated_inputs,
+             diffusion_seed=args.diffusion_seed,
+         )
++    static_seq_len = _load_static_seq_len_from_metadata(args.ov_model_dir)
++    if static_seq_len is not None:
++        logger.info("  Static LLM seq_len from metadata: %d (inputs will be padded to this length)", static_seq_len)
+     ov_inputs = _prepare_single_ov_inputs(
+         policy,
+         collated_inputs,
+         initial_actions=initial_actions,
+         runtime_llm_capture=runtime_llm_capture,
++        static_seq_len=static_seq_len,
+     )
+     for input_name, value in ov_inputs.items():
+         logger.info("  %s: shape=%s, dtype=%s", input_name, value.shape, value.dtype)
+-- 
+2.43.0
+

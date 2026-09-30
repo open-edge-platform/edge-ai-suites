@@ -35,12 +35,12 @@ Intel-operated generative artificial intelligence solutions.
                    │
                    │ Writes to
                    ▼
-      ┌────────────────────────────┐
-      │  monitoring_sessions/      │
-      │  └── session_name/         │
-      │      ├── graph_timing.csv  │──┐
-      │      └── resource_usage.log│  │
-      └────────────────────────────┘  │
+      ┌─────────────────────────────┐
+      │  monitoring_sessions/       │
+      │  └── session_name/          │
+      │      ├── graph_timing.csv   │──┐
+      │      └── resource_usage.json│  │
+      └─────────────────────────────┘  │
                                       │ Reads from
                                       ▼
                    ┌──────────────────────────────┐

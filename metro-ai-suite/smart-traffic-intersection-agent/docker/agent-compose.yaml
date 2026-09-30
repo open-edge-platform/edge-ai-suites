@@ -61,7 +61,6 @@ services:
     environment:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       USE_API: "true"
-      REFRESH_INTERVAL: ${REFRESH_INTERVAL:-15}
       
       # Proxy settings
       http_proxy: ${http_proxy}

@@ -68,6 +68,10 @@ from analyze_pipeline_latency import (  # noqa: E402
     validate_level2_json,
 )
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  Bag reading
 # ──────────────────────────────────────────────────────────────────────────────
@@ -472,12 +476,12 @@ Examples:
         sessions_root = ws_root / 'monitoring_sessions'
         bag_dir = _find_latest_bag(sessions_root)
         if bag_dir is None:
-            print(f'ERROR: No bag found under {sessions_root}', file=sys.stderr)
+            logger.error(f'No bag found under {sessions_root}')
             sys.exit(1)
-        print(f'  Auto-selected bag: {bag_dir}')
+        logger.info(f'  Auto-selected bag: {bag_dir}')
 
     if not bag_dir.exists():
-        print(f'ERROR: Bag directory not found: {bag_dir}', file=sys.stderr)
+        logger.error(f'Bag directory not found: {bag_dir}')
         sys.exit(1)
 
     # Resolve Level 1 kpi.json.
@@ -490,22 +494,22 @@ Examples:
             # Fall back to workspace-wide search.
             kpi1_path = _find_latest_kpi(ws_root / 'monitoring_sessions')
         if kpi1_path is None:
-            print('ERROR: No kpi.json found. Pass --kpi <path>.', file=sys.stderr)
+            logger.error('No kpi.json found. Pass --kpi <path>.')
             sys.exit(1)
-        print(f'  Auto-selected kpi.json: {kpi1_path}')
+        logger.info(f'  Auto-selected kpi.json: {kpi1_path}')
 
     if not kpi1_path.exists():
-        print(f'ERROR: kpi.json not found: {kpi1_path}', file=sys.stderr)
+        logger.error(f'kpi.json not found: {kpi1_path}')
         sys.exit(1)
 
-    print(f'\n  Bag        : {bag_dir}')
-    print(f'  Level 1 KPI: {kpi1_path}')
-    print(f'  Tolerance  : {args.tol_ms} ms\n')
+    logger.info(f'\n  Bag        : {bag_dir}')
+    logger.info(f'  Level 1 KPI: {kpi1_path}')
+    logger.info(f'  Tolerance  : {args.tol_ms} ms\n')
 
     try:
         kpi2 = derive_traced(bag_dir, kpi1_path, tol_ms=args.tol_ms)
     except (ValueError, FileNotFoundError, ImportError) as exc:
-        print(f'ERROR: {exc}', file=sys.stderr)
+        logger.error(f'{exc}')
         sys.exit(1)
 
     print_report(kpi2, kpi1_path)
@@ -516,18 +520,17 @@ Examples:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, 'w') as f:
             json.dump(kpi2, f, indent=2)
-        print(f'  Traced Level 2 KPI JSON written → {out_path}')
+        logger.info(f'  Traced Level 2 KPI JSON written → {out_path}')
 
         errors = validate_level2_json(kpi2)
         if errors:
-            print(
-                f'  WARNING: schema validation failed ({len(errors)} error(s)):',
-                file=sys.stderr,
+            logger.warning(
+                f'  Schema validation failed ({len(errors)} error(s)):',
             )
             for e in errors:
-                print(f'    • {e}', file=sys.stderr)
+                logger.error(f'    • {e}')
         else:
-            print('  Schema validation passed ✓')
+            logger.info('  Schema validation passed ✓')
 
     if args.csv_out:
         import csv as _csv  # noqa: PLC0415,F811
@@ -587,7 +590,7 @@ Examples:
             writer = _csv.DictWriter(_cf, fieldnames=_L2_FIELDS, extrasaction='ignore')
             writer.writeheader()
             writer.writerows(_rows)
-        print(f'  Traced Level 2 KPI CSV written → {csv_path}  ({len(_rows)} rows)')
+        logger.info(f'  Traced Level 2 KPI CSV written → {csv_path}  ({len(_rows)} rows)')
 
 
 if __name__ == '__main__':

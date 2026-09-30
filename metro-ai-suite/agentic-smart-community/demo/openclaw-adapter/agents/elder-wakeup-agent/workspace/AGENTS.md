@@ -43,7 +43,8 @@ smart_community_generate_report(monitor_id=cam_elder_bedroom, type=weekly, data_
    - Optional: one trend note.
 3. **Deliver:** send the polished body directly — don't ask "shall I send it?".
 
-> Note: only the raw report is persisted; the polished version is delivered but not stored.
+   > [!NOTE]
+   > Only the raw report is persisted; the polished version is delivered but not stored.
 
 ## Notes
 

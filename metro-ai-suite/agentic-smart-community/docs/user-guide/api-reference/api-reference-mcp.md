@@ -8,6 +8,7 @@ resources over Streamable HTTP.
 | Endpoint | `http://<mcp-host>:3100/mcp` |
 | Protocol | MCP over Streamable HTTP with JSON-RPC 2.0 |
 | Authentication | None; restrict the endpoint to loopback or a trusted private network |
+| Bind address | `127.0.0.1`, hardcoded and not configurable — this endpoint and the dashboard are local-only by design. The container runs with `network_mode: host`, so this is the host's own loopback. For off-host access, forward the port over SSH: `ssh -N -L 3100:127.0.0.1:3100 user@host`. |
 | Required request headers | `Content-Type: application/json` and `Accept: application/json, text/event-stream` |
 | Session header | `mcp-session-id` after initialization |
 
@@ -175,7 +176,7 @@ Register and persist a source:
 
 ```bash
 mcp_tool_call smart_community_monitor_ctl \
-  '{"action":"register_source","monitor_id":"cam_child","name":"Child Safety Camera","source_url":"rtsp://localhost:8555/live","use_case":"child_safety","persist":true}'
+  '{"action":"register_source","monitor_id":"cam_child","name":"Child Safety Camera","source_url":"rtsp://localhost:8555/live/test","use_case":"child_safety","persist":true}'
 ```
 
 ### `smart_community_monitors_compose`
@@ -190,7 +191,7 @@ Validate or apply all monitor declarations in a `monitors.yaml` file.
 
 ```bash
 mcp_tool_call smart_community_monitors_compose \
-  '{"action":"ps","file":"demo/monitors.demo.yaml"}'
+  '{"action":"ps","file":"demo/quick-start/monitors.demo.yaml"}'
 ```
 
 ### `smart_community_video_db`
@@ -231,7 +232,8 @@ then `register` after the prompt and final schema have been confirmed.
 | `video_summary_task` | string | No | Defaults to `<use_case>_monitor` |
 | `description` | string | No | Human-readable task description |
 | `prompt_text` | string | For `generate_task` | Full four-section prompt text without Markdown code fences |
-| `evaluate_rules_path` | string | For extended schema or custom alert behavior | Path to a Python rule override to stage and validate |
+| `evaluate_rules_path` | string | For extended schema or custom alert behavior | Server-local path to a Python rule override; mutually exclusive with `evaluate_rules_content` |
+| `evaluate_rules_content` | string | For extended schema or custom alert behavior | Python rule source for remote MCP clients; written, validated, and staged by the MCP server |
 | `schema_extensions` | array | No | Extra fields `{name, type, required}`; normally inferred from `LOCAL_PROMPT`, so pass only to set a non-text type or override `required` |
 | `reports`, `summarize` | object | No | Use-case report and per-clip summary configuration |
 | `overwrite` | boolean | No | Replace an existing use-case entry; default false |

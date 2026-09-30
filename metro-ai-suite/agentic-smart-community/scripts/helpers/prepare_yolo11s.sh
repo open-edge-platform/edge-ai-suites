@@ -33,9 +33,38 @@ fi
 
 mkdir -p "$work_dir"
 
+venv_python="$venv_dir/bin/python"
+
+# A venv whose ensurepip silently failed still leaves the directory behind,
+# so probe pip itself rather than trusting -d.
+yolo_venv_pip_ok() {
+    [[ -x "$venv_python" ]] && "$venv_python" -m pip --version >/dev/null 2>&1
+}
+
+if [[ -d "$venv_dir" ]] && ! yolo_venv_pip_ok; then
+    step "venv at $venv_dir has no working pip — repairing"
+    if [[ -x "$venv_python" ]]; then
+        "$venv_python" -m ensurepip --default-pip >/dev/null 2>&1 || true
+    fi
+    if ! yolo_venv_pip_ok; then
+        step "Repair failed — recreating venv"
+        run rm -rf "$venv_dir"
+    fi
+fi
+
 if [[ ! -d "$venv_dir" ]]; then
     step "Creating throwaway venv at $venv_dir"
     run python3 -m venv "$venv_dir" || { err "venv create failed"; exit 2; }
+fi
+
+if ! yolo_venv_pip_ok; then
+    if [[ -x "$venv_python" ]]; then
+        "$venv_python" -m ensurepip --default-pip >/dev/null 2>&1 || true
+    fi
+    yolo_venv_pip_ok || {
+        err "venv at $venv_dir has no usable pip — install python3-venv / python3-pip and retry"
+        exit 2
+    }
 fi
 
 run "$venv_dir/bin/python" -m pip install --quiet --upgrade pip || {

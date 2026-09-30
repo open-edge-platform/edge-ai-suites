@@ -1,6 +1,8 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Optional, Set
+from typing import Mapping, Optional, Set
+
+from utils.pipeline_catalog import topo_sort
 
 from .registry import REGISTRY
 
@@ -29,10 +31,15 @@ def resolve(raw_flags: Optional[Mapping[str, bool]]) -> EffectiveFeatures:
         )
     else:
         enabled = {fid for fid, on in raw_flags.items() if on}
+        unknown = sorted(enabled - set(REGISTRY))
+        if unknown:
+            raise ValueError(f"Unknown feature id: {unknown[0]!r}")
 
-    resolved: Set[str] = set()
-    for fid in list(enabled):
-        _resolve_feature(fid, enabled, resolved, stack=[])
+    # Validates the whole graph, not just the part the enabled features reach,
+    # so a cycle is reported at startup rather than when someone enables it.
+    topo_sort(list(REGISTRY), lambda fid: REGISTRY[fid].depends_on, "feature id")
+
+    _close_over_dependencies(enabled)
 
     capabilities: Set[str] = set()
     for fid in enabled:
@@ -44,24 +51,18 @@ def resolve(raw_flags: Optional[Mapping[str, bool]]) -> EffectiveFeatures:
     )
 
 
-def _resolve_feature(
-    fid: str,
-    enabled: Set[str],
-    resolved: Set[str],
-    stack: List[str],
-) -> None:
-    if fid in resolved:
-        return
-    if fid in stack:
-        cycle = " -> ".join([*stack, fid])
-        raise ValueError(f"Dependency cycle detected: {cycle}")
-    if fid not in REGISTRY:
-        raise ValueError(f"Unknown feature id: {fid!r}")
+def _close_over_dependencies(enabled: Set[str]) -> None:
+    """Grow `enabled` until it holds everything the live features need.
 
-    for dep in REGISTRY[fid].depends_on:
-        if dep not in enabled:
+    So a feature switched off in config.yaml still runs if something enabled
+    needs it. config-schema.cjs warns about that, off the same graph.
+    """
+    pending = list(enabled)
+    while pending:
+        fid = pending.pop()
+        for dep in REGISTRY[fid].depends_on:
+            if dep in enabled:
+                continue
             enabled.add(dep)
+            pending.append(dep)
             logger.info("Auto-enabling feature %r (required by %r).", dep, fid)
-        _resolve_feature(dep, enabled, resolved, [*stack, fid])
-
-    resolved.add(fid)

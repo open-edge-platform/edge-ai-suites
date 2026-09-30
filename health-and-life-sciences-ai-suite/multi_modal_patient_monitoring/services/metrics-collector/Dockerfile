@@ -1,20 +1,56 @@
+# Dockerfile – metrics-collector for the multi-modal patient monitoring suite.
+#
+# Uses intel/retail-benchmark as the base image, which ships:
+#   supervisord      – process manager that starts all collectors
+#   qmassa           – Intel GPU utilization (writes qmassa1-*-tool-generated.json)
+#   Intel NPU tool   – NPU utilization (writes npu_usage.csv)
+#   Intel PCM        – CPU package power (writes pcm.csv)
+#   sar / free       – CPU and memory (managed by supervisord.conf)
+#
+# pciutils is added for lspci (used by /platform-info and /device-config to
+# detect iGPU/NPU names).
+
 FROM intel/retail-benchmark:3.3.2
 
 ARG HTTP_PROXY
+ARG HTTPS_PROXY
+ARG NO_PROXY
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3 \
+        python3-pip \
+        python3-venv \
+        pciutils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir fastapi uvicorn
+
+# Override supervisord.conf to add stdout_logfile_maxbytes=0 on every program,
+# which disables log rotation for non-seekable streams (Docker stdout/stderr pipes)
+# and eliminates the harmless but noisy "OSError: [Errno 29] Illegal seek" errors.
+RUN sed -i '/^stdout_logfile=\/dev\/stdout/a stdout_logfile_maxbytes=0' /supervisord.conf
 
 WORKDIR /app
 
-# Ensure Python runtime is available for the API
-RUN apt-get update && \
-	DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 && \
-	rm -rf /var/lib/apt/lists/*
+COPY app.py      ./app.py
+COPY metrics.py  ./metrics.py
+COPY api/        ./api/
+COPY start.sh    /start.sh
 
-COPY app.py ./app.py
-COPY start.sh /start.sh
-RUN chmod +x /start.sh
+# Override the base image's GPU collector with a bounded-cycle version.
+# The base script runs `qmassa -t` forever, and qmassa never rotates that JSON
+# (unbounded growth measured at ~596 MB/hour) nor releases the memory backing
+# it. supervisord's [program:gpu_metrics] invokes /scripts/collect_gpu.sh by
+# path, so replacing the file is sufficient -- supervisord.conf needs no change.
+COPY collect_gpu.sh /scripts/collect_gpu.sh
 
-EXPOSE 9001
+RUN chmod +x /start.sh /scripts/collect_gpu.sh
 
-# Run the existing metrics collectors (via supervisord in the base image)
-# and the FastAPI app in a single container.
+EXPOSE 9000
+
+# start.sh starts supervisord (base-image collectors) then runs app.py.
 CMD ["/start.sh"]

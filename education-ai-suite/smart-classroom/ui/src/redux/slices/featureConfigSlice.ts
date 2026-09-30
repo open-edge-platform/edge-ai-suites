@@ -1,16 +1,21 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { FeatureId, SessionStage } from '../../generated/pipeline';
 
 /**
- * Feature descriptor shape from backend /features endpoint
+ * Feature descriptor shape from backend /features endpoint.
  */
 export interface FeatureDescriptor {
-  id: string;
-  dependency: string[];
+  id: FeatureId;
+  dependency: FeatureId[];
   requires: string[];
-  
+  /** The pipeline stage this feature owns, if any. */
+  stage?: SessionStage | null;
+
   // Optional UI-specific fields
   endpoints?: Record<string, string>;
   mode?: string;
+  chunking?: boolean;
+  diarization?: boolean;
 }
 
 interface FeatureConfigState {
@@ -48,6 +53,13 @@ const featureConfigSlice = createSlice({
       state.loaded = false;
       state.loading = false;
     },
+
+    // Re-opens the guard in useFeatureConfig, which treats a recorded error as
+    // "do not attempt". Dispatched from that hook's retry timer, so a failure
+    // is retried on a cadence instead of as fast as requests can fail.
+    clearError(state) {
+      state.error = null;
+    },
     
     reset(state) {
       state.features = [];
@@ -58,5 +70,5 @@ const featureConfigSlice = createSlice({
   },
 });
 
-export const { startLoading, setFeatures, setError, reset } = featureConfigSlice.actions;
+export const { startLoading, setFeatures, setError, clearError, reset } = featureConfigSlice.actions;
 export default featureConfigSlice.reducer;

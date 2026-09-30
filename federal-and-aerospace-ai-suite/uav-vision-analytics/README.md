@@ -1,0 +1,134 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+# UAV Vision Analytics Application
+
+The UAV Vision Analytics application is an AI-powered UAV object detection application with live telemetry overlay, optimized for Intel® edge hardware. It processes video from a UAV-mounted camera (or a simulated video file), runs YOLO11s inference across 80 object classes, and overlays correlated MAVLink telemetry (GPS, altitude, speed, heading) on the output RTSP stream. The stream is consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
+
+The application is built on Intel DL Streamer Pipeline Server and supports two deployment modes: a self-contained **Standalone (pymavlink)** mode using Gazebo/PX4 Software-in-the-Loop (SITL) simulation, and a **UAV Mission Compute SDK** mode that integrates with a running instance of the UAV Mission Compute SDK for full mission control and multi-camera pipeline management. Both modes are deployed on top of the Edge Node Infrastructure software - an edge computing platform, which enables hardware acceleration capabilities. See [Infrastructure Setup](docs/user-guide/infrastructure-setup.md) for build and provisioning steps.
+
+## Project Structure
+
+```text
+docker-compose-pymavlink.yml  Standalone mode: PX4 SITL, mavlink-router, broker, DL Streamer Pipeline Server, metrics-manager, nginx.
+docker-compose-uavsdk.yml     UAV Mission Compute SDK mode: DL Streamer Pipeline Server + nginx (connects to an external SDK stack).
+.env.example                  Template for .env — HOST_IP, GPU/NPU/camera device paths, and image tags.
+Makefile                      Operational targets (init, model, pymav-*, uavsdk-*, start-rtsp).
+configs/                      Mosquitto and mavlink-router configuration, DL Streamer Pipeline Server pipeline configs, nginx reverse-proxy configs.
+gvapython/                    Telemetry overlay Python scripts (pymavlink and UAVSDK variants).
+scripts/                      Pipeline manager and MAVLink listener scripts.
+resources/                    Python requirements for `make model`, sample input video, and the exported YOLO11s model (after running `make model`).
+benchmark/                    Stream density benchmarking tooling (`calc_stream_density.sh`).
+```
+
+## Stack
+
+### Standalone Mode (pymavlink)
+
+| Service | Image | Role |
+|---------|-------|------|
+| `broker` | `eclipse-mosquitto:2.0.22` | MQTT broker for telemetry and pipeline events |
+| `px4` | `px4io/px4-sitl:latest` | PX4 SITL flight controller simulation |
+| `mavlink-router` | Built from `uav-mission-compute-sdk/infra/px4-sim/mavlink-router` | Routes MAVLink telemetry between PX4 and the pipeline server |
+| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24` (+ `pymavlink`) | Core inference engine — YOLO11s detection and telemetry overlay |
+| `metrics-manager` | `intel/metrics-manager:2026.2.0` | Host platform (CPU/GPU) metrics |
+| `nginx` | `nginx:1.27-alpine` | Reverse proxy — the only service that publishes ports to the host |
+
+All services share the `app_network` Docker network and are defined in [`docker-compose-pymavlink.yml`](docker-compose-pymavlink.yml). Only `nginx` publishes ports to the host; `dlstreamer-pipeline-server` and `metrics-manager` are reachable exclusively through it.
+
+### UAV Mission Compute SDK Mode
+
+| Service | Image | Role |
+|---------|-------|------|
+| `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24` | Core inference engine — YOLO11s detection and telemetry overlay; connects to an externally running UAV Mission Compute SDK stack |
+| `nginx` | `nginx:1.27-alpine` | Reverse proxy — the only service that publishes ports to the host |
+
+Defined in [`docker-compose-uavsdk.yml`](docker-compose-uavsdk.yml). Requires the
+`edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk` stack to be running first. Only `nginx` publishes ports to the host; `dlstreamer-pipeline-server` is reachable exclusively through it.
+
+## Prerequisites
+
+| Requirement | Notes |
+|-------------|-------|
+| Docker Engine release 24 or later | [Install guide](https://docs.docker.com/engine/install/) |
+| Docker Compose v2 | Included with Docker Desktop; on Linux OS, install the `docker-compose-plugin` package. Use `docker compose` (space), not `docker-compose` (hyphen). |
+| Intel® GPU with OpenVINO support | Required for `GPU_DEVICE` / `GPU_RENDER_DEVICE` in `.env`. |
+| Python 3 with `venv` | Required by `make model` to create a Python virtual environment for exporting YOLO11s. |
+| Intel® NPU (optional) | For NPU-accelerated pipelines; falls back to `/dev/null` (disabled) if not detected. |
+| USB or RealSense camera (optional) | For live-camera pipelines; auto-detected by `make init`. |
+
+Run `make init` after cloning to create `.env` from `.env.example`, auto-detect the host IP (`HOST_IP`), and auto-detect GPU, NPU, and camera device paths.
+
+## Quick Start
+
+### Step 1: Download the model
+
+```bash
+cd uav-vision-analytics
+make model
+```
+
+This creates a Python virtual environment, downloads YOLO11s, and exports it to OpenVINO FP16 format under `resources/models/yolo11s/`.
+
+### Step 2: Start a deployment mode
+
+**Standalone Mode (pymavlink)** — self-contained, no external dependencies:
+
+```bash
+make pymav-up
+```
+
+**UAV Mission Compute SDK Mode** — requires the UAV Mission Compute SDK stack running first:
+
+```bash
+make uavsdk-up
+```
+
+### Step 3: Start RTSP pipelines
+
+```bash
+make start-rtsp DEVICE=gpu   # or cpu | npu | all
+```
+
+## Endpoints
+
+All HTTP(S) traffic is served through the nginx reverse proxy on port 443 (HTTPS,
+self-signed cert; plain HTTP on port 80 redirects to HTTPS. `dlstreamer-pipeline-server`
+and `metrics-manager` no longer publish ports directly to the host.
+
+| Service | URL / Path | Notes |
+|---------|-----------|-------|
+| DL Streamer Pipeline Server REST API | `https://<HOST_IP>/` | Pipeline control and status, proxied to `dlstreamer-pipeline-server:8081` |
+| RTSP annotated stream | `rtsp://<HOST_IP>:8555` | Detection + telemetry overlay output; TCP passthrough via nginx `stream {}` |
+| Metrics manager SSE stream (Standalone mode only) | `https://<HOST_IP>/metrics/stream` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
+| Metrics manager REST snapshot (Standalone mode only) | `https://<HOST_IP>/api/v1/metrics/latest` | Host platform (CPU/GPU) metrics, proxied to `metrics-manager:9090` |
+
+`<HOST_IP>` is auto-detected and written to `.env` by `make init` (defaults to `localhost`/`127.0.0.1` when run locally). The self-signed TLS certificate is generated automatically into `configs/nginx/ssl/` the first time `make pymav-up`/`make uavsdk-up` runs — use `curl -k` to skip verification.
+
+> [!IMPORTANT]
+> `nginx`'s ports (`80`, `443`, `8555`) are published on `HOST_IP`, so they are reachable
+> from your LAN by default (needed for QGroundControl/VLC/ffplay on other devices) — not
+> just `localhost`. RTSP traffic is unencrypted, and neither the REST API nor the RTSP
+> stream is authenticated. Set `HOST_IP=127.0.0.1` in `.env` to restrict access to the
+> local host only.
+
+## Make Targets
+
+```text
+make init          Create .env from template, auto-detect HOST_IP, and auto-detect GPU/NPU/camera device paths
+make model         Download YOLO11s and export to OpenVINO FP16
+make pymav-up       Start standalone pymavlink stack (PX4 SITL + broker + DL Streamer Pipeline Server + metrics-manager + nginx)
+make pymav-down     Stop and remove pymavlink stack (includes volumes)
+make uavsdk-up      Start UAV Mission Compute SDK stack (requires uav-mission-compute-sdk running first)
+make uavsdk-down    Stop and remove UAV Mission Compute SDK stack (includes volumes)
+make start-rtsp     Start RTSP pipelines. DEVICE=cpu|gpu|npu|all (default: gpu)
+make build          Alias: start the default pymavlink stack
+```
+
+## Related Documentation
+
+- [User Guide](docs/user-guide/index.md) — Full deployment, configuration, and how-to guides.
+- [Infrastructure Setup](docs/user-guide/infrastructure-setup.md) — Build the OS image, flash it to a bootable USB, and validate the provisioned platform.
+- [Benchmarks](docs/user-guide/benchmark.md) — Measure stream density and hardware utilization.
+- [Agent SKILLs](docs/user-guide/agents.md) — AI agent skills for platform automation and DL Streamer pipeline generation.

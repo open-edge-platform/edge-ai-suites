@@ -3,7 +3,7 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
 from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
-from utils.markdown_cleaner import strip_think_tokens
+from utils.session_paths import SessionPaths
 import logging, os
 
 logger = logging.getLogger(__name__)
@@ -25,24 +25,15 @@ class MindmapComponent(PipelineComponent):
         ]
 
     def generate_mindmap(self, summary_text):
-        project_config = RuntimeConfig.get_section("Project")
-        project_path = os.path.join(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-        mindmap_path = os.path.join(project_path, "mindmap.mmd")
+        mindmap_path = str(SessionPaths.mindmap_path(self.session_id))
 
         try:
             logger.info("Generating mindmap from summary...")
-            mindmap_prompt = self.model.tokenizer.apply_chat_template(
-                self._get_mindmap_message(summary_text),
-                tokenize=False,
-                add_generation_prompt=True,
-                enable_thinking=False
+            full_mindmap = self.model.generate(
+                messages=self._get_mindmap_message(summary_text),
+                stream=False,
+                enable_thinking=False,
             )
-
-            full_mindmap = self.model.generate(mindmap_prompt, stream=False)
             StorageManager.save(mindmap_path, full_mindmap, append=False)
             logger.info("Mindmap generation completed successfully.")
             return full_mindmap

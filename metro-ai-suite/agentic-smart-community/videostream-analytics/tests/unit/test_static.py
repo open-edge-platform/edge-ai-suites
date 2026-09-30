@@ -108,7 +108,7 @@ def _run(pipeline, frames, clock):
     pipeline._fps = FPS
     pipeline._running = True
     with patch.object(rtsp_monitor.time, "time", clock.time):
-        pipeline._process_loop()
+        pipeline._process_loop(pipeline._generation)
 
 
 def _static_events(sink):

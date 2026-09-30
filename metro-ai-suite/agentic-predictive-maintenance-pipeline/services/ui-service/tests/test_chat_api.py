@@ -3,6 +3,7 @@
 
 """Focused backend tests for the Ask & Analyze API."""
 
+import asyncio
 import json
 import os
 
@@ -424,6 +425,97 @@ def test_detection_planner_retries_one_invalid_response(client):
 
 
 @respx.mock
+def test_detection_planner_falls_back_after_supported_invalid_plans(client):
+    invalid_plan = (
+        '{"operation":"aggregate","metrics":'
+        '[{"function":"sum","alias":"total_detections"}]}'
+    )
+    llm = respx.post("http://mock-llm/v3/chat/completions").mock(side_effect=[
+        _llm_response(invalid_plan),
+        _llm_response(invalid_plan),
+        _llm_response(invalid_plan),
+        _llm_response("There are five rupture detections."),
+    ])
+    storage = respx.post("http://mock-storage/detections/query").mock(
+        return_value=httpx.Response(200, json={
+            "data": [{"count": 5}],
+            "meta": {"operation": "count", "returned": 1},
+        })
+    )
+
+    response = client.post("/api/chat", json={
+        "message": "What is the total number of Rupture detections?",
+        "mode": "detections",
+    })
+
+    assert response.status_code == 200
+    assert len(llm.calls) == 4
+    posted_plan = json.loads(storage.calls[0].request.content)
+    assert posted_plan == {
+        "operation": "count",
+        "filters": [
+            {"field": "label", "operator": "eq", "value": "Rupture"},
+        ],
+    }
+
+
+@respx.mock
+def test_combined_mode_scopes_fallback_plan_to_selected_run(client):
+    respx.get("http://mock-agent/agents/status/run-fallback").mock(
+        return_value=httpx.Response(200, json={"status": "completed"})
+    )
+    respx.get("http://mock-agent/agents/results/run-fallback").mock(
+        return_value=httpx.Response(200, json={
+            "analysis": {"recommendation": "Inspect ruptures"},
+            "window": {"min_id": 10, "max_id": 20},
+        })
+    )
+    raw_detection = (
+        '{"id":"1","frame_id":"2","label":"Rupture","confidence":1.0,'
+        '"x":50,"y":50,"width":100,"height":100,"timestamp":1684379600000}'
+    )
+    respx.post("http://mock-llm/v3/chat/completions").mock(side_effect=[
+        _llm_response(raw_detection),
+        _llm_response(raw_detection),
+        _llm_response(raw_detection),
+        _llm_response("The highest-confidence rupture detections are listed."),
+    ])
+    storage = respx.post("http://mock-storage/detections/query").mock(
+        return_value=httpx.Response(200, json={
+            "data": [],
+            "meta": {"operation": "list", "returned": 0},
+        })
+    )
+
+    response = client.post("/api/chat", json={
+        "message": "Which Rupture detections need immediate attention?",
+        "mode": "combined",
+        "run_id": "run-fallback",
+    })
+
+    assert response.status_code == 200
+    posted_plan = json.loads(storage.calls[0].request.content)
+    assert posted_plan["operation"] == "list"
+    assert {"field": "label", "operator": "eq", "value": "Rupture"} in posted_plan["filters"]
+    assert {"field": "id", "operator": "gt", "value": 10} in posted_plan["filters"]
+    assert {"field": "id", "operator": "lte", "value": 20} in posted_plan["filters"]
+
+
+def test_detection_plan_repairs_confidence_metric_field():
+    normalized = app_module._normalize_detection_plan({
+        "operation": "aggregate",
+        "metrics": [{"function": "min", "alias": "minimum_confidence"}],
+    })
+
+    assert normalized["metrics"] == [{
+        "function": "min",
+        "field": "confidence",
+        "alias": "minimum_confidence",
+    }]
+    app_module._QUERY_ADAPTER.validate_python(normalized)
+
+
+@respx.mock
 def test_malformed_query_plan_is_visible_and_not_executed(client):
     respx.post("http://mock-llm/v3/chat/completions").mock(
         return_value=_llm_response("```json\n{\"operation\":\"sql\"}\n```")
@@ -629,6 +721,88 @@ def test_storage_failure_returns_sanitized_error(client):
     assert response.status_code == 502
     assert response.json()["detail"] == "The detection query could not be completed."
     assert "database details" not in response.text
+
+
+async def _noop_sleep(_):
+    return
+
+
+@respx.mock
+def test_llm_retries_on_server_error_then_succeeds(client, monkeypatch):
+    monkeypatch.setattr(app_module, "asyncio", type("asyncio", (), {"sleep": staticmethod(_noop_sleep)}))
+    respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[
+        {"run_id": "retry-run", "status": "completed"},
+    ]))
+    respx.get("http://mock-agent/agents/results/retry-run").mock(return_value=httpx.Response(200, json={
+        "analysis": {"finding": "Rupture"},
+        "window": {"min_id": 1, "max_id": 5},
+    }))
+    llm = respx.post("http://mock-llm/v3/chat/completions").mock(side_effect=[
+        httpx.Response(502, text="Bad Gateway"),
+        _llm_response("Inspection recommended."),
+    ])
+
+    response = client.post("/api/chat", json={
+        "message": "What needs attention?",
+        "mode": "analysis",
+    })
+
+    assert response.status_code == 200
+    assert response.json()["answer"] == "Inspection recommended."
+    assert len(llm.calls) == 2
+
+
+@respx.mock
+def test_proactive_context_trimming_fits_token_budget(client, monkeypatch):
+    monkeypatch.setattr(app_module, "_LLM_CONTEXT_LIMIT", 1024)
+    large_data = [{"label": f"item-{i}", "confidence": 0.9} for i in range(200)]
+    respx.post("http://mock-storage/detections/query").mock(
+        return_value=httpx.Response(200, json={
+            "data": large_data,
+            "meta": {"operation": "list", "returned": 200},
+        })
+    )
+    llm = respx.post("http://mock-llm/v3/chat/completions").mock(side_effect=[
+        _llm_response('{"operation":"list","filters":[]}'),
+        _llm_response("Detection summary complete."),
+    ])
+
+    response = client.post("/api/chat", json={
+        "message": "List detections",
+        "mode": "detections",
+    })
+
+    assert response.status_code == 200
+    answer_body = json.loads(llm.calls[1].request.content)
+    input_chars = sum(len(m["content"]) for m in answer_body["messages"])
+    original_chars = sum(
+        len(json.dumps(d, ensure_ascii=False, separators=(",", ":"))) for d in large_data
+    )
+    assert input_chars < original_chars, "Context should have been trimmed"
+
+
+@respx.mock
+def test_llm_exhausts_retries_returns_502(client, monkeypatch):
+    monkeypatch.setattr(app_module, "asyncio", type("asyncio", (), {"sleep": staticmethod(_noop_sleep)}))
+    respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[
+        {"run_id": "fail-run", "status": "completed"},
+    ]))
+    respx.get("http://mock-agent/agents/results/fail-run").mock(return_value=httpx.Response(200, json={
+        "analysis": {"finding": "Rupture"},
+        "window": {"min_id": 1, "max_id": 5},
+    }))
+    llm = respx.post("http://mock-llm/v3/chat/completions").mock(
+        return_value=httpx.Response(502, text="Bad Gateway"),
+    )
+
+    response = client.post("/api/chat", json={
+        "message": "What needs attention?",
+        "mode": "analysis",
+    })
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "The language model could not complete the request."
+    assert len(llm.calls) == app_module._LLM_MAX_RETRIES + 1
 
 
 @pytest.mark.parametrize("payload", [

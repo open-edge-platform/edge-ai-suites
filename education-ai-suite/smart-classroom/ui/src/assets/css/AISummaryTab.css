@@ -23,20 +23,6 @@
   line-height: 1.5;
 }
 
-.tab-spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #c5d7f0;
-  border-top-color: #3b5bdb;
-  border-radius: 50%;
-  animation: tab-spin 0.8s linear infinite;
-  display: inline-block;
-}
-
-@keyframes tab-spin {
-  to { transform: rotate(360deg); }
-}
-
 .summary-content {
   white-space: pre-wrap;
   line-height: 1;
@@ -70,4 +56,35 @@
 .summary-content strong,
 .summary-content b {
   font-weight: 700;
+}
+
+.summary-progress {
+  padding: 0.75rem 0;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.summary-progress-dots span {
+  animation: summary-progress-dot 1.4s infinite ease-in-out;
+  opacity: 0;
+}
+.summary-progress-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.summary-progress-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes summary-progress-dot {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .summary-progress-dots span {
+    animation: none;
+    opacity: 1;
+  }
 }

@@ -12,7 +12,7 @@ WORKDIR /app
 # Copy code into the container
 RUN pip install --no-cache-dir "uv>=0.9.22,<1.0.0"
 COPY . .
-RUN uv sync
+RUN uv sync --frozen --no-install-project
 
 # Upgrade pip and install dependencies directly from pyproject.toml
 

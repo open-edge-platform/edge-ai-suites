@@ -22,11 +22,15 @@ from collections import defaultdict
 from typing import Optional
 import threading
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 try:
     from prometheus_client import Gauge, Info, make_wsgi_app
 except ImportError:
-    print("Error: prometheus_client not installed")
-    print("Install with: uv sync")
+    logger.error("prometheus_client not installed")
+    logger.info("Install with: uv sync")
     sys.exit(1)
 
 
@@ -70,7 +74,7 @@ class ROS2MetricsCollector:
 
         if session_dir:
             self.graph_log = session_dir / "graph_timing.csv"
-            self.resource_log = session_dir / "resource_usage.log"
+            self.resource_log = session_dir / "resource_usage.json"
 
         # Initialize Prometheus metrics
         self._init_metrics()
@@ -166,11 +170,6 @@ class ROS2MetricsCollector:
             ['process', 'pid']
         )
 
-        self.cpu_package_power = Gauge(
-            'ros2_cpu_package_power_watts',
-            'Mean CPU package power in watts sampled via Intel RAPL powercap sysfs'
-        )
-
         # System info
         self.exporter_info = Info('ros2_kpi_exporter', 'ROS2 KPI Exporter Information')
         self.exporter_info.info({
@@ -185,8 +184,6 @@ class ROS2MetricsCollector:
         ros2_node_topic_* metrics that carry node→topic relationships and
         per-topic KPIs (frequency, latency, msg count).
         """
-        import json as _json
-
         topo_path = None
         if self.session_dir:
             topo_path = self.session_dir / 'graph_topology.json'
@@ -195,9 +192,9 @@ class ROS2MetricsCollector:
 
         try:
             with open(topo_path) as f:
-                topo = _json.load(f)
+                topo = json.load(f)
         except Exception as e:
-            print(f"Error reading topology JSON: {e}")
+            logger.error(f"Reading topology JSON: {e}")
             return
 
         nodes  = topo.get('nodes',  {})
@@ -226,14 +223,18 @@ class ROS2MetricsCollector:
                     kpi = topic_kpi[tname]
 
                     def _f(v):
-                        try: return float(v) if v and v.strip() else None
+                        try:
+                            return float(v) if v and v.strip() else None
                         except Exception:
                             return None
-                    if kpi.get('freq')    is None: kpi['freq']    = _f(row.get('frequency_hz'))
-                    if kpi.get('latency') is None: kpi['latency'] = _f(row.get('latency_mean_ms'))
-                    if not kpi.get('msg_count'):   kpi['msg_count'] = int(_f(row.get('message_count')) or 0)
+                    if kpi.get('freq') is None:
+                        kpi['freq'] = _f(row.get('frequency_hz'))
+                    if kpi.get('latency') is None:
+                        kpi['latency'] = _f(row.get('latency_mean_ms'))
+                    if not kpi.get('msg_count'):
+                        kpi['msg_count'] = int(_f(row.get('message_count')) or 0)
             except Exception as e:
-                print(f"Warning: could not enrich from CSV: {e}")
+                logger.warning(f"Could not enrich from CSV: {e}")
 
         # Emit per-node metrics
         for nname, nd in nodes.items():
@@ -348,60 +349,34 @@ class ROS2MetricsCollector:
                         ).set(float(latest['processing_delay_ms']))
 
         except Exception as e:
-            print(f"Error reading graph CSV: {e}")
+            logger.error(f"Reading graph CSV: {e}")
 
     def update_from_resource_log(self):
-        """Read resource usage log and update metrics."""
+        """Read resource_usage.json (written by _psutil_probe.py) and update metrics."""
         if not self.resource_log or not self.resource_log.exists():
             return
 
-        import re
         try:
             with open(self.resource_log, 'r') as f:
-                lines = f.readlines()
+                try:
+                    document = json.load(f)
+                except json.JSONDecodeError:
+                    return
 
             # Collect last value per PID so we emit the most recent sample
             latest: dict = {}   # pid -> {cpu, rss_mb, command}
 
-            for line in lines:
-                line = line.rstrip()
-                if not re.match(r'^\d{2}:\d{2}:\d{2} [AP]M', line):
-                    continue
-                parts = line.split()
-                if len(parts) < 12:
-                    continue
-
-                # Detect thread mode vs PID mode (same heuristic as visualize_resources.py)
-                # Thread mode: parts[4] is '-' or a plain integer (TID)
-                # PID mode:    parts[4] is a float percentage like '0.60'
-                has_threads = (parts[4] == '-' or
-                               (parts[4].isdigit() and len(parts) >= 16))
-
-                try:
-                    if has_threads:
-                        # Thread mode: Time UID TGID TID %usr %sys %guest %wait %CPU CPU ... VSZ RSS %MEM Command
-                        tgid    = parts[3]
-                        tid     = parts[4]
-                        if tid != '-':          # only process-level (TGID) lines
-                            continue
-                        cpu_pct = float(parts[9])
-                        rss_kb  = int(parts[14])
-                        command = ' '.join(parts[16:]) if len(parts) > 16 else parts[-1]
-                        pid_key = tgid
-                    else:
-                        # PID mode: Time UID PID %usr %sys %guest %wait %CPU CPU ... VSZ RSS %MEM Command
-                        pid_key = parts[3]
-                        cpu_pct = float(parts[8])
-                        rss_kb  = int(parts[13])
-                        command = ' '.join(parts[15:]) if len(parts) > 15 else parts[-1]
-
-                    latest[pid_key] = {
-                        'cpu':     cpu_pct,
-                        'rss_mb':  rss_kb / 1024.0,
+            for rec in document.get('samples', []):
+                for p in rec.get('processes', []):
+                    pid = p.get('pid')
+                    if pid is None:
+                        continue
+                    command = p.get('cmdline') or p.get('name') or ''
+                    latest[str(pid)] = {
+                        'cpu':     p.get('cpu_pct', 0.0),
+                        'rss_mb':  p.get('rss_kb', 0.0) / 1024.0,
                         'command': command.strip(),
                     }
-                except (ValueError, IndexError):
-                    continue
 
             # Emit metrics for the most recent sample of each PID
             for pid, info in latest.items():
@@ -414,30 +389,7 @@ class ROS2MetricsCollector:
                 ).set(info['rss_mb'])
 
         except Exception as e:
-            print(f"Error reading resource log: {e}")
-
-        # ── CPU package power from cpu_power.log ─────────────────────────────
-        if self.session_dir:
-            cpu_power_log = self.session_dir / 'cpu_power.log'
-            if cpu_power_log.exists():
-                try:
-                    samples = []
-                    for raw in cpu_power_log.read_text().splitlines():
-                        raw = raw.strip()
-                        if not raw:
-                            continue
-                        try:
-                            rec = json.loads(raw)
-                        except json.JSONDecodeError:
-                            continue
-                        if rec.get('event'):
-                            continue
-                        if rec.get('power_w') is not None:
-                            samples.append(float(rec['power_w']))
-                    if samples:
-                        self.cpu_package_power.set(samples[-1])  # latest sample
-                except Exception as e:
-                    print(f"Error reading cpu_power.log: {e}")
+            logger.error(f"Reading resource log: {e}")
 
     def start_live_monitoring(self, interval: int = 5):
         """
@@ -446,7 +398,7 @@ class ROS2MetricsCollector:
         Args:
             interval: Update interval in seconds
         """
-        print(f"Starting live metric collection (update interval: {interval}s)")
+        logger.info(f"Starting live metric collection (update interval: {interval}s)")
 
         while True:
             try:
@@ -455,10 +407,10 @@ class ROS2MetricsCollector:
                 self.update_from_topology_json()
                 time.sleep(interval)
             except KeyboardInterrupt:
-                print("\nStopping metric collection...")
+                logger.info("\nStopping metric collection...")
                 break
             except Exception as e:
-                print(f"Error in live monitoring: {e}")
+                logger.error(f"In live monitoring: {e}")
                 time.sleep(interval)
 
 
@@ -580,30 +532,30 @@ def main():
         pass
 
     # Start HTTP server for Prometheus scraping (SO_REUSEADDR enabled)
-    print(f"Starting Prometheus exporter on port {args.port}")
+    logger.info(f"Starting Prometheus exporter on port {args.port}")
     try:
         _start_http_server_reuse(args.port)
     except OSError as e:
-        print(f"Error: cannot bind port {args.port}: {e}")
-        print(f"Try: fuser -k {args.port}/tcp   then retry.")
+        logger.error(f"Cannot bind port {args.port}: {e}")
+        logger.info(f"Try: fuser -k {args.port}/tcp   then retry.")
         sys.exit(1)
 
     if args.mode == 'file':
         # File-based mode: read from monitoring session files
         if not args.session_dir:
-            print("Error: --session-dir required for file mode")
+            logger.error("--session-dir required for file mode")
             sys.exit(1)
 
         session_path = Path(args.session_dir)
         if not session_path.exists():
-            print(f"Error: Session directory not found: {session_path}")
+            logger.error(f"Session directory not found: {session_path}")
             sys.exit(1)
 
         collector = ROS2MetricsCollector(session_path)
 
-        print(f"Monitoring session: {session_path}")
-        print(f"Metrics available at http://localhost:{args.port}/metrics")
-        print("Press Ctrl+C to stop\n")
+        logger.info(f"Monitoring session: {session_path}")
+        logger.info(f"Metrics available at http://localhost:{args.port}/metrics")
+        logger.info("Press Ctrl+C to stop\n")
 
         collector.start_live_monitoring(interval=args.interval)
     else:
@@ -611,9 +563,9 @@ def main():
         # Switches automatically when a newer session is created.
         sessions_base = Path(args.sessions_dir)
 
-        print(f"Live mode: watching {sessions_base}/ for the latest session")
-        print(f"Metrics available at http://localhost:{args.port}/metrics")
-        print("Press Ctrl+C to stop\n")
+        logger.info(f"Live mode: watching {sessions_base}/ for the latest session")
+        logger.info(f"Metrics available at http://localhost:{args.port}/metrics")
+        logger.info("Press Ctrl+C to stop\n")
 
         def _latest_session(base: Path):
             """Return the newest session directory (by name, which is a timestamp)."""
@@ -635,10 +587,10 @@ def main():
                     current_session = latest
                     if current_session:
                         collector = ROS2MetricsCollector(current_session)
-                        print(f"[live] Tracking session: {current_session.name}")
+                        logger.info(f"[live] Tracking session: {current_session.name}")
                     else:
                         collector = None
-                        print(f"[live] No sessions yet — waiting in {sessions_base}/...")
+                        logger.info(f"[live] No sessions yet — waiting in {sessions_base}/...")
 
                 if collector:
                     try:
@@ -646,11 +598,11 @@ def main():
                         collector.update_from_resource_log()
                         collector.update_from_topology_json()
                     except Exception as e:
-                        print(f"[live] update error: {e}")
+                        logger.error(f"[live] update error: {e}")
 
                 time.sleep(args.interval)
         except KeyboardInterrupt:
-            print("\nStopping exporter...")
+            logger.info("\nStopping exporter...")
 
 
 if __name__ == '__main__':

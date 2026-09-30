@@ -9,7 +9,8 @@ hide_directive-->
 - **Time to Complete:** 20min
 - **Programming Language:** C++
 
-> **Note:** SVET2 is a legacy solution.
+> [!NOTE]
+> SVET2 is a legacy solution.
 
 ## About SVET2
 
@@ -67,7 +68,7 @@ sudo bash /opt/intel/vppsdk/install_vppsdk_dependencies.sh
 source /opt/intel/vppsdk/env.sh
 ```
 
-Assume the Video Processing Platform SDK package directory is `vppsdk` and the default install path is `/opt/intel/media/`.
+Assume the Video Processing Platform SDK package directory is `vppsdk` and the default install path is `/opt/intel/`.
 Run `vainfo` to verify the media stack is installed successfully:
 
 ```
@@ -97,7 +98,8 @@ vainfo: Supported profile and entrypoints
 
 Then, run a Video Processing Platform SDK API test.
 
-> **Note:** Make sure there is at least one display connected to the device and switch to
+> [!NOTE]
+> Make sure there is at least one display connected to the device and switch to
 > `root` and `init 3` before running the command below:
 
 ```
@@ -167,7 +169,8 @@ Before running the sample application, make sure the environment variables are s
 # export MULTI_DISPLAY_PATCH=1
 ```
 
-> **Note:** the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
+> [!NOTE]
+> the Video Processing Platform SDK uses drm display, which requires that there is no X server running and with root privileges.
 
 ### 3 Run a basic Decode and Display pipeline
 

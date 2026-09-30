@@ -26,6 +26,10 @@ import csv
 import json
 import statistics as stats_module
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def _latency_stats(samples) -> dict:
     """Compute latency statistics from a rolling deque of ms samples."""
@@ -125,6 +129,7 @@ class ROS2GraphMonitor(Node):
         self.remote_user = remote_user
         self.log_file = log_file
         self.topology_file = topology_file
+        self.use_sim_time = use_sim_time
         self.csv_writer = None
         self.csv_file = None
 
@@ -524,7 +529,19 @@ class ROS2GraphMonitor(Node):
                     msg_ts = s.sec + s.nanosec * 1e-9
                 except AttributeError:
                     ros_ts = self.get_clock().now().nanoseconds / 1e9
-                    msg_ts = ros_ts if ros_ts > 0.0 else time.time()
+                    if ros_ts > 0.0:
+                        msg_ts = ros_ts
+                    elif self.use_sim_time:
+                        # /clock hasn't published its first message yet -- falling
+                        # back to time.time() here would mix wall-clock epoch
+                        # timestamps with sim-time timestamps for the *same* topic
+                        # once /clock comes online a moment later (sim time starts
+                        # back near 0), corrupting every downstream latency/trigger
+                        # calculation that assumes one consistent time base per
+                        # topic. Drop this one early sample instead.
+                        return
+                    else:
+                        msg_ts = time.time()
 
                 with self.lock:
                     stats = self.topic_stats[topic_name]
@@ -557,7 +574,7 @@ class ROS2GraphMonitor(Node):
                                 if self.show_realtime_delays:
                                     ts = datetime.now().strftime('%H:%M:%S.%f')
                                     lat = _latency_stats(self.node_processing_delays[pub_node])
-                                    print(f"[{ts}] {pub_node} → {topic_name}: "
+                                    logger.info(f"[{ts}] {pub_node} → {topic_name}: "
                                           f"proc delay = {delay_ms:.3f} ms "
                                           f"(mean={lat.get('mean_ms', 0):.3f} ms)")
 
@@ -766,12 +783,12 @@ def categorize_node(node_name: str, node_info: Dict) -> str:
 
 def print_node_statistics(node_stats: Dict[str, Dict[str, Any]], node_info: Dict):
     """Print average latency and frequency for each node."""
-    print(f"\n{'NODE STATISTICS (Average Latency & Frequency)':-^80}")
-    print(f"Total Nodes: {len(node_stats)}\n")
+    logger.info(f"\n{'NODE STATISTICS (Average Latency & Frequency)':-^80}")
+    logger.info(f"Total Nodes: {len(node_stats)}\n")
 
-    print(f"{'Node Name':<32} {'Category':<16} {'Pub Freq':<10} {'Pub Lat':<10} {'Sub Freq':<10} {'Sub Lat':<10}")
-    print(f"{'':32} {'':16} {'(Hz)':<10} {'(ms)':<10} {'(Hz)':<10} {'(ms)':<10}")
-    print("-" * 88)
+    logger.info(f"{'Node Name':<32} {'Category':<16} {'Pub Freq':<10} {'Pub Lat':<10} {'Sub Freq':<10} {'Sub Lat':<10}")
+    logger.info(f"{'':32} {'':16} {'(Hz)':<10} {'(ms)':<10} {'(Hz)':<10} {'(ms)':<10}")
+    logger.info("-" * 88)
 
     for node_name, stats in sorted(node_stats.items()):
         # Truncate node name if too long
@@ -795,9 +812,9 @@ def print_node_statistics(node_stats: Dict[str, Dict[str, Any]], node_info: Dict
         sub_freq = f"{stats['avg_sub_frequency_hz']:.2f}" if stats['avg_sub_frequency_hz'] else "N/A"
         sub_lat = f"{stats['avg_sub_latency_ms']:.2f}" if stats['avg_sub_latency_ms'] else "N/A"
 
-        print(f"{node_display:<32} {category_display:<16} {pub_freq:<10} {pub_lat:<10} {sub_freq:<10} {sub_lat:<10}")
+        logger.info(f"{node_display:<32} {category_display:<16} {pub_freq:<10} {pub_lat:<10} {sub_freq:<10} {sub_lat:<10}")
 
-    print("\n")
+    logger.info("\n")
 
 
 def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[str] = None,
@@ -819,24 +836,24 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
     if len(node_info) <= 1 and all('ros2_graph_monitor' in name for name in node_info.keys()):
         return
 
-    print("\n" + "="*80)
+    logger.info("\n" + "="*80)
     if target_node:
-        print(f"ROS2 NODE MONITOR: {target_node} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.info(f"ROS2 NODE MONITOR: {target_node} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     else:
-        print(f"ROS2 GRAPH ANALYSIS - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("="*80)
+        logger.info(f"ROS2 GRAPH ANALYSIS - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    logger.info("="*80)
 
     # Print processing delay summary (per-node, all nodes)
     if show_processing and stats_data.get('node_proc_delays'):
-        print(f"\n{'PROCESSING DELAY ANALYSIS (input → output per node)':-^80}")
+        logger.info(f"\n{'PROCESSING DELAY ANALYSIS (input → output per node)':-^80}")
         for nname, nd in sorted(stats_data['node_proc_delays'].items()):
             mean = nd.get('mean_ms')
             std  = nd.get('std_dev_ms')
             n    = nd.get('samples', 0)
             if mean is not None:
                 std_str = f' ± {std:.3f}' if std is not None else ''
-                print(f"  {nname:<45} {mean:.3f}{std_str} ms  (n={n})")
-        print()
+                logger.info(f"  {nname:<45} {mean:.3f}{std_str} ms  (n={n})")
+        logger.info("")
 
     # Print node statistics first (average latency and frequency per node)
     if show_node_stats and 'node_stats' in stats_data:
@@ -844,28 +861,28 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
 
     # Print nodes
     if show_nodes:
-        print(f"\n{'NODE INFORMATION':-^80}")
-        print(f"Total Nodes: {len(node_info)}\n")
+        logger.info(f"\n{'NODE INFORMATION':-^80}")
+        logger.info(f"Total Nodes: {len(node_info)}\n")
 
         for node_name, info in sorted(node_info.items()):
-            print(f"📦 {node_name}")
+            logger.info(f"📦 {node_name}")
 
             if info['publishers']:
-                print(f"  Publishers ({len(info['publishers'])})")
+                logger.info(f"  Publishers ({len(info['publishers'])})")
                 for topic, msg_type in sorted(info['publishers']):
-                    print(f"    → {topic} [{msg_type.split('/')[-1]}]")
+                    logger.info(f"    → {topic} [{msg_type.split('/')[-1]}]")
 
             if info['subscribers']:
-                print(f"  Subscribers ({len(info['subscribers'])})")
+                logger.info(f"  Subscribers ({len(info['subscribers'])})")
                 for topic, msg_type in sorted(info['subscribers']):
-                    print(f"    ← {topic} [{msg_type.split('/')[-1]}]")
+                    logger.info(f"    ← {topic} [{msg_type.split('/')[-1]}]")
 
-            print()
+            logger.info("")
 
     # Print topic statistics
     if show_topics:
-        print(f"{'TOPIC STATISTICS':-^80}")
-        print(f"Total Topics: {len(topic_stats)}\n")
+        logger.info(f"{'TOPIC STATISTICS':-^80}")
+        logger.info(f"Total Topics: {len(topic_stats)}\n")
 
         # Categorize topics
         categorized_topics = {
@@ -895,13 +912,13 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 'Other': '📋'
             }
             icon = category_icons.get(category, '📋')
-            print(f"\n{icon} {category.upper()} ({len(topics)} topics)")
+            logger.info(f"\n{icon} {category.upper()} ({len(topics)} topics)")
 
             if target_node:
-                print(f"{'Topic':<38} {'I/O':<4} {'Msg Type':<20} {'Freq (Hz)':<12} {'Delta (ms)':<12}")
+                logger.info(f"{'Topic':<38} {'I/O':<4} {'Msg Type':<20} {'Freq (Hz)':<12} {'Delta (ms)':<12}")
             else:
-                print(f"{'Topic':<40} {'Msg Type':<25} {'Freq (Hz)':<12} {'Delta (ms)':<12} {'Count':<10}")
-            print("-" * 80)
+                logger.info(f"{'Topic':<40} {'Msg Type':<25} {'Freq (Hz)':<12} {'Delta (ms)':<12} {'Count':<10}")
+            logger.info("-" * 80)
 
             for topic_name, stats in sorted(topics):
                 msg_type_short = stats['msg_type'].split('/')[-1] if stats['msg_type'] else 'unknown'
@@ -923,17 +940,17 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                     topic_display = topic_name if len(topic_name) <= 36 else topic_name[:33] + "..."
                     msg_type_display = msg_type_short if len(msg_type_short) <= 18 else msg_type_short[:15] + "..."
 
-                    print(f"{topic_display:<38} {io_indicator:<4} {msg_type_display:<20} {freq:<12} {delta:<12}")
+                    logger.info(f"{topic_display:<38} {io_indicator:<4} {msg_type_display:<20} {freq:<12} {delta:<12}")
                 else:
                     # Truncate topic name if too long
                     topic_display = topic_name if len(topic_name) <= 38 else topic_name[:35] + "..."
 
-                    print(f"{topic_display:<40} {msg_type_short:<25} {freq:<12} {delta:<12} {count:<10}")
+                    logger.info(f"{topic_display:<40} {msg_type_short:<25} {freq:<12} {delta:<12} {count:<10}")
 
-        print()
+        logger.info("")
     # Print detailed input/output timing for target node
     if show_io_details and target_node:
-        print(f"{'INPUT/OUTPUT TIMING DETAILS':-^80}")
+        logger.info(f"{'INPUT/OUTPUT TIMING DETAILS':-^80}")
 
         input_topics = [(name, stats) for name, stats in sorted(topic_stats.items()) if stats.get('is_input')]
         output_topics = [(name, stats) for name, stats in sorted(topic_stats.items()) if stats.get('is_output')]
@@ -945,7 +962,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 category = categorize_topic(topic_name, stats['msg_type'])
                 input_categorized[category].append((topic_name, stats))
 
-            print("\n📥 INPUT TOPICS (Subscribed by target node):")
+            logger.info("\n📥 INPUT TOPICS (Subscribed by target node):")
             for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
                 if category not in input_categorized:
                     continue
@@ -958,17 +975,17 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                     'Other': '📋'
                 }
                 icon = category_icons.get(category, '📋')
-                print(f"\n  {icon} {category}:")
+                logger.info(f"\n  {icon} {category}:")
 
                 for topic_name, stats in input_categorized[category]:
-                    print(f"    {topic_name}")
-                    print(f"       Type: {stats['msg_type']}")
+                    logger.info(f"    {topic_name}")
+                    logger.info(f"       Type: {stats['msg_type']}")
                     if stats['frequency_hz']:
-                        print(f"       Frequency: {stats['frequency_hz']:.2f} Hz")
-                        print(f"       Avg Delta: {stats['avg_delta_ms']:.2f} ms")
-                    print(f"       Messages: {stats['message_count']}")
+                        logger.info(f"       Frequency: {stats['frequency_hz']:.2f} Hz")
+                        logger.info(f"       Avg Delta: {stats['avg_delta_ms']:.2f} ms")
+                    logger.info(f"       Messages: {stats['message_count']}")
                     if stats['publishers']:
-                        print(f"       Published by: {', '.join(stats['publishers'])}")
+                        logger.info(f"       Published by: {', '.join(stats['publishers'])}")
 
         if output_topics:
             # Categorize output topics
@@ -977,7 +994,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 category = categorize_topic(topic_name, stats['msg_type'])
                 output_categorized[category].append((topic_name, stats))
 
-            print("\n📤 OUTPUT TOPICS (Published by target node):")
+            logger.info("\n📤 OUTPUT TOPICS (Published by target node):")
             for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
                 if category not in output_categorized:
                     continue
@@ -990,32 +1007,32 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                     'Other': '📋'
                 }
                 icon = category_icons.get(category, '📋')
-                print(f"\n  {icon} {category}:")
+                logger.info(f"\n  {icon} {category}:")
 
                 for topic_name, stats in output_categorized[category]:
-                    print(f"    {topic_name}")
-                    print(f"       Type: {stats['msg_type']}")
+                    logger.info(f"    {topic_name}")
+                    logger.info(f"       Type: {stats['msg_type']}")
                     if stats['frequency_hz']:
-                        print(f"       Frequency: {stats['frequency_hz']:.2f} Hz")
-                        print(f"       Avg Delta: {stats['avg_delta_ms']:.2f} ms")
-                    print(f"       Messages: {stats['message_count']}")
+                        logger.info(f"       Frequency: {stats['frequency_hz']:.2f} Hz")
+                        logger.info(f"       Avg Delta: {stats['avg_delta_ms']:.2f} ms")
+                    logger.info(f"       Messages: {stats['message_count']}")
                     if stats['subscribers']:
                         other_subs = [s for s in stats['subscribers'] if s != target_node]
                         if other_subs:
-                            print(f"       Subscribed by: {', '.join(other_subs)}")
+                            logger.info(f"       Subscribed by: {', '.join(other_subs)}")
 
         node_delays = stats_data.get('node_proc_delays', {})
         if input_topics and output_topics and node_delays:
             avg_all = [nd['mean_ms'] for nd in node_delays.values() if nd.get('mean_ms') is not None]
             if avg_all:
                 overall = sum(avg_all) / len(avg_all)
-                print(f"\n⏱️  PROCESSING: {overall:.2f} ms avg delay across {len(avg_all)} nodes (input → output)")
+                logger.info(f"\n⏱️  PROCESSING: {overall:.2f} ms avg delay across {len(avg_all)} nodes (input → output)")
 
-        print()
+        logger.info("")
 
     # Print connections
     if show_connections:
-        print(f"{'TOPIC CONNECTIONS':-^80}")
+        logger.info(f"{'TOPIC CONNECTIONS':-^80}")
 
         # Categorize topics with connections
         categorized_connections = {
@@ -1046,25 +1063,25 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 'Other': '📋'
             }
             icon = category_icons.get(category, '📋')
-            print(f"\n{icon} {category.upper()}")
-            print("-" * 80)
+            logger.info(f"\n{icon} {category.upper()}")
+            logger.info("-" * 80)
 
             for topic_name, stats in sorted(topics):
-                print(f"\n📡 {topic_name}")
-                print(f"   Type: {stats['msg_type']}")
+                logger.info(f"\n📡 {topic_name}")
+                logger.info(f"   Type: {stats['msg_type']}")
 
                 if stats['publishers']:
-                    print(f"   Publishers: {', '.join(stats['publishers'])}")
+                    logger.info(f"   Publishers: {', '.join(stats['publishers'])}")
 
                 if stats['subscribers']:
-                    print(f"   Subscribers: {', '.join(stats['subscribers'])}")
+                    logger.info(f"   Subscribers: {', '.join(stats['subscribers'])}")
 
                 if stats['frequency_hz']:
-                    print(f"   Frequency: {stats['frequency_hz']:.2f} Hz")
-                    print(f"   Avg Delta: {stats['avg_delta_ms']:.2f} ms")
-                    print(f"   Message Count: {stats['message_count']}")
+                    logger.info(f"   Frequency: {stats['frequency_hz']:.2f} Hz")
+                    logger.info(f"   Avg Delta: {stats['avg_delta_ms']:.2f} ms")
+                    logger.info(f"   Message Count: {stats['message_count']}")
 
-        print("\n" + "="*80 + "\n")
+        logger.info("\n" + "="*80 + "\n")
 
 
 def main():
@@ -1205,13 +1222,13 @@ Examples:
         args.show_connections = True
 
     if args.node:
-        print(f"Starting ROS2 Graph Monitor for node: {args.node}...")
+        logger.info(f"Starting ROS2 Graph Monitor for node: {args.node}...")
     else:
-        print("Starting ROS2 Graph Monitor for all nodes...")
+        logger.info("Starting ROS2 Graph Monitor for all nodes...")
 
     # Configure DDS peer discovery for remote system if requested
     if args.remote_ip:
-        print(f"Configuring DDS discovery for remote host: {args.remote_ip}")
+        logger.info(f"Configuring DDS discovery for remote host: {args.remote_ip}")
         # Auto-detect remote ROS_DOMAIN_ID and align locally when run standalone
         if not args.no_countdown:  # standalone mode (not spawned by monitor_stack)
             try:
@@ -1224,11 +1241,11 @@ Examples:
                 remote_domain = r.stdout.strip()
                 local_domain  = os.environ.get('ROS_DOMAIN_ID', '0')
                 if remote_domain.isdigit() and remote_domain != local_domain:
-                    print(f"  ⚠  ROS_DOMAIN_ID mismatch: local={local_domain}, remote={remote_domain}")
-                    print(f"     Setting ROS_DOMAIN_ID={remote_domain} to match remote.")
+                    logger.info(f"  ⚠  ROS_DOMAIN_ID mismatch: local={local_domain}, remote={remote_domain}")
+                    logger.info(f"     Setting ROS_DOMAIN_ID={remote_domain} to match remote.")
                     os.environ['ROS_DOMAIN_ID'] = remote_domain
                 else:
-                    print(f"  ✅ ROS_DOMAIN_ID={os.environ.get('ROS_DOMAIN_ID', '0')} matches.")
+                    logger.info(f"  ✅ ROS_DOMAIN_ID={os.environ.get('ROS_DOMAIN_ID', '0')} matches.")
             except Exception:
                 pass
         os.environ['ROS_LOCALHOST_ONLY'] = '0'
@@ -1244,19 +1261,19 @@ Examples:
         os.environ['CYCLONEDDS_URI'] = cyclone_uri
         # FastDDS / rmw_fastrtps unicast peer (always override)
         os.environ['ROS_STATIC_PEERS'] = args.remote_ip
-        print("  ROS_LOCALHOST_ONLY=0")
-        print(f"  CYCLONEDDS_URI set with peer {args.remote_ip} (multicast disabled)")
-        print(f"  ROS_STATIC_PEERS={args.remote_ip}")
+        logger.info("  ROS_LOCALHOST_ONLY=0")
+        logger.info(f"  CYCLONEDDS_URI set with peer {args.remote_ip} (multicast disabled)")
+        logger.info(f"  ROS_STATIC_PEERS={args.remote_ip}")
 
     # Countdown to give user time to start ROS2 launch
     if args.no_countdown:
-        print("Starting monitor!\n")
+        logger.info("Starting monitor!\n")
     else:
-        print("\nStarting in...")
+        logger.info("\nStarting in...")
         for i in range(5, 0, -1):
-            print(f"{i}...")
+            logger.info(f"{i}...")
             time.sleep(1)
-        print("Starting monitor!\n")
+        logger.info("Starting monitor!\n")
 
     rclpy.init()
 
@@ -1270,7 +1287,7 @@ Examples:
             rclpy.spin_once(_probe, timeout_sec=0.5)
             if '/clock' in dict(_probe.get_topic_names_and_types()):
                 use_sim_time = True
-                print('  ℹ  /clock detected — enabling sim-time timestamps for accurate latency measurement.')
+                logger.info('  ℹ  /clock detected — enabling sim-time timestamps for accurate latency measurement.')
             _probe.destroy_node()
 
         monitor = ROS2GraphMonitor(target_node=args.node, show_realtime_delays=args.realtime_delays,
@@ -1281,48 +1298,50 @@ Examples:
         # Initial discovery with retry for target node
         node_info = None
         if args.node:
-            print(f"Waiting for node: {args.node}...")
+            logger.info(f"Waiting for node: {args.node}...")
             retry_count = 0
             while not node_info and rclpy.ok():
                 node_info = monitor.discover_graph()
 
                 if not node_info:
                     if retry_count == 0:
-                        print(f"Node '{args.node}' not found. Retrying every second...")
-                        print("Available nodes:")
+                        logger.info(f"Node '{args.node}' not found. Retrying every second...")
+                        logger.info("Available nodes:")
                         all_nodes = monitor.get_node_names_and_namespaces()
                         # Filter out the monitor itself
                         other_nodes = [(name, ns) for name, ns in all_nodes if name != 'ros2_graph_monitor']
 
                         if not other_nodes:
-                            print("  (No ROS2 processes found!)")
-                            print("\nNo ROS2 processes are running.")
-                            print("Start your ROS2 launch file first, then run this monitor.")
-                            print("\nExiting...")
-                            return
-
-                        for name, ns in sorted(other_nodes):
-                            full_name = f"{ns}/{name}".replace('//', '/')
-                            print(f"  {full_name}")
-                        print("\nWaiting for target node to appear...")
+                            # DDS peer discovery can lag a beat right after this monitor's own
+                            # rclpy node joins the graph -- an empty result here doesn't mean no
+                            # nodes exist, just that discovery hasn't caught up yet. Keep retrying
+                            # instead of giving up on the very first check (previously this
+                            # returned immediately, silently producing an empty graph_timing.csv
+                            # whenever this race was lost).
+                            logger.info("  (No other ROS2 nodes visible yet -- still discovering...)")
+                        else:
+                            for name, ns in sorted(other_nodes):
+                                full_name = f"{ns}/{name}".replace('//', '/')
+                                logger.info(f"  {full_name}")
+                            logger.info("\nWaiting for target node to appear...")
                     else:
                         print(f"Retry {retry_count}: Node '{args.node}' not found yet...", end='\r')
 
                         # Exit after 30 retries (30 seconds)
                         if retry_count >= 30:
-                            print()  # New line
-                            print(f"\nTimeout: Node '{args.node}' did not appear after 30 seconds.")
-                            print("Exiting...")
+                            logger.info("")  # New line
+                            logger.info(f"\nTimeout: Node '{args.node}' did not appear after 30 seconds.")
+                            logger.info("Exiting...")
                             return
 
                     retry_count += 1
                     time.sleep(1.0)
                 else:
                     if retry_count > 0:
-                        print()  # New line after retry messages
-                    print(f"✓ Node '{args.node}' found!")
+                        logger.info("")  # New line after retry messages
+                    logger.info(f"✓ Node '{args.node}' found!")
         else:
-            print("Discovering ROS2 graph...")
+            logger.info("Discovering ROS2 graph...")
             node_info = monitor.discover_graph()
 
             # Check if any nodes were found
@@ -1331,11 +1350,11 @@ Examples:
             other_nodes = [n for n in all_nodes if n[0] != 'ros2_graph_monitor']
 
             if not other_nodes:
-                print("\nNo ROS2 nodes found yet. Will continue monitoring...")
-                print("The monitor will detect nodes as they start up.")
+                logger.info("\nNo ROS2 nodes found yet. Will continue monitoring...")
+                logger.info("The monitor will detect nodes as they start up.")
 
         # Subscribe to all discovered topics for monitoring
-        print("Setting up topic subscriptions...")
+        logger.info("Setting up topic subscriptions...")
         for topic_name, stats in monitor.topic_stats.items():
             if stats['msg_type']:
                 monitor.subscribe_to_topic(topic_name, stats['msg_type'])
@@ -1343,16 +1362,38 @@ Examples:
         # Write initial topology snapshot
         monitor.write_topology_json()
 
-        print(f"Monitoring {len(monitor.subscribers)} topics. Collecting data...")
-        print("Press Ctrl+C to stop and display results.\n")
+        logger.info(f"Monitoring {len(monitor.subscribers)} topics. Collecting data...")
+        logger.info("Press Ctrl+C to stop and display results.\n")
 
         # Monitoring loop
         update_interval = args.interval
         last_update = time.time()
 
+        # Process subscription callbacks on a dedicated background thread.
+        # rclpy.spin_once() executes at most ONE ready callback per call, and
+        # discover_graph() (O(nodes * topics) introspection calls) plus
+        # print_graph_info() run synchronously in the same loop below — while
+        # either of those runs, no messages are processed at all. With dozens
+        # of topics publishing concurrently this starved graph_timing.csv down
+        # to a couple of samples per topic for an entire run (observed ~2
+        # msgs/s system-wide instead of hundreds), which meant
+        # analyze_trigger_latency.py could never find the >=5 samples per
+        # (input, output) pair it requires -- i.e. "0 (input→output) pairs
+        # found" even on a fully successful run. Spinning on its own thread
+        # lets callbacks drain continuously, independent of the periodic
+        # housekeeping below.
+        spin_stop = threading.Event()
+
+        def _spin_worker():
+            while rclpy.ok() and not spin_stop.is_set():
+                rclpy.spin_once(monitor, timeout_sec=0.5)
+
+        spin_thread = threading.Thread(target=_spin_worker, daemon=True)
+        spin_thread.start()
+
         try:
             while rclpy.ok():
-                rclpy.spin_once(monitor, timeout_sec=0.1)
+                time.sleep(0.1)
 
                 # Periodically update display
                 current_time = time.time()
@@ -1390,10 +1431,13 @@ Examples:
                     last_update = current_time
 
         except KeyboardInterrupt:
-            print("\n\nStopping monitor...")
+            logger.info("\n\nStopping monitor...")
+        finally:
+            spin_stop.set()
+            spin_thread.join(timeout=2.0)
 
         # Final statistics display
-        print("\nFinal Statistics:")
+        logger.info("\nFinal Statistics:")
         stats_data = monitor.get_statistics()
         # Add node statistics
         stats_data['node_stats'] = monitor.get_node_statistics()
@@ -1409,7 +1453,7 @@ Examples:
         monitor.close_log()
         monitor.destroy_node()
         rclpy.shutdown()
-        print("ROS2 Graph Monitor stopped.")
+        logger.info("ROS2 Graph Monitor stopped.")
 
 
 if __name__ == '__main__':

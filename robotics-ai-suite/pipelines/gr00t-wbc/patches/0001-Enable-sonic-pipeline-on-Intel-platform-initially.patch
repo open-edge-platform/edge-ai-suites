@@ -1,0 +1,3274 @@
+From 6cce8f3440135a7f07bdf3566cc040d899c647ad Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Fri, 31 Jul 2026 09:19:03 +0800
+Subject: [PATCH 01/13]   Enable sonic pipeline on Intel platform initially   
+ - add OpenVINO inference backend support    - support encoder/decoder on
+ iGPU,NPU.    - support planner mode on CPU    - remove cuda dependency
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ gear_sonic/scripts/run_sim_loop.py            |  11 +
+ gear_sonic_deploy/.justfile                   |   5 +-
+ gear_sonic_deploy/CMakeLists.txt              | 331 ++++++----------
+ gear_sonic_deploy/cmake/FindOpenVINO.cmake    |  43 ++
+ gear_sonic_deploy/deploy.sh                   |  44 ++-
+ gear_sonic_deploy/scripts/install_deps.sh     |  99 +++--
+ gear_sonic_deploy/scripts/setup_env.sh        | 112 ++++--
+ gear_sonic_deploy/src/CMakeLists.txt          |   9 +-
+ .../src/OVInference/CMakeLists.txt            |  29 ++
+ .../src/OVInference/OVInferenceEngine.cpp     | 304 ++++++++++++++
+ .../src/OVInference/OVInferenceEngine.h       | 174 ++++++++
+ .../src/OVInference/OVInferenceEngine.inl     |  41 ++
+ gear_sonic_deploy/src/OVInference/Utility.h   |  17 +
+ gear_sonic_deploy/src/g1/CMakeLists.txt       |   9 +-
+ .../src/g1/g1_deploy_onnx_ref/CMakeLists.txt  | 152 ++++---
+ .../g1/g1_deploy_onnx_ref/cmake/ROS2.cmake    |   2 +-
+ .../include/control_policy.hpp                | 227 ++++-------
+ .../g1/g1_deploy_onnx_ref/include/encoder.hpp | 200 +++-------
+ .../include/inference_backend.hpp             |  13 +
+ .../include/localmotion_kplanner_tensorrt.hpp | 374 ++++++++----------
+ .../src/g1_deploy_onnx_ref.cpp                |  48 ++-
+ 21 files changed, 1372 insertions(+), 872 deletions(-)
+ create mode 100644 gear_sonic_deploy/cmake/FindOpenVINO.cmake
+ create mode 100644 gear_sonic_deploy/src/OVInference/CMakeLists.txt
+ create mode 100644 gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+ create mode 100644 gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+ create mode 100644 gear_sonic_deploy/src/OVInference/OVInferenceEngine.inl
+ create mode 100644 gear_sonic_deploy/src/OVInference/Utility.h
+ create mode 100644 gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/inference_backend.hpp
+
+diff --git a/gear_sonic/scripts/run_sim_loop.py b/gear_sonic/scripts/run_sim_loop.py
+index 9115e77..1312fb5 100644
+--- a/gear_sonic/scripts/run_sim_loop.py
++++ b/gear_sonic/scripts/run_sim_loop.py
+@@ -4,6 +4,17 @@ Parses a YAML-based WBC config via tyro CLI, instantiates the G1 robot model,
+ and launches the simulator (optionally with offscreen image publishing).
+ """
+ 
++import os
++
++# Disable CycloneDDS shared memory (iceoryx) for loopback simulation.
++# Prevents assertion crash on systems without iceoryx daemon.
++if "CYCLONEDDS_URI" not in os.environ:
++    os.environ["CYCLONEDDS_URI"] = (
++        "<CycloneDDS><Domain><SharedMemory>"
++        "<Enable>false</Enable>"
++        "</SharedMemory></Domain></CycloneDDS>"
++    )
++
+ from typing import Dict
+ 
+ import tyro
+diff --git a/gear_sonic_deploy/.justfile b/gear_sonic_deploy/.justfile
+index 1556f4b..4ada6d4 100644
+--- a/gear_sonic_deploy/.justfile
++++ b/gear_sonic_deploy/.justfile
+@@ -15,11 +15,14 @@ default:
+ # Get the number of cores
+ CORES := if os() == "macos" { `sysctl -n hw.ncpu` } else if os() == "linux" { `nproc` } else { "1" }
+ 
++# Detect OpenVINO from environment
++OV_FLAG := if env("USE_OPENVINO", "0") == "1" { "-DUSE_OPENVINO=ON" } else { "" }
++
+ # Build the project
+ build *build_type='Release':
+   @mkdir -p build
+   @echo "Configuring the build system..."
+-  @cd build && cmake -S .. -B . -DCMAKE_BUILD_TYPE={{build_type}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
++  @cd build && cmake -S .. -B . -DCMAKE_BUILD_TYPE={{build_type}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON {{OV_FLAG}}
+   @echo "Building the project..."
+   @cd build && cmake --build . -j{{CORES}}
+ 
+diff --git a/gear_sonic_deploy/CMakeLists.txt b/gear_sonic_deploy/CMakeLists.txt
+index 454c54c..9690a4e 100644
+--- a/gear_sonic_deploy/CMakeLists.txt
++++ b/gear_sonic_deploy/CMakeLists.txt
+@@ -1,5 +1,4 @@
+-cmake_minimum_required(VERSION 3.14 FATAL_ERROR) # Set the minimum required
+-                                                 # version of CMake
++cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+ 
+ project(
+   g1_deploy
+@@ -23,220 +22,146 @@ include(CheckLanguage)
+ # Optional builds
+ option(BUILD_SRCS "Build sources" ON)
+ 
++# ============================================================================
++# Inference Backend Selection
++# ============================================================================
++option(USE_OPENVINO "Use OpenVINO instead of TensorRT for inference" OFF)
++
++# Auto-detect: if no CUDA/TensorRT but OpenVINO is available, default to OpenVINO
++if(NOT USE_OPENVINO)
++  # Check environment hint
++  if(DEFINED ENV{USE_OPENVINO} AND "$ENV{USE_OPENVINO}" STREQUAL "1")
++    set(USE_OPENVINO ON)
++    message(STATUS "🔵 USE_OPENVINO enabled via environment variable")
++  endif()
++endif()
++
+ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+ 
+-find_package(TensorRT REQUIRED)
+-find_package(Threads REQUIRED)
+-find_package(onnxruntime REQUIRED)
+-# Find CUDA Toolkit with proper environment variable support
+-if(DEFINED ENV{CUDAToolkit_ROOT})
+-    set(CUDAToolkit_ROOT $ENV{CUDAToolkit_ROOT})
+-    message(STATUS "🎯 Using CUDAToolkit_ROOT from environment: ${CUDAToolkit_ROOT}")
+-endif()
++if(USE_OPENVINO)
++  # ========================================================================
++  # OpenVINO Backend (Intel x86 / iGPU / CPU)
++  # ========================================================================
++  message(STATUS "═══════════════════════════════════════════════════════════")
++  message(STATUS "  Inference Backend: OpenVINO")
++  message(STATUS "═══════════════════════════════════════════════════════════")
+ 
+-if(DEFINED ENV{CUDA_HOME})
+-    message(STATUS "🔍 Using CUDA_HOME from environment: $ENV{CUDA_HOME}")
+-    list(APPEND CMAKE_PREFIX_PATH $ENV{CUDA_HOME})
+-endif()
++  find_package(OpenVINO REQUIRED COMPONENTS Runtime)
++  message(STATUS "✅ OpenVINO found: ${OpenVINO_VERSION}")
++
++  find_package(Threads REQUIRED)
++
++  # ONNX Runtime is optional with OpenVINO (kept for reference motion playback)
++  find_package(onnxruntime QUIET)
++  if(onnxruntime_FOUND)
++    message(STATUS "✅ ONNX Runtime found (optional, for reference motion)")
++  else()
++    message(STATUS "ℹ️  ONNX Runtime not found — reference motion via ORT disabled")
++  endif()
++
++  # No CUDA/TensorRT needed
++  add_compile_definitions(USE_OPENVINO=1)
++  add_compile_definitions(NO_CUDA=1)
+ 
+-find_package(CUDAToolkit 10.2 QUIET)
+-
+-if(CUDAToolkit_FOUND)
+-    message(STATUS "✅ CUDA Toolkit found: version ${CUDAToolkit_VERSION}")
+-    
+-    # Report CUDA architecture and paths for debugging
+-    message(STATUS "   CUDA Root: ${CUDAToolkit_TARGET_DIR}")
+-    message(STATUS "   CUDA Libraries: ${CUDAToolkit_LIBRARY_DIR}")
+-    
+-    # For CUDA 12.6+, enable newer features if available
+-    if(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.6")
+-        message(STATUS "   🚀 CUDA 12.6+ detected - enabling optimized features")
+-        # Add any CUDA 12.6+ specific optimizations here
+-        add_compile_definitions(CUDA_12_6_PLUS=1)
+-    elseif(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.0")
+-        message(STATUS "   🔧 CUDA 12.x detected")
+-        add_compile_definitions(CUDA_12_PLUS=1)
+-    endif()
+ else()
+-    # Fallback: Look for CUDA runtime libraries and headers
+-    message(STATUS "🔍 CUDA Toolkit not found via find_package, searching for runtime libraries...")
+-    message(STATUS "   This is normal for systems with runtime-only CUDA installations")
+-    
+-    # Debug: Show environment variables
+-    if(DEFINED ENV{CUDAToolkit_ROOT})
+-        message(STATUS "   🔍 Environment CUDAToolkit_ROOT: $ENV{CUDAToolkit_ROOT}")
+-    endif()
+-    if(DEFINED ENV{CUDA_HOME})
+-        message(STATUS "   🔍 Environment CUDA_HOME: $ENV{CUDA_HOME}")
+-    endif()
+-    
+-    # Enhanced search with better path prioritization - now includes dynamic version detection
+-    # First, build dynamic path lists for any CUDA versions
+-    file(GLOB CUDA_SBSA_PATHS "/usr/local/cuda*/targets/sbsa-linux/lib")
+-    file(GLOB CUDA_AARCH64_PATHS "/usr/local/cuda*/targets/aarch64-linux/lib") 
+-    file(GLOB CUDA_LIB64_PATHS "/usr/local/cuda*/lib64")
+-    
+-    find_library(CUDA_RUNTIME_LIBRARY
+-        NAMES cudart libcudart
+-        HINTS
+-            # Environment variable paths
+-            $ENV{CUDAToolkit_ROOT}/targets/sbsa-linux/lib
+-            $ENV{CUDAToolkit_ROOT}/targets/aarch64-linux/lib
+-            $ENV{CUDAToolkit_ROOT}/lib64
+-            $ENV{CUDAToolkit_ROOT}/lib
+-            $ENV{CUDA_HOME}/targets/sbsa-linux/lib
+-            $ENV{CUDA_HOME}/targets/aarch64-linux/lib
+-            $ENV{CUDA_HOME}/lib64
+-            $ENV{CUDA_HOME}/lib
+-        PATHS
+-            # Dynamic CUDA version paths (automatically found)
+-            ${CUDA_SBSA_PATHS}
+-            ${CUDA_AARCH64_PATHS}
+-            ${CUDA_LIB64_PATHS}
+-            # Static fallback paths
+-            /usr/local/cuda/targets/sbsa-linux/lib
+-            /usr/local/cuda/targets/aarch64-linux/lib
+-            /usr/local/cuda/lib64
+-            /usr/local/cuda/lib
+-            # System library paths
+-            /usr/lib/aarch64-linux-gnu
+-            /usr/lib/x86_64-linux-gnu
+-            /usr/lib64
+-            /usr/lib
+-        NO_DEFAULT_PATH
+-        )
+-    
+-    # Build dynamic include paths for any CUDA versions
+-    file(GLOB CUDA_SBSA_INCLUDE_PATHS "/usr/local/cuda*/targets/sbsa-linux/include")
+-    file(GLOB CUDA_AARCH64_INCLUDE_PATHS "/usr/local/cuda*/targets/aarch64-linux/include")
+-    file(GLOB CUDA_INCLUDE_PATHS "/usr/local/cuda*/include")
+-    
+-    find_path(CUDA_INCLUDE_DIR cuda_runtime.h
+-        HINTS
+-            # Environment variable paths
+-            $ENV{CUDAToolkit_ROOT}/targets/sbsa-linux/include
+-            $ENV{CUDAToolkit_ROOT}/targets/aarch64-linux/include
+-            $ENV{CUDAToolkit_ROOT}/include
+-            $ENV{CUDA_HOME}/targets/sbsa-linux/include
+-            $ENV{CUDA_HOME}/targets/aarch64-linux/include
+-            $ENV{CUDA_HOME}/include
+-        PATHS
+-            # Dynamic CUDA version paths (automatically found)
+-            ${CUDA_SBSA_INCLUDE_PATHS}
+-            ${CUDA_AARCH64_INCLUDE_PATHS}
+-            ${CUDA_INCLUDE_PATHS}
+-            # Static fallback paths
+-            /usr/local/cuda/targets/sbsa-linux/include
+-            /usr/local/cuda/targets/aarch64-linux/include
+-            /usr/local/cuda/include
+-            # System include paths
+-            /usr/include
+-            /usr/include/cuda
+-        PATH_SUFFIXES
+-            cuda
+-        NO_DEFAULT_PATH
+-        )
+-    
+-    # Debug: Check if files exist in Jetson-specific locations
+-    message(STATUS "🔍 Manually checking Jetson CUDA locations...")
+-    
+-    # Check for libcudart with version number (as found in your system)
+-    if(EXISTS "/usr/local/cuda/targets/sbsa-linux/lib/libcudart.so.12.6.77")
+-        message(STATUS "✅ Found libcudart.so.12.6.77 in Jetson sbsa-linux location!")
+-        set(CUDA_RUNTIME_LIBRARY "/usr/local/cuda/targets/sbsa-linux/lib/libcudart.so.12.6.77")
+-    elseif(EXISTS "/usr/local/cuda/targets/sbsa-linux/lib")
+-        # Check if any libcudart exists in sbsa-linux directory
+-        file(GLOB CUDART_FILES "/usr/local/cuda/targets/sbsa-linux/lib/libcudart*")
+-        if(CUDART_FILES)
+-            list(GET CUDART_FILES 0 FIRST_CUDART)
+-            message(STATUS "✅ Found CUDA runtime in sbsa-linux: ${FIRST_CUDART}")
+-            set(CUDA_RUNTIME_LIBRARY ${FIRST_CUDART})
+-        endif()
+-    elseif(EXISTS "/usr/local/cuda/targets/aarch64-linux/lib/libcudart.so")
+-        message(STATUS "✅ Found libcudart.so in Jetson aarch64-linux location!")
+-        set(CUDA_RUNTIME_LIBRARY "/usr/local/cuda/targets/aarch64-linux/lib/libcudart.so")
+-    elseif(EXISTS "/usr/local/cuda/lib64/libcudart.so")
+-        message(STATUS "✅ Found libcudart.so in standard location!")
+-        set(CUDA_RUNTIME_LIBRARY "/usr/local/cuda/lib64/libcudart.so")
+-    else()
+-        message(STATUS "❌ libcudart.so not found in expected locations")
+-    endif()
+-    
+-    if(EXISTS "/usr/local/cuda/targets/sbsa-linux/include/cuda_runtime.h")
+-        message(STATUS "✅ Found cuda_runtime.h in Jetson sbsa-linux location!")
+-        set(CUDA_INCLUDE_DIR "/usr/local/cuda/targets/sbsa-linux/include")
+-    elseif(EXISTS "/usr/local/cuda/targets/aarch64-linux/include/cuda_runtime.h")
+-        message(STATUS "✅ Found cuda_runtime.h in Jetson aarch64-linux location!")
+-        set(CUDA_INCLUDE_DIR "/usr/local/cuda/targets/aarch64-linux/include")
+-    elseif(EXISTS "/usr/local/cuda/include/cuda_runtime.h")
+-        message(STATUS "✅ Found cuda_runtime.h in standard location!")
+-        set(CUDA_INCLUDE_DIR "/usr/local/cuda/include")
+-    else()
+-        message(STATUS "❌ cuda_runtime.h not found in expected locations")
+-    endif()
+-    
+-    if(CUDA_RUNTIME_LIBRARY AND CUDA_INCLUDE_DIR)
+-        message(STATUS "✅ CUDA runtime components verified")
+-        
+-        # Try to detect CUDA version from headers
+-        if(EXISTS "${CUDA_INCLUDE_DIR}/cuda.h")
+-            file(STRINGS "${CUDA_INCLUDE_DIR}/cuda.h" CUDA_VERSION_DEFINES
+-                REGEX "#define CUDA_VERSION ")
+-            if(CUDA_VERSION_DEFINES MATCHES "#define CUDA_VERSION ([0-9]+)")
+-                math(EXPR CUDA_VERSION_MAJOR "${CMAKE_MATCH_1} / 1000")
+-                math(EXPR CUDA_VERSION_MINOR "(${CMAKE_MATCH_1} % 1000) / 10")
+-                set(CUDA_VERSION_STRING "${CUDA_VERSION_MAJOR}.${CUDA_VERSION_MINOR}")
+-                message(STATUS "   Detected CUDA version: ${CUDA_VERSION_STRING}")
+-                
+-                # Enable version-specific features
+-                if(CUDA_VERSION_MAJOR GREATER_EQUAL 12 AND CUDA_VERSION_MINOR GREATER_EQUAL 6)
+-                    message(STATUS "   🚀 CUDA 12.6+ detected - enabling optimized features")
+-                    add_compile_definitions(CUDA_12_6_PLUS=1)
+-                elseif(CUDA_VERSION_MAJOR GREATER_EQUAL 12)
+-                    message(STATUS "   🔧 CUDA 12.x detected")
+-                    add_compile_definitions(CUDA_12_PLUS=1)
+-                endif()
+-            endif()
+-        endif()
+-        
+-        # Create imported target for compatibility with modern CMake
+-        add_library(CUDA::cudart SHARED IMPORTED)
+-        set_target_properties(CUDA::cudart PROPERTIES
+-            IMPORTED_LOCATION "${CUDA_RUNTIME_LIBRARY}"
+-            INTERFACE_INCLUDE_DIRECTORIES "${CUDA_INCLUDE_DIR}")
+-    else()
+-        message(STATUS "❌ CUDA components not found:")
+-        if(NOT CUDA_RUNTIME_LIBRARY)
+-            message(STATUS "   - CUDA runtime library (libcudart) not found")
+-        endif()
+-        if(NOT CUDA_INCLUDE_DIR)
+-            message(STATUS "   - CUDA headers (cuda_runtime.h) not found")
+-        endif()
+-        message(FATAL_ERROR "
+-🚨 CUDA installation incomplete. Please run: 
+-   ./scripts/install_deps.sh
+-
+-💡 For Jetson systems with CUDA 12.6:
+-   - Ensure JetPack SDK development components are installed
+-   - Check if CUDA is installed at /usr/local/cuda-12.6/
+-   - Run 'ls -la /usr/local/cuda*' to verify CUDA installation")
+-    endif()
+-endif()
++  # ========================================================================
++  # TensorRT Backend (NVIDIA GPU — original path)
++  # ========================================================================
++  message(STATUS "═══════════════════════════════════════════════════════════")
++  message(STATUS "  Inference Backend: TensorRT + CUDA")
++  message(STATUS "═══════════════════════════════════════════════════════════")
++
++  find_package(TensorRT REQUIRED)
++  find_package(Threads REQUIRED)
++  find_package(onnxruntime REQUIRED)
++
++  # Find CUDA Toolkit
++  if(DEFINED ENV{CUDAToolkit_ROOT})
++      set(CUDAToolkit_ROOT $ENV{CUDAToolkit_ROOT})
++      message(STATUS "🎯 Using CUDAToolkit_ROOT from environment: ${CUDAToolkit_ROOT}")
++  endif()
++
++  if(DEFINED ENV{CUDA_HOME})
++      message(STATUS "🔍 Using CUDA_HOME from environment: $ENV{CUDA_HOME}")
++      list(APPEND CMAKE_PREFIX_PATH $ENV{CUDA_HOME})
++  endif()
++
++  find_package(CUDAToolkit 10.2 QUIET)
++
++  if(CUDAToolkit_FOUND)
++      message(STATUS "✅ CUDA Toolkit found: version ${CUDAToolkit_VERSION}")
++      message(STATUS "   CUDA Root: ${CUDAToolkit_TARGET_DIR}")
++      message(STATUS "   CUDA Libraries: ${CUDAToolkit_LIBRARY_DIR}")
++
++      if(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.6")
++          message(STATUS "   🚀 CUDA 12.6+ detected - enabling optimized features")
++          add_compile_definitions(CUDA_12_6_PLUS=1)
++      elseif(CUDAToolkit_VERSION VERSION_GREATER_EQUAL "12.0")
++          message(STATUS "   🔧 CUDA 12.x detected")
++          add_compile_definitions(CUDA_12_PLUS=1)
++      endif()
++  else()
++      # Fallback: search for CUDA runtime
++      message(STATUS "🔍 CUDA Toolkit not found via find_package, searching for runtime...")
++
++      file(GLOB CUDA_SBSA_PATHS "/usr/local/cuda*/targets/sbsa-linux/lib")
++      file(GLOB CUDA_AARCH64_PATHS "/usr/local/cuda*/targets/aarch64-linux/lib")
++      file(GLOB CUDA_LIB64_PATHS "/usr/local/cuda*/lib64")
++
++      find_library(CUDA_RUNTIME_LIBRARY
++          NAMES cudart libcudart
++          HINTS
++              $ENV{CUDAToolkit_ROOT}/targets/sbsa-linux/lib
++              $ENV{CUDAToolkit_ROOT}/targets/aarch64-linux/lib
++              $ENV{CUDAToolkit_ROOT}/lib64
++              $ENV{CUDAToolkit_ROOT}/lib
++              $ENV{CUDA_HOME}/lib64
++              $ENV{CUDA_HOME}/lib
++          PATHS
++              ${CUDA_SBSA_PATHS}
++              ${CUDA_AARCH64_PATHS}
++              ${CUDA_LIB64_PATHS}
++              /usr/local/cuda/lib64
++              /usr/local/cuda/lib
++              /usr/lib/aarch64-linux-gnu
++              /usr/lib/x86_64-linux-gnu
++              /usr/lib64
++              /usr/lib
++          NO_DEFAULT_PATH
++      )
++
++      find_path(CUDA_INCLUDE_DIR cuda_runtime.h
++          HINTS
++              $ENV{CUDAToolkit_ROOT}/include
++              $ENV{CUDA_HOME}/include
++          PATHS
++              /usr/local/cuda/include
++              /usr/include
++          NO_DEFAULT_PATH
++      )
++
++      if(CUDA_RUNTIME_LIBRARY AND CUDA_INCLUDE_DIR)
++          message(STATUS "✅ CUDA runtime found: ${CUDA_RUNTIME_LIBRARY}")
++          add_library(CUDA::cudart SHARED IMPORTED)
++          set_target_properties(CUDA::cudart PROPERTIES
++              IMPORTED_LOCATION "${CUDA_RUNTIME_LIBRARY}"
++              INTERFACE_INCLUDE_DIRECTORIES "${CUDA_INCLUDE_DIR}")
++      else()
++          message(FATAL_ERROR "CUDA not found. Install CUDA or use -DUSE_OPENVINO=ON for Intel platforms.")
++      endif()
++  endif()
++
++endif() # USE_OPENVINO
++
+ find_package(ZLIB REQUIRED)
+ 
+ # Use local unitree_sdk2 subfolder
+-# Disable building examples for unitree_sdk2
+-set(BUILD_EXAMPLES
+-    OFF
+-    CACHE BOOL "Build unitree_sdk2 examples" FORCE)
+-
++set(BUILD_EXAMPLES OFF CACHE BOOL "Build unitree_sdk2 examples" FORCE)
+ add_subdirectory(thirdparty/unitree_sdk2)
+ 
+ # Add unitree_sdk2 include directories
+ target_include_directories(${PROJECT_NAME}
+                            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/unitree_sdk2/include)
+-
+-# Link to unitree_sdk2 which includes all necessary dependencies
+ target_link_libraries(${PROJECT_NAME} INTERFACE unitree_sdk2)
+ 
+ # Examples
+diff --git a/gear_sonic_deploy/cmake/FindOpenVINO.cmake b/gear_sonic_deploy/cmake/FindOpenVINO.cmake
+new file mode 100644
+index 0000000..23f8dfe
+--- /dev/null
++++ b/gear_sonic_deploy/cmake/FindOpenVINO.cmake
+@@ -0,0 +1,43 @@
++# FindOpenVINO.cmake
++# Locate Intel OpenVINO Runtime installation.
++#
++# This module looks for OpenVINO's native CMake config (OpenVINOConfig.cmake)
++# in common installation paths. If OpenVINO_DIR is set (e.g., by setup_env.sh),
++# it will be found directly.
++#
++# Sets:
++#   OpenVINO_FOUND
++#   OpenVINO_VERSION
++#   openvino::runtime (imported target)
++
++# Common OpenVINO installation paths
++set(_OV_SEARCH_PATHS
++    /opt/intel/openvino_2026/runtime/cmake
++    /opt/intel/openvino/runtime/cmake
++    /opt/intel/openvino_2025/runtime/cmake
++    $ENV{OpenVINO_DIR}
++    $ENV{INTEL_OPENVINO_DIR}/runtime/cmake
++)
++
++# Try to find the config file
++find_package(OpenVINO QUIET CONFIG
++    PATHS ${_OV_SEARCH_PATHS}
++    NO_DEFAULT_PATH
++)
++
++if(NOT OpenVINO_FOUND)
++    # Fallback: try system paths
++    find_package(OpenVINO QUIET CONFIG)
++endif()
++
++if(OpenVINO_FOUND)
++    message(STATUS "FindOpenVINO: Found OpenVINO ${OpenVINO_VERSION}")
++else()
++    if(OpenVINO_FIND_REQUIRED)
++        message(FATAL_ERROR
++            "OpenVINO not found. Please install OpenVINO 2026 and either:\n"
++            "  1. Source /opt/intel/openvino_2026/setupvars.sh before building, or\n"
++            "  2. Set OpenVINO_DIR to point to <openvino>/runtime/cmake/\n"
++            "  Download: https://docs.openvino.ai/2026/get-started/install-openvino.html")
++    endif()
++endif()
+diff --git a/gear_sonic_deploy/deploy.sh b/gear_sonic_deploy/deploy.sh
+index 6bcc617..871944a 100755
+--- a/gear_sonic_deploy/deploy.sh
++++ b/gear_sonic_deploy/deploy.sh
+@@ -384,6 +384,10 @@ EXTRA_ARGS=""
+ if [[ "$ENV_TYPE" == "sim" ]]; then
+     EXTRA_ARGS="--disable-crc-check"
+     echo -e "${YELLOW}📋 Simulation mode: CRC check will be disabled${NC}"
++
++    # Disable CycloneDDS shared memory (iceoryx) on loopback — prevents assertion crash
++    export CYCLONEDDS_URI='<CycloneDDS><Domain><SharedMemory><Enable>false</Enable></SharedMemory></Domain></CycloneDDS>'
++    echo -e "${YELLOW}📋 Simulation mode: CycloneDDS shared memory disabled (loopback)${NC}"
+     echo ""
+ fi
+ 
+@@ -393,18 +397,25 @@ fi
+ 
+ echo -e "${BLUE}[Step 1/4]${NC} Checking prerequisites..."
+ 
+-# Check for TensorRT
+-if [ -z "$TensorRT_ROOT" ]; then
+-    echo -e "${YELLOW}⚠️  TensorRT_ROOT is not set.${NC}"
+-    echo "   Please ensure TensorRT is installed and add to your ~/.bashrc:"
+-    echo "   export TensorRT_ROOT=\$HOME/TensorRT"
+-    echo ""
+-    echo "   Get TensorRT from: https://developer.nvidia.com/tensorrt/download/10x"
+-    
+-    # Check if it exists in common locations
+-    if [ -d "$HOME/TensorRT" ]; then
+-        echo -e "${GREEN}   Found TensorRT at ~/TensorRT - setting temporarily${NC}"
+-        export TensorRT_ROOT="$HOME/TensorRT"
++# Check for inference backend prerequisites
++if [ "${USE_OPENVINO:-0}" = "1" ]; then
++    echo -e "${GREEN}✅ OpenVINO mode — TensorRT/CUDA not required${NC}"
++else
++    # Check for TensorRT (only when not using OpenVINO)
++    if [ -z "$TensorRT_ROOT" ]; then
++        echo -e "${YELLOW}⚠️  TensorRT_ROOT is not set.${NC}"
++        echo "   Please ensure TensorRT is installed and add to your ~/.bashrc:"
++        echo "   export TensorRT_ROOT=\$HOME/TensorRT"
++        echo ""
++        echo "   Get TensorRT from: https://developer.nvidia.com/tensorrt/download/10x"
++        echo ""
++        echo "   Alternatively, use OpenVINO: install OpenVINO and re-source setup_env.sh"
++
++        # Check if it exists in common locations
++        if [ -d "$HOME/TensorRT" ]; then
++            echo -e "${GREEN}   Found TensorRT at ~/TensorRT - setting temporarily${NC}"
++            export TensorRT_ROOT="$HOME/TensorRT"
++        fi
+     fi
+ fi
+ 
+@@ -550,7 +561,14 @@ if [[ "$confirm" =~ ^[Yy]$ ]] || [[ -z "$confirm" ]]; then
+     echo ""
+     echo -e "${GREEN}🚀 Starting deployment...${NC}"
+     echo ""
+-    
++
++    # Ensure unitree_sdk2's bundled CycloneDDS is loaded (not ROS2's version)
++    # Mismatched libddsc (ROS2) + libddscxx (unitree) causes memory corruption
++    UNITREE_DDS_LIB="$SCRIPT_DIR/thirdparty/unitree_sdk2/thirdparty/lib/x86_64"
++    if [ -d "$UNITREE_DDS_LIB" ]; then
++        export LD_LIBRARY_PATH="$UNITREE_DDS_LIB:$LD_LIBRARY_PATH"
++    fi
++
+     # Build the command with optional extra args
+     if [[ -n "$EXTRA_ARGS" ]]; then
+         just run g1_deploy_onnx_ref "$TARGET" "$CHECKPOINT_DECODER" "$MOTION_DATA" \
+diff --git a/gear_sonic_deploy/scripts/install_deps.sh b/gear_sonic_deploy/scripts/install_deps.sh
+index a8e413e..a60db05 100755
+--- a/gear_sonic_deploy/scripts/install_deps.sh
++++ b/gear_sonic_deploy/scripts/install_deps.sh
+@@ -3,6 +3,23 @@
+ set -e
+ 
+ echo "🚀 Installing G1 Deploy system dependencies..."
++
++# ============================================================================
++# OpenVINO Mode Detection
++# ============================================================================
++# If OpenVINO is installed, skip CUDA/TensorRT/ONNX Runtime entirely.
++USE_OPENVINO_MODE=false
++if [ "${USE_OPENVINO:-0}" = "1" ]; then
++    USE_OPENVINO_MODE=true
++elif [ -f "/opt/intel/openvino_2026/setupvars.sh" ] || \
++     [ -f "/opt/intel/openvino/setupvars.sh" ]; then
++    USE_OPENVINO_MODE=true
++fi
++
++if [ "$USE_OPENVINO_MODE" = true ]; then
++    echo "🔵 OpenVINO mode detected — CUDA/TensorRT/ONNX Runtime will be SKIPPED"
++fi
++
+ sudo apt-get update && sudo apt-get install -y libgtest-dev
+ 
+ # Detect system type and architecture
+@@ -373,7 +390,10 @@ else
+     echo "✅ Just is already installed"
+ fi
+ 
+-# Install ONNX Runtime
++# Install ONNX Runtime (skip in OpenVINO mode)
++if [ "$USE_OPENVINO_MODE" = true ]; then
++    echo "ℹ️  Skipping ONNX Runtime installation (OpenVINO mode)"
++else
+ echo "🧠 Setting up ONNX Runtime..."
+ 
+ # Allow configurable installation path
+@@ -440,6 +460,15 @@ fi
+ 
+ echo "💡 To install to a different location, set ONNX_INSTALL_PATH environment variable"
+ 
++fi  # end of OpenVINO mode skip for ONNX Runtime
++
++# ============================================================================
++# CUDA Section (skip entirely in OpenVINO mode)
++# ============================================================================
++if [ "$USE_OPENVINO_MODE" = true ]; then
++    echo "ℹ️  Skipping CUDA/TensorRT installation (OpenVINO mode)"
++else
++
+ # Function to check for CUDA toolkit (nvcc compiler) - silent check
+ check_cuda_toolkit() {
+     # Check for nvcc in PATH
+@@ -830,6 +859,8 @@ else
+     fi
+ fi
+ 
++fi  # end of OpenVINO mode skip for CUDA
++
+ # Initialize Git LFS
+ echo "📁 Setting up Git LFS..."
+ if git lfs install --force 2>/dev/null; then
+@@ -849,7 +880,17 @@ echo ""
+ echo "🎉 System dependencies installation complete!"
+ echo ""
+ 
+-if [ "$IS_JETSON" = true ]; then
++if [ "$USE_OPENVINO_MODE" = true ]; then
++    echo "🔵 OpenVINO mode — next steps:"
++    echo "   1. Ensure OpenVINO is installed at /opt/intel/openvino_2026"
++    echo "   2. Run 'source scripts/setup_env.sh' to set up the environment"
++    echo "   3. Run 'just build' or 'cmake -DUSE_OPENVINO=ON' to build"
++    echo ""
++    echo "💡 Intel x86 tips:"
++    echo "   - OpenVINO uses Intel GPU (iGPU/dGPU) by default, CPU as fallback"
++    echo "   - No CUDA/TensorRT/NVIDIA drivers needed"
++    echo "   - ROS2 Jazzy is supported natively"
++elif [ "$IS_JETSON" = true ]; then
+     echo "🤖 Jetson-specific setup completed!"
+     echo ""
+     echo "📋 Next steps for Jetson system:"
+@@ -857,70 +898,42 @@ if [ "$IS_JETSON" = true ]; then
+     echo "   2. Run 'source scripts/setup_env.sh' to configure paths for Jetson"
+     echo "   3. Run 'just build' to build the project"
+     echo ""
+-    echo "💡 Jetson tips:"
+-    echo "   - CUDA is typically pre-installed at /usr/local/cuda-12.6, /usr/local/cuda-11.4 or /usr/local/cuda-10.2"
+-    echo "   - TensorRT is usually available at /usr/lib/aarch64-linux-gnu/"
+-    echo "   - If build fails, you may need to install JetPack SDK development components"
+-    echo "   - Monitor system temperature during compilation (use 'tegrastats')"
+-    echo "   - For CUDA 12.6 systems, ensure you have the latest JetPack SDK Manager"
+-    echo ""
+-    
++
+     # Install JetPack for Jetson systems (includes all DLA libraries)
+     echo "🔧 Installing JetPack for complete Jetson development environment..."
+-    
++
+     update_package_cache
+-    
++
+     if sudo apt install -y nvidia-jetpack; then
+         echo "✅ JetPack installed successfully - includes all DLA libraries!"
+-        echo "   This resolves all TensorRT DLA dependencies"
+     else
+         echo "⚠️  JetPack installation failed (may have version conflicts)"
+-        echo "   💡 Try: sudo apt update && sudo apt install -y nvidia-jetpack"
+-        echo "   🔄 If issues persist, build should still work with existing libraries"
+     fi
+ else
+-    # Non-Jetson systems
++    # Non-Jetson, non-OpenVINO systems
+     echo "📋 Next steps for $ARCH system:"
+-echo "   1. Make sure TensorRT is installed and TensorRT_ROOT is set"
+-echo "   2. Run 'source scripts/setup_env.sh' to set up the environment"
+-echo "   3. Run 'just build' to build the project"
+-echo ""
+-    
+-    if [[ "$ARCH" == "aarch64" ]]; then
+-        echo "💡 ARM64 tips:"
+-        echo "   - CUDA may be installed at /usr/local/cuda or system locations"
+-        echo "   - TensorRT typically installed via package manager"
+-        echo "   - DLA libraries not needed on non-Jetson ARM64 systems"
+-    elif [[ "$ARCH" == "x86_64" ]]; then
+-        echo "💡 x86_64 tips:"
+-        echo "   - CUDA typically at /usr/local/cuda or via CUDA toolkit"
+-        echo "   - TensorRT available from NVIDIA or package repositories"
+-        echo "   - Use nvidia-smi to check GPU compatibility"
+-        echo "   - DLA libraries typically not needed on desktop GPUs"
+-    fi
++    echo "   1. Make sure TensorRT is installed and TensorRT_ROOT is set"
++    echo "   2. Run 'source scripts/setup_env.sh' to set up the environment"
++    echo "   3. Run 'just build' to build the project"
+ fi
+ 
+ echo ""
+ echo "⚠️  If you encounter any issues:"
+-if [ "$IS_JETSON" = true ]; then
++if [ "$USE_OPENVINO_MODE" = true ]; then
++    echo "   🔵 OpenVINO troubleshooting:"
++    echo "   - Verify: source /opt/intel/openvino_2026/setupvars.sh"
++    echo "   - Check GPU: clinfo (for Intel GPU)"
++    echo "   - Check environment: echo \$USE_OPENVINO"
++elif [ "$IS_JETSON" = true ]; then
+     echo "   🤖 Jetson-specific troubleshooting:"
+     echo "   - Check JetPack version: jetson_release"
+     echo "   - Verify CUDA installation: ls -la /usr/local/cuda*"
+-    echo "   - Monitor resources: tegrastats"
+     echo "   - For DLA linking errors: Install full JetPack SDK"
+-    echo "   - For help: https://developer.nvidia.com/embedded/jetpack"
+-elif [[ "$ARCH" == "aarch64" ]]; then
+-    echo "   🔧 ARM64 troubleshooting:"
+-    echo "   - Check CUDA: ls -la /usr/local/cuda*"
+-    echo "   - Verify libraries: ldconfig -p | grep cuda"
+-    echo "   - DLA errors: DLA not supported on non-Jetson ARM64"
+ elif [[ "$ARCH" == "x86_64" ]]; then
+     echo "   🖥️  x86_64 troubleshooting:"
+     echo "   - Check GPU: nvidia-smi"
+     echo "   - Verify CUDA: nvcc --version"
+     echo "   - Check environment: echo \$CUDA_HOME \$TensorRT_ROOT"
+-    echo "   - DLA errors: DLA typically not supported on desktop GPUs"
+ else
+     echo "   - Check that all environment variables are set correctly"
+-    echo "   - Verify CUDA installation for your architecture"
+ fi
+diff --git a/gear_sonic_deploy/scripts/setup_env.sh b/gear_sonic_deploy/scripts/setup_env.sh
+index 5ba045d..ed271e3 100755
+--- a/gear_sonic_deploy/scripts/setup_env.sh
++++ b/gear_sonic_deploy/scripts/setup_env.sh
+@@ -5,6 +5,41 @@
+ 
+ echo "🔧 Setting up G1 Deploy environment..."
+ 
++# ── OpenVINO detection ─────────────────────────────────────────────────────
++# Check for OpenVINO installation and set USE_OPENVINO=1 if found
++OPENVINO_FOUND=false
++OPENVINO_PATHS=(
++    "/opt/intel/openvino_2026"
++    "/opt/intel/openvino"
++    "/opt/intel/openvino_2025"
++    "$HOME/intel/openvino"
++)
++
++for ov_path in "${OPENVINO_PATHS[@]}"; do
++    if [ -f "$ov_path/setupvars.sh" ]; then
++        echo "✅ OpenVINO found at: $ov_path"
++        source "$ov_path/setupvars.sh" 2>/dev/null || true
++        export OpenVINO_DIR="$ov_path/runtime/cmake"
++        export USE_OPENVINO=1
++        OPENVINO_FOUND=true
++        break
++    fi
++done
++
++if [ "$OPENVINO_FOUND" = false ]; then
++    # Try pkg-config or cmake find
++    if pkg-config --exists openvino 2>/dev/null; then
++        echo "✅ OpenVINO found via pkg-config"
++        export USE_OPENVINO=1
++        OPENVINO_FOUND=true
++    fi
++fi
++
++if [ "$OPENVINO_FOUND" = true ]; then
++    echo "🔵 OpenVINO mode enabled (USE_OPENVINO=1)"
++    echo "   CUDA/TensorRT detection will be skipped"
++fi
++
+ # Run jetson_clocks on Jetson systems (bare-metal only)
+ if command -v jetson_clocks &> /dev/null; then
+     if [ -f "/.dockerenv" ]; then
+@@ -162,9 +197,10 @@ if [ -f "src/g1/g1_deploy_onnx_ref/config/fastrtps_profile.xml" ]; then
+     echo "✅ FastRTPS production profile configured"
+ fi
+ 
+-# TensorRT Environment Setup
+-# Check if TensorRT_ROOT is already set, if not try to load from .bashrc
+-if [ -z "$TensorRT_ROOT" ] && [ -f "$HOME/.bashrc" ]; then
++# TensorRT Environment Setup (skip if OpenVINO mode)
++if [ "$OPENVINO_FOUND" = true ]; then
++    echo "ℹ️  Skipping TensorRT setup (OpenVINO mode)"
++elif [ -z "$TensorRT_ROOT" ] && [ -f "$HOME/.bashrc" ]; then
+     # Extract TensorRT_ROOT from .bashrc if it exists
+     BASHRC_TENSORRT=$(grep -o 'export TensorRT_ROOT=.*' "$HOME/.bashrc" | head -n1 | cut -d'=' -f2 | tr -d '"' | envsubst)
+     if [ -n "$BASHRC_TENSORRT" ]; then
+@@ -173,41 +209,43 @@ if [ -z "$TensorRT_ROOT" ] && [ -f "$HOME/.bashrc" ]; then
+     fi
+ fi
+ 
+-if [ -n "$TensorRT_ROOT" ]; then
+-    export LD_LIBRARY_PATH="$TensorRT_ROOT/lib:$LD_LIBRARY_PATH"
+-    echo "✅ TensorRT environment configured"
+-    
+-    # For Jetson systems, ensure DLA libraries are accessible for runtime
+-    if [[ "$ARCH" == "aarch64" ]] && [[ -f "/etc/nv_tegra_release" || -d "/usr/src/jetson_multimedia_api" ]]; then
+-        echo "🤖 Jetson system detected - setting up DLA library paths for runtime"
+-        
+-        # Create missing libcudla.so.1 symlink if needed (TensorRT expects this name)
+-        if [ -f "/usr/lib/aarch64-linux-gnu/nvidia/libnvcudla.so" ] && [ ! -f "/usr/lib/aarch64-linux-gnu/nvidia/libcudla.so.1" ]; then
+-            echo "   🔗 Creating libcudla.so.1 symlink for TensorRT compatibility..."
+-            sudo ln -sf libnvcudla.so /usr/lib/aarch64-linux-gnu/nvidia/libcudla.so.1 2>/dev/null || echo "   ⚠️  Could not create symlink (may need sudo)"
+-            sudo ln -sf libnvcudla.so /usr/lib/aarch64-linux-gnu/nvidia/libcudla.so 2>/dev/null || echo "   ⚠️  Could not create symlink (may need sudo)"
+-            echo "   ✅ libcudla.so.1 → libnvcudla.so"
+-        fi
+-        
+-        # CRITICAL: Add DLA library path for runtime (this is why your executable can't run)
+-        export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu/nvidia:$LD_LIBRARY_PATH"
+-        echo "   📁 Added DLA library path to current session"
+-        
+-        # Make it persistent so you don't need to run setup_env.sh every time
+-        if ! grep -q "/usr/lib/aarch64-linux-gnu/nvidia" ~/.bashrc 2>/dev/null; then
+-            echo 'export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu/nvidia:$LD_LIBRARY_PATH"' >> ~/.bashrc
+-            echo "   ✅ Added DLA library path to ~/.bashrc for future sessions"
+-        fi
+-        
+-        echo "   ℹ️  Your executable should now be able to find DLA libraries at runtime"
+-    fi
+-else
+-    echo "⚠️  TensorRT_ROOT is not set"
+-    echo "   Please install TensorRT and add 'export TensorRT_ROOT=/path/to/tensorrt' to your ~/.bashrc"
+-    echo "   Or source ~/.bashrc before running this script"
++if [ "$OPENVINO_FOUND" != true ]; then
++  if [ -n "$TensorRT_ROOT" ]; then
++      export LD_LIBRARY_PATH="$TensorRT_ROOT/lib:$LD_LIBRARY_PATH"
++      echo "✅ TensorRT environment configured"
++
++      # For Jetson systems, ensure DLA libraries are accessible for runtime
++      if [[ "$ARCH" == "aarch64" ]] && [[ -f "/etc/nv_tegra_release" || -d "/usr/src/jetson_multimedia_api" ]]; then
++          echo "🤖 Jetson system detected - setting up DLA library paths for runtime"
++
++          if [ -f "/usr/lib/aarch64-linux-gnu/nvidia/libnvcudla.so" ] && [ ! -f "/usr/lib/aarch64-linux-gnu/nvidia/libcudla.so.1" ]; then
++              echo "   🔗 Creating libcudla.so.1 symlink for TensorRT compatibility..."
++              sudo ln -sf libnvcudla.so /usr/lib/aarch64-linux-gnu/nvidia/libcudla.so.1 2>/dev/null || echo "   ⚠️  Could not create symlink (may need sudo)"
++              sudo ln -sf libnvcudla.so /usr/lib/aarch64-linux-gnu/nvidia/libcudla.so 2>/dev/null || echo "   ⚠️  Could not create symlink (may need sudo)"
++              echo "   ✅ libcudla.so.1 → libnvcudla.so"
++          fi
++
++          export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu/nvidia:$LD_LIBRARY_PATH"
++          echo "   📁 Added DLA library path to current session"
++
++          if ! grep -q "/usr/lib/aarch64-linux-gnu/nvidia" ~/.bashrc 2>/dev/null; then
++              echo 'export LD_LIBRARY_PATH="/usr/lib/aarch64-linux-gnu/nvidia:$LD_LIBRARY_PATH"' >> ~/.bashrc
++              echo "   ✅ Added DLA library path to ~/.bashrc for future sessions"
++          fi
++
++          echo "   ℹ️  Your executable should now be able to find DLA libraries at runtime"
++      fi
++  else
++      echo "⚠️  TensorRT_ROOT is not set"
++      echo "   Please install TensorRT and add 'export TensorRT_ROOT=/path/to/tensorrt' to your ~/.bashrc"
++      echo "   Or source ~/.bashrc before running this script"
++  fi
+ fi
+ 
+-# CUDA Environment Setup
++# CUDA Environment Setup (skip if OpenVINO mode)
++if [ "$OPENVINO_FOUND" = true ]; then
++    echo "ℹ️  Skipping CUDA setup (OpenVINO mode — no CUDA required)"
++else
+ echo "🔧 Setting up CUDA environment..."
+ 
+ # Function to detect and set CUDA toolkit root
+@@ -296,6 +334,8 @@ else
+     fi
+ fi
+ 
++fi  # end of OPENVINO_FOUND != true (CUDA section)
++
+ # Add ONNX Runtime to library path if not already there
+ if [ -d "/opt/onnxruntime/lib" ]; then
+     export LD_LIBRARY_PATH="/opt/onnxruntime/lib:$LD_LIBRARY_PATH"
+diff --git a/gear_sonic_deploy/src/CMakeLists.txt b/gear_sonic_deploy/src/CMakeLists.txt
+index 9471d2f..0185999 100644
+--- a/gear_sonic_deploy/src/CMakeLists.txt
++++ b/gear_sonic_deploy/src/CMakeLists.txt
+@@ -1,3 +1,8 @@
+-add_subdirectory(TRTInference)
+-add_subdirectory(g1)
++if(USE_OPENVINO)
++  add_subdirectory(OVInference)
++else()
++  add_subdirectory(TRTInference)
++endif()
++
+ add_subdirectory(audio_thread)
++add_subdirectory(g1)
+diff --git a/gear_sonic_deploy/src/OVInference/CMakeLists.txt b/gear_sonic_deploy/src/OVInference/CMakeLists.txt
+new file mode 100644
+index 0000000..e7705c7
+--- /dev/null
++++ b/gear_sonic_deploy/src/OVInference/CMakeLists.txt
+@@ -0,0 +1,29 @@
++set(SRC_FILES
++    "OVInferenceEngine.cpp"
++    "OVInferenceEngine.h"
++    "OVInferenceEngine.inl"
++)
++
++source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SRC_FILES})
++
++add_library(OVInference ${SRC_FILES})
++
++set_target_properties(OVInference PROPERTIES
++    CXX_STANDARD 20
++    CXX_STANDARD_REQUIRED ON
++    CXX_EXTENSIONS OFF
++)
++
++# Find OpenVINO
++find_package(OpenVINO REQUIRED COMPONENTS Runtime)
++
++target_include_directories(OVInference
++    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
++    PRIVATE ${PROJECT_SOURCE_DIR}/src
++)
++
++target_link_libraries(OVInference PUBLIC openvino::runtime)
++
++if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
++    target_compile_options(OVInference PRIVATE -Wno-deprecated-declarations)
++endif()
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+new file mode 100644
+index 0000000..c264c72
+--- /dev/null
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.cpp
+@@ -0,0 +1,304 @@
++/**
++ * @file OVInferenceEngine.cpp
++ * @brief OpenVINO inference engine implementation.
++ *
++ * Loads ONNX models directly via OpenVINO 2026 Runtime API.
++ * Default device: NPU (Intel integrated/discrete), fallback: CPU.
++ */
++
++#include "OVInferenceEngine.h"
++
++#include <openvino/openvino.hpp>
++#include <iostream>
++#include <unordered_map>
++#include <algorithm>
++#include <numeric>
++#include <cassert>
++#include <filesystem>
++#include <cstdlib>
++
++// ============================================================================
++// Helper: Determine model cache directory
++// ============================================================================
++// Priority: $OV_CACHE_DIR > $HOME/.cache/openvino_model_cache > /tmp/openvino_model_cache
++static std::string GetCacheDir() {
++    // Check environment variable override
++    const char* env_cache = std::getenv("OV_CACHE_DIR");
++    if (env_cache && env_cache[0] != '\0') {
++        std::filesystem::create_directories(env_cache);
++        return env_cache;
++    }
++
++    // Default: ~/.cache/openvino_model_cache
++    const char* home = std::getenv("HOME");
++    std::string cache_dir;
++    if (home && home[0] != '\0') {
++        cache_dir = std::string(home) + "/.cache/openvino_model_cache";
++    } else {
++        cache_dir = "/tmp/openvino_model_cache";
++    }
++
++    std::filesystem::create_directories(cache_dir);
++    return cache_dir;
++}
++
++// ============================================================================
++// Implementation (pimpl)
++// ============================================================================
++class OVInferenceEngine::Impl {
++public:
++    ov::Core core;
++    std::shared_ptr<ov::Model> model;
++    ov::CompiledModel compiled_model;
++    ov::InferRequest infer_request;
++
++    std::string device_used;
++    bool initialized = false;
++
++    // Cached tensor metadata
++    struct TensorMeta {
++        ov::element::Type element_type;
++        ov::Shape shape;
++        size_t byte_size;
++    };
++    std::unordered_map<std::string, TensorMeta> input_meta;
++    std::unordered_map<std::string, TensorMeta> output_meta;
++
++    std::vector<std::string> input_names;
++    std::vector<std::string> output_names;
++};
++
++// ============================================================================
++// Helper: Convert ov::element::Type to our DataType enum
++// ============================================================================
++static DataType OVTypeToDataType(ov::element::Type t) {
++    if (t == ov::element::f32)   return DataType::FLOAT;
++    if (t == ov::element::f16)   return DataType::HALF;
++    if (t == ov::element::i8)    return DataType::INT8;
++    if (t == ov::element::i32)   return DataType::INT32;
++    if (t == ov::element::boolean) return DataType::BOOL;
++    if (t == ov::element::u8)    return DataType::UINT8;
++    if (t == ov::element::i64)   return DataType::INT64;
++    return DataType::UNKNOWN;
++}
++
++// ============================================================================
++// Construction / Destruction
++// ============================================================================
++OVInferenceEngine::OVInferenceEngine() : m_impl(std::make_shared<Impl>()) {}
++
++OVInferenceEngine::~OVInferenceEngine() { Destroy(); }
++
++// ============================================================================
++// Initialize (TRT-compatible signature)
++// ============================================================================
++bool OVInferenceEngine::Initialize(const std::string& modelPath, int /*deviceID*/,
++                                   const Options::AxisNames& /*axisNames*/) {
++    // Use AUTO:NPU,CPU as default — OpenVINO will pick best available
++    return Initialize(modelPath, "AUTO:GPU,CPU", Precision::FP32);
++}
++
++// ============================================================================
++// Initialize (extended, with device selection)
++// ============================================================================
++bool OVInferenceEngine::Initialize(const std::string& modelPath, const std::string& device,
++                                   Precision precision) {
++    try {
++        std::cout << "[OVInference] Loading model: " << modelPath << std::endl;
++        std::cout << "[OVInference] Requested device: " << device << std::endl;
++
++        // Print available devices
++        auto devices = m_impl->core.get_available_devices();
++        std::cout << "[OVInference] Available devices:";
++        for (const auto& d : devices) std::cout << " " << d;
++        std::cout << std::endl;
++
++        // Enable model caching for faster subsequent loads (GPU/NPU compilation is cached on disk)
++        std::string cache_dir = GetCacheDir();
++        if (!cache_dir.empty()) {
++            m_impl->core.set_property(ov::cache_dir(cache_dir));
++            std::cout << "[OVInference] Model cache dir: " << cache_dir << std::endl;
++        }
++
++        // Read model (supports ONNX natively)
++        m_impl->model = m_impl->core.read_model(modelPath);
++
++        // Set precision hint
++        ov::AnyMap config;
++        if (precision == Precision::FP16) {
++            config[ov::hint::inference_precision.name()] = ov::element::f16;
++        } else {
++            config[ov::hint::inference_precision.name()] = ov::element::f32;
++        }
++        // Latency-optimized for real-time control
++        config[ov::hint::performance_mode.name()] = ov::hint::PerformanceMode::LATENCY;
++
++        // Compile model (uses cache if available, otherwise compiles and stores to cache)
++        m_impl->compiled_model = m_impl->core.compile_model(m_impl->model, device, config);
++        m_impl->device_used = device;
++
++        // Create inference request
++        m_impl->infer_request = m_impl->compiled_model.create_infer_request();
++
++        // Cache input metadata
++        for (const auto& input : m_impl->model->inputs()) {
++            std::string name = input.get_any_name();
++            auto shape = input.get_shape();
++            auto type = input.get_element_type();
++            size_t byte_size = ov::shape_size(shape) * type.size();
++
++            m_impl->input_meta[name] = {type, shape, byte_size};
++            m_impl->input_names.push_back(name);
++        }
++
++        // Cache output metadata
++        for (const auto& output : m_impl->model->outputs()) {
++            std::string name = output.get_any_name();
++            auto shape = output.get_shape();
++            auto type = output.get_element_type();
++            size_t byte_size = ov::shape_size(shape) * type.size();
++
++            m_impl->output_meta[name] = {type, shape, byte_size};
++            m_impl->output_names.push_back(name);
++        }
++
++        m_impl->initialized = true;
++
++        std::cout << "[OVInference] ✓ Model compiled on device: " << device << std::endl;
++        std::cout << "[OVInference]   Inputs: " << m_impl->input_names.size()
++                  << ", Outputs: " << m_impl->output_names.size() << std::endl;
++
++        return true;
++
++    } catch (const std::exception& e) {
++        std::cerr << "[OVInference] ✗ Failed to initialize: " << e.what() << std::endl;
++        m_impl->initialized = false;
++        return false;
++    }
++}
++
++// ============================================================================
++// InitInputs — for dynamic shapes (reshaping). Static shapes: no-op.
++// ============================================================================
++bool OVInferenceEngine::InitInputs(const AxisSizes& /*axisSizes*/) {
++    // For static ONNX models used in this pipeline, no reshape is needed.
++    // If dynamic shapes are required in the future, implement reshape here.
++    return m_impl->initialized;
++}
++
++// ============================================================================
++// Destroy
++// ============================================================================
++void OVInferenceEngine::Destroy() {
++    if (m_impl) {
++        m_impl->initialized = false;
++        m_impl->input_meta.clear();
++        m_impl->output_meta.clear();
++        m_impl->input_names.clear();
++        m_impl->output_names.clear();
++    }
++}
++
++// ============================================================================
++// SetInputData (sync)
++// ============================================================================
++void OVInferenceEngine::SetInputData(const std::string& name, const void* data, size_t byteCount) {
++    if (!m_impl->initialized) return;
++
++    auto it = m_impl->input_meta.find(name);
++    if (it == m_impl->input_meta.end()) {
++        std::cerr << "[OVInference] ✗ Unknown input tensor: " << name << std::endl;
++        return;
++    }
++
++    // Get the input tensor from the infer request and copy data into it
++    ov::Tensor tensor = m_impl->infer_request.get_tensor(name);
++    size_t copy_size = std::min(byteCount, it->second.byte_size);
++    std::memcpy(tensor.data(), data, copy_size);
++}
++
++// ============================================================================
++// GetOutputData (sync)
++// ============================================================================
++void OVInferenceEngine::GetOutputData(const std::string& name, void* data, size_t byteCount) {
++    if (!m_impl->initialized) return;
++
++    auto it = m_impl->output_meta.find(name);
++    if (it == m_impl->output_meta.end()) {
++        std::cerr << "[OVInference] ✗ Unknown output tensor: " << name << std::endl;
++        return;
++    }
++
++    ov::Tensor tensor = m_impl->infer_request.get_tensor(name);
++    size_t copy_size = std::min(byteCount, it->second.byte_size);
++    std::memcpy(data, tensor.data(), copy_size);
++}
++
++// ============================================================================
++// Async variants (stream parameter ignored — OpenVINO manages its own queues)
++// ============================================================================
++void OVInferenceEngine::SetInputDataAsync(const std::string& name, const void* data, size_t byteCount, cudaStream_t) {
++    SetInputData(name, data, byteCount);
++}
++
++void OVInferenceEngine::GetOutputDataAsync(const std::string& name, void* data, size_t byteCount, cudaStream_t) {
++    GetOutputData(name, data, byteCount);
++}
++
++// ============================================================================
++// Enqueue (run inference)
++// ============================================================================
++bool OVInferenceEngine::Enqueue(cudaStream_t /*stream*/) {
++    if (!m_impl->initialized) return false;
++
++    try {
++        m_impl->infer_request.infer();  // Synchronous inference
++        return true;
++    } catch (const std::exception& e) {
++        std::cerr << "[OVInference] ✗ Inference failed: " << e.what() << std::endl;
++        return false;
++    }
++}
++
++// ============================================================================
++// Metadata queries
++// ============================================================================
++std::vector<std::string> OVInferenceEngine::GetInputTensorNames() const {
++    return m_impl->input_names;
++}
++
++std::vector<std::string> OVInferenceEngine::GetOutputTensorNames() const {
++    return m_impl->output_names;
++}
++
++bool OVInferenceEngine::GetTensorShape(std::string name, std::vector<int64_t>& shape) const {
++    // Check inputs
++    auto it = m_impl->input_meta.find(name);
++    if (it != m_impl->input_meta.end()) {
++        shape.clear();
++        for (auto dim : it->second.shape) shape.push_back(static_cast<int64_t>(dim));
++        return true;
++    }
++    // Check outputs
++    auto oit = m_impl->output_meta.find(name);
++    if (oit != m_impl->output_meta.end()) {
++        shape.clear();
++        for (auto dim : oit->second.shape) shape.push_back(static_cast<int64_t>(dim));
++        return true;
++    }
++    return false;
++}
++
++DataType OVInferenceEngine::GetTensorDataType(std::string name) const {
++    auto it = m_impl->input_meta.find(name);
++    if (it != m_impl->input_meta.end()) return OVTypeToDataType(it->second.element_type);
++
++    auto oit = m_impl->output_meta.find(name);
++    if (oit != m_impl->output_meta.end()) return OVTypeToDataType(oit->second.element_type);
++
++    return DataType::UNKNOWN;
++}
++
++std::string OVInferenceEngine::GetDevice() const {
++    return m_impl->device_used;
++}
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+new file mode 100644
+index 0000000..5a5a7fe
+--- /dev/null
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.h
+@@ -0,0 +1,174 @@
++#pragma once
++
++/**
++ * @file OVInferenceEngine.h
++ * @brief OpenVINO-based inference engine — drop-in replacement for TRTInferenceEngine.
++ *
++ * Provides the same public interface (SetInputData / GetOutputData / Enqueue) so that
++ * higher-level code (PolicyEngine, Encoder, Planner) can switch backends via a typedef
++ * or compile-time flag without source changes.
++ *
++ * Default device priority: Intel GPU → CPU (configurable via Initialize()).
++ */
++
++#include <string>
++#include <memory>
++#include <vector>
++#include <map>
++#include <cstring>
++#include <stdexcept>
++
++// --------------------------------------------------------------------------
++// Shared enums (same as TRTInference for API compatibility)
++// --------------------------------------------------------------------------
++#ifndef INFERENCE_ENUMS_DEFINED
++#define INFERENCE_ENUMS_DEFINED
++
++enum class Precision {
++    FP32,
++    FP16
++};
++
++enum class DataType {
++    FLOAT,
++    HALF,
++    INT8,
++    INT32,
++    BOOL,
++    UINT8,
++    INT64,
++    UNKNOWN
++};
++
++#endif // INFERENCE_ENUMS_DEFINED
++
++// --------------------------------------------------------------------------
++// Options struct (compatible with TRT Options, only relevant fields used)
++// --------------------------------------------------------------------------
++struct Options {
++    using AxisNames = std::map<std::string, std::map<int, std::string>>;
++    using AxisSizes = std::map<std::string, std::tuple<int, int, int>>;
++    using ShapeTensorSizes = std::map<std::string, std::tuple<std::vector<int>, std::vector<int>, std::vector<int>>>;
++
++    Precision        precision = Precision::FP32;
++    AxisNames        dynamic_axes_names;
++    AxisSizes        dynamic_axes_sizes;
++    ShapeTensorSizes shape_tensor_sizes;
++    std::tuple<int, int, int> defaultSizes = {1, 8, 16};
++    int              deviceID = 0;
++
++    // OpenVINO-specific: preferred device ("GPU", "CPU", "AUTO", "GPU.0", etc.)
++    std::string ov_device = "GPU";
++    // Fallback device when preferred is unavailable
++    std::string ov_fallback_device = "CPU";
++};
++
++// --------------------------------------------------------------------------
++// Stub: ConvertONNXToTRT is a no-op for OpenVINO (ONNX loaded directly)
++// Returns the same path as "generated file" since OV reads ONNX natively.
++// --------------------------------------------------------------------------
++inline bool ConvertONNXToTRT(
++    const Options& /*options*/,
++    const std::string& onnxModelPath,
++    std::string& generatedFile,
++    const std::string /*prefix*/ = "",
++    bool /*forceConvert*/ = false)
++{
++    // OpenVINO reads ONNX directly — no conversion step needed.
++    generatedFile = onnxModelPath;
++    return true;
++}
++
++// --------------------------------------------------------------------------
++// Pinned-memory vector replacement: on CPU/iGPU we use standard allocator.
++// The typedef is kept so existing code using TPinnedVector<T> compiles as-is.
++// --------------------------------------------------------------------------
++template<typename T>
++using TPinnedVector = std::vector<T>;
++
++// --------------------------------------------------------------------------
++// Dummy cudaStream_t for API compatibility (OpenVINO doesn't use CUDA streams)
++// --------------------------------------------------------------------------
++#ifndef OV_CUDA_COMPAT_DEFINED
++#define OV_CUDA_COMPAT_DEFINED
++using cudaStream_t = void*;
++#endif
++
++// --------------------------------------------------------------------------
++// OVInferenceEngine
++// --------------------------------------------------------------------------
++class OVInferenceEngine {
++public:
++    OVInferenceEngine();
++    ~OVInferenceEngine();
++
++    using AxisSizes = std::map<std::string, int>;
++
++    /**
++     * @brief Load and compile an ONNX model with OpenVINO.
++     * @param modelPath Path to ONNX file (or OpenVINO IR .xml)
++     * @param deviceID Ignored (kept for API compat); use Options::ov_device instead.
++     * @param axisNames Dynamic axis metadata (used for reshape if needed)
++     * @return true on success
++     */
++    bool Initialize(const std::string& modelPath, int deviceID = 0,
++                    const Options::AxisNames& axisNames = {});
++
++    /**
++     * @brief Extended initialize with device selection.
++     * @param modelPath Path to ONNX file
++     * @param device OpenVINO device string ("GPU", "CPU", "AUTO:GPU,CPU")
++     * @param precision Inference precision hint
++     * @return true on success
++     */
++    bool Initialize(const std::string& modelPath, const std::string& device,
++                    Precision precision = Precision::FP32);
++
++    bool InitInputs(const AxisSizes& axisSizes = {});
++    void Destroy();
++
++    // Synchronous data transfer (memcpy into internal buffers)
++    void SetInputData(const std::string& name, const void* data, size_t byteCount);
++    template<typename T> void SetInputData(const std::string& name, const T* data, size_t elementCount);
++    template<typename T> void SetInputData(const std::string& name, const std::vector<T>& data);
++
++    void GetOutputData(const std::string& name, void* data, size_t byteCount);
++    template<typename T> void GetOutputData(const std::string& name, T* data, size_t elementCount);
++    template<typename T> void GetOutputData(const std::string& name, std::vector<T>& data);
++
++    // Async variants — for OpenVINO these are identical to sync (stream param ignored)
++    void SetInputDataAsync(const std::string& name, const void* data, size_t byteCount, cudaStream_t);
++    template<typename T> void SetInputDataAsync(const std::string& name, const T* data, size_t elementCount, cudaStream_t);
++    template<typename T> void SetInputDataAsync(const std::string& name, const std::vector<T>& data, cudaStream_t);
++
++    void GetOutputDataAsync(const std::string& name, void* data, size_t byteCount, cudaStream_t);
++    template<typename T> void GetOutputDataAsync(const std::string& name, T* data, size_t elementCount, cudaStream_t);
++    template<typename T> void GetOutputDataAsync(const std::string& name, std::vector<T>& data, cudaStream_t);
++
++    std::vector<std::string> GetInputTensorNames() const;
++    std::vector<std::string> GetOutputTensorNames() const;
++
++    bool GetTensorShape(std::string name, std::vector<int64_t>& shape) const;
++    DataType GetTensorDataType(std::string name) const;
++
++    /**
++     * @brief Run inference (stream param ignored for OpenVINO).
++     */
++    bool Enqueue(cudaStream_t stream = nullptr);
++
++    /**
++     * @brief Get the actual device the model was compiled on.
++     */
++    std::string GetDevice() const;
++
++private:
++    class Impl;
++    std::shared_ptr<Impl> m_impl;
++};
++
++// --------------------------------------------------------------------------
++// Typedef for drop-in replacement
++// --------------------------------------------------------------------------
++using TRTInferenceEngine = OVInferenceEngine;
++
++#include "OVInferenceEngine.inl"
+diff --git a/gear_sonic_deploy/src/OVInference/OVInferenceEngine.inl b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.inl
+new file mode 100644
+index 0000000..c3ec464
+--- /dev/null
++++ b/gear_sonic_deploy/src/OVInference/OVInferenceEngine.inl
+@@ -0,0 +1,41 @@
++#pragma once
++
++template<typename T>
++void OVInferenceEngine::SetInputData(const std::string& name, const T* data, size_t elementCount) {
++    SetInputData(name, static_cast<const void*>(data), sizeof(T) * elementCount);
++}
++
++template<typename T>
++void OVInferenceEngine::SetInputData(const std::string& name, const std::vector<T>& data) {
++    SetInputData(name, static_cast<const void*>(data.data()), sizeof(T) * data.size());
++}
++
++template<typename T>
++void OVInferenceEngine::GetOutputData(const std::string& name, T* data, size_t elementCount) {
++    GetOutputData(name, static_cast<void*>(data), sizeof(T) * elementCount);
++}
++
++template<typename T>
++void OVInferenceEngine::GetOutputData(const std::string& name, std::vector<T>& data) {
++    GetOutputData(name, static_cast<void*>(data.data()), sizeof(T) * data.size());
++}
++
++template<typename T>
++void OVInferenceEngine::SetInputDataAsync(const std::string& name, const T* data, size_t elementCount, cudaStream_t) {
++    SetInputData(name, data, elementCount);
++}
++
++template<typename T>
++void OVInferenceEngine::SetInputDataAsync(const std::string& name, const std::vector<T>& data, cudaStream_t) {
++    SetInputData(name, data);
++}
++
++template<typename T>
++void OVInferenceEngine::GetOutputDataAsync(const std::string& name, T* data, size_t elementCount, cudaStream_t) {
++    GetOutputData(name, data, elementCount);
++}
++
++template<typename T>
++void OVInferenceEngine::GetOutputDataAsync(const std::string& name, std::vector<T>& data, cudaStream_t) {
++    GetOutputData(name, data);
++}
+diff --git a/gear_sonic_deploy/src/OVInference/Utility.h b/gear_sonic_deploy/src/OVInference/Utility.h
+new file mode 100644
+index 0000000..6d29a87
+--- /dev/null
++++ b/gear_sonic_deploy/src/OVInference/Utility.h
+@@ -0,0 +1,17 @@
++#pragma once
++
++/**
++ * @file Utility.h
++ * @brief OpenVINO-compatible replacement for TRTInference/Utility.h
++ *
++ * On OpenVINO builds, TPinnedVector<T> is just std::vector<T> since we don't
++ * use CUDA pinned memory. This header exists so that #include "Utility.h"
++ * resolves correctly when included from the OVInference directory.
++ */
++
++#include <vector>
++#include <stdexcept>
++
++// No CUDA pinned memory — use standard allocator
++template<typename T>
++using TPinnedVector = std::vector<T>;
+diff --git a/gear_sonic_deploy/src/g1/CMakeLists.txt b/gear_sonic_deploy/src/g1/CMakeLists.txt
+index 61f3b7b..35ae0a3 100644
+--- a/gear_sonic_deploy/src/g1/CMakeLists.txt
++++ b/gear_sonic_deploy/src/g1/CMakeLists.txt
+@@ -1,3 +1,8 @@
+-add_subdirectory(freq_test)
+-add_subdirectory(g1_deploy_onnx_ref)
++# freq_test requires ONNX Runtime — skip if not available
++if(onnxruntime_FOUND)
++  add_subdirectory(freq_test)
++else()
++  message(STATUS "ℹ️  Skipping freq_test (ONNX Runtime not found)")
++endif()
+ 
++add_subdirectory(g1_deploy_onnx_ref)
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/CMakeLists.txt b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/CMakeLists.txt
+index b713922..ba497ed 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/CMakeLists.txt
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/CMakeLists.txt
+@@ -25,7 +25,6 @@ else()
+ endif()
+ 
+ # Find msgpack for message serialization (used by ROS2 and ZMQ handlers)
+-# msgpack is header-only and doesn't provide pkg-config, so we check for the header directly
+ find_path(MSGPACK_INCLUDE_DIR msgpack.hpp
+   PATHS /usr/include /usr/local/include
+   DOC "msgpack C++ header location"
+@@ -35,7 +34,20 @@ if(MSGPACK_INCLUDE_DIR)
+   message(STATUS "✅ msgpack found at: ${MSGPACK_INCLUDE_DIR}")
+   set(MSGPACK_INCLUDE_DIRS ${MSGPACK_INCLUDE_DIR})
+ else()
+-  message(FATAL_ERROR "msgpack not found. Install libmsgpack-dev (Ubuntu/Debian) or msgpack-cxx (Arch) or msgpack-devel (RHEL/CentOS)")
++  # Fetch msgpack-cxx as header-only dependency
++  message(STATUS "📦 msgpack not found in system — fetching via FetchContent...")
++  include(FetchContent)
++  FetchContent_Declare(
++    msgpack-cxx
++    GIT_REPOSITORY https://github.com/msgpack/msgpack-c.git
++    GIT_TAG cpp-6.1.1
++    GIT_SHALLOW TRUE
++  )
++  set(MSGPACK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
++  set(MSGPACK_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
++  FetchContent_MakeAvailable(msgpack-cxx)
++  set(MSGPACK_INCLUDE_DIRS ${msgpack-cxx_SOURCE_DIR}/include)
++  message(STATUS "✅ msgpack fetched to: ${MSGPACK_INCLUDE_DIRS}")
+ endif()
+ 
+ file(GLOB_RECURSE PROJECT_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+@@ -50,8 +62,16 @@ if(ENABLE_ASAN)
+   target_link_options(${EXECUTABLE_NAME} PRIVATE -fsanitize=address)
+ endif()
+ 
+-# Detect architecture and conditionally set CUDA library paths
+-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
++# ============================================================================
++# Platform-specific setup
++# ============================================================================
++if(USE_OPENVINO)
++  # OpenVINO path: no CUDA link dirs needed
++  set(CUDA_LINK_DIRS "")
++  set(CUDLA_LIBRARY "")
++  message(STATUS "✅ x86_64 + OpenVINO mode — no CUDA dependencies")
++
++elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+   # Check for Thor (no DLA support)
+   set(IS_THOR FALSE)
+   if(DEFINED ENV{IS_THOR} AND "$ENV{IS_THOR}" STREQUAL "true")
+@@ -65,13 +85,11 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+   endif()
+ 
+   # ARM/Jetson platform - conditionally add DLA support
+-  # Dynamically find CUDA installation for ARM
+   if(DEFINED ENV{CUDAToolkit_ROOT})
+     set(CUDA_ARM_LIB_PATH "$ENV{CUDAToolkit_ROOT}/targets/aarch64-linux/lib")
+   elseif(EXISTS "/usr/local/cuda/targets/aarch64-linux/lib")
+     set(CUDA_ARM_LIB_PATH "/usr/local/cuda/targets/aarch64-linux/lib")
+   else()
+-    # Find any available CUDA version for ARM
+     file(GLOB CUDA_ARM_DIRS "/usr/local/cuda-*/targets/aarch64-linux/lib")
+     if(CUDA_ARM_DIRS)
+       list(GET CUDA_ARM_DIRS 0 CUDA_ARM_LIB_PATH)
+@@ -83,29 +101,21 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+ 
+   set(CUDA_LINK_DIRS ${CUDA_ARM_LIB_PATH})
+ 
+-  # DLA support: only for non-Thor Jetson devices
+   if(IS_THOR)
+     set(CUDLA_LIBRARY "")
+     message(STATUS "🚀 ARM64 (Thor) detected - building without DLA support")
+-    message(STATUS "   Using CUDA library path: ${CUDA_ARM_LIB_PATH}")
+-    message(STATUS "   Thor doesn't have DLA engines")
+   else()
+-    # Match bare-metal Jetson builds: link cudla from the CUDA toolkit (targets/aarch64-linux/lib)
+     set(CUDLA_LIBRARY "cudla")
+     message(STATUS "✅ ARM64 detected - enabling DLA (cudla) support")
+-    message(STATUS "   Using CUDA library path: ${CUDA_ARM_LIB_PATH}")
+-    message(STATUS "   Using CUDLA library: -l${CUDLA_LIBRARY}")
+   endif()
+-  
++
+ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+-  # x86_64 platform - no DLA support needed
+-  # Dynamically find CUDA installation for x86_64
++  # x86_64 with TensorRT (NVIDIA dGPU)
+   if(DEFINED ENV{CUDAToolkit_ROOT})
+     set(CUDA_X64_LIB_PATH "$ENV{CUDAToolkit_ROOT}/lib64")
+   elseif(EXISTS "/usr/local/cuda/lib64")
+     set(CUDA_X64_LIB_PATH "/usr/local/cuda/lib64")
+   else()
+-    # Find any available CUDA version for x86_64
+     file(GLOB CUDA_X64_DIRS "/usr/local/cuda-*/lib64")
+     if(CUDA_X64_DIRS)
+       list(GET CUDA_X64_DIRS 0 CUDA_X64_LIB_PATH)
+@@ -114,11 +124,32 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+       set(CUDA_X64_LIB_PATH "/usr/local/cuda/lib64")
+     endif()
+   endif()
+-  
++
+   set(CUDA_LINK_DIRS ${CUDA_X64_LIB_PATH})
+   set(CUDLA_LIBRARY "")
+-  message(STATUS "✅ x86_64 detected - building without DLA support")
+-  message(STATUS "   Using CUDA library path: ${CUDA_X64_LIB_PATH}")
++  message(STATUS "✅ x86_64 + TensorRT mode")
++endif()
++
++# Find nlohmann/json.hpp (needed by ZMQ tests and main executable)
++find_path(NLOHMANN_JSON_INCLUDE_DIR nlohmann/json.hpp
++  PATHS /usr/include /usr/local/include
++        /usr/share/openvino/samples/cpp/thirdparty/nlohmann_json/single_include
++  DOC "nlohmann JSON header location"
++)
++if(NLOHMANN_JSON_INCLUDE_DIR)
++  message(STATUS "✅ nlohmann/json found at: ${NLOHMANN_JSON_INCLUDE_DIR}")
++else()
++  # Fetch it
++  include(FetchContent)
++  FetchContent_Declare(nlohmann_json
++    GIT_REPOSITORY https://github.com/nlohmann/json.git
++    GIT_TAG v3.11.3
++    GIT_SHALLOW TRUE
++  )
++  set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
++  FetchContent_MakeAvailable(nlohmann_json)
++  set(NLOHMANN_JSON_INCLUDE_DIR ${nlohmann_json_SOURCE_DIR}/single_include)
++  message(STATUS "✅ nlohmann/json fetched to: ${NLOHMANN_JSON_INCLUDE_DIR}")
+ endif()
+ 
+ # ZMQ support (required for main executable and tests)
+@@ -136,7 +167,6 @@ if(NOT ZMQ_INCLUDE_DIR OR NOT ZMQ_LIBRARY)
+   message(FATAL_ERROR "❌ libzmq is required but not found. Please install libzmq-dev (apt) or zeromq (brew)")
+ endif()
+ 
+-# Add ZMQ to main executable
+ message(STATUS "✅ ZMQ support enabled for main executable")
+ 
+ # Build ZMQ tests
+@@ -145,7 +175,8 @@ if(ZMQ_INCLUDE_DIR AND ZMQ_LIBRARY)
+     ${CMAKE_CURRENT_SOURCE_DIR}/tests/zmq_pose_subscriber_test.cpp)
+   target_include_directories(zmq_pose_subscriber_test PRIVATE
+     ${CMAKE_CURRENT_SOURCE_DIR}/include
+-    ${ZMQ_INCLUDE_DIR})
++    ${ZMQ_INCLUDE_DIR}
++    ${NLOHMANN_JSON_INCLUDE_DIR})
+   target_link_libraries(zmq_pose_subscriber_test PRIVATE ${ZMQ_LIBRARY})
+   set_target_properties(zmq_pose_subscriber_test PROPERTIES
+     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/target/release/"
+@@ -153,13 +184,13 @@ if(ZMQ_INCLUDE_DIR AND ZMQ_LIBRARY)
+     CXX_STANDARD_REQUIRED ON
+     CXX_EXTENSIONS OFF)
+   message(STATUS "✅ Added zmq_pose_subscriber_test (ZMQ found)")
+-  
+-  # Test for connecting to Python pose estimation server
++
+   add_executable(zmq_python_sender_test
+     ${CMAKE_CURRENT_SOURCE_DIR}/tests/zmq_python_sender_test.cpp)
+   target_include_directories(zmq_python_sender_test PRIVATE
+     ${CMAKE_CURRENT_SOURCE_DIR}/include
+-    ${ZMQ_INCLUDE_DIR})
++    ${ZMQ_INCLUDE_DIR}
++    ${NLOHMANN_JSON_INCLUDE_DIR})
+   target_link_libraries(zmq_python_sender_test PRIVATE ${ZMQ_LIBRARY})
+   set_target_properties(zmq_python_sender_test PROPERTIES
+     RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/target/release/"
+@@ -177,31 +208,58 @@ set(EXE_INCLUDES
+   ${CMAKE_CURRENT_SOURCE_DIR}/include/
+   ${ZMQ_INCLUDE_DIR}
+   ${EIGEN3_INCLUDE_DIR}
++  ${NLOHMANN_JSON_INCLUDE_DIR}
++  ${MSGPACK_INCLUDE_DIRS}
+ )
+ 
+ 
+-# Build a static library, used by both the main executable and the tests: 
++# Build a static library, used by both the main executable and the tests:
+ add_library(g1_deploy_shared STATIC ${PROJECT_SRCS})
+ target_include_directories(g1_deploy_shared PUBLIC ${EXE_INCLUDES})
+ 
+-# List of libs to link for both the main executable and the tests
+-set(EXE_LIBS
+-  g1_deploy_shared
+-  audio_thread
+-  unitree_sdk2 ZLIB::ZLIB
+-  onnxruntime::onnxruntime TRTInference
+-  CUDA::cudart
+-  ${TensorRT_nvinfer_LIBRARY} ${TensorRT_nvonnxparser_LIBRARY}
+-  ${CUDLA_LIBRARY}
+-  ${ZMQ_LIBRARY}
+-)
++# ============================================================================
++# Link libraries — backend-specific
++# ============================================================================
++if(USE_OPENVINO)
++  set(INFERENCE_LIB OVInference)
++  set(EXE_LIBS
++    g1_deploy_shared
++    audio_thread
++    unitree_sdk2 ZLIB::ZLIB
++    ${INFERENCE_LIB}
++    ${ZMQ_LIBRARY}
++  )
++  # Optionally link ONNX Runtime if found (for reference motion ORT path)
++  if(onnxruntime_FOUND)
++    list(APPEND EXE_LIBS onnxruntime::onnxruntime)
++  endif()
++else()
++  set(INFERENCE_LIB TRTInference)
++  set(EXE_LIBS
++    g1_deploy_shared
++    audio_thread
++    unitree_sdk2 ZLIB::ZLIB
++    onnxruntime::onnxruntime ${INFERENCE_LIB}
++    CUDA::cudart
++    ${TensorRT_nvinfer_LIBRARY} ${TensorRT_nvonnxparser_LIBRARY}
++    ${CUDLA_LIBRARY}
++    ${ZMQ_LIBRARY}
++  )
++endif()
+ 
++# Add compile definition to g1_deploy_shared so headers can switch
++if(USE_OPENVINO)
++  target_compile_definitions(g1_deploy_shared PUBLIC USE_OPENVINO=1 NO_CUDA=1)
++endif()
+ 
+ # build the main executable:
+ add_executable(${EXECUTABLE_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/src/g1_deploy_onnx_ref.cpp)
+ target_include_directories(${EXECUTABLE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/ ${PROJECT_SOURCE_DIR}/src)
+ 
+-target_link_directories(${EXECUTABLE_NAME} PRIVATE ${CUDA_LINK_DIRS})
++if(CUDA_LINK_DIRS)
++  target_link_directories(${EXECUTABLE_NAME} PRIVATE ${CUDA_LINK_DIRS})
++endif()
++
+ target_link_libraries(
+   ${EXECUTABLE_NAME} PRIVATE ${PROJECT_NAME}
+   ${EXE_LIBS}
+@@ -214,18 +272,24 @@ set_target_properties(
+              OUTPUT_NAME ${EXECUTABLE_NAME}
+              CXX_STANDARD 20
+              CXX_STANDARD_REQUIRED ON
+-             CXX_EXTENSIONS OFF)
++             CXX_EXTENSIONS OFF
++             BUILD_RPATH_USE_ORIGIN ON)
++
++# Force RPATH (not RUNPATH) so unitree's DDS libs take priority over LD_LIBRARY_PATH.
++# RUNPATH is searched AFTER LD_LIBRARY_PATH, causing ROS2's incompatible libddsc to be
++# loaded instead of unitree's bundled version. RPATH is searched BEFORE LD_LIBRARY_PATH.
++target_link_options(${EXECUTABLE_NAME} PRIVATE "LINKER:--disable-new-dtags")
+ 
+ # Optional ROS2 support for main executable and tests
+ if(rclcpp_FOUND AND std_msgs_FOUND)
+   # Load ROS2 configuration (handles both main executable and tests)
+   include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/ROS2.cmake)
+-  
++
+   # Add ROS2 support to main executable (requires msgpack)
+   target_include_directories(${EXECUTABLE_NAME} PRIVATE ${ROS2_INCLUDE_DIRS} ${MSGPACK_INCLUDE_DIRS})
+   target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${ROS2_LIBS} pthread)
+   target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAS_ROS2=1)
+-  
++
+   message(STATUS "✅ ROS2InputHandler support enabled with msgpack")
+ else()
+   target_compile_definitions(${EXECUTABLE_NAME} PRIVATE HAS_ROS2=0)
+@@ -235,7 +299,6 @@ endif()
+ # test executable:
+ include(FetchContent)
+ 
+-# Download and make GoogleTest available
+ FetchContent_Declare(
+   googletest
+   URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+@@ -247,15 +310,16 @@ find_package(GTest REQUIRED)
+ file(GLOB_RECURSE TEST_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/*.cpp)
+ 
+ add_executable(run_tests ${TEST_SRCS})
+-target_link_directories(run_tests PRIVATE ${CUDA_LINK_DIRS})
++if(CUDA_LINK_DIRS)
++  target_link_directories(run_tests PRIVATE ${CUDA_LINK_DIRS})
++endif()
+ target_link_libraries(run_tests GTest::GTest GTest::Main ${EXE_LIBS})
+ target_include_directories(run_tests PUBLIC ${EXE_INCLUDES})
+ 
+-# Setting our output directory and C++ standard
+ set_target_properties(
+   run_tests
+   PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${PROJECT_SOURCE_DIR}/target/release/"
+              OUTPUT_NAME run_tests
+              CXX_STANDARD 20
+              CXX_STANDARD_REQUIRED ON
+-             CXX_EXTENSIONS OFF)
+\ No newline at end of file
++             CXX_EXTENSIONS OFF)
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/cmake/ROS2.cmake b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/cmake/ROS2.cmake
+index e5c4478..e269737 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/cmake/ROS2.cmake
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/cmake/ROS2.cmake
+@@ -101,7 +101,7 @@ set(TEST_EXECUTABLE_NAME test_ros2)
+ add_executable(${TEST_EXECUTABLE_NAME} tests/test_ros2.cpp)
+ 
+ target_include_directories(${TEST_EXECUTABLE_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
+-target_include_directories(${TEST_EXECUTABLE_NAME} PRIVATE ${ROS2_INCLUDE_DIRS})
++target_include_directories(${TEST_EXECUTABLE_NAME} PRIVATE ${ROS2_INCLUDE_DIRS} ${MSGPACK_INCLUDE_DIRS} ${NLOHMANN_JSON_INCLUDE_DIR})
+ target_link_libraries(${TEST_EXECUTABLE_NAME} PRIVATE ${ROS2_LIBS} pthread)
+ target_compile_definitions(${TEST_EXECUTABLE_NAME} PRIVATE HAS_ROS2=1)
+ 
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+index 040dcf5..399ef61 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/control_policy.hpp
+@@ -1,10 +1,9 @@
+ /**
+  * @file control_policy.hpp
+- * @brief TensorRT-accelerated control-policy engine (observations → actions).
++ * @brief OpenVINO-accelerated control-policy engine (observations → actions).
+  *
+- * PolicyEngine loads an ONNX policy model, converts it to TensorRT at first
+- * run (cached on disk), and provides GPU-accelerated inference with optional
+- * CUDA graph capture for deterministic, sub-millisecond latency.
++ * PolicyEngine loads an ONNX policy model and runs inference via OpenVINO
++ * on Intel GPU, NPU, or CPU.
+  *
+  * ## I/O Contract
+  *
+@@ -13,11 +12,9 @@
+  *
+  * ## Typical Usage
+  *
+- *   1. `Initialize(model_path)` – convert + load the TRT engine.
++ *   1. `Initialize(model_path)` – load and compile the model.
+  *   2. Fill `GetInputBuffer()` with observation data.
+- *   3. `Infer()` – runs GPU inference and populates `GetActionBuffer()`.
+- *   4. (Optional) `CaptureGraph()` after the first successful `Infer()` to
+- *      lock the CUDA graph for all subsequent calls.
++ *   3. `Infer()` – runs inference and populates `GetActionBuffer()`.
+  */
+ 
+ #ifndef POLICY_ENGINE_HPP
+@@ -31,16 +28,15 @@
+ #include <iostream>
+ #include <algorithm>
+ #include <numeric>
+-#include <cuda_runtime.h>
+-#include <TRTInference/InferenceEngine.h>
++#include <chrono>
++#include "inference_backend.hpp"
+ #include "robot_parameters.hpp"
+ 
+ /**
+  * @class PolicyEngine
+- * @brief Runs the main RL control policy on GPU via TensorRT.
++ * @brief Runs the main RL control policy via OpenVINO on Intel GPU/NPU/CPU.
+  *
+- * Owns CUDA resources (stream, graph, graph-exec) and pinned-memory I/O
+- * buffers.  Non-copyable; destroyed via `Destroy()` or the destructor.
++ * Non-copyable; destroyed via `Destroy()` or the destructor.
+  */
+ class PolicyEngine {
+ public:
+@@ -49,11 +45,13 @@ public:
+ 
+   /**
+    * @brief Initialize the control policy from a model path
+-   * @param model_path Path to ONNX model file (will be converted to TensorRT)
++   * @param model_path Path to ONNX model file
+    * @param use_fp16 Whether to use FP16 precision
++   * @param device OpenVINO device string ("GPU", "CPU", "NPU", "AUTO:GPU,CPU")
+    * @return true if initialization successful, false otherwise
+    */
+-  bool Initialize(const std::string& model_path, bool use_fp16 = false) {
++  bool Initialize(const std::string& model_path, bool use_fp16 = false,
++                  const std::string& device = "GPU") {
+     if (model_path.empty()) {
+       std::cerr << "✗ PolicyEngine::Initialize - Empty model path" << std::endl;
+       return false;
+@@ -61,41 +59,49 @@ public:
+ 
+     config_.model_path = model_path;
+     config_.use_fp16 = use_fp16;
++    config_.device = device;
+ 
+     try {
+       std::cout << "Loading policy model..." << std::endl;
++      std::cout << "[Policy] Device: " << device
++                << " | Precision: " << (use_fp16 ? "FP16" : "FP32") << std::endl;
+ 
+       inference_engine_ = std::make_unique<TRTInferenceEngine>();
+ 
+-      // Setup options for ONNX to TensorRT conversion
+       Options options;
+       options.deviceID = config_.device_id;
+       std::string prefix("policy_");
+-      if (use_fp16) { 
+-        options.precision = Precision::FP16; 
+-        prefix += "fp16_"; 
++      if (use_fp16) {
++        options.precision = Precision::FP16;
++        prefix += "fp16_";
+       }
+ 
+-      std::string cached_trt_file;
+-      if (!ConvertONNXToTRT(options, model_path, cached_trt_file, prefix, false)) {
+-        std::cerr << "✗ Failed to convert policy ONNX to TRT: " << model_path << std::endl;
++      std::string model_file;
++      if (!ConvertONNXToTRT(options, model_path, model_file, prefix, false)) {
++        std::cerr << "✗ Failed to prepare policy model: " << model_path << std::endl;
+         inference_engine_.reset();
+         return false;
+       }
+ 
+-      if (!inference_engine_->Initialize(cached_trt_file, options.deviceID, options.dynamic_axes_names)) {
+-        std::cerr << "✗ Failed to initialize policy TensorRT model: " << cached_trt_file << std::endl;
++      // Initialize with device selection
++      auto init_start = std::chrono::steady_clock::now();
++      if (!inference_engine_->Initialize(model_file, device,
++              use_fp16 ? Precision::FP16 : Precision::FP32)) {
++        std::cerr << "✗ Failed to initialize policy on " << device << ": " << model_file << std::endl;
+         inference_engine_.reset();
+         return false;
+       }
++      auto init_end = std::chrono::steady_clock::now();
++      auto init_ms = std::chrono::duration_cast<std::chrono::milliseconds>(init_end - init_start).count();
++      std::cout << "[Policy] ✓ OpenVINO initialization took " << init_ms << "ms" << std::endl;
+ 
+       if (!inference_engine_->InitInputs({})) {
+-        std::cerr << "✗ Failed to initialize policy TensorRT model inputs" << std::endl;
++        std::cerr << "✗ Failed to initialize policy model inputs" << std::endl;
+         inference_engine_.reset();
+         return false;
+       }
+ 
+-      std::cout << "✓ Successfully converted ONNX to TRT: " << cached_trt_file << std::endl;
++      std::cout << "✓ Successfully loaded policy model: " << model_file << std::endl;
+ 
+       // Validate required inputs
+       auto input_names = inference_engine_->GetInputTensorNames();
+@@ -123,12 +129,12 @@ public:
+       // Initialize input buffer
+       std::vector<int64_t> input_dims;
+       inference_engine_->GetTensorShape(input_tensor_name_, input_dims);
+-      
++
+       config_.input_dimension = std::accumulate(
+         input_dims.begin(), input_dims.end(), static_cast<size_t>(1), std::multiplies<size_t>()
+       );
+       policy_input_buffer_.resize(config_.input_dimension, 0.0f);
+-      
++
+       // Set initial input data (zeros)
+       inference_engine_->SetInputData(input_tensor_name_, policy_input_buffer_);
+ 
+@@ -165,7 +171,7 @@ public:
+ 
+       // Validate action dimension matches robot configuration
+       if (config_.action_dimension != G1_NUM_MOTOR) {
+-        std::cerr << "✗ Policy action dimension (" << config_.action_dimension 
++        std::cerr << "✗ Policy action dimension (" << config_.action_dimension
+                   << ") doesn't match G1 robot motors (" << G1_NUM_MOTOR << ")" << std::endl;
+         inference_engine_.reset();
+         return false;
+@@ -173,17 +179,20 @@ public:
+ 
+       action_buffer_.resize(config_.action_dimension, 0.0f);
+ 
+-      // Create CUDA stream
+-      cudaError_t cuda_status = cudaStreamCreate(&cuda_stream_);
+-      if (cuda_status != cudaSuccess) {
+-        std::cerr << "✗ Failed to create CUDA stream: " << cudaGetErrorString(cuda_status) << std::endl;
+-        inference_engine_.reset();
+-        return false;
++      // Run warmup inference
++      std::cout << "[Policy] Running warmup inference..." << std::endl;
++      auto warmup_start = std::chrono::steady_clock::now();
++      if (!inference_engine_->Enqueue(nullptr)) {
++        std::cout << "[Policy] ⚠ Warmup inference failed (non-fatal)" << std::endl;
+       }
++      auto warmup_end = std::chrono::steady_clock::now();
++      auto warmup_ms = std::chrono::duration_cast<std::chrono::milliseconds>(warmup_end - warmup_start).count();
++      std::cout << "[Policy] ✓ Warmup inference took " << warmup_ms << "ms" << std::endl;
+ 
+       initialized_ = true;
+       std::cout << "✓ Policy engine initialized successfully!" << std::endl;
+       std::cout << "  Model: " << model_path << std::endl;
++      std::cout << "  Device: " << device << std::endl;
+       std::cout << "  Input dimension: " << config_.input_dimension << std::endl;
+       std::cout << "  Action dimension: " << config_.action_dimension << std::endl;
+       std::cout << "  Input tensor: " << input_tensor_name_ << std::endl;
+@@ -210,116 +219,44 @@ public:
+   }
+ 
+   /**
+-   * @brief Set input data asynchronously
+-   * @param data Input data buffer
+-   * @param element_count Number of elements
+-   * @param stream CUDA stream for async operation
+-   */
+-  template<typename T>
+-  void SetInputDataAsync(const T* data, size_t element_count, cudaStream_t stream) {
+-    if (!initialized_ || !inference_engine_) { return; }
+-    inference_engine_->SetInputDataAsync(input_tensor_name_, data, element_count, stream);
+-  }
+-
+-  /**
+-   * @brief Set input data using TPinnedVector
+-   * @param data Input data in TPinnedVector
++   * @brief Set input data using std::vector
++   * @param data Input data vector
+    */
+   template<typename T>
+-  void SetInputData(const TPinnedVector<T>& data) {
++  void SetInputData(const std::vector<T>& data) {
+     if (!initialized_ || !inference_engine_) { return; }
+     inference_engine_->SetInputData(input_tensor_name_, data);
+   }
+ 
+   /**
+    * @brief Run control policy inference and populate internal action buffer
+-   * @param stream CUDA stream for inference (uses internal stream if nullptr)
+    * @return true if inference successful, false otherwise
+    */
+-  bool Infer(cudaStream_t stream = nullptr) {
+-    if (!initialized_) { 
+-      std::cerr << "✗ PolicyEngine::Infer - Not initialized" << std::endl; 
+-      return false; 
++  bool Infer() {
++    if (!initialized_) {
++      std::cerr << "✗ PolicyEngine::Infer - Not initialized" << std::endl;
++      return false;
+     }
+-    if (!inference_engine_) { 
+-      std::cerr << "✗ PolicyEngine::Infer - TensorRT engine not initialized" << std::endl; 
+-      return false; 
++    if (!inference_engine_) {
++      std::cerr << "✗ PolicyEngine::Infer - Engine not initialized" << std::endl;
++      return false;
+     }
+ 
+-    cudaStream_t infer_stream = (stream != nullptr) ? stream : cuda_stream_;
+-
+-    // Transfer input data from CPU to GPU
++    // Transfer input data
+     inference_engine_->SetInputData(input_tensor_name_, policy_input_buffer_);
+ 
+-    if (graph_captured_ && cuda_graph_exec_ != nullptr) {
+-      cudaError_t status = cudaGraphLaunch(cuda_graph_exec_, infer_stream);
+-      if (status != cudaSuccess) {
+-        std::cerr << "✗ PolicyEngine::Infer - Failed to launch CUDA graph: " << cudaGetErrorString(status) << std::endl;
+-        return false;
+-      }
+-    } else {
+-      if (!inference_engine_->Enqueue(infer_stream)) {
+-        std::cerr << "✗ PolicyEngine::Infer - Failed to enqueue inference" << std::endl;
+-        return false;
+-      }
+-    }
+-    
+-    // Automatically populate internal action buffer after inference (GPU to CPU)
+-    inference_engine_->GetOutputDataAsync(output_tensor_name_, action_buffer_, infer_stream);
+-    cudaStreamSynchronize(infer_stream);
+-    
+-    return true;
+-  }
+-
+-  /**
+-   * @brief Capture CUDA graph for optimized execution
+-   * @return true if capture successful, false otherwise
+-   */
+-  bool CaptureGraph() {
+-    if (!initialized_ || !inference_engine_) {
+-      std::cerr << "✗ PolicyEngine::CaptureGraph - Cannot capture (engine not initialized)" << std::endl;
++    // Run inference
++    if (!inference_engine_->Enqueue(nullptr)) {
++      std::cerr << "✗ PolicyEngine::Infer - Inference failed" << std::endl;
+       return false;
+     }
+-    if (graph_captured_) { 
+-      std::cout << "Control policy CUDA graph already captured" << std::endl;
+-      return true; 
+-    }
+ 
+-    std::cout << "Capturing control policy CUDA graph..." << std::endl;
+-    cudaStreamBeginCapture(cuda_stream_, cudaStreamCaptureModeRelaxed);
+-    if (!inference_engine_->Enqueue(cuda_stream_)) {
+-      std::cerr << "✗ Failed to enqueue control policy inference for CUDA graph capture" << std::endl;
+-      cudaStreamEndCapture(cuda_stream_, &cuda_graph_);
+-      return false;
+-    }
+-    cudaStreamEndCapture(cuda_stream_, &cuda_graph_);
+-    cudaStreamSynchronize(cuda_stream_);
+-    
+-    cudaGraphInstantiate(&cuda_graph_exec_, cuda_graph_, NULL, NULL, 0);
+-    
+-    graph_captured_ = true;
+-    std::cout << "✓ Control policy CUDA graph captured successfully!" << std::endl;
++    // Read output
++    inference_engine_->GetOutputData(output_tensor_name_, action_buffer_);
++
+     return true;
+   }
+ 
+-  /**
+-   * @brief Get CUDA stream used by control policy
+-   * @return CUDA stream handle
+-   */
+-  cudaStream_t GetCudaStream() const { return cuda_stream_; }
+-
+-  /**
+-   * @brief Get CUDA graph (if captured)
+-   * @return CUDA graph handle
+-   */
+-  cudaGraph_t GetCudaGraph() const { return cuda_graph_; }
+-
+-  /**
+-   * @brief Get CUDA graph execution instance
+-   * @return CUDA graph execution handle
+-   */
+-  cudaGraphExec_t GetCudaGraphExec() const { return cuda_graph_exec_; }
+-
+   /**
+    * @brief Get input dimension
+    * @return Input dimension size
+@@ -360,13 +297,13 @@ public:
+    * @brief Get reference to internal input buffer
+    * @return Reference to input buffer
+    */
+-  TPinnedVector<float>& GetInputBuffer() { return policy_input_buffer_; }
++  std::vector<float>& GetInputBuffer() { return policy_input_buffer_; }
+ 
+   /**
+    * @brief Get reference to internal action buffer
+    * @return Reference to action buffer
+    */
+-  TPinnedVector<float>& GetActionBuffer() { return action_buffer_; }
++  std::vector<float>& GetActionBuffer() { return action_buffer_; }
+ 
+   /**
+    * @brief Get input tensor name
+@@ -385,30 +322,17 @@ public:
+    */
+   void Destroy() {
+     if (!initialized_) { return; }
+-    if (cuda_graph_exec_ != nullptr) { 
+-      cudaGraphExecDestroy(cuda_graph_exec_); 
+-      cuda_graph_exec_ = nullptr; 
+-    }
+-    if (cuda_graph_ != nullptr) { 
+-      cudaGraphDestroy(cuda_graph_); 
+-      cuda_graph_ = nullptr; 
+-    }
+-    if (cuda_stream_ != nullptr) { 
+-      cudaStreamDestroy(cuda_stream_); 
+-      cuda_stream_ = nullptr; 
+-    }
+-    if (inference_engine_) { 
+-      inference_engine_->Destroy(); 
+-      inference_engine_.reset(); 
++    if (inference_engine_) {
++      inference_engine_->Destroy();
++      inference_engine_.reset();
+     }
+-    graph_captured_ = false; 
+     initialized_ = false;
+   }
+ 
+ private:
+-  // Internal configuration state
+   struct Config {
+     std::string model_path;
++    std::string device = "GPU";
+     int device_id = 0;
+     size_t input_dimension = 0;
+     size_t action_dimension = 0;
+@@ -416,28 +340,15 @@ private:
+   };
+   Config config_;
+ 
+-  // TensorRT inference engine
+   std::unique_ptr<TRTInferenceEngine> inference_engine_;
+ 
+-  // Tensor names
+   std::string input_tensor_name_;
+   std::string output_tensor_name_;
+ 
+-  // CUDA resources
+-  cudaStream_t cuda_stream_ = nullptr;
+-  cudaGraph_t cuda_graph_ = nullptr;
+-  cudaGraphExec_t cuda_graph_exec_ = nullptr;
+-
+-  // Input buffer
+-  TPinnedVector<float> policy_input_buffer_;
++  std::vector<float> policy_input_buffer_;
++  std::vector<float> action_buffer_;
+ 
+-  // Action output buffer
+-  TPinnedVector<float> action_buffer_;
+-
+-  // State
+   bool initialized_ = false;
+-  bool graph_captured_ = false;
+ };
+ 
+ #endif // POLICY_ENGINE_HPP
+-
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+index 7d912b5..00094a5 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/encoder.hpp
+@@ -1,9 +1,9 @@
+ /**
+  * @file encoder.hpp
+- * @brief TensorRT-accelerated encoder engine (observations → token state).
++ * @brief OpenVINO-accelerated encoder engine (observations → token state).
+  *
+- * EncoderEngine loads an ONNX encoder model, converts it to TensorRT, and
+- * provides GPU-accelerated inference with optional CUDA graph capture.
++ * EncoderEngine loads an ONNX encoder model and runs inference via OpenVINO
++ * on Intel GPU, NPU, or CPU.
+  *
+  * The encoder compresses high-dimensional robot observations into a compact
+  * latent / token representation that is then consumed by the control policy
+@@ -23,10 +23,9 @@
+  *
+  * ## Typical Usage
+  *
+- *   1. `Initialize(model_path)` – convert + load TRT engine.
++ *   1. `Initialize(model_path)` – load and compile the model with OpenVINO.
+  *   2. Fill `GetInputBuffer()` with encoder observations.
+- *   3. `Encode()` – runs GPU inference and populates `GetTokenBuffer()`.
+- *   4. (Optional) `CaptureGraph()` for deterministic latency.
++ *   3. `Encode()` – runs inference and populates `GetTokenBuffer()`.
+  */
+ 
+ #ifndef ENCODER_HPP
+@@ -39,15 +38,14 @@
+ #include <iostream>
+ #include <algorithm>
+ #include <numeric>
+-#include <cuda_runtime.h>
+-#include <TRTInference/InferenceEngine.h>
++#include <chrono>
++#include "inference_backend.hpp"
+ 
+ /**
+  * @class EncoderEngine
+- * @brief Runs the observation encoder on GPU via TensorRT.
++ * @brief Runs the observation encoder via OpenVINO on Intel GPU/NPU/CPU.
+  *
+- * Mirrors the PolicyEngine architecture: owns CUDA resources, pinned-memory
+- * buffers, and supports CUDA graph capture.  Non-copyable.
++ * Non-copyable. Owns the inference engine and I/O buffers.
+  */
+ class EncoderEngine {
+ public:
+@@ -56,11 +54,13 @@ public:
+ 
+   /**
+    * @brief Initialize the encoder engine from a model path
+-   * @param model_path Path to ONNX model file (will be converted to TensorRT)
++   * @param model_path Path to ONNX model file
+    * @param use_fp16 Whether to use FP16 precision
++   * @param device OpenVINO device string ("GPU", "CPU", "NPU", "AUTO:GPU,CPU")
+    * @return true if initialization successful, false otherwise
+    */
+-  bool Initialize(const std::string& model_path, bool use_fp16 = false) {
++  bool Initialize(const std::string& model_path, bool use_fp16 = false,
++                  const std::string& device = "GPU") {
+     if (model_path.empty()) {
+       std::cerr << "✗ EncoderEngine::Initialize - Empty model path" << std::endl;
+       return false;
+@@ -68,9 +68,12 @@ public:
+ 
+     config_.model_path = model_path;
+     config_.use_fp16 = use_fp16;
++    config_.device = device;
+ 
+     try {
+       std::cout << "Loading encoder model..." << std::endl;
++      std::cout << "[Encoder] Device: " << device
++                << " | Precision: " << (use_fp16 ? "FP16" : "FP32") << std::endl;
+ 
+       inference_engine_ = std::make_unique<TRTInferenceEngine>();
+ 
+@@ -79,21 +82,27 @@ public:
+       std::string prefix("encoder_");
+       if (use_fp16) { options.precision = Precision::FP16; prefix += "fp16_"; }
+ 
+-      std::string cached_trt_file;
+-      if (!ConvertONNXToTRT(options, model_path, cached_trt_file, prefix, false)) {
+-        std::cerr << "✗ Failed to convert encoder ONNX to TRT: " << model_path << std::endl;
++      std::string model_file;
++      if (!ConvertONNXToTRT(options, model_path, model_file, prefix, false)) {
++        std::cerr << "✗ Failed to prepare encoder model: " << model_path << std::endl;
+         inference_engine_.reset();
+         return false;
+       }
+ 
+-      if (!inference_engine_->Initialize(cached_trt_file, options.deviceID, options.dynamic_axes_names)) {
+-        std::cerr << "✗ Failed to initialize encoder TensorRT model: " << cached_trt_file << std::endl;
++      // Initialize with device selection
++      auto init_start = std::chrono::steady_clock::now();
++      if (!inference_engine_->Initialize(model_file, device,
++              use_fp16 ? Precision::FP16 : Precision::FP32)) {
++        std::cerr << "✗ Failed to initialize encoder on " << device << ": " << model_file << std::endl;
+         inference_engine_.reset();
+         return false;
+       }
++      auto init_end = std::chrono::steady_clock::now();
++      auto init_ms = std::chrono::duration_cast<std::chrono::milliseconds>(init_end - init_start).count();
++      std::cout << "[Encoder] ✓ OpenVINO initialization took " << init_ms << "ms" << std::endl;
+ 
+       if (!inference_engine_->InitInputs({})) {
+-        std::cerr << "✗ Failed to initialize encoder TensorRT model inputs" << std::endl;
++        std::cerr << "✗ Failed to initialize encoder model inputs" << std::endl;
+         inference_engine_.reset();
+         return false;
+       }
+@@ -161,25 +170,29 @@ public:
+         inference_engine_.reset();
+         return false;
+       }
+-      
++
+       config_.input_dimension = std::accumulate(
+         input_dims.begin(), input_dims.end(), static_cast<size_t>(1), std::multiplies<size_t>()
+       );
+       encoder_input_buffer_.resize(config_.input_dimension, 0.0f);
+-      
++
+       // Set initial input data (zeros)
+       inference_engine_->SetInputData(input_tensor_name_, encoder_input_buffer_);
+ 
+-      cudaError_t cuda_status = cudaStreamCreate(&cuda_stream_);
+-      if (cuda_status != cudaSuccess) {
+-        std::cerr << "✗ Failed to create CUDA stream: " << cudaGetErrorString(cuda_status) << std::endl;
+-        inference_engine_.reset();
+-        return false;
++      // Run warmup inference
++      std::cout << "[Encoder] Running warmup inference..." << std::endl;
++      auto warmup_start = std::chrono::steady_clock::now();
++      if (!inference_engine_->Enqueue(nullptr)) {
++        std::cout << "[Encoder] ⚠ Warmup inference failed (non-fatal)" << std::endl;
+       }
++      auto warmup_end = std::chrono::steady_clock::now();
++      auto warmup_ms = std::chrono::duration_cast<std::chrono::milliseconds>(warmup_end - warmup_start).count();
++      std::cout << "[Encoder] ✓ Warmup inference took " << warmup_ms << "ms" << std::endl;
+ 
+       initialized_ = true;
+       std::cout << "✓ Encoder initialized successfully!" << std::endl;
+       std::cout << "  Model: " << model_path << std::endl;
++      std::cout << "  Device: " << device << std::endl;
+       std::cout << "  Input dimension: " << config_.input_dimension << std::endl;
+       std::cout << "  Token dimension: " << config_.token_dimension << std::endl;
+       std::cout << "  Input tensor: " << input_tensor_name_ << std::endl;
+@@ -206,110 +219,38 @@ public:
+   }
+ 
+   /**
+-   * @brief Set input data asynchronously
+-   * @param data Input data buffer
+-   * @param element_count Number of elements
+-   * @param stream CUDA stream for async operation
+-   */
+-  template<typename T>
+-  void SetInputDataAsync(const T* data, size_t element_count, cudaStream_t stream) {
+-    if (!initialized_ || !inference_engine_) { return; }
+-    inference_engine_->SetInputDataAsync(input_tensor_name_, data, element_count, stream);
+-  }
+-
+-  /**
+-   * @brief Set input data using TPinnedVector
+-   * @param data Input data in TPinnedVector
++   * @brief Set input data using std::vector
++   * @param data Input data vector
+    */
+   template<typename T>
+-  void SetInputData(const TPinnedVector<T>& data) {
++  void SetInputData(const std::vector<T>& data) {
+     if (!initialized_ || !inference_engine_) { return; }
+     inference_engine_->SetInputData(input_tensor_name_, data);
+   }
+ 
+   /**
+    * @brief Run encoder inference and populate internal token buffer
+-   * @param stream CUDA stream for inference (uses internal stream if nullptr)
+    * @return true if inference successful, false otherwise
+    */
+-  bool Encode(cudaStream_t stream = nullptr) {
++  bool Encode() {
+     if (!initialized_) { std::cerr << "✗ EncoderEngine::Encode - Not initialized" << std::endl; return false; }
+-    if (!inference_engine_) { std::cerr << "✗ EncoderEngine::Encode - TensorRT engine not initialized" << std::endl; return false; }
+-
+-    cudaStream_t encode_stream = (stream != nullptr) ? stream : cuda_stream_;
++    if (!inference_engine_) { std::cerr << "✗ EncoderEngine::Encode - Engine not initialized" << std::endl; return false; }
+ 
+-    // Transfer input data from CPU to GPU
++    // Transfer input data
+     inference_engine_->SetInputData(input_tensor_name_, encoder_input_buffer_);
+ 
+-    if (graph_captured_ && cuda_graph_exec_ != nullptr) {
+-      cudaError_t status = cudaGraphLaunch(cuda_graph_exec_, encode_stream);
+-      if (status != cudaSuccess) {
+-        std::cerr << "✗ EncoderEngine::Encode - Failed to launch CUDA graph: " << cudaGetErrorString(status) << std::endl;
+-        return false;
+-      }
+-    } else {
+-      if (!inference_engine_->Enqueue(encode_stream)) {
+-        std::cerr << "✗ EncoderEngine::Encode - Failed to enqueue inference" << std::endl;
+-        return false;
+-      }
+-    }
+-    
+-    // Automatically populate internal token buffer after inference (GPU to CPU)
+-    inference_engine_->GetOutputDataAsync(output_tensor_name_, token_buffer_, encode_stream);
+-    cudaStreamSynchronize(encode_stream);
+-    
+-    return true;
+-  }
+-
+-  /**
+-   * @brief Capture CUDA graph for optimized execution
+-   * @return true if capture successful, false otherwise
+-   */
+-  bool CaptureGraph() {
+-    if (!initialized_ || !inference_engine_) {
+-      std::cerr << "✗ EncoderEngine::CaptureGraph - Cannot capture (engine not initialized)" << std::endl;
++    // Run inference
++    if (!inference_engine_->Enqueue(nullptr)) {
++      std::cerr << "✗ EncoderEngine::Encode - Inference failed" << std::endl;
+       return false;
+     }
+-    if (graph_captured_) { 
+-      std::cout << "Encoder CUDA graph already captured" << std::endl;
+-      return true; 
+-    }
+ 
+-    std::cout << "Capturing encoder CUDA graph..." << std::endl;
+-    cudaStreamBeginCapture(cuda_stream_, cudaStreamCaptureModeRelaxed);
+-    if (!inference_engine_->Enqueue(cuda_stream_)) {
+-      std::cerr << "✗ Failed to enqueue encoder inference for CUDA graph capture" << std::endl;
+-      cudaStreamEndCapture(cuda_stream_, &cuda_graph_);
+-      return false;
+-    }
+-    cudaStreamEndCapture(cuda_stream_, &cuda_graph_);
+-    cudaStreamSynchronize(cuda_stream_);
+-    
+-    cudaGraphInstantiate(&cuda_graph_exec_, cuda_graph_, NULL, NULL, 0);
+-    
+-    graph_captured_ = true;
+-    std::cout << "✓ Encoder CUDA graph captured successfully!" << std::endl;
++    // Read output
++    inference_engine_->GetOutputData(output_tensor_name_, token_buffer_);
++
+     return true;
+   }
+ 
+-  /**
+-   * @brief Get CUDA stream used by encoder
+-   * @return CUDA stream handle
+-   */
+-  cudaStream_t GetCudaStream() const { return cuda_stream_; }
+-
+-  /**
+-   * @brief Get CUDA graph (if captured)
+-   * @return CUDA graph handle
+-   */
+-  cudaGraph_t GetCudaGraph() const { return cuda_graph_; }
+-
+-  /**
+-   * @brief Get CUDA graph execution instance
+-   * @return CUDA graph execution handle
+-   */
+-  cudaGraphExec_t GetCudaGraphExec() const { return cuda_graph_exec_; }
+-
+   /**
+    * @brief Get input dimension
+    * @return Input dimension size
+@@ -322,18 +263,6 @@ public:
+    */
+   size_t GetTokenDimension() const { return config_.token_dimension; }
+ 
+-  /**
+-   * @brief Get current token source type
+-   * @return Token source type
+-   */
+-  // EncoderTokenSource GetTokenSource() const { return config_.source; } // Removed
+-
+-  /**
+-   * @brief Set token source type
+-   * @param source Token source type
+-   */
+-  // void SetTokenSource(EncoderTokenSource source) { config_.source = source; } // Removed
+-
+   /**
+    * @brief Check if encoder is initialized
+    * @return true if initialized, false otherwise
+@@ -356,30 +285,27 @@ public:
+    * @brief Get reference to internal input buffer
+    * @return Reference to input buffer
+    */
+-  TPinnedVector<float>& GetInputBuffer() { return encoder_input_buffer_; }
++  std::vector<float>& GetInputBuffer() { return encoder_input_buffer_; }
+ 
+   /**
+    * @brief Get reference to internal token buffer
+    * @return Reference to token buffer
+    */
+-  TPinnedVector<float>& GetTokenBuffer() { return token_buffer_; }
++  std::vector<float>& GetTokenBuffer() { return token_buffer_; }
+ 
+   /**
+    * @brief Destroy and clean up encoder resources
+    */
+   void Destroy() {
+     if (!initialized_) { return; }
+-    if (cuda_graph_exec_ != nullptr) { cudaGraphExecDestroy(cuda_graph_exec_); cuda_graph_exec_ = nullptr; }
+-    if (cuda_graph_ != nullptr) { cudaGraphDestroy(cuda_graph_); cuda_graph_ = nullptr; }
+-    if (cuda_stream_ != nullptr) { cudaStreamDestroy(cuda_stream_); cuda_stream_ = nullptr; }
+     if (inference_engine_) { inference_engine_->Destroy(); inference_engine_.reset(); }
+-    graph_captured_ = false; initialized_ = false;
++    initialized_ = false;
+   }
+ 
+ private:
+-  // Internal configuration state
+   struct Config {
+     std::string model_path;
++    std::string device = "GPU";
+     int device_id = 0;
+     size_t input_dimension = 0;
+     size_t token_dimension = 0;
+@@ -387,27 +313,15 @@ private:
+   };
+   Config config_;
+ 
+-  // TensorRT inference engine
+   std::unique_ptr<TRTInferenceEngine> inference_engine_;
+ 
+-  // Tensor names
+   std::string input_tensor_name_;
+   std::string output_tensor_name_;
+ 
+-  // CUDA resources
+-  cudaStream_t cuda_stream_ = nullptr;
+-  cudaGraph_t cuda_graph_ = nullptr;
+-  cudaGraphExec_t cuda_graph_exec_ = nullptr;
+-
+-  // Input buffer
+-  TPinnedVector<float> encoder_input_buffer_;
+-
+-  // Token storage
+-  TPinnedVector<float> token_buffer_;
++  std::vector<float> encoder_input_buffer_;
++  std::vector<float> token_buffer_;
+ 
+-  // State
+   bool initialized_ = false;
+-  bool graph_captured_ = false;
+ };
+ 
+ #endif // ENCODER_HPP
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/inference_backend.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/inference_backend.hpp
+new file mode 100644
+index 0000000..6f740bb
+--- /dev/null
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/inference_backend.hpp
+@@ -0,0 +1,13 @@
++#pragma once
++
++/**
++ * @file inference_backend.hpp
++ * @brief Unified include for the OpenVINO inference backend.
++ *
++ * All inference code should include this header. It provides:
++ *   - OVInferenceEngine (aliased as TRTInferenceEngine for compatibility)
++ *   - TPinnedVector<T> as std::vector<T>
++ *   - ConvertONNXToTRT() as a no-op passthrough (OpenVINO reads ONNX directly)
++ */
++
++#include <OVInference/OVInferenceEngine.h>
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
+index 48b7986..03b9fc4 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/include/localmotion_kplanner_tensorrt.hpp
+@@ -1,21 +1,15 @@
+ /**
+  * @file localmotion_kplanner_tensorrt.hpp
+- * @brief TensorRT (GPU) backend for the locomotion planner.
++ * @brief OpenVINO (CPU) backend for the locomotion planner.
+  *
+  * LocalMotionPlannerTensorRT is a concrete implementation of
+- * LocalMotionPlannerBase that runs planner inference on the GPU via NVIDIA
+- * TensorRT.  It is the production backend, offering significantly lower
+- * latency than the ONNX Runtime backend.
++ * LocalMotionPlannerBase that runs planner inference on the CPU via OpenVINO.
+  *
+- * ## GPU Pipeline
++ * ## Pipeline
+  *
+- *   1. Constructor converts the ONNX model to a TensorRT engine (cached on
+- *      disk), creates a CUDA stream, and captures a CUDA graph for the
+- *      inference pass.
+- *   2. `UpdateInputTensors()` writes new locomotion commands into pinned-
+- *      memory (`TPinnedVector`) buffers on the host.
+- *   3. `RunInference()` asynchronously copies inputs to the GPU, launches
+- *      the captured CUDA graph, copies outputs back, and synchronises.
++ *   1. Constructor loads the ONNX model via OpenVINO and runs a warmup.
++ *   2. `UpdateInputTensors()` writes new locomotion commands into buffers.
++ *   3. `RunInference()` sets inputs, runs Enqueue(), reads outputs.
+  *   4. Output buffers (`mujoco_qpos_values_`, `num_pred_frames_values_`)
+  *      are read by the base class to resample the trajectory at 50 Hz.
+  *
+@@ -25,53 +19,38 @@
+  *   --------|--------|------
+  *   0       | 6      | Basic: context, mode, target_vel, movement/facing direction, random_seed.
+  *   1–2     | 11     | Adds: height, has_specific_target, specific_target_positions/headings, allowed_pred_num_tokens.
+- *
+- * ## CUDA Graph
+- *
+- * A CUDA graph is captured during `InitializeEngine()` and replayed on every
+- * `RunInference()` call.  This eliminates kernel launch overhead and ensures
+- * deterministic timing (~1–2 ms per planning cycle on Jetson Orin).
+  */
+ 
+ #ifndef LOCALMOTION_KPLANNER_TENSORRT_HPP
+ #define LOCALMOTION_KPLANNER_TENSORRT_HPP
+ 
+-#include <TRTInference/InferenceEngine.h>
++#include "inference_backend.hpp"
+ #include <iostream>
++#include <chrono>
++#include <cmath>
+ #include "localmotion_kplanner.hpp"
+-#include <cuda_runtime.h>
+ 
+ /**
+  * @class LocalMotionPlannerTensorRT
+- * @brief TensorRT (GPU) backend for the locomotion planner.
+- *
+- * Uses CUDA graphs and pinned memory for low-latency, deterministic inference.
++ * @brief OpenVINO (CPU) backend for the locomotion planner.
+  */
+ class LocalMotionPlannerTensorRT : public LocalMotionPlannerBase {
+ public:
+     /**
+      * @brief Constructor for LocalMotionPlannerTensorRT
+      * @param use_fp16 Whether to use FP16 precision
+-     * @param device_id CUDA device ID to use for inference
++     * @param device_id Unused (kept for API compatibility)
+      * @param config Planner configuration parameters
+      */
+     LocalMotionPlannerTensorRT(bool use_fp16,
+                                int device_id = 0,
+                                const PlannerConfig& config = PlannerConfig())
+         : LocalMotionPlannerBase(config), use_fp16_(use_fp16),
+-          device_id_(device_id), cuda_stream_(nullptr), graph_(nullptr), graphExec_(nullptr) {
+-        
+-        // Initialize TensorRT engine
+-        inference_engine_ = std::make_unique<TRTInferenceEngine>();
++          device_id_(device_id) {
+ 
+-        // Clear all input value vectors and ensure correct sizes:
+-        mode_values_.clear();
+-        target_vel_values_.clear();
+-        movement_direction_values_.clear();
+-        facing_direction_values_.clear();
+-        random_seed_values_.clear();
+-        context_qpos_values_.clear();
++        inference_engine_ = std::make_unique<TRTInferenceEngine>();
+ 
++        // Initialize input buffers
+         mode_values_.resize(1);
+         target_vel_values_.resize(1);
+         movement_direction_values_.resize(3, 0.0f);
+@@ -79,203 +58,153 @@ public:
+         random_seed_values_.resize(1);
+         context_qpos_values_.resize(4 * (G1_NUM_MOTOR + 7));
+ 
+-        {
+-            // version 1
+-            target_height_values_.clear();
+-            has_specific_target_.clear(); 
+-            specific_target_positions_.clear(); 
+-            specific_target_headings_.clear(); 
+-            allowed_pred_num_tokens_.clear(); 
+-
+-            target_height_values_.resize(1,-1.0f); 
+-            has_specific_target_.resize(1,0); 
+-            specific_target_positions_.resize(12,0.0f); 
+-            specific_target_headings_.resize(4,0.0f); 
+-            allowed_pred_num_tokens_.resize(11,0);
+-
+-            // set allowed_pred_num_tokens_ to [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]
+-            allowed_pred_num_tokens_[0] = 0; // 6 tokens
+-            allowed_pred_num_tokens_[1] = 0; // 7
+-            allowed_pred_num_tokens_[2] = 0; // 8
+-            allowed_pred_num_tokens_[3] = 1; // 9
+-            allowed_pred_num_tokens_[4] = 1; // 10
+-            allowed_pred_num_tokens_[5] = 1;
+-        }
+-
+-
+-        // Clear output buffers
+-        mujoco_qpos_values_.clear();
+-        num_pred_frames_values_.clear();
+-        
+-        // Initialize output vectors with defaults
++        // Version 1+ inputs
++        target_height_values_.resize(1, -1.0f);
++        has_specific_target_.resize(1, 0);
++        specific_target_positions_.resize(12, 0.0f);
++        specific_target_headings_.resize(4, 0.0f);
++        allowed_pred_num_tokens_.resize(11, 0);
++
++        // Default allowed tokens
++        allowed_pred_num_tokens_[0] = 0; // 6 tokens
++        allowed_pred_num_tokens_[1] = 0; // 7
++        allowed_pred_num_tokens_[2] = 0; // 8
++        allowed_pred_num_tokens_[3] = 1; // 9
++        allowed_pred_num_tokens_[4] = 1; // 10
++        allowed_pred_num_tokens_[5] = 1;
++
++        // Initialize output buffers
+         mujoco_qpos_values_.resize(64 * 36);
+         num_pred_frames_values_.resize(1);
+ 
+         bool success = InitializeEngine();
+         if (!success) {
+-            std::cout << "✗ Failed to initialize TensorRT engine" << std::endl;
+-            throw std::runtime_error("Failed to initialize TensorRT engine");
++            std::cout << "✗ Failed to initialize planner engine" << std::endl;
++            throw std::runtime_error("Failed to initialize planner engine");
+         }
+-        
+-        // CUDA stream will be created in the .cpp implementation
+-        // to avoid including full CUDA headers in the header file
+     }
+ 
+-    /**
+-     * @brief Destructor
+-     */
+-    ~LocalMotionPlannerTensorRT() {
+-        if (graphExec_) {
+-            cudaGraphExecDestroy(graphExec_);
+-        }
+-        if (graph_) {
+-            cudaGraphDestroy(graph_);
+-        }
+-        if (cuda_stream_) {
+-            cudaStreamDestroy(cuda_stream_);
+-        }
+-    }
++    ~LocalMotionPlannerTensorRT() = default;
+ 
+     bool InitializeSpecific() override {
+-        if (!inference_engine_) {
+-            return false;
+-        }
+-        
+-
+-        return true;
++        return inference_engine_ != nullptr;
+     }
+ 
+-
+-    // TensorRT always uses CUDA streams for async inference (like existing code)
+-
+-    /**
+-     * @brief Get current CUDA stream (for async operations)
+-     * @return Current CUDA stream
+-     */
+-    cudaStream_t GetCudaStream() const { return cuda_stream_; }
+-
+ private:
+     // ------------------------------------------------------------------
+-    // TensorRT engine components
++    // Engine components
+     // ------------------------------------------------------------------
+-    std::unique_ptr<TRTInferenceEngine> inference_engine_;  ///< TensorRT inference engine.
+-    bool use_fp16_;           ///< FP16 precision flag.
+-    int device_id_;           ///< CUDA device ID.
+-    cudaStream_t cuda_stream_;  ///< CUDA stream for async operations.
+-    cudaGraph_t graph_;         ///< Captured CUDA graph (inference pass).
+-    cudaGraphExec_t graphExec_; ///< Instantiated CUDA graph for replay.
++    std::unique_ptr<TRTInferenceEngine> inference_engine_;
++    bool use_fp16_;
++    int device_id_;
+ 
+     // ------------------------------------------------------------------
+-    // Input data buffers (pinned memory for efficient CPU ↔ GPU transfers)
++    // Input data buffers
+     // ------------------------------------------------------------------
+-    TPinnedVector<float> context_qpos_values_;          ///< [4 × 36] Context frames (7 root + 29 joints each).
+-    TPinnedVector<int64_t> mode_values_;                ///< [1] Locomotion mode.
+-    TPinnedVector<float> target_vel_values_;            ///< [1] Target speed (−1 = default).
+-    TPinnedVector<float> movement_direction_values_;    ///< [3] Movement direction unit vector.
+-    TPinnedVector<float> facing_direction_values_;      ///< [3] Facing direction unit vector.
+-    TPinnedVector<int64_t> random_seed_values_;         ///< [1] Random seed.
++    std::vector<float> context_qpos_values_;          ///< [4 × 36] Context frames.
++    std::vector<int64_t> mode_values_;                ///< [1] Locomotion mode.
++    std::vector<float> target_vel_values_;            ///< [1] Target speed.
++    std::vector<float> movement_direction_values_;    ///< [3] Movement direction.
++    std::vector<float> facing_direction_values_;      ///< [3] Facing direction.
++    std::vector<int64_t> random_seed_values_;         ///< [1] Random seed.
+ 
+     // Version 1–2 additional inputs
+-    TPinnedVector<float> target_height_values_;         ///< [1] Target body height (−1 = default).
+-    TPinnedVector<int64_t> has_specific_target_;        ///< [1] Whether specific waypoint target is set.
+-    TPinnedVector<float> specific_target_positions_;    ///< [12] 4 waypoint positions × xyz.
+-    TPinnedVector<float> specific_target_headings_;     ///< [4]  4 waypoint heading angles.
+-    TPinnedVector<int64_t> allowed_pred_num_tokens_;    ///< [11] Allowed prediction token mask.
++    std::vector<float> target_height_values_;         ///< [1] Target body height.
++    std::vector<int64_t> has_specific_target_;        ///< [1] Waypoint target flag.
++    std::vector<float> specific_target_positions_;    ///< [12] 4 waypoint positions × xyz.
++    std::vector<float> specific_target_headings_;     ///< [4] 4 waypoint heading angles.
++    std::vector<int64_t> allowed_pred_num_tokens_;    ///< [11] Prediction token mask.
+ 
+     // ------------------------------------------------------------------
+-    // Output data buffers (pinned memory)
++    // Output data buffers
+     // ------------------------------------------------------------------
+-    TPinnedVector<float> mujoco_qpos_values_;           ///< [frames × 36] Predicted qpos (7 root + 29 joints).
+-    TPinnedVector<int32_t> num_pred_frames_values_;     ///< [1] Number of predicted 30 Hz frames.
++    std::vector<float> mujoco_qpos_values_;           ///< [frames × 36] Predicted qpos.
++    std::vector<int32_t> num_pred_frames_values_;     ///< [1] Number of predicted frames.
+ 
+-    /// Named tensor identifiers used for TensorRT SetInput/GetOutput calls.
++    // ------------------------------------------------------------------
++    // Inference logging
++    // ------------------------------------------------------------------
++    uint64_t planner_infer_count_ = 0;
++    uint64_t planner_latency_sum_us_ = 0;
++
++    /// Named tensor identifiers.
+     struct TensorNames {
+         std::string context_qpos = "context_mujoco_qpos";
+         std::string mode = "mode";
+         std::string target_vel = "target_vel";
+-        std::string target_height = "height"; // version 1
+-        std::string has_specific_target = "has_specific_target"; // version 1
+-        std::string specific_target_positions = "specific_target_positions"; // version 1
+-        std::string specific_target_headings = "specific_target_headings"; // version 1
+-        std::string allowed_pred_num_tokens = "allowed_pred_num_tokens"; // version 1
+-
++        std::string target_height = "height";
++        std::string has_specific_target = "has_specific_target";
++        std::string specific_target_positions = "specific_target_positions";
++        std::string specific_target_headings = "specific_target_headings";
++        std::string allowed_pred_num_tokens = "allowed_pred_num_tokens";
+         std::string movement_direction = "movement_direction";
+         std::string facing_direction = "facing_direction";
+         std::string random_seed = "random_seed";
+-        
+         std::string mujoco_qpos_output = "mujoco_qpos";
+         std::string num_pred_frames_output = "num_pred_frames";
+     } tensor_names_;
+ 
+     /**
+-     * @brief Convert the ONNX model to TensorRT, initialise the engine, and capture a CUDA graph.
+-     * @return True on success; false if conversion, initialisation, or validation fails.
++     * @brief Load and compile the ONNX model with OpenVINO, run warmup.
+      */
+     bool InitializeEngine() {
+         std::cout << "Initialize Engine..." << std::endl;
+ 
+-        // Create CUDA stream for async operations
+-        cudaError_t status = cudaStreamCreate(&cuda_stream_);
+-        if (status != cudaSuccess) {
+-            std::cout << "✗ CUDA error: " << cudaGetErrorString(status) << std::endl;
+-            return false;
+-        }
+-
+-        // Setup options for ONNX to TensorRT conversion
+         Options options;
+         options.deviceID = device_id_;
+         std::string prefix("planner_");
+-        if(use_fp16_)
+-        {
++        if (use_fp16_) {
+             options.precision = Precision::FP16;
+             prefix += "fp16_";
+         }
+-        
+-        std::string cachedTRTFile;
++
++        std::string model_file;
+         std::string onnxModelPath = config_.model_path;
+-        
+-        // Convert ONNX to TensorRT if needed
+-        if (!ConvertONNXToTRT(options, onnxModelPath, cachedTRTFile, prefix, false)) {
+-            std::cout << "✗ Failed to convert ONNX at " << onnxModelPath << std::endl;
++
++        if (!ConvertONNXToTRT(options, onnxModelPath, model_file, prefix, false)) {
++            std::cout << "✗ Failed to prepare planner model: " << onnxModelPath << std::endl;
+             return false;
+         }
+-        
+-        // Initialize the TensorRT inference engine
+-        if (!inference_engine_->Initialize(cachedTRTFile, options.deviceID, options.dynamic_axes_names)) {
+-            std::cout << "✗ Failed to initialize TensorRT model: " << cachedTRTFile << std::endl;
++
++        // Planner always runs on CPU with FP32 for accuracy
++        std::cout << "[Planner] Initializing with OpenVINO backend (CPU, FP32)..." << std::endl;
++        std::cout << "[Planner] Model: " << model_file << std::endl;
++
++        auto init_start = std::chrono::steady_clock::now();
++        if (!inference_engine_->Initialize(model_file, "CPU", Precision::FP32)) {
++            std::cout << "✗ Failed to initialize planner on CPU: " << model_file << std::endl;
+             return false;
+         }
+-        
+-        // Initialize engine inputs
++        auto init_end = std::chrono::steady_clock::now();
++        auto init_ms = std::chrono::duration_cast<std::chrono::milliseconds>(init_end - init_start).count();
++        std::cout << "[Planner] ✓ OpenVINO initialization took " << init_ms << "ms" << std::endl;
++
+         if (!inference_engine_->InitInputs({})) {
+-            std::cout << "✗ Failed to initialize TensorRT model inputs: " << cachedTRTFile << std::endl;
++            std::cout << "✗ Failed to initialize planner model inputs: " << model_file << std::endl;
+             return false;
+         }
+-        
+-        std::cout << "✓ Successfully converted ONNX to TRT: " << cachedTRTFile << std::endl;
+ 
+-        // Capture a CUDA graph
+-        cudaStreamBeginCapture(cuda_stream_, cudaStreamCaptureModeRelaxed);
+-        if(!inference_engine_->Enqueue(cuda_stream_))
+-        {
+-            std::cout << "✗ Failed to enqueue inference for capturing cuda graph" << std::endl;
+-            return false;
++        std::cout << "✓ Successfully loaded planner model: " << model_file << std::endl;
++
++        // Run warmup inference
++        std::cout << "[Planner] Running warmup inference..." << std::endl;
++        auto warmup_start = std::chrono::steady_clock::now();
++        if (!inference_engine_->Enqueue(nullptr)) {
++            std::cout << "[Planner] ⚠ Warmup inference failed (non-fatal)" << std::endl;
+         }
+-        cudaStreamEndCapture(cuda_stream_, &graph_);
+-        cudaStreamSynchronize(cuda_stream_);
+-        
+-        cudaGraphInstantiate(&graphExec_, graph_, NULL, NULL, 0);
++        auto warmup_end = std::chrono::steady_clock::now();
++        auto warmup_ms = std::chrono::duration_cast<std::chrono::milliseconds>(warmup_end - warmup_start).count();
++        std::cout << "[Planner] ✓ Warmup inference took " << warmup_ms << "ms" << std::endl;
+ 
+-        // Log tensor information for debugging
++        // Validate tensor names
+         std::vector<std::string> inputNames = inference_engine_->GetInputTensorNames();
+         std::vector<std::string> outputNames = inference_engine_->GetOutputTensorNames();
+ 
+-        // Version-based input validation (ensure expected count and required names)
+         size_t expectedInputs = (config_.version == 1 || config_.version == 2) ? 11 : 6;
+         if (inputNames.size() != expectedInputs) {
+             std::cout << "Model version: " << config_.version << std::endl;
+             std::cout << "Model has " << inputNames.size() << " inputs, expected " << expectedInputs << std::endl;
+-            std::cout << "✗ Failed to initialize TensorRT engine (input count mismatch)" << std::endl;
++            std::cout << "✗ Failed to initialize planner engine (input count mismatch)" << std::endl;
+             return false;
+         }
+ 
+@@ -302,7 +231,7 @@ private:
+                 }
+             }
+         }
+-        
++
+         std::cout << "Input tensors:" << std::endl;
+         for (const auto& name : inputNames) {
+             std::vector<int64_t> shape;
+@@ -311,7 +240,7 @@ private:
+             for (auto& dim : shape) {
+                 std::cout << dim << " ";
+             }
+-            
++
+             auto dataType = inference_engine_->GetTensorDataType(name);
+             if (dataType == DataType::FLOAT) {
+                 std::cout << "float";
+@@ -324,7 +253,7 @@ private:
+             }
+             std::cout << std::endl;
+         }
+-        
++
+         std::cout << "Output tensors:" << std::endl;
+         for (const auto& name : outputNames) {
+             std::vector<int64_t> shape;
+@@ -333,7 +262,7 @@ private:
+             for (auto& dim : shape) {
+                 std::cout << dim << " ";
+             }
+-            
++
+             auto dataType = inference_engine_->GetTensorDataType(name);
+             if (dataType == DataType::FLOAT) {
+                 std::cout << "float";
+@@ -345,35 +274,72 @@ private:
+             std::cout << std::endl;
+         }
+ 
+-        std::cout << "✓ TensorRT planner model loaded successfully!" << std::endl;
++        std::cout << "✓ Planner model loaded successfully!" << std::endl;
+         return true;
+     }
+-    
+-    /// Async GPU inference: copy inputs → launch CUDA graph → copy outputs → synchronise.
++
++    /// Run planner inference: set inputs → infer → read outputs.
+     void RunInference() override {
+-        inference_engine_->SetInputDataAsync(tensor_names_.context_qpos, context_qpos_values_, cuda_stream_);
+-        inference_engine_->SetInputDataAsync(tensor_names_.facing_direction, facing_direction_values_, cuda_stream_);
+-        inference_engine_->SetInputDataAsync(tensor_names_.mode, mode_values_, cuda_stream_);
+-        inference_engine_->SetInputDataAsync(tensor_names_.target_vel, target_vel_values_, cuda_stream_);
+-        inference_engine_->SetInputDataAsync(tensor_names_.movement_direction, movement_direction_values_, cuda_stream_);
+-        inference_engine_->SetInputDataAsync(tensor_names_.random_seed, random_seed_values_, cuda_stream_);
+-        
+-        if (config_.version == 1 || config_.version == 2)
+-        {
+-            inference_engine_->SetInputDataAsync(tensor_names_.target_height, target_height_values_, cuda_stream_);
+-            inference_engine_->SetInputDataAsync(tensor_names_.has_specific_target, has_specific_target_, cuda_stream_);
+-            inference_engine_->SetInputDataAsync(tensor_names_.specific_target_positions, specific_target_positions_, cuda_stream_);
+-            inference_engine_->SetInputDataAsync(tensor_names_.specific_target_headings, specific_target_headings_, cuda_stream_);
+-            inference_engine_->SetInputDataAsync(tensor_names_.allowed_pred_num_tokens, allowed_pred_num_tokens_, cuda_stream_);
++        auto infer_start = std::chrono::steady_clock::now();
++
++        inference_engine_->SetInputData(tensor_names_.context_qpos, context_qpos_values_);
++        inference_engine_->SetInputData(tensor_names_.facing_direction, facing_direction_values_);
++        inference_engine_->SetInputData(tensor_names_.mode, mode_values_);
++        inference_engine_->SetInputData(tensor_names_.target_vel, target_vel_values_);
++        inference_engine_->SetInputData(tensor_names_.movement_direction, movement_direction_values_);
++        inference_engine_->SetInputData(tensor_names_.random_seed, random_seed_values_);
++
++        if (config_.version == 1 || config_.version == 2) {
++            inference_engine_->SetInputData(tensor_names_.target_height, target_height_values_);
++            inference_engine_->SetInputData(tensor_names_.has_specific_target, has_specific_target_);
++            inference_engine_->SetInputData(tensor_names_.specific_target_positions, specific_target_positions_);
++            inference_engine_->SetInputData(tensor_names_.specific_target_headings, specific_target_headings_);
++            inference_engine_->SetInputData(tensor_names_.allowed_pred_num_tokens, allowed_pred_num_tokens_);
++        }
++
++        if (!inference_engine_->Enqueue(nullptr)) {
++            std::cerr << "[Planner] ✗ Inference failed!" << std::endl;
++            return;
++        }
++
++        inference_engine_->GetOutputData(tensor_names_.mujoco_qpos_output, mujoco_qpos_values_);
++        inference_engine_->GetOutputData(tensor_names_.num_pred_frames_output, num_pred_frames_values_);
++
++        auto infer_end = std::chrono::steady_clock::now();
++        auto latency_us = std::chrono::duration_cast<std::chrono::microseconds>(infer_end - infer_start).count();
++
++        // Log planner inference latency periodically
++        planner_infer_count_++;
++        planner_latency_sum_us_ += latency_us;
++        if (planner_infer_count_ % 10 == 1) {
++            bool has_nan = false, has_inf = false;
++            float max_abs_val = 0.0f;
++            for (size_t i = 0; i < mujoco_qpos_values_.size(); ++i) {
++                float v = mujoco_qpos_values_[i];
++                if (std::isnan(v)) { has_nan = true; break; }
++                if (std::isinf(v)) { has_inf = true; break; }
++                max_abs_val = std::max(max_abs_val, std::abs(v));
++            }
++            int num_pred = num_pred_frames_values_.empty() ? -1 : static_cast<int>(num_pred_frames_values_[0]);
++            double avg_latency = static_cast<double>(planner_latency_sum_us_) / planner_infer_count_;
++
++            std::cout << "[Planner] Inference #" << planner_infer_count_
++                      << " | latency: " << latency_us << "us"
++                      << " (avg: " << static_cast<int>(avg_latency) << "us)"
++                      << " | num_pred_frames: " << num_pred
++                      << " | max|qpos|: " << max_abs_val;
++            if (has_nan) std::cout << " | ⚠ NaN DETECTED";
++            if (has_inf) std::cout << " | ⚠ Inf DETECTED";
++            std::cout << " | mode: " << mode_values_[0]
++                      << " vel: " << target_vel_values_[0]
++                      << " dir: [" << movement_direction_values_[0] << ","
++                      << movement_direction_values_[1] << ","
++                      << movement_direction_values_[2] << "]"
++                      << std::endl;
+         }
+-        
+-        cudaGraphLaunch(graphExec_, cuda_stream_);
+-        inference_engine_->GetOutputDataAsync(tensor_names_.mujoco_qpos_output, mujoco_qpos_values_, cuda_stream_);
+-        inference_engine_->GetOutputDataAsync(tensor_names_.num_pred_frames_output, num_pred_frames_values_, cuda_stream_);
+-        cudaStreamSynchronize(cuda_stream_);
+     }
+-    
+-    /// Write new locomotion commands into pinned-memory input buffers.
++
++    /// Write new locomotion commands into input buffers.
+     void UpdateInputTensors(int mode_value,
+                            float target_vel,
+                            float target_height,
+@@ -389,28 +355,26 @@ private:
+         // Update target velocity
+         target_vel_values_[0] = target_vel;
+ 
+-        if (config_.version == 1 || config_.version == 2)
+-        {
+-            // Update target height (version 1)
++        if (config_.version == 1 || config_.version == 2) {
+             target_height_values_[0] = target_height;
+         }
+-        
++
+         // Update movement direction
+         movement_direction_values_[0] = movement_direction[0];
+         movement_direction_values_[1] = movement_direction[1];
+         movement_direction_values_[2] = movement_direction[2];
+-        
++
+         // Update facing direction
+         facing_direction_values_[0] = facing_direction[0];
+         facing_direction_values_[1] = facing_direction[1];
+         facing_direction_values_[2] = facing_direction[2];
+-        
++
+         // Update random seed if provided
+         if (random_seed != -1) {
+             current_random_seed_ = random_seed;
+             random_seed_values_[0] = random_seed;
+         }
+-        
++
+         // Log replanning values
+         std::cout << "Replanning with mode: ";
+         switch(mode_values_[0])
+@@ -669,13 +633,13 @@ private:
+                   << ", movement: [" << movement_direction_values_[0] << ", " << movement_direction_values_[1] << ", " << movement_direction_values_[2] << "]"
+                   << ", facing: [" << facing_direction_values_[0] << ", " << facing_direction_values_[1] << ", " << facing_direction_values_[2] << "]" << std::endl;
+     }
+-    
++
+     virtual float *GetContextBuffer() override {
+         return context_qpos_values_.data();
+     }
+     virtual int32_t GetNumPredFrames() override {
+         return num_pred_frames_values_[0];
+-    }   
++    }
+     virtual const float *GetMujocoQposBuffer() override {
+         return mujoco_qpos_values_.data();
+     }
+diff --git a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+index 4dc9f4f..0557171 100644
+--- a/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
++++ b/gear_sonic_deploy/src/g1/g1_deploy_onnx_ref/src/g1_deploy_onnx_ref.cpp
+@@ -46,12 +46,13 @@
+  *   --policy-fp16         | Use FP16 for policy TensorRT engine
+  */
+ #include <cmath>
+-#include <cuda_runtime_api.h>
+ #include <memory>
+ #include <mutex>
+ #include <shared_mutex>
+ #include <pthread.h>
+ #include <sched.h>
++#include <signal.h>
++#include <atomic>
+ #include <array>
+ #include <vector>
+ #include <algorithm>
+@@ -76,11 +77,13 @@
+ #include <unitree/idl/hg/LowState_.hpp>
+ #include <unitree/robot/b2/motion_switcher/motion_switcher_client.hpp>
+ 
+-// TRTInference
+-#include <TRTInference/InferenceEngine.h>
++// Inference backend (TensorRT or OpenVINO)
++#include "../include/inference_backend.hpp"
+ 
+-// ONNX
++// ONNX Runtime (only needed for non-OpenVINO builds or if ORT is available)
++#if !defined(USE_OPENVINO) || defined(HAS_ONNXRUNTIME)
+ #include <onnxruntime_cxx_api.h>
++#endif
+ 
+ // Motion Data Reader
+ #include "../include/motion_data_reader.hpp"
+@@ -121,7 +124,6 @@
+ 
+ #include "../include/output_interface/zmq_output_handler.hpp"
+ 
+-#include <cuda_runtime.h>
+ #include "../include/state_logger.hpp"
+ 
+ // Encoder
+@@ -2301,11 +2303,6 @@ class G1Deploy {
+       size_t obs_dim = policy_engine_->GetInputDimension();
+       obs_buffer_.resize(obs_dim, 0.0);
+       
+-      // Capture CUDA graph for optimized execution
+-      if (!policy_engine_->CaptureGraph()) {
+-        throw std::runtime_error("Failed to capture control policy CUDA graph");
+-      }
+-      
+       std::cout << "✓ Policy model loaded successfully!" << std::endl;
+ 
+       // Load observation configuration FIRST (before encoder/planner initialization)
+@@ -2356,11 +2353,6 @@ class G1Deploy {
+         size_t encoder_input_size = encoder_engine_->GetInputDimension();
+         encoder_obs_buffer_.resize(encoder_input_size, 0.0);
+ 
+-        // Capture CUDA graph for optimized execution
+-        if (!encoder_engine_->CaptureGraph()) {
+-          throw std::runtime_error("Failed to capture encoder CUDA graph");
+-        }
+-        
+         std::cout << "✓ Encoder model loaded successfully!" << std::endl;
+         is_using_encoder_ = true;
+         initial_encoder_mode_ = 0;  // Encoder available, default to mode 0.
+@@ -2410,7 +2402,8 @@ class G1Deploy {
+           std::cout << "Unsupported planner version: " << planner_path << std::endl;
+           throw std::runtime_error("Unsupported planner version: " + planner_path);
+         }
+-        planner_ = std::make_unique<LocalMotionPlannerTensorRT>(planner_fp16, 0, planner_config);
++        // Planner always uses FP32 for accuracy on CPU
++        planner_ = std::make_unique<LocalMotionPlannerTensorRT>(false, 0, planner_config);
+       }
+       
+       // Initialize observation function map
+@@ -4090,7 +4083,20 @@ class G1Deploy {
+  * All other arguments are optional flags (see --help for full list).
+  * The main loop sleeps until the operator issues a stop signal or ROS2 shuts down.
+  */
++
++// Global flag for signal handler → main loop communication
++static std::atomic<bool> g_signal_received{false};
++
++static void SignalHandler(int signum) {
++  std::cout << "\n[INFO] Signal " << signum << " received, shutting down gracefully..." << std::endl;
++  g_signal_received.store(true);
++}
++
+ int main(int argc, char const* argv[]) {
++  // Install signal handlers for graceful shutdown
++  signal(SIGINT, SignalHandler);
++  signal(SIGTERM, SignalHandler);
++
+   std::cout << "[DEBUG] Program starting..." << std::endl;
+   if (argc < 4) {
+     std::cout << "Usage: " << argv[0] << " <network_interface> <policy_file> <motion_data_path> [OPTIONS]"
+@@ -4442,20 +4448,20 @@ int main(int argc, char const* argv[]) {
+   );
+   std::cout << "[DEBUG] G1Deploy object created successfully!" << std::endl;
+   
+-  // Main application loop - check both operator_state.stop and ROS2 status if using ROS2
++  // Main application loop - check stop flag and signal
+ #if HAS_ROS2
+   if (inputType == "ros2") {
+-    while (!custom.operator_state.stop && rclcpp::ok()) { 
+-      sleep(0.02); 
++    while (!custom.operator_state.stop && !g_signal_received.load() && rclcpp::ok()) {
++      usleep(20000);
+     }
+     if (!rclcpp::ok()) {
+       std::cout << "[INFO] ROS2 shutdown detected (Ctrl+C)" << std::endl;
+     }
+   } else {
+-    while (!custom.operator_state.stop) { sleep(0.02); }
++    while (!custom.operator_state.stop && !g_signal_received.load()) { usleep(20000); }
+   }
+ #else
+-  while (!custom.operator_state.stop) { sleep(0.02); }
++  while (!custom.operator_state.stop && !g_signal_received.load()) { usleep(20000); }
+ #endif
+   
+   std::cout << "[DEBUG] Stopping G1Deploy..." << std::endl;
+-- 
+2.43.0
+

@@ -2,7 +2,8 @@
 param(
     [switch]$Help,
     [switch]$NoElevate,
-    [switch]$Silent
+    [switch]$Silent,
+    [switch]$NoWindowsTerminal
 )
 
 # ============================================================================
@@ -15,29 +16,90 @@ if (-not $IsWindowsOS) {
     exit 1
 }
 
+# Disable QuickEdit Mode on conhost to prevent the process from hanging
+function Disable-ConsoleQuickEdit {
+    try {
+        if (-not ('SmartClassroom.ConsoleMode' -as [type])) {
+            Add-Type -Namespace SmartClassroom -Name ConsoleMode -MemberDefinition @'
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern IntPtr GetStdHandle(int nStdHandle);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
+[DllImport("kernel32.dll", SetLastError = true)]
+public static extern bool SetConsoleMode(IntPtr hConsoleHandle, uint dwMode);
+'@ -ErrorAction Stop
+        }
+
+        $handle = [SmartClassroom.ConsoleMode]::GetStdHandle(-10)  # STD_INPUT_HANDLE
+        if ($handle -eq [IntPtr]::Zero -or $handle -eq [IntPtr](-1)) { return }
+
+        $mode = [uint32]0
+        if (-not [SmartClassroom.ConsoleMode]::GetConsoleMode($handle, [ref]$mode)) { return }
+
+        # ENABLE_EXTENDED_FLAGS (0x0080) must be set for the console to honour
+        # a cleared ENABLE_QUICK_EDIT_MODE (0x0040).
+        $newMode = [uint32](($mode -band (-bnot 0x0040)) -bor 0x0080)
+        if ($newMode -ne $mode) {
+            [void][SmartClassroom.ConsoleMode]::SetConsoleMode($handle, $newMode)
+        }
+    } catch {
+        # No real console attached (redirected output, ISE, ...)
+    }
+}
+
+if (-not $env:WT_SESSION) { Disable-ConsoleQuickEdit }
+
 # ============================================================================
 # AUTO-ELEVATE TO ADMINISTRATOR
 # ============================================================================
 if (-not $NoElevate) {
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-    
+
     if (-not $isAdmin) {
         Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
-        
-        $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-        if ($Help) { $argList += " -Help" }
-        if ($Silent) { $argList += " -Silent" }
-        $argList += " -NoElevate"  # Prevent infinite elevation loop
-        
-        try {
-            Start-Process powershell -Verb RunAs -ArgumentList $argList
-            Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
-            exit 0
-        } catch {
-            Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
-            Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
-            exit 1
+
+        $relaunchArgs = @()
+        if ($Help) { $relaunchArgs += "-Help" }
+        if ($Silent) { $relaunchArgs += "-Silent" }
+        if ($NoWindowsTerminal) { $relaunchArgs += "-NoWindowsTerminal" }
+        $relaunchArgs += "-NoElevate"  # Prevent infinite elevation loop
+
+        # Set-Location first so the -NoExit prompt stays in the script folder:
+        # after a failure the user can just re-run .\setup-smart-classroom.ps1 there.
+        $relaunchDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $PSCommandPath }
+
+        # Encoded rather than -File "<path>": wt treats ';' as its own delimiter
+        # and mangles nested quotes.
+        $relaunchCommand = "Set-Location '" + $relaunchDir.Replace("'", "''") + "'; & '" + $PSCommandPath.Replace("'", "''") + "' " + ($relaunchArgs -join ' ')
+        $relaunchEncoded = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($relaunchCommand))
+        $psArgs = "-NoExit -ExecutionPolicy Bypass -EncodedCommand $relaunchEncoded"
+
+        $wtCmd = if ($NoWindowsTerminal) { $null } else { Get-Command wt.exe -ErrorAction SilentlyContinue }
+
+        $elevated = $false
+        if ($wtCmd) {
+            # '-w SmartClassroom' also makes the start script's tabs join this window.
+            try {
+                Start-Process $wtCmd.Source -Verb RunAs -ArgumentList "-w SmartClassroom new-tab --title `"Smart Classroom Setup`" powershell.exe $psArgs"
+                $elevated = $true
+            } catch {
+                Write-Host "  Windows Terminal launch failed; falling back to powershell.exe..." -ForegroundColor DarkYellow
+            }
         }
+
+        if (-not $elevated) {
+            try {
+                Start-Process powershell -Verb RunAs -ArgumentList $psArgs
+                $elevated = $true
+            } catch {
+                Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
+                Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
+                exit 1
+            }
+        }
+
+        Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
+        exit 0
     }
 }
 
@@ -45,12 +107,13 @@ if ($Help) {
     Write-Host @"
 Smart Classroom Setup Script
 
-Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate] [-Silent]
+Usage: ./setup-smart-classroom.ps1 [-Help] [-NoElevate] [-Silent] [-NoWindowsTerminal]
 
 Options:
-    -Help       Show this help message
-    -NoElevate  Skip auto-elevation to Administrator (Windows)
-    -Silent     Unattended mode - auto-install dependencies, no prompts
+    -Help               Show this help message
+    -NoElevate          Skip auto-elevation to Administrator (Windows)
+    -Silent             Unattended mode - auto-install dependencies, no prompts
+    -NoWindowsTerminal  Elevate into a plain powershell.exe window instead of Windows Terminal
 
 System Requirements:
   - OS: Windows 11
@@ -96,6 +159,9 @@ Write-Host ""
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 if (-not $ScriptDir) { $ScriptDir = Get-Location }
 
+# Anchor the shell here so a re-run after an early exit works without any cd
+Set-Location $ScriptDir
+
 Write-Host "Script location: $ScriptDir" -ForegroundColor Gray
 Write-Host ""
 
@@ -121,16 +187,16 @@ if (Test-Path $proxyConfigFile) {
     if ($script:httpProxy) { Write-Host "    HTTP_PROXY:  $($script:httpProxy)" -ForegroundColor Gray }
     if ($script:httpsProxy) { Write-Host "    HTTPS_PROXY: $($script:httpsProxy)" -ForegroundColor Gray }
     if ($script:noProxy) { Write-Host "    NO_PROXY:    $($script:noProxy)" -ForegroundColor Gray }
-    if (-not $script:httpProxy -and -not $script:httpsProxy) { 
-        Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray 
-        
+    if (-not $script:httpProxy -and -not $script:httpsProxy) {
+        Write-Host "    (No proxy configured in .proxy-config)" -ForegroundColor Gray
+
         # Check environment for proxy settings
         Write-Host ""
         Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
         $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
         $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
         $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
-        
+
         $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
         if ($envProxies) {
             $envProxies | ForEach-Object {
@@ -160,21 +226,21 @@ if (Test-Path $proxyConfigFile) {
         Write-Host ""
         $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
     }
-    
+
     if ($changeProxy -match "^[Yy]") {
         Write-Host ""
         Write-Host "Enter new proxy settings (press Enter to keep current value):" -ForegroundColor Yellow
         Write-Host "  (Common Intel proxy: http://proxy-iind.intel.com:912)" -ForegroundColor DarkGray
         Write-Host ""
-        
+
         $newHttpProxy = Read-Host "HTTP_PROXY  [$($script:httpProxy)]"
         $newHttpsProxy = Read-Host "HTTPS_PROXY [$($script:httpsProxy)]"
         $newNoProxy = Read-Host "NO_PROXY    [$($script:noProxy)]"
-        
+
         if ($newHttpProxy) { $script:httpProxy = $newHttpProxy }
         if ($newHttpsProxy) { $script:httpsProxy = $newHttpsProxy }
         if ($newNoProxy) { $script:noProxy = $newNoProxy }
-        
+
         $proxyConfig = @{
             httpProxy = $script:httpProxy
             httpsProxy = $script:httpsProxy
@@ -192,7 +258,7 @@ if (Test-Path $proxyConfigFile) {
             $script:httpProxy = $envHttpProxy
             $script:httpsProxy = $envHttpsProxy
             $script:noProxy = $envNoProxy
-            
+
             $proxyConfig = @{
                 httpProxy = $script:httpProxy
                 httpsProxy = $script:httpsProxy
@@ -212,12 +278,12 @@ if (Test-Path $proxyConfigFile) {
     Write-Host "  No proxy configuration found in .proxy-config file." -ForegroundColor Gray
     Write-Host "  Checking environment for existing proxy settings..." -ForegroundColor Gray
     Write-Host ""
-    
+
     # Check environment variables for proxy settings
     $envHttpProxy = if ($env:HTTP_PROXY) { $env:HTTP_PROXY } elseif ($env:http_proxy) { $env:http_proxy } else { "" }
     $envHttpsProxy = if ($env:HTTPS_PROXY) { $env:HTTPS_PROXY } elseif ($env:https_proxy) { $env:https_proxy } else { "" }
     $envNoProxy = if ($env:NO_PROXY) { $env:NO_PROXY } elseif ($env:no_proxy) { $env:no_proxy } else { "" }
-    
+
     $envProxies = Get-ChildItem Env:\*proxy* -ErrorAction SilentlyContinue
     if ($envProxies) {
         $envProxies | ForEach-Object {
@@ -250,15 +316,15 @@ if (Test-Path $proxyConfigFile) {
         Write-Host "Enter proxy settings:" -ForegroundColor Yellow
         Write-Host "  (Common Intel proxy: http://proxy-iind.intel.com:912)" -ForegroundColor DarkGray
         Write-Host ""
-        
+
         $script:httpProxy = Read-Host "HTTP_PROXY"
         $script:httpsProxy = Read-Host "HTTPS_PROXY (press Enter to use same as HTTP)"
         $script:noProxy = Read-Host "NO_PROXY"
-        
+
         if (-not $script:httpsProxy -and $script:httpProxy) {
             $script:httpsProxy = $script:httpProxy
         }
-        
+
         $proxyConfig = @{
             httpProxy = $script:httpProxy
             httpsProxy = $script:httpsProxy
@@ -272,7 +338,7 @@ if (Test-Path $proxyConfigFile) {
             $script:httpProxy = $envHttpProxy
             $script:httpsProxy = $envHttpsProxy
             $script:noProxy = $envNoProxy
-            
+
             $proxyConfig = @{
                 httpProxy = $script:httpProxy
                 httpsProxy = $script:httpsProxy
@@ -302,15 +368,15 @@ function Invoke-WebRequestWithProxy {
         [string]$OutFile,
         [switch]$UseBasicParsing
     )
-    
+
     # Ensure TLS 1.2 is enabled
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    
+
     # For large files (GitHub releases), use WebClient which handles better through proxies
     if ($OutFile -and ($Uri -match "github.com.*releases")) {
         Write-Host "    Using WebClient for large file download..." -ForegroundColor DarkGray
         $webClient = New-Object System.Net.WebClient
-        
+
         if ($script:httpProxy -or $script:httpsProxy) {
             $proxyUrl = if ($Uri -match "^https") { $script:httpsProxy } else { $script:httpProxy }
             if ($proxyUrl) {
@@ -319,10 +385,10 @@ function Invoke-WebRequestWithProxy {
                 $webClient.Proxy = $proxy
             }
         }
-        
+
         # Add progress indicator
         $webClient.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PowerShell")
-        
+
         try {
             $webClient.DownloadFile($Uri, $OutFile)
             return
@@ -330,18 +396,18 @@ function Invoke-WebRequestWithProxy {
             Write-Host "    WebClient failed, trying Invoke-WebRequest..." -ForegroundColor DarkYellow
         }
     }
-    
+
     # Standard method for smaller files or API calls
     $params = @{
         Uri = $Uri
         UseBasicParsing = $UseBasicParsing
         TimeoutSec = 300
     }
-    
+
     if ($OutFile) {
         $params.OutFile = $OutFile
     }
-    
+
     if ($script:httpProxy -or $script:httpsProxy) {
         $proxyUrl = if ($Uri -match "^https") { $script:httpsProxy } else { $script:httpProxy }
         if ($proxyUrl) {
@@ -349,7 +415,7 @@ function Invoke-WebRequestWithProxy {
             $params.ProxyUseDefaultCredentials = $true
         }
     }
-    
+
     Invoke-WebRequest @params
 }
 
@@ -438,7 +504,7 @@ try {
     $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
     $osCaption = $osInfo.Caption
     $osBuild = [int]$osInfo.BuildNumber
-    
+
     if ($osBuild -ge 22000) {
         Write-Host "  [OK] $osCaption (Build $osBuild)" -ForegroundColor Green
     } else {
@@ -454,7 +520,7 @@ Write-Host "Checking Processor..." -ForegroundColor White
 try {
     $cpuInfo = Get-CimInstance -ClassName Win32_Processor | Select-Object -First 1
     $cpuName = $cpuInfo.Name
-    
+
     if ($cpuName -match "Intel.*Core.*Ultra") {
         Write-Host "  [OK] $cpuName" -ForegroundColor Green
     } elseif ($cpuName -match "Intel") {
@@ -475,7 +541,7 @@ Write-Host "Checking Memory..." -ForegroundColor White
 try {
     $memInfo = Get-CimInstance -ClassName Win32_ComputerSystem
     $totalMemGB = [math]::Round($memInfo.TotalPhysicalMemory / 1GB, 1)
-    
+
     if ($totalMemGB -ge 30) {
         Write-Host "  [OK] $totalMemGB GB RAM" -ForegroundColor Green
     } elseif ($totalMemGB -ge 16) {
@@ -494,10 +560,10 @@ Write-Host "Checking Storage..." -ForegroundColor White
 try {
     $driveLetter = (Split-Path -Qualifier $ScriptDir)
     $driveInfo = Get-PSDrive -Name $driveLetter.TrimEnd(':') -ErrorAction SilentlyContinue
-    
+
     if ($driveInfo) {
         $freeSpaceGB = [math]::Round($driveInfo.Free / 1GB, 1)
-        
+
         if ($freeSpaceGB -ge 50) {
             Write-Host "  [OK] $freeSpaceGB GB free on $driveLetter" -ForegroundColor Green
         } elseif ($freeSpaceGB -ge 30) {
@@ -521,14 +587,14 @@ try {
     $gpuList = Get-CimInstance -ClassName Win32_VideoController
     $intelGpuFound = $false
     $gpuNames = @()
-    
+
     foreach ($gpu in $gpuList) {
         $gpuNames += $gpu.Name
         if ($gpu.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)") {
             $intelGpuFound = $true
         }
     }
-    
+
     if ($intelGpuFound) {
         $intelGpuObj = $gpuList | Where-Object { $_.Name -match "Intel.*(Arc|Core Ultra|Iris|UHD|Graphics)" } | Select-Object -First 1
         Write-Host "  [OK] $($intelGpuObj.Name)" -ForegroundColor Green
@@ -576,24 +642,24 @@ function Install-NPUDriver {
     Write-Host "  Intel NPU Driver Installation" -ForegroundColor Cyan
     Write-Host "  ============================================" -ForegroundColor Cyan
     Write-Host ""
-    
+
     $npuDriverVersion = "32.0.100.4778"
     $npuDriverFileName = "npu_win_$npuDriverVersion.exe"
     $npuDriverUrl = "https://downloadmirror.intel.com/919954/$npuDriverFileName"
     $npuDriverPath = Join-Path $env:TEMP $npuDriverFileName
-    
+
     Write-Host "  Intel NPU Driver version: $npuDriverVersion" -ForegroundColor Gray
     Write-Host "  Supports: Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)" -ForegroundColor Gray
     Write-Host ""
-    
+
     Write-Host "  Step 1: Downloading NPU Driver..." -ForegroundColor Yellow
     Write-Host "    URL: $npuDriverUrl" -ForegroundColor DarkGray
     if ($script:httpProxy) { Write-Host "    Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
-    
+
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    
+
     $downloadSuccess = $false
-    
+
     try {
         Invoke-WebRequestWithProxy -Uri $npuDriverUrl -OutFile $npuDriverPath -UseBasicParsing
         if (Test-Path $npuDriverPath) {
@@ -609,7 +675,7 @@ function Install-NPUDriver {
     } catch {
         Write-Host "    [WARN] PowerShell download failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
-    
+
     if (-not $downloadSuccess -and (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
         Write-Host "    Trying curl.exe..." -ForegroundColor Gray
         try {
@@ -618,9 +684,9 @@ function Install-NPUDriver {
                 $curlArgs += @("-x", $script:httpProxy)
             }
             $curlArgs += $npuDriverUrl
-            
+
             & curl.exe @curlArgs 2>&1 | Out-Null
-            
+
             if ((Test-Path $npuDriverPath) -and ((Get-Item $npuDriverPath).Length -gt 10MB)) {
                 $downloadSuccess = $true
                 $fileSize = (Get-Item $npuDriverPath).Length
@@ -630,7 +696,7 @@ function Install-NPUDriver {
             Write-Host "    [WARN] curl download failed: $_" -ForegroundColor Yellow
         }
     }
-    
+
     if (-not $downloadSuccess) {
         Write-Host "    [FAIL] Download failed." -ForegroundColor Red
         Write-Host ""
@@ -642,19 +708,19 @@ function Install-NPUDriver {
         Write-Host ""
         return $false
     }
-    
+
     Write-Host ""
-    
+
     Write-Host "  Step 2: Running NPU Driver Installer..." -ForegroundColor Yellow
     Write-Host "    Please follow the on-screen instructions." -ForegroundColor Gray
     Write-Host "    The installer window will open shortly..." -ForegroundColor Gray
     Write-Host ""
-    
+
     try {
         $process = Start-Process -FilePath $npuDriverPath -Wait -PassThru
-        
+
         Remove-Item $npuDriverPath -Force -ErrorAction SilentlyContinue
-        
+
         if ($process.ExitCode -eq 0) {
             Write-Host "    [OK] NPU Driver installation completed" -ForegroundColor Green
         } else {
@@ -664,7 +730,7 @@ function Install-NPUDriver {
         Write-Host "    [WARN] Could not run installer: $_" -ForegroundColor Yellow
         Write-Host "    Please run the installer manually: $npuDriverPath" -ForegroundColor Gray
     }
-    
+
     Write-Host ""
     Write-Host "  ============================================" -ForegroundColor Yellow
     Write-Host "  IMPORTANT: System Restart Required" -ForegroundColor Yellow
@@ -674,10 +740,10 @@ function Install-NPUDriver {
     Write-Host "    1. Restart your computer" -ForegroundColor Gray
     Write-Host "    2. Re-run this setup script to verify NPU detection" -ForegroundColor Gray
     Write-Host ""
-    
-    $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue | 
+
+    $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue |
                         Where-Object { $_.FriendlyName -match "Intel.*(NPU|Neural|AI Boost|VPU|Accelerator)" }
-    
+
     if ($npuDevicesRecheck) {
         $npuName = ($npuDevicesRecheck | Select-Object -First 1).FriendlyName
         Write-Host "  [OK] NPU detected: $npuName" -ForegroundColor Green
@@ -691,33 +757,33 @@ function Install-NPUDriver {
 Write-Host "Checking NPU..." -ForegroundColor White
 try {
     # Check multiple device classes where NPU might appear (System, Compute, SoftwareComponent)
-    $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
+    $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue |
                   Where-Object { $_.FriendlyName -match "NPU|Neural|AI Boost|VPU" -and $_.FriendlyName -match "Intel" }
-    
+
     if (-not $npuDevices) {
         # Broader search including Accelerator keyword
-        $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
+        $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue |
                       Where-Object { $_.FriendlyName -match "Intel.*(NPU|Neural|AI Boost|VPU|Accelerator)" }
     }
-    
+
     if ($npuDevices) {
         $npuDevice = $npuDevices | Select-Object -First 1
         $npuName = $npuDevice.FriendlyName
         $npuStatus = $npuDevice.Status
-        
+
         if ($npuStatus -eq "OK") {
             Write-Host "  [OK] $npuName" -ForegroundColor Green
-            
+
             # Try to get driver version information from registry and WMI
             $npuDriverVersion = $null
             try {
                 $instanceId = $npuDevice.InstanceId
-                
+
                 # Method 1: Check device registry for DriverVersion
                 $regPath = "HKLM:\SYSTEM\CurrentControlSet\Enum\$instanceId"
                 if (Test-Path $regPath) {
                     $deviceProps = Get-ItemProperty -Path $regPath -ErrorAction SilentlyContinue
-                    
+
                     # Try to get from Device Parameters
                     $deviceParamsPath = "$regPath\Device Parameters"
                     if (Test-Path $deviceParamsPath) {
@@ -726,18 +792,18 @@ try {
                             $npuDriverVersion = $deviceParams.DriverVersion
                         }
                     }
-                    
+
                     # Fallback: Check direct properties
                     if (-not $npuDriverVersion -and $deviceProps.DriverVersion) {
                         $npuDriverVersion = $deviceProps.DriverVersion
                     }
                 }
-                
+
                 # Method 2: Use WMI to find driver by device name
                 if (-not $npuDriverVersion) {
-                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue | 
+                    $signedDrivers = Get-CimInstance -ClassName Win32_PnPSignedDriver -ErrorAction SilentlyContinue |
                                     Where-Object { $_.DeviceName -match "Intel.*(NPU|Neural|AI Boost|VPU)" }
-                    
+
                     if ($signedDrivers) {
                         $driver = $signedDrivers | Select-Object -First 1
                         if ($driver.DriverVersion) {
@@ -745,25 +811,25 @@ try {
                         }
                     }
                 }
-                
+
                 if ($npuDriverVersion) {
                     Write-Host "  Driver version: $npuDriverVersion" -ForegroundColor Gray
-                    
+
                     # Define known latest versions for NPU drivers
                     $latestVersionMap = @{
                         "32" = "32.0.100.4778"   # Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)
                     }
-                    
+
                     # Parse version and compare
                     $installedMajor = [int]($npuDriverVersion.Split('.')[0])
-                    
+
                     if ($latestVersionMap.ContainsKey($installedMajor.ToString())) {
                         $latestVersion = $latestVersionMap[$installedMajor.ToString()]
-                        
+
                         try {
                             $installedVersion = [version]$npuDriverVersion
                             $latestVersionObj = [version]$latestVersion
-                            
+
                             if ($installedVersion -ge $latestVersionObj) {
                                 Write-Host "  [OK] Driver is up to date (latest: $latestVersion)" -ForegroundColor Green
                             } else {
@@ -827,37 +893,37 @@ Write-Host "Checking Python version..." -ForegroundColor White
 
 function Install-Python312 {
     $Version = "3.12.10"
-    
+
     Write-Host ""
     Write-Host "  Installing Python $Version..." -ForegroundColor Yellow
-    
+
     $is64Bit = [Environment]::Is64BitOperatingSystem
     if ($is64Bit) {
         $installerName = "python-$Version-amd64.exe"
     } else {
         $installerName = "python-$Version.exe"
     }
-    
+
     $installerUrl = "https://www.python.org/ftp/python/$Version/$installerName"
     $installerPath = Join-Path $env:TEMP $installerName
-    
+
     try {
         Write-Host "  Downloading from: $installerUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequestWithProxy -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
-        
+
         if (Test-Path $installerPath) {
             Write-Host "  Running installer (this may take a few minutes)..." -ForegroundColor Gray
-            
+
             $arguments = "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0"
             $process = Start-Process -FilePath $installerPath -ArgumentList $arguments -Wait -PassThru
-            
+
             if ($process.ExitCode -eq 0) {
                 Write-Host "  [OK] Python $Version installed successfully" -ForegroundColor Green
-                
+
                 Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
-                
+
                 # Detect Python installation directory
                 $pythonExe = $null
                 $versionShort = "Python" + ($Version -replace "^(\d+)\.(\d+).*", '$1$2')  # e.g. Python312
@@ -879,11 +945,11 @@ function Install-Python312 {
                         if ($whereResult -and (Test-Path $whereResult)) { $pythonExe = $whereResult }
                     } catch {}
                 }
-                
+
                 if ($pythonExe) {
                     $pythonDir     = Split-Path -Parent $pythonExe
                     $pythonScripts = Join-Path $pythonDir "Scripts"
-                    
+
                     function Add-PathEntries {
                         param(
                             [string]$Scope,
@@ -925,11 +991,11 @@ function Install-Python312 {
                 } else {
                     Write-Host "  [WARN] Could not locate Python install dir - PATH not updated" -ForegroundColor Yellow
                 }
-                
+
                 # Refresh current session PATH
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 Write-Host "  NOTE: Restart PowerShell if 'python' is still not recognised" -ForegroundColor Cyan
-                
+
                 return $true
             } else {
                 Write-Host "  [FAIL] Installer exited with code: $($process.ExitCode)" -ForegroundColor Red
@@ -954,7 +1020,7 @@ try {
         $major = [int]$Matches[1]
         $minor = [int]$Matches[2]
         $patch = [int]$Matches[3]
-        
+
         if ($major -eq 3 -and $minor -eq 12) {
             Write-Host "  [OK] Python $major.$minor.$patch" -ForegroundColor Green
             $pythonInstalled = $true
@@ -1089,7 +1155,7 @@ Write-Host "Checking Node.js version..." -ForegroundColor White
 function Get-LatestNodeLTSVersion {
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        
+
         # Build proxy parameters
         $params = @{
             Uri = "https://nodejs.org/dist/index.json"
@@ -1100,9 +1166,9 @@ function Get-LatestNodeLTSVersion {
             $params.ProxyUseDefaultCredentials = $true
         }
         $indexJson = Invoke-RestMethod @params
-        
+
         $latestLTS = $indexJson | Where-Object { $_.lts -ne $false } | Select-Object -First 1
-        
+
         if ($latestLTS) {
             return $latestLTS.version.TrimStart('v')
         }
@@ -1115,33 +1181,33 @@ function Get-LatestNodeLTSVersion {
 function Install-NodeJS {
     Write-Host ""
     Write-Host "  Fetching latest Node.js LTS version..." -ForegroundColor Gray
-    
+
     $Version = Get-LatestNodeLTSVersion
     Write-Host "  Installing Node.js v$Version (Latest LTS)..." -ForegroundColor Yellow
-    
+
     $arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
     $msiUrl = "https://nodejs.org/dist/v$Version/node-v$Version-$arch.msi"
     $msiPath = Join-Path $env:TEMP "node-v$Version-$arch.msi"
-    
+
     try {
         Write-Host "  Downloading from: $msiUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequestWithProxy -Uri $msiUrl -OutFile $msiPath -UseBasicParsing
-        
+
         if (Test-Path $msiPath) {
             Write-Host "  Running installer (this may take a minute)..." -ForegroundColor Gray
-            
+
             $process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$msiPath`" /qn /norestart" -Wait -PassThru
-            
+
             if ($process.ExitCode -eq 0) {
                 Write-Host "  [OK] Node.js v$Version installed successfully" -ForegroundColor Green
                 Write-Host "  NOTE: You may need to restart PowerShell for PATH changes" -ForegroundColor Cyan
-                
+
                 Remove-Item $msiPath -Force -ErrorAction SilentlyContinue
-                
+
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
-                
+
                 return $true
             } else {
                 Write-Host "  [FAIL] Installer exited with code: $($process.ExitCode)" -ForegroundColor Red
@@ -1166,7 +1232,7 @@ try {
         $nodeMajor = [int]$Matches[1]
         $nodeMinor = [int]$Matches[2]
         $nodePatch = [int]$Matches[3]
-        
+
         if ($nodeMajor -ge 18) {
             Write-Host "  [OK] Node.js v$nodeMajor.$nodeMinor.$nodePatch" -ForegroundColor Green
             $nodeInstalled = $true
@@ -1281,13 +1347,13 @@ $appChecksFailed = $false
 function Install-FFmpeg {
     Write-Host ""
     Write-Host "  Installing FFmpeg..." -ForegroundColor Yellow
-    
+
     try {
         $wingetAvailable = Get-Command winget -ErrorAction SilentlyContinue
         if ($wingetAvailable) {
             Write-Host "  Using winget to install FFmpeg..." -ForegroundColor Gray
             $process = Start-Process -FilePath "winget" -ArgumentList "install -e --id Gyan.FFmpeg --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
-            
+
             if ($process.ExitCode -eq 0) {
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 Write-Host "  [OK] FFmpeg installed via winget" -ForegroundColor Green
@@ -1297,49 +1363,49 @@ function Install-FFmpeg {
     } catch {
         Write-Host "  [INFO] winget not available, trying manual download..." -ForegroundColor Gray
     }
-    
+
     try {
         $ffmpegDir = "C:\ffmpeg"
         $ffmpegZip = Join-Path $env:TEMP "ffmpeg-release.zip"
-        
+
         $downloadUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
-        
+
         Write-Host "  Downloading from: $downloadUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $ffmpegZip -UseBasicParsing
-        
+
         if (Test-Path $ffmpegZip) {
             Write-Host "  Extracting to $ffmpegDir..." -ForegroundColor Gray
-            
+
             if (-not (Test-Path $ffmpegDir)) {
                 New-Item -ItemType Directory -Path $ffmpegDir -Force | Out-Null
             }
-            
+
             Expand-Archive -Path $ffmpegZip -DestinationPath $env:TEMP -Force
-            
+
             $extractedFolder = Get-ChildItem -Path $env:TEMP -Directory -Filter "ffmpeg-*-essentials_build" | Select-Object -First 1
-            
+
             if ($extractedFolder) {
                 Copy-Item -Path "$($extractedFolder.FullName)\*" -Destination $ffmpegDir -Recurse -Force
-                
+
                 $ffmpegBin = Join-Path $ffmpegDir "bin"
                 $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-                
+
                 if ($currentPath -notlike "*$ffmpegBin*") {
                     [System.Environment]::SetEnvironmentVariable("Path", "$currentPath;$ffmpegBin", "Machine")
                     $env:Path = "$env:Path;$ffmpegBin"
                     Write-Host "  Added $ffmpegBin to system PATH" -ForegroundColor Gray
                 }
-                
+
                 Remove-Item $ffmpegZip -Force -ErrorAction SilentlyContinue
                 Remove-Item $extractedFolder.FullName -Recurse -Force -ErrorAction SilentlyContinue
-                
+
                 Write-Host "  [OK] FFmpeg installed to $ffmpegDir" -ForegroundColor Green
                 return $true
             }
         }
-        
+
         Write-Host "  [FAIL] FFmpeg download/extraction failed" -ForegroundColor Red
         return $false
     } catch {
@@ -1426,24 +1492,24 @@ if ($appChecksFailed) {
     Write-Host ""
     Write-Host "Please install the missing dependencies:" -ForegroundColor Yellow
     Write-Host ""
-    
+
     if (-not $ffmpegInstalled) {
         Write-Host "  FFmpeg (required for audio processing):" -ForegroundColor White
         Write-Host "    https://ffmpeg.org/download.html" -ForegroundColor Cyan
         Write-Host "    Or: winget install Gyan.FFmpeg" -ForegroundColor Gray
         Write-Host ""
     }
-    
+
     if (-not $dlStreamerFound) {
         Write-Host "  DL Streamer (required for video pipelines):" -ForegroundColor White
         Write-Host "    https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.1.0/dlstreamer-2026.1.0-win64.exe" -ForegroundColor Cyan
         Write-Host "    Download and run the installer" -ForegroundColor Gray
         Write-Host ""
         Write-Host "  Installation Guide:" -ForegroundColor White
-        Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md" -ForegroundColor Cyan
+        Write-Host "    https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/install/install_guide_windows.md" -ForegroundColor Cyan
         Write-Host ""
     }
-    
+
     Write-Host "----------------------------------------" -ForegroundColor DarkGray
     Write-Host ""
     Write-Host "WARNING: Some application dependencies are missing." -ForegroundColor Yellow
@@ -1496,7 +1562,7 @@ function Update-YamlValue {
         [string]$NewValue,
         [string]$Section = ""
     )
-    
+
     if ($Section) {
         # More complex: need to find section and update key within it
         # For simplicity, we'll use regex patterns
@@ -1571,6 +1637,18 @@ function Test-HfTokenSet {
     $token = Get-HfTokenRaw -Content $Content
     return -not ([string]::IsNullOrWhiteSpace($token) -or $token -eq "None")
 }
+function Get-DiarizationBackend {
+    param([string]$Content)
+    $diarBlockMatch = [regex]::Match($Content, "(?ms)^  diarization:.*?(?=^  \S)")
+    $diarBlock = if ($diarBlockMatch.Success) { $diarBlockMatch.Value } else { "" }
+    $m = [regex]::Match($diarBlock, 'backend:\s*"?([\w-]+)"?')
+    if ($m.Success) { return $m.Groups[1].Value.ToLower() } else { return "pyannote" }
+}
+
+function Test-DiarizationNeedsHfToken {
+    param([string]$Content)
+    return (Get-DiarizationBackend -Content $Content) -ne "campplus"
+}
 
 # ============================================================================
 # Current Configuration Overview (shown before asking to configure config.yaml)
@@ -1590,10 +1668,10 @@ $currentDiarizationEnabled = if ($diarEnabledMatch.Success) { $diarEnabledMatch.
 $diarizationWasEnabled = ($currentDiarizationEnabled -match "(?i)^true$")
 
 Write-Host "  models.asr:" -ForegroundColor White
-Write-Host ("    {0,-20} enabled: {1}" -f "diarization:", $currentDiarizationEnabled) -ForegroundColor Gray
+Write-Host ("    {0,-20} enabled: {1}  (backend: {2})" -f "diarization:", $currentDiarizationEnabled, (Get-DiarizationBackend -Content $configContent)) -ForegroundColor Gray
 Write-Host ""
 
-if ($diarizationWasEnabled -and -not (Test-HfTokenSet -Content $configContent)) {
+if ($diarizationWasEnabled -and (Test-DiarizationNeedsHfToken -Content $configContent) -and -not (Test-HfTokenSet -Content $configContent)) {
     Write-Host "  [WARNING] Diarization is enabled but hf_token is None. It needs to be filled in." -ForegroundColor Red
     Write-Host "            See the setup guide:" -ForegroundColor Red
     Write-Host "            https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Red
@@ -1700,14 +1778,14 @@ if ($Silent) {
 
 if ($changeAsr -match "^[Yy]") {
     Write-Host ""
-    
+
     # Language selection
     Write-Host "Select Language:" -ForegroundColor Yellow
     Write-Host "  [1] en - English" -ForegroundColor White
     Write-Host "  [2] zh - Chinese" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentLanguage)" -ForegroundColor White
     $langChoice = Read-Host "Choice (1/2/N)"
-    
+
     if ($langChoice -eq "1") {
         $configContent = $configContent -replace "(language:\s*)\S+", "`${1}en"
         $currentLanguage = "en"
@@ -1717,9 +1795,9 @@ if ($changeAsr -match "^[Yy]") {
         $currentLanguage = "zh"
         Write-Host "  [OK] Language set to: zh" -ForegroundColor Green
     }
-    
+
     Write-Host ""
-    
+
     # ASR Provider selection
     Write-Host "Select ASR Provider:" -ForegroundColor Yellow
     Write-Host "  [1] openai   - OpenAI Whisper (recommended for English)" -ForegroundColor White
@@ -1727,22 +1805,22 @@ if ($changeAsr -match "^[Yy]") {
     Write-Host "  [3] funasr   - FunASR (recommended for Chinese)" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentAsrProvider)" -ForegroundColor White
     $providerChoice = Read-Host "Choice (1/2/3/N)"
-    
+
     $newProvider = $null
     switch ($providerChoice) {
         "1" { $newProvider = "openai" }
         "2" { $newProvider = "openvino" }
         "3" { $newProvider = "funasr" }
     }
-    
+
     if ($newProvider) {
         $configContent = $configContent -replace "(asr:\s*\n\s*provider:\s*)\w+", "`${1}$newProvider"
         $currentAsrProvider = $newProvider
         Write-Host "  [OK] Provider set to: $newProvider" -ForegroundColor Green
     }
-    
+
     Write-Host ""
-    
+
     # ASR Model selection
     Write-Host "Select ASR Model:" -ForegroundColor Yellow
     Write-Host "  [1] whisper-base   - Smaller, faster" -ForegroundColor White
@@ -1752,7 +1830,7 @@ if ($changeAsr -match "^[Yy]") {
     Write-Host "  [5] paraformer-zh  - Chinese optimized (FunASR)" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentAsrModel)" -ForegroundColor White
     $modelChoice = Read-Host "Choice (1/2/3/4/5/N)"
-    
+
     $newModel = $null
     switch ($modelChoice) {
         "1" { $newModel = "whisper-base" }
@@ -1761,22 +1839,22 @@ if ($changeAsr -match "^[Yy]") {
         "4" { $newModel = "whisper-large" }
         "5" { $newModel = "paraformer-zh" }
     }
-    
+
     if ($newModel) {
         $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*name:\s*)[\w-]+", "`${1}$newModel"
         $currentAsrModel = $newModel
         Write-Host "  [OK] Model set to: $newModel" -ForegroundColor Green
     }
-    
+
     Write-Host ""
-    
+
     # ASR Device selection
     Write-Host "Select ASR Device:" -ForegroundColor Yellow
     Write-Host "  [C] CPU - Recommended, most compatible" -ForegroundColor White
     Write-Host "  [G] GPU - Faster if supported" -ForegroundColor White
     Write-Host "  [N] No change (current: $currentAsrDevice)" -ForegroundColor White
     $deviceChoice = Read-Host "Choice (C/G/N)"
-    
+
     if ($deviceChoice -match "^[Cc]") {
         $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*device:\s*)\w+", "`${1}CPU"
         $currentAsrDevice = "CPU"
@@ -1786,7 +1864,7 @@ if ($changeAsr -match "^[Yy]") {
         $currentAsrDevice = "GPU"
         Write-Host "  [OK] Device set to: GPU" -ForegroundColor Green
     }
-    
+
     Write-Host ""
     Write-Host "Final ASR Settings:" -ForegroundColor Cyan
     Write-Host "  Language: $currentLanguage" -ForegroundColor Gray
@@ -1816,6 +1894,8 @@ Write-Host "Current Speaker Diarization configuration in config.yaml:" -Foregrou
 Write-Host ""
 Write-Host "  models.asr:" -ForegroundColor White
 Write-Host "    diarization: $currentDiarizationEnabled   # labels TEACHER/STUDENT_XX speakers in ASR transcripts" -ForegroundColor Gray
+Write-Host "  models.diarization:" -ForegroundColor White
+Write-Host "    backend: $(Get-DiarizationBackend -Content $configContent)" -ForegroundColor Gray
 Write-Host ""
 
 if ($Silent) {
@@ -1849,8 +1929,15 @@ if ($changeDiarization.ToUpper() -eq "Y") {
 }
 
 $diarizationJustEnabled = $diarizationIsEnabled -and (-not $diarizationWasEnabled)
+$diarizationNeedsHfToken = Test-DiarizationNeedsHfToken -Content $configContent
 
-if ($diarizationIsEnabled) {
+if ($diarizationIsEnabled -and -not $diarizationNeedsHfToken) {
+    Write-Host ""
+    Write-Host "  Backend 'campplus' (FunASR CAM++) needs no Hugging Face token or access request;" -ForegroundColor Gray
+    Write-Host "  its speaker model is downloaded automatically on first run." -ForegroundColor Gray
+}
+
+if ($diarizationIsEnabled -and $diarizationNeedsHfToken) {
     Write-Host ""
 
     # Resolve the diarization model's local cache path (mirrors utils/ensure_model.py::get_diarization_model_path)
@@ -1867,17 +1954,10 @@ if ($diarizationIsEnabled) {
         Write-Host "  Diarization model not found locally at:" -ForegroundColor Yellow
         Write-Host "    $diarModelPath" -ForegroundColor Gray
         Write-Host ""
-        Write-Host "  [NOTE] Before Speaker Diarization will work, you must request model access on" -ForegroundColor Yellow
-        Write-Host "         Hugging Face and create an access token. Please read the setup guide:" -ForegroundColor Yellow
-        Write-Host "         https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
-        Write-Host ""
-
-        # ------------------------------------------------------------------
-        # Request Model Access
-        # ------------------------------------------------------------------
-        Write-Host "Request Model Access" -ForegroundColor Yellow
-        Write-Host "  This model is gated on Hugging Face. Please request access here:" -ForegroundColor Gray
-        Write-Host "    https://huggingface.co/$diarizationModelName" -ForegroundColor White
+        Write-Host "  [ATTENTION] Before Speaker Diarization will work, you must request model access and create an access token on" -ForegroundColor Yellow
+        Write-Host "    https://huggingface.co/$diarizationModelName " -ForegroundColor Yellow
+        Write-Host "  More details can be found in the setup guide:" -ForegroundColor Yellow
+        Write-Host "    https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/docs/user-guide/advance-setup-guide.md#f-speaker-diarization-setup-optional" -ForegroundColor Yellow
         Write-Host ""
         if (-not $Silent) {
             Read-Host "  Press Enter once you have submitted/been granted the access request"
@@ -1890,33 +1970,26 @@ if ($diarizationIsEnabled) {
     # ------------------------------------------------------------------
     $hfTokenIsSet = Test-HfTokenSet -Content $configContent
     if ($diarizationJustEnabled -or -not $hfTokenIsSet) {
-        if (-not $hfTokenIsSet) {
-            Write-Host ""
-            Write-Host "  [WARNING] hf_token is None. It needs to be filled in." -ForegroundColor Yellow
-        }
         Write-Host ""
-        Write-Host "Hugging Face Token" -ForegroundColor Yellow
-        Write-Host "  Current token: $(if ($hfTokenIsSet) { 'Set' } else { 'Not set' })" -ForegroundColor Gray
+        if ($hfTokenIsSet) {
+            Write-Host "Hugging Face token: already set in config.yaml" -ForegroundColor Yellow
+        } else {
+            Write-Host "Hugging Face token: not set (hf_token: None)" -ForegroundColor Yellow
+        }
 
         if (-not $Silent) {
-            $secureHfToken = Read-Host "  Enter your Hugging Face access token (leave blank to keep current)" -AsSecureString
+            $secureHfToken = Read-Host "  Enter token (blank = keep current)" -AsSecureString
             $newHfToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
                 [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureHfToken)
             )
             if ($newHfToken) {
                 $configContent = $configContent -replace "(hf_token:\s*)\S+", "`${1}$newHfToken"
-                Write-Host "  [OK] Hugging Face token updated" -ForegroundColor Green
-            } else {
-                Write-Host "  Keeping existing Hugging Face token." -ForegroundColor Gray
+                Write-Host "  [OK] Token updated" -ForegroundColor Green
             }
-        } else {
-            Write-Host "  Silent mode: keeping existing Hugging Face token." -ForegroundColor Gray
         }
 
         if (-not (Test-HfTokenSet -Content $configContent)) {
-            Write-Host ""
-            Write-Host "  [WARNING] No Hugging Face token is set. If the model ever needs to be" -ForegroundColor Red
-            Write-Host "            (re)downloaded, it will fail until a valid hf_token is provided." -ForegroundColor Red
+            Write-Host "  [WARNING] Without a token, downloading the diarization model will fail." -ForegroundColor Red
         }
     }
 }
@@ -1956,17 +2029,17 @@ if ($changeUploadLimits.ToUpper() -eq "Y") {
     Write-Host ""
     $newDocMax = Read-Host "Enter document_max_mb (blank = $currentDocMax)"
     $newVideoMax = Read-Host "Enter video_max_mb (blank = $currentVideoMax)"
-    
+
     if ($newDocMax -and $newDocMax -match "^\d+$") {
         $configContent = $configContent -replace "(document_max_mb:\s*)\d+", "`${1}$newDocMax"
         Write-Host "  document_max_mb set to $newDocMax" -ForegroundColor Gray
     }
-    
+
     if ($newVideoMax -and $newVideoMax -match "^\d+$") {
         $configContent = $configContent -replace "(video_max_mb:\s*)\d+", "`${1}$newVideoMax"
         Write-Host "  video_max_mb set to $newVideoMax" -ForegroundColor Gray
     }
-    
+
     Write-Host "Upload limits updated." -ForegroundColor Green
 } else {
     Write-Host "Keeping current upload limits." -ForegroundColor Gray
@@ -2064,7 +2137,11 @@ $finalBoardOcr = Get-FeatureState -Content $finalConfig -Id "board_ocr"
 $csFlag  = $finalConfig -match "content_search:\s*\{\s*enabled:\s*true"
 $segFlag = $finalConfig -match "topic_segmentation:\s*\{\s*enabled:\s*true"
 $qaFlag  = $finalConfig -match "qa:\s*\{\s*enabled:\s*true"
-$contentSearchEnabled = $csFlag -or $segFlag -or $qaFlag
+$csTriggers = @()
+if ($csFlag)  { $csTriggers += "content_search" }
+if ($segFlag) { $csTriggers += "topic_segmentation" }
+if ($qaFlag)  { $csTriggers += "qa" }
+$contentSearchEnabled = $csTriggers.Count -gt 0
 
 Write-Host "  Features:" -ForegroundColor White
 foreach ($fid in $featureIds) {
@@ -2077,15 +2154,15 @@ Write-Host "  Language:        $finalLang" -ForegroundColor White
 Write-Host "  ASR Provider:    $finalProvider" -ForegroundColor White
 Write-Host "  ASR Model:       $finalAsrName" -ForegroundColor White
 Write-Host "  ASR Device:      $finalAsrDevice" -ForegroundColor White
-Write-Host "  Diarization:     $finalDiarization" -ForegroundColor White
-if ($finalDiarization -match "(?i)^true$" -and -not (Test-HfTokenSet -Content $finalConfig)) {
+Write-Host "  Diarization:     $finalDiarization$(if ($finalDiarization -match '(?i)^true$') { " (backend: $(Get-DiarizationBackend -Content $finalConfig))" })" -ForegroundColor White
+if ($finalDiarization -match "(?i)^true$" -and (Test-DiarizationNeedsHfToken -Content $finalConfig) -and -not (Test-HfTokenSet -Content $finalConfig)) {
     Write-Host "                   [WARNING] hf_token is None - diarization will not work until it is filled in" -ForegroundColor Red
 }
 Write-Host "  Doc Max (MB):    $finalDocMax" -ForegroundColor White
 Write-Host "  Video Max (MB):  $finalVideoMax" -ForegroundColor White
 Write-Host "  Document OCR:    $finalOcr" -ForegroundColor White
 Write-Host "  Board OCR:       $finalBoardOcr" -ForegroundColor White
-Write-Host "  Content Search:  $(if ($contentSearchEnabled) { 'Enabled' } else { 'Disabled' })" -ForegroundColor White
+Write-Host "  Content Search:  $(if ($contentSearchEnabled) { "Stack enabled (required by: $($csTriggers -join ', '))" } else { 'Stack disabled' })" -ForegroundColor White
 Write-Host ""
 
 # ============================================================================

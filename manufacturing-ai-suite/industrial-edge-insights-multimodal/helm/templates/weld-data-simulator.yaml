@@ -64,6 +64,8 @@ spec:
           value: '{{ .Values.env.CONTINUOUS_SIMULATOR_INGESTION }}'
         - name: SIMULATION_TARGET_FPS
           value: "{{ .Values.env.SIMULATION_TARGET_FPS }}"
+        - name: SIMULATION_REPLAY_COUNT
+          value: "{{ .Values.env.SIMULATION_REPLAY_COUNT }}"
         - name: TS_MS_SERVER
           value: "{{ .Values.config.time_series_analytics_microservice.name }}"
         - name: TS_MS_PORT

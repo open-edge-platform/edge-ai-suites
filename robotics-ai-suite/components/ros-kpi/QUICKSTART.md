@@ -89,7 +89,7 @@ All results are saved in timestamped folders:
 monitoring_sessions/
 └── YYYYMMDD_HHMMSS/
     ├── graph_timing.csv         # Topic timing data
-    ├── resource_usage.log        # CPU/memory usage
+    ├── resource_usage.json        # CPU/memory usage
     ├── session_info.txt          # Test configuration
     └── visualizations/           # Auto-generated plots
 ```
@@ -176,7 +176,7 @@ source /opt/ros/humble/setup.bash   # or /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=0
 ```
 
-See the [Intel Robotics AI Suite Getting Started Guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) for installation instructions.
+See the [Intel Robotics AI Suite Getting Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html) for installation instructions.
 
 Or use the auto-setup script:
 ```bash

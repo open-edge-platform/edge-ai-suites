@@ -1,0 +1,28 @@
+# How to use UAV Vision Analytics
+
+This section provides information on how to use and adjust the application.
+Learn more about:
+
+- [YOLO11s AI Model](./how-to-guides/model.md) — YOLO11s model
+  details, `make model` usage
+- [Makefile Reference](./how-to-guides/makefile.md) — Shorthand targets for
+  model setup, stack management, and pipeline control
+- [Intel RealSense Camera](./how-to-guides/realsense-guide.md) — Connect and
+  stream from an Intel RealSense depth camera as the video source
+- [QGroundControl](./how-to-guides/qgroundcontrol.md) — Configure QGroundControl
+  to receive the UAV Vision Analytics video stream
+- [Troubleshooting](./how-to-guides/troubleshooting.md) — Common issues and
+  fixes for deployment, inference, and streaming problems
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+YOLO11s AI Model <./how-to-guides/model.md>
+Makefile Reference <./how-to-guides/makefile.md>
+RealSense Camera <./how-to-guides/realsense-guide.md>
+QGroundControl <./how-to-guides/qgroundcontrol.md>
+Troubleshooting <./how-to-guides/troubleshooting.md>
+:::
+hide_directive-->

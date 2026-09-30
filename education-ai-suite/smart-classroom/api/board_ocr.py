@@ -12,7 +12,6 @@ from components.board_ocr.board_ocr_service import (
     read_board_ocr,
 )
 from utils.config_loader import config
-from utils.markdown_cleaner import strip_think_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -85,24 +84,12 @@ def summarize_board_ocr(session_id: Optional[str]) -> dict:
 
     tg = ModelManager.instance().text_gen()
 
-    model_name = str(config.models.text_gen.vlm_name)
-    user_content = board_text
-    if "qwen3" in model_name.lower() and not user_content.lstrip().startswith("/no_think"):
-        user_content = "/no_think\n" + board_text
-
     messages = [
         {"role": "system", "content": _board_summary_system_prompt(config.app.language)},
-        {"role": "user", "content": user_content},
+        {"role": "user", "content": board_text},
     ]
-    prompt = tg.tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True,
-        enable_thinking=False,
-    )
-
-    raw = tg.generate(prompt, stream=False)
-    summary = strip_think_tokens(raw if isinstance(raw, str) else "".join(raw))
+    raw = tg.generate(messages=messages, stream=False, enable_thinking=False)
+    summary = raw if isinstance(raw, str) else "".join(raw)
 
     logger.info(
         f"Board OCR summary generated for session {board['session_id']} "

@@ -1,0 +1,130 @@
+From 08c550300ce8fcc33b360bca0be068beafd49a23 Mon Sep 17 00:00:00 2001
+From: "Deng, Bing" <bing.deng@intel.com>
+Date: Fri, 17 Jul 2026 09:27:54 +0800
+Subject: [PATCH] Size OMP thread count from runtime CPU affinity
+
+MP_EN/MP_PROC_NUM were baked in at build time from ProcessorCount(N), the
+total host core count. When the demo pipeline pins fastlivo_mapping to a
+smaller cpu set via `taskset -c` (scripts/env.sh CPUSET_ALGO), the binary
+still spawns OMP threads sized to the full host, oversubscribing the
+pinned cores.
+
+Detect the process's actual CPU affinity at startup via
+sched_getaffinity() and size g_mp_proc_num to the pinned core count
+instead, falling back to the original ProcessorCount-based default when
+no affinity restriction is present. Takes effect immediately on any run
+with no rebuild required.
+
+Signed-off-by: Deng, Bing <bing.deng@intel.com>
+---
+ include/common_lib.h | 38 ++++++++++++++++++++++++++++++++++++++
+ src/main.cpp         |  1 +
+ src/vio.cpp          |  6 ++----
+ src/voxel_map.cpp    |  6 ++----
+ 4 files changed, 43 insertions(+), 8 deletions(-)
+
+diff --git a/include/common_lib.h b/include/common_lib.h
+index 0f44f88..7dd2ac5 100755
+--- a/include/common_lib.h
++++ b/include/common_lib.h
+@@ -13,6 +13,13 @@ which is included as part of this source code package.
+ #ifndef COMMON_LIB_H
+ #define COMMON_LIB_H
+ 
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
++#include <sched.h>
++#include <unistd.h>
++#include <cstdio>
++
+ #include <utils/so3_math.h>
+ #include <utils/types.h>
+ #include <utils/color.h>
+@@ -27,6 +34,37 @@ using namespace std;
+ //using namespace Eigen;
+ //using namespace Sophus;
+ 
++// Effective OMP thread count for the MP_EN-guarded parallel regions in
++// vio.cpp/voxel_map.cpp. Set once by mp_runtime_init(); read thereafter.
++inline int g_mp_proc_num = 1;
++
++// Call once, first thing in main(), before any worker code runs. Detects
++// whether this process's affinity has been restricted to a strict subset of
++// the host's online cores (e.g. via `taskset -c`, cgroups, etc.) and sizes
++// g_mp_proc_num to that pinned core count instead of the build-time
++// MP_PROC_NUM default baked in from CMakeLists.txt's ProcessorCount(N).
++inline void mp_runtime_init()
++{
++  cpu_set_t mask;
++  CPU_ZERO(&mask);
++  int affined = (sched_getaffinity(0, sizeof(mask), &mask) == 0) ? CPU_COUNT(&mask) : 0;
++  long total = sysconf(_SC_NPROCESSORS_ONLN);
++
++  if (affined > 0 && total > 0 && affined < total) {
++    g_mp_proc_num = affined;
++    printf("[mp_runtime] CPU affinity restricted to %d core(s) (of %ld online); using %d OMP thread(s)\n",
++           affined, total, g_mp_proc_num);
++  } else {
++#ifdef MP_EN
++    g_mp_proc_num = MP_PROC_NUM;
++#else
++    g_mp_proc_num = 1;
++#endif
++    printf("[mp_runtime] No CPU affinity restriction detected; using build-time default of %d OMP thread(s)\n",
++           g_mp_proc_num);
++  }
++}
++
+ #define print_line std::cout << __FILE__ << ", " << __LINE__ << std::endl;
+ #define G_m_s2 (9.81)   // Gravaty const in GuangDong/China
+ #define DIM_STATE (19)  // Dimension of states (Let Dim(SO(3)) = 3)
+diff --git a/src/main.cpp b/src/main.cpp
+index 62840fb..fa96010 100755
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -2,6 +2,7 @@
+ 
+ int main(int argc, char **argv)
+ {
++  mp_runtime_init();
+   rclcpp::init(argc, argv);
+   rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("laserMapping");
+   image_transport::ImageTransport it_(node);
+diff --git a/src/vio.cpp b/src/vio.cpp
+index 0ca7ebf..c05908c 100755
+--- a/src/vio.cpp
++++ b/src/vio.cpp
+@@ -1567,10 +1567,8 @@ void VIOManager::updateState(cv::Mat img, int level)
+     // int desired_threads = std::min(max_threads, total_points);
+     // omp_set_num_threads(desired_threads);
+   
+-    #ifdef MP_EN
+-      omp_set_num_threads(MP_PROC_NUM);
+-      #pragma omp parallel for reduction(+:error, n_meas)
+-    #endif
++    omp_set_num_threads(g_mp_proc_num);
++    #pragma omp parallel for reduction(+:error, n_meas)
+     for (int i = 0; i < total_points; i++)
+     {
+       // printf("thread is %d, i=%d, i address is %p\n", omp_get_thread_num(), i, &i);
+diff --git a/src/voxel_map.cpp b/src/voxel_map.cpp
+index 7475755..b693adf 100644
+--- a/src/voxel_map.cpp
++++ b/src/voxel_map.cpp
+@@ -694,10 +694,8 @@ void VoxelMapManager::BuildResidualListOMP(std::vector<pointWithVar> &pv_list, s
+     index[i] = i;
+     useful_ptpl[i] = false;
+   }
+-  #ifdef MP_EN
+-    omp_set_num_threads(MP_PROC_NUM);
+-    #pragma omp parallel for
+-  #endif
++  omp_set_num_threads(g_mp_proc_num);
++  #pragma omp parallel for
+   for (int i = 0; i < index.size(); i++)
+   {
+     pointWithVar &pv = pv_list[i];
+-- 
+2.43.0
+

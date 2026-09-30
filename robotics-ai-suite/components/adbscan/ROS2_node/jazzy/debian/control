@@ -32,12 +32,10 @@ Package: ros-jazzy-adbscan-ros2
 Architecture: any
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends},
-    ros-jazzy-bagfile-laser-pointcloud,
     ros-jazzy-builtin-interfaces,
     ros-jazzy-geometry-msgs,
     ros-jazzy-nav2-dynamic-msgs,
     ros-jazzy-rclcpp,
-    ros-jazzy-rviz2,
     ros-jazzy-sensor-msgs,
     ros-jazzy-visualization-msgs,
 Description: Standard Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2
@@ -54,7 +52,6 @@ Depends: ${misc:Depends}, ${shlibs:Depends},
     ros-jazzy-nav2-dynamic-msgs,
     ros-jazzy-pcl-conversions,
     ros-jazzy-rclcpp,
-    ros-jazzy-rviz2,
     ros-jazzy-sensor-msgs,
     ros-jazzy-visualization-msgs,
 Description: Intel OneAPI optimized Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2

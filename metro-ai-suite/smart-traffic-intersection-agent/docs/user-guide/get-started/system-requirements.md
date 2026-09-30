@@ -2,7 +2,7 @@
 
 This section shows the hardware, software, and platform requirements to help you set up and run Smart Traffic Intersection Agent efficiently.
 
-The agent currently supports CPU- and GPU-based runs, and runs in the context of video summary pipeline. Hence, the system requirements is as per the documentation in the sample application.
+The agent currently supports CPU- and GPU-based runs, and runs in the context of video summary pipeline. Hence, the system requirements is as per the documentation in the sample application. Object detection, provided by the Smart Intersection application, can additionally be configured to run on NPU; see [Enabling NPU for Object Detection](../get-started.md#enabling-npu-for-object-detection).
 
 ## Supported Operating Systems
 
@@ -17,6 +17,7 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 | RAM | 16 GB | 32 GB or more |
 | Disk Space | 50 GB free | 100 GB free |
 | GPU (optional) | — | Intel® integrated GPU (iGPU) for accelerated VLM inference |
+| NPU (optional) | — | Intel® NPU for accelerated object detection |
 | Network | Internet access for weather API and model downloads | — |
 
 ## Software Requirements

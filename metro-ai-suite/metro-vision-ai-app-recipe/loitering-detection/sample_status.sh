@@ -28,7 +28,7 @@ function get_status() {
       echo -e "\n>>>>>>>>>>>>>>> $elapsed_time seconds."
       results=$(curl -k -s --location -X GET "https://$DLSPS_NODE_IP/api/pipelines/status" | grep -A 2 -B 5 RUNNING | grep fps | awk -F': ' '{print $2}' | awk -F',' '{printf" %.2f ", $1}')
       results_pipeline+=("$results")
-      echo -e "pipelines fps: (${results_pipeline[@]})"
+      echo -e "pipelines fps: (${results_pipeline[*]})"
       sleep $interval
 
       fi

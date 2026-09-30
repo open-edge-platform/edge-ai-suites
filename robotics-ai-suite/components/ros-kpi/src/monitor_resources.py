@@ -5,29 +5,137 @@
 # These contents may have been developed with support from one or more
 # Intel-operated generative artificial intelligence solutions.
 """
-Monitor ROS2 processes resource utilization using pidstat.
-This script filters and displays CPU, memory, and I/O statistics for ROS2-related processes.
+Monitor system-wide resource utilization using a psutil-based sampler
+(_psutil_probe.py). Samples CPU, memory, and I/O statistics for ALL
+processes (not just ROS2-related ones) and writes them to a JSON log,
+along with a `# ROS2_PIDS:`-style PID snapshot so downstream consumers can
+attribute samples to ROS2 processes post-hoc.
 """
 
 import subprocess
 import argparse
 import glob
 import os
+import re
+import signal
 import sys
 import time
 import json
 import threading
 from typing import Optional, Set
 from datetime import datetime
+from collections import defaultdict
+
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
+# Process name/command-line substrings used to classify a process as "ROS2-related".
+# Shared between get_ros2_pids() (live filtering for --list) and downstream report
+# post-processing (e.g. visualize_resources.py) that attributes system-wide resource
+# samples back to ROS2 vs. the rest of the system.
+ROS2_PROCESS_PATTERNS = ['ros2', '_node', 'ros_', 'gazebo', 'rviz']
 
 
-def get_ros2_pids(remote_ip: str = None, remote_user: str = 'ubuntu') -> Set[int]:
+def is_ros2_process(command_line: str) -> bool:
+    """Return True if `command_line` (ps/cmdline Command field) looks ROS2-related."""
+    lowered = command_line.lower()
+    return any(pattern in lowered for pattern in ROS2_PROCESS_PATTERNS)
+
+
+# Matches the node-name remap argument ROS2 appends to a node's real argv,
+# e.g. '... --ros-args -r __node:=controller_server -r ...' -> 'controller_server'.
+_NODE_REMAP_RE = re.compile(r'__node:=(\S+)')
+
+
+def extract_node_name(command_line: str) -> Optional[str]:
+    """
+    Best-effort extraction of a ROS2 node name from a process's full command
+    line. Returns None if no ``__node:=`` remap argument is present -- many
+    nodes (e.g. nav2's controller_server) are launched without one, so
+    callers should fall back to the bare executable name in that case.
+    """
+    match = _NODE_REMAP_RE.search(command_line)
+    return match.group(1) if match else None
+
+
+def get_descendant_pids(root_pid: int, remote_ip: str = None, remote_user: str = 'ubuntu') -> Set[int]:
+    """
+    Return {root_pid} plus every transitive child of root_pid, by walking the
+    system process tree (`ps -eo pid,ppid`).
+
+    This is a far more robust way to identify "every process belonging to
+    this ROS2/simulation stack" than name/arg substring matching: every node
+    launched via `ros2 launch` is a descendant of that one launch process,
+    regardless of whether its own executable name or command-line args
+    happen to contain a recognizable ROS2 substring (many don't -- e.g.
+    nav2's controller_server is often launched without any --ros-args
+    remapping at all, so it matches none of ROS2_PROCESS_PATTERNS).
+    """
+    if remote_ip:
+        ps_cmd = ['ssh', '-T', '-o', 'StrictHostKeyChecking=no',
+                  '-o', 'BatchMode=yes',
+                  f'{remote_user}@{remote_ip}', 'ps -eo pid,ppid --no-headers']
+    else:
+        ps_cmd = ['ps', '-eo', 'pid,ppid', '--no-headers']
+
+    try:
+        output = subprocess.check_output(
+            ps_cmd,
+            universal_newlines=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Getting process tree: {e}")
+        return {root_pid}
+
+    children_of = defaultdict(list)
+    all_pids = set()
+    for line in output.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        try:
+            pid, ppid = int(parts[0]), int(parts[1])
+        except ValueError:
+            continue
+        all_pids.add(pid)
+        children_of[ppid].append(pid)
+
+    if root_pid not in all_pids:
+        return {root_pid}  # already exited; nothing to expand
+
+    descendants = {root_pid}
+    frontier = [root_pid]
+    while frontier:
+        pid = frontier.pop()
+        for child in children_of.get(pid, []):
+            if child not in descendants:
+                descendants.add(child)
+                frontier.append(child)
+    return descendants
+
+
+def get_ros2_pids(remote_ip: str = None, remote_user: str = 'ubuntu',
+                  root_pid: Optional[int] = None) -> Set[int]:
     """Get all process IDs related to ROS2.
 
     Args:
         remote_ip: IP address of the remote system (None = local)
         remote_user: SSH username for the remote system
+        root_pid: PID of the top-level launch process (e.g. `ros2 launch`).
+            When given, classification is done by process-tree ancestry
+            (get_descendant_pids()) instead of the less reliable name/arg
+            substring matching below.
+
+    Known limitation: PIDs are not stable identifiers across a long-running
+    session -- the OS can recycle a PID after its original process exits
+    (e.g. a crashed/respawned node), so a PID observed late in a run is not
+    guaranteed to refer to the same process as when `ros2_pids` was captured.
     """
+    if root_pid:
+        return get_descendant_pids(root_pid, remote_ip=remote_ip, remote_user=remote_user)
+
     pids = set()
     try:
         # Find processes with 'ros2' or common ROS2 node patterns in their command line
@@ -44,7 +152,7 @@ def get_ros2_pids(remote_ip: str = None, remote_user: str = 'ubuntu') -> Set[int
         )
 
         for line in ps_output.split('\n')[1:]:  # Skip header
-            if any(pattern in line.lower() for pattern in ['ros2', '_node', 'ros_', 'gazebo', 'rviz']):
+            if is_ros2_process(line):
                 parts = line.split()
                 if len(parts) >= 2:
                     try:
@@ -52,125 +160,267 @@ def get_ros2_pids(remote_ip: str = None, remote_user: str = 'ubuntu') -> Set[int
                     except ValueError:
                         continue
     except subprocess.CalledProcessError as e:
-        print(f"Error getting ROS2 processes: {e}", file=sys.stderr)
+        logger.error(f"Getting ROS2 processes: {e}")
 
     return pids
 
 
-def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
+def get_ros2_pid_node_map(remote_ip: str = None, remote_user: str = 'ubuntu',
+                          root_pid: Optional[int] = None) -> dict:
+    """
+    Return {pid: node_name} for every ROS2-related process, from a single
+    `ps -eo pid,ppid,args` snapshot (covers both process-tree ancestry, when
+    root_pid is given, and node-name extraction -- no extra subprocess calls
+    beyond what get_ros2_pids()/get_descendant_pids() already need).
+
+    Node name resolution per PID:
+      1. the `__node:=<name>` remap arg in its command line (extract_node_name())
+      2. fall back to the bare executable name (argv[0]'s basename) when no
+         remap arg is present -- e.g. nav2's controller_server is often
+         launched without one.
+
+    Args:
+        remote_ip: IP address of the remote system (None = local)
+        remote_user: SSH username for the remote system
+        root_pid: PID of the top-level launch process. When given, the
+            candidate PID set is every transitive descendant of root_pid
+            (process-tree ancestry, like get_descendant_pids()). Falls back
+            to is_ros2_process() name/arg substring matching when omitted.
+
+    Known limitation: same PID-reuse caveat as get_ros2_pids() -- the
+    resulting {pid: node_name} map is a point-in-time snapshot, so a PID
+    that gets recycled by the OS after its original node exits (e.g. a
+    crashed/respawned node) will be reported under whatever node name owned
+    that PID at snapshot time, not necessarily the node currently running
+    under it.
+    """
+    if remote_ip:
+        ps_cmd = ['ssh', '-T', '-o', 'StrictHostKeyChecking=no',
+                  '-o', 'BatchMode=yes',
+                  f'{remote_user}@{remote_ip}', 'ps -eo pid,ppid,args --no-headers']
+    else:
+        ps_cmd = ['ps', '-eo', 'pid,ppid,args', '--no-headers']
+
+    try:
+        output = subprocess.check_output(
+            ps_cmd,
+            universal_newlines=True,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Getting process list for node-name attribution: {e}")
+        return {}
+
+    cmdline_of = {}
+    children_of = defaultdict(list)
+    all_pids = set()
+    for line in output.splitlines():
+        parts = line.split(None, 2)
+        if len(parts) < 3:
+            continue
+        try:
+            pid, ppid = int(parts[0]), int(parts[1])
+        except ValueError:
+            continue
+        all_pids.add(pid)
+        children_of[ppid].append(pid)
+        cmdline_of[pid] = parts[2]
+
+    if root_pid:
+        target_pids = {root_pid} if root_pid in all_pids else set()
+        frontier = list(target_pids)
+        while frontier:
+            pid = frontier.pop()
+            for child in children_of.get(pid, []):
+                if child not in target_pids:
+                    target_pids.add(child)
+                    frontier.append(child)
+        if not target_pids:
+            target_pids = {root_pid}
+    else:
+        target_pids = {pid for pid, cmdline in cmdline_of.items() if is_ros2_process(cmdline)}
+
+    node_map = {}
+    for pid in target_pids:
+        cmdline = cmdline_of.get(pid, '')
+        node_name = extract_node_name(cmdline) or (cmdline.split()[0].rsplit('/', 1)[-1] if cmdline else str(pid))
+        node_map[pid] = node_name
+    return node_map
+
+
+def monitor_ros2_resources(interval: int = 1, count: int = 0,
                          show_cpu: bool = True,
                          show_memory: bool = False,
                          show_io: bool = False,
                          show_threads: bool = False,
+                         show_ctx: bool = False,
                          log_file: str = None,
                          remote_ip: str = None,
-                         remote_user: str = 'ubuntu'):
+                         remote_user: str = 'ubuntu',
+                         root_pid: Optional[int] = None,
+                         remote_probe_path: str = '~/ros-kpi/src/_psutil_probe.py'):
     """
-    Monitor ROS2 processes using pidstat.
+    Monitor system-wide resource utilization.
+
+    Uses _psutil_probe.py (a minimal psutil-based sampler) rather than
+    pidstat -- pidstat's text output has no structured/JSON mode, and every
+    downstream consumer had grown its own fragile positional-column parser
+    (thread-vs-PID-mode heuristics, 12h/24h timestamp regex, ANSI
+    stripping...) independently. Samples ALL processes system-wide, not just
+    ones that looked ROS2-related at a single point-in-time `ps aux` snapshot.
+    This avoids missing samples on short runs (nothing to filter against yet)
+    and on process-name churn (node restarts). Downstream consumers classify
+    each entry as ROS2-related or not via is_ros2_process()/ros2_pids, post-hoc,
+    using the full log.
+
+    ``log_file`` is written as a single well-formed JSON document (not
+    JSON-lines / not a text log):
+    ``{"num_cpus": N, "ros2_pids": [...], "started_at": "...",
+    "ended_at": "...", "samples": [{"ts": "...", "processes": [...]}, ...]}``.
+    Rewritten atomically (write-to-temp + rename) after every sample so it's
+    both always valid JSON and safe for live pollers (e.g.
+    prometheus_exporter.py) to re-read mid-run, not only after it ends.
+    ``ended_at`` stays null until the run actually finishes.
+
+    A second, ROS2-filtered sidecar document is also written alongside
+    ``log_file`` -- same shape and same PID/ROS2 attribution, but each
+    sample's ``processes`` list is restricted to PIDs in ``ros2_pids``. Its
+    path is derived automatically: ``.../resource_usage.json`` ->
+    ``.../resource_usage_ros2.json``.
 
     Args:
         interval: Sampling interval in seconds
         count: Number of samples (0 for infinite)
-        show_cpu: Show CPU statistics
+        show_cpu: Show CPU statistics (always on; kept for CLI/API compatibility)
         show_memory: Show memory statistics
-        show_io: Show I/O statistics
+        show_io: Show per-process disk I/O statistics (read/write bytes since
+            last tick, via _psutil_probe.py's --disk-io)
         show_threads: Show per-thread statistics
-        log_file: Path to log file (optional)
+        show_ctx: Show per-process voluntary/involuntary context-switch counts
+            since last tick, via _psutil_probe.py's --ctx-switches. A spike in
+            involuntary switches is a privilege-free signal of CPU
+            oversubscription/contention (relevant on constrained hardware).
+        log_file: Path to the JSON output file (optional)
         remote_ip: IP address of the remote system to monitor (None = local)
         remote_user: SSH username for the remote system
+        root_pid: PID of the top-level launch process, for process-tree-based
+            ROS2 attribution (see get_ros2_pids()). Falls back to name/arg
+            substring matching when omitted.
+        remote_probe_path: Path to _psutil_probe.py on the remote host (must
+            already be deployed there, e.g. via scp). Ignored when local.
     """
+    # monitor_stack.py stops this subprocess via process.terminate() (SIGTERM),
+    # not Ctrl+C. Python's default SIGTERM disposition terminates immediately
+    # and skips `finally` blocks -- converting it to KeyboardInterrupt lets the
+    # existing except/finally cleanup below run (writing the final JSON
+    # document) on normal benchmark shutdown, not just Ctrl+C.
+    def _raise_keyboard_interrupt(_signum, _frame):
+        raise KeyboardInterrupt()
+    signal.signal(signal.SIGTERM, _raise_keyboard_interrupt)
 
-    # Open log file if specified
-    log_fp = None
+    started_at = datetime.now().isoformat()
+    num_cpus = 0
+    samples: list = []
+
+    # Derive the ROS2-filtered sidecar path from log_file, e.g.
+    # ".../resource_usage.json" -> ".../resource_usage_ros2.json".
+    ros2_log_file = None
     if log_file:
-        try:
-            log_fp = open(log_file, 'a')
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            log_fp.write(f"\n{'='*80}\n")
-            log_fp.write(f"Monitoring started at {timestamp}\n")
-            log_fp.write(f"{'='*80}\n\n")
-            log_fp.flush()
-        except IOError as e:
-            print(f"Error opening log file: {e}", file=sys.stderr)
-            log_file = None
+        base, ext = os.path.splitext(log_file)
+        ros2_log_file = f'{base}_ros2{ext or ".json"}'
 
-    # Countdown before scanning
     if remote_ip:
-        print(f"Targeting remote system: {remote_user}@{remote_ip}")
-    print("Starting in...")
-    for i in range(5, 0, -1):
-        print(f"{i}...")
-        time.sleep(1)
-    print("Scanning for ROS2 processes...")
-    ros2_pids = get_ros2_pids(remote_ip=remote_ip, remote_user=remote_user)
+        logger.info(f"Targeting remote system: {remote_user}@{remote_ip}")
 
-    if not ros2_pids:
-        msg = "No ROS2 processes found!\nMake sure ROS2 nodes are running."
-        print(msg)
-        if log_fp:
-            log_fp.write(msg + "\n")
-            log_fp.close()
-        return
+    logger.info("Monitoring all system processes (psutil probe)\n")
 
-    msg = f"Found {len(ros2_pids)} ROS2-related processes\n"
-    print(msg)
-    if log_fp:
-        log_fp.write(msg + "\n")
-        log_fp.flush()
+    # ROS2 attribution: the probe's own Command field can't be reliably
+    # name-matched (it's the bare executable name; most ROS2 node binaries
+    # like controller_server/bt_navigator never contain ROS2_PROCESS_PATTERNS
+    # in their own name -- that only reliably matches against `ps aux`'s full
+    # command line, e.g. the "--ros-args -r __node:=..." remapping argument).
+    # Take a ps-aux-based snapshot now (start of run) and union it with a
+    # second snapshot taken at the end (see the `finally` block below) since
+    # the ROS2 stack is often still launching at this point -- e.g. nav2's
+    # controller_server typically spawns after some startup delay.
+    start_ros2_pids = get_ros2_pids(remote_ip=remote_ip, remote_user=remote_user, root_pid=root_pid)
+    logger.info(f"Found {len(start_ros2_pids)} ROS2-related processes so far (for attribution, not filtering)\n")
 
-    # Build pidstat arguments
-    pidstat_args = ['pidstat']
+    # Per-node attribution: {pid: node_name}, unioned with an end-of-run
+    # snapshot below for the same reason as start_ros2_pids above (nodes
+    # that spawn after startup would otherwise be missing a node name).
+    start_ros2_node_map = get_ros2_pid_node_map(remote_ip=remote_ip, remote_user=remote_user, root_pid=root_pid)
 
-    # Add options based on flags
-    if show_cpu:
-        pidstat_args.append('-u')  # CPU statistics
-    if show_memory:
-        pidstat_args.append('-r')  # Memory statistics
-    if show_io:
-        pidstat_args.append('-d')  # I/O statistics
+    # Build the psutil probe command. Its stdout is JSON-lines, one object
+    # per sample tick -- parsed here and accumulated into `samples`.
+    probe_args = ['--interval', str(max(0.1, float(interval))),
+                  '--count', str(max(0, count))]
     if show_threads:
-        pidstat_args.append('-t')  # Show threads
+        probe_args.append('--threads')
+    if not show_memory:
+        probe_args.append('--no-memory')
+    if show_io:
+        probe_args.append('--disk-io')
+    if show_ctx:
+        probe_args.append('--ctx-switches')
 
-    # Add process filter
-    pidstat_args.extend(['-p', ','.join(map(str, ros2_pids))])
-
-    # Add human-readable output
-    pidstat_args.append('-h')
-
-    # Add interval (pidstat only accepts integers)
-    interval_int = max(1, int(interval))
-    if interval < 1 and interval != int(interval):
-        print(f"Warning: pidstat only accepts integer intervals. Rounding {interval}s to {interval_int}s")
-        if log_fp:
-            log_fp.write(f"Warning: pidstat only accepts integer intervals. Rounding {interval}s to {interval_int}s\n")
-            log_fp.flush()
-    pidstat_args.append(str(interval_int))
-
-    # Add count if specified
-    if count > 0:
-        pidstat_args.append(str(count))
-
-    # Build final command – prefix with ssh when targeting a remote host
     if remote_ip:
         # Use -T (no TTY) so SSH never touches local terminal settings.
-        # COLUMNS=250 tells pidstat how wide to format output without needing stty.
-        pidstat_cmd = ' '.join(pidstat_args)
-        remote_cmd = f'COLUMNS=250 {pidstat_cmd}'
+        remote_cmd = f'python3 {remote_probe_path} ' + ' '.join(probe_args)
         cmd = ['ssh', '-T', '-o', 'StrictHostKeyChecking=no',
                '-o', 'BatchMode=yes',
                f'{remote_user}@{remote_ip}', remote_cmd]
     else:
-        cmd = pidstat_args
+        local_probe = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    '_psutil_probe.py')
+        cmd = [sys.executable, local_probe] + probe_args
 
-    cmd_str = f"Running: {' '.join(cmd)}\n"
-    print(cmd_str)
-    print("Press Ctrl+C to stop\n")
-    if log_fp:
-        log_fp.write(cmd_str + "\n")
-        log_fp.flush()
+    logger.info(f"Running: {' '.join(cmd)}\n")
+    logger.info("Press Ctrl+C to stop\n")
 
+    def _filter_ros2_samples(ros2_pids: set) -> list:
+        """Return `samples` with each sample's processes[] filtered to ROS2 PIDs."""
+        filtered = []
+        for sample in samples:
+            procs = [p for p in sample.get('processes', []) if p.get('pid') in ros2_pids]
+            filtered.append({**sample, 'processes': procs})
+        return filtered
+
+    def _write_json_atomic(path: str, document: dict):
+        """Write-to-temp + rename so readers never observe a partial file."""
+        tmp_path = f'{path}.tmp'
+        try:
+            with open(tmp_path, 'w') as f:
+                json.dump(document, f, indent=2, default=str)
+            os.replace(tmp_path, path)
+        except IOError as e:
+            logger.error(f"Writing {path}: {e}")
+
+    def _write_documents(ended_at=None):
+        """
+        (Re)write both the system-wide log_file and the ROS2-filtered
+        ros2_log_file as single, always well-formed JSON documents. Called
+        after every sample -- not just at shutdown -- so live consumers that
+        re-read the whole file on a poll loop (e.g. prometheus_exporter.py)
+        see fresh data during a run, not only after it ends.
+        """
+        if not log_file:
+            return
+        document = {
+            'num_cpus':      num_cpus,
+            'ros2_pids':     sorted(start_ros2_pids),
+            'ros2_node_map': {str(pid): start_ros2_node_map[pid] for pid in sorted(start_ros2_node_map)},
+            'started_at':    started_at,
+            'ended_at':      ended_at,
+            'samples':       samples,
+        }
+        _write_json_atomic(log_file, document)
+
+        ros2_document = {**document, 'samples': _filter_ros2_samples(start_ros2_pids)}
+        _write_json_atomic(ros2_log_file, ros2_document)
+
+    process = None
     try:
-        # Run pidstat and stream output
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -181,61 +431,120 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
 
         for line in process.stdout:
             print(line, end='')
-            if log_fp:
-                log_fp.write(line)
-                log_fp.flush()
+            line = line.strip()
+            if not line.startswith('{'):
+                continue
+            try:
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if rec.get('event') == 'start':
+                num_cpus = rec.get('num_cpus', 0) or num_cpus
+            elif rec.get('event') not in ('stop', 'error'):
+                samples.append(rec)
+                _write_documents()
 
         process.wait()
 
     except KeyboardInterrupt:
-        msg = "\n\nMonitoring stopped by user."
-        print(msg)
-        if log_fp:
-            log_fp.write(msg + "\n")
-        process.terminate()
+        logger.info("\n\nMonitoring stopped by user.")
+        if process is not None:
+            process.terminate()
     except subprocess.CalledProcessError as e:
-        print(f"Error running pidstat: {e}", file=sys.stderr)
-        print("Make sure pidstat is installed (sudo apt install sysstat)", file=sys.stderr)
+        logger.error(f"Running psutil probe: {e}")
     except FileNotFoundError:
-        print("Error: pidstat not found!", file=sys.stderr)
-        print("Install it with: sudo apt install sysstat", file=sys.stderr)
+        logger.error("_psutil_probe.py not found (local) or python3/probe missing on remote host!")
+        if remote_ip:
+            logger.error(f"Make sure {remote_probe_path} is deployed on {remote_user}@{remote_ip} "
+                          "(e.g. via scp) and psutil is installed there.")
     finally:
-        if log_fp:
-            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            log_fp.write(f"\nMonitoring ended at {timestamp}\n")
-            log_fp.close()
+        # Take a second ROS2 PID snapshot at the end of the run and union it
+        # with the start-of-run snapshot -- the stack is often still
+        # launching at the start (e.g. nav2's controller_server spawns after
+        # some startup delay), so relying on only the first snapshot
+        # systematically misses processes that start later in the run.
+        end_ros2_pids = get_ros2_pids(remote_ip=remote_ip, remote_user=remote_user, root_pid=root_pid)
+        start_ros2_pids |= end_ros2_pids
+
+        end_ros2_node_map = get_ros2_pid_node_map(remote_ip=remote_ip, remote_user=remote_user, root_pid=root_pid)
+        start_ros2_node_map.update(end_ros2_node_map)
+
+        _write_documents(ended_at=datetime.now().isoformat())
 
 
-def continuous_monitor(interval: int = 2):
-    """Continuously monitor ROS2 processes, refreshing the PID list periodically."""
-    print("Starting continuous ROS2 monitoring (refreshing process list every 10 seconds)...")
-    print("Press Ctrl+C to stop\n")
+def continuous_monitor(interval: float = 2):
+    """
+    Continuously monitor ROS2 processes, refreshing the PID list periodically.
 
+    Uses a single long-lived _psutil_probe.py subprocess (system-wide sampler,
+    same one monitor_ros2_resources() uses) rather than pidstat -- pidstat has
+    no JSON output and required re-invoking it per-iteration with a fresh PID
+    list, which also meant every sample was pidstat's own average over its
+    own sampling window rather than a live per-tick reading. Re-using the
+    same probe process across ticks also means %CPU is computed as a proper
+    delta since the previous tick (a fresh subprocess/Process object always
+    reports 0.0 on its first sample).
+    """
+    logger.info("Starting continuous ROS2 monitoring (refreshing process list every ~10 seconds)...")
+    logger.info("Press Ctrl+C to stop\n")
+
+    interval = max(0.1, float(interval))
+    # Refresh the ROS2 PID list roughly every 10 seconds' worth of ticks.
+    refresh_every = max(1, round(10 / interval))
+
+    local_probe = os.path.join(os.path.dirname(os.path.abspath(__file__)), '_psutil_probe.py')
+    cmd = [sys.executable, local_probe, '--interval', str(interval), '--count', '0']
+
+    process = None
     try:
-        iteration = 0
-        while True:
-            # Refresh PID list every 5 iterations (10 seconds with 2 sec interval)
-            if iteration % 5 == 0:
-                ros2_pids = get_ros2_pids()
-                if not ros2_pids:
-                    print("No ROS2 processes found. Waiting...")
-                    time.sleep(interval)
-                    iteration += 1
-                    continue
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
+        )
 
-            # Run pidstat for this iteration
-            cmd = ['pidstat', '-u', '-r', '-h', '-p', ','.join(map(str, ros2_pids)), str(interval), '1']
-
+        ros2_pids: Set[int] = set()
+        tick = 0
+        for line in process.stdout:
+            line = line.strip()
+            if not line.startswith('{'):
+                continue
             try:
-                output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.DEVNULL)
-                print(output)
-            except subprocess.CalledProcessError:
-                pass  # Ignore errors, processes might have died
+                rec = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if rec.get('event') in ('start', 'stop', 'error'):
+                continue
 
-            iteration += 1
+            if tick % refresh_every == 0:
+                ros2_pids = get_ros2_pids()
+
+            if not ros2_pids:
+                logger.info("No ROS2 processes found. Waiting...")
+                tick += 1
+                continue
+
+            procs = [p for p in rec.get('processes', []) if p.get('pid') in ros2_pids]
+            if procs:
+                logger.info(f"{'PID':<8} {'CPU%':<8} {'RSS(KB)':<10} {'MEM%':<8} {'COMMAND'}")
+                logger.info("-" * 80)
+                for p in sorted(procs, key=lambda p: -p.get('cpu_pct', 0)):
+                    logger.info(f"{p['pid']:<8} {p.get('cpu_pct', 0):<8.1f} "
+                                f"{p.get('rss_kb', 0):<10.0f} {p.get('mem_pct', 0):<8.1f} "
+                                f"{p.get('cmdline') or p.get('name', '')}")
+                logger.info("")
+            tick += 1
+
+        process.wait()
 
     except KeyboardInterrupt:
-        print("\n\nMonitoring stopped by user.")
+        logger.info("\n\nMonitoring stopped by user.")
+        if process is not None:
+            process.terminate()
+    except FileNotFoundError:
+        logger.error("_psutil_probe.py not found!")
 
 
 def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
@@ -246,9 +555,9 @@ def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
         remote_user: SSH username for the remote system
     """
     if remote_ip:
-        print(f"Scanning for ROS2 processes on {remote_user}@{remote_ip}...\n")
+        logger.info(f"Scanning for ROS2 processes on {remote_user}@{remote_ip}...\n")
     else:
-        print("Scanning for ROS2 processes...\n")
+        logger.info("Scanning for ROS2 processes...\n")
 
     try:
         if remote_ip:
@@ -261,8 +570,8 @@ def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
             universal_newlines=True
         )
 
-        print(f"{'PID':<8} {'CPU%':<8} {'MEM%':<8} {'COMMAND'}")
-        print("-" * 80)
+        logger.info(f"{'PID':<8} {'CPU%':<8} {'MEM%':<8} {'COMMAND'}")
+        logger.info("-" * 80)
 
         count = 0
         for line in ps_output.split('\n')[1:]:  # Skip header
@@ -273,13 +582,13 @@ def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
                     cpu = parts[2]
                     mem = parts[3]
                     cmd = parts[10]  # Show full command
-                    print(f"{pid:<8} {cpu:<8} {mem:<8} {cmd}")
+                    logger.info(f"{pid:<8} {cpu:<8} {mem:<8} {cmd}")
                     count += 1
 
-        print(f"\nFound {count} ROS2-related processes")
+        logger.info(f"\nFound {count} ROS2-related processes")
 
     except subprocess.CalledProcessError as e:
-        print(f"Error listing processes: {e}", file=sys.stderr)
+        logger.error(f"Listing processes: {e}")
 
 
 # Candidate paths for a locally installed qmassa binary (xe driver support)
@@ -296,6 +605,7 @@ _DRM_CARDS_TEMP = ['/sys/class/drm/card0', '/sys/class/drm/card1']
 # Engine-class patterns (display name → regex on JSON key).
 # Covers both i915 names ("Render/3D 0", "Video 0", …) and xe names (rcs, bcs, ccs, vcs, vecs).
 import re as _re  # noqa: E402
+
 _ENGINE_CLASS_RE = {
     'Render/3D': _re.compile(r'render|3d|^rcs\d*$',                        _re.I),
     'Blitter':   _re.compile(r'blitter|blt|^bcs\d*$',                      _re.I),
@@ -405,152 +715,6 @@ def _read_gpu_temp_sysfs(remote_ip: str = None,
     return None
 
 
-def _read_cpu_thermal_sysfs() -> dict:
-    """
-    Read CPU package temperature and throttle state from local sysfs.
-
-    Temperature source: the ``x86_pkg_temp`` thermal zone in
-    ``/sys/class/thermal/thermal_zone*/``.
-
-    Throttle detection: compares ``scaling_cur_freq`` against
-    ``cpuinfo_max_freq`` for CPU 0 via cpufreq sysfs; throttling is
-    assumed when the current frequency falls below 95 % of the maximum.
-
-    Returns a dict with:
-        temp_c     - CPU package temperature in °C (float), or None
-        throttled  - True when throttling detected, False when not, or None
-    """
-    temp_c: Optional[float] = None
-    throttled: Optional[bool] = None
-
-    for zone_dir in sorted(glob.glob('/sys/class/thermal/thermal_zone*')):
-        try:
-            zone_type = open(f'{zone_dir}/type').read().strip()
-            if zone_type == 'x86_pkg_temp':
-                raw = int(open(f'{zone_dir}/temp').read().strip())
-                temp_c = round(raw / 1000.0, 1)
-                break
-        except (OSError, ValueError):
-            continue
-
-    try:
-        cur  = int(open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq').read().strip())
-        mxf  = int(open('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').read().strip())
-        throttled = cur < mxf * 0.95
-    except (OSError, ValueError):
-        throttled = None
-
-    return {'temp_c': temp_c, 'throttled': throttled}
-
-
-def probe_cpu_power_available() -> tuple:
-    """
-    Probe Intel RAPL CPU package power availability via powercap sysfs.
-
-    Returns ``(available, reason)`` where:
-      - ``available`` - True if the energy counter exists and is readable
-      - ``reason``    - human-readable string suitable for log output
-    """
-    if not os.path.exists(_RAPL_PKG_ENERGY):
-        return False, f'RAPL sysfs not found ({_RAPL_PKG_ENERGY}) — WSL2 or non-Intel?'
-    try:
-        int(open(_RAPL_PKG_ENERGY).read().strip())
-        return True, f'Intel RAPL accessible at {_RAPL_PKG_ENERGY}'
-    except (OSError, ValueError) as exc:
-        return False, f'RAPL sysfs exists but not readable: {exc}'
-
-
-def _read_rapl_energy_uj() -> Optional[int]:
-    """Read the current CPU package energy counter in µJ. Returns None on error."""
-    try:
-        return int(open(_RAPL_PKG_ENERGY).read().strip())
-    except (OSError, ValueError):
-        return None
-
-
-def _read_rapl_max_uj() -> int:
-    """Read the RAPL counter wraparound value in µJ (default 262143 µJ if unreadable)."""
-    try:
-        return int(open(_RAPL_PKG_MAX).read().strip())
-    except (OSError, ValueError):
-        return 262_143_000_000  # ~262 kJ, typical Sandy Bridge wrap value
-
-
-def monitor_cpu_power(interval: float = 2.0,
-                      cpu_power_log: str = None,
-                      stop_event: threading.Event = None):
-    """
-    Sample Intel RAPL CPU package power at *interval* seconds and write
-    JSON-lines to *cpu_power_log*.
-
-    Each record contains:
-        ts        - ISO-8601 timestamp
-        power_w   - mean CPU package power over the sampling window (watts)
-        temp_c    - CPU package temperature at sample time (°C), or null
-        throttled - True when CPU frequency dropped below 95 % of max, or null
-
-    Runs until *stop_event* is set or KeyboardInterrupt.
-    Silently exits if RAPL sysfs is not available.
-    """
-    avail, reason = probe_cpu_power_available()
-    if not avail:
-        print(f'[PWR] RAPL not available — CPU power monitoring skipped ({reason})')
-        return
-
-    log_fp = None
-    if cpu_power_log:
-        log_fp = open(cpu_power_log, 'a')
-        log_fp.write(json.dumps({'event': 'start',
-                                  'ts': datetime.now().isoformat()}) + '\n')
-        log_fp.flush()
-
-    if stop_event is None:
-        stop_event = threading.Event()
-
-    print(f'[PWR] Monitoring Intel RAPL CPU package power (interval={interval}s)...')
-
-    max_uj = _read_rapl_max_uj()
-
-    try:
-        e0 = _read_rapl_energy_uj()
-        t0 = time.monotonic()
-
-        while not stop_event.is_set():
-            stop_event.wait(timeout=interval)
-            e1 = _read_rapl_energy_uj()
-            t1 = time.monotonic()
-
-            if e0 is not None and e1 is not None:
-                # Handle counter wraparound
-                delta_uj = e1 - e0 if e1 >= e0 else (max_uj - e0 + e1)
-                elapsed_s = t1 - t0
-                power_w = round(delta_uj / 1_000_000.0 / max(elapsed_s, 1e-6), 2)
-
-                thermal = _read_cpu_thermal_sysfs()
-                record = {
-                    'ts':       datetime.now().isoformat(),
-                    'power_w':  power_w,
-                    'temp_c':   thermal.get('temp_c'),
-                    'throttled': thermal.get('throttled'),
-                }
-                print(f'[PWR] pkg={power_w:.2f} W'
-                      + (f'  🌡{thermal["temp_c"]}°C' if thermal.get('temp_c') else '')
-                      + ('  ⚠THROTTLE' if thermal.get('throttled') else ''))
-                if log_fp:
-                    log_fp.write(json.dumps(record) + '\n')
-                    log_fp.flush()
-
-            e0, t0 = e1, t1
-    except KeyboardInterrupt:
-        pass
-    finally:
-        if log_fp:
-            log_fp.write(json.dumps({'event': 'stop',
-                                      'ts': datetime.now().isoformat()}) + '\n')
-            log_fp.close()
-        print('[PWR] CPU power monitor stopped.')
-
-
 def _ssh(remote_ip: str, remote_user: str, cmd: str,
          timeout: int = 12) -> subprocess.CompletedProcess:
     """Run a command on the remote via SSH (BatchMode, no tty)."""
@@ -648,14 +812,12 @@ def _try_qmassa_local(interval: float = 2.0) -> dict:
     if not render_busy and engines_out:
         render_busy = max(v['busy'] for v in engines_out.values())
 
-    # ── Frequencies (Hz → MHz) + throttle ─────────────────────────────────────
+    # ── Frequencies (Hz → MHz) ──────────────────────────────────────────────────
     last_freqs = _last(dev_stats.get('freqs', []))      # Vec<DrmDeviceFreqs>
     act_freq_mhz = 0
-    throttled = False
     if last_freqs and isinstance(last_freqs, list) and last_freqs:
         gt0 = last_freqs[0]
         act_freq_mhz = int(gt0.get('act_freq', 0) / 1_000_000)
-        throttled = bool(gt0.get('throttle_reasons', {}).get('status', False))
 
     # ── Power (already in watts) ───────────────────────────────────────────────
     last_power = _last(dev_stats.get('power', []))
@@ -708,7 +870,6 @@ def _try_qmassa_local(interval: float = 2.0) -> dict:
         'power_pkg_w':  power_pkg_w,
         'engines':      engines_out,
         'clients':      clients,
-        'throttled':    throttled,
         'period_ms':    float(interval_ms),
         'drv_name':     dev.get('drv_name', 'xe'),
         'vram_used_mb': vram_used_mb,
@@ -728,7 +889,6 @@ def _read_sysfs_gpu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         act_freq_mhz   – actual (measured) GT frequency
         cur_freq_mhz   – current requested GT frequency
         max_freq_mhz   – maximum configured GT frequency
-        throttled       – True when any throttle reason is active
         rc6_ms_per_s   – raw RC6 idle ms in the last second (for debugging)
         gt_count        – number of GTs found
     Returns an empty dict on any failure.
@@ -780,11 +940,10 @@ def _read_sysfs_gpu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         f'{_CARD}/gt_cur_freq_mhz',
         f'{_CARD}/gt_max_freq_mhz',
     ]
-    throttle_path = f'{_CARD}/gt/gt0/throttle_reason_status'
 
     # First RC6 sample
     t0 = time.monotonic()
-    s0 = _read(rc6_paths + freq_paths + [throttle_path])
+    s0 = _read(rc6_paths + freq_paths)
     time.sleep(1.0)
     t1 = time.monotonic()
     s1 = _read(rc6_paths)
@@ -811,18 +970,11 @@ def _read_sysfs_gpu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         except ValueError:
             return 0
 
-    throttle_raw = s0.get(throttle_path, '0') or '0'
-    try:
-        throttled = int(throttle_raw) != 0
-    except ValueError:
-        throttled = False
-
     return {
         'busy_pct':     busy_pct,
         'act_freq_mhz': _int(f'{_CARD}/gt_act_freq_mhz'),
         'cur_freq_mhz': _int(f'{_CARD}/gt_cur_freq_mhz'),
         'max_freq_mhz': _int(f'{_CARD}/gt_max_freq_mhz'),
-        'throttled':    throttled,
         'rc6_ms_per_s': round(rc6_idle_ms, 1),
         'gt_count':     gt_count,
     }
@@ -857,10 +1009,10 @@ def monitor_gpu(interval: float = 2.0,
                      'ls /sys/class/drm/card* 2>/dev/null | grep -qE "card[0-9]" && echo ok || echo missing',
                      timeout=8)
             if 'missing' in r.stdout:
-                print('[GPU] No Intel GPU sysfs found on remote — GPU monitoring skipped.')
+                logger.info('[GPU] No Intel GPU sysfs found on remote — GPU monitoring skipped.')
                 return
         except Exception:
-            print('[GPU] Could not reach remote for GPU check — skipping.')
+            logger.info('[GPU] Could not reach remote for GPU check — skipping.')
             return
 
     # Probe: try qmassa first; fall back to sysfs if unavailable.
@@ -870,19 +1022,19 @@ def monitor_gpu(interval: float = 2.0,
         if probe:
             use_qmassa = True
             drv = probe.get('drv_name', 'xe')
-            print(f'[GPU] Using qmassa ({drv} driver, engines/power/per-PID)  '
+            logger.info(f'[GPU] Using qmassa ({drv} driver, engines/power/per-PID)  '
                   f'interval={interval}s')
         else:
             qmassa_bin = _find_local_qmassa()
             if qmassa_bin:
-                print(f'[GPU] qmassa found at {qmassa_bin} but probe failed '
+                logger.info(f'[GPU] qmassa found at {qmassa_bin} but probe failed '
                       f'(check video/render/power group membership).')
             else:
-                print('[GPU] qmassa not found — falling back to sysfs monitoring.')
-                print('[GPU] Install:  make install-qmassa')
+                logger.info('[GPU] qmassa not found — falling back to sysfs monitoring.')
+                logger.info('[GPU] Install:  make install-qmassa')
 
     if not use_qmassa:
-        print(f'[GPU] Monitoring Intel GPU via sysfs (interval={interval}s)...')
+        logger.info(f'[GPU] Monitoring Intel GPU via sysfs (interval={interval}s)...')
 
     def _fmt_rich(stats: dict) -> str:
         engs     = stats.get('engines', {})
@@ -911,8 +1063,7 @@ def monitor_gpu(interval: float = 2.0,
 
     def _fmt_sysfs(stats: dict) -> str:
         return (f"[GPU] busy={stats['busy_pct']:5.1f}%  "
-                f"freq={stats['act_freq_mhz']}/{stats.get('max_freq_mhz', 0)} MHz"
-                f"{'  ⚠THROTTLE' if stats.get('throttled') else ''}")
+                f"freq={stats['act_freq_mhz']}/{stats.get('max_freq_mhz', 0)} MHz")
 
     try:
         while not stop_event.is_set():
@@ -954,7 +1105,7 @@ def monitor_gpu(interval: float = 2.0,
                 record = {'ts': ts, **stats}
                 line = json.dumps(record)
                 src = stats.get('source', '')
-                print(_fmt_rich(stats) if src == 'qmassa' else _fmt_sysfs(stats))
+                logger.info(_fmt_rich(stats) if src == 'qmassa' else _fmt_sysfs(stats))
                 if log_fp:
                     log_fp.write(line + '\n')
                     log_fp.flush()
@@ -972,7 +1123,7 @@ def monitor_gpu(interval: float = 2.0,
             log_fp.write(json.dumps({'event': 'stop',
                                       'ts': datetime.now().isoformat()}) + '\n')
             log_fp.close()
-        print('[GPU] GPU monitor stopped.')
+        logger.info('[GPU] GPU monitor stopped.')
 
 
 # ── Intel NPU monitoring (sysfs / SSH) ───────────────────────────────────────
@@ -984,10 +1135,6 @@ _NPU_SYSFS_FILES = [
     'npu_memory_utilization',
 ]
 
-# Intel RAPL powercap sysfs — CPU package energy counter (µJ, no root required)
-_RAPL_PKG_ENERGY  = '/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj'
-_RAPL_PKG_MAX     = '/sys/class/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj'
-
 
 def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
     """
@@ -997,11 +1144,10 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         busy% = delta_busy_us / (delta_wall_us) * 100
 
     Returns a dict with:
-        busy_pct          - NPU compute utilisation %
+        busy_pct          - NPU compute utilization %
         cur_freq_mhz      - current clock frequency
         max_freq_mhz      - maximum clock frequency
-        memory_used_mb    - memory utilisation (bytes → MB)
-        throttled         - True when cur_freq_mhz < max_freq_mhz * 0.95
+        memory_used_mb    - memory utilization (bytes → MB)
     Returns an empty dict on any failure.
     """
 
@@ -1051,14 +1197,11 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
     mem_bytes = _int(s1, 'npu_memory_utilization')
     cur_freq = _int(s1, 'npu_current_frequency_mhz')
     max_freq = _int(s1, 'npu_max_frequency_mhz')
-    # Throttle detection: current frequency dropped below 95 % of maximum.
-    throttled = bool(0 < cur_freq < max_freq * 0.95 and max_freq > 0)
     result = {
         'busy_pct':       busy_pct,
         'cur_freq_mhz':   cur_freq,
         'max_freq_mhz':   max_freq,
         'memory_used_mb': round(mem_bytes / (1024 * 1024), 1),
-        'throttled':      throttled,
     }
     return result
 
@@ -1089,17 +1232,17 @@ def monitor_npu(interval: float = 2.0,
             r = _ssh(remote_ip, remote_user,
                      f'test -d {_NPU_SYSFS} && echo ok || echo missing', timeout=8)
             if 'missing' in r.stdout:
-                print('[NPU] No Intel NPU sysfs found on remote — NPU monitoring skipped.')
+                logger.info('[NPU] No Intel NPU sysfs found on remote — NPU monitoring skipped.')
                 return
         except Exception:
-            print('[NPU] Could not reach remote for NPU check — skipping.')
+            logger.info('[NPU] Could not reach remote for NPU check — skipping.')
             return
     else:
         if not os.path.isdir(_NPU_SYSFS):
-            print('[NPU] No Intel NPU sysfs found locally — NPU monitoring skipped.')
+            logger.info('[NPU] No Intel NPU sysfs found locally — NPU monitoring skipped.')
             return
 
-    print(f'[NPU] Monitoring Intel NPU via sysfs (interval={interval}s)...')
+    logger.info(f'[NPU] Monitoring Intel NPU via sysfs (interval={interval}s)...')
 
     try:
         while not stop_event.is_set():
@@ -1114,11 +1257,10 @@ def monitor_npu(interval: float = 2.0,
                             if 'temp_c' in stats else '')
                 bw_str   = (f"  bw={stats['bw_mbps']:.1f} MB/s"
                             if 'bw_mbps' in stats else '')
-                throttle_str = '  ⚠THROTTLE' if stats.get('throttled') else ''
-                print(f"[NPU] busy={stats['busy_pct']:5.1f}%  "
+                logger.info(f"[NPU] busy={stats['busy_pct']:5.1f}%  "
                       f"freq={stats['cur_freq_mhz']}/{stats['max_freq_mhz']} MHz  "
                       f"mem={stats['memory_used_mb']:.1f} MB"
-                      f"{pwr_str}{temp_str}{bw_str}{throttle_str}")
+                      f"{pwr_str}{temp_str}{bw_str}")
                 if log_fp:
                     log_fp.write(json.dumps(record) + '\n')
                     log_fp.flush()
@@ -1136,12 +1278,12 @@ def monitor_npu(interval: float = 2.0,
             log_fp.write(json.dumps({'event': 'stop',
                                       'ts': datetime.now().isoformat()}) + '\n')
             log_fp.close()
-        print('[NPU] NPU monitor stopped.')
+        logger.info('[NPU] NPU monitor stopped.')
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Monitor ROS2 processes resource utilization using pidstat',
+        description='Monitor ROS2 processes resource utilization using a psutil-based sampler',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -1152,7 +1294,7 @@ Examples:
   %(prog)s
 
   # Monitor CPU and memory usage with logging
-  %(prog)s --memory --log ros2_monitor.log
+  %(prog)s --memory --log ros2_monitor.json
 
   # Monitor with 2 second interval
   %(prog)s --interval 2
@@ -1162,6 +1304,9 @@ Examples:
 
   # Monitor I/O statistics
   %(prog)s --io
+
+  # Monitor context-switch counts (contention diagnostics)
+  %(prog)s --ctx-switches
 
   # Monitor with thread details
   %(prog)s --threads
@@ -1174,13 +1319,16 @@ Examples:
     parser.add_argument('-l', '--list', action='store_true',
                         help='List all ROS2 processes and exit')
     parser.add_argument('-i', '--interval', type=float, default=1,
-                        help='Sampling interval in seconds (default: 1, pidstat requires integers >= 1)')
+                        help='Sampling interval in seconds (default: 1)')
     parser.add_argument('-c', '--count', type=int, default=0,
                         help='Number of samples (default: 0 = infinite)')
     parser.add_argument('-m', '--memory', action='store_true',
                         help='Show memory statistics')
     parser.add_argument('-d', '--io', action='store_true',
-                        help='Show I/O statistics')
+                        help='Show per-process disk I/O statistics (read/write bytes since last tick)')
+    parser.add_argument('-x', '--ctx-switches', action='store_true',
+                        help='Show per-process voluntary/involuntary context-switch counts since '
+                             'last tick (involuntary spikes indicate CPU contention)')
     parser.add_argument('-t', '--threads', action='store_true',
                         help='Show per-thread statistics')
     parser.add_argument('--continuous', action='store_true',
@@ -1195,14 +1343,17 @@ Examples:
                         help='Also collect Intel NPU metrics via sysfs (writes npu_usage.log alongside --log)')
     parser.add_argument('--npu-log', type=str, default=None,
                         help='Explicit path for NPU JSON-lines log (auto-derived from --log if omitted)')
-    parser.add_argument('--power', action='store_true',
-                        help='Also collect Intel RAPL CPU package power via powercap sysfs (writes cpu_power.log)')
-    parser.add_argument('--power-log', type=str, default=None,
-                        help='Explicit path for CPU power JSON-lines log (auto-derived from --log if omitted)')
     parser.add_argument('--remote-ip', type=str, default=None,
                         help='IP address of the remote system running the ROS2 pipeline')
     parser.add_argument('--remote-user', type=str, default='ubuntu',
                         help='SSH username for the remote system (default: ubuntu)')
+    parser.add_argument('--remote-probe-path', type=str, default='~/ros-kpi/src/_psutil_probe.py',
+                        help='Path to _psutil_probe.py on the remote host (must already be '
+                             'deployed there, e.g. via scp). Ignored when --remote-ip is not set.')
+    parser.add_argument('--root-pid', type=int, default=None,
+                        help='PID of the top-level launch process (e.g. `ros2 launch`). '
+                             'Used to classify ROS2 processes by process-tree ancestry '
+                             'for resource attribution, instead of name/arg matching.')
     parser.add_argument('--check-hw', action='store_true',
                         help='Probe local GPU and NPU monitoring availability then exit')
 
@@ -1212,36 +1363,24 @@ Examples:
         driver = _detect_gpu_driver()
         gpu_avail, gpu_tool, gpu_reason = probe_gpu_available()
         npu_avail, npu_reason = probe_npu_available()
-        print('\u2554' + '\u2550' * 64 + '\u2557')
-        print('\u2551' + '  Hardware Monitoring Probe'.ljust(64) + '\u2551')
-        print('\u255a' + '\u2550' * 64 + '\u255d')
-        print()
-        print(f'[GPU] Kernel driver : {driver}')
+        logger.info('\u2554' + '\u2550' * 64 + '\u2557')
+        logger.info('\u2551' + '  Hardware Monitoring Probe'.ljust(64) + '\u2551')
+        logger.info('\u255a' + '\u2550' * 64 + '\u255d\n')
+        logger.info(f'[GPU] Kernel driver : {driver}')
         if gpu_avail:
-            print(f'[GPU] Status        : \u2705 AVAILABLE  (tool: {gpu_tool})')
+            logger.info(f'[GPU] Status        : \u2705 AVAILABLE  (tool: {gpu_tool})')
         else:
-            print('[GPU] Status        : \u274c UNAVAILABLE')
-        print(f'[GPU] Detail        : {gpu_reason}')
-        print()
-        print(f'[NPU] Sysfs path    : {_NPU_SYSFS}')
+            logger.info('[GPU] Status        : \u274c UNAVAILABLE')
+        logger.info(f'[GPU] Detail        : {gpu_reason}\n')
+        logger.info(f'[NPU] Sysfs path    : {_NPU_SYSFS}')
         if npu_avail:
-            print('[NPU] Status        : \u2705 AVAILABLE')
+            logger.info('[NPU] Status        : \u2705 AVAILABLE')
         else:
-            print('[NPU] Status        : \u274c UNAVAILABLE')
-        print(f'[NPU] Detail        : {npu_reason}')
-        print()
-        pwr_avail, pwr_reason = probe_cpu_power_available()
-        print(f'[PWR] RAPL path     : {_RAPL_PKG_ENERGY}')
-        if pwr_avail:
-            print('[PWR] Status        : \u2705 AVAILABLE')
-        else:
-            print('[PWR] Status        : \u274c UNAVAILABLE')
-        print(f'[PWR] Detail        : {pwr_reason}')
-        print()
-        print('Auto-monitoring summary:')
-        print(f'  GPU will be monitored   : {"yes" if gpu_avail else "no"}')
-        print(f'  NPU will be monitored   : {"yes" if npu_avail else "no"}')
-        print(f'  RAPL power monitored    : {"yes" if pwr_avail else "no"}')
+            logger.info('[NPU] Status        : \u274c UNAVAILABLE')
+        logger.info(f'[NPU] Detail        : {npu_reason}\n')
+        logger.info('Auto-monitoring summary:')
+        logger.info(f'  GPU will be monitored   : {"yes" if gpu_avail else "no"}')
+        logger.info(f'  NPU will be monitored   : {"yes" if npu_avail else "no"}')
         import sys as _sys
         _sys.exit(0 if (gpu_avail or npu_avail) else 1)
 
@@ -1260,7 +1399,6 @@ Examples:
     if args.gpu:
         gpu_log = args.gpu_log
         if gpu_log is None and args.log:
-            import os
             gpu_log = os.path.join(os.path.dirname(os.path.abspath(args.log)), 'gpu_usage.log')
         if gpu_log is None:
             gpu_log = 'gpu_usage.log'
@@ -1287,40 +1425,26 @@ Examples:
         )
         _npu_thread.start()
 
-    _pwr_stop = None
-    if args.power:
-        pwr_log = args.power_log
-        if pwr_log is None and args.log:
-            pwr_log = os.path.join(os.path.dirname(os.path.abspath(args.log)), 'cpu_power.log')
-        if pwr_log is None:
-            pwr_log = 'cpu_power.log'
-        _pwr_stop = threading.Event()
-        _pwr_thread = threading.Thread(
-            target=monitor_cpu_power,
-            args=(args.interval, pwr_log, _pwr_stop),
-            daemon=True,
-        )
-        _pwr_thread.start()
-
     try:
-        monitor_ros2_pidstat(
+        monitor_ros2_resources(
             interval=args.interval,
             count=args.count,
             show_cpu=show_cpu,
             show_memory=args.memory,
             show_io=args.io,
             show_threads=args.threads,
+            show_ctx=args.ctx_switches,
             log_file=args.log,
             remote_ip=args.remote_ip,
             remote_user=args.remote_user,
+            root_pid=args.root_pid,
+            remote_probe_path=args.remote_probe_path,
         )
     finally:
         if _gpu_stop is not None:
             _gpu_stop.set()
         if _npu_stop is not None:
             _npu_stop.set()
-        if _pwr_stop is not None:
-            _pwr_stop.set()
 
 
 if __name__ == '__main__':

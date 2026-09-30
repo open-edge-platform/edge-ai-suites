@@ -7,7 +7,7 @@
 """
 view_average.py — Average KPI metrics across the last N monitoring sessions.
 
-Reads graph_timing.csv (and optionally resource_usage.log) from the N most
+Reads graph_timing.csv (and optionally resource_usage.json) from the N most
 recent monitoring_sessions/ sub-directories and prints a consolidated summary
 table showing mean ± std-dev for every metric, per topic / per process.
 
@@ -36,11 +36,14 @@ import argparse
 import csv
 import json
 import math
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+from log_config import get_logger
+
+logger = get_logger(__name__)
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -122,7 +125,7 @@ def parse_graph_csv(csv_path: Path) -> Dict[str, Dict[str, List[float]]]:
                     if v is not None:
                         results[topic][col].append(v)
     except Exception as exc:
-        print(f"  ⚠  Could not parse {csv_path}: {exc}", file=sys.stderr)
+        logger.error(f"  ⚠  Could not parse {csv_path}: {exc}")
     return results
 
 
@@ -162,14 +165,13 @@ def aggregate_timing(sessions: List[Path]) -> Dict[str, Dict[str, Dict[str, Opti
     return result
 
 
-# ── resource log (pidstat) ───────────────────────────────────────────────────
-
-_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+# ── resource log (resource_usage.json, single JSON document) ─────────────────
 
 
 def parse_resource_log(log_path: Path) -> Dict[str, Dict[str, List[float]]]:
     """
-    Extract per-process (TGID / PID) CPU% and RSS-MB from one pidstat log.
+    Extract per-process (by command) CPU% and RSS-MB from one
+    resource_usage.json (single JSON document written by _psutil_probe.py).
 
     Result shape:
         { command: { 'cpu_pct': [...], 'rss_mb': [...] } }
@@ -177,36 +179,14 @@ def parse_resource_log(log_path: Path) -> Dict[str, Dict[str, List[float]]]:
     results: Dict[str, Dict[str, List[float]]] = defaultdict(lambda: defaultdict(list))
     try:
         with open(log_path) as fh:
-            for line in fh:
-                line = _ANSI.sub("", line).rstrip()
-                if not re.match(r"^\d{2}:\d{2}:\d{2} [AP]M", line):
-                    continue
-                parts = line.split()
-                if len(parts) < 12:
-                    continue
-                has_threads = parts[4] == "-" or (
-                    parts[4].isdigit() and len(parts) >= 16
-                )
-                try:
-                    if has_threads:
-                        tid = parts[4]
-                        if tid != "-":
-                            continue  # only process-level rows
-                        cpu_pct = float(parts[9])
-                        rss_kb  = int(parts[14])
-                        command = " ".join(parts[16:]) if len(parts) > 16 else parts[-1]
-                    else:
-                        cpu_pct = float(parts[8])
-                        rss_kb  = int(parts[13])
-                        command = " ".join(parts[15:]) if len(parts) > 15 else parts[-1]
-
-                    cmd = command.strip() or "unknown"
-                    results[cmd]["cpu_pct"].append(cpu_pct)
-                    results[cmd]["rss_mb"].append(rss_kb / 1024.0)
-                except (ValueError, IndexError):
-                    continue
+            document = json.load(fh)
+        for rec in document.get("samples", []):
+            for p in rec.get("processes", []):
+                command = (p.get("cmdline") or p.get("name") or "").strip() or "unknown"
+                results[command]["cpu_pct"].append(p.get("cpu_pct", 0.0))
+                results[command]["rss_mb"].append(p.get("rss_kb", 0.0) / 1024.0)
     except Exception as exc:
-        print(f"  ⚠  Could not parse {log_path}: {exc}", file=sys.stderr)
+        logger.error(f"  ⚠  Could not parse {log_path}: {exc}")
     return results
 
 
@@ -221,7 +201,7 @@ def aggregate_resources(sessions: List[Path]) -> Dict[str, Dict[str, Dict[str, O
     session_count: Dict[str, int] = defaultdict(int)
 
     for sess in sessions:
-        log_path = sess / "resource_usage.log"
+        log_path = sess / "resource_usage.json"
         if not log_path.exists():
             continue
         per_cmd = parse_resource_log(log_path)
@@ -251,13 +231,13 @@ def print_timing_table(
     n_sessions: int,
 ) -> None:
     if not agg:
-        print("  (no graph_timing.csv data found in these sessions)")
+        logger.warning("  (no graph_timing.csv data found in these sessions)")
         return
 
     col_w = 40
-    print(f"\n{'TOPIC':<{col_w}} {'Sessions':>8}  {'Freq (Hz)':>22}  {'Delta (ms)':>22}  "
+    logger.info(f"\n{'TOPIC':<{col_w}} {'Sessions':>8}  {'Freq (Hz)':>22}  {'Delta (ms)':>22}  "
           f"{'Latency mean (ms)':>24}  {'Proc delay (ms)':>24}")
-    print("─" * (col_w + 8 + 22 + 22 + 24 + 24 + 10))
+    logger.info("─" * (col_w + 8 + 22 + 22 + 24 + 24 + 10))
 
     for topic in sorted(agg):
         m = agg[topic]
@@ -268,7 +248,7 @@ def print_timing_table(
         proc  = m.get("processing_delay_ms", {})
 
         topic_display = topic if len(topic) <= col_w else topic[: col_w - 3] + "..."
-        print(
+        logger.info(
             f"{topic_display:<{col_w}} {sessions:>8}  "
             f"{_fmt(freq.get('mean'), freq.get('std')):>22}  "
             f"{_fmt(delta.get('mean'), delta.get('std')):>22}  "
@@ -283,7 +263,7 @@ def print_resource_table(
     top: int = 20,
 ) -> None:
     if not agg:
-        print("  (no resource_usage.log data found in these sessions)")
+        logger.warning("  (no resource_usage.json data found in these sessions)")
         return
 
     # Sort by mean CPU descending
@@ -294,15 +274,15 @@ def print_resource_table(
     )[:top]
 
     col_w = 50
-    print(f"\n{'PROCESS':<{col_w}} {'Sessions':>8}  {'CPU %':>22}  {'RSS MB':>22}")
-    print("─" * (col_w + 8 + 22 + 22 + 6))
+    logger.info(f"\n{'PROCESS':<{col_w}} {'Sessions':>8}  {'CPU %':>22}  {'RSS MB':>22}")
+    logger.info("─" * (col_w + 8 + 22 + 22 + 6))
 
     for cmd, metrics in ranked:
         sessions = max(v["sessions"] for v in metrics.values()) if metrics else 0
         cpu = metrics.get("cpu_pct", {})
         rss = metrics.get("rss_mb",  {})
         cmd_display = cmd if len(cmd) <= col_w else cmd[: col_w - 3] + "..."
-        print(
+        logger.info(
             f"{cmd_display:<{col_w}} {sessions:>8}  "
             f"{_fmt(cpu.get('mean'), cpu.get('std')):>22}  "
             f"{_fmt(rss.get('mean'), rss.get('std')):>22}"
@@ -360,7 +340,7 @@ def _screen_inches() -> Tuple[float, float, float]:
 
 
 def _latency_color(mean_ms: float) -> str:
-    """Traffic-light colour based on latency magnitude."""
+    """Traffic-light color based on latency magnitude."""
     if mean_ms < 10:
         return "#2ecc71"   # green  – excellent
     if mean_ms < 50:
@@ -381,7 +361,7 @@ def plot_timing(
         import matplotlib.pyplot as plt
         from _accel import np  # Intel dpnp/numpy shim
     except ImportError:
-        print("matplotlib not available — skipping plots", file=sys.stderr)
+        logger.error("matplotlib not available — skipping plots")
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -452,13 +432,13 @@ def plot_timing(
             ax_lat.text(bar.get_x() + bar.get_width() / 2, h * 1.02,
                         f"{h:.1f}", ha="center", va="bottom", fontsize=7, color="#555")
 
-    for threshold, label_str, colour in [
+    for threshold, label_str, color in [
         (10,  "10 ms (good)",   "#2ecc71"),
         (50,  "50 ms (warn)",   "#f1c40f"),
         (200, "200 ms (poor)",  "#e74c3c"),
     ]:
         if threshold < max(lat_means.max(), proc_means.max()) * 1.35:
-            ax_lat.axhline(threshold, color=colour, linestyle="--",
+            ax_lat.axhline(threshold, color=color, linestyle="--",
                            linewidth=0.9, alpha=0.65, label=label_str)
 
     ax_lat.set_xticks(x)
@@ -470,7 +450,7 @@ def plot_timing(
     ax_lat.grid(axis="y", alpha=0.25)
     ax_lat.set_xlim(-0.7, n - 0.3)
 
-    # embed colour grade legend inside the axes
+    # embed color grade legend inside the axes
     ax_lat.legend(legend_items + [plt.Line2D([0], [0], color="none")] * 0,
                   legend_labels,
                   loc="upper left", fontsize=7.5, ncol=2,
@@ -484,7 +464,7 @@ def plot_timing(
     fig1.tight_layout()
     out1 = output_dir / "avg_latency.png"
     fig1.savefig(out1, dpi=save_dpi, bbox_inches="tight")
-    print(f"  Saved: {out1}")
+    logger.info(f"  Saved: {out1}")
     if show:
         plt.show()
     plt.close(fig1)
@@ -515,7 +495,7 @@ def plot_timing(
     fig2.tight_layout()
     out2 = output_dir / "avg_frequency.png"
     fig2.savefig(out2, dpi=save_dpi, bbox_inches="tight")
-    print(f"  Saved: {out2}")
+    logger.info(f"  Saved: {out2}")
     if show:
         plt.show()
     plt.close(fig2)
@@ -534,7 +514,7 @@ def plot_resources(
         import matplotlib.gridspec as gridspec
         from _accel import np, ne  # Intel dpnp/numpy shim + numexpr
     except ImportError:
-        print("matplotlib not available — skipping plots", file=sys.stderr)
+        logger.error("matplotlib not available — skipping plots")
         return
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -556,7 +536,7 @@ def plot_resources(
     n          = len(labels)
     y          = np.arange(n)
 
-    # Colour scale: proportional to CPU %
+    # Color scale: proportional to CPU %
     _cpu_max   = float(cpu_means.max()) + 1e-9
     _rss_max   = float(rss_means.max()) + 1e-9
     cpu_norm   = ne.evaluate("cpu_means / _cpu_max") if ne is not None else cpu_means / _cpu_max
@@ -627,7 +607,7 @@ def plot_resources(
     out_png = output_dir / "avg_resources.png"
     _, _, dpi = _screen_inches()
     fig.savefig(out_png, dpi=max(100, dpi), bbox_inches="tight")
-    print(f"  Saved: {out_png}")
+    logger.info(f"  Saved: {out_png}")
     if show:
         plt.show()
     plt.close(fig)
@@ -668,7 +648,7 @@ def save_timing_tables(
                 lat.get("mean"),   lat.get("std"),
                 proc.get("mean"),  proc.get("std"),
             ])
-    print(f"  Saved: {csv_path}")
+    logger.info(f"  Saved: {csv_path}")
 
     # ── JSON ─────────────────────────────────────────────────────────────────
     json_path = output_dir / "avg_timing.json"
@@ -684,7 +664,7 @@ def save_timing_tables(
     }
     with open(json_path, "w") as fh:
         json.dump(payload, fh, indent=2)
-    print(f"  Saved: {json_path}")
+    logger.info(f"  Saved: {json_path}")
 
 
 def save_resource_tables(
@@ -719,7 +699,7 @@ def save_resource_tables(
                 cpu.get("mean"), cpu.get("std"),
                 rss.get("mean"), rss.get("std"),
             ])
-    print(f"  Saved: {csv_path}")
+    logger.info(f"  Saved: {csv_path}")
 
     # ── JSON ─────────────────────────────────────────────────────────────────
     json_path = output_dir / "avg_resources.json"
@@ -735,7 +715,7 @@ def save_resource_tables(
     }
     with open(json_path, "w") as fh:
         json.dump(payload, fh, indent=2)
-    print(f"  Saved: {json_path}")
+    logger.info(f"  Saved: {json_path}")
 
 
 def save_gpu_tables(
@@ -757,13 +737,13 @@ def save_gpu_tables(
                 info.get("std"),
                 info.get("sessions"),
             ])
-    print(f"  Saved: {csv_path}")
+    logger.info(f"  Saved: {csv_path}")
 
     # ── JSON ─────────────────────────────────────────────────────────────────
     json_path = output_dir / "avg_gpu.json"
     with open(json_path, "w") as fh:
         json.dump(gpu_agg, fh, indent=2)
-    print(f"  Saved: {json_path}")
+    logger.info(f"  Saved: {json_path}")
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
@@ -771,10 +751,9 @@ def save_gpu_tables(
 # ── GPU log (sysfs) ──────────────────────────────────────────────────────────
 
 def aggregate_gpu(sessions: List[Path]) -> Optional[Dict[str, Dict[str, Optional[float]]]]:
-    """Average GPU busy%, act_freq, and throttle_fraction across sessions."""
+    """Average GPU busy% and act_freq across sessions."""
     busy_pcts: List[float] = []
     act_freqs: List[float] = []
-    throttle_fracs: List[float] = []
 
     for sess in sessions:
         log_path = sess / "gpu_usage.log"
@@ -797,14 +776,12 @@ def aggregate_gpu(sessions: List[Path]) -> Optional[Dict[str, Dict[str, Optional
             continue
         busy_pcts.append(sum(r.get('busy_pct', 0.0) for r in records) / len(records))
         act_freqs.append(sum(r.get('act_freq_mhz', 0) for r in records) / len(records))
-        throttle_fracs.append(sum(1 for r in records if r.get('throttled', False)) / len(records) * 100)
 
     if not busy_pcts:
         return None
     return {
         'busy_pct': {'mean': _mean(busy_pcts), 'std': _std(busy_pcts), 'sessions': len(busy_pcts)},
         'act_freq_mhz': {'mean': _mean(act_freqs), 'std': _std(act_freqs), 'sessions': len(act_freqs)},
-        'throttle_pct': {'mean': _mean(throttle_fracs), 'std': _std(throttle_fracs), 'sessions': len(throttle_fracs)},
     }
 
 
@@ -813,15 +790,14 @@ def plot_gpu_average(
     output_dir: Path,
     show: bool = False,
 ) -> None:
-    """Bar chart of average GPU busy%, frequency, and throttle fraction."""
+    """Bar chart of average GPU busy% and frequency."""
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(9, 4))
 
     metrics = [
         ('busy_pct', 'GPU Busy %', 'steelblue', (0, 100)),
         ('act_freq_mhz', 'Actual Freq (MHz)', 'darkorange', None),
-        ('throttle_pct', 'Throttle Time %', 'firebrick', (0, 100)),
     ]
     n_sess = None
     for ax, (key, label, color, ylim) in zip(axes, metrics):
@@ -847,7 +823,7 @@ def plot_gpu_average(
 
     out_png = output_dir / "avg_gpu.png"
     fig.savefig(out_png, dpi=150, bbox_inches='tight')
-    print(f"  Saved: {out_png}")
+    logger.info(f"  Saved: {out_png}")
     if show:
         plt.show()
     plt.close(fig)
@@ -912,18 +888,18 @@ def main() -> None:
     sessions = find_sessions(sessions_dir, args.runs)
 
     if not sessions:
-        print(f"No monitoring sessions found in '{sessions_dir}'. "
+        logger.error(f"No monitoring sessions found in '{sessions_dir}'. "
               "Run 'uv run python src/monitor_stack.py' first.")
         sys.exit(1)
 
     n_found = len(sessions)
-    print("╔══════════════════════════════════════════════════════════════════╗")
-    print(f"║  ROS2 KPI — Average across last {args.runs} session(s)               ║")
-    print("╚══════════════════════════════════════════════════════════════════╝")
-    print(f"\nUsing {n_found} session(s) (of {args.runs} requested):")
+    logger.info("╔══════════════════════════════════════════════════════════════════╗")
+    logger.info(f"║  ROS2 KPI — Average across last {args.runs} session(s)               ║")
+    logger.info("╚══════════════════════════════════════════════════════════════════╝")
+    logger.info(f"\nUsing {n_found} session(s) (of {args.runs} requested):")
     for s in reversed(sessions):   # oldest first
-        print(f"  • {s.name}")
-    print()
+        logger.info(f"  • {s.name}")
+    logger.info("")
 
     output_dir = Path(args.output_dir) if args.output_dir else (
         sessions_dir / f"average_{args.runs}"
@@ -931,52 +907,52 @@ def main() -> None:
 
     # ── timing ---------------------------------------------------------------
     if not args.resources_only:
-        print("══════════════════════════════════════════")
-        print(f" GRAPH TIMING  (avg of {n_found} session(s))")
-        print("══════════════════════════════════════════")
+        logger.info("══════════════════════════════════════════")
+        logger.info(f" GRAPH TIMING  (avg of {n_found} session(s))")
+        logger.info("══════════════════════════════════════════")
         timing_agg = aggregate_timing(sessions)
         print_timing_table(timing_agg, n_found)
         if timing_agg:
             if args.save_tables:
-                print("\nSaving timing tables...")
+                logger.info("\nSaving timing tables...")
                 save_timing_tables(timing_agg, output_dir, n_found)
             if args.plot:
-                print("\nSaving timing plots...")
+                logger.info("\nSaving timing plots...")
                 plot_timing(timing_agg, output_dir, args.show)
 
-    print()
+    logger.info("")
 
     # ── resources ------------------------------------------------------------
     if not args.timing_only:
-        print("══════════════════════════════════════════")
-        print(f" RESOURCE USAGE  (avg of {n_found} session(s))")
-        print("══════════════════════════════════════════")
+        logger.info("══════════════════════════════════════════")
+        logger.info(f" RESOURCE USAGE  (avg of {n_found} session(s))")
+        logger.info("══════════════════════════════════════════")
         resource_agg = aggregate_resources(sessions)
         print_resource_table(resource_agg, n_found, top=args.top)
         if resource_agg:
             if args.save_tables:
-                print("\nSaving resource tables...")
+                logger.info("\nSaving resource tables...")
                 save_resource_tables(resource_agg, output_dir, n_found)
             if args.plot:
-                print("\nSaving resource plots...")
+                logger.info("\nSaving resource plots...")
                 plot_resources(resource_agg, output_dir, args.show, top=args.top)
 
         # GPU average
         gpu_agg = aggregate_gpu(sessions)
         if gpu_agg:
-            print("\n── GPU Average ──")
+            logger.info("\n── GPU Average ──")
             for key, info in gpu_agg.items():
-                print(f"  {key:20s}: {info['mean']:.1f} ± {info['std']:.1f}  (n={info['sessions']})")
+                logger.info(f"  {key:20s}: {info['mean']:.1f} ± {info['std']:.1f}  (n={info['sessions']})")
             if args.save_tables:
-                print("\nSaving GPU tables...")
+                logger.info("\nSaving GPU tables...")
                 save_gpu_tables(gpu_agg, output_dir)
             if args.plot:
-                print("\nSaving GPU average plot...")
+                logger.info("\nSaving GPU average plot...")
                 plot_gpu_average(gpu_agg, output_dir, args.show)
 
-    print()
+    logger.info("")
     if args.plot or args.save_tables:
-        print(f"Output saved to: {output_dir}/")
+        logger.info(f"Output saved to: {output_dir}/")
 
 
 if __name__ == "__main__":

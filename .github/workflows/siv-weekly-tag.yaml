@@ -8,28 +8,41 @@ on:
 
 permissions: {}
 
+concurrency:
+  group: siv-weekly-tag
+  cancel-in-progress: false
+
 jobs:
   update-submodules-and-tag:
+    name: Update submodules and create weekly tag
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write # Required to push the update branch and create the tag.
+      pull-requests: write # Required to create and merge the submodule update PR.
 
     steps:
     - name: Checkout repository with submodules
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #5.0.0
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.SIV_USER_TOKEN_GH }}
+        persist-credentials: false
         submodules: recursive
         fetch-depth: 0
 
     - name: Configure Git
+      env:
+        SIV_USER: ${{ secrets.SIV_USER }}
+        SIV_USER_EMAIL: ${{ secrets.SIV_USER_EMAIL }}
       run: |
-        git config user.name "${{ secrets.SIV_USER }}"
-        git config user.email "${{ secrets.SIV_USER_EMAIL }}"
+        git config user.name "$SIV_USER"
+        git config user.email "$SIV_USER_EMAIL"
 
     - name: Update all submodules to latest
+      env:
+        GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
       run: |
+        gh auth setup-git
+
         echo "🧹 Resetting submodules to clean state..."
         git submodule foreach --recursive git reset --hard
         git submodule foreach --recursive git clean -fdx
@@ -79,10 +92,10 @@ jobs:
         # Check if there are any submodule pointer changes to commit
         if git diff --quiet --ignore-submodules=dirty; then
           echo "ℹ️ No submodule updates detected"
-          echo "has_changes=false" >> $GITHUB_OUTPUT
+          echo "has_changes=false" >> "$GITHUB_OUTPUT"
         else
           echo "✅ Submodule changes detected"
-          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "has_changes=true" >> "$GITHUB_OUTPUT"
           echo ""
           echo "📊 Changed submodules:"
           git diff --name-only
@@ -102,7 +115,7 @@ jobs:
 
         COMMIT_SHA=$(git rev-parse HEAD)
         echo "✅ Commit created: $COMMIT_SHA"
-        echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+        echo "sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
 
     - name: Create PR and merge changes
       if: steps.submodule-status.outputs.has_changes == 'true'
@@ -143,41 +156,52 @@ jobs:
     - name: Get commit SHA for tagging
       id: get-sha
       env:
+        GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
+        HAS_CHANGES: ${{ steps.submodule-status.outputs.has_changes }}
         TARGET_BRANCH: ${{ github.ref_name }}
       run: |
-        if [ "${{ steps.submodule-status.outputs.has_changes }}" == "true" ]; then
+        if [ "$HAS_CHANGES" = "true" ]; then
           # Get the latest commit from the target branch after merge
           git fetch origin "$TARGET_BRANCH"
-          COMMIT_SHA=$(git rev-parse origin/$TARGET_BRANCH)
+          COMMIT_SHA=$(git rev-parse "origin/$TARGET_BRANCH")
         else
           # If no changes, get the current HEAD SHA
           COMMIT_SHA=$(git rev-parse HEAD)
         fi
         echo "📍 Commit SHA for tagging: $COMMIT_SHA"
-        echo "sha=$COMMIT_SHA" >> $GITHUB_OUTPUT
+        echo "sha=$COMMIT_SHA" >> "$GITHUB_OUTPUT"
 
     - name: Create annotated tag via API
+      env:
+        COMMIT_SHA: ${{ steps.get-sha.outputs.sha }}
+        GH_REPO: ${{ github.repository }}
+        GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
+        TAG_PREFIX: ${{ vars.SIV_WEEKLY_BUILD_PREFIX }}
       run: |
-        TAG_NAME="${{ vars.SIV_WEEKLY_BUILD_PREFIX }}-$(date +'%Y%m%d')"
-        COMMIT_SHA="${{ steps.get-sha.outputs.sha }}"
+        if ! [[ "$TAG_PREFIX" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$ ]]; then
+          echo "❌ Invalid weekly build tag prefix"
+          exit 1
+        fi
+
+        if ! [[ "$COMMIT_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "❌ Invalid commit SHA: $COMMIT_SHA"
+          exit 1
+        fi
+
+        TAG_NAME="${TAG_PREFIX}-$(date +'%Y%m%d')"
         TAG_MESSAGE="Weekly Build - ${TAG_NAME}"
 
         echo "🚀 Creating tag: $TAG_NAME"
         echo "📍 Target commit: $COMMIT_SHA"
         echo "📝 Tag message: $TAG_MESSAGE"
 
-        if [ "$COMMIT_SHA" = "" ] || [ "$COMMIT_SHA" = "null" ]; then
-          echo "❌ Invalid commit SHA: $COMMIT_SHA"
-          exit 1
-        fi
-
         echo "📝 Creating annotated tag object..."
         RESPONSE=$(curl -s -w "%{http_code}" -o tag_object.json \
-          -H "Authorization: Bearer ${{ secrets.SIV_USER_TOKEN_GH }}" \
+          -H "Authorization: Bearer $GH_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
           -H "Content-Type: application/json" \
           -X POST \
-          https://api.github.com/repos/${{ github.repository }}/git/tags \
+          "https://api.github.com/repos/$GH_REPO/git/tags" \
           -d "{
             \"tag\": \"${TAG_NAME}\",
             \"message\": \"${TAG_MESSAGE}\",
@@ -199,11 +223,11 @@ jobs:
 
         echo "🔗 Creating tag reference..."
         RESPONSE=$(curl -s -w "%{http_code}" -o tag.json \
-          -H "Authorization: Bearer ${{ secrets.SIV_USER_TOKEN_GH }}" \
+          -H "Authorization: Bearer $GH_TOKEN" \
           -H "Accept: application/vnd.github.v3+json" \
           -H "Content-Type: application/json" \
           -X POST \
-          https://api.github.com/repos/${{ github.repository }}/git/refs \
+          "https://api.github.com/repos/$GH_REPO/git/refs" \
           -d "{
             \"ref\": \"refs/tags/${TAG_NAME}\",
             \"sha\": \"${TAG_SHA}\"
@@ -217,9 +241,9 @@ jobs:
           printf "==========================================\n"
           printf "📌 Tag Name:     %s\n" "${TAG_NAME}"
           printf "🔗 Commit SHA:   %s\n" "${COMMIT_SHA}"
-          printf "📁 Repository:   %s\n" "${{ github.repository }}"
+          printf "📁 Repository:   %s\n" "$GH_REPO"
           printf "⏰ Created:      %s\n" "$(date -u '+%Y-%m-%d %H:%M:%S UTC')"
-          printf "🌐 View Online:  https://github.com/%s/releases/tag/%s\n" "${{ github.repository }}" "${TAG_NAME}"
+          printf "🌐 View Online:  https://github.com/%s/releases/tag/%s\n" "$GH_REPO" "${TAG_NAME}"
           printf "\n"
           echo "📋 API Response:"
           cat tag.json | jq '.'

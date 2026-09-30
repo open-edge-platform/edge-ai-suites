@@ -5,7 +5,7 @@
 This is a monorepo containing multiple Intel Edge AI Suites, each in its own top-level directory:
 
 - `education-ai-suite/` — Smart classroom application
-- `federal-aerospace/` — Deterministic threat detection, handheld multi-modal
+- `federal-and-aerospace-ai-suite/` — Deterministic threat detection, handheld multi-modal
 - `health-and-life-sciences-ai-suite/` — NICU Warmer, multi-modal patient monitoring
 - `manufacturing-ai-suite/` — Industrial edge insights (vision, time-series, multimodal), HMI augmented worker
 - `metro-ai-suite/` — Smart NVR, live video analysis, smart traffic, agentic RAG, VMS adapter, etc.
@@ -15,7 +15,7 @@ This is a monorepo containing multiple Intel Edge AI Suites, each in its own top
 ### Navigation
 
 When working on a specific component, check for a local `AGENTS.md` file first — it contains authoritative per-component instructions:
-- [federal-aerospace/apps/handheld-multi-modal/AGENTS.md](../federal-aerospace/apps/handheld-multi-modal/AGENTS.md)
+- [federal-and-aerospace-ai-suite/handheld-multi-modal/AGENTS.md](../federal-and-aerospace-ai-suite/handheld-multi-modal/AGENTS.md)
 - [metro-ai-suite/metro-sdk-manager/AGENTS.md](../metro-ai-suite/metro-sdk-manager/AGENTS.md)
 - [metro-ai-suite/live-video-analysis/live-video-captioning/AGENTS.md](../metro-ai-suite/live-video-analysis/live-video-captioning/AGENTS.md)
 - [manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/.github/copilot-instructions.md](../manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/.github/copilot-instructions.md)
@@ -153,7 +153,7 @@ Each suite directory has its own `README.md` with suite-level context. Each sub-
 Treat AI-generated output as **untrusted draft code** until reviewed and tested.
 Reject suggestions that bypass security controls for convenience or introduce unsafe defaults.
 
-Load [`.github/skills/security.md`](skills/security.md) when changes touch authentication, authorization, input parsing, secrets, Dockerfiles, Helm charts, or CI workflows.
+Load [`./skills/security-review/SKILL.md`](./skills/security-review/SKILL.md) when changes touch authentication, authorization, input parsing, secrets, Dockerfiles, Helm charts, or CI workflows.
 
 ## Contributing
 

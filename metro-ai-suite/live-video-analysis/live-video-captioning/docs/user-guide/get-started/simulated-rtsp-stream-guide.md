@@ -2,7 +2,7 @@
 
 This guide explains how to set up a simulated RTSP stream. It includes a script that helps you quickly create a looped RTSP stream from a local video file.
 
-The [`setup_proxy_rtsp.sh`](../../../scripts/setup_proxy_rtsp.sh) script allows you to:
+The [`setup_proxy_rtsp.sh`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/scripts/setup_proxy_rtsp.sh) script allows you to:
 
 - Stream one or more local video files as live RTSP feeds
 - Loop all videos indefinitely
@@ -143,13 +143,13 @@ For multiple streams, you can provide all input/output mappings in a JSON file.
    ./setup_proxy_rtsp.sh -c <your-config-file>.json
    ```
 
-> **Note:**
+> [!NOTE]
 >
 > - Use either `-c` or `-i`/`-o` in a single run (do not mix them).
 > - Relative input paths in JSON are resolved relative to the JSON file location.
 > - `-c` mode uses `jq`, and the script installs it automatically if missing.
 
-> **Important:**
+> [!IMPORTANT]
 >
 > - If `-o` is omitted, the script auto-generates `stream1`, `stream2`, ...
 > - If `-o` is provided, the number of `-o` values must match the number of `-i` values.

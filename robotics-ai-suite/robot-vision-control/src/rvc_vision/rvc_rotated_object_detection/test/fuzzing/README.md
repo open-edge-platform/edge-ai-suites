@@ -1,5 +1,5 @@
 # Fuzzing Example for Python Code
-The scope of this PR is to provide **only an initial example** for fuzzing code written in Python for 
+The scope of this PR is to provide **only an initial example** for fuzzing code written in Python for
 the Robotics SDK and RVC repos. The identified fuzzer is the [Google atheris](https://github.com/google/atheris) framework.
 
 ## Execution
@@ -7,29 +7,36 @@ Follows a list of used commands for executing the fuzzing and generating a cover
 
 ### Standard Execution
 Specifying a certain amount of runs:
-```
+
+```bash
 python3 fuzzing/fuzz_detector.py -atheris_runs=20
 ```
+
 Using a timeout (seconds):
-```
+
+```bash
 python3 fuzzing/fuzz_detector.py -max_total_time=60
 ```
 
 ### Execution with Coverage
-```
+
+```bash
 python3 -m coverage run fuzzing/fuzz_detector.py -atheris_runs=20
 python3 -m coverage report
 ```
+
 The `report` argument can be replaced with arguments like `html`, `json`, etc.
 
 Sometimes, the coverage report cannot be generated when the `-max_total_time` option is used (probably because of
 a non clean termination of the program).
 
 ## Output
+
 Follows the produced output for the previously described commands.
 
 ### Execution output
-```
+
+```bash
 python3 -m coverage run fuzzing/fuzz_detector.py -atheris_runs=200
 INFO: Using built-in libfuzzer
 WARNING: Failed to find function "__sanitizer_acquire_crash_state".
@@ -71,8 +78,10 @@ Done 200 in 40 second(s)
 ```
 
 ### Coverage Report
+
 Please note that it was asked to instrument only one specific function but, apparently, this mechanism works recursively for the subsequent calls:
-```
+
+```bash
  python3 -m coverage report
 Name                                                                                                                                                                                                              Stmts   Miss  Cover
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,7 +97,7 @@ Name                                                                            
 /home/rvc/workspace/frameworks.industrial.robotics.rvc.use-cases/src/frameworks.industrial.robotics.rvc.vision/rvc_rotated_object_detection/rvc_rotated_object_detection/object_detection.py                        237    159    33%
 /home/rvc/workspace/frameworks.industrial.robotics.rvc.use-cases/src/frameworks.industrial.robotics.rvc.vision/rvc_rotated_object_detection/rvc_rotated_object_detection/rotated_object_detection_parameters.py     436    380    13%
 /opt/ros/humble/lib/python3.10/site-packages/ament_index_python/__init__.py                                                                                                                                          14      0   100%
-/opt/ros/humble/lib/python3.10/site-packages/ament_index_python/constants.py       
+/opt/ros/humble/lib/python3.10/site-packages/ament_index_python/constants.py
 ...
 fuzzing/fuzz_detector.py                                                                                                                                                                                             34      4    88%
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

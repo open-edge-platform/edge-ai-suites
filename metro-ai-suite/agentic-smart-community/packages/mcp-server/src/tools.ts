@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { logger } from "./logger.js";
-import type { ServerConfig } from "./config.js";
+import { reportTuning, type ServerConfig } from "./config.js";
 import type { SmartCommunityDB } from "@smart-community-video/db";
 import type { VideoSummaryClient } from "@smart-community-video/tools";
 import type { WorkerService } from "./video-worker/index.js";
@@ -13,6 +13,8 @@ export function registerTools(
   workerService: WorkerService,
   summaryClient: VideoSummaryClient,
 ): void {
+  const reportJobs = new Map<string, Promise<unknown>>();
+
   // --- smart_community_alert_query ---
   server.registerTool("smart_community_alert_query", {
     description: "Query or acknowledge alerts. action: latest | by_date | ack | stats",
@@ -110,13 +112,51 @@ export function registerTools(
         summaryClient,
         filter: (params.filter ?? ucReports?.filter) as Record<string, any> | undefined,
         debugDir: config.reportsLogsDir,
+        ...reportTuning(config),
       };
-      const result = await generateReport(db, reportConfig, {
+      const reportParams = {
         monitor_id: params.monitor_id,
         type: params.type,
         period_start: params.period_start,
         period_end: params.period_end,
-      });
+      };
+      const jobKey = JSON.stringify({ reportParams, dataSource: reportConfig.dataSource, filter: reportConfig.filter });
+      let reportJob = reportJobs.get(jobKey);
+      if (!reportJob) {
+        reportJob = generateReport(db, reportConfig, reportParams);
+        reportJobs.set(jobKey, reportJob);
+        void reportJob.then(
+          () => reportJobs.delete(jobKey),
+          (error) => {
+            reportJobs.delete(jobKey);
+            logger.error(`Background report generation failed for ${params.monitor_id}: ${error}`);
+          },
+        );
+      }
+
+      const pending = Symbol("report-pending");
+      let waitTimer: ReturnType<typeof setTimeout> | undefined;
+      const result = await Promise.race([
+        reportJob,
+        new Promise<typeof pending>((resolve) => {
+          waitTimer = setTimeout(() => resolve(pending), 10_000);
+        }),
+      ]);
+      if (waitTimer) clearTimeout(waitTimer);
+      if (result === pending) {
+        return {
+          content: [{
+            type: "text" as const,
+            text: JSON.stringify({
+              status: "processing",
+              monitorId: params.monitor_id,
+              type: params.type ?? reportConfig.defaultType,
+              dataSource: reportConfig.dataSource,
+              message: "Report generation is still running. Query the reports table for this monitor shortly; do not start a duplicate report.",
+            }, null, 2),
+          }],
+        };
+      }
       return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
     } catch (err: any) {
       return { content: [{ type: "text" as const, text: `Error: ${err.message}` }], isError: true };
@@ -342,7 +382,7 @@ export function registerTools(
       "smart-community-use-case-manager Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
-      "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
+      "(step 1) action=generate_task with prompt_text (+ evaluate_rules_content for a remote custom rule, or evaluate_rules_path when the file already exists on this server) — " +
       "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
       "on 409), and ON SUCCESS writes <data_dir>/use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
       "evaluate_rules.py is staged to <data_dir>/use-cases/<use_case>/evaluate_rules.py). " +
@@ -400,10 +440,16 @@ export function registerTools(
       ),
       description: z.string().optional().describe("Human description shown by /v1/tasks"),
       evaluate_rules_path: z.string().optional().describe(
-        "Path to a Python evaluate_rules.py override. The tool reads this file for consistency checks, " +
+        "SERVER-LOCAL path to a Python evaluate_rules.py override. Use evaluate_rules_content for a remote MCP client. " +
+        "The tool reads this file for consistency checks, " +
         "stages it to <data_dir>/use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
         "persists the conventional absolute path into config.yaml. Required whenever the Final Schema " +
         "contains fields beyond severity/event/desc, and for custom alert behavior."
+      ),
+      evaluate_rules_content: z.string().optional().describe(
+        "Python source for evaluate_rules.py from a remote MCP client. Mutually exclusive with evaluate_rules_path. " +
+        "The server writes it to <data_dir>/use-cases/<use_case>/evaluate_rules.py, then runs the same consistency " +
+        "checks and smoke test before persisting its conventional absolute path into config.yaml."
       ),
       reports: z.record(z.unknown()).optional().describe("Report config: {data_source, default_type, filter}"),
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
@@ -416,7 +462,8 @@ export function registerTools(
         "Do not include Markdown code fences, because the video-summary service rejects reserved tokens."
       ),
       schema_extensions: z.array(z.object({
-        name: z.string(),
+        // Names land verbatim in ALTER/CREATE TABLE DDL — plain identifiers only.
+        name: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, "must be a plain SQL identifier ([a-zA-Z_][a-zA-Z0-9_]*)"),
         type: z.enum(["text", "integer", "real"]),
         required: z.boolean(),
       })).optional().describe(
@@ -551,6 +598,7 @@ export function registerTools(
         db,
         {
           useCaseDict: config.useCaseDict,
+          alertCooldownSeconds: config.alerts.cooldownSeconds,
         },
         params as any,
       );

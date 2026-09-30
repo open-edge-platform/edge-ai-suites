@@ -4,6 +4,10 @@ This section shows detailed hardware, software, and platform requirements for In
 
 See the specific system requirements for **HMI Augmented Worker** and **Win Vision AI** in their respective sections.
 
+For quick deployment of hardware components, you can use
+[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
+provided as part of Open Edge Platform.
+
 ## Minimum Requirements
 
 | Component | Specification |
@@ -36,9 +40,11 @@ Other required software or tools: Git, jq, and unzip.
 
 See the list of certified edge AI systems as enabled through the  Intel® Edge System Qualification (Intel® ESQ) through the [catalog](https://builders.intel.com/ecosystem-engagement/solution-hub/edge-ai-catalog/partner-spotlight). On the left menu, you can filter by **Verticals > Manufacturing** or by **Intel Open Software Platform** > **Manufacturing AI Suite**.
 
-> **Note:** Only a subset of sample applications are represented by the Intel® ESQ package. See [Test Suites](https://open-edge-platform.github.io/edge-system-qualification/main/getting-started/suites/) for more information.
+> [!NOTE]
+> Only a subset of sample applications are represented by the Intel® ESQ package. See [Test Suites](https://open-edge-platform.github.io/edge-system-qualification/main/getting-started/suites/) for more information.
 
-> **Note:** You can also create apps tailored to your use case using models supported by DL Streamer.
+> [!NOTE]
+> You can also create apps tailored to your use case using models supported by DL Streamer.
 > Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
 ## Validation

@@ -1,0 +1,212 @@
+From 218322b5b26978db90f0824771ae2b120bf60d36 Mon Sep 17 00:00:00 2001
+From: "Deng, Bing" <bing.deng@intel.com>
+Date: Tue, 18 Aug 2026 09:15:47 +0800
+Subject: [PATCH] Fix IMU buffer locking and duplicate init in laserMapping
+
+Major bug fixes:
+1. Move the mutex lock in imu_cbk and sync_packages so the shared
+   buffer state is covered by the lock for its entire read/write
+   window, not just the tail end of it.
+2. Fix res_last never actually reaching its -1000 sentinel value
+   because memset() truncates a float fill argument to a byte;
+   replace it with std::fill and drop the leftover duplicate reset
+   of point_selected_surf/res_last a few lines below the real one.
+3. Check mkdir()'s return value when creating the log directory
+   instead of silently ignoring failures, and wrap main() in a
+   try/catch so a startup exception is logged instead of crashing
+   the node outright.
+
+Signed-off-by: Deng, Bing <bing.deng@intel.com>
+---
+ src/laserMapping.cpp | 94 ++++++++++++++++++++++++++------------------
+ 1 file changed, 55 insertions(+), 39 deletions(-)
+
+diff --git a/src/laserMapping.cpp b/src/laserMapping.cpp
+index 2a82a69..706ebe7 100644
+--- a/src/laserMapping.cpp
++++ b/src/laserMapping.cpp
+@@ -36,6 +36,8 @@
+ #include <mutex>
+ #include <math.h>
+ #include <thread>
++#include <algorithm>
++#include <iterator>
+ #include <pthread.h>
+ #include <fstream>
+ #ifdef ENABLE_PROFILING
+@@ -81,6 +83,7 @@ static inline double realtime_sec()
+ #include <ikd-Tree/ikd_Tree.h>
+ #include <sys/stat.h>
+ #include <cerrno>
++#include <cstring>
+ #include <sched.h>
+ #include <vector>
+ 
+@@ -544,6 +547,8 @@ void imu_cbk(const sensor_msgs::msg::Imu::UniquePtr msg_in)
+   // cout<<"IMU got at: "<<msg_in->header.stamp.toSec()<<endl;
+   sensor_msgs::msg::Imu::SharedPtr msg(new sensor_msgs::msg::Imu(*msg_in));
+ 
++  mtx_buffer.lock();
++
+   msg->header.stamp = get_ros_time(get_time_sec(msg_in->header.stamp) - time_diff_lidar_to_imu);
+   if (abs(timediff_lidar_wrt_imu) > 0.1 && time_sync_en) {
+     msg->header.stamp = rclcpp::Time(timediff_lidar_wrt_imu + get_time_sec(msg_in->header.stamp));
+@@ -551,8 +556,6 @@ void imu_cbk(const sensor_msgs::msg::Imu::UniquePtr msg_in)
+ 
+   double timestamp = get_time_sec(msg->header.stamp);
+ 
+-  mtx_buffer.lock();
+-
+   if (timestamp < last_timestamp_imu) {
+     std::cerr << "lidar loop back, clear buffer" << std::endl;
+     imu_buffer.clear();
+@@ -569,7 +572,9 @@ double lidar_mean_scantime = 0.0;
+ int scan_num = 0;
+ bool sync_packages(MeasureGroup & meas)
+ {
++  mtx_buffer.lock();
+   if (lidar_buffer.empty() || imu_buffer.empty()) {
++    mtx_buffer.unlock();
+     return false;
+   }
+ 
+@@ -596,6 +601,7 @@ bool sync_packages(MeasureGroup & meas)
+   }
+ 
+   if (last_timestamp_imu < lidar_end_time) {
++    mtx_buffer.unlock();
+     return false;
+   }
+ 
+@@ -612,6 +618,7 @@ bool sync_packages(MeasureGroup & meas)
+   lidar_buffer.pop_front();
+   time_buffer.pop_front();
+   lidar_pushed = false;
++  mtx_buffer.unlock();
+   return true;
+ }
+ 
+@@ -1086,12 +1093,10 @@ public:
+     _featsArray.reset(new PointCloudXYZI());
+ 
+     memset(point_selected_surf, true, sizeof(point_selected_surf));
+-    memset(res_last, -1000.0f, sizeof(res_last));
++    std::fill(std::begin(res_last), std::end(res_last), -1000.0f);
+     downSizeFilterSurf.setLeafSize(
+       filter_size_surf_min, filter_size_surf_min, filter_size_surf_min);
+     downSizeFilterMap.setLeafSize(filter_size_map_min, filter_size_map_min, filter_size_map_min);
+-    memset(point_selected_surf, true, sizeof(point_selected_surf));
+-    memset(res_last, -1000.0f, sizeof(res_last));
+ 
+     Lidar_T_wrt_IMU << VEC_FROM_ARRAY(extrinT);
+     Lidar_R_wrt_IMU << MAT_FROM_ARRAY(extrinR);
+@@ -1108,7 +1113,10 @@ public:
+     // FILE *fp;
+     {
+       string log_dir = root_dir + "/Log";
+-      mkdir(log_dir.c_str(), 0755);
++      if (mkdir(log_dir.c_str(), 0755) != 0 && errno != EEXIST) {
++        std::cerr << "Failed to create log directory " << log_dir << ": " << strerror(errno)
++                  << std::endl;
++      }
+     }
+     string pos_log_dir = root_dir + "/Log/pos_log.txt";
+     fp = fopen(pos_log_dir.c_str(), "w");
+@@ -1116,7 +1124,10 @@ public:
+ #ifdef ENABLE_PROFILING
+     {
+       string log_dir = root_dir + "/Log";
+-      mkdir(log_dir.c_str(), 0755);
++      if (mkdir(log_dir.c_str(), 0755) != 0 && errno != EEXIST) {
++        std::cerr << "Failed to create log directory " << log_dir << ": " << strerror(errno)
++                  << std::endl;
++      }
+       string csv_dir = log_dir + "/fast_lio_profiling.csv";
+       g_csv_fp = fopen(csv_dir.c_str(), "w");
+       if (g_csv_fp) {
+@@ -1486,45 +1497,50 @@ private:
+ 
+ int main(int argc, char ** argv)
+ {
+-  rclcpp::init(argc, argv);
++  try {
++    rclcpp::init(argc, argv);
+ 
+-  signal(SIGINT, SigHandle);
++    signal(SIGINT, SigHandle);
+ 
+-  rclcpp::spin(std::make_shared<LaserMappingNode>());
++    rclcpp::spin(std::make_shared<LaserMappingNode>());
+ 
+-  if (rclcpp::ok()) rclcpp::shutdown();
+-  /**************** save map ****************/
+-  /* 1. make sure you have enough memories
++    if (rclcpp::ok()) rclcpp::shutdown();
++    /**************** save map ****************/
++    /* 1. make sure you have enough memories
+     /* 2. pcd save will largely influence the real-time performences **/
+-  if (pcl_wait_save->size() > 0 && pcd_save_en) {
+-    string file_name = string("scans.pcd");
+-    string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
+-    pcl::PCDWriter pcd_writer;
+-    cout << "current scan saved to /PCD/" << file_name << endl;
+-    pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
+-  }
++    if (pcl_wait_save->size() > 0 && pcd_save_en) {
++      string file_name = string("scans.pcd");
++      string all_points_dir(string(string(ROOT_DIR) + "PCD/") + file_name);
++      pcl::PCDWriter pcd_writer;
++      cout << "current scan saved to /PCD/" << file_name << endl;
++      pcd_writer.writeBinary(all_points_dir, *pcl_wait_save);
++    }
+ 
+-  if (runtime_pos_log) {
+-    vector<double> t, s_vec, s_vec2, s_vec3, s_vec4, s_vec5, s_vec6, s_vec7;
+-    FILE * fp2;
+-    string log_dir = root_dir + "/Log/fast_lio_time_log.csv";
+-    fp2 = fopen(log_dir.c_str(), "w");
+-    fprintf(
+-      fp2,
+-      "time_stamp, total time, scan point size, incremental time, search time, delete size, delete "
+-      "time, tree size st, tree size end, add point size, preprocess time\n");
+-    for (int i = 0; i < time_log_counter; i++) {
++    if (runtime_pos_log) {
++      vector<double> t, s_vec, s_vec2, s_vec3, s_vec4, s_vec5, s_vec6, s_vec7;
++      FILE * fp2;
++      string log_dir = root_dir + "/Log/fast_lio_time_log.csv";
++      fp2 = fopen(log_dir.c_str(), "w");
+       fprintf(
+-        fp2, "%0.8f,%0.8f,%d,%0.8f,%0.8f,%d,%0.8f,%d,%d,%d,%0.8f\n", T1[i], s_plot[i],
+-        int(s_plot2[i]), s_plot3[i], s_plot4[i], int(s_plot5[i]), s_plot6[i], int(s_plot7[i]),
+-        int(s_plot8[i]), int(s_plot10[i]), s_plot11[i]);
+-      t.push_back(T1[i]);
+-      s_vec.push_back(s_plot9[i]);
+-      s_vec2.push_back(s_plot3[i] + s_plot6[i]);
+-      s_vec3.push_back(s_plot4[i]);
+-      s_vec5.push_back(s_plot[i]);
++        fp2,
++        "time_stamp, total time, scan point size, incremental time, search time, delete size, "
++        "delete time, tree size st, tree size end, add point size, preprocess time\n");
++      for (int i = 0; i < time_log_counter; i++) {
++        fprintf(
++          fp2, "%0.8f,%0.8f,%d,%0.8f,%0.8f,%d,%0.8f,%d,%d,%d,%0.8f\n", T1[i], s_plot[i],
++          int(s_plot2[i]), s_plot3[i], s_plot4[i], int(s_plot5[i]), s_plot6[i], int(s_plot7[i]),
++          int(s_plot8[i]), int(s_plot10[i]), s_plot11[i]);
++        t.push_back(T1[i]);
++        s_vec.push_back(s_plot9[i]);
++        s_vec2.push_back(s_plot3[i] + s_plot6[i]);
++        s_vec3.push_back(s_plot4[i]);
++        s_vec5.push_back(s_plot[i]);
++      }
++      fclose(fp2);
+     }
+-    fclose(fp2);
++  } catch (const std::exception & e) {
++    RCLCPP_FATAL(rclcpp::get_logger("laserMapping"), "Unhandled exception in main: %s", e.what());
++    return 1;
+   }
+ 
+   return 0;
+-- 
+2.43.0
+

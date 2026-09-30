@@ -13,9 +13,10 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 ### B. Install DL Streamer
 
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
-For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
+For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/install/install_guide_windows.html).
 
-> Note: DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
+> [!NOTE]
+> DL Streamer 2026.1.0 is lastest verified version, please also update your [NPU driver](./get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
 **Run your shell with admin privileges before starting the application**
 
@@ -73,18 +74,19 @@ features:
   asr:                { enabled: true }   # Speech-to-text transcription
   summary:            { enabled: true }   # AI class summary / report
   mindmap:            { enabled: true }   # Mind map generation
-  topic_segmentation: { enabled: true }   
+  topic_segmentation: { enabled: true }
   video_analytics:    { enabled: true }   # Video ingestion / analytics
   board_ocr:          { enabled: true }   # OCR of the teacher's display (IFPD)
   content_search:     { enabled: true }   # Multimodal search + RAG service (port 9011)
   qa:                 { enabled: true }   # RAG-based Q&A over uploaded materials
 ```
 
-**Important: After updating the configuration, reload the application for changes to take effect.**
+> [!IMPORTANT]
+> After updating the configuration, reload the application for changes to take effect.
 
 ### B. Default Configuration
 
-By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
+By default, the project uses Whisper for transcription, and summarization runs on the shared OpenVINO™ vision-language model configured under `models.text_gen`. You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
 ```yaml
 asr:
@@ -94,11 +96,14 @@ asr:
   temperature: 0.0
 
 summarizer:
-  provider: openvino
-  name: Qwen/Qwen2-7B-Instruct # Examples: Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct, Qwen/Qwen2.5-7B-Instruct
+  mode: dialog                # Supported: dialog, teacher, hybrid
+
+text_gen:                     # Shared by summary, mindmap, segmentation and Q&A
+  provider: vlm
+  vlm_name: Qwen/Qwen3-VL-8B-Instruct
   device: GPU                 # Options: GPU or CPU
-  weight_format: int8         # Supported: fp16, fp32, int4, int8
-  max_new_tokens: 1024        # Maximum tokens to generate in summaries
+  weight_format: int4         # Supported: fp16, int4, int8
+  max_new_tokens: 5120        # Maximum tokens to generate
 ```
 
 ### C. Chinese Audio Transcription
@@ -135,7 +140,8 @@ content_search:
   ocr_enabled: true
 ```
 
-> **Note:** This only affects document ingestion. Board OCR has its own OCR usage and is unaffected by this flag.
+> [!NOTE]
+> This only affects document ingestion. Board OCR has its own OCR usage and is unaffected by this flag.
 
 ### E. Board OCR Configuration
 
@@ -147,12 +153,20 @@ board_ocr:
   debug: false         # keep the uncleaned board_ocr_raw.txt alongside the output
 ```
 
-> **Note:** When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
+> [!NOTE]
+> When Board OCR is enabled, the AI-generated class summary automatically gains an extra **"Board / IFPD Content"** section that summarizes the text captured from the display, in addition to the sections derived from the audio transcript.
 
 ### F. Speaker Diarization Setup (Optional)
 
-Speaker diarization is supported using Pyannote Audio models.
-To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
+Speaker diarization labels each transcript line with the speaker who said it. Two backends are
+available:
+
+| Backend | Gated access | Speed (CPU) | Notes |
+| :--- | :--- | :--- | :--- |
+| `pyannote` (default) | Yes, Hugging Face token required | ~0.43x realtime | Detects overlapping speech |
+| `campplus` | No | ~0.01x realtime | FunASR VAD + CAM++, requires the funASR setup from section C |
+
+Steps a-c below set up the default pyannote backend. Skip to step d for CAM++.
 
 #### a. Request Model Access on Hugging Face
 
@@ -185,9 +199,38 @@ models:
     hf_token: "hf_your_access_token_here"
 ```
 
-> **Note:** The diarization model downloads automatically on next startup once `diarization: true` is set.
+> [!NOTE]
+> The diarization model downloads automatically on next startup once `diarization: true` is set.
 
-**Important: After updating the configuration, reload the application for changes to take effect.**
+#### d. CAM++ Backend (funASR only)
+
+`campplus` needs no token and no gated access, but it requires `provider: funasr` and
+`name: paraformer-zh` from section C. Its speaker and VAD models are downloaded from ModelScope
+on first use and reused offline afterwards.
+
+```yaml
+models:
+  asr:
+    diarization: true
+  diarization:
+    backend: campplus
+```
+
+#### e. Whole-File Processing (funASR only)
+
+By default audio is transcribed and diarized in chunks, which streams results to the UI while
+the recording is still being processed. Setting `chunking: false` processes the whole recording
+in a single pass instead: speaker clustering sees all the speech at once, at the cost of no
+intermediate results. It also requires `provider: funasr` and `name: paraformer-zh`, and is
+ignored for microphone capture, where the recording is not available up front.
+
+```yaml
+audio_preprocessing:
+  chunking: false
+```
+
+> [!IMPORTANT]
+> After updating the configuration, reload the application for changes to take effect.
 
 ## Step 3: Run the Application
 
@@ -218,12 +261,13 @@ Content Search provides multimodal semantic search, AI-driven video summarizatio
 
 Content Search runs in the same `smartclassroom` environment as the backend.
 
-> **Note:**  When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits.
+> [!NOTE]
+> When the `content_search` feature is enabled in `config.yaml`, the backend (`main.py`) automatically launches the Content Search services on startup and shuts them down when it exits.
 
 When all services are ready:
 
-```
-[launcher] All 5 services are ready. (startup took XXs)
+```text
+[launcher] All 4 services are ready. (startup took XXs)
 [launcher] You can use Ctrl+C to stop all services.
 ```
 
@@ -233,7 +277,16 @@ Verify the service status:
 Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```
 
-> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+This endpoint aggregates every service the launcher starts (ChromaDB, video
+preprocess, file ingest, and the Content Search API itself). It answers `200`
+with `status: "ok"` only when all of them are ready, and `503` with
+`status: "degraded"` until then - the `services` map in the body names what is
+still missing. `Invoke-RestMethod` throws on the `503`, so use
+`try { ... } catch { $_.ErrorDetails.Message }` to read the detail while
+services are still coming up.
+
+> [!NOTE]
+> First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
 
 ### B. Network Requirements for Content Search
 
@@ -248,9 +301,10 @@ Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 
 ## Step 5: Set Up Grading (Optional)
 
-> **Note:** Skip this step if `grading.enabled: false` in `config.yaml`.
+> [!NOTE]
+> Skip this step if `grading.enabled: false` in `config.yaml`.
 
-Smart Grading uses a layout detection model that requires a one-time conversion from Paddle format to OpenVINO IR. This step creates a dedicated conversion environment.
+Smart Grading uses a layout detection model that requires a one-time conversion from Paddle format to OpenVINO™ IR. This step creates a dedicated conversion environment.
 
 ### A. Create the Model Conversion Environment
 
@@ -266,7 +320,8 @@ python -m venv venv_convert
 .\venv_convert\Scripts\python ensure_layout_model.py
 ```
 
-> **Note:** This downloads PP-DocLayoutV2 (~200 MB) and converts it to OpenVINO IR. Subsequent runs detect the existing model and skip this step automatically.
+> [!NOTE]
+> This downloads PP-DocLayoutV2 (~200 MB) and converts it to OpenVINO™ IR. Subsequent runs detect the existing model and skip this step automatically.
 
 ### C. Launch Grading Services
 
@@ -286,7 +341,8 @@ python grading_service.py
 
 ## Step 6: Bring Up the Frontend
 
-> **Note:** Open a new Command Prompt / terminal window for the frontend.
+> [!NOTE]
+> Open a new Command Prompt / terminal window for the frontend.
 > The backend and Content Search terminals stay busy serving requests.
 
 ```bash
@@ -316,7 +372,8 @@ npm run electron:preview
 npm run electron:build
 ```
 
-> **Note** The Electron runtime binary is fetched lazily the **first time Electron runs**
+> [!NOTE]
+> The Electron runtime binary is fetched lazily the **first time Electron runs**
 > (`npm run electron:dev` / `electron:preview`). Behind a proxy, the first launch
 > needs the proxy variables `ELECTRON_GET_USE_PROXY=true` and
 > `GLOBAL_AGENT_HTTPS_PROXY=<proxy>` in addition to the usual
@@ -380,7 +437,7 @@ If you changed the port, adjust the URL accordingly.
 
   2. Rerun only Step 1, option D. If the virtual environment already exists, rerun the required pip commands.
 
-- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+- **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO™ GenAI models may crash on newer hardware. Try running the model on CPU by setting `device: CPU` under `models.text_gen` in `config.yaml`.
 
 - **Tokenizer load issue:**
 
@@ -424,8 +481,7 @@ To uninstall the application, follow these steps:
 
 1. **Delete the Python virtual environment folder:** \
    Navigate to the directory and remove \
-  For base environment : *education-ai-suite/smartclassroom*. \
-  For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
+  *education-ai-suite/smartclassroom*. \
   For grading model conversion environment (if created): *education-ai-suite/smart-classroom/components/grading/providers/layout_detection_service/venv_convert*.
 2. **Remove the models directory:**
   Remove the models folder located under *education-ai-suite/smart-classroom*.

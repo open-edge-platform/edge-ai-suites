@@ -18,6 +18,11 @@ from fastapi.testclient import TestClient
 from src.app import app
 
 
+def assert_condition(condition, message=""):
+    """Fail a test when condition is false."""
+    assert condition, message  # nosec B101
+
+
 @pytest.fixture(scope="module")
 def client():
     with TestClient(app) as c:
@@ -31,8 +36,8 @@ def test_index_no_data(client):
     respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[]))
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     r = client.get("/")
-    assert r.status_code == 200
-    assert "Agentic Predictive Maintenance" in r.text
+    assert_condition(r.status_code == 200)
+    assert_condition("Agentic Predictive Maintenance" in r.text)
 
 
 @respx.mock
@@ -47,8 +52,8 @@ def test_index_with_summary(client):
     respx.get("http://mock-agent/agents/runs").mock(return_value=httpx.Response(200, json=[]))
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     r = client.get("/")
-    assert r.status_code == 200
-    assert "Rupture" in r.text
+    assert_condition(r.status_code == 200)
+    assert_condition("Rupture" in r.text)
 
 
 @respx.mock
@@ -63,8 +68,8 @@ def test_index_merges_detection_and_agent_runs(client):
         {"run_id": "r1", "status": "completed", "phase": "completed"},
     ]))
     r = client.get("/")
-    assert r.status_code == 200
-    assert "r1"[:8] in r.text or "r1" in r.text
+    assert_condition(r.status_code == 200)
+    assert_condition("r1"[:8] in r.text or "r1" in r.text)
 
 
 @respx.mock
@@ -74,12 +79,12 @@ def test_detections_page(client):
     ]
     respx.get("http://mock-storage/detections").mock(return_value=httpx.Response(200, json=detections))
     r = client.get("/detections")
-    assert r.status_code == 200
-    assert "Rupture" in r.text
+    assert_condition(r.status_code == 200)
+    assert_condition("Rupture" in r.text)
 
 
 def test_health(client):
     r = client.get("/health")
-    assert r.status_code == 200
-    assert r.json()["service"] == "ui-service"
-    assert r.json()["use_case_id"] == "test-case"
+    assert_condition(r.status_code == 200)
+    assert_condition(r.json()["service"] == "ui-service")
+    assert_condition(r.json()["use_case_id"] == "test-case")

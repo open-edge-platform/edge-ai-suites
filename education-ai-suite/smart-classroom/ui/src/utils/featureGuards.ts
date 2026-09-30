@@ -1,4 +1,10 @@
 import type { FeatureDescriptor } from '../redux/slices/featureConfigSlice';
+import {
+  FEATURES_BY_INPUT,
+  FEATURES_BY_SCREEN,
+  type FeatureScreen,
+  type PipelineInput,
+} from '../generated/pipeline';
 
 /**
  * Feature Guard - Centralized feature availability and configuration access
@@ -41,27 +47,26 @@ export class FeatureGuard {
   }
 
   /**
-   * Get camera configuration from video_analytics feature
-   */
-  getCameraConfig() {
-    const va = this.featureMap.get('video_analytics');
-    return va?.cameras || { front: false, back: false, board: false };
-  }
-
-  /**
-   * Check if a specific camera is enabled
-   */
-  isCameraEnabled(camera: 'front' | 'back' | 'board'): boolean {
-    const config = this.getCameraConfig();
-    return config[camera] || false;
-  }
-
-  /**
    * Get summary mode (dialog, teacher, hybrid)
    */
   getSummaryMode(): string {
     const summary = this.featureMap.get('summary');
     return summary?.mode || 'dialog';
+  }
+
+  /**
+   * Whether ASR streams partial transcripts. When false, an uploaded file is
+   * transcribed in a single pass and nothing shows up until it completes.
+   */
+  isAsrChunkingEnabled(): boolean {
+    return this.featureMap.get('asr')?.chunking !== false;
+  }
+
+  /**
+   * Whether speaker diarization is enabled in the ASR model config.
+   */
+  isDiarizationEnabled(): boolean {
+    return this.featureMap.get('asr')?.diarization === true;
   }
 
   /**
@@ -83,6 +88,22 @@ export class FeatureGuard {
    */
   hasAnyFeature(...featureIds: string[]): boolean {
     return featureIds.some(id => this.hasFeature(id));
+  }
+
+  /**
+   * Whether anything is enabled that works from a given source. Membership
+   * comes from the generated catalog, not from a list at the call site.
+   */
+  hasAnyFeatureForInput(input: PipelineInput): boolean {
+    return FEATURES_BY_INPUT[input].some(id => this.hasFeature(id));
+  }
+
+  /**
+   * Whether anything belonging to a screen is enabled. Drives the app's
+   * auto-switch when the main features are all off.
+   */
+  hasAnyFeatureForScreen(screen: FeatureScreen): boolean {
+    return FEATURES_BY_SCREEN[screen].some(id => this.hasFeature(id));
   }
 
   /**

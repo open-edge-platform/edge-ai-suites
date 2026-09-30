@@ -1,0 +1,268 @@
+From 5bf56277f540f58f0a30dc606261efb19fbee917 Mon Sep 17 00:00:00 2001
+From: "Deng, Bing" <bing.deng@intel.com>
+Date: Tue, 18 Aug 2026 09:15:47 +0800
+Subject: [PATCH] Fix crash/race risks and an info-leak in the ROS2 node
+
+Major bug fixes:
+1. Wrap main() in a try/catch so a startup exception logs a clear
+   fatal message through RCLCPP_FATAL instead of taking down the
+   node with an unhandled exception.
+2. Reorder a few null-pointer checks so the pointer is tested
+   before it gets dereferenced, add an explicit lidar pointer
+   guard in ImuProcess::Process2 next to the existing assert, and
+   move the mutex lock in imu_prop_callback and img_cbk so the
+   shared state they read is actually covered by the lock instead
+   of being checked just before it.
+3. Guard against division by zero in three VIO score/residual
+   computations, free the scratch patch buffer in
+   updateVisualMapPoints when a point ends up not being added, and
+   reject the degenerate zero-area case in plane_judge before it
+   divides by the cross-product magnitude.
+4. Trim an internal IP address from the camera intrinsics config
+   comment, which a BDBA scan flagged as an information-leakage
+   finding, keeping the capture date and camera serial number for
+   traceability; add a maintainer entry in package.xml.
+
+Signed-off-by: Deng, Bing <bing.deng@intel.com>
+---
+ config/camera_d415_1920.yaml |  2 +-
+ package.xml                  |  1 +
+ src/IMU_Processing.cpp       |  4 ++++
+ src/LIVMapper.cpp            | 25 +++++++++++++++++--------
+ src/main.cpp                 | 21 +++++++++++++--------
+ src/preprocess.cpp           |  6 +++---
+ src/vio.cpp                  | 12 ++++++++----
+ 7 files changed, 47 insertions(+), 24 deletions(-)
+
+diff --git a/config/camera_d415_1920.yaml b/config/camera_d415_1920.yaml
+index 329bfe3..05e8a77 100644
+--- a/config/camera_d415_1920.yaml
++++ b/config/camera_d415_1920.yaml
+@@ -1,7 +1,7 @@
+ # Camera intrinsics — Intel RealSense D415 at 1920x1080@15fps
+ #
+ # Source: ros2 topic echo /camera/camera/color/camera_info --once (1920x1080@15fps,
+-#         captured 2026-05-15 on PTL intel@10.239.89.17, device S/N 249322064339)
++#         captured 2026-05-15 on an internal Intel PTL test rig, device S/N 249322064339)
+ # Note:   Camera intrinsics (K matrix) are FPS-independent; values valid for
+ #         1920x1080@15fps used in E1 C3/C4 experiments.
+ #
+diff --git a/package.xml b/package.xml
+index 1784d09..222414d 100755
+--- a/package.xml
++++ b/package.xml
+@@ -12,6 +12,7 @@
+ 
+   <maintainer email="dev@livoxtech.com">claydergc</maintainer>
+   <maintainer email="kanghua.he@intel.com">He Kanghua</maintainer>
++  <maintainer email="bing.deng@intel.com">Deng Bing</maintainer>
+ 
+   <license>BSD</license>
+ 
+diff --git a/src/IMU_Processing.cpp b/src/IMU_Processing.cpp
+index 318ccb0..2bd9877 100755
+--- a/src/IMU_Processing.cpp
++++ b/src/IMU_Processing.cpp
+@@ -539,6 +539,10 @@ void ImuProcess::Process2(
+   double t1, t2, t3;
+   t1 = omp_get_wtime();
+   rcpputils::assert_true(lidar_meas.lidar != nullptr);
++  if (lidar_meas.lidar == nullptr) {
++    RCLCPP_ERROR(rclcpp::get_logger(""), "lidar_meas.lidar is null, skip Process2");
++    return;
++  }
+   if (!imu_en) {
+     Forward_without_imu(lidar_meas, stat, *cur_pcl_un_);
+     return;
+diff --git a/src/LIVMapper.cpp b/src/LIVMapper.cpp
+index b3555a5..549d9c8 100755
+--- a/src/LIVMapper.cpp
++++ b/src/LIVMapper.cpp
+@@ -422,7 +422,7 @@ void LIVMapper::handleVIO()
+            << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose()
+            << std::endl;
+ 
+-  if (pcl_w_wait_pub->empty() || (pcl_w_wait_pub == nullptr)) {
++  if ((pcl_w_wait_pub == nullptr) || pcl_w_wait_pub->empty()) {
+     std::cout << "[ VIO ] No point!!!" << std::endl;
+     return;
+   }
+@@ -483,7 +483,7 @@ void LIVMapper::handleLIO()
+            << _state.bias_a.transpose() << " " << V3D(_state.inv_expo_time, 0, 0).transpose()
+            << endl;
+ 
+-  if (feats_undistort->empty() || (feats_undistort == nullptr)) {
++  if ((feats_undistort == nullptr) || feats_undistort->empty()) {
+     std::cout << "[ LIO ]: No point!!!" << std::endl;
+     return;
+   }
+@@ -749,10 +749,11 @@ void LIVMapper::prop_imu_once(
+ 
+ void LIVMapper::imu_prop_callback()
+ {
++  mtx_buffer_imu_prop.lock();
+   if (p_imu->imu_need_init || !new_imu || !ekf_finish_once) {
++    mtx_buffer_imu_prop.unlock();
+     return;
+   }
+-  mtx_buffer_imu_prop.lock();
+   new_imu = false;  // 控制propagate频率和IMU频率一致
+   if (imu_prop_enable && !prop_imu_buffer.empty()) {
+     static double last_t_from_lidar_end_time = 0;
+@@ -955,7 +956,7 @@ void LIVMapper::livox_pcl_cbk(const livox_ros_driver2::msg::CustomMsg::ConstShar
+   PointCloudXYZI::Ptr ptr(new PointCloudXYZI());
+   p_pre->process(msg, ptr);
+ 
+-  if (!ptr || ptr->empty()) {
++  if (ptr->empty()) {
+     RCLCPP_ERROR(this->node->get_logger(), "Received an empty point cloud");
+     mtx_buffer.unlock();
+     return;
+@@ -1066,17 +1067,25 @@ void LIVMapper::img_cbk(const sensor_msgs::msg::Image::ConstSharedPtr & msg_in)
+   }
+   // double msg_header_time =  msg->header.stamp.toSec();
+   double msg_header_time = rclcpp::Time(msg->header.stamp).seconds() + img_time_offset;
+-  if (abs(msg_header_time - last_timestamp_img) < 0.001) return;
++
++  mtx_buffer.lock();
++
++  if (abs(msg_header_time - last_timestamp_img) < 0.001) {
++    mtx_buffer.unlock();
++    return;
++  }
+   RCLCPP_INFO(this->node->get_logger(), "Get image, its header time: %.6f", msg_header_time);
+-  if (last_timestamp_lidar < 0) return;
++  if (last_timestamp_lidar < 0) {
++    mtx_buffer.unlock();
++    return;
++  }
+ 
+   if (msg_header_time < last_timestamp_img) {
+     RCLCPP_ERROR(this->node->get_logger(), "image loop back. ");
++    mtx_buffer.unlock();
+     return;
+   }
+ 
+-  mtx_buffer.lock();
+-
+   double img_time_correct = msg_header_time;  // last_timestamp_lidar + 0.105;
+ 
+   if (img_time_correct - last_timestamp_img < 0.02) {
+diff --git a/src/main.cpp b/src/main.cpp
+index fe75237..63db10c 100755
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -2,13 +2,18 @@
+ 
+ int main(int argc, char ** argv)
+ {
+-  mp_runtime_init();
+-  rclcpp::init(argc, argv);
+-  rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("laserMapping");
+-  image_transport::ImageTransport it_(node);
+-  LIVMapper mapper(node, "laserMapping");
+-  mapper.initializeSubscribersAndPublishers(node, it_);
+-  mapper.run(node);
+-  rclcpp::shutdown();
++  try {
++    mp_runtime_init();
++    rclcpp::init(argc, argv);
++    rclcpp::Node::SharedPtr node = std::make_shared<rclcpp::Node>("laserMapping");
++    image_transport::ImageTransport it_(node);
++    LIVMapper mapper(node, "laserMapping");
++    mapper.initializeSubscribersAndPublishers(node, it_);
++    mapper.run(node);
++    rclcpp::shutdown();
++  } catch (const std::exception & e) {
++    RCLCPP_FATAL(rclcpp::get_logger("laserMapping"), "Unhandled exception in main: %s", e.what());
++    return 1;
++  }
+   return 0;
+ }
+\ No newline at end of file
+diff --git a/src/preprocess.cpp b/src/preprocess.cpp
+index 1e8a8f3..02d9af7 100755
+--- a/src/preprocess.cpp
++++ b/src/preprocess.cpp
+@@ -1047,13 +1047,13 @@ int Preprocess::plane_judge(
+     }
+   }
+ 
+-  if ((two_dis * two_dis / leng_wid) < p2l_ratio) {
++  if ((leng_wid <= 0) || ((two_dis * two_dis / leng_wid) < p2l_ratio)) {
+     curr_direct.setZero();
+     return 0;
+   }
+ 
+   uint disarrsize = disarr.size();
+-  for (uint j = 0; j < disarrsize - 1; j++) {
++  for (uint j = 0; disarrsize > 0 && j < disarrsize - 1; j++) {
+     for (uint k = j + 1; k < disarrsize; k++) {
+       if (disarr[j] < disarr[k]) {
+         leng_wid = disarr[j];
+@@ -1063,7 +1063,7 @@ int Preprocess::plane_judge(
+     }
+   }
+ 
+-  if (disarr[disarr.size() - 2] < 1e-16) {
++  if ((disarrsize < 2) || (disarr[disarr.size() - 2] < 1e-16)) {
+     curr_direct.setZero();
+     return 0;
+   }
+diff --git a/src/vio.cpp b/src/vio.cpp
+index 030fd7c..d7cdef7 100755
+--- a/src/vio.cpp
++++ b/src/vio.cpp
+@@ -949,6 +949,9 @@ void VIOManager::updateVisualMapPoints(cv::Mat img)
+       ftr_new->id_ = new_frame_->id_;
+       ftr_new->inv_expo_time_ = state->inv_expo_time;
+       pt->addFrameRef(ftr_new);
++    } else {
++      delete
++        [] patch_temp;  // Feature (which would otherwise own and free this) is never constructed
+     }
+   }
+   printf("[ VIO ] Update %d points in visual submap\n", update_num);
+@@ -1066,7 +1069,7 @@ void VIOManager::updateReferencePatch(
+         count++;
+       }
+ 
+-      NCC = NCC / count;
++      NCC = (count > 0) ? (NCC / count) : 0.0f;
+ 
+       score = NCC + cos_angle;
+ 
+@@ -1337,10 +1340,11 @@ void VIOManager::precomputeReferencePatches(int level)
+     const int scale = (1 << level);
+ 
+     VisualPoint * pt = visual_submap->voxel_points[i];
+-    cv::Mat img = pt->ref_patch->img_;
+ 
+     if (pt == nullptr) continue;
+ 
++    cv::Mat img = pt->ref_patch->img_;
++
+     double depth((pt->pos_ - pt->ref_patch->pos()).norm());
+     V3D pf = pt->ref_patch->f_ * depth;
+     V2D pc = pt->ref_patch->px_;
+@@ -1480,7 +1484,7 @@ void VIOManager::updateStateInverse(cv::Mat img, int level)
+       error += patch_error;
+     }
+ 
+-    error = error / n_meas;
++    error = (n_meas > 0) ? (error / n_meas) : 0.0f;
+ 
+     compute_jacobian_time += omp_get_wtime() - t1;
+ 
+@@ -1642,7 +1646,7 @@ void VIOManager::updateState(cv::Mat img, int level)
+       error += patch_error;
+     }
+ 
+-    error = error / n_meas;
++    error = (n_meas > 0) ? (error / n_meas) : 0.0f;
+ 
+     compute_jacobian_time += omp_get_wtime() - t1;
+ 
+-- 
+2.43.0
+

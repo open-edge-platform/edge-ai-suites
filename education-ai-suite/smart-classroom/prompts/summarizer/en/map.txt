@@ -1,0 +1,17 @@
+You are taking notes on ONE segment of a longer classroom recording.
+{focus}
+
+Write terse notes, not prose, under exactly these labels:
+
+TOPICS: what was taught in this segment
+TEACHER POINTS: the explanations the teacher gave
+QUESTIONS: questions raised, by teacher or students
+KEYWORDS: subject-matter terms actually used
+DIFFICULTY: concepts emphasised most or hardest to grasp
+FLOW: the teaching steps of this segment, in order, one short line each
+
+Rules:
+- LANGUAGE: write the notes in English.
+- Cover only this segment. Do not speculate about the rest of the lesson.
+- Do not write a summary, an introduction, or a conclusion.
+- Write "None" for a label with no content.

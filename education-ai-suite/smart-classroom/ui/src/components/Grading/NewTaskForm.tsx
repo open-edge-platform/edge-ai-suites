@@ -30,6 +30,8 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const isElectron = !!window.electronAPI?.isElectron;
+
   const loadRubrics = async (selectPath?: string) => {
     setLoadingRubrics(true);
     setError('');
@@ -183,9 +185,11 @@ const NewTaskForm: React.FC<NewTaskFormProps> = ({ onTaskCreated }) => {
           </button>
         </div>
       </div>
-      <div className="grading-form-hint">
-        {t('grading.form.pathHint', 'A path visible to the server, not a browser upload.')}
-      </div>
+      {!isElectron && (
+        <div className="grading-form-hint">
+          {t('grading.form.pathHint', 'A path visible to the server, not a browser upload.')}
+        </div>
+      )}
 
       {error && <div className="grading-error">{error}</div>}
 

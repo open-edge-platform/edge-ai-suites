@@ -18,6 +18,7 @@ set -e
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
 NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -61,6 +62,263 @@ is_vllm_healthy() {
   curl -s --max-time 5 "$VLLM_HEALTH_URL" 2>/dev/null | grep -q '"id"'
 }
 
+is_external_serving_reachable() {
+  local status
+  status="$(curl -s --max-time 5 -o /dev/null -w '%{http_code}' "$VLLM_ENDPOINT" 2>/dev/null || true)"
+  [ "$status" != "000" ] && [ -n "$status" ]
+}
+
+# Resolve each role against the standard OpenAI /v1/models response. The
+# requested name must match an advertised ID; never select by list order.
+resolve_model_name() {
+  local role="$1" base_url="$2" api_key="$3" requested="$4" models selected
+  models="$(curl -fsS --connect-timeout 3 --max-time 10 \
+    -H "Authorization: Bearer ${api_key}" "${base_url%/}/models" 2>/dev/null \
+    | python3 -c 'import json, sys; print("\\n".join(str(item["id"]) for item in json.load(sys.stdin).get("data", []) if isinstance(item, dict) and item.get("id")))' 2>/dev/null || true)"
+  if [ -z "$models" ]; then
+    if [ -n "$requested" ]; then
+      echo -e "${YELLOW}Warning: ${role} serving did not return a usable model list from ${base_url%/}/models; using configured model '${requested}' without validation.${NC}" >&2
+      printf '%s' "$requested"
+      return 0
+    fi
+    echo -e "${RED}Error: ${role} serving did not return a usable model from ${base_url%/}/models.${NC}" >&2
+    return 1
+  fi
+  if [ -z "$requested" ]; then
+    echo -e "${RED}Error: ${role} model is not configured; set ${role}_MODEL_NAME to an advertised model ID.${NC}" >&2
+    printf 'Available %s models:\n%s\n' "$role" "$models" >&2
+    return 1
+  elif grep -Fqx -- "$requested" <<<"$models"; then
+    selected="$requested"
+    echo "${role} model verified: ${selected}" >&2
+  else
+    echo -e "${RED}Error: configured ${role} model '${requested}' is not served by ${base_url%/}/models.${NC}" >&2
+    printf 'Available %s models:\n%s\n' "$role" "$models" >&2
+    return 1
+  fi
+  printf '%s' "$selected"
+}
+
+resolve_serving_models() {
+  local vlm_discovery_url="$VLM_BASE_URL" llm_discovery_url="$LLM_BASE_URL"
+  if [ "$USE_LOCAL_VLLM" = true ]; then
+    # The service name is resolvable only inside app-network; discovery runs on
+    # the host before MLVU/MCP containers are created.
+    vlm_discovery_url="http://localhost:${VLLM_SERVICE_PORT}/v1"
+    llm_discovery_url="$vlm_discovery_url"
+  fi
+  VLM_MODEL_NAME="$(resolve_model_name VLM "$vlm_discovery_url" "${VLM_API_KEY:-EMPTY}" "${VLM_MODEL_NAME:-}")" || return 1
+  LLM_MODEL_NAME="$(resolve_model_name LLM "$llm_discovery_url" "${LLM_API_KEY:-EMPTY}" "${LLM_MODEL_NAME:-}")" || return 1
+  export VLM_MODEL_NAME LLM_MODEL_NAME
+}
+
+# Published MCP images read a concrete YAML file and do not expand shell-style
+# placeholders. Render the two VLM placeholders after model discovery so both
+# direct setup and demo launchers produce the same runtime configuration.
+prepare_mcp_config() {
+  local config_path template_path temporary_path content mcp_vlm_url
+  local url_placeholder='${VLM_BASE_URL:-http://localhost:41091/v1}'
+  local model_placeholder='${VLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}'
+
+  config_path="${SMART_COMMUNITY_DATA_DIR}/config.yaml"
+  template_path="${SCRIPT_DIR}/config.yaml.example"
+  mkdir -p "${SMART_COMMUNITY_DATA_DIR}"
+  if [[ ! -e "$config_path" ]]; then
+    cp -- "$template_path" "$config_path"
+    echo "Created runtime MCP configuration: ${config_path}"
+  fi
+  [[ ! -L "$config_path" && -f "$config_path" ]] || {
+    echo -e "${RED}Error: MCP configuration must be a regular file: ${config_path}${NC}" >&2
+    return 1
+  }
+
+  content="$(<"$config_path")"
+  if [[ "$content" != *"$url_placeholder"* && "$content" != *"$model_placeholder"* ]]; then
+    return 0
+  fi
+
+  mcp_vlm_url="$VLM_BASE_URL"
+  if [[ "$mcp_vlm_url" == "http://vllm-ipex-serving:8000/v1" ]]; then
+    mcp_vlm_url="http://localhost:${VLLM_SERVICE_PORT}/v1"
+  fi
+  content="${content//"$url_placeholder"/"$mcp_vlm_url"}"
+  content="${content//"$model_placeholder"/"$VLM_MODEL_NAME"}"
+  temporary_path="$(mktemp "${SMART_COMMUNITY_DATA_DIR}/.config.yaml.XXXXXX")"
+  printf '%s' "$content" > "$temporary_path"
+  mv -- "$temporary_path" "$config_path"
+  echo "Rendered VLM settings in runtime MCP configuration: ${config_path}"
+}
+
+# --- serving startup recovery --------------------------------------------------
+# compose.yaml gives vllm-ipex-serving `restart: always`, and multilevel/mcp-server
+# depend on it with `condition: service_healthy`. If the serving dies mid-weight-load
+# — most often the transient Intel Xe device-lost fault — compose abandons the whole
+# `up` immediately, while Docker restarts the container in the background and the
+# next attempt usually succeeds. The helpers below keep the script in step with that
+# background retry instead of exiting with a bare compose error.
+VLLM_CONTAINER="${VLLM_CONTAINER:-vllm-ipex-serving}"
+# Seconds to keep waiting for the restart policy to bring the serving back. 0 = don't wait.
+# A restart redoes the whole weight download + FP8 compile (about 30 min on a cold
+# cache), so leave roughly double that before calling it dead.
+VLLM_RETRY_TIMEOUT="${VLLM_RETRY_TIMEOUT:-3600}"
+
+vllm_inspect()  { docker inspect -f "$1" "$VLLM_CONTAINER" 2>/dev/null || true; }
+vllm_state()    { vllm_inspect '{{.State.Status}}'; }
+vllm_health()   { vllm_inspect '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}'; }
+vllm_restarts() { vllm_inspect '{{.RestartCount}}'; }
+vllm_policy()   { vllm_inspect '{{.HostConfig.RestartPolicy.Name}}'; }
+
+human_duration() {
+  if [ "$1" -ge 60 ]; then echo "$(($1 / 60)) min"; else echo "$1 s"; fi
+}
+
+vllm_is_up() {
+  case "$(vllm_health)" in
+    healthy) return 0 ;;
+    none)    is_vllm_healthy ;;
+    *)       return 1 ;;
+  esac
+}
+
+# True while Docker will still restart the container on its own.
+vllm_retry_pending() {
+  case "$(vllm_policy)" in
+    always|unless-stopped|on-failure) ;;
+    *) return 1 ;;
+  esac
+  case "$(vllm_state)" in
+    running|restarting|created|exited) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+vllm_hit_gpu_fault() {
+  docker logs --tail 400 "$VLLM_CONTAINER" 2>&1 \
+    | grep -qE 'UR_RESULT_ERROR_DEVICE_LOST|DEVICE_LOST|level_zero backend failed|exec queue reset'
+}
+
+vllm_failure_description() {
+  local logs
+  logs="$(docker logs --tail 400 "$VLLM_CONTAINER" 2>&1 || true)"
+
+  if grep -qiE 'UR_RESULT_ERROR_DEVICE_LOST|DEVICE_LOST|level_zero backend failed|exec queue reset' <<<"$logs"; then
+    echo "The serving lost access to the GPU. Release other GPU users or reset the xe driver."
+  elif grep -qiE 'out of memory|OOM|Cannot allocate memory|Killed' <<<"$logs"; then
+    echo "Model loading ran out of memory. Add swap or lower GPU_MEM_UTIL and MAX_MODEL_LEN."
+  elif grep -qiE 'RepositoryNotFound|GatedRepoError|401 Client Error|403 Client Error|authentication.*failed|Invalid username or password' <<<"$logs"; then
+    echo "Model download was denied. Check LLM_MODEL and any required Hugging Face access token."
+  elif grep -qiE 'not a local folder and is not a valid model identifier|Incorrect path_or_model_id|Invalid.*model|model.*not found' <<<"$logs"; then
+    echo "Model configuration is invalid. Check LLM_MODEL in docker/set_env.sh."
+  elif grep -qiE 'Couldn.t connect|ConnectionError|ConnectTimeout|ReadTimeout|Max retries exceeded|Network is unreachable|Name or service not known|Temporary failure in name resolution|offline mode.*local files' <<<"$logs"; then
+    echo "Model download is unavailable. Check network access and HF_ENDPOINT, or pre-populate the Hugging Face cache."
+  else
+    echo "The model serving process did not become healthy. Review the vLLM log excerpt below for the first error."
+  fi
+}
+
+cleanup_failed_stack() {
+  echo "Stopping the failed stack to prevent further vLLM restart attempts..."
+  if ! $DOCKER_CMD down --remove-orphans; then
+    echo -e "${YELLOW}Warning: failed to fully clean up the stack; run '$0 --down' manually.${NC}"
+  fi
+}
+
+show_vllm_logs() {
+  echo "---- docker logs --tail 40 ${VLLM_CONTAINER} ----"
+  docker logs --tail 40 "$VLLM_CONTAINER" 2>&1 | sed 's/^/  /' || true
+  echo "------------------------------------------------"
+}
+
+show_vllm_failure() {
+  echo
+  echo -e "${RED}Failure: $(vllm_failure_description)${NC}"
+}
+
+# Poll until the serving reports healthy, or Docker stops retrying, or we run out
+# of budget. Reports progress so a long wait does not look like a hang.
+wait_for_vllm_healthy() {
+  local started=$SECONDS
+  local deadline=$((SECONDS + VLLM_RETRY_TIMEOUT))
+  local next_report=0
+
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    vllm_is_up && return 0
+    vllm_retry_pending || return 1
+    if [ "$SECONDS" -ge "$next_report" ]; then
+      printf '  [%5ds] %s state=%s health=%s restarts=%s\n' \
+        "$((SECONDS - started))" "$VLLM_CONTAINER" \
+        "$(vllm_state)" "$(vllm_health)" "$(vllm_restarts)"
+      next_report=$((SECONDS + 30))
+    fi
+    sleep 5
+  done
+  return 1
+}
+
+# `docker compose up -d`, but recover from the serving crashing out from under a
+# `service_healthy` dependency instead of reporting a bare failure to the user.
+compose_up() {
+  local arg vllm_in_play=false
+
+  if [ "$USE_LOCAL_VLLM" = true ]; then
+    vllm_in_play=true
+    for arg in "$@"; do
+      [ "$arg" = "--no-deps" ] && vllm_in_play=false
+    done
+  fi
+
+  if $DOCKER_CMD up -d "$@"; then
+    return 0
+  fi
+
+  if [ "$vllm_in_play" != true ] || [ -z "$(vllm_state)" ]; then
+    echo -e "${RED}Error: 'docker compose up -d' failed.${NC}"
+    echo "  Service states: docker compose -f ${DOCKER_DIR}/compose.yaml ps"
+    echo "  Service logs:   docker compose -f ${DOCKER_DIR}/compose.yaml logs --tail 50"
+    return 1
+  fi
+
+  echo
+  echo -e "${YELLOW}Compose gave up waiting for '${VLLM_CONTAINER}' (state=$(vllm_state) health=$(vllm_health) restarts=$(vllm_restarts)).${NC}"
+  show_vllm_logs
+
+  if [ "$VLLM_RETRY_TIMEOUT" -le 0 ] || ! vllm_retry_pending; then
+    echo -e "${RED}Giving up on '${VLLM_CONTAINER}'.${NC}"
+    show_vllm_failure
+    cleanup_failed_stack
+    return 1
+  fi
+
+  echo
+  echo -e "${YELLOW}This is not necessarily fatal: Docker's restart policy ('$(vllm_policy)') is already${NC}"
+  echo -e "${YELLOW}retrying the serving in the background, and this crash usually clears on the retry.${NC}"
+  echo "Waiting up to $(human_duration "$VLLM_RETRY_TIMEOUT") for it to come back."
+  echo "Ctrl-C is safe — the retry continues without this script; resume with 'bash $0 --light'."
+  echo
+
+  trap 'echo; echo "Interrupted. ${VLLM_CONTAINER} keeps restarting in the background."; echo "Re-check: curl -fsS ${VLLM_HEALTH_URL}   Resume: bash $0 --light"; exit 130' INT
+  local recovered=true
+  wait_for_vllm_healthy || recovered=false
+  trap - INT
+
+  if [ "$recovered" != true ]; then
+    echo
+    echo -e "${RED}'${VLLM_CONTAINER}' did not become healthy within $(human_duration "$VLLM_RETRY_TIMEOUT").${NC}"
+    show_vllm_logs
+    show_vllm_failure
+    cleanup_failed_stack
+    return 1
+  fi
+
+  echo -e "${GREEN}'${VLLM_CONTAINER}' recovered after $(vllm_restarts) restart(s) — starting the remaining services.${NC}"
+  if ! $DOCKER_CMD up -d "$@"; then
+    echo -e "${RED}Error: the stack still failed to start after the serving recovered.${NC}"
+    echo "  Service states: docker compose -f ${DOCKER_DIR}/compose.yaml ps"
+    echo "  Service logs:   docker compose -f ${DOCKER_DIR}/compose.yaml logs --tail 50"
+    return 1
+  fi
+}
+
 # The multilevel-video-understanding build context lives in the external
 # open-edge-platform edge-ai-libraries repo, which is NOT vendored here. Clone it
 # on demand (shallow + partial + sparse: only the one microservice, no LFS blobs)
@@ -73,8 +331,10 @@ EDGE_AI_LIBRARIES_REF="main"
 MULTILEVEL_SUBPATH="microservices/multilevel-video-understanding"
 
 ensure_edge_ai_libraries() {
-  if [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
-    echo "edge-ai-libraries present: ${EDGE_AI_LIBRARIES_DIR}"
+  if git -C "${EDGE_AI_LIBRARIES_DIR}" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      && [ -f "${EDGE_AI_LIBRARIES_DIR}/${MULTILEVEL_SUBPATH}/docker/Dockerfile" ]; then
+    echo "Using existing directory: ${EDGE_AI_LIBRARIES_DIR}"
+    echo "To use the latest version, delete: ${EDGE_AI_LIBRARIES_DIR}"
     return 0
   fi
   echo "Fetching edge-ai-libraries (${EDGE_AI_LIBRARIES_REF}) from ${EDGE_AI_LIBRARIES_REPO}"
@@ -111,6 +371,12 @@ Options:
   --light-down           Stop multilevel + videostream-analytics + smart-community-mcp-server,
                          but leave vllm-ipex-serving running (avoids its 3-20 min recompile)
   -h, --help             Show this help
+
+Environment:
+  VLLM_RETRY_TIMEOUT     Seconds to keep waiting when vllm-ipex-serving crashes during
+                         startup and Docker's restart policy is retrying it in the
+                         background (default: 3600 — a retry redoes the full ~30 min
+                         weight load). Set to 0 to fail immediately.
 
 Examples:
   source docker/set_env.sh   # optional; the script also sources it itself
@@ -236,37 +502,54 @@ fi
 if [ "$UP_CONTAINERS" = true ]; then
   prepare_videostream_config
 
-  # All locally-built images must exist before we start.
-  missing=false
+  # Compose pulls a missing image itself, and only builds from source if that pull
+  # fails — so a missing image is not fatal. But the build fallback is a long, silent
+  # detour, so name the absent images up front instead of letting it surprise anyone.
+  missing=()
   for img in "$MULTILEVEL_IMAGE" "$VSA_IMAGE" "$MCP_IMAGE"; do
-    if ! docker image inspect "$img" >/dev/null 2>&1; then
-      echo -e "${RED}Error: image '$img' not found.${NC}"
-      missing=true
-    fi
+    docker image inspect "$img" >/dev/null 2>&1 || missing+=("$img")
   done
-  if [ "$missing" = true ]; then
-    echo "Build first:  $0 --build   (or one-shot:  $0 --build-prod)"
-    exit 1
+  if [ "${#missing[@]}" -gt 0 ]; then
+    echo -e "${YELLOW}${#missing[@]} image(s) not present locally:${NC}"
+    printf '  %s\n' "${missing[@]}"
+    echo "Compose will pull them, and build from source if a pull fails (much slower)."
+    echo "Tag mismatch? TAG=${TAG:-latest}; export TAG before 'source docker/set_env.sh'."
   fi
 
   if [ "$LIGHT_MODE" = true ]; then
     # Reuse an already-warm serving; start only the app + analytics.
     if is_vllm_healthy; then
+      resolve_serving_models || exit 1
+      prepare_mcp_config || exit 1
       echo "Model serving already healthy at ${VLLM_HEALTH_URL} — starting multilevel + videostream-analytics + smart-community-mcp-server only."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
+      compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     elif [ "$USE_LOCAL_VLLM" = true ]; then
-      echo "Local vllm-ipex-serving not healthy yet — starting the full stack instead."
-      echo "(first run pulls/compiles the model — this can take 3-20+ min)"
-      $DOCKER_CMD up -d
+      echo "Local vllm-ipex-serving not healthy yet — starting it before the app tier."
+      echo "(first run pulls/compiles the model — this can take about 30 mins)"
+      compose_up vllm-ipex-serving || exit 1
+      wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
+      resolve_serving_models || exit 1
+      prepare_mcp_config || exit 1
+      compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
+    elif is_external_serving_reachable; then
+      resolve_serving_models || exit 1
+      prepare_mcp_config || exit 1
+      echo "External model serving is reachable but does not expose a usable model list — starting multilevel + videostream-analytics + smart-community-mcp-server with the configured model IDs."
+      compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
     else
-      echo "Warning: external serving not reachable at ${VLLM_HEALTH_URL}; starting multilevel + videostream-analytics + smart-community-mcp-server anyway (they retry at runtime)."
-      $DOCKER_CMD up -d --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server
+      echo -e "${RED}Error: external serving is not reachable at ${VLLM_HEALTH_URL}.${NC}" >&2
+      exit 1
     fi
   else
-    # End-to-end: bring up serving + app + analytics together.
-    echo "Starting all three services..."
-    echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take 3-20+ min)"
-    $DOCKER_CMD up -d
+    # End-to-end: wait for the serving, resolve its advertised model, then start
+    # the services that require a concrete VLM/LLM model ID.
+    echo "Starting model serving..."
+    echo "(first run pulls/compiles the model in vllm-ipex-serving — this can take about 30 mins)"
+    compose_up vllm-ipex-serving || exit 1
+    wait_for_vllm_healthy || { show_vllm_failure; exit 1; }
+    resolve_serving_models || exit 1
+    prepare_mcp_config || exit 1
+    compose_up --no-deps multilevel-video-understanding videostream-analytics smart-community-mcp-server || exit 1
   fi
 
   echo -e "${GREEN}==== Setup complete! ====${NC}"
@@ -274,13 +557,14 @@ if [ "$UP_CONTAINERS" = true ]; then
   echo "  videostream-analytics          : host network, POSTs to ${WEBHOOK_URL:-http://localhost:3101/events}"
   echo "  smart-community-mcp-server       : UI http://localhost:3100/  MCP http://localhost:3100/mcp  events http://localhost:3101/events"
   echo "To stop: $0 --light-down   (keep vllm warm)   |   $0 --down   (full teardown)"
+  echo "Service states: docker compose -f ${DOCKER_DIR}/compose.yaml ps"
 fi
 
 # --- down ---------------------------------------------------------------------
 if [ "$DOWN_CONTAINERS" = true ]; then
-  echo "Stopping and removing all containers..."
-  $DOCKER_CMD down
-  echo "==== Containers stopped and removed! ===="
+  echo "Stopping and removing all containers, networks, and named volumes..."
+  $DOCKER_CMD down --volumes --remove-orphans
+  echo "==== Full stack stopped and removed! ===="
 fi
 
 # --- light-down ---------------------------------------------------------------

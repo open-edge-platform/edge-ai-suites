@@ -8,7 +8,6 @@
   padding: 16px;
   margin-top: 16px;
   color: #2B2C30;
-  font-family: 'IntelOne Text', sans-serif;
 }
 
 /* ───────── Section-level tab bar: Search | Q&A ───────── */
@@ -24,7 +23,6 @@
   padding: 10px 0;
   background: none;
   border: none;
-  font-family: 'IntelOne Text', sans-serif;
   font-size: 14px;
   font-weight: 500;
   color: #6A6D75;
@@ -536,7 +534,7 @@
   width: 80px;
   height: 32px;
   padding: 8px 16px;
-  gap: 4px;
+  gap: 10px;
   opacity: 1;
   border-radius: 4px;
   font-weight: 500;
@@ -568,7 +566,7 @@
 
 .cs-search-btn--primary.cs-search-btn--loading,
 .cs-search-btn--primary.cs-search-btn--loading:disabled {
-  width: 132px;
+  width: 138px;
   height: 32px;
   background: #1976d2;
   color: white;
@@ -596,7 +594,6 @@
   border-right-color: white;
   border-radius: 50%;
   animation: cs-spin 0.8s linear infinite;
-  margin-right: 6px;
 }
 
 .cs-search-btn--secondary {

@@ -211,7 +211,6 @@ class TestSourceManagerUpdate:
             enabled=True,
             interval_seconds=60,
             fps=15,
-            retention_days=5,
         )
 
         manager.update_pipeline_config(
@@ -224,7 +223,6 @@ class TestSourceManagerUpdate:
         assert updated.fps == 25
         assert updated.enabled is True
         assert updated.interval_seconds == 60
-        assert updated.retention_days == 5
 
 
 class TestSourceManagerRemoveCallback:
@@ -344,6 +342,11 @@ class TestUpdatePipelineTargetClassesValidation:
                             lambda p: (["person", "knife"], "embedded"))
         model = tmp_path / "model.xml"
         model.write_text("<net/>")
+        # A request-supplied model_path is confined to the permitted model roots
+        # (service.validate_model_path). `AppConfig()` configures none, so the
+        # tmp dir has to be allowed explicitly or the PUT is a 400 before
+        # target_classes are ever looked at.
+        api_client.app.state.config.security.allowed_model_roots.append(str(tmp_path))
         api_client.post("/register_source", json=_REG_BODY)
         resp = api_client.put("/sources/cam1/pipeline", json={
             "pipeline": {
@@ -365,6 +368,11 @@ class TestUpdatePipelineTargetClassesValidation:
                             lambda p: (["person", "knife"], "embedded"))
         model = tmp_path / "model.xml"
         model.write_text("<net/>")
+        # A request-supplied model_path is confined to the permitted model roots
+        # (service.validate_model_path). `AppConfig()` configures none, so the
+        # tmp dir has to be allowed explicitly or the PUT is a 400 before
+        # target_classes are ever looked at.
+        api_client.app.state.config.security.allowed_model_roots.append(str(tmp_path))
         api_client.post("/register_source", json=_REG_BODY)
         resp = api_client.put("/sources/cam1/pipeline", json={
             "pipeline": {

@@ -1,0 +1,84 @@
+# Sample Apps + AI Helpers
+#
+# Run AFTER the core infra stack is up (root docker-compose.yml via `make up`).
+# Attaches to the uav-mission-compute-sdk_default network created by the root stack.
+#
+# Usage:
+#   cd sample-apps && docker compose up -d --build
+#   (or from repo root: make apps)
+
+services:
+  # ── AI Helpers ──────────────────────────────────────────────────────────────
+
+  vision-processor:
+    image: uav-mission-compute-sdk/vision-processor-multicam
+    build:
+      context: ./helpers/vision-processor
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: vision-processor-multicam
+    entrypoint: ["/app/entrypoint.sh"]
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - CAMERA_IDS=${VISION_CAMERA_IDS:-nadir,forward,rear}
+      - INFERENCE_DEVICE=GPU
+      - CONF_THRESH=0.4
+      - STREAM_FPS=30
+      - INFERENCE_FPS=10
+      - USE_RTSP=true
+      - RTSP_HOST=mediamtx
+      - RTSP_PORT=8554
+      - RTSP_LATENCY=100
+      - no_proxy=mediamtx,mosquitto,localhost,127.0.0.1
+      - NO_PROXY=mediamtx,mosquitto,localhost,127.0.0.1
+    devices:
+      - ${GPU_DEVICE:-/dev/dri/card0}:${GPU_DEVICE:-/dev/dri/card0}
+      - ${GPU_RENDER_DEVICE:-/dev/dri/renderD128}:${GPU_RENDER_DEVICE:-/dev/dri/renderD128}
+    group_add:
+      - "${GPU_RENDER_GID:-994}"
+    volumes:
+      - ./helpers/vision-processor/detector_multicam_rtsp.py:/app/detector_multicam_rtsp.py:ro
+    networks:
+      - infra
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # ── Showcase App ────────────────────────────────────────────────────────────
+
+  edge-ai-showcase:
+    build:
+      context: ./edge-ai-showcase
+      args:
+        - http_proxy=${HTTP_PROXY:-}
+        - https_proxy=${HTTPS_PROXY:-}
+        - no_proxy=${NO_PROXY:-}
+    container_name: edge-ai-showcase
+    ports:
+      - "127.0.0.1:5002:5002"
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - COMPANION_BRIDGE_URL=${COMPANION_BRIDGE_URL:-http://px4-gazebo:8080}
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=
+    volumes:
+      - ./edge-ai-showcase/app.py:/app/app.py:ro
+      - ./edge-ai-showcase/templates:/app/templates:ro
+    networks:
+      - infra
+    restart: unless-stopped
+
+networks:
+  infra:
+    external: true
+    name: uav-mission-compute-sdk_default

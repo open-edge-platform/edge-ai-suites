@@ -8,6 +8,10 @@ interface MindmapState {
   generationTime: number | null;
   error: string | null;
   sessionId: string | null;
+  // performance.now() when the fetch was kicked off, so MindMapTab can report
+  // generation time (fetch through first render) even though the fetch itself
+  // is driven from outside the tab (see useAudioPipeline).
+  startedAt: number | null;
 }
 
 const initialState: MindmapState = {
@@ -18,22 +22,25 @@ const initialState: MindmapState = {
   generationTime: null,
   error: null,
   sessionId: null,
+  startedAt: null,
 };
 
 const mindmapSlice = createSlice({
   name: "mindmap",
   initialState,
   reducers: {
-    startMindmap: (state, action: PayloadAction<string>) => {
-      console.log('🧠 Starting mindmap for session:', action.payload);
-      if (state.sessionId !== action.payload) {
+    startMindmap: (state, action: PayloadAction<{ sessionId: string; startedAt: number }>) => {
+      const { sessionId, startedAt } = action.payload;
+      console.log('🧠 Starting mindmap for session:', sessionId);
+      if (state.sessionId !== sessionId) {
         state.isLoading = true;
         state.isRendered = false;
         state.finalText = null;
         state.svg = null;
         state.generationTime = null;
         state.error = null;
-        state.sessionId = action.payload;
+        state.sessionId = sessionId;
+        state.startedAt = startedAt;
       }
     },
     

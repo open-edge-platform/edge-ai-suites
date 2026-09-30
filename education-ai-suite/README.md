@@ -1,61 +1,37 @@
 # Education AI Suite
 
-The **Education AI Suite** is a collection of education-focused AI applications, libraries, and benchmarking tools to help developers build intelligent classroom solutions faster. It provides audio and video pipelines accelerated with the OpenVINO™ toolkit, enabling high-performance deployment on **Intel® CPUs, integrated GPUs, and NPUs**.
+The **Education AI Suite** is a collection of open-source reference applications, libraries,
+microservices, and benchmarking tools, helping developers accelerate AI workload development
+and select hardware that best fits their education-focused use cases.
+It provides audio and video pipelines accelerated with the **OpenVINO™ toolkit**,
+enabling high-performance deployment on **Intel® CPUs, integrated GPUs, and NPUs**.
 
-This suite organizes workflows tailored for the education sector, with initial support for the **Smart Classroom** application—an extensible framework for processing, analyzing, and summarizing classroom sessions using advanced multimodal AI.
+The suite workflows redefine the experience of both teaching and learning:
 
-The main features are as follows:
+The **Smart Classroom** application, is an extensible framework
+for processing, analyzing, and summarizing classroom sessions using advanced multimodal AI.
 
-**Audio Intelligence**:
-
-- Audio transcription with ASR models (e.g., Whisper, Paraformer)
-- Summarization using powerful LLMs (e.g., Qwen, LLaMA)
-- Plug-and-play architecture for integrating new ASR and LLM models
-- API-first design ready for frontend integration
-- Extensible roadmap for real-time streaming, diarization, translation, and video analysis
-
-**Video Intelligence**:
-
-- Front Camera Pipeline: Student **pose detection**: sitting, standing, hand raise, leaning
-- Rear Camera Pipeline: **Re-Identification (ReID)** to track students consistently across camera views
-- Board Camera Pipeline: **Board content classification**
-
-**Content Search & RAG**:
-
-- **Retrieval Augmented Generation (RAG)**: Upload educational content (PDFs, documents, videos, images) and ask natural language questions
-- **Multi-modal AI**: Combines vector search with LLM-powered question answering using OpenVINO
-- **Multiple UI Options**: React-based web interface and Flutter cross-platform application(RAG)
-- **Intelligent Q&A**: Context-aware question answering with cited sources
-- **Content Management**: File upload, indexing, tagging, and management capabilities
+The **Teaching Assistant** answers the self-development needs, offering voice-first assistance
+in studying.
 
 
-### Flutter + RAG Integration
+## Suite Capabilities
 
-The Smart Classroom now includes a **Flutter application** (`utils/flutter/`) that provides a modern, cross-platform interface for the Content Search RAG pipeline. This integration demonstrates how educational applications can leverage local AI inference via OpenVINO for intelligent Retrieval Augmented Generation.
+The Education AI Suite supports the following AI technologies and workflows:
 
-**Key Features**:
-- Upload and ingest educational materials (documents, presentations, videos, images)
-- Ask questions against indexed content with cited sources
-- Multi-turn conversational Q&A with conversation history
-- Tag-based content filtering
-- File management (list, filter, delete indexed files)
-- Cross-platform support (Windows desktop, Web)
+- **Audio Intelligence**: ASR (speech-to-text), speaker diarization, summarization, and
+  text-to-speech powered by models like Whisper, Paraformer, and Qwen
+- **Video Analytics**: Multi-camera pose detection, student re-identification, and classroom
+  statistics
+- **Retrieval-Augmented Generation (RAG)**: Multimodal semantic search, vector-based
+  retrieval with CLIP and mE5 embeddings, and LLM-powered Q&A
+- **Report Generation**: Automated generation of classroom summaries, mind maps, and session
+  reports in multiple formats
+- **Extensible Architecture**: Plug-and-play model integration and API-first design for
+  frontend applications
 
-**Two Ways to Use the Application**:
+The suite is built with modularity and extensibility in mind. It is designed as code to
+understand the AI workload patterns and hardware requirements for educational edge AI systems.
 
-1. **Flutter UI** - Traditional graphical interface:
-   - Run `.\utils\flutter\setup.ps1` to install dependencies
-   - Run `.\utils\flutter\start.ps1` to launch the application
-   - Interact via the Flutter desktop or web interface
-
-2. **Coding Companion (Agentic Mode)** - AI-assisted workflow:
-   - Use natural language commands in your coding assistant like GitHub Copilot, Claude, Cursor etc.,
-   - Available skills automatically execute setup, upload files, ask questions, manage content
-   - Example: `/sc-setup "first time set-up"`, `/sc-upload "upload a file"`, `/sc-qa "explain quantum computing"`
-
-For detailed setup instructions, architecture overview, and coding companion usage, see [**Flutter + RAG Documentation**](utils/flutter/README.md).
-
-## Full Documentation
-
-For comprehensive setup, usage, and contribution guide, see
-[**Smart Classroom Documentation**](smart-classroom/README.md).
+For full documentation, refer to the
+[Open Edge Platform documentation website](https://docs.openedgeplatform.intel.com/dev/ai-suite-education.html).

@@ -11,7 +11,8 @@
 
 2. For Docker-related test cases, run the following commands:
 
-   > **Note**: Docker and Docker Compose must be installed as prerequisites.
+   > [!NOTE]
+   > Docker and Docker Compose must be installed as prerequisites.
 
    * Wind Turbine Anomaly Detection
 
@@ -27,7 +28,8 @@
 
 3. For Helm-related test cases, run the following commands:
 
-   > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites. If you are using k3s, ensure `KUBECONFIG` is exported before running the tests:
+   > [!NOTE]
+   > A Kubernetes cluster and Helm must be installed as prerequisites. If you are using k3s, ensure `KUBECONFIG` is exported before running the tests:
    >
    > ```sh
    > export KUBECONFIG=/etc/rancher/k3s/k3s.yaml

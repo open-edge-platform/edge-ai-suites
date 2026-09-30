@@ -50,6 +50,10 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 #  Pipeline stage ordering
@@ -349,39 +353,38 @@ def _health(ms: Optional[float]) -> str:
 def print_report(kpi2: dict, kpi1_path: Path) -> None:
     """Print a formatted Level 2 pipeline KPI report to stdout."""
     W = 90
-    print()
-    print('━' * W)
-    print('  Level 2 Pipeline KPI')
-    print(f'  Source  : {kpi1_path}')
+    logger.info("\n" + '━' * W)
+    logger.info('  Level 2 Pipeline KPI')
+    logger.info(f'  Source  : {kpi1_path}')
     m = kpi2['metadata']
-    print(f'  Host    : {m["hostname"]}  ({m["hardware"]["cpu_model"]})')
-    print(f'  ROS     : {m["ros_distro"]}  |  Framework: {m["framework_version"]}')
-    print('━' * W)
+    logger.info(f'  Host    : {m["hostname"]}  ({m["hardware"]["cpu_model"]})')
+    logger.info(f'  ROS     : {m["ros_distro"]}  |  Framework: {m["framework_version"]}')
+    logger.info('━' * W)
 
     pipe  = kpi2['pipeline']
     e2e   = kpi2['e2e_latency_ms']
-    print(f'\n  Pipeline  : {pipe["input_topic"]}  →  {pipe["output_topic"]}')
-    print(f'  Stages    : {" → ".join(pipe["stage_sequence"])}')
-    print(f'  Method    : {e2e["method"]}')
+    logger.info(f'\n  Pipeline  : {pipe["input_topic"]}  →  {pipe["output_topic"]}')
+    logger.info(f'  Stages    : {" → ".join(pipe["stage_sequence"])}')
+    logger.info(f'  Method    : {e2e["method"]}')
 
     h = _health(e2e['mean'])
-    print(f'\n  {h} End-to-end latency (chained)')
-    print(f'       mean : {e2e["mean"]:.1f} ms' if e2e['mean'] is not None else '       mean : —')
-    print(f'        p50 : {e2e["p50"]:.1f} ms' if e2e.get('p50') is not None else '        p50 : —')
-    print(f'        p90 : {e2e["p90"]:.1f} ms' if e2e.get('p90') is not None else '        p90 : —')
-    print(f'        p99 : {e2e["p99"]:.1f} ms' if e2e.get('p99') is not None else '        p99 : —')
-    print(f'        max : {e2e["max"]:.1f} ms' if e2e.get('max') is not None else '        max : —')
-    print(f'          n : {e2e["n"]} samples (min across stages)')
+    logger.info(f'\n  {h} End-to-end latency (chained)')
+    logger.info(f'       mean : {e2e["mean"]:.1f} ms' if e2e['mean'] is not None else '       mean : —')
+    logger.info(f'        p50 : {e2e["p50"]:.1f} ms' if e2e.get('p50') is not None else '        p50 : —')
+    logger.info(f'        p90 : {e2e["p90"]:.1f} ms' if e2e.get('p90') is not None else '        p90 : —')
+    logger.info(f'        p99 : {e2e["p99"]:.1f} ms' if e2e.get('p99') is not None else '        p99 : —')
+    logger.info(f'        max : {e2e["max"]:.1f} ms' if e2e.get('max') is not None else '        max : —')
+    logger.info(f'          n : {e2e["n"]} samples (min across stages)')
 
     hz = kpi2.get('throughput_hz')
-    print(f'\n  Throughput     : {hz:.2f} Hz' if hz is not None else '\n  Throughput     : —')
+    logger.info(f'\n  Throughput     : {hz:.2f} Hz' if hz is not None else '\n  Throughput     : —')
     dr = kpi2.get('drop_rate_pct')
-    print(f'  Drop rate      : {dr:.1f}%' if dr is not None else '  Drop rate      : —')
-    print(f'  Bottleneck     : {kpi2["bottleneck_stage"]}')
+    logger.info(f'  Drop rate      : {dr:.1f}%' if dr is not None else '  Drop rate      : —')
+    logger.info(f'  Bottleneck     : {kpi2["bottleneck_stage"]}')
 
-    print('\n  Per-stage breakdown:')
-    print(f'  {"Stage":<14} {"Node":<28} {"mean":>8} {"p90":>8} {"Hz":>8}  Representative pair')
-    print(f'  {"─"*14} {"─"*28} {"─"*8} {"─"*8} {"─"*8}  {"─"*32}')
+    logger.info('\n  Per-stage breakdown:')
+    logger.info(f'  {"Stage":<14} {"Node":<28} {"mean":>8} {"p90":>8} {"Hz":>8}  Representative pair')
+    logger.info(f'  {"─"*14} {"─"*28} {"─"*8} {"─"*8} {"─"*8}  {"─"*32}')
     for stage in kpi2['pipeline']['stage_sequence']:
         entry = kpi2['stage_latency_ms'].get(stage)
         if not entry:
@@ -391,10 +394,9 @@ def print_report(kpi2: dict, kpi1_path: Path) -> None:
         hz_s = f'{entry["throughput_hz"]:.1f}' if entry.get('throughput_hz') else '—'
         inp  = entry['representative_input'].split('/')[-1][:16]
         out  = entry['representative_output'].split('/')[-1][:16]
-        print(f'  {h_s} {stage:<12} {nd:<28} {entry["mean_ms"]:>7.1f}ms '
+        logger.info(f'  {h_s} {stage:<12} {nd:<28} {entry["mean_ms"]:>7.1f}ms '
               f'{entry["p90_ms"]:>7.1f}ms {hz_s:>8}  {inp} → {out}')
-    print()
-    print('━' * W)
+    logger.info("\n" + '━' * W)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -485,22 +487,21 @@ Examples:
         sessions_root = ws_root / 'monitoring_sessions'
         kpi1_path = _find_latest_kpi(sessions_root)
         if kpi1_path is None:
-            print(f'ERROR: No kpi.json found under {sessions_root}', file=sys.stderr)
-            print('  Run: uv run python src/analyze_trigger_latency.py --json-out <session>/kpi.json',
-                  file=sys.stderr)
+            logger.error(f'No kpi.json found under {sessions_root}')
+            logger.error('  Run: uv run python src/analyze_trigger_latency.py --json-out <session>/kpi.json')
             sys.exit(1)
-        print(f'  Auto-selected: {kpi1_path}')
+        logger.info(f'  Auto-selected: {kpi1_path}')
 
     if not kpi1_path.exists():
-        print(f'ERROR: kpi.json not found: {kpi1_path}', file=sys.stderr)
+        logger.error(f'kpi.json not found: {kpi1_path}')
         sys.exit(1)
 
-    print(f'\n  Loading Level 1 KPI from: {kpi1_path}')
+    logger.info(f'\n  Loading Level 1 KPI from: {kpi1_path}')
 
     try:
         kpi2 = derive_level2(kpi1_path)
     except ValueError as exc:
-        print(f'ERROR: {exc}', file=sys.stderr)
+        logger.error(f'{exc}')
         sys.exit(1)
 
     print_report(kpi2, kpi1_path)
@@ -510,16 +511,15 @@ Examples:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, 'w') as f:
             json.dump(kpi2, f, indent=2)
-        print(f'  Level 2 KPI JSON written → {out_path}')
+        logger.info(f'  Level 2 KPI JSON written → {out_path}')
 
         errors = validate_level2_json(kpi2)
         if errors:
-            print(f'  WARNING: KPI Level 2 JSON failed schema validation ({len(errors)} error(s)):',
-                  file=sys.stderr)
+            logger.warning(f'  KPI Level 2 JSON failed schema validation ({len(errors)} error(s)):')
             for e in errors:
-                print(f'    • {e}', file=sys.stderr)
+                logger.error(f'    • {e}')
         else:
-            print('  KPI Level 2 JSON schema validation passed ✓')
+            logger.info('  KPI Level 2 JSON schema validation passed ✓')
 
     if args.csv_out or args.xlsx_out:
         import csv as _csv
@@ -584,7 +584,7 @@ Examples:
                 writer = _csv.DictWriter(_cf, fieldnames=_L2_FIELDS, extrasaction='ignore')
                 writer.writeheader()
                 writer.writerows(_l2_rows)
-            print(f'  Level 2 KPI CSV written → {csv_out_path}  ({len(_l2_rows)} rows)')
+            logger.info(f'  Level 2 KPI CSV written → {csv_out_path}  ({len(_l2_rows)} rows)')
 
         if args.xlsx_out:
             xlsx_out_path = Path(args.xlsx_out)
@@ -605,10 +605,10 @@ Examples:
                         max((len(str(c.value or '')) for c in _col), default=8) + 2
                     )
                 _wb.save(xlsx_out_path)
-                print(f'  Level 2 KPI Excel written → {xlsx_out_path}  ({len(_l2_rows)} rows)')
+                logger.info(f'  Level 2 KPI Excel written → {xlsx_out_path}  ({len(_l2_rows)} rows)')
             except ImportError:
-                print('  WARNING: openpyxl not installed — Excel export skipped. '
-                      'Install with: pip install openpyxl', file=sys.stderr)
+                logger.warning('  openpyxl not installed — Excel export skipped. '
+                      'Install with: pip install openpyxl')
 
 
 if __name__ == '__main__':

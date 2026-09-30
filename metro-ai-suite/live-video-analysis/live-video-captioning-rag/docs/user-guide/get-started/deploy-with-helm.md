@@ -46,7 +46,8 @@ Before you begin, ensure that you have the following:
 	 | `affinity.enabled` | Set to true to deploy on dedicated node | `true` |
 	 | `affinity.value` | Dedicated node name/value from `kubectl get node` | `<your_node_name>` |
 
-	 > **Note:** The chart can run on CPU-only nodes; however, a GPU-enabled node is strongly recommended for better conversion and runtime performance.
+	 > [!NOTE]
+	 > The chart can run on CPU-only nodes; however, a GPU-enabled node is strongly recommended for better conversion and runtime performance.
 
 3. Deploy the chart.
 
@@ -54,7 +55,8 @@ Before you begin, ensure that you have the following:
 	 helm install model-download . -n <your-namespace>
 	 ```
 
-	 > **Note:** `model-download` creates and manages a shared PVC consumed by Live Video Captioning and Live Video Captioning RAG workloads.
+	 > [!NOTE]
+	 > `model-download` creates and manages a shared PVC consumed by Live Video Captioning and Live Video Captioning RAG workloads.
 
 4. Verify deployment.
 
@@ -73,67 +75,67 @@ To set up the integrated deployment, obtain the chart and install it with your e
 
 1. Run the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning-rag/tags) from Docker Hub. Refer to the release notes for details on the latest version number to use for the sample application.
 
-     ```bash
-	 helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
-     ```
-	 > Note: When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
+   ```bash
+   helm pull oci://registry-1.docker.io/intel/live-video-captioning-rag --version <version-no>
+   ```
+
+   > [!NOTE]
+   > When browsing available tags, look for tags ending with the `helm` suffix — these indicate a Helm chart package.
 
 2. Extract the `.tgz` file.
 
-     ```bash
-	 tar -xvf live-video-captioning-rag-<version-no>.tgz
-	 cd live-video-captioning-rag
-	 ```
+   ```bash
+   tar -xvf live-video-captioning-rag-<version-no>.tgz
+   cd live-video-captioning-rag
+   ```
 
 3. Configure the `values-override.yaml` using the [Select target node](#select-the-target-node) and [Configured required values](#configure-required-values) sections below.
 
 4. Install/Deploy the chart.
 
-     ```bash
-	 helm install lvc-rag . \
-	 -f values-override.yaml \
-	 -n "$my_namespace"
-	 ```
+   ```bash
+   helm install lvc-rag . \
+   -f values-override.yaml \
+   -n "$my_namespace"
+   ```
 
 5. See the [Verify the deployment section](#verify-the-deployment) to confirm the deployment.
 
 6. If you modify the chart or subcharts, refresh dependencies first:
 
-     ```bash
-	 # Update/refresh the chart
-	 helm dependency update
-	 ```
+   ```bash
+   # Update/refresh the chart
+   helm dependency update
+   ```
 
    Then upgrade the deployment:
 
-	 ```bash
-	 helm upgrade lvc-rag . \
-	 -f values-override.yaml \
-	 -n "$my_namespace"
-	 ```
+   ```bash
+   helm upgrade lvc-rag . \
+   -f values-override.yaml \
+   -n "$my_namespace"
+   ```
 
-6. Uninstall the chart.
+7. Uninstall the chart.
 
-     ```bash
-	 helm uninstall lvc-rag -n "$my_namespace"
-	 ```
+   ```bash
+   helm uninstall lvc-rag -n "$my_namespace"
+   ```
 
 #### Option 2: Install from source
 
 1. Clone the repository.
 
-	 ```bash
-	 # Clone latest mainline
-	 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
-	 # Or clone a specific release branch
-	 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
-	 ```
+   ```bash
+   # Clone the mainline branch
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
+   ```
 
 2. Navigate to the chart directory.
 
-	 ```bash
-	 cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag/charts
-	 ```
+   ```bash
+   cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag/charts
+   ```
 
 ### Select the target node
 
@@ -184,19 +186,23 @@ Prior to deployment, edit `charts/values-override.yaml` and set at least the fol
 | `global.models` | VLM model entries for captioning (`modelId`, `modelType`, `weightFormat`, `device`) | `OpenGVLab/InternVL2-1B` |
 | `global.huggingface.apiToken` | Hugging Face token for gated models (if needed) | `<your_huggingfacehub_token>` |
 | `global.llmModel.modelId` | LLM model for RAG chatbot | `microsoft/Phi-3.5-mini-instruct` |
-| `gloval.llmModel.weightFormat` | Precision of model weights for conversion | `int8 / int4 / fp16` |
+| `global.llmModel.weightFormat` | Precision of model weights for conversion | `int8 / int4 / fp16` |
 | `global.llmModel.useGPU.enabled` | Enable GPU scheduling for LLM model runtime | `true / false` |
 | `global.llmModel.useGPU.key` | GPU resource key used to schedule the LLM workload | `gpu.intel.com/i915` |
+| `global.llmModel.useNPU.enabled` | Enable NPU scehduling for LLM model runtime | `true / false` |
+| `global.llmModel.useNPU.key` | NPU resource key used to schedule the LLM workload | `npu.intel.com/accel` |
+| `global.ragChatbotMode` | RAG chatbot mode: `embedded (in-dashboard)` or `detached (browser tab)` | `embedded / detached` |
 | `global.embeddingModel.useGPU.enabled` | Enable GPU scheduling for embedding model runtime | `true / false` |
 | `global.embeddingModel.useGPU.key` | GPU resource key used to schedule embedding workload | `gpu.intel.com/i915 / gpu.intel.com/xe` |
 | `live-video-captioning-rag.env.maxTokens` | Max generated tokens for RAG response | `1024` |
 | `live-video-captioning-rag.env.topK` | Number of retrieved context candidates | `1` |
+| `live-video-captioning-rag.env.scoreThreshold` | Minimum retrieval score for including RAG search results | `0.5` |
+| `live-video-captioning-rag.env.maxPromptLen` | Maximum token limit accepted by the LLM pipeline on NPU devices. | `1024` |
 
-> **Note:** You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
+> [!NOTE]
+> You can find GPU resource keys by running `kubectl describe node <node-name>`. Common values for intel GPUs include `gpu.intel.com/i915` and `gpu.intel.com/xe`.
 >
 > **Note:** If `NPU` is selected in `global.models[].device` for VLM models, `weightFormat` is automatically forced to `int4`.
->
-> **Note:** LLM models in the Live-Video-Captioning-RAG application currently do not support NPU inference.
 
 #### Optional: Proxy configuration
 
@@ -209,14 +215,15 @@ global:
     noProxy: "<your-rtsp-camera-host-or-ip>"
 ```
 
-> **Important:** the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
+> [!IMPORTANT]
+> the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
 >
->For example:
+> For example:
 >
->- If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
->- If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
+> - If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
+> - If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
 >
->If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
+> If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
 
 #### Optional: Detection pipeline
 
@@ -263,7 +270,8 @@ kubectl get pods -n <your-namespace>
 kubectl get services -n <your-namespace>
 ```
 
-> **Note:** First-time deployment can take several minutes because models may be downloaded and converted before services become ready.
+> [!NOTE]
+> First-time deployment can take several minutes because models may be downloaded and converted before services become ready.
 
 ## Access the application
 
@@ -271,6 +279,8 @@ By default, the chart exposes:
 
 - Live Video Captioning dashboard: `http://<global.hostIP>:4173`
 - Live Video Captioning RAG dashboard/API: `http://<global.hostIP>:4172`
+
+> **Note:** The Live Video Captioning RAG dashboard is accessible via `http://<global.hostIP>:4172` only when the RAG chatbot is deployed in `detached` mode.
 
 To start:
 

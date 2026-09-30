@@ -10,7 +10,7 @@ To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
 Verify the VLM microservice is running and accessible at the configured endpoint.
 
-[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ### 2. Set Environment Variables
 
@@ -24,7 +24,7 @@ export VLM_SERVING_PORT=<vlm-serving-port>
 
 Re-run the application after [configuring the base environment](./get-started.md#step-2-configure-environment).
 
-> **Important:**
+> [!IMPORTANT]
 >
 > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
 > - Requires VLM microservice to be running.

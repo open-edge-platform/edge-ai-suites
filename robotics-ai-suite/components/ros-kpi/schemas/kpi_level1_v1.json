@@ -8,12 +8,15 @@
     "schema_version",
     "throughput_hz",
     "mean_latency_ms",
+    "min_latency_ms",
+    "max_latency_ms",
     "max_jitter_ms",
     "min_jitter_ms",
     "mean_jitter_ms",
     "jitter_stdev_ms",
     "cpu_mean_pct",
     "cpu_max_pct",
+    "latency_spikes",
     "per_node",
     "pairs",
     "metadata"
@@ -34,6 +37,16 @@
       "type": ["number", "null"],
       "minimum": 0,
       "description": "Mean processing latency in milliseconds for the dominant pair."
+    },
+    "min_latency_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Minimum processing latency in milliseconds for the dominant pair."
+    },
+    "max_latency_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Maximum processing latency in milliseconds for the dominant pair."
     },
     "max_jitter_ms": {
       "type": ["number", "null"],
@@ -67,42 +80,6 @@
       "maximum": 100,
       "description": "Peak CPU utilization percentage. Null when not collected."
     },
-    "thermal": {
-      "type": ["object", "null"],
-      "description": "Session-level thermal summary: temperatures and throttle flags. Null when resource monitoring was not active.",
-      "additionalProperties": false,
-      "properties": {
-        "cpu_temp_c": {
-          "type": ["number", "null"],
-          "description": "Mean CPU package temperature in °C sampled at analysis time from sysfs x86_pkg_temp zone. Null when unavailable."
-        },
-        "gpu_temp_c": {
-          "type": ["number", "null"],
-          "description": "Mean GPU temperature in °C over the session, sourced from qmassa (xe) or hwmon sysfs (i915). Null when GPU monitoring was not active."
-        },
-        "npu_temp_c": {
-          "type": ["number", "null"],
-          "description": "Mean NPU junction temperature in °C over the session, sourced from Intel PMT telemetry. Null when PMT is unavailable."
-        },
-        "cpu_throttled": {
-          "type": ["boolean", "null"],
-          "description": "True when CPU frequency dropped below 95 % of cpuinfo_max_freq at analysis time. Null when sysfs is unavailable."
-        },
-        "gpu_throttled": {
-          "type": ["boolean", "null"],
-          "description": "True if GPU thermal throttling was active in any sample during the session. Null when GPU monitoring is not active."
-        },
-        "npu_throttled": {
-          "type": ["boolean", "null"],
-          "description": "True if NPU throttling was observed during the session. Null when not monitorable."
-        },
-        "cpu_pkg_power_w": {
-          "type": ["number", "null"],
-          "minimum": 0,
-          "description": "Mean CPU package power in watts over the session, sampled via Intel RAPL powercap sysfs. Null when RAPL is unavailable (e.g. WSL2)."
-        }
-      }
-    },
     "per_node": {
       "type": "object",
       "description": "Per-node performance summary keyed by fully-qualified node name.",
@@ -110,6 +87,8 @@
         "type": "object",
         "required": [
           "mean_latency_ms",
+          "min_latency_ms",
+          "max_latency_ms",
           "mean_jitter_ms",
           "max_jitter_ms",
           "num_samples",
@@ -128,6 +107,16 @@
             "type": "number",
             "minimum": 0,
             "description": "Mean callback/processing latency in milliseconds."
+          },
+          "min_latency_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Minimum observed callback/processing latency in milliseconds."
+          },
+          "max_latency_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum observed callback/processing latency in milliseconds."
           },
           "mean_jitter_ms": {
             "type": "number",
@@ -255,6 +244,72 @@
             "type": "string",
             "enum": ["Sensor", "Perception", "Planning", "Control", "Other"],
             "description": "Pipeline stage classification for this node pair."
+          }
+        }
+      }
+    },
+    "latency_spikes": {
+      "type": "array",
+      "description": "Latency outliers (events at or above their own pair's p99_ms) cross-referenced against the nearest resource_usage.json sample by timestamp, identifying top CPU consumers at each spike. Empty when resource_usage.json is absent or no event meets its pair's threshold. Capped to --max-latency-spikes entries (default 5), sorted by latency_ms descending.",
+      "items": {
+        "type": "object",
+        "required": ["node", "input", "output", "out_ts", "latency_ms",
+                     "resource_sample_ts", "time_delta_sec", "top_consumers"],
+        "additionalProperties": false,
+        "properties": {
+          "node": {
+            "type": "string",
+            "description": "Fully-qualified ROS 2 node name."
+          },
+          "input": {
+            "type": "string",
+            "description": "Input topic name for this pair."
+          },
+          "output": {
+            "type": "string",
+            "description": "Output topic name for this pair."
+          },
+          "out_ts": {
+            "type": "number",
+            "description": "Epoch-seconds timestamp of the outlier output message."
+          },
+          "latency_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Observed latency for this event, in milliseconds."
+          },
+          "resource_sample_ts": {
+            "type": ["number", "null"],
+            "description": "Epoch-seconds timestamp of the nearest resource_usage.json sample."
+          },
+          "time_delta_sec": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Absolute time gap between out_ts and the matched resource sample."
+          },
+          "top_consumers": {
+            "type": "array",
+            "description": "Top CPU-consuming processes at the matched resource sample.",
+            "items": {
+              "type": "object",
+              "required": ["pid", "node", "cpu_pct"],
+              "additionalProperties": false,
+              "properties": {
+                "pid": {
+                  "type": "integer",
+                  "description": "Process ID at capture time."
+                },
+                "node": {
+                  "type": ["string", "null"],
+                  "description": "ROS 2 node name from ros2_node_map, or null if unmapped."
+                },
+                "cpu_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "description": "CPU utilization percentage (100% = 1 core) at that sample."
+                }
+              }
+            }
           }
         }
       }

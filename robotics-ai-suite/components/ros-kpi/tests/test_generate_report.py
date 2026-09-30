@@ -53,7 +53,7 @@ class TestLoadSession:
                     "mean_latency_ms": 5.0, "max_jitter_ms": 1.0,
                     "min_jitter_ms": 0.1, "mean_jitter_ms": 0.5,
                     "jitter_stdev_ms": 0.2, "cpu_mean_pct": None,
-                    "cpu_max_pct": None, "thermal": {}, "per_node": {},
+                    "cpu_max_pct": None, "per_node": {},
                     "pairs": [], "metadata": {}}
         (tmp_path / "kpi.json").write_text(json.dumps(kpi_data))
         k1, k2, sd = load_session(session_dir=str(tmp_path))
@@ -98,8 +98,8 @@ class TestRenderReport:
     def test_contains_level1_section_marker(self, report_l1_only):
         assert "Level 1 KPI" in report_l1_only
 
-    def test_contains_thermal_section_marker(self, report_l1_only):
-        assert "Thermal" in report_l1_only
+    def test_contains_resource_section_marker(self, report_l1_only):
+        assert "Resource Utilization" in report_l1_only
 
     def test_no_level2_section_when_absent(self, report_l1_only):
         assert "Level 2 KPI" not in report_l1_only
@@ -134,14 +134,6 @@ class TestRenderReport:
         import re
         external = re.findall(r'(?:src|href)=["\']https?://', report_l1_l2)
         assert not external, f"Found external URL references: {external}"
-
-    def test_null_thermal_renders_na(self, kpi1):
-        kpi1["thermal"] = {
-            "cpu_temp_c": None, "gpu_temp_c": None, "npu_temp_c": None,
-            "cpu_throttled": None, "gpu_throttled": None, "npu_throttled": None,
-        }
-        html = render_report(kpi1)
-        assert "N/A" in html
 
     def test_null_cpu_pct_renders_na(self, kpi1):
         kpi1["cpu_mean_pct"] = None

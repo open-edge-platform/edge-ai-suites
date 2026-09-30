@@ -42,7 +42,22 @@
     <div class="video-stage-shell">
       <div class="video-stage">
         <video
-          v-if="isLiveMode && activeRecord.videoSrc"
+          v-if="recordingSession"
+          ref="recordingVideoRef"
+          :key="recordingSession.segment.id"
+          class="main-player live-player"
+          :src="recordingStreamUrl"
+          autoplay
+          playsinline
+          controls
+          preload="auto"
+          @loadedmetadata="handleRecordingLoaded"
+          @timeupdate="handleRecordingTimeUpdate"
+          @ended="handleRecordingEnded"
+          @error="handleRecordingError"
+        ></video>
+        <video
+          v-else-if="isLiveMode && activeRecord.videoSrc"
           ref="liveVideoRef"
           :key="activeRecord.videoSrc"
           class="main-player live-player"
@@ -82,11 +97,7 @@
 
         <div class="video-topbar flex-between">
           <div class="video-mode-tag" :class="{ live: isLiveMode }">
-            {{
-              isLiveMode
-                ? $t("smartCommunity.liveVideo")
-                : $t("smartCommunity.historyVideo")
-            }}
+            {{ videoModeLabel }}
           </div>
           <div class="video-topbar-actions flex-end">
             <div class="realtime-pill flex-left">
@@ -111,7 +122,7 @@
           <div class="video-kicker">{{ activeRecord.camera }}</div>
           <div class="video-title">{{ activeRecord.title }}</div>
           <div class="video-time">
-            {{ isLiveMode ? $t("smartCommunity.liveNow") : activeRecord.time }}
+            {{ videoTimeLabel }}
           </div>
         </div>
       </div>
@@ -120,9 +131,12 @@
     <ActivityFeed
       :loading="activityLoading"
       :tasks="taskList"
+      :recordings="recordingList"
+      :playback-time-ms="playbackTimeMs"
       :selected-date="selectedDateLabel"
       :selected-source-id="selectedSourceId"
       @select="handleHistoryRecordSelect"
+      @seek-recording="handleSeekRecording"
     />
 
     <ReportDrawer
@@ -148,13 +162,21 @@ import { useI18n } from "vue-i18n";
 import { videoPlay as VideoPlayer } from "vue3-video-play/dist/index.mjs";
 import ActivityFeed from "./ActivityFeed.vue";
 import ReportDrawer from "./ReportDrawer.vue";
-import type { CameraReport, ActivityRecord, CameraTaskRecord } from "../type";
+import type {
+  CameraReport,
+  ActivityRecord,
+  CameraTaskRecord,
+  RecordingSegment,
+} from "../type";
 import "vue3-video-play/dist/style.css";
 import {
+  buildRecordingStreamUrl,
   getCameraActivityList,
+  getCameraRecordings,
   getCamReport,
 } from "@/api/smartCommunity";
 import { getSmartCommunitySourceMeta } from "../deviceMeta";
+import { findNextRecording, findRecordingAt } from "../recordings";
 
 const props = defineProps<{
   selectedDate: Dayjs;
@@ -170,6 +192,10 @@ const route = useRoute();
 const MAX_STREAM_QUEUE_BYTES = 8 * 1024 * 1024;
 const MAX_STREAM_BUFFER_SECONDS = 30;
 const RETAIN_STREAM_BUFFER_SECONDS = 20;
+const LIVE_EDGE_TOLERANCE_SECONDS = 3;
+const LIVE_WATCHDOG_INTERVAL_MS = 1000;
+const LIVE_RECONNECT_MIN_DELAY_MS = 1000;
+const LIVE_RECONNECT_MAX_DELAY_MS = 15000;
 
 const mainControlButtons = [
   "speedRate",
@@ -187,6 +213,13 @@ const activityLoading = ref(false);
 const reportLoading = ref(false);
 const liveNow = ref(dayjs());
 const liveVideoRef = ref<HTMLVideoElement | null>(null);
+const recordingList = ref<RecordingSegment[]>([]);
+const recordingVideoRef = ref<HTMLVideoElement | null>(null);
+const recordingSession = ref<{
+  segment: RecordingSegment;
+  offsetSeconds: number;
+} | null>(null);
+const recordingElapsedSeconds = ref(0);
 
 const selectedDate = computed({
   get: () => props.selectedDate,
@@ -246,10 +279,54 @@ const selectedDateLabel = computed(() => {
 
 const hasReports = computed(() => reportList.value.length > 0);
 
+const recordingStreamUrl = computed(() => {
+  const session = recordingSession.value;
+  if (!session || !selectedSourceId.value) {
+    return "";
+  }
+
+  return buildRecordingStreamUrl(session.segment.id, selectedSourceId.value);
+});
+
+// Wall-clock instant currently on screen during playback — drives both the
+// header pill and the timeline's playback marker.
+const playbackTimeMs = computed(() => {
+  const session = recordingSession.value;
+  if (!session) {
+    return null;
+  }
+
+  return session.segment.startMs + recordingElapsedSeconds.value * 1000;
+});
+
+const videoModeLabel = computed(() => {
+  if (recordingSession.value) {
+    return t("smartCommunity.recordingPlayback");
+  }
+
+  return isLiveMode.value
+    ? t("smartCommunity.liveVideo")
+    : t("smartCommunity.historyVideo");
+});
+
 const realtimeEventValue = computed(() => {
+  if (playbackTimeMs.value !== null) {
+    return dayjs(playbackTimeMs.value).format("YYYY-MM-DD HH:mm:ss");
+  }
+
   return isLiveMode.value
     ? `${selectedDateLabel.value} ${liveNow.value.format("HH:mm:ss")}`
     : `${activeRecord.value.date} ${activeRecord.value.time}`;
+});
+
+const videoTimeLabel = computed(() => {
+  if (playbackTimeMs.value !== null) {
+    return dayjs(playbackTimeMs.value).format("HH:mm:ss");
+  }
+
+  return isLiveMode.value
+    ? t("smartCommunity.liveNow")
+    : activeRecord.value.time;
 });
 
 let activityPollingTimer: number | null = null;
@@ -257,7 +334,11 @@ let reportPollingTimer: number | null = null;
 let liveClockTimer: number | null = null;
 let latestActivityRequestId = 0;
 let latestReportRequestId = 0;
+let latestRecordingRequestId = 0;
 let cleanupLiveStream: (() => void) | null = null;
+let liveReconnectTimer: number | null = null;
+let liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
+let recordingErrorStreak = 0;
 
 const buildRecordStatus = (status: string) => {
   if (!status) {
@@ -337,6 +418,32 @@ const queryCamFridgeList = async ({ showLoading = false } = {}) => {
   }
 };
 
+const queryRecordings = async () => {
+  const requestId = ++latestRecordingRequestId;
+
+  if (!selectedSourceId.value) {
+    recordingList.value = [];
+    return;
+  }
+
+  try {
+    const res = await getCameraRecordings({
+      date: selectedDate.value.format("YYYY-MM-DD"),
+      source_id: selectedSourceId.value,
+    });
+
+    if (requestId !== latestRecordingRequestId) {
+      return;
+    }
+
+    recordingList.value = res.recordings || [];
+  } catch {
+    if (requestId === latestRecordingRequestId) {
+      recordingList.value = [];
+    }
+  }
+};
+
 const queryCamReport = async (silent = true) => {
   const requestId = ++latestReportRequestId;
 
@@ -389,10 +496,12 @@ const disableDate = (current: Dayjs) => {
 
 const handleDateChange = (value: Dayjs | null) => {
   selectedDate.value = value ?? dayjs();
+  clearRecordingSession();
   activeRecord.value = buildFallbackActiveRecord(selectedDate.value);
   isLiveMode.value = true;
   resetReportData();
   void queryCamFridgeList({ showLoading: true });
+  void queryRecordings();
   void queryCamReport();
 };
 
@@ -449,6 +558,7 @@ const handleExportReport = async (reports?: CameraReport[]) => {
 
 const refreshActivityList = () => {
   void queryCamFridgeList();
+  void queryRecordings();
 };
 
 const refreshDashboardData = () => {
@@ -456,6 +566,11 @@ const refreshDashboardData = () => {
 };
 
 const stopLiveStreamPlayback = () => {
+  if (liveReconnectTimer !== null) {
+    window.clearTimeout(liveReconnectTimer);
+    liveReconnectTimer = null;
+  }
+
   cleanupLiveStream?.();
   cleanupLiveStream = null;
 
@@ -467,6 +582,27 @@ const stopLiveStreamPlayback = () => {
   try {
     video.pause();
   } catch {}
+};
+
+// The upstream ffmpeg session can end at any time (idle kill, transcoder
+// restart, server-side backpressure disconnect). Retry with backoff instead of
+// leaving the element frozen on its last decoded frame.
+const scheduleLiveStreamReconnect = () => {
+  if (
+    liveReconnectTimer !== null ||
+    document.hidden ||
+    !isLiveMode.value ||
+    !activeRecord.value.videoSrc
+  ) {
+    return;
+  }
+
+  const delay = liveReconnectDelay;
+  liveReconnectDelay = Math.min(delay * 2, LIVE_RECONNECT_MAX_DELAY_MS);
+  liveReconnectTimer = window.setTimeout(() => {
+    liveReconnectTimer = null;
+    void startLiveStreamPlayback();
+  }, delay);
 };
 
 const startLiveStreamPlayback = async () => {
@@ -492,6 +628,63 @@ const startLiveStreamPlayback = async () => {
   let reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
   let disposed = false;
   let playbackStarted = false;
+  let watchdogTimer: number | null = null;
+  let userPaused = false;
+
+  const seekToLiveEdge = (resume = true) => {
+    if (!sourceBuffer || disposed || !sourceBuffer.buffered.length) {
+      return;
+    }
+
+    const start = sourceBuffer.buffered.start(0);
+    const end = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
+    video.currentTime = Math.max(start, end - 0.1);
+
+    if (resume) {
+      void video.play().catch((error) => {
+        console.error("[live] autoplay failed:", error);
+      });
+    }
+  };
+
+  // Without this the element stays frozen forever once the playhead falls out
+  // of the buffered range — nothing else ever moves it back to the live edge.
+  const watchLiveEdge = () => {
+    if (userPaused || !sourceBuffer || disposed || !sourceBuffer.buffered.length) {
+      return;
+    }
+
+    const start = sourceBuffer.buffered.start(0);
+    const end = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
+    const current = video.currentTime;
+
+    if (current < start || end - current > LIVE_EDGE_TOLERANCE_SECONDS) {
+      seekToLiveEdge();
+      return;
+    }
+
+    if (video.paused) {
+      void video.play().catch(() => undefined);
+    }
+  };
+
+  // A pause event can only come from the viewer here — a stalled element stays
+  // `paused === false`. Honour it, and rejoin the live edge on resume.
+  const handlePause = () => {
+    if (!disposed) {
+      userPaused = true;
+    }
+  };
+
+  const handlePlay = () => {
+    userPaused = false;
+    if (!sourceBuffer || disposed || !sourceBuffer.buffered.length) {
+      return;
+    }
+    if (video.currentTime < sourceBuffer.buffered.start(0)) {
+      seekToLiveEdge(false);
+    }
+  };
 
   const pumpQueue = () => {
     if (!sourceBuffer || sourceBuffer.updating || disposed) {
@@ -501,8 +694,14 @@ const startLiveStreamPlayback = async () => {
     if (sourceBuffer.buffered.length) {
       const start = sourceBuffer.buffered.start(0);
       const end = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
-      if (end - start > MAX_STREAM_BUFFER_SECONDS) {
-        sourceBuffer.remove(start, end - RETAIN_STREAM_BUFFER_SECONDS);
+      // Never evict past the playhead: dropping the range that holds
+      // currentTime strands playback outside the buffered region. While the
+      // viewer has deliberately paused, let it slide — resuming rejoins live.
+      const evictEnd = userPaused
+        ? end - RETAIN_STREAM_BUFFER_SECONDS
+        : Math.min(end - RETAIN_STREAM_BUFFER_SECONDS, video.currentTime - 1);
+      if (end - start > MAX_STREAM_BUFFER_SECONDS && evictEnd > start) {
+        sourceBuffer.remove(start, evictEnd);
         return;
       }
     }
@@ -523,15 +722,20 @@ const startLiveStreamPlayback = async () => {
 
     if (!playbackStarted && sourceBuffer.buffered.length) {
       playbackStarted = true;
-      const liveEdge = sourceBuffer.buffered.end(sourceBuffer.buffered.length - 1);
-      video.currentTime = Math.max(sourceBuffer.buffered.start(0), liveEdge - 0.1);
-      void video.play().catch((error) => {
-        playbackStarted = false;
-        console.error("[live] autoplay failed:", error);
-      });
+      seekToLiveEdge();
     }
 
     pumpQueue();
+  };
+
+  const handleVideoError = () => {
+    if (disposed) {
+      return;
+    }
+
+    console.error("[live] media element error:", video.error?.message);
+    dispose();
+    scheduleLiveStreamReconnect();
   };
 
   const dispose = () => {
@@ -544,6 +748,13 @@ const startLiveStreamPlayback = async () => {
     void reader?.cancel().catch(() => undefined);
     mediaSource.removeEventListener("sourceopen", handleSourceOpen);
     sourceBuffer?.removeEventListener("updateend", handleUpdateEnd);
+    video.removeEventListener("error", handleVideoError);
+    video.removeEventListener("pause", handlePause);
+    video.removeEventListener("play", handlePlay);
+    if (watchdogTimer !== null) {
+      window.clearInterval(watchdogTimer);
+      watchdogTimer = null;
+    }
     appendQueue.length = 0;
     queuedBytes = 0;
 
@@ -578,6 +789,7 @@ const startLiveStreamPlayback = async () => {
         throw new Error(`Live stream returned HTTP ${response.status}`);
       }
 
+      liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
       reader = response.body.getReader();
       while (!disposed) {
         const { done, value } = await reader.read();
@@ -593,6 +805,12 @@ const startLiveStreamPlayback = async () => {
         queuedBytes += chunk.byteLength;
         pumpQueue();
       }
+
+      // Upstream closed the response — the transcoder died or was idle-killed.
+      if (!disposed) {
+        dispose();
+        scheduleLiveStreamReconnect();
+      }
     } catch (error) {
       if (
         !disposed &&
@@ -600,6 +818,7 @@ const startLiveStreamPlayback = async () => {
       ) {
         console.error("[live] stream playback failed:", error);
         dispose();
+        scheduleLiveStreamReconnect();
       }
     }
   }
@@ -609,6 +828,10 @@ const startLiveStreamPlayback = async () => {
   video.muted = true;
   video.defaultMuted = true;
   video.autoplay = true;
+  video.addEventListener("error", handleVideoError);
+  video.addEventListener("pause", handlePause);
+  video.addEventListener("play", handlePlay);
+  watchdogTimer = window.setInterval(watchLiveEdge, LIVE_WATCHDOG_INTERVAL_MS);
   mediaSource.addEventListener("sourceopen", handleSourceOpen, { once: true });
 };
 
@@ -619,16 +842,104 @@ const handleVisibilityChange = () => {
   }
 
   if (isLiveMode.value) {
+    liveReconnectDelay = LIVE_RECONNECT_MIN_DELAY_MS;
     void startLiveStreamPlayback();
   }
 };
 
+const clearRecordingSession = () => {
+  recordingSession.value = null;
+  recordingElapsedSeconds.value = 0;
+  recordingErrorStreak = 0;
+};
+
+const startRecordingSegment = (
+  segment: RecordingSegment,
+  offsetSeconds: number,
+) => {
+  // Leaving live mode tears down the MSE stream via the isLiveMode watcher.
+  isLiveMode.value = false;
+  recordingElapsedSeconds.value = offsetSeconds;
+  recordingSession.value = { segment, offsetSeconds };
+};
+
+const handleSeekRecording = (timeMs: number) => {
+  const segment = findRecordingAt(recordingList.value, timeMs);
+  if (!segment) {
+    message.warning(t("smartCommunity.noRecordingAtTime"));
+    return;
+  }
+
+  startRecordingSegment(segment, Math.max(0, (timeMs - segment.startMs) / 1000));
+};
+
+const handleRecordingLoaded = (event: Event) => {
+  const video = event.target as HTMLVideoElement;
+  const session = recordingSession.value;
+  if (!session) {
+    return;
+  }
+
+  recordingErrorStreak = 0;
+  // The DB duration and the muxed file can disagree by a frame or two.
+  const target = Math.min(
+    session.offsetSeconds,
+    Math.max((video.duration || 0) - 0.1, 0),
+  );
+  if (Number.isFinite(target) && target > 0) {
+    video.currentTime = target;
+  }
+
+  void video.play().catch(() => undefined);
+};
+
+const handleRecordingTimeUpdate = (event: Event) => {
+  recordingElapsedSeconds.value = (event.target as HTMLVideoElement).currentTime;
+};
+
+const handleRecordingEnded = () => {
+  const session = recordingSession.value;
+  if (!session) {
+    return;
+  }
+
+  const next = findNextRecording(recordingList.value, session.segment.startMs);
+  if (!next) {
+    message.info(t("smartCommunity.recordingReachedEnd"));
+    return;
+  }
+
+  startRecordingSegment(next, 0);
+};
+
+// Retention can delete the mp4 while the DB row survives. Skip over a few dead
+// segments, then give up rather than racing through the rest of the day.
+const handleRecordingError = () => {
+  const session = recordingSession.value;
+  recordingErrorStreak += 1;
+
+  const next =
+    recordingErrorStreak <= 3 && session
+      ? findNextRecording(recordingList.value, session.segment.startMs)
+      : null;
+
+  if (!next) {
+    clearRecordingSession();
+    message.warning(t("smartCommunity.recordingLoadFailed"));
+    return;
+  }
+
+  startRecordingSegment(next, 0);
+};
+
 const handleHistoryRecordSelect = (record: ActivityRecord) => {
+  clearRecordingSession();
   activeRecord.value = record;
   isLiveMode.value = false;
 };
 
 const switchToLive = () => {
+  clearRecordingSession();
   activeRecord.value = buildFallbackActiveRecord(selectedDate.value);
   isLiveMode.value = true;
 };
@@ -651,6 +962,7 @@ onMounted(() => {
   activeRecord.value = buildFallbackActiveRecord();
   liveNow.value = dayjs();
   void queryCamFridgeList({ showLoading: true });
+  void queryRecordings();
   void queryCamReport();
   activityPollingTimer = window.setInterval(refreshActivityList, 30 * 1000);
   reportPollingTimer = window.setInterval(refreshDashboardData, 3 * 60 * 1000);
@@ -660,11 +972,13 @@ onMounted(() => {
 });
 
 watch(selectedSourceId, () => {
+  clearRecordingSession();
   activeRecord.value = buildFallbackActiveRecord(selectedDate.value);
   isLiveMode.value = true;
   reportDrawerVisible.value = false;
   resetReportData();
   void queryCamFridgeList({ showLoading: true });
+  void queryRecordings();
   void queryCamReport();
 });
 

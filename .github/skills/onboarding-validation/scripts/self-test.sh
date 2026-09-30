@@ -132,9 +132,12 @@ check_skeleton_matches_rules() {
 # -----------------------------------------------------------------------------
 check_contract_not_drifted() {
   echo "[4/5] Format contract in the script matches references/report-format.md..."
-  awk '/^# CONTRACT-BEGIN/{f=1;next} /^# CONTRACT-END/{f=0} f && /^[A-Z_]+=/ { print }' \
+  # CR is stripped from both sides: a CRLF checkout (git core.autocrlf=true on Windows) would
+  # otherwise make every line differ by a trailing \r and report a drift that does not exist.
+  awk '{ sub(/\r$/, "") }
+       /^# CONTRACT-BEGIN/{f=1;next} /^# CONTRACT-END/{f=0} f && /^[A-Z_]+=/ { print }' \
     "$CHECKER" | sort > "$WORK/contract-script.txt"
-  grep -E '^[A-Z_]+=' "$FORMAT_FILE" | sort > "$WORK/contract-doc.txt"
+  awk '{ sub(/\r$/, "") } /^[A-Z_]+=/ { print }' "$FORMAT_FILE" | sort > "$WORK/contract-doc.txt"
 
   [[ -s "$WORK/contract-script.txt" ]] || fail "No contract constants found in $CHECKER."
 

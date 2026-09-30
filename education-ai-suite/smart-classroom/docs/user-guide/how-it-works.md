@@ -26,24 +26,21 @@ The audio pipeline handles speech-to-text conversion and content summarization:
   Converts audio into text using integrated ASR providers:
 
   - FunASR (Paraformer)
-  - OpenVINO
+  - OpenVINO™
   - OpenAI (Whisper)
 
 - **Speaker Diarization**
   Identifies and separates individual speakers using Pyannote Audio models. This could be enabled/disabled by modifying `config.yaml`
 
 - **Summariser Component**
-  Generates concise summaries of transcribed text using LLM providers:
-
-  - iPexLLM
-  - OpenVINO
+  Generates concise summaries of transcribed text using the OpenVINO™ LLM provider.
 
 - **Content Segmentation**
   The LLM segments the transcript into 15–25 topic-based sections, each is encoded and indexed into vector store. Users can then search lecture content by natural-language queries, retrieving the most relevant topic segments.
 
 ## Video Analytics Pipeline
 
-The Video Analytics (VA) pipeline performs real-time video analysis using DL Streamer and OpenVINO, processing multiple concurrent video streams to extract classroom engagement data.
+The Video Analytics (VA) pipeline performs real-time video analysis using DL Streamer and OpenVINO™, processing multiple concurrent video streams to extract classroom engagement data.
 
 ### Pipeline Architecture
 
@@ -95,16 +92,13 @@ Extracts text from the IFPD or whiteboard captured by the content pipeline, enab
 
 The Content Search pipeline provides multimodal ingestion, semantic indexing, and retrieval across videos, documents, and images.
 
-<p align="center">
-  <img src="./_assets/Content_Search_Arch.png" alt="Content Search Architecture" width="80%">
-</p>
-<p align="center">
-  <img src="./_assets/Content_Search_Software_Stack.svg" alt="Content Search Software Stack" width="80%">
-</p>
+![Content Search Architecture](./_assets/Content_Search_Arch.png)
+
+![Content Search Software Stack](./_assets/Content_Search_Software_Stack.svg)
 
 ### Ingestion
 
-- **Video**: Split into time-based chunks (default 30s with 4s overlap), each chunk's sampled frames are summarized by a **Vision Language Model** (Qwen2.5-VL via OpenVINO). Summaries are indexed as text embeddings; frames are indexed as visual embeddings.
+- **Video**: Split into time-based chunks (default 30s with 4s overlap), each chunk's sampled frames are summarized by a **Vision Language Model** (Qwen2.5-VL via OpenVINO™). Summaries are indexed as text embeddings; frames are indexed as visual embeddings.
 - **Document**: Full-text extraction via `unstructured` with image OCR via PaddleOCR service. Text is split using semantic chunking (embedding-based boundary detection) or fixed-size chunking, then embedded with **BGE** (bge-small-en-v1.5).
 - **Image**: Embedded directly via **CLIP** (xlm-roberta-base-ViT-B-32) for visual similarity search.
 
@@ -127,7 +121,7 @@ The Q&A endpoint retrieves top-k relevant chunks, assembles them as context with
 | Content Search API | 9011 | Orchestrator and public API |
 | File Ingest & Retrieve | 9990 | Embedding, indexing, and retrieval |
 | Video Preprocess | 8001 | Video chunking and VLM summarization |
-| VLM OpenVINO Serving | 9900 | Vision-language model inference |
+| VLM OpenVINO™ Serving | 9900 | Vision-language model inference |
 | ChromaDB | 9090 | Vector database |
 
 For API details, see the [Content Search Dev Guide](../dev-guide/content-search/Content_search_API.md).

@@ -33,6 +33,8 @@ services:
       # generic "batch-complete" event this service publishes when a run ends
       MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-apm-client}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-change-me-mqtt-password}
       MQTT_TOPIC: ${MQTT_DETECTION_TOPIC:-apm/detections}
       MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
       # Available source videos (shared with dlstreamer-pipeline-server's own mount)
@@ -40,8 +42,6 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - ${USE_CASE_RESOURCES_DIR:-/tmp/resources}/videos:/app/videos:ro
-    ports:
-      - "${DETECTION_PORT:-5004}:5004"
     depends_on:
       apm-storage:
         condition: service_healthy

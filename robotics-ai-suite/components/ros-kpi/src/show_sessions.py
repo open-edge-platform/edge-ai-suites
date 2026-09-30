@@ -33,6 +33,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from log_config import get_logger
+
+logger = get_logger(__name__)
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────────────────────────────────────
@@ -63,23 +67,53 @@ def _fmt_dur(seconds: float) -> str:
     return f'{s}s'
 
 
+_INFO_TS_RE = re.compile(r'^(Started|Stopped):\s*(.+)$')
+
+
+def _parse_info_timestamps(info_file: Path) -> tuple[Optional[datetime], Optional[datetime]]:
+    """Parse 'Started: ...' / 'Stopped: ...' lines from a session_info.txt file."""
+    started = stopped = None
+    try:
+        text = info_file.read_text(errors='replace')
+    except OSError:
+        return None, None
+    for line in text.splitlines():
+        m = _INFO_TS_RE.match(line.strip())
+        if not m:
+            continue
+        try:
+            dt = datetime.strptime(m.group(2).strip(), '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            continue
+        if m.group(1) == 'Started':
+            started = dt
+        else:
+            stopped = dt
+    return started, stopped
+
+
 def _session_duration(session_dir: Path) -> Optional[float]:
     """
-    Estimate session duration in seconds.
+    Determine session duration in seconds.
 
-    Uses the timestamp embedded in the directory name as the start time.
-    The end time is taken from the mtime of files written during the live
-    session (graph_timing.csv, resource_usage.log, *.log) to avoid being
-    skewed by kpi.json files generated long after the fact.
+    Prefers the authoritative 'Started:'/'Stopped:' timestamps written by
+    monitor_stack.py into session_info.txt. Falls back to estimating from
+    the directory-name timestamp and the mtime of files written during the
+    live session (graph_timing.csv, resource_usage.json, *.log) only when
+    session_info.txt is missing or incomplete.
     """
-    start_dt = _parse_ts(session_dir.name)
+    started, stopped = _parse_info_timestamps(session_dir / 'session_info.txt')
+    if started is not None and stopped is not None:
+        return max(0.0, (stopped - started).total_seconds())
+
+    start_dt = started or _parse_ts(session_dir.name)
     if start_dt is None:
         return None
     start_s = start_dt.timestamp()
 
     # Prefer files that are only written during the live session run.
-    live_globs = ['graph_timing.csv', 'resource_usage.log', 'gpu_usage.log',
-                  'npu_usage.log', 'cpu_power.log', '*.log']
+    live_globs = ['graph_timing.csv', 'resource_usage.json', 'gpu_usage.log',
+                  'npu_usage.log', '*.log']
     mtimes = []
     for pattern in live_globs:
         for p in session_dir.glob(pattern):
@@ -124,8 +158,7 @@ def _session_summary(session_dir: Path) -> dict:
     Extract key metrics for a single session directory.
 
     Returns a dict with: dur_s, thr_hz, lat_ms, e2e_ms, drop_pct, goals,
-    has_kpi, has_l2, host, throttled, cpu_thr, gpu_thr, goal_calc_ms,
-    goal_response_ms.
+    has_kpi, has_l2, host, goal_calc_ms, goal_response_ms.
     """
     info: dict = {
         'dur_s':           _session_duration(session_dir),
@@ -137,9 +170,6 @@ def _session_summary(session_dir: Path) -> dict:
         'has_kpi':         False,
         'has_l2':          False,
         'host':            None,
-        'throttled':       False,
-        'cpu_thr':         False,
-        'gpu_thr':         False,
         'goal_calc_ms':    None,
         'goal_response_ms': None,
     }
@@ -151,11 +181,6 @@ def _session_summary(session_dir: Path) -> dict:
         info['lat_ms']  = kpi1.get('mean_latency_ms')
         meta = kpi1.get('metadata') or {}
         info['host'] = meta.get('host')
-        thermal = kpi1.get('thermal') or {}
-        if thermal.get('cpu_throttled') or thermal.get('gpu_throttled'):
-            info['throttled'] = True
-            info['cpu_thr'] = bool(thermal.get('cpu_throttled'))
-            info['gpu_thr'] = bool(thermal.get('gpu_throttled'))
         _gcl = (kpi1.get('wandering') or {}).get('goal_calc_latency_ms') or {}
         info['goal_calc_ms'] = _gcl.get('mean_ms')
         _grl = (kpi1.get('wandering') or {}).get('goal_response_latency_ms') or {}
@@ -207,15 +232,6 @@ def _fmt_session_line(name: str, info: dict, prefix: str) -> str:
     if info.get('goal_response_ms') is not None:
         parts.append(f'  grl={info["goal_response_ms"]:5.1f}ms')
 
-    if info['throttled']:
-        hw = []
-        if info['cpu_thr']:
-            hw.append('CPU')
-        if info['gpu_thr']:
-            hw.append('GPU')
-        label = '+'.join(hw) if hw else 'THR'
-        parts.append(f'  ⚠ {label} throttled')
-
     return ''.join(parts)
 
 
@@ -246,7 +262,7 @@ def _render_type_dir(type_dir: Path, is_last_type: bool):
         for p in bench_dirs
     ) + len(session_dirs)
 
-    print(f'{type_prefix}{type_dir.name}/   ({total_runs} runs total)')
+    logger.info(f'{type_prefix}{type_dir.name}/   ({total_runs} runs total)')
 
     for idx, item in enumerate(all_items):
         is_last = idx == len(all_items) - 1
@@ -257,7 +273,7 @@ def _render_type_dir(type_dir: Path, is_last_type: bool):
             _render_bench_dir(item, item_prefix, item_indent)
         elif _TS_RE.match(item.name):
             info = _session_summary(item)
-            print(_fmt_session_line(item.name, info, item_prefix))
+            logger.info(_fmt_session_line(item.name, info, item_prefix))
 
 
 def _render_bench_dir(bench_dir: Path, prefix: str, indent: str):
@@ -285,12 +301,12 @@ def _render_bench_dir(bench_dir: Path, prefix: str, indent: str):
 
     dur_str = _fmt_dur(total_dur) if total_dur else '?'
     goals_str = f'  goals={total_goals}' if any_goals else ''
-    print(f'{prefix}{bench_dir.name}/   {n} runs │ {dur_str} total{goals_str}')
+    logger.info(f'{prefix}{bench_dir.name}/   {n} runs │ {dur_str} total{goals_str}')
 
     for idx, (sess_dir, info) in enumerate(summaries):
         is_last = idx == len(summaries) - 1
         line_prefix = f'{indent}{"└── " if is_last else "├── "}'
-        print(_fmt_session_line(sess_dir.name, info, line_prefix))
+        logger.info(_fmt_session_line(sess_dir.name, info, line_prefix))
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -299,7 +315,7 @@ def _render_bench_dir(bench_dir: Path, prefix: str, indent: str):
 
 def show(root: Path):
     if not root.exists():
-        print(f'[Error] sessions root not found: {root}', file=sys.stderr)
+        logger.error(f'Sessions root not found: {root}')
         sys.exit(1)
 
     type_dirs = sorted(
@@ -307,10 +323,10 @@ def show(root: Path):
         key=lambda p: p.name,
     )
     if not type_dirs:
-        print(f'{root}/  (empty — no sessions yet)')
+        logger.info(f'{root}/  (empty — no sessions yet)')
         return
 
-    print(f'{root}/')
+    logger.info(f'{root}/')
     for idx, td in enumerate(type_dirs):
         _render_type_dir(td, is_last_type=idx == len(type_dirs) - 1)
 

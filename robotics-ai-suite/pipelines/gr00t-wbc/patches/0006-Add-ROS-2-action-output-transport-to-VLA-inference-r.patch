@@ -1,0 +1,695 @@
+From 61ba8311198f60398d758b26b398df14bf5819f8 Mon Sep 17 00:00:00 2001
+From: "Mao, Roger" <roger.mao@intel.com>
+Date: Thu, 2 Jul 2026 14:26:44 +0800
+Subject: [PATCH 06/13] Add ROS 2 action-output transport to VLA inference
+ runner
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+  - run_vla_inference.py: introduce --transport {zmq,ros2}; factor ZMQ/ROS2
+    publisher back-ends; pack toggle_vla_mode into Protocol v4; make ROS 2
+    'k' a start/stop toggle mirroring ZMQ (warm-up pulse, then EXIT-VLA/pause)
+  - launch_inference.py: default deploy_input_type=zmq_manage.
+    Use 'deploy-input-type=ros2' to switch to ROS2.
+    Support --deploy-debug tee logging.
+  - install_inference.sh: allow PY_VERSION override (default 3.10)
+    Note: for ROS2 support，make sure add PY_VERSION=3.12
+
+Signed-off-by: Mao, Roger <roger.mao@intel.com>
+---
+ gear_sonic/scripts/launch_inference.py  |  26 +-
+ gear_sonic/scripts/run_vla_inference.py | 424 +++++++++++++++++++++---
+ install_scripts/install_inference.sh    |  13 +-
+ 3 files changed, 401 insertions(+), 62 deletions(-)
+
+diff --git a/gear_sonic/scripts/launch_inference.py b/gear_sonic/scripts/launch_inference.py
+index 4b7a65b..4d1153f 100644
+--- a/gear_sonic/scripts/launch_inference.py
++++ b/gear_sonic/scripts/launch_inference.py
+@@ -33,6 +33,7 @@ Usage (from repo root — no venv activation needed):
+ """
+ 
+ from dataclasses import dataclass
++from datetime import datetime
+ from pathlib import Path
+ import os
+ import shutil
+@@ -93,7 +94,9 @@ class InferenceLaunchConfig:
+ 
+     # C++ deploy options
+     deploy_input_type: str = "zmq_manager"
+-    """Input type for the C++ deploy."""
++    """Input type for the C++ deploy. 'zmq_manager' (default) keeps the legacy
++    ZMQ pipeline and pairs with the runner's transport=zmq mode; use 'ros2' to
++    pair with transport=ros2 (VLA tokens on ControlPolicy/vla_token)."""
+ 
+     deploy_zmq_host: str = "localhost"
+     """ZMQ host for the C++ deploy to listen on."""
+@@ -113,6 +116,11 @@ class InferenceLaunchConfig:
+     deploy_output_type: str = ""
+     """Output type for deploy.sh. Leave empty for default."""
+ 
++    deploy_debug: bool = False
++    """Tee the deploy pane's stdout+stderr to a timestamped log file
++    (gear_sonic_deploy/<YYYYMMDD-HHMMSS>_deploy_vla.txt) for post-run
++    debugging. Off by default."""
++
+     # VLA inference options
+     policy_host: str = "localhost"
+     """Isaac-GR00T PolicyServer host."""
+@@ -321,8 +329,14 @@ def main(config: InferenceLaunchConfig):
+     if config.deploy_output_type:
+         deploy_cmd += f"--output-type {config.deploy_output_type} "
+     deploy_cmd += deploy_mode
+-
+-    print("Starting C++ deploy (pane 0)...")
++    if config.deploy_debug:
++        # Tee stdout+stderr into a timestamped log (relative to
++        # gear_sonic_deploy/, which is deploy.sh's cwd).
++        deploy_log = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}_deploy_vla.txt"
++        deploy_cmd += f" 2>&1 | tee {deploy_log}"
++        print(f"Starting C++ deploy (pane 0), log -> gear_sonic_deploy/{deploy_log}")
++    else:
++        print("Starting C++ deploy (pane 0)...")
+     _send_to_pane(0, deploy_cmd, wait=3.0)
+ 
+     if not _check_pane_alive(0):
+@@ -373,10 +387,16 @@ def main(config: InferenceLaunchConfig):
+         _send_to_pane(3, exporter_cmd, wait=2.0)
+ 
+     # --- Pane 1 (top-right): VLA Inference ---
++    # Pair the runner transport with the deploy input-type so tokens land
++    # on the channel the deploy is subscribed to.
++    #   deploy_input_type=ros2         → runner transport=ros2 (ControlPolicy/vla_token)
++    #   deploy_input_type=zmq_manager  → runner transport=zmq  (ZMQ 'pose' topic)
++    runner_transport = "ros2" if config.deploy_input_type == "ros2" else "zmq"
+     inference_cmd = (
+         f"cd {repo_root} && "
+         f"source .venv_inference/bin/activate && "
+         f"python gear_sonic/scripts/run_vla_inference.py "
++        f"--transport {runner_transport} "
+         f"--host {config.policy_host} "
+         f"--port {config.policy_port} "
+         f"--embodiment-tag {config.embodiment_tag} "
+diff --git a/gear_sonic/scripts/run_vla_inference.py b/gear_sonic/scripts/run_vla_inference.py
+index 927c40f..89d0405 100644
+--- a/gear_sonic/scripts/run_vla_inference.py
++++ b/gear_sonic/scripts/run_vla_inference.py
+@@ -1,32 +1,55 @@
+ """
+-VLA inference runner — NO ROS 2 DEPENDENCY.
++VLA inference runner — action output over ZMQ or ROS 2.
+ 
+ Runs an Isaac-GR00T VLA policy against the Sonic whole-body control stack.
+-All communication uses ZMQ:
+-  1. Robot state  -> ZMQ SUB on ``g1_debug`` topic (from C++ zmq_output_handler)
+-  2. Actions out  -> ZMQ PUB (latent protocol v4: motion token + hand joints)
+-  3. Camera       -> ZMQ/TCP via ComposedCameraClientSensor
+-  4. Keyboard     -> ZMQ SUB via ZMQKeyboardSubscriber
++
++Transport choice controls only the action-output path (``--transport``):
++
++  transport=zmq (default)
++    1. Robot state  -> ZMQ SUB on ``g1_debug`` topic (from C++ zmq_output_handler)
++    2. Actions out  -> ZMQ PUB (Protocol v4: motion token + hand joints)
++                       AND ZMQ 'command' topic (start/stop/mode switch)
++    3. Camera       -> ZMQ/TCP via ComposedCameraClientSensor
++    4. Keyboard     -> ZMQ SUB via ZMQKeyboardSubscriber
++
++  transport=ros2
++    1-3 as above, but Actions out -> ROS 2 publisher on
++    ``ControlPolicy/vla_token`` (std_msgs/ByteMultiArray). The payload is the
++    same Protocol-v4 packed header+body, with an added ``toggle_vla_mode``
++    field that edge-triggers ENTER/EXIT VLA on the C++ side
++    (see ros2_input_handler.hpp::parse_packed_vla_token). 
+ 
+ Uses the Isaac-GR00T PolicyClient (ZMQ REQ/REP) to communicate with a
+ running PolicyServer.
+ 
+ Keyboard commands (received via ZMQ from the standalone keyboard publisher):
+-  p  -> pause / resume the policy loop
+-  k  -> start / stop the C++ control loop
+-  i  -> send initial pose and switch to POSE mode
++  p  -> pause / resume the policy loop (local only; never a mode toggle)
++  k  -> ZMQ:  start / stop the C++ control loop
++        ROS2: Toggle, mirroring ZMQ. First press sends toggle_policy_action=True
++              on ControlPolicy/upper_body_pose so the deploy STARTs the planner
++              without entering VLA (use 'i' to then enter VLA). Second press
++              sends another pulse to STOP: the deploy EXITs VLA via safety
++              reset.
++  i  -> send initial pose. In ROS 2 mode, the first ``i`` after startup
++        also sets ``toggle_vla_mode=True`` to enter VLA mode.
+   t  -> change prompt at runtime (publisher sends ``prompt:<text>``)
+   [  -> toggle left hand open/closed for initial pose
+   ]  -> toggle right hand open/closed for initial pose
+   c  -> start recording (handled by data exporter if running)
+   s  -> stop recording success (handled by data exporter)
+   f  -> stop recording failure (handled by data exporter)
++
++On Ctrl+C: same as ZMQ mode — just close the publisher. The ROS 2 deploy's
++token-freshness watchdog (TOKEN_FRESHNESS_MS_ in ros2_input_handler.hpp)
++falls back to encoder+planner automatically once tokens stop arriving; no
++explicit exit-VLA toggle is sent.
+ """
+ 
+ from dataclasses import dataclass
+ import queue
+ import threading
+ import time
++from typing import Literal
+ 
+ import numpy as np
+ import tyro
+@@ -92,12 +115,27 @@ class InferenceConfig:
+     state_zmq_port: int = 5557
+     """ZMQ port for robot state (same socket as robot_config topic)."""
+ 
+-    # ZMQ: Action output (latent actions to C++ control loop)
++    # Action output transport
++    transport: Literal["zmq", "ros2"] = "zmq"
++    """Where to send latent actions: 'zmq' (ZMQ PUB, existing pipeline) or
++    'ros2' (ROS 2 publisher on ControlPolicy/vla_token)."""
++
++    # ZMQ: Action output (latent actions to C++ control loop; used when transport=zmq)
+     action_zmq_host: str = "localhost"
+-    """ZMQ host for action output (PUB socket)."""
++    """ZMQ host for action output (PUB socket). Ignored when transport=ros2."""
+ 
+     action_zmq_port: int = 5556
+-    """ZMQ port for action output."""
++    """ZMQ port for action output. Ignored when transport=ros2."""
++
++    # ROS 2: Action output (used when transport=ros2)
++    ros2_vla_topic: str = "ControlPolicy/vla_token"
++    """ROS 2 topic for VLA token stream. Must match ROS2InputHandler subscription."""
++
++    ros2_control_goal_topic: str = "ControlPolicy/upper_body_pose"
++    """ROS 2 topic for the ControlGoalMsg (msgpack). The runner publishes a
++    single toggle_policy_action pulse on this topic on the first 'k' press
++    to warm up the C++ planner without entering VLA mode (matches
++    dummy_nav_publisher.py's contract)."""
+ 
+     # ZMQ: Keyboard input
+     keyboard_zmq_host: str = "localhost"
+@@ -133,17 +171,25 @@ def pack_latent_action_message(
+     frame_index: np.ndarray,
+     left_hand_joints: np.ndarray = None,
+     right_hand_joints: np.ndarray = None,
++    toggle_vla_mode: bool = False,
++    topic: str = "pose",
+ ) -> bytes:
+-    """Pack a single motion-token action into a ZMQ message (Protocol v4).
++    """Pack a single motion-token action into a Protocol-v4 message.
+ 
+     Args:
+         motion_token: Shape ``[64]`` (flat) or ``[1, 64]``.
+         frame_index:  Shape ``[1]``.
+         left_hand_joints:  Shape ``[7]`` or ``[1, 7]``, optional.
+         right_hand_joints: Shape ``[7]`` or ``[1, 7]``, optional.
++        toggle_vla_mode: When True, adds a ``toggle_vla_mode`` bool[1] field.
++            Only used by the ROS 2 transport to signal ENTER/EXIT VLA mode
++            (edge-triggered on the C++ side). Omit for the ZMQ ``pose`` topic
++            where mode is set via the separate ``command`` topic.
++        topic: Topic prefix. Use ``"pose"`` for ZMQ; the ROS 2 transport
++            passes ``""`` so the returned bytes are pure header+body.
+ 
+     Returns:
+-        Packed ZMQ message bytes.
++        Packed message bytes (topic prefix + 1280-byte header + binary body).
+     """
+     motion_token = np.asarray(motion_token, dtype=np.float32)
+     frame_index = np.asarray(frame_index, dtype=np.int64)
+@@ -158,8 +204,12 @@ def pack_latent_action_message(
+ 
+     pose_data = {
+         "token_state": motion_token,
+-        "frame_index": frame_index,
+     }
++    if toggle_vla_mode:
++        # Match dummy_vla_token_publisher.py wire order (token → toggle → frame_index),
++        # which is what ros2_input_handler.hpp::parse_packed_vla_token walks through.
++        pose_data["toggle_vla_mode"] = np.array([True], dtype=bool)
++    pose_data["frame_index"] = frame_index
+ 
+     if left_hand_joints is not None:
+         left_hand_joints = np.asarray(left_hand_joints, dtype=np.float32)
+@@ -181,7 +231,214 @@ def pack_latent_action_message(
+             right_hand_joints = right_hand_joints.reshape(1, 7)
+         pose_data["right_hand_joints"] = right_hand_joints
+ 
+-    return pack_pose_message(pose_data, topic="pose", version=4)
++    return pack_pose_message(pose_data, topic=topic, version=4)
++
++
++# ---------------------------------------------------------------------------
++# Action publisher abstraction
++# ---------------------------------------------------------------------------
++#
++# The two transports differ only in the sink for latent-action bytes:
++#   ZMQ:  PUB socket carrying (a) the 'pose' topic (latent action + hand joints)
++#         and (b) the 'command' topic (start/stop/mode switch).
++#   ROS2: rclpy publisher on ControlPolicy/vla_token carrying a Protocol-v4
++#         packed payload. There is NO command channel — mode transitions are
++#         folded into an edge-triggered ``toggle_vla_mode`` field inside the
++#         same packed payload (see ros2_input_handler.hpp:637-676).
++#
++# Both back-ends expose the same three methods so the main loop stays agnostic:
++#   send_latent_action(payload_bytes)   — the packed motion-token message
++#   send_command(start, stop, planner)  — ZMQ only; ROS 2 backend is a no-op
++#   close()                             — cleanup on shutdown
++# ---------------------------------------------------------------------------
++
++
++class _ZmqActionPublisher:
++    """ZMQ PUB back-end: latent actions on 'pose', control on 'command'."""
++
++    supports_toggle_vla_mode = False
++
++    def __init__(self, host: str, port: int):
++        self._ctx = zmq.Context()
++        self._sock = self._ctx.socket(zmq.PUB)
++        self._sock.bind(f"tcp://{host}:{port}")
++        time.sleep(0.1)  # let subscribers connect
++        print_green(f"ZMQ action socket bound to tcp://{host}:{port}")
++
++    def send_latent_action(
++        self,
++        motion_token: np.ndarray,
++        frame_index: np.ndarray,
++        left_hand_joints: np.ndarray = None,
++        right_hand_joints: np.ndarray = None,
++        toggle_vla_mode: bool = False,
++    ) -> None:
++        # toggle_vla_mode is a ROS 2 concept; the ZMQ path expresses mode
++        # switching via the separate 'command' topic. Silently drop the flag
++        # rather than smuggling an unexpected field onto the 'pose' topic.
++        payload = pack_latent_action_message(
++            motion_token=motion_token,
++            frame_index=frame_index,
++            left_hand_joints=left_hand_joints,
++            right_hand_joints=right_hand_joints,
++            toggle_vla_mode=False,
++            topic="pose",
++        )
++        self._sock.send(payload)
++
++    def send_command(self, start: bool, stop: bool, planner: bool) -> bool:
++        try:
++            self._sock.send(build_command_message(start=start, stop=stop, planner=planner))
++            time.sleep(0.01)  # give the subscriber a moment to pick it up
++            return True
++        except Exception as e:
++            print(f"Warning: Failed to send command message: {e}")
++            return False
++
++    def send_control_goal_toggle(self) -> bool:
++        # No-op in ZMQ mode — warm-up goes through send_command (start=True,
++        # planner=True). Kept for polymorphism with the ROS 2 back-end.
++        return False
++
++    def close(self) -> None:
++        self._sock.close()
++        self._ctx.term()
++
++
++class _Ros2ActionPublisher:
++    """ROS 2 back-end: latent actions on ControlPolicy/vla_token (ByteMultiArray).
++
++    Lazily imports rclpy so the ZMQ path never touches the ROS 2 stack.
++
++    Optionally publishes a msgpack-encoded ControlGoalMsg on
++    ControlPolicy/upper_body_pose (matching dummy_nav_publisher.py's wire
++    format) — used only for the warm-up 'k' pulse to start C++ control
++    without entering VLA mode.
++    """
++
++    supports_toggle_vla_mode = True
++
++    def __init__(self, vla_token_topic: str, control_goal_topic: str = ""):
++        import rclpy
++        from rclpy.qos import (
++            QoSDurabilityPolicy,
++            QoSHistoryPolicy,
++            QoSProfile,
++            QoSReliabilityPolicy,
++        )
++        from std_msgs.msg import ByteMultiArray
++
++        self._rclpy = rclpy
++        self._ByteMultiArray = ByteMultiArray
++
++        if not rclpy.ok():
++            rclpy.init()
++        self._node = rclpy.create_node("run_vla_inference")
++        qos = QoSProfile(
++            reliability=QoSReliabilityPolicy.RELIABLE,
++            history=QoSHistoryPolicy.KEEP_LAST,
++            depth=1,
++            durability=QoSDurabilityPolicy.VOLATILE,
++        )
++        self._pub = self._node.create_publisher(ByteMultiArray, vla_token_topic, qos)
++
++        # Optional ControlGoalMsg (msgpack) publisher for warm-up. Lazily
++        # created only if control_goal_topic is provided so `pip install
++        # msgpack msgpack-numpy` isn't required for the vla-only path.
++        self._goal_pub = None
++        self._msgpack = None
++        self._mnp = None
++        if control_goal_topic:
++            import msgpack
++            import msgpack_numpy as mnp
++
++            self._msgpack = msgpack
++            self._mnp = mnp
++            self._goal_pub = self._node.create_publisher(
++                ByteMultiArray, control_goal_topic, qos
++            )
++            print_green(
++                f"ROS 2 warm-up publisher created for topic '{control_goal_topic}'"
++            )
++
++        # Spin the node so publisher lifecycle events and DDS discovery keep
++        # progressing. Daemon so it dies with the process.
++        self._spin_stop = threading.Event()
++
++        def _spin():
++            while not self._spin_stop.is_set() and rclpy.ok():
++                try:
++                    rclpy.spin_once(self._node, timeout_sec=0.1)
++                except Exception:
++                    break
++
++        self._spin_thread = threading.Thread(target=_spin, daemon=True)
++        self._spin_thread.start()
++        print_green(f"ROS 2 publisher created for topic '{vla_token_topic}'")
++
++    def send_latent_action(
++        self,
++        motion_token: np.ndarray,
++        frame_index: np.ndarray,
++        left_hand_joints: np.ndarray = None,
++        right_hand_joints: np.ndarray = None,
++        toggle_vla_mode: bool = False,
++    ) -> None:
++        payload = pack_latent_action_message(
++            motion_token=motion_token,
++            frame_index=frame_index,
++            left_hand_joints=left_hand_joints,
++            right_hand_joints=right_hand_joints,
++            toggle_vla_mode=toggle_vla_mode,
++            topic="",  # ROS 2 uses topic in the URL, not as a byte prefix
++        )
++        # std_msgs/ByteMultiArray.data is bytes[] (each element 1 byte);
++        # matches dummy_vla_token_publisher.py:to_byte_multi_array.
++        msg = self._ByteMultiArray()
++        msg.data = [bytes([b]) for b in payload]
++        self._pub.publish(msg)
++
++    def send_command(self, start: bool, stop: bool, planner: bool) -> bool:
++        # No separate command channel in ROS 2 mode — the deploy auto-starts
++        # control on the first toggle_vla_mode rising edge; mode switching is
++        # driven by toggle_vla_mode pulses inside the vla_token stream.
++        print("[ROS2] send_command is a no-op (mode changes go through toggle_vla_mode)")
++        return True
++
++    def send_control_goal_toggle(self) -> bool:
++        """Publish one ControlGoalMsg with toggle_policy_action=True.
++      
++        On the deploy side this flips control_is_active_ true, warming up the planner
++        WITHOUT touching vla_mode_active_. Returns False if the goal
++        publisher wasn't created .
++        """
++        if self._goal_pub is None:
++            print("[ROS2] warm-up publisher not initialised — pass "
++                  "control_goal_topic to enable")
++            return False
++        payload = {
++            "navigate_cmd": [0.0, 0.0, 0.0],
++            "base_height_command": 0.78,
++            "toggle_policy_action": True,
++            "locomotion_mode": 1,
++            "ros_timestamp": time.time(),
++            "valid": True,
++        }
++        packed = self._msgpack.packb(payload, default=self._mnp.encode)
++        msg = self._ByteMultiArray()
++        msg.data = [bytes([b]) for b in packed]
++        self._goal_pub.publish(msg)
++        return True
++
++    def close(self) -> None:
++        self._spin_stop.set()
++        if self._spin_thread.is_alive():
++            self._spin_thread.join(timeout=1.0)
++        try:
++            self._node.destroy_node()
++        finally:
++            if self._rclpy.ok():
++                self._rclpy.shutdown()
+ 
+ 
+ def get_action_field(action_dict: dict, key: str):
+@@ -388,15 +645,28 @@ def main(config: InferenceConfig):
+         server_ip=config.camera_host, port=config.camera_port
+     )
+ 
+-    zmq_context = zmq.Context()
+-    zmq_socket = zmq_context.socket(zmq.PUB)
+-    zmq_socket.bind(f"tcp://{config.action_zmq_host}:{config.action_zmq_port}")
+-    time.sleep(0.1)
+-    print_green(
+-        f"ZMQ action socket bound to tcp://{config.action_zmq_host}:{config.action_zmq_port}"
+-    )
++    if config.transport == "zmq":
++        publisher = _ZmqActionPublisher(
++            host=config.action_zmq_host, port=config.action_zmq_port
++        )
++    elif config.transport == "ros2":
++        publisher = _Ros2ActionPublisher(
++            vla_token_topic=config.ros2_vla_topic,
++            control_goal_topic=config.ros2_control_goal_topic,
++        )
++    else:
++        raise ValueError(f"Unknown transport: {config.transport!r}")
++    print_green(f"Action transport: {config.transport}")
+     print_green(f"Using embodiment tag: {config.embodiment_tag}")
+ 
++    # Local mirrors of deploy state:
++    #   vla_mode_active     ↔ deploy's vla_mode_active_ (set on toggle_vla_mode)
++    #   cpp_control_armed   ↔ deploy's control_is_active_ (set on toggle_policy_action
++    #                         warm-up OR on the first toggle_vla_mode auto-START).
++    # ZMQ mode still uses cpp_loop_running / cpp_mode for the existing flow.
++    vla_mode_active = False
++    cpp_control_armed = False
++
+     keyboard_listener = ZMQKeyboardSubscriber(
+         port=config.keyboard_zmq_port, host=config.keyboard_zmq_host
+     )
+@@ -415,7 +685,13 @@ def main(config: InferenceConfig):
+     initial_pose_right_hand_closed = False
+ 
+     def publish_initial_pose():
+-        """Publish initial pose command to move robot to starting position."""
++        """Publish initial pose to move the robot to its starting position.
++
++        In ROS 2 mode, the first call after startup (while vla_mode_active is
++        False) also sets toggle_vla_mode=True so the deploy edge-triggers
++        into VLA mode.
++        """
++        nonlocal vla_mode_active, cpp_control_armed
+         print("Moving to initial pose")
+         left_hand = (
+             _compute_closed_hand_joints("L")
+@@ -427,37 +703,41 @@ def main(config: InferenceConfig):
+             if initial_pose_right_hand_closed
+             else np.zeros(7, dtype=np.float32)
+         )
+-        zmq_message = pack_latent_action_message(
++
++        send_toggle = publisher.supports_toggle_vla_mode and not vla_mode_active
++        publisher.send_latent_action(
+             motion_token=LATENT_INITIAL_MOTION_TOKEN,
+             frame_index=np.array([0], dtype=np.int64),
+             left_hand_joints=left_hand,
+             right_hand_joints=right_hand,
++            toggle_vla_mode=send_toggle,
+         )
+-        zmq_socket.send(zmq_message)
+-        print_green("Sent latent initial pose via ZMQ")
++        if send_toggle:
++            vla_mode_active = True
++            # toggle_vla_mode's rising edge also auto-STARTs control on the
++            # deploy side (ros2_input_handler.hpp:657-662), so mirror that.
++            cpp_control_armed = True
++            print_green("Sent latent initial pose with toggle_vla_mode=True (ENTER VLA)")
++        else:
++            print_green("Sent latent initial pose")
+         time.sleep(1.0)
+         print("Initial pose done.")
+ 
+     def send_cpp_control_command(start: bool, planner: bool = False):
+-        """Send C++ control loop start/stop commands via ZMQ."""
++        """Send C++ control loop start/stop commands (ZMQ mode only)."""
+         nonlocal cpp_loop_running, cpp_mode
+-        try:
+-            cmd_msg = build_command_message(start=start, stop=not start, planner=planner)
+-            zmq_socket.send(cmd_msg)
+-            time.sleep(0.01)
+-            action_str = "start" if start else "stop"
+-            mode_str = "planner" if planner else "pose"
+-            cpp_loop_running = start
+-            if start:
+-                cpp_mode = "PLANNER" if planner else "POSE"
+-            else:
+-                cpp_mode = "OFF"
+-            print_green(f"Sent ZMQ command: {action_str} control loop ({mode_str} mode)")
+-            return True
+-        except Exception as e:
+-            action_str = "start" if start else "stop"
+-            print(f"Warning: Failed to send {action_str} command message: {e}")
++        ok = publisher.send_command(start=start, stop=not start, planner=planner)
++        if not ok:
+             return False
++        action_str = "start" if start else "stop"
++        mode_str = "planner" if planner else "pose"
++        cpp_loop_running = start
++        if start:
++            cpp_mode = "PLANNER" if planner else "POSE"
++        else:
++            cpp_mode = "OFF"
++        print_green(f"Sent command: {action_str} control loop ({mode_str} mode)")
++        return True
+ 
+     # Async inference state
+     cached_action_chunk = None
+@@ -470,7 +750,8 @@ def main(config: InferenceConfig):
+     PROMPT_MSG_PREFIX = "prompt:"
+ 
+     def check_keyboard_input():
+-        nonlocal pause_loop, cpp_loop_running, cpp_mode
++        nonlocal pause_loop, cpp_loop_running, cpp_mode, cpp_control_armed
++        nonlocal vla_mode_active
+         nonlocal initial_pose_left_hand_closed, initial_pose_right_hand_closed
+         nonlocal cached_action_chunk, action_chunk_index, last_inference_time
+         nonlocal zmq_frame_counter
+@@ -503,7 +784,12 @@ def main(config: InferenceConfig):
+             cached_action_chunk = None
+             action_chunk_index = 0
+             print("Cleared cached action chunk")
+-            if cpp_loop_running and cpp_mode == "PLANNER":
++            if publisher.supports_toggle_vla_mode:
++                # ROS 2 path: publish_initial_pose() already sent the ENTER-VLA
++                # edge if needed. Nothing else to do — no separate command
++                # channel to switch to POSE mode.
++                pass
++            elif cpp_loop_running and cpp_mode == "PLANNER":
+                 if send_cpp_control_command(start=True, planner=False):
+                     print("Switched to POSE mode (from PLANNER mode)")
+                 else:
+@@ -518,7 +804,39 @@ def main(config: InferenceConfig):
+             else:
+                 print("Policy loop resumed")
+         elif key == "k":
+-            if cpp_loop_running:
++            if publisher.supports_toggle_vla_mode:
++                # ROS 2 path — toggle like ZMQ. Each 'k' sends one
++                # toggle_policy_action pulse on ControlPolicy/upper_body_pose.
++                #   1st press -> warm-up / START planner (unchanged behaviour;
++                #                use 'i' to then enter VLA mode)
++                #   2nd press -> STOP: the deploy treats a pulse as EXIT-VLA
++                #                (safety reset, when VLA mode is active) or
++                #                PAUSE-in-place otherwise. Mirrors ZMQ's
++                #                start/stop alternation on the same key.
++                if not cpp_control_armed:
++                    if publisher.send_control_goal_toggle():
++                        cpp_control_armed = True
++                        print_green("Warm-up: sent toggle_policy_action=True "
++                                    "(deploy will START planner)")
++                        print("Press 'i' to enter VLA mode + send initial pose")
++                        if pause_loop:
++                            print("Note: Policy loop is paused - press 'p' to resume")
++                    else:
++                        print("Warning: warm-up publisher not available")
++                else:
++                    print("Stopping C++ control loop (ROS 2 mode)...")
++                    if publisher.send_control_goal_toggle():
++                        cpp_control_armed = False
++                        if vla_mode_active:
++                            vla_mode_active = False
++                            print_green("Sent toggle_policy_action=True — STOP "
++                                        "(EXIT VLA, deploy safety-resets)")
++                        else:
++                            print_green("Sent toggle_policy_action=True — STOP "
++                                        "(deploy pauses control in place)")
++                    else:
++                        print("Warning: control-goal publisher not available")
++            elif cpp_loop_running:
+                 current_planner = cpp_mode == "PLANNER"
+                 print(f"Stopping C++ control loop (from {cpp_mode} mode)...")
+                 if send_cpp_control_command(start=False, planner=current_planner):
+@@ -662,16 +980,15 @@ def main(config: InferenceConfig):
+                     frame_index = np.array([zmq_frame_counter], dtype=np.int64)
+                     zmq_frame_counter += 1
+ 
+-                    zmq_message = pack_latent_action_message(
+-                        motion_token,
+-                        frame_index,
++                    publisher.send_latent_action(
++                        motion_token=motion_token,
++                        frame_index=frame_index,
+                         left_hand_joints=left_hand_joints,
+                         right_hand_joints=right_hand_joints,
+                     )
+-                    zmq_socket.send(zmq_message)
+                     if zmq_frame_counter % 50 == 0:
+                         print_green(
+-                            f"ZMQ: Sent latent action - "
++                            f"Sent latent action ({config.transport}) - "
+                             f"frame: {frame_index[0]}, "
+                             f"token shape: {motion_token.shape}"
+                         )
+@@ -695,8 +1012,7 @@ def main(config: InferenceConfig):
+     finally:
+         inference_stop_event.set()
+         inference_worker_thread.join(timeout=1.0)
+-        zmq_socket.close()
+-        zmq_context.term()
++        publisher.close()
+         state_subscriber.close()
+         keyboard_listener.close()
+         print("Shutdown complete.")
+diff --git a/install_scripts/install_inference.sh b/install_scripts/install_inference.sh
+index 4350d1f..b7d7d9e 100755
+--- a/install_scripts/install_inference.sh
++++ b/install_scripts/install_inference.sh
+@@ -69,10 +69,13 @@ if ! command -v uv &>/dev/null; then
+ fi
+ echo "[OK] uv $(uv --version)"
+ 
+-# ── 3. Install a uv-managed Python 3.10 (includes dev headers / Python.h) ────
+-echo "[INFO] Installing uv-managed Python 3.10 (includes development headers) …"
+-uv python install 3.10
+-MANAGED_PY="$(uv python find --no-project 3.10)"
++# ── 3. Install a uv-managed Python (includes dev headers / Python.h) ─────────
++# Override the default with `PY_VERSION=3.12 bash install_scripts/install_inference.sh`
++# when you need to match a system ROS 2 distro (Jazzy ships Python 3.12).
++PY_VERSION="${PY_VERSION:-3.10}"
++echo "[INFO] Installing uv-managed Python $PY_VERSION (includes development headers) …"
++uv python install "$PY_VERSION"
++MANAGED_PY="$(uv python find --no-project "$PY_VERSION")"
+ echo "[OK] Using Python: $MANAGED_PY"
+ 
+ # ── 4. (--ov only) Locate or clone the OpenVINO Isaac-GR00T fork ─────────────
+@@ -97,7 +100,7 @@ echo "[INFO] Removing old .venv_inference (if present) …"
+ rm -rf .venv_inference
+ 
+ # ── 6. Create venv & install inference deps ──────────────────────────────────
+-echo "[INFO] Creating .venv_inference with uv-managed Python 3.10 …"
++echo "[INFO] Creating .venv_inference with uv-managed Python $PY_VERSION …"
+ uv venv .venv_inference --python "$MANAGED_PY" --prompt gear_sonic_inference
+ # shellcheck disable=SC1091
+ source .venv_inference/bin/activate
+-- 
+2.43.0
+

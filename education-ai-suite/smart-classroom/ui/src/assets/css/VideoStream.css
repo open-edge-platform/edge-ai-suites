@@ -150,6 +150,10 @@
   margin: 20px;
   width: 100%;
 }
+
+.stream-placeholder h3 {
+  margin-bottom: 10px;
+}
  
 .streaming-icon {
   width: 48px;
@@ -283,11 +287,6 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
- 
 .video-analytics-spinner p {
   color: #666;
   font-size: 14px;

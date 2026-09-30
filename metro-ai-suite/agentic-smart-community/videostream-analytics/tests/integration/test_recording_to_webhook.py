@@ -35,7 +35,6 @@ class TestRecordingToWebhook:
                 "recording": {
                     "enabled": True,
                     "interval_seconds": 5,
-                    "retention_days": 1,
                 },
             },
         })

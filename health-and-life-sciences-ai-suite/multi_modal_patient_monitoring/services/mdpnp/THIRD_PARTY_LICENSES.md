@@ -1,4 +1,4 @@
-## Third-Party Software
+# Third-Party Software
 
 This project includes code from the mdpnp project.
 

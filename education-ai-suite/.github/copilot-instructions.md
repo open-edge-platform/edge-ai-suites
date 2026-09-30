@@ -2,7 +2,7 @@
 
 ## Canonical Instructions
 
-Use this file as the canonical router for all coding agents. 
+Use this file as the canonical router for all coding agents.
 
 ---
 
@@ -29,13 +29,13 @@ The system has multiple tiers:
 
 ---
 
-## Architecture 
+## Architecture
 
 ### VLM Integration
 
 The Content Search RAG pipeline uses a Vision-Language Model for answer generation:
 
-```
+```text
 Clients:
   - PowerShell scripts (sc-qa skill)
     ↓ HTTP requests (port 9011)
@@ -59,7 +59,8 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 
 | Purpose | Endpoint |
 |---|---|
-| Health check | `GET /api/v1/system/health` |
+| Health check | `GET /api/v1/system/health` (200 = all services ready, 503 = degraded) |
+| Liveness only | `GET /api/v1/system/ping` |
 | Upload + ingest | `POST /api/v1/object/upload-ingest` (multipart) |
 | Task status | `GET /api/v1/task/query/{task_id}` |
 | Cleanup task | `DELETE /api/v1/object/cleanup-task/{task_id}` |
@@ -90,7 +91,7 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 ## Tech Stack
 
 - **Backend**: Python 3.12, FastAPI, OpenVINO
-- **VLM**: Qwen3-VL-8B-Instruct 
+- **VLM**: Qwen3-VL-8B-Instruct
 - **Frontend**: React, Vite, Node.js v18+
 - **Flutter**: Flutter 3.22+ / Dart 3.3+, Dio (HTTP), Riverpod (state management)
 - **Infrastructure**: FFmpeg, DL Streamer
@@ -113,6 +114,11 @@ The Content Search service provides a RAG API at `http://127.0.0.1:9011`:
 - Target `http://127.0.0.1:9011` for the Content Search API
 - Target `http://127.0.0.1:8000` for the main backend API
 - Every new source/config file carries the SPDX header used across the repo
+- **Features, pipeline stages and platform requirements are declared once**, in
+  `smart-classroom/utils/pipeline_catalog.py` and `smart-classroom/utils/requirements.py`.
+  After editing either, run `python Scripts/gen_catalog.py` from `smart-classroom/` to
+  refresh the UI's copies — `tests/unit/test_catalog_generated.py` fails if you forget.
+  Never hand-edit `ui/src/generated/*` or a `*-catalog.cjs`.
 
 ---
 
@@ -141,5 +147,7 @@ the relevant skill, then read that skill's `SKILL.md`.
   documented in each skill file rather than executing unrelated workflows
 - **Agent: execute skill instructions** by running the PowerShell scripts and
   relaying the output to the user
-- Probe `GET /api/v1/system/health` before any API workflow. If the backend is
-  unreachable, use `sc-doctor` or `sc-up`
+- Probe `GET /api/v1/system/health` before any API workflow. It returns 200 only
+  when every Content Search service is ready and 503 (with a per-service
+  `services` map) otherwise. If the backend is unreachable or degraded, use
+  `sc-doctor` or `sc-up`

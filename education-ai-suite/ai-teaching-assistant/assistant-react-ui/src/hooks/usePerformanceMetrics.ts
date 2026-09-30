@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   getAsrPerformance,
   getPlatformInfo,
@@ -74,13 +74,19 @@ const INITIAL: MetricsState = {
   error: null,
 };
 
-export function usePerformanceMetrics() {
+export function usePerformanceMetrics(paused = false) {
   const [state, setState] = useState<MetricsState>(INITIAL);
+  // Read the latest pause flag inside the interval without restarting it.
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   useEffect(() => {
     let cancelled = false;
 
     const poll = async () => {
+      // Skip polling while a response is streaming/playing so metrics traffic
+      // doesn't compete with TTS audio delivery to the UI.
+      if (pausedRef.current) return;
       const [systemRes, ragRes, ttsRes, asrRes] = await Promise.allSettled([
         getSystemMetrics(),
         getRagPerformance(),

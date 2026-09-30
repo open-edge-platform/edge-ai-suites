@@ -56,7 +56,7 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.2.0-ubuntu24-rc1 \
+  intel/dlstreamer:2026.2.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
@@ -105,7 +105,7 @@ while true; do
         --env no_proxy=$no_proxy \
         --user root \
         -w /workspace \
-        intel/dlstreamer:2026.2.0-ubuntu24-rc1  \
+        intel/dlstreamer:2026.2.0-ubuntu24  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \
@@ -130,7 +130,8 @@ echo "OEP Vision AI pipeline started with PID: $PIPELINE_PID"
 echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
-> **Note:** This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
+> [!NOTE]
+> This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
 
 **Expected Console Output:**
 

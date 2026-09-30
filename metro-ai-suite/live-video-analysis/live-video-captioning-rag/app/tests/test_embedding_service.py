@@ -73,6 +73,8 @@ def _load_embedding_module(monkeypatch):
     services_pkg.__path__ = [str(services_dir)]
 
     cfg_mod = ModuleType("backend.config")
+    cfg_mod.APP_DISPLAY_NAME = "Test App"
+    cfg_mod.DEBUG = False
     cfg_mod.EMBEDDING_HOST = "embedding-host"
     cfg_mod.EMBEDDING_HOST_PORT = 8000
     cfg_mod.EMBEDDING_MODEL = "embedding-model"

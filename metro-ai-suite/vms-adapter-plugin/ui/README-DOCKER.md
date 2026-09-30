@@ -18,8 +18,8 @@ cp .env.example .env
 # Build and start all services (postgres, backend, ui)
 docker compose up -d
 
-# Access the UI (default port 3100)
-open http://localhost:3100
+# Access the UI (default port 3443)
+open https://localhost:3443
 ```
 
 ## Docker Configuration
@@ -87,7 +87,8 @@ docker run -d \
   vms-adapter-ui
 ```
 
-> **Note**: In standalone mode nginx will still proxy `/v1/` to `http://backend:8080`,
+> [!NOTE]
+> In standalone mode nginx will still proxy `/v1/` to `http://backend:8080`,
 > which requires a Docker network containing a container named `backend`.
 > For a truly standalone run you would need to rebuild with a customised nginx.conf.
 

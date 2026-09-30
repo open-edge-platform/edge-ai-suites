@@ -24,14 +24,15 @@ def create_chroma_data(embedding, meta=None):
     return {"id": generate_unique_id(), "meta": meta, "vector": embedding}
 
 class Indexer:
-    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None):
+    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None, do_detect_and_crop=False):
         self.client = ChromaClientWrapper()
         run_device = os.getenv("INGEST_DEVICE", "CPU")
         self.visual_collection_name = collection_name
 
         self.visual_embedding_model = visual_embedding_model or get_visual_embedding_model()
 
-        self.detector = Detector(device=run_device)
+        # Detector downloads yolox_s.xml on init; skip when not needed.
+        self.detector = Detector(device=run_device) if do_detect_and_crop else None
         self.visual_id_map = {}
         self.visual_db_inited = False
 

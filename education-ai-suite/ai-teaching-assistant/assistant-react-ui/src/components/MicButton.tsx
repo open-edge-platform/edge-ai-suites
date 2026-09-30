@@ -13,7 +13,7 @@ export default function MicButton({ recording, inputLevel = 0, disabled, onStart
       type="button"
       disabled={disabled}
       onClick={recording ? onStop : onStart}
-      className={`flex h-16 w-16 items-center justify-center rounded-full text-2xl text-white shadow-lg transition disabled:opacity-40 ${
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-md transition disabled:opacity-40 ${
         recording
           ? "animate-pulse bg-black hover:bg-black/90"
           : "bg-intel-blue hover:bg-intel-dark"
@@ -22,7 +22,7 @@ export default function MicButton({ recording, inputLevel = 0, disabled, onStart
       title={recording ? "Stop recording" : "Start recording"}
     >
       {recording ? (
-        <span className="block h-5 w-5 rounded-sm bg-white" />
+        <span className="block h-3.5 w-3.5 rounded-sm bg-white" />
       ) : (
         <svg
           viewBox="0 0 24 24"
@@ -31,7 +31,7 @@ export default function MicButton({ recording, inputLevel = 0, disabled, onStart
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="h-7 w-7"
+          className="h-5 w-5"
           aria-hidden="true"
         >
           <rect x="9" y="2" width="6" height="12" rx="3" />

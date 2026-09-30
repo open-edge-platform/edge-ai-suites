@@ -216,21 +216,33 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled, active }) => {
 
   const selectedEntries = entries.filter((e) => e.selected);
 
-  // Add a chip tag on Enter or comma — available whenever a file is selected
-  const handleTagKeyDown = (ev: React.KeyboardEvent<HTMLInputElement>) => {
-    if (ev.key !== "Enter" && ev.key !== ",") return;
-    ev.preventDefault();
-    const tag = tagInput.trim().replace(/,$/, "");
-    if (!tag) return;
+  // Files a typed tag would actually land on. Tags are locked once a file has
+  // been submitted, so an unselected or already-uploaded row takes nothing.
+  const tagTargets = entries.filter((e) => e.selected && e.status === "STAGED");
+  const pendingTag = tagInput.trim().replace(/,$/, "");
 
-    // Only add tags to files that have not yet been uploaded (still STAGED)
+  /**
+   * Apply the typed tag to every selected staged file. Called on Enter/comma and
+   * on blur, so a tag the user typed but never confirmed is not silently lost
+   * when they click Upload or elsewhere. The input is only cleared if the tag
+   * actually landed somewhere — otherwise the text stays put rather than
+   * vanishing with nothing to show for it.
+   */
+  const commitTag = () => {
+    if (!pendingTag || tagTargets.length === 0) return;
     setEntries((prev) =>
       prev.map((e) => {
-        if (!e.selected || e.status !== "STAGED" || e.tags.includes(tag)) return e;
-        return { ...e, tags: [...e.tags, tag] };
+        if (!e.selected || e.status !== "STAGED" || e.tags.includes(pendingTag)) return e;
+        return { ...e, tags: [...e.tags, pendingTag] };
       })
     );
     setTagInput("");
+  };
+
+  const handleTagKeyDown = (ev: React.KeyboardEvent<HTMLInputElement>) => {
+    if (ev.key !== "Enter" && ev.key !== ",") return;
+    ev.preventDefault();
+    commitTag();
   };
 
   const removeTag = (entryId: string, tag: string) => {
@@ -674,12 +686,18 @@ return (
                   <div className="cs-meta-row">
                     <input
                       type="text"
-                      className="cs-meta-input cs-meta-input--tags"
-                      placeholder="Add tag — press Enter or comma"
+                      className={`cs-meta-input cs-meta-input--tags${pendingTag ? " cs-meta-input--pending" : ""}`}
+                      placeholder={t("uploadSection.addTagPlaceholder")}
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleTagKeyDown}
+                      onBlur={commitTag}
                     />
+                    {pendingTag && (
+                      <span className="cs-meta-hint cs-meta-hint--pending">
+                        {t("uploadSection.tagPendingHint", { count: tagTargets.length })}
+                      </span>
+                    )}
                   </div>
                 </>
               )}
@@ -701,11 +719,11 @@ return (
                         className="cs-checkbox"
                       />
                     </th>
-                    <th>{t("uploadSection.fileName")}</th>
-                    <th>{t("uploadSection.type")}</th>
-                    <th>{t("uploadSection.size")}</th>
-                    <th>{t("uploadSection.status")}</th>
-                    <th></th>
+                    <th className="cs-col-name">{t("uploadSection.fileName")}</th>
+                    <th className="cs-col-type">{t("uploadSection.type")}</th>
+                    <th className="cs-col-size">{t("uploadSection.size")}</th>
+                    <th className="cs-col-status">{t("uploadSection.status")}</th>
+                    <th className="cs-col-remove"></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -724,7 +742,7 @@ return (
                       </td>
                       <td>
                         <span className="cs-file-name" title={entry.filename}>
-                          {entry.filename}
+                          <span className="cs-file-name-text">{entry.filename}</span>
                           {entry.status === "COMPLETED" && entry.ocrTextKey && (
                             <img
                               src={handwrittenIcon}
