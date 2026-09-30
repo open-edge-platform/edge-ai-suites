@@ -1,5 +1,16 @@
 # Smart Building Digital Twin
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-building-digital-twin">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-building-digital-twin/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 Smart Building Digital Twin is a complete smart-building monitoring simulation that
 includes the end-to-end deployment: inputs, processing, analytics, dashboard,
 configuration, and startup scripts.
@@ -37,7 +48,7 @@ get-started
 how-it-works
 how-to-use-application
 troubleshooting
-Release Notes <release-notes>
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

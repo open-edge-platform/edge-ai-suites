@@ -93,6 +93,29 @@ AI models into a cohesive system. By leveraging Intel's hardware
 acceleration and software ecosystem, it enables next-generation robotic
 applications with enhanced intelligence, efficiency, and adaptability.
 
+## Reference Application: Humanoid Imitation Learning
+
+Building on the software architecture above, the toolkit ships an end-to-end
+imitation-learning reference application that pairs LLM task planning with
+VLA/ACT-based manipulation. The diagram below follows a single request through
+five stages — human interface and language, perception, policy and skill,
+motion and control, and the robot — and calls out where each stage runs on
+Intel hardware.
+
+:::{figure} assets/images/Humanoid-Architecture.svg
+:alt: Humanoid imitation-learning reference application pipeline from a human command through perception, policy, and motion control to the robot
+:align: center
+:width: 100%
+
+Humanoid imitation-learning reference application: a voice or text command is
+interpreted by the human-interface and language stage, RGB-D perception
+(SAM/CLIP and 3D point cloud) feeds an Action Chunking Transformer skill
+policy, and MoveIt motion planning produces real-time trajectories for a JAKA
+arm or humanoid with a gripper end-effector. Stages are accelerated with
+OpenVINO™ across CPU, iGPU, dGPU, and NPU, with real-time control on
+PREEMPT_RT.
+:::
+
 ## Validated Configuration
 
 The Humanoid Blueprint supports the validated configuration below. It defines

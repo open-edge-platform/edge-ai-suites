@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
 import type { SmartCommunityDB } from "@smart-community-video/db";
-import { BIND_HOST } from "./config.js";
+import { EVENTS_BIND_HOST } from "./config.js";
 import { logger } from "./logger.js";
 
 export interface VideoEvent {
@@ -60,7 +60,7 @@ export class EventsEndpoint {
   /**
    * @param port TCP port to listen on.
    *
-   * Always binds BIND_HOST (loopback): this endpoint is unauthenticated and
+  * Defaults to EVENTS_BIND_HOST (loopback): this endpoint is unauthenticated and
    * writes straight into the DB, and its only producer is the on-host
    * videostream-analytics service, which POSTs to localhost.
    */
@@ -70,7 +70,7 @@ export class EventsEndpoint {
 
       server.on("error", (err: NodeJS.ErrnoException) => {
         if (err.code === "EADDRINUSE") {
-          logger.warn(`[events-endpoint] ${BIND_HOST}:${port} in use, skipping events endpoint`);
+          logger.warn(`[events-endpoint] ${EVENTS_BIND_HOST}:${port} in use, skipping events endpoint`);
           this.server = null;
           resolve();
         } else {
@@ -78,9 +78,9 @@ export class EventsEndpoint {
         }
       });
 
-      server.listen(port, BIND_HOST, () => {
+      server.listen(port, EVENTS_BIND_HOST, () => {
         this.server = server;
-        logger.info(`[events-endpoint] Listening on http://${BIND_HOST}:${port}`);
+        logger.info(`[events-endpoint] Listening on http://${EVENTS_BIND_HOST}:${port}`);
         resolve();
       });
     });

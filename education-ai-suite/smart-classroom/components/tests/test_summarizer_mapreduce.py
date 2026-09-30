@@ -101,7 +101,8 @@ def _run(transcript, budget, board_text="", mode="dialog", note=None):
          patch.object(tc, "resolve_budget", return_value=budget), \
          patch("components.summarizer_component.StorageManager") as sm:
         rc.get_section.return_value = {"location": "storage/", "name": "p"}
-        sm.save_async.side_effect = lambda path, data, append=False: saved.append(data)
+        sm.save.side_effect = \
+            lambda path, data, append=False: saved.append(data) if append else None
         sm.update_csv.side_effect = \
             lambda path, new_data: handler.metrics.append(new_data)
         # Consumed one item at a time: draining the generator into a list first

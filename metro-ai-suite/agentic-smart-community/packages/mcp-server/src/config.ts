@@ -171,17 +171,17 @@ function resolveDataDir(): string {
 }
 
 /**
- * Interface both listeners bind to. Hardcoded, not configurable.
- *
- * Neither the MCP/dashboard listener (`mcp.port`) nor the events webhook
- * (`events_webhook.port`) authenticates: whoever can open a socket can call
- * every MCP tool, browse the dashboard, and write events straight into the DB.
- * Every access path is local by design — the containers that serve them run
- * with `network_mode: host`, so this is the host's own loopback and the kernel
- * drops non-local SYNs outright. For off-host access, forward a port over SSH
- * (`ssh -N -L <port>:127.0.0.1:<port> user@host`) rather than widening this.
+ * MCP/dashboard listener interface. The default loopback binding keeps the
+ * unauthenticated API local; set MCP_BIND_HOST only behind suitable network
+ * access controls.
  */
-export const BIND_HOST = "127.0.0.1";
+export const MCP_BIND_HOST = process.env.MCP_BIND_HOST ?? "127.0.0.1";
+
+/**
+ * Events webhook listener interface. It remains loopback-only by default
+ * because webhook requests write directly into the database.
+ */
+export const EVENTS_BIND_HOST = process.env.EVENTS_BIND_HOST ?? "127.0.0.1";
 
 function numFromEnv(name: string): number | undefined {
   const raw = process.env[name];

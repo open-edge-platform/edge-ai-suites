@@ -85,7 +85,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | `{{DEVICE}}` | `CPU` \| `GPU` \| `NPU` \| `all` (generates CPU+GPU+NPU variants) |
 | `{{MODEL}}` | `yolo11s` (default) \| path to custom OpenVINO IR `.xml` |
 | `{{PIPELINE_PREFIX}}` | prefix for pipeline names, e.g. `uav_object_detection` |
-| `{{RTSP_PATHS}}` | RTSP stream path(s) published by DLSPS, e.g. `uav-cpu`, `uav-gpu` |
+| `{{RTSP_PATHS}}` | RTSP stream path(s) published by DL Streamer Pipeline Server, e.g. `uav-cpu`, `uav-gpu` |
 | `{{UAV_ID}}` | UAV identifier for UAVSDK MQTT topic, e.g. `uav-1` |
 | `{{STACK_DIR}}` | output directory for the new application stack |
 | `{{OVERLAY_NAME}}` | label shown in the telemetry overlay, e.g. `MyUAV-CPU` |
@@ -106,7 +106,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 | `DEPLOYMENT_MODE` | `pymavlink`\|`uavsdk` | wrong compose file selected |
 | `VIDEO_SOURCE` | `file`\|`realsense`\|`rtsp`\|`gazebo-rtsp` | pipeline GStreamer string invalid |
 | `DEVICE` | `CPU`\|`GPU`\|`NPU`\|`all` | unknown device in gvadetect |
-| `MODEL` | ends in `.xml`, file exists (if custom) | DLSPS fails to load model |
+| `MODEL` | ends in `.xml`, file exists (if custom) | DL Streamer Pipeline Server fails to load model |
 | `UAV_ID` | `^[a-z0-9-]+$`, no spaces | MQTT topic invalid |
 | `PIPELINE_PREFIX` | `^[a-z0-9_]+$` | REST path + MQTT topic break |
 
@@ -156,7 +156,7 @@ MAVLink/MQTT → Pipeline Manager → start/stop pipelines on ARMED/DISARMED
 ├── .env.example                     # template copied by make init
 ├── Makefile                         # init, model, stack up/down, pipeline start/stop
 ├── configs/
-│   └── config-{{PIPELINE_PREFIX}}.json   # DLSPS pipeline definitions
+│   └── config-{{PIPELINE_PREFIX}}.json   # DL Streamer Pipeline Server pipeline definitions
 ├── gvapython/
 │   └── telemetry-overlay-{{MODE}}.py     # gvapython telemetry overlay
 ├── scripts/
@@ -183,11 +183,13 @@ or scripts is a syntax error.
 
 ## Completion Criteria (all must pass)
 
-1. `make init` succeeds: `.env` created with auto-detected GPU/NPU device paths.
+1. `make init` succeeds: `.env` created with auto-detected `HOST_IP` and GPU/NPU device paths.
 2. `make model` succeeds: OpenVINO IR model present at
    `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml`.
-3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`.
-4. `curl http://localhost:8081/pipelines` returns the registered pipeline definitions.
+3. `make pymav-up` (or `make uavsdk-up`) → all containers `running`, including `nginx`.
+4. `curl -k https://localhost/pipelines` returns the registered pipeline definitions
+   (`dlstreamer-pipeline-server` no longer publishes a host port directly — it is reached
+   only through the `nginx` reverse proxy on `443`; self-signed cert requires `-k`).
 5. Pipeline manager starts with `make start-rtsp` and connects to MAVLink/MQTT.
 6. On ARMED signal: pipelines start; RTSP streams appear at `:8555`.
 7. `ffplay rtsp://localhost:8555/{{RTSP_PATH}}` shows annotated video with telemetry overlay.

@@ -32,7 +32,7 @@ rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ![QGroundControl RTSP stream](../_assets/QGC-rtsp.gif)
 
 > [!NOTE]
-> Make sure `make start-rtsp` is running in the DLSPS container before
+> Make sure `make start-rtsp` is running in the DL Streamer Pipeline Server container before
 > attempting to connect QGroundControl to the RTSP stream.
 
 ## Troubleshooting

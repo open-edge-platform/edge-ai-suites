@@ -382,7 +382,7 @@ export function registerTools(
       "smart-community-use-case-manager Q1/Q2 flow and confirmed Final Schema + Rule Path; " +
       "detection goals are event values, not schema fields. " +
       "RECOMMENDED two-step flow for a new use case (keeps the large prompt_text in ONE call): " +
-      "(step 1) action=generate_task with prompt_text (+ evaluate_rules_path on the custom path) — " +
+      "(step 1) action=generate_task with prompt_text (+ evaluate_rules_content for a remote custom rule, or evaluate_rules_path when the file already exists on this server) — " +
       "runs the consistency gate, POSTs the VLM task to multilevel-video-understanding (auto-PATCH " +
       "on 409), and ON SUCCESS writes <data_dir>/use-cases/<use_case>/prompt.md to disk (a caller-supplied " +
       "evaluate_rules.py is staged to <data_dir>/use-cases/<use_case>/evaluate_rules.py). " +
@@ -440,10 +440,16 @@ export function registerTools(
       ),
       description: z.string().optional().describe("Human description shown by /v1/tasks"),
       evaluate_rules_path: z.string().optional().describe(
-        "Path to a Python evaluate_rules.py override. The tool reads this file for consistency checks, " +
+        "SERVER-LOCAL path to a Python evaluate_rules.py override. Use evaluate_rules_content for a remote MCP client. " +
+        "The tool reads this file for consistency checks, " +
         "stages it to <data_dir>/use-cases/<use_case>/evaluate_rules.py, smoke-tests the staged file, and " +
         "persists the conventional absolute path into config.yaml. Required whenever the Final Schema " +
         "contains fields beyond severity/event/desc, and for custom alert behavior."
+      ),
+      evaluate_rules_content: z.string().optional().describe(
+        "Python source for evaluate_rules.py from a remote MCP client. Mutually exclusive with evaluate_rules_path. " +
+        "The server writes it to <data_dir>/use-cases/<use_case>/evaluate_rules.py, then runs the same consistency " +
+        "checks and smoke test before persisting its conventional absolute path into config.yaml."
       ),
       reports: z.record(z.unknown()).optional().describe("Report config: {data_source, default_type, filter}"),
       summarize: z.record(z.unknown()).optional().describe("Per-clip summarize config: {method, processor_kwargs}"),
