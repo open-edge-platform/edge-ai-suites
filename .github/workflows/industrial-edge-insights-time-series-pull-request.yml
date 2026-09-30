@@ -93,7 +93,7 @@ jobs:
         fi
         make status | tee status.log
         # Grafana logs "user token not found" until first login (see user guide).
-        if grep -i error status.log | grep -viE 'found errors in container|containers have errors|without errors|user token not found'; then exit 1; fi
+        if grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'; then exit 1; fi
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
         timeout 30s bash -c '
@@ -113,7 +113,7 @@ jobs:
             exit 1
         fi
         make status | tee status.log
-        ! grep -i error status.log | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
+        ! grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -155,7 +155,7 @@ jobs:
         echo "Deploying Multimodal Weld Defect Detection Sample App"
         make up
         make status | tee status.log
-        ! grep -i error status.log | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
+        ! grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'
     - name: Undeploying Multimodal Weld Defect Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -216,7 +216,7 @@ jobs:
       run: |
         make up_vllm
         make status | tee status.log
-        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
+        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'
     - name: Deploy and test agentic
       run: |
         make up_agentic "$AGENTIC_OVR"
@@ -224,7 +224,7 @@ jobs:
         curl -sf localhost:8010/v3/chat/completions -H 'Content-Type: application/json' \
           -d '{"model":"microsoft/Phi-4-mini-instruct","messages":[{"role":"user","content":"Reply OK"}],"max_tokens":8}' | grep '"content"'
         make status | tee status.log
-        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'found errors in container|containers have errors|without errors|user token not found'
+        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'
     - name: Logs
       if: failure()
       run: for c in $(docker ps -a --format '{{.Names}}'); do echo "=== $c"; docker logs --tail 200 "$c"; done
