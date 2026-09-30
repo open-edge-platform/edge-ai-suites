@@ -23,10 +23,27 @@ refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 Deliverable shape: *end-to-end solution* (Compose stack) for
 `metro-ai-apps-recipe` (production mode); *quick single app / PoC* for
 `dlstreamer-coding-agent`; *multi-camera solution* for the `scenescape-setup`
-path. Map the Step 1 **depth-of-solution** answer to the route: "quick demo /
-simple app" → `dlstreamer-coding-agent`; "full end-to-end solution" →
-`metro-ai-apps-recipe`; and the Step 1 **camera-coverage** answer to Scenescape:
-a multi-camera whole-scene view → `scenescape-setup`.
+path. Map the Step 1 **packaging** answer (Q4) to the route: `demo`/`function`/
+`port` (quick single app) → `dlstreamer-coding-agent`; `microservice` (full
+end-to-end stack) → `metro-ai-apps-recipe`; and the Step 1 **camera-coverage**
+answer to Scenescape: a multi-camera whole-scene view → `scenescape-setup`.
+
+### 1a. API recipe → delegate routing (Step 1, Q8)
+
+The **API-recipe** answer selects the media/analytics delegate and **takes
+precedence** for these use cases (full detail in [`API_RECIPES.md`](API_RECIPES.md)):
+
+| API recipe | Primary | Supporting |
+|---|---|---|
+| **DL Streamer (DLS)** — a DL Streamer pipeline / app | **`dlstreamer-coding-agent`** (the DLS skill) — **not** `metro-ai-apps-recipe` | `model-download-user` (IR) |
+| **OpenVINO + OpenCV** — minimal custom inference app | OpenVINO custom-code path (per OpenVINO docs; no dedicated skill) | `model-download-user` (IR) |
+| **OVMS + FFmpeg** — model served by OVMS, FFmpeg media I/O | OVMS model-serving path (no dedicated skill) | `model-download-user` (OVMS-ready IR) |
+
+> **DLS vs the recipe stack:** picking the **DL Streamer** API recipe routes to
+> `dlstreamer-coding-agent`. The full end-to-end **stack**
+> (`metro-ai-apps-recipe`) is selected by the **packaging** axis
+> (`microservice`), not by the DLS API-recipe answer — even though the recipe
+> uses DL Streamer internally.
 
 ## 2. Conversational AI — chatbot / Q&A / RAG over documents
 
@@ -102,10 +119,12 @@ Typical robot pipeline: train (`physicalai-train-*`) → export
   *search/summarize + video* → §3; *download/convert + model* → §4;
   *train/fine-tune + dataset* → §5; *run/deploy + robot policy* → §6.
 - **Deployment target** picks the Docker vs Helm variant (chatqna, vss). For
-  vision, the **depth-of-solution** answer picks the route: a *quick demo /
-  simple app* → **`dlstreamer-coding-agent`** (a single DL Streamer pipeline or
-  sample app); a *full end-to-end* stack → **`metro-ai-apps-recipe`** (production
-  mode).
+  vision, the **packaging** answer (Q4) picks the route: a *demo / function /
+  port* single app → **`dlstreamer-coding-agent`** (a single DL Streamer pipeline
+  or sample app); a *microservice / full end-to-end* stack →
+  **`metro-ai-apps-recipe`** (production mode). The **API-recipe** answer (Q8)
+  overrides for media/analytics — see §1a (DLS → `dlstreamer-coding-agent`;
+  OV+OpenCV / OVMS+FFmpeg → custom-code paths).
 - **Multi-camera / spatial** whole-scene tracking (a subject followed *across*
   cameras covering one physical space, smart-intersection style) → route
   **directly** to **`scenescape-setup`**; add `metro-ai-apps-recipe` only if a

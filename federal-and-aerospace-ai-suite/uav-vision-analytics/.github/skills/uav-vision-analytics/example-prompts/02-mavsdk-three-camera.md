@@ -22,7 +22,7 @@ annotated stream. Automatically start all three pipelines when the UAV arms
 - UAV ID: `uav-1`
 
 Produce:
-- `docker-compose-uavsdk.yml` (single DLSPS container)
+- `docker-compose-uavsdk.yml` (single DL Streamer Pipeline Server container)
 - `configs/config-uavsdk.json` with three camera pipeline variants
 - `gvapython/telemetry-overlay-uavsdk.py` MQTT-based overlay
 - `scripts/uavsdk_pipeline_manager.py` with ffprobe RTSP probing

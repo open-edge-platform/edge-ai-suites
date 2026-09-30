@@ -240,6 +240,7 @@ up_mqtt_ingestion: check_env_variables down
 		for i in $$(seq 1 $(num_of_streams)); do \
 			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP";\
 			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
+			docker update --restart unless-stopped ia-mqtt-publisher-$$i; \
 		done; \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi

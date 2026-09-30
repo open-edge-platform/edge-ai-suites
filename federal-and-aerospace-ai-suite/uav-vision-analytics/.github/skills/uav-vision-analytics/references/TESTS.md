@@ -26,7 +26,9 @@ import os
 import pytest
 import requests
 
-REST_BASE = os.getenv("DLSPS_REST_URL", "http://localhost:8081")
+# nginx terminates TLS with a self-signed cert —
+# every request() call below passes verify=False accordingly.
+REST_BASE = os.getenv("DLSPS_REST_URL", "https://localhost")
 RTSP_HOST = os.getenv("HOST_IP", "127.0.0.1")
 RTSP_PORT = int(os.getenv("RTSP_PORT", "8555"))
 
@@ -100,12 +102,12 @@ import time
 
 
 def test_rest_api_reachable(rest_base):
-    resp = requests.get(f"{rest_base}/pipelines", timeout=10)
+    resp = requests.get(f"{rest_base}/pipelines", timeout=10, verify=False)
     assert resp.status_code == 200
 
 
 def test_pipelines_registered(rest_base):
-    resp = requests.get(f"{rest_base}/pipelines", timeout=10)
+    resp = requests.get(f"{rest_base}/pipelines", timeout=10, verify=False)
     assert resp.status_code == 200
     pipelines = resp.json()
     names = [p.get("version", p.get("name", "")) for p in pipelines]
@@ -128,13 +130,13 @@ def test_pipeline_start_stop(rest_base):
     }
 
     # Start pipeline — adjust name to match first registered pipeline
-    resp = requests.get(f"{rest_base}/pipelines", timeout=10)
+    resp = requests.get(f"{rest_base}/pipelines", timeout=10, verify=False)
     pipelines = resp.json()
     pipeline_name = pipelines[0].get("version", pipelines[0].get("name"))
 
     start_resp = requests.post(
         f"{rest_base}/pipelines/user_defined_pipelines/{pipeline_name}",
-        json=payload, timeout=15
+        json=payload, timeout=15, verify=False
     )
     assert start_resp.status_code == 200, f"Start failed: {start_resp.text}"
 
@@ -144,18 +146,18 @@ def test_pipeline_start_stop(rest_base):
     # Wait for pipeline to be RUNNING
     for _ in range(10):
         time.sleep(1)
-        status_resp = requests.get(f"{rest_base}/pipelines/{instance_id}/status", timeout=5)
+        status_resp = requests.get(f"{rest_base}/pipelines/{instance_id}/status", timeout=5, verify=False)
         if status_resp.status_code == 200:
             state = status_resp.json().get("state", "")
             if state == "RUNNING":
                 break
 
-    status_resp = requests.get(f"{rest_base}/pipelines/{instance_id}/status", timeout=5)
+    status_resp = requests.get(f"{rest_base}/pipelines/{instance_id}/status", timeout=5, verify=False)
     assert status_resp.json().get("state") == "RUNNING", \
         f"Pipeline not RUNNING: {status_resp.json()}"
 
     # Stop pipeline
-    del_resp = requests.delete(f"{rest_base}/pipelines/{instance_id}", timeout=10)
+    del_resp = requests.delete(f"{rest_base}/pipelines/{instance_id}", timeout=10, verify=False)
     assert del_resp.status_code in (200, 204), f"Delete failed: {del_resp.text}"
 ```
 
@@ -188,7 +190,7 @@ def _start_pipeline(rest_base, pipeline_name, rtsp_path):
     }
     resp = requests.post(
         f"{rest_base}/pipelines/user_defined_pipelines/{pipeline_name}",
-        json=payload, timeout=15
+        json=payload, timeout=15, verify=False
     )
     assert resp.status_code == 200
     return resp.text.strip().strip('"')
@@ -212,7 +214,7 @@ def _probe_rtsp(rtsp_url, timeout=10):
 )
 def test_rtsp_stream_available(rest_base, rtsp_host, rtsp_port):
     # Get first pipeline name
-    resp = requests.get(f"{rest_base}/pipelines", timeout=10)
+    resp = requests.get(f"{rest_base}/pipelines", timeout=10, verify=False)
     pipelines = resp.json()
     pipeline_name = pipelines[0].get("version", pipelines[0].get("name"))
     rtsp_path = "test-rtsp-probe"
@@ -223,7 +225,7 @@ def test_rtsp_stream_available(rest_base, rtsp_host, rtsp_port):
         rtsp_url = f"rtsp://{rtsp_host}:{rtsp_port}/{rtsp_path}"
         assert _probe_rtsp(rtsp_url), f"RTSP stream not available at {rtsp_url}"
     finally:
-        requests.delete(f"{rest_base}/pipelines/{instance_id}", timeout=10)
+        requests.delete(f"{rest_base}/pipelines/{instance_id}", timeout=10, verify=False)
 ```
 
 ---
@@ -285,7 +287,7 @@ pip install pytest requests
 pytest -q tests/
 
 # With custom host
-DLSPS_REST_URL=http://localhost:8081 HOST_IP=192.168.1.x pytest -q tests/
+DLSPS_REST_URL=https://localhost HOST_IP=192.168.1.x pytest -q tests/
 
 # Verbose with stdout
 pytest -v -s tests/
