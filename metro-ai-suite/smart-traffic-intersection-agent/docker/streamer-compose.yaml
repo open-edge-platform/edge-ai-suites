@@ -1,0 +1,75 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Self-contained RTSP video streamer for STIA demo/synthetic-data flows.
+# Only started when STIA_DEMO_INTERSECTION is set (see setup.sh's
+# start_stia_rtsp_streamer()) - the default STIA flow does not use this file
+# and does not require an RTSP source at all.
+#
+# Container names deliberately omitted (rely on the compose project name,
+# passed via `-p`) so multiple STIA instances can each run their own
+# streamer on the same host without name collisions.
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:latest
+    restart: unless-stopped
+    ports:
+      - "${RTSP_STREAM_BIND_IP:-0.0.0.0}:${RTSP_STREAM_PORT:-8554}:8554"
+
+  ffmpeg:
+    image: jrottenberg/ffmpeg:6.1-alpine
+    restart: unless-stopped
+    entrypoint:
+      - sh
+      - -ec
+    depends_on:
+      - mediamtx
+    volumes:
+      - ${STIA_DEMO_VIDEOS_DIR:-../resources/videos}:/videos:ro
+    environment:
+      - STIA_DEMO_INTERSECTION=${STIA_DEMO_INTERSECTION}
+    command:
+      - |
+          pids=""
+
+          publish_stream() {
+            stream_name="$$1"
+            file="$$2"
+            [ -f "$$file" ] || {
+              echo "Missing video for $${stream_name}: $${file}" >&2
+              exit 1
+            }
+            ffmpeg \
+              -hide_banner \
+              -loglevel info \
+              -re \
+              -stream_loop -1 \
+              -i "$$file" \
+              -map 0:v:0 \
+              -map 0:a:0? \
+              -c:v libx264 \
+              -preset ultrafast \
+              -tune zerolatency \
+              -profile:v baseline \
+              -level:v 3.1 \
+              -g 30 \
+              -keyint_min 30 \
+              -sc_threshold 0 \
+              -bf 0 \
+              -pix_fmt yuv420p \
+              -c:a copy \
+              -f rtsp \
+              -rtsp_transport tcp \
+              -muxdelay 0.1 \
+              -muxpreload 0 \
+              "rtsp://mediamtx:8554/$${stream_name}" &
+            pids="$$pids $$!"
+          }
+
+          publish_stream camera1 "/videos/$${STIA_DEMO_INTERSECTION}_1.ts"
+          publish_stream camera2 "/videos/$${STIA_DEMO_INTERSECTION}_2.ts"
+          publish_stream camera3 "/videos/$${STIA_DEMO_INTERSECTION}_3.ts"
+          publish_stream camera4 "/videos/$${STIA_DEMO_INTERSECTION}_4.ts"
+
+          trap 'kill $$pids' INT TERM
+          wait
