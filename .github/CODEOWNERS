@@ -1,0 +1,13 @@
+# CODEOWNERS
+# This file defines file ownership for automatic review requests.
+# The later matching patterns take precedence over the earlier ones, which means that more specific patterns should appear after general ones.
+# If a resource has under three technical code owners, it should not be assigned to the Documentation team either, even if it includes documentation (for the process reasons).
+
+/                  @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+LICENSE            @xwu2intel
+CONTRIBUTING.md    @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+CODE_OF_CONDUCT.md @xwu2intel
+SECURITY.md        @xwu2intel
+README.md          @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
