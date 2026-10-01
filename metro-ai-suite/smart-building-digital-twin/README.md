@@ -248,6 +248,31 @@ docker compose logs -f scene-narrator   # stream dashboard and narrator logs
 ./cleanup.sh                            # stop services and remove all generated files and volumes
 ```
 
+## Intended Use
+
+The sample application is meant to demonstrate person and object detection capabilities within a
+limited use-case scope indicated in the system documentation and the associated performance of
+Intel technology solutions. The system was not created with the intention for wide scale
+deployment or productization, and therefore lacks the breadth of information necessary to be
+considered as adequate for all human subjects. Accordingly, while the system may serve as a
+foundation for additional development of more robust systems, Intel expressly recommends and
+requests that this application not be considered a final product.
+
+AI detection of people in this application is solely for notification purposes (alerts, counts,
+and scene narration) and is not linked to or used to identify specific individuals.
+
+## Storage and Retention of Data
+
+Input data containing images of individuals and their physical characteristics is not stored or
+retained beyond what is required to generate the application's simulated outputs.
+
+## Human Rights
+
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See
+Intel's [Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html).
+Intel's products and software are intended only to be used in applications that do not cause or
+contribute to a violation of an internationally recognized human right.
+
 ## Notice for FFmpeg
 
 FFmpeg is an open source project licensed under LGPL and GPL. See <https://www.ffmpeg.org/legal.html>. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
