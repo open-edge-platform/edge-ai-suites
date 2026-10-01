@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Standalone/legacy launch path: the console joins the application's network
+# as an external network and serves its own self-signed TLS on CONSOLE_PORT,
+# without touching nginx or the main docker-compose.yml.
+#
+# The recommended path is now the "console" service in the top-level
+# docker-compose.yml, which builds from the same ./console-addon/console
+# image, runs on the shared app_network, and is reverse-proxied by nginx at
+# /console/ (TLS terminated at the edge, like every other service). Use this
+# file only if you need the console to run independently of that stack.
+services:
+  console:
+    build:
+      context: ./console
+      dockerfile: Dockerfile
+    image: loitering-detection-ui:0.1.0
+    container_name: ui-console
+    restart: unless-stopped
+    ports:
+      - "${CONSOLE_PORT}:${CONSOLE_PORT}"
+    environment:
+      - UI_PORT=${CONSOLE_PORT}
+      - ENABLE_TLS=true
+      - HOST_IP=${HOST_IP:-127.0.0.1}
+      - PIPELINE_SERVER_URL=${PIPELINE_SERVER_URL}
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT}
+      - MEDIAMTX_URL=${MEDIAMTX_URL}
+      - PROMETHEUS_URL=${PROMETHEUS_URL}
+      - MODEL_ROOT=${MODEL_ROOT}
+      - DEVICES=${DEVICES}
+      - DEFAULT_ZONE=${DEFAULT_ZONE}
+      - LOITER_THRESHOLD_S=${LOITER_THRESHOLD_S}
+      - ZONE_VACANT_GRACE_S=${ZONE_VACANT_GRACE_S}
+      - TRACK_TTL_S=${TRACK_TTL_S}
+      - DETECTIONS_TOPIC_PREFIX=${DETECTIONS_TOPIC_PREFIX}
+      - SOURCES_JSON=${SOURCES_JSON}
+      # The console talks only to services on this network. Docker injects the
+      # host's proxy settings, whose bypass list does not contain Docker
+      # service names, so every in-network call is sent to the proxy and fails
+      # with 504. Neutralise it and bypass explicitly.
+      - http_proxy=
+      - https_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - no_proxy=${NO_PROXY_LIST}
+      - NO_PROXY=${NO_PROXY_LIST}
+    volumes:
+      - ${MODEL_STORE_HOST}:${MODEL_ROOT}:ro
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    name: ${APP_NETWORK}
+    external: true
