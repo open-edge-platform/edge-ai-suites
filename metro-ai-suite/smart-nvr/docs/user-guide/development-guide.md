@@ -1,6 +1,6 @@
 # Development Guide
 
-Quick reference for developers contributing to Smart Event Router.
+Quick reference for developers contributing to Smart NVR.
 
 ## Setup
 

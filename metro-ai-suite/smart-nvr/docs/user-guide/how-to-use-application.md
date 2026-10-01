@@ -1,7 +1,7 @@
-# How to Use Smart Event Router
+# How to Use Smart NVR
 
 This guide helps you verify deployment, access the application features, and interact with
-the Smart Event Router components.
+the Smart NVR components.
 
 ## Accessing the Application
 
@@ -25,7 +25,7 @@ After successful deployment, you will see the main landing page:
 
 ### Core Features
 
-The Smart Event Router application provides three main functionalities:
+The Smart NVR application provides three main functionalities:
 
 #### 1. **Video Summarization & Search**
 
