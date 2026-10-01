@@ -143,9 +143,7 @@ These recur every couple of minutes, even while WebRTC/TURN video streaming cont
 ### 5.2 Reason
 
 This is a long-standing, unresolved upstream interoperability issue between the `pion/turn` TURN client
-library (used internally by mediamtx's WebRTC/TURN client, `turnc`) and coturn -- see
-[pion/turn#144](https://github.com/pion/turn/issues/144), open since 2020 and still reported as of late 2025
-across many unrelated coturn/pion deployments and topologies.
+library (used internally by mediamtx's WebRTC/TURN client, `turnc`) and coturn.
 
 mediamtx's TURN client periodically resends a `CreatePermission`/`CHANNEL_BIND` request to refresh the
 permission on its TURN allocation, and coturn intermittently answers with `error 400` for that refresh. In
