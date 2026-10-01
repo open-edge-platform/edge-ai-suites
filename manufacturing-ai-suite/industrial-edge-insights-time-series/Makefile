@@ -250,10 +250,10 @@ up_mqtt_ingestion: check_env_variables down
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
 	$(call multi_stream_check,opcua)
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(num_of_streams) -gt 1 ]; then \
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \
-	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	if [ $(INCLUDE) = 'validation' ]; then \
