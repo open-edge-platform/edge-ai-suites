@@ -10,9 +10,9 @@ from collections import deque
 import requests
 from flask import jsonify, request
 
-from config import (DEFAULT_ZONE, DETECTIONS_TOPIC_PREFIX, LOCK, MQTT_HOST,
+from config import (DETECTIONS_TOPIC_PREFIX, LOCK, MQTT_HOST,
                     MQTT_PORT, PIPELINE_SERVER_URL, SESSIONS, _parse_zone, app,
-                    zone_to_analytics_json, zone_to_attachroi)
+                    analytics_zones_json)
 from catalog import (_extract_instance_id, _model_instance_id,
                      _resolve_source_uri, _select_pipeline, discover_models)
 
@@ -20,6 +20,11 @@ from catalog import (_extract_instance_id, _model_instance_id,
 def _launch(source_id, model_id, device, zone, rtsp=None):
     """Start one pipeline instance. Raises ValueError with a user-facing
     message on any input/DLSPS error; returns the new session dict on success.
+
+    `zone` is None until the operator customises it, in which case the
+    pipeline keeps evaluating the deployment's own zones from
+    loitering_analytics_config.json unmodified; a provided zone entirely
+    replaces them (see `analytics_zones_json`).
     """
     source_uri = _resolve_source_uri(source_id, rtsp)
     if not source_uri:
@@ -44,8 +49,8 @@ def _launch(source_id, model_id, device, zone, rtsp=None):
     if model_entry.get("model_proc"):
         detection_props["model_proc"] = model_entry["model_proc"]
 
-    zone = zone or dict(DEFAULT_ZONE)
-    analytics_props = {"zones": zone_to_analytics_json(zone)}
+    zone = zone or None
+    analytics_props = {"zones": analytics_zones_json(zone)}
 
     payload = {
         "source": {"uri": source_uri, "type": "uri"},
@@ -54,8 +59,7 @@ def _launch(source_id, model_id, device, zone, rtsp=None):
             "frame": {"type": "webrtc", "peer-id": peer_id},
         },
         "parameters": {"detection-properties": detection_props,
-                       "analytics-properties": analytics_props,
-                       "attachroi-properties": {"roi": zone_to_attachroi(zone)}},
+                       "analytics-properties": analytics_props},
     }
 
     url = f"{PIPELINE_SERVER_URL}/pipelines/{pipeline.get('name')}/{pipeline.get('version')}"
@@ -120,7 +124,7 @@ def api_pipelines_start():
     device = str(body.get("device") or "CPU").upper()
     if device not in ("CPU", "GPU", "NPU"):
         return jsonify({"error": "device must be one of CPU, GPU, NPU"}), 400
-    zone = _parse_zone(body.get("zone")) or dict(DEFAULT_ZONE)
+    zone = _parse_zone(body.get("zone"))
     try:
         result = _launch(body.get("source"), body.get("model"), device, zone, body.get("rtsp"))
     except ValueError as exc:

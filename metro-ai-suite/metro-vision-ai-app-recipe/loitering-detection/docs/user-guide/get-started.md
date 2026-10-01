@@ -126,16 +126,16 @@ By following this guide, you will learn how to:
   ![Grafana Dashboard](./_assets/grafana.png "grafana dashboard")
 
   > [!NOTE]
-  > In the default pipeline, we use `gvatrack tracking-type=short-term-imageless`
-  > element. Imageless tracking forms object associations based on the movement
-  > and shape of objects, and it does not use image data. Since it does not use
-  > image features, the same object may receive different IDs over time due to
-  > lack of re-identification.
+  > The default pipeline uses `gvatrack tracking-type=zero-term`, which uses
+  > image data to re-associate a track and keeps the same id across brief
+  > occlusions better than imageless tracking. The id can still change if a
+  > track leaves the frame and a similar-looking object enters later.
 
 ### **Loitering Detection Console UI**
 
 - **URL**: `https://localhost/console/`
 - Start/stop streams, discover models, draw a zone and view live per-stream loitering analytics.
+- See the [Console UI guide](./how-to-guides/console-ui-guide.md) for full usage details.
 
 ### **DL Streamer Pipeline Server**
 

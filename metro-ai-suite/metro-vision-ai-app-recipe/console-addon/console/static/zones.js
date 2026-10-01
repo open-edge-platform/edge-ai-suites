@@ -28,6 +28,15 @@
   // disabled until the fields differ from it.
   C._appliedZone = null;
 
+  // Whether the operator has ever edited the rail, drawn on video, or
+  // applied a zone. Starting a stream while this is false keeps the
+  // deployment's own zones (loitering_analytics_config.json) exactly as
+  // configured; once true, a custom rectangle is sent instead and replaces
+  // them entirely (gvaanalytics evaluates one zone set or the other, never
+  // both - see config.py's analytics_zones_json). Never reset to false:
+  // once customised, the session stays in "custom zone" mode.
+  C._zoneCustomized = false;
+
   C.markZoneApplied = function (zoneString) {
     C._appliedZone = zoneString !== undefined ? zoneString : C.currentZoneString();
     C.refreshApplyState();

@@ -80,6 +80,7 @@ window.Console = window.Console || {};
     sx = Math.max(0, Math.min(sx, g.vw - 1));
     sy = Math.max(0, Math.min(sy, g.vh - 1));
     C.setZoneInputs({ x: sx, y: sy, w: Math.min(sw, g.vw - sx), h: Math.min(sh, g.vh - sy) });
+    C._zoneCustomized = true;
     C.refreshApplyState();
   };
 
@@ -100,6 +101,7 @@ window.Console = window.Console || {};
   // relaunched under a new peer_id and its panel replaced.
   C.applyZone = function (peerId, btn) {
     var zone = C.currentZoneString();
+    C._zoneCustomized = true;
     var body = { zone: zone };
     if (peerId) { body.peer_id = peerId; }
     if (btn) { btn.disabled = true; btn.textContent = "Applying..."; }

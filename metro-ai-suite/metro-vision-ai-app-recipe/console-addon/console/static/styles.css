@@ -113,6 +113,24 @@ body {
   margin: 0 0 10px 0;
 }
 
+/* Source/Model/Zone are <details>; summary replaces the plain h2 bar and
+   keeps the same look whether expanded or collapsed. */
+details.card summary {
+  list-style: none;
+  cursor: pointer;
+}
+details.card summary::-webkit-details-marker { display: none; }
+details.card summary h2 { margin: 0; }
+details.card[open] summary h2 { margin-bottom: 10px; }
+details.card > *:not(summary) { margin-top: 0; }
+
+.info-icon {
+  color: var(--muted);
+  cursor: help;
+  font-size: .9rem;
+}
+.info-icon:hover, .info-icon:focus { color: var(--accent-2); }
+
 .field { margin-bottom: 10px; }
 .field label {
   display: block;
@@ -151,6 +169,13 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
   margin-bottom: 10px;
+}
+.roi-field label {
+  display: block;
+  font-size: .72rem;
+  color: var(--muted);
+  margin-bottom: 2px;
+  text-align: center;
 }
 
 .actions { display: flex; flex-direction: column; gap: 8px; }

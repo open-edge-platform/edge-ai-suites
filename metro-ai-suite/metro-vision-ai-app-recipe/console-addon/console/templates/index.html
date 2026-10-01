@@ -35,8 +35,8 @@
 
   <main class="layout">
     <aside class="rail">
-      <div class="card">
-        <h2>Source</h2>
+      <details class="card" data-section="source" open>
+        <summary><h2>Source</h2></summary>
         <div class="field">
           <label for="sourceSel">Camera / stream</label>
           <select id="sourceSel"></select>
@@ -45,10 +45,10 @@
           <label for="rtspInput">&hellip;or RTSP URL</label>
           <input id="rtspInput" type="text" placeholder="rtsp://...">
         </div>
-      </div>
+      </details>
 
-      <div class="card">
-        <h2>Model <button id="refreshModels" class="mini-btn" title="Re-scan model store">&#x27F3;</button></h2>
+      <details class="card" data-section="model" open>
+        <summary><h2>Model <button id="refreshModels" class="mini-btn" title="Re-scan model store">&#x27F3;</button></h2></summary>
         <div class="field">
           <label for="modelSelA">Primary model</label>
           <select id="modelSelA"></select>
@@ -62,24 +62,42 @@
           <select id="deviceSel"></select>
         </div>
         <p class="hint" id="modelSrcHint">Models are discovered automatically from the mounted model store.</p>
-      </div>
+      </details>
 
-      <div class="card">
-        <h2>Zone (ROI)</h2>
+      <details class="card" data-section="zone" open>
+        <summary><h2>Zone (ROI)
+          <span class="info-icon" tabindex="0"
+                title="x, y: pixel position of the rectangle's top-left corner in the source video. w, h: its width and height in pixels. All four are in source-video pixels, not screen pixels.">&#9432;</span>
+        </h2></summary>
         <label class="draw-toggle">
           <input type="checkbox" id="drawZone">
           &#9998; Draw zone on video
         </label>
         <div class="roi-grid">
-          <input id="roiX" type="number" value="0" placeholder="x">
-          <input id="roiY" type="number" value="200" placeholder="y">
-          <input id="roiW" type="number" value="300" placeholder="w">
-          <input id="roiH" type="number" value="400" placeholder="h">
+          <div class="roi-field">
+            <label for="roiX">x</label>
+            <input id="roiX" type="number" value="0" placeholder="x" title="x: left edge, in source-video pixels">
+          </div>
+          <div class="roi-field">
+            <label for="roiY">y</label>
+            <input id="roiY" type="number" value="200" placeholder="y" title="y: top edge, in source-video pixels">
+          </div>
+          <div class="roi-field">
+            <label for="roiW">w</label>
+            <input id="roiW" type="number" value="300" placeholder="w" title="w: width, in source-video pixels">
+          </div>
+          <div class="roi-field">
+            <label for="roiH">h</label>
+            <input id="roiH" type="number" value="400" placeholder="h" title="h: height, in source-video pixels">
+          </div>
         </div>
         <button id="applyZoneAll" class="btn btn-ghost btn-sm">Apply zone to live streams</button>
-        <p class="hint">Rectangle zone only for now. Applying a zone updates every live stream.</p>
+        <p class="hint">These fields are pre-filled from the deployment's own zone file for
+          reference only. Starting a stream without touching them keeps that file's zones
+          exactly as configured; editing a field, drawing on video, or applying replaces them
+          entirely with this rectangle.</p>
         <p class="hint">A track loiters once its dwell time in the zone reaches <span id="loiterThr">5.0</span>s.</p>
-      </div>
+      </details>
 
       <div class="actions">
         <button id="startBtn" class="btn btn-primary">&#9654; Start stream</button>
@@ -144,7 +162,7 @@
         <div class="p-stats"></div>
         <table class="p-loiter">
           <thead><tr>
-            <th>Object ID</th><th>Type</th><th>Status</th>
+            <th>Object ID</th><th>Type</th><th>Zone</th><th>Status</th>
             <th>Entry Time</th><th>Dwell (s)</th>
           </tr></thead>
           <tbody></tbody>

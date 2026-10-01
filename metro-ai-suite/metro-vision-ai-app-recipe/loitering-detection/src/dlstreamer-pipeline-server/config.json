@@ -5,7 +5,7 @@
                 "name": "object_tracking_cpu",
                 "source": "gstreamer",
                 "queue_maxsize": 30,
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaattachroi name=attachroi ! gvadetect inference-region=1 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=CPU model-instance-id=inst0 threshold=0.7 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics draw-zones=false ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=CPU model-instance-id=inst0 threshold=0.7 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics evaluation-point=bottom-center draw-zones=true ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvapython module=/home/pipeline-server/configs/zone_region_filter.py class=ZoneOnlyFilter name=zonefilter ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
                 "description": "Loitering detection pipeline on CPU",
                 "parameters": {
                     "type": "object",
@@ -27,12 +27,6 @@
                                 "name": "metaconvert",
                                 "format": "element-properties"
                             }
-                        },
-                        "attachroi-properties": {
-                            "element": {
-                                "name": "attachroi",
-                                "format": "element-properties"
-                            }
                         }
                     }
                 },
@@ -42,7 +36,7 @@
                 "name": "object_tracking_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 30,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvaattachroi name=attachroi ! gvadetect inference-region=1 batch-size=1 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=GPU model-instance-id=instgpu0 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics draw-zones=false ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect batch-size=1 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=GPU model-instance-id=instgpu0 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics evaluation-point=bottom-center draw-zones=true ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvapython module=/home/pipeline-server/configs/zone_region_filter.py class=ZoneOnlyFilter name=zonefilter ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
                 "description": "Loitering detection pipeline on GPU",
                 "parameters": {
                     "type": "object",
@@ -64,12 +58,6 @@
                                 "name": "metaconvert",
                                 "format": "element-properties"
                             }
-                        },
-                        "attachroi-properties": {
-                            "element": {
-                                "name": "attachroi",
-                                "format": "element-properties"
-                            }
                         }
                     }
                 },
@@ -79,7 +67,7 @@
                 "name": "object_tracking_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 30,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvaattachroi name=attachroi ! gvadetect inference-region=1 batch-size=1 nireq=2 threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=NPU model-instance-id=instnpu0 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics draw-zones=false ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect batch-size=1 nireq=2 threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=NPU model-instance-id=instnpu0 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics evaluation-point=bottom-center draw-zones=true ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvapython module=/home/pipeline-server/configs/zone_region_filter.py class=ZoneOnlyFilter name=zonefilter ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
                 "description": "Loitering detection pipeline on NPU",
                 "parameters": {
                     "type": "object",
@@ -99,12 +87,6 @@
                         "metaconvert-properties": {
                             "element": {
                                 "name": "metaconvert",
-                                "format": "element-properties"
-                            }
-                        },
-                        "attachroi-properties": {
-                            "element": {
-                                "name": "attachroi",
                                 "format": "element-properties"
                             }
                         }

@@ -155,6 +155,8 @@ def _zone_from_config_file(path):
 
     Its zone is kept rectangular so the rail's x/y/w/h fields represent it
     exactly; a polygon would be silently replaced by its bounding box on edit.
+    This is only ever used to pre-fill the rail - see `_load_file_zones`
+    below for what the pipeline itself is actually given.
     """
     try:
         with open(path, "r", encoding="utf-8") as fh:
@@ -168,22 +170,46 @@ def _zone_from_config_file(path):
     return None
 
 
-ZONE_CONFIG_FILE = os.environ.get("ZONE_CONFIG_FILE", "/home/pipeline-server/configs/loitering_analytics_config.json")
-def zone_to_attachroi(zone):
-    """Render a zone as gvaattachroi's `roi` value.
+def _load_file_zones(path):
+    """The deployment's own zones (e.g. Pathway/Driveway), verbatim.
 
-    gvaattachroi takes opposite corners (x1,y1,x2,y2), not x/y/w/h - sending
-    width and height where it expects corners silently shrinks the region.
+    Pipelines no longer bake `gvaanalytics config=...`: every start now sets
+    the `zones` property itself, either with this file's zones (nothing
+    customised yet) or with the operator's own rectangle in place of them
+    (see `analytics_zones_json`) - gvaanalytics has no notion of "add to the
+    file's zones", so the two are mutually exclusive by construction.
     """
-    if not zone:
-        return None
-    return "%d,%d,%d,%d" % (zone["x"], zone["y"],
-                            zone["x"] + zone["w"], zone["y"] + zone["h"])
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            zones = json.load(fh).get("zones") or []
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return []
+    return zones if isinstance(zones, list) else []
 
+
+ZONE_CONFIG_FILE = os.environ.get("ZONE_CONFIG_FILE", "/home/pipeline-server/configs/loitering_analytics_config.json")
+
+FILE_ZONES = _load_file_zones(ZONE_CONFIG_FILE)
+FILE_ZONES_JSON = json.dumps(FILE_ZONES) if FILE_ZONES else "[]"
 
 DEFAULT_ZONE = (_parse_zone(os.environ.get("DEFAULT_ZONE"))
                 or _zone_from_config_file(ZONE_CONFIG_FILE)
                 or {"x": 0, "y": 200, "w": 300, "h": 400, "points": None})
+
+
+def analytics_zones_json(zone):
+    """What to set gvaanalytics' `zones` property to for this session.
+
+    `zone` is None until the operator customises it (the rail is only
+    pre-filled with the file's own bounding box for convenience - starting
+    without touching it keeps the file's zones, unmodified, as-is). Once a
+    zone is supplied - by editing the rail, drawing on video, or applying -
+    it entirely replaces the file's zones rather than being added alongside
+    them, matching the "it is now a new config" mental model: a deployment
+    is either watching its own pre-configured zones or an operator's own
+    rectangle, never a mix of both.
+    """
+    return zone_to_analytics_json(zone) if zone else FILE_ZONES_JSON
 
 try:
     SOURCES = json.loads(os.environ.get("SOURCES_JSON", "[]"))

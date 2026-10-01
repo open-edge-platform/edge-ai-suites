@@ -54,15 +54,17 @@ def api_pipelines():
 def api_zone():
     """Apply a new evaluation zone by relaunching the affected session(s).
 
-    gvaanalytics has no live-update path for its zones: a zone already loaded
-    (from its config file or a prior start) is not cleanly replaced by a later
-    property set with the same id (confirmed live — the original geometry kept
-    winning). The only way a new zone reliably takes effect is a fresh start,
-    so this stops each affected session's instance and starts a new one with
-    the same source/model/device and the new zone — mirroring the reapply
-    pattern already required for the pipeline-level attach-roi predecessor of
-    this element. Without "peer_id" the zone is applied to every live stream,
-    so a zone drawn while comparing models applies to all panels at once.
+    gvaanalytics has no live-update path for its zones: a zone already in
+    effect (from `analytics_zones_json` at the prior start) is not cleanly
+    replaced by a later property set with the same id (confirmed live — the
+    original geometry kept winning). The only way a new zone reliably takes
+    effect is a fresh start, so this stops each affected session's instance
+    and starts a new one with the same source/model/device and the new zone.
+    A zone applied here entirely replaces whatever the session was
+    evaluating before - the deployment's own file zones included - rather
+    than being added alongside them; see `analytics_zones_json`. Without
+    "peer_id" the zone is applied to every live stream, so a zone drawn
+    while comparing models applies to all panels at once.
     """
     body = request.get_json(silent=True) or {}
     zone = _parse_zone(body.get("zone"))

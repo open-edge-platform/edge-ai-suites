@@ -39,8 +39,8 @@ def _publish_table_rows(topic, objects, now):
     if mqtt_client is None:
         return
     for obj in objects:
-        if not isinstance(obj, dict) or obj.get("parent_id") is None:
-            continue  # the region gvaattachroi adds has no parent and is not a detection
+        if not isinstance(obj, dict):
+            continue
         for dwell in obj.get("dwell_times") or []:
             if not isinstance(dwell, dict):
                 continue

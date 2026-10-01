@@ -1,37 +1,30 @@
 #!/bin/bash
 
 DLSPS_NODE_IP="localhost"
-ZONE_CONFIG="$(dirname "$(readlink -f "$0")")/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json"
 # The pipelines bake in no model, so that a different one can be selected per
 # request without inheriting this model's post-processing.
 MODEL_DIR="/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001"
 MODEL_XML="$MODEL_DIR/FP16/pedestrian-and-vehicle-detector-adas-0001.xml"
 MODEL_PROC="$MODEL_DIR/pedestrian-and-vehicle-detector-adas-0001.json"
 
-# The pipelines deliberately bake in no zone: gvaanalytics does not cleanly
-# replace a zone already loaded from a config= file, so a baked zone could
-# never be overridden by the console. The zone is therefore always supplied
-# at start time, and this file is its single source of truth - edit it to
-# change the zone the sample pipelines evaluate.
-if [ ! -f "$ZONE_CONFIG" ]; then
-  echo "Error: zone configuration not found at $ZONE_CONFIG"
-  exit 1
-fi
-ZONES_JSON=$(python3 -c "import json,sys; print(json.dumps(json.dumps(json.load(open(sys.argv[1]))['zones'])))" "$ZONE_CONFIG") || {
-  echo "Error: could not read zones from $ZONE_CONFIG"
-  exit 1
-}
-# gvaattachroi restricts inference to the zone (the pipeline sets
-# inference-region=1), and takes opposite corners rather than x/y/w/h.
-ATTACH_ROI=$(python3 -c "
-import json,sys
-pts = json.load(open(sys.argv[1]))['zones'][0]['points']
-xs = [p['x'] for p in pts]; ys = [p['y'] for p in pts]
-print('%d,%d,%d,%d' % (min(xs), min(ys), max(xs), max(ys)))
-" "$ZONE_CONFIG") || {
-  echo "Error: could not derive the inference ROI from $ZONE_CONFIG"
-  exit 1
-}
+# Zones are no longer baked into the pipeline (gvaanalytics has no
+# `config=` property set in config.json), so this script reads the same
+# zone file (src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json)
+# and passes its "zones" array through the "analytics-properties" parameter
+# on every start - every zone defined there, rectangle or polygon, any
+# count, is active exactly as if it were still baked in. Edit that file to
+# change the zones the sample pipelines evaluate.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ZONES_CONFIG_FILE="$SCRIPT_DIR/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json"
+ZONES_JSON=$(python3 -c "
+import json
+try:
+    with open('$ZONES_CONFIG_FILE') as f:
+        zones = json.load(f).get('zones') or []
+except Exception:
+    zones = []
+print(json.dumps(json.dumps(zones)))
+")
 
 function run_sample() {
   pipelines=$1
@@ -72,9 +65,6 @@ function run_sample() {
         },
         "analytics-properties": {
             "zones": $ZONES_JSON
-        },
-        "attachroi-properties": {
-            "roi": "$ATTACH_ROI"
         }
     }
   }

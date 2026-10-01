@@ -8,15 +8,34 @@ import time
 from config import (TABLE_STALE_S, TRACK_TTL_S, ZONE_ID)
 
 def _native_dwell(obj):
-    """gvaanalytics' own dwell time for this session's zone, or None.
+    """gvaanalytics' own dwell time for this object, or None if in no zone.
 
-    Preferred over recomputing from bounding boxes: it is what the pipeline
-    itself treats as authoritative and it honours object-retention.
+    An object counts for the table once it is in any configured zone (the
+    config file's Pathway/Driveway as well as this session's OperatorZone),
+    not only when it happens to also be inside OperatorZone - otherwise
+    moving OperatorZone away from a file zone would empty the table even
+    while gvaanalytics is still actively tracking dwell there. OperatorZone's
+    own reading is preferred when present since it is the zone the operator
+    is actively watching; the longest-running zone otherwise stands in for it.
     """
-    for dt in obj.get("dwell_times") or []:
-        if isinstance(dt, dict) and dt.get("zone_id") == ZONE_ID:
+    dwell_times = [dt for dt in (obj.get("dwell_times") or []) if isinstance(dt, dict)]
+    for dt in dwell_times:
+        if dt.get("zone_id") == ZONE_ID:
             return dt.get("dwell_time_sec")
-    return None
+    if not dwell_times:
+        return None
+    return max(dt.get("dwell_time_sec", 0.0) for dt in dwell_times)
+
+
+def _zone_ids(obj):
+    """Every zone id gvaanalytics currently matches this object to.
+
+    Includes the config file's own zones (e.g. Pathway/Driveway) alongside
+    this session's OperatorZone, so the table can show which zone(s) an
+    object owes its row to when more than one is active at once.
+    """
+    ids = [dt.get("zone_id") for dt in obj.get("dwell_times") or [] if isinstance(dt, dict) and dt.get("zone_id")]
+    return sorted(set(ids))
 
 
 def _extract_candidates(payload, metadata):
@@ -93,19 +112,9 @@ def _object_label(obj):
     return ("region %s" % rid) if rid is not None else "object"
 
 
-def _is_detection(obj):
-    """False for the region gvaattachroi adds to every frame.
-
-    That region also carries dwell metadata, so it must be excluded by shape.
-    Detections are its children and carry a parent_id; it has none. Keying on
-    the class label instead would drop detections from an unlabelled model.
-    """
-    return obj.get("parent_id") is not None
-
-
 def _update_zone_analytics(sess, objects, metadata, frame_ts, now):
     for obj in objects:
-        if not isinstance(obj, dict) or not _is_detection(obj):
+        if not isinstance(obj, dict):
             continue
         # gvaanalytics decides zone membership, and it is the same component
         # the overlay and Grafana report from.
@@ -115,13 +124,16 @@ def _update_zone_analytics(sess, objects, metadata, frame_ts, now):
         tid = obj.get("id") or obj.get("object_id") or obj.get("track_id") or f"anon-{id(obj)}"
         trk = sess["tracks"].get(tid)
         label = _object_label(obj)
+        zones = _zone_ids(obj)
         if trk is None:
             sess["tracks"][tid] = {"first": frame_ts, "last": frame_ts, "wall_last": now,
-                                   "label": label, "entry_wall": now, "native_dwell_s": native_dwell}
+                                   "label": label, "entry_wall": now, "native_dwell_s": native_dwell,
+                                   "zones": zones}
         else:
             trk["last"] = frame_ts
             trk["wall_last"] = now
             trk["native_dwell_s"] = native_dwell
+            trk["zones"] = zones
             if label != "object":
                 trk["label"] = label
 

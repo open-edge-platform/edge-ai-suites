@@ -59,7 +59,7 @@ window.Console = window.Console || {};
     tbody.innerHTML = rows.map(function (r) {
       var cls = r.status === "Loitering" ? ' class="row-loiter"' : "";
       return "<tr" + cls + "><td>" + escapeHtml(r.id) + "</td><td>" + escapeHtml(r.label) +
-        "</td><td>" + escapeHtml(r.status) + "</td><td>" + escapeHtml(r.entry_time) +
+        "</td><td>" + escapeHtml(r.zone) + "</td><td>" + escapeHtml(r.status) + "</td><td>" + escapeHtml(r.entry_time) +
         "</td><td>" + n(r.dwell_s) + "</td></tr>";
     }).join("");
     if (empty) { empty.style.display = rows.length ? "none" : "block"; }
@@ -130,9 +130,11 @@ window.Console = window.Console || {};
     var e = gpu && gpu.engines;
     var parts = [];
     if (e) {
+      // engines holds raw 0-1 ratios, not percentages; rounding before
+      // scaling made every engine but the busiest read as 0.
       Object.keys(e).sort().forEach(function (k) {
         var v = e[k];
-        if (v !== null && v !== undefined) { parts.push(k + " " + Math.round(v)); }
+        if (v !== null && v !== undefined) { parts.push(k + " " + Math.round(v * 100)); }
       });
     }
     var mem = fmtMem(gpu && gpu.mem_used_bytes, gpu && gpu.mem_total_bytes);

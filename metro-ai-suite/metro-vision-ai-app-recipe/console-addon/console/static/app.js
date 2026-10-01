@@ -105,6 +105,13 @@ window.Console = window.Console || {};
       var devices = (cfg.devices || []).filter(function (d) { return d.available; });
       if (!devices.length) { devices = [{ id: "CPU", available: true }]; }
       fillSelect(byId("deviceSel"), devices, "id", "id");
+      // GPU gives the best balance of throughput and availability on this
+      // deployment; fall back to whatever is first when it is not present.
+      var deviceSel = byId("deviceSel");
+      if (deviceSel) {
+        var hasGpu = devices.some(function (d) { return d.id === "GPU"; });
+        deviceSel.value = hasGpu ? "GPU" : devices[0].id;
+      }
       // Reflect the zone this deployment was configured with, so the rail
       // never shows a rectangle the server is not enforcing.
       C.setZoneInputs(cfg.default_zone);
@@ -138,7 +145,10 @@ window.Console = window.Console || {};
     var device = byId("deviceSel").value;
     var source = byId("sourceSel").value;
     var rtsp = (byId("rtspInput").value || "").trim();
-    var zone = C.currentZoneString();
+    // Omit the zone entirely until the operator customises it, so the
+    // deployment's own zones (loitering_analytics_config.json) are what the
+    // pipeline evaluates rather than an implicit rectangle derived from them.
+    var zone = C._zoneCustomized ? C.currentZoneString() : null;
     var wanted = [byId("modelSelA").value];
     if (byId("compareMode").checked && byId("modelSelB").value) {
       wanted.push(byId("modelSelB").value);
@@ -155,8 +165,9 @@ window.Console = window.Console || {};
       btn.disabled = false;
       btn.textContent = prev;
       C.updateEmptyState();
-      // Streams now run this zone, so applying it again would be a no-op.
-      C.markZoneApplied(zone);
+      // Streams now run this zone (or the file's own, if not customised),
+      // so applying the rail's current value again would be a no-op.
+      if (zone) { C.markZoneApplied(zone); }
     });
   }
 
@@ -174,7 +185,12 @@ window.Console = window.Console || {};
     });
     ["roiX", "roiY", "roiW", "roiH"].forEach(function (id) {
       var el = byId(id);
-      if (el) { el.addEventListener("input", function () { C.refreshApplyState(); }); }
+      if (el) {
+        el.addEventListener("input", function () {
+          C._zoneCustomized = true;
+          C.refreshApplyState();
+        });
+      }
     });
   }
 
