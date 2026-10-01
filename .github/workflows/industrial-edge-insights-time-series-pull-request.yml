@@ -92,7 +92,6 @@ jobs:
             exit 1
         fi
         make status | tee status.log
-        # Grafana logs "user token not found" until first login (see user guide).
         if grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'; then exit 1; fi
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
@@ -166,7 +165,7 @@ jobs:
     permissions:
       contents: read
       packages: read
-    runs-on: ubuntu-22.04-32core-128GB
+    runs-on: ubuntu-24.04-16core-64GB
     env:
       PLATFORM_CHECK: "false"
       # agentic services hard-code /dev/dri and /dev/accel, absent on hosted runners.
