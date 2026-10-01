@@ -74,7 +74,16 @@ Scenescape images are pulled automatically from Docker Hub by `./setup.sh` — n
 
 ## Setup
 
-Clone the repository (Git LFS extension is required for video and model files), then run:
+Clone the repository (Git LFS extension is required for video and model files):
+
+```bash
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/smart-building-digital-twin
+```
+
+Then run:
 
 ```bash
 ./setup.sh
@@ -251,3 +260,12 @@ docker compose logs -f scene-narrator   # stream dashboard and narrator logs
 ## Notice for FFmpeg
 
 FFmpeg is an open source project licensed under LGPL and GPL. See <https://www.ffmpeg.org/legal.html>. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+
+## Documentation
+
+- [Overview](./docs/user-guide/index.md)
+- [User Guide](./docs/user-guide/get-started.md)
+- [How It Works](./docs/user-guide/how-it-works.md)
+- [How To Use the Application](./docs/user-guide/how-to-use-application.md)
+- [Troubleshooting](./docs/user-guide/troubleshooting.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
