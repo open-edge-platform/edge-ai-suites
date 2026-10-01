@@ -96,6 +96,14 @@ window.Console = window.Console || {};
     });
   }
 
+  // Used by telemetry.js to title a panel reattached on page reload, where
+  // the session carries only the raw model id (never an operator-facing
+  // string) and there is no fresher label from a Start click to adopt.
+  C.modelLabel = function (modelId) {
+    var m = MODELS.filter(function (x) { return x.id === modelId; })[0];
+    return m ? m.label : modelId;
+  };
+
   function loadConfig() {
     return C.apiGet("api/config").then(function (cfg) {
       if (!cfg) { return; }

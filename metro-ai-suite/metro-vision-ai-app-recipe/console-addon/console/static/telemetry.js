@@ -70,12 +70,16 @@ window.Console = window.Console || {};
   function renderStreams(streams) {
     streams.forEach(function (s) {
       // Rebuild a panel for any session the page does not know about, so a
-      // refresh reattaches to streams that are still running.
+      // refresh reattaches to streams that are still running. The session
+      // only carries the raw model id, never the operator-facing label
+      // Start shows, so look that label up from the already-loaded model
+      // list rather than printing the id verbatim.
       if (!C.panels[s.peer_id]) {
+        var modelLabel = (C.modelLabel ? C.modelLabel(s.model) : s.model) || "?";
         C.createPanel({
           peer_id: s.peer_id,
           whep_url: "whep/" + s.peer_id,
-          title: (s.model || "?") + " \u00b7 " + (s.device || "?"),
+          title: modelLabel + " \u00b7 " + (s.device || "?"),
           zone: s.zone,
         });
         C.panels[s.peer_id].settled = true;

@@ -1,48 +1,115 @@
-# Using the Loitering Detection Console UI
+# Getting started - Loitering Detection Console UI
 
 The Loitering Detection Console is the sample application's operator UI: a single page to
 start/stop video analytics streams, pick a model and device, draw an evaluation zone, and watch
 live per-object loitering analytics without going through Grafana or the DL Streamer Pipeline
 Server's REST API directly.
 
-- Prerequisite: the application must already be running — see [Get Started](../get-started.md)
-  to deploy it first.
-- **URL**: `https://localhost/console/` (replace `localhost` with your host IP if accessing
-  remotely).
+## Prerequisites
 
-## Starting a stream
+- Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
+- Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
+  Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/)
+- Install Git: [Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
-1. **Source**: pick a bundled sample video from the **Camera / stream** dropdown, or type an
-   RTSP URL instead. The RTSP field takes priority when filled in.
-2. **Model**: choose the **Primary model** to run. Checking **Model compare (side-by-side)**
-   starts a second panel with a different model on the same source, so you can judge two
-   models against each other on identical input.
-3. **Device**: CPU, GPU or NPU. GPU is pre-selected because it gives the best throughput on
-   most deployments; switch it if your hardware or model does not support that device.
-4. **Zone**: see [Changing the zone](#changing-the-zone) below.
-5. Click **Start stream**. Each stream gets its own panel with a live WebRTC view and a
-   per-object loiter table underneath it.
+## Set up and first use
 
-Clicking a card's header (**Source**, **Model**, **Zone (ROI)**) collapses or expands just that
-card — useful for focusing on one section at a time on a short screen.
+1. **Clone the Suite**:
 
-## Adding a model to compare
+   ```bash
+   git clone --filter=blob:none --sparse --branch gg/ld-ui https://github.com/guptagunjan/edge-ai-suites.git
+   cd edge-ai-suites
+   git sparse-checkout set metro-ai-suite
+   cd metro-ai-suite/metro-vision-ai-app-recipe/
+   ```
+
+2. **Setup Application and Download Assets**:
+   - Use the installation script to configure the application and download required models:
+
+     ```bash
+     ./install.sh loitering-detection
+     ```
+
+   > [!NOTE]
+   > For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+   > specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
+   > your target IP address.)
+
+## Run the application
+
+1. **Start the Application**:
+   - Download container images with Application microservices and run with Docker Compose:
+
+     ```bash
+     docker compose up -d
+     ```
+
+     <details>
+     <summary>
+     Check Status of Microservices
+     </summary>
+     - The application starts the following microservices.
+     - To check if all microservices are in Running state:
+
+          docker ps
+
+     **Expected Services:**
+     - Grafana Dashboard
+     - DL Streamer Pipeline Server
+     - MQTT Broker
+     - Loitering Detection Console (operator UI)
+
+     </details>
+
+2. **Access the Console UI**:
+   - Open a browser and go to `https://localhost/console/` to access the Console UI.
+     - Change `localhost` to your host IP if you are accessing it remotely.
+
+3. **Starting a stream** (required):
+   - **Source**, **Model** and **Device** are already pre-filled with working defaults, so you
+     can click **Start stream** right away to see video with live detections - no field needs
+     to be touched first.
+   - Each stream gets its own panel with a live WebRTC view and a per-object loiter table
+     underneath it. Clicking a card's header (**Source**, **Model**, **Zone (ROI)**) collapses
+     or expands just that card - useful for focusing on one section at a time on a short screen.
+   - Need a different video, model, device or zone first? See
+     [Customization](#customization) below for what each field does and how to add more
+     options - **Model compare (side-by-side)** and **Zone (ROI)** are covered there too.
+
+## Customization
+
+### Changing the video, model or device
+
+- **Source**: pick a bundled sample video from the **Camera / stream** dropdown, or type an
+  RTSP URL instead. The RTSP field takes priority when filled in. See
+  [Changing the video source](#changing-the-video-source) below to add another bundled option.
+- **Model**: choose the **Primary model** to run. Checking **Model compare (side-by-side)**
+  starts a second panel with a different model on the same source, so you can judge two
+  models against each other on identical input. See
+  [Adding a model to compare](#adding-a-model-to-compare) below to add another option.
+- **Device**: CPU, GPU or NPU. GPU is pre-selected because it gives the best throughput on
+  most deployments; switch it if your hardware or model does not support that device.
+- **Zone**: see [Changing the zone](#changing-the-zone) below.
+- **Pipeline configuration**: for how Start/Stop map to DL Streamer Pipeline Server REST calls
+  and element properties, see [Updating the Pipeline](./how-to-guides/update-pipelines.md).
+
+### Adding a model to compare
 
 The **Model** dropdown lists whatever is under the mounted model store
 (`loitering-detection/src/dlstreamer-pipeline-server/models/`) as `<model>.xml` + `<model>.bin`
 pairs, with an optional `<model>.json` model_proc beside them. Drop a new model's files into
 that folder using the same layout and click the refresh button (&#x27F3;) next to **Model** -
 no restart or code change is needed. A model whose IR has a dynamic input shape is still listed
-but flagged, since GPU and NPU reject that shape and CPU silently returns no detections for it;
+but flagged, since GPU and NPU reject that shape and returns no detections for it;
 re-export the model with a fixed input size to use it on every device.
 
-## Changing the video source
+### Changing the video source
 
 Add a source to the **Camera / stream** dropdown by adding an entry to `SOURCES_JSON` in
 `console-addon/.env` (id, label, and a `file://` or `rtsp://` URI), then restart the `console`
 service. For a one-off source there is no need to edit anything - use the RTSP field instead.
 
-## Changing the zone
+### Changing the zone
 
 The rail's four fields are a **rectangle** in source-video pixels, labelled directly above each
 box so there is no guessing which field is which:
@@ -115,10 +182,6 @@ the `yolo11s` model, which may have better recall for some object types/angles t
 
 ## Troubleshooting
 
-- **No bounding boxes on a stream**: confirm the object is actually inside a zone — detection
-  only draws boxes for objects matched to at least one zone (see
-  [How detection and zones interact](#how-detection-and-zones-interact)). Widen or reposition
-  the `OperatorZone` rectangle and re-apply if the area you care about is not covered.
-- **Zone edits not taking effect**: `gvaanalytics` cannot update a zone on a running pipeline,
-  so **Apply zone to live streams** always restarts every live stream — expect a brief
-  reconnect of each video panel.
+See [Troubleshooting the Console UI](./troubleshooting.md#troubleshooting-the-console-ui) for
+UI-specific issues (missing bounding boxes, zone edits, stuck/silent streams).
+

@@ -70,6 +70,10 @@ function run_sample() {
   pipeline_list=()
   echo
   echo -n ">>>>>Initialization..."
+  # Each camera gets its own model-instance-id: DL Streamer caches a loaded
+  # network per id, and sharing one across concurrent pipelines can wedge
+  # every later launch reusing it once any one of them stops uncleanly
+  # (console-addon/console/catalog.py's _model_instance_id has the full story).
   for x in $(seq 1 $pipelines); do
     payload=$(cat <<EOF
    {
@@ -91,7 +95,8 @@ function run_sample() {
     "parameters": {
         "detection-properties": {
             "model": "$MODEL_XML",
-            "model_proc": "$MODEL_PROC"
+            "model_proc": "$MODEL_PROC",
+            "model-instance-id": "sample-${pipeline_name}-$x"
         },
         "analytics-properties": {
             "zones": $ZONES_JSON

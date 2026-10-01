@@ -155,15 +155,22 @@ def _select_pipeline(device):
     return None
 
 
-def _model_instance_id(model_path, device):
-    """Derive a unique model-instance-id from the model path and device.
+def _model_instance_id(model_path, device, unique):
+    """Derive a model-instance-id from the model path, device and `unique`.
 
-    The released pipelines pin a fixed identifier per device; DL Streamer
-    caches a loaded network against that identifier, so reusing it with a
-    different model binds the request to the stale network. Deriving the
-    identifier makes every model/device combination its own cache entry.
+    DL Streamer caches a loaded network against this identifier, so reusing
+    it for a different model binds the request to the stale network -
+    `unique` (the new session's own peer_id) rules that out entirely. It is
+    deliberately NOT shared across concurrent launches of the very same
+    model+device either: two separate pipeline instances told to share one
+    cached network can starve each other's inference requests once one of
+    them is stopped uncleanly, silently wedging every later launch that
+    reuses that id (observed live - fixed only by restarting the whole
+    pipeline server, which clears the cache). A fresh id per launch costs a
+    model recompile per stream instead of reusing a cached one, which is
+    the right trade for every stream actually working.
     """
-    digest = hashlib.sha256(f"{model_path}|{device}".encode("utf-8")).hexdigest()[:12]
+    digest = hashlib.sha256(f"{model_path}|{device}|{unique}".encode("utf-8")).hexdigest()[:12]
     return f"console-{digest}"
 
 

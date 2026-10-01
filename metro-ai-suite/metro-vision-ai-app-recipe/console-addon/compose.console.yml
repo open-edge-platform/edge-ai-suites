@@ -15,8 +15,8 @@ services:
     build:
       context: ./console
       dockerfile: Dockerfile
-    image: mission-console:latest
-    container_name: mission-console
+    image: loitering-detection-ui:0.1.0
+    container_name: ui-console
     restart: unless-stopped
     ports:
       - "${CONSOLE_PORT}:${CONSOLE_PORT}"

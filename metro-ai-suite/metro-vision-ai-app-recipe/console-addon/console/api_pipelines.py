@@ -44,7 +44,7 @@ def _launch(source_id, model_id, device, zone, rtsp=None):
     detection_props = {
         "model": model_entry["model"],
         "device": device,
-        "model-instance-id": _model_instance_id(model_entry["model"], device),
+        "model-instance-id": _model_instance_id(model_entry["model"], device, peer_id),
     }
     if model_entry.get("model_proc"):
         detection_props["model_proc"] = model_entry["model_proc"]

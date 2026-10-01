@@ -166,7 +166,7 @@ to use all of them.
 
 - **URL**: `https://localhost/console/`
 - Start/stop streams, discover models, draw a zone and view live per-stream loitering analytics.
-- See the [Console UI guide](./how-to-guides/console-ui-guide.md) for full usage details.
+- See [Getting started - Loitering Detection Console UI](./getting-started-ui.md) for full usage details.
 
 ### **DL Streamer Pipeline Server**
 

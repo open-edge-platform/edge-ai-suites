@@ -179,15 +179,15 @@ services:
     networks:
       - app_network
 
-  # Mission console: operator UI to start/stop streams, draw a zone and view
+  # UI Console: operator UI to start/stop streams, draw a zone and view
   # live loitering analytics. Served over plain HTTP; nginx is the only TLS
   # termination point, same as grafana/prometheus above.
   console:
     build:
       context: ./console-addon/console
       dockerfile: Dockerfile
-    image: mission-console:latest
-    container_name: mission-console
+    image: loitering-detection-ui:0.1.0
+    container_name: ui-console
     restart: unless-stopped
     env_file:
       - ./console-addon/.env

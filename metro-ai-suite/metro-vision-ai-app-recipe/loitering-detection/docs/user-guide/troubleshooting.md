@@ -119,6 +119,43 @@ to file new tickets there (after learning about the guidelines for
 
    This should resolve the time discrepancy in Prometheus.
 
+## Troubleshooting the Console UI
+
+See [Getting started - Loitering Detection Console UI](./getting-started-ui.md) for normal
+usage; the issues below are specific to it.
+
+1. **No bounding boxes on a stream**
+
+   - Confirm the object is actually inside a zone — detection only draws boxes for objects
+     matched to at least one zone (see
+     [How detection and zones interact](./getting-started-ui.md#how-detection-and-zones-interact)).
+     Widen or reposition the `OperatorZone` rectangle and re-apply if the area you care about is
+     not covered.
+
+2. **Zone edits not taking effect**
+
+   - `gvaanalytics` cannot update a zone on a running pipeline, so **Apply zone to live
+     streams** always restarts every live stream — expect a brief reconnect of each video
+     panel.
+
+3. **A stream connects but never shows video or detections (stuck/silent)**
+
+   - **Cause**: DL Streamer caches a loaded model against its `model-instance-id`; if a
+     pipeline using that id is ever stopped uncleanly, a shared id can leave the cache entry
+     wedged so every later launch reusing it silently stalls (connects, but no video frames or
+     metadata ever arrive). The Console UI and `sample_start.sh` both generate a unique id per
+     launch, so this should no longer happen in normal use.
+   - **Fix**: stop the affected stream(s) and restart the pipeline server to clear any wedged
+     cache entry:
+
+     ```bash
+     docker compose up -d --force-recreate dlstreamer-pipeline-server
+     ```
+
+   - If it recurs reliably for a specific model/device combination, check the pipeline server's
+     logs for errors around that model's load before restarting, since that points at a model
+     or device-compatibility problem rather than a cache issue.
+
 ## Troubleshooting Helm Deployments
 
 1. Deploying with Intel® GPU K8S Extension on Open Edge Platform

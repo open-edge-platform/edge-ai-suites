@@ -27,7 +27,20 @@ window.Console = window.Console || {};
 
   // Vertices, when supplied, take precedence over the rectangle fields.
   // Both notations are understood by the server.
+  //
+  // Starting a stream and the 1s reconcile poll (telemetry.js) can both
+  // learn about the same brand-new session - whichever's response arrives
+  // first wins the create; the other just adopts its (possibly more
+  // accurate) title/zone onto the panel already running, rather than
+  // cloning a second DOM node and opening a second WHEP connection for the
+  // same peer_id.
   C.createPanel = function (info) {
+    var existing = panels[info.peer_id];
+    if (existing) {
+      if (info.title) { existing.el.querySelector(".p-title").textContent = info.title; }
+      if (info.zone) { existing.zone = info.zone; C.drawCurrentZone(info.peer_id); }
+      return existing;
+    }
     var tpl = byId("panelTpl");
     var el = tpl.content.firstElementChild.cloneNode(true);
     var video = el.querySelector("video");
