@@ -12,7 +12,7 @@ from flask import jsonify, request
 
 from config import (DETECTIONS_TOPIC_PREFIX, LOCK, MQTT_HOST,
                     MQTT_PORT, PIPELINE_SERVER_URL, SESSIONS, _parse_zone, app,
-                    analytics_zones_json)
+                    analytics_zones_json, attachroi_rect)
 from catalog import (_extract_instance_id, _model_instance_id,
                      _resolve_source_uri, _select_pipeline, discover_models)
 
@@ -51,6 +51,12 @@ def _launch(source_id, model_id, device, zone, rtsp=None):
 
     zone = zone or None
     analytics_props = {"zones": analytics_zones_json(zone)}
+    # Physically restricts gvadetect to this rectangle - the reliable way
+    # to keep an object from ever being detected, let alone drawn, outside
+    # the zone (see config.attachroi_rect for why per-object suppression
+    # after the fact does not work in this DLStreamer version). No zone
+    # anywhere (file or custom) is the one case nothing should be cropped.
+    attachroi_props = {"roi": attachroi_rect(zone) or "0,0,100000,100000"}
 
     payload = {
         "source": {"uri": source_uri, "type": "uri"},
@@ -59,7 +65,8 @@ def _launch(source_id, model_id, device, zone, rtsp=None):
             "frame": {"type": "webrtc", "peer-id": peer_id},
         },
         "parameters": {"detection-properties": detection_props,
-                       "analytics-properties": analytics_props},
+                       "analytics-properties": analytics_props,
+                       "attachroi-properties": attachroi_props},
     }
 
     url = f"{PIPELINE_SERVER_URL}/pipelines/{pipeline.get('name')}/{pipeline.get('version')}"

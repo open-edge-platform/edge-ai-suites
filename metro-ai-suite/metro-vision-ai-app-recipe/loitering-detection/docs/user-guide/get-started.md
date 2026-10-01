@@ -22,6 +22,20 @@ By following this guide, you will learn how to:
 
 1. **Clone the Suite**:
 
+   > [!NOTE]
+   > The Loitering Detection Console UI described in this guide is not yet merged into
+   > `open-edge-platform/edge-ai-suites`. Until it is, clone the fork/branch it currently lives
+   > on instead of `main`:
+   >
+   > ```bash
+   > git clone --filter=blob:none --sparse --branch gg/ld-ui https://github.com/guptagunjan/edge-ai-suites.git
+   > cd edge-ai-suites
+   > git sparse-checkout set metro-ai-suite
+   > cd metro-ai-suite/metro-vision-ai-app-recipe/
+   > ```
+   >
+   > Once merged, use the upstream clone below as normal.
+
    Go to the target directory of your choice and clone the suite.
    If you want to clone a specific release branch, replace `main` with the desired tag.
    To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
@@ -47,7 +61,13 @@ By following this guide, you will learn how to:
 
 ## Run the application
 
-1. **Start the Application**:
+> [!NOTE]
+> **Steps 1 and 2 below are required** to get the application running. **Step 3 is optional** -
+> it only verifies the pipelines are producing output via Grafana; skip it if you plan to use the
+> [Loitering Detection Console UI](#loitering-detection-console-ui) instead, and go straight to
+> [Access the Application and Components](#access-the-application-and-components).
+
+1. **Start the Application** (required):
    - Download container images with Application microservices and run with Docker Compose:
 
      ```bash
@@ -73,12 +93,18 @@ By following this guide, you will learn how to:
 
      </details>
 
-2. **Run Predefined Pipelines**:
+2. **Run Predefined Pipelines** (required):
    - Start video streams to run video inference pipelines:
 
      ```bash
      ./sample_start.sh
      ```
+
+     > [!NOTE]
+     > This starts 4 fixed sample-video pipelines directly via the DL Streamer Pipeline Server
+     > API. If you only intend to use the [Console UI](#loitering-detection-console-ui) - which
+     > starts and stops its own streams on demand - you can skip this step entirely and go
+     > straight to the Console UI's URL below.
 
    - To check the status of the pipelines:
 
@@ -101,7 +127,7 @@ By following this guide, you will learn how to:
        ```
        </details>
 
-3. **View the Application Output**:
+3. **View the Application Output** (optional - Grafana verification):
    - Open a browser and go to `https://localhost/grafana` to access the Grafana dashboard.
      - Change the localhost to your host IP if you are accessing it remotely.
    - Log in with the following credentials:
@@ -109,8 +135,13 @@ By following this guide, you will learn how to:
      - **Password**: `admin`
    - Check under the Dashboards section for the application-specific preloaded dashboard.
    - **Expected Results**: The dashboard displays real-time video streams with AI overlays and detection metrics.
+   - **This step can be skipped**: it only confirms step 2's pipelines are producing output: the
+     [Loitering Detection Console UI](#loitering-detection-console-ui) does not depend on it.
 
 ## **Access the Application and Components**
+
+Every interface below is independent - open whichever one suits your workflow, you do not need
+to use all of them.
 
 ### **Nginx Dashboard**
 

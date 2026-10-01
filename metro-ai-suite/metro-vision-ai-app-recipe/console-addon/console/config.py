@@ -211,6 +211,50 @@ def analytics_zones_json(zone):
     """
     return zone_to_analytics_json(zone) if zone else FILE_ZONES_JSON
 
+
+def _zone_points(zone):
+    """Vertices of a raw zone dict straight from the config file (where
+    points are {"x", "y"} objects, unlike the session zone's [x, y] pairs)."""
+    if zone.get("type") == "circle":
+        center = zone.get("center") or {}
+        cx, cy, r = center.get("x", 0), center.get("y", 0), zone.get("radius", 0)
+        return [(cx - r, cy - r), (cx + r, cy + r)]
+    points = zone.get("points") or []
+    return [(p["x"], p["y"]) for p in points]
+
+
+def attachroi_rect(zone):
+    """"x1,y1,x2,y2" for gvaattachroi's `roi` property, cropping detection
+    itself to this rectangle.
+
+    Suppressing individual out-of-zone boxes after the fact does not work in
+    this DLStreamer version: gvawatermark (including the DL Streamer
+    Pipeline Server's own internal instance ahead of its WebRTC encoder, a
+    second copy outside this pipeline string entirely) draws from the raw
+    GstAnalyticsRelationMeta object-detection entries, and nothing exposed
+    to gvapython removes those - only the legacy VideoRegionOfInterestMeta
+    mirror, which gvawatermark no longer reads from (confirmed live: removed
+    regions kept rendering regardless of removal). Physically restricting
+    where gvadetect runs is the only reliable way left to keep an object
+    from ever being detected, let alone drawn, outside the zone.
+
+    A custom zone crops to its own rectangle exactly. The file's own zones
+    (if several, e.g. Pathway + Driveway) crop to their combined bounding
+    box instead - coarser than each polygon's true shape, but this keeps
+    gvaanalytics' own, separate zone/dwell matching (see
+    `analytics_zones_json`) exact down to the polygon edge; only the
+    detection crop (and therefore what can ever be drawn) is boxy.
+    """
+    if zone:
+        x, y, w, h = zone["x"], zone["y"], zone["w"], zone["h"]
+        return f"{x},{y},{x + w},{y + h}"
+    points = [pt for z in FILE_ZONES for pt in _zone_points(z)]
+    if not points:
+        return None
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    return f"{min(xs)},{min(ys)},{max(xs)},{max(ys)}"
+
 try:
     SOURCES = json.loads(os.environ.get("SOURCES_JSON", "[]"))
     if not isinstance(SOURCES, list):

@@ -14,6 +14,14 @@ MODEL_PROC="$MODEL_DIR/pedestrian-and-vehicle-detector-adas-0001.json"
 # on every start - every zone defined there, rectangle or polygon, any
 # count, is active exactly as if it were still baked in. Edit that file to
 # change the zones the sample pipelines evaluate.
+#
+# Detection itself is separately restricted to the combined bounding box of
+# those same zones via gvaattachroi's "roi" property (x1,y1,x2,y2) - the
+# only reliable way to keep a box from ever being drawn outside them, since
+# gvawatermark (including the DL Streamer Pipeline Server's own internal
+# instance ahead of its WebRTC encoder) cannot be made to skip individual
+# detections after the fact in this DLStreamer version. See
+# config.attachroi_rect in console-addon for the equivalent logic.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZONES_CONFIG_FILE="$SCRIPT_DIR/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json"
 ZONES_JSON=$(python3 -c "
@@ -24,6 +32,28 @@ try:
 except Exception:
     zones = []
 print(json.dumps(json.dumps(zones)))
+")
+ATTACHROI_RECT=$(python3 -c "
+import json
+try:
+    with open('$ZONES_CONFIG_FILE') as f:
+        zones = json.load(f).get('zones') or []
+except Exception:
+    zones = []
+points = []
+for z in zones:
+    if z.get('type') == 'circle':
+        c = z.get('center') or {}
+        cx, cy, r = c.get('x', 0), c.get('y', 0), z.get('radius', 0)
+        points += [(cx - r, cy - r), (cx + r, cy + r)]
+    else:
+        points += [(p['x'], p['y']) for p in z.get('points') or []]
+if points:
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
+    print(f'{min(xs)},{min(ys)},{max(xs)},{max(ys)}')
+else:
+    print('0,0,100000,100000')
 ")
 
 function run_sample() {
@@ -65,6 +95,9 @@ function run_sample() {
         },
         "analytics-properties": {
             "zones": $ZONES_JSON
+        },
+        "attachroi-properties": {
+            "roi": "$ATTACHROI_RECT"
         }
     }
   }

@@ -5,10 +5,10 @@ start/stop video analytics streams, pick a model and device, draw an evaluation 
 live per-object loitering analytics without going through Grafana or the DL Streamer Pipeline
 Server's REST API directly.
 
-- **URL**: `https://localhost/console/` (replace `localhost` with your host IP if accessing
-  remotely).
 - Prerequisite: the application must already be running — see [Get Started](../get-started.md)
   to deploy it first.
+- **URL**: `https://localhost/console/` (replace `localhost` with your host IP if accessing
+  remotely).
 
 ## Starting a stream
 
