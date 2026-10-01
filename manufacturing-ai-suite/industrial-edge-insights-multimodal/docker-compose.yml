@@ -304,6 +304,7 @@ services:
       - ia-mqtt-broker
     networks:
       - timeseries_network
+
   dlstreamer-pipeline-server:
     image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: dlstreamer-pipeline-server
@@ -420,6 +421,7 @@ services:
     hostname: seaweedfs-master
     container_name: seaweedfs-master
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     security_opt:
     - no-new-privileges
@@ -437,9 +439,10 @@ services:
     hostname: seaweedfs-volume
     container_name: seaweedfs-volume
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     mem_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
-    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
+    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-6g}
     security_opt:
     - no-new-privileges
     networks:
@@ -458,6 +461,7 @@ services:
     hostname: seaweedfs-filer
     container_name: seaweedfs-filer
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     security_opt:
     - no-new-privileges
@@ -485,6 +489,7 @@ services:
     hostname: seaweedfs-s3
     container_name: seaweedfs-s3
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     mem_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
     memswap_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
@@ -525,6 +530,7 @@ services:
     image: coturn/coturn:4.17.2-alpine
     container_name: coturn
     read_only: true
+    restart: unless-stopped
     security_opt:
     - no-new-privileges
     ports:
@@ -569,33 +575,15 @@ volumes:
 
   vol_nginx_tmpfs:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   seaweed_master_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   seaweed_volume_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   seaweed_filer_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   vol_temp_seaweed_filer:
     name: "seaweed_filer_vol"
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   vol_temp_seaweed_s3:
     name: "seaweed_s3_vol"
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
