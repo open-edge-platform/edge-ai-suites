@@ -20,46 +20,46 @@ cd mcp-server && ./setup.sh
 claude
 ```
 
-## Examples
+## Example prompts 
 
-### 1. [Quick Status](05-quick-status.md)
+### 1. [Quick Status](01-quick-status.md)
 Instant health check and location
 ```
 "What's the UAV status and where is it?"
 ```
 
-### 2. [Real-Time Monitoring](04-realtime-monitoring-dashboard.md)
+### 2. [Real-Time Monitoring](02-realtime-monitoring-dashboard.md)
 Live telemetry with anomaly alerts
 ```
 "Monitor the flight and alert me if anything unusual happens"
 ```
 
-### 3. [Flight Anomaly Detection](01-flight-anomaly-detection.md)
+### 3. [Flight Anomaly Detection](03-flight-anomaly-detection.md)
 Detect abnormal behavior (IMU drift, battery issues, GPS problems)
 ```
 "Collect 2 minutes of flight data and detect anomalies"
 ```
 
-### 4. [Battery Health Prediction](03-battery-health-prediction.md)
+### 4. [Battery Health Prediction](04-battery-health-prediction.md)
 Predict degradation and replacement timing
 ```
 "Analyze battery performance and predict when to replace"
 ```
 
-### 5. [Video Processing](09-video-file-processing.md)
+### 5. [Video Processing](05-video-file-processing.md)
 Analyze recorded videos with object detection
 ```
 "Process inspection_video.mp4 with DLStreamer, generate report"
 ```
 
-### 6. [Computer Vision Application Development](02-computer-vision-application-development.md)
+### 6. [Computer Vision Application Development](06-computer-vision-application-development.md)
 Design a custom DLStreamer detect/track app on a live camera stream
 ```
 "Build a computer vision application that detects and tracks vehicles in the
 uav-1/nadir RTSP stream and publishes counts to MQTT"
 ```
 
-### 7. [Time Series Processing Application Development](06-time-series-processing-application.md)
+### 7. [Time Series Processing Application Development](07-time-series-processing-application.md)
 Design a custom telemetry ingestion/processing/visualization pipeline
 ```
 "Build a time series processing app that computes a rolling vibration score
