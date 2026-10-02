@@ -46,7 +46,8 @@ specific workflows:
 | Intel® Geti™ Software | Used offline to train and export the Pallet Defect Detection (YOLOX) and PCB Anomaly Detection (Anomalib-based) models as OpenVINO™ IR | [Generate a Model with Geti™](./pallet-defect-detection/how-to-guides/generate-model-with-geti.md) |
 | Helm / Kubernetes | Alternative deployment path for the same microservices on a Kubernetes cluster | [Deploy with Helm](./get-started/deploy-with-helm.md) |
 
-> **Note:** Model training and export (Geti™, PyTorch, Anomalib) happen outside the deployed
+> [!NOTE]
+> Model training and export (Geti™, PyTorch, Anomalib) happen outside the deployed
 > application containers — only the resulting OpenVINO™ IR model is consumed at runtime by
 > DL Streamer.
 

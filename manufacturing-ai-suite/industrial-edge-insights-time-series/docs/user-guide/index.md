@@ -48,7 +48,8 @@ equivalent Helm chart in `helm/`):
 | Visual Pipeline and Platform Evaluation Tool (ViPPET) | Deploys and benchmarks the Time Series Analytics Microservice as part of the ViPPET stack | ViPPET integration (see [Release Notes](./release-notes.md)) |
 | Helm / Kubernetes | Alternative deployment path for the same microservices on a Kubernetes cluster | [Deploy with Helm](./get-started/deploy-with-helm.md) |
 
-> **Note:** This sample application uses a classical machine learning model
+> [!NOTE]
+> This sample application uses a classical machine learning model
 > (scikit-learn `RandomForestClassifier`), not OpenVINO™ or DL Streamer — there is no
 > vision/inference-accelerator component in this stack.
 
