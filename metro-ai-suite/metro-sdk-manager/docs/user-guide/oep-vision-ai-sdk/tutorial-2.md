@@ -261,23 +261,12 @@ docker run -it --rm --net=host \
   /home/dlstreamer/decode.sh
 ```
 
-### Step 6: Monitor Performance and Results
+### Step 6: Monitor Results
 
 The application will display a 4x4 tiled video composition on your 4K monitor. You should see:
 
 ![4x4 Video Streaming Result](./images/intel-edge-ai-box-4x4-video-streaming.png)
 
-**Performance Monitoring:**
-Monitor system resources during playback:
-
-```bash
-# In a separate terminal, monitor GPU utilization
-sudo intel_gpu_top
-```
-```bash
-# Monitor CPU and memory usage
-htop
-```
 
 ### Step 7: Stop the Application
 
