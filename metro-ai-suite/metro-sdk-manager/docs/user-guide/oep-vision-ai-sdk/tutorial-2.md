@@ -112,7 +112,7 @@ mkdir -p ~/oep/oep-vision-tutorial-2/videos/
 cd ~/oep/oep-vision-tutorial-2
 
 # Download Big Buck Bunny sample video (Creative Commons licensed)
-wget -O videos/Big_Buck_Bunny.mp4 "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_30MB.mp4"
+wget -O videos/Big_Buck_Bunny.mp4 "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"
 ```
 
 ### Step 3: Create Multi-Stream Video Processing Script

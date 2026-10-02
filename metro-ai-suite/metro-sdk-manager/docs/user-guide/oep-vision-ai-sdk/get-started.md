@@ -56,15 +56,7 @@ cd ~/oep/oep-vision-get-started-tutorial
 Download the Intel-hosted sample video, which shows pedestrians and a vehicle from a street-side perspective:
 
 ```bash
-<<<<<<< HEAD
-wget -O sample.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4
-mkdir -p models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/v2026.2.0/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
-=======
 wget -O sample.mp4 https://raw.githubusercontent.com/open-edge-platform/edge-ai-resources/main/videos/VIRAT_S_000101.mp4
->>>>>>> 45fd797d (Updated model and gsg to fix low detection rate and sporadic gst launch)
 ```
 
 Download and convert the COCO-trained YOLO11s detector using the DL Streamer container:
