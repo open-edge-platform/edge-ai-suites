@@ -50,6 +50,15 @@ specific workflows:
 > application containers — only the resulting OpenVINO™ IR model is consumed at runtime by
 > DL Streamer.
 
+### Supported Inference Devices
+
+| AI Workload | CPU | iGPU | NPU |
+|---|---|---|---|
+| DL Streamer Pipeline Server (detection/classification model) | ✓ | ✓ | ✓ |
+
+See [Use NPU for Inference](./how-to-evaluate-accelerate/use-npu-for-inference.md) and
+[Use GPU for Inference](./how-to-evaluate-accelerate/use-gpu-for-inference.md).
+
 ### Minimum Configuration
 
 See [System Requirements](./get-started/vision-system-requirements.md) for the minimum

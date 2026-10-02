@@ -126,6 +126,12 @@ Windows®-hosted HMI, split across a Type-2 hypervisor host and a guest VM.
 > for the specific microservices (LLM serving, embedding, retriever, reranker) it deploys.
 > This repository does not modify or redeploy that stack.
 
+### Supported Inference Devices
+
+NPU support for the RAG pipeline (LLM, embedding, retriever, reranker) depends entirely on
+`Chat Question & Answer Core`'s own device configuration — this repository does not document
+or validate NPU targeting for that stack.
+
 ### Optional Add-ons
 
 None — this sample application does not define optional deployment add-ons beyond the

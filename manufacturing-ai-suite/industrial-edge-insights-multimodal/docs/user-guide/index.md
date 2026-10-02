@@ -73,6 +73,14 @@ The following components are deployed by default through `docker-compose.yml`:
 | PyTorch (training only) | Used offline for VLM fine-tuning (LoRA adapters for defect explainability) — not part of the deployed containers | [training/vlm-fine-tuning](../../training/vlm-fine-tuning/README.md) |
 | Helm / Kubernetes | Alternative deployment path for the core (non-agentic, non-vLLM) stack | [Deploy with Helm](./get-started/deploy-with-helm.md) |
 
+### Supported Inference Devices
+
+| AI Workload | CPU | iGPU | NPU | Notes |
+|---|---|---|---|---|
+| DL Streamer Pipeline Server (weld classification model) | ✓ | ✓ | ✓ | See [Running DL Streamer Pipeline Server model inference on GPU or NPU](./get-started.md#running-dl-streamer-pipeline-server-model-inference-on-gpu-or-npu) |
+| Time Series Analytics UDF (sensor anomaly detection) | ✓ | ✓ | ✗ | Runs via scikit-learn-intelex (oneDAL), which supports CPU/GPU only — not an OpenVINO™ IR model |
+| Agentic LLM (`LLM_DEVICE`, served via OVMS) | ✓ | ✓ | ✗ | See [Deploy the Agentic Workflow](./how-to-guides/how-to-deploy-agent-workflow.md) — supported devices are documented as CPU and GPU only |
+
 ### Minimum Configuration
 
 See [System Requirements](./get-started/system-requirements.md) for the minimum hardware and

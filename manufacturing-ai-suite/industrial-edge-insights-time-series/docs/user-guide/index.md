@@ -52,6 +52,12 @@ equivalent Helm chart in `helm/`):
 > (scikit-learn `RandomForestClassifier`), not OpenVINO™ or DL Streamer — there is no
 > vision/inference-accelerator component in this stack.
 
+### Supported Inference Devices
+
+| AI Workload | CPU | iGPU | NPU | Rationale |
+|---|---|---|---|---|
+| Time Series Analytics UDF (`RandomForestClassifier`) | ✓ | ✓ | ✗ | Runs via scikit-learn-intelex (oneDAL), which supports CPU/GPU only — not an OpenVINO™ IR model, so NPU is not applicable |
+
 ### Minimum Configuration
 
 See [System Requirements](./get-started/system-requirements.md) for the minimum hardware and
