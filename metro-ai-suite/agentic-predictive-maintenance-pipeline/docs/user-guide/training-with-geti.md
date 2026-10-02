@@ -11,7 +11,10 @@ for your inspection scenario.
 ## Training Workflow
 
 1. Collect representative images or video frames from the target environment. Include normal
-   examples and each defect class that the application must detect.
+   examples and each defect class that the application must detect. For the `pipeline-defect-detection`
+   use case, you can use the public
+   [Pipeline Defect Dataset on Kaggle](https://www.kaggle.com/api/v1/datasets/download/simplexitypipeline/pipeline-defect-dataset)
+   as a starting point, though it should be supplemented with production data before release.
 2. Create a Geti object detection project.
 3. Define the defect labels. For the reference pipeline use case, the application configuration
    expects these labels:
