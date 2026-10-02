@@ -1,0 +1,252 @@
+ /* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+ /* SPDX-License-Identifier: Apache-2.0 */
+
+.insights-page .workbench-wrap {
+  width: 100%;
+  padding: 1.5rem 20px;
+}
+
+.workbench-card {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #d6deeb;
+  border-radius: 10px;
+  min-height: 270px;
+}
+
+.workbench-toolbar,
+.workbench-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+}
+
+.workbench-toolbar {
+  border-bottom: 1px solid #d6deeb;
+}
+
+.workbench-toolbar h2 {
+  margin: 0 0 0.25rem;
+}
+
+.workbench-toolbar p,
+.workbench-status {
+  color: #5f6d82;
+  font-size: 0.88rem;
+}
+
+.workbench-actions,
+.workbench-pager {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.workbench-actions label {
+  color: #5f6d82;
+  font-size: 0.85rem;
+}
+
+.workbench-card button,
+.workbench-card select {
+  border: 1px solid #d6deeb;
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+  background: #fff;
+  color: #11203a;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.workbench-card button:hover:not(:disabled) {
+  border-color: var(--intel-blue);
+}
+
+.workbench-card button:disabled,
+.workbench-card select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.workbench-card #explainBtn:not(:disabled) {
+  background: var(--intel-blue);
+  border-color: var(--intel-blue);
+  color: #fff;
+}
+
+.workbench-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.workbench-table-wrap table {
+  min-width: 700px;
+}
+
+.workbench-table-wrap th,
+.workbench-table-wrap td {
+  border: 1px solid #d6deeb;
+  padding: 0.65rem 0.75rem;
+  white-space: nowrap;
+}
+
+.workbench-table-wrap th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.workbench-message {
+  padding: 1rem 1.25rem;
+  color: #5f6d82;
+}
+
+.workbench-footer {
+  border-top: 1px solid #d6deeb;
+}
+
+.workbench-status {
+  margin-left: auto;
+}
+
+.explain-output {
+  margin: 0.5rem 1.25rem 1.25rem;
+  border: 1px solid #d6deeb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.explain-output h3 {
+  padding: 0.8rem 1rem;
+  margin: 0;
+  background: #f4f7fd;
+  color: #22395f;
+}
+
+.explain-body {
+  padding: 1rem;
+  color: #22395f;
+  line-height: 1.5;
+}
+
+.explain-body > div + div,
+.markdown-content p,
+.markdown-content ul,
+.markdown-content ol {
+  margin-top: 0.6rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 1.5rem;
+}
+
+.markdown-content pre {
+  padding: 0.75rem;
+  overflow-x: auto;
+  background: #f4f7fd;
+}
+
+.markdown-content blockquote {
+  margin: 0.75rem 0;
+  padding-left: 0.75rem;
+  border-left: 3px solid var(--intel-blue);
+}
+
+.markdown-content table,
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #d6deeb;
+}
+
+.data-display-table {
+  margin-bottom: 1rem;
+}
+
+.data-display-table td {
+  width: 50%;
+  vertical-align: top;
+}
+
+.data-display-table td:last-child {
+  white-space: pre-wrap;
+  background: #fbfcff;
+}
+
+.data-display-table img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  border-radius: 4px;
+}
+
+#vllmOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f6f8fb;
+  text-align: center;
+}
+
+#vllmOverlay[hidden] {
+  display: none;
+}
+
+.vllm-spinner,
+.explain-spinner {
+  border: 4px solid #d2d9e8;
+  border-top-color: var(--intel-blue);
+  border-radius: 50%;
+  animation: insights-spin 0.9s linear infinite;
+}
+
+.vllm-spinner {
+  width: 48px;
+  height: 48px;
+}
+
+.explain-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 0.5rem;
+}
+
+.vllm-label {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.vllm-sublabel {
+  color: #5f6d82;
+  font-size: 0.9rem;
+}
+
+@keyframes insights-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 700px) {
+  .workbench-toolbar,
+  .workbench-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .workbench-status {
+    margin-left: 0;
+  }
+}
