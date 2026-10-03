@@ -63,10 +63,13 @@ spec:
         - name: seaweedfs-s3-init
           mountPath: /usr/local/bin/s3-init-buckets.sh
           subPath: s3-init-buckets.sh
+        - name: seaweedfs-security-config
+          mountPath: /etc/seaweedfs/security.toml
+          subPath: security.toml
         - name: tmp-volume
           mountPath: /tmp
         command: ["/usr/local/bin/s3-init-buckets.sh"]
-        args: ["s3", "-filer={{ .Values.config.seaweedfs_filer.name }}:8888", "-ip.bind=0.0.0.0", "-config=/tmp/s3_config.json"]
+        args: ["-config_dir=/etc/seaweedfs", "s3", "-filer={{ .Values.config.seaweedfs_filer.name }}:8888", "-ip.bind=0.0.0.0", "-config=/tmp/s3_config.json"]
         env:
         - name: NO_PROXY
           value: "localhost,127.0.0.1,{{ .Values.config.seaweedfs_filer.name }},{{ .Values.config.seaweedfs_volume.name }},{{ .Values.config.seaweedfs_master.name }},{{ .Values.config.seaweedfs_s3.name }},172.18.0.0/16"
@@ -80,6 +83,20 @@ spec:
           value: {{ .Values.env.S3_STORAGE_PASSWORD }}
         - name: S3_BUCKET_TTL
           value: {{ .Values.env.S3_BUCKET_TTL }}
+        - name: WEED_MASTER_ADDRESS
+          value: {{ printf "%s:9333" .Values.config.seaweedfs_master.name | quote }}
+        - name: WEED_FILER_ADDRESS
+          value: {{ printf "%s:8888" .Values.config.seaweedfs_filer.name | quote }}
+        - name: WEED_CORS_ALLOWED_ORIGINS_VALUES
+          value: {{ .Values.env.SEAWEEDFS_ALLOWED_CORS_ORIGINS | quote }}
+        - name: WEED_JWT_SIGNING_KEY
+          value: {{ .Values.env.SEAWEEDFS_JWT_SIGNING_KEY | quote }}
+        - name: WEED_JWT_SIGNING_READ_KEY
+          value: {{ .Values.env.SEAWEEDFS_JWT_SIGNING_READ_KEY | quote }}
+        - name: WEED_JWT_FILER_SIGNING_KEY
+          value: {{ .Values.env.SEAWEEDFS_FILER_JWT_SIGNING_KEY | quote }}
+        - name: WEED_JWT_FILER_SIGNING_READ_KEY
+          value: {{ .Values.env.SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY | quote }}
       volumes:
       - name: seaweedfs-s3-config-template
         configMap:
@@ -88,5 +105,8 @@ spec:
         configMap:
           name: seaweedfs-s3-init
           defaultMode: 0755
+      - name: seaweedfs-security-config
+        configMap:
+          name: seaweedfs-security-config
       - name: tmp-volume
         emptyDir: {}

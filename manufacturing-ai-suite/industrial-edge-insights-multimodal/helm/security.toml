@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Shared SeaweedFS security configuration.
+# Secret keys and allowed origins are injected via the WEED_* environment variables supported by SeaweedFS:
+#   WEED_CORS_ALLOWED_ORIGINS_VALUES
+#   WEED_JWT_SIGNING_KEY / WEED_JWT_SIGNING_READ_KEY
+#   WEED_JWT_FILER_SIGNING_KEY / WEED_JWT_FILER_SIGNING_READ_KEY
+
+[cors.allowed_origins]
+values = ""
+
+[jwt.signing]
+expires_after_seconds = 300
+
+[jwt.signing.read]
+expires_after_seconds = 300
+
+[jwt.filer_signing]
+expires_after_seconds = 300
+
+[jwt.filer_signing.read]
+expires_after_seconds = 300

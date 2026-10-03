@@ -66,6 +66,67 @@
             { "pattern": ".*[A-Za-z].*" }
           ],
           "description": "At least 10 alphanumeric, at least one digit."
+        },
+        "SEAWEEDFS_ALLOWED_CORS_ORIGINS": {
+          "type": "string",
+          "pattern": "^https://[^,\\s]+(,https://[^,\\s]+)*$",
+          "description": "Comma-separated HTTPS origins allowed to reach SeaweedFS browser endpoints."
+        },
+        "SEAWEEDFS_JWT_SIGNING_KEY": {
+          "type": "string",
+          "anyOf": [
+            { "const": "" },
+            {
+              "allOf": [
+                { "pattern": "^[A-Za-z0-9]{16,}$" },
+                { "pattern": ".*[0-9].*" },
+                { "pattern": ".*[A-Za-z].*" }
+              ]
+            }
+          ],
+          "description": "At least 16 alphanumeric, at least one digit."
+        },
+        "SEAWEEDFS_JWT_SIGNING_READ_KEY": {
+          "type": "string",
+          "anyOf": [
+            { "const": "" },
+            {
+              "allOf": [
+                { "pattern": "^[A-Za-z0-9]{16,}$" },
+                { "pattern": ".*[0-9].*" },
+                { "pattern": ".*[A-Za-z].*" }
+              ]
+            }
+          ],
+          "description": "At least 16 alphanumeric, at least one digit."
+        },
+        "SEAWEEDFS_FILER_JWT_SIGNING_KEY": {
+          "type": "string",
+          "anyOf": [
+            { "const": "" },
+            {
+              "allOf": [
+                { "pattern": "^[A-Za-z0-9]{16,}$" },
+                { "pattern": ".*[0-9].*" },
+                { "pattern": ".*[A-Za-z].*" }
+              ]
+            }
+          ],
+          "description": "At least 16 alphanumeric, at least one digit."
+        },
+        "SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY": {
+          "type": "string",
+          "anyOf": [
+            { "const": "" },
+            {
+              "allOf": [
+                { "pattern": "^[A-Za-z0-9]{16,}$" },
+                { "pattern": ".*[0-9].*" },
+                { "pattern": ".*[A-Za-z].*" }
+              ]
+            }
+          ],
+          "description": "At least 16 alphanumeric, at least one digit."
         }
       }
     }

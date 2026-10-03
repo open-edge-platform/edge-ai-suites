@@ -38,18 +38,19 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
 > [!NOTE]
 > You may see the error `There was an error writing history file: open /.influx_history: read-only file system` in the InfluxDB shell. This is harmless and does not affect functionality.
 
-## Accessing Stored Images using SeaweedFS Filer Web Interface
+## Accessing Stored Images
 
-Access the SeaweedFS Filer interface in your web browser:
+SeaweedFS filer endpoints are protected by SeaweedFS JWT authentication. As a result, the filer web
+interface is no longer available for anonymous browser access through the sample app ingress paths.
 
-```text
-https://localhost:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
-```
+Use an S3-compatible client with the `S3_STORAGE_USERNAME` and `S3_STORAGE_PASSWORD` credentials
+from `.env` or `values.yaml` to access stored images through the authenticated `seaweedfs-s3`
+gateway instead.
 
-> [!NOTE]
-> Use link `https://localhost:30001/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/` to access the SeaweedFS Filer interface for the Helm deployment.
-
-Images are organized by their `img_handle` identifier. Browse the directory to locate specific images, then click to view the image.
+- **Docker Compose:** connect from a container on `timeseries_network` to `http://seaweedfs-s3:8333`.
+- **Helm:** connect in-cluster to `http://seaweedfs-s3:8333`, or use
+  `kubectl port-forward svc/seaweedfs-s3 8333:8333 -n <namespace>` and point your S3 client to
+  `http://127.0.0.1:8333`.
 
 ## Mapping Vision Metadata to Stored Images
 
@@ -63,13 +64,8 @@ Follow these steps to correlate detection events in InfluxDB with stored images:
 
 2. Note the `img_handle` from the query results (e.g., `X7TINNVPNX`).
 
-3. Navigate to the Filer interface:
-
-   ```text
-   https://localhost:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
-   ```
-
-4. Locate and open the file matching the `img_handle` (e.g., `X7TINNVPNX.jpg`).
+3. Use an authenticated S3 client to fetch the file matching the `img_handle`
+   (for example, `X7TINNVPNX.jpg`) from the `dlstreamer-pipeline-results` bucket.
 
 > [!NOTE]
 > All data stored in SeaweedFS and InfluxDB is non-persistent and will be lost on container/pod restart.

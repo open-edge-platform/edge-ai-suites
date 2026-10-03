@@ -427,10 +427,14 @@ services:
       - timeseries_network
     volumes:
       - seaweed_master_data:/data
+      - ./configs/seaweedfs/security.toml:/etc/seaweedfs/security.toml:ro
     environment:
       - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
-    command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
+      - WEED_CORS_ALLOWED_ORIGINS_VALUES=${SEAWEEDFS_ALLOWED_CORS_ORIGINS}
+      - WEED_JWT_SIGNING_KEY=${SEAWEEDFS_JWT_SIGNING_KEY}
+      - WEED_JWT_SIGNING_READ_KEY=${SEAWEEDFS_JWT_SIGNING_READ_KEY}
+    command: -config_dir=/etc/seaweedfs master -ip=seaweedfs-master -ip.bind=0.0.0.0
 
   seaweedfs-volume:
     image: ${SEAWEEDFS_IMAGE}
@@ -446,10 +450,14 @@ services:
       - timeseries_network
     volumes:
       - seaweed_volume_data:/data
+      - ./configs/seaweedfs/security.toml:/etc/seaweedfs/security.toml:ro
     environment:
       - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
-    command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
+      - WEED_CORS_ALLOWED_ORIGINS_VALUES=${SEAWEEDFS_ALLOWED_CORS_ORIGINS}
+      - WEED_JWT_SIGNING_KEY=${SEAWEEDFS_JWT_SIGNING_KEY}
+      - WEED_JWT_SIGNING_READ_KEY=${SEAWEEDFS_JWT_SIGNING_READ_KEY}
+    command: -config_dir=/etc/seaweedfs volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
     depends_on:
       - seaweedfs-master
 
@@ -466,15 +474,21 @@ services:
     volumes:
       - seaweed_filer_data:/data
       - "vol_temp_seaweed_filer:/tmp"
+      - ./configs/seaweedfs/security.toml:/etc/seaweedfs/security.toml:ro
     environment:
       - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
-    command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
+      - WEED_CORS_ALLOWED_ORIGINS_VALUES=${SEAWEEDFS_ALLOWED_CORS_ORIGINS}
+      - WEED_JWT_SIGNING_KEY=${SEAWEEDFS_JWT_SIGNING_KEY}
+      - WEED_JWT_SIGNING_READ_KEY=${SEAWEEDFS_JWT_SIGNING_READ_KEY}
+      - WEED_JWT_FILER_SIGNING_KEY=${SEAWEEDFS_FILER_JWT_SIGNING_KEY}
+      - WEED_JWT_FILER_SIGNING_READ_KEY=${SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY}
+    command: -config_dir=/etc/seaweedfs filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
     depends_on:
       - seaweedfs-master
       - seaweedfs-volume
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888/"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8888/healthz || curl -fsS http://localhost:8888/"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -501,8 +515,15 @@ services:
       - S3_STORAGE_USER=${S3_STORAGE_USERNAME}
       - S3_STORAGE_PASS=${S3_STORAGE_PASSWORD}
       - S3_BUCKET_TTL=${S3_BUCKET_TTL:-30m}
+      - WEED_MASTER_ADDRESS=seaweedfs-master:9333
+      - WEED_FILER_ADDRESS=seaweedfs-filer:8888
+      - WEED_CORS_ALLOWED_ORIGINS_VALUES=${SEAWEEDFS_ALLOWED_CORS_ORIGINS}
+      - WEED_JWT_SIGNING_KEY=${SEAWEEDFS_JWT_SIGNING_KEY}
+      - WEED_JWT_SIGNING_READ_KEY=${SEAWEEDFS_JWT_SIGNING_READ_KEY}
+      - WEED_JWT_FILER_SIGNING_KEY=${SEAWEEDFS_FILER_JWT_SIGNING_KEY}
+      - WEED_JWT_FILER_SIGNING_READ_KEY=${SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY}
     entrypoint: ["/s3-init-buckets.sh"]
-    command: s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -config=/tmp/s3_config.json
+    command: -config_dir=/etc/seaweedfs s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -config=/tmp/s3_config.json
     depends_on:
       seaweedfs-filer:
         condition: service_healthy
@@ -517,6 +538,7 @@ services:
       retries: 5
       start_period: 30s
     volumes:
+      - ./configs/seaweedfs/security.toml:/etc/seaweedfs/security.toml:ro
       - ./configs/seaweedfs-s3/seaweedfs_s3_config.json.template:/etc/seaweedfs/s3_config.json.template:ro
       - ./configs/seaweedfs-s3/s3-init-buckets.sh:/s3-init-buckets.sh:ro
       - "vol_temp_seaweed_s3:/tmp"

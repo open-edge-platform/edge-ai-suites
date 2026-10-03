@@ -77,6 +77,17 @@ env:
   # SeaweedFS S3 Storage related config
   S3_STORAGE_USERNAME: 
   S3_STORAGE_PASSWORD: 
+  # Allowed HTTPS origins for SeaweedFS filer and S3 browser requests.
+  # If you set HOST_IP for remote UI access, append the matching https://<HOST_IP>:3000 and/or https://<HOST_IP>:30001 origins here.
+  SEAWEEDFS_ALLOWED_CORS_ORIGINS: https://localhost:3000,https://localhost:30001
+  # The SEAWEEDFS_JWT_SIGNING_KEY length must be a minimum of 16 alphanumeric characters with at least one digit
+  SEAWEEDFS_JWT_SIGNING_KEY:
+  # The SEAWEEDFS_JWT_SIGNING_READ_KEY length must be a minimum of 16 alphanumeric characters with at least one digit
+  SEAWEEDFS_JWT_SIGNING_READ_KEY:
+  # The SEAWEEDFS_FILER_JWT_SIGNING_KEY length must be a minimum of 16 alphanumeric characters with at least one digit
+  SEAWEEDFS_FILER_JWT_SIGNING_KEY:
+  # The SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY length must be a minimum of 16 alphanumeric characters with at least one digit
+  SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY:
   # S3_BUCKET_TTL specifies the time-to-live duration for files/objects stored in SeaweedFS S3 buckets.
   # After this duration, files/objects that have not been accessed will be automatically deleted, but the bucket itself remains.
   # The duration can be specified using a combination of time units such as hours(h), minutes(m), and seconds(s),

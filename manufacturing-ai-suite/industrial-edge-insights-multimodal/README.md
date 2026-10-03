@@ -19,6 +19,10 @@ Refer to the [How it works](./docs/user-guide/weld-defect-detection/index.md#how
 
 - [How to build from source and deploy](./docs/user-guide/get-started/build-from-source.md): Guide to build from source and docker compose deployment.
 - [How to deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Guide for deploying with Helm.
+- SeaweedFS now requires the `SEAWEEDFS_ALLOWED_CORS_ORIGINS`,
+  `SEAWEEDFS_JWT_SIGNING_KEY`, `SEAWEEDFS_JWT_SIGNING_READ_KEY`,
+  `SEAWEEDFS_FILER_JWT_SIGNING_KEY`, and `SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY`
+  environment variables in addition to the existing S3 credentials for both Docker Compose and Helm deployments.
 - [How to configure MQTT alerts](./docs/user-guide/how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts for the sample app.
 - [How to update configuration](./docs/user-guide/how-to-guides/how-to-update-config.md): Guide for updating the configuration.
 - [Troubleshooting](./docs/user-guide/troubleshooting.md): Troubleshooting information.

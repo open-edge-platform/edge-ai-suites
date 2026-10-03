@@ -68,6 +68,11 @@ You can either generate or download the Helm charts.
    HOST_IP:  # defaults to localhost; set it to the host system IP address if you want to access the UI remotely
    S3_STORAGE_USERNAME:
    S3_STORAGE_PASSWORD:
+   SEAWEEDFS_ALLOWED_CORS_ORIGINS:
+   SEAWEEDFS_JWT_SIGNING_KEY:
+   SEAWEEDFS_JWT_SIGNING_READ_KEY:
+   SEAWEEDFS_FILER_JWT_SIGNING_KEY:
+   SEAWEEDFS_FILER_JWT_SIGNING_READ_KEY:
    ```
 
 ## Step 3: Install Helm charts
