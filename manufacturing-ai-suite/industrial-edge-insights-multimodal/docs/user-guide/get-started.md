@@ -78,6 +78,8 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    - `HOST_IP` (set this to a host-reachable, non-loopback node IP address for remote UI access and WebRTC/TURN)
    - `S3_STORAGE_USERNAME`
    - `S3_STORAGE_PASSWORD`
+   - `SEAWEEDFS_WEB_AUTH_USER`
+   - `SEAWEEDFS_WEB_AUTH_PASSWORD`
 
 2. Deploy the sample app, use only one of the following options.
 

@@ -136,6 +136,8 @@ jobs:
         HOST_IP=$(hostname -I | awk '{print $1}')
         S3_STORAGE_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
+        SEAWEEDFS_WEB_AUTH_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        SEAWEEDFS_WEB_AUTH_PASSWORD=$(openssl rand -hex 10)
 
         sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
         sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
@@ -145,6 +147,8 @@ jobs:
         sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
         sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
         sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
+        sed -i "s/SEAWEEDFS_WEB_AUTH_USER=.*/SEAWEEDFS_WEB_AUTH_USER=${SEAWEEDFS_WEB_AUTH_USER}/g" .env
+        sed -i "s/SEAWEEDFS_WEB_AUTH_PASSWORD=.*/SEAWEEDFS_WEB_AUTH_PASSWORD=${SEAWEEDFS_WEB_AUTH_PASSWORD}/g" .env
         sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
         make build
     - name: Deploying Multimodal Weld Defect Detection Sample App
@@ -191,10 +195,10 @@ jobs:
     - name: Setup
       run: |
         pw=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)1
-        for v in INFLUXDB_USERNAME VISUALIZER_GRAFANA_USER MTX_WEBRTCICESERVERS2_0_USERNAME S3_STORAGE_USERNAME; do
+        for v in INFLUXDB_USERNAME VISUALIZER_GRAFANA_USER MTX_WEBRTCICESERVERS2_0_USERNAME S3_STORAGE_USERNAME SEAWEEDFS_WEB_AUTH_USER; do
           sed -i "s/^$v=.*/$v=$(tr -dc 'a-zA-Z' </dev/urandom | head -c8)/" .env
         done
-        for v in INFLUXDB_PASSWORD VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_PASSWORD; do
+        for v in INFLUXDB_PASSWORD VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_PASSWORD SEAWEEDFS_WEB_AUTH_PASSWORD; do
           sed -i "s/^$v=.*/$v=$pw/" .env
         done
         sed -i "s/^HOST_IP=.*/HOST_IP=$(hostname -I | awk '{print $1}')/" .env

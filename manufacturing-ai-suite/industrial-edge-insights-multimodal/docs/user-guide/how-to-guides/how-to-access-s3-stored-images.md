@@ -49,6 +49,10 @@ https://localhost:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defe
 > [!NOTE]
 > Use link `https://localhost:30001/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/` to access the SeaweedFS Filer interface for the Helm deployment.
 
+> [!NOTE]
+> For the Docker Compose deployment, the Filer interface is protected with HTTP Basic Auth. When prompted, enter the
+> `SEAWEEDFS_WEB_AUTH_USER` and `SEAWEEDFS_WEB_AUTH_PASSWORD` values configured in the `.env` file.
+
 Images are organized by their `img_handle` identifier. Browse the directory to locate specific images, then click to view the image.
 
 ## Mapping Vision Metadata to Stored Images

@@ -76,7 +76,7 @@ validate_host_ip:
 .PHONY: check_env_variables
 check_env_variables:
 	@echo "Checking if username/password in .env are matching the rules set..."
-	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_USERNAME MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_USERNAME S3_STORAGE_PASSWORD"; \
+	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_USERNAME MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_USERNAME S3_STORAGE_PASSWORD SEAWEEDFS_WEB_AUTH_USER SEAWEEDFS_WEB_AUTH_PASSWORD"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
 		if [ -z "$$value" ]; then \
@@ -133,6 +133,18 @@ check_env_variables:
 			S3_STORAGE_PASSWORD) \
 				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "S3_STORAGE_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
+					exit 1; \
+				fi \
+				;; \
+			SEAWEEDFS_WEB_AUTH_USER) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
+					echo "SEAWEEDFS_WEB_AUTH_USER must contain only alphabets and be at least 5 characters minimum"; \
+					exit 1; \
+				fi \
+				;; \
+			SEAWEEDFS_WEB_AUTH_PASSWORD) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
+					echo "SEAWEEDFS_WEB_AUTH_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
 					exit 1; \
 				fi \
 				;; \
@@ -205,7 +217,7 @@ post_config:
 .PHONY: up
 up: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
-	export NGINX_CONFIG_PATH=./configs/nginx/nginx.conf; \
+	export NGINX_PROFILE=base; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	rm -f configs/grafana/provisioning/*.json; \
@@ -265,7 +277,7 @@ check_hardware:
 .PHONY: up_vllm
 up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
-	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
+	export NGINX_PROFILE=vllm; \
 	export AGENTIC_UI_ENABLED=false MQTT_DISABLED=true; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
@@ -335,7 +347,7 @@ download_model:
 .PHONY: up_agentic
 up_agentic: check_hardware check_models check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
-	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
+	export NGINX_PROFILE=agentic; \
 	export AGENTIC_UI_ENABLED=true MQTT_DISABLED=false; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
