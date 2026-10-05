@@ -1,0 +1,29 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schemaVersion": "1.0",
+  "description": "Harness-neutral discovery catalog for Industrial Edge Insights - Time Series workflow skills. Paths are relative to the repository root.",
+  "skillsRoot": ".github/skills",
+  "skills": [
+    {
+      "name": "time-series-deploy",
+      "path": ".github/skills/time-series-deploy/SKILL.md",
+      "description": "Build, deploy, smoke-check, and functionally test the Industrial Edge Insights - Time Series sample app (e.g. wind-turbine-anomaly-detection) via its Makefile-driven Docker Compose (MQTT/OPC-UA ingestion, batch mode) and Helm paths.",
+      "triggers": [
+        "build and deploy wind turbine anomaly detection",
+        "deploy time series sample app",
+        "run time series with docker compose",
+        "deploy time series with helm",
+        "smoke test time series app",
+        "run time series functional tests"
+      ],
+      "requires": [
+        "Makefile",
+        "docker-compose.yml",
+        ".github/skills/time-series-deploy/scripts/smoke-check.sh",
+        ".github/skills/time-series-deploy/scripts/run-functional-tests.sh",
+        "docker compose or helm+kubectl"
+      ]
+    }
+  ]
+}

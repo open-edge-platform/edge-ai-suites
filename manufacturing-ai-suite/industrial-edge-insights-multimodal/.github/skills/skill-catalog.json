@@ -1,0 +1,29 @@
+{
+  "SPDX-FileCopyrightText": "(C) 2026 Intel Corporation",
+  "SPDX-License-Identifier": "Apache-2.0",
+  "schemaVersion": "1.0",
+  "description": "Harness-neutral discovery catalog for Multimodal Weld Defect Detection workflow skills. Paths are relative to the repository root.",
+  "skillsRoot": ".github/skills",
+  "skills": [
+    {
+      "name": "multimodal-deploy",
+      "path": ".github/skills/multimodal-deploy/SKILL.md",
+      "description": "Build, deploy, smoke-check, and functionally test the Multimodal Weld Defect Detection sample app via its Makefile-driven Docker Compose (default/vLLM/agentic variants) and Helm paths.",
+      "triggers": [
+        "build and deploy multimodal",
+        "deploy weld defect detection",
+        "run multimodal with docker compose",
+        "deploy multimodal with helm",
+        "smoke test multimodal",
+        "run multimodal functional tests"
+      ],
+      "requires": [
+        "Makefile",
+        "docker-compose.yml",
+        ".github/skills/multimodal-deploy/scripts/smoke-check.sh",
+        ".github/skills/multimodal-deploy/scripts/run-functional-tests.sh",
+        "docker compose or helm+kubectl"
+      ]
+    }
+  ]
+}
