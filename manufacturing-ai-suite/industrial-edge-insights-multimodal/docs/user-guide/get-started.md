@@ -79,7 +79,24 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    - `S3_STORAGE_USERNAME`
    - `S3_STORAGE_PASSWORD`
 
-2. Deploy the sample app, use only one of the following options.
+2. Create the nginx basic-auth file used to protect the Agentic UI at `/agentic-ui/`.
+
+   ```bash
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   mkdir -p configs/nginx/ssl
+   printf '%s:%s\n' "<agentic-ui-username>" "$(openssl passwd -apr1 "<agentic-ui-password>")" > configs/nginx/ssl/htpasswd
+   chmod 640 configs/nginx/ssl/htpasswd
+   ```
+
+   > [!NOTE]
+   > This `configs/nginx/ssl/htpasswd` file is required before you run
+   > `make up`, `make up_agentic`, or `docker compose` for the agentic UI path.
+   > The nginx service mounts `./configs/nginx/ssl` into the container at
+   > `/etc/nginx/ssl`, so the credentials file is available at
+   > `/etc/nginx/ssl/htpasswd`. If you manage credentials as a secret or external
+   > volume, mount that file at the same container path instead.
+
+3. Deploy the sample app, use only one of the following options.
 
    > [!NOTE]
    >
@@ -104,7 +121,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    make up
    ```
 
-3. Use the following command to verify that all containers are active and error-free.
+4. Use the following command to verify that all containers are active and error-free.
 
    > [!NOTE]
    > The command `make status` may show errors in containers like ia-grafana when the user has not logged in

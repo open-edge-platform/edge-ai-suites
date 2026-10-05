@@ -23,6 +23,7 @@ import os
 import time
 import uuid
 import json
+import re
 import threading
 from typing import Optional
 
@@ -49,6 +50,8 @@ _MQTT_QOS      = int(os.environ.get("MQTT_QOS",          "1"))
 _MQTT_KEEPALIVE = int(os.environ.get("MQTT_KEEPALIVE",   "60"))
 _MQTT_CLIENT_ID = os.environ.get("MQTT_CLIENT_ID",       "apm-ui-service")
 _MQTT_DISABLED = os.environ.get("MQTT_DISABLED",         "false").lower() == "true"
+_LABEL_MAX_LENGTH = 128
+_LABEL_PATTERN = re.compile(r"^[A-Za-z0-9 _-]+$")
 
 
 _start_time = time.time()
@@ -212,6 +215,25 @@ def _redirect_path(request: Request, route_name: str, **path_params: str) -> str
     return f"{root_path}{app.url_path_for(route_name, **path_params)}"
 
 
+def _sanitize_detection_label(label: Optional[str]) -> Optional[str]:
+    if label is None:
+        return None
+
+    normalized_label = label.strip()
+    if not normalized_label:
+        return None
+
+    if len(normalized_label) > _LABEL_MAX_LENGTH:
+        log.warning("Ignoring detections label filter longer than %s characters", _LABEL_MAX_LENGTH)
+        return None
+
+    if not _LABEL_PATTERN.fullmatch(normalized_label):
+        log.warning("Ignoring detections label filter with unsupported characters")
+        return None
+
+    return normalized_label
+
+
 # ── Run merging helpers ────────────────────────────────────────────────────────
 
 def _merge_runs(agent_runs: list[dict]) -> list[dict]:
@@ -333,6 +355,7 @@ async def detections_page(
     limit: int = 100,
 ):
     # Treat empty string from form submission as no filter
+    sanitized_label = _sanitize_detection_label(label)
     parsed_confidence: Optional[float] = None
     if min_confidence:
         try:
@@ -341,8 +364,8 @@ async def detections_page(
             pass
 
     params: dict = {"limit": limit}
-    if label:
-        params["label"] = label
+    if sanitized_label:
+        params["label"] = sanitized_label
     if parsed_confidence is not None:
         params["min_confidence"] = parsed_confidence
 
@@ -365,7 +388,7 @@ async def detections_page(
         context={
             "use_case_id": _USE_CASE_ID,
             "detections": detections,
-            "filter_label": label or "",
+            "filter_label": sanitized_label or "",
             "filter_confidence": parsed_confidence if parsed_confidence is not None else "",
             "filter_limit": limit,
             "total_count": total_count,

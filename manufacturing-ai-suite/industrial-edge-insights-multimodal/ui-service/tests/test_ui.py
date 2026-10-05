@@ -37,7 +37,7 @@ def test_index_no_data(client):
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     r = client.get("/")
     assert_condition(r.status_code == 200)
-    assert_condition("Agentic Predictive Maintenance" in r.text)
+    assert_condition("Agentic Weld Quality Analysis" in r.text)
 
 
 @respx.mock
@@ -81,6 +81,44 @@ def test_detections_page(client):
     r = client.get("/detections")
     assert_condition(r.status_code == 200)
     assert_condition("Rupture" in r.text)
+
+
+@respx.mock
+def test_detections_page_forwards_valid_label(client):
+    detections_route = respx.get("http://mock-storage/detections").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
+
+    r = client.get("/detections", params={"label": "Rupture-1"})
+
+    assert_condition(r.status_code == 200)
+    assert_condition(detections_route.calls.last.request.url.params["label"] == "Rupture-1")
+
+
+@respx.mock
+def test_detections_page_rejects_overlong_label(client, caplog):
+    detections_route = respx.get("http://mock-storage/detections").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
+    label = "A" * 129
+
+    with caplog.at_level("WARNING"):
+        r = client.get("/detections", params={"label": label})
+
+    assert_condition(r.status_code == 200)
+    assert_condition("label" not in detections_route.calls.last.request.url.params)
+    assert_condition("Ignoring detections label filter longer than 128 characters" in caplog.text)
+
+
+@respx.mock
+def test_detections_page_rejects_label_with_disallowed_characters(client, caplog):
+    detections_route = respx.get("http://mock-storage/detections").mock(return_value=httpx.Response(200, json=[]))
+    respx.get("http://mock-storage/detections/summary").mock(return_value=httpx.Response(200, json={}))
+
+    with caplog.at_level("WARNING"):
+        r = client.get("/detections", params={"label": "Rupture<script>"})
+
+    assert_condition(r.status_code == 200)
+    assert_condition("label" not in detections_route.calls.last.request.url.params)
+    assert_condition("Ignoring detections label filter with unsupported characters" in caplog.text)
 
 
 def test_health(client):

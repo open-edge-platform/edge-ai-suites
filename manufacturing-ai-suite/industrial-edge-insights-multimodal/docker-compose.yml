@@ -252,6 +252,7 @@ services:
       - vol_nginx_tmpfs:/var/cache/nginx:rw
       - vol_nginx_tmpfs:/run:rw
       - vol_nginx_tmpfs:/etc/nginx/:rw
+      - ./configs/nginx/ssl:/etc/nginx/ssl:ro
     networks:
       - timeseries_network
     healthcheck:
