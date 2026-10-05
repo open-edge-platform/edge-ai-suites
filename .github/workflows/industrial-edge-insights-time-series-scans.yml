@@ -487,9 +487,6 @@ jobs:
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics/Dockerfile
             output-report-path: trivy-fusion-analytics-dockerfile.json
             scan-name: Multimodal Fusion Analytics Dockerfile
-          - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/insights-workbench/Dockerfile
-            output-report-path: trivy-insights-workbench-dockerfile.json
-            scan-name: Multimodal Insights Workbench Dockerfile
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/ui-service/Dockerfile
             output-report-path: trivy-multimodal-ui-dockerfile.json
             scan-name: Multimodal UI Service Dockerfile

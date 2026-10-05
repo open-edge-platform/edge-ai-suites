@@ -260,12 +260,19 @@ services:
       timeout: 5s
       retries: 20
     depends_on:
-      - ia-grafana
-      - ia-time-series-analytics-microservice
-      - ia-mqtt-broker
-      - mediamtx
-      - coturn
-      - seaweedfs-filer
+      ia-grafana:
+        condition: service_started
+      ia-time-series-analytics-microservice:
+        condition: service_started
+      ia-mqtt-broker:
+        condition: service_started
+      mediamtx:
+        condition: service_started
+      coturn:
+        condition: service_started
+      seaweedfs-filer:
+        condition: service_started
+
   ia-fusion-analytics:
     build:
       context: $PWD/fusion-analytics
@@ -304,6 +311,7 @@ services:
       - ia-mqtt-broker
     networks:
       - timeseries_network
+
   dlstreamer-pipeline-server:
     image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: dlstreamer-pipeline-server
@@ -415,11 +423,31 @@ services:
     networks:
     - timeseries_network
   
+  # One-shot init: the seaweedfs data/tmp volumes are disk-backed (not tmpfs)
+  # and are created root-owned by the local volume driver, while the seaweedfs services run as
+  # TIMESERIES_UID with read_only root filesystems. Chown them once up front so
+  # those services can actually write to their volumes.
+  seaweedfs-volumes-init:
+    image: ${SEAWEEDFS_IMAGE}
+    container_name: seaweedfs-volumes-init
+    user: "0:0"
+    entrypoint: ["sh", "-c"]
+    command:
+      - chown -R ${TIMESERIES_UID}:${TIMESERIES_UID} /init/master_data /init/volume_data /init/filer_data /init/filer_tmp /init/s3_tmp
+    volumes:
+      - seaweed_master_data:/init/master_data
+      - seaweed_volume_data:/init/volume_data
+      - seaweed_filer_data:/init/filer_data
+      - vol_temp_seaweed_filer:/init/filer_tmp
+      - vol_temp_seaweed_s3:/init/s3_tmp
+    restart: "no"
+
   seaweedfs-master:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-master
     container_name: seaweedfs-master
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     security_opt:
     - no-new-privileges
@@ -431,15 +459,19 @@ services:
       - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
+    depends_on:
+      seaweedfs-volumes-init:
+        condition: service_completed_successfully
 
   seaweedfs-volume:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-volume
     container_name: seaweedfs-volume
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     mem_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
-    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
+    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-6g}
     security_opt:
     - no-new-privileges
     networks:
@@ -451,13 +483,17 @@ services:
       - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
     depends_on:
-      - seaweedfs-master
+      seaweedfs-master:
+        condition: service_started
+      seaweedfs-volumes-init:
+        condition: service_completed_successfully
 
   seaweedfs-filer:
     image: ${SEAWEEDFS_IMAGE}
     hostname: seaweedfs-filer
     container_name: seaweedfs-filer
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     security_opt:
     - no-new-privileges
@@ -471,8 +507,12 @@ services:
       - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
     depends_on:
-      - seaweedfs-master
-      - seaweedfs-volume
+      seaweedfs-master:
+        condition: service_started
+      seaweedfs-volume:
+        condition: service_started
+      seaweedfs-volumes-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/"]
       interval: 10s
@@ -485,6 +525,7 @@ services:
     hostname: seaweedfs-s3
     container_name: seaweedfs-s3
     read_only: true
+    restart: unless-stopped
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     mem_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
     memswap_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
@@ -510,6 +551,8 @@ services:
         condition: service_started
       seaweedfs-volume:
         condition: service_started
+      seaweedfs-volumes-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8333/"]
       interval: 10s
@@ -525,6 +568,7 @@ services:
     image: coturn/coturn:4.17.2-alpine
     container_name: coturn
     read_only: true
+    restart: unless-stopped
     security_opt:
     - no-new-privileges
     ports:
@@ -572,30 +616,14 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+
   seaweed_master_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   seaweed_volume_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   seaweed_filer_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   vol_temp_seaweed_filer:
-    name: "seaweed_filer_vol"
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   vol_temp_seaweed_s3:
-    name: "seaweed_s3_vol"
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs

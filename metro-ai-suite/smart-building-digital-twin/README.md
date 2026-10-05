@@ -1,6 +1,6 @@
 # Smart Building Digital Twin
 
-Smart Building Digital Twin sample application is a complete smart-building monitoring simulation that includes the end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
+Smart Building Digital Twin sample application is a complete smart-building monitoring simulation that includes end-to-end deployment: inputs, processing, analytics, dashboard, configuration, and startup scripts.
 
 The sample application uses synchronized cameras, YOLOX-S and ATSS-MobileNetV2 model variants, and sensors to watch a building for:
 
@@ -74,7 +74,16 @@ Scenescape images are pulled automatically from Docker Hub by `./setup.sh` — n
 
 ## Setup
 
-Clone the repository (Git LFS extension is required for video and model files), then run:
+Clone the repository (Git LFS extension is required for video and model files):
+
+```bash
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/smart-building-digital-twin
+```
+
+Then run:
 
 ```bash
 ./setup.sh
@@ -276,3 +285,12 @@ contribute to a violation of an internationally recognized human right.
 ## Notice for FFmpeg
 
 FFmpeg is an open source project licensed under LGPL and GPL. See <https://www.ffmpeg.org/legal.html>. You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+
+## Documentation
+
+- [Overview](./docs/user-guide/index.md)
+- [User Guide](./docs/user-guide/get-started.md)
+- [How It Works](./docs/user-guide/how-it-works.md)
+- [How To Use the Application](./docs/user-guide/how-to-use-application.md)
+- [Troubleshooting](./docs/user-guide/troubleshooting.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
