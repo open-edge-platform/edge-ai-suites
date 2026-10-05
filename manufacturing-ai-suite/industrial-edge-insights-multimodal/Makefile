@@ -56,12 +56,8 @@ validate_host_ip:
 		echo "HOST_IP is not set in $(ENV_FILE)."; \
 		exit 1; \
 	fi; \
-	if [ "$$host_ip" = "localhost" ]; then \
-		echo "HOST_IP ($$host_ip) is valid."; \
-		exit 0; \
-	fi; \
 	if ! echo "$$host_ip" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$$'; then \
-		echo "HOST_IP ($$host_ip) must be localhost or a valid IPv4 address format."; \
+		echo "HOST_IP ($$host_ip) must be a valid IPv4 address format (use 127.0.0.1 for local-only access)."; \
 		exit 1; \
 	fi; \
 	for octet in $$(echo "$$host_ip" | tr '.' ' '); do \
@@ -143,7 +139,7 @@ wait_for_tsam:
 	@echo "Waiting for Time-Series Analytics microservice to be accessible..."; \
 	max_retries=30; \
 	retry=0; \
-	until [ "$$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:3000/ts-api/health)" != "000" ]; do \
+	until [ "$$(curl -sk -o /dev/null -w '%{http_code}' https://${HOST_IP}:3000/ts-api/health)" != "000" ]; do \
 		retry=$$((retry + 1)); \
 		if [ $$retry -ge $$max_retries ]; then \
 			echo "Timed out waiting for Time-Series Analytics microservice after $$max_retries attempts."; \
@@ -168,7 +164,7 @@ upload_tar_file:
 	@echo "Uploading UDF deployment tar for weld anomaly detection to Time-Series Analytics microservice..."; \
 	tar_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.tar; \
 	response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
-		-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
+		-X POST https://${HOST_IP}:${GRAFANA_PORT}/ts-api/udfs/package \
 		-F "file=@$$tar_file" \
 		-k); \
 	if [ "$$response" = "200" ]; then \
@@ -189,7 +185,7 @@ post_config:
 	$(MAKE) wait_for_tsam; \
 	echo "Posting config for weld anomaly detection to Time-Series Analytics microservice..."; \
 	response=$$(curl -s -o /tmp/config_response.json -w "%{http_code}" \
-		-X POST https://localhost:${GRAFANA_PORT}/ts-api/config \
+		-X POST https://${HOST_IP}:${GRAFANA_PORT}/ts-api/config \
 		-H 'accept: application/json' \
 		-H 'Content-Type: application/json' \
 		-d @$$config_file \
@@ -282,7 +278,7 @@ download_model:
 	echo "Waiting for model-download service to become healthy on port 8200..."; \
 	i=0; \
 	while [ $$i -lt 60 ]; do \
-		if curl -sf "http://localhost:8200/api/v1/models/results" >/dev/null 2>&1; then \
+		if curl -sf "http://${HOST_IP}:8200/api/v1/models/results" >/dev/null 2>&1; then \
 			break; \
 		fi; \
 		if [ "$$i" -eq 59 ]; then \
@@ -294,7 +290,7 @@ download_model:
 	done; \
 	echo "Requesting download+conversion of '${LLM_MODEL_NAME}' (device=${LLM_DEVICE}, precision=${LLM_WEIGHT_FORMAT})..."; \
 	payload='{"models":[{"name":"${LLM_MODEL_NAME}","hub":"openvino","type":"llm","is_ovms":true,"config":{"precision":"${LLM_WEIGHT_FORMAT}","device":"${LLM_DEVICE}","pipeline_type":"LM_CB"}}],"parallel_downloads":false}'; \
-	http_code=$$(curl -w "%{http_code}" -s -o /tmp/model_response.json -X POST "http://localhost:8200/api/v1/models/download?download_path=llm_model_agentic" \
+	http_code=$$(curl -w "%{http_code}" -s -o /tmp/model_response.json -X POST "http://${HOST_IP}:8200/api/v1/models/download?download_path=llm_model_agentic" \
 		-H "Content-Type: application/json" \
 		-d "$$payload"); \
 	response=$$(cat /tmp/model_response.json); \
@@ -311,7 +307,7 @@ download_model:
 	echo "Download job submitted (job_id=$$job_id). Waiting for completion..."; \
 	i=0; \
 	while [ $$i -lt 600 ]; do \
-		job=$$(curl -sf "http://localhost:8200/api/v1/jobs/$$job_id" 2>/dev/null || echo '{}'); \
+		job=$$(curl -sf "http://${HOST_IP}:8200/api/v1/jobs/$$job_id" 2>/dev/null || echo '{}'); \
 		status=$$(echo "$$job" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', 'unknown'))" 2>/dev/null); \
 		if [ "$$status" = "completed" ]; then \
 			echo "Download complete."; \
