@@ -10,6 +10,9 @@ set -euo pipefail
 
 MODE="${1:-}"
 NAMESPACE="${2:-multimodal-sample-app}"
+if [ -z "${GRAFANA_PORT:-}" ] && [ -f .env ]; then
+  GRAFANA_PORT="$(sed -n 's/^GRAFANA_PORT=//p' .env | tail -n 1)"
+fi
 GRAFANA_PORT="${GRAFANA_PORT:-3000}"
 MAX_RETRIES=30
 SLEEP_SECS=5

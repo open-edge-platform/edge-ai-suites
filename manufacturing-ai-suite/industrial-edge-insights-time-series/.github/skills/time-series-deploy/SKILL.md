@@ -98,7 +98,7 @@ make gen_helm_charts app=wind-turbine-anomaly-detection
 cd helm
 # Edit values.yaml: INFLUXDB_USERNAME/PASSWORD, VISUALIZER_GRAFANA_USER/PASSWORD,
 # HTTP(S)_PROXY as required — never invent values, ask the user.
-helm install ts-wind-turbine-anomaly . -n ts-sample-app --create-namespace
+helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=<mqtt_consumer|opcua> . -n ts-sample-app --create-namespace
 # GPU inferencing variant:
 # helm install ts-wind-turbine-anomaly --set privileged_access_required=true \
 #   --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> . -n ts-sample-app --create-namespace

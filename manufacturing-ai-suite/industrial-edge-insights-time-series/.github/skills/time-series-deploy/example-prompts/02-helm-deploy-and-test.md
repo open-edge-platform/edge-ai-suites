@@ -11,7 +11,7 @@ Expected agent flow:
 1. Resolve app root, check `.env`, run Kubernetes/Helm preflight.
 2. `make gen_helm_charts app=wind-turbine-anomaly-detection`
 3. Confirm `helm/values.yaml` required fields are populated (ask user if not).
-4. `helm install ts-wind-turbine-anomaly . -n ts-sample-app --create-namespace`
-5. `scripts/smoke-check.sh helm ts-sample-app`
-6. `scripts/run-functional-tests.sh helm default`
+4. `helm install ts-wind-turbine-anomaly ./helm -n ts-sample-app --create-namespace`
+5. `.github/skills/time-series-deploy/scripts/smoke-check.sh helm ts-sample-app`
+6. `.github/skills/time-series-deploy/scripts/run-functional-tests.sh helm default`
 7. Summarize pytest PASS/FAIL counts; offer `helm uninstall` for cleanup.
