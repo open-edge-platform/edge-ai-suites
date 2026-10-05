@@ -423,9 +423,8 @@ services:
     networks:
     - timeseries_network
   
-  # One-shot init: the seaweedfs data/tmp volumes are disk-backed (not tmpfs,
-  # see bugfix/vkb1/fix-for-seaweedfs-long-run-dataloss) and are created
-  # root-owned by the local volume driver, while the seaweedfs services run as
+  # One-shot init: the seaweedfs data/tmp volumes are disk-backed (not tmpfs)
+  # and are created root-owned by the local volume driver, while the seaweedfs services run as
   # TIMESERIES_UID with read_only root filesystems. Chown them once up front so
   # those services can actually write to their volumes.
   seaweedfs-volumes-init:
