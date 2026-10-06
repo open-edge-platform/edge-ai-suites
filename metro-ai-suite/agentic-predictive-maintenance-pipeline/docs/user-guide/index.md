@@ -1,8 +1,8 @@
 ```{eval-rst}
 .. meta::
    :description: The Agentic Predictive Maintenance sample application uses live or recorded video to
-detect industrial defects and uses multiple AI agents to analyze the results and generate structured
-outputs, i.e. maintenance tickets, on Intel® edge hardware.
+      detect industrial defects and uses multiple AI agents to analyze the results and generate structured
+      outputs, i.e. maintenance tickets, on Intel® edge hardware.
 ```
 
 # Agentic Predictive Maintenance

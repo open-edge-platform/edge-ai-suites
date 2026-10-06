@@ -28,12 +28,10 @@ services:
        mqtt-broker:
          condition: service_healthy
     environment:
-      no_proxy: ${no_proxy}, frigate, ${VSS_IP}, ${VLM_SERVING_IP}
-      NO_PROXY: ${no_proxy}, frigate, ${VSS_IP}, ${VLM_SERVING_IP}
+      no_proxy: ${no_proxy}, frigate, ${VSS_IP}
+      NO_PROXY: ${no_proxy}, frigate, ${VSS_IP}
       FRIGATE_MQTT_PASSWORD: ${MQTT_PASSWORD} 
       FRIGATE_MQTT_USER: ${MQTT_USER}
-      OPENAI_BASE_URL: "http://${VLM_SERVING_IP}:${VLM_SERVING_PORT}/v1"
-      OPENAI_API_KEY: "your_openai_api_key" 
   
   nvr-event-router:
     container_name: nvr-event-router
@@ -77,7 +75,7 @@ services:
       WATCH_BATCH_SIZE: ${WATCH_BATCH_SIZE:-10}
       BATCH_JOB_POLL_INTERVAL_SECONDS: ${BATCH_JOB_POLL_INTERVAL_SECONDS:-0.5}
       BATCH_JOB_TIMEOUT_SECONDS: ${BATCH_JOB_TIMEOUT_SECONDS:-3600}
-      no_proxy: ${no_proxy}, frigate-vms, ${VSS_IP}, ${VLM_SERVING_IP}
+      no_proxy: ${no_proxy}, frigate-vms, ${VSS_IP}
       MQTT_USER: ${MQTT_USER}
       MQTT_PASSWORD: ${MQTT_PASSWORD} 
       HOST_IP: ${HOST_IP}
@@ -111,9 +109,8 @@ services:
       MODE: "ui" 
       API_BASE_URL: "http://${HOST_IP}:8000" 
       EVENT_POLL_INTERVAL: "10"
-      NVR_GENAI: ${NVR_GENAI}
       NVR_SCENESCAPE: ${NVR_SCENESCAPE}
-      no_proxy: ${no_proxy}, frigate, nvr-event-router, ${VSS_IP}, ${VLM_SERVING_IP}
+      no_proxy: ${no_proxy}, frigate, nvr-event-router, ${VSS_IP}
       
   mqtt-broker:
     image: eclipse-mosquitto:2.0.21
