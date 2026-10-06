@@ -217,6 +217,7 @@ jobs:
         ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found|unlinkat /usr/share/grafana/data/plugins-bundled/elasticsearch: read-only file system'
     - name: Deploy and test agentic
       run: |
+        source .env
         make up_agentic "$AGENTIC_OVR"
         timeout 20m bash -c 'until [ "$(docker inspect -f {{.State.Health.Status}} apm-llm)" = healthy ] && [ "$(docker inspect -f {{.State.Health.Status}} apm-agent)" = healthy ]; do sleep 10; done'
         curl -sf "${HOST_IP}:8010/v3/chat/completions" -H 'Content-Type: application/json' \
