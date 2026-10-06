@@ -313,7 +313,7 @@ services:
       - timeseries_network
 
   dlstreamer-pipeline-server:
-    image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}
+    image: ${DOCKER_REGISTRY}${DLSTREAMER_PIPELINE_SERVER_IMAGE}:${DEPS_IMAGE_SUFFIX:-2026.2.0}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}-ubuntu24
     container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     read_only: true
