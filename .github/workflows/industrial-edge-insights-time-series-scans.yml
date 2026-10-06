@@ -232,7 +232,6 @@ jobs:
             MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
             S3_STORAGE_USERNAME=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 8)
             S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
-            HOST_IP=$(hostname -I | awk '{print $1}')
 
             echo "INFLUXDB_USERNAME: $INFLUXDB_USERNAME"
             echo "VISUALIZER_GRAFANA_USER: $VISUALIZER_GRAFANA_USER"
@@ -293,7 +292,7 @@ jobs:
               sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
               sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
               sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
-              sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
+              
               make build
               make up
               make down
@@ -487,9 +486,6 @@ jobs:
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics/Dockerfile
             output-report-path: trivy-fusion-analytics-dockerfile.json
             scan-name: Multimodal Fusion Analytics Dockerfile
-          - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/insights-workbench/Dockerfile
-            output-report-path: trivy-insights-workbench-dockerfile.json
-            scan-name: Multimodal Insights Workbench Dockerfile
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/ui-service/Dockerfile
             output-report-path: trivy-multimodal-ui-dockerfile.json
             scan-name: Multimodal UI Service Dockerfile
@@ -724,7 +720,6 @@ jobs:
           MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
           S3_STORAGE_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
           S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
-          HOST_IP=$(hostname -I | awk '{print $1}')
 
           sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
           sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
@@ -734,7 +729,6 @@ jobs:
           sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
           sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
           sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
-          sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
 
           make build
           echo "Deploying using mqtt ingestion"

@@ -32,7 +32,7 @@ before proceeding with the following steps.
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
    # build
-   make build # builds only weld data simulator, fusion analytics, insights workbench and multimodal agent ui images
+   make build # builds the simulator, fusion analytics, and the Agentic UI image
    ```
 
    > [!NOTE]
