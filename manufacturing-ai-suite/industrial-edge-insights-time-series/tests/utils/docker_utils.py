@@ -515,8 +515,6 @@ def generate_username(length=10):
 def get_credential_fields():
     """Get list of credential field names"""
     return [
-        "INFLUXDB_USERNAME",
-        "INFLUXDB_PASSWORD",
         "VISUALIZER_GRAFANA_USER",
         "VISUALIZER_GRAFANA_PASSWORD",
         "MR_MINIO_ACCESS_KEY",
@@ -556,8 +554,6 @@ def generate_test_credentials(case_type="valid", invalid_field=None):
     elif case_type == "valid":
         # Return valid credentials with appropriate lengths
         return {
-            "INFLUXDB_USERNAME": generate_username(5),
-            "INFLUXDB_PASSWORD": generate_password(10),
             "VISUALIZER_GRAFANA_USER": generate_username(5),
             "VISUALIZER_GRAFANA_PASSWORD": generate_password(10),
             "MR_MINIO_ACCESS_KEY": generate_password(10),
@@ -1285,72 +1281,11 @@ def remove_old_alert_in_tick_script(file_path, setup):
         return False
 
 def check_and_update_tick_script(script_path=None, setup=None):
-    """Step 1: Open tick script, update it with opcua and mqtt alerts, and return its content."""
-    try:
-        # First, ensure we're in the correct working directory
-        success, original_dir = check_and_set_working_directory(return_original=True)
-        if not success:
-            logger.error("✗ Failed to set correct working directory")
-            return None
-
-        if script_path is None:
-            # Use the tick_scripts subdirectory for the tick script
-            script_path = os.path.join(os.getcwd(), constants.WINDTURBINE_TICK_SCRIPT_PATH)
-
-        logger.info(f"Opening tick script at: {script_path}")
-
-        # Check if the tick script file exists
-        if not os.path.exists(script_path):
-            logger.error(f"✗ Tick script file not found at: {script_path}")
-            os.chdir(original_dir)  # Return to original directory before returning
-            return None
-
-        # Read the tick script file directly using the full path
-        with open(script_path, 'r') as file:
-            content = file.read()
-
-        script_filename = os.path.basename(script_path)
-        logger.info(f"✓ Successfully opened tick script ({len(content)} characters)")
-        logger.info(f"✓ Script file: {script_filename}")
-
-        # Update tick script with alert configurations based on setup parameter
-        if setup:
-            logger.info(f"\n--- Updating tick script with {setup} alert configuration ---")
-
-            # Update with specified setup
-            logger.info(f"Updating tick script with {setup} setup...")
-            success = remove_old_alert_in_tick_script(script_path, setup)
-
-            # Switch case for success/failure messaging
-            result_messages = {
-                True: f"✓ Successfully updated tick script with {setup} alerts",
-                False: f"✗ Failed to update tick script with {setup} alerts"
-            }
-            logger.info(result_messages[success])
-
-        else:
-            # Default behavior: no setup parameter provided, skip alert update
-            logger.info("\n--- No setup parameter provided, skipping alert configuration update ---")
-            logger.info("✓ Tick script opened without alert configuration changes")
-
-        # Read the updated content
-        with open(script_path, 'r') as file:
-            updated_content = file.read()
-
-        logger.info(f"✓ Tick script updated with alert configuration ({len(updated_content)} characters)")
-
-        # Return to original directory before returning the content
-        os.chdir(original_dir)
-        return updated_content
-
-    except FileNotFoundError:
-        logger.error(f"✗ Tick script file not found at: {script_path}")
-        os.chdir(original_dir)  # Return to original directory
+    """Compatibility shim; Core alert mode is applied through the /config API."""
+    if setup not in (None, "mqtt", "opcua"):
+        logger.error("Invalid alert mode: %s", setup)
         return None
-    except Exception as e:
-        logger.error(f"✗ Error opening/updating tick script: {str(e)}")
-        os.chdir(original_dir)  # Return to original directory
-        return None
+    return "InfluxDB 3 trigger configuration is managed by the TS API"
 
 
 def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=10, custom_pattern=None,
@@ -1527,15 +1462,18 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
             logger.error("Config directory not found: %s", config_path)
             return False
 
-        required_folders = ("udfs", "tick_scripts")
-        for folder in required_folders:
-            source = config_path / folder
-            if not source.exists() or not source.is_dir() or not any(source.iterdir()):
-                logger.error(
-                    "Required UDF folder '%s' is missing or empty under '%s'.",
-                    folder, config_path,
-                )
+        if sample_app == constants.WIND_SAMPLE_APP:
+            package_plugin = config_path / "udfs" / "influx3_windturbine" / "__init__.py"
+            if not package_plugin.is_file():
+                logger.error("Core UDF entry point not found: %s", package_plugin)
                 return False
+            package_paths = [config_path / "udfs" / "influx3_windturbine"]
+        else:
+            package_paths = [config_path / "udfs", config_path / "tick_scripts"]
+            for source in package_paths:
+                if not source.exists() or not source.is_dir() or not any(source.iterdir()):
+                    logger.error("Required UDF folder '%s' is missing or empty.", source)
+                    return False
 
         if sample_app == constants.MULTIMODAL_SAMPLE_APP:
             tar_name = "weld_anomaly_detector.tar"
@@ -1549,12 +1487,21 @@ def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
             os.unlink(tar_path)
 
         with _tarfile.open(tar_path, "w") as tar:
-            for folder in required_folders:
-                tar.add(config_path / folder, arcname=folder)
-                logger.info("Added required '%s' folder to tar archive.", folder)
+            for source in package_paths:
+                archive_name = str(source.relative_to(config_path))
+                tar.add(
+                    source,
+                    arcname=archive_name,
+                    filter=lambda member: None if "__pycache__" in member.name.split("/") or member.name.endswith(".pyc") else member,
+                )
+                logger.info("Added required '%s' path to tar archive.", archive_name)
             models_source = config_path / "models"
             if models_source.exists() and models_source.is_dir() and any(models_source.iterdir()):
-                tar.add(models_source, arcname="models")
+                tar.add(
+                    models_source,
+                    arcname="models",
+                    filter=lambda member: None if "__pycache__" in member.name.split("/") or member.name.endswith(".pyc") else member,
+                )
                 logger.info("Added optional 'models' folder to tar archive.")
             else:
                 logger.debug("Skipping absent/empty optional 'models' folder.")
@@ -1656,34 +1603,7 @@ def update_config_file(ingestion_type="opcua"):
             os.chdir(original_dir)  # Return to original directory before returning
             return False
 
-        # Step 3: Open and update tick script with correct configuration
-        script_content = check_and_update_tick_script(setup=ingestion_type)
-        if script_content is None:
-            logger.error(f"✗ Failed to open/update tick script for {ingestion_type.upper()}")
-            os.chdir(original_dir)  # Return to original directory before returning
-            return False
-        logger.info(f"✓ {ingestion_type.upper()} tick script configuration completed successfully")
-
-        # Step 4: Navigate to the correct time-series-analytics-config directory
-        config_dir = constants.WINDTURBINE_CONFIG_DIR
-        if os.path.exists(config_dir):
-            os.chdir(config_dir)
-            logger.debug(f"Changed to directory: {os.getcwd()}")
-        else:
-            logger.error(f"✗ Configuration directory not found: {config_dir}")
-            os.chdir(original_dir)
-            return False
-
-        # Step 5: Create the directory and copy files
-        os.makedirs('windturbine_anomaly_detector', exist_ok=True)
-        result = common_utils.exec_command(['cp', '-r', 'models', 'tick_scripts', 'udfs', 'windturbine_anomaly_detector/.'], check=True)
-        if result.stdout:
-            logger.info("Files copied successfully to 'windturbine_anomaly_detector' directory.")
-        elif result.stderr:
-            logger.error(f"Error copying files: {result.stderr}")
-
-        logger.info(f"current directory: {os.getcwd()}")
-        logger.info("Starting the curl command to update the configuration...")
+        logger.info("Applying %s alert mode through Core trigger configuration.", ingestion_type.upper())
 
         # Step 5: Send configuration update using curl to Docker-based service with retries
         if ingestion_type == "opcua":
@@ -1843,32 +1763,25 @@ def execute_gpu_config_curl(device="gpu", sample_app=constants.WIND_SAMPLE_APP):
         return False
 
 # Idempotent helpers to ensure the UDF loaded in TSAM matches the alert mode the caller needs.
-def _kapacitor_task_alert_mode_matches(alert_mode):
-    """Return True iff Kapacitor's loaded windturbine_anomaly_detector task is
-    currently executing the TICK for the given alert_mode ("mqtt" or "opcua").
-    Looks at the live task definition served by Kapacitor's REST API rather
-    than the .tick file on the test host, because TSAM uses its own copy of
-    the UDF package (only ``upload_udf_tar_package`` ships a new one).
-    Returns False on any error so the caller falls through to a re-upload
-    (safer than a false positive that skips needed remediation).
-    """
+def _core_trigger_alert_mode_matches(alert_mode):
+    """Return True when the TS API config already uses the requested alert mode."""
     if alert_mode not in ("mqtt", "opcua"):
         return False
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
     try:
         result = common_utils.exec_command(
             ["docker", "exec", tsam_name,
-             "curl", "-s", "http://localhost:9092/kapacitor/v1/tasks/windturbine_anomaly_detector"],
+             "curl", "-fsS", "http://localhost:5000/config"],
             capture_output=True, text=True, timeout=15,
         )
         if result.returncode != 0:
             return False
-        body = result.stdout or ""
+        alerts = (json.loads(result.stdout or "{}").get("alerts") or {})
         if alert_mode == "mqtt":
-            return ("my_mqtt_broker" in body) and ("opcua_alerts" not in body)
-        return ("opcua_alerts" in body) and ("my_mqtt_broker" not in body)
+            return bool(alerts.get("mqtt")) and not bool(alerts.get("opcua"))
+        return bool(alerts.get("opcua")) and not bool(alerts.get("mqtt"))
     except Exception as exc:
-        logger.warning(f"[reset_loaded_udf_to] Kapacitor introspection failed: {exc}")
+        logger.warning("[reset_loaded_udf_to] TS API config lookup failed: %s", exc)
         return False
 
 
@@ -1878,16 +1791,13 @@ def reset_loaded_udf_to(alert_mode, sample_app=constants.WIND_SAMPLE_APP):
         logger.error(f"[reset_loaded_udf_to] Invalid alert_mode '{alert_mode}'")
         return False
 
-    if _kapacitor_task_alert_mode_matches(alert_mode):
-        logger.info(f"[reset_loaded_udf_to] Kapacitor already in '{alert_mode}' mode; skipping re-upload")
+    if _core_trigger_alert_mode_matches(alert_mode):
+        logger.info(f"[reset_loaded_udf_to] Core trigger already in '{alert_mode}' mode; skipping re-upload")
         return True
 
-    logger.info(f"[reset_loaded_udf_to] Loaded UDF != '{alert_mode}'; rewriting TICK + re-uploading tar")
+    logger.info(f"[reset_loaded_udf_to] Applying '{alert_mode}' through Core trigger configuration")
     if check_and_update_tick_script(setup=alert_mode) is None:
-        logger.error(f"[reset_loaded_udf_to] Failed to rewrite TICK to '{alert_mode}'")
-        return False
-    if not upload_udf_tar_package(sample_app):
-        logger.error(f"[reset_loaded_udf_to] Failed to re-upload UDF tar for '{alert_mode}'")
+        logger.error(f"[reset_loaded_udf_to] Invalid Core alert mode '{alert_mode}'")
         return False
     if not update_config_file(alert_mode):
         logger.error(f"[reset_loaded_udf_to] Failed to POST '{alert_mode}' config")
@@ -1922,7 +1832,7 @@ def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
 
     # Step 2: Check container logs for alert pattern using common_utils for proper weld support
     logger.info(f"\nStep 2: Checking container logs for {alert_type.upper()} alert pattern...")
-    logs_validation = common_utils.check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], alert_type, timeout=constants.WIND_TURBINE_ALERT_LOG_TIMEOUT, interval=5)
+    logs_validation = common_utils.check_logs_for_alerts(constants.CONTAINERS["influxdb"]["name"], alert_type, timeout=constants.WIND_TURBINE_ALERT_LOG_TIMEOUT, interval=5)
     if not logs_validation:
         logger.error(f"✗ Step 2 FAILED: {alert_type.upper()} alert pattern not found in container logs")
         return False
@@ -1936,13 +1846,13 @@ def validate_opcua_alert_system():
     logger.info("=== Docker-based OPC UA Alert System Validation ===")
     logger.info(f"Starting validation from directory: {os.getcwd()}")
 
-    # Step 1: Configure OPC UA alert in TICK script only (no config POST yet)
-    logger.info("\nStep 1: Configuring OPC UA alert in TICK script...")
+    # Alert mode is carried in Core trigger arguments posted through /config.
+    logger.info("\nStep 1: Preparing Core trigger alert configuration...")
     tick_result = check_and_update_tick_script(setup="opcua")
     if tick_result is None:
-        logger.error("✗ Step 1 FAILED: Tick script update failed")
+        logger.error("✗ Step 1 FAILED: Invalid Core alert mode")
         return False
-    logger.info("✓ Step 1 PASSED: Tick script updated successfully")
+    logger.info("✓ Step 1 PASSED: Core alert mode accepted")
 
     # Step 2: Upload the UDF deployment package (must happen before config POST)
     logger.info("\nStep 2: Uploading UDF deployment package...")
@@ -1984,7 +1894,7 @@ def validate_opcua_alert_system():
     # Step 5: Poll logs immediately after restart instead of sleeping a fixed window.
     logger.info("\nStep 5: Polling container logs for OPC UA alert pattern...")
     logs_validation = check_logs_for_alerts(
-        constants.CONTAINERS["time_series_analytics"]["name"],
+        constants.CONTAINERS["influxdb"]["name"],
         "opcua",
         timeout=max(
             constants.WIND_TURBINE_OPCUA_ALERT_SETTLE,
@@ -2000,42 +1910,23 @@ def validate_opcua_alert_system():
     return True
 
 def get_influxdb_credentials():
-    """Fetch INFLUXDB_USERNAME and INFLUXDB_PASSWORD from env file"""
+    """Return the Core token in a credentials-compatible tuple."""
     try:
-        env_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
-        logger.info(f"Fetching InfluxDB credentials from: {env_path}")
-
-        # Expand environment variables in the file path
-        expanded_path = os.path.expandvars(env_path)
-
-        # Read the existing file
-        with open(expanded_path, 'r') as file:
-            lines = file.readlines()
-
-        # Extract the INFLUXDB_USERNAME and INFLUXDB_PASSWORD
-        influxdb_username = None
-        influxdb_password = None
-
-        for line in lines:
-            line = line.strip()
-            if line.startswith('INFLUXDB_USERNAME='):
-                influxdb_username = line.split('=', 1)[1]
-            elif line.startswith('INFLUXDB_PASSWORD='):
-                influxdb_password = line.split('=', 1)[1]
-
-        # Note: Not logging credentials for security reasons
-        logger.info("Successfully retrieved InfluxDB credentials from .env file")
-
-        return influxdb_username, influxdb_password
+        token_path = Path(constants.EDGE_AI_SUITES_DIR) / ".secrets" / "admin-token.json"
+        with token_path.open("r", encoding="utf-8") as token_file:
+            token = json.load(token_file).get("token")
+        if not token:
+            raise ValueError("Core admin token is missing")
+        return "token", token
     except FileNotFoundError:
-        logger.error(f"File not found: {env_path}")
+        logger.error("Core admin token file was not found")
         return None, None
     except Exception as e:
-        logger.error(f"An unexpected error occurred: {e}")
+        logger.error("Unable to read Core admin token: %s", e)
         return None, None
 
-def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
-    """Execute InfluxDB commands inside the InfluxDB container and return data."""
+def execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"], measurement=None):
+    """Query the selected Core measurements through its bundled CLI."""
     logger.info(f"Executing InfluxDB commands in container '{container_name}'...")
     try:
         # Step 1: Check InfluxDB container existence
@@ -2051,31 +1942,24 @@ def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
             logger.info("Failed to get InfluxDB credentials")
             return None
 
-        # Step 3: Execute InfluxDB commands inside the container
+        # Step 3: Query measurements through the Core SQL CLI.
         if measurement:
-            query_part = f"SELECT * FROM \"{measurement.replace('_', '-')}\" LIMIT 5"
-            verify_tables = [measurement.replace('_', '-')]
+            verify_tables = [measurement.replace("_", "-")]
         else:
-            # Default wind turbine queries for backward compatibility
-            query_part = f"SELECT * FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" LIMIT 5; SELECT * FROM \"{constants.WIND_TURBINE_ANALYTICS_TOPIC}\" LIMIT 5"
             verify_tables = [constants.WIND_TURBINE_INGESTED_TOPIC, constants.WIND_TURBINE_ANALYTICS_TOPIC]
-        influx_execute = f"SHOW MEASUREMENTS; {query_part}"
-
-        exec_command = [
-            "docker", "exec", container_name,
-            "influx", "-username", influxdb_username, "-password", influxdb_password,
-            "-database", "datain", "-execute", influx_execute
-        ]
-        logger.info(f"Executing command: 'SHOW MEASUREMENTS; {query_part}' inside {container_name} container with redacted credentials.")
-
-        result = common_utils.exec_command(exec_command, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            logger.info(f"Command failed with return code {result.returncode}")
-            logger.info(f"Error: {result.stderr}")
-            return None
-
-        response = result.stdout.strip()
+        responses = []
+        for table in verify_tables:
+            result = common_utils.exec_command(
+                ["docker", "exec", container_name, "influxdb3", "query",
+                 "--token", influxdb_password, "--database", "datain",
+                 f'SELECT * FROM "{table}" LIMIT 5'],
+                capture_output=True, text=True,
+            )
+            if result.returncode != 0:
+                logger.error("Core query failed: %s", result.stderr)
+                return None
+            responses.append(result.stdout.strip())
+        response = "\n".join(responses)
         logger.info("Query results:")
         logger.info(response)
 
@@ -2117,11 +2001,11 @@ def verify_influxdb_retention_docker(response=None, container_name=constants.CON
             return None, False
 
         # Step 3: Execute InfluxDB query to get the earliest time value
-        influx_execute = f"SELECT time, wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1"
+        influx_execute = f'SELECT time, wind_speed FROM "{constants.WIND_TURBINE_INGESTED_TOPIC}" ORDER BY time ASC LIMIT 1'
         exec_command = [
             "docker", "exec", container_name,
-            "influx", "-username", influxdb_username, "-password", influxdb_password,
-            "-database", "datain", "-execute", influx_execute
+            "influxdb3", "query", "--token", influxdb_password, "--database", "datain",
+            "--format", "json", influx_execute
         ]
         logger.info(f"Executing InfluxDB query inside container '{container_name}': '{influx_execute}' with redacted credentials.")
         result = common_utils.exec_command(exec_command, capture_output=True, text=True)
@@ -2131,9 +2015,8 @@ def verify_influxdb_retention_docker(response=None, container_name=constants.CON
             logger.info(f"Error: {result.stderr}")
             return None, False
 
-        # Parse the time value from line 4 of the output (equivalent to awk 'NR==4 {print $1}')
-        output_lines = result.stdout.strip().split('\n')
-        time_value = output_lines[3].split()[0] if len(output_lines) >= 4 else ""
+        rows = json.loads(result.stdout or "[]")
+        time_value = rows[0].get("time") if rows else None
         if time_value:
             logger.info(f"First time value in '{constants.WIND_TURBINE_INGESTED_TOPIC}': {time_value}")
             return time_value, True
@@ -3788,7 +3671,7 @@ def check_multimodal_mqtt_topic_data(topic, broker_host="localhost", broker_port
         return False
 
 
-def check_influxdb_data_with_auth(measurement, database="datain", container_name="ia-influxdb", username="", password="", timeout=30):
+def check_influxdb_data_with_auth(measurement, database="datain", container_name=constants.CONTAINERS["influxdb"]["name"], username="token", password="", timeout=30):
     """
     Check if data exists in InfluxDB measurement with authentication
 
@@ -3809,12 +3692,11 @@ def check_influxdb_data_with_auth(measurement, database="datain", container_name
             logger.warning(f"Container {container_name} is not running")
             return False
 
-        # Execute InfluxDB query with authentication
+        token = password or get_influxdb_credentials()[1]
         query_cmd = [
             "docker", "exec", container_name,
-            "influx", "-database", database,
-            "-username", username, "-password", password,
-            "-execute", f"SELECT COUNT(*) FROM \"{measurement}\" LIMIT 1"
+            "influxdb3", "query", "--token", token, "--database", database,
+            "--format", "json", f'SELECT COUNT(*) AS count FROM "{measurement}"'
         ]
 
         result = common_utils.exec_command(
@@ -3825,10 +3707,9 @@ def check_influxdb_data_with_auth(measurement, database="datain", container_name
         )
 
         if result.returncode == 0:
-            output = result.stdout.strip()
-            logger.info(f"InfluxDB query output: {output}")
-            # Check if the output contains any count > 0
-            if "count" in output.lower() and any(char.isdigit() and char != '0' for char in output):
+            rows = json.loads(result.stdout or "[]")
+            logger.info("Core query rows: %s", rows)
+            if rows and int(rows[0].get("count", 0)) > 0:
                 logger.info(f"Data found in measurement: {measurement}")
                 return True
             else:
@@ -3849,14 +3730,14 @@ def check_influxdb_data_with_auth(measurement, database="datain", container_name
 def query_influxdb_measurement_with_auth(
     measurement,
     database="datain",
-    container_name="ia-influxdb",
-    username="",
+    container_name=constants.CONTAINERS["influxdb"]["name"],
+    username="token",
     password="",
     limit=3,
     timeout=30,
     order_by_time_desc=False,
 ):
-    """Fetch rows from an InfluxDB measurement using the CLI with authentication."""
+    """Fetch rows from an InfluxDB 3 Core table using its SQL CLI."""
     query_result = {
         "success": False,
         "records": [],
@@ -3872,14 +3753,11 @@ def query_influxdb_measurement_with_auth(
 
         order_clause = " ORDER BY time DESC" if order_by_time_desc else ""
         query = f'SELECT * FROM "{measurement}"{order_clause} LIMIT {limit}'
+        token = password or get_influxdb_credentials()[1]
         cmd = [
             "docker", "exec", container_name,
-            "influx",
-            "-database", database,
-            "-username", username,
-            "-password", password,
-            "-format", "json",
-            "-execute", query,
+            "influxdb3", "query", "--token", token, "--database", database,
+            "--format", "json", query,
         ]
 
         result = common_utils.exec_command(cmd, capture_output=True, text=True, timeout=timeout)
@@ -3891,19 +3769,9 @@ def query_influxdb_measurement_with_auth(
             logger.error(query_result["error"])
             return query_result
 
-        json_payload = _extract_json_payload(query_result["raw_output"])
-        if not json_payload:
-            query_result["error"] = "InfluxDB response did not contain JSON payload"
-            logger.error(query_result["error"])
-            return query_result
-
-        data = json.loads(json_payload)
-        series = data.get("results", [{}])[0].get("series", [])
-        if series:
-            columns = series[0].get("columns", [])
-            values = series[0].get("values", [])
-            query_result["records"] = [dict(zip(columns, row)) for row in values]
-            query_result["success"] = bool(query_result["records"])
+        query_result["records"] = json.loads(query_result["raw_output"] or "[]")
+        if query_result["records"]:
+            query_result["success"] = True
         else:
             query_result["error"] = f"No data returned for measurement {measurement}"
             logger.warning(query_result["error"])

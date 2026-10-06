@@ -97,7 +97,7 @@ initializes and starts inferencing.
 
 No action required --- wait for the **time-series-analytics**
 microservice to complete downloading the dependent packages and
-initialize Kapacitor to start inference.
+initialize the InfluxDB 3 Core Processing Engine trigger to start inference.
 
 ---
 

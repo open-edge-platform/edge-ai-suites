@@ -65,8 +65,6 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
 ## Deploy with Docker Compose
 
 1. Update the following fields in `.env`:
-   - `INFLUXDB_USERNAME`
-   - `INFLUXDB_PASSWORD`
    - `VISUALIZER_GRAFANA_USER`
    - `VISUALIZER_GRAFANA_PASSWORD`
 
@@ -74,7 +72,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
 
 > [!NOTE]
 >
-> - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the above required fields are not populated
+> - The below `make up_opcua_ingestion` or `make up_mqtt_ingestion` fails if the Grafana credentials are not populated
 >   as per the rules called out in `.env` file.
 > - The sample app is deployed by pulling the pre-built container images of the sample app
 >   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
@@ -140,22 +138,14 @@ curl -k -X 'POST' \
     docker exec -it ia-influxdb bash
    ```
 
-2. Run the following commands to see the data in InfluxDB*:
+2. Query processed data from InfluxDB 3 Core:
 
-   > [!NOTE]
-   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-   > This does not affect any functionality while working with the InfluxDB commands
-
-   ``` bash
-   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-   # for docker compose deployment and `values.yml` for helm deployment
-   influx -username <username> -password <passwd>
-   use datain # database access
-   show measurements
-   # Run below query to check and output measurement processed
-   # by Time Series Analytics microservice
-   select * from "wind-turbine-anomaly-data"
-   ```
+  ```bash
+  docker exec ia-influxdb influxdb3 query \
+    --token "$(jq -r '.token' .secrets/admin-token.json)" \
+    --database datain \
+    'SELECT * FROM "wind-turbine-anomaly-data" LIMIT 10'
+  ```
 
 3. To check the output in Grafana:
 
@@ -210,7 +200,7 @@ guide to learn how to deploy the sample application on a k8s cluster using Helm.
 - [How to build from source and deploy](./get-started/build-from-source.md): Guide to build from source and docker compose deployment
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [How to configure OPC-UA/MQTT alerts](./how-to-guides/configure-alerts.md): Guide for configuring the OPC-UA/MQTT alerts in the Time Series Analytics microservice
-- [How to configure custom UDF deployment package](./how-to-guides/configure-custom-udf.md): Guide for deploying a customized UDF deployment package (UDFs/models/TICKscripts)
+- [How to configure custom UDF deployment package](./how-to-guides/configure-custom-udf.md): Guide for deploying a customized Core plugin package (UDFs/models)
 - [How to enable multi-stream ingestion](./how-to-guides/multi-stream-ingestion.md): Guide to deploy sample apps with multiple parallel ingestion streams
 - [How to run benchmarking](./how-to-guides/benchmarking.md): Guide to benchmark ingestion and UDF processing with stream and batch modes
 

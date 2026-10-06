@@ -12,7 +12,8 @@ services:
     image: telegraf:1.39.3-alpine
     restart: unless-stopped
     depends_on:
-      - ia-influxdb
+      ia-influxdb3-provision:
+        condition: service_completed_successfully
     security_opt:
     - no-new-privileges
     read_only: true
@@ -24,9 +25,9 @@ services:
       NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
       MQTT_BROKER_HOST: "ia-mqtt-broker"
       INFLUX_SERVER: "ia-influxdb"
-      INFLUXDB_PORT: 8086
-      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
-      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_PORT: 8181
+      INFLUXDB_USERNAME: token
+      INFLUXDB_PASSWORD: ${INFLUXDB3_AUTH_TOKEN}
       INFLUXDB_DBNAME: datain
       TELEGRAF_CONFIG_PATH: ${TELEGRAF_CONFIG_PATH:-/etc/telegraf/Telegraf.conf}
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
@@ -35,7 +36,6 @@ services:
       # The Telegraf metric_batch_size specifies the number of metrics or data points 
       # that are grouped together and sent in a single batch to the InfluxDB.
       TELEGRAF_METRIC_BATCH_SIZE: 100
-      TS_MS_SERVER_URL: http://ia-time-series-analytics-microservice:${KAPACITOR_PORT}
     entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     networks:
     - timeseries_network
@@ -44,36 +44,78 @@ services:
     - "./apps/${SAMPLE_APP}/telegraf-config/:/etc/telegraf"   
 
   ia-influxdb:
-    user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.12.4
+    image: ${DOCKER_REGISTRY}${INFLUXDB3_CORE_IMAGE}:${IMAGE_SUFFIX:-latest}
+    build:
+      context: ./core-image
+      dockerfile: Dockerfile
     container_name: ia-influxdb
     hostname: ia-influxdb
+    command:
+      - influxdb3
+      - serve
+      - --node-id=windturbine
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --plugin-dir=/tmp
+      - --admin-token-file=/run/secrets/admin-token
     restart: unless-stopped
-    read_only: true
+    depends_on:
+      ia-influxdb3-data-init:
+        condition: service_completed_successfully
     security_opt:
     - no-new-privileges
     networks:
     - timeseries_network
     healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
-      interval: 5m
+      test: ["CMD-SHELL", "status=$$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8181/health) || exit 1; test \"$$status\" = 200 -o \"$$status\" = 401"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
     environment:
-      INFLUXDB_DB: datain
-      INFLUXDB_ADMIN_USER: admin
-      INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
-      INFLUXDB_USER : ${INFLUXDB_USERNAME}
-      INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h0m0s}
-      no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
-      NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
-      INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
-      INFLUXDB_LOGGING_LEVEL: ${LOG_LEVEL}
-      INFLUXDB_TLS_CIPHERS: TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      no_proxy: "localhost,127.0.0.1,ia-influxdb,ia-mqtt-broker,ia-time-series-analytics-microservice"
+      NO_PROXY: "localhost,127.0.0.1,ia-influxdb,ia-mqtt-broker,ia-time-series-analytics-microservice"
+    ports:
+      - "127.0.0.1:${INFLUXDB3_PORT:-8181}:8181"
     volumes:
-      # Mount for influxdb data directory and configuration
-    - vol_influxdb_conf:/var/lib/influxdb:rw
-    - ./configs/influxdb/config:/etc/influxdb
-    - ./configs/influxdb/init-influxdb.sh:/docker-entrypoint-initdb.d/init-influxdb.sh
+      - vol_influxdb3_data:/var/lib/influxdb3/data
+      - vol_temp_time_series_analytics_microservice:/tmp
+      - ${INFLUXDB3_ADMIN_TOKEN_FILE:-./.secrets/admin-token.json}:/run/secrets/admin-token:ro
+
+  ia-influxdb3-data-init:
+    image: ${DOCKER_REGISTRY}${INFLUXDB3_CORE_IMAGE}:${IMAGE_SUFFIX:-latest}
+    user: "0:0"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - chown -R influxdb3:influxdb3 /var/lib/influxdb3/data
+    restart: "no"
+    volumes:
+      - vol_influxdb3_data:/var/lib/influxdb3/data
+
+  ia-influxdb3-provision:
+    image: influxdb:3.12.0-core
+    depends_on:
+      ia-influxdb:
+        condition: service_healthy
+    environment:
+      INFLUXDB3_AUTH_TOKEN: ${INFLUXDB3_AUTH_TOKEN}
+      INFLUXDB_RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h}
+      no_proxy: "ia-influxdb,localhost,127.0.0.1"
+      NO_PROXY: "ia-influxdb,localhost,127.0.0.1"
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        status=$$(curl --silent --output /tmp/db-response.json --write-out '%{http_code}' \
+          --request POST http://ia-influxdb:8181/api/v3/configure/database \
+          --header "Authorization: Bearer $$INFLUXDB3_AUTH_TOKEN" \
+          --header 'Content-Type: application/json' \
+          --data "{\"db\":\"datain\",\"retention_period\":\"$$INFLUXDB_RETENTION_DURATION\"}") || exit 1
+        case "$$status" in
+          200|409) echo "InfluxDB 3 database datain is ready" ;;
+          *) cat /tmp/db-response.json; exit 1 ;;
+        esac
+    restart: "no"
+    networks:
+      - timeseries_network
   
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
@@ -81,29 +123,26 @@ services:
     image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     restart: unless-stopped
     depends_on:
-      - ia-influxdb
-      - ia-mqtt-broker
+      ia-influxdb3-provision:
+        condition: service_completed_successfully
+      ia-mqtt-broker:
+        condition: service_started
     security_opt:
     - no-new-privileges
     read_only: true
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9092/kapacitor/v1/ping || exit 1"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health', timeout=3)"]
       interval: 10s
       timeout: 5s
       retries: 20
     environment:
       no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
-      KAPACITOR_PORT: ${KAPACITOR_PORT}
-      INFLUX_SERVER: "ia-influxdb"
-      KAPACITOR_INFLUXDB_0_USERNAME: ${INFLUXDB_USERNAME}
-      KAPACITOR_INFLUXDB_0_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB3_URL: http://ia-influxdb:8181
+      INFLUXDB3_ADMIN_TOKEN_FILE: /run/secrets/admin-token
+      INFLUXDB3_UDF_PLUGIN_DIR: influx3_windturbine
       PROFILING_MODE: "false"
-      KAPACITOR_URL: http://ia-time-series-analytics-microservice:$KAPACITOR_PORT/
-      KAPACITOR_UNSAFE_SSL: "true"
-      KAPACITOR_INFLUXDB_0_URLS_0: http://ia-influxdb:8086/
-      INFLUXDB_PORT: 8086
-      KAPACITOR_LOGGING_LEVEL: ${LOG_LEVEL}
+      LOG_LEVEL: ${LOG_LEVEL}
       INFLUXDB_DBNAME: datain
       PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION: python
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
@@ -116,6 +155,7 @@ services:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
+    - ${INFLUXDB3_ADMIN_TOKEN_FILE:-./.secrets/admin-token.json}:/run/secrets/admin-token:ro
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
@@ -150,8 +190,8 @@ services:
       NO_PROXY: "ia-influxdb,${no_proxy}"
       INFLUX_SERVER: "ia-influxdb"
       GRAFANA_SERVER: '0.0.0.0'
-      INFLUXDB_USERNAME: ${INFLUXDB_USERNAME}
-      INFLUXDB_PASSWORD: ${INFLUXDB_PASSWORD}
+      INFLUXDB_USERNAME: token
+      INFLUXDB_PASSWORD: ${INFLUXDB3_AUTH_TOKEN}
       INFLUXDB_DB: datain
       GF_SECURITY_ADMIN_USER: ${VISUALIZER_GRAFANA_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${VISUALIZER_GRAFANA_PASSWORD}
@@ -208,7 +248,7 @@ services:
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
-      TS_MS_PORT: ${KAPACITOR_PORT}
+      TS_MS_PORT: 5000
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
     restart: unless-stopped
     security_opt:
@@ -247,7 +287,7 @@ services:
       no_proxy: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
       TS_MS_SERVER: "ia-time-series-analytics-microservice"
-      TS_MS_PORT: ${KAPACITOR_PORT}
+      TS_MS_PORT: 5000
       CONTINUOUS_SIMULATOR_INGESTION: ${CONTINUOUS_SIMULATOR_INGESTION}
       SAMPLE_APP: ${SAMPLE_APP}
     networks:
@@ -293,11 +333,8 @@ networks:
     driver: bridge
 
 volumes:
-  vol_influxdb_conf:
+  vol_influxdb3_data:
     driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
   vol_temp_time_series_analytics_microservice:
     driver: local
     driver_opts:

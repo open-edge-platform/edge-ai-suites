@@ -57,6 +57,8 @@ DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
+CORE_IMAGE = influxdb:3.12.0-core
+INFLUXDB3_ADMIN_TOKEN_FILE = $(CURDIR)/.secrets/admin-token.json
 
 # Define the path to the .env file and scripts
 ENV_FILE = ./.env
@@ -67,22 +69,37 @@ DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null
 export DRI_MOUNT_PATH
 $(shell chmod 600 .env helm/values.yaml)
 
+.PHONY: prepare_influxdb3_token
+prepare_influxdb3_token:
+	@mkdir -p .secrets
+	@chmod 700 .secrets
+	@if [ ! -s "$(INFLUXDB3_ADMIN_TOKEN_FILE)" ]; then \
+		docker run --rm --user "$$(id -u):$$(id -g)" \
+			-v "$(CURDIR)/.secrets:/tokens" $(CORE_IMAGE) \
+			influxdb3 create token --admin --offline \
+			--output-file /tokens/admin-token.json >/dev/null 2>&1 || exit 1; \
+	fi
+	@docker run --rm --user 0:0 \
+		-v "$(INFLUXDB3_ADMIN_TOKEN_FILE):/token.json" \
+		--entrypoint /bin/sh $(CORE_IMAGE) \
+			-c 'chown $(shell id -u):1500 /token.json && chmod 440 /token.json'
+
 # Build Docker containers
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build --pull;
+	$(DOCKER_COMPOSE) build --pull ia-opcua-server ia-mqtt-publisher;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull ia-opcua-server ia-mqtt-publisher;
 
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
 check_env_variables:
-	@echo "Checking if username/password in .env are matching the rules set..."
-	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD"; \
+	@echo "Checking if Grafana credentials in .env are matching the rules set..."
+	@variables="VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
 		if [ -z "$$value" ]; then \
@@ -90,22 +107,6 @@ check_env_variables:
 			exit 1; \
 		fi; \
 		case "$$variable_name" in \
-			INFLUXDB_USERNAME) \
-				if [ "$$value" = "admin" ]; then \
-					echo "INFLUXDB_USERNAME must not be admin."; \
-					exit 1; \
-				fi; \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
-					echo "INFLUXDB_USERNAME must contain only alphabets and be at least 5 characters minimum"; \
-					exit 1; \
-				fi \
-				;; \
-			INFLUXDB_PASSWORD) \
-				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
-					echo "The INFLUXDB_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
-					exit 1; \
-				fi \
-				;; \
 			VISUALIZER_GRAFANA_USER) \
 				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
 					echo "VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum"; \
@@ -205,9 +206,9 @@ if [ "$(CONFIG_JSON_FILE)" = "config-batch.json" ]; then \
 fi; \
 rm -f $$tar_file; \
 cd $$config_dir && \
-folders="udfs tick_scripts"; \
+folders="udfs/influx3_windturbine"; \
 if [ -d models ] && [ -n "$$(ls -A models 2>/dev/null)" ]; then folders="$$folders models"; fi; \
-tar cf $$tar_file $$folders && \
+tar --exclude='__pycache__' --exclude='*.pyc' -cf $$tar_file $$folders && \
 echo "Created: $$tar_file"; \
 $(wait_for_tsam); \
 echo "Uploading UDF deployment tar for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
@@ -226,9 +227,11 @@ fi
 endef
 
 .PHONY: up_mqtt_ingestion
-up_mqtt_ingestion: check_env_variables down
+up_mqtt_ingestion: check_env_variables prepare_influxdb3_token down
 	$(call multi_stream_check,mqtt)
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
+	export INFLUXDB3_AUTH_TOKEN=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
+	export INFLUXDB_PASSWORD=$$INFLUXDB3_AUTH_TOKEN; \
 	if [ $(num_of_streams) -gt 1 ]; then \
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \
@@ -248,9 +251,11 @@ up_mqtt_ingestion: check_env_variables down
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
-up_opcua_ingestion: check_env_variables down
+up_opcua_ingestion: check_env_variables prepare_influxdb3_token down
 	$(call multi_stream_check,opcua)
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
+	export INFLUXDB3_AUTH_TOKEN=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
+	export INFLUXDB_PASSWORD=$$INFLUXDB3_AUTH_TOKEN; \
 	if [ $(num_of_streams) -gt 1 ]; then \
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \

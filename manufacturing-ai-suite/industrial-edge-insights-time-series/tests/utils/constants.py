@@ -10,7 +10,7 @@ import os
 CONTAINERS = {
     "influxdb": {
         "name": "ia-influxdb",
-        "port": 8086
+        "port": 8181
     },
     "telegraf": {
         "name": "ia-telegraf"

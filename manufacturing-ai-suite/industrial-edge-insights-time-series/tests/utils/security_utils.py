@@ -817,16 +817,22 @@ def fetch_docker_credentials(credential_type):
         tuple: (username, password) or (None, None) if not found
     """
     try:
+        if credential_type == "influxdb":
+            token_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".secrets", "admin-token.json")
+            with open(token_path, "r", encoding="utf-8") as token_file:
+                token = json.load(token_file).get("token")
+            if not token:
+                logger.error("Core admin token is missing")
+                return None, None
+            return "token", token
+
         env_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
         logger.info(f"Fetching {credential_type} credentials from: {env_path}")
 
         with open(env_path, 'r') as file:
             lines = file.readlines()
 
-        if credential_type == "influxdb":
-            username_key = "INFLUXDB_USERNAME="
-            password_key = "INFLUXDB_PASSWORD="
-        elif credential_type == "grafana":
+        if credential_type == "grafana":
             username_key = "VISUALIZER_GRAFANA_USER="
             password_key = "VISUALIZER_GRAFANA_PASSWORD="
         else:
@@ -855,7 +861,7 @@ def fetch_docker_credentials(credential_type):
         return None, None
 
 def influxdb_login_docker(container_name="ia-influxdb"):
-    """Execute InfluxDB commands inside the Docker container to verify authentication."""
+    """Verify Core token authentication with a read-only SQL query."""
     logger.info(f"Testing InfluxDB authentication in Docker container '{container_name}'...")
     try:
         # Get InfluxDB credentials from .env file
@@ -865,15 +871,13 @@ def influxdb_login_docker(container_name="ia-influxdb"):
             logger.error("Failed to get InfluxDB credentials from .env file.")
             return False
 
-        # Use environment variable to pass password securely to InfluxDB CLI
-        # The InfluxDB CLI reads INFLUX_PASSWORD from environment
-        logger.info(f"Executing InfluxDB command - 'SHOW MEASUREMENTS'  in container '{container_name}' with configured credentials (credentials not shown)")
+        logger.info("Checking Core token authentication in container '%s'", container_name)
         
         result = common_utils.exec_command(
             [
-                "docker", "exec", "-e", f"INFLUX_PASSWORD={influxdb_password}", container_name,
-                "influx", "-username", influxdb_username, "-database", "datain",
-                "-execute", "SHOW MEASUREMENTS"
+                "docker", "exec", container_name,
+                "influxdb3", "query", "--token", influxdb_password,
+                "--database", "datain", 'SELECT COUNT(*) FROM "wind-turbine-data"'
             ],
             capture_output=True, text=True
         )

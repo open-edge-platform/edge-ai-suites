@@ -23,8 +23,8 @@ for Time-series applications.
 
 As seen in the following architecture diagram, the sample app at a high-level comprises data
 simulators (which can act as data destinations, if configured) - in the real world these would
-be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising
-of Telegraf, InfluxDB, and the Time Series Analytics microservice using Kapacitor and Grafana.
+be the physical devices. The stack comprises Telegraf, InfluxDB 3 Core, the Time Series Analytics
+API, and Grafana.
 
 ![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_assets/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
 
@@ -44,23 +44,24 @@ This data is ingested into **Telegraf** through the **OPC-UA** protocol using th
 
 #### **Data Ingestion**
 
-**Telegraf** through its input plugins (**OPC-UA** OR **MQTT**) gathers the data and sends this input data to both **InfluxDB** and **Time Series Analytics Microservice**.
+**Telegraf** through its input plugins (**OPC-UA** OR **MQTT**) gathers the data and writes it to the Core `datain` database.
 
 #### **Data Storage**
 
-**InfluxDB** stores the incoming data from **Telegraf**.
+**InfluxDB 3 Core** stores the incoming data and invokes its configured Processing Engine plugin.
 
 #### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function (UDF) deployment package
-(TICK Scripts, UDFs, Models) from the sample apps. The UDF deployment package for the Wind
+The **Time Series Analytics Microservice** accepts configuration and UDF package uploads.
+InfluxDB 3 Core runs the User Defined Function (UDF) deployment package
+(plugin and model) from the sample app. The UDF deployment package for the Wind
 Turbine Anomaly Detection sample app is available in [this folder](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config).
 
 Directory details are as below:
 
 ##### **`config.json`**
 
-The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
+The `udfs` section defines the Core Processing Engine plugin, model, and device settings.
 
 | Key    | Description                                          | Example Value          |
 | ------ | ---------------------------------------------------- | ---------------------- |
@@ -101,18 +102,17 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port` | The port number of the MQTT broker.            | `1883`             |
 | `name`             | The name of the MQTT broker configuration.     | `"my_mqtt_broker"` |
 
-##### **`udfs/`**
+##### **`udfs/influx3_windturbine/`**
 
 Contains the Python script to process the incoming data.
 Uses Random Forest Regressor machine learning algorithm accelerated with
 [Intel® Extension for Scikit-learn\*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html)
 to run on CPU/GPU to detect the anomalous power generation data points relative to wind speed.
 
-##### **`tick_scripts/`**
-
-The TICKScript `windturbine_anomaly_detector.tick` determines processing of the input data
-coming in. The file contains the details on execution of the UDF file, storage of processed data and publishing of alerts.
-By default, it is configured to publish the alerts to **MQTT**.
+The Core plugin processes input through `process_writes` in stream mode or
+`process_scheduled_call` in batch mode. It writes predictions, anomaly status,
+and timing fields to `wind-turbine-anomaly-data`; alert destinations come from
+the app configuration.
 
 ##### **`models/`**
 

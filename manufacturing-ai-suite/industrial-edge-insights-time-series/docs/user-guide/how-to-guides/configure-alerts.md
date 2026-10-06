@@ -21,17 +21,18 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
 <!--hide_directive:::
 ::::hide_directive-->
 
-#### Configure MQTT Alert in TICK Script
+#### Configure MQTT Alert in the Core plugin
 
-The MQTT `alert()` block is already configured by default in the TICK script for each app.
-Refer to the `alert()` section of each app's TICK script:
+The Core plugin publishes anomaly alerts to `alerts/wind_turbine` when the
+`mqtt` section is present in the app configuration. The broker host and port
+are read from `config.json`; no TICKscript edit is needed.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
 <!--hide_directive:sync: tab1hide_directive-->
 
-[wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+[wind-turbine-anomaly-detection/time-series-analytics-config/udfs/influx3_windturbine/__init__.py](
+https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/influx3_windturbine/__init__.py)
 
 
 <!--hide_directive:::
@@ -51,15 +52,14 @@ Follow the steps to subscribe to the published MQTT alerts.
 docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
 ```
 
-- To subscribe to a specific MQTT topic, such as `alerts/wind_turbine`, use the following command.
-  Note that the topic information can be found in the TICK Script.
+- To subscribe to `alerts/wind_turbine`, use the following command.
 
   <!--hide_directive::::{tab-set}
   :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
   <!--hide_directive:sync: tab1hide_directive-->
 
-  [wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+  [wind-turbine-anomaly-detection/time-series-analytics-config/udfs/influx3_windturbine/__init__.py](
+  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/influx3_windturbine/__init__.py)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
@@ -79,35 +79,21 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, use the followi
 
 #### Configuration
 
-#### 1. Configure OPC-UA Alert in TICK Script
+#### 1. Configure OPC-UA Alert in the app config
 
-The following code snippets show how to add the OPC-UA alert, if not
-already added, replace this in place of MQTT alert section in the TICK script.
+Select OPC-UA alerts by posting `config-opcua.json`. The Core plugin forwards
+anomaly messages to the existing `/opcua_alerts` API; no TICKscript edit is needed.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
 <!--hide_directive:sync: tab1hide_directive-->
 
-[wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
-
-```bash
-data0
-    |alert()
-        .crit(lambda: "anomaly_status" > 0)
-        .message('Anomaly detected: Wind Speed: {{ index .Fields "wind_speed" }}, Grid Active Power: {{ index .Fields "grid_active_power" }}, Anomaly Status: {{ index .Fields "anomaly_status" }}')
-        .noRecoveries()
-        .post('http://localhost:5000/opcua_alerts')
-        .timeout(30s)
-```
-
-> [!NOTE]
->
-> - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
+[wind-turbine-anomaly-detection/time-series-analytics-config/config-opcua.json](
+https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config-opcua.json)
 
 #### 2. Upload the new UDF deployment package
 
-To copy the TICK script and upload the new UDF deployment package, run the following commands:
+To upload the Core UDF package, run the following commands:
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git  clone   folder
@@ -115,7 +101,7 @@ cd time-series-analytics-config
 export SAMPLE_APP="wind-turbine-anomaly-detection"
 
 rm -f ${SAMPLE_APP}.tar
-tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
+tar --exclude='__pycache__' --exclude='*.pyc' -cf ${SAMPLE_APP}.tar models/ udfs/influx3_windturbine/
 curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
 ```
 
@@ -277,4 +263,4 @@ To subscribe to OPC-UA alerts, follow [these steps](#docker---subscribe-to-opc-u
 
 ## Supporting Resources
 
-- [Kapacitor MQTT Alert Documentation](https://docs.influxdata.com/kapacitor/v1/reference/event_handlers/mqtt/).
+- [Core Processing Engine documentation](https://docs.influxdata.com/influxdb3/core/plugins/).

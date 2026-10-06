@@ -1,4 +1,5 @@
 # Top level ignore patterns
+.secrets/
 apps/**/telegraf-config/Telegraf_multi_stream.conf
 apps/**/time-series-analytics-config/*.tar
 configs/grafana/dashboards/grafana-dashboard.json
