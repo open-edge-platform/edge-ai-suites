@@ -6,7 +6,7 @@
 
 ## Version 2026.2.0
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 **New**:
 
@@ -31,7 +31,6 @@
 
 - Scenescape integration is currently not supported when deploying with Helm charts.
 - Smart NVR will not work on either Standalone or Developer Node versions of Edge Microvisor Toolkit due to its incompatibility with Frigate.
-- The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
 
 ## Version 2026.1.0
 

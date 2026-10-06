@@ -11,7 +11,6 @@ from utils.runtime_config_loader import RuntimeConfig
 @pytest.fixture(autouse=True)
 def _reset_global_state():
     orchestrator._RUNNING.clear()
-    session_store.SessionStore._states.clear()
 
     tmp_root = Path(tempfile.mkdtemp())
     config_path = tmp_root / "runtime_config.yaml"

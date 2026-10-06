@@ -1,4 +1,4 @@
-# Release Notes
+# Release Notes: Visual Search and QA
 
 ## Version 2025.2.0
 

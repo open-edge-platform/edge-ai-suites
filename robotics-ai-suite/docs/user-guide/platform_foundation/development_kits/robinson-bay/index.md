@@ -17,7 +17,8 @@ GMSL, and SerDes connectivity.
 
 ![AAEON CEXD-INTRBL Development Kit](./images/aaeon-cexd-intrbl.png)
 
-> **Note:** This development kit is intended for research and development purposes only.
+> [!NOTE]
+> This development kit is intended for research and development purposes only.
 
 ## What you'll need
 
@@ -47,7 +48,8 @@ following items:
 
 Inspect the kit to make sure no components are missing, bent, or cracked.
 
-> **Warning:** The kit can be damaged if it is not placed on an anti-static surface. If any item is
+> [!WARNING]
+> The kit can be damaged if it is not placed on an anti-static surface. If any item is
 > missing or the kit is damaged, contact Intel before proceeding.
 
 ### Step 2: Connect peripherals

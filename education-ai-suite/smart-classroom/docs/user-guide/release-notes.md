@@ -2,7 +2,7 @@
 
 ## Version 2026.2
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 Smart Classroom 2026.2 refactors the backend around a **modular feature-module
 architecture** and adds two new classroom AI capabilities — **VLM-based exam grading with

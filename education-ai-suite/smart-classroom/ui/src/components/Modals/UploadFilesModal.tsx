@@ -7,11 +7,12 @@ import {
   uploadAudio,
   storeAudioDuration,
   createSession,
+  registerSession,
   startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring,
   BACKEND_UNAVAILABLE_MESSAGE
 } from '../../services/api';
+import { declaredStages } from '../../utils/sessionStages';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
   setUploadedAudioPath,
@@ -19,6 +20,7 @@ import {
   processingFailed,
   resetFlow,
   setSessionId,
+  setSessionRegistered,
   setActiveStream,
   startStream,
   setFrontCameraStream,
@@ -72,14 +74,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
 
   // Check if video_analytics feature is enabled
-  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasVideoAnalyticsFeature = featureGuard.hasAnyFeatureForInput('video');
 
   // Check if any audio-related features are enabled
-  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
-    featureGuard.hasFeature('summary') ||
-    featureGuard.hasFeature('mindmap') ||
-    featureGuard.hasFeature('topic_segmentation') ||
-    featureGuard.hasFeature('report');
+  const hasAudioFeatures = featureGuard.hasAnyFeatureForInput('audio');
 
   const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 
@@ -196,7 +194,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       dispatch(setVideoStatus('starting')); // This will change from 'processed' to 'starting'
 
       const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
-      startPipelineMonitoring(sessionId);
       let hasSuccessfulStreams = false;
 
       videoResponse.results.forEach((result: any) => {
@@ -322,6 +319,28 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
       dispatch(setSessionId(sessionId));
+      // Same declaration Start recording makes, from the same helper, so the two
+      // entry points cannot drift apart. Best-effort: an unrecorded session
+      // still uploads and processes normally.
+      //
+      // File names, not the paths uploaded further down: this is what the
+      // history lists a session by, and the browser's File objects have no
+      // trustworthy path anyway. The backend basenames whatever it gets, so a
+      // bare name arrives unchanged. Only /sessions/process validates that the
+      // sources exist on disk; register does not.
+      const registeredVideoSources: Record<string, string> = {};
+      if (frontCameraPath) registeredVideoSources.front = frontCameraPath.name;
+      if (rearCameraPath) registeredVideoSources.back = rearCameraPath.name;
+      if (boardCameraPath) registeredVideoSources.board = boardCameraPath.name;
+      const registered = await registerSession(
+        sessionId,
+        declaredStages(featureGuard, { hasAudio: hasAudioFile, hasVideo: hasVideoFiles }),
+        {
+          audio_path: audioFile?.name,
+          video_sources: registeredVideoSources,
+        },
+      );
+      dispatch(setSessionRegistered(registered));
 
       try {
         // Covers the handover as a whole: the stop, the 5s settle and the start.

@@ -16,7 +16,6 @@ from your video data.
 | ----------------- | -------- | --------------- |
 | Single device | Dual Mode (`--summary --search`) | 1 |
 | Separate VSS device | Any mode | 2 |
-| With GenAI (optional) | Any | +1 for VLM Microservice |
 
 Deploy VSS before starting Smart NVR. See [VSS Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started.html) for setup instructions.
 
@@ -94,15 +93,11 @@ http://<host-ip>:7860
 source setup.sh stop
 ```
 
-## Advanced Configuration
-
-For optional features including AI-powered event descriptions (GenAI) and custom build options, see the **[Advanced Configuration Guide](./advanced-configuration.md)**.
-
-### Scenescape Integration
+## Scenescape Integration
 
 For traffic analytics capabilities with Scenescape (vehicle counting, traffic flow analysis), see the **[Scenescape Integration Guide](./scenescape-integration.md)**.
 
-### Custom Build Configuration
+## Custom Build Configuration
 
 If using custom [build flags](./get-started/build-from-source.md#customizing-the-build),
 ensure the same environment variables are set before running the setup script.
@@ -119,7 +114,6 @@ ensure the same environment variables are set before running the setup script.
 ./get-started/system-requirements
 ./get-started/build-from-source
 ./get-started/deploy-with-helm
-./advanced-configuration
 
 :::
 hide_directive-->

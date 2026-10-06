@@ -4,7 +4,7 @@
 // Shapes returned by the Electron setup IPC bridge. Kept in sync with
 // electron/services/setup-runner.cjs.
 
-export type SetupStatus = 'unknown' | 'ok' | 'warn' | 'missing' | 'running' | 'failed';
+export type SetupStatus = 'unknown' | 'ok' | 'warn' | 'outdated' | 'missing' | 'running' | 'failed';
 
 export interface SetupAction {
   id: string;
@@ -28,9 +28,20 @@ export interface SetupStep {
   actions: SetupAction[];
   status: SetupStatus;
   detail: string;
+  /** The action that clears this status. */
+  repair: string | null;
   /** A command or link the user can use when the app cannot fix it. */
   hint: string | null;
 }
+
+/**
+ * Codes a failed setup action can carry, for failures the screen can offer a
+ * way out of. Mirrors SETUP_ERROR in electron/services/setup-runner.cjs.
+ */
+export const SETUP_ERROR = {
+  /** The Python environment cannot be touched while the backend is using it. */
+  BACKEND_RUNNING: 'backend-running',
+} as const;
 
 export interface SetupDescription {
   sections: SetupSection[];

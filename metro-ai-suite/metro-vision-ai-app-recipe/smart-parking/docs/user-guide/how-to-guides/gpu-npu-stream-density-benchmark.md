@@ -39,8 +39,8 @@ default.
 # Navigate to the metro-vision-ai-app-recipe directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-# Run GPU-only stream density benchmark: test 1–16 streams, target >= 28.5 FPS
-./calc_stream_density.sh -p yolov11s_gpu -l 1 -u 16 -t 28.5
+# Run GPU-only stream density benchmark: stream count is found automatically, target >= 28.5 FPS
+./calc_stream_density.sh -p yolov11s_gpu -t 28.5
 ```
 
 ### Example Results (GPU Only)
@@ -107,8 +107,8 @@ default.
 # Navigate to the metro-vision-ai-app-recipe directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-# Run NPU-only stream density benchmark: test 1–16 streams, target >= 28.5 FPS
-./calc_stream_density.sh -p yolov11s_npu -l 1 -u 16 -t 28.5
+# Run NPU-only stream density benchmark: stream count is found automatically, target >= 28.5 FPS
+./calc_stream_density.sh -p yolov11s_npu -t 28.5
 ```
 
 ### Example Results (NPU Only)

@@ -26,11 +26,11 @@ repositories=(
 images=(
   "openvino/model_server:2026.3"
   "openvino/ubuntu24_dev:2026.3.0"
-  "intel/dlstreamer:2026.2.0-ubuntu24-rc2"
-  "intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24-rc2"
-  "intel/scenescape-manager:2026.2.0-rc2"
-  "intel/scenescape-controller:2026.2.0-rc2"
-  "intel/scenescape-autocalibration:2026.2.0-rc2"
+  "intel/dlstreamer:2026.2.0-ubuntu24"
+  "intel/dlstreamer-pipeline-server:2026.2.0-ubuntu24"
+  "intel/scenescape-manager:2026.2.0"
+  "intel/scenescape-controller:2026.2.0"
+  "intel/scenescape-autocalibration:2026.2.0"
 )
 
 NAME="OEP Vision AI SDK"

@@ -18,21 +18,20 @@ UAV Blueprint demonstrates how AI-based object detection can be integrated with 
 flight controller telemetry on a companion compute platform.
 
 Based on DL Streamer Pipeline Server, the application processes video from a UAV-mounted
-camera or a simulated video file, detects objects across ten object classes, and outputs an
-RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). The stream is
-consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
-It runs the YOLOv8n-VisDrone, a model designed to recognize imagery typical for drone video.
+camera or a simulated video file, detects common object across 80 classes (person, car, truck, bus, bicycle, motorcycle, and more), and outputs an RTSP stream annotated with MAVLink telemetry (GPS, altitude, speed, heading). The stream is consumable by any capable client, such as QGroundControl (QGC), VLC, and ffplay.
+It runs the YOLO11s, Ultralytics' pretrained small object detection model.
 
+![UAV drone](./_assets/fedaero-drone.svg)
 
 The application supports two deployment modes depending on whether an external SDK is available.
 
-![  uav vision analytics application architecture](./_assets/FedAero-uav-vision-architecture.drawio.svg)
+![  uav vision analytics application architecture](./_assets/FedAero-uav-vision-architecture.svg)
 
 | Component                                      | Role                                                                                                    |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | RTSP / Video File / Live Camera Streams        | Input video source — UAV camera feed, a recorded video file, or a simulated RTSP stream                 |
 | MAVLink UAV Telemetry                          | Telemetry input — GPS, altitude, speed, and heading received from the flight controller over UDP        |
-| DL Streamer Pipeline Server (CPU / GPU / NPU)  | Core inference engine — runs YOLOv8n-VisDrone object detection and renders the telemetry overlay on each frame |
+| DL Streamer Pipeline Server (CPU / GPU / NPU)  | Core inference engine — runs YOLO11s object detection and renders the telemetry overlay on each frame |
 | RTSP Stream with Detection & Telemetry Overlay | Annotated output stream — processed video with bounding boxes and telemetry overlay, served over RTSP   |
 
 
@@ -78,9 +77,7 @@ application creation (scaffolding new pymavlink or UAVSDK stacks). See
 
 ### Intended Use
 
-This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object
-detection and live telemetry overlay. It is provided for reference and demonstration purposes
-only, and is not intended to be deployed as-is or for alternate use cases or applications.
+This project is intended to demonstrate the capabilities of Intel Edge AI for UAV object detection and live telemetry overlay. It is provided for reference and demonstration purposes only and is not intended to be deployed as-is or for alternate use cases or applications. `nginx` consolidates host-facing traffic behind a single reverse proxy and terminates TLS using a self-signed certificate, but the application does not implement authentication/authorization between the app and external interfaces, and network exposure is LAN-wide by default. Additional security measures should be provided by the solution builder.
 
 ### Responsible Use
 

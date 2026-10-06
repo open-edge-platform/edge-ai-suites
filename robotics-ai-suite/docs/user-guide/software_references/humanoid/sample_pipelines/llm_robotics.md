@@ -331,7 +331,7 @@ Ultra IPC.
 The LLM Robotic demo includes the real-time component, non-real-time
 ROS2 component, and non-real-time LLM component.
 
-> **Important:**
+> [!IMPORTANT]
 > Please ensure a stable network connection before running the demo. The
 > FunASR and LLM applications require an active network connection.
 

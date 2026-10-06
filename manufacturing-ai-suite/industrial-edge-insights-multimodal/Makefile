@@ -31,11 +31,16 @@ $(shell chmod 600 .env helm/values.yaml)
 KEY_LENGTH=3072
 DAYS=365
 SHA_ALGO="sha384"
+LLM_DEVICE_LOWER := $(shell printf '%s' "$(LLM_DEVICE)" | tr '[:upper:]' '[:lower:]')
+LLM_WEIGHT_FORMAT_LOWER := $(shell printf '%s' "$(LLM_WEIGHT_FORMAT)" | tr '[:upper:]' '[:lower:]')
+MODEL_PATH ?= /model/llm_model_agentic/openvino_models/$(LLM_DEVICE_LOWER)/$(LLM_WEIGHT_FORMAT_LOWER)/$(LLM_MODEL_NAME)
+export MODEL_PATH
+PLATFORM_CHECK ?= true
 
 # Build Docker containers
 .PHONY: build
 build:
-	@echo "Building Docker containers..."
+	@echo "Building Docker containers...";
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) build --pull;
 
 .PHONY: build_copyleft_sources
@@ -51,12 +56,8 @@ validate_host_ip:
 		echo "HOST_IP is not set in $(ENV_FILE)."; \
 		exit 1; \
 	fi; \
-	if [ "$$host_ip" = "localhost" ]; then \
-		echo "HOST_IP ($$host_ip) is valid."; \
-		exit 0; \
-	fi; \
 	if ! echo "$$host_ip" | grep -Eq '^([0-9]{1,3}\.){3}[0-9]{1,3}$$'; then \
-		echo "HOST_IP ($$host_ip) must be localhost or a valid IPv4 address format."; \
+		echo "HOST_IP ($$host_ip) must be a valid IPv4 address format (use 127.0.0.1 for local-only access)."; \
 		exit 1; \
 	fi; \
 	for octet in $$(echo "$$host_ip" | tr '.' ' '); do \
@@ -138,7 +139,7 @@ wait_for_tsam:
 	@echo "Waiting for Time-Series Analytics microservice to be accessible..."; \
 	max_retries=30; \
 	retry=0; \
-	until [ "$$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:3000/ts-api/health)" != "000" ]; do \
+	until [ "$$(curl -sk -o /dev/null -w '%{http_code}' https://${HOST_IP}:3000/ts-api/health)" != "000" ]; do \
 		retry=$$((retry + 1)); \
 		if [ $$retry -ge $$max_retries ]; then \
 			echo "Timed out waiting for Time-Series Analytics microservice after $$max_retries attempts."; \
@@ -163,7 +164,7 @@ upload_tar_file:
 	@echo "Uploading UDF deployment tar for weld anomaly detection to Time-Series Analytics microservice..."; \
 	tar_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.tar; \
 	response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
-		-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
+		-X POST https://${HOST_IP}:${GRAFANA_PORT}/ts-api/udfs/package \
 		-F "file=@$$tar_file" \
 		-k); \
 	if [ "$$response" = "200" ]; then \
@@ -184,7 +185,7 @@ post_config:
 	$(MAKE) wait_for_tsam; \
 	echo "Posting config for weld anomaly detection to Time-Series Analytics microservice..."; \
 	response=$$(curl -s -o /tmp/config_response.json -w "%{http_code}" \
-		-X POST https://localhost:${GRAFANA_PORT}/ts-api/config \
+		-X POST https://${HOST_IP}:${GRAFANA_PORT}/ts-api/config \
 		-H 'accept: application/json' \
 		-H 'Content-Type: application/json' \
 		-d @$$config_file \
@@ -203,6 +204,7 @@ up: check_env_variables validate_host_ip down
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx.conf; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm -f configs/grafana/provisioning/*.json; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	$(DOCKER_COMPOSE) up -d; \
 	$(MAKE) upload_tar_file
@@ -225,31 +227,45 @@ check_models:
 
 .PHONY: check_hardware
 check_hardware:
-	@echo "Checking hardware compatibility (Panther Lake or above required)..."
-	@cpu_model=$$(grep -m1 "model name" /proc/cpuinfo | cut -d: -f2 | xargs); \
+	@if [ "$$(printf '%s' '$(PLATFORM_CHECK)' | tr '[:upper:]' '[:lower:]')" = "false" ]; then \
+		echo "WARNING: PLATFORM_CHECK=false, skipping Panther Lake hardware check (CI/validation use only)."; \
+		exit 0; \
+	fi; \
+	echo "Checking hardware compatibility (Intel Panther Lake / Core Ultra 3xx required)..."; \
+	cpu_model=$$(lscpu | awk -F: '/Model name:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
+	cpu_vendor=$$(lscpu | awk -F: '/Vendor ID:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
+	cpu_family=$$(lscpu | awk -F: '/CPU family:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
+	cpu_model_id=$$(lscpu | awk -F: '/^Model:/ {gsub(/^[ \t]+/, "", $$2); print $$2; exit}'); \
 	echo "Detected CPU: $$cpu_model"; \
-	if ! echo "$$cpu_model" | grep -qi "intel"; then \
-		echo "Error: An Intel processor is required. Panther Lake (Core Ultra 3xx) or above."; \
+	\
+	if [ "$$cpu_vendor" != "GenuineIntel" ]; then \
+		echo "Error: An Intel processor is required."; \
 		exit 1; \
 	fi; \
-	model_num=$$(echo "$$cpu_model" | grep -oiP 'Ultra\s+[3579]\s+\K\d{3}'); \
-	if [ -z "$$model_num" ]; then \
-		echo "Error: Intel Core Ultra processor not detected. Panther Lake (Core Ultra 3xx) or above is required."; \
+	\
+	if ! echo "$$cpu_model" | grep -Eqi 'Core\(TM\)[[:space:]]+Ultra[[:space:]]+([3579]|X[3579])[[:space:]]+3[0-9]{2}[A-Z]*'; then \
+		echo "Error: Intel Core Ultra 3xx processor is required."; \
+		echo "Detected: $$cpu_model"; \
 		exit 1; \
 	fi; \
-	gen=$$(echo "$$model_num" | cut -c1); \
-	if [ "$$gen" -lt 3 ]; then \
-		echo "Error: Panther Lake (Intel Core Ultra 3xx) or above is required. Detected: $$cpu_model"; \
+	\
+	if [ "$$cpu_family" != "6" ] || [ "$$cpu_model_id" != "204" ]; then \
+		echo "Error: Unsupported CPU platform."; \
+		echo "Required: Intel Panther Lake (Family 6, Model 204)."; \
+		echo "Detected: $$cpu_model (Family $$cpu_family, Model $$cpu_model_id)"; \
 		exit 1; \
 	fi; \
-	echo "Hardware check passed: Intel Core Ultra $${model_num} detected."
+	\
+	echo "Hardware check passed: $$cpu_model (Panther Lake)."
 
 .PHONY: up_vllm
 up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_vllm.conf; \
+	export AGENTIC_UI_ENABLED=false MQTT_DISABLED=true; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm -f configs/grafana/provisioning/*.json; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d; \
 	$(MAKE) upload_tar_file
@@ -257,12 +273,12 @@ up_vllm: check_hardware check_models check_env_variables validate_host_ip down
 download_model:
 	@echo "Starting Model Download Service..."; \
 	mkdir -p configs/agentic/models; \
-	$(shell chmod -R 755 configs/agentic/models) \
+	chmod -R 755 configs/agentic/models; \
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d model-download; \
 	echo "Waiting for model-download service to become healthy on port 8200..."; \
 	i=0; \
 	while [ $$i -lt 60 ]; do \
-		if curl -sf "http://localhost:8200/api/v1/models/results" >/dev/null 2>&1; then \
+		if curl -sf "http://${HOST_IP}:8200/api/v1/models/results" >/dev/null 2>&1; then \
 			break; \
 		fi; \
 		if [ "$$i" -eq 59 ]; then \
@@ -274,7 +290,7 @@ download_model:
 	done; \
 	echo "Requesting download+conversion of '${LLM_MODEL_NAME}' (device=${LLM_DEVICE}, precision=${LLM_WEIGHT_FORMAT})..."; \
 	payload='{"models":[{"name":"${LLM_MODEL_NAME}","hub":"openvino","type":"llm","is_ovms":true,"config":{"precision":"${LLM_WEIGHT_FORMAT}","device":"${LLM_DEVICE}","pipeline_type":"LM_CB"}}],"parallel_downloads":false}'; \
-	http_code=$$(curl -w "%{http_code}" -s -o /tmp/model_response.json -X POST "http://localhost:8200/api/v1/models/download?download_path=llm_model_agentic" \
+	http_code=$$(curl -w "%{http_code}" -s -o /tmp/model_response.json -X POST "http://${HOST_IP}:8200/api/v1/models/download?download_path=llm_model_agentic" \
 		-H "Content-Type: application/json" \
 		-d "$$payload"); \
 	response=$$(cat /tmp/model_response.json); \
@@ -291,7 +307,7 @@ download_model:
 	echo "Download job submitted (job_id=$$job_id). Waiting for completion..."; \
 	i=0; \
 	while [ $$i -lt 600 ]; do \
-		job=$$(curl -sf "http://localhost:8200/api/v1/jobs/$$job_id" 2>/dev/null || echo '{}'); \
+		job=$$(curl -sf "http://${HOST_IP}:8200/api/v1/jobs/$$job_id" 2>/dev/null || echo '{}'); \
 		status=$$(echo "$$job" | python3 -c "import sys, json; print(json.load(sys.stdin).get('status', 'unknown'))" 2>/dev/null); \
 		if [ "$$status" = "completed" ]; then \
 			echo "Download complete."; \
@@ -316,12 +332,14 @@ download_model:
 up_agentic: check_hardware check_models check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
 	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
+	export AGENTIC_UI_ENABLED=true MQTT_DISABLED=false; \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm -f configs/grafana/provisioning/*.json; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
 	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection_agentic.json || exit 1; \
-	$(MAKE) download_model; \
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_VLLM) up -d; \
+	$(MAKE) download_model || exit 1; \
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) up -d || exit 1; \
 	$(MAKE) upload_tar_file
 
 
@@ -330,10 +348,14 @@ up_agentic: check_hardware check_models check_env_variables validate_host_ip dow
 .PHONY: status
 status:
 	@echo "Status of the deployed containers..."; \
-	docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
+	docker ps -a \
+		--filter "network=timeseriessoftware_timeseries_network" \
+		--format "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}"; \
 	echo "Parsing the logs of all containers to catch any error messages..."; \
 	sleep 20; \
-	containers=$$(docker ps -a --filter "name=^ia-" --filter "name=mr_" --filter "name=model_" --filter "name=wind-turbine" --format "{{.Names}}"); \
+	containers=$$(docker ps -a \
+		--filter "network=timeseriessoftware_timeseries_network" \
+		--format "{{.Names}}"); \
 	failure_cont_flag=0; \
 	for container in $$containers; do \
 		errors=$$(docker logs --tail 5 $$container 2>&1 | grep -i "error"); \
@@ -417,6 +439,8 @@ push_helm_charts: gen_helm_charts
 help:
 	@echo "Makefile commands:"
 	@echo "  make build                        - Build Docker containers"
+	@echo "  make up_agentic                   - Start the application and the agentic stack including vLLM service"
+	@echo "  make up_vllm                      - Start the application and the vLLM stack"
 	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
 	@echo "  make up                           - Start Docker containers"
 	@echo "  make down                         - Stop Docker containers"

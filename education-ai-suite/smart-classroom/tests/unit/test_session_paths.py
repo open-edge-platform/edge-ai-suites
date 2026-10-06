@@ -2,6 +2,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from utils.session_paths import SessionPaths
 
 
@@ -183,3 +185,42 @@ def test_mindmap_png_path():
 def test_returns_path_objects():
     with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
         assert isinstance(SessionPaths.session_dir("s1"), Path)
+
+
+# Ids can arrive from a client (POST /sessions/register), and session_dir() feeds
+# real filesystem calls - shutil.rmtree() among them.
+@pytest.mark.parametrize(
+    "unsafe",
+    [
+        "..",
+        "../..",
+        "../../etc",
+        "..\\..\\Windows",
+        "a/b",
+        "a\\b",
+        "/abs",
+        "C:\\Users",
+        ".hidden",
+        "",
+        None,
+        "x" * 65,
+    ],
+)
+def test_session_dir_rejects_unsafe_ids(unsafe):
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        with pytest.raises(ValueError):
+            SessionPaths.session_dir(unsafe)
+
+
+def test_session_dir_accepts_a_generated_id():
+    from utils.session_manager import generate_session_id
+
+    sid = generate_session_id()
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        assert SessionPaths.session_dir(sid) == Path(tmp) / "proj" / sid
+
+
+def test_derived_paths_inherit_the_guard():
+    with tempfile.TemporaryDirectory() as tmp, _patch_project(tmp, "proj"):
+        with pytest.raises(ValueError):
+            SessionPaths.report_docx_path("../../evil")

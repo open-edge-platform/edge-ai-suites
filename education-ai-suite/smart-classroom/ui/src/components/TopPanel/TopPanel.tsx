@@ -11,15 +11,13 @@ interface TopPanelProps {
   setActiveScreen: (screen: 'main' | 'content-search' | 'grading' | 'services' | 'config' | 'setup' | 'ready') => void;
   featureGuard: FeatureGuard;
   hasMainFeatures: boolean;
-  onViewReport: () => void;
 }
 
 const TopPanel: React.FC<TopPanelProps> = ({
   activeScreen,
   setActiveScreen,
   featureGuard,
-  hasMainFeatures,
-  onViewReport
+  hasMainFeatures
 }) => {
   const navMenuRef = useRef<HTMLDivElement>(null);
   const navToggleRef = useRef<HTMLButtonElement>(null);
@@ -31,7 +29,6 @@ const TopPanel: React.FC<TopPanelProps> = ({
   // Show Content Search UI if either content_search OR qa feature is enabled
   const hasContentSearchFeatures = featureGuard.hasFeature('content_search') || featureGuard.hasFeature('qa');
   const hasGradingFeature = featureGuard.hasFeature('grading');
-  const hasReportFeature = featureGuard.hasFeature('report');
 
   // Close nav menu when clicking outside
   useEffect(() => {
@@ -112,13 +109,9 @@ const TopPanel: React.FC<TopPanelProps> = ({
               <span className="menu-icon">📝</span>
               <span className={!hasGradingFeature ? 'disabled' : ''}>{t('grading.title', 'Grading')}</span>
             </li>
-            <li
-              className={!hasReportFeature ? 'no-click' : ''}
-              onClick={() => hasReportFeature && handleNavItemClick(onViewReport)}
-            >
-              <span className="menu-icon">📊</span>
-              <span className={!hasReportFeature ? 'disabled' : ''}>{t('reportPanel.title', 'View Report')}</span>
-            </li>
+            {/* Report and Session history are not here: they open slide-over
+                panels rather than navigating, so they are buttons on the header
+                bar, next to the audio/video status they belong with. */}
             {/* Electron only: supervision of the Python backend processes */}
             {hasServiceManager && (
               <li

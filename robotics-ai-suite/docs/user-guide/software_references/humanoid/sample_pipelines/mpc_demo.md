@@ -25,7 +25,8 @@ Please make sure you have finished setup steps in [Get Started](../../../platfor
 
 Please refer to the [official ROS2 Jazzy installation](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html). The target platform for this release is Ubuntu 24.04.
 
-> **Note:** This release is maintained for ROS2 Jazzy only. If you need ROS2 Humble, please switch to the **2026.1** release.
+> [!NOTE]
+> This release is maintained for ROS2 Jazzy only. If you need ROS2 Humble, please switch to the **2026.1** release.
 
 ## ACT Setup
 
@@ -181,9 +182,11 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
    ./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
    ```
 
-   > **Note:** If running successfully, the mujoco UI will display two opposing ALOHA robotic arms. Collision in this stage is acceptable.
+   > [!NOTE]
+   > If running successfully, the mujoco UI will display two opposing ALOHA robotic arms. Collision in this stage is acceptable.
 
-   > **Note:** If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
+   > [!NOTE]
+   > If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
    >
    > ```bash
    > # ldd check
@@ -209,7 +212,8 @@ Here, we adopted and modified the open-source Mujoco Plugin project [MujocoRosUt
 
 3. Open new terminal and run Act:
 
-   > **Note:** You need to download our pre-trained ACT weights for [transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument `--ckpt_dir` to the path of the pre-trained weights.
+   > [!NOTE]
+   > You need to download our pre-trained ACT weights for [transferring cube task](https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip) and set the argument `--ckpt_dir` to the path of the pre-trained weights.
 
    ```bash
    # env
@@ -304,6 +308,7 @@ viewer can start before the nodes.
    `--seconds N` static run duration, `--left` / `--right` arm prefixes, and
    positional numbers or `--qpos` to force a single static target.
 
-> **Note:** The shared-memory transport currently unlinks its segment on close
+> [!NOTE]
+> The shared-memory transport currently unlinks its segment on close
 > without distinguishing creator from opener, so restarting individual processes
 > mid-session may misbehave. Restart the whole set if you hit shared-memory errors.

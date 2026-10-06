@@ -45,7 +45,8 @@ Run one of the following commands to launch the segmentation tutorial with a spe
   ros2 launch segmentation_realsense_tutorial openvino_segmentation.launch.py device:=CPU
   ```
 
-> **Note:** If no device is specified, the GPU is selected by default as inference engine.
+> [!NOTE]
+> If no device is specified, the GPU is selected by default as inference engine.
 
 Once the tutorial is started, the ``deeplabv3`` model is downloaded, converted into IR files,
 and the inference process begins, utilizing the input from the RealSense camera.

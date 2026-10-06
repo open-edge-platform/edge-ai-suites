@@ -4,20 +4,19 @@ import { useEffect } from 'react';
  * Recolours the Electron title bar overlay while a surface covers the caption.
  *
  * The Window Controls Overlay strip is painted by Windows, not by the page, so
- * no DOM overlay can dim or hide it. Left alone, a modal leaves a bright blue
- * patch with white glyphs above the dimmed UI, and the report panel (a white
- * sheet pinned to the right edge, full height) gets a blue block stamped across
- * its top-right corner.
+ * no DOM overlay can dim or hide it. Left alone, anything that darkens the UI —
+ * a modal, or a slide-over panel's backdrop — leaves a bright blue patch with
+ * white glyphs above it.
  *
  * No-op on the plain web app and on any platform without WCO — the preload
  * bridge is absent or the main process ignores the message.
  */
-export type TitleBarTheme = 'default' | 'dimmed' | 'light';
+export type TitleBarTheme = 'default' | 'dimmed';
 
 /**
  * LIFO rather than a simple counter: when a dialog opens over the report panel
- * its `dimmed` must win (the dialog's overlay covers the panel), and closing it
- * must fall back to the panel's `light` — not to `default`.
+ * both ask for `dimmed`, and closing the dialog must fall back to the panel's
+ * entry rather than dropping straight to `default` while the panel is still up.
  */
 const stack: Array<{ id: object; theme: TitleBarTheme }> = [];
 

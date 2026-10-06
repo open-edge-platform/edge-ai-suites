@@ -19,7 +19,10 @@ function ok(data) {
 
 function fail(error) {
   // Message only — stacks and absolute paths stay in the main process log.
-  return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  // A code comes too when the thrower set one, so the renderer can offer a way
+  // out of a known failure without matching on its English text.
+  const code = typeof error?.code === 'string' ? error.code : undefined;
+  return { ok: false, error: error instanceof Error ? error.message : String(error), code };
 }
 
 function register({ manager, logs, setup, getWindow }) {
@@ -86,11 +89,15 @@ function register({ manager, logs, setup, getWindow }) {
     const { step, action } = setup.find(stepId, actionId);
     if (action.destructive) {
       const window = getWindow();
+      // The action says which folder it deletes.
+      const folder = action.deletes?.();
       const options = {
         type: 'warning',
         title: 'Smart Classroom',
         message: `${action.label} the ${step.label.toLowerCase()}?`,
-        detail: `${paths.venvDir()}\n\nThis folder will be deleted and every package reinstalled, which takes several minutes and needs network access.`,
+        detail: folder
+          ? `${folder}\n\nThis folder will be deleted and every package reinstalled, which takes several minutes and needs network access.`
+          : 'Everything it contains will be deleted and reinstalled, which takes several minutes and needs network access.',
         buttons: ['Cancel', `${action.label} and reinstall`],
         defaultId: 0,
         cancelId: 0,

@@ -40,9 +40,6 @@ datasources:
       #httpHeaderName1: "Authorization"
    # <string> json object of data that will be encrypted.
    secureJsonData:
-     tlsCACert: "..."
-     tlsClientCert: "..."
-     tlsClientKey: "..."
      # <string> basic auth password
      basicAuthPassword: $INFLUXDB_PASSWORD
      # <string> database password, if used

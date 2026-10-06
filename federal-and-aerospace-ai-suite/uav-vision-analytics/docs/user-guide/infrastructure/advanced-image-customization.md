@@ -11,7 +11,8 @@ To get a bootable RAW or ISO image, you define the target OS, packages, kernel, 
 ICT supports multiple distributions including Ubuntu, Azure Linux, and Red Hat compatible
 distros on x86_64.
 
-> Note that this path is intended for advanced users who need fine-grained control over disk
+> [!NOTE]
+> This path is intended for advanced users who need fine-grained control over disk
 > layout, installed packages, and package repositories. Most users can start with the simpler
 > path, [using the standard build](../infrastructure-setup.md#step-2-build-the-os-image).
 
@@ -56,9 +57,10 @@ These packages are required before composing any image:
 sudo apt install systemd-ukify mmdebstrap
 ```
 
-Follow the instructions at [Image Composition Prerequisites](https://github.com/open-edge-platform/image-composer-tool/blob/main/docs/user-guide/get-started/installation.md#image-composition-prerequisites) if you face issues installing packages using apt.
+Follow the instructions at [Image Composition Prerequisites](https://docs.openedgeplatform.intel.com/dev/image-composer-tool/get-started/installation.html#image-composition-prerequisites) if you face issues installing packages using apt.
 
-> **Note:** `mmdebstrap` version 0.8.x (shipped with Ubuntu OS version 22.04) has known
+> [!NOTE]
+> `mmdebstrap` version 0.8.x (shipped with Ubuntu OS version 22.04) has known
 > issues. Ensure you have version 1.4.3 or later. On Ubuntu OS version 23.04 or later, the
 > repository version is sufficient.
 
@@ -249,11 +251,7 @@ cp "$TEMPLATE" \
    "$(dirname "$TEMPLATE")/my-template.yml"
 ```
 
-For detailed validation and build instructions, refer to [Building an Ubuntu OS Version 24.04 Image with Image Composer Tool](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/blob/main/infrastructure/host-os/ict/README.md). That guide covers:
-
-- template validation
-- image build process
-- troubleshooting and build output artifacts
+Validate and build this variant using the same commands as the default template (see [Validate the template](#validate-the-template) and [Build the image](#build-the-image) above), substituting `my-template.yml` for `$TEMPLATE`. See [Troubleshoot](#troubleshoot) below if you run into issues.
 
 Expected output artifact type:
 

@@ -31,9 +31,13 @@ export interface ReadinessItem {
 const ENVIRONMENT_STEPS = ['venv', 'gradingVenv', 'layoutModel'];
 
 const isBad = (step: SetupStep) => step.status === 'missing' || step.status === 'failed';
+// Installed and working, but behind what this app asks for. Needs attention,
+// not a block: everything still runs.
+const isOutdated = (step: SetupStep) => step.status === 'outdated';
+// Advisory, and deliberately not part of any state.
 const isWarn = (step: SetupStep) => step.status === 'warn';
-// A step being fixed is neither bad nor warn. Without this it drops out of both
-// lists and the item claims to be ready while the work is still running.
+// A step being fixed is none of the above. Without this it drops out of every
+// list and the item claims to be ready while the work is still running.
 const isRunning = (step: SetupStep) => step.status === 'running';
 
 /**
@@ -73,9 +77,11 @@ export function useReadiness(
     const problems = ruleProblems(configProblems);
 
     const prerequisiteBad = prerequisites.filter(isBad);
+    const prerequisiteOutdated = prerequisites.filter(isOutdated);
     const prerequisiteWarn = prerequisites.filter(isWarn);
     const prerequisiteRunning = prerequisites.filter(isRunning);
     const environmentBad = environment.filter(isBad);
+    const environmentOutdated = environment.filter(isOutdated);
     const environmentRunning = environment.filter(isRunning);
 
     const working = (running: SetupStep[]) =>
@@ -92,9 +98,11 @@ export function useReadiness(
             ? 'pending'
             : prerequisiteBad.length
               ? 'blocked'
-              : prerequisiteWarn.length
+              : prerequisiteOutdated.length
                 ? 'attention'
                 : 'ok',
+        // Warnings get a detail line but no state of their own: they are worth
+        // reading and never worth acting on.
         detail: !checked.length
           ? t('getStarted.details.checking', 'Checking…')
           : prerequisiteRunning.length
@@ -103,13 +111,17 @@ export function useReadiness(
               ? t('getStarted.details.missing', 'Missing: {{items}}', {
                   items: prerequisiteBad.map((s) => s.label).join(', '),
                 })
-              : prerequisiteWarn.length
-                ? t('getStarted.details.warnings', 'Warnings: {{items}}', {
-                    items: prerequisiteWarn.map((s) => s.label).join(', '),
+              : prerequisiteOutdated.length
+                ? t('getStarted.details.outdated', 'Out of date: {{items}}', {
+                    items: prerequisiteOutdated.map((s) => s.label).join(', '),
                   })
-                : t('getStarted.details.prereqOk', 'System, drivers and tools are in place'),
-        steps: [...prerequisiteBad, ...prerequisiteWarn],
-        focus: (prerequisiteBad[0] ?? prerequisiteWarn[0])?.id,
+                : prerequisiteWarn.length
+                  ? t('getStarted.details.warnings', 'Warnings: {{items}}', {
+                      items: prerequisiteWarn.map((s) => s.label).join(', '),
+                    })
+                  : t('getStarted.details.prereqOk', 'System, drivers and tools are in place'),
+        steps: [...prerequisiteBad, ...prerequisiteOutdated, ...prerequisiteWarn],
+        focus: (prerequisiteBad[0] ?? prerequisiteOutdated[0] ?? prerequisiteWarn[0])?.id,
       },
       {
         id: 'environment',
@@ -119,16 +131,22 @@ export function useReadiness(
             ? 'pending'
             : environmentBad.length
               ? 'blocked'
-              : 'ok',
+              : environmentOutdated.length
+                ? 'attention'
+                : 'ok',
         detail: !checked.length
           ? t('getStarted.details.checking', 'Checking…')
           : environmentRunning.length
             ? working(environmentRunning)
             : environmentBad.length
               ? environmentBad.map((s) => s.label).join(', ')
-              : t('getStarted.details.envOk', 'Python environment and models are ready'),
-        steps: environmentBad,
-        focus: environmentBad[0]?.id,
+              : environmentOutdated.length
+                ? t('getStarted.details.outdated', 'Out of date: {{items}}', {
+                    items: environmentOutdated.map((s) => s.label).join(', '),
+                  })
+                : t('getStarted.details.envOk', 'Python environment and models are ready'),
+        steps: [...environmentBad, ...environmentOutdated],
+        focus: (environmentBad[0] ?? environmentOutdated[0])?.id,
       },
       {
         id: 'settings',

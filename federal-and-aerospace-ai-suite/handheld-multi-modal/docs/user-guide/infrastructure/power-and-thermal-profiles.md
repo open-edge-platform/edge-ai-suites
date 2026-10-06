@@ -168,7 +168,8 @@ stress command completes:
 sudo tools/power-tuning/pt_mon.sh
 sudo tools/power-tuning/stress_gen.sh --gpu 12 --duration 3m
 ```
-> **Note:** Use `stress_gen.sh`, `openvino_stress.sh`, an magic9 benchmark, or
+> [!NOTE]
+> Use `stress_gen.sh`, `openvino_stress.sh`, an magic9 benchmark, or
 > your production workload to generate load for power and thermal profiling.
 > Choose a bounded run and use the same workload when comparing profiles.
 

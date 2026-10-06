@@ -496,8 +496,9 @@ function run_concurrent_workload() {
 # --- Main Script ---
 
 function usage() {
-    echo "Usage (stream-density mode):"
-    echo "  $0 -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "Usage (stream-density mode — automatic, no search range needed):"
+    echo "  $0 -p <pipeline_name> [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
+    echo "  Example: $0 -p yolov11s_gpu -t 15"
     echo
     echo "Usage (nstreams mode):"
     echo "  $0 -p <p1> [p2 ...] -nstreams <N1> [N2 ...] [-t <target_fps>] [-i <interval>] [-c <throughput_percentile>]"
@@ -505,12 +506,14 @@ function usage() {
     echo
     echo "Arguments:"
     echo "  -p <pipeline_name>   : (Required) Pipeline name(s). Provide one or more names for nstreams mode."
-    echo "  -l <lower_bound>     : (Required for stream-density mode) Starting lower bound for stream count."
-    echo "  -u <upper_bound>     : (Required for stream-density mode) Starting upper bound for stream count."
     echo "  -nstreams <N1> [N2 ...] : (Required for nstreams mode) Fixed stream count per pipeline, in the same order as -p."
     echo "  -t <target_fps>      : Target FPS threshold (default: 14.95); used for stream-density mode and accepted in nstreams mode for CLI consistency."
     echo "  -i <interval>        : Monitoring duration in seconds for each test run (default: 60)."
     echo "  -c <throughput_percentile> : Throughput percentile for KPI calculation (default: 0.9)."
+    echo
+    echo "Notes:"
+    echo "  Stream density is discovered automatically (exponential ramp-up, then bisect)."
+    echo "  Set MAX_STREAMS=<n> in the environment to change the internal safety ceiling (default: 64)."
     exit 1
 }
 
@@ -617,24 +620,28 @@ pipeline_name_arg=""
 target_fps="14.95"
 MAX_DURATION=60
 THROUGHPUT_PERCENTILE="0.9"
-lower_bound=""
-upper_bound=""
+# Safety ceiling for the automatic search; env-only, not a CLI argument.
+max_streams_cap=${MAX_STREAMS:-64}
 
-while getopts "p:l:u:t:i:c:" opt; do
+while getopts "p:t:i:c:l:u:" opt; do
   case ${opt} in
     p ) pipeline_name_arg=$OPTARG ;;
-    l ) lower_bound=$OPTARG ;;
-    u ) upper_bound=$OPTARG ;;
     t ) target_fps=$OPTARG ;;
     i ) MAX_DURATION=$OPTARG ;;
     c ) THROUGHPUT_PERCENTILE=$OPTARG ;;
+    l | u ) echo "Warning: -$opt is deprecated and ignored; stream density is determined automatically." >&2 ;;
     \? ) usage ;;
   esac
 done
 
-if [ -z "$pipeline_name_arg" ] || [ -z "$lower_bound" ] || [ -z "$upper_bound" ]; then
-    echo "Error: Pipeline name, lower bound, and upper bound are required." >&2
+if [ -z "$pipeline_name_arg" ]; then
+    echo "Error: Pipeline name is required." >&2
     usage
+fi
+
+if ! [[ "$max_streams_cap" =~ ^[0-9]+$ ]] || [ "$max_streams_cap" -lt 1 ]; then
+    echo "Error: MAX_STREAMS must be a positive integer (got '$max_streams_cap')." >&2
+    exit 1
 fi
 
 # Path to the .env file
@@ -674,36 +681,51 @@ if [ $? -ne 0 ]; then
    exit 1
 fi
 
-records=""
-ns=$lower_bound
+# ---------------------------------------------------------------------------
+# Automatic stream-density search: exponential ramp-up, then bisect.
+#   Phase 1 - measure N = 1, 2, 4, 8, ... until throughput drops below
+#             target_fps, or the safety ceiling (MAX_STREAMS) is reached.
+#   Phase 2 - bisect between the last passing N (lo) and the first failing N
+#             (hi) until they are adjacent; lo is the maximum sustainable density.
+# ---------------------------------------------------------------------------
+echo ">>>>> Automatic stream-density search: target ${target_fps} fps/stream, window ${MAX_DURATION}s, ceiling ${max_streams_cap} streams." >&2
+
+ns=1
+lo=0
+hi=-1
 tns=0
-lns=$lower_bound
-uns=$upper_bound
+exp_phase=true
 
-[[ "$@" = *"--trace"* && $lns -lt $uns ]] || echo "Start-Trace:"
-while [ $((uns - lns)) -gt 1 ] || [[ "$records" != *" $lns:"* ]] || [[ "$records" != *" $uns:"* ]]; do
-  if [[ "$records" = *" $ns:"* ]]; then
-    throughput=${records##* $ns:}
-    throughput=${throughput%% *}
+[[ "$@" = *"--trace"* ]] || echo "Start-Trace:"
+while true; do
+  throughput=$(run_workload_with_retries "$ns" "$pipeline_name_arg" "$payload_file")
+
+  if [ $hi -gt 0 ]; then hi_display=$hi; else hi_display=$max_streams_cap; fi
+  echo "streams: $ns throughput: $throughput range: [$lo,$hi_display]"
+
+  if echo "${throughput:-0} $target_fps" | gawk '{exit($1>=$2?0:1)}'; then
+    tns=$ns
+    lo=$ns
+    if $exp_phase; then
+      [ $ns -ge $max_streams_cap ] && break
+      ns=$((ns * 2))
+      [ $ns -gt $max_streams_cap ] && ns=$max_streams_cap
+      continue
+    fi
   else
-    throughput=$(run_workload_with_retries "$ns" "$pipeline_name_arg" "$payload_file")
+    hi=$ns
+    if $exp_phase; then
+      [ $ns -eq 1 ] && break
+      exp_phase=false
+    fi
   fi
-  records="$records $ns:$throughput"
 
-  echo "streams: $ns throughput: $throughput range: [$lns,$uns]"
-
-  if echo "${throughput:-0} $target_fps" | gawk '{exit($1<$2?0:1)}'; then
-    uns=$ns
-    ns=$(echo "$lns $ns" | gawk '{n=int(($1+$2)/2);m=int($2/2);n=(n<m?m:n);print (n<1?1:n)}')
-  else
-    [ $ns -le $tns ] || tns=$ns
-    lns=$ns
-    ns=$(echo "$ns $uns" | gawk '{n=int(($1+$2)/2+0.5);m=$1*2;print (n>m?m:n)}')
-  fi
+  [ $hi -lt 0 ] && break
+  [ $((hi - lo)) -le 1 ] && break
+  ns=$(( (lo + hi) / 2 ))
 done
-tns=$lns
 
-if [[ "$@" = *"--trace"* && $lns -lt $uns ]]; then
+if [[ "$@" = *"--trace"* ]] && [ "$tns" -gt 0 ]; then
   echo "Start-Trace:"
   throughput=$(run_workload_with_retries "$tns" "$pipeline_name_arg" "$payload_file")
 fi
@@ -713,6 +735,7 @@ echo
 echo "======================================================" >&2
 if [ "$tns" -gt 0 ]; then
     echo "✅ FINAL RESULT: Stream-Density Benchmark Completed!" >&2
+    [ "$tns" -ge "$max_streams_cap" ] && echo "   Note: the safety ceiling ($max_streams_cap) was reached; raise MAX_STREAMS to search higher." >&2
     # The primary result goes to stdout
     echo "stream density: $tns"
     echo "======================================================" >&2
@@ -721,6 +744,6 @@ if [ "$tns" -gt 0 ]; then
     # The KPI details go to stdout
     cat "benchmark-$tns/kpi.txt" 2> /dev/null
 else
-    echo "❌ FINAL RESULT: Target FPS Not Achievable in the given range." >&2
+    echo "❌ FINAL RESULT: Target FPS $target_fps not achievable even with a single stream." >&2
     echo "======================================================" >&2
 fi

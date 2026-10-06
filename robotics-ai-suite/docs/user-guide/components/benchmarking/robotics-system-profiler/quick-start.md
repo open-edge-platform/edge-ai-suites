@@ -96,7 +96,8 @@ uv run python src/monitor_stack.py --node /slam_toolbox --session my_session --d
 ./grafana-monitor.sh --remote-ip 192.168.1.100 --remote-user ubuntu --node /slam_toolbox
 ```
 
-> **Note:** Allow 30–60 seconds for DDS discovery to complete before topic data
+> [!NOTE]
+> Allow 30–60 seconds for DDS discovery to complete before topic data
 > starts flowing on remote sessions. Use `--duration` ≥ 90s for remote monitoring.
 
 ## Results

@@ -17,7 +17,7 @@ the data flow of the selected app before proceeding with the following steps.
     docker compose build
     ```
 
-    > **Note:**
+    > [!NOTE]
     > To include copyleft licensed sources when building the Docker image, use the below command:
     >
     > ```bash
@@ -34,7 +34,7 @@ the data flow of the selected app before proceeding with the following steps.
     make build # builds only data simulator (OPC-UA server and MQTT publisher) docker images
     ```
 
-    > **Note:**
+    > [!NOTE]
     > To include copyleft licensed sources when building the Docker images, use the below command:
     >
     > ```bash

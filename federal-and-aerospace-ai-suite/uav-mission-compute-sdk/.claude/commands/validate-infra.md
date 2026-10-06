@@ -8,9 +8,10 @@ SPDX-License-Identifier: Apache-2.0
 Validate the UAV infrastructure (PX4 + Gazebo stack) is healthy and streaming.
 
 ## Camera Profile Awareness
-- Sim profile: `camera-bridge` should run, `usb-camera-bridge` should not.
-- USB profile: `usb-camera-bridge` should run, `camera-bridge` should not.
-- In both profiles, PX4 + companion-bridge + mediamtx + mosquitto must be up.
+- Sim profile: `camera-bridge` should run, `usb-camera-bridge`/`realsense-camera-bridge` should not.
+- USB profile: `usb-camera-bridge` should run, `camera-bridge`/`realsense-camera-bridge` should not.
+- RealSense profile: `realsense-camera-bridge` should run, `camera-bridge`/`usb-camera-bridge` should not.
+- In all profiles, PX4 (or PX4 SIH) + companion-bridge + mediamtx + mosquitto must be up.
 
 ## Context
 - Compose file: `docker-compose.yml` at repo root
@@ -74,8 +75,12 @@ ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/na
 # Sim profile only
 ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/forward 2>&1 | grep -q '"codec_name":"h264"' && echo "Forward stream OK" || echo "Forward stream missing"
 ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/rear 2>&1 | grep -q '"codec_name":"h264"' && echo "Rear stream OK" || echo "Rear stream missing"
+
+# RealSense profile only
+ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/ir 2>&1 | grep -q '"codec_name":"h264"' && echo "IR stream OK" || echo "IR stream missing"
+ffprobe -v quiet -print_format json -show_streams rtsp://localhost:8554/uav-1/depth 2>&1 | grep -q '"codec_name":"h264"' && echo "Depth stream OK" || echo "Depth stream missing"
 ```
-Expected: `nadir` always present when armed; `forward/rear` present only in sim profile.
+Expected: `nadir` always present when armed (sim/usb); `forward/rear` present only in sim profile; `ir/depth` present only in realsense profile.
 
 ### 7. Verify telemetry is flowing
 ```bash
@@ -86,7 +91,7 @@ Expected: JSON with lat_deg, lng_deg, relative_altitude_m
 ### 8. Test companion bridge REST API
 ```bash
 docker exec px4-gazebo curl -sf http://127.0.0.1:8080/health   # sim-camera mode
-docker exec px4-sitl curl -sf http://127.0.0.1:8080/health     # usb-camera mode
+docker exec px4-sitl curl -sf http://127.0.0.1:8080/health     # usb-camera / realsense-camera mode
 ```
 Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 
@@ -99,10 +104,11 @@ Expected: `{"armed": false, "connected": true, "mode": "...", "status": "ok"}`
 | companion-bridge "Connection refused" or "heartbeats timed out" | `docker compose restart companion-bridge` |
 | camera-bridge no RTSP streams | Check logs: `docker logs camera-bridge` (sim profile - look for "RTSP pipeline started") |
 | usb-camera-bridge no RTSP streams | Check logs: `docker logs usb-camera-bridge` and verify `USB_VIDEO_DEVICE` |
+| realsense-camera-bridge no RTSP streams | Check logs: `docker logs realsense-camera-bridge`, verify `RS_VIDEO*`/`RS_MEDIA*` in `.env` (re-run `make init` after replugging), and `rs-enumerate-devices --short` shows the device |
 | camera-bridge GStreamer errors | Verify MediaMTX is healthy, check RTSP_HOST/RTSP_PORT env vars |
 | vision-processor no detections | Check RTSP consumption: `docker logs vision-processor-multicam` (look for "RTSP DL Streamer pipeline started") |
 | vision-processor "Could not connect to RTSP" | Verify MediaMTX has streams: `docker exec vision-processor-multicam curl -sf http://mediamtx:9997/v3/paths/list` |
-| All services stale after PX4 restart | Restart in order: `px4`/`px4-sih` → `mediamtx` → `camera-bridge`/`usb-camera-bridge` |
+| All services stale after PX4 restart | Restart in order: `px4`/`px4-sih` → `mediamtx` → `camera-bridge`/`usb-camera-bridge`/`realsense-camera-bridge` |
 | Want to revert to MQTT mode | Set `USE_RTSP=false` in docker-compose.yml, restart camera-bridge |
 
 ## Restart Order (full stack)

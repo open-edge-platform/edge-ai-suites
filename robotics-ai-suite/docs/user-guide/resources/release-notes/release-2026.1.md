@@ -1,12 +1,12 @@
 # Release Notes: Robotics AI Suite 2026.1
 
-**June 17, 2026**
+**Release Date**: June 17, 2026
 
 ## Autonomous Mobile Robot
 
-**Version 2026.1**
+**Version 2026.1**:
 
-**New**
+**New**:
 
 - Added automated one-command ROS 2 environment setup scripts (setup-robotics-humble.sh and setup-robotics-jazzy.sh) that install the full AMR stack (ROS 2, OpenVINO, Intel RealSense SDK, Robotics SDK, Collaborative SLAM) for Ubuntu Humble and Jazzy respectively.
 - Added ISX031 industrial camera support in multicam-demo with a new config/config_isx031_4cameras.js configuration file and extended CameraCapWrapper to accept Linux device paths (e.g. /dev/video-isx031-a-0) in addition to integer camera indices.
@@ -14,7 +14,7 @@
 - Added Grafana live metrics dashboard integration for ros-kpi, including a new demo_interactive_heatmap.py script for interactive visualization of KPI data and a GRAFANA_QUICKSTART.md guide for rapid dashboard setup.
 - Added JSON schema files (kpi_level1_v1.json, kpi_level2_v1.json) for structured validation of KPI output data.
 
-**Improved**
+**Improved**:
 
 - ros-kpi: ros2_graph_monitor.py now uses ROS message header timestamps instead of wall-clock time for accurate latency measurement in both real-time and Gazebo simulated environments; added \--use-sim-time CLI flag and auto-detection of the /clock topic.
 - ros-kpi: Added \--csv-out and \--xlsx-out flags to analyze_trigger_latency.py for exporting KPI results to CSV and Excel formats; added a smoke-test suite (tests/test_csv_export.py) for the export functionality.
@@ -26,7 +26,7 @@
 - Setup scripts hardened with set -o errexit, set -o errtrace, set -o pipefail, and a failure handler ERR trap, so installation failures are reported with the failing step name instead of silently continuing.
 - Setup scripts: Changed all apt calls to apt-get for scripting best-practice compliance; added \--allow-downgrades when installing ros-*-librealsense2 to accommodate pinned version constraints; reordered RealSense installation to run the ROS wrapper package before the DKMS kernel module and SDK.
 
-**Fixed**
+**Fixed**:
 
 - adbscan (Follow-Me): Initialized new_target_loc to zero before use in adbscan_sub.cpp, adbscan_sub_w_gesture.cpp, and adbscan_sub_w_gesture_audio.cpp, preventing potential undefined behavior when no target has been detected yet; fixed an uninitialized pointer in doDBSCAN.cpp.
 - adbscan: Fixed the license-check Makefile target to reference the public fsfe/reuse:5.0.2 Docker image instead of an internal registry path, allowing license checks to run without internal network access.
@@ -36,21 +36,20 @@
 - ros-kpi: Fixed the Debian packaging rules for both Humble and Jazzy to include the schemas/ directory in the installed package.
 - Removed obsolete deprecated files: collaborative-slam trajectory comparison script (traj-compare.py), ITS planner run script (run_its.sh), and Debian preinst scripts from multicam-demo.
 
-
 ## Embodied Intelligence SDK
 
-**Version 2026.1**
+**Version 2026.1**:
 
 Embodied Intelligence SDK v26.1 introduces new sample pipeline - OpenClaw + AgenticROS and Intel Core Ultra 3 Platform support of below pipelines:
 
 - Pi0.5 with RTC
 - LLM Robotics Demo
 
-**New**
+**New**:
 
 - OpenClaw + AgenticROS: The sample pipeline demonstrates the integration of OpenClaw and AgenticROS AI agent frameworks on Intel PTL (Panther Lake) platform, with LLM/VLM inference served by Intel OpenVINO Model Server (OVMS) for controlling JAKA Kargo robot in a Gazebo simulation environment.
 
-**Enhanced**
+**Enhanced**:
 
 - LLM Robotics Demo: Migrate from ROS2 humble to jazzy; Support LLM `Qwen3`; Add TTS server `MeloTTS`.
 - Pi0.5 with RTC: Refactor the pipeline for better evaluation in MuJoCo simulator.
@@ -66,12 +65,12 @@ RVC v2.1 release includes bug and security updates as well as Intel Lab's Histod
 
 - **Intel Lab's Histodepth Pointcloud Segmentation Virtual Fence**: Now part of the RVC package, this virtual fence application running on ROS uses depth information from an Intel RealSense camera to create dynamic and static scene segmentation maps to enable live robotic virtual fencing and safety bounding. The use of this segmentation algorithm enables a drop-in approach to virtual fencing, requiring no training or learning before deployment.
 
-**Features**
+**Features**:
 
 - New dynamic path planning algorithm available (Dobby path planner available under NDA - contact [eci.maintainer@intel.com](mailto:eci.maintainer@intel.com) for details).
 - New dynamic virtual fencing algorithm available.
 
-**Known Limitations and Issues**
+**Known Limitations and Issues**:
 
 :::
 :::{tab-item} RVC v2.0
@@ -87,7 +86,7 @@ RVC focuses on demonstrating consolidation of the following functionalities:
 - Trajectory calculation to detected object pose.
 - Robot control
 
-**Features**
+**Features**:
 
 - Defined API between vision and control.
 - 3D detection and 3D pose detection components.
@@ -96,12 +95,12 @@ RVC focuses on demonstrating consolidation of the following functionalities:
 - Control of ROS2 not supported robots (example implementation for UR5).
 - Simple static and dynamic use case example.
 
-**Known Limitations and Issues**
+**Known Limitations and Issues**:
 
 **Debian packages:**
 
 | Package | Deb Package | Description |
-|---|---|---|
+| --- | --- | --- |
 | gui-settings | `ros-humble-gui-settings_2.0.0jammy_amd64.deb` | Custom message for GUI to RVC communication Package. |
 | moveit2-servo-motion-controller | `ros-humble-moveit2-servo-motion-controller_1.0.0jammy_amd64.deb` | RVC Motion controller interface-based plugin implemented using moveit2 servo. |
 | non-oriented-grasp | `ros-humble-non-oriented-grasp_2.0.0jammy_amd64.deb` | Non oriented grasp plugin. |
@@ -134,12 +133,12 @@ RVC focuses on demonstrating consolidation of the following functionalities:
 Initial release of Robot Vision & Control Framework (RVC).
 RVC allows closed loop automatic object recognition and robot manipulation of a set of moving objects.
 
-**Features**
+**Features**:
 
 - Six Degree of Freedom (6DoF) real-time object detection
 - Manipulator dynamic tracking, that is, robot adjusts trajectory towards target in real-time
 
-**Known Limitations and Issues**
+**Known Limitations and Issues**:
 
 - The object set must be known prior, that is, the objects need to be present on file system in the pointcloud format, matching the real objects
 - Camera position must be accurate by either adjusting the camera in a particular position or changing the position in a configuration file

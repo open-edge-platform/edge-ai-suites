@@ -24,7 +24,8 @@
       "loading": "加载中…",
       "working": "正在准备：{{items}}…",
       "missing": "缺失：{{items}}",
-      "warnings": "警告：{{items}}",
+      "outdated": "需更新：{{items}}",
+      "warnings": "提示：{{items}}",
       "prereqOk": "系统、驱动与工具均已就绪",
       "envOk": "Python 环境与模型已就绪",
       "settingsOk": "请查看常用设置",
@@ -50,11 +51,13 @@
     "copied": "已复制",
     "blockedBy": "需先完成：{{items}}。",
     "firstRun": "Python 环境缺失，后端无法启动。点击“修复”创建 — 首次运行需下载数 GB 内容。",
+    "manualFix": "{{items}} 无法自动更新。请点击该行的按钮 — 重新创建需要请求确认。",
     "allReady": "一切就绪。",
-    "settledWithWarnings": "已无需修复。仍有 {{count}} 条警告。",
+    "settledWithWarnings": "一切就绪。另有 {{count}} 条提示，仅供参考。",
     "allReadyRunning": "一切就绪，后端正在运行。",
     "startBackend": "启动后端",
     "backToGetStarted": "返回“快速开始”",
+    "openServices": "打开服务管理",
     "sections": {
       "system": "系统与驱动",
       "software": "软件与环境"
@@ -62,7 +65,8 @@
     "status": {
       "unknown": "未检查",
       "ok": "正常",
-      "warn": "警告",
+      "warn": "提示",
+      "outdated": "需更新",
       "missing": "缺失",
       "running": "执行中",
       "failed": "失败"
@@ -346,6 +350,7 @@
   },
   "errors": {
     "videoPipelineFailed": "视频分析无法启动：\n{{details}}",
+    "videoPipelineRetrying": "视频分析出现问题，正在重试：\n{{details}}",
     "videoPipelineStopFailed": "视频分析无法停止：\n{{details}}",
     "failedToStartRecording": "开始录音失败",
     "failedToStopRecording": "停止录音失败",
@@ -371,6 +376,8 @@
     "videoFailed":"视频获取失败",
     "continuingAudioOnly":"继续进行纯音频处理",
     "loadingvideo": "正在加载视频流",
+    "connectingStream": "正在连接视频流",
+    "streamTimeout": "视频流连接时间超出预期",
     "browserNotSupported": "您的浏览器不支持视频播放。",
     "noVideoConfigured": "未配置视频"
   },
@@ -698,6 +705,8 @@
   },
   "reportPanel": {
     "title": "查看报告",
+
+    "short": "报告",
     "classReport": "课堂报告",
     "noSessionActive": "当前无会话",
     "reportFields": "报告字段",
@@ -762,5 +771,54 @@
     "previewUnavailableType": "此文件类型不支持预览。",
     "download": "下载 {{name}}",
     "closePreview": "关闭预览"
+  },
+  "history": {
+    "title": "历史记录",
+
+    "short": "历史",
+    "subtitle": "本机录制过的课程，最新的在前。",
+    "refresh": "刷新",
+    "empty": "暂无记录。从现在起的录制和上传都会出现在这里。",
+    "started": "开始时间",
+    "sources": "来源",
+    "stages": "阶段",
+    "stateLabel": "状态",
+    "stage": "阶段",
+    "status": "状态",
+    "duration": "耗时",
+    "detail": "详情",
+    "loading": "加载中…",
+    "noEvents": "该记录没有阶段耗时数据。",
+    "openFile": "打开 {{file}}",
+    "fileEmpty": "该文件为空。",
+    "fileTruncated": "该文件过长，以下只显示开头部分。",
+    "fileUnreadable": "无法读取该文件：{{reason}}",
+    "kindUnknown": "当前版本暂不支持排版 {{kind}} 类文件，以下为原始内容。",
+    "mindmapUnreadable": "无法根据该文件绘制思维导图。",
+    "topicTime": "时间",
+    "topic": "主题",
+    "mostHands": "举手最多的学生",
+    "stageName": {
+      "transcribe": "转写文稿",
+      "summarize": "课堂总结",
+      "mindmap": "思维导图",
+      "va": "视频分析",
+      "segmentation": "内容分段",
+      "report": "课堂报告"
+    },
+    "delete": "删除",
+    "confirmDelete": "删除这条记录及其产生的全部文件？此操作不可撤销。",
+    "markFailed": "标记为失败",
+    "markedByUser": "由用户标记为失败",
+    "prev": "上一页",
+    "next": "下一页",
+    "pageOf": "第 {{page}} / {{pages}} 页",
+    "state": {
+      "pending": "等待中",
+      "running": "进行中",
+      "completed": "已完成",
+      "failed": "失败",
+      "cancelled": "已取消"
+    }
   }
 }

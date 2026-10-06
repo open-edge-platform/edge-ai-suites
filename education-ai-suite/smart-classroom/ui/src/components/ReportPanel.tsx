@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import {
   clearReportStartRequest,
@@ -22,22 +22,9 @@ import { useTranslation } from 'react-i18next';
 import type { FeatureGuard } from '../utils/featureGuards';
 import '../assets/css/ReportPanel.css';
 import { useTitleBarTheme } from '../hooks/useTitleBarTheme';
+import { reportUrlTransform } from '../utils/reportMarkdown';
 
 const activeReportSessions = new Set<string>();
-
-const env = (import.meta as any).env ?? {};
-const API_BASE_URL: string = (env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
-
-const reportUrlTransform = ((url: string) => {
-  if (url.startsWith('data:image/')) return url;
-  // Report markdown may contain image URLs like /report/{session}/mindmap-image.
-  // In dev/proxy setups those need an explicit backend base URL to avoid
-  // resolving against the frontend origin and returning 404.
-  if (url.startsWith('/report/')) {
-    return `${API_BASE_URL}${url}`;
-  }
-  return defaultUrlTransform(url);
-}) as any;
 
 const isManual = (f: TemplateFieldMeta) => f.input === 'manual';
 const isAlwaysOn = (f: TemplateFieldMeta) => !!f.always_on;
@@ -58,7 +45,9 @@ interface ReportPanelProps {
 }
 
 const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard }) => {
-  useTitleBarTheme(isOpen, 'light');
+  // The panel sits below the caption strip, so what covers it is the dim
+  // backdrop rather than the panel's own white sheet.
+  useTitleBarTheme(isOpen, 'dimmed');
 
   const dispatch = useAppDispatch();
   const { i18n, t } = useTranslation();
@@ -68,14 +57,14 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
   const reportError = useAppSelector(s => s.ui.reportError);
   const shouldStartReport = useAppSelector(s => s.ui.shouldStartReport);
   const audioStatus = useAppSelector(s => s.ui.audioStatus);
-  // The report must wait for topic/content segmentation, which the report reads
-  // as a data source. For uploaded audio+video it is triggered only AFTER the
-  // video reaches playback mode (see useContentSegmentation), so its completion
-  // also guarantees video processing is done — no separate video gating needed.
+  // The report must wait for topic/content segmentation, which it reads as a
+  // data source. useStageDrivenChain keeps this status honest for every session
+  // type, including microphone recordings, which the old Redux trigger could
+  // not see at all.
   const contentSegmentationStatus = useAppSelector(s => s.ui.contentSegmentationStatus);
+  const sessionRegistered = useAppSelector(s => s.ui.sessionRegistered);
   const videoStatus = useAppSelector(s => s.ui.videoStatus);
   const processingMode = useAppSelector(s => s.ui.processingMode);
-  const uploadedAudioPath = useAppSelector(s => s.ui.uploadedAudioPath);
 
   // Field catalog. Checkbox fields go in `selected`; manual (basic-info) fields
   // are text the teacher types in `manualValues`; always-on fields (report_time)
@@ -239,21 +228,21 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
     }
   }, [sessionId]);
 
-  // Topic/content segmentation runs only for UPLOADED audio (both audio-only and
-  // audio+video); microphone recordings never trigger it (see
-  // useContentSegmentation), so its status stays 'idle' there and we must not
-  // wait for it. When it does run, hold the report until it reaches a terminal
-  // state ('complete'/'error') — placing report generation strictly after
-  // "Content Generating…". Because segmentation for audio+video only starts once
-  // the video is in playback mode, waiting for it also guarantees video is done.
-  const hasUploadedAudio = Boolean(
-    uploadedAudioPath && uploadedAudioPath !== 'MICROPHONE' && uploadedAudioPath.trim() !== '',
-  );
+  // Hold Generate until topic segmentation has had its turn, so a report is
+  // never written from a half-prepared transcript — that is what puts
+  // "Content Generating…" in front of it.
+  //
+  // The old version keyed off the audio being an uploaded file and off
+  // videoStatus, back when segmentation was triggered from Redux and skipped
+  // microphone sessions entirely. useStageDrivenChain now runs it for every
+  // session that declares it, so the only questions left are whether this build
+  // has the feature and whether the chain has a row to drive from: without a
+  // registration nothing will ever run segmentation, and waiting for it would
+  // disable Generate for good.
   const topicTerminal =
     contentSegmentationStatus === 'complete' || contentSegmentationStatus === 'error';
-  // Failsafe: a failed video never reaches playback, so segmentation is never
-  // triggered — don't deadlock the report waiting for it in that case.
-  const pipelineSettled = !hasUploadedAudio || topicTerminal || videoStatus === 'failed';
+  const pipelineSettled =
+    !featureGuard?.hasFeature('topic_segmentation') || !sessionRegistered || topicTerminal;
 
   const handleGenerate = () => {
     if (!reportAvailable) {

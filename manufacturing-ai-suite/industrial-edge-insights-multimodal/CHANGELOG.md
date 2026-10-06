@@ -2,6 +2,40 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026.2] - September 2026
+
+### Added
+- Added Agentic Integration for the multimodal sample app, including agent workflow configs, prompts, and a new deployment guide. ([#3492])
+- Added a standalone Qwen VLM fine-tuning toolkit for weld defect detection, with training, inference, and dataset preparation scripts. ([#3587])
+- Added a VLM-based deployment path with `docker-compose-vllm.yml`, nginx vLLM configuration, and how-to guide. ([#3550])
+- Added a new insight-workbench/UI service for weld defect analytics. ([#3314])
+- Added GPU/NPU functional tests for Docker Compose and Helm deployments. ([#2596])
+- Added troubleshoot steps for GPU/NPU access. ([#2737])
+
+### Changed
+- Improved the UI for the agentic sample app. ([#3603])
+- Aligned naming for DL Streamer / DL Streamer Pipeline Server across configs and docs. ([#3565])
+- Updated DL Streamer Pipeline Server to the 2026.2 RC1 tag. ([#3634])
+- Updated container image versions and image suffix for the 2026.2 release. ([#3608], [#3442])
+- Updated the Helm chart version to `rc1`. ([#3667])
+- Replaced hostip references with localhost in configuration and docs. ([#3458])
+- Removed references to the deprecated CatBoost model. ([#3313])
+- Removed references to the model registry. ([#3285])
+- Removed the standalone weld-defect-detection sample app. ([#3307])
+- Updated the tests workflow to run on pushed artifacts. ([#3443])
+- Updated architecture diagram and deployment guide. ([#3460])
+- Updated documentation for editorial clarity, punctuation, and formatting. ([#3612], [#3596], [#3465], [#2954], [#2929])
+
+### Security
+- Addressed SDLe scan findings. ([#3602])
+- Added security-related fixes for vLLM containers. ([#3436])
+- Fixed reported vulnerabilities. ([#3414])
+- Fixed security-related test failures. ([#3135])
+
+### Fixed
+- Fixed RAM bloating issue and updated related documentation. ([#3484])
+- Fixed nginx health check for Docker Compose deployment. ([#3355])
+
 ## [2026.1] - June 2026
 
 ### Added
@@ -53,6 +87,35 @@ All notable changes to this project are documented in this file.
 - Miscellaneous documentation fixes. ([#2932])
 
 ---
+[#3667]: https://github.com/open-edge-platform/edge-ai-suites/pull/3667
+[#3603]: https://github.com/open-edge-platform/edge-ai-suites/pull/3603
+[#3634]: https://github.com/open-edge-platform/edge-ai-suites/pull/3634
+[#3602]: https://github.com/open-edge-platform/edge-ai-suites/pull/3602
+[#3608]: https://github.com/open-edge-platform/edge-ai-suites/pull/3608
+[#3612]: https://github.com/open-edge-platform/edge-ai-suites/pull/3612
+[#3596]: https://github.com/open-edge-platform/edge-ai-suites/pull/3596
+[#3587]: https://github.com/open-edge-platform/edge-ai-suites/pull/3587
+[#3565]: https://github.com/open-edge-platform/edge-ai-suites/pull/3565
+[#3492]: https://github.com/open-edge-platform/edge-ai-suites/pull/3492
+[#3443]: https://github.com/open-edge-platform/edge-ai-suites/pull/3443
+[#3550]: https://github.com/open-edge-platform/edge-ai-suites/pull/3550
+[#3484]: https://github.com/open-edge-platform/edge-ai-suites/pull/3484
+[#3465]: https://github.com/open-edge-platform/edge-ai-suites/pull/3465
+[#3460]: https://github.com/open-edge-platform/edge-ai-suites/pull/3460
+[#3458]: https://github.com/open-edge-platform/edge-ai-suites/pull/3458
+[#3442]: https://github.com/open-edge-platform/edge-ai-suites/pull/3442
+[#3436]: https://github.com/open-edge-platform/edge-ai-suites/pull/3436
+[#3314]: https://github.com/open-edge-platform/edge-ai-suites/pull/3314
+[#3414]: https://github.com/open-edge-platform/edge-ai-suites/pull/3414
+[#2596]: https://github.com/open-edge-platform/edge-ai-suites/pull/2596
+[#3355]: https://github.com/open-edge-platform/edge-ai-suites/pull/3355
+[#3135]: https://github.com/open-edge-platform/edge-ai-suites/pull/3135
+[#3313]: https://github.com/open-edge-platform/edge-ai-suites/pull/3313
+[#3285]: https://github.com/open-edge-platform/edge-ai-suites/pull/3285
+[#3307]: https://github.com/open-edge-platform/edge-ai-suites/pull/3307
+[#2737]: https://github.com/open-edge-platform/edge-ai-suites/pull/2737
+[#2954]: https://github.com/open-edge-platform/edge-ai-suites/pull/2954
+[#2929]: https://github.com/open-edge-platform/edge-ai-suites/pull/2929
 [#2283]: https://github.com/open-edge-platform/edge-ai-suites/pull/2283
 [#2343]: https://github.com/open-edge-platform/edge-ai-suites/pull/2343
 [#2347]: https://github.com/open-edge-platform/edge-ai-suites/pull/2347

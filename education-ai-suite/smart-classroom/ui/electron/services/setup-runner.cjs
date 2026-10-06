@@ -19,26 +19,53 @@ const registry = require('./registry.cjs');
 const proc = require('./win-proc.cjs');
 const winEnv = require('./win-env.cjs');
 
+// RAM, Windows build, Python and DL Streamer are checked by the backend too
+// (utils/system_checker.py), so they come from a generated copy of
+// utils/requirements.py. Everything below is this screen's alone.
+const {
+  MIN_MEMORY_GB: MIN_RAM_GB,
+  MIN_WINDOWS_BUILD,
+  PYTHON_TARGET,
+  REQUIRED_DLSTREAMER,
+} = require('./requirements-catalog.cjs');
+
 const LOG_ID = 'setup';
-const MIN_RAM_GB = 32;
+// Slack for firmware-reserved RAM, so a 32 GB machine reporting 31.9 still passes.
 const RAM_TOLERANCE = 0.95;
 const MIN_DISK_GB = 50;
-const PYTHON_TARGET = [3, 12];
 const LATEST_GPU_DRIVER = '32.0.101.8826';
 const LATEST_NPU_DRIVER = '32.0.100.4778';
-const REQUIRED_DLSTREAMER = '2026.1.0';
 const NPU_DRIVER_URL = 'https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html';
+
+// Derived, so bumping the version in utils/requirements.py carries the label,
+// the winget id and the download URL with it.
+const PYTHON_VERSION = PYTHON_TARGET.join('.');
+const PYTHON_WINGET_ID = `Python.Python.${PYTHON_VERSION}`;
+const PYTHON_WINGET_HINT = `winget install -e --id ${PYTHON_WINGET_ID} --source winget`;
 const DLSTREAMER_URL =
-  'https://github.com/open-edge-platform/dlstreamer/releases/download/v2026.1.0/dlstreamer-2026.1.0-win64.exe';
+  `https://github.com/open-edge-platform/dlstreamer/releases/download/v${REQUIRED_DLSTREAMER}/dlstreamer-${REQUIRED_DLSTREAMER}-win64.exe`;
 
 const STATUS = {
   UNKNOWN: 'unknown',
   OK: 'ok',
   WARN: 'warn',
+  OUTDATED: 'outdated',
   MISSING: 'missing',
   RUNNING: 'running',
   FAILED: 'failed',
 };
+
+// Statuses with something to run. OUTDATED belongs here and WARN does not: that
+// is the whole distinction between them.
+const REPAIRABLE = [STATUS.MISSING, STATUS.FAILED, STATUS.OUTDATED];
+
+// Failures the Setup screen can offer a way out of. The code crosses IPC with
+// the message (see fail() in ipc.cjs), so the screen decides what to offer from
+// this rather than by matching on English prose that translation would break.
+// Mirrored in ui/src/types/setup.ts.
+const SETUP_ERROR = { BACKEND_RUNNING: 'backend-running' };
+
+const setupError = (message, code) => Object.assign(new Error(message), { code });
 
 const SECTIONS = [
   { id: 'system', label: 'System and drivers' },
@@ -48,6 +75,22 @@ const SECTIONS = [
 // Most actions install or create something, so they are pointless once the step
 // is satisfied. Actions that stay useful afterwards override this.
 const visibleUnlessOk = (status) => status !== STATUS.OK;
+
+/**
+ * The action that clears this result, which the screen offers as one click and
+ * bulk-runs from its "Fix" button.
+ *
+ * A check can name its own, because the condition it found decides the cure: a
+ * venv whose packages have drifted is upgraded, but one built on the wrong
+ * interpreter can only be rebuilt, and upgrading it would run pip for minutes
+ * and change nothing. Checks that name nothing keep the old rule — a broken
+ * step is repaired by its first non-destructive action.
+ */
+function repairFor(step, result) {
+  if (result.repair !== undefined) return result.repair;
+  if (!REPAIRABLE.includes(result.status)) return null;
+  return (step.actions ?? []).find((action) => !action.destructive)?.id ?? null;
+}
 
 function run(file, args, timeout = 20000) {
   return new Promise((resolve) => {
@@ -131,7 +174,7 @@ async function pythonVersion(exe) {
   return result.ok ? result.stdout : null;
 }
 
-/** The interpreter used to create the venv: prefers an exact 3.12 match. */
+/** The interpreter used to create the venv: prefers an exact PYTHON_TARGET match. */
 async function findPython() {
   for (const exe of await pythonCandidates()) {
     const version = await pythonVersion(exe);
@@ -181,6 +224,108 @@ function importFailure(stderr) {
   if (!last) return 'the core packages do not import';
   const text = last.trim();
   return text.length > 140 ? `${text.slice(0, 139)}…` : text;
+}
+
+/**
+ * Compare requirements.txt against what the environment actually has, printing
+ * one JSON object: `{checked, missing, mismatched}`.
+ *
+ * Run by the venv's own interpreter with the requirements file as argv[1], so
+ * the versions read are the ones the backend will import.
+ *
+ * Top-level lines only. What an extra or a transitive dependency drags in is
+ * pip's business; this answers the narrower question of whether the file has
+ * moved on without the environment.
+ */
+const REQUIREMENTS_PROBE = `
+import importlib.metadata as metadata
+import json
+import re
+import sys
+
+try:
+    from packaging.requirements import Requirement
+except Exception:
+    # An environment too bare to parse its own requirements; the caller reports
+    # that through the import check instead of guessing here.
+    print(json.dumps({"checked": 0, "missing": [], "mismatched": []}))
+    raise SystemExit(0)
+
+BACKSLASH = chr(92)
+
+entries = []
+pending = ""
+with open(sys.argv[1], encoding="utf-8") as handle:
+    for raw in handle:
+        # The leading space makes one pattern strip a trailing comment and a
+        # whole-line one alike, and matches pip's rule that an inline comment
+        # must be preceded by whitespace.
+        text = pending + re.sub(r"\\s#.*$", "", " " + raw.strip()).strip()
+        if text.endswith(BACKSLASH):
+            pending = text[:-1]
+            continue
+        pending = ""
+        if text:
+            entries.append(text)
+if pending.strip():
+    entries.append(pending.strip())
+
+checked = 0
+missing = []
+mismatched = []
+for text in entries:
+    # -r, --index-url and friends: pip's to act on, not ours to verify.
+    if text.startswith("-"):
+        continue
+    try:
+        requirement = Requirement(text)
+    except Exception:
+        continue
+    if requirement.marker and not requirement.marker.evaluate():
+        continue
+    checked += 1
+    try:
+        installed = metadata.version(requirement.name)
+    except metadata.PackageNotFoundError:
+        missing.append(requirement.name)
+        continue
+    if requirement.specifier and not requirement.specifier.contains(installed, prereleases=True):
+        mismatched.append({
+            "name": requirement.name,
+            "installed": installed,
+            "wanted": str(requirement.specifier),
+        })
+
+print(json.dumps({"checked": checked, "missing": missing, "mismatched": mismatched}))
+`;
+
+/**
+ * What the environment is missing or has at the wrong version, or null when the
+ * comparison could not be made — no requirements file, an interpreter that will
+ * not run it, or nothing parseable in it. Null means "unknown", never "clean":
+ * the caller must not report a match it did not verify.
+ */
+async function requirementsDrift(exe, requirements) {
+  if (!fs.existsSync(requirements)) return null;
+  const result = await run(exe, ['-c', REQUIREMENTS_PROBE, requirements], 60000);
+  if (!result.ok) return null;
+  try {
+    const report = JSON.parse(result.stdout);
+    return report.checked > 0 ? report : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Name the drift for the step detail, listing a few and counting the rest. */
+function describeDrift({ missing, mismatched }, limit = 3) {
+  const items = [
+    ...missing.map((name) => `${name} is not installed`),
+    ...mismatched.map((entry) => `${entry.name} is ${entry.installed}, not ${entry.wanted}`),
+  ];
+  const shown = items.slice(0, limit).join('; ');
+  const rest = items.length - limit;
+  return rest > 0 ? `${shown}; and ${rest} more` : shown;
 }
 
 function freeDiskGb(target) {
@@ -273,6 +418,8 @@ function venvActions({ dir, requirements, cwd, interpreter }) {
       id: 'create',
       label: 'Create',
       requiresBackendStopped: true,
+      // Only while there is nothing to create.
+      visible: () => !fs.existsSync(paths.venvPython(dir())),
       async run(emit) {
         const options = await target();
         await ensureVenv(emit, options);
@@ -293,6 +440,8 @@ function venvActions({ dir, requirements, cwd, interpreter }) {
       label: 'Recreate',
       destructive: true,
       requiresBackendStopped: true,
+      // What the confirmation prompt has to name.
+      deletes: () => dir(),
       visible: () => fs.existsSync(dir()),
       async run(emit) {
         const options = await target();
@@ -330,8 +479,8 @@ const STEPS = [
     async check() {
       const build = Number(os.release().split('.')[2] || 0);
       if (process.platform !== 'win32') return { status: STATUS.FAILED, detail: `${process.platform} is not supported` };
-      // Windows 11 reports build 22000 or higher.
-      return build >= 22000
+      // The release string carries no marketing version, so test the build.
+      return build >= MIN_WINDOWS_BUILD
         ? { status: STATUS.OK, detail: `Windows 11 (build ${build})` }
         : { status: STATUS.WARN, detail: `Windows build ${build}; Windows 11 is recommended` };
     },
@@ -430,7 +579,7 @@ const STEPS = [
 
   {
     id: 'python',
-    label: 'Python 3.12',
+    label: `Python ${PYTHON_VERSION}`,
     section: 'software',
     async check() {
       const found = await findPython();
@@ -438,15 +587,15 @@ const STEPS = [
         return {
           status: STATUS.MISSING,
           detail: 'No interpreter found; needed to create the Python environment',
-          hint: 'winget install -e --id Python.Python.3.12 --source winget',
+          hint: PYTHON_WINGET_HINT,
         };
       }
       return found.exact
         ? { status: STATUS.OK, detail: `${found.version} (${found.exe})` }
         : {
-            status: STATUS.WARN,
-            detail: `${found.version} (${found.exe}); 3.12.x is the verified version, others may fail to build the environment`,
-            hint: 'winget install -e --id Python.Python.3.12 --source winget',
+            status: STATUS.OUTDATED,
+            detail: `${found.version} (${found.exe}); ${PYTHON_VERSION}.x is the verified version, others may fail to build the environment`,
+            hint: PYTHON_WINGET_HINT,
           };
     },
     actions: [
@@ -454,7 +603,7 @@ const STEPS = [
         id: 'install',
         label: 'Install',
         async run(emit) {
-          await wingetInstall(emit, 'Python.Python.3.12', 'Python 3.12');
+          await wingetInstall(emit, PYTHON_WINGET_ID, `Python ${PYTHON_VERSION}`);
           emit('Installed.');
         },
       },
@@ -523,7 +672,7 @@ const STEPS = [
       return compareVersions(version, REQUIRED_DLSTREAMER) >= 0
         ? { status: STATUS.OK, detail: `${version} (${installDir})` }
         : {
-            status: STATUS.WARN,
+            status: STATUS.OUTDATED,
             detail: `${version} (${installDir}); ${REQUIRED_DLSTREAMER} is required for video pipelines`,
             hint: DLSTREAMER_URL,
           };
@@ -591,13 +740,44 @@ const STEPS = [
       const version = await pythonVersion(exe);
       if (!version) return { status: STATUS.FAILED, detail: `Its interpreter does not run; select Recreate (${dir})` };
 
+      // Import rather than metadata: a package can be recorded as installed and
+      // still not load, which on Windows is the openvino DLL case above.
       const imports = await run(exe, ['-c', 'import fastapi, uvicorn, openvino; print("ok")'], 60000);
-      return imports.ok
-        ? { status: STATUS.OK, detail: `Python ${version} with the core packages (${dir})` }
-        : {
-            status: STATUS.MISSING,
-            detail: `Python ${version}; ${importFailure(imports.stderr)} — select Create to install the requirements`,
-          };
+      if (!imports.ok) {
+        return {
+          status: STATUS.MISSING,
+          detail: `Python ${version}; ${importFailure(imports.stderr)} — select Create to install the requirements`,
+        };
+      }
+
+      // Before the packages, because no amount of pip fixes this one and the
+      // detail should name the problem that has to be solved first.
+      const [major, minor] = version.split('.').map(Number);
+      if (major !== PYTHON_TARGET[0] || minor !== PYTHON_TARGET[1]) {
+        return {
+          status: STATUS.OUTDATED,
+          // Recreate, not Upgrade: an environment's interpreter is fixed when it
+          // is built, so the only way to change it is to build it again.
+          repair: 'recreate',
+          detail: `Built with Python ${version}; ${PYTHON_VERSION}.x is the verified version — select Recreate to rebuild it (${dir})`,
+        };
+      }
+
+      // Those three loading proves the environment exists, not that it is the
+      // one requirements.txt now describes. The file is edited far more often
+      // than the venv is rebuilt, and nothing else notices when they part.
+      const drift = await requirementsDrift(exe, paths.requirementsFile());
+      if (!drift) return { status: STATUS.OK, detail: `Python ${version} with the core packages (${dir})` };
+      if (!drift.missing.length && !drift.mismatched.length) {
+        return { status: STATUS.OK, detail: `Python ${version}, ${drift.checked} packages matching requirements.txt (${dir})` };
+      }
+      // Outdated, not missing: the backend does start against a drifted
+      // environment, so the red "cannot start" treatment would overstate it.
+      return {
+        status: STATUS.OUTDATED,
+        repair: 'upgrade',
+        detail: `Python ${version}; ${describeDrift(drift)} — select Upgrade to match requirements.txt`,
+      };
     },
     actions: venvActions({
       dir: () => paths.venvDir(),
@@ -605,7 +785,7 @@ const STEPS = [
       cwd: () => paths.home(),
       interpreter: async () => {
         const found = await findPython();
-        if (!found) throw new Error('No Python interpreter found; install Python 3.12 first.');
+        if (!found) throw new Error(`No Python interpreter found; install Python ${PYTHON_VERSION} first.`);
         return found.exe;
       },
     }),
@@ -688,8 +868,22 @@ class SetupRunner extends EventEmitter {
     this.state = new Map();
     this.busy = false;
     for (const step of STEPS) {
-      this.state.set(step.id, { status: STATUS.UNKNOWN, detail: '', hint: null });
+      this.record(step, { status: STATUS.UNKNOWN, detail: '' });
     }
+  }
+
+  /**
+   * One state entry. Every status change goes through here so the repair the
+   * screen offers is always derived from the result that produced it, rather
+   * than left over from the one before.
+   */
+  record(step, result) {
+    this.state.set(step.id, {
+      status: result.status,
+      detail: result.detail ?? '',
+      hint: result.hint ?? null,
+      repair: repairFor(step, result),
+    });
   }
 
   snapshot() {
@@ -753,13 +947,12 @@ class SetupRunner extends EventEmitter {
 
     for (const step of STEPS) {
       if (step.enabled && !step.enabled()) continue;
-      this.state.set(step.id, { ...this.state.get(step.id), status: STATUS.RUNNING });
+      this.record(step, { ...this.state.get(step.id), status: STATUS.RUNNING, repair: null });
       this.emitChanged();
       try {
-        const result = await step.check();
-        this.state.set(step.id, { status: result.status, detail: result.detail, hint: result.hint ?? null });
+        this.record(step, await step.check());
       } catch (error) {
-        this.state.set(step.id, { status: STATUS.FAILED, detail: error.message, hint: null });
+        this.record(step, { status: STATUS.FAILED, detail: error.message });
       }
       this.emitChanged();
     }
@@ -783,13 +976,19 @@ class SetupRunner extends EventEmitter {
     if (action.requiresBackendStopped) {
       const port = registry.get('backend')?.port;
       if (port && !(await proc.isPortFree(port))) {
-        throw new Error('Stop the backend first: its Python environment is in use.');
+        // Coded, because stopping the backend is a different screen: the Setup
+        // screen turns this into a button rather than an instruction to go
+        // hunting for one.
+        throw setupError(
+          'Stop the backend first: its Python environment is in use.',
+          SETUP_ERROR.BACKEND_RUNNING
+        );
       }
     }
 
     this.busy = true;
     this.logs.openSink(LOG_ID);
-    this.state.set(step.id, { status: STATUS.RUNNING, detail: `${action.label}…`, hint: null });
+    this.record(step, { status: STATUS.RUNNING, detail: `${action.label}…` });
     this.emitChanged();
 
     const emit = (line) => this.log(line);
@@ -800,10 +999,10 @@ class SetupRunner extends EventEmitter {
       // shells out and would otherwise still be looking at the old one.
       await this.refreshEnvironment();
       const result = await step.check();
-      this.state.set(step.id, { status: result.status, detail: result.detail, hint: result.hint ?? null });
+      this.record(step, result);
       this.log(`=== ${step.label}: ${result.status} ===`);
     } catch (error) {
-      this.state.set(step.id, { status: STATUS.FAILED, detail: error.message, hint: null });
+      this.record(step, { status: STATUS.FAILED, detail: error.message });
       this.log(`=== ${step.label} failed: ${error.message} ===`);
       throw error;
     } finally {
@@ -821,4 +1020,4 @@ class SetupRunner extends EventEmitter {
   }
 }
 
-module.exports = { SetupRunner, STATUS, SECTIONS, LOG_ID };
+module.exports = { SetupRunner, STATUS, SECTIONS, SETUP_ERROR, LOG_ID };

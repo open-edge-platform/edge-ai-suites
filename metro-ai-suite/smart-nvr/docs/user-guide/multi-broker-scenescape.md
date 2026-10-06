@@ -9,8 +9,8 @@ System 1, NVR stack on System 2. For single-node deployment, see
 Smart NVR maintains a persistent, independent MQTT connection to each SI node.
 Events are tagged with the broker `id` to route them to the correct Frigate camera.
 
-- **RTSP and MQTT are decoupled.** `brokers.yaml` holds only MQTT broker IPs. RTSP
-  streams are configured separately via prompts or env vars at startup.
+- **One entry per SI node.** In `brokers.yaml`, `host` is the MQTT broker IP used at
+  runtime; `rtsp_host` and `rtsp_port` are the RTSP stream IP and port, read only by `setup.sh`.
 - **Camera naming.** Frigate cameras must be named `{broker_id}-camera{n}`
   (e.g. `si1-camera1`). The broker `id` must match this prefix exactly.
 - **Brokers persist.** On startup, the broker manager reads `brokers.yaml`, seeds
@@ -34,21 +34,25 @@ runtime via the API.
 brokers:
   - id: si1                          # Must match Frigate camera prefix: si1-camera*
     name: Smart Intersection 1
-    host: <si1_ip>                    # MQTT broker IP — NOT the RTSP source
+    host: <si1_mqtt_ip>               # MQTT broker IP
     port: 1883
     topic: scenescape/data/camera/#
     type: scenescape
     throttle_interval: 2.0
     enabled: true
+    rtsp_host: <si1_rtsp_ip>          # RTSP source IP, read by setup.sh
+    rtsp_port: 8554                   # RTSP source port, read by setup.sh
 
   - id: si2
     name: Smart Intersection 2
-    host: <si2_ip>
+    host: <si2_mqtt_ip>
     port: 1883
     topic: scenescape/data/camera/#
     type: scenescape
     throttle_interval: 2.0
     enabled: true
+    rtsp_host: <si2_rtsp_ip>
+    rtsp_port: 8556                   # Nodes can share an IP on different ports
 ```
 
 > TLS is enabled by default. Broker connections do not use username or password authentication.
@@ -66,6 +70,8 @@ brokers:
 | `use_tls` | — | `true` | Enable TLS. Set to `false` for plain MQTT brokers. |
 | `throttle_interval` | — | `2.0` | Minimum seconds between processed events. |
 | `enabled` | — | `true` | Set to `false` to disable on startup without removing. |
+| `rtsp_host` | — | — | RTSP stream IP. Read by `setup.sh` to generate Frigate cameras; unused at runtime. |
+| `rtsp_port` | Required for `start-nvr` | — | RTSP stream port (1–65535). Read by `setup.sh start-nvr` to generate Frigate cameras; unused at runtime. |
 
 ### Environment variables
 
@@ -76,9 +82,12 @@ brokers:
 | `VSS_PORT` | — | `12345` | VSS service port. |
 | `MQTT_USER` | — | auto-generated | Local Mosquitto username (Frigate ↔ NVR). |
 | `MQTT_PASSWORD` | — | auto-generated | Local Mosquitto password. |
-| `SI_RTSP_HOST` | — | prompt | RTSP IP for si1. Prompts interactively (`start-nvr`) or auto-detected (`start`) if unset. |
-| `SI{N}_RTSP_HOST` | — | prompt | RTSP IP for siN (N ≥ 2). Prompts interactively if unset. |
-| `RTSP_STREAM_PORT` | — | `8554` | RTSP port for all SI streams. |
+| `SI_RTSP_HOST` | — | `brokers.yaml` | RTSP IP for si1. Overrides `rtsp_host` for `si1`. Ignored by `start` (single-node), which always uses this machine's IP. |
+| `SI{N}_RTSP_HOST` | — | `brokers.yaml` | RTSP IP for siN (N ≥ 2). Overrides `rtsp_host` for `siN`. |
+| `SI_RTSP_PORT` | — | `brokers.yaml` | RTSP port for si1. Overrides `rtsp_port` for `si1`. Used by `start-nvr` only. |
+| `SI{N}_RTSP_PORT` | — | `brokers.yaml` | RTSP port for siN (N ≥ 2). Overrides `rtsp_port` for `siN`. Used by `start-nvr` only. |
+| `SI_NODE_COUNT` | — | highest `siN` in `brokers.yaml` | Number of SI nodes to generate Frigate cameras for (max 20). |
+| `RTSP_STREAM_PORT` | — | `8554` | Local RTSP streamer port for `start` and `start-si`. Not used as a fallback by `start-nvr`. |
 | `SCENESCAPE_MQTT_BROKER` | — | — | Legacy: seeds si1 MQTT broker into Redis on startup. Prefer `brokers.yaml` or the API. |
 | `BROKERS_CONFIG_PATH` | — | `resources/broker-config/brokers.yaml` | Path to broker config file. |
 | `MAX_CONCURRENT_EVENTS` | — | `50` | Maximum simultaneous in-flight event tasks. |
@@ -103,24 +112,27 @@ broker on System 2.
 
 ### System 2 — NVR node
 
+Populate `brokers.yaml` with `host` and `rtsp_host` for each SI node before starting.
+
 ```bash
 export NVR_SCENESCAPE=true
 export VSS_IP=<ip>
 export VSS_PORT=<port>              # optional, default 12345
 
-# Optional: pre-set RTSP IP to skip interactive prompts
-# export SI_RTSP_HOST=<si1_ip>
+# Optional: override brokers.yaml rtsp_host/rtsp_port for si1
+# export SI_RTSP_HOST=<si1_rtsp_ip>
+# export SI_RTSP_PORT=<si1_rtsp_port>
 
 source setup.sh start-nvr
 ```
 
-`start-nvr` prompts for the number of SI nodes and their RTSP IPs. Add MQTT brokers
-after startup via `POST /brokers/`, or pre-populate `brokers.yaml` before running
-`start-nvr` to load them automatically.
+`start-nvr` reads the SI node count and RTSP IPs from `brokers.yaml` to generate the
+Frigate camera list, and connects to the brokers listed in it. Brokers can still be
+added later via `POST /brokers/`.
 
-> **Note:** If `brokers.yaml` is absent and `SCENESCAPE_MQTT_BROKER` is not set,
-> no MQTT connections are established on startup. Add brokers via `POST /brokers/`
-> after the stack is running.
+> [!NOTE]
+> Any SI node without an RTSP IP (`rtsp_host` or `SI{N}_RTSP_HOST`) is skipped with
+> a warning. `start-nvr` exits with an error only if no node has one.
 
 ## Stop
 
@@ -165,8 +177,10 @@ curl -X POST $BASE/brokers/ \
   -d '{
     "id": "si3",
     "name": "Smart Intersection 3",
-    "host": "<si3_ip>",
-    "topic": "scenescape/data/camera/#"
+    "host": "<si3_mqtt_ip>",
+    "topic": "scenescape/data/camera/#",
+    "rtsp_host": "<si3_rtsp_ip>",
+    "rtsp_port": 8557
   }'
 
 # Update a broker (restarts its MQTT connection)
@@ -185,20 +199,23 @@ curl -X DELETE $BASE/brokers/si3
 ```
 
 > Adding a broker via the API updates MQTT routing only. To record video from a new
-> SI node, re-run `setup.sh start-nvr` to regenerate Frigate camera blocks.
+> SI node, set its `rtsp_host`, then re-run `setup.sh start-nvr` to regenerate
+> Frigate camera blocks.
 
 ## Frigate camera configuration
 
-`setup.sh` generates `resources/frigate-config/config.yml` at startup. It prompts
-for the number of SI nodes, then appends 4 camera blocks per node
-(`{broker_id}-camera1` through `camera4`):
+`setup.sh` generates `resources/frigate-config/config.yml` at startup. It reads the
+SI node count from `brokers.yaml` (highest `siN` id), then appends 4 camera blocks
+per node (`{broker_id}-camera1` through `camera4`):
 
-| SI node | RTSP IP source |
-|---------|----------------|
-| si1 | `SI_RTSP_HOST` if set; else interactive prompt (`start-nvr`) or auto-detected (`start`) |
-| si2..siN | `SI{N}_RTSP_HOST` → interactive prompt |
+| SI node | RTSP IP source (in priority order) | RTSP port source (in priority order) |
+|---------|------------------------------------|--------------------------------------|
+| si1 | `SI_RTSP_HOST` → `rtsp_host` → node skipped with a warning (`start` always uses this machine's IP) | `SI_RTSP_PORT` → `rtsp_port` → `start-nvr` fails (`start` always uses `RTSP_STREAM_PORT`) |
+| si2..siN | `SI{N}_RTSP_HOST` → `rtsp_host` → node skipped with a warning | `SI{N}_RTSP_PORT` → `rtsp_port` → `start-nvr` fails |
 
-All cameras use `RTSP_STREAM_PORT` (default `8554`).
+Invalid `SI_RTSP_PORT`/`SI{N}_RTSP_PORT` values are ignored with a warning. If every
+node is skipped, `start-nvr` exits with an error. `start-nvr` also exits with an
+error if a resolved node (has an `rtsp_host`) has no `rtsp_port` from either source.
 
 ## Verify integration
 

@@ -40,7 +40,8 @@ The Intel Core Ultra 7 255H processor, part of Intel's Core Ultra processor seri
 
 - Advanced Hybrid **CPU** Architecture: the Core Ultra 7 255H utilizes a sophisticated hybrid architecture, combining different core types to optimize performance across various workloads.
 
-  > **Note:** **CPU Architecture**
+  > [!NOTE]
+  > **CPU Architecture**
   >
   > **Performance Cores (P-cores):** 6 Lion Cove cores, each capable of reaching up to 5.1 GHz. These cores are tailored for tasks demanding high single-threaded performance.
   >

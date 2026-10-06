@@ -25,6 +25,7 @@
         "loading": "Loading…",
         "working": "Setting up: {{items}}…",
         "missing": "Missing: {{items}}",
+        "outdated": "Out of date: {{items}}",
         "warnings": "Warnings: {{items}}",
         "prereqOk": "System, drivers and tools are in place",
         "envOk": "Python environment and models are ready",
@@ -52,12 +53,14 @@
       "copied": "Copied",
       "blockedBy": "Needs {{items}} first.",
       "firstRun": "The Python environment is missing, so the backend cannot start. Select Fix to create it — the first run downloads several gigabytes.",
+      "manualFix": "{{items}} cannot be brought up to date automatically. Use the button on that row — it rebuilds from scratch, so it asks for confirmation first.",
       "allReady": "Everything is ready.",
-      "settledWithWarnings": "Nothing left to fix. {{count}} warning remains.",
-      "settledWithWarnings_other": "Nothing left to fix. {{count}} warnings remain.",
+      "settledWithWarnings": "Everything is ready. {{count}} note is for information only.",
+      "settledWithWarnings_other": "Everything is ready. {{count}} notes are for information only.",
       "allReadyRunning": "Everything is ready and the backend is running.",
       "startBackend": "Start backend",
       "backToGetStarted": "Back to Get started",
+      "openServices": "Open Services",
       "sections": {
         "system": "System and drivers",
         "software": "Software and environment"
@@ -65,7 +68,8 @@
       "status": {
         "unknown": "Not checked",
         "ok": "OK",
-        "warn": "Warning",
+        "warn": "Note",
+        "outdated": "Outdated",
         "missing": "Missing",
         "running": "Running",
         "failed": "Failed"
@@ -351,6 +355,7 @@
   },
   "errors": {
       "videoPipelineFailed": "Video analytics could not start:\n{{details}}",
+      "videoPipelineRetrying": "Video analytics problem, retrying:\n{{details}}",
       "videoPipelineStopFailed": "Video analytics could not stop:\n{{details}}",
       "failedToStartRecording": "Failed to start recording",
       "failedToStopRecording": "Failed to stop recording",
@@ -376,6 +381,8 @@
     "videoFailed":"Video Failed",
     "continuingAudioOnly":"Continuing with audio-only processing",
     "loadingvideo": "Loading video stream",
+    "connectingStream": "Connecting to stream",
+    "streamTimeout": "Stream is taking longer than usual",
     "browserNotSupported": "Your browser does not support video playback.",
     "noVideoConfigured": "No video configured"
   },
@@ -703,6 +710,8 @@
   },
   "reportPanel": {
     "title": "View Report",
+
+    "short": "Report",
     "classReport": "Class Report",
     "noSessionActive": "No session active",
     "reportFields": "Report Fields",
@@ -767,6 +776,55 @@
     "previewUnavailableType": "Preview not available for this file type.",
     "download": "Download {{name}}",
     "closePreview": "Close preview"
+  },
+  "history": {
+    "title": "Session history",
+
+    "short": "History",
+    "subtitle": "Classes recorded on this machine, newest first.",
+    "refresh": "Refresh",
+    "empty": "No sessions yet. Recordings and uploads made from now on will appear here.",
+    "started": "Started",
+    "sources": "Sources",
+    "stages": "Stages",
+    "stateLabel": "State",
+    "stage": "Stage",
+    "status": "Status",
+    "duration": "Duration",
+    "detail": "Detail",
+    "loading": "Loading…",
+    "noEvents": "No stage timings were recorded for this session.",
+    "openFile": "Open {{file}}",
+    "fileEmpty": "This file is empty.",
+    "fileTruncated": "This file is too long to show in full; the beginning is below.",
+    "fileUnreadable": "This file could not be read: {{reason}}",
+    "kindUnknown": "This app cannot lay out {{kind}} files yet; showing it raw.",
+    "mindmapUnreadable": "This mind map could not be drawn from its file.",
+    "topicTime": "When",
+    "topic": "Topic",
+    "mostHands": "Most hands raised",
+    "stageName": {
+      "transcribe": "Transcript",
+      "summarize": "Summary",
+      "mindmap": "Mind map",
+      "va": "Video analytics",
+      "segmentation": "Topic segmentation",
+      "report": "Report"
+    },
+    "delete": "Delete",
+    "confirmDelete": "Delete this session and every file it produced? This cannot be undone.",
+    "markFailed": "Mark failed",
+    "markedByUser": "Marked as failed by the user",
+    "prev": "Previous",
+    "next": "Next",
+    "pageOf": "{{page}} / {{pages}}",
+    "state": {
+      "pending": "Pending",
+      "running": "Running",
+      "completed": "Completed",
+      "failed": "Failed",
+      "cancelled": "Cancelled"
+    }
   }
 }
  

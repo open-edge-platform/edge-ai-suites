@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps stats apps apps-down apps-logs clean clean-all deps clean-venv bench bench-client-sweep bench-bridge-sweep bench-all help
+.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-realsense-camera up-realsense-camera-lean up-ethernet down down-ethernet build build-nc logs ps stats apps apps-down apps-logs clean clean-all deps clean-venv bench bench-client-sweep bench-bridge-sweep bench-all help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -14,7 +14,7 @@ COMPOSE_APPS    := docker compose --env-file .env -f sample-apps/docker-compose.
 
 # ── Environment file ──────────────────────────────────────────────────────
 init:
-	@# Help: Create .env from .env.example, populate required credentials, and auto-detect GPU devices
+	@# Help: Create .env from .env.example, populate required credentials, and auto-detect GPU/RealSense devices
 	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
 		echo ".env created"; \
@@ -51,6 +51,20 @@ init:
 			echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
 			echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
 			echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
+		fi; \
+	fi
+	@if command -v v4l2-ctl >/dev/null 2>&1; then \
+		sed -i '/^RS_VIDEO[0-9]*=/d;/^RS_MEDIA[0-9]*=/d' .env; \
+		RS_NODES="$$(v4l2-ctl --list-devices 2>/dev/null | awk '/RealSense/{grab=1;next} /^$$/{grab=0} grab && /\/dev\//{print $$1}')"; \
+		if [ -n "$$RS_NODES" ]; then \
+			echo "✅ RealSense camera detected. Adding device nodes to .env:"; \
+			i=0; j=0; \
+			for dev in $$RS_NODES; do \
+				case "$$dev" in \
+					*/video*) echo "RS_VIDEO$$i=$$dev" >> .env; echo "   RS_VIDEO$$i=$$dev"; i=$$((i+1));; \
+					*/media*) echo "RS_MEDIA$$j=$$dev" >> .env; echo "   RS_MEDIA$$j=$$dev"; j=$$((j+1));; \
+				esac; \
+			done; \
 		fi; \
 	fi
 	@bash infra/scripts/harden-permissions.sh
@@ -105,6 +119,18 @@ up-usb-camera-lean:
 		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
 	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile usb-camera up -d --build
 
+up-realsense-camera:
+	@# Help: Start core infra with Intel RealSense camera (IR + depth, beyond-visual-spectrum) + lightweight PX4 SIH
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile realsense-camera --profile observability up -d --build
+
+up-realsense-camera-lean:
+	@# Help: Start realsense-camera without observability stack (saves ~300 MB RAM)
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile realsense-camera up -d --build
+
 build:
 	@# Help: Build all images (core infra + apps), using Docker layer cache
 	$(COMPOSE_LOCAL) build
@@ -116,9 +142,9 @@ build-nc:
 	$(COMPOSE_APPS) build --no-cache
 
 down:
-	@# Help: Stop all containers — core infra (sim-camera/usb-camera) + apps
+	@# Help: Stop all containers — core infra (sim-camera/usb-camera/realsense-camera) + apps
 	$(COMPOSE_APPS) down --remove-orphans
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans
 
 logs:
 	@# Help: Tail logs for core infra
@@ -170,12 +196,12 @@ deploy-remote:
 # ── Misc ──────────────────────────────────────────────────────────────────
 clean:
 	@# Help: Remove stopped containers and dangling images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans
 	docker image prune -f
 
 clean-all:
 	@# Help: Remove containers, compose volumes, and all unused images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans --volumes
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans --volumes
 	docker image prune -a -f
 
 help:

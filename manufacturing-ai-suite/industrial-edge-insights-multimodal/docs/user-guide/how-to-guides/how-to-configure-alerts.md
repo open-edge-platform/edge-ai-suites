@@ -18,7 +18,8 @@ The MQTT alert is configured by default in the TICK script. Refer to
 [`configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick)
 for the `alert()` block details.
 
-> **Note:** Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
+> [!NOTE]
+> Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.
 
 ### Docker - Subscribe to MQTT Alerts
 
@@ -62,15 +63,15 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
 
 - Identify the MQTT broker pod name by running:
 
-```bash
-kubectl get pods -n multimodal-sample-app | grep mqtt-broker
-```
+  ```bash
+  kubectl get pods -n multimodal-sample-app | grep mqtt-broker
+  ```
 
 - Use the pod name from the output of the above command to subscribe to all topics:
 
-```bash
-kubectl exec -it -n multimodal-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
-```
+  ```bash
+  kubectl exec -it -n multimodal-sample-app <mqtt_broker_pod_name> -- mosquitto_sub -h localhost -v -t '#' -p 1883
+  ```
 
 #### Helm - Subscribing to Time Series Analytics Microservice Alerts
 

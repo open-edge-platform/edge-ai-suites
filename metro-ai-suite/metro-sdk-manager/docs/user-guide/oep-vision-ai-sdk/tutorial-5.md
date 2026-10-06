@@ -1,6 +1,6 @@
 # OEP Vision AI SDK - Tutorial 5
 
-This tutorial will guide you through profiling and monitoring performance of OEP Vision AI workloads using command-line tools. You'll learn to use `perf`, `htop`, and `intel_gpu_top` to analyze system performance while running DL Streamer Pipeline Server or OpenVINO applications.
+This tutorial will guide you through profiling and monitoring performance of OEP Vision AI workloads using command-line tools. You'll learn to use `htop` and `intel_gpu_top` (or `gputop` on newer platforms) to analyze system performance while running DL Streamer Pipeline Server or OpenVINO applications.
 
 ## Prerequisites
 
@@ -24,6 +24,40 @@ sudo apt install -y htop intel-gpu-tools
 # Verify installations
 htop --version
 intel_gpu_top --help
+```
+
+### Newer platforms using the `xe` kernel driver (Panther Lake, Wildcat Lake, Lunar Lake, Battlemage)
+
+Check which kernel driver your GPU uses:
+
+```bash
+lspci -k | grep -A3 -Ei "vga|display" | grep "Kernel driver"
+```
+
+If it reports `xe`, the `intel-gpu-tools` package from Ubuntu (1.28 on Ubuntu 24.04) cannot detect the GPU and `intel_gpu_top` fails with:
+
+```text
+No device filter specified and no discrete/integrated i915 devices found
+```
+
+Upstream `intel_gpu_top` supports only `i915` devices. For `xe` devices, use the `gputop` tool. To get it, build a recent IGT GPU Tools release from source:
+
+```bash
+sudo apt install -y git meson ninja-build pkg-config build-essential flex bison \
+  libdrm-dev libkmod-dev libproc2-dev libdw-dev libpciaccess-dev libpci-dev libudev-dev \
+  libcairo2-dev libpixman-1-dev libssl-dev libjson-c-dev libunwind-dev \
+  libxmlrpc-core-c3-dev liblzma-dev libgsl-dev libasound2-dev python3-docutils
+
+git clone --depth 1 --branch v2.6 https://gitlab.freedesktop.org/drm/igt-gpu-tools.git ~/igt-gpu-tools
+cd ~/igt-gpu-tools
+meson setup build -Dtests=disabled -Dman=disabled -Ddocs=disabled -Drunner=disabled
+ninja -C build
+sudo ninja -C build install
+sudo ldconfig
+
+# Verify: the GPU should now be listed (for example "Intel Wildcatlake (Gen30)")
+sudo intel_gpu_top -L
+gputop -h
 ```
 
 ## Step 2: Verify System Hardware
@@ -56,7 +90,7 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.2.0-ubuntu24-rc2 \
+  intel/dlstreamer:2026.2.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
@@ -105,7 +139,7 @@ while true; do
         --env no_proxy=$no_proxy \
         --user root \
         -w /workspace \
-        intel/dlstreamer:2026.2.0-ubuntu24-rc2  \
+        intel/dlstreamer:2026.2.0-ubuntu24  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \
@@ -130,7 +164,8 @@ echo "OEP Vision AI pipeline started with PID: $PIPELINE_PID"
 echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
-> **Note:** This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
+> [!NOTE]
+> This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
 
 **Expected Console Output:**
 
@@ -181,6 +216,26 @@ sudo intel_gpu_top
 **Expected Console Output:**
 
 ![Tutorial 5 GPU Top Output](./images/tutorial-5-gpu-top.png)
+
+### On `xe` driver platforms (Panther Lake, Wildcat Lake)
+
+`intel_gpu_top` reports `Detected Xe device which is not supported by intel_gpu_top`. Use `gputop` instead:
+
+```bash
+sudo gputop
+```
+
+`gputop` shows per-process GPU memory and engine utilization for each DRM device:
+
+```text
+DRM minor 128   Frequency(MHz) GT0-2600/2600 GT1-550/550
+   PID      MEM      RSS     rcs        vcs       vecs        bcs        ccs     NAME
+466292     158M     158M |  0.0%   ||  0.0%   ||  0.0%   ||  0.0%   || 49.6% █ | gst-launch-1.0
+```
+
+- `ccs` (compute) - OpenVINO GPU inference runs here on `xe` platforms
+- `rcs` (render/3D), `vcs` (video decode/encode), `vecs` (video enhancement), `bcs` (copy)
+- `vcs` stays at 0% in this tutorial because `avdec_h264` decodes on the CPU
 
 ## Step 6: Stop the Running Pipeline
 
@@ -239,7 +294,7 @@ This tutorial provides a practical approach to profiling OEP Vision AI workloads
 
 1. **Installing Tools**: Set up `htop` and `intel_gpu_top` for system monitoring
 2. **System Monitoring**: Use `htop` for real-time CPU and memory monitoring
-3. **GPU Profiling**: Monitor Intel GPU performance with `intel_gpu_top`
+3. **GPU Profiling**: Monitor Intel GPU performance with `intel_gpu_top` (`i915`) or `gputop` (`xe`)
 4. **Performance Analysis**: Understand resource utilization patterns
 
 ### **Key Monitoring Points:**

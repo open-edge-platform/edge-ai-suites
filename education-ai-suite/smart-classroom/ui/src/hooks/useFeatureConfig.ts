@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import { startLoading, setFeatures, setError, clearError } from '../redux/slices/featureConfigSlice';
 import { fetchFeatures, type FeatureDescriptor } from '../services/api';
 import { createFeatureGuard } from '../utils/featureGuards';
+import { FEATURE_IDS, FEATURE_STAGE } from '../generated/pipeline';
 
 /**
  * How long to wait before trying again after a failed load.
@@ -16,6 +17,30 @@ let inFlight: Promise<FeatureDescriptor[]> | null = null;
 
 const describe = (err: unknown) =>
   (err instanceof Error && err.message) || 'Failed to load features';
+
+/**
+ * Compare the live backend's feature graph with the copy this bundle was built
+ * from. They only disagree if app and backend are from different builds, which
+ * the drift test cannot see. Warn rather than fail: the app still works.
+ */
+function warnOnCatalogSkew(descriptors: FeatureDescriptor[]): void {
+  for (const f of descriptors) {
+    if (!FEATURE_IDS.includes(f.id)) {
+      console.warn(
+        `⚠️ Backend reports feature '${f.id}', which this build does not know. ` +
+          'The app and the backend look to be from different versions.',
+      );
+      continue;
+    }
+    const expected = FEATURE_STAGE[f.id] ?? null;
+    if (f.stage !== undefined && (f.stage ?? null) !== expected) {
+      console.warn(
+        `⚠️ Feature '${f.id}' owns stage '${f.stage}' on the backend but ` +
+          `'${expected}' in this build.`,
+      );
+    }
+  }
+}
 
 /**
  * Hook for loading and accessing feature configuration
@@ -35,6 +60,7 @@ export function useFeatureConfig() {
       .then(descriptors => {
         inFlight = null;
         console.log('✅ Features loaded:', descriptors.map(f => f.id));
+        warnOnCatalogSkew(descriptors);
         dispatch(setFeatures(descriptors));
       })
       .catch(err => {

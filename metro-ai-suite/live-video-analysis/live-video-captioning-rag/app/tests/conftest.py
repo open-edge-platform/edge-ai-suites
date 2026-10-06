@@ -27,11 +27,13 @@ def _patch_env(monkeypatch):
     monkeypatch.setenv("EMBEDDING_HOST", "localhost")
     monkeypatch.setenv("EMBEDDING_HOST_PORT", "8000")
     monkeypatch.setenv("EMBEDDING_LENGTH", "8")
+    monkeypatch.setenv("RAG_CHATBOT_MODE", "detached")
+    monkeypatch.setenv("DASHBOARD_PORT", "4173")
 
 
-@pytest.fixture()
-def client(monkeypatch, tmp_path):
+def _build_test_client(monkeypatch, tmp_path, rag_chatbot_mode: str = "detached"):
     """Return a TestClient without initializing real LLM/VDMS dependencies."""
+    monkeypatch.setenv("RAG_CHATBOT_MODE", rag_chatbot_mode)
 
     # Stub backend.services so route imports are lightweight during app startup.
     fake_services = ModuleType("backend.services")
@@ -59,6 +61,7 @@ def client(monkeypatch, tmp_path):
 
     import backend.config as cfg
 
+    importlib.reload(cfg)
     monkeypatch.setattr(cfg, "UI_DIR", ui_dir)
 
     # Ensure app and route modules are imported after stubbing backend.services.
@@ -70,5 +73,18 @@ def client(monkeypatch, tmp_path):
     main = importlib.import_module("main")
     importlib.reload(main)
 
-    with TestClient(main.app) as tc:
+    return TestClient(main.app)
+
+
+@pytest.fixture()
+def client(monkeypatch, tmp_path):
+    """Client configured for detached mode (direct UI access allowed)."""
+    with _build_test_client(monkeypatch, tmp_path, rag_chatbot_mode="detached") as tc:
+        yield tc
+
+
+@pytest.fixture()
+def embedded_client(monkeypatch, tmp_path):
+    """Client configured for embedded mode (top-level UI access blocked)."""
+    with _build_test_client(monkeypatch, tmp_path, rag_chatbot_mode="embedded") as tc:
         yield tc

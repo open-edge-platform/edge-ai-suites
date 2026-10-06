@@ -324,7 +324,7 @@ async def delete_specific_task(
         # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
         if run_id:
             import shutil
-            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            run_dir = storage_service.get_run_directory(run_id, bucket_name=f_bucket)
             if run_dir.exists():
                 shutil.rmtree(run_dir)
                 logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
@@ -465,7 +465,7 @@ async def delete_file_by_hash(
         # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
         if run_id:
             import shutil
-            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            run_dir = storage_service.get_run_directory(run_id, bucket_name=f_bucket)
             if run_dir.exists():
                 shutil.rmtree(run_dir)
                 deletion_results["storage_deleted"] = True

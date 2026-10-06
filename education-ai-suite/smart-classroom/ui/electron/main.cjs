@@ -30,11 +30,11 @@ const TITLE_BAR_HEIGHT = 63;
 const TITLE_BAR_THEMES = {
   // App header.
   default: { color: '#0071c5', symbolColor: '#ffffff' },
-  // Brand blue and white composited under 50% black.
+  // Brand blue and white composited under 50% black. Used by every surface that
+  // covers the caption: the modals, and the slide-over panels — those start
+  // below the caption strip, so what reaches it is their backdrop, not the
+  // panel itself.
   dimmed: { color: '#003862', symbolColor: '#7f7f7f' },
-  // The report panel is a white sheet pinned to the right edge, full height, so
-  // it sits directly under the caption buttons.
-  light: { color: '#ffffff', symbolColor: '#5a6374' },
 };
 
 // ---------------------------------------------------------------------------

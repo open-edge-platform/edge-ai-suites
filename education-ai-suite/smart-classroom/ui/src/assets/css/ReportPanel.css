@@ -65,10 +65,6 @@
   min-width: 0;
 }
 
-body.electron .report-panel-header {
-  padding-right: calc(24px + (100vw - env(titlebar-area-width, 100vw)));
-}
-
 .report-panel-header > div {
   min-width: 0;
 }

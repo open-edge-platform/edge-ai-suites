@@ -89,6 +89,11 @@
 }
 
 .setup-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   padding: 8px 12px;
   border-radius: 4px;
   background: #fdecea;
@@ -193,6 +198,12 @@
   background: #fffbf0;
 }
 
+/* Deeper than the advisory yellow above: this one is asking to be acted on. */
+.setup-step.status-outdated {
+  border-left-color: #e07b00;
+  background: #fff7ed;
+}
+
 .setup-step.status-running {
   border-left-color: var(--color-theme);
   background: #f2f8fc;
@@ -219,6 +230,10 @@
 
 .setup-dot.status-warn {
   background: #e6b800;
+}
+
+.setup-dot.status-outdated {
+  background: #e07b00;
 }
 
 .setup-dot.status-missing,

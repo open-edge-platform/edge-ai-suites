@@ -28,7 +28,7 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
+curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash
 ```
 
 ![Visual AI Demo Kit Installation](images/visual-ai-demo-kit-install.png)

@@ -90,8 +90,8 @@ $SubmoduleUrl = "https://github.com/open-edge-platform/edge-ai-libraries.git"
 # Pinned commit for reproducible builds. The setup always checks out this exact
 # commit instead of the moving branch tip, so upstream changes can't break the
 # app. Bump this SHA deliberately after validating a newer upstream commit.
-# $SubmodulePinnedCommit = "152442976009c8825b3646362f0ed7c619d385b9" Last Stable commit SHA (Edge-AI-Libraries)
-$SubmodulePinnedCommit = "3ceefb6df6f66ef6f6303c29f8310160ab1e70e1"
+# $SubmodulePinnedCommit = "3ceefb6df6f66ef6f6303c29f8310160ab1e70e1" Last Stable commit SHA (Edge-AI-Libraries)
+$SubmodulePinnedCommit = "9a43d49e097f6f77b7631d7e662899dbee3695ce"
 
 # Locate the enclosing git repository (the edge-ai-suites fork).
 $RepoRoot = $null

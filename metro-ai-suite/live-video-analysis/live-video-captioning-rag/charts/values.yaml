@@ -15,6 +15,7 @@
 global:
   # Ensure RAG-related components in captioning-app are enabled.
   enableRAG: true
+  ragChatbotMode: "embedded"
 
   nodeName: ""
   hostIP: ""

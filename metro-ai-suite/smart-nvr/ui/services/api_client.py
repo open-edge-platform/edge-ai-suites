@@ -106,20 +106,6 @@ def submit_camera_watcher_mapping(enabled_list: List[str], all_cameras: List[str
         return {"error": str(e)}
 
 
-def fetch_events(camera_name):
-    try:
-        response = requests.get(
-            f"{API_BASE_URL}/events", params={"camera": camera_name}, timeout=15
-        )
-        response.raise_for_status()
-        events = response.json()
-        events.sort(key=lambda x: x.get("start_time", 0), reverse=True)
-        return events
-    except Exception as e:
-        logger.error(f"Error fetching events: {e}")
-        return []
-
-
 def add_rule(
     camera: str,
     label: str,

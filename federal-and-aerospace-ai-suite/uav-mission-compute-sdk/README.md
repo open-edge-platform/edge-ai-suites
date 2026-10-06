@@ -111,6 +111,7 @@ flowchart LR
 |---|---|---|---|
 | Simulated (default) | `make up-sim-camera` | Gazebo SITL | 3 virtual cameras (nadir, forward, rear) |
 | Real USB camera | `make up-usb-camera` | SIH (no Gazebo) | 1 USB/V4L2 device |
+| Intel RealSense | `make up-realsense-camera` | SIH (no Gazebo) | RealSense D400 series — IR + depth (beyond visual spectrum) |
 
 ---
 
@@ -122,6 +123,7 @@ make up-sim-camera         # Start sim stack (includes Grafana/InfluxDB)
 make up-sim-camera-lean    # Start sim stack without observability (~300 MB RAM saved)
 make up-usb-camera         # Start USB camera stack
 make up-usb-camera-lean    # Start USB camera stack without observability
+make up-realsense-camera   # Start Intel RealSense camera stack (IR + depth)
 make down                  # Stop all containers (core infra + apps)
 make logs                  # Tail core infra logs
 ```
@@ -137,6 +139,7 @@ infra/                       Infrastructure definitions
   bridges/companion/         MAVLink ↔ MQTT bridge (companion_bridge.py — REST API)
   bridges/camera/            Gazebo cameras → RTSP (ffmpeg H264)
   bridges/usb-camera/        USB/V4L2 device → RTSP
+  bridges/realsense-camera/  Intel RealSense camera (IR + depth) → RTSP
   mediamtx/                  RTSP server config
   mosquitto/                 MQTT broker config
   grafana/                   Dashboards provisioning (Flight Telemetry, Platform Health)

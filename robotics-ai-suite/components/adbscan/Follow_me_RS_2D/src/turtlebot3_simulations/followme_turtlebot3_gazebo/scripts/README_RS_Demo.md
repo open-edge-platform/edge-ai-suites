@@ -144,7 +144,8 @@ are listed below.
 | Guide cmd\_vel | `/guide_robot/cmd_vel` | ROS 2 → Gz | Yes | Yes | Yes |
 | Guide odometry | `/guide_robot/odom` | Gz → ROS 2 | Yes | Yes | Yes |
 
-> **Note:** The `/camera/points` bridge uses `best_effort` QoS to match
+> [!NOTE]
+> The `/camera/points` bridge uses `best_effort` QoS to match
 > the ADBSCAN subscriber.
 
 ## Key Differences Between RS and LiDAR Modes

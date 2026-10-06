@@ -29,7 +29,8 @@ There are several assumptions:
 | camera_color_optical_frame | image_frame    | "empty"       | Image plane coordinate (typically the orientation is different to camera_link) |
 | imu_link                   | imu_frame      | d400_imu      | IMU coordinate                                                                |
 
-Note that we can see two different frames shown in the figure - **camera_color_frame** and **camera_aligned_depth_to_color_frame**. It is because we enable the ```align_depth``` option when launching the RealSense node.
+> [!NOTE]
+> We can see two different frames shown in the figure - **camera_color_frame** and **camera_aligned_depth_to_color_frame**. It is because we enable the ```align_depth``` option when launching the RealSense node.
 
 ## Key concepts related to coordinate definition
 

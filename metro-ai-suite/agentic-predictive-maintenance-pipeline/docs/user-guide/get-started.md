@@ -54,7 +54,8 @@ agentic-predictive-maintenance-pipeline/
 └── setup.sh                           # Main deployment script
 ```
 
-> **Note**: Each use case ships with its own `.env_<use-case>` file already populated
+> [!NOTE]
+> Each use case ships with its own `.env_<use-case>` file already populated
 > with working defaults at `apps/<use-case>/.env_<use-case>` — you do not need to create
 > it yourself; `setup.sh` reads it from that location automatically.
 
@@ -94,7 +95,8 @@ If you are using a gated Hugging Face model, set your API token:
 HUGGINGFACEHUB_API_TOKEN=hf_your_token_here
 ```
 
-> **Note**: Accept the model license agreement on the
+> [!NOTE]
+> Accept the model license agreement on the
 > [Hugging Face model page](https://huggingface.co/microsoft/Phi-4-mini-instruct) before using
 > the gated models.
 
@@ -123,7 +125,8 @@ This script:
 > for release validation. To train a detector for your own inspection scenario, see
 > [Training a Defect Detection Model with Intel Geti](./training-with-geti.md).
 
-> **Note**: Skip this step if you have your own video, or if you plan to run in
+> [!NOTE]
+> Skip this step if you have your own video, or if you plan to run in
 > `LLM_MODE=fallback` where no video or DL Streamer inference is required.
 
 > **Disclaimer**: By running this script you acknowledge that you are solely responsible for the
@@ -147,7 +150,8 @@ writes the resulting local path back into
 `apps/pipeline-defect-detection/.env_pipeline-defect-detection`
 as `LLM_MODEL_PATH`. `setup.sh` mounts this path read-only into the `apm-llm` container.
 
-> **Note**: Skip this step entirely if `LLM_MODE=fallback` — the script detects this and exits
+> [!NOTE]
+> Skip this step entirely if `LLM_MODE=fallback` — the script detects this and exits
 > immediately without downloading anything.
 
 ## Step 5 — Launch the Application
@@ -228,7 +232,8 @@ workflow, and rule-based agent pipeline remain available, but chat cannot genera
 the deployment omits the `apm-llm` service. The UI intentionally has no hard Compose dependency on that service,
 which allows fallback deployments to start normally.
 
-> **Note — Fallback mode**: If you deployed with `LLM_MODE=fallback`, the **Ask & Analyze** page
+> [!NOTE]
+> Fallback mode: If you deployed with `LLM_MODE=fallback`, the **Ask & Analyze** page
 > displays a banner explaining that conversational analysis is disabled. The chat form is locked.
 
 ## Stop and Clean Up

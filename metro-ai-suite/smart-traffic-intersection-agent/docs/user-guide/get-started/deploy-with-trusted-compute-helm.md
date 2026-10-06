@@ -23,7 +23,8 @@ Before you begin, ensure that you have the following prerequisites:
 - Intel CPU with VT-x and VT-d, integrated GPU, and IOMMU enabled in BIOS/UEFI
 - Linux kernel with IOMMU, VFIO, and DRM/i915 or xe driver support
 
-> **Note**: When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
+> [!NOTE]
+> When GPU passthrough is enabled with Trusted Compute, the iGPU is exclusively bound to the Trusted Compute VM and is unavailable to the host or other workloads.
 
 ## 1. Install Trusted Compute
 
@@ -127,7 +128,8 @@ helm install stia . -n <your-namespace> --create-namespace \
 | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
 | `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
 
-> **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
+> [!NOTE]
+> The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 
 ## 3. Deploy the Application
 
@@ -145,7 +147,8 @@ helm install stia . -n <your-namespace> --create-namespace \
   --set ovms.gpu.enabled=false
 ```
 
-> **Note:** If the prerequisite **Smart Intersection** deployment is using the GPU or NPU, the GPU is not available for Metrics Manager telemetry in this deployment. Disable GPU telemetry by adding `--set metricsManager.hardware.gpu.enabled=false` to the command above.
+> [!NOTE]
+> If the prerequisite **Smart Intersection** deployment is using the GPU or NPU, the GPU is not available for Metrics Manager telemetry in this deployment. Disable GPU telemetry by adding `--set metricsManager.hardware.gpu.enabled=false` to the command above.
 
 ---
 
@@ -153,7 +156,8 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 #### Step 1: Bind GPU to vfio-pci
 
-> **Note:** Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
+> [!NOTE]
+> Binding the GPU stops the display manager and disables the graphical display on the host. Run this step over SSH. The display is restored after running the `unbind` command.
 
 Use the `intel-igpu-vfio-bind.sh` script from the `tools/` directory of the package installed in [Step 1](#1-install-trusted-compute) to bind the Intel iGPU to the `vfio-pci` driver on each GPU-enabled k3s host.
 
@@ -181,7 +185,8 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 ---
 
-> **Note:** When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
+> [!NOTE]
+> When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
 
 ## 4. Verify Deployment
 
@@ -249,7 +254,8 @@ Follow the steps below in order to cleanly remove the deployment.
 helm uninstall stia -n <your-namespace>
 ```
 
-> **Note:** When `ovms.persistence.keepOnUninstall` is `true` (the default), the VLM model cache PVC is **retained** after uninstall to avoid re-downloading the model. This is recommended during development and testing. To fully clean up all PVCs:
+> [!NOTE]
+> When `ovms.persistence.keepOnUninstall` is `true` (the default), the VLM model cache PVC is **retained** after uninstall to avoid re-downloading the model. This is recommended during development and testing. To fully clean up all PVCs:
 >
 > ```bash
 > kubectl get pvc -n <your-namespace>

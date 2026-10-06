@@ -3,7 +3,8 @@
 This section shows how to build the APM blueprint's application
 images from source code.
 
-> **Note**: You only need to build from source if you want to customize the application code. For
+> [!NOTE]
+> You only need to build from source if you want to customize the application code. For
 > standard deployments, the prebuilt images referenced in the Docker Compose files are sufficient.
 
 ## Prerequisites
@@ -53,7 +54,7 @@ The build targets use the Dockerfiles located in `services/<service-name>/Docker
 The reasoning agent (`apm-agent`) is no longer built from this repo — it is
 an external image (Intel EAL's `agent-quality-handler` microservice) pulled
 via `docker/compose.agents.yaml`. See the [agent-service integration
-guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/agent-quality-handler/docs/user-guide/agent-service-integration-guide.md) for its contract.
+guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/agent-quality-handler/agent-service-integration-guide.html) for its contract.
 
 ### 4. Verify the Build
 

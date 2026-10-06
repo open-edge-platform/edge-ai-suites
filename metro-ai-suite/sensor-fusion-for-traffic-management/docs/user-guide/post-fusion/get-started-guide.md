@@ -140,17 +140,22 @@ sudo bash -x run_service_bare.sh
     [2023-06-26 14:34:42.972] [DualSinks] [trace] Add connection with uid 0 into the conn pool
 
 ```
-> NOTE-1 : workload (default as 4) can be configured in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
-```
-...
-[Pipeline]
-maxConcurrentWorkload=4
-```
 
-> NOTE-2 : to stop service, run the following commands:
-```bash
-sudo pkill Hce
-```
+> [!NOTE]
+>
+> - Workload (default as 4) can be configured in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+>
+>   ```ini
+>   ...
+>   [Pipeline]
+>   maxConcurrentWorkload=4
+>   ```
+>
+> - To stop service, run the following commands:
+>
+>   ```bash
+>   sudo pkill Hce
+>   ```
 
 ### Run Entry Program
 
@@ -189,7 +194,8 @@ Environment requirement:
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -242,7 +248,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -295,7 +302,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -348,7 +356,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
@@ -401,7 +410,8 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 
 **Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> [!NOTE]
+> Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
 Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).

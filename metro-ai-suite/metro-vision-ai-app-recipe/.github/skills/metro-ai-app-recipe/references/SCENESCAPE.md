@@ -43,8 +43,8 @@ Cameras (N, unique camera_ids) ─RTSP─▶ DLSPS ─MQTT─▶ broker (mosquit
 
 ## Pinned images (from the smart-intersection reference)
 
-- `intel/scenescape-controller:2026.1.0` — **scene** (multi-camera fusion, `tracker-config.json`)
-- `intel/scenescape-manager:2026.1.0` — **web** (Scene Management UI + REST scene API, Django)
+- `intel/scenescape-controller:2026.2.0` — **scene** (multi-camera fusion, `tracker-config.json`)
+- `intel/scenescape-manager:2026.2.0` — **web** (Scene Management UI + REST scene API, Django)
 - `postgres:17.6` — **pgserver** (scene database)
 - `influxdb:2.7.11` — **influxdb2** (time-series ROI analytics; Flux queries)
 - `grafana/grafana:11.6.0` — Grafana with the **InfluxDB** datasource (not the MQTT datasource)

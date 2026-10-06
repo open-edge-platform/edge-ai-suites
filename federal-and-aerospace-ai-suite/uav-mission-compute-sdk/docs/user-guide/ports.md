@@ -28,7 +28,8 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Observability (always on)
 
-> **Note** — Grafana is intended **only for simulation visualization when the drone is grounded**.
+> [!NOTE]
+> Grafana is intended **only for simulation visualization when the drone is grounded**.
 
 | Port | Service | Description | Authenticated | Encrypted |
 |------|---------|-------------|:---:|:---:|

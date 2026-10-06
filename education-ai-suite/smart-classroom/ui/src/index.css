@@ -56,6 +56,17 @@ body {
   background: #f5f7fa;
 }
 
+/* The two slide-over panels (report, session history) start below the Electron
+   title bar. Left at top: 0 their own close button lands in the same band as
+   the native window controls, and the caption shows two X buttons side by side.
+   Falls back to 0 in the browser and on macOS, where no overlay is painted.
+   Kept here rather than in each panel's stylesheet so the two cannot drift. */
+body.electron .report-panel,
+body.electron .history-panel {
+  top: env(titlebar-area-height, 0px);
+  height: calc(100vh - env(titlebar-area-height, 0px));
+}
+
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   color: var(--color-dark);

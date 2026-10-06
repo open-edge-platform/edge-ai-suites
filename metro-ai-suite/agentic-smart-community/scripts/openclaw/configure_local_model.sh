@@ -16,11 +16,15 @@ command -v openclaw >/dev/null 2>&1 || { echo "ERROR: 'openclaw' CLI not found o
 
 echo "==> Discovering the deployed model at ${MODEL_BASE_URL}/models"
 models_response="$(curl --fail --silent --show-error --max-time 10 "${MODEL_BASE_URL}/models")"
-model_id="$(jq -er '.data[0].id | select(type == "string" and length > 0)' <<<"$models_response")" || {
+model_ids="$(jq -r '.data[]? | .id | select(type == "string" and length > 0)' <<<"$models_response")" || {
 	echo "ERROR: No valid model ID was returned by ${MODEL_BASE_URL}/models." >&2
 	exit 1
 }
-context_window="$(jq -er '.data[0].max_model_len | select(type == "number" and . > 0)' <<<"$models_response" 2>/dev/null || printf '61440')"
+[[ -n "$model_ids" ]] || {
+	echo "ERROR: No valid model ID was returned by ${MODEL_BASE_URL}/models." >&2
+	exit 1
+}
+model_id="${model_ids%%$'\n'*}"
 model_ref="vllm-local/${model_id}"
 
 echo "==> Backing up $CONFIG"
@@ -31,15 +35,15 @@ patch_file="$(mktemp)"
 trap 'rm -f "$patch_file"' EXIT
 jq -n \
 	--arg base_url "$MODEL_BASE_URL" \
-	--arg model_id "$model_id" \
 	--arg model_ref "$model_ref" \
-	--argjson context_window "$context_window" \
+	--argjson models_response "$models_response" \
 	'{
 		agents: {
 			defaults: {
-				models: {
-					($model_ref): {alias: $model_id}
-				},
+				models: (reduce $models_response.data[] as $model ({};
+					if ($model.id | type) == "string" and ($model.id | length) > 0
+					then . + {("vllm-local/" + $model.id): {alias: $model.id}}
+					else . end)),
 				model: {primary: $model_ref}
 			}
 		},
@@ -51,13 +55,15 @@ jq -n \
 					apiKey: "none",
 					api: "openai-completions",
 					models: [
-						{
-							id: $model_id,
-							name: $model_id,
+						$models_response.data[]
+						| select((.id | type) == "string" and (.id | length) > 0)
+						| {
+							id: .id,
+							name: .id,
 							reasoning: true,
 							input: ["text", "image"],
 							cost: {input: 0, output: 0, cacheRead: 0, cacheWrite: 0},
-							contextWindow: $context_window,
+							contextWindow: (if (.max_model_len | type) == "number" and .max_model_len > 0 then .max_model_len else 61440 end),
 							maxTokens: 4096
 						}
 					]

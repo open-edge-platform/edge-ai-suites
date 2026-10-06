@@ -77,7 +77,8 @@ This guide explains how to run Vision AI Detection Apps in an environment withou
    ::::
    hide_directive-->
 
-   > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
+   > [!NOTE]
+   > If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application
 
