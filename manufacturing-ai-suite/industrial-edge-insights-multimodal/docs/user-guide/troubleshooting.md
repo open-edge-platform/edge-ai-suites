@@ -155,8 +155,8 @@ not interrupt the active (direct) media path.
 
 This has only been observed when `HOST_IP` is set to a real, host-reachable, non-loopback IP address (the
 setting needed for remote UI/WebRTC access); it does not occur when `HOST_IP` is left at the default
-`localhost`. This is because `HOST_IP` is also the address that coturn advertises to WebRTC clients for
-TURN candidates (`MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}`). With `HOST_IP=localhost`,
+`127.0.0.1`. This is because `HOST_IP` is also the address that coturn advertises to WebRTC clients for
+TURN candidates (`MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}`). With `HOST_IP=127.0.0.1`,
 that TURN candidate is only reachable from the same host, so browsers/clients running on that same host
 already connect over `host`/loopback ICE candidates before ICE ever needs to gather and hold a TURN relay
 candidate -- mediamtx's TURN client has no live allocation to refresh, so the refresh cycle (and its

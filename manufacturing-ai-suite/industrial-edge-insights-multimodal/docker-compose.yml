@@ -243,8 +243,7 @@ services:
       MEDIAMTX_SERVER: mediamtx
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
     ports:
-      - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
-      # - "1883:1883" # MQTT TCP Proxy
+      - "${HOST_IP:-127.0.0.1}:${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
     volumes:
       - ${NGINX_CONFIG_PATH}:/tmp/default.conf.template:ro
       - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
@@ -572,8 +571,8 @@ services:
     security_opt:
     - no-new-privileges
     ports:
-      - "${COTURN_UDP_PORT}:3478"
-      - "${COTURN_UDP_PORT}:3478/udp"
+      - "${HOST_IP:-127.0.0.1}:${COTURN_UDP_PORT}:3478"
+      - "${HOST_IP:-127.0.0.1}:${COTURN_UDP_PORT}:3478/udp"
     command: ["-v", "--external-ip=${HOST_IP}", "--user=${MTX_WEBRTCICESERVERS2_0_USERNAME}:${MTX_WEBRTCICESERVERS2_0_PASSWORD}", "--realm=turn.local", "--no-tls", "--no-dtls", "--lt-cred-mech"]
     networks:
     - timeseries_network

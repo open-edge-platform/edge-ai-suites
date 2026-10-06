@@ -6,8 +6,6 @@ image:
 env:
   FRIGATE_MQTT_USER: ""
   FRIGATE_MQTT_PASSWORD: ""
-  OPENAI_BASE_URL: ""
-  OPENAI_API_KEY: "your_openai_api_key"
 
 persistence:
   enabled: true
