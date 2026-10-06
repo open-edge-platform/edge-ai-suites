@@ -114,6 +114,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: real-time-scene-understanding
     restart: unless-stopped
     ports:

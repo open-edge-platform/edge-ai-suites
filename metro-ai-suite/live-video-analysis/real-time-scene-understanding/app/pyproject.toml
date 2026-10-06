@@ -14,7 +14,7 @@ dependencies = [
     "starlette>=1.3.1",
     "uvicorn[standard]==0.40.0",
 
-    # RTSP ingestion + remux to MediaMTX (PyAV bundles ffmpeg libraries)
+    # RTSP ingestion + remux to MediaMTX
     "av==18.1.0",
 
     # VLM inference on decoded frames
