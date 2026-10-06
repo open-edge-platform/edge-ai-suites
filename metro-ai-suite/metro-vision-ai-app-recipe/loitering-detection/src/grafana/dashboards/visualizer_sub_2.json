@@ -22,7 +22,7 @@
       "type": "text",
       "options": {
         "mode": "html",
-        "content": "<iframe src=\"https://10.106.147.115/mediamtx/object_tracking_2/\" width=\"100%\" height=\"100%\" frameborder=\"0\" allow=\"autoplay; fullscreen\"></iframe>"
+        "content": "<iframe src=\"${WEBRTC_URL}object_tracking_2/\" width=\"100%\" height=\"100%\" frameborder=\"0\" allow=\"autoplay; fullscreen\"></iframe>"
       }
     },
     {
@@ -155,7 +155,25 @@
     "metro-ai-suite"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": "https://0.0.0.0/mediamtx/",
+          "value": "https://0.0.0.0/mediamtx/"
+        },
+        "description": "",
+        "name": "WEBRTC_URL",
+        "options": [
+          {
+            "selected": true,
+            "text": "https://0.0.0.0/mediamtx/",
+            "value": "https://0.0.0.0/mediamtx/"
+          }
+        ],
+        "query": "https://0.0.0.0/mediamtx/",
+        "type": "textbox"
+      }
+    ]
   },
   "time": {
     "from": "now-5m",

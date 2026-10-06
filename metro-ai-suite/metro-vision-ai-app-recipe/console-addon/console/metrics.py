@@ -63,12 +63,14 @@ def _gpu_engine_ratios():
 
 
 def _gpu_percent(engines):
-    # GPU utilisation MUST be taken from the compute-engine ("ccs") series:
+    # GPU utilisation MUST be taken from the compute-engine series:
     # averaging across all engines dilutes the signal because most engines
     # are idle during inference, and the legacy aggregate series reports
-    # zero on supported builds.
-    if "ccs" in engines:
-        return round(engines["ccs"] * 100, 1)
+    # zero on supported builds. The compute engine's label varies by
+    # qmassa version/GPU generation - "ccs" on some, "compute" on others.
+    for name in ("ccs", "compute"):
+        if name in engines:
+            return round(engines[name] * 100, 1)
     return _prom_first(["max(qmmd_gpu_utilization_ratio)*100"])
 
 
