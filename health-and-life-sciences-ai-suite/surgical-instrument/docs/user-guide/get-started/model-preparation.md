@@ -89,8 +89,9 @@ Under the hood this runs `python -m backend.main_bootstrap`, which:
    `data.yaml` under `datasets/REAL-Colon/` (70/15/15 train/val/test split,
    deterministic seed).
 3. Trains YOLO11n on the Intel iGPU (`device: xpu`) for 50 epochs with the
-   hyperparameters in `backend/config/model.yaml`. Typical wall time on Arc
-   iGPU (Meteor Lake / Lunar Lake / Arrow Lake) is ~20 minutes.
+   hyperparameters in `backend/config/model.yaml`. Typical wall time on an
+   Intel Core Ultra Arc iGPU (Meteor Lake / Lunar Lake / Arrow Lake /
+   Panther Lake) is ~20 minutes.
 4. Exports the best checkpoint to a FP16 OpenVINO IR at
    `models/yolo11n_polyp/best_openvino_model/best.xml` + `best.bin`.
 5. Writes a `.trained_ok` marker so subsequent runs cache-hit.
