@@ -13,7 +13,6 @@ This section explains the environment variables used to configure the Smart Rout
 |----------|---------|-------------|
 | `HOST_IP` | Auto-detected | Host IP address for the application. Automatically detected from the network interface. Falls back to `127.0.0.1` if detection fails. |
 | `TAG` | `latest` | Docker image tag to use when building and running containers. |
-| `REGISTRY` | (empty) | Docker registry path for pulling or pushing images. |
 
 ## Network Configuration
 
@@ -21,13 +20,20 @@ This section explains the environment variables used to configure the Smart Rout
 |----------|---------|-------------|
 | `AI_ROUTE_PLANNER_PORT` | `7864` | Port on which the Smart Route Planning Agent UI is accessible. |
 
-## Application Settings
+## Reasoning Settings
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TRAFFIC_BUFFER_DURATION` | `60` | Duration in seconds for traffic data buffering. |
-| `LOG_LEVEL` | `INFO` | Logging level for the application. Options: `DEBUG`, `INFO`, `WARNING`, `ERROR`. |
-| `DATA_RETENTION_HOURS` | `24` | Number of hours to retain traffic data. |
+| `OVMS_CACHE_SIZE` | `10` | Value for KV cache in GiB. Increase this value for better performance. |
+| `REASONING_TIMEOUT_SEC` | `15.0` | Timeout in seconds for the reasoning model. Increase this value for larger models or slower hardware. |
+
+#### Example:
+
+```bash
+export OVMS_CACHE_SIZE=20
+export REASONING_TIMEOUT_SEC=30.0
+```
+
 
 ## Proxy Settings
 
@@ -39,32 +45,16 @@ This section explains the environment variables used to configure the Smart Rout
 
 ## Set Environment Variables
 
-### Configure Using the Setup Script (Recommended)
+The setup script automatically configures most environment variables. To override defaults, export variables before running the script.
 
-The setup script automatically configures most environment variables. To override defaults, export variables before running the script:
+Here are some example values being set and then used to run the application :
 
 ```bash
 export AI_ROUTE_PLANNER_PORT=8080
 export LOG_LEVEL=DEBUG
-source setup.sh --setup
-```
-
-### Configure Manually
-
-For manual deployment, create a `.env` file in the `src/` directory:
-
-```bash
-HOST_IP=192.168.1.100
-AI_ROUTE_PLANNER_PORT=7864
-TAG=latest
-LOG_LEVEL=INFO
-TRAFFIC_BUFFER_DURATION=60
-DATA_RETENTION_HOURS=24
-```
-
-Run the Docker Compose tool:
-
-```bash
-cd src
-docker compose --env-file .env up
+export TAG=latest
+export LOG_LEVEL=INFO
+export TRAFFIC_BUFFER_DURATION=60
+export DATA_RETENTION_HOURS=24
+source setup.sh --run
 ```

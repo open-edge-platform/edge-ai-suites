@@ -1,6 +1,6 @@
 # Get Started
 
-- **Time to Complete:** <TODO>
+<!-- - **Time to Complete:** <TODO>-->
 - **Programming Language:**  Python 3
 
 ## Prerequisites
@@ -9,7 +9,18 @@
 
 ## Clone the Repository
 
-Clone the repository and ensure the Git LFS extension is installed before the clone completes.
+> [!NOTE]
+> Ensure you have the Git LFS extension (for handling model and video files) installed before
+> cloning the repository.
+
+Clone the repository:
+
+```bash
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/smart-building-digital-twin
+```
 
 ## Run setup
 
