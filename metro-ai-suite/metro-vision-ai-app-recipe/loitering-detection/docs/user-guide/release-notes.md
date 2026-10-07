@@ -9,7 +9,7 @@
   overlay — no external low-code flow engine required.
 - Added a lightweight `mqtt-table-flattener` sidecar that reshapes per-frame MQTT metadata into
   one-row-per-object summaries so the Grafana status table renders correctly.
-- Zones are now defined per stream as JSON polygon configs, so adding or editing zones
+- Zones are now defined per stream as JSON polygon/circle configs, so adding or editing zones
   requires no pipeline or dashboard changes.
 
 **Removed**:
