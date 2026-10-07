@@ -87,12 +87,7 @@ inference-region=0 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THRO
 ```
 
 **Parameter Descriptions:**
-- `inference-region=1`: Use the region-of-interest (ROI) list for detection, instead of the
-full frame. Not applicable to this app's pipelines: `gvaattachroi` was removed (zone/dwell
-analytics now run downstream via `gvaanalytics` on tracked full-frame detections), so
-`config.json` uses `inference-region=0` (full-frame). Leave this at `0` for this app; setting
-it to `1` here would make `gvadetect` look for a pre-existing ROI list that no longer exists,
-producing zero detections.
+- `inference-region=0`: Use full frame.
 - `inference-interval=3`: Run inference on every 3rd frame.
 - `batch-size=8`: Process 8 frames in a single batch for better GPU utilization.
 - `nireq=2`: Number of inference requests to run in parallel.
