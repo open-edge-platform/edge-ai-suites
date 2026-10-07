@@ -290,13 +290,20 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
-          # When running the full suite, ignore GPU tests unless explicitly enabled.
+          # Helm-based test files still exist on disk but are no longer supported by
+          # this workflow, so always exclude them when discovering the full suite.
           # GPU test files remain individually selectable via the tests input.
           IGNORE_ARGS=()
-          if [[ "$RUN_ALL_TS" == "true" && "$INCLUDE_GPU_TESTS" != "yes" ]]; then
+          if [[ "$RUN_ALL_TS" == "true" ]]; then
             IGNORE_ARGS=(
-              --ignore=test_GPU_docker.py
+              --ignore=test_helm_deployment_wind_turbine.py
+              --ignore=test_helm_influxdb_retention.py
+              --ignore=test_GPU_helm.py
+              --ignore=test_docker_helm_deployment_security.py
             )
+            if [[ "$INCLUDE_GPU_TESTS" != "yes" ]]; then
+              IGNORE_ARGS+=(--ignore=test_GPU_docker.py)
+            fi
           fi
 
           # For weekly builds, skip KPI/chart-generation tests that are not applicable.
@@ -421,6 +428,7 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
+          INCLUDE_GPU_TESTS: ${{ inputs.include_gpu_tests || 'no' }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Multimodal-specific test files
@@ -476,15 +484,24 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
-          # When running the full suite (all-tests / multimodal-all), exclude GPU and NPU
-          # test files unless explicitly opted in. They remain individually selectable
-          # via the tests input (e.g. tests=test_GPU_docker_multimodal).
+          # Helm-based test files still exist on disk but are no longer supported by
+          # this workflow, so always exclude them when discovering the full suite.
+          # When running the full suite (all-tests / multimodal-all), also exclude GPU
+          # and NPU test files unless explicitly opted in. They remain individually
+          # selectable via the tests input (e.g. tests=test_GPU_docker_multimodal).
           IGNORE_ARGS=()
-          if [[ "$RUN_ALL_MM" == "true" && "$INCLUDE_GPU_TESTS" != "yes" ]]; then
+          if [[ "$RUN_ALL_MM" == "true" ]]; then
             IGNORE_ARGS=(
-              --ignore=test_GPU_docker_multimodal.py
-              --ignore=test_NPU_docker_multimodal.py
+              --ignore=test_helm_deployment_multimodal.py
+              --ignore=test_GPU_helm_multimodal.py
+              --ignore=test_NPU_helm_multimodal.py
             )
+            if [[ "$INCLUDE_GPU_TESTS" != "yes" ]]; then
+              IGNORE_ARGS+=(
+                --ignore=test_GPU_docker_multimodal.py
+                --ignore=test_NPU_docker_multimodal.py
+              )
+            fi
           fi
 
           # List tests that will be collected (helps debug which tests run/are skipped)
