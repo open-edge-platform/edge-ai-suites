@@ -51,17 +51,26 @@ mkdir -p ~/oep/oep-vision-get-started-tutorial
 cd ~/oep/oep-vision-get-started-tutorial
 ```
 
-### Step 2: Download Sample Video and model
+### Step 2: Download Sample Video and Model
 
-Download the required video sample and pre-trained model components:
+Download the Intel-hosted sample video, which shows pedestrians and a vehicle from a street-side perspective:
 
 ```bash
-wget -O sample.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/person-bicycle-car-detection.mp4
-mkdir -p models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
+wget -O sample.mp4 https://raw.githubusercontent.com/open-edge-platform/edge-ai-resources/main/videos/VIRAT_S_000101.mp4
 ```
+
+Download and convert the COCO-trained YOLO11s detector using the DL Streamer container:
+
+```bash
+# Download YOLO11s model using DL Streamer
+docker run --rm --user=root \
+  -e http_proxy -e https_proxy -e no_proxy \
+  -v "${PWD}:/home/dlstreamer/" \
+  intel/dlstreamer:2026.2.0-ubuntu24 \
+  bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolo11s"
+```
+
+The downloader creates `public/yolo11s/FP16/yolo11s.xml` and `yolo11s.bin` in the working directory. YOLO11s detects COCO classes including `person`, `car`, `bus`, and `truck`; DL Streamer reads its class labels and preprocessing metadata directly from the exported model, so no model-proc file is needed.
 
 ### Step 3: Pipeline Execution
 
@@ -69,11 +78,13 @@ Execute the object detection pipeline using the configured assets.
 
 ```bash
 # Allow X11 connections from local clients
-xhost +
+xhost +local:root
 
 # Start the container
 docker run --rm -it --name dlstreamer \
   -v $PWD:/data \
+  --ipc=host \
+  --net=host \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
   intel/dlstreamer:2026.2.0-ubuntu24
@@ -82,19 +93,19 @@ docker run --rm -it --name dlstreamer \
 ```bash
 # Run the GStreamer pipeline inside the running container
 gst-launch-1.0 filesrc location=/data/sample.mp4 ! \
-  decodebin ! videoconvert ! \
-  gvadetect model=/data/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml \
-    model-proc=/data/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json \
-    device=CPU ! \
+  decodebin3 caps="video/x-raw(ANY)" ! videoconvert ! \
+  gvadetect model=/data/public/yolo11s/FP16/yolo11s.xml device=CPU ! queue ! \
   gvawatermark ! videoconvert ! autovideosink
 ```
+
+The video begins with pedestrians; a vehicle enters the scene later (around the one-minute mark). Let the pipeline play until then to see both detection classes.
+
+![Object Detection](images/object-detection.png)
 
 ```bash
 # To exit the container
 exit
 ```
-
-![Object Detection](images/object-detection.png)
 
 ### Pipeline Architecture Analysis
 

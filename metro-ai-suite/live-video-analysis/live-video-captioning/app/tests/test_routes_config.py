@@ -37,6 +37,9 @@ class TestRuntimeConfig:
             "defaultPrompt",
             "defaultRtspUrl",
             "enableDetectionPipeline",
+            "enableEmbedding",
+            "liveVideoRagHostPort",
+            "ragChatbotMode",
             "captionHistory",
             "metricsServicePort",
         }
@@ -56,3 +59,10 @@ class TestRuntimeConfig:
         payload = json.loads(json_str)
         assert isinstance(payload["captionHistory"], int)
         assert payload["captionHistory"] >= 0
+
+    def test_rag_chatbot_mode_is_supported_value(self, client):
+        """ragChatbotMode is constrained to supported frontend behavior values."""
+        resp = client.get("/runtime-config.js")
+        json_str = resp.text.removeprefix("window.RUNTIME_CONFIG = ").removesuffix(";")
+        payload = json.loads(json_str)
+        assert payload["ragChatbotMode"] in {"embedded", "detached"}

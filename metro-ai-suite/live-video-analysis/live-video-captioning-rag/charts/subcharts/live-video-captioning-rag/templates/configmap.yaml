@@ -10,13 +10,16 @@ metadata:
     {{- include "live-video-captioning-rag.labels" . | nindent 4 }}
 
 data:
-  LLM_MODEL_ID: {{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId .Values.env.llmModelId "" | quote }}
-  LLM_DEVICE: {{ (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) | quote }}
+  LLM_MODEL_ID: {{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId "" | quote }}
+  LLM_DEVICE: {{ (ternary "NPU" (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) (or .Values.global.llmModel.useNPU.enabled .Values.env.llmModel.useNPU.enabled)) | quote }}
   MAX_TOKENS: {{ .Values.env.maxTokens | quote }}
   TOP_K: {{ .Values.env.topK | quote }}
-  EMBEDDING_MODEL: {{ coalesce .Values.global.embeddingModel.modelId .Values.env.embeddingModel.modelId .Values.env.embeddingModelId "" | quote }}
+  SCORE_THRESHOLD: {{ .Values.env.scoreThreshold | quote }}
+  MAX_PROMPT_LEN: {{ .Values.env.maxPromptLen | quote }}
+  EMBEDDING_MODEL: {{ coalesce .Values.global.embeddingModel.modelId .Values.env.embeddingModel.modelId "" | quote }}
   EMBEDDING_HOST: {{ .Values.env.embeddingHost | quote }}
   EMBEDDING_HOST_PORT: {{ .Values.env.embeddingHostPort | quote }}
+  RAG_CHATBOT_MODE: {{ coalesce .Values.global.ragChatbotMode .Values.env.ragChatbotMode "embedded" | quote }}
   VDMS_HOST: {{ .Values.env.vdmsHost | quote }}
   VDMS_PORT: {{ .Values.env.vdmsPort | quote }}
   http_proxy: {{ .Values.global.httpProxy | quote }}
@@ -27,7 +30,7 @@ data:
     #!/bin/bash
     set -e
 
-    DEFAULT_MODEL={{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId .Values.env.llmModelId "" | quote }}
+    DEFAULT_MODEL={{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId "" | quote }}
     DEFAULT_MODEL_TYPE={{ coalesce .Values.global.llmModel.modelType .Values.env.llmModel.modelType "llm" | quote }}
     DEFAULT_WEIGHT_FORMAT={{ coalesce .Values.global.llmModel.weightFormat .Values.env.llmModel.weightFormat "" | quote }}
     DEFAULT_HF_TOKEN={{ .Values.global.huggingface.apiToken | quote }}

@@ -23,7 +23,7 @@
                 aria-label="System compute devices" aria-live="polite" hidden></section>
             <div class="header-actions">
                 <button id="chatToggle" class="icon-button tooltip-btn" type="button" aria-label="Open chat"
-                    data-tooltip="Redirect to RAG Chatbot">
+                    data-tooltip="Open RAG Chatbot">
                     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
                         <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"
                             stroke="currentColor" stroke-width="1.5" fill="none" />
@@ -264,6 +264,51 @@
             </article>
         </section>
     </main>
+
+    <section id="chatPanel" class="chat-panel" aria-hidden="true">
+        <div id="chatPanelBackdrop" class="chat-panel-backdrop" aria-hidden="true"></div>
+        <div class="chat-panel-dialog" role="dialog" aria-modal="true" aria-label="RAG chatbot">
+            <div class="chat-panel-header">
+                <span>RAG Chatbot</span>
+                <div class="chat-panel-header-actions">
+                    <button id="chatPanelExpand" class="icon-button chat-panel-expand" type="button"
+                        aria-label="Maximize" aria-pressed="false" title="Maximize">
+                        <svg class="icon-expand" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
+                            focusable="false">
+                            <polyline points="9,3 3,3 3,9" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="3" y1="3" x2="10" y2="10" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <polyline points="15,21 21,21 21,15" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="14" y1="14" x2="21" y2="21" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                        <svg class="icon-collapse" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"
+                            focusable="false">
+                            <polyline points="15,3 21,3 21,9" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="21" y1="3" x2="14" y2="10" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                            <polyline points="9,21 3,21 3,15" stroke="currentColor" stroke-width="2" fill="none"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <line x1="3" y1="21" x2="10" y2="14" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </button>
+                    <button id="chatPanelClose" class="icon-button chat-panel-close" type="button"
+                        aria-label="Close chat">
+                        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2" />
+                            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <iframe id="chatIframe" class="chat-panel-iframe" title="Live Video Captioning RAG" loading="lazy"></iframe>
+        </div>
+    </section>
+
     <script src="/js/vendor/chart.js"></script>
     <script src="/runtime-config.js"></script>
     <script src="/js/utils/theme.js"></script>

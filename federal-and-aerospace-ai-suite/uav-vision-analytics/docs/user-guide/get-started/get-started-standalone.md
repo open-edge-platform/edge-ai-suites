@@ -3,7 +3,6 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-
 # Get Started (Standalone Mode / pymavlink)
 
 This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in standalone mode (pymavlink) and running the demo with a simulated UAV camera feed/RealSense cameras.
@@ -12,35 +11,47 @@ This guide provides a step-by-step walkthrough for testing the UAV Vision Analyt
 
 A self-contained stack. PX4 SITL, MAVLink router, MQTT broker, and Metrics Manager are all started together (`docker-compose-pymavlink.yml`). Telemetry flows from PX4 SITL through `mavlink-router` to the DL Streamer container, where `pymavlink` reads it directly over UDP.
 
-![uav vision analytics standalone](../_assets/FedAero-uav-vision-pymavlink.drawio.svg)
+![uav vision analytics standalone](../_assets/FedAero-uav-vision-pymavlink.svg)
 
 **Telemetry flow:**
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 sequenceDiagram
+    participant Client as curl / QGroundControl / ffplay
+    participant Nginx as nginx (TLS :443, RTSP :8555)
+    participant DL_Streamer_Pipeline_Server as DL Streamer Pipeline Server
     participant PX4 as PX4 SITL
     participant RTR as mavlink-router
     participant OVL as gvapython MavlinkReceiver
     participant Frame as Video Frame
+
+    Client->>Nginx: POST /pipelines/... (HTTPS :443)
+    Nginx->>DL_Streamer_Pipeline_Server: proxy_pass REST :8081
+    DL_Streamer_Pipeline_Server-->>Nginx: 200 instance_id
+    Nginx-->>Client: 200 instance_id
 
     PX4->>RTR: MAVLink stream (UDP :14550)
     RTR->>OVL: broadcast UDP :14541
     Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
     Frame->>OVL: process_frame() per frame
     OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
+
+    Frame->>Nginx: annotated RTSP :8555 (stream {} passthrough)
+    Nginx->>Client: rtsp://<HOST_IP>:8555/...
 ```
 
 **Services:**
 
 | Service | Image | Ports | Role |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` + pymavlink | `8081`, `8555` | AI inference, RTSP output |
-| `px4` | `px4io/px4-sitl` | `14550`  | Flight controller simulator |
+| `px4` | `px4io/px4-sitl` | `14550` | Flight controller simulator |
 | `mavlink-router` | custom build | `14551` | MAVLink UDP routing (:14550 → :14541) |
 | `metrics-manager` | `intel/metrics-manager` | `9090` | CPU/GPU/NPU/power metrics |
+| `nginx` | `nginx:1.27-alpine` | `80` (redirects to 443), `443` (HTTPS, self-signed cert), `8555` (RTSP passthrough) — published to `HOST_IP` | Reverse proxy / TLS termination — the only service that publishes ports to the host |
+
+> `dlstreamer-pipeline-server` and `metrics-manager` no longer publish ports directly —
+> both are reachable only through `nginx` on the internal `app_network`.
 
 ---
 
@@ -102,7 +113,6 @@ make model
 
 > See the [AI Model guide](../how-to-guides/model.md) for model details.
 
-
 ### 3. Standalone mode (pymavlink)
 
 ```bash
@@ -115,7 +125,7 @@ Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
-Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
+Runs `pipeline_manager.py` inside the DL Streamer Pipeline Server container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
 `make start-rtsp` starts **one device pipeline at a time** (default: GPU). Pass `DEVICE=cpu|gpu|npu|all` to choose:
 
@@ -134,14 +144,14 @@ Start a single pipeline directly without the pipeline manager. Useful for testin
 
 ```bash
 # CPU pipeline
-INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/uav_object_detection_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/uav_object_detection_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_cpu.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -159,10 +169,11 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 ```
 
-Change following **three values** to switch between CPU / GPU / NPU:
+Change following **four values** to switch between CPU / GPU / NPU:
 1. **Pipeline name** in the URL path (`uav_object_detection_cpu` → `_gpu` / `_npu`)
 2. **RTSP path** in the request body (`uav-mavlink-cpu` → `uav-mavlink-gpu` / `uav-mavlink-npu`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+4. **JSONL log path** in the request body (`/tmp/results_cpu.jsonl` → `/tmp/results_gpu.jsonl` / `/tmp/results_npu.jsonl`) — each device pipeline logs detections to its own file so events from concurrently-running pipelines are never mixed together.
 
 ### 5. View the output stream
 
@@ -178,6 +189,18 @@ ffplay rtsp://<HOST_IP>:8555/uav-mavlink-gpu   # GPU
 ffplay rtsp://<HOST_IP>:8555/uav-mavlink-npu   # NPU
 ```
 
+#### View detection logs
+
+Each device pipeline writes its detection events (with GPS/telemetry enrichment) to a
+separate JSONL file, so CPU/GPU/NPU logs never collide even when multiple pipelines run
+at once:
+
+```bash
+tail -f /tmp/results_cpu.jsonl   # CPU pipeline detections
+tail -f /tmp/results_gpu.jsonl   # GPU pipeline detections
+tail -f /tmp/results_npu.jsonl   # NPU pipeline detections
+```
+
 The annotated stream includes bounding boxes for detected objects
 (person, car, bus, truck, bicycle, and other classes)
 and a live telemetry overlay (GPS, altitude, speed, heading).
@@ -185,15 +208,13 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 > [!NOTE]
 > Other ways to view the stream:
 > - Leverage versatile streaming media players such as VLC Player to seamlessly handle, manage, and playback the incoming streams with ease and efficiency.
->
 > - **QGroundControl (QGC)** — connect and view the stream directly in its video panel; see the [QGroundControl guide](../how-to-guides/qgroundcontrol.md#rtsp-stream) for connection details. For the [Step 4](#4-start-inference-pipelines)-Option A flow, connecting QGC and pressing takeoff is arms the drone and triggers the pipeline manager to starts the selected pipeline and serves the RTSP stream once the UAV is armed. If the UAV is armed without a takeoff command, PX4 SITL automatically disarms it again after a few seconds.
->
 > - `DEVICE=npu` requires `NPU_DEVICE` to have been detected during `make init` — falls back to GPU otherwise.
 
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 4](#4-start-inference-pipelines)):
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### 6. Stop all services
@@ -211,7 +232,7 @@ make pymav-down
 ### pymavlink mode (`config-pymavlink.json`)
 
 | Pipeline | Device | Source | Output |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `uav_object_detection_cpu` | CPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
 | `uav_object_detection_gpu` | GPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
 | `uav_object_detection_npu` | NPU | Looped video file (`uav_sample.avi`) | RTSP `:8555` |
@@ -229,7 +250,7 @@ make pymav-down
 Each output frame carries these overlaid fields in the upper-left corner:
 
 | Field | Source MAVLink message | Description |
-|---|---|---|
+| --- | --- | --- |
 | `Name` | — | Name passed as argument to the gvapython |
 | `Frame` | — | Running frame counter |
 | `ALT` | `GLOBAL_POSITION_INT.relative_alt` | Relative altitude (m) |
@@ -243,12 +264,17 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 ## Port Reference
 
-| Port | Protocol | Service | Mode |
-|---|---|---|---|
-| `8081` | HTTP | DL Streamer REST API | All modes |
-| `8555` | RTSP | Annotated video output | All modes |
-| `14541` | UDP | MAVLink broadcast (mavlink-router) | pymavlink modes |
-| `9090` | HTTP | metrics-manager (HW metrics) | pymavlink modes |
+`nginx` is the only service that publishes ports to the host (bound to `HOST_IP`, not
+`0.0.0.0`). Everything else below is reachable only on the internal `app_network`.
+
+| Port | Protocol | Service | Published to host? | Mode |
+| --- | --- | --- | --- | --- |
+| `80` | HTTP | `nginx` → `301` redirect to HTTPS (no application traffic) | Yes | All modes |
+| `443` | HTTPS | `nginx` → proxies to `dlstreamer-pipeline-server:8081` (REST API) and `metrics-manager:9090` (metrics); self-signed cert, use `curl -k` | Yes | All modes |
+| `8555` | RTSP | `nginx` → raw TCP passthrough to `dlstreamer-pipeline-server:8555` | Yes | All modes |
+| `8081` | HTTP | DL Streamer REST API | No (internal only) | All modes |
+| `14541` | UDP | MAVLink broadcast (mavlink-router) | No (internal only) | pymavlink modes |
+| `9090` | HTTP | metrics-manager (HW metrics) | No (internal only) | pymavlink modes |
 
 ---
 
@@ -259,8 +285,8 @@ Intel RealSense camera setup and pipelines details are provided in the [RealSens
 ## Documentation
 
 | Document | Description |
-|---|---|
+| --- | --- |
 | [index.md](../index.md) | Application overview and component block diagrams |
-| [benchmark.md](../benchmark.md) | Performance benchmarking guide  |
+| [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |

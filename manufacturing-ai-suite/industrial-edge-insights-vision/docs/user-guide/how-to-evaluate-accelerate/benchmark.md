@@ -18,16 +18,28 @@ optimal stream density and performance characteristics.
 Navigate to the `[WORKDIR]/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision` directory and use the benchmark script:
 
 ```bash
-./calc_stream_density.sh -p <pipeline_name> -l <lower_bound> -u <upper_bound> [-t <target_fps>] [-i <interval>]
+./calc_stream_density.sh -p <pipeline_name> [-t <target_fps>] [-i <interval>]
 ```
+
+The stream count range is determined automatically: the script ramps up 1, 2, 4, 8, ... streams until the target FPS is missed, then bisects between the last passing and first failing counts to find the maximum sustainable density.
 
 **Arguments:**
 
 - `-p <pipeline_name>` : **(Required)** The name of the pipeline to benchmark (e.g., pallet_defect_detection or pcb_anomaly_classification)
-- `-l <lower_bound>` : **(Required)** Starting lower bound for number of streams
-- `-u <upper_bound>` : **(Required)** Starting upper bound for number of streams
+- `-nstreams <N1> [N2 ...]` : Run the listed pipelines concurrently at fixed stream counts instead of searching (see [NStreams Mode](#nstreams-mode))
 - `-t <target_fps>` : Target FPS threshold (default: 14.95)
 - `-i <interval>` : Monitoring duration in seconds per test run (default: 60)
+- `-c <throughput_percentile>` : Throughput percentile for KPI calculation (default: 0.9)
+
+> **Note:** `-l` and `-u` are deprecated. They are still accepted for backward compatibility but ignored. Set `MAX_STREAMS=<n>` in the environment to raise the internal safety ceiling for the automatic search (default: 64).
+
+### NStreams Mode
+
+To measure a fixed, known configuration instead of searching for one, pass `-nstreams` with one stream count per pipeline, in the same order as `-p`. All pipelines start concurrently, run for the monitoring window, and report combined KPIs in `benchmark-multi/kpi.txt`.
+
+```bash
+./calc_stream_density.sh -p pallet_defect_detection_gpu pcb_anomaly_classification_gpu -nstreams 6 4 -t 28.5 -i 60
+```
 
 ### Configuration
 
@@ -71,13 +83,13 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 2. **Test CPU performance**:
 
    ```bash
-   ./calc_stream_density.sh -p pallet_defect_detection -l 1 -u 10 -t 25.0 -i 30
+   ./calc_stream_density.sh -p pallet_defect_detection -t 25.0 -i 30
    ```
 
 3. **Test GPU performance** (if available):
 
    ```bash
-   ./calc_stream_density.sh -p pallet_defect_detection_gpu -l 1 -u 20 -t 28.5 -i 60
+   ./calc_stream_density.sh -p pallet_defect_detection_gpu -t 28.5 -i 60
    ```
 
    > [!NOTE]
@@ -92,13 +104,13 @@ inference-region=full-frame inference-interval=1 batch-size=8 nireq=2 ie-config=
 2. **Test CPU performance**:
 
    ```bash
-   ./calc_stream_density.sh -p pcb_anomaly_classification -l 1 -u 10 -t 25.0 -i 30
+   ./calc_stream_density.sh -p pcb_anomaly_classification -t 25.0 -i 30
    ```
 
 3. **Test GPU performance** (if available):
 
    ```bash
-   ./calc_stream_density.sh -p pcb_anomaly_classification_gpu -l 1 -u 20 -t 28.5 -i 60
+   ./calc_stream_density.sh -p pcb_anomaly_classification_gpu -t 28.5 -i 60
    ```
 
    > [!NOTE]
@@ -165,7 +177,7 @@ throughput cumulative: 173.8
    <!--hide_directive :sync: pallet-detect hide_directive-->
 
    ```bash
-   ./calc_stream_density.sh -p pallet_defect_detection_gpu -l 1 -u 10 --trace
+   ./calc_stream_density.sh -p pallet_defect_detection_gpu --trace
    ```
 
    <!--hide_directive ::: hide_directive-->
@@ -173,7 +185,7 @@ throughput cumulative: 173.8
    <!--hide_directive :sync: pcb-detect hide_directive-->
 
    ```bash
-   ./calc_stream_density.sh -p pcb_anomaly_classification_gpu -l 1 -u 10 --trace
+   ./calc_stream_density.sh -p pcb_anomaly_classification_gpu --trace
    ```
 
    <!--hide_directive

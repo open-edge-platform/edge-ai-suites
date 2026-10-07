@@ -18,12 +18,14 @@ Contract:
 - Define how every extension is handled by the alert policy, alert description,
   or a documented non-alerting/default branch. The static gate verifies field
   ownership but cannot prove that every extension changes the decision.
-- Pass its path as `evaluate_rules_path` to step 1 (`action=generate_task`).
-  The file may live anywhere — the server stages it to
-  `<data_dir>/use-cases/<use_case>/evaluate_rules.py` (`<data_dir>` is the
-  server's data dir: `$SMART_COMMUNITY_DATA_DIR` or `~/.mcp-smart-community` by
-  default), smoke-tests the staged
-  copy, and persists that path into config.
+- For an agent running on another machine, pass the Python source as
+    `evaluate_rules_content` to step 1 (`action=generate_task`). The MCP server
+    writes it to `<data_dir>/use-cases/<use_case>/evaluate_rules.py`
+    (`<data_dir>` is the server's data dir: `$SMART_COMMUNITY_DATA_DIR` or
+    `~/.mcp-smart-community` by default), smoke-tests the staged copy, and
+    persists that path into config. Use `evaluate_rules_path` only when the file
+    already exists on the MCP server host; the two parameters are mutually
+    exclusive.
 
 ## Severity/event template (with an extension zone field)
 

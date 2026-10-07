@@ -18,11 +18,14 @@ services:
       HTTPS_PROXY: ${https_proxy}
       no_proxy: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,${no_proxy}
       NO_PROXY: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,${NO_PROXY:-}
+      DASHBOARD_PORT: ${DASHBOARD_PORT:-4173}
       LLM_MODEL_ID: ${LLM_MODEL_ID}
       LLM_DEVICE: ${LLM_DEVICE}
       MAX_TOKENS: ${MAX_TOKENS:-1024}
       TOP_K: ${TOP_K:-1}
       SCORE_THRESHOLD: ${SCORE_THRESHOLD:-0.3}
+      MAX_PROMPT_LEN: ${MAX_PROMPT_LEN:-1024}
+      RAG_CHATBOT_MODE: ${RAG_CHATBOT_MODE:-embedded}
       # EMBEDDING
       EMBEDDING_MODEL: ${EMBEDDING_MODEL_NAME}
       EMBEDDING_HOST: ${EMBEDDING_HOST:-multimodal-embedding-serving}
@@ -34,6 +37,7 @@ services:
       - ${LIVE_VIDEO_RAG_HOST_PORT:-4172}:4172
     devices:
       - "/dev/dri:/dev/dri"
+      - "${NPU_DEVICE_PATH:-/dev/null}:${NPU_DEVICE_PATH:-/dev/null}"
     group_add:
       - ${USER_GROUP_ID:-1000}
       # render group ID for ubuntu 20.04 host OS
@@ -45,11 +49,18 @@ services:
     volumes:
       - "${MODEL_CACHE_PATH:-/tmp/model_cache}:/tmp/model_cache"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:4172/api/health" ]
+      test: [ "CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4172/api/health', timeout=8)" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    depends_on:
+      multimodal-embedding-serving:
+        condition: service_started
+      vdms-vector-db:
+        condition: service_healthy
+      video-caption-service:
+        condition: service_started
     restart: unless-stopped
     networks:
       - rag_network
@@ -69,9 +80,6 @@ services:
       EMBEDDING_DEVICE: ${EMBEDDING_DEVICE}
       EMBEDDING_USE_OV: ${EMBEDDING_USE_OV}
       EMBEDDING_OV_MODELS_DIR: ${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
-      DEFAULT_START_OFFSET_SEC: ${DEFAULT_START_OFFSET_SEC:-0}
-      DEFAULT_CLIP_DURATION: ${DEFAULT_CLIP_DURATION:--1}
-      DEFAULT_NUM_FRAMES: ${DEFAULT_NUM_FRAMES:-64}
       OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-LATENCY}
     devices:
       - /dev/dri:/dev/dri
@@ -90,7 +98,6 @@ services:
       - rag_network
     volumes:
       - ov-models:/home/appuser/.cache/huggingface
-      #- data-prep:/tmp/dataprep
       - ov-models:${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
 
   vdms-vector-db:
@@ -289,6 +296,7 @@ services:
       # Embedding and vectordatabase
       - ENABLE_EMBEDDING=${ENABLE_EMBEDDING:-false}
       - LIVE_VIDEO_RAG_HOST_PORT=${LIVE_VIDEO_RAG_HOST_PORT:-4172}
+      - RAG_CHATBOT_MODE=${RAG_CHATBOT_MODE:-embedded}
       # NPU-specific token length controls for static-shape LLM pipelines.
       - NPU_MAX_PROMPT_LENGTH=${NPU_MAX_PROMPT_LENGTH:-1024}
       - NPU_MIN_RESPONSE_LENGTH=${NPU_MIN_RESPONSE_LENGTH:-128}
@@ -303,7 +311,7 @@ services:
     ports:
       - "${DASHBOARD_PORT:-4173}:4173"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:4173/api/health" ]
+      test: [ "CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4173/api/health', timeout=8)" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -316,6 +324,10 @@ services:
       mqtt-broker:
         condition: service_started
       metrics-manager:
+        condition: service_healthy
+      multimodal-embedding-serving:
+        condition: service_started
+      vdms-vector-db:
         condition: service_healthy
     networks:
       - rag_network

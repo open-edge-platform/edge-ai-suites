@@ -138,7 +138,7 @@ fi; \
 $(wait_for_tsam); \
 echo "Posting config for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
 response=$$(curl -s -o /tmp/config_response.json -w "%{http_code}" \
-	-X POST https://localhost:${GRAFANA_PORT}/ts-api/config \
+	-X POST https://${HOST_IP}:${GRAFANA_PORT}/ts-api/config \
 	-H 'accept: application/json' \
 	-H 'Content-Type: application/json' \
 	-d @$$config_file \
@@ -156,11 +156,11 @@ define wait_for_tsam
 echo "Waiting for nginx to be up and running..."; \
 max_retries=30; \
 retry=0; \
-until curl -sk -I https://localhost:${GRAFANA_PORT}/ 2>/dev/null | grep -iq '^server: nginx'; do \
+until curl -sk -I https://${HOST_IP}:${GRAFANA_PORT}/ 2>/dev/null | grep -iq '^server: nginx'; do \
 	retry=$$((retry + 1)); \
 	if [ $$retry -ge $$max_retries ]; then \
 		echo "Timed out waiting for nginx after $$max_retries attempts. Last error:"; \
-		curl -sk -I https://localhost:${GRAFANA_PORT}/ 2>&1 | head -5; \
+		curl -sk -I https://${HOST_IP}:${GRAFANA_PORT}/ 2>&1 | head -5; \
 		exit 1; \
 	fi; \
 	echo "  nginx not accessible yet (attempt $$retry/$$max_retries), retrying in 5s..."; \
@@ -169,7 +169,7 @@ done; \
 echo "nginx is up and running."; \
 echo "Waiting for Time-Series Analytics microservice to be accessible..."; \
 retry=0; \
-until { code=$$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:${GRAFANA_PORT}/ts-api/health); [ "$$code" = "200" ] || [ "$$code" = "503" ]; }; do \
+until { code=$$(curl -sk -o /dev/null -w '%{http_code}' https://${HOST_IP}:${GRAFANA_PORT}/ts-api/health); [ "$$code" = "200" ] || [ "$$code" = "503" ]; }; do \
 	retry=$$((retry + 1)); \
 	if [ $$retry -ge $$max_retries ]; then \
 		echo "Timed out waiting for Time-Series Analytics microservice after $$max_retries attempts."; \
@@ -212,7 +212,7 @@ echo "Created: $$tar_file"; \
 $(wait_for_tsam); \
 echo "Uploading UDF deployment tar for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
 response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
-	-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
+	-X POST https://${HOST_IP}:${GRAFANA_PORT}/ts-api/udfs/package \
 	-F "file=@$$tar_file" \
 	-k); \
 if [ "$$response" = "200" ]; then \
@@ -240,6 +240,7 @@ up_mqtt_ingestion: check_env_variables down
 		for i in $$(seq 1 $(num_of_streams)); do \
 			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP";\
 			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
+			docker update --restart unless-stopped ia-mqtt-publisher-$$i; \
 		done; \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi
@@ -249,10 +250,10 @@ up_mqtt_ingestion: check_env_variables down
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
 	$(call multi_stream_check,opcua)
+	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	if [ $(num_of_streams) -gt 1 ]; then \
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \
-	export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	echo "Starting Docker containers..."; \
 	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
 	if [ $(INCLUDE) = 'validation' ]; then \

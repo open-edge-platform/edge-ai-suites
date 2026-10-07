@@ -75,7 +75,7 @@ Run:
 
 # LLM model for RAG responses
 ./model_download_scripts/download_models.sh \
-	--model Qwen/Qwen2.5-3B-Instruct \
+	--model microsoft/Phi-3.5-mini-instruct \
 	--type llm \
 	--device CPU \
 	--weight-format int8
@@ -99,8 +99,7 @@ By default, conversion runs on CPU. To target another device:
 	--device <CPU|GPU|NPU>
 ```
 
-> [!NOTE]
-> NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`. Additionally, LLM model support for NPU is not yet available in Live-Video-Captioning-RAG.
+> **Note:** NPU support currently only works with `int4` quantization when converting VLM models. If `--device NPU` is specified alongside `int8` or `fp16`, the script will automatically switch the quantization to `int4`.
 
 ---
 
@@ -127,13 +126,9 @@ The first run may take a few minutes while images are downloaded and services be
    - Select the VLM device and model.
    - Click **Start** and confirm captions are appearing.
 
-3. Open Live Video Captioning RAG via `chat icon` on the top right of Live Video Captioning dashboard or open a new tab with:
+3. Open Live Video Captioning RAG chatbot via `chat icon` on the top right of Live Video Captioning dashboard.
 
-   ```text
-   http://<YOUR_IP>:4172
-   ```
-
-4. Ask questions about the live or recent scene in the chat panel.
+4. Use the chat panel to ask questions based on the generated scene captions.
 
 ---
 

@@ -24,6 +24,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY:-${http_proxy:-}}
         HTTPS_PROXY: ${HTTPS_PROXY:-${https_proxy:-}}
         NO_PROXY: ${NO_PROXY:-${no_proxy:-}}
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-true}
     image: ${REGISTRY:-}smart-community-mcp-server:${TAG:-latest}
     # Host network keeps localhost semantics in both directions: the MCP server
     # reaches multilevel/vllm/videostream-analytics on localhost, and VSA (also on
@@ -39,6 +40,8 @@ services:
       # Writable home for the non-root container user.
       HOME: /tmp
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      MCP_BIND_HOST: ${MCP_BIND_HOST:-127.0.0.1}
+      EVENTS_BIND_HOST: ${EVENTS_BIND_HOST:-127.0.0.1}
       # The summary service's own limits, forwarded from set_env.sh. Report
       # chunking solves its level plan against these, so they must describe the
       # model actually serving multilevel — a stale value silently mis-sizes every

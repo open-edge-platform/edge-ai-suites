@@ -3,40 +3,50 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-
 # Get Started (UAV Mission Compute SDK Mode)
 
 This guide provides a step-by-step walkthrough for testing the UAV Vision Analytics application in UAV Mission Compute SDK mode and running the demo with a simulated UAV camera feed/RealSense cameras.
 
 ## How It Works
 
-A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DLSPS container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
+A minimal single-container stack. Telemetry is received via MQTT from the `uav-mission-compute-sdk` project, which must be started first. The DL Streamer Pipeline Server container reads armed/disarmed state from `uav/{id}/telemetry/status` and subscribes to three RTSP camera streams (nadir, forward, rear).
 
-![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.drawio.svg)
-
+![uav vision analytics sdk](../_assets/FedAero-uav-vision-uavsdk.svg)
 
 **Telemetry / pipeline lifecycle flow:**
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 sequenceDiagram
+    participant Client as curl / QGroundControl / ffplay
+    participant Nginx as nginx (TLS :443, RTSP :8555)
+    participant DL_Streamer_Pipeline_Server as DL Streamer Pipeline Server
     participant SDK as uav-mission-compute-sdk
     participant OVL as gvapython (MavlinkReceiver)
     participant Frame as Video Frame
+
+    Client->>Nginx: POST /pipelines/... (HTTPS :443)
+    Nginx->>DL_Streamer_Pipeline_Server: proxy_pass REST :8081
+    DL_Streamer_Pipeline_Server-->>Nginx: 200 instance_id
+    Nginx-->>Client: 200 instance_id
 
     SDK->>OVL: broadcast MQTT Telemetry :1883
     Note over OVL: background thread parses<br/>GLOBAL_POSITION_INT, VFR_HUD,<br/>GPS_RAW_INT into latest_data
     Frame->>OVL: process_frame() per frame
     OVL->>Frame: ROI labels (ALT · SPD · HDG · LAT · LON · SATS)
+
+    Frame->>Nginx: annotated RTSP :8555 (stream {} passthrough)
+    Nginx->>Client: rtsp://<HOST_IP>:8555/...
 ```
 
 **Services:**
 
 | Service | Image | Ports | Role |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `dlstreamer-pipeline-server` | `intel/dlstreamer-pipeline-server` | `8081`, `8555` | AI inference, RTSP output |
+| `nginx` | `nginx:1.27-alpine` | `80` (redirects to 443), `443` (HTTPS, self-signed cert), `8555` (RTSP passthrough) — published to `HOST_IP` | Reverse proxy / TLS termination — the only service that publishes ports to the host |
+
+> `dlstreamer-pipeline-server` no longer publishes ports directly — it is reachable only
+> through `nginx` on the internal `app_network`.
 
 ---
 
@@ -90,7 +100,7 @@ Then, for either option, initialize the environment:
 make init                # create .env, detect GPU
 ```
 
-> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DLSPS.
+> Follow only **Step 0** (configure credentials) and **Step 1+2** (`make up-sim-camera`) from the [get-started guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/docs/user-guide/get-started.md) / [SDK README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/uav-mission-compute-sdk/README.md). Do **not** run `make apps` (SDK Step 3) — that starts the SDK's own AI vision-processor and dashboard, which is not needed here since `uav-vision-analytics` runs its own inference via DL Streamer Pipeline Server.
 
 The SDK's `.env` defaults to `HOST_IP=127.0.0.1`, which binds MQTT, RTSP, and all other published ports to loopback only. Since `uav-vision-analytics` runs in a separate Docker container/network, it cannot reach loopback-bound ports. Set the SDK's `.env` to bind on all interfaces before starting it:
 
@@ -170,7 +180,7 @@ Two options are available depending on your use case:
 
 #### Option A — Managed RTSP output (recommended)
 
-Runs `pipeline_manager.py` inside the DLSPS container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
+Runs `pipeline_manager.py` inside the DL Streamer Pipeline Server container. It monitors the drone's ARMED/DISARMED state and automatically starts and stops inference pipelines. Annotated frames are served as RTSP on port `8555`.
 
 `make start-rtsp` starts **one camera pipeline at a time** (default: GPU/forward camera). Pass `DEVICE=cpu|gpu|npu|all` to choose:
 
@@ -194,14 +204,14 @@ Once the source is confirmed live, start the pipeline:
 
 ```bash
 # Start CPU pipeline (uav-mission-compute-sdk mode)
-INSTANCE_ID=$(curl -s -X POST \
-  http://localhost:8081/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
+INSTANCE_ID=$(curl -k -s -X POST \
+  https://<HOST_IP>/pipelines/user_defined_pipelines/nadir_camera_rtsp_cpu \
   -H "Content-Type: application/json" \
   -d '{
     "destination": {
       "metadata": {
         "type": "file",
-        "path": "/tmp/results.jsonl",
+        "path": "/tmp/results_cpu.jsonl",
         "format": "json-lines"
       },
       "frame": {
@@ -219,17 +229,24 @@ INSTANCE_ID=$(curl -s -X POST \
 echo "Instance ID: $INSTANCE_ID"
 
 # Verify it reached RUNNING state (not ERROR)
-curl -s http://localhost:8081/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
+curl -k -s https://<HOST_IP>/pipelines/${INSTANCE_ID}/status | python3 -m json.tool
 ```
 
 If `state` is `ERROR`, check the container logs:
+
 ```bash
 docker logs dlstreamer-pipeline-server 2>&1 | tail -20
 ```
-Change following **three values** to switch between CPU / GPU / NPU:
+Change following **four values** to switch between CPU / GPU / NPU:
 1. **Pipeline name** in the URL path (`nadir_camera_rtsp_cpu` → `forward_camera_rtsp_gpu` / `rear_camera_rtsp_npu`)
 2. **RTSP path** in the request body (`nadir` → `forward` / `rear`)
 3. **Device** in `detection-properties` (`CPU` → `GPU` / `NPU`)
+4. **JSONL log path** in the request body (`/tmp/results_cpu.jsonl` → `/tmp/results_gpu.jsonl` / `/tmp/results_npu.jsonl`) — each camera/device pipeline logs detections to its own file so events from concurrently-running pipelines are never mixed together.
+
+> [!NOTE]
+> `https://<HOST_IP>/...` is the DL Streamer Pipeline Server REST API, proxied by nginx on
+> port `443` (self-signed cert; use `curl -k` to skip verification). Plain HTTP on port `80`
+> redirects to HTTPS. Replace `<HOST_IP>` with the value auto-detected by `make init` (see `.env`).
 
 ### 7. View the output stream
 
@@ -245,7 +262,19 @@ ffplay rtsp://<HOST_IP>:8555/forward               # forward camera
 ffplay rtsp://<HOST_IP>:8555/rear               # rearcamera
 ```
 
+#### View detection logs
+
+Each camera/device pipeline writes its detection events (with GPS/telemetry enrichment)
+to a separate JSONL file:
+
+```bash
+tail -f /tmp/results_cpu.jsonl   # nadir (CPU) detections
+tail -f /tmp/results_gpu.jsonl   # forward (GPU) detections
+tail -f /tmp/results_npu.jsonl   # rear (NPU) detections
+```
+
 #### Capture all the video streams
+
 Record all three streams to disk with `ffmpeg`:
 
 ```bash
@@ -269,7 +298,7 @@ and a live telemetry overlay (GPS, altitude, speed, heading).
 **Stop an individual pipeline** (only needed if you started one manually via Option B in [Step 6](#6-start-inference-pipelines)):
 
 ```bash
-curl -X DELETE http://localhost:8081/pipelines/${INSTANCE_ID}
+curl -k -X DELETE https://<HOST_IP>/pipelines/${INSTANCE_ID}
 ```
 
 ### 8. Stop all services
@@ -294,7 +323,7 @@ make down
 ### UAV Mission Compute SDK Mode (`config-uavsdk.json`)
 
 | Pipeline | Device | Source (inside Docker) | Output RTSP (host) |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `nadir_camera_rtsp_cpu` | CPU | `rtsp://host.docker.internal:8554/uav-1/nadir` | `rtsp://<HOST_IP>:8555/nadir` |
 | `forward_camera_rtsp_gpu` | GPU | `rtsp://host.docker.internal:8554/uav-1/forward` | `rtsp://<HOST_IP>:8555/forward` |
 | `rear_camera_rtsp_npu` | NPU | `rtsp://host.docker.internal:8554/uav-1/rear` | `rtsp://<HOST_IP>:8555/rear` |
@@ -305,7 +334,7 @@ make down
 
 All pipelines are `auto_start: false` — started explicitly via the pipeline managers (`make start-rtsp DEVICE=cpu|gpu|npu|all`) or the REST API directly.
 
-REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{name}`
+REST endpoint: `POST https://<HOST_IP>/pipelines/user_defined_pipelines/{name}` (proxied by nginx over HTTPS to `dlstreamer-pipeline-server:8081`)
 
 ---
 
@@ -314,7 +343,7 @@ REST endpoint: `POST http://localhost:8081/pipelines/user_defined_pipelines/{nam
 Each output frame carries these overlaid fields in the upper-left corner:
 
 | Field | Source MAVLink message | Description |
-|---|---|---|
+| --- | --- | --- |
 | `Name` | — | Name passed as argument to the gvapython |
 | `Frame` | — | Running frame counter |
 | `ALT` | `GLOBAL_POSITION_INT.relative_alt` | Relative altitude (m) |
@@ -328,20 +357,24 @@ Each output frame carries these overlaid fields in the upper-left corner:
 
 ## Port Reference
 
-| Port | Protocol | Service | Mode |
-|---|---|---|---|
-| `8081` | HTTP | DL Streamer REST API | All modes |
-| `8555` | RTSP | Annotated video output | All modes |
+`nginx` is the only service that publishes ports to the host (bound to `HOST_IP`, not
+`0.0.0.0`). `dlstreamer-pipeline-server` is reachable only on the internal `app_network`.
+
+| Port | Protocol | Service | Published to host? | Mode |
+| --- | --- | --- | --- | --- |
+| `80` | HTTP | `nginx` → `301` redirect to HTTPS (no application traffic) | Yes | All modes |
+| `443` | HTTPS | `nginx` → proxies to `dlstreamer-pipeline-server:8081` (REST API); self-signed cert, use `curl -k` | Yes | All modes |
+| `8555` | RTSP | `nginx` → raw TCP passthrough to `dlstreamer-pipeline-server:8555` | Yes | All modes |
+| `8081` | HTTP | DL Streamer REST API | No (internal only) | All modes |
 
 ---
 
 ## Documentation
 
 | Document | Description |
-|---|---|
+| --- | --- |
 | [index.md](../index.md) | Application overview and component block diagrams |
 | [realsense-guide.md](../how-to-guides/realsense-guide.md) | Intel RealSense camera setup and pipelines |
 | [benchmark.md](../benchmark.md) | Performance benchmarking guide |
 | [makefile.md](../how-to-guides/makefile.md) | Makefile target reference |
 | [troubleshooting.md](../how-to-guides/troubleshooting.md) | Known issues and resolutions |
-

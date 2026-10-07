@@ -298,9 +298,6 @@ fine-tuned to reproduce in Step 3.
 ## Detailed Data-Preparation Flow
 
 ```mermaid
----
-config: {"theme": "dark"}
----
 flowchart TD
     A["Fused CSV</br>(--input-csv)"] --> B["CSV Loader and Cleaner"]
     I["Image Root</br>(--images-root)"] --> C["Image Index by Frame_id stem"]
