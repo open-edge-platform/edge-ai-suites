@@ -105,8 +105,8 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
    ```
 
 4. Check the output in Grafana dashboard:
-   - Use the link `https://localhost:3000` to open the Grafana dashboard in a browser, preferably
-     the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
+   - Use the link `https://127.0.0.1:3000` to open the Grafana dashboard in a browser, preferably
+     the Chrome browser. For Helm deployment, use the link `https://127.0.0.1:30001`.
    - Log in to the Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      values from the `.env` file:
 
@@ -122,7 +122,7 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
 
      ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
 
-   The insights UI can also be independently accessed at URL: `https://localhost:3000/insights-ui/`
+   The insights UI can also be independently accessed at URL: `https://127.0.0.1:3000/insights-ui/`
 
 ## Stop the Deployment
 

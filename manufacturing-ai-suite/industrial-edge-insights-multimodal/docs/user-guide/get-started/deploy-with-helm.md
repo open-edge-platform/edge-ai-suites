@@ -148,7 +148,7 @@ this sample application in Kubernetes environment:
    rm -f weld_anomaly_detector.tar
    tar cf weld_anomaly_detector.tar udfs/ models/ tick_scripts/
 
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.tar" -k
+   curl -X POST https://127.0.0.1:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.tar" -k
    ```
 
 > [!NOTE]
@@ -173,12 +173,12 @@ following cURL command.
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
 
   # Deletes all existing pipelines before starting a new one
-  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  for id in $(curl -k --location https://127.0.0.1:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
-      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+      curl -k --location -X DELETE "https://127.0.0.1:30001/dsps-api/pipelines/$id"
   done;
 
-  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  curl -k https://127.0.0.1:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
     -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
   ```
 
@@ -188,12 +188,12 @@ following cURL command.
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
   # Deletes all existing pipelines before starting a new one
-  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  for id in $(curl -k --location https://127.0.0.1:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
-      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+      curl -k --location -X DELETE "https://127.0.0.1:30001/dsps-api/pipelines/$id"
   done;
 
-  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  curl -k https://127.0.0.1:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
     -X POST -H 'Content-Type: application/json' \
     -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
   ```
@@ -204,12 +204,12 @@ following cURL command.
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
   # Deletes all existing pipelines before starting a new one
-  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  for id in $(curl -k --location https://127.0.0.1:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
-      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+      curl -k --location -X DELETE "https://127.0.0.1:30001/dsps-api/pipelines/$id"
   done;
 
-  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  curl -k https://127.0.0.1:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
     -X POST -H 'Content-Type: application/json' \
     -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
   ```
@@ -224,14 +224,14 @@ To activate the UDF deployment package and run UDF inference on `CPU` or `GPU`, 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
 
-curl -s -X POST https://localhost:30001/ts-api/config   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d @config.json   -k
+curl -s -X POST https://127.0.0.1:30001/ts-api/config   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d @config.json   -k
 ```
 
 - GPU
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
-curl -s -X POST https://localhost:30001/ts-api/config \
+curl -s -X POST https://127.0.0.1:30001/ts-api/config \
   -H 'accept: application/json' -H 'Content-Type: application/json' \
   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)" -k
 ```

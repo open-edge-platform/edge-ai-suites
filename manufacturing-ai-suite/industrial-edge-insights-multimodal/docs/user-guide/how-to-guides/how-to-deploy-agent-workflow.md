@@ -139,7 +139,7 @@ Agent reasoning prompts are in `configs/agentic/prompts/weld-quality-monitoring.
 
 2. Check the output in Grafana dashboard:
 
-   - Use the link `https://localhost:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
+   - Use the link `https://127.0.0.1:3000` to open Grafana dashboard in a browser, preferably the Chrome browser. For Helm deployment, use the link `https://127.0.0.1:30001`.
 
    - Log in to Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD` values
      from the `.env` file:
