@@ -58,6 +58,7 @@ except ImportError:
     SECURITY_UTILS_AVAILABLE = False
     logger.warning("security_utils not available, some functions may be limited")
 
+HOST_IP = common_utils.get_system_ip()
 def run_command(cmd, capture_output=False):
     """
     Execute shell commands.
@@ -5227,7 +5228,7 @@ def execute_seaweedfs_bucket_query():
         dict: Result with success status, jpg_files list, and bucket URL used
     """
     nginx_port = CONTAINERS["nginx_proxy"]["https_port"]
-    bucket_url = f"https://localhost:{nginx_port}/image-store/buckets/{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}/?limit=5000"
+    bucket_url = f"https://{HOST_IP}:{nginx_port}/image-store/buckets/{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}/?limit=5000"
 
     # Use existing function to get bucket files
     bucket_result = get_seaweedfs_bucket_files(bucket_url)
@@ -5250,7 +5251,7 @@ def check_s3_image_file_size(img_filename, bucket_path=None):
     if bucket_path is None:
         bucket_path = f"{MULTIMODAL_DLSTREAMER_S3_BUCKET}/{MULTIMODAL_DLSTREAMER_S3_FOLDER_PREFIX}"
     nginx_port = CONTAINERS["nginx_proxy"]["https_port"]
-    file_url = f"https://localhost:{nginx_port}/image-store/buckets/{bucket_path}/{img_filename}"
+    file_url = f"https://{HOST_IP}:{nginx_port}/image-store/buckets/{bucket_path}/{img_filename}"
 
     try:
         # Execute curl HEAD request to get content-length

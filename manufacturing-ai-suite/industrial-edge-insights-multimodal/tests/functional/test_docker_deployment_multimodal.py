@@ -23,6 +23,7 @@ pytest_plugins = ["conftest_docker"]
 
 logger = logging.getLogger(__name__)
 
+HOST_IP = common_utils.get_system_ip()
 def test_blank_values():
     """TC_001: Testing blank values in .env file for multimodal deployment"""
     logger.info("TC_001: Testing blank values, checking make check env variables with blank values in .env file")
@@ -579,7 +580,7 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
     # Test proxy endpoints
     grafana_results = docker_utils.test_nginx_proxy_endpoint(
         constants.NGINX_CONTAINER,
-        f"https://localhost:{constants.NGINX_HTTPS_PORT}/",
+        f"https://{HOST_IP}:{constants.NGINX_HTTPS_PORT}/",
         constants.TEST_CURL_TIMEOUT
     )
     logger.info(f"Grafana proxy results: success={grafana_results['success']}, errors={grafana_results.get('errors')}")
@@ -587,7 +588,7 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
 
     api_results = docker_utils.test_nginx_proxy_endpoint(
         constants.NGINX_CONTAINER,
-        f"https://localhost:{constants.NGINX_HTTPS_PORT}/ts-api/",
+        f"https://{HOST_IP}:{constants.NGINX_HTTPS_PORT}/ts-api/",
         constants.TEST_CURL_TIMEOUT
     )
     logger.info(f"TS API proxy results: success={api_results['success']}, errors={api_results.get('errors')}")
