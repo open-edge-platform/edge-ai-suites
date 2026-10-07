@@ -65,21 +65,9 @@ spec:
         - name: datasources-config
           mountPath: /etc/grafana/provisioning/datasources/datasources.yml
           subPath: datasources.yml
-        - name: grafana-visualizer
-          mountPath: /var/lib/grafana/dashboards/visualizer.json
-          subPath: visualizer.json
-        - name: grafana-visualizer-sub-1
-          mountPath: /var/lib/grafana/dashboards/visualizer_sub_1.json
-          subPath: visualizer_sub_1.json
-        - name: grafana-visualizer-sub-2
-          mountPath: /var/lib/grafana/dashboards/visualizer_sub_2.json
-          subPath: visualizer_sub_2.json
-        - name: grafana-visualizer-sub-3
-          mountPath: /var/lib/grafana/dashboards/visualizer_sub_3.json
-          subPath: visualizer_sub_3.json
-        - name: grafana-visualizer-sub-4
-          mountPath: /var/lib/grafana/dashboards/visualizer_sub_4.json
-          subPath: visualizer_sub_4.json
+        - name: grafana-dashboard
+          mountPath: /var/lib/grafana/dashboards/loitering-detection.json
+          subPath: loitering-detection.json
         - name: grafana-prometheus
           mountPath: /var/lib/grafana/dashboards/prometheus.json
           subPath: prometheus.json
@@ -94,21 +82,9 @@ spec:
       - name: datasources-config
         configMap:
           name: grafana-datasources
-      - name: grafana-visualizer
+      - name: grafana-dashboard
         configMap:
-          name: grafana-visualizer
-      - name: grafana-visualizer-sub-1
-        configMap:
-          name: grafana-visualizer-sub-1
-      - name: grafana-visualizer-sub-2
-        configMap:
-          name: grafana-visualizer-sub-2
-      - name: grafana-visualizer-sub-3
-        configMap:
-          name: grafana-visualizer-sub-3
-      - name: grafana-visualizer-sub-4
-        configMap:
-          name: grafana-visualizer-sub-4
+          name: grafana-dashboard
       - name: grafana-prometheus
         configMap:
           name: grafana-prometheus
@@ -151,47 +127,11 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grafana-visualizer
+  name: grafana-dashboard
   namespace: {{ $.Values.namespace }}
 data:
-  visualizer.json: |
-    {{ (.Files.Get "config/grafana/dashboards/visualizer.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-visualizer-sub-1
-  namespace: {{ $.Values.namespace }}
-data:
-  visualizer_sub_1.json: |
-    {{ (.Files.Get "config/grafana/dashboards/visualizer_sub_1.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-visualizer-sub-2
-  namespace: {{ $.Values.namespace }}
-data:
-  visualizer_sub_2.json: |
-    {{ (.Files.Get "config/grafana/dashboards/visualizer_sub_2.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-visualizer-sub-3
-  namespace: {{ $.Values.namespace }}
-data:
-  visualizer_sub_3.json: |
-    {{ (.Files.Get "config/grafana/dashboards/visualizer_sub_3.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: grafana-visualizer-sub-4
-  namespace: {{ $.Values.namespace }}
-data:
-  visualizer_sub_4.json: |
-    {{ (.Files.Get "config/grafana/dashboards/visualizer_sub_4.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
+  loitering-detection.json: |
+    {{ (.Files.Get "config/grafana/dashboards/loitering-detection.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
 ---
 apiVersion: v1
 kind: ConfigMap

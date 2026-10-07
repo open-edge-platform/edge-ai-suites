@@ -36,11 +36,15 @@ services:
       - OTEL_EXPORT_INTERVAL_MILLIS=${OTEL_EXPORT_INTERVAL_MILLIS}
       # NPU related environment variables
       - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
+      # Additional GStreamer plugin path(s), e.g. for the loitering-detection app's custom native element
+      - ADDITIONAL_GST_PLUGIN_PATH=/home/pipeline-server/plugins
     volumes:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/home/pipeline-server/videos"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/zones:/home/pipeline-server/zones"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/plugins:/home/pipeline-server/plugins:ro"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
       - "/tmp:/tmp"

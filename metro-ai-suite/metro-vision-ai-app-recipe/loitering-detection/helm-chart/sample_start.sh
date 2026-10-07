@@ -8,7 +8,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "topic": "object_tracking_1",
+            "topic": "object_tracking/1",
             "publish_frame":false
         },
         "frame": {
@@ -17,7 +17,10 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -
         }
     },
     "parameters": {
-        "detection-device": "CPU"
+        "detection-device": "CPU",
+        "analytics-properties": {
+            "config": "/home/pipeline-server/zones/VIRAT_S_000101.json"
+        }
     }
 }'
 
@@ -30,7 +33,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "topic": "object_tracking_2",
+            "topic": "object_tracking/2",
             "publish_frame":false
         },
         "frame": {
@@ -39,7 +42,10 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -
         }
     },
     "parameters": {
-        "detection-device": "CPU"
+        "detection-device": "CPU",
+        "analytics-properties": {
+            "config": "/home/pipeline-server/zones/VIRAT_S_000102.json"
+        }
     }
 }'
 
@@ -52,7 +58,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "topic": "object_tracking_3",
+            "topic": "object_tracking/3",
             "publish_frame":false
         },
         "frame": {
@@ -61,7 +67,10 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -
         }
     },
     "parameters": {
-        "detection-device": "CPU"
+        "detection-device": "CPU",
+        "analytics-properties": {
+            "config": "/home/pipeline-server/zones/VIRAT_S_000103.json"
+        }
     }
 }'
 
@@ -74,7 +83,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "topic": "object_tracking_4",
+            "topic": "object_tracking/4",
             "publish_frame":false
         },
         "frame": {
@@ -83,6 +92,9 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
         }
     },
     "parameters": {
-        "detection-device": "CPU"
+        "detection-device": "CPU",
+        "analytics-properties": {
+            "config": "/home/pipeline-server/zones/VIRAT_S_000104.json"
+        }
     }
 }'

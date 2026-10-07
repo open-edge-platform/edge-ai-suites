@@ -183,7 +183,7 @@ the Node IP. (Total 4 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_1",
+               "topic": "object_tracking/1",
                "publish_frame":false
            },
            "frame": {
@@ -209,7 +209,7 @@ the Node IP. (Total 4 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_2",
+               "topic": "object_tracking/2",
                "publish_frame":false
            },
            "frame": {
@@ -235,7 +235,7 @@ the Node IP. (Total 4 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_3",
+               "topic": "object_tracking/3",
                "publish_frame":false
            },
            "frame": {
@@ -261,7 +261,7 @@ the Node IP. (Total 4 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_4",
+               "topic": "object_tracking/4",
                "publish_frame":false
            },
            "frame": {

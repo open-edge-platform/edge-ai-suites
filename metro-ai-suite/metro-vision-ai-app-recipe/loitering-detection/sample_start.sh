@@ -26,7 +26,7 @@ function run_sample() {
     "destination": {
         "metadata": {
             "type": "mqtt",
-            "topic": "object_tracking_$x",
+            "topic": "object_tracking/$x",
             "publish_frame":false
         },
         "frame": {
@@ -36,6 +36,11 @@ function run_sample() {
                 "font-scale": 1.0,
                 "draw-txt-bg": false
             }
+        }
+    },
+    "parameters": {
+        "analytics-properties": {
+            "config": "/home/pipeline-server/zones/VIRAT_S_00010$x.json"
         }
     }
   }

@@ -9,7 +9,7 @@ By following this guide, you will learn how to:
 
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run a predefined pipeline**: Execute a pipeline to see loitering detection in action.
-- **Access the application's features and user interfaces**: Explore the Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
+- **Access the application's features and user interfaces**: Explore the Grafana dashboard and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
 
 ## Prerequisites
 
@@ -68,7 +68,6 @@ By following this guide, you will learn how to:
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
 
      </details>
@@ -131,10 +130,6 @@ By following this guide, you will learn how to:
   > and shape of objects, and it does not use image data. Since it does not use
   > image features, the same object may receive different IDs over time due to
   > lack of re-identification.
-
-### **NodeRED UI**
-
-- **URL**: `https://localhost/nodered/`
 
 ### **DL Streamer Pipeline Server**
 

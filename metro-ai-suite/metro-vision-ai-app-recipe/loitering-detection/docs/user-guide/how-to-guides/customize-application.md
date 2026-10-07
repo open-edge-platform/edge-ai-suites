@@ -2,10 +2,10 @@
 
 This comprehensive guide provides a detailed walkthrough of building a complete object tracking
 and loitering detection system. It utilizes a combination of technologies designed for ease of
-use: Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server), the visual
-programming tool Node-RED, and the data visualization Grafana platform. This approach caters
-to no-code/low-code users, enabling the creation of sophisticated analytics solutions with
-minimal programming.
+use: Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server) with native
+`gvaanalytics` zone and dwell-time analytics, and the data visualization Grafana platform. This
+approach caters to no-code/low-code users, enabling the creation of sophisticated analytics
+solutions with minimal programming.
 
 ## Overall System Architecture
 
@@ -13,11 +13,11 @@ The system follows a modular architecture:
 
 -   **Video Input:** Cameras or video streams provide the raw data.
 -   **Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server):** Processes video
-streams locally using AI models to detect and track objects.
--   **Node-RED:** Consumes object tracking data from the DL Streamer Pipeline Server, performs
-further analysis (like calculating distances and loitering times), and publishes results.
--   **Grafana:** Visualizes the processed data from Node-RED (or a database fed by Node-RED),
-providing real-time dashboards.
+streams locally using AI models to detect and track objects, and evaluates each tracked object
+against configurable zone polygons to compute dwell time natively via the `gvaanalytics`
+element — no external data-processing service required.
+-   **Grafana:** Visualizes the published MQTT data (zone presence, dwell time, and loitering
+status), providing real-time dashboards.
 
 ## DL Streamer Pipeline Server
 
@@ -65,14 +65,20 @@ Pipelines like `yolov10_1`, `yolov10_2`, etc., are used to identify objects in t
 
 ##### Object tracking pipelines
 
-Pipelines like `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `object_tracking_4`
-are designed to track objects detected by the object detection pipelines.
+Pipelines `object_tracking_cpu`, `object_tracking_gpu`, and `object_tracking_npu` each run
+detection, tracking, and zone/dwell-time analytics in a single pipeline for a given device; a
+stream is launched against one of these by REST call (see `sample_start.sh`), which assigns it
+a per-instance MQTT topic and WebRTC peer-id (e.g. `object_tracking_1`).
 
--   **Pipelines:** `object_tracking_1`, `object_tracking_2`, `object_tracking_3`, `object_tracking_4`
+-   **Pipelines:** `object_tracking_cpu`, `object_tracking_gpu`, `object_tracking_npu`
 -   **How They Work:**
     -   **Detection Model:** Uses the `pedestrian-and-vehicle-detector-adas-0001` model for
     specialized tracking.
     -   **Tracking Element:** Incorporates `gvatrack` with the setting `tracking-type=short-term-imageless` to follow objects over time.
+    -   **Zone & Dwell-Time Analytics:** The `gvaanalytics` element evaluates each tracked
+    object's position against a per-stream polygon zone config file and computes dwell time;
+    `loitering_watermark` (a reused DL Streamer sample element) renders the dwell-time/status
+    text overlay on the video.
     -   **Additional Parameters:**
         -   `Threshold`: Set to `0.1` to balance sensitivity and accuracy.
         -   `Inference Interval`: Controls how often the model analyzes frames.
@@ -99,8 +105,10 @@ Pipeline Server uses a messaging interface based on Message Queuing Telemetry Tr
     -   `Name: default`
     -   `Type: mqtt`
     -   `Endpoint: tcp://0.0.0.0:1883`
-    -   `Topics:` (Messages are published under topics like `yolov5` and `yolov5_effnet`; you
-    can update these as needed)
+    -   `Topics:` Each launched stream publishes its raw per-frame metadata under
+    `object_tracking/<N>` (set per-instance via `destination.metadata.topic` in the REST
+    launch payload, not hardcoded; see `sample_start.sh`). The `mqtt-table-flattener` sidecar
+    republishes a reshaped summary to `loiter_status/<N>` for the Grafana table.
     -   `Allowed Clients: *` (`*` denotes 'all', ensuring that any subscribed system can
     receive the data)
 
@@ -114,223 +122,138 @@ objects are continuously monitored.
 bounding boxes, timestamps, and object types). The processed data is published via MQTT,
 making it available for dashboards.
 
-## Node-RED Flow for Data Processing
+## Zone & Dwell-Time Analytics (gvaanalytics)
 
-> [!NOTE]
-> For comprehensive Node-RED documentation, visit the [Official Node-RED Documentation](https://nodered.org/docs/).
+> For detailed documentation on the `gvaanalytics` element, visit the
+> [DL Streamer documentation](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/elements/gvaanalytics.md).
 
-Node-RED is a flow-based programming tool that lets you visually wire together devices, APIs,
-and online services. This guide demonstrates how Node-RED can be used to process video
-analytics data from the DL Streamer Pipeline Server for tasks such as object tracking and
-loitering detection. Using a drag-and-drop interface, you can build complex workflows with
-minimal coding, making it ideal for no-code/low-code environments.
+Zone presence and dwell-time computation run natively inside the DL Streamer pipeline via the
+`gvaanalytics` element \u2014 no external low-code tool or custom service is required. This keeps
+the whole pipeline (detection, tracking, zone/dwell analytics, and the on-screen watermark) in
+one process, and the resulting data already flows to MQTT through the pipeline's existing
+`gvametaconvert` + `destination.metadata` publish path.
 
-![Node-RED Flow 1](../_assets/node-red1.png)
+### Zone configuration files
 
-![Node-RED Flow 2](../_assets/node-red2.png)
+Each stream has its own zone-config JSON file under `src/dlstreamer-pipeline-server/zones/`
+(mirrored under `helm-chart/config/dlstreamer-pipeline-server/zones/` for Helm deployments),
+for example `VIRAT_S_000101.json`:
 
-### Key Node-RED components
-
-#### MQTT Input nodes
-
--   **Purpose:** To receive real-time object tracking data from DL Streamer Pipeline Server
-using MQTT. DL Streamer Pipeline Server needs to be configured to forward its MQTT messages
-to an MQTT broker.
-
--   **Configuration Details:**
-    -   `Server Address: 0.0.0.0:1883` (example - replace with your MQTT broker's address)
-    -   `Topics: object_tracking_1, object_tracking_2` (as an example)
-    -   `Quality of Service (QoS): 2` (ensuring exactly-once delivery)
--   **Usage:** These nodes are the entry points for the data flow. They subscribe to specific
-MQTT topics, automatically parsing incoming messages for further processing.
-
-#### Data extraction nodes
-
--   **Purpose:** To extract and filter meaningful information from raw MQTT messages.
-
--   **Key tasks:**
-
-    -   **Parsing the Payload:** The node retrieves the list of detected objects.
-
-    ```javascript
-    let payload = msg.payload["objects"];
-    ```
-
-    -   **Fetching configuration variables:** Retrieve parameters such as object confidence
-    thresholds and target object types from the flow context.
-
-    ```javascript
-    var object_confidence = flow.get("object_confidence");
-    var target_object = flow.get("target_object");
-    ```
-
-    -   **Filtering and time stamping:** Iterates through the object list, applying filters
-    (e.g., minimum confidence) and appending timestamps.
-
-    ```javascript
-    var date = new Date();
-    msg.nodered_timestamp = date.toLocaleString();
-    msg.object_timestamp = date.getTime() / 1000;
-    ```
-
--   **Outcome:** A structured message containing only the relevant object data, ready for
-further analysis.
-
-#### Euclidean and IoR Nodes (Loitering Detection)
-
--   **Purpose:** To perform advanced spatial analysis, crucial for determining object positions
-and detecting loitering behavior. We will focus on a simplified Euclidean distance approach
-suitable for a low-code environment.
-
--   **Key Processes:**
-
-    A. **Preprocessing Object Data**
-
-    -   **Extracting Object Properties:** A helper function extracts properties like type,
-    color, ID, and region type from each detected object.
-
-    ```javascript
-    function getObjectData(object_data) {
-        let current_object_data = {};
-        if (object_data.hasOwnProperty("type")) {
-            current_object_data["type"] = object_data["type"];
+```json
+{
+    "zones": [
+        {
+            "id": "region1",
+            "type": "polygon",
+            "points": [
+                {"x": 208, "y": 390},
+                {"x": 2, "y": 489},
+                {"x": 2, "y": 296},
+                {"x": 197, "y": 237}
+            ],
+            "track-dwell-time": true,
+            "object-retention": 1.0,
+            "color": {"r": 0, "g": 255, "b": 0},
+            "thickness": 2
         }
-        // Additional properties like color, license_plate, etc.
-        return current_object_data;
+    ]
+}
+```
+
+-   `id`: Zone identifier, reported as `zone_id` in the published metadata.
+-   `type`: `"polygon"` (arbitrary number of points) or `"circle"`.
+-   `track-dwell-time`: Enables dwell-time computation for this zone.
+-   `object-retention`: Grace period (seconds) to keep zone state after an object leaves.
+-   `color`/`thickness`: Used when rendering the zone outline on the video overlay.
+
+A zone file can contain **any number of zones** \u2014 adding a second or third zone to a stream is
+purely a matter of adding another entry to the `zones` array in that stream's JSON file.
+
+### Adding or editing a zone (no code changes)
+
+1.  Edit (or add zones to) the stream's JSON file under `src/dlstreamer-pipeline-server/zones/`.
+2.  Restart that stream's pipeline instance so it picks up the change (`gvaanalytics` only reads
+    its config file once, when the pipeline starts \u2014 editing the file does not hot-reload a
+    running pipeline):
+    ```bash
+    ./sample_stop.sh
+    ./sample_start.sh
+    ```
+No `config.json`, pipeline string, or Grafana dashboard changes are needed.
+
+### Adding a new stream
+
+1.  Add a video file under `src/dlstreamer-pipeline-server/videos/` and a matching zone-config
+    JSON file under `src/dlstreamer-pipeline-server/zones/`.
+2.  Launch it with one more REST call (see `sample_start.sh` for the pattern), passing
+    `"analytics-properties": {"config": "/home/pipeline-server/zones/<your-zone-file>.json"}`
+    in the `parameters` object, alongside a unique `destination.metadata.topic` /
+    `destination.frame.peer-id` for the new stream.
+3.  Add the new stream name to the `stream` dashboard variable in the Grafana dashboard so its
+    video panel is rendered (the MQTT status table requires no change \u2014 it already subscribes
+    to a wildcard topic covering all streams).
+
+### Published metadata
+
+`gvametaconvert` (already part of the pipeline) natively serializes each tracked object's zone
+membership and dwell time into the existing MQTT payload on `object_tracking/<N>`, per object:
+
+```json
+{
+  "objects": [
+    {
+      "id": 7,
+      "x": 120, "y": 240, "w": 40, "h": 90,
+      "roi_type": "pedestrian",
+      "zone_violations": ["region1"],
+      "dwell_times": [
+        {"zone_id": "region1", "dwell_time_sec": 6.2, "first_seen_timestamp_sec": 118.4}
+      ]
     }
-    ```
+  ],
+  "resolution": {"width": 1280, "height": 720},
+  "timestamp": 123456789
+}
+```
 
-    B. **Bounding Box Calculation**
+No custom metadata-publishing code is needed \u2014 this is the same MQTT topic and publish
+mechanism the application already uses for object detection/tracking data. `object_tracking/<N>`
+is never modified by this application and remains available as-is for any external integration
+that wants the raw, full per-frame payload.
 
--   **Extracting Coordinates:** Retrieve bounding box coordinates to understand the
-    object's location. Assume the bounding box is represented by x1, y1, x2, y2 in the
-    `msg.payload`. We will use the center point of the bounding box for distance calculations:
+### Grafana table data (`mqtt-table-flattener`)
 
-    ```javascript
-    let x_center = (msg.payload.x1 + msg.payload.x2) / 2;
-    let y_center = (msg.payload.y1 + msg.payload.y2) / 2;
+Grafana's MQTT data source maps one MQTT message to one table row, and cannot expand a nested
+JSON array (like `objects` above) into multiple rows on its own. A small sidecar service,
+`mqtt-table-flattener` (`src/mqtt-table-flattener/flatten.py`), bridges this gap:
 
-    msg.object_position = { x: x_center, y: y_center };
-    ```
+- Subscribes read-only to `object_tracking/+` (never alters it).
+- Performs no zone/dwell-time computation itself \u2014 all of that is still done exclusively by
+  `gvaanalytics`; the flattener only reshapes already-computed values for display.
+- Once a second, republishes one small flat message per currently-dwelling object to
+  `loiter_status/<N>`, e.g. `{"Stream": "1", "Track ID": 7, "Type": "pedestrian", "Zone":
+  "region1", "Dwell Time (s)": 6.2}`.
+- Stops republishing a stream once it has been silent for a few seconds (`STALE_AFTER_SEC`,
+  default 3s), so the table correctly empties out after a pipeline stops instead of repeating
+  its last-known state forever.
+- Runs as a second container from the same `dlstreamer-pipeline-server` image (already pulled
+  for the main pipeline service, and already has `paho-mqtt`) \u2014 no extra image pull and no
+  `pip install` at runtime, so it works in air-gapped deployments too.
+- The `object_tracking`/`loiter_status` topic prefixes are not hardcoded: they come from
+  `SOURCE_TOPIC_PREFIX`/`DEST_TOPIC_PREFIX` in the root `.env` (Compose) or
+  `mqtt_table_flattener.sourceTopicPrefix`/`destTopicPrefix` in `helm-chart/values.yaml` (Helm).
 
--   **Calculating Distance**
+The Grafana dashboard's status table subscribes to `loiter_status/+` and needs no per-stream
+changes when adding a new stream, since it already covers the whole topic namespace.
 
-    ```javascript
-    let distance = Math.sqrt(Math.pow(msg.object_position.x - initialPosition.x, 2) + Math.pow(msg.object_position.y - initialPosition.y, 2));
-    ```
+### Video overlay
 
-    -   `let distance = ...`: This line creates a "variable" called `distance`. The `distance`
-    variable will store the calculated distance.
+The reused `loitering_watermark` element reads the same dwell-time metadata and draws a
+per-object dashboard line (`<zone_id>: <type>-<id> : <dwell_time>s`), turning red once dwell
+time crosses the configured `loitering-threshold`. It can be disabled per-stream (e.g. to rely
+on the Grafana table only) by setting `quiet-mode` to `"true"` via the
+`loitering-watermark-properties` REST parameter at launch time, with zero code changes.
 
-    -   `msg.object_position.x`: This means "get the X coordinate from the object's positional
-    information".
-
-    -   `initialPosition.x`: This is the X coordinate of the object's starting position, which
-    the smart box remembered earlier.
-
-    -   `msg.object_position.x - initialPosition.x`: This subtracts the starting X coordinate
-    from the current X coordinate. It tells us how far the object has moved horizontally.
-
-    -   `Math.pow(..., 2)`: This part squares the result of the subtraction. We do this to
-    handle positive and negative movements the same way.
-
-    -   `+`: This adds the squared horizontal movement to the squared vertical movement (which
-    is calculated in the same way using `msg.object_position.y - initialPosition.y`).
-
-    -   `Math.sqrt(...)`: This is short for "square root". It "undoes" the squaring we did earlier.
-
-    Putting it all together: The entire line calculates the straight-line distance between the
-    object's current position and its starting position, i.e. the Euclidean distance.
-
--   **Checking the time elapsed**
-
-    ```javascript
-    let timeElapsed = msg.object_timestamp - initialTimestamp;
-    if (timeElapsed >= loiteringThresholdTime) {
-        msg.loitering = true; // Object is loitering!
-    }
-    ```
-
-    -   `let timeElapsed = ...`: Creates another variable called `timeElapsed` to store the
-    amount of time that has passed.
-
-    -   `msg.object_timestamp - initialTimestamp`: Subtracts the object's current timestamp from
-    the timestamp when it started at its initial position. The result is the time elapsed.
-
-    -   `if (timeElapsed >= loiteringThresholdTime) { ... }`: This is a conditional statement.
-    It checks if `timeElapsed` is greater than or equal to the `loiteringThresholdTime` that
-    we configured.
-
-    -   `msg.loitering = true;`: If the time elapsed is long enough, this line sets the
-    `loitering` flag to `true`. This tells the rest of the system that the object is loitering.
-
--   **Outcome:** Enhanced object data that includes spatial metrics and a `msg.loitering` flag.
-
-#### Data Table Output Nodes
-
--   **Purpose:** To convert processed object data into a structured, tabular format that is easy
-to read and interpret.
-
--   **Key Configuration:**
-
-    -   **Table Headers:** Define the columns for output.
-
-    ```javascript
-    var header = ["Zone ID", "Spot ID", "ID", "Status", "Type", "Loitering"];
-    ```
-
-    -   **Data Mapping:** Specify which fields from the processed data correspond to each column.
-
-    ```javascript
-    var data = ["video_id", "region_id", "id", "occupied", "roi_type", "loitering"];
-    ```
-
--   **Processing Logic:**
-
-    -   **Iterating Over Objects:** The node loops through each detected object, filters out
-    invalid entries, and assigns region names dynamically.
-
-    ```javascript
-    for (let i = 0; i < keys.length; i++) {
-        // Determine number of entries, check for valid IDs, etc.
-        var region_name = "Region " + payload[keys[i]][data[h]];
-        result.payload[region_name] = {};
-    }
-    ```
-
-    -   **Handling Empty Data:** If no objects are detected, the node returns an empty result
-    to prevent errors downstream.
-
--   **Outcome:** A clean, structured JSON object that can be easily consumed by visualization
-tools or stored in a database.
-
-#### MQTT Output Nodes
-
--   **Purpose:** To publish the final processed data, such as loitering status updates, back
-to an MQTT topic. This allows other systems (like dashboards) to subscribe and react to the data.
-
--   **Configuration Details:**
-    -   `Server Address: 0.0.0.0:1883`
-    -   `Topic: loiter_status_1` (as an example)
-    -   `QoS: 2`
-    -   `Retain Flag: Enabled` (so that the last message is stored for new subscribers)
-
--   **Usage:** After all processing and formatting is complete, this node publishes the output
-data, ensuring that downstream services always receive up-to-date information on object status
-and loitering events.
-
-### Node-RED workflow
-
-1.  **Data Ingestion:** MQTT Input Nodes receive live data from the DL Streamer Pipeline Server
-(relayed via MQTT broker).
-2.  **Data Processing:**
-    -   Data Extraction Nodes filter and enrich the data by adding timestamps and applying
-    confidence thresholds.
-    -   Euclidean Distance calculation and loitering detection.
-3.  **Data Structuring:** Data Table Output Nodes organize the processed data into a clear,
-tabular format.
-4.  **Data Publication:** MQTT Output Nodes send the final loitering status updates to an MQTT
-topic, making it accessible to visualization tools (e.g., Grafana).
 
 ## Grafana visualization
 
@@ -341,15 +264,15 @@ topic, making it accessible to visualization tools (e.g., Grafana).
 
 Grafana is a powerful, open-source visualization tool that helps you create dynamic dashboards
 for monitoring real-time data. With Grafana, you can easily visualize the outputs from your
-DL Streamer Pipeline Server and Node-RED systems without deep coding skills. Here is how you
+DL Streamer Pipeline Server without deep coding skills. Here is how you
 can leverage Grafana in your analytics workflow.
 
 ### Key Grafana Components
 
 #### Data Sources
 
--   **MQTT Integration:** Directly query data from the DL Streamer Pipeline Server or Node-RED
-endpoints via MQTT datasource.
+-   **MQTT Integration:** Directly query data from the DL Streamer Pipeline Server
+via MQTT datasource.
 
 #### Dashboards and Panels
 
@@ -397,30 +320,27 @@ The system operates as follows:
 
 1.  **Video Input:** A camera captures video and sends the stream to the DL Streamer Pipeline Server.
 2.  **DL Streamer Pipeline Server Processing:** The DL Streamer Pipeline Server processes the
-video, detects and tracks objects using its AI models. It publishes metadata about the
-detected objects (ID, bounding box coordinates, object type, timestamps) to MQTT.
+video, detects and tracks objects using its AI models, and evaluates each tracked object
+against configured zone polygons via `gvaanalytics` to compute zone presence and dwell time.
+It publishes metadata about the detected objects (ID, bounding box coordinates, object type,
+timestamps, zone presence, and dwell time) to MQTT.
 3.  **MQTT Bridging (DL Streamer Pipeline Server Configuration):** The DL Streamer Pipeline Server
 is configured to relay the MQTT messages to an MQTT broker. This broker acts as a central hub
 for the data.
-4.  **Node-RED Processing:** Node-RED subscribes to the relevant MQTT topics. It receives the
-object metadata, filters the data, calculates the Euclidean distance to determine loitering,
-and adds the loitering flag to the data.
-5.  **Grafana Visualization:** Grafana directly consumes MQTT topics through its MQTT
+4.  **Grafana Visualization:** Grafana directly consumes MQTT topics through its MQTT
 datasource to create dashboards showing real-time object counts and loitering events.
 
 **Data at each step:**
 
 -   **DL Streamer Pipeline Server Output (MQTT):** JSON payload containing an array of detected
-objects. Each object has properties like `id`, `type`, `confidence`, `x1`, `y1`, `x2`, `y2`,
-and `timestamp`.
--   **Node-RED Processed Data:** JSON payload with the same object properties as above, plus
-the calculated `loitering` flag and any other derived metrics.
+objects. Each object has properties like `id`, `roi_type`, `confidence`, bounding box
+coordinates, `zone_violations`, and `dwell_times` (zone ID, dwell time, and first-seen timestamp).
 
 ## Conclusion
 
 This section has demonstrated a complete object tracking and loitering detection system using
-DL Streamer Pipeline Server, Node-RED, and Grafana. The system provides a balance of edge
-processing, flexible data manipulation, and powerful visualization. The low-code nature of
-Node-RED and the user-friendly interface of Grafana make this solution accessible to users,
-without extensive programming knowledge. This allows for quick deployment, easy customization
-for specific use cases, and scalability to handle multiple cameras and locations.
+DL Streamer Pipeline Server (with native `gvaanalytics` zone/dwell-time analytics) and Grafana.
+The system provides a balance of edge processing and powerful visualization, with zone
+configuration handled entirely through JSON files — no custom data-processing service, flow
+duplication, or per-zone code is required. This allows for quick deployment, easy customization
+for specific use cases, and scalability to handle multiple cameras and zones.

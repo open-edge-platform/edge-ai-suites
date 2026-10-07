@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-mqtt-table-flattener
+  labels:
+    app: mqtt-table-flattener
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-table-flattener
+  template:
+    metadata:
+      labels:
+        app: mqtt-table-flattener
+    spec:
+      containers:
+      - name: mqtt-table-flattener
+        image: {{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
+        command: ["python3", "/app/flatten.py"]
+        env:
+        - name: MQTT_HOST
+          value: broker
+        - name: MQTT_PORT
+          value: "{{ $.Values.config.mqtt_broker.int.mqtt_port }}"
+        - name: SOURCE_TOPIC_PREFIX
+          value: {{ $.Values.mqtt_table_flattener.sourceTopicPrefix }}
+        - name: DEST_TOPIC_PREFIX
+          value: {{ $.Values.mqtt_table_flattener.destTopicPrefix }}
+        - name: http_proxy
+          value: {{ $.Values.env.http_proxy }}
+        - name: https_proxy
+          value: {{ $.Values.env.https_proxy }}
+        - name: no_proxy
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        volumeMounts:
+        - name: mqtt-table-flattener-app
+          mountPath: /app
+          readOnly: true
+      volumes:
+      - name: mqtt-table-flattener-app
+        configMap:
+          name: mqtt-table-flattener-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: mqtt-table-flattener-config
+data:
+  flatten.py: |-
+{{ .Files.Get "config/mqtt-table-flattener/flatten.py" | indent 4 }}

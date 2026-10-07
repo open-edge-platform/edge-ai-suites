@@ -1,0 +1,272 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 7,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 26,
+      "panels": [],
+      "title": "Video Streams",
+      "type": "row"
+    },
+    {
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 15,
+        "w": 12,
+        "x": 0,
+        "y": 1
+      },
+      "id": 22,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<iframe src=\"${WEBRTC_URL}$stream/\" style=\"width:100%;height:500px\";  allow=\"autoplay; encrypted-media\">\n</iframe> ",
+        "mode": "html"
+      },
+      "pluginVersion": "11.5.4",
+      "repeat": "stream",
+      "repeatDirection": "h",
+      "title": "$stream",
+      "type": "text"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "id": 28,
+      "panels": [],
+      "title": "Loitering Status",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "grafana-mqtt-datasource",
+        "uid": "PBA9FB8DAC51D59B8"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Dwell Time (s)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "s"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 16,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "id": 27,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "11.5.4",
+      "targets": [
+        {
+          "datasource": {
+            "type": "grafana-mqtt-datasource",
+            "uid": "PBA9FB8DAC51D59B8"
+          },
+          "refId": "A",
+          "topic": "loiter_status/+"
+        }
+      ],
+      "title": "Loiter Table - All Streams",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Stream": { "aggregations": [], "operation": "groupby" },
+              "Track ID": { "aggregations": [], "operation": "groupby" },
+              "Type": { "aggregations": ["last"], "operation": "aggregate" },
+              "Zone": { "aggregations": ["last"], "operation": "aggregate" },
+              "Dwell Time (s)": { "aggregations": ["last"], "operation": "aggregate" }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "Type (last)": "Type",
+              "Zone (last)": "Zone",
+              "Dwell Time (s) (last)": "Dwell Time (s)"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    }
+  ],
+  "preload": false,
+  "refresh": "5s",
+  "schemaVersion": 40,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "text": "https://10.223.24.28/mediamtx/",
+          "value": "https://10.223.24.28/mediamtx/"
+        },
+        "description": "",
+        "name": "WEBRTC_URL",
+        "options": [
+          {
+            "selected": true,
+            "text": "https://10.223.24.28/mediamtx/",
+            "value": "https://10.223.24.28/mediamtx/"
+          }
+        ],
+        "query": "https://10.223.24.28/mediamtx/",
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "text": ["object_tracking_1", "object_tracking_2", "object_tracking_3", "object_tracking_4"],
+          "value": ["object_tracking_1", "object_tracking_2", "object_tracking_3", "object_tracking_4"]
+        },
+        "description": "Comma-separated list of active DLSPS pipeline/stream names. Add or remove a value here when a stream is added/removed \u2014 no new dashboard file needed.",
+        "includeAll": false,
+        "multi": true,
+        "name": "stream",
+        "options": [
+          {
+            "selected": true,
+            "text": "object_tracking_1",
+            "value": "object_tracking_1"
+          },
+          {
+            "selected": true,
+            "text": "object_tracking_2",
+            "value": "object_tracking_2"
+          },
+          {
+            "selected": true,
+            "text": "object_tracking_3",
+            "value": "object_tracking_3"
+          },
+          {
+            "selected": true,
+            "text": "object_tracking_4",
+            "value": "object_tracking_4"
+          }
+        ],
+        "query": "object_tracking_1,object_tracking_2,object_tracking_3,object_tracking_4",
+        "type": "custom"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-1s",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "15s",
+      "1m",
+      "10m",
+      "30m",
+      "1h",
+      "6h",
+      "12h",
+      "1d",
+      "7d",
+      "14d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "Loitering Detection",
+  "uid": "kzGVerJnz4",
+  "version": 1,
+  "weekStart": ""
+}
