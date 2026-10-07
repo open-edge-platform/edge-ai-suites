@@ -68,6 +68,8 @@ You can either generate or download the Helm charts.
    HOST_IP:  # set this to a host-reachable, non-loopback node IP address for remote UI access and WebRTC/TURN
    S3_STORAGE_USERNAME:
    S3_STORAGE_PASSWORD:
+   SEAWEEDFS_WEB_AUTH_USER:
+   SEAWEEDFS_WEB_AUTH_PASSWORD:
    ```
 
 ## Step 3: Install Helm charts

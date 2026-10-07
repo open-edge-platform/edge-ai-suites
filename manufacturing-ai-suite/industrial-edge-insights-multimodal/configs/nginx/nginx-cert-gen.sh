@@ -15,7 +15,13 @@ if [ -d "$SSL_DIR" ]; then rm -rf "${SSL_DIR:?}"/*; fi
 # htpasswd utility, so use openssl to produce an APR1-hashed credential line.
 : "${SEAWEEDFS_WEB_AUTH_USER:?SEAWEEDFS_WEB_AUTH_USER is required}"
 : "${SEAWEEDFS_WEB_AUTH_PASSWORD:?SEAWEEDFS_WEB_AUTH_PASSWORD is required}"
-echo "${SEAWEEDFS_WEB_AUTH_USER}:$(openssl passwd -apr1 "${SEAWEEDFS_WEB_AUTH_PASSWORD}")" > "$SSL_DIR/.htpasswd"
+# Feed the password via stdin so it never appears in the process list.
+if ! htpasswd_hash=$(printf '%s\n' "${SEAWEEDFS_WEB_AUTH_PASSWORD}" | openssl passwd -apr1 -stdin) || [ -z "$htpasswd_hash" ]; then
+    echo "Failed to generate htpasswd hash for SeaweedFS web auth" >&2
+    exit 1
+fi
+printf '%s:%s\n' "${SEAWEEDFS_WEB_AUTH_USER}" "$htpasswd_hash" > "$SSL_DIR/.htpasswd"
+unset htpasswd_hash
 chmod 640 "$SSL_DIR/.htpasswd"
 
 # Render the profile-specific server locations (insights-ui, agentic-ui,
