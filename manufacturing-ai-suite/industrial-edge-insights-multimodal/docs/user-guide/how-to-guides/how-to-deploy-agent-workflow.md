@@ -17,12 +17,22 @@ The agentic workflow is implemented as a **LangGraph framework-based, sequential
 > [!NOTE]
 > The `[SYSTEM]` prompt provides shared domain knowledge, including the canonical defect taxonomy, label normalization rules, and available fusion data. It establishes the common reasoning context for all agents and is **not** a separate execution stage.
 
-## System Requirements
+## Minimum System Requirements
 
-| Component | Minimum Requirement |
-| --------- | ------------------- |
-| Operating System | Ubuntu OS version 24.04 LTS or later |
-| Hardware | Intel® Core™ Ultra Series 3 processor or newer |
+In addition to the [minimum requirements](../get-started/system-requirements.md#minimum-requirements) and [software requirements](../get-started/system-requirements.md#software-requirements) of the sample application, the agentic workflow requires the following:
+
+| Component    | Minimum Requirement                                 |
+|--------------|-----------------------------------------------------|
+| **Hardware** | Intel® Core™ Ultra Series 3 processor or newer only |
+| **RAM**      | Minimum 32 GB                                       |
+| **Storage**  | Minimum 256 GB (512 GB recommended)                 |
+
+### Validated Platforms
+
+| Product / Family                                                                 | CPU | iGPU | NPU |
+|----------------------------------------------------------------------------------|-----|------|-----|
+| Intel® Core™ Ultra Processors Series 3 (Intel Core Ultra 7 356H, 16 Cores, 32GB) | ✓   | ✓    | ✓   |
+
 
 ## Prerequisites
 
