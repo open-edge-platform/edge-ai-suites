@@ -41,27 +41,9 @@ useful information about the system's operations without being overly verbose.
 #### Video processing pipelines
 
 The DL Streamer Pipeline Server utilizes GStreamer pipelines to define the flow of video data
-through various processing elements.
-
-##### Object detection pipelines (YOLOv10 Series)
-
-Pipelines like `yolov10_1`, `yolov10_2`, etc., are used to identify objects in the video frames.
-
--   **Pipelines:** `yolov10_1`, `yolov10_2`, `yolov10_3`, `yolov10_4`
--   **How They Work:**
-    -   **Video Source:** Uses GStreamer to capture live video.
-    -   **Decoding & Detection:** The pipeline decodes the video stream and uses the `gvadetect`
-    element with a YOLO model (located at `/home/pipeline-server/models/public/yolov10s/FP32/yolov10s.xml`)
-    to identify objects.
-    -   **Post-Processing:**
-        -   `gvawatermark` adds visual overlays (like bounding boxes) on detected objects.
-        -   `gvametaconvert` and `gvametapublish` process and publish the metadata.
-        -   `gvafpscounter` monitors the frame rate.
-    -   **Queue Management:** Each pipeline has a queue with a maximum size of 50, ensuring
-    smooth data handling even during high loads.
-    -   **Control Options:**
-        -   `Auto-Start`: Set to `false` so you can start the pipeline manually.
-        -   `Publish Frame`: Enabled, allowing the system to output processed video frames for visualization.
+through various processing elements. This app defines a single family of pipelines that run
+detection, tracking, and zone/dwell-time analytics together (see below) — there is no
+separate detection-only pipeline stage.
 
 ##### Object tracking pipelines
 
@@ -128,7 +110,7 @@ making it available for dashboards.
 > [DL Streamer documentation](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/elements/gvaanalytics.md).
 
 Zone presence and dwell-time computation run natively inside the DL Streamer pipeline via the
-`gvaanalytics` element \u2014 no external low-code tool or custom service is required. This keeps
+`gvaanalytics` element — no external low-code tool or custom service is required. This keeps
 the whole pipeline (detection, tracking, zone/dwell analytics, and the on-screen watermark) in
 one process, and the resulting data already flows to MQTT through the pipeline's existing
 `gvametaconvert` + `destination.metadata` publish path.
@@ -166,14 +148,14 @@ for example `VIRAT_S_000101.json`:
 -   `object-retention`: Grace period (seconds) to keep zone state after an object leaves.
 -   `color`/`thickness`: Used when rendering the zone outline on the video overlay.
 
-A zone file can contain **any number of zones** \u2014 adding a second or third zone to a stream is
+A zone file can contain **any number of zones** — adding a second or third zone to a stream is
 purely a matter of adding another entry to the `zones` array in that stream's JSON file.
 
 ### Adding or editing a zone (no code changes)
 
 1.  Edit (or add zones to) the stream's JSON file under `src/dlstreamer-pipeline-server/zones/`.
 2.  Restart that stream's pipeline instance so it picks up the change (`gvaanalytics` only reads
-    its config file once, when the pipeline starts \u2014 editing the file does not hot-reload a
+    its config file once, when the pipeline starts — editing the file does not hot-reload a
     running pipeline):
     ```bash
     ./sample_stop.sh
@@ -190,7 +172,7 @@ No `config.json`, pipeline string, or Grafana dashboard changes are needed.
     in the `parameters` object, alongside a unique `destination.metadata.topic` /
     `destination.frame.peer-id` for the new stream.
 3.  Add the new stream name to the `stream` dashboard variable in the Grafana dashboard so its
-    video panel is rendered (the MQTT status table requires no change \u2014 it already subscribes
+    video panel is rendered (the MQTT status table requires no change — it already subscribes
     to a wildcard topic covering all streams).
 
 ### Published metadata
@@ -216,7 +198,7 @@ membership and dwell time into the existing MQTT payload on `object_tracking/<N>
 }
 ```
 
-No custom metadata-publishing code is needed \u2014 this is the same MQTT topic and publish
+No custom metadata-publishing code is needed — this is the same MQTT topic and publish
 mechanism the application already uses for object detection/tracking data. `object_tracking/<N>`
 is never modified by this application and remains available as-is for any external integration
 that wants the raw, full per-frame payload.
@@ -228,7 +210,7 @@ JSON array (like `objects` above) into multiple rows on its own. A small sidecar
 `mqtt-table-flattener` (`src/mqtt-table-flattener/flatten.py`), bridges this gap:
 
 - Subscribes read-only to `object_tracking/+` (never alters it).
-- Performs no zone/dwell-time computation itself \u2014 all of that is still done exclusively by
+- Performs no zone/dwell-time computation itself — all of that is still done exclusively by
   `gvaanalytics`; the flattener only reshapes already-computed values for display.
 - Once a second, republishes one small flat message per currently-dwelling object to
   `loiter_status/<N>`, e.g. `{"Stream": "1", "Track ID": 7, "Type": "pedestrian", "Zone":
@@ -237,7 +219,7 @@ JSON array (like `objects` above) into multiple rows on its own. A small sidecar
   default 3s), so the table correctly empties out after a pipeline stops instead of repeating
   its last-known state forever.
 - Runs as a second container from the same `dlstreamer-pipeline-server` image (already pulled
-  for the main pipeline service, and already has `paho-mqtt`) \u2014 no extra image pull and no
+  for the main pipeline service, and already has `paho-mqtt`) — no extra image pull and no
   `pip install` at runtime, so it works in air-gapped deployments too.
 - The `object_tracking`/`loiter_status` topic prefixes are not hardcoded: they come from
   `SOURCE_TOPIC_PREFIX`/`DEST_TOPIC_PREFIX` in the root `.env` (Compose) or

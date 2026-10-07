@@ -37,7 +37,7 @@ The architecture is designed to facilitate seamless integration and operation of
 
 - **DL Streamer Pipeline Server (VA Pipeline):** Processes video frames, runs object detection and tracking, and computes zone presence and dwell time natively via the `gvaanalytics` element and a reusable `loitering_watermark` overlay element.
 - **Mosquitto MQTT Broker:** Facilitates message communication between the DL Streamer Pipeline Server and Grafana using the MQTT protocol.
-- **MQTT Table Flattener:** A small stateless sidecar that reshapes the raw per-frame `object_tracking/<N>` metadata into one-row-per-object `loiter_status/<N>` messages for the Grafana status table (no zone/dwell computation \u2014 that remains entirely in `gvaanalytics`).
+- **MQTT Table Flattener:** A small stateless sidecar that reshapes the raw per-frame `object_tracking/<N>` metadata into one-row-per-object `loiter_status/<N>` messages for the Grafana status table (no zone/dwell computation — that remains entirely in `gvaanalytics`).
 - **WebRTC Stream Viewer:** Displays real-time video streams processed by the pipeline for end-user visualization.
 - **Grafana Dashboard:** A monitoring and visualization tool for analyzing pipeline metrics, logs, and other performance data.
 - **Inputs (Video Files and Cameras):** Provide raw video streams or files as input data for processing in the pipeline.
