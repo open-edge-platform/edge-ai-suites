@@ -57,6 +57,52 @@ ENV PATH="/opt/venv/bin:$PATH"
 ENV UV_PROJECT_ENVIRONMENT="/opt/venv"
 RUN uv sync --frozen --no-dev --no-install-project
 
+ARG COPYLEFT_SOURCES=false
+COPY scripts/collect_copyleft_python_sources.py /tmp/collect_copyleft_python_sources.py
+COPY scripts/build_copyleft_media.sh /tmp/build_copyleft_media.sh
+RUN mkdir -p /copyleft_sources/python /copyleft_sources/native /opt/ffmpeg
+
+# Build the pinned FFmpeg/x264 stack and verify its archived source checksums.
+RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
+        bash /tmp/build_copyleft_media.sh && \
+        cd /copyleft_sources/native/sources && sha256sum --check SHA256SUMS; \
+    fi
+
+# Build PyAV against that stack and assert the expected codec set is present.
+RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
+        cd /copyleft_sources/python/sources && sha256sum --check SHA256SUMS && \
+        uv venv /opt/pyav-build && \
+        uv pip install --python /opt/pyav-build/bin/python \
+            pip==26.2.1 setuptools==80.9.0 Cython==3.1.3 && \
+        mkdir -p /tmp/pyav-wheelhouse && \
+        PKG_CONFIG_PATH=/opt/ffmpeg/lib/pkgconfig \
+        LD_LIBRARY_PATH=/opt/ffmpeg/lib \
+            /opt/pyav-build/bin/python -m pip wheel \
+                --no-build-isolation --no-deps \
+                --wheel-dir /tmp/pyav-wheelhouse \
+                /copyleft_sources/python/sources/av-18.1.0.tar.gz && \
+        uv pip uninstall --python /opt/venv/bin/python av && \
+        uv pip install --python /opt/venv/bin/python --no-deps \
+            /tmp/pyav-wheelhouse/av-18.1.0-*.whl && \
+        LD_LIBRARY_PATH=/opt/ffmpeg/lib /opt/venv/bin/python -c \
+            'import av; assert av.Codec("libx264", "w").name == "libx264"; print(av.library_versions)' && \
+        if find /opt/ffmpeg/lib -maxdepth 1 -name 'libx265.so*' -print -quit | grep -q .; then \
+            echo "Unexpected x265 library in the controlled FFmpeg build" >&2; exit 1; \
+        fi; \
+    fi
+
+# Archive the native build recipe and collect sources for copyleft Python packages.
+RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
+        cp /tmp/build_copyleft_media.sh /copyleft_sources/native/sources/build_copyleft_media.sh && \
+        (cd /copyleft_sources/native/sources && sha256sum build_copyleft_media.sh >> SHA256SUMS) && \
+    /opt/venv/bin/python /tmp/collect_copyleft_python_sources.py > /copyleft_sources/python/copyleft_python_requirements.txt && \
+        if [ -s /copyleft_sources/python/copyleft_python_requirements.txt ]; then \
+            pip3 download --disable-pip-version-check --no-deps --no-binary=:all: \
+                --dest /copyleft_sources/python \
+                --requirement /copyleft_sources/python/copyleft_python_requirements.txt; \
+        fi; \
+    fi
+
 # Production stage.
 FROM base AS production
 
@@ -70,10 +116,14 @@ RUN groupadd --gid 1000 appuser \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONPATH=/app \
-    PATH="/opt/venv/bin:$PATH"
+    PATH="/opt/venv/bin:$PATH" \
+    LD_LIBRARY_PATH="/opt/ffmpeg/lib"
 
 # Virtual environment with installed dependencies.
 COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /opt/ffmpeg /opt/ffmpeg
+COPY --from=builder /copyleft_sources/python /copyleft_sources/python
+COPY --from=builder /copyleft_sources/native /copyleft_sources/native
 
 WORKDIR /app
 
@@ -87,7 +137,13 @@ ARG COPYLEFT_SOURCES=false
 RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
         apt-get update && \
         # Get list of installed deb packages with copyleft licenses \
-        sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list && \
+        if [ -f /etc/apt/sources.list.d/debian.sources ]; then \
+            sed -Ei 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/debian.sources; \
+        elif [ -f /etc/apt/sources.list ]; then \
+            sed -Ei 's/# deb-src /deb-src /' /etc/apt/sources.list; \
+        else \
+            echo "Could not find an APT sources file to enable deb-src" >&2; exit 1; \
+        fi && \
         apt-get update && \
         mkdir -p /copyleft_sources/deb && cd /copyleft_sources/deb && \
         echo -n $null > copyleft_package_list.txt && \
@@ -99,20 +155,6 @@ RUN if [ "$COPYLEFT_SOURCES" = "true" ]; then \
                 apt-get source -q --download-only $package; \
             fi; \
         done; \
-        # Get source code for installed Python packages with copyleft licenses \
-        mkdir -p /copyleft_sources/python && \
-        cd /copyleft_sources/python && \
-        apt-get update && apt-get install --no-install-recommends -y gcc build-essential libffi-dev python3-dev && \
-        # Download python package sources with relevant licenses \
-        pip3 freeze | cut -d= -f1 | while read pkg; do \
-            meta=$(pip3 show $pkg 2>/dev/null); \
-            lic=$(echo "$meta" | grep -i '^License:' | grep -E 'MPL|GPL|General Public License|EPL|Eclipse Public License|CDDL|LGPL'); \
-            if [ ! -z "$lic" ]; then \
-                echo "Downloading source for $pkg with license: $lic"; \
-                pip3 download --no-binary :all: $pkg || true; \
-            fi; \
-        done; \
-        apt-get remove --purge -y gcc build-essential libffi-dev python3-dev; \
     fi
 
 # The application runs entirely out of /opt/venv (a self-contained venv with
