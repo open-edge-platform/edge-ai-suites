@@ -6,6 +6,10 @@ if [ ! -f "${SOURCE}/secrets/browser.auth" ]; then
   bash ${SOURCE}/secrets/generate_secrets.sh
 fi
 
+# Self-guarded: also backfills this secret on deployments that already ran
+# generate_secrets.sh before adminAuth was introduced.
+bash ${SOURCE}/secrets/generate_nodered_secret.sh
+
 if [ ! -f .env ]; then
   touch .env
 fi

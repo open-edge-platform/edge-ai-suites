@@ -64,6 +64,8 @@ services:
       - node-red-node-modules:/usr/src/node-red/node_modules
     secrets:
       - influxdb2-admin-token
+      - nodered-admin-username
+      - nodered-admin-password
       - root-cert
       - broker-cert
       - broker-key
@@ -412,6 +414,10 @@ secrets:
     file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-password
   influxdb2-admin-token:
     file: ./${SAMPLE_APP}/src/secrets/influxdb2/influxdb2-admin-token
+  nodered-admin-username:
+    file: ./${SAMPLE_APP}/src/secrets/nodered/nodered-admin-username
+  nodered-admin-password:
+    file: ./${SAMPLE_APP}/src/secrets/nodered/nodered-admin-password
   django:
     file: ./${SAMPLE_APP}/src/secrets/django
   browser.auth:
