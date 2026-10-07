@@ -166,6 +166,7 @@ services:
     # render group IDs for ubuntu 24.04 host OS
     - "992"
     - "993"
+    - "1500"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU

@@ -88,12 +88,12 @@ prepare_influxdb3_token:
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build --pull ia-opcua-server ia-mqtt-publisher;
+	$(DOCKER_COMPOSE) build --pull ia-influxdb ia-opcua-server ia-mqtt-publisher;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull ia-opcua-server ia-mqtt-publisher;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull ia-influxdb ia-opcua-server ia-mqtt-publisher;
 
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
@@ -182,6 +182,34 @@ done; \
 echo "Time-Series Analytics microservice is accessible."
 endef
 
+define start_core_services
+export INFLUXDB3_AUTH_TOKEN=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
+echo "Starting Core and Time Series Analytics services..."; \
+if [ $(INCLUDE) = 'validation' ]; then \
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d ia-influxdb3-provision ia-mqtt-broker ia-time-series-analytics-microservice ia-grafana nginx; \
+else \
+	$(DOCKER_COMPOSE) up -d ia-influxdb3-provision ia-mqtt-broker ia-time-series-analytics-microservice ia-grafana nginx; \
+fi
+endef
+
+define wait_for_core_trigger
+trigger_name=$$(jq -r '.udfs.name' "$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(CONFIG_JSON_FILE)"); \
+echo "Waiting for InfluxDB 3 Core trigger $$trigger_name..."; \
+token=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
+retry=0; \
+until docker exec ia-influxdb influxdb3 query --token "$$token" --database datain --format json \
+	'SELECT trigger_name, disabled FROM "system"."processing_engine_triggers"' 2>/dev/null | \
+	jq -e --arg name "$$trigger_name" 'any(.[]; .trigger_name == $$name and .disabled == false)' >/dev/null; do \
+	retry=$$((retry + 1)); \
+	if [ $$retry -ge 360 ]; then \
+		echo "Timed out waiting for Core trigger $$trigger_name to be enabled."; \
+		exit 1; \
+	fi; \
+	sleep 5; \
+done; \
+echo "Core trigger $$trigger_name is enabled."
+endef
+
 define upload_tar_file
 echo "Creating UDF deployment tar for $(SAMPLE_APP)..."; \
 config_dir=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config; \
@@ -229,44 +257,38 @@ endef
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: check_env_variables prepare_influxdb3_token down
 	$(call multi_stream_check,mqtt)
+	@$(start_core_services)
+	@$(upload_tar_file)
+	@$(wait_for_core_trigger)
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
 	export INFLUXDB3_AUTH_TOKEN=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
-	export INFLUXDB_PASSWORD=$$INFLUXDB3_AUTH_TOKEN; \
-	if [ $(num_of_streams) -gt 1 ]; then \
-		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
-    fi; \
-	echo "Starting Docker containers..."; \
-	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	if [ $(num_of_streams) -gt 1 ]; then export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; fi; \
 	if [ $(INCLUDE) = 'validation' ]; then \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=0 -d; \
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d ia-telegraf ia-mqtt-publisher; \
 	else \
+		$(DOCKER_COMPOSE) up -d ia-telegraf; \
 		for i in $$(seq 1 $(num_of_streams)); do \
-			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP";\
-			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
-			docker update --restart unless-stopped ia-mqtt-publisher-$$i; \
+			echo "Starting ia-mqtt-publisher instance $$i for SAMPLE_APP: $$SAMPLE_APP"; \
+			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher || exit 1; \
+			docker update --restart unless-stopped ia-mqtt-publisher-$$i || exit 1; \
 		done; \
-		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi
-	@$(upload_tar_file)
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables prepare_influxdb3_token down
 	$(call multi_stream_check,opcua)
+	@$(start_core_services)
+	@$(upload_tar_file)
+	@$(wait_for_core_trigger)
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "opcua:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "opcua"; fi); \
 	export INFLUXDB3_AUTH_TOKEN=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
-	export INFLUXDB_PASSWORD=$$INFLUXDB3_AUTH_TOKEN; \
-	if [ $(num_of_streams) -gt 1 ]; then \
-		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
-    fi; \
-	echo "Starting Docker containers..."; \
-	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	if [ $(num_of_streams) -gt 1 ]; then export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; fi; \
 	if [ $(INCLUDE) = 'validation' ]; then \
-		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
+		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-opcua-server=$(num_of_streams) -d ia-opcua-server ia-telegraf; \
 	else \
-		$(DOCKER_COMPOSE) up --scale ia-opcua-server=$(num_of_streams) --scale ia-mqtt-publisher=0 -d; \
+		$(DOCKER_COMPOSE) up --scale ia-opcua-server=$(num_of_streams) -d ia-opcua-server ia-telegraf; \
 	fi
-	@$(upload_tar_file)
 
 
 # Status of the deployed containers
