@@ -1,0 +1,38 @@
+---
+description: Multimodal Weld Defect Detection Cursor agent router — canonical instructions and workflow skills
+alwaysApply: true
+---
+
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# Multimodal Weld Defect Detection (Cursor)
+
+## Canonical instructions
+
+For project-wide agent discovery, read
+[`copilot-instructions.md`](../../.github/copilot-instructions.md). Do not
+duplicate policy from that file or from skills. Use short pointers only in
+Cursor rules. For build/deploy/smoke/functional-test tasks, that file points
+to the `multimodal-deploy` skill under
+[`.github/skills/`](../../.github/skills/) (catalog:
+[`skill-catalog.json`](../../.github/skills/skill-catalog.json)) — read the
+skill directly rather than re-deriving commands.
+
+## Cursor workflow
+
+- Prefer the repo's real interfaces: `Makefile`, `docker-compose.yml` (+
+  `docker-compose-vllm.yml` / `docker-compose-agentic.yml` overlays),
+  `helm/`, and the `.github/skills/multimodal-deploy/scripts/` drivers
+  (`smoke-check.sh`, `run-functional-tests.sh`).
+- Run commands in the real environment when possible and investigate
+  failures before giving up; report host blockers (e.g., Docker/K8s
+  unreachable, missing hardware) plainly instead of stalling.
+- Commits and pull requests only when the user asks.
+- Keep changes minimal and match existing conventions in the touched area.
+- If you change the Makefile, compose files, Helm chart, `.env` schema, or
+  `docs/user-guide/`, update `copilot-instructions.md` and the
+  `multimodal-deploy` skill in the same change (see "Keeping Agent Guidance
+  in Sync" in `copilot-instructions.md`).
