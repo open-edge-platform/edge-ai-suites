@@ -105,11 +105,12 @@ Remove or comment out the default built-in MQTT broker dependency:
 ```yaml
 ia-time-series-analytics-microservice:
   depends_on:
+    - ia-influxdb
     # - ia-mqtt-broker  # Comment this out
 
 ia-telegraf:
   depends_on:
-    - ia-time-series-analytics-microservice
+    - ia-influxdb
     # - ia-mqtt-broker  # Comment this out
 ```
 
@@ -120,13 +121,13 @@ Replace `ia-mqtt-broker` with your external broker's hostname/IP in the proxy se
 ```yaml
 ia-telegraf:
   environment:
-    no_proxy: "ia-time-series-analytics-microservice,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,${no_proxy}"
-    NO_PROXY: "ia-time-series-analytics-microservice,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,${no_proxy}"
+    no_proxy: "ia-influxdb,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
+    NO_PROXY: "ia-influxdb,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
 
 ia-time-series-analytics-microservice:
   environment:
-    no_proxy: "ia-time-series-analytics-microservice,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,localhost,${no_proxy}"
-    NO_PROXY: "ia-time-series-analytics-microservice,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,localhost,${no_proxy}"
+    no_proxy: "ia-influxdb,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,localhost,${no_proxy}"
+    NO_PROXY: "ia-influxdb,<YOUR_MQTT_BROKER_IP>,ia-opcua-server,localhost,${no_proxy}"
 ```
 
 ### Configure MQTT Publisher Port

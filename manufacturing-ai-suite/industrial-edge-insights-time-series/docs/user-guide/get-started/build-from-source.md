@@ -31,7 +31,7 @@ the data flow of the selected app before proceeding with the following steps.
     cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
 
     # build
-    make build # builds InfluxDB 3 Core, OPC-UA server, and MQTT publisher images
+    make build # builds only data simulator (OPC-UA server and MQTT publisher) docker images
     ```
 
     > [!NOTE]

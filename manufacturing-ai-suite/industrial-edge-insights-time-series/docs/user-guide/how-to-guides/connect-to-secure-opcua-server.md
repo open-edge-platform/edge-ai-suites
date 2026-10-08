@@ -139,13 +139,13 @@ Replace `ia-opcua-server` with your external OPC UA server's hostname/IP in the 
 ```yaml
 ia-telegraf:
   environment:
-    no_proxy: "ia-time-series-analytics-microservice,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,${no_proxy}"
-    NO_PROXY: "ia-time-series-analytics-microservice,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,${no_proxy}"
+    no_proxy: "ia-influxdb,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
+    NO_PROXY: "ia-influxdb,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,ia-mqtt-broker,ia-time-series-analytics-microservice,${no_proxy}"
 
 ia-time-series-analytics-microservice:
   environment:
-    no_proxy: "ia-time-series-analytics-microservice,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,localhost,${no_proxy}"
-    NO_PROXY: "ia-time-series-analytics-microservice,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,localhost,${no_proxy}"
+    no_proxy: "ia-influxdb,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,localhost,${no_proxy}"
+    NO_PROXY: "ia-influxdb,ia-mqtt-broker,<YOUR_OPCUA_SERVER_IP>,ia-mqtt-broker,localhost,${no_proxy}"
 ```
 
 ### Configure OPC UA server
