@@ -1,0 +1,6 @@
+numpy
+scikit-learn==1.9.1
+scikit-learn-intelex==2026.1.0
+scikit-learn-intelex-gpu==2026.1.0
+dpctl==0.22.1
+paho-mqtt

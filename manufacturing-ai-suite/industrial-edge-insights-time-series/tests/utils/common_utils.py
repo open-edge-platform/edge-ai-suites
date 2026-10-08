@@ -289,11 +289,10 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
     Returns:
         bool: True if alert found, False otherwise
     """
-    # Define alert message patterns - these match Kapacitor's actual log output
-    # Kapacitor logs when it sends alerts, patterns are case-insensitive
+    # Core logs alert delivery from the Processing Engine plugin.
     alert_patterns = {
         "mqtt": "alerts/wind_turbine",  # Simplified to match topic in logs
-        "opcua": "opcua_alerts",  # Matches the HTTP endpoint
+        "opcua": "ALERT sent to OPC UA server",
         "mqtt_weld": "alerts/weld_defects"  # Simplified to match topic in logs
     }
     
@@ -309,12 +308,17 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
     
     search_pattern = alert_patterns[input_lower]
     
-    logger.info(f"Checking {resource_type} '{resource_name}' logs for {input_type.upper()} alerts...")
+    log_resource_name = (
+        constants.CONTAINERS["influxdb"]["name"]
+        if resource_type == "container" and input_lower in ("mqtt", "opcua")
+        else resource_name
+    )
+    logger.info(f"Checking {resource_type} '{log_resource_name}' logs for {input_type.upper()} alerts...")
     logger.info(f"Timeout: {timeout}s, Check interval: {interval}s")
     
     # Check if container is running (only for containers)
-    if resource_type == "container" and not _container_is_running(resource_name):
-        logger.error(f"✗ Container {resource_name} is not running")
+    if resource_type == "container" and not _container_is_running(log_resource_name):
+        logger.error(f"✗ Container {log_resource_name} is not running")
         return False
     
     start_time = time.time()
@@ -330,7 +334,7 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
             if resource_type == "container":
                 since_seconds = max(1, int(elapsed_time) + 1)
                 result = exec_command(
-                    ["docker", "logs", "--since", f"{since_seconds}s", resource_name],
+                    ["docker", "logs", "--since", f"{since_seconds}s", log_resource_name],
                     capture_output=True, text=True
                 )
                 combined = (result.stdout or "") + (result.stderr or "")
@@ -831,14 +835,14 @@ def find_critical_errors_in_logs(logs):
     return filtered_errors
 
 
-def check_influxdb_data(measurement, database="datain", container_name="ia-influxdb", timeout=30):
+def check_influxdb_data(measurement, database="datain", container_name=constants.CONTAINERS["influxdb"]["name"], timeout=30):
     """
     Check if data exists in InfluxDB measurement
     
     Args:
         measurement (str): The measurement name to check
         database (str): The database name (default: "datain")
-        container_name (str): The InfluxDB container name (default: "ia-influxdb")
+        container_name (str): The combined TS/Core container name
         timeout (int): Timeout in seconds (default: 30)
         
     Returns:
@@ -850,11 +854,14 @@ def check_influxdb_data(measurement, database="datain", container_name="ia-influ
             logger.warning(f"Container {container_name} is not running")
             return False
         
-        # Execute InfluxDB query to check for data
+        token_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".secrets", "admin-token.json")
+        with open(token_path, "r", encoding="utf-8") as token_file:
+            token = json.load(token_file)["token"]
+
         query_cmd = [
             "docker", "exec", container_name,
-            "influx", "-database", database,
-            "-execute", f"SELECT COUNT(*) FROM \"{measurement}\" LIMIT 1"
+            "influxdb3", "query", "--token", token, "--database", database,
+            "--format", "json", f'SELECT COUNT(*) AS count FROM "{measurement}"'
         ]
         
         result = exec_command(
@@ -865,9 +872,8 @@ def check_influxdb_data(measurement, database="datain", container_name="ia-influ
         )
         
         if result.returncode == 0:
-            output = result.stdout.strip()
-            # Check if the output contains any count > 0
-            if "count" in output.lower() and any(char.isdigit() and char != '0' for char in output):
+            rows = json.loads(result.stdout or "[]")
+            if rows and int(rows[0].get("count", 0)) > 0:
                 logging.info(f"Data found in measurement: {measurement}")
                 return True
             else:
