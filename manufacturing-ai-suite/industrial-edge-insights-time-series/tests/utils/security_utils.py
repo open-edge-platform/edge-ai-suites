@@ -860,7 +860,7 @@ def fetch_docker_credentials(credential_type):
         logger.error(f"Error fetching {credential_type} credentials: {e}")
         return None, None
 
-def influxdb_login_docker(container_name="ia-influxdb"):
+def influxdb_login_docker(container_name=constants.CONTAINERS["influxdb"]["name"]):
     """Verify Core token authentication with a read-only SQL query."""
     logger.info(f"Testing InfluxDB authentication in Docker container '{container_name}'...")
     try:

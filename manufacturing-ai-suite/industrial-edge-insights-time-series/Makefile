@@ -57,7 +57,6 @@ DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
-CORE_IMAGE = influxdb:3.12.0-core
 INFLUXDB3_ADMIN_TOKEN_FILE = $(CURDIR)/.secrets/admin-token.json
 
 # Define the path to the .env file and scripts
@@ -71,29 +70,30 @@ $(shell chmod 600 .env helm/values.yaml)
 
 .PHONY: prepare_influxdb3_token
 prepare_influxdb3_token:
-	@mkdir -p .secrets
-	@chmod 700 .secrets
-	@if [ ! -s "$(INFLUXDB3_ADMIN_TOKEN_FILE)" ]; then \
+	@set -eu; \
+	image=$$($(DOCKER_COMPOSE) config --format json 2>/dev/null | jq -r '.services["ia-time-series-analytics-microservice"].image'); \
+	mkdir -p .secrets; \
+	chmod 700 .secrets; \
+	if [ ! -s "$(INFLUXDB3_ADMIN_TOKEN_FILE)" ]; then \
 		docker run --rm --user "$$(id -u):$$(id -g)" \
-			-v "$(CURDIR)/.secrets:/tokens" $(CORE_IMAGE) \
-			influxdb3 create token --admin --offline \
-			--output-file /tokens/admin-token.json >/dev/null 2>&1 || exit 1; \
-	fi
-	@docker run --rm --user 0:0 \
+			-v "$(CURDIR)/.secrets:/tokens" --entrypoint /usr/bin/influxdb3 "$$image" \
+			create token --admin --offline --output-file /tokens/admin-token.json >/dev/null 2>&1; \
+	fi; \
+	docker run --rm --user 0:0 \
 		-v "$(INFLUXDB3_ADMIN_TOKEN_FILE):/token.json" \
-		--entrypoint /bin/sh $(CORE_IMAGE) \
-			-c 'chown $(shell id -u):1500 /token.json && chmod 440 /token.json'
+		--entrypoint /bin/sh "$$image" \
+		-c 'chown $(shell id -u):1500 /token.json && chmod 440 /token.json'
 
 # Build Docker containers
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build --pull ia-influxdb ia-opcua-server ia-mqtt-publisher;
+	$(DOCKER_COMPOSE) build --pull ia-opcua-server ia-mqtt-publisher;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull ia-influxdb ia-opcua-server ia-mqtt-publisher;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull ia-opcua-server ia-mqtt-publisher;
 
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
@@ -186,9 +186,9 @@ define start_core_services
 export INFLUXDB3_AUTH_TOKEN=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
 echo "Starting Core and Time Series Analytics services..."; \
 if [ $(INCLUDE) = 'validation' ]; then \
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d ia-influxdb3-provision ia-mqtt-broker ia-time-series-analytics-microservice ia-grafana nginx; \
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d ia-influxdb3-data-init ia-mqtt-broker ia-time-series-analytics-microservice ia-grafana nginx; \
 else \
-	$(DOCKER_COMPOSE) up -d ia-influxdb3-provision ia-mqtt-broker ia-time-series-analytics-microservice ia-grafana nginx; \
+	$(DOCKER_COMPOSE) up -d ia-influxdb3-data-init ia-mqtt-broker ia-time-series-analytics-microservice ia-grafana nginx; \
 fi
 endef
 
@@ -197,7 +197,7 @@ trigger_name=$$(jq -r '.udfs.name' "$(CURDIR)/apps/$(SAMPLE_APP)/time-series-ana
 echo "Waiting for InfluxDB 3 Core trigger $$trigger_name..."; \
 token=$$(jq -r '.token' "$(INFLUXDB3_ADMIN_TOKEN_FILE)"); \
 retry=0; \
-until docker exec ia-influxdb influxdb3 query --token "$$token" --database datain --format json \
+until docker exec ia-time-series-analytics-microservice influxdb3 query --token "$$token" --database datain --format json \
 	'SELECT trigger_name, disabled FROM "system"."processing_engine_triggers"' 2>/dev/null | \
 	jq -e --arg name "$$trigger_name" 'any(.[]; .trigger_name == $$name and .disabled == false)' >/dev/null; do \
 	retry=$$((retry + 1)); \

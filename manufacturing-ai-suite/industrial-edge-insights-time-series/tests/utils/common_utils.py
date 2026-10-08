@@ -835,14 +835,14 @@ def find_critical_errors_in_logs(logs):
     return filtered_errors
 
 
-def check_influxdb_data(measurement, database="datain", container_name="ia-influxdb", timeout=30):
+def check_influxdb_data(measurement, database="datain", container_name=constants.CONTAINERS["influxdb"]["name"], timeout=30):
     """
     Check if data exists in InfluxDB measurement
     
     Args:
         measurement (str): The measurement name to check
         database (str): The database name (default: "datain")
-        container_name (str): The InfluxDB container name (default: "ia-influxdb")
+        container_name (str): The combined TS/Core container name
         timeout (int): Timeout in seconds (default: 30)
         
     Returns:

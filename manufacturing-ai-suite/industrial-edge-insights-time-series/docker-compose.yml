@@ -12,8 +12,8 @@ services:
     image: telegraf:1.39.3-alpine
     restart: unless-stopped
     depends_on:
-      ia-influxdb3-provision:
-        condition: service_completed_successfully
+      ia-time-series-analytics-microservice:
+        condition: service_healthy
     security_opt:
     - no-new-privileges
     read_only: true
@@ -21,11 +21,11 @@ services:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      no_proxy: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
-      NO_PROXY: "ia-influxdb,ia-mqtt-broker,ia-opcua-server,ia-time-series-analytics-microservice,${no_proxy}"
+      no_proxy: "ia-time-series-analytics-microservice,ia-mqtt-broker,ia-opcua-server,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,ia-mqtt-broker,ia-opcua-server,${no_proxy}"
       MQTT_BROKER_HOST: "ia-mqtt-broker"
-      INFLUX_SERVER: "ia-influxdb"
-      INFLUXDB_PORT: 8181
+      INFLUX_SERVER: "ia-time-series-analytics-microservice"
+      INFLUXDB_PORT: 5000
       INFLUXDB_USERNAME: token
       INFLUXDB_PASSWORD: ${INFLUXDB3_AUTH_TOKEN}
       INFLUXDB_DBNAME: datain
@@ -33,100 +33,32 @@ services:
       OPCUA_SERVER: opc.tcp://ia-opcua-server:4840/freeopcua/server/
       LOG_LEVEL: ${LOG_LEVEL}
       TELEGRAF_INPUT_PLUGIN: ${TELEGRAF_INPUT_PLUGIN:-opcua}
-      # The Telegraf metric_batch_size specifies the number of metrics or data points 
-      # that are grouped together and sent in a single batch to the InfluxDB.
       TELEGRAF_METRIC_BATCH_SIZE: 100
     entrypoint: ["/bin/sh", "-c", "/entrypoint.sh"]
     networks:
     - timeseries_network
     volumes:
     - ./configs/telegraf/entrypoint.sh:/entrypoint.sh
-    - "./apps/${SAMPLE_APP}/telegraf-config/:/etc/telegraf"   
-
-  ia-influxdb:
-    image: ${DOCKER_REGISTRY}${INFLUXDB3_CORE_IMAGE}:${IMAGE_SUFFIX:-latest}
-    build:
-      context: ./core-image
-      dockerfile: Dockerfile
-    container_name: ia-influxdb
-    hostname: ia-influxdb
-    command:
-      - influxdb3
-      - serve
-      - --node-id=windturbine
-      - --object-store=file
-      - --data-dir=/var/lib/influxdb3/data
-      - --plugin-dir=/tmp
-      - --admin-token-file=/run/secrets/admin-token
-    restart: unless-stopped
-    depends_on:
-      ia-influxdb3-data-init:
-        condition: service_completed_successfully
-    security_opt:
-    - no-new-privileges
-    networks:
-    - timeseries_network
-    healthcheck:
-      test: ["CMD-SHELL", "status=$$(curl --silent --output /dev/null --write-out '%{http_code}' http://localhost:8181/health) || exit 1; test \"$$status\" = 200 -o \"$$status\" = 401"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-    environment:
-      no_proxy: "localhost,127.0.0.1,ia-influxdb,ia-mqtt-broker,ia-time-series-analytics-microservice"
-      NO_PROXY: "localhost,127.0.0.1,ia-influxdb,ia-mqtt-broker,ia-time-series-analytics-microservice"
-    ports:
-      - "127.0.0.1:${INFLUXDB3_PORT:-8181}:8181"
-    volumes:
-      - vol_influxdb3_data:/var/lib/influxdb3/data
-      - vol_temp_time_series_analytics_microservice:/tmp
-      - ${INFLUXDB3_ADMIN_TOKEN_FILE:-./.secrets/admin-token.json}:/run/secrets/admin-token:ro
+    - "./apps/${SAMPLE_APP}/telegraf-config/:/etc/telegraf"
 
   ia-influxdb3-data-init:
-    image: ${DOCKER_REGISTRY}${INFLUXDB3_CORE_IMAGE}:${IMAGE_SUFFIX:-latest}
+    image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     user: "0:0"
     entrypoint: ["/bin/sh", "-ec"]
     command:
-      - chown -R influxdb3:influxdb3 /var/lib/influxdb3/data
+      - chown -R ${TIMESERIES_UID}:${TIMESERIES_UID} /var/lib/influxdb3/data
     restart: "no"
     volumes:
       - vol_influxdb3_data:/var/lib/influxdb3/data
 
-  ia-influxdb3-provision:
-    image: influxdb:3.12.0-core
-    depends_on:
-      ia-influxdb:
-        condition: service_healthy
-    environment:
-      INFLUXDB3_AUTH_TOKEN: ${INFLUXDB3_AUTH_TOKEN}
-      INFLUXDB_RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h}
-      no_proxy: "ia-influxdb,localhost,127.0.0.1"
-      NO_PROXY: "ia-influxdb,localhost,127.0.0.1"
-    entrypoint: ["/bin/sh", "-ec"]
-    command:
-      - |
-        status=$$(curl --silent --output /tmp/db-response.json --write-out '%{http_code}' \
-          --request POST http://ia-influxdb:8181/api/v3/configure/database \
-          --header "Authorization: Bearer $$INFLUXDB3_AUTH_TOKEN" \
-          --header 'Content-Type: application/json' \
-          --data "{\"db\":\"datain\",\"retention_period\":\"$$INFLUXDB_RETENTION_DURATION\"}") || exit 1
-        case "$$status" in
-          200|409) echo "InfluxDB 3 database datain is ready" ;;
-          *) cat /tmp/db-response.json; exit 1 ;;
-        esac
-    restart: "no"
-    networks:
-      - timeseries_network
-  
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
     hostname: ia-time-series-analytics-microservice
     image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     restart: unless-stopped
     depends_on:
-      ia-influxdb3-provision:
+      ia-influxdb3-data-init:
         condition: service_completed_successfully
-      ia-mqtt-broker:
-        condition: service_started
     security_opt:
     - no-new-privileges
     read_only: true
@@ -136,11 +68,12 @@ services:
       timeout: 5s
       retries: 20
     environment:
-      no_proxy: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
-      NO_PROXY: "ia-time-series-analytics-microservice,ia-influxdb,ia-mqtt-broker,ia-opcua-server,localhost,${no_proxy}"
-      INFLUXDB3_URL: http://ia-influxdb:8181
+      no_proxy: "localhost,127.0.0.1,ia-mqtt-broker,ia-opcua-server,${no_proxy}"
+      NO_PROXY: "localhost,127.0.0.1,ia-mqtt-broker,ia-opcua-server,${no_proxy}"
+      INFLUXDB3_URL: http://localhost:8181
       INFLUXDB3_ADMIN_TOKEN_FILE: /run/secrets/admin-token
       INFLUXDB3_UDF_PLUGIN_DIR: influx3_windturbine
+      INFLUXDB3_TRIGGER_SPEC: table:wind-turbine-data
       PROFILING_MODE: "false"
       LOG_LEVEL: ${LOG_LEVEL}
       INFLUXDB_DBNAME: datain
@@ -153,23 +86,21 @@ services:
       UDF_MAX_FILE_SIZE_MB: 100
     networks:
     - timeseries_network
+    ports:
+      - "127.0.0.1:${INFLUXDB3_PORT:-8181}:8181"
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
+    - vol_influxdb3_data:/var/lib/influxdb3/data
     - ${INFLUXDB3_ADMIN_TOKEN_FILE:-./.secrets/admin-token.json}:/run/secrets/admin-token:ro
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
-    # render group ID for ubuntu 20.04 host OS
     - "109"
-    # render group ID for ubuntu 22.04 host OS
     - "110"
-    # render group IDs for ubuntu 24.04 host OS
     - "992"
     - "993"
     - "1500"
     devices:
-      # Following devices under /dev filesystem will be needed based on usecase
-      # dri - GPU
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
@@ -180,16 +111,16 @@ services:
     restart: unless-stopped
     read_only: true
     depends_on:
-      - ia-influxdb
+      - ia-time-series-analytics-microservice
     security_opt:
     - no-new-privileges
     healthcheck:
       test: ["CMD-SHELL", "exit", "0"]
       interval: 5m
     environment:
-      no_proxy: "ia-influxdb,${no_proxy}"
-      NO_PROXY: "ia-influxdb,${no_proxy}"
-      INFLUX_SERVER: "ia-influxdb"
+      no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
+      NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
+      INFLUX_SERVER: "ia-time-series-analytics-microservice"
       GRAFANA_SERVER: '0.0.0.0'
       INFLUXDB_USERNAME: token
       INFLUXDB_PASSWORD: ${INFLUXDB3_AUTH_TOKEN}
@@ -219,8 +150,6 @@ services:
     read_only: true
     image: eclipse-mosquitto:2.0.22
     restart: unless-stopped
-    depends_on:
-      - ia-influxdb
     security_opt:
     - no-new-privileges
     healthcheck:

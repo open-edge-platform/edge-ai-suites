@@ -3678,7 +3678,7 @@ def check_influxdb_data_with_auth(measurement, database="datain", container_name
     Args:
         measurement (str): The measurement name to check
         database (str): The database name (default: "datain")
-        container_name (str): The InfluxDB container name (default: "ia-influxdb")
+        container_name (str): The combined TS/Core container name
         username (str): InfluxDB username
         password (str): InfluxDB password
         timeout (int): Timeout in seconds (default: 30)
@@ -4901,7 +4901,7 @@ def validate_container_logs_common(container_list, critical_containers=None):
     logger.info("Validating container logs for critical errors")
 
     if critical_containers is None:
-        critical_containers = ["ia-influxdb", "ia-time-series-analytics-microservice", "ia-telegraf"]
+        critical_containers = [constants.CONTAINERS["influxdb"]["name"], "ia-time-series-analytics-microservice", "ia-telegraf"]
 
     running_critical_containers = [c for c in critical_containers if container_is_running(c)]
 
@@ -5433,7 +5433,7 @@ def execute_dlstreamer_pipeline_activation(device="GPU",
 
 
 
-def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database="datain", limit=5):
+def execute_influxdb_commands_multimodal(container_name=constants.CONTAINERS["influxdb"]["name"], database="datain", limit=5):
     """
     Execute InfluxDB commands inside the InfluxDB container for the multimodal
     weld-defect-detection deployment and return query output.
@@ -5446,7 +5446,7 @@ def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database=
         select * from "vision-weld-classification-results" # DL Streamer Pipeline Server
 
     Args:
-        container_name (str): InfluxDB container name (default: "ia-influxdb").
+        container_name (str): Combined TS/Core container name.
         database (str): InfluxDB database to query (default: "datain").
         limit (int): Row limit for SELECT queries.
 

@@ -135,13 +135,13 @@ curl -k -X 'POST' \
    > for <influxdb-pod-name> replace with InfluxDB pod name.
 
    ``` bash
-    docker exec -it ia-influxdb bash
+    docker exec -it ia-time-series-analytics-microservice bash
    ```
 
 2. Query processed data from InfluxDB 3 Core:
 
   ```bash
-  docker exec ia-influxdb influxdb3 query \
+  docker exec ia-time-series-analytics-microservice influxdb3 query \
     --token "$(jq -r '.token' .secrets/admin-token.json)" \
     --database datain \
     'SELECT * FROM "wind-turbine-anomaly-data" LIMIT 10'

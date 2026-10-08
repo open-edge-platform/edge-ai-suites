@@ -9,7 +9,7 @@ import os
 # Centralized container definitions for all sample apps
 CONTAINERS = {
     "influxdb": {
-        "name": "ia-influxdb",
+        "name": "ia-time-series-analytics-microservice",
         "port": 8181
     },
     "telegraf": {
