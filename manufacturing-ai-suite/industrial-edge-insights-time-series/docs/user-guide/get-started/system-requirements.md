@@ -24,10 +24,10 @@ provided as part of Open Edge Platform.
 
 ## Validated Platforms
 
-| Product / Family                            | CPU | iGPU | NPU |
-|---------------------------------------------|-----|------|-----|
-| Intel® Core™ Ultra Processors (Series 3, 2) | ✓   | ✓    | ✓   |
-| Intel® Core™ Processors (13th Gen)          | ✓   | ✓    | N/A |
+| Product / Family                          | Validated inference devices |
+|-------------------------------------------|-----------------------------|
+| Intel® Core™ Ultra Processors (Series 3, 2) | CPU, iGPU                   |
+| Intel® Core™ Processors (13th Gen)          | CPU, iGPU                   |
 
 ## Validation
 

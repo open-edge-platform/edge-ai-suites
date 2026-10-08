@@ -29,9 +29,9 @@ In addition to the [minimum requirements](../get-started/system-requirements.md#
 
 ### Validated Platforms
 
-| Product / Family                                                                 | CPU | iGPU | NPU |
-|----------------------------------------------------------------------------------|-----|------|-----|
-| Intel® Core™ Ultra Processors Series 3 (Intel Core Ultra 7 356H, 16 Cores, 32GB) | ✓   | ✓    | ✓   |
+| Product / Family                                                            | Validated inference devices |
+|-----------------------------------------------------------------------------|-----------------------------|
+| Intel® Core™ Ultra Processors Series 3 (Intel Core Ultra 7 356H, 16 Cores, 32GB) | CPU, iGPU                   |
 
 
 ## Prerequisites
