@@ -16,6 +16,8 @@ helm-packages/
 
 venv/
 # Python cache
+**/__pycache__/
+*.pyc
 tests/**/__pycache__/
 tests/__pycache__/
 tests/functional/tests.log
