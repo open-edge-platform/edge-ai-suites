@@ -1988,6 +1988,7 @@ export interface TemplateFieldMeta {
   always_on?: boolean;     // auto metadata, not a toggleable checkbox (e.g. report_time)
   label_key?: string;      // preferred i18n key for UI labels
   label?: { en: string; zh: string }; // legacy inline labels (backward compatibility)
+  default?: { en: string; zh: string }; // example value (manual fields) shown as input placeholder
 }
 export interface TemplateFieldGroup {
   group_key?: string;      // preferred i18n key for UI group titles

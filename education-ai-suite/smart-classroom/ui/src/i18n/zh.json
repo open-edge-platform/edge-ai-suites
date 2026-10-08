@@ -685,7 +685,7 @@
     },
     "fields": {
       "school_name": "学校名称",
-      "class_name": "班级",
+      "class_name": "年级&班级",
       "course_name": "课程名称",
       "teacher_name": "授课教师",
       "report_time": "报告生成时间",
