@@ -362,7 +362,13 @@
       "anErrorOccurred": "An error occurred"
     },
     "summary": {
-      "boardOcrPartial": "Board OCR is still running. This summary only covers the board content recognized so far and may be incomplete."
+      "boardOcrPartial": "Board OCR is still running. This summary only covers the board content recognized so far and may be incomplete.",
+      "overload": {
+        "memory_short": "This machine has less free memory than this lesson needs right now. The summary was not changed and will usually still finish — close other applications if it does not.",
+        "reserve_capped": "The instructions and the requested answer length alone take more than half of this device's budget, so the answer may be cut short. Lower the maximum answer length for this device.",
+        "fold_incomplete": "This lesson has more notes than two rounds of merging could compress, so the summary may be cut short.",
+        "line_oversize": "One line of the transcript is longer than a single part may be, so one part is larger than planned."
+      }
     },
     "app": {
       "checkingBackendTitle": "Checking backend status",
