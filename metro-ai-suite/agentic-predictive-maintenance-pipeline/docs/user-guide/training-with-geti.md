@@ -13,8 +13,12 @@ for your inspection scenario.
 1. Collect representative images or video frames from the target environment. Include normal
    examples and each defect class that the application must detect. For the `pipeline-defect-detection`
    use case, you can use the public
-   [Gas Pipelines Defect Detection](https://www.kaggle.com/datasets/sardaanaeginova/gas-pipelines)
-   as a starting point, though it should be supplemented with production data before release.
+   [Gas Pipelines Dataset on Kaggle](https://www.kaggle.com/datasets/sardaanaeginova/gas-pipelines)
+   as a starting point, though it should be supplemented with production data before release. Note
+   that this dataset's classes (Corrosion, Deformation, Coating degradation) do not match the
+   reference labels in step 3 below — relabel to your target classes or update the APM
+   configuration (see [Update APM Configuration](#update-apm-configuration)) to match whichever
+   label set you train with.
 2. Create a Geti object detection project.
 3. Define the defect labels. For the reference pipeline use case, the application configuration
    expects these labels:
