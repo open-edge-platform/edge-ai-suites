@@ -305,8 +305,6 @@ days or weeks, helping you identify peak activity times or recurring patterns.
 
 ## End-to-End integration
 
-![Integration Diagram](../_assets/integration.png)
-
 The system operates as follows:
 
 1.  **Video Input:** A camera captures video and sends the stream to the DL Streamer Pipeline Server.
