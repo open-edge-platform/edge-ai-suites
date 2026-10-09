@@ -161,6 +161,8 @@ by `sample_start.sh` — no code or pipeline changes needed:
   > [!NOTE]
   > Pipeline parameters are only read when a pipeline starts, so editing the payload value
   > alone does not affect an already-running pipeline — it must be restarted.
+  > [!IMPORTANT]
+  > `loitering-threshold` must be a JSON number (e.g. `7.0`), not a quoted string (`"7.0"`)
 - `quiet-mode`: set to `"true"` to suppress the on-screen text entirely (e.g. to rely on the
   Grafana table only); `"false"` to re-enable it.
 
@@ -170,7 +172,7 @@ Example REST payload fragment (see `sample_start.sh` for the full launch payload
 {
   "parameters": {
     "loitering-watermark-properties": {
-      "loitering-threshold": "7.0",
+      "loitering-threshold": 7.0,
       "quiet-mode": "false"
     }
   }

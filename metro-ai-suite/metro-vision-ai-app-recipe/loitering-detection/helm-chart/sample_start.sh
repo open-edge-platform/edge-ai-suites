@@ -22,7 +22,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_1 -
             "config": "/home/pipeline-server/zones/VIRAT_S_000101.json"
         },
         "loitering-watermark-properties": {
-            "loitering-threshold": "5.0"
+            "loitering-threshold": 5.0
         }
     }
 }'
@@ -50,7 +50,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_2 -
             "config": "/home/pipeline-server/zones/VIRAT_S_000102.json"
         },
         "loitering-watermark-properties": {
-            "loitering-threshold": "5.0"
+            "loitering-threshold": 5.0
         }
     }
 }'
@@ -78,7 +78,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_3 -
             "config": "/home/pipeline-server/zones/VIRAT_S_000103.json"
         },
         "loitering-watermark-properties": {
-            "loitering-threshold": "5.0"
+            "loitering-threshold": 5.0
         }
     }
 }'
@@ -106,7 +106,7 @@ curl http://<HOST_IP>:30385/pipelines/user_defined_pipelines/object_tracking_4 -
             "config": "/home/pipeline-server/zones/VIRAT_S_000104.json"
         },
         "loitering-watermark-properties": {
-            "loitering-threshold": "5.0"
+            "loitering-threshold": 5.0
         }
     }
 }'

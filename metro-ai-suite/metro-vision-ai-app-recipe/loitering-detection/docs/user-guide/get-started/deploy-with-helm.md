@@ -295,9 +295,10 @@ the Node IP. (Total 4 places)
    > [!TIP]
    > The on-screen dwell-time overlay is REST-tunable via `loitering-watermark-properties` in
    > the launch payload (see `sample_start.sh`), with no code or pipeline changes:
-   > `"loitering-threshold"` (seconds before the overlay turns red; default `"5.0"`) and
-   > `"quiet-mode"` (`"true"` to suppress the on-screen text, e.g. to rely on the Grafana table
-   > only). Zone outlines/bounding boxes and the Grafana table are unaffected either way.
+   > `"loitering-threshold"` (seconds before the overlay turns red; default `5.0` — must be a
+   > JSON number, not a quoted string)
+   > and `"quiet-mode"` (`"true"` to suppress the on-screen text, e.g. to rely on the Grafana
+   > table only). Zone outlines/bounding boxes and the Grafana table are unaffected either way.
 
    > [!NOTE]
    > Detection (`gvadetect`) and tracking (`gvatrack`) always run on the full video frame —
