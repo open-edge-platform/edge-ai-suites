@@ -38,7 +38,7 @@
                     },
                     "parameters": {
                         "classification-properties": {
-                            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
+                            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-ViT-Tiny/model.xml",
                             "device": "CPU"
                         }
                     }
