@@ -1,12 +1,12 @@
 {
     "config": {
         "pipelines": [
-	          {
+            {
                 "name": "object_tracking_cpu",
                 "source": "gstreamer",
-                "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect inference-region=0 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=CPU model-instance-id=inst0 inference-interval=1 threshold=0.7 name=detection ! queue ! gvatrack tracking-type=zero-term ! queue ! gvaanalytics name=analytics config=/home/pipeline-server/zones/VIRAT_S_000101.json evaluation-point=bottom-center draw-zones=true ! loitering_watermark name=loitering_watermark loitering-threshold=5.0 dashboard-pos=20,40 ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
-                "description": "Pedestrian and vehicle detection and tracking with zone dwell-time loitering analytics",
+                "queue_maxsize": 30,
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=CPU model-instance-id=inst0 threshold=0.7 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics evaluation-point=bottom-center draw-zones=true ! loitering_watermark name=loitering_watermark loitering-threshold=5.0 dashboard-pos=20,40 ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
+                "description": "Loitering detection pipeline on CPU with zone dwell-time analytics and on-screen overlay",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -19,6 +19,12 @@
                         "analytics-properties": {
                             "element": {
                                 "name": "analytics",
+                                "format": "element-properties"
+                            }
+                        },
+                        "metaconvert-properties": {
+                            "element": {
+                                "name": "metaconvert",
                                 "format": "element-properties"
                             }
                         },
@@ -30,15 +36,14 @@
                         }
                     }
                 },
-                
                 "auto_start": false
             },
             {
                 "name": "object_tracking_gpu",
                 "source": "gstreamer",
-                "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect inference-region=0 inference-interval=1 batch-size=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=GPU model-instance-id=instgpu0 name=detection ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term ! gvaanalytics name=analytics config=/home/pipeline-server/zones/VIRAT_S_000101.json evaluation-point=bottom-center draw-zones=true ! loitering_watermark name=loitering_watermark loitering-threshold=5.0 dashboard-pos=20,40 ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! appsink name=destination",
-                "description": "Pedestrian and vehicle detection and tracking with zone dwell-time loitering analytics",
+                "queue_maxsize": 30,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect batch-size=1 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=GPU model-instance-id=instgpu0 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics evaluation-point=bottom-center draw-zones=true ! loitering_watermark name=loitering_watermark loitering-threshold=5.0 dashboard-pos=20,40 ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
+                "description": "Loitering detection pipeline on GPU with zone dwell-time analytics and on-screen overlay",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -51,6 +56,12 @@
                         "analytics-properties": {
                             "element": {
                                 "name": "analytics",
+                                "format": "element-properties"
+                            }
+                        },
+                        "metaconvert-properties": {
+                            "element": {
+                                "name": "metaconvert",
                                 "format": "element-properties"
                             }
                         },
@@ -67,9 +78,9 @@
             {
                 "name": "object_tracking_npu",
                 "source": "gstreamer",
-                "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect inference-region=0 inference-interval=1 batch-size=1 nireq=2 threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml model_proc=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json device=NPU model-instance-id=instnpu0 name=detection ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term ! gvaanalytics name=analytics config=/home/pipeline-server/zones/VIRAT_S_000101.json evaluation-point=bottom-center draw-zones=true ! loitering_watermark name=loitering_watermark loitering-threshold=5.0 dashboard-pos=20,40 ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! appsink name=destination",
-                "description": "Pedestrian and vehicle detection and tracking with zone dwell-time loitering analytics",
+                "queue_maxsize": 30,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect batch-size=1 nireq=2 threshold=0.7 model=/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml device=NPU model-instance-id=instnpu0 name=detection ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvatrack tracking-type=zero-term config=tracking_per_class=false name=tracker ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvaanalytics name=analytics evaluation-point=bottom-center draw-zones=true ! loitering_watermark name=loitering_watermark loitering-threshold=5.0 dashboard-pos=20,40 ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvametaconvert add-empty-results=false add-rtp-timestamp=true name=metaconvert ! queue max-size-buffers=2 max-size-bytes=0 max-size-time=0 ! gvawatermark ! appsink name=destination",
+                "description": "Loitering detection pipeline on NPU with zone dwell-time analytics and on-screen overlay",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -82,6 +93,12 @@
                         "analytics-properties": {
                             "element": {
                                 "name": "analytics",
+                                "format": "element-properties"
+                            }
+                        },
+                        "metaconvert-properties": {
+                            "element": {
+                                "name": "metaconvert",
                                 "format": "element-properties"
                             }
                         },

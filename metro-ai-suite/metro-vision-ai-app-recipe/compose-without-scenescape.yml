@@ -19,11 +19,11 @@ services:
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${HOST_IP},mediamtx-server,otel-collector,${no_proxy}
-      - NO_PROXY=${HOST_IP},mediamtx-server,otel-collector,${no_proxy}
+      - no_proxy=${HOST_IP},mediamtx-server,otel-collector,broker,${no_proxy}
+      - NO_PROXY=${HOST_IP},mediamtx-server,otel-collector,broker,${no_proxy}
       - ENABLE_WEBRTC=true
       - WEBRTC_SIGNALING_SERVER=http://mediamtx-server:8889
-      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=true
+      - APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=false
       - RUN_MODE=EVA
       - EMIT_SOURCE_AND_DESTINATION=true
       - REST_SERVER_PORT=8080
@@ -42,8 +42,8 @@ services:
       - dlstreamer-pipeline-server-pipeline-root:/var/cache/pipeline_root:uid=1999,gid=1999
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/home/pipeline-server/videos"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/configs:/home/pipeline-server/configs"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json"
-      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/zones:/home/pipeline-server/zones"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/plugins:/home/pipeline-server/plugins:ro"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
@@ -110,7 +110,6 @@ services:
     depends_on:
       - dlstreamer-pipeline-server
       - grafana
-      - node-red
       - mediamtx
     environment:
       - http_proxy=${http_proxy}
@@ -132,35 +131,13 @@ services:
       - GF_INSTALL_PLUGINS=grafana-mqtt-datasource 1.3.3
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
-      - no_proxy=${no_proxy},${HOST_IP},nginx-reverse-proxy
-      - NO_PROXY=${no_proxy},${HOST_IP},nginx-reverse-proxy
+      - no_proxy=${no_proxy},${HOST_IP},nginx-reverse-proxy,broker
+      - NO_PROXY=${no_proxy},${HOST_IP},nginx-reverse-proxy,broker
       - GF_SERVER_ROOT_URL=https://localhost/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
       - GF_SECURITY_ALLOW_EMBEDDING=true
 
-  node-red:
-    image: nodered/node-red:4.1
-    container_name: node-red
-    environment:
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy}
-    volumes:
-      - "./${SAMPLE_APP}/src/node-red:/data"
-      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/data/public/videos"
-      - node-red-node-modules:/usr/src/node-red/node_modules
-      - /etc/localtime:/etc/localtime:ro
-    ipc: "none"
-    entrypoint:
-      [
-        "/bin/bash",
-        "-c",
-        "/data/install_package.sh && /usr/src/node-red/entrypoint.sh",
-      ]
-    user: root
-    networks:
-      - app_network
 
   prometheus:
     image: prom/prometheus:v3.12.0
@@ -205,6 +182,42 @@ services:
     networks:
       - app_network
 
+  # UI Console: operator UI to start/stop streams, draw a zone and view
+  # live loitering analytics. Served over plain HTTP; nginx is the only TLS
+  # termination point, same as grafana/prometheus above.
+  console:
+    build:
+      context: ./console-addon/console
+      dockerfile: Dockerfile
+    image: loitering-detection-ui:0.1.1
+    container_name: ui-console
+    restart: unless-stopped
+    env_file:
+      - ./console-addon/.env
+    environment:
+      - UI_PORT=8091
+      - HOST_IP=${HOST_IP}
+      - PIPELINE_SERVER_URL=http://dlstreamer-pipeline-server:8080
+      - MQTT_HOST=broker
+      - MQTT_PORT=1883
+      - MEDIAMTX_URL=http://mediamtx-server:8889
+      - PROMETHEUS_URL=http://prometheus:9090/prometheus
+      - MODEL_ROOT=/home/pipeline-server/models
+      - http_proxy=
+      - https_proxy=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - no_proxy=localhost,127.0.0.1,::1,dlstreamer-pipeline-server,mediamtx-server,prometheus,broker,${HOST_IP}
+      - NO_PROXY=localhost,127.0.0.1,::1,dlstreamer-pipeline-server,mediamtx-server,prometheus,broker,${HOST_IP}
+    volumes:
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models:ro"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/configs:/home/pipeline-server/configs:ro"
+    networks:
+      - app_network
+    depends_on:
+      - dlstreamer-pipeline-server
+      - broker
+
 networks:
   app_network:
     driver: "bridge"
@@ -217,4 +230,3 @@ volumes:
       device: tmpfs
   prometheus_data:
     driver: local
-  node-red-node-modules:
