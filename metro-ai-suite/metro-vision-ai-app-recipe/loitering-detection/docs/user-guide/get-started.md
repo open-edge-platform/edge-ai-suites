@@ -28,7 +28,7 @@ By following this guide, you will learn how to:
    > on instead of `main`:
    >
    > ```bash
-   > git clone --filter=blob:none --sparse --branch gg/ld-ui https://github.com/guptagunjan/edge-ai-suites.git
+   > git clone --filter=blob:none --sparse --branch ld-ui-v2 https://github.com/guptagunjan/edge-ai-suites.git
    > cd edge-ai-suites
    > git sparse-checkout set metro-ai-suite
    > cd metro-ai-suite/metro-vision-ai-app-recipe/
