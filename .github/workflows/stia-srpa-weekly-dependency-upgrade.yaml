@@ -1,0 +1,176 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "STIA/SRPA Weekly Dependency Upgrade"
+run-name: "STIA/SRPA Weekly uv dependency upgrade (by @${{ github.actor }} via ${{ github.event_name }})"
+
+# ----------------------------------------------------------------------------
+# Weekly, automated refresh of the `uv.lock` file in order to keep packages updated
+# within the declared version constraints.
+#
+# This workflow applies to these two projects in the repo:
+#   * metro-ai-suite/smart-traffic-intersection-agent
+#   * metro-ai-suite/smart-route-planning-agent
+#
+# It runs `uv lock --upgrade` inside each project's `src/` directory. This preserves
+# the version constraints declared in `pyproject.toml` while updating the 
+# dependency lock file to latest version satisfying the constraints.
+# ----------------------------------------------------------------------------
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # 09:00 UTC every Monday
+  # Maintainers can trigger manually
+  workflow_dispatch:
+
+# Least privileged workflow permissions.
+permissions: {}
+
+# Only one upgrade run at a time.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  UV_VERSION: ">=0.9.22,<1.0.0"
+  STIA_DIR: "metro-ai-suite/smart-traffic-intersection-agent/src"
+  SRPA_DIR: "metro-ai-suite/smart-route-planning-agent/src"
+
+jobs:
+  uv-lock-upgrade:
+    name: Upgrade uv lockfiles and open PR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv ${{ env.UV_VERSION }}
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Upgrade lockfile - smart-traffic-intersection-agent
+        working-directory: ${{ env.STIA_DIR }}
+        run: |
+          set -euo pipefail
+          echo "::group::uv lock --upgrade (smart-traffic-intersection-agent)"
+          uv lock --upgrade 2>&1 | tee "${RUNNER_TEMP}/stia-upgrade.log"
+          echo "::endgroup::"
+
+      - name: Upgrade lockfile - smart-route-planning-agent
+        working-directory: ${{ env.SRPA_DIR }}
+        run: |
+          set -euo pipefail
+          echo "::group::uv lock --upgrade (smart-route-planning-agent)"
+          uv lock --upgrade 2>&1 | tee "${RUNNER_TEMP}/srpa-upgrade.log"
+          echo "::endgroup::"
+
+      - name: Verify lockfiles are in sync with pyproject.toml
+        run: |
+          set -euo pipefail
+          for dir in "${STIA_DIR}" "${SRPA_DIR}"; do
+            echo "Checking ${dir}/uv.lock is in sync with ${dir}/pyproject.toml ..."
+            ( cd "${dir}" && uv lock --check )
+          done
+          echo "Both lockfiles are in sync with their pyproject.toml. ✅"
+
+      - name: Build pull request body
+        id: pr-body
+        run: |
+          set -euo pipefail
+          body_file="${RUNNER_TEMP}/pr-body.md"
+          {
+            echo "## Weekly \`uv lock --upgrade\` dependency refresh"
+            echo
+            echo "Automated weekly refresh of the \`uv.lock\` files for the two metro-ai-suite"
+            echo "agents so the latest **transitive** security fixes are picked up within the"
+            echo "version constraints already declared in each \`pyproject.toml\`."
+            echo
+            echo "### Changed files"
+            echo "- \`${STIA_DIR}/uv.lock\`"
+            echo "- \`${SRPA_DIR}/uv.lock\`"
+            echo
+            echo "### What this PR does **not** do"
+            echo "- No edits to any \`pyproject.toml\` — declared dependencies and version"
+            echo "  constraints are untouched."
+            echo "- No new, removed, or manually pinned direct/transitive dependencies; only"
+            echo "  already-constrained versions move, strictly within their declared ranges."
+            echo
+            echo "### How it was produced"
+            echo "1. \`uv lock --upgrade\` in each agent's \`src/\` directory."
+            echo "2. \`uv lock --check\` confirmed both lockfiles stay in sync with their"
+            echo "   \`pyproject.toml\`."
+            echo
+            echo "<details><summary><strong>smart-traffic-intersection-agent</strong> — resolver changes</summary>"
+            echo
+            echo '```'
+            if [ -s "${RUNNER_TEMP}/stia-upgrade.log" ]; then
+              cat "${RUNNER_TEMP}/stia-upgrade.log"
+            else
+              echo "No version changes detected."
+            fi
+            echo '```'
+            echo "</details>"
+            echo
+            echo "<details><summary><strong>smart-route-planning-agent</strong> — resolver changes</summary>"
+            echo
+            echo '```'
+            if [ -s "${RUNNER_TEMP}/srpa-upgrade.log" ]; then
+              cat "${RUNNER_TEMP}/srpa-upgrade.log"
+            else
+              echo "No version changes detected."
+            fi
+            echo '```'
+            echo "</details>"
+            echo
+            echo "> Triggered by \`${GITHUB_EVENT_NAME}\` · run [\`${GITHUB_RUN_ID}\`](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})"
+          } > "${body_file}"
+          echo "path=${body_file}" >> "${GITHUB_OUTPUT}"
+          # Surface the same content in the run summary for quick inspection.
+          cat "${body_file}" >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Create or update pull request
+        id: cpr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          
+          body_file="${{ steps.pr-body.outputs.path }}"
+          branch="chore/weekly-uv-lock-upgrade"
+          base="main"
+          title="chore(deps): weekly uv lockfile upgrade (STIA & SRPA)"
+          
+          # Check if PR already exists
+          pr_url=$(gh pr list --head "${branch}" --base "${base}" --json url --jq '.[0].url' 2>/dev/null || echo "")
+          
+          if [ -n "${pr_url}" ]; then
+            # Update existing PR
+            gh pr edit "${pr_url}" --title "${title}" --body-file "${body_file}"
+            echo "pull-request-url=${pr_url}" >> "${GITHUB_OUTPUT}"
+            echo "pull-request-operation=updated" >> "${GITHUB_OUTPUT}"
+          else
+            # Create new PR
+            pr_url=$(gh pr create --title "${title}" --head "${branch}" --base "${base}" --body-file "${body_file}" --label "dependencies" --label "Automation" --json url --jq '.url')
+            echo "pull-request-url=${pr_url}" >> "${GITHUB_OUTPUT}"
+            echo "pull-request-operation=created" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Report result
+        if: always()
+        env:
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+          PR_OP: ${{ steps.cpr.outputs.pull-request-operation }}
+        run: |
+          set -euo pipefail
+          if [ -n "${PR_URL:-}" ]; then
+            echo "Pull request ${PR_OP:-ready}: ${PR_URL}" >> "${GITHUB_STEP_SUMMARY}"
+          else
+            echo "No dependency updates were necessary; no pull request created." >> "${GITHUB_STEP_SUMMARY}"
+          fi
