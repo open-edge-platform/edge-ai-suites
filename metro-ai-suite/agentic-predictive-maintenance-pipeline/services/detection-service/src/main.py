@@ -77,7 +77,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="APM Detection Service",
-    description="Agentic Predictive Maintenance — detection layer (DL Streamer orchestration)",
+    description="Agentic Predictive Maintenance for Critical Infrastructure — detection layer (DL Streamer orchestration)",
     version="1.0.0",
     lifespan=lifespan,
 )
