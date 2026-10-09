@@ -41,6 +41,9 @@ function run_sample() {
     "parameters": {
         "analytics-properties": {
             "config": "/home/pipeline-server/zones/VIRAT_S_00010$x.json"
+        },
+        "loitering-watermark-properties": {
+            "loitering-threshold": "5.0"
         }
     }
   }

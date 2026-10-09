@@ -13,9 +13,9 @@ The system follows a modular architecture:
 
 -   **Video Input:** Cameras or video streams provide the raw data.
 -   **Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server):** Processes video
-streams locally using AI models to detect and track objects, and evaluates each tracked object
-against configurable zone polygons to compute dwell time natively via the `gvaanalytics`
-element — no external data-processing service required.
+streams locally using AI models to detect and track objects across the full frame, and
+evaluates each tracked object against configurable zone polygons to compute dwell time
+natively via the `gvaanalytics` element — no external data-processing service required.
 -   **Grafana:** Visualizes the published MQTT data (zone presence, dwell time, and loitering
 status), providing real-time dashboards.
 
@@ -55,12 +55,15 @@ a per-instance MQTT topic and WebRTC peer-id (e.g. `object_tracking_1`).
 -   **Pipelines:** `object_tracking_cpu`, `object_tracking_gpu`, `object_tracking_npu`
 -   **How They Work:**
     -   **Detection Model:** Uses the `pedestrian-and-vehicle-detector-adas-0001` model for
-    specialized tracking.
+    specialized tracking. `gvadetect` runs with `inference-region=0`, so detection/tracking
+    analyze the full frame, not just the configured zone polygons.
     -   **Tracking Element:** Incorporates `gvatrack` with the setting `tracking-type=short-term-imageless` to follow objects over time.
     -   **Zone & Dwell-Time Analytics:** The `gvaanalytics` element evaluates each tracked
     object's position against a per-stream polygon zone config file and computes dwell time;
-    `loitering_watermark` (a reused DL Streamer sample element) renders the dwell-time/status
-    text overlay on the video.
+    it is the only stage whose output is restricted to the configured zones — an object
+    outside every zone is still detected and tracked, just not reported as present/dwelling
+    in a zone. `loitering_watermark` (a reused DL Streamer sample element) renders the
+    dwell-time/status text overlay on the video.
     -   **Additional Parameters:**
         -   `Threshold`: Set to `0.1` to balance sensitivity and accuracy.
         -   `Inference Interval`: Controls how often the model analyzes frames.
@@ -114,6 +117,12 @@ Zone presence and dwell-time computation run natively inside the DL Streamer pip
 the whole pipeline (detection, tracking, zone/dwell analytics, and the on-screen watermark) in
 one process, and the resulting data already flows to MQTT through the pipeline's existing
 `gvametaconvert` + `destination.metadata` publish path.
+
+`gvadetect` (`inference-region=0`) and `gvatrack` always run on the full video frame — there is
+no ROI-cropping element in this pipeline, so every object in frame is detected and tracked
+regardless of the zone polygons. `gvaanalytics` is the stage that narrows scope: it only reports
+zone presence and dwell time for the polygon region(s) defined in the stream's zone-config file;
+objects outside those polygons are detected/tracked but produce no zone/dwell metadata.
 
 ### Zone configuration files
 
@@ -232,9 +241,9 @@ changes when adding a new stream, since it already covers the whole topic namesp
 
 The reused `loitering_watermark` element reads the same dwell-time metadata and draws a
 per-object dashboard line (`<zone_id>: <type>-<id> : <dwell_time>s`), turning red once dwell
-time crosses the configured `loitering-threshold`. It can be disabled per-stream (e.g. to rely
-on the Grafana table only) by setting `quiet-mode` to `"true"` via the
-`loitering-watermark-properties` REST parameter at launch time, with zero code changes.
+time crosses the configured `loitering-threshold` (default `5.0` seconds). See
+[Get Started](../get-started.md) for how to tune or disable this overlay via REST parameters at
+launch time.
 
 
 ## Grafana visualization

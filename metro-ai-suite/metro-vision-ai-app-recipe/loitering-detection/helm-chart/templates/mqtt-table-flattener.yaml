@@ -15,10 +15,23 @@ spec:
       labels:
         app: mqtt-table-flattener
     spec:
+      {{- if and $.Values.DOCKER_USERNAME $.Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
       containers:
       - name: mqtt-table-flattener
         image: {{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
+        imagePullPolicy: {{ $.Values.imagePullPolicy }}
         command: ["python3", "/app/flatten.py"]
+        securityContext:
+          runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsUser: 1999
+          capabilities:
+            drop:
+              - ALL
         env:
         - name: MQTT_HOST
           value: broker

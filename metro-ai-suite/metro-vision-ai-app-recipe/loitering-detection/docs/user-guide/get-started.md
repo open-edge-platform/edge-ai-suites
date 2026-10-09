@@ -131,10 +131,54 @@ By following this guide, you will learn how to:
   > image features, the same object may receive different IDs over time due to
   > lack of re-identification.
 
+  > [!NOTE]
+  > Detection (`gvadetect`) and tracking (`gvatrack`) always run on the full video frame —
+  > there is no element cropping input to the zone polygons. Only the `gvaanalytics` element
+  > restricts its output to the configured zones: objects outside every zone are still
+  > detected and tracked, just not reported as present/dwelling in a zone.
+
 ### **DL Streamer Pipeline Server**
 
 - **REST API**: `https://localhost/api/pipelines/status`
 - **WebRTC**: `https://localhost/mediamtx/object_tracking_1/`
+
+### **Tuning or disabling the dwell-time overlay**
+
+The on-screen dwell-time dashboard text (drawn by `loitering_watermark`) is controlled by two
+REST-overridable properties, set via `loitering-watermark-properties` in the launch payload used
+by `sample_start.sh` — no code or pipeline changes needed:
+
+- `loitering-threshold`: dwell time (seconds) after which the overlay turns red. Default `5.0`.
+  To change it, edit the `"loitering-threshold"` value in the payload in `sample_start.sh` (or
+  pass a different value in your own `curl` call using the same payload shape), then restart the
+  pipelines so the new value takes effect:
+
+  ```bash
+  ./sample_stop.sh
+  ./sample_start.sh
+  ```
+
+  > [!NOTE]
+  > Pipeline parameters are only read when a pipeline starts, so editing the payload value
+  > alone does not affect an already-running pipeline — it must be restarted.
+- `quiet-mode`: set to `"true"` to suppress the on-screen text entirely (e.g. to rely on the
+  Grafana table only); `"false"` to re-enable it.
+
+Example REST payload fragment (see `sample_start.sh` for the full launch payload):
+
+```json
+{
+  "parameters": {
+    "loitering-watermark-properties": {
+      "loitering-threshold": "7.0",
+      "quiet-mode": "false"
+    }
+  }
+}
+```
+
+This only affects the on-screen text; zone outlines/bounding boxes and the Grafana table are
+unaffected.
 
 ## **Stop the Application**
 

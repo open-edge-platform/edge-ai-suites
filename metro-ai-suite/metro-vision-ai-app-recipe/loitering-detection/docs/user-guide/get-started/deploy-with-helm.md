@@ -292,6 +292,19 @@ the Node IP. (Total 4 places)
    ![Example of Grafana and WebRTC streaming](../_assets/grafana.png)
    *Figure 1: Grafana and WebRTC streaming*
 
+   > [!TIP]
+   > The on-screen dwell-time overlay is REST-tunable via `loitering-watermark-properties` in
+   > the launch payload (see `sample_start.sh`), with no code or pipeline changes:
+   > `"loitering-threshold"` (seconds before the overlay turns red; default `"5.0"`) and
+   > `"quiet-mode"` (`"true"` to suppress the on-screen text, e.g. to rely on the Grafana table
+   > only). Zone outlines/bounding boxes and the Grafana table are unaffected either way.
+
+   > [!NOTE]
+   > Detection (`gvadetect`) and tracking (`gvatrack`) always run on the full video frame —
+   > there is no element cropping input to the zone polygons. Only the `gvaanalytics` element
+   > restricts its output to the configured zones: objects outside every zone are still
+   > detected and tracked, just not reported as present/dwelling in a zone.
+
 ### Step 4: End the demonstration
 
 Follow this procedure to stop the sample application and end this demonstration.
