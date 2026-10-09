@@ -61,7 +61,8 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
-   > **Note:** If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   > [!NOTE]
+   > If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the URL for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    <!--hide_directive ::::{tab-set} hide_directive-->
@@ -137,7 +138,8 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
 
 7. Run the following sample OPC UA subscriber on a different machine by updating the `<IP-Address of OPCUA Server>` to read the meta-data written to the server variable from DL Streamer Pipeline Server.
 
-   > **Note:** Install `asyncua` before running the script below (if not already installed):
+   > [!NOTE]
+   > Install `asyncua` before running the script below (if not already installed):
    >
    > ```sh
    > pip3 install asyncua

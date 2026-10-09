@@ -49,7 +49,7 @@ download_artifacts() {
         # echo "Model XML: $MODEL_XML_URL"
         echo "Model URL: $MODEL_URL"
         # Download model XML and BIN files
-        if curl -kL "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
+        if curl -L "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
             echo "Model zip for $app_name downloaded successfully."
             # Unzip the downloaded model file
             if unzip_compressed_file "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)" "$LOCAL_MODEL_DIR"; then
@@ -74,7 +74,7 @@ download_artifacts() {
             return 1
         fi
         echo "Downloading video artifacts for $app_name..."
-        if ! curl -kL "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
+        if ! curl -L "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
             err "Failed to download video for $app_name."
             return 1
         fi

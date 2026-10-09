@@ -5,7 +5,8 @@ local machine.
 
 ## (Optional) Configuring the Proxy
 
-> **Note**: If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
+> [!NOTE]
+> If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
 
 Depending on the system's network configuration, you may need an additional proxy configuration.
 Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a
@@ -81,14 +82,20 @@ Decompress the downloaded file:
 unzip handheld-multi-modal.zip
 ```
 
-Run the script that installs all dependencies, downloads models, and starts applications.
+Run the makefile target that installs all dependencies, downloads models, and starts applications.
 During installation, a single prompt asking to accept licenses of models will appear.
 Depending on network bandwidth, it takes around 10-15 minutes. If an error occurs during
-installation, see the [proxy configuration step](#optional-configure-the-proxy):
+installation, see the [proxy configuration step](#optional-configuring-the-proxy):
 
 ```bash
-cd handheld-multi-modal
-./run.sh up
+cd handheld-multi-modal/handheld-multi-modal
+make deploy
+```
+
+For development purposes, it is possible to deploy a lightweight version without the Visual Pipeline and Platform Evaluation Tool, however, the full version is recommended for end users. To deploy it, run:
+
+```bash
+make deploy-standalone
 ```
 
 ## Verifying the installation
@@ -110,33 +117,3 @@ d1ec3f394245   intel/vippet-app:2026.1.0-20260512-weekly               "./entryp
 f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypoint.sh"         34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp, 8186/tcp, 0.0.0.0:9273->9273/tcp, [::]:9273->9273/tcp                                      metrics-manager
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
-
-> **Note**: After a system restart, run `./run up` from the `handheld-multi-modal` directory to start the applications again.
-
-## Accessing Application User Interface
-
-This composite application exposes multiple endpoints through the NGINX TLS reverse proxy.
-They are bound to localhost only and are not exposed on any external IP address.
-Since the intended use is on handheld devices, the applications do not provide authentication
-or authorization.
-
-> **Notice**:
-> The "self-signed certificate" browser warning is expected.
-> Modern browsers require HTTPS to enable microphone input used by Open WebUI and
-  Speech To Text services, therefore, the NGINX reverse proxy uses the certificate to ensure
-  TLS transport on the `localhost` bound addresses.
-
-
-
-| Service | URL | Notes |
-|---------|-----|-------|
-| Visual Pipeline and Platform Evaluation Tool UI | https://localhost:443 | via NGINX reverse proxy |
-| Open WebUI | https://localhost:8443 | Conversational Agent backed by LLM — browser microphone enabled (via NGINX reverse proxy) |
-| Whisper speech-to-text service | https://localhost:5443 | Speech-to-text — browser microphone enabled (via NGINX reverse proxy) |
-| Grafana dashboard | https://localhost:7443 | Pre-provisioned dashboards (via NGINX reverse proxy) |
-
-
-
-<!--
-Source: [Endpoints](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-and-aerospace-ai-suite/handheld-multi-modal/README.md#endpoints)
--->

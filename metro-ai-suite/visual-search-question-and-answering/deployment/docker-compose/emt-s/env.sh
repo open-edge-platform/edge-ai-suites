@@ -40,15 +40,17 @@ export USER_GROUP_ID
 export VIDEO_GROUP_ID
 export RENDER_GROUP_ID
 
-# Append the value of the public IP address to the no_proxy list 
-export no_proxy="localhost,127.0.0.1,::1,${host_ip},milvus-standalone,vlm-openvino-serving,multimodal-embedding-serving,multimodal-dataprep,retriever-milvus,visual-search-qa-app"
+# Append the value of the public IP address and Docker service names to the no_proxy list
+export no_proxy="localhost,127.0.0.1,::1,${host_ip},milvus-standalone,milvus-etcd,milvus-minio,multimodal-embedding-serving,multimodal-dataprep,retriever-milvus,vlm-openvino-serving,visual-search-qa-app"
 export http_proxy=${http_proxy}
 export https_proxy=${https_proxy}
 export no_proxy_env=${no_proxy}
 
-export MILVUS_HOST=milvus-standalone
-export MILVUS_PORT=19530
 export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-vsqa}"
+
+# MinIO credentials consumed by the milvus-minio service.
+export MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+export MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
 
 export DATA_INGEST_WITH_DETECT="${DATA_INGEST_WITH_DETECT:-false}"
 export DATA_INGEST_FRAME_INTERVAL="${DATA_INGEST_FRAME_INTERVAL:-15}"
@@ -66,43 +68,50 @@ export MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE="${MM_DATAPREP_VIDEO_EXTRACTION_B
 export MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS="${MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS:-1}"
 export MM_DATAPREP_DETECTION_WORKER_THREADS="${MM_DATAPREP_DETECTION_WORKER_THREADS:-1}"
 export MM_DATAPREP_EMBED_WORKER_THREADS="${MM_DATAPREP_EMBED_WORKER_THREADS:-1}"
+# Maximum number of files accepted in a single directory/batch ingest job.
+# The full DAVIS dataset is ~2200 files, so the microservice default is too low.
+export DATAPREP_BATCH_MAX_ITEMS="${DATAPREP_BATCH_MAX_ITEMS:-5000}"
+# Bucket the dataprep service groups this app's media under; also the target of
+# the UI's "Clear DB" action.
 export DATAPREP_BUCKET_NAME="${DATAPREP_BUCKET_NAME:-vsqa}"
+# Milvus collection shared by the dataprep and retriever microservices.
 export INDEX_NAME="${INDEX_NAME:-default}"
 
-# huggingface mirror 
-export HF_ENDPOINT=https://hf-mirror.com
+# huggingface mirror
+# export HF_ENDPOINT=https://huggingface.co
+export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 
-export DEVICE="GPU.1"
-export VLM_DEVICE="GPU.1"
-export HOST_DATA_PATH="$HOME/data"
+export VLM_DEVICE="${VLM_DEVICE:-GPU.1}"
+export HOST_DATA_PATH="${HOST_DATA_PATH:-$HOME/data}"
 # export VLM_MODEL_NAME="Qwen/Qwen2.5-VL-7B-Instruct"
 
 # OpenVINO configuration
-export EMBEDDING_DEVICE="GPU.1"
-export MM_DATAPREP_EMBEDDING_DEVICE="${MM_DATAPREP_EMBEDDING_DEVICE:-${EMBEDDING_DEVICE:-CPU}}"
-export MM_DATAPREP_DETECTION_DEVICE="${MM_DATAPREP_DETECTION_DEVICE:-${EMBEDDING_DEVICE:-CPU}}"
+export EMBEDDING_DEVICE="${EMBEDDING_DEVICE:-GPU.1}"
+export MM_DATAPREP_EMBEDDING_DEVICE="${MM_DATAPREP_EMBEDDING_DEVICE:-${EMBEDDING_DEVICE:-GPU.1}}"
+export MM_DATAPREP_DETECTION_DEVICE="${MM_DATAPREP_DETECTION_DEVICE:-${EMBEDDING_DEVICE:-GPU.1}}"
 export EMBEDDING_USE_OV=true
 
-export VLM_COMPRESSION_WEIGHT_FORMAT=int8
+export VLM_COMPRESSION_WEIGHT_FORMAT="${VLM_COMPRESSION_WEIGHT_FORMAT:-int8}"
 export WORKERS=1
 
 export VLM_SEED=42
 export VLM_SERVICE_PORT=9764
 export DATAPREP_SERVICE_PORT=9990
-export RETRIEVER_SERVICE_PORT=7770
+export RETRIEVER_SERVICE_PORT=6008
 export VISUAL_SEARCH_QA_UI_PORT=17580
 export EMBEDDING_SERVER_PORT=9777
 
+# The app talks to the backends over the compose network, where every service
+# listens on its container port (8000), not on the published host port.
 export BACKEND_VQA_BASE_URL="http://vlm-openvino-serving:8000"
-export BACKEND_SEARCH_BASE_URL="http://retriever-milvus:${RETRIEVER_SERVICE_PORT}"
-export BACKEND_DATAPREP_BASE_URL="http://multimodal-dataprep:${DATAPREP_SERVICE_PORT}"
+export BACKEND_SEARCH_BASE_URL="http://retriever-milvus:8000"
+export BACKEND_DATAPREP_BASE_URL="http://multimodal-dataprep:8000"
 # Browser-reachable dataprep URL. Search results are streamed straight from
 # GET /media/download by the browser itself, so this must resolve there -
 # container names (multimodal-dataprep) never do. host_ip is used so the UI
 # also works when opened from another machine; http://localhost:<port> is a
 # valid override only when the browser runs on this host.
 export DATAPREP_PUBLIC_BASE_URL="${DATAPREP_PUBLIC_BASE_URL:-http://${host_ip}:${DATAPREP_SERVICE_PORT}}"
-export EMBEDDING_BASE_URL="http://multimodal-embedding-serving:8000"
 
 # export EMBEDDING_MODEL_NAME="CLIP/clip-vit-h-14"
 

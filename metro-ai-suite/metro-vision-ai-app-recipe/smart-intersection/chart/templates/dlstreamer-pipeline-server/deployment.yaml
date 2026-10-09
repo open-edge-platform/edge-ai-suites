@@ -122,7 +122,7 @@ spec:
         - name: https_proxy
           value: {{ .Values.https_proxy | quote }}
         - name: no_proxy
-          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web"
+          value: "influxdb2,ntpserv,smart-intersection-broker,smart-intersection-dlstreamer-pipeline-server,smart-intersection-grafana,smart-intersection-nodered,smart-intersection-pgserver,smart-intersection-scene,smart-intersection-web,{{ .Values.no_proxy }}"
         - name: ZE_ENABLE_ALT_DRIVERS
           value: "libze_intel_npu.so"
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}

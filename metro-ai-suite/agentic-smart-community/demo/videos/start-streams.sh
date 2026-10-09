@@ -152,10 +152,7 @@ stop_one() {
 }
 
 cmd_stop() {
-  shopt -s nullglob
-  for pidfile in "$RUN_DIR"/*.pid; do
-    stop_one "$(basename "$pidfile" .pid)"
-  done
+  exec "$SCRIPT_DIR/stop_streams.sh"
 }
 
 cmd_status() {

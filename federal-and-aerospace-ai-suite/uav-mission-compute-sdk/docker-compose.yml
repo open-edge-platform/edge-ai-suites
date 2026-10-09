@@ -9,14 +9,16 @@
 #   Vars: PX4_START_SCRIPT, PX4_MODEL_DIR, PX4_WORLD_FILE, GZ_WORLD, CAMERA_IDS
 #
 # Simulation + bridges:
-#   px4               — PX4 SITL + Gazebo Harmonic simulation (profile: sim-camera)
-#   px4-sih           — PX4 SITL SIH lightweight simulation (profile: usb-camera)
-#   companion-bridge  — MAVLink ↔ MQTT bridge (telemetry + commands)
-#   camera-bridge     — Gazebo camera → RTSP via MediaMTX (profile: sim-camera)
-#   usb-camera-bridge — real USB (V4L2) camera → RTSP via MediaMTX (profile: usb-camera)
-#   Exactly one of the two camera bridges should be active at a time.
+#   px4                     — PX4 SITL + Gazebo Harmonic simulation (profile: sim-camera)
+#   px4-sih                 — PX4 SITL SIH lightweight simulation (profile: usb-camera, realsense-camera)
+#   companion-bridge        — MAVLink ↔ MQTT bridge (telemetry + commands)
+#   camera-bridge           — Gazebo camera → RTSP via MediaMTX (profile: sim-camera)
+#   usb-camera-bridge       — real USB (V4L2) camera → RTSP via MediaMTX (profile: usb-camera)
+#   realsense-camera-bridge — Intel RealSense depth camera (IR + depth) → RTSP via MediaMTX (profile: realsense-camera)
+#   Exactly one camera bridge should be active at a time.
 #     make up               → sim (Gazebo) cameras
 #     make up-usb-camera    → real USB camera (/dev/video32)
+#     make up-realsense-camera → Intel RealSense camera (IR + depth)
 #   mediamtx          — RTSP server for camera streams
 #   mosquitto         — MQTT broker
 #
@@ -83,7 +85,7 @@ services:
     image: px4io/px4-sitl:latest
     container_name: px4-sitl
     hostname: px4-sitl
-    profiles: ["usb-camera"]
+    profiles: ["usb-camera", "realsense-camera"]
     ipc: shareable
     environment:
       - HEADLESS=1
@@ -119,7 +121,7 @@ services:
         - HTTP_PROXY=${HTTP_PROXY:-}
         - HTTPS_PROXY=${HTTPS_PROXY:-}
     container_name: companion-bridge
-    profiles: ["sim-camera", "usb-camera"]
+    profiles: ["sim-camera", "usb-camera", "realsense-camera"]
     network_mode: service:${PX4_NETWORK_SERVICE:-px4}
     environment:
       - MQTT_BROKER_HOST=mosquitto
@@ -211,6 +213,80 @@ services:
       - "${USB_VIDEO_DEVICE:-/dev/video0}:${USB_VIDEO_DEVICE:-/dev/video0}"
     volumes:
       - ./infra/bridges/usb-camera/usb_camera_bridge.py:/app/usb_camera_bridge.py:ro
+    depends_on:
+      companion-bridge:
+        condition: service_started
+      mediamtx:
+        condition: service_started
+      mosquitto:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  # Intel RealSense depth camera (IR + depth) → RTSP. Mutually exclusive with
+  # camera-bridge/usb-camera-bridge. Start with: make up-realsense-camera
+  # Captures the active-infrared stereo pair (beyond visible spectrum) and the
+  # derived depth stream. Streams to rtsp://localhost:8554/uav-1/<CAMERA_ID_IR>
+  # and rtsp://localhost:8554/uav-1/<CAMERA_ID_DEPTH>.
+  realsense-camera-bridge:
+    image: uav-mission-compute-sdk/realsense-camera-bridge
+    build:
+      context: ./infra/bridges/realsense-camera
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY:-}
+        - HTTPS_PROXY=${HTTPS_PROXY:-}
+    container_name: realsense-camera-bridge
+    profiles: ["realsense-camera"]
+    environment:
+      - MQTT_BROKER_HOST=mosquitto
+      - MQTT_BROKER_PORT=1883
+      - UAV_ID=${UAV_ID:-uav-1}
+      - RS_SERIAL=${RS_SERIAL:-}
+      - RS_WIDTH=${RS_WIDTH:-640}
+      - RS_HEIGHT=${RS_HEIGHT:-480}
+      - RS_FPS=${RS_FPS:-30}
+      - ENABLE_IR=${RS_ENABLE_IR:-true}
+      - ENABLE_DEPTH=${RS_ENABLE_DEPTH:-true}
+      - CAMERA_ID_IR=${RS_CAMERA_ID_IR:-ir}
+      - CAMERA_ID_DEPTH=${RS_CAMERA_ID_DEPTH:-depth}
+      - USE_RTSP=true
+      - RTSP_HOST=mediamtx
+      - RTSP_PORT=8554
+    devices:
+      # D400-series cameras stream through the uvcvideo kernel driver (V4L2
+      # nodes), and use /dev/bus/usb only for control — both are required.
+      # Host node numbers are enumeration-order dependent (not stable across
+      # reboots/hotplug or different camera models), so they're auto-detected
+      # into .env as RS_VIDEO0../RS_MEDIA0.. by `make init` (falls back to
+      # /dev/null — always present, harmless — for unused slots).
+      - /dev/bus/usb:/dev/bus/usb
+      - ${RS_VIDEO0:-/dev/null}:/dev/video0
+      - ${RS_VIDEO1:-/dev/null}:/dev/video1
+      - ${RS_VIDEO2:-/dev/null}:/dev/video2
+      - ${RS_VIDEO3:-/dev/null}:/dev/video3
+      - ${RS_VIDEO4:-/dev/null}:/dev/video4
+      - ${RS_VIDEO5:-/dev/null}:/dev/video5
+      - ${RS_VIDEO6:-/dev/null}:/dev/video6
+      - ${RS_VIDEO7:-/dev/null}:/dev/video7
+      - ${RS_MEDIA0:-/dev/null}:/dev/media0
+      - ${RS_MEDIA1:-/dev/null}:/dev/media1
+      - ${RS_MEDIA2:-/dev/null}:/dev/media2
+      - ${RS_MEDIA3:-/dev/null}:/dev/media3
+    # /dev/bus/usb and /dev/video*/media* are directory/individual bind mounts —
+    # Docker only auto-allows individual device files listed under `devices:`,
+    # so the majors (189=usb, 81=video4linux, 235=media) must be explicitly
+    # allowed here or the kernel blocks access to nodes inside/matching them.
+    device_cgroup_rules:
+      - "c 189:* rmw"
+      - "c 81:* rmw"
+      - "c 235:* rmw"
+    volumes:
+      - ./infra/bridges/realsense-camera/realsense_camera_bridge.py:/app/realsense_camera_bridge.py:ro
     depends_on:
       companion-bridge:
         condition: service_started

@@ -11,23 +11,8 @@ from typing import Any, Dict, Optional
 # Temporary logger for validators and early startup (reconfigured later)
 _temp_logger = logging.getLogger(__name__)
 
-try:
-    from dotenv import load_dotenv
-except ImportError:  # optional dependency
-    load_dotenv = None
-
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
-
-# Load environment variables from .env file if it exists
-env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
-if os.path.exists(env_path):
-    if load_dotenv is not None:
-        load_dotenv(env_path)
-    else:
-        _temp_logger.warning(
-            "python-dotenv is not installed; skipping .env loading."
-        )
 
 
 class Settings(BaseSettings):
@@ -195,13 +180,5 @@ for handler in logging.root.handlers:
     handler.setFormatter(GunicornStyleFormatter())
 
 logger = logging.getLogger(__name__)
-
-# Log environment file loading status
-if os.path.exists(env_path):
-    logger.info(f"Loaded environment variables from {env_path}")
-else:
-    logger.info(
-        f".env file not found at {env_path}. Using environment variables."
-    )
 
 logger.debug(f"Settings: {settings.model_dump()}")

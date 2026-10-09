@@ -624,6 +624,114 @@ def plot_core_heatmap(core_data, data, output_file=None):
         logger.info(f"Core heatmap saved to {output_file}")
 
 
+def aggregate_core_by_node(data, top_cores=8, top_nodes_per_core=6):
+    """
+    Group per-core CPU utilization by ROS2 node name
+    instead of raw PID, to distinguish "core-bound due to poor affinity/
+    scheduling" (one node dominating a core) from "generally CPU-heavy" (many
+    nodes sharing it). Complements plot_core_heatmap()'s raw per-core total.
+
+    Returns a list of (core, times, node_series) tuples for the top_cores
+    busiest cores (by total CPU across the session), sorted by core number.
+    node_series is {label: [cpu_pct_per_tick, ...]} aligned to `times`.
+    PIDs absent from ros2_node_map are bucketed under '(non-ROS2)'; within
+    each core, only the top_nodes_per_core busiest labels are kept
+    individually and the remainder are summed into '(other)'.
+
+    Returns [] if ros2_node_map is empty (older session, or non-ROS2 host).
+    """
+    node_map = data.get('ros2_node_map') or {}
+    if not node_map:
+        return []
+
+    # Use threads if available, otherwise PIDs -- same source as plot_core_heatmap.
+    source_data = data['threads'] if data['threads'] else data['pids']
+
+    per_core_time_node = defaultdict(lambda: defaultdict(float))
+    core_totals = defaultdict(float)
+    for pid, records in source_data.items():
+        for record in records:
+            # Thread records are keyed by TID but carry their parent PID in
+            # 'tgid'; ros2_node_map is keyed by PID, so look that up instead.
+            node_pid = record.get('tgid', pid)
+            node_label = node_map.get(node_pid, '(non-ROS2)')
+            per_core_time_node[(record['core'], record['time'])][node_label] += record['cpu']
+            core_totals[record['core']] += record['cpu']
+
+    if not core_totals:
+        return []
+
+    all_times = sorted(set(record['time'] for records in source_data.values() for record in records))
+    busiest_cores = sorted(core_totals, key=core_totals.get, reverse=True)[:top_cores]
+
+    result = []
+    for core in sorted(busiest_cores):
+        node_totals = defaultdict(float)
+        for time_str in all_times:
+            for node_label, cpu in per_core_time_node.get((core, time_str), {}).items():
+                node_totals[node_label] += cpu
+
+        top_nodes = sorted(node_totals, key=node_totals.get, reverse=True)[:top_nodes_per_core]
+        top_nodes_set = set(top_nodes)
+
+        node_series = {node: [] for node in top_nodes}
+        other_series = []
+        for time_str in all_times:
+            cell = per_core_time_node.get((core, time_str), {})
+            for node in top_nodes:
+                node_series[node].append(cell.get(node, 0.0))
+            other_series.append(sum(cpu for label, cpu in cell.items() if label not in top_nodes_set))
+
+        if any(v > 0 for v in other_series):
+            node_series['(other)'] = other_series
+
+        result.append((core, all_times, node_series))
+
+    return result
+
+
+def plot_core_node_stacking(data, top_n=10, output_file=None):
+    """
+    Stacked-area CPU utilization by node, one subplot per busiest core --
+    a stack dominated by a single node signals affinity/scheduling
+    contention on that core; an even mix signals generally CPU-heavy load.
+    """
+    core_series = aggregate_core_by_node(data, top_cores=top_n)
+    if not core_series:
+        logger.warning("No per-node core data to plot (requires ros2_node_map -- "
+                        "re-capture with a monitor_resources.py version that writes it)")
+        return
+
+    fig, axes = plt.subplots(len(core_series), 1, figsize=(14, 3.2 * len(core_series)), sharex=True)
+    if len(core_series) == 1:
+        axes = [axes]
+
+    all_nodes = sorted({node for _core, _times, series in core_series for node in series})
+    colors = dict(zip(all_nodes, plt.cm.tab20(np.linspace(0, 1, max(len(all_nodes), 1)))))
+
+    for ax, (core, times, node_series) in zip(axes, core_series):
+        x = list(range(len(times)))
+        y_stack = np.zeros(len(times))
+        for node, values in node_series.items():
+            vals = np.array(values)
+            ax.fill_between(x, y_stack, y_stack + vals, alpha=0.7, color=colors[node], label=node)
+            y_stack += vals
+        ax.set_ylabel(f'Core {core}\nCPU %', fontsize=9)
+        ax.grid(True, alpha=0.3)
+        ax.legend(loc='upper right', fontsize=7, ncol=2)
+
+    axes[-1].set_xlabel('Time Index', fontsize=11)
+    fig.suptitle(
+        f'Per-Core CPU by Node (top {len(core_series)} busiest cores)\n'
+        'Stack dominated by one node = affinity/scheduling hot spot; even mix = generally CPU-heavy',
+        fontsize=13, fontweight='bold')
+    plt.tight_layout()
+
+    if output_file:
+        plt.savefig(output_file, dpi=200, bbox_inches='tight')
+        logger.info(f"Per-core node stacking plot saved to {output_file}")
+
+
 def plot_pid_to_core_mapping(data, output_file=None):
     """
     Visualize which PIDs/threads run on which cores over time.
@@ -1232,6 +1340,9 @@ Examples:
                         help='Plot CPU utilization per PID/thread')
     parser.add_argument('--heatmap', action='store_true',
                         help='Generate core utilization heatmap')
+    parser.add_argument('--core-nodes', action='store_true',
+                        help='Plot per-core CPU stacked by ROS2 node (top busiest cores), '
+                             'if ros2_node_map is present')
     parser.add_argument('--mapping', action='store_true',
                         help='Show thread-to-core mapping')
     parser.add_argument('--disk-io', action='store_true',
@@ -1263,6 +1374,7 @@ Examples:
         args.mapping = True
         args.disk_io = True
         args.ctx_switches = True
+        args.core_nodes = True
 
     logger.info(f"Parsing log file: {args.log_file}")
     data, _ = parse_resource_log(args.log_file)
@@ -1327,6 +1439,11 @@ Examples:
         logger.info(f"\nGenerating top {args.top} context-switch plot...")
         ctx_out = os.path.join(args.output_dir, 'ctx_switches.png') if args.output_dir else None
         plot_ctx_switches(data, top_n=args.top, output_file=ctx_out)
+
+    if args.core_nodes:
+        logger.info("\nGenerating per-core CPU-by-node stacking plot...")
+        core_nodes_out = os.path.join(args.output_dir, 'core_node_stacking.png') if args.output_dir else None
+        plot_core_node_stacking(data, top_n=args.top, output_file=core_nodes_out)
 
     if args.gpu_log:
         import os

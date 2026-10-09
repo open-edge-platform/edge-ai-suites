@@ -20,24 +20,22 @@ Make sure Docker is correctly installed and configured.
 ## Run Docker container
 
 1. Run `sudo init 3` switch to non-GUI mode.
-eg:To enable NPU support, please run export NPU_ON=true before building.
-3. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`
-To exit the program, you need to open another terminal window and stop the container using docker stop.
+
+   For example, to enable NPU support, please run `export NPU_ON=true` before building.
+2. Run a sample test in docker container : `bash run.sh yolov8n_with_preprocess.xml`
+
+   To exit the program, you need to open another terminal window and stop the container using docker stop.
 
 ## Run Docker Compose
 
 If you want to build the image.Using the provided script to build the image is highly recommended.
 
-```
+```bash
 #Set up environment variables for the model
 
 export MODEL_DIR=your_model_dir
 
-eg:/home/vpp/yolov8n_int8
-
 export MODEL_FILE=your_model_file
-
-eg:yolov8n_with_preprocess.xml
 
 docker compose build
 ```
@@ -48,7 +46,8 @@ docker compose build
 If you want to stop the program, press Ctrl+C
 
 Upon successful execution, the following logs will be displayed:
-```
+
+```txt
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 327] [info]: [decode.cpp:releaseFrame@Line1492] decode release frame
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 337] [info]: [decode.cpp:getFrame@Line1434] decode get frame
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 329] [info]: [decode.cpp:getFrame@Line1434] decode get frame

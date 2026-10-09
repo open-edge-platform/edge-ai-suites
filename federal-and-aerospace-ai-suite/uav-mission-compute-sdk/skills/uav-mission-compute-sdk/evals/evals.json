@@ -1,0 +1,127 @@
+{
+  "skill_name": "uav-mission-compute-user",
+  "notes": "These evaluations are guidance-only scenarios. Do not start containers, modify host hardware, or claim live validation. Grade whether the response follows the local command references and user-guide documents, covers the requested workflow, and states prerequisites and stream lifecycle constraints accurately.",
+  "evals": [
+    {
+      "id": 1,
+      "eval_name": "sim-stack-start-and-validation",
+      "prompt": "I have a fresh checkout of the UAV Mission Compute SDK on Ubuntu with Docker and an Intel GPU. Explain the exact sequence to initialize it, start the default simulated three-camera stack, validate the infrastructure, and make the camera streams available for testing. Do not run commands or claim that the stack is running.",
+      "expected_output": "An ordered setup procedure using make init, /start-stack sim, /validate-infra, and the arm requirement for RTSP streams, with the relevant ports and three simulated camera names.",
+      "expectations": [
+        "Starts with make init from the SDK root",
+        "Uses /start-stack sim as the primary startup command and identifies make up-sim-camera as its implementation target",
+        "Uses make up-sim-camera for the default Gazebo multi-camera profile",
+        "Uses /validate-infra after startup and explains that it checks PX4, MQTT, bridges, REST, and RTSP health",
+        "States that RTSP paths are published only while the UAV is armed and provides the documented arm endpoint",
+        "Identifies nadir, forward, and rear as the simulated camera streams",
+        "Does not claim that commands were executed or that services are healthy"
+      ]
+    },
+    {
+      "id": 2,
+      "eval_name": "camera-mode-switching",
+      "prompt": "The SDK is currently running in simulated camera mode. I need to switch first to a USB camera and later to an Intel RealSense D400 camera. Give me the safe command-driven procedure, including device discovery, environment initialization, teardown, startup targets, expected streams, and the most relevant verification step. Do not start the stack.",
+      "expected_output": "A mode-switching procedure using /switch-camera-mode usb and /switch-camera-mode realsense that tears down the current profile before starting the next one and distinguishes USB nadir from RealSense IR/depth streams.",
+      "expectations": [
+        "Explains that only one camera profile should run at a time and the current stack must be stopped before switching",
+        "Uses /switch-camera-mode usb and /switch-camera-mode realsense as the primary profile-switch commands",
+        "Uses v4l2-ctl --list-devices for USB discovery and identifies USB_VIDEO_DEVICE and USB_CAMERA_ID as relevant settings",
+        "Uses make init after a RealSense camera is connected or reconnected so RS_VIDEO and RS_MEDIA nodes are detected",
+        "Uses make up-usb-camera for USB mode and make up-realsense-camera for RealSense mode",
+        "Identifies USB mode as usually nadir and RealSense mode as ir and depth",
+        "Recommends docker compose ps and the active camera bridge or camera list as verification",
+        "Does not invent a fourth camera profile or claim a switch was performed"
+      ]
+    },
+    {
+      "id": 3,
+      "eval_name": "camera-capture-and-legacy-mqtt",
+      "prompt": "I need to capture one nadir frame and then record a five-second clip from the UAV Mission Compute SDK. Explain the default RTSP commands, how arming affects the result, how to validate the JPEG, and when the legacy MQTT capture path should be used. Also mention how to capture an annotated processed frame.",
+      "expected_output": "A capture workflow using /capture-camera nadir, with RTSP as the default, arm-before-capture behavior, ffmpeg/file checks, and the MQTT fallback plus processed topic.",
+      "expectations": [
+        "Uses /capture-camera nadir as the primary capture command",
+        "Uses the raw RTSP URL pattern rtsp://localhost:8554/uav-1/<camera>",
+        "Arms the UAV before capture because RTSP paths are unavailable while disarmed",
+        "Uses ffmpeg -frames:v 1 for a single JPEG and ffmpeg -t 5 -c copy for a five-second clip",
+        "Suggests file or image validation for the captured JPEG",
+        "Explains that MQTT capture is legacy mode and is appropriate when USE_RTSP=false or when checking legacy topics",
+        "Uses uav/uav-1/camera/<camera>/processed for an annotated frame",
+        "Does not claim that a frame or clip was actually captured"
+      ]
+    },
+    {
+      "id": 4,
+      "eval_name": "sdk-mode-vision-analytics",
+      "prompt": "I want to run UAV Vision Analytics in UAV Mission Compute SDK mode. I can either download the ZIP or clone the whole edge-ai-suites repository. Explain both source options and the ordered setup from the SDK infrastructure through model preparation, analytics startup, managed CPU/GPU/NPU pipelines, and annotated RTSP output. Do not run anything.",
+      "expected_output": "A two-option acquisition and SDK-mode integration procedure that starts the UAV Mission Compute SDK first, handles HOST_IP for a separate analytics container, prepares the model, starts uavsdk-up, and describes DEVICE and output streams.",
+      "expectations": [
+        "Provides both the release ZIP/unzip path and the git clone path",
+        "States that the SDK core infrastructure must be started before the analytics application",
+        "Includes make init and make up-sim-camera for the SDK side and make model plus make uavsdk-up for the analytics side",
+        "Explains why HOST_IP=0.0.0.0 may be needed when the analytics stack is in a separate Docker network",
+        "Uses make start-rtsp with DEVICE=cpu, gpu, npu, or all",
+        "States that annotated SDK-mode streams are served on port 8555 at nadir, forward, and rear paths",
+        "Does not conflate SDK mode with standalone pymavlink mode or claim live output"
+      ]
+    },
+    {
+      "id": 5,
+      "eval_name": "standalone-pymavlink-mode",
+      "prompt": "Describe how to run UAV Vision Analytics in standalone mode rather than using the UAV Mission Compute SDK. Include source/configuration, model preparation, startup, how the UAV is armed for managed pipelines, CPU/GPU/NPU selection, output viewing, and shutdown. This is a planning answer only; do not execute commands.",
+      "expected_output": "A standalone pymavlink workflow that clearly uses the analytics application's own PX4/MAVLink stack, make pymav-up, managed start-rtsp pipelines, QGroundControl or the documented mission flow, RTSP output, and make pymav-down.",
+      "expectations": [
+        "Explains that standalone mode supplies its own PX4, MAVLink router, MQTT, and metrics services",
+        "Includes make init and make model before make pymav-up",
+        "Uses make start-rtsp with DEVICE=cpu, gpu, npu, or all",
+        "Explains that the UAV must be armed or take off before managed output streams become available",
+        "Mentions the standalone annotated output paths or port 8555",
+        "Ends with make pymav-down for stopping the standalone stack",
+        "Does not require the UAV Mission Compute SDK to be running for this mode"
+      ]
+    },
+    {
+      "id": 6,
+      "eval_name": "ethernet-and-observability",
+      "prompt": "I have a real or remote PX4 flight controller on the network and want to deploy the SDK in Ethernet mode while retaining observability. Tell me the required Make target and variable, which user-guide reference to consult, and the relevant host-facing services for REST, MQTT, RTSP, Grafana, and InfluxDB. Do not start the deployment.",
+      "expected_output": "A concise Ethernet deployment answer using make up-ethernet FC_IP=<IP>, linking ethernet-px4.md and ports.md, and accurately listing the documented service endpoints.",
+      "expectations": [
+        "Uses make up-ethernet FC_IP=<flight-controller-ip> and states FC_IP is required",
+        "References docs/user-guide/ethernet-px4.md for the remote PX4 procedure",
+        "Identifies REST at localhost:8080 and MQTT at localhost:1884",
+        "Identifies raw RTSP at localhost:8554 and Grafana at localhost:3000",
+        "Identifies InfluxDB at localhost:8086 and notes observability may be omitted by lean profiles",
+        "Does not expose Docker-network-only MediaMTX APIs as normal host-facing services"
+      ]
+    },
+    {
+      "id": 7,
+      "eval_name": "benchmarking-workflow",
+      "prompt": "I need to measure MAVLink-to-MQTT telemetry performance after the SDK is running. Explain prerequisites and the three benchmark modes, including how to run a client scaling sweep and produce an HTML report. Do not execute the benchmark or report measurements.",
+      "expected_output": "A benchmarking workflow based on benchmarking.md that installs dependencies, starts infrastructure, distinguishes passive, bridge-stress, and client-scaling modes, and uses the documented HTML report option without inventing results.",
+      "expectations": [
+        "Runs or instructs make deps before benchmark commands",
+        "Requires the core stack to be running and telemetry to be available",
+        "Names make bench, make bench-bridge-sweep, and make bench-client-sweep as the three primary modes",
+        "Shows CLIENT_SWEEP_COUNTS or the documented client-sweep option for changing subscriber tiers",
+        "Shows an --html-report invocation through ARGS or the direct Python benchmark command",
+        "Explains that the report contains health, system, charts, and raw benchmark data",
+        "Does not claim latency, rate, or jitter measurements were observed"
+      ]
+    },
+    {
+      "id": 8,
+      "eval_name": "profile-aware-cleanup-and-recovery",
+      "prompt": "The SDK has stale containers after a PX4 restart, and I now want to stop the full workload safely. Explain the recovery order, the validation to perform afterward, the cleanup command and shutdown order, and when clean-all is appropriate. Do not run destructive cleanup.",
+      "expected_output": "A recovery and cleanup answer based on the command references that restarts PX4/bridges in the right order, runs /validate-infra again, uses /cleanup-stack, stops sample apps before core infrastructure, and distinguishes safe clean from clean-all.",
+      "expectations": [
+        "Explains that PX4 restarts can disconnect the companion and camera bridges",
+        "Recommends restarting PX4 or PX4-SIH first, then MediaMTX if needed, then the active companion and camera bridge",
+        "Requires rerunning /validate-infra after recovery",
+        "Uses /cleanup-stack for full cleanup and states that sample apps stop before core infrastructure",
+        "Describes make clean as the default safe cleanup",
+        "Restricts make clean-all to an explicit request because it removes compose volumes and unused images",
+        "Does not recommend git reset, deleting .env credentials, or claim cleanup completed"
+      ]
+    }
+  ]
+}

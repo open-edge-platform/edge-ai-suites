@@ -10,8 +10,8 @@ OpenVINO™ model server-accelerated LLM inference on Intel iGPU with a web chat
 
 | Service | Image | Role |
 |---------|-------|------|
-| `ovms` | `openvino/model_server:latest-gpu` | Serves OpenVINO-optimized LLMs via OpenAI-compatible REST API |
-| `open-webui` | `ghcr.io/open-webui/open-webui:main` | Chat UI connected to OVMS |
+| `ovms` | `openvino/model_server@sha256:cc13f88dc249cb94ab30cab90286b0c72a329e3d605da497bd4e594c5d21af00` | Serves OpenVINO-optimized LLMs via OpenAI-compatible REST API |
+| `open-webui` | `ghcr.io/open-webui/open-webui:v0.11.0-slim` | Chat UI connected to OVMS |
 
 Both services are defined in the root [`docker-compose.yml`](../../docker-compose.yml) and share the `fedaero` network.
 
@@ -30,7 +30,8 @@ You can only access the Open WebUI chat UI through  the NGINX TLS reverse proxy.
 Edit the `--source_model` argument on the `ovms` service in the root `docker-compose.yml`.
 Models are downloaded from the HuggingFace hub on first start and persisted in the `ovms_models` Docker volume.
 
-> **NOTE** Models loaded at runtime carry their own licenses and the operator is responsible for reviewing the licenses and making sure that they are matching operator's use-case(s).
+> [!NOTE]
+> Models loaded at runtime carry their own licenses and the operator is responsible for reviewing the licenses and making sure that they are matching operator's use-case(s).
 
 Because downloading happens on first start, OpenVINO model server accepts connections before the model is actually ready to serve requests. After changing the model, or on a fresh start, check readiness before sending inference requests.
 
@@ -45,7 +46,7 @@ downloading or loading, and inference requests will fail.
 
 | Model | Size | Notes |
 |-------|------|-------|
-| `OpenVINO/Phi-3.5-mini-instruct-int4-ov` | ~2 GB | Default, very fast |
+| `OpenVINO/Phi-3.5-mini-instruct-int4-ov` | ~2 GB | Very fast |
 | `OpenVINO/llama-3.2-3b-instruct-int4-ov` | ~2 GB | Good general use |
 | `OpenVINO/mistral-7b-instruct-v0.3-int4-ov` | ~4 GB | Better quality |
 | `OpenVINO/DeepSeek-R1-Distill-Qwen-1.5B-int4-ov` | ~1 GB | Tiny, fastest |
@@ -55,9 +56,10 @@ downloading or loading, and inference requests will fail.
 
 | Model | Size | Notes |
 |-------|------|-------|
+| `OpenVINO/mistral-7b-instruct-v0.3-int8-ov` | ~7 GB | Default, high quality, needs more VRAM |
+| `OpenVINO/Qwen3.5-4B-int8-ov` | ~4 GB | Supports reasoning |
 | `OpenVINO/Phi-3.5-mini-instruct-int8-ov` | ~4 GB | Balanced quality and speed |
 | `OpenVINO/llama-3.2-3b-instruct-int8-ov` | ~3 GB | Good accuracy |
-| `OpenVINO/mistral-7b-instruct-v0.3-int8-ov` | ~7 GB | High quality, needs more VRAM |
 | `OpenVINO/Qwen2.5-7B-Instruct-int8-ov` | ~8 GB | Excellent instruction following |
 
 ### FP16 — Full Precision and Best Quality (Requires ≥16-GB memory)

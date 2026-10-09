@@ -27,6 +27,21 @@ Multi-camera UAV simulation with Intel Edge AI — PX4 + Gazebo + OpenVINO visio
 
 ---
 
+## Getting the Code
+
+This SDK lives inside the [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites) monorepo. To
+check out only this directory instead of the entire repo, use a sparse
+checkout:
+
+```bash
+git clone -b main --filter=blob:none --sparse https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+cd federal-and-aerospace-ai-suite/uav-mission-compute-sdk
+```
+
+---
+
 ## Prerequisites
 
 - **OS**: Ubuntu 24.04
@@ -45,17 +60,14 @@ ls /dev/dri/renderD*
 ## Quick Start
 
 ```bash
-# 1. Create .env and detect GPU devices
+# 1. Create/populate .env and detect GPU devices
 make init
-
-# 2. Start core infra (PX4 + Gazebo + camera bridges + MQTT + RTSP + observability)
-make up-sim-camera
-
-# 3. Start AI helpers + sample apps
-make apps
 ```
 
-Open **http://localhost:5002**
+```bash
+# 2. Start core infra (PX4 + Gazebo + camera bridges + MQTT + RTSP + observability)
+make up-sim-camera
+```
 
 See [docs/user-guide/get-started.md](docs/user-guide/get-started.md) for full setup, troubleshooting, and ports.
 
@@ -73,7 +85,7 @@ flowchart LR
     MQTT[MQTT Broker<br/>:1884]
     AI[Intel Edge AI<br/>YOLOv2 GPU]
     APPS[Applications<br/>Dashboards]
-    
+
     SIM -->|MAVLink| BRIDGE
     SIM -->|gz frames| BRIDGE
     BRIDGE -->|telemetry| MQTT
@@ -82,7 +94,7 @@ flowchart LR
     AI -->|detections| MQTT
     MQTT --> APPS
     RTSP -.->|"optional<br/>viewing"| APPS
-    
+
     style SIM fill:#e1f5ff,stroke:#0277bd,stroke-width:2px
     style BRIDGE fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
     style RTSP fill:#ffe0b2,stroke:#e65100,stroke-width:3px
@@ -99,6 +111,7 @@ flowchart LR
 |---|---|---|---|
 | Simulated (default) | `make up-sim-camera` | Gazebo SITL | 3 virtual cameras (nadir, forward, rear) |
 | Real USB camera | `make up-usb-camera` | SIH (no Gazebo) | 1 USB/V4L2 device |
+| Intel RealSense | `make up-realsense-camera` | SIH (no Gazebo) | RealSense D400 series — IR + depth (beyond visual spectrum) |
 
 ---
 
@@ -110,11 +123,9 @@ make up-sim-camera         # Start sim stack (includes Grafana/InfluxDB)
 make up-sim-camera-lean    # Start sim stack without observability (~300 MB RAM saved)
 make up-usb-camera         # Start USB camera stack
 make up-usb-camera-lean    # Start USB camera stack without observability
-make apps                  # Start vision processor + dashboard
-make apps-down             # Stop apps only
+make up-realsense-camera   # Start Intel RealSense camera stack (IR + depth)
 make down                  # Stop all containers (core infra + apps)
 make logs                  # Tail core infra logs
-make apps-logs             # Tail app logs
 ```
 
 ---
@@ -128,6 +139,7 @@ infra/                       Infrastructure definitions
   bridges/companion/         MAVLink ↔ MQTT bridge (companion_bridge.py — REST API)
   bridges/camera/            Gazebo cameras → RTSP (ffmpeg H264)
   bridges/usb-camera/        USB/V4L2 device → RTSP
+  bridges/realsense-camera/  Intel RealSense camera (IR + depth) → RTSP
   mediamtx/                  RTSP server config
   mosquitto/                 MQTT broker config
   grafana/                   Dashboards provisioning (Flight Telemetry, Platform Health)
@@ -148,7 +160,6 @@ docker-compose.ethernet.yml  Override for remote PX4 FC over Ethernet
 
 | Service | URL | Purpose |
 |---|---|---|
-| Edge AI Dashboard | http://localhost:5002 | Live camera feeds, detections, arm/fly/land |
 | REST API | http://localhost:8080 | UAV commands (arm, takeoff, land, goto) |
 | RTSP Streams | rtsp://localhost:8554/uav-1/{cam} | Raw + annotated video |
 | MQTT broker | localhost:1884 | Telemetry + detection events |
@@ -175,7 +186,7 @@ Or stop observability on an already-running stack:
 docker compose stop grafana influxdb topic-extractor metrics-manager
 ```
 
-**View live camera**: `ffplay rtsp://localhost:8554/uav-1/nadir`
+**View live camera**: `ffplay rtsp://localhost:8554/uav-1/nadir` (needs a local display). Headless alternative: `ffmpeg -rtsp_transport tcp -i rtsp://localhost:8554/uav-1/nadir -t 10 -c:v copy nadir.mkv`
 
 ## Notices and Disclaimers
 
@@ -187,3 +198,4 @@ FFmpeg is an open source project licensed under LGPL and GPL. See https://www.ff
 
 GStreamer is an open source framework licensed under LGPL. See https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html. You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.
 
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See Intel's [Global Human Rights Principles](https://www.intel.com/content/www/us/en/policy/policy-human-rights.html). Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.

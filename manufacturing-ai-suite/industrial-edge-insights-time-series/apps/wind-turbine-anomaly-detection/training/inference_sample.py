@@ -8,7 +8,7 @@
 
 import argparse
 import logging
-import pickle
+import pickle  # nosec B403 - loads trusted model file from a local --model path, not untrusted input
 from contextlib import nullcontext
 from pathlib import Path
 
@@ -81,7 +81,7 @@ def main() -> None:
         raise FileNotFoundError(f"CSV file not found: {args.data}")
 
     with args.model.open("rb") as f:
-        model = pickle.load(f)
+        model = pickle.load(f)  # nosec B301 - trusted model artifact from local --model path
 
     df = pd.read_csv(args.data)
 

@@ -79,7 +79,7 @@ spec:
             - name: VLM_BASE_URL
               value: "http://{{ include "stia.ovms.fullname" . }}:{{ .Values.ovms.service.port }}"
             - name: VLM_MODEL_NAME
-              value: {{ .Values.ovms.env.modelName | quote }}
+              value: {{ include "stia.ovms.storageName" . | quote }}
             - name: VLM_TARGET_DEVICE
               value: {{ if or .Values.ovms.gpu.enabled (and .Values.ovms.trustedCompute.enabled .Values.ovms.trustedCompute.tc_gpu_enabled) }}"GPU"{{ else }}{{ .Values.ovms.env.targetDevice | quote }}{{ end }}
             - name: VLM_WEIGHT_FORMAT

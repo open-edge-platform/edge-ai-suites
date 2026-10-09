@@ -28,6 +28,13 @@
 FROM python:3.13-slim AS python-base
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Security updates first: Docker Hub's official slim images lag the Debian
+# repos, so preinstalled base-layer packages (e.g. util-linux 2.41-5) can carry
+# CVEs that already have fixes in trixie (e.g. 2.41.5-0+deb13u1). Doing this in
+# python-base makes every stage below inherit the patched packages.
+RUN apt-get update -y && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 # ---------------------------------------------------------------------------
 FROM python-base AS builder-base
 
@@ -119,18 +126,42 @@ RUN apt-get update -y && apt-get install --no-install-recommends -y \
     && rm -rf /var/lib/apt/lists/*
 
 # --enable-libx264: the app re-encodes clips to browser-compatible H.264
-# (roi_processor.py / roi.py). --disable-network: only file:// I/O is used
-# (RTSP ingest goes through OpenCV's bundled ffmpeg). Static libav* -> single
-# binary; only runtime dependency is libx264-164.
+# (roi_processor.py / roi.py).
+# --enable-network: REQUIRED by the continuous recorder's default "copy"
+# backend, which pulls RTSP itself (`ffmpeg -rtsp_transport tcp -c copy -f
+# segment`) instead of decoding through OpenCV — see stream_monitor/
+# continuous_recorder.py. Without it the rtsp demuxer is compiled out
+# entirely and every recording session dies with "Protocol not found".
+# No TLS library is linked, so https/rtmps stay unavailable; a protocol
+# whitelist is deliberately NOT used because configure's
+# rtsp_demuxer_select pulls http_protocol back in regardless.
+# --disable-ffprobe: nothing shells out to ffprobe (the recorder reads
+# durations from ffmpeg's own segment list). Static libav* -> single binary;
+# only runtime dependency is libx264-164.
 RUN cd "/src/ffmpeg/ffmpeg-${FFMPEG_VERSION}" \
     && ./configure \
-        --disable-doc --disable-debug --disable-network \
+        --disable-doc --disable-debug --enable-network \
         --disable-ffplay --disable-ffprobe \
         --enable-pic --enable-static --disable-shared \
         --enable-gpl --enable-libx264 \
         --extra-libs=-lpthread --extra-libs=-lm \
     && make -j"$(nproc)" ffmpeg \
     && install -m 755 ffmpeg /usr/local/bin/ffmpeg
+
+# Build-time capability assertion: a network-less ffmpeg still builds and runs
+# fine, it just fails at the first recording session in production. Fail the
+# BUILD instead (same intent as the gst engine's gst-inspect assertions).
+RUN set -eu; \
+    ff=/usr/local/bin/ffmpeg; \
+    "$ff" -hide_banner -formats 2>/dev/null | grep -qE '^ *D[E ]? *rtsp( |$)' \
+        || { echo "MISSING: ffmpeg rtsp demuxer (--enable-network?)"; exit 1; }; \
+    for proto in file pipe tcp rtp; do \
+        "$ff" -hide_banner -protocols 2>/dev/null | grep -qE "^ *${proto}\$" \
+            || { echo "MISSING: ffmpeg protocol ${proto}"; exit 1; }; \
+    done; \
+    "$ff" -hide_banner -h encoder=libx264 2>/dev/null | grep -q '^Encoder libx264' \
+        || { echo "MISSING: ffmpeg libx264 encoder"; exit 1; }; \
+    echo "ffmpeg capabilities OK (rtsp demuxer + file/pipe/tcp/rtp + libx264)"
 
 # ---------------------------------------------------------------------------
 FROM python-base AS runtime

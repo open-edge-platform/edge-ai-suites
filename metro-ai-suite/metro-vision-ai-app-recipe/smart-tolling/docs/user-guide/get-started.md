@@ -17,7 +17,7 @@ Before you begin ensure the following:
 - **MQTT Explorer**: Ensure access to
   [MQTT explorer](https://mqttexplorer.com/download/) for traffic data streaming and verifying payloads.
 
-> **Note:**
+> [!NOTE]
 >
 > - Make sure the following ports are available
 >   - localhost:1880 (for **NodeRED**)
@@ -46,7 +46,8 @@ Ensure the following specialized adapters are present in `src/dlstreamer-pipelin
 - `sscape_adapter_lpr.py` (Front/Rear LPR)
 - `sscape_adapter_side.py` (Axle Counting)
 
-*Note: Verify variables in `.env` match your camera RTSP endpoints.*
+> [!NOTE]
+> Verify variables in `.env` match your camera RTSP endpoints.*
 
 ### 3. Create .yml file
 
@@ -97,7 +98,7 @@ docker compose ps
 
 Open a browser and go to the following endpoints to access the application.
 
-> **Note:**
+> [!NOTE]
 >
 > - For passwords stored in files (e.g., `supass` or `influxdb2-admin-token`), refer to the respective secret files in your deployment under ./src/secrets (Docker) or chart/files/secrets (Helm).
 > - Since the application uses HTTPS with self-signed certificates, your browser may display a certificate warning. For the best experience, use **Google Chrome** and accept the certificate.
@@ -107,7 +108,7 @@ Open a browser and go to the following endpoints to access the application.
   - **Username**: `admin`
   - **Password**: Stored in `supass`. (Check `./smart-intersection/src/secrets/supass`)
 
-> **Note:**
+> [!NOTE]
 >
 > - After starting the application, wait approximately 1 minute for the MQTT broker to initialize. You can confirm it is ready when green arrows appear for MQTT in the application interface . Since the application uses HTTPS, your browser may display a self-signed certificate warning. For the best experience, use **Google Chrome**.
 
@@ -119,7 +120,7 @@ Login with the following credentials:
 - **Host**: `localhost`
 - **Port**: `1883`
 
-> **Note:**
+> [!NOTE]
 >
 > - Make sure to disable "Validate Certificate" and enable "Encryption(tls)".
 

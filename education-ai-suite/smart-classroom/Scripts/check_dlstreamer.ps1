@@ -30,6 +30,10 @@
 .PARAMETER Install
     Runs the full interactive check + version-gate + install/reinstall flow.
 
+.PARAMETER Yes
+    Install mode only. Answers every confirmation prompt with "yes", so the flow
+    can run unattended.
+
 .PARAMETER RequiredVersion
     The minimum DL Streamer version required (default "2026.1.0"). Used by
     -Install mode for the version gate and the installer download.
@@ -56,11 +60,13 @@
     Example:
       $version = & .\Scripts\check_dlstreamer.ps1 -Quiet
       & .\Scripts\check_dlstreamer.ps1 -Install -HttpProxy $proxy
+      & .\Scripts\check_dlstreamer.ps1 -Install -Yes   # unattended
 #>
 [CmdletBinding()]
 param(
     [switch]$Quiet,
     [switch]$Install,
+    [switch]$Yes,
     [string]$RequiredVersion = "2026.1.0",
     [string]$HttpProxy = "",
     [string]$HttpsProxy = ""
@@ -317,7 +323,7 @@ if ($result.Status -eq 'Found') {
         if ($detectedDlsVersion -lt [version]$RequiredVersion) {
             Write-Host "  [WARN] DL Streamer $dlStreamerVersion is older than the required $RequiredVersion" -ForegroundColor Yellow
             Write-Host ""
-            $upgradeChoice = Read-Host "  Reinstall DL Streamer $RequiredVersion now? (Y/N)"
+            $upgradeChoice = if ($Yes) { "Y" } else { Read-Host "  Reinstall DL Streamer $RequiredVersion now? (Y/N)" }
             if ($upgradeChoice -match "^[Yy]") {
                 if (Install-DLStreamer) {
                     Write-Host "  [OK] DL Streamer $RequiredVersion installed." -ForegroundColor Green
@@ -361,7 +367,7 @@ if (-not $dlStreamerFound) {
     Write-Host ""
     Write-Host "  This will download and run the DL Streamer $RequiredVersion installer." -ForegroundColor Gray
     Write-Host ""
-    $installChoice = Read-Host "  Install DL Streamer $RequiredVersion now? (Y/N)"
+    $installChoice = if ($Yes) { "Y" } else { Read-Host "  Install DL Streamer $RequiredVersion now? (Y/N)" }
 
     if ($installChoice -match "^[Yy]") {
         if (Install-DLStreamer) {

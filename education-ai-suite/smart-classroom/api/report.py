@@ -19,19 +19,25 @@ import os
 import logging
 import shutil
 import subprocess
-from typing import Literal
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, Query
+from fastapi import APIRouter, File, HTTPException, Path, UploadFile, Query
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 
 from pipeline import Pipeline
 from dto.report_dto import ReportRequest, ReportReselectRequest
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
+from utils.session_manager import PATH_SAFE_SESSION_ID
+from utils.session_paths import SessionPaths
+from utils.pipeline_catalog import FEATURE_STAGE
+from utils.stage_tracker import stage_tracker
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+SessionIdPath = Annotated[str, Path(pattern=PATH_SAFE_SESSION_ID)]
 
 
 def _pdf_export_available() -> bool:
@@ -53,18 +59,13 @@ def _ensure_docx_report(session_id: str) -> tuple[str, str]:
     """
     from components.report_generator.docx_export import markdown_to_docx
 
-    project_config = RuntimeConfig.get_section("Project")
-    session_dir = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
+    session_dir = str(SessionPaths.result_dir(session_id))
 
-    docx_path = os.path.join(session_dir, "class_report.docx")
+    docx_path = str(SessionPaths.report_docx_path(session_id))
     if os.path.exists(docx_path):
         return session_dir, docx_path
 
-    report_md_path = os.path.join(session_dir, "class_report.md")
+    report_md_path = str(SessionPaths.report_md_path(session_id))
     if not os.path.exists(report_md_path):
         raise HTTPException(
             status_code=404,
@@ -72,7 +73,7 @@ def _ensure_docx_report(session_id: str) -> tuple[str, str]:
         )
 
     report_content = StorageManager.read_text_file(report_md_path)
-    mindmap_path = os.path.join(session_dir, "mindmap_report.png")
+    mindmap_path = str(SessionPaths.mindmap_png_path(session_id))
     markdown_to_docx(
         report_content,
         docx_path,
@@ -91,30 +92,34 @@ async def generate_report(request: ReportRequest):
     pipeline = Pipeline(request.session_id)
 
     async def event_stream():
-        try:
-            for event in pipeline.run_report_generator(
-                selected_fields=request.selected_fields,
-                manual_fields=request.manual_fields,
-            ):
-                if isinstance(event, dict):
-                    etype = event["type"]
-                    if etype in ("partial_report", "report"):
-                        yield json.dumps({"type": etype, "content": event.get("content", "")}) + "\n"
-                    elif etype == "report_ready":
-                        yield json.dumps({"type": "report_ready", "session_id": event.get("session_id", request.session_id)}) + "\n"
-                    elif etype == "token":
-                        content = event["content"]
-                        if content.startswith("[ERROR]:"):
-                            yield json.dumps({"token": "", "error": content}) + "\n"
-                            break
-                        yield json.dumps({"token": content, "error": ""}) + "\n"
-                await asyncio.sleep(0)
-        except HTTPException as e:
-            detail = e.detail if isinstance(e.detail, str) else str(e.detail)
-            yield json.dumps({"token": "", "error": f"[ERROR]: {detail}"}) + "\n"
-        except Exception as e:
-            logger.exception("Unexpected error while streaming report for session %s", request.session_id)
-            yield json.dumps({"token": "", "error": f"[ERROR]: Report generation failed: {e}"}) + "\n"
+        with stage_tracker(pipeline.session_id, FEATURE_STAGE["report"]) as stage:
+            try:
+                for event in pipeline.run_report_generator(
+                    selected_fields=request.selected_fields,
+                    manual_fields=request.manual_fields,
+                ):
+                    if isinstance(event, dict):
+                        etype = event["type"]
+                        if etype in ("partial_report", "report"):
+                            yield json.dumps({"type": etype, "content": event.get("content", "")}) + "\n"
+                        elif etype == "report_ready":
+                            yield json.dumps({"type": "report_ready", "session_id": event.get("session_id", request.session_id)}) + "\n"
+                        elif etype == "token":
+                            content = event["content"]
+                            if content.startswith("[ERROR]:"):
+                                stage.fail(RuntimeError(content))
+                                yield json.dumps({"token": "", "error": content}) + "\n"
+                                break
+                            yield json.dumps({"token": content, "error": ""}) + "\n"
+                    await asyncio.sleep(0)
+            except HTTPException as e:
+                detail = e.detail if isinstance(e.detail, str) else str(e.detail)
+                stage.fail(e)
+                yield json.dumps({"token": "", "error": f"[ERROR]: {detail}"}) + "\n"
+            except Exception as e:
+                logger.exception("Unexpected error while streaming report for session %s", request.session_id)
+                stage.fail(e)
+                yield json.dumps({"token": "", "error": f"[ERROR]: Report generation failed: {e}"}) + "\n"
 
     return StreamingResponse(event_stream(), media_type="application/json")
 
@@ -125,9 +130,28 @@ async def generate_report(request: ReportRequest):
 
 @router.get("/report/template-fields")
 def get_report_template_fields():
-    """Return the report field catalog (grouped, bilingual) for the checkboxes."""
+    """Return the report field catalog (grouped, bilingual) for the checkboxes.
+
+    Manual fields carry a bilingual ``default`` (the same example value the
+    report fills when left blank) so the UI can show it as the input placeholder
+    without maintaining its own copy.
+    """
     from components.report_generator.field_catalog import REPORT_TEMPLATE_FIELD_GROUPS
-    return {"groups": REPORT_TEMPLATE_FIELD_GROUPS}
+    from components.report_generator.raw_field_mapper import manual_field_defaults
+    defaults = manual_field_defaults()
+    groups = [
+        {
+            **group,
+            "fields": [
+                {**f, "default": defaults[f["code"]]}
+                if f.get("input") == "manual" and f["code"] in defaults
+                else f
+                for f in group["fields"]
+            ],
+        }
+        for group in REPORT_TEMPLATE_FIELD_GROUPS
+    ]
+    return {"groups": groups}
 
 
 @router.get("/report/capabilities")
@@ -142,7 +166,7 @@ def get_report_capabilities():
 
 
 @router.post("/report/{session_id}/mindmap-image")
-async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
+async def upload_mindmap_image(session_id: SessionIdPath, file: UploadFile = File(...)):
     """Store a mind-map PNG that the UI captured (html2canvas) from the live
     jsMind view, to be embedded in the class report.
 
@@ -151,14 +175,8 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
     ``mindmap_report.png`` in the session dir — the exact path
     ReportGenerator picks up as the ``mindmap`` image field.
     """
-    project_config = RuntimeConfig.get_section("Project")
-    session_dir = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-    )
-    os.makedirs(session_dir, exist_ok=True)
-    out_path = os.path.join(session_dir, "mindmap_report.png")
+    out_path = str(SessionPaths.mindmap_png_path(session_id))
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
     try:
         content = await file.read()
@@ -177,15 +195,9 @@ async def upload_mindmap_image(session_id: str, file: UploadFile = File(...)):
 
 
 @router.get("/report/{session_id}/mindmap-image")
-def get_mindmap_image(session_id: str):
+def get_mindmap_image(session_id: SessionIdPath):
     """Return the previously uploaded mind-map PNG for inline report preview."""
-    project_config = RuntimeConfig.get_section("Project")
-    image_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "mindmap_report.png",
-    )
+    image_path = str(SessionPaths.mindmap_png_path(session_id))
 
     if not os.path.exists(image_path):
         raise HTTPException(
@@ -203,15 +215,9 @@ def get_mindmap_image(session_id: str):
 # Parametrized report routes — defined AFTER the literal /report/template-fields
 # route above so that literal is matched first.
 @router.get("/report/{session_id}")
-def get_report(session_id: str):
+def get_report(session_id: SessionIdPath):
     """Retrieve a previously generated class report for a session."""
-    project_config = RuntimeConfig.get_section("Project")
-    report_path = os.path.join(
-        project_config.get("location"),
-        project_config.get("name"),
-        session_id,
-        "class_report.md",
-    )
+    report_path = str(SessionPaths.report_md_path(session_id))
 
     if not os.path.exists(report_path):
         raise HTTPException(
@@ -228,7 +234,7 @@ def get_report(session_id: str):
 
 @router.get("/report/{session_id}/download")
 def download_report(
-    session_id: str,
+    session_id: SessionIdPath,
     format: Literal["docx", "pdf"] = Query("docx", description="Download format: docx or pdf"),
 ):
     """Download the class report in the requested format.
@@ -283,7 +289,7 @@ def download_report(
         logger.error("PDF conversion failed for session %s: %s", session_id, err)
         raise HTTPException(status_code=500, detail="Failed to convert report to PDF.")
 
-    default_pdf = os.path.join(session_dir, "class_report.pdf")
+    default_pdf = str(SessionPaths.report_pdf_path(session_id))
     if os.path.exists(default_pdf) and default_pdf != pdf_path:
         try:
             os.replace(default_pdf, pdf_path)
@@ -301,7 +307,7 @@ def download_report(
 
 
 @router.post("/report/{session_id}/reselect")
-def reselect_report(session_id: str, request: ReportReselectRequest):
+def reselect_report(session_id: SessionIdPath, request: ReportReselectRequest):
     """Re-render an existing report for a new checkbox selection — NO LLM.
 
     Re-projects the session's cached full-catalog fields onto the template,

@@ -63,11 +63,18 @@ export MM_DATAPREP_VIDEO_EXTRACTION_BATCH_SIZE="${MM_DATAPREP_VIDEO_EXTRACTION_B
 export MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS="${MM_DATAPREP_VIDEO_FRAME_DECODER_WORKERS:-1}"
 export MM_DATAPREP_DETECTION_WORKER_THREADS="${MM_DATAPREP_DETECTION_WORKER_THREADS:-1}"
 export MM_DATAPREP_EMBED_WORKER_THREADS="${MM_DATAPREP_EMBED_WORKER_THREADS:-1}"
+# Maximum number of files accepted in a single directory/batch ingest job.
+# The full DAVIS dataset is ~2200 files, so the microservice default is too low.
+export DATAPREP_BATCH_MAX_ITEMS="${DATAPREP_BATCH_MAX_ITEMS:-5000}"
 # Bucket the dataprep service groups this app's media under; also the target of
 # the UI's "Clear DB" action.
 export DATAPREP_BUCKET_NAME="${DATAPREP_BUCKET_NAME:-vsqa}"
 # Milvus collection shared by the dataprep and retriever microservices.
 export INDEX_NAME="${INDEX_NAME:-default}"
+
+# MinIO credentials consumed by the milvus-minio service.
+export MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+export MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
 
 # huggingface mirror
 # export HF_ENDPOINT=https://huggingface.co

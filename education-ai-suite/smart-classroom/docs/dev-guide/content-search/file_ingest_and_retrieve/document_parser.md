@@ -4,7 +4,7 @@
 
 `DocumentParser` processes a file in two independent steps:
 
-```
+```text
 File  →  [Step 1: Text Extraction]  →  raw text  →  [Step 2: Chunking]  →  nodes
 ```
 
@@ -40,7 +40,8 @@ Pass a LlamaIndex-compatible embedding model to enable `SemanticSplitterNodePars
 
 A bilingual sentence splitter is used internally, supporting both **Chinese** (。！？；……) and **English** (`. ! ?`) punctuation boundaries.
 
-> **Note:** When `embed_model` is provided, `chunk_size` and `chunk_overlap` are ignored.
+> [!NOTE]
+> When `embed_model` is provided, `chunk_size` and `chunk_overlap` are ignored.
 
 | Parameter | Default | Description |
 |---|---|---|

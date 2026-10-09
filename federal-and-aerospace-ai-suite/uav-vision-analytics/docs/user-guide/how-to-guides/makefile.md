@@ -5,18 +5,17 @@ SPDX-License-Identifier: Apache-2.0
 
 # Makefile Reference
 
-The `Makefile` at the root of `uav-vision-analytics/` provides shorthand targets for the most common development and deployment tasks.
+The `Makefile` at the root of `uav-vision-analytics/` provides shorthand targets
+for the most common development and deployment tasks.
 
 Run `make help` (or just `make`) to list all targets with descriptions.
-
----
 
 ## Quick Reference
 
 | Target | Description |
-|---|---|
+| --- | --- |
 | `make init` | Create `.env` from template and auto-detect Intel GPU and NPU device paths |
-| `make model` | Download YOLOv8n-VisDrone checkpoint and export to OpenVINO FP16 |
+| `make model` | Download YOLO11s checkpoint and export to OpenVINO FP16 |
 | `make pymav-up` | Start the standalone pymavlink stack (requires model — errors if missing) |
 | `make pymav-down` | Stop and remove the pymavlink stack (includes volumes) |
 | `make uavsdk-up` | Start the uav-mission-compute-sdk stack |
@@ -24,13 +23,13 @@ Run `make help` (or just `make`) to list all targets with descriptions.
 | `make start-rtsp` | Start inference pipeline(s) with RTSP output. `DEVICE=cpu\|gpu\|npu\|all` (default: `gpu`) |
 | `make build` | Alias for `pymav-up` |
 
----
-
 ## Target Details
 
 ### `make init`
 
-Creates `.env` from `.env.example` (skipped if `.env` already exists) and auto-detects Intel GPU and NPU device paths, writing them into `.env` so `docker compose` picks them up automatically.
+Creates `.env` from `.env.example` (skipped if `.env` already exists) and
+auto-detects Intel GPU and NPU device paths, writing them into `.env` so
+`docker compose` picks them up automatically.
 
 - **GPU:** scans `/dev/dri/` for `card*` and `renderD*` entries → sets `GPU_DEVICE` and `GPU_RENDER_DEVICE`
 - **NPU:** scans `/dev/accel/` for `accel*` entries → sets `NPU_DEVICE` (defaults to `/dev/null` if not found, disabling NPU pipelines)
@@ -45,47 +44,54 @@ make init
 #    NPU_DEVICE=/dev/accel/accel0
 ```
 
-Run this once before the first `make pymav-up`. On machines where the Intel iGPU is assigned `card1` instead of `card0` (common on multi-GPU desktops), this avoids the manual `.env` edit.
-
----
+Run this once before the first `make pymav-up`. On machines where the Intel
+iGPU is assigned `card1` instead of `card0` (common on multi-GPU desktops),
+this avoids the manual `.env` edit.
 
 ### `make model`
 
-Creates a Python virtual environment under `resources/venv/`, installs dependencies from `resources/requirements.txt`, downloads the `best.pt` checkpoint from HuggingFace, and exports it to OpenVINO FP16 IR format.
+Creates a Python virtual environment under `resources/venv/`, installs
+dependencies from `resources/requirements.txt`, downloads the `yolo11s.pt`
+checkpoint from Ultralytics, and exports it to OpenVINO FP16 IR format.
 
-> **`make pymav-up` checks for the model** before starting containers. If `resources/models/yolov8n-visdrone/best_openvino_model/best.xml` is missing it prints an error and exits — run `make model` first.
+> [!NOTE]
+> `make pymav-up` **checks for the model** before starting containers.
+> If `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml` is
+> missing it prints an error and exits — run `make model` first.
 
 ```text
 resources/
 ├── requirements.txt
 ├── venv/                          ← created by this target
 └── models/
-    └── yolov8n-visdrone/
-        ├── best.pt                ← downloaded checkpoint
-        └── best_openvino_model/   ← exported IR (best.xml + best.bin)
+    └── yolo11s/
+        ├── yolo11s.pt                ← downloaded checkpoint
+        └── yolo11s_openvino_model/      ← exported IR (yolo11s.xml + yolo11s.bin)
 ```
 
-> **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without re-verifying GPU/NPU compatibility — newer versions use a `CumSum`-based detection head that fails to compile on Intel GPU and NPU OpenVINO plugins.
-
----
+> [!NOTE]
+> `ultralytics` is pinned to `8.4.67`. Do not upgrade without
+> re-verifying GPU/NPU compatibility — newer versions use a `CumSum`-based
+> detection head that fails to compile on Intel GPU and NPU OpenVINO plugins.
 
 ### `make pymav-up` / `make pymav-down`
 
 Manages the **standalone pymavlink stack** (`docker-compose-pymavlink.yml`), which includes:
 
-- `dlstreamer-pipeline-server` — AI inference, REST API (:8081), RTSP output (:8555)
+- `dlstreamer-pipeline-server` — AI inference, REST API (:8081), RTSP output (:8555) — reached via `nginx`
 - `broker` — Eclipse Mosquitto MQTT broker (:1883)
 - `px4` — PX4 SITL flight controller simulator
 - `mavlink-router` — MAVLink routing sidecar (receives on :14550, broadcasts to :14541)
-- `metrics-manager` — system metrics endpoint (:9090)
+- `metrics-manager` — system metrics endpoint (:9090) — reached via `nginx`
+- `nginx` — reverse proxy; the only service publishing ports to the host (`:80`, `:8555`)
 
 `down` passes `-v` to also remove named volumes (pipeline cache).
 
----
-
 ### `make uavsdk-up` / `make uavsdk-down`
 
-Manages the **uav-mission-compute-sdk stack** (`docker-compose-uavsdk.yml`), which requires the `edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk` project to already be running.
+Manages the **uav-mission-compute-sdk stack** (`docker-compose-uavsdk.yml`),
+which requires the `edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk`
+project to already be running.
 
 Start order:
 
@@ -99,11 +105,12 @@ make uavsdk-up
 
 `down` passes `-v` to also remove named volumes.
 
----
-
 ### `make start-rtsp`
 
-Executes `pipeline_manager.py --sink rtsp` inside the running `dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED state and automatically starts/stops inference pipeline(s) with **RTSP frame output** on port `8555`.
+Executes `pipeline_manager.py --sink rtsp` inside the running
+`dlstreamer-pipeline-server` container. This script monitors MAVLink ARMED/DISARMED
+state and automatically starts/stops inference pipeline(s) with
+**RTSP frame output** on port `8555`.
 
 By default, only the **GPU** pipeline starts. Pass `DEVICE=cpu|gpu|npu|all` to choose:
 
@@ -116,15 +123,11 @@ make start-rtsp DEVICE=all     # CPU + GPU + NPU simultaneously
 
 `DEVICE=npu` falls back to GPU if `NPU_DEVICE` was not detected during `make init`.
 
-Requires the DLSPS container to already be running (`make pymav-up` or `make uavsdk-up` first).
-
----
+Requires the DL Streamer Pipeline Server container to already be running (`make pymav-up` or `make uavsdk-up` first).
 
 ### `make build`
 
 Convenience alias for `make pymav-up`. Starts the default standalone stack.
-
----
 
 ## Common Workflows
 

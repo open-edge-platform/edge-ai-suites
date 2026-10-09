@@ -228,7 +228,15 @@ class YoloPrefilter:
                         str(e).splitlines()[0] if str(e) else e,
                     )
                     time.sleep(_COMPILE_RETRY_DELAY_S)
-        raise last_err
+        # `last_err` is always set here (the loop runs at least once and either
+        # returns or assigns), but it is typed `Exception | None`, so `raise
+        # last_err` alone would raise TypeError instead of the real cause if
+        # `_COMPILE_MAX_ATTEMPTS` were ever lowered to 0. Be explicit.
+        if last_err is not None:
+            raise last_err
+        raise RuntimeError(
+            f"compile_model was never attempted: _COMPILE_MAX_ATTEMPTS={_COMPILE_MAX_ATTEMPTS}"
+        )
 
     def predict(self, frame: np.ndarray) -> list[dict]:
         """Run inference on a single BGR frame. Returns target-class detections."""

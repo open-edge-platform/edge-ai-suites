@@ -12,7 +12,8 @@ By the end of this guide you will know how to:
 
 **Prerequisites:** an agent host is connected (see [Connect an agent host](../get-started.md#step-3---connect-an-agent-host)) and the skills are imported (OpenClaw [Step 3](../get-started.md#openclaw)).
 
-> **Tip — use a capable cloud model for registration.** Registering a use case is the most model-demanding flow on the platform: the agent must infer events and schema, draft a four-section VLM prompt, and pass the server-side consistency gate. We recommend switching the agent to a strong cloud model for this conversation — e.g., in OpenClaw, pick a MiniMax model from the model selector — rather than a small local model. This only affects the **authoring** step; once the use case is registered, day-to-day detection runs on the on-device VLM/LLM stack (for example a local Qwen model), independent of which model the agent used to register it.
+> [!TIP]
+> Use a capable cloud model for registration. Registering a use case is the most model-demanding flow on the platform: the agent must infer events and schema, draft a four-section VLM prompt, and pass the server-side consistency gate. We recommend switching the agent to a strong cloud model for this conversation — e.g., in OpenClaw, pick a MiniMax model from the model selector — rather than a small local model. This only affects the **authoring** step; once the use case is registered, day-to-day detection runs on the on-device VLM/LLM stack (for example a local Qwen model), independent of which model the agent used to register it.
 
 ## Use case registration flow
 
@@ -44,7 +45,8 @@ If you registered without a stream URL, monitor configuration simply does not st
 
 The inventory is printed automatically only when a use case is created. To check the system's use cases at any other time, just ask in the conversation — e.g., *"list all the use cases"* — and the agent returns the same grouped view (each use case with its task, rule path, and bound monitors) on demand.
 
-> **Tip:** Things to *detect* (escape, trapped, aggressive behavior, …) are event **values**, not schema fields — describe what to watch for, and only name extra schema fields in Q2 when you truly need them persisted and queryable.
+> [!TIP]
+> Things to *detect* (escape, trapped, aggressive behavior, …) are event **values**, not schema fields — describe what to watch for, and only name extra schema fields in Q2 when you truly need them persisted and queryable.
 
 ## Walkthrough: register a use case with OpenClaw
 
@@ -200,16 +202,20 @@ The final chat report has three parts:
 Note the **validation status**: *registered but behaviorally unvalidated* — registration only confirms structural alignment of prompt ↔ schema ↔ rules. When you have representative footage, compare the persisted `event / severity / desc / pet_zone` values against ground truth and re-register with `overwrite=true` to refine. From this point the use case is live: pet-safety events start producing alerts on `smart-community://monitor/cam_pet_safety/alerts`.
 
 ### Step 9 — (Optional) Real-Time Alert Configuration
+
 MCP Server subscriptions can deliver alert updates directly to connected clients. Whether an MCP client receives these notifications in real time depends on its configuration. To configure real-time alert delivery:
-- First, make sure you have installed the OpenClaw adapter by following [Connect an agent host — OpenClaw](../get-started.md#realtime-alerts-notifications).
+
+- First, make sure you have installed the OpenClaw adapter by following [Connect an agent host — OpenClaw](../get-started.md#real-time-alert-notifications).
 - Then, from any OpenClaw chat session, ask OpenClaw to create a dedicated agent and configure alert notifications. For example, ask it to:
+
   ```text
-  Create an OpenClaw agent dedicated to monitoring the cam_pet_safety camera. 
+  Create an OpenClaw agent dedicated to monitoring the cam_pet_safety camera.
   Place it in the `~/.openclaw/agents` directory and register it in `openclaw.json`.
   Then configure the system to push pet camera alerts to this agent in real time.
   ```
 
   The following screenshot shows an example configuration:
+
 ![openclaw_setup_agent_and_configure_alerts](../_assets/openclaw_setup_agent_and_configure_alerts.png)
 
 - After configuration, real-time alerts appear in the dedicated agent session, as shown in the following screenshot:

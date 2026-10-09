@@ -1,0 +1,82 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Run profile for the realsense2_tutorial benchmark scenario (USB camera).
+# Scenario name is derived from the ROS package in launch.cmd: "realsense2_tutorial".
+# For a GMSL D457 camera, use config/realsense2_tutorial_gmsl_run.yaml instead.
+#
+# NOTE: This is a live-camera scenario, not a bag replay.  Run
+#   scripts/find_cameras.sh (in the realsense2_tutorial package) first to
+#   confirm a USB camera is connected.
+#
+# Load with:
+#   uv run python src/benchmark_profiler.py --config config/realsense2_tutorial_run.yaml --show
+#
+# Use in bash run scripts:
+#   TOPICS=$(uv run python src/benchmark_profiler.py --config config/realsense2_tutorial_run.yaml --topics)
+#   LAUNCH=$(uv run python src/benchmark_profiler.py --config config/realsense2_tutorial_run.yaml --launch-cmd)
+#   SLEEP=$(uv run python src/benchmark_profiler.py  --config config/realsense2_tutorial_run.yaml --init-sleep)
+
+---
+launch:
+  # realsense2_tutorial.launch.py starts the RealSense camera driver + rviz2.
+  # Scenario is derived from package name: "realsense2_tutorial".
+  cmd: "ros2 launch realsense2_tutorial realsense2_tutorial.launch.py"
+
+  # camera_type:=usb is the launch file's default; kept explicit here for clarity.
+  args: ["camera_type:=usb"]
+
+  # Seconds to wait after launch before starting monitoring.
+  # Allows the camera driver and rviz2 to initialize and start publishing.
+  # librealsense's device-watcher thread takes
+  # ~15-16s to report "Device with serial number ... was found" even when the
+  # device is already connected and enumerated (confirmed via strace: it polls
+  # an internal fd every 100ms waiting on a hotplug event rather than actively
+  # re-querying) -- rviz2/the node itself are not slow, there's just no camera
+  # data yet. 20s gives margin above the observed 15-16.2s range.
+  init_sleep: 20
+
+stop:
+  # No goal events for a camera-streaming pipeline; the run only stops on
+  # --timeout or Ctrl-C.
+  goal_pattern: ""
+  goal_count: 0
+
+  # Hard stop after N seconds (0 = off). CLI --timeout overrides this.
+  timeout: 30
+
+monitor:
+  # Full resource monitoring (CPU, memory, GPU) enabled to correlate camera
+  # streaming/rviz2 load with system resource usage.
+  graph_only: false
+
+gazebo:
+  # No Gazebo — this is a live-camera pipeline.
+  press_play: false
+
+cleanup:
+  # Sweep pattern for pkill -f used before and after each run.
+  sweep: "ros2 |realsense2_tutorial|rs_launch|realsense2_camera|rviz2"
+
+session:
+  # Subdirectory under monitoring_sessions/ where sessions are stored.
+  output_subdir: "realsense2_tutorial"
+  # Prefix for log filenames.
+  log_prefix: "realsense2_tutorial"
+  # Path for the ros2 bag record stderr log.
+  record_log: "/tmp/realsense2_tutorial_record.log"
+
+post_run: # No post-run analysis script for this story; resource monitoring only.
+
+bag:
+  # Topics recorded by `ros2 bag record` when --record is passed.
+  topics:
+    # ── USB camera ────────────────────────────────────────────────────────────
+    - /camera/color/image_raw
+    - /camera/color/camera_info
+    - /camera/aligned_depth_to_color/image_raw
+    - /camera/depth/color/points
+
+    # ── Transforms ───────────────────────────────────────────────────────────
+    - /tf
+    - /tf_static

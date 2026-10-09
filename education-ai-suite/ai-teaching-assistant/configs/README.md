@@ -3,17 +3,17 @@
 This folder stores reference configuration for the upstream services used by
 AI Teaching Assistant:
 
-- [configs/audio-analyzer/config.yaml](configs/audio-analyzer/config.yaml)
-- [configs/text-to-speech/config.yaml](configs/text-to-speech/config.yaml)
+- [configs/audio-analyzer/config.yaml](./audio-analyzer/config.yaml)
+- [configs/text-to-speech/config.yaml](./text-to-speech/config.yaml)
 
 ## Important Runtime Note
 
 In this Windows-native application flow, services run directly from the
 submodule source trees. The active runtime configs are read from:
 
-- [edge-ai-libraries/microservices/audio-analyzer/config.yaml](edge-ai-libraries/microservices/audio-analyzer/config.yaml)
-- [edge-ai-libraries/microservices/text-to-speech/config.yaml](edge-ai-libraries/microservices/text-to-speech/config.yaml)
-- [voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml](voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml)
+- [edge-ai-libraries/microservices/audio-analyzer/config.yaml](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/audio-analyzer/config.yaml)
+- [edge-ai-libraries/microservices/text-to-speech/config.yaml](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/text-to-speech/config.yaml)
+- [voice-enabled-interactions/smart-kiosk-assistant/rag-service/config.yaml](https://github.com/intel-retail/voice-enabled-interactions/blob/main/smart-kiosk-assistant/rag-service/config.yaml)
 
 If you change values here under `configs/`, copy those values to the runtime
 config files above before restarting services.

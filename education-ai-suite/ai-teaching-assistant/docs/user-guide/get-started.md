@@ -4,13 +4,14 @@ Set up the AI Teaching Assistant on Windows and ingest your first course materia
 
 Confirm your machine meets the [System Requirements](./get-started/system-requirements.md) before starting.
 
-> **Important:** Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
+> [!IMPORTANT]
+> Use **Windows PowerShell** (not Command Prompt/CMD) for all steps in this guide.
 > PowerShell scripts (`.ps1` files) will not execute in CMD — they will only open as text files.
 
 ## Step 1: Prerequisites
 
 - **Git for Windows** — [Download here](https://git-scm.com/download/win)
-- **Python 3.10+** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
+- **Python 3.11 or 3.12** — [Download here](https://www.python.org/downloads/) (check "Add Python to PATH")
 - **Visual C++ Build Tools** — Required for some Python packages
 
 ## Step 2: Clone The Repository
@@ -35,7 +36,8 @@ PowerShell script handles all setup (Python venv, dependencies, models):
 .\setup_windows.ps1
 ```
 
-Note: This setup script also initializes the required submodules automatically.
+> [!NOTE]
+> This setup script also initializes the required submodules automatically.
 
 The script will:
 1. Create and activate a Python virtual environment
@@ -83,7 +85,7 @@ Each response should be: `{"status": "ok"}`
 
 Open your browser and navigate to:
 
-```
+```text
 http://127.0.0.1:7860
 ```
 
@@ -108,7 +110,8 @@ To stop individual services, use `Ctrl+C` in their respective terminal windows.
 
 The application has no installer — all files live inside the cloned repository. To uninstall, stop the services and delete the Python virtual environments (`venv`) along with the downloaded models, storage, and cache folders.
 
-> **Warning:** Deleting the `storage/` folders permanently removes user data, including the RAG vector database of your ingested course materials (`rag-service/storage/vector_db`). Back up anything you want to keep first.
+> [!WARNING]
+> Deleting the `storage/` folders permanently removes user data, including the RAG vector database of your ingested course materials (`rag-service/storage/vector_db`). Back up anything you want to keep first.
 
 1. Stop all services:
 
@@ -138,10 +141,12 @@ The application has no installer — all files live inside the cloned repository
 
 To reinstall later, re-run `.\setup_windows.ps1` — it will recreate the virtual environments and re-download the models. Ingested course materials will need to be uploaded again.
 
-> **Note:** If you deleted the cloned repository folder in step 3, re-run [Step 2: Clone The Repository](#step-2-clone-the-repository) first — `setup_windows.ps1` lives inside the repo, so running it alone is not enough.
+> [!NOTE]
+> If you deleted the cloned repository folder in step 3, re-run [Step 2: Clone The Repository](#step-2-clone-the-repository) first — `setup_windows.ps1` lives inside the repo, so running it alone is not enough.
 
 ## Next Steps
 
+- [Application Flow](./application-flow.md) — UI walkthrough and element reference
 - [How It Works](./how-it-works.md) — Understand the architecture
 - [Configuration](./get-started/configuration.md) — Adjust models, temperature, and settings
 - [Troubleshooting](./troubleshooting.md) — Debug common issues

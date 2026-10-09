@@ -1,0 +1,23 @@
+---
+description: Real Time Scene Understanding Cursor agent router
+alwaysApply: true
+---
+
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+
+# Real Time Scene Understanding (Cursor)
+
+For project-wide instructions, read [`copilot-instructions.md`](../../.github/copilot-instructions.md). Do not duplicate policy from that file.
+
+## Cursor workflow
+
+- Run commands from the repository root.
+- Prefer `scripts/setup_env.sh`, `compose.yaml`, Docker Compose, the FastAPI `/api/...` routes, and the documented Python test workflow.
+- Check `/api/health` and relevant container logs when debugging runtime behavior.
+- Read the relevant future skill under `.github/skills/` when a task-specific procedure exists.
+- Keep changes minimal and consistent with the touched area.
+- Add focused tests and update documentation when behavior, configuration, or APIs change.
+- Create commits or pull requests only when the user explicitly asks.

@@ -23,18 +23,19 @@ Before You Begin, ensure the following:
 
 ## Pull the helm chart (Optional)
 
-> **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
+> [!NOTE]
+> The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
 
 - Download helm chart with the following command
 
     ```bash
-    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.4.0-rc1
+    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.4.0
     ```
 
 - unzip the package using the following command
 
     ```bash
-    tar -xvf image-based-video-search-1.4.0-rc1.tgz
+    tar -xvf image-based-video-search-1.4.0.tgz
     ```
 
 - Get into the helm directory
@@ -79,7 +80,8 @@ Before You Begin, ensure the following:
 
    - Now frontend should be accessible at `https://<ip-addr>:30443/`.
 
-     > **Note:** To access the above url remotely, replace the `<ip-addr>` with your system IP address.
+     > [!NOTE]
+     > To access the above url remotely, replace the `<ip-addr>` with your system IP address.
 
 4. **Stop the application**:
 

@@ -74,9 +74,10 @@ configured Kubernetes cluster.
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
-> **Note:**
+> [!NOTE]
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
 > to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
@@ -84,7 +85,9 @@ configured Kubernetes cluster.
 
 Follow this procedure on the target system to download the package.
 
-> **Note:** Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
+> [!NOTE]
+> Skip this step if you have already followed the steps as part of the
+> [Get Started guide](../get-started.md).
 
 Before you can deploy with Helm, you must clone the repository and download the Helm chart:
 
@@ -99,7 +102,8 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 Optional: Pull the Helm chart and replace the existing helm-chart folder with it
 
-> **Note:** The Helm chart should be downloaded when you are not using the Helm chart provided
+> [!NOTE]
+> The Helm chart should be downloaded when you are not using the Helm chart provided
 > in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/helm-chart`.
 
 ```bash
@@ -107,10 +111,10 @@ Optional: Pull the Helm chart and replace the existing helm-chart folder with it
 cd loitering-detection
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.6.0-rc1
+helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.6.0
 
 #unzip the package using the following command
-tar -xvf loitering-detection-1.6.0-rc1.tgz
+tar -xvf loitering-detection-1.6.0.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv loitering-detection helm-chart
@@ -137,7 +141,15 @@ cd ..
         password: # example: password: mypassword
     ```
 
-    > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+   > [!NOTE]
+   >
+   > - To run the pipeline on GPU, make sure to set `gpu.enabled:true` and
+   >   `npu.enabled:false` in `values.yaml`.
+   > - To run the pipeline on NPU, make sure to set `npu.enabled:true` and
+   >   `gpu.enabled:false` in `values.yaml`.
+   > - For both GPU and NPU deployments, make sure the gpu.type in `values.yaml`
+   >   is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but
+   >   for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 ### Step 3: Deploy the application and Run multiple AI pipelines
 
@@ -159,7 +171,7 @@ visualization in the Grafana.
     ```
 
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with
-the Node IP. (Total 8 places)
+the Node IP. (Total 4 places)
 
    ``` sh
    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
@@ -171,7 +183,7 @@ the Node IP. (Total 8 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_1",
+               "topic": "object_tracking/1",
                "publish_frame":false
            },
            "frame": {
@@ -197,7 +209,7 @@ the Node IP. (Total 8 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_2",
+               "topic": "object_tracking/2",
                "publish_frame":false
            },
            "frame": {
@@ -223,7 +235,7 @@ the Node IP. (Total 8 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_3",
+               "topic": "object_tracking/3",
                "publish_frame":false
            },
            "frame": {
@@ -249,7 +261,7 @@ the Node IP. (Total 8 places)
        "destination": {
            "metadata": {
                "type": "mqtt",
-               "topic": "object_tracking_4",
+               "topic": "object_tracking/4",
                "publish_frame":false
            },
            "frame": {
@@ -267,7 +279,8 @@ the Node IP. (Total 8 places)
    }'
    ```
 
-   > **Note:** To run the pipeline on GPU replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to run the pipeline on NPU replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines and change.
+   > [!NOTE]
+   > To run the pipeline on GPU replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to run the pipeline on NPU replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines and change.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
@@ -278,6 +291,20 @@ the Node IP. (Total 8 places)
 
    ![Example of Grafana and WebRTC streaming](../_assets/grafana.png)
    *Figure 1: Grafana and WebRTC streaming*
+
+   > [!TIP]
+   > The on-screen dwell-time overlay is REST-tunable via `loitering-watermark-properties` in
+   > the launch payload (see `sample_start.sh`), with no code or pipeline changes:
+   > `"loitering-threshold"` (seconds before the overlay turns red; default `5.0` — must be a
+   > JSON number, not a quoted string)
+   > and `"quiet-mode"` (`"true"` to suppress the on-screen text, e.g. to rely on the Grafana
+   > table only). Zone outlines/bounding boxes and the Grafana table are unaffected either way.
+
+   > [!NOTE]
+   > Detection (`gvadetect`) and tracking (`gvatrack`) always run on the full video frame —
+   > there is no element cropping input to the zone polygons. Only the `gvaanalytics` element
+   > restricts its output to the configured zones: objects outside every zone are still
+   > detected and tracked, just not reported as present/dwelling in a zone.
 
 ### Step 4: End the demonstration
 

@@ -6,10 +6,10 @@ This guide provides step-by-step instructions for deploying the Multimodal Weld 
 
 - [System Requirements](../get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
- Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
+ Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to setup Kubernetes cluster on the web with host OS as Ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
-> **Note:**
+> [!NOTE]
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
 > to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target
 > system refers to the system where you are installing the application.
@@ -26,14 +26,14 @@ You can either generate or download the Helm charts.
     Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.2.0-<date>-weekly
+     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.3.0-<date>-weekly
      ```
     
 
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.2.0-<date>-weekly.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.3.0-<date>-weekly.tgz
      ```
 
 - Get into the Helm directory:
@@ -65,14 +65,16 @@ You can either generate or download the Helm charts.
    HTTPS_PROXY:  # example: http_proxy: http://proxy.example.com:891
    MTX_WEBRTCICESERVERS2_0_USERNAME:
    MTX_WEBRTCICESERVERS2_0_PASSWORD:
-   HOST_IP:  # defaults to localhost; set it to the host system IP address if you want to access the UI remotely
+   HOST_IP:  # set this to a host-reachable, non-loopback node IP address for remote UI access and WebRTC/TURN
    S3_STORAGE_USERNAME:
    S3_STORAGE_PASSWORD:
+   SEAWEEDFS_WEB_AUTH_USER:
+   SEAWEEDFS_WEB_AUTH_PASSWORD:
    ```
 
 ## Step 3: Install Helm charts
 
-> **Note:**
+> [!NOTE]
 >
 > 1. Uninstall Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
@@ -93,7 +95,7 @@ helm install multimodal-weld-defect-detection . -n multimodal-sample-app --creat
 
 **Verify Installation:**
 
-> **Note:**
+> [!NOTE]
 > The `deployment-coturn`, `deployment-fusion-analytics`, `deployment-ia-weld-data-simulator` and `deployment-telegraf` pods might restart since its depended on `deployment-mqtt-broker` and `deployment-mediamtx`
 
 Use the following command to verify if all the application resources got installed with their status:
@@ -146,10 +148,10 @@ this sample application in Kubernetes environment:
    rm -f weld_anomaly_detector.tar
    tar cf weld_anomaly_detector.tar udfs/ models/ tick_scripts/
 
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.tar" -k
+   curl -X POST https://127.0.0.1:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.tar" -k
    ```
 
-> **Note:**
+> [!NOTE]
 > Run the commands only after performing the Helm install.
 
 ## Step 5: Activate the Pipeline and UDF Deployment Package
@@ -159,7 +161,7 @@ this sample application in Kubernetes environment:
 You use a Client URL (cURL) command to start the pipeline. Start this pipeline with the
 following cURL command.
 
-> **Note:**
+> [!NOTE]
 >
 > - By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
 > - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
@@ -171,12 +173,12 @@ following cURL command.
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
 
   # Deletes all existing pipelines before starting a new one
-  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  for id in $(curl -k --location https://127.0.0.1:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
-      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+      curl -k --location -X DELETE "https://127.0.0.1:30001/dsps-api/pipelines/$id"
   done;
 
-  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  curl -k https://127.0.0.1:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
     -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
   ```
 
@@ -186,12 +188,12 @@ following cURL command.
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
   # Deletes all existing pipelines before starting a new one
-  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  for id in $(curl -k --location https://127.0.0.1:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
-      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+      curl -k --location -X DELETE "https://127.0.0.1:30001/dsps-api/pipelines/$id"
   done;
 
-  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  curl -k https://127.0.0.1:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
     -X POST -H 'Content-Type: application/json' \
     -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
   ```
@@ -202,12 +204,12 @@ following cURL command.
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
   # Deletes all existing pipelines before starting a new one
-  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  for id in $(curl -k --location https://127.0.0.1:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
-      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+      curl -k --location -X DELETE "https://127.0.0.1:30001/dsps-api/pipelines/$id"
   done;
 
-  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  curl -k https://127.0.0.1:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
     -X POST -H 'Content-Type: application/json' \
     -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
   ```
@@ -222,14 +224,14 @@ To activate the UDF deployment package and run UDF inference on `CPU` or `GPU`, 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
 
-curl -s -X POST https://localhost:30001/ts-api/config   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d @config.json   -k
+curl -s -X POST https://127.0.0.1:30001/ts-api/config   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d @config.json   -k
 ```
 
 - GPU
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
-curl -s -X POST https://localhost:30001/ts-api/config \
+curl -s -X POST https://127.0.0.1:30001/ts-api/config \
   -H 'accept: application/json' -H 'Content-Type: application/json' \
   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)" -k
 ```

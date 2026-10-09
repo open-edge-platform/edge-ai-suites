@@ -129,6 +129,8 @@ The main `docker-compose.yml` is extended by `docker-compose.ethernet.yml` which
 ```bash
 export FC_IP=192.168.1.100   # IP of FC machine running mavlink-router
 
+make init                    # Create .env and detect GPU (skip if already run)
+
 # Option A — Makefile shortcut (also brings up InfluxDB/Grafana)
 make up-ethernet FC_IP=$FC_IP
 

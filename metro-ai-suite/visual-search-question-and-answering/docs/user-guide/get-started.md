@@ -48,7 +48,7 @@ VLM OpenVINO Serving is not built from source. The Compose file references the p
 image by its pinned tag, so Compose pulls it automatically. To fetch it ahead of time:
 
 ```bash
-docker pull intel/vlm-openvino-serving:2026.2.0-20260807-weekly
+docker pull intel/vlm-openvino-serving:2026.2.0
 ```
 
 Run the command to build image for the application:
@@ -68,15 +68,17 @@ export TAG="latest"
 
 ### Step 2: Prepare host directories for models and data
 
-```sh
+```bash
 mkdir -p $HOME/data
 ```
 
-If you would like to test the application with a demo dataset, please continue and follow the instructions in the [Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
+If you would like to test the application with a demo dataset, please continue and follow the instructions in the
+[Try with a demo dataset](#try-with-a-demo-dataset) section later in this guide.
 
 Otherwise, if you would like to use your own data (images and video), make sure to put them all in the created data directory (`$HOME/data` in the example commands above) and make sure the created path matches with the `HOST_DATA_PATH` variable in `deployment/docker-compose/env.sh` BEFORE deploying the services.
 
-> **Note:** Supported media types are jpg, png, and mp4.
+> [!NOTE]
+> Supported media types are jpg, png, and mp4.
 
 ### Step 3: Deploy
 
@@ -91,7 +93,8 @@ Otherwise, if you would like to use your own data (images and video), make sure 
 
 2. Set up environment variables.
 
-   > **Note:** You need to set models first.
+   > [!NOTE]
+   > You need to set models first.
 
    - **Ubuntu**:
 
@@ -101,9 +104,10 @@ Otherwise, if you would like to use your own data (images and video), make sure 
      source env.sh
      ```
 
-     > **Important:** You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
+     > [!IMPORTANT]
+     > You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
      > [Supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for Multimodal Embedding Serving for available embedding models, and
-     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
      You might want to pay some attention to `VLM_DEVICE`, `EMBEDDING_DEVICE`,
      `MM_DATAPREP_EMBEDDING_DEVICE` and `MM_DATAPREP_DETECTION_DEVICE` in `env.sh`.
@@ -196,7 +200,8 @@ Expected valid inputs are "car-race", "deer", "guitar-violin", "gym", "helicopte
 
 Try ticking a search result, and ask a question in the leftside chatbox about the selected media.
 
-Note: for each chat request, you may select either a single image, or multiple images, or a single video. Multiple videos or a collection of images+videos are not supported yet.
+> [!NOTE]
+> For each chat request, you may select either a single image, or multiple images, or a single video. Multiple videos or a collection of images+videos are not supported yet.
 
 ## Performance
 

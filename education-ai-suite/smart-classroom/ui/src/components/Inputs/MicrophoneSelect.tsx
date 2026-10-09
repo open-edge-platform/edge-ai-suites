@@ -5,11 +5,14 @@ import { getAudioDevices } from '../../services/api';
 interface MicrophoneSelectProps {
   selectedMicrophone: string;
   onChange: (microphone: string) => void;
+  /** Set while a session is starting: the choice has already been acted on. */
+  disabled?: boolean;
 }
 
 const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   selectedMicrophone,
-  onChange
+  onChange,
+  disabled = false
 }) => {
   const { t } = useTranslation();
   const [devices, setDevices] = useState<string[]>([]);
@@ -58,6 +61,7 @@ const MicrophoneSelect: React.FC<MicrophoneSelectProps> = ({
   return (
     <select
       value={currentValue}
+      disabled={disabled}
       onChange={e => {
         const selectedValue = e.target.value;
         console.log('🎤 Microphone selected:', selectedValue);

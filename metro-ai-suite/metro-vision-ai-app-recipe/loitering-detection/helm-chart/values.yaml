@@ -16,19 +16,20 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 2026.2.0-ubuntu24-rc1
+  imageTag: 2026.2.0-ubuntu24
+mqtt_table_flattener:
+  # Reuses the dlstreamer_pipeline_server image above (already has paho-mqtt) instead of a new one.
+  sourceTopicPrefix: object_tracking
+  destTopicPrefix: loiter_status
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4
-node_red:
-  image: nodered/node-red
-  imageTag: 4.1
 nginx:
   image: nginx
   imageTag: 1.30.2-alpine
 metrics_service:
   image: intel/metrics-manager
-  imageTag: 2026.2.0-rc1
+  imageTag: 2026.2.0
 timezone: ""  # Leave empty; set dynamically at install time: --set timezone=$(cat /etc/timezone)
 env:
   ENABLE_WEBRTC: "true"
@@ -90,10 +91,6 @@ config:
     name: grafana
     int:
       web_ui_port: "3000"
-  node_red:
-    name: node-red
-    int:
-      web_ui_port: "1880"
   nginx:
     name: nginx-reverse-proxy
     int:

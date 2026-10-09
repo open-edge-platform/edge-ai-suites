@@ -48,6 +48,8 @@ spec:
           value: {{ .Values.retrieverMilvus.env.LOG_LEVEL | quote }}
         - name: HF_ENDPOINT
           value: {{ .Values.retrieverMilvus.env.HF_ENDPOINT | quote }}
+        - name: REQUEST_TIMEOUT_SECONDS
+          value: {{ .Values.retrieverMilvus.env.REQUEST_TIMEOUT_SECONDS | quote }}
         - name: no_proxy
           value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
         - name: http_proxy

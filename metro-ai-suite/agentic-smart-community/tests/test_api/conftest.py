@@ -160,10 +160,14 @@ def vsa_api() -> tuple[TestClient, MagicMock]:
     sys.modules["source_worker"] = source_worker
     try:
         import service
+        from shared.config import AppConfig
 
         manager = MagicMock()
         service._manager = manager
-        client = TestClient(service.create_app(MagicMock()))
+        # A real AppConfig: the register path reads `config.security` to
+        # allowlist source_url schemes, so a MagicMock here would make every
+        # scheme evaluate to "not allowed".
+        client = TestClient(service.create_app(AppConfig()))
         yield client, manager
     finally:
         service._manager = None

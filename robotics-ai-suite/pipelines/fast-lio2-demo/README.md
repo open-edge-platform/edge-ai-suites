@@ -303,8 +303,8 @@ from section "2. Hong Kong Dataset" of the
 either mirror it lists (Google Drive is frequently unreachable from
 corporate networks even with an account, so these are the reliable ones):
 
-- Dropbox: https://www.dropbox.com/scl/fo/zrsmoddbq96t4go1wbxwp/AJw_DGVXng06DmLx9j9iQMs?rlkey=rk11n8tt62ejbg8mbixrm6quz&e=1&st=j7sy3izj&dl=0
-- Baidu Netdisk (百度网盘): https://pan.baidu.com/s/1-5d8xM1tzfsSSueTiU6-MQ?pwd=sufc
+- Dropbox: <https://www.dropbox.com/scl/fo/zrsmoddbq96t4go1wbxwp/AJw_DGVXng06DmLx9j9iQMs?rlkey=rk11n8tt62ejbg8mbixrm6quz&e=1&st=j7sy3izj&dl=0>
+- Baidu Netdisk (百度网盘): <https://pan.baidu.com/s/1-5d8xM1tzfsSSueTiU6-MQ?pwd=sufc>
 
 (same shared folder for every Hong Kong sequence — open the
 `HK-Data20190117` entry inside it). Place the downloaded ROS1 bag at:
@@ -345,9 +345,10 @@ ros2 run fast_lio fastlio_mapping --ros-args \
   -p use_sim_time:=false
 ```
 
-Note this uses the pristine upstream `velodyne.yaml` (not a new/patched
-config) — see "Validate without hardware" above for why its defaults
-already fit this dataset's sensor rig.
+> [!NOTE]
+> This uses the pristine upstream `velodyne.yaml` (not a new/patched
+> config) — see "Validate without hardware" above for why its defaults
+> already fit this dataset's sensor rig.
 
 **Terminal B — bag playback + trajectory recording** (start once Terminal A
 is up and printing):
@@ -497,9 +498,10 @@ paper's own number.
   This is non-fatal — FAST-LIO2 falls back to a scan-rate-based per-point
   time estimate — and the measured RMSE already reflects this; it is not a
   config bug to fix.
-- UrbanLoco's license (Creative Commons Attribution-NonCommercial-ShareAlike
-  4.0, non-commercial/academic use) should be checked on the
-  [dataset's own GitHub page](https://github.com/weisongwen/UrbanLoco)
-  before redistributing any downloaded data.
+- UrbanLoco's [home page](https://advdataset2019.wixsite.com/urbanloco)
+  states: "This work is licensed under a Creative Commons
+  Attribution-NonCommercial-ShareAlike 4.0 International License and is
+  provided for non-commercial but academic use." Check that page before
+  redistributing any downloaded data.
 - GPLv2 licensing (see callout above) applies to the upstream code as-is;
   this integration does not change that.

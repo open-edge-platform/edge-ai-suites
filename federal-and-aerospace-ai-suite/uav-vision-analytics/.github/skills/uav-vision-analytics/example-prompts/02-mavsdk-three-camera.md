@@ -17,12 +17,12 @@ annotated stream. Automatically start all three pipelines when the UAV arms
 - Deployment mode: `uavsdk`
 - Video source: `gazebo-rtsp` (RTSP from SDK: `rtsp://host.docker.internal:8554/uav-1/nadir`, `/forward`, `/rear`)
 - Inference device: `all` (nadir=CPU, forward=GPU, rear=NPU)
-- Model: `yolov8n-visdrone`
+- Model: `yolo11s`
 - Output directory: `./uav-uavsdk-stack/`
 - UAV ID: `uav-1`
 
 Produce:
-- `docker-compose-uavsdk.yml` (single DLSPS container)
+- `docker-compose-uavsdk.yml` (single DL Streamer Pipeline Server container)
 - `configs/config-uavsdk.json` with three camera pipeline variants
 - `gvapython/telemetry-overlay-uavsdk.py` MQTT-based overlay
 - `scripts/uavsdk_pipeline_manager.py` with ffprobe RTSP probing

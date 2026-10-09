@@ -10,6 +10,7 @@ import {
   startBrowserWakewordSession,
   startHostSession,
   startStreamSession,
+  startTextQuery,
   stopBrowserWakewordSession,
 } from "../api";
 import { MicRecorder } from "../audio/MicRecorder";
@@ -77,6 +78,7 @@ export function useVoiceSession(deviceId?: string) {
   const autoStopSilenceMsRef = useRef(0);
   const autoStoppingRef = useRef(false);
   const recordingRef = useRef(false);
+  const sendingTextRef = useRef(false);
   const stopRef = useRef<() => Promise<void>>(async () => undefined);
   const captureModeRef = useRef<CaptureMode>("browser");
   // Track the selected device in a ref so wake-word callbacks can read the
@@ -312,6 +314,38 @@ export function useVoiceSession(deviceId?: string) {
       await driveHostTurn(snap.session_id, startedAt);
     },
     [ensurePlayer, driveHostTurn]
+  );
+
+  // Sends a typed text query. Skips microphone capture and TTS entirely — the
+  // answer is displayed as text only. Reuses the same poll-to-completion path
+  // as voice turns (no TTS segments arrive, so nothing is spoken).
+  const sendText = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed || recordingRef.current || sendingTextRef.current) return;
+      sendingTextRef.current = true;
+      // Invalidate any in-flight wake-word turn so it cannot also call start().
+      wakewordCancelVersionRef.current += 1;
+      setProcessing(true);
+      setPartialUser(trimmed);
+      setPartialAssistant("");
+      setStatus("📝 Searching the knowledge base…");
+      const startedAt = performance.now();
+      setSessionPerf({ ttstMs: null, endToEndMs: null, rtf: null });
+      try {
+        const history = messagesRef.current.map((m) => ({ role: m.role, content: m.text }));
+        const snap = await startTextQuery(trimmed, history);
+        sessionIdRef.current = snap.session_id;
+        await pollSessionToCompletion(snap.session_id, startedAt);
+      } catch (err) {
+        setProcessing(false);
+        setPartialUser("");
+        setStatus(`❌ ${err instanceof Error ? err.message : "Could not send message"}`);
+      } finally {
+        sendingTextRef.current = false;
+      }
+    },
+    [pollSessionToCompletion]
   );
 
   const start = useCallback(async (deviceId?: string) => {
@@ -767,6 +801,7 @@ export function useVoiceSession(deviceId?: string) {
 
   return {
     recording,
+    processing,
     wakewordEnabled,
     wakewordListening,
     wakewordScore,
@@ -782,6 +817,7 @@ export function useVoiceSession(deviceId?: string) {
     sessionPerfSeries,
     start,
     stop,
+    sendText,
     setWakewordEnabled: setWakewordEnabledSafe,
     reset,
   };

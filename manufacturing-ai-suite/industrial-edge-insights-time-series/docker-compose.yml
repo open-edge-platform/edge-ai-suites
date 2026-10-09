@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.38.4
+    image: telegraf:1.39.3-alpine
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -132,7 +132,7 @@ services:
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
-    image: grafana/grafana-oss:13.0.1-security-01-ubuntu
+    image: grafana/grafana-oss:13.0.2
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -219,7 +219,7 @@ services:
     networks:
     - timeseries_network
     ports:
-    - ${OPCUA_SERVER_PORT_MAPPING:-30003}:4840
+    - ${HOST_IP:-127.0.0.1}:${OPCUA_SERVER_PORT_MAPPING:-30003}:4840
     volumes:
     - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
@@ -256,7 +256,7 @@ services:
     - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
-    image: nginx:1.31.1-trixie-perl
+    image: nginx:1.31.4
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -264,8 +264,7 @@ services:
       no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
     ports:
-      - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API 
-      - "1883:1883" # MQTT TCP Proxy
+      - "${HOST_IP:-127.0.0.1}:${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
     volumes:
       - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro

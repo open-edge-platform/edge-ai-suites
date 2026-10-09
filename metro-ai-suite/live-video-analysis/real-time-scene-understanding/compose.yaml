@@ -1,0 +1,214 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: ${PROJECT_NAME:-real-time-scene-understanding}
+
+services:
+  mediamtx:
+    image: bluenviron/mediamtx:1.15.6
+    container_name: mediamtx
+    restart: unless-stopped
+    environment:
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,real-time-scene-understanding,metrics-manager,${no_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,real-time-scene-understanding,metrics-manager,${NO_PROXY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - MTX_LOGLEVEL=info
+      - MTX_READTIMEOUT=${MTX_READTIMEOUT:-30s}
+      - MTX_WRITETIMEOUT=${MTX_WRITETIMEOUT:-30s}
+      - MTX_API=no
+      - MTX_RTSP=yes
+      - MTX_RTMP=no
+      - MTX_SRT=no
+      - MTX_HLS=no
+      - MTX_WEBRTC=yes
+      - MTX_WEBRTCADDRESS=:8889
+      - MTX_WEBRTCADDITIONALHOSTS=${HOST_IP:-localhost}
+      - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP:-localhost}:3478
+      - MTX_WEBRTCICESERVERS2_0_USERNAME=${TURN_USERNAME:-scene}
+      - MTX_WEBRTCICESERVERS2_0_PASSWORD=${TURN_PASSWORD:-scenepass}
+    ports:
+      - "${WEBRTC_SIGNALING_PORT:-8889}:8889"
+      - "8189:8189/udp"
+    networks:
+      - app_network
+
+  coturn:
+    image: coturn/coturn:4.12
+    container_name: coturn
+    restart: unless-stopped
+    environment:
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,real-time-scene-understanding,metrics-manager,${no_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,real-time-scene-understanding,metrics-manager,${NO_PROXY:-}
+    ports:
+      - "3478:3478/udp"
+    command: [ "-v" ]
+    networks:
+      - app_network
+
+  metrics-manager:
+    image: intel/metrics-manager:2026.2.0-extended
+    container_name: metrics-manager
+    environment:
+      - no_proxy=localhost,127.0.0.1,real-time-scene-understanding,metrics-manager,${no_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,real-time-scene-understanding,metrics-manager,${NO_PROXY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - METRICS_PORT=9090
+      - LOG_LEVEL=INFO
+      - CORS_ORIGINS=*
+      - PROMETHEUS_POLLER_INTERVAL_MS=${METRICS_POLL_INTERVAL_MS:-1000}
+    ports:
+      - "${METRICS_SERVICE_PORT:-9090}:9090"
+      - "9273:9273"
+    privileged: true
+    pid: host
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - "/dev/dri:/dev/dri"
+    volumes:
+      - "/sys:/sys:ro"
+      - "/run:/run:ro"
+    healthcheck:
+      test: [ "CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9090/health', timeout=8)" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: on-failure:5
+    networks:
+      - app_network
+
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.29
+    container_name: seaweedfs
+    restart: unless-stopped
+    ports:
+      - "${SEAWEEDFS_S3_PORT:-8333}:8333"
+      - "${SEAWEEDFS_MASTER_PORT:-9333}:9333"
+      - "${SEAWEEDFS_VOLUME_PORT:-8080}:8080"
+      - "${SEAWEEDFS_FILER_PORT:-8888}:8888"
+    networks:
+      - app_network
+    environment:
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - HTTP_PROXY=${http_proxy:-}
+      - HTTPS_PROXY=${https_proxy:-}
+      - no_proxy=${no_proxy:-${NO_PROXY:-}},seaweedfs,localhost,127.0.0.1,::1,172.18.0.0/16,10.0.0.0/8
+      - NO_PROXY=${no_proxy:-${NO_PROXY:-}},seaweedfs,localhost,127.0.0.1,::1,172.18.0.0/16,10.0.0.0/8
+    command: "server -s3 -filer -s3.config=/etc/seaweedfs/s3-config.json -dir=/data"
+    volumes:
+      - seaweedfs-data:/data
+      - ./configs/s3-config.json:/etc/seaweedfs/s3-config.json:ro
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "127.0.0.1", "9333" ]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  real-time-scene-understanding:
+    image: ${REGISTRY:-}real-time-scene-understanding:${TAG:-latest}
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
+    container_name: real-time-scene-understanding
+    restart: unless-stopped
+    ports:
+      - "${PORT:-9100}:9100"
+    environment:
+      # ---- proxy ----
+      - no_proxy=${no_proxy:-localhost,127.0.0.1},mediamtx,coturn,metrics-manager,seaweedfs
+      - NO_PROXY=${NO_PROXY:-localhost,127.0.0.1},mediamtx,coturn,metrics-manager,seaweedfs
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      # ---- server ----
+      - DASHBOARD_PORT=9100
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # ---- stream source ----
+      - RTSP_TIMEOUT=${RTSP_TIMEOUT:-30.0}
+      # ---- WebRTC rendering ----
+      - WEBRTC_AUTO_PUBLISH=${WEBRTC_AUTO_PUBLISH:-true}
+      - WEBRTC_RELAY_URL=${WEBRTC_RELAY_URL:-rtsp://mediamtx:8554}
+      - WEBRTC_SIGNALING_URL=${WEBRTC_SIGNALING_URL:-}
+      - WEBRTC_SIGNALING_PORT=${WEBRTC_SIGNALING_PORT:-8889}
+      - METRICS_SERVICE_PORT=${METRICS_SERVICE_PORT:-9090}
+      # ---- VLM inference (OpenVINO GenAI) ----
+      - ALERT_VLM_MODEL=${ALERT_VLM_MODEL:-Qwen3-VL-2B-Instruct}
+      - ALERT_VLM_DEVICE=${ALERT_VLM_DEVICE:-CPU}
+      - ALERT_VLM_INTERVAL=${ALERT_VLM_INTERVAL:-2.0}
+      - ALERT_VLM_MAX_TOKENS=${ALERT_VLM_MAX_TOKENS:-128}
+      - SEGMENT_DIM_1_1=${SEGMENT_DIM_1_1:-448x448}
+      - SEGMENT_DIM_4_3=${SEGMENT_DIM_4_3:-512x384}
+      - SEGMENT_DIM_16_9=${SEGMENT_DIM_16_9:-576x320}
+      - MAX_STREAMS=${MAX_STREAMS:-8}
+      # ---- Deep analyzer (multi-frame follow-up on a "Yes" alert verdict) ----
+      - DEEP_ANALYZER_ENABLED=${DEEP_ANALYZER_ENABLED:-true}
+      - DEEP_ANALYZER_MODEL=${DEEP_ANALYZER_MODEL:-Qwen3-VL-8B-Instruct}
+      - DEEP_ANALYZER_DEVICE=${DEEP_ANALYZER_DEVICE:-GPU}
+      - DEEP_ANALYZER_MAX_FRAMES=${DEEP_ANALYZER_MAX_FRAMES:-8}
+      - DEEP_ANALYZER_MAX_TOKENS=${DEEP_ANALYZER_MAX_TOKENS:-256}
+      - DEEP_ANALYZER_DEDUP_CACHE_SIZE=${DEEP_ANALYZER_DEDUP_CACHE_SIZE:-500}
+      # ---- SeaweedFS object storage (S3-compatible) ----
+      - SEAWEEDFS_ENDPOINT_URL=${SEAWEEDFS_ENDPOINT_URL:-http://seaweedfs:8333}
+      - SEAWEEDFS_ACCESS_KEY=${SEAWEEDFS_ACCESS_KEY:-sceneadmin}
+      - SEAWEEDFS_SECRET_KEY=${SEAWEEDFS_SECRET_KEY:-sceneadmin123}
+      - SEAWEEDFS_BUCKET=${SEAWEEDFS_BUCKET:-real-time-scene-understanding}
+      - SEAWEEDFS_USE_SSL=${SEAWEEDFS_USE_SSL:-false}
+      - SEAWEEDFS_VERIFY_SSL=${SEAWEEDFS_VERIFY_SSL:-false}
+      - S3_RETENTION_DAYS=${S3_RETENTION_DAYS:-10}
+      - SEAWEEDFS_MAX_RETRY_DELAY_SECONDS=${SEAWEEDFS_MAX_RETRY_DELAY_SECONDS:-2.0}
+      - SEAWEEDFS_MAX_POOL_CONNECTIONS=${SEAWEEDFS_MAX_POOL_CONNECTIONS:-20}
+      - SEGMENT_OUTPUT_DIR=${SEGMENT_OUTPUT_DIR:-segments}
+      - SEGMENT_TIME_SECONDS=${SEGMENT_TIME_SECONDS:-15}
+      - FRAME_SAMPLE_FPS=${FRAME_SAMPLE_FPS:-1}
+      # One record per sampled frame; retained history ≈
+      # FRAME_REGISTRY_MAX_RECORDS_PER_STREAM / FRAME_SAMPLE_FPS seconds
+      # (default: 500 / 1fps = 500s / ~8.3 min).
+      - FRAME_REGISTRY_MAX_RECORDS_PER_STREAM=${FRAME_REGISTRY_MAX_RECORDS_PER_STREAM:-500}
+      # Retained video per stream ≈ SEGMENT_MAX_ON_DISK * SEGMENT_TIME_SECONDS
+      # seconds (default: 50 * 15s = 750s / ~12.5 min).
+      - SEGMENT_MAX_ON_DISK=${SEGMENT_MAX_ON_DISK:-50}
+    volumes:
+      # OpenVINO models, laid out per device: <root>/<cpu|gpu|npu>/<model>.
+      # Both VLM and deep-analyzer pipelines read from this shared /models root.
+      - "./ov_models:/models:ro"
+      # Rolling .mp4 segments written by the frame registry. Bind-mounted so
+      # segments remain visible to deep-analysis process
+      # reading the same host path. Point HOST_SEGMENTS_DIR at a tmpfs-backed
+      # path (e.g. /dev/shm/...) for in-memory storage, or a real disk path
+      # for persistence across restarts.
+      - "${HOST_SEGMENTS_DIR:-./segments}:/app/segments"
+    # Intel GPU/NPU access for accelerated inference (ALERT_VLM_DEVICE=GPU or NPU).
+    # Harmless for CPU inference; requires the host Intel compute runtime.
+    devices:
+      - "/dev/dri:/dev/dri"
+      - "${NPU_DEVICE_PATH:-/dev/null}:${NPU_DEVICE_PATH:-/dev/null}"
+    group_add:
+      - "${RENDER_GROUP_ID:-992}"
+    healthcheck:
+      test: [ "CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/api/health', timeout=8)" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      mediamtx:
+        condition: service_started
+      metrics-manager:
+        condition: service_healthy
+      seaweedfs:
+        condition: service_healthy
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  seaweedfs-data:

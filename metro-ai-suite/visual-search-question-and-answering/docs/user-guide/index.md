@@ -53,7 +53,7 @@ the image encoder from the CLIP model, and stores them in a vector database.
 
 - Resize, convert colors, normalize, and optionally apply object detection with cropping.
 
-> **Note**
+> [!NOTE]
 >
 > Object detection and cropping are disabled by default, so only full frames are
 > indexed. Enable them with `MM_DATAPREP_ENABLE_OBJECT_DETECTION` and
@@ -122,7 +122,7 @@ The UI, built with `streamlit`, allows users to:
 get-started
 tutorials
 troubleshooting
-release-notes
+Release Notes <./release-notes.md>
 
 :::
 hide_directive-->

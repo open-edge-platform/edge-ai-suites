@@ -2,6 +2,10 @@
 
 This page provides detailed hardware, software, and platform requirements to help you set up and run the application efficiently.
 
+For quick deployment of hardware components, you can use
+[Edge Developer Kit Reference Scripts](https://github.com/open-edge-platform/edge-developer-kit-reference-scripts)
+provided as part of Open Edge Platform.
+
 ## Minimum Requirements
 
 | Component           | Specification                                                                                   |
@@ -17,6 +21,13 @@ This page provides detailed hardware, software, and platform requirements to hel
 - Operating System Ubuntu 24.04
 - Docker 24.0.7 or higher
 - Python 3.10+
+
+## Validated Platforms
+
+| Product / Family                          | Validated inference devices |
+|-------------------------------------------|-----------------------------|
+| Intel® Core™ Ultra Processors (Series 3, 2) | CPU, iGPU                   |
+| Intel® Core™ Processors (13th Gen)          | CPU, iGPU                   |
 
 ## Validation
 

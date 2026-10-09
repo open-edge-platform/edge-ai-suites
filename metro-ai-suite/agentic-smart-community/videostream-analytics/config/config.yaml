@@ -1,5 +1,11 @@
+# The service has no authentication: every endpoint (register/delete a source,
+# rewrite webhook_url, change the pipeline) is open to anyone who can reach the
+# port. Bind loopback so the kernel drops non-local connections outright. The
+# docker deployment is `network_mode: host` and MCP talks to VSA over
+# http://localhost:8999, so loopback is enough there. Only widen this for a
+# cross-host deployment, and put your own authentication in front of it.
 server:
-  host: "0.0.0.0"
+  host: "127.0.0.1"
   port: 8999
 
 webhook:
@@ -13,6 +19,33 @@ webhook:
 # (or whatever absolute path the register_source body specifies in its
 # `data_dir` field; MCP sends an absolute per-source path).
 data_dir: "~/.mcp-smart-community/segments"
+
+# Extra roots a register_source `data_dir` may live under, on top of `data_dir`
+# itself. A `data_dir` outside every permitted root is rejected with 400, so an
+# absolute path cannot be used to create directories elsewhere on the host.
+# Leave empty for the standard deployment: MCP always sends
+# <SMART_COMMUNITY_DATA_DIR>/segments/<monitor_id>, and `data_dir` above is
+# derived from the same env var, so it is already contained. Only set this when
+# the segment tree is mounted somewhere else.
+# allowed_data_roots:
+#   - "/mnt/nvme/vsa-segments"
+
+# Input-surface restrictions on the `source_url` a register_source request may
+# supply. The URL is handed verbatim to `ffmpeg -i` and cv2.VideoCapture, and
+# ffmpeg speaks far more than RTSP: `file:`, `concat:`, `subfile:`, `data:`.
+# Without an allowlist a caller can register a "camera" pointing at a local file
+# or an internal HTTP endpoint and have the bytes muxed into data_dir, which the
+# MCP dashboard then serves back as an mp4.
+security:
+  allowed_source_schemes: ["rtsp", "rtsps", "http", "https"]
+  # `file://` sources are a local-file-read primitive. Enable only for offline
+  # evaluation against sample clips on disk, never in a shared deployment.
+  allow_file_source: false
+  # Passed to ffmpeg as -protocol_whitelist: a second gate inside ffmpeg itself,
+  # so an input that slips past the scheme check still cannot be opened.
+  # `file` and `crypto` are needed by the segment muxer's own output handling.
+  ffmpeg_protocol_whitelist:
+    ["file", "crypto", "rtp", "udp", "tcp", "tls", "rtsp", "rtsps", "http", "https"]
 
 defaults:
   motion:

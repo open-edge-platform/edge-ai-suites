@@ -6,11 +6,11 @@ tags:
   - worker-safety
   - ppe-compliance
   - computer-vision
-  - metro-ai-apps-builder
+  - metro-ai-app-builder
   - intel
 prompt: |
   I want to keep my workers safe by flagging anyone missing required protective gear such as a hard hat or safety vest and raise an alert so a supervisor can act.
 
-  Use the metro-ai-apps-builder skill to guide this process. Install and invoke it:
+  Use the metro-ai-app-builder skill to guide this process. Install and invoke it:
 
-  npx skills add open-edge-platform/skills --skill metro-ai-apps-builder
+  npx skills add open-edge-platform/skills --skill metro-ai-app-builder

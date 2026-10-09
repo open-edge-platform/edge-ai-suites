@@ -88,6 +88,42 @@ total involuntary switches (solid = involuntary, dashed = voluntary for context)
 **Files changed:** `src/_psutil_probe.py`, `src/monitor_resources.py`,
 `src/visualize_resources.py`, `src/monitor_stack.py`.
 
+### Per-Core Hot-Spotting Joined With Per-Node Attribution
+
+`visualize_resources.py`'s existing per-core heatmap shows total CPU% per core over time, but
+not which node dominates each core — so it couldn't distinguish "core-bound due to poor
+affinity/scheduling" from "generally CPU-heavy." `--core-nodes` adds a new
+`aggregate_core_by_node()` grouping that joins the existing per-core CPU series with
+`ros2_node_map` (#58), then `plot_core_node_stacking()` renders one stacked-area subplot per
+busiest core: a stack dominated by a single node signals an affinity/scheduling hot spot; an
+even mix signals genuinely shared CPU-heavy load. PIDs absent from `ros2_node_map` are grouped
+as `(non-ROS2)`; per core, only the busiest few node labels are kept individually and the rest
+are summed into `(other)`. Requires `ros2_node_map` in the log — skipped with a warning
+otherwise (older sessions).
+
+**Files changed:** `src/visualize_resources.py`.
+
+### Correlate Latency Spikes With Resource Usage
+
+`resource_usage.json` and `analyze_trigger_latency.py`'s per-pair timing data were both
+timestamped but never cross-referenced — two disconnected charts instead of a root-cause story
+("node X spiked CPU right before this latency outlier"). `analyze_trigger_latency.py` now flags
+any event at or above its own (node, input, output) pair's `p99_ms` (reusing the percentile
+already computed, no second statistical pass), joins it to the nearest `resource_usage.json`
+sample by timestamp (`_load_resource_samples()` + `_nearest_sample_index()`, bisect-based), and
+attributes the top-3 CPU consumers at that moment via `ros2_node_map` (#58).
+
+Surfaced as a new `latency_spikes` array in `kpi.json` (Level 1), sorted by latency descending
+and capped to `--max-latency-spikes` (default 5) to keep the payload bounded. Empty when
+`resource_usage.json` is absent or no event crosses its pair's threshold.
+
+**Known limitation:** the join assumes both timestamp sources share a wall-clock time base. A
+session run with `--use-sim-time` may have `out_ts` (simulated time) diverge from the resource
+probe's wall-clock samples once `/clock` comes online, making the correlation unreliable for
+that portion of the run — same category as the sim-time bug fixed in `ros2_graph_monitor.py`.
+
+**Files changed:** `src/analyze_trigger_latency.py`, `schemas/kpi_level1_v1.json`.
+
 ## 🗓️ May 2026 — Latest Updates
 
 ### Intel RAPL CPU Package Power Monitoring (0.1.17)

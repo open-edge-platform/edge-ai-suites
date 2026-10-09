@@ -98,4 +98,4 @@ GDK_BACKEND=x11 ./ImpactControlCenter
 ```
 
 **Reference:**
-[Balluff Impact Acquire Quick Start Guide](https://assets.balluff.com/documents/DRF_957345_AA_000/mvBC_page_quickstart.html)
+[Balluff Impact Acquire Quick Start Guide](https://assets.balluff.com/documents/DRF_957346_AA_000/Quickstart_FrameworkInstallation.html)

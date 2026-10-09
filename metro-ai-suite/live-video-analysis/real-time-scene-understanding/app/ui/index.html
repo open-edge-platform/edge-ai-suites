@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2025 Intel Corporation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real Time Scene Understanding</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <h1>Real Time Scene Understanding</h1>
+        <span id="status-pill" class="pill pill--idle">connecting…</span>
+        <div class="topbar-actions">
+            <div class="topbar-menu">
+                <button id="system-info-toggle" class="settings-toggle" type="button"
+                    aria-label="Open system information" aria-expanded="false" title="System Information">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                            d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 13.4a1.1 1.1 0 1 1 0 2.2 1.1 1.1 0 0 1 0-2.2zm1.2-2.65v.45h-2.4V8.4h2.4v5.35z" />
+                    </svg>
+                </button>
+                <div id="system-info-panel" class="settings-panel system-panel settings-panel--hidden" role="dialog"
+                    aria-label="System information">
+                    <h2>System Information</h2>
+                    <div class="settings-row">
+                        <span>CPU</span>
+                        <strong id="host-cpu-val">-</strong>
+                    </div>
+                    <div class="settings-row">
+                        <span>RAM</span>
+                        <strong id="host-ram-val">-</strong>
+                    </div>
+                    <div class="settings-row">
+                        <span>GPU</span>
+                        <strong id="host-gpu-val">-</strong>
+                    </div>
+                    <div class="settings-row">
+                        <span>NPU</span>
+                        <strong id="host-npu-val">-</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="topbar-menu">
+                <button id="settings-toggle" class="settings-toggle" type="button" aria-label="Open settings"
+                    aria-expanded="false" title="Settings">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path
+                            d="M10.88 2.25h2.24l.45 2.05c.43.14.84.32 1.23.53l1.84-1.03 1.58 1.58-1.03 1.84c.21.39.39.8.53 1.23l2.05.45v2.24l-2.05.45c-.14.43-.32.84-.53 1.23l1.03 1.84-1.58 1.58-1.84-1.03c-.39.21-.8.39-1.23.53l-.45 2.05h-2.24l-.45-2.05a7.6 7.6 0 0 1-1.23-.53l-1.84 1.03-1.58-1.58 1.03-1.84a7.6 7.6 0 0 1-.53-1.23l-2.05-.45V9.08l2.05-.45c.14-.43.32-.84.53-1.23L5.8 5.56 7.38 3.98l1.84 1.03c.39-.21.8-.39 1.23-.53l.43-2.23zm1.12 6.1a2.78 2.78 0 1 0 0 5.56 2.78 2.78 0 0 0 0-5.56z" />
+                    </svg>
+                </button>
+                <div id="settings-panel" class="settings-panel settings-panel--hidden" role="dialog"
+                    aria-label="VLM settings">
+                    <h2>Settings</h2>
+                    <details class="settings-group" open>
+                        <summary>Alert Pipeline Settings</summary>
+                        <div class="settings-row">
+                            <span>Vision model</span>
+                            <strong id="settings-vlm-model">-</strong>
+                        </div>
+                        <div class="settings-row">
+                            <span>Inference Device</span>
+                            <strong id="settings-vlm-device">-</strong>
+                        </div>
+                        <div class="settings-row">
+                            <span>Max Tokens</span>
+                            <strong id="settings-vlm-max-tokens">-</strong>
+                        </div>
+                    </details>
+                    <details id="settings-deep-analyzer-group" class="settings-group" open>
+                        <summary>Deep Analyzer Pipeline Settings</summary>
+                        <div class="settings-row">
+                            <span>Vision model</span>
+                            <strong id="settings-deep-model">-</strong>
+                        </div>
+                        <div class="settings-row">
+                            <span>Inference Device</span>
+                            <strong id="settings-deep-device">-</strong>
+                        </div>
+                        <div class="settings-row">
+                            <span>Max Frames</span>
+                            <strong id="settings-deep-max-frames">-</strong>
+                        </div>
+                        <div class="settings-row">
+                            <span>Max Tokens</span>
+                            <strong id="settings-deep-max-tokens">-</strong>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="layout">
+        <aside class="left-column">
+            <section class="control-panel">
+                <h2>RTSP Source</h2>
+                <form id="rtsp-form" class="rtsp-form" autocomplete="off">
+                    <label for="rtsp-url">RTSP URL</label>
+                    <input id="rtsp-url" name="url" type="url" inputmode="url"
+                        placeholder="rtsp://<your-rtsp-url>:<port>/<stream>" required />
+                    <label for="stream-id">Stream ID (optional)</label>
+                    <input id="stream-id" name="stream_id" type="text" inputmode="text" maxlength="48"
+                        placeholder="camera-lobby" />
+                    <button id="rtsp-submit" type="submit">Add Stream</button>
+                    <p id="rtsp-message" class="form-message" aria-live="polite"></p>
+                </form>
+            </section>
+
+            <section class="control-panel">
+                <h2>Prompt Configuration</h2>
+                <div class="rtsp-form">
+                    <div class="field-label-row">
+                        <label for="alert-prompt">Alert Prompt</label>
+                        <button type="button" class="field-help" aria-label="Alert Prompt help"
+                            data-tooltip="Enter a prompt for single-frame VLM inference from input stream. Alert will be raised when the conditions in the prompt are met, and the description will be used for context in Deep Analyzer.">?</button>
+                    </div>
+                    <textarea id="alert-prompt" name="alert_prompt" rows="4" maxlength="2400"
+                        placeholder="Describe this frame in 1 short sentence using only visible facts. Determine whether '{event}' is visible in this image, using only visual evidence from this image."
+                        required></textarea>
+
+                    <div class="field-label-row">
+                        <label for="deep-analyzer-prompt">Deep Analyzer Prompt</label>
+                        <button type="button" class="field-help" aria-label="Deep Analyzer Prompt help"
+                            data-tooltip="Enter a prompt for video-segment-level deep analyzer follow-up. VLM will use this to analyze and summarize detected events from the alert.">?</button>
+                    </div>
+                    <textarea id="deep-analyzer-prompt" name="deep_analyzer_prompt" rows="4" maxlength="2400"
+                        placeholder="Summarize what is visibly happening across the frames in chronological order, focusing on key evidence and scene changes. Then decide whether the context event is clearly visible in the frames and set confirmed accordingly. Use only visible evidence. Do not infer intent, identity, or facts outside the frames."
+                        required></textarea>
+                </div>
+            </section>
+
+            <section class="metrics-panel">
+                <div class="metrics-header">
+                    <h2>Device Usage</h2>
+                    <span id="metrics-connection"
+                        class="metrics-connection metrics-connection--idle">disconnected</span>
+                </div>
+                <div class="metrics-values">
+                    <span class="metric-chip metric-chip--cpu" data-chip="cpu" tabindex="0">CPU <strong
+                            id="cpu-val">-</strong></span>
+                    <span class="metric-chip metric-chip--ram" data-chip="ram" tabindex="0">RAM <strong
+                            id="ram-val">-</strong></span>
+                    <span class="metric-chip metric-chip--gpu" data-chip="gpu" tabindex="0">GPU <strong
+                            id="gpu-val">-</strong></span>
+                    <span class="metric-chip metric-chip--npu" data-chip="npu" tabindex="0">NPU <strong
+                            id="npu-val">-</strong></span>
+                </div>
+                <canvas id="metrics-canvas" class="metrics-canvas" width="640" height="220"></canvas>
+            </section>
+        </aside>
+
+        <section class="video-panel">
+            <div class="video-panel-head">
+                <h2>Playback</h2>
+            </div>
+            <div id="streams-grid" class="streams-grid"></div>
+            <p id="streams-empty" class="streams-empty">No streams yet. Add one from the left panel.</p>
+        </section>
+    </main>
+
+    <div id="alert-drawer" class="alert-drawer alert-drawer--hidden" aria-hidden="true">
+        <div class="alert-drawer__backdrop" data-close="alert-drawer"></div>
+        <aside class="alert-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="alert-drawer-title">
+            <div class="alert-drawer__header">
+                <h3 id="alert-drawer-title">Alerts — <span id="alert-drawer-stream"></span></h3>
+                <button id="alert-drawer-close" class="alert-drawer__close" type="button"
+                    aria-label="Close alert history">&times;</button>
+            </div>
+            <ul id="alert-drawer-list" class="alert-drawer__list"></ul>
+            <p id="alert-drawer-status" class="alert-drawer__status">Loading alerts...</p>
+            <button id="alert-drawer-more" class="alert-drawer__more" type="button" hidden>Load more</button>
+        </aside>
+    </div>
+
+    <div id="alert-modal" class="alert-modal alert-modal--hidden" aria-hidden="true">
+        <div class="alert-modal__backdrop" data-close="alert-modal"></div>
+        <div class="alert-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="alert-modal-title">
+            <div class="alert-modal__header">
+                <h3 id="alert-modal-title">Alert details</h3>
+                <button id="alert-modal-close" class="alert-modal__close" type="button"
+                    aria-label="Close alert details">&times;</button>
+            </div>
+            <div class="alert-modal__content">
+                <div class="alert-modal__video-wrap">
+                    <video id="alert-modal-video" class="alert-modal__video" controls playsinline
+                        preload="metadata"></video>
+                </div>
+                <aside class="alert-modal__side">
+                    <h4>Metadata</h4>
+                    <dl id="alert-modal-meta" class="alert-modal__meta"></dl>
+                </aside>
+            </div>
+            <div class="alert-modal__summary">
+                <h4>Deep analyzer summary</h4>
+                <p id="alert-modal-summary">No summary yet.</p>
+            </div>
+            <p id="alert-modal-status" class="alert-modal__status">Loading alert...</p>
+        </div>
+    </div>
+
+    <script src="/api/runtime-config.js"></script>
+    <script type="module" src="/static/js/app.js"></script>
+</body>
+
+</html>

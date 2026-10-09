@@ -3,7 +3,7 @@
 
 services:
   vlm-openvino-serving:
-    image: intel/vlm-openvino-serving:2026.2.0-20260807-weekly
+    image: intel/vlm-openvino-serving:2026.2.0
     container_name: vlm-openvino-serving
     ports:
       - "${VLM_SERVICE_PORT}:8000"
@@ -63,21 +63,26 @@ services:
 
   milvus-minio:
     container_name: milvus-minio
-    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    image: chainguard/minio@sha256:cb84dfa704c648c4b14858aa288576bb1cf756a9b326112a0934db00e87d0bb8
     environment:
-      MINIO_ACCESS_KEY: minioadmin
-      MINIO_SECRET_KEY: minioadmin
+      - MINIO_ROOT_USER
+      - MINIO_ROOT_PASSWORD
     ports:
-      - "9001:9001"
-      - "9000:9000"
+      - "${MINIO_API_HOST_PORT:-9000}:${MINIO_API_PORT:-9000}"
+      - "${MINIO_CONSOLE_HOST_PORT:-9001}:${MINIO_CONSOLE_PORT:-9001}"
     volumes:
       - milvus-minio-data:/data
-    command: minio server /data --console-address ":9001"
+    command: |
+      server /data
+      --address ":${MINIO_API_PORT:-9000}"
+      --console-address ":${MINIO_CONSOLE_PORT:-9001}"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
+      test:
+      - CMD-SHELL
+      - echo > /dev/tcp/127.0.0.1/${MINIO_API_PORT:-9000} && exit 0 || exit 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   milvus-standalone:
     container_name: milvus-standalone
@@ -87,7 +92,11 @@ services:
     - seccomp:unconfined
     environment:
       ETCD_ENDPOINTS: milvus-etcd:2379
-      MINIO_ADDRESS: milvus-minio:9000
+      MINIO_ADDRESS: milvus-minio:${MINIO_API_PORT:-9000}
+      # Must match the milvus-minio root credentials, otherwise Milvus cannot
+      # authenticate against its object store and aborts on startup.
+      MINIO_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
       http_proxy: ""
       https_proxy: ""
       no_proxy: ""
@@ -142,7 +151,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 40
-      start_period: 5s
+      start_period: 30s
     devices:
       - /dev/dri:/dev/dri
     networks:
@@ -223,7 +232,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 40
-      start_period: 5s
+      start_period: 30s
     networks:
       - default
     depends_on:
@@ -258,6 +267,9 @@ services:
       - DEFAULT_TOP_K=${DEFAULT_TOP_K:-20}
       - MAX_TOP_K=${MAX_TOP_K:-1000}
       - LOG_LEVEL=${VECTOR_RETRIEVER_LOG_LEVEL:-INFO}
+      # Upper bound on a single embedding call. Large CLIP variants (e.g.
+      # clip-vit-h-14) need well over the 30s default to encode one image on CPU.
+      - REQUEST_TIMEOUT_SECONDS=${RETRIEVER_REQUEST_TIMEOUT_SECONDS:-120}
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/ready')\""]

@@ -10,7 +10,6 @@ import logging
 from services.api_client import (
     fetch_cameras,
     fetch_cameras_with_labels,
-    fetch_events,
     add_rule,
     fetch_rule_responses,
     fetch_rules,
@@ -22,14 +21,11 @@ from services.api_client import (
     fetch_vss_features,
 )
 from services.video_processor import process_video
-from services.event_utils import display_events
 from config import logger
 import json
 
 camera_list = []
-recent_events = []
 # Global state
-recent_events = []
 event_update_thread = None
 stop_event_thread = threading.Event()
 
@@ -278,7 +274,6 @@ def auto_refresh_summary_status(summary_id):
         return f"## Error\n\n❌ **Error fetching status:** {str(e)}", f"❌ Error: {str(e)}", gr.update(visible=True)
 
 def create_ui():
-    show_genai_tab = os.getenv("NVR_GENAI", "false").lower() == "true"
     show_scenescape_source = os.getenv("NVR_SCENESCAPE", "false").lower() == "true"
     time.sleep(5)  # Ensure the environment is fully initialized
     # Detect which VSS features are active so the UI only offers actions the
@@ -311,7 +306,6 @@ def create_ui():
             )
             camera_list = []
             camera_labels_map = {}
-    recent_events = []
     def get_labels_for_camera(camera_name):
         # Dummy example mapping camera to labels
         camera_to_labels = {
@@ -415,7 +409,7 @@ def create_ui():
                         scale=5,
                     )
                     close_toast_btn = gr.Button("❌", visible=False, scale=1)
-                
+
                 # Register the tick event
                 polling_timer.tick(
                     fn=auto_refresh_summary_status,
@@ -552,74 +546,6 @@ def create_ui():
                     outputs=[camera_selector, camera_save_status]
                 )
 
-            if show_genai_tab:
-                # Tab 2: AI-Powered Event Viewer
-                with gr.TabItem("AI-Powered Event Viewer") as event_viewer_tab:
-
-                    with gr.Row():
-                        with gr.Column(scale=1):
-                            cam_dropdown_view = gr.Dropdown(
-                                choices=camera_list,
-                                label="Select Camera",
-                                interactive=True,
-                                container=True,
-                            )
-                        with gr.Column(scale=2):
-                            gr.HTML("")  # Placeholder for spacing or future use
-                    with gr.Row():
-                        with gr.Column(scale=2):
-                            events_table = gr.Dataframe(
-                                headers=[
-                                    "Label",
-                                    "Start Time",
-                                    "End Time",
-                                    "Top Score",
-                                    "Description",
-                                    "Thumbnail",
-                                ],
-                                datatype=["str", "str", "str", "str", "str", "html"],
-                                label="Events",
-                                interactive=False,
-                                elem_id="events-table",
-                                elem_classes="events-table",
-                            )
-                            gr.HTML(
-                                """
-                            <style>
-                            .events-table table td:nth-child(5) {
-                                white-space: normal !important;
-                                word-wrap: break-word !important;
-                                max-width: 300px;
-                            }
-                            .events-table table td:nth-child(6) {
-                                text-align: center;
-                                vertical-align: middle;
-                            }
-                            .events-table table td:nth-child(6) img {
-                                border-radius: 4px;
-                                border: 1px solid #ddd;
-                            }
-                            </style>
-                            """
-                            )
-                    
-                    def fetch_and_display_events(camera):
-                        nonlocal recent_events
-                        recent_events = fetch_events(camera)
-                        return display_events(recent_events)
-
-                    cam_dropdown_view.change(
-                        fn=fetch_and_display_events,
-                        inputs=[cam_dropdown_view],
-                        outputs=[events_table],
-                    )
-                        # 👇 Trigger fetch when tab is opened
-                    event_viewer_tab.select(
-                        fn=fetch_and_display_events,
-                        inputs=[cam_dropdown_view],
-                        outputs=[events_table],
-                    )
-
             # Tab 3: Auto-Route Rules
             with gr.TabItem("Auto-Route Events"):
                 with gr.Row():
@@ -636,7 +562,7 @@ def create_ui():
                     )
 
                     if show_scenescape_source:
-                        # SceneScape: fixed labels, count visible by default
+                        # Scenescape: fixed labels, count visible by default
                         SCENESCAPE_LABELS = ["vehicle", "pedestrian"]
                         label_filter = gr.Dropdown(
                             choices=SCENESCAPE_LABELS,
@@ -658,7 +584,7 @@ def create_ui():
                             value=0,
                             precision=0,
                             interactive=True,
-                            visible=False,  
+                            visible=False,
                         )
 
                     def toggle_count_visibility(source):

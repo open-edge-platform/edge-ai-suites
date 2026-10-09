@@ -1,10 +1,9 @@
-# Release Notes
+# Release Notes: Visual Search and QA
 
-## Current Release
+## Version 2026.3.0
 
-**Version**: 2026.2.0 \
-**Helm Chart Version**: 1.1.0 \
-**Release Date**: 06 Aug 2026
+**Helm Chart Version**: 1.1.0
+**Release Date**: October 9, 2026
 
 **Changes**:
 
@@ -40,16 +39,15 @@
   - VLM OpenVINO Serving is now consumed as a published image instead of being
     built from source.
 
-**HW used for validation**:
+**Hardware Used for Validation**:
 
 - Intel® Core™ processors (13th Gen, i7 recommended)
 - Intel® Arc™ A-Series Graphics (Intel® Arc™ A770 recommended)
 
-## Previous Releases
+## Version 2025.2.0
 
-**Version**: 2025.2.0 \
-**Helm Chart Version**: 1.0.0 \
-**Release Date**: 10 Dec 2025
+**Helm Chart Version**: 1.0.0
+**Release Date**: December 10, 2025
 
 **Features**:
 
@@ -65,7 +63,7 @@
 
   - Includes data preparation, retriever, multimodal embedding, VLM serving, and a Streamlit-based web UI.
 
-**HW used for validation**:
+**Hardware Used for Validation**:
 
 - Intel® Core™ processors (13th Gen, i7 recommended)
 - Intel® Arc™ A-Series Graphics (Intel® Arc™ A770 recommended)

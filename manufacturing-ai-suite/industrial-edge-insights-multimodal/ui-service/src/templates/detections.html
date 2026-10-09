@@ -1,22 +1,30 @@
+ <!--
+ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+ SPDX-License-Identifier: Apache-2.0
+ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Detections — {{ use_case_id }}</title>
+  <title>Classifications</title>
   {% set root = request.scope.get("root_path", "") %}
   <link rel="stylesheet" href="{{ root }}/static/css/style.css">
 </head>
 <body>
   <header>
-    <div class="header-inner">
-      <span class="logo">&#9632; Intel</span>
-      <h1>Agentic Weld Quality Analysis</h1>
-      <span class="use-case-badge">{{ use_case_id }}</span>
+    <div class="header-wrapper">
+      <div class="header-inner">
+        <span class="logo">&#9632; Intel</span>
+        <h1>Multimodal Weld Defect Detection</h1>
+      </div>
     </div>
   </header>
   <nav>
-    <a href="{{ root }}/">Dashboard</a>
-    <a href="{{ root }}/detections" class="active">Detections</a>
+    <div class="nav-wrapper">
+      <a href="{{ root }}/">Dashboard</a>
+      <a href="{{ root }}/detections" class="active">Detections</a>
+      <a href="/insights-ui/">VLM Reasoning</a>
+    </div>
   </nav>
 
   <main>
@@ -43,7 +51,7 @@
       </h2>
       {% if detections %}
       <table>
-        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th><th>BBox (x,y,w,h)</th><th>Timestamp</th></tr></thead>
+        <thead><tr><th>#</th><th>Frame</th><th>Label</th><th>Confidence</th></tr></thead>
         <tbody>
           {% for d in detections %}
           <tr>
@@ -56,8 +64,6 @@
               </span>
               {{ "%.3f"|format(d.confidence) }}
             </td>
-            <td>({{ d.x }}, {{ d.y }}, {{ d.width }}, {{ d.height }})</td>
-            <td class="timestamp">{{ d.timestamp or "—" }}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -68,7 +74,7 @@
     </section>
   </main>
   <footer>
-    <p>&#169; Intel Corporation — Agentic Weld Quality Analysis Blueprint</p>
+    <p>&#169; Intel Corporation — Multimodal Weld Defect Detection</p>
   </footer>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import threading
+import time
 import sys
 import os
 
@@ -223,6 +224,81 @@ def test_asr_handler_reads_concurrency_from_config():
     assert handler._runner._queue_max == 16
 
     handler.shutdown()
+
+
+def test_asr_transcribe_forwards_kwargs_to_processor():
+    """temperature (and any other kwarg) reaches the underlying processor."""
+    from unittest.mock import MagicMock, patch
+    handler = AsrHandler()
+    mock_processor = MagicMock()
+    mock_processor.transcribe.return_value = {"segments": []}
+
+    with patch.object(handler, "_build_processor", return_value=mock_processor):
+        handler.load()
+
+    result = handler.transcribe("chunk.wav", temperature=0.3)
+
+    assert result == {"segments": []}
+    mock_processor.transcribe.assert_called_once_with("chunk.wav", temperature=0.3)
+
+    handler.shutdown()
+
+
+def test_asr_transcribe_requires_load():
+    handler = AsrHandler()
+    try:
+        handler.transcribe("chunk.wav")
+        assert False, "expected RuntimeError"
+    except RuntimeError:
+        pass
+
+
+def test_asr_transcribe_serializes_under_max_concurrency_one():
+    """Concurrent transcribe() calls queue on the CapabilityRunner instead of
+    entering the model together. Guards against callers reaching around the
+    handler to the raw processor."""
+    from unittest.mock import patch
+    handler = AsrHandler()
+
+    inflight = []
+    peak = []
+
+    class SlowProcessor:
+        def transcribe(self, audio_path, temperature=0.0):
+            inflight.append(1)
+            peak.append(len(inflight))
+            time.sleep(0.05)
+            inflight.pop()
+            return {"segments": []}
+
+    with patch.object(handler, "_build_processor", return_value=SlowProcessor()):
+        with patch.object(handler, "_concurrency_config", return_value=(1, 8)):
+            handler.load()
+
+    threads = [
+        threading.Thread(target=handler.transcribe, args=(f"chunk{i}.wav",))
+        for i in range(4)
+    ]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+
+    assert max(peak) == 1, f"expected serialized ASR calls, saw {max(peak)} concurrent"
+
+    handler.shutdown()
+
+
+def test_asr_component_does_not_bypass_the_runner():
+    """ASRComponent must call AsrHandler.transcribe(), not reach into
+    _processor — otherwise the CapabilityRunner is silently skipped.
+    Source-level check so the test stays free of torch/model imports."""
+    path = os.path.join(_SC_ROOT, "components", "asr_component.py")
+    with open(path, encoding="utf-8") as f:
+        source = f.read()
+
+    assert "_processor" not in source
+    assert "self.asr_handler.transcribe(" in source
 
 
 def test_health_reports_asr_state_without_loading():

@@ -1,12 +1,8 @@
 # Release Notes: NICU Warmer
 
-<!--## Version 2026.2-->
-
-<!--date TBD-->
-
 ## Version 1.0.0
 
-**2026**
+**Release Date**: 2026
 
 This is the initial release of the application, therefore, it is considered a preview version.
 
@@ -18,7 +14,7 @@ It proves that heterogeneous workloads — from multi-object detection to heart-
 via rPPG and activity classification — can coexist efficiently on one Intel® Core™ Ultra platform
 without compromising performance or stability.
 
-**New**
+**New**:
 
 The initial feature set of the application is now available:
 
@@ -32,7 +28,7 @@ The initial feature set of the application is now available:
 - Docker Compose deployment with automatic model download (`make setup`)
 - Device profile presets (all-CPU, all-GPU, all-NPU, mixed-optimized)
 
-**Known issues**
+**Known issues**:
 
 - Video upload is limited to 500 MB per file.
 

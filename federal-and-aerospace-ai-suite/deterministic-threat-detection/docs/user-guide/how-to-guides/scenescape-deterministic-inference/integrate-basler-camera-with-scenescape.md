@@ -28,7 +28,8 @@ The standard DL Streamer Pipeline Server image does not include the Basler pylon
 
 [Integrate Pylon SDK — Step 2: Create the Docker Image](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/how-to-guides/integrate-camera-sdks.html#step-2-create-the-docker-image)
 
-> **Note:** Patch `gencamsrc` to propagate the PTP timestamp before building the image. By default, `gencamsrc` discards the camera's PTP hardware timestamp after setting the GStreamer buffer PTS. The following patch adds a `GstReferenceTimestampMeta` to each buffer so downstream elements such as `gvapython` can read the original camera timestamp before any clock correction occurs.
+> [!NOTE]
+> Patch `gencamsrc` to propagate the PTP timestamp before building the image. By default, `gencamsrc` discards the camera's PTP hardware timestamp after setting the GStreamer buffer PTS. The following patch adds a `GstReferenceTimestampMeta` to each buffer so downstream elements such as `gvapython` can read the original camera timestamp before any clock correction occurs.
 
 ```bash
 git -C /path/to/edge-ai-libraries apply \
@@ -60,7 +61,8 @@ git -C /path/to/scenescape apply \
   /path/to/deterministic-threat-detection/usecases/scenescape-deterministic-inference/basler/patches/macvlan_docker.patch
 ```
 
-> **Note:** Edit the patched `docker-compose-dl-streamer-example.yml` to set the correct host NIC name (default: `enp5s0.1`) and IP address (`192.168.127.51`) for the macvlan interface to match your network configuration.
+> [!NOTE]
+> Edit the patched `docker-compose-dl-streamer-example.yml` to set the correct host NIC name (default: `enp5s0.1`) and IP address (`192.168.127.51`) for the macvlan interface to match your network configuration.
 
 ---
 
@@ -85,4 +87,5 @@ Update the pipeline definition in Scenescape (eg: `dlstreamer-pipeline-server/qu
 gencamsrc serial=<basler-camera-serial> pixel-format=bayerrggb frame-rate=10 name=source ! bayer2rgb ! videoscale ! video/x-raw,width=1920,height=1080 ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect model=/home/pipeline-server/models/intel/person-detection-retail-0013/FP32/person-detection-retail-0013.xml model-proc=/home/pipeline-server/models/object_detection/person/person-detection-retail-0013.json ! gvametaconvert add-tensor-data=true name=metaconvert ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true
 ```
 
-> **Tip:** Scenescape tracking quality depends on the camera feed. You can either configure the camera for your real-world scene or point the camera at a monitor that plays the queuing demo video. The monitor-based setup is often the quickest way to validate Basler camera tracking behavior.
+> [!TIP]
+> Scenescape tracking quality depends on the camera feed. You can either configure the camera for your real-world scene or point the camera at a monitor that plays the queuing demo video. The monitor-based setup is often the quickest way to validate Basler camera tracking behavior.

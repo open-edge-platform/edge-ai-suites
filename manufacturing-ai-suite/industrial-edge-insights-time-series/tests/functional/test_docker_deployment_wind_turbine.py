@@ -14,6 +14,8 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from utils import docker_utils
 from utils import constants
 from utils import common_utils
+from common_utils import assert_condition
+
 
 # Import the fixture directly from conftest_docker.py
 pytest_plugins = ["conftest_docker"]
@@ -44,7 +46,7 @@ def test_blank_values():
     logger.info("Verifying that make check env variables fails with blank values in .env file")
     result = docker_utils.invoke_make_check_env_variables()
     logger.info(f"make check env variables returned: {result}, expected: False")
-    assert result == False
+    assert_condition(result == False, "Assertion failed")
     
 
 def test_invalid_values():
@@ -55,7 +57,7 @@ def test_invalid_values():
     logger.info("Verifying that make check env variables fails with invalid values in .env file")
     result = docker_utils.invoke_make_check_env_variables()
     logger.info(f"make check env variables returned: {result}, expected: False")
-    assert result == False
+    assert_condition(result == False, "Assertion failed")
     
 
 def test_valid_values():
@@ -66,7 +68,7 @@ def test_valid_values():
     logger.info("Verifying that make check env variables succeeds with valid values in .env file")
     result = docker_utils.invoke_make_check_env_variables()
     logger.info(f"make check env variables returned: {result}, expected: True")
-    assert result == True
+    assert_condition(result == True, "Assertion failed")
 
 @pytest.mark.opcua
 def test_make_up_opcua(setup_wind_turbine_environment):
@@ -77,13 +79,13 @@ def test_make_up_opcua(setup_wind_turbine_environment):
     # Use the deploy_opcua function with app parameter
     result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
     logger.info(f"OPCUA deploy result: {result}")
-    assert result == True, "OPCUA deployment with app parameter failed"
+    assert_condition(result == True, "OPCUA deployment with app parameter failed")
     
     # Verify containers are running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Deployed containers: {containers}")
     logger.info(f"Containers found: {len(containers) if containers else 0}")
-    assert containers, "No containers found after OPCUA deployment"
+    assert_condition(containers, "No containers found after OPCUA deployment")
     
     # No manual cleanup needed - handled by fixture
     
@@ -97,13 +99,13 @@ def test_make_up_mqtt(setup_wind_turbine_environment):
     # Use enhanced deploy_mqtt function with app parameter
     deploy_result = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP)
     logger.info(f"MQTT deploy result: {deploy_result}")
-    assert deploy_result == True
+    assert_condition(deploy_result == True, "Assertion failed")
     
     # Verify containers are running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Deployed containers: {containers}")
     logger.info(f"Containers found: {len(containers) if containers else 0}")
-    assert containers, "No containers found after MQTT deployment"
+    assert_condition(containers, "No containers found after MQTT deployment")
     # No manual cleanup needed - handled by fixture    
 
 @pytest.mark.mqtt
@@ -118,16 +120,16 @@ def test_multiple_runs_mqtt(setup_wind_turbine_environment):
         logger.info(f"Cycle {i+1}:")
         deploy_result = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP)
         logger.info(f"MQTT deploy result in cycle {i+1}: {deploy_result}")
-        assert deploy_result == True
+        assert_condition(deploy_result == True, "Assertion failed")
         docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
-        assert containers, "No containers found after MQTT deployment"
+        assert_condition(containers, "No containers found after MQTT deployment")
         # Cleanup between iterations (except last one which is handled by fixture)
         if i < 2:
             make_down_result = docker_utils.invoke_make_down()
             logger.info(f"make down result in cycle {i+1}: {make_down_result}")
-            assert make_down_result == True
+            assert_condition(make_down_result == True, "Assertion failed")
 
 @pytest.mark.opcua
 def test_multiple_runs_opcua(setup_wind_turbine_environment):
@@ -141,32 +143,32 @@ def test_multiple_runs_opcua(setup_wind_turbine_environment):
         logger.info(f"Cycle {i+1}:")
         deploy_result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
         logger.info(f"OPCUA deploy result in cycle {i+1}: {deploy_result}")
-        assert deploy_result == True
+        assert_condition(deploy_result == True, "Assertion failed")
         docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
-        assert containers, "No containers found after OPCUA deployment"
+        assert_condition(containers, "No containers found after OPCUA deployment")
 
         # Step 1: Configure OPC UA alert in TICK script
         logger.info(f"Cycle {i+1} Step 1: Configuring OPC UA alert in TICK script...")
         tick_result = docker_utils.check_and_update_tick_script(setup="opcua")
-        assert tick_result is not None, f"Cycle {i+1}: Failed to configure OPC UA alert in TICK script"
+        assert_condition(tick_result is not None, f"Cycle {i+1}: Failed to configure OPC UA alert in TICK script")
 
         # Step 2: Upload UDF deployment package
         logger.info(f"Cycle {i+1} Step 2: Uploading UDF deployment package...")
         upload_result = docker_utils.upload_udf_tar_package(constants.WIND_SAMPLE_APP)
-        assert upload_result == True, f"Cycle {i+1}: Failed to upload UDF deployment package"
+        assert_condition(upload_result == True, f"Cycle {i+1}: Failed to upload UDF deployment package")
 
         # Step 3: Configure OPC UA alert in config.json
         logger.info(f"Cycle {i+1} Step 3: Configuring OPC UA alert in config.json...")
         config_result = docker_utils.update_config_file("opcua")
-        assert config_result == True, f"Cycle {i+1}: Failed to configure OPC UA alert in config.json"
+        assert_condition(config_result == True, f"Cycle {i+1}: Failed to configure OPC UA alert in config.json")
 
         # Cleanup between iterations (except last one which is handled by fixture)
         if i < 2:
             make_down_result = docker_utils.invoke_make_down()
             logger.info(f"make down result in cycle {i+1}: {make_down_result}")
-            assert make_down_result == True
+            assert_condition(make_down_result == True, "Assertion failed")
 
 @pytest.mark.opcua
 def test_switch_mqtt_to_opcua_ingestion(setup_wind_turbine_environment):
@@ -178,22 +180,22 @@ def test_switch_mqtt_to_opcua_ingestion(setup_wind_turbine_environment):
     logger.info("Verifying Switch from mqtt to opcua succeeded")
     switch_result = docker_utils.invoke_switch_mqtt_opcua()
     logger.info(f"Switch MQTT to OPCUA result: {switch_result}")
-    assert switch_result == True
+    assert_condition(switch_result == True, "Assertion failed")
 
     # Step 1: Configure OPC UA alert in TICK script
     logger.info("Step 1: Configuring OPC UA alert in TICK script...")
     tick_result = docker_utils.check_and_update_tick_script(setup="opcua")
-    assert tick_result is not None, "Failed to configure OPC UA alert in TICK script"
+    assert_condition(tick_result is not None, "Failed to configure OPC UA alert in TICK script")
 
     # Step 2: Upload UDF deployment package
     logger.info("Step 2: Uploading UDF deployment package...")
     upload_result = docker_utils.upload_udf_tar_package(constants.WIND_SAMPLE_APP)
-    assert upload_result == True, "Failed to upload UDF deployment package"
+    assert_condition(upload_result == True, "Failed to upload UDF deployment package")
 
     # Step 3: Configure OPC UA alert in config.json
     logger.info("Step 3: Configuring OPC UA alert in config.json...")
     config_result = docker_utils.update_config_file("opcua")
-    assert config_result == True, "Failed to configure OPC UA alert in config.json"
+    assert_condition(config_result == True, "Failed to configure OPC UA alert in config.json")
     # Cleanup handled by fixture
     
 
@@ -207,7 +209,7 @@ def test_switch_opcua_to_mqtt_ingestion(setup_wind_turbine_environment):
     logger.info("Verifying switch from opcua to mqtt succeeded")
     switch_result = docker_utils.invoke_switch_opcua_mqtt()
     logger.info(f"Switch OPCUA to MQTT result: {switch_result}")
-    assert switch_result == True
+    assert_condition(switch_result == True, "Assertion failed")
     # Cleanup handled by fixture
 
 @pytest.mark.mqtt
@@ -218,8 +220,7 @@ def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
     context["deploy_mqtt"]()
     
     # Poll until service is ready instead of sleeping blindly
-    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
-        "ts-api health endpoint did not become ready before MQTT stability check"
+    assert_condition(docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), "ts-api health endpoint did not become ready before MQTT stability check")
 
     # Check container status
     container_status = docker_utils.restart_containers_and_check_status(ingestion_type="mqtt")
@@ -229,7 +230,7 @@ def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
     failed = {k: v for k, v in container_status.items() if v != "Up"}
     if failed:
         logger.info(f"Containers not running: {failed}")
-    assert all(status == "Up" for status in container_status.values()), f"Not all containers are running. Failed: {failed}"
+    assert_condition(all(status == "Up" for status in container_status.values()), f"Not all containers are running. Failed: {failed}")
     
     # Cleanup handled by fixture
     
@@ -242,8 +243,7 @@ def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     context["deploy_opcua"]()
     
     # Poll until service is ready instead of sleeping blindly
-    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
-        "ts-api health endpoint did not become ready before OPC-UA stability check"
+    assert_condition(docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), "ts-api health endpoint did not become ready before OPC-UA stability check")
 
     # Check container status
     container_status = docker_utils.restart_containers_and_check_status(ingestion_type="opcua")
@@ -253,7 +253,7 @@ def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     failed = {k: v for k, v in container_status.items() if v != "Up"}
     if failed:
         logger.info(f"Containers not running: {failed}")
-    assert all(status == "Up" for status in container_status.values()), f"Not all containers are running. Failed: {failed}"
+    assert_condition(all(status == "Up" for status in container_status.values()), f"Not all containers are running. Failed: {failed}")
     
     # Cleanup handled by fixture
     
@@ -287,7 +287,7 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
         logger.info("Testing INFO log level configuration")
         result_info = common_utils.check_logs_by_level(container_name, "INFO", update_config=True)
         logger.info(f"INFO log level check result: {result_info}")
-        assert result_info == True, "INFO log level verification failed"
+        assert_condition(result_info == True, "INFO log level verification failed")
 
         # Test DEBUG log level with proper container restart
         logger.info("Testing DEBUG log level configuration with container restart")
@@ -299,12 +299,11 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
         logger.info(f"Restarting container {container_name} to apply DEBUG log level...")
         restart_exit_code = docker_utils.restart_container(container_name)
         logger.info(f"Container restart exit code: {restart_exit_code}")
-        assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
+        assert_condition(restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}")
 
         # Poll until service is ready after restart instead of sleeping blindly
         logger.info("Waiting for container to stabilize after restart...")
-        assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
-            f"ts-api health endpoint did not become ready after restarting '{container_name}'"
+        assert_condition(docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), f"ts-api health endpoint did not become ready after restarting '{container_name}'")
 
         # Trigger some activity to generate DEBUG logs by checking container status
         logger.info("Triggering activity to generate DEBUG logs...")
@@ -324,7 +323,7 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
             # Alternative verification: check if container is running and log level was updated
             status_result = docker_utils.check_make_status()
             logger.info(f"Container status result: {status_result}, length: {len(status_result) if status_result else 0}")
-            assert status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update"
+            assert_condition(status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update")
 
             logger.info("Container is running properly with DEBUG log level configuration")
             result_debug = True  # Consider test passed if container is healthy
@@ -371,7 +370,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info("[DEBUG] Phase 1/4: Deploying MQTT stack...")
     deploy_ok = context["deploy_mqtt"]()
     logger.info(f"[DEBUG] deploy_mqtt returned: {deploy_ok}")
-    assert deploy_ok, "MQTT deployment failed before alert validation could start"
+    assert_condition(deploy_ok, "MQTT deployment failed before alert validation could start")
 
     # Phase 2: Pre-validation health checks
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
@@ -383,28 +382,28 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info(f"[DEBUG] Checking TSAM container '{tsam_name}' is running...")
     tsam_running = docker_utils.container_is_running(tsam_name)
     logger.info(f"[DEBUG]   tsam_running={tsam_running}")
-    assert tsam_running, f"TSAM container '{tsam_name}' is not running before MQTT alert validation"
+    assert_condition(tsam_running, f"TSAM container '{tsam_name}' is not running before MQTT alert validation")
 
     logger.info(f"[DEBUG] Checking MQTT broker container '{mqtt_broker_name}' is running...")
     mqtt_broker_running = docker_utils.container_is_running(mqtt_broker_name)
     logger.info(f"[DEBUG]   mqtt_broker_running={mqtt_broker_running}")
-    assert mqtt_broker_running, f"MQTT broker container '{mqtt_broker_name}' is not running before alert validation"
+    assert_condition(mqtt_broker_running, f"MQTT broker container '{mqtt_broker_name}' is not running before alert validation")
 
     logger.info(f"[DEBUG] Checking MQTT publisher container '{mqtt_publisher_name}' is running...")
     mqtt_publisher_running = docker_utils.container_is_running(mqtt_publisher_name)
     logger.info(f"[DEBUG]   mqtt_publisher_running={mqtt_publisher_running}")
-    assert mqtt_publisher_running, f"MQTT publisher container '{mqtt_publisher_name}' is not running before alert validation"
+    assert_condition(mqtt_publisher_running, f"MQTT publisher container '{mqtt_publisher_name}' is not running before alert validation")
 
     logger.info("[DEBUG] Polling ts-api health endpoint until ready...")
     svc_ready = docker_utils.wait_until_service_ready(
         timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT
     )
     logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
-    assert svc_ready, "ts-api health endpoint did not become ready before MQTT alert validation"
+    assert_condition(svc_ready, "ts-api health endpoint did not become ready before MQTT alert validation")
 
     # Snapshot container state for triage
     try:
-        ps_out = subprocess.run(
+        ps_out = common_utils.exec_command(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True, text=True, timeout=15,
         ).stdout.strip()
@@ -423,7 +422,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
 
         # Re-snapshot container state (something may have crashed / restarted)
         try:
-            ps_out = subprocess.run(
+            ps_out = common_utils.exec_command(
                 ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
@@ -435,7 +434,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
         # alert pipeline.  We use --tail to bound output size in CI logs.
         for cname in (tsam_name, mqtt_broker_name, mqtt_publisher_name, telegraf_name):
             try:
-                logs_out = subprocess.run(
+                logs_out = common_utils.exec_command(
                     ["docker", "logs", "--tail", "120", cname],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -448,11 +447,9 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
                 logger.warning(f"[DEBUG] Failed to capture logs for {cname}: {exc}")
 
     logger.info(f"MQTT alert validation result: {validation_result}")
-    assert validation_result == True, (
-        "MQTT alert system validation failed — see [DEBUG] log lines above for "
+    assert_condition(validation_result == True, "MQTT alert system validation failed — see [DEBUG] log lines above for "
         "container state and TSAM/MQTT-broker/MQTT-publisher/Telegraf log tails "
-        "captured at failure time."
-    )
+        "captured at failure time.")
 
     # Cleanup handled by fixture
 
@@ -486,7 +483,7 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
     logger.info("[DEBUG] Phase 1/4: Deploying OPC-UA stack...")
     deploy_ok = context["deploy_opcua"]()
     logger.info(f"[DEBUG] deploy_opcua returned: {deploy_ok}")
-    assert deploy_ok, "OPC-UA deployment failed before alert validation could start"
+    assert_condition(deploy_ok, "OPC-UA deployment failed before alert validation could start")
 
     # Phase 2: Pre-validation health checks
     tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
@@ -496,23 +493,23 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
     logger.info(f"[DEBUG] Checking TSAM container '{tsam_name}' is running...")
     tsam_running = docker_utils.container_is_running(tsam_name)
     logger.info(f"[DEBUG]   tsam_running={tsam_running}")
-    assert tsam_running, f"TSAM container '{tsam_name}' is not running before OPC-UA alert validation"
+    assert_condition(tsam_running, f"TSAM container '{tsam_name}' is not running before OPC-UA alert validation")
 
     logger.info(f"[DEBUG] Checking OPC-UA server container '{opcua_name}' is running...")
     opcua_running = docker_utils.container_is_running(opcua_name)
     logger.info(f"[DEBUG]   opcua_running={opcua_running}")
-    assert opcua_running, f"OPC-UA server container '{opcua_name}' is not running before alert validation"
+    assert_condition(opcua_running, f"OPC-UA server container '{opcua_name}' is not running before alert validation")
 
     logger.info("[DEBUG] Polling ts-api health endpoint until ready...")
     svc_ready = docker_utils.wait_until_service_ready(
         timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT
     )
     logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
-    assert svc_ready, "ts-api health endpoint did not become ready before OPC-UA alert validation"
+    assert_condition(svc_ready, "ts-api health endpoint did not become ready before OPC-UA alert validation")
 
     # Snapshot container state for triage
     try:
-        ps_out = subprocess.run(
+        ps_out = common_utils.exec_command(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True, text=True, timeout=15,
         ).stdout.strip()
@@ -531,7 +528,7 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
 
         # Re-snapshot container state (something may have crashed / restarted)
         try:
-            ps_out = subprocess.run(
+            ps_out = common_utils.exec_command(
                 ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
@@ -543,7 +540,7 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
         # alert pipeline.  We use --tail to bound output size in CI logs.
         for cname in (tsam_name, opcua_name, constants.CONTAINERS["telegraf"]["name"]):
             try:
-                logs_out = subprocess.run(
+                logs_out = common_utils.exec_command(
                     ["docker", "logs", "--tail", "120", cname],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -556,10 +553,8 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
                 logger.warning(f"[DEBUG] Failed to capture logs for {cname}: {exc}")
 
     logger.info(f"OPCUA alert validation result: {validation_result}")
-    assert validation_result == True, (
-        "OPCUA alert system validation failed — see [DEBUG] log lines above for "
-        "container state and TSAM/OPC-UA/Telegraf log tails captured at failure time."
-    )
+    assert_condition(validation_result == True, "OPCUA alert system validation failed — see [DEBUG] log lines above for "
+        "container state and TSAM/OPC-UA/Telegraf log tails captured at failure time.")
 
     # Cleanup handled by fixture
     
@@ -573,15 +568,14 @@ def test_influxdb_data_with_mqtt(setup_wind_turbine_environment):
 
     # Poll until service is ready before querying InfluxDB
     logger.info("Polling until service is ready and data is flowing...")
-    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
-        "ts-api health endpoint did not become ready before querying InfluxDB (MQTT)"
+    assert_condition(docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), "ts-api health endpoint did not become ready before querying InfluxDB (MQTT)")
 
     # Test InfluxDB data retrieval
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
 
     # Check if the data retrieval was successful (not None)
     logger.info(f"InfluxDB MQTT data retrieval result: {influxdb_data is not None}, data: {influxdb_data}")
-    assert influxdb_data is not None, "InfluxDB data retrieval failed"
+    assert_condition(influxdb_data is not None, "InfluxDB data retrieval failed")
     
     # Cleanup handled by fixture
     
@@ -596,15 +590,14 @@ def test_influxdb_data_with_opcua(setup_wind_turbine_environment):
 
     # Poll until service is ready before querying InfluxDB
     logger.info("Polling until service is ready and data is flowing...")
-    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
-        "ts-api health endpoint did not become ready before querying InfluxDB (OPC-UA)"
+    assert_condition(docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), "ts-api health endpoint did not become ready before querying InfluxDB (OPC-UA)")
 
     # Test InfluxDB data retrieval
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
 
     # Check if the data retrieval was successful (not None)
     logger.info(f"InfluxDB OPCUA data retrieval result: {influxdb_data is not None}, data: {influxdb_data}")
-    assert influxdb_data is not None, "InfluxDB data retrieval failed"
+    assert_condition(influxdb_data is not None, "InfluxDB data retrieval failed")
 
     # Print the actual data for verification
     if influxdb_data:
@@ -661,15 +654,13 @@ def test_opcua_multi_stream_ingestion(setup_wind_turbine_environment):
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Deployed containers: {containers}")
         logger.info(f"Containers found after multi-stream deployment: {len(containers) if containers else 0}")
-        assert containers, "No containers found after multi-stream deployment"
+        assert_condition(containers, "No containers found after multi-stream deployment")
         
         # Verify we have the expected OPC-UA server containers (should be multiple for multi-stream)
         opcua_containers = [c for c in containers if 'opcua-server' in c]
         logger.info(f"Found {len(opcua_containers)} OPC-UA server containers: {opcua_containers}")
-        assert len(opcua_containers) == num_streams, (
-            f"Expected {num_streams} OPC-UA server containers for multi-stream deployment, "
-            f"found {len(opcua_containers)}: {opcua_containers}"
-        )
+        assert_condition(len(opcua_containers) == num_streams, f"Expected {num_streams} OPC-UA server containers for multi-stream deployment, "
+            f"found {len(opcua_containers)}: {opcua_containers}")
         
         # Run make status check before declaring success
         logger.info("Running make status check to verify deployment health...")
@@ -685,7 +676,7 @@ def test_opcua_multi_stream_ingestion(setup_wind_turbine_environment):
         test_result = False
     
     logger.info(f"OPC-UA multi-stream test result: {test_result}")
-    assert test_result == True, f"OPC-UA multi-stream deployment with {num_streams} streams failed"
+    assert_condition(test_result == True, f"OPC-UA multi-stream deployment with {num_streams} streams failed")
     # No manual cleanup needed - handled by fixture
 
 
@@ -709,15 +700,13 @@ def test_mqtt_multi_stream_ingestion(setup_wind_turbine_environment):
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Deployed containers: {containers}")
         logger.info(f"Containers found after MQTT multi-stream deployment: {len(containers) if containers else 0}")
-        assert containers, "No containers found after multi-stream deployment"
+        assert_condition(containers, "No containers found after multi-stream deployment")
         
         # Verify we have the expected MQTT publisher containers (should be multiple for multi-stream)
         mqtt_containers = [c for c in containers if 'mqtt-publisher' in c]
         logger.info(f"Found {len(mqtt_containers)} MQTT publisher containers: {mqtt_containers}")
-        assert len(mqtt_containers) == num_streams, (
-            f"Expected {num_streams} MQTT publisher containers for multi-stream deployment, "
-            f"found {len(mqtt_containers)}: {mqtt_containers}"
-        )
+        assert_condition(len(mqtt_containers) == num_streams, f"Expected {num_streams} MQTT publisher containers for multi-stream deployment, "
+            f"found {len(mqtt_containers)}: {mqtt_containers}")
         
         # Run make status check before declaring success
         logger.info("Running make status check to verify deployment health...")
@@ -734,7 +723,7 @@ def test_mqtt_multi_stream_ingestion(setup_wind_turbine_environment):
 
     
     logger.info(f"MQTT multi-stream test result: {test_result}")
-    assert test_result == True, f"MQTT multi-stream deployment with {num_streams} streams failed"
+    assert_condition(test_result == True, f"MQTT multi-stream deployment with {num_streams} streams failed")
     # No manual cleanup needed - handled by fixture
 
 
@@ -760,22 +749,22 @@ def test_opcua_multi_stream_scalability(setup_wind_turbine_environment):
             # Step 1: Configure OPC UA alert in TICK script
             logger.info(f"Step 1: Configuring OPC UA alert in TICK script for {num_streams} streams...")
             tick_result = docker_utils.check_and_update_tick_script(setup="opcua")
-            assert tick_result is not None, f"Failed to configure OPC UA alert in TICK script for {num_streams} streams"
+            assert_condition(tick_result is not None, f"Failed to configure OPC UA alert in TICK script for {num_streams} streams")
 
             # Step 2: Upload UDF deployment package
             logger.info(f"Step 2: Uploading UDF deployment package for {num_streams} streams...")
             upload_result = docker_utils.upload_udf_tar_package(constants.WIND_SAMPLE_APP)
-            assert upload_result == True, f"Failed to upload UDF deployment package for {num_streams} streams"
+            assert_condition(upload_result == True, f"Failed to upload UDF deployment package for {num_streams} streams")
 
             # Step 3: Configure OPC UA alert in config.json
             logger.info(f"Step 3: Configuring OPC UA alert in config.json for {num_streams} streams...")
             config_result = docker_utils.update_config_file("opcua")
-            assert config_result == True, f"Failed to configure OPC UA alert in config.json for {num_streams} streams"
+            assert_condition(config_result == True, f"Failed to configure OPC UA alert in config.json for {num_streams} streams")
 
             # Verify containers are running
             containers = docker_utils.get_the_deployed_containers()
             logger.info(f"Deployed containers for {num_streams} streams: {len(containers)} total")
-            assert containers, f"No containers found after deployment with {num_streams} streams"
+            assert_condition(containers, f"No containers found after deployment with {num_streams} streams")
             
             # Run make status check before declaring success
             logger.info("Running make status check to verify deployment health...")
@@ -791,7 +780,7 @@ def test_opcua_multi_stream_scalability(setup_wind_turbine_environment):
             test_result = False
         
         logger.info(f"OPC-UA scalability test result for {num_streams} streams: {test_result}")
-        assert test_result == True, f"OPC-UA multi-stream deployment with {num_streams} streams failed"
+        assert_condition(test_result == True, f"OPC-UA multi-stream deployment with {num_streams} streams failed")
         
         # Clean up between different stream counts (except the last one)
         if num_streams != stream_counts[-1]:
@@ -824,7 +813,7 @@ def test_mqtt_multi_stream_scalability(setup_wind_turbine_environment):
             # Verify containers are running
             containers = docker_utils.get_the_deployed_containers()
             logger.info(f"Deployed containers for {num_streams} streams: {len(containers)} total")
-            assert containers, f"No containers found after deployment with {num_streams} streams"
+            assert_condition(containers, f"No containers found after deployment with {num_streams} streams")
             
             # Run make status check before declaring success
             logger.info("Running make status check to verify deployment health...")
@@ -840,7 +829,7 @@ def test_mqtt_multi_stream_scalability(setup_wind_turbine_environment):
             test_result = False
 
         logger.info(f"MQTT scalability test result for {num_streams} streams: {test_result}")
-        assert test_result == True, f"MQTT multi-stream deployment with {num_streams} streams failed"
+        assert_condition(test_result == True, f"MQTT multi-stream deployment with {num_streams} streams failed")
         
         # Clean up between different stream counts (except the last one)
         if num_streams != stream_counts[-1]:
@@ -872,10 +861,8 @@ def test_mqtt_deployment_time_kpi(setup_wind_turbine_environment):
     
     # Verify KPIs are met
     logger.info(f"MQTT deployment KPI results: success_rate={success_rate}%, avg_time={avg_time:.2f}s, min={min_time:.2f}s, max={max_time:.2f}s")
-    assert success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, \
-        f"Success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
-    assert avg_time <= constants.KPI_DEPLOYMENT_TIME_THRESHOLD, \
-        f"Average time {avg_time:.2f}s exceeds threshold of {constants.KPI_DEPLOYMENT_TIME_THRESHOLD}s"
+    assert_condition(success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, f"Success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%")
+    assert_condition(avg_time <= constants.KPI_DEPLOYMENT_TIME_THRESHOLD, f"Average time {avg_time:.2f}s exceeds threshold of {constants.KPI_DEPLOYMENT_TIME_THRESHOLD}s")
 
 
 @pytest.mark.kpi
@@ -899,10 +886,8 @@ def test_opcua_deployment_time_kpi(setup_wind_turbine_environment):
     
     # Verify KPIs are met
     logger.info(f"OPCUA deployment KPI results: success_rate={success_rate}%, avg_time={avg_time:.2f}s, min={min_time:.2f}s, max={max_time:.2f}s")
-    assert success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, \
-        f"Success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
-    assert avg_time <= constants.KPI_DEPLOYMENT_TIME_THRESHOLD, \
-        f"Average time {avg_time:.2f}s exceeds threshold of {constants.KPI_DEPLOYMENT_TIME_THRESHOLD}s"
+    assert_condition(success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, f"Success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%")
+    assert_condition(avg_time <= constants.KPI_DEPLOYMENT_TIME_THRESHOLD, f"Average time {avg_time:.2f}s exceeds threshold of {constants.KPI_DEPLOYMENT_TIME_THRESHOLD}s")
 
 
 @pytest.mark.kpi
@@ -925,7 +910,7 @@ def test_container_sizes_kpi(setup_wind_turbine_environment):
     logger.info("Building Docker images...")
     build_success, build_output = docker_utils.invoke_make_build()
     logger.info(f"Docker build result: success={build_success}")
-    assert build_success, f"Docker build failed: {build_output}"
+    assert_condition(build_success, f"Docker build failed: {build_output}")
     logger.info("Docker build completed successfully")
     
     # Now check the sizes of the built images
@@ -937,7 +922,7 @@ def test_container_sizes_kpi(setup_wind_turbine_environment):
         check_deployed_only=False
     )
     logger.info(f"Image size check result: success={success}, message={message}")
-    assert success, message
+    assert_condition(success, message)
 
 
 @pytest.mark.kpi
@@ -960,10 +945,8 @@ def test_build_time_kpi(setup_wind_turbine_environment):
     
     # Verify KPIs are met
     logger.info(f"Build KPI results: success_rate={success_rate}%, avg_time={avg_time:.2f}s, min={min_time:.2f}s, max={max_time:.2f}s")
-    assert success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, \
-        f"Build success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
-    assert avg_time <= constants.KPI_BUILD_TIME_THRESHOLD, \
-        f"Average build time {avg_time:.2f}s exceeds threshold of {constants.KPI_BUILD_TIME_THRESHOLD}s"
+    assert_condition(success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, f"Build success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%")
+    assert_condition(avg_time <= constants.KPI_BUILD_TIME_THRESHOLD, f"Average build time {avg_time:.2f}s exceeds threshold of {constants.KPI_BUILD_TIME_THRESHOLD}s")
 
 
 
@@ -983,7 +966,7 @@ def test_nginx_proxy_integration_wind_turbine(setup_wind_turbine_environment):
     
     # Assert overall success or direct access validation
     logger.info(f"Nginx proxy integration result: success={nginx_results['success']}, errors={nginx_results.get('errors')}")
-    assert nginx_results["success"], f"Nginx proxy integration failed: {nginx_results['errors']}"
+    assert_condition(nginx_results["success"], f"Nginx proxy integration failed: {nginx_results['errors']}")
     
     if nginx_results["nginx_available"]:
         logger.info("✓ Nginx proxy integration validated successfully")

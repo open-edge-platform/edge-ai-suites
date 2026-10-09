@@ -16,6 +16,13 @@ LAUNCH_FILE = os.path.join(
     'realsense2_tutorial.launch.py',
 )
 
+FIND_CAMERAS_SCRIPT = os.path.join(
+    os.path.dirname(__file__),
+    '..',
+    'scripts',
+    'find_cameras.sh',
+)
+
 
 def test_launch_file_exists():
     """The launch file must exist on disk."""
@@ -44,10 +51,24 @@ def test_launch_file_has_generate_function():
     )
 
 
-def test_launch_file_declares_use_usb_camera_arg():
-    """The launch file must declare the use_usb_camera argument."""
+def test_launch_file_declares_camera_type_arg():
+    """The launch file must declare the camera_type argument."""
     with open(LAUNCH_FILE, 'r', encoding='utf-8') as fh:
         source = fh.read()
-    assert 'use_usb_camera' in source, (  # nosec B101
-        "Expected 'use_usb_camera' argument declaration in launch file"
+    assert 'camera_type' in source, (  # nosec B101
+        "Expected 'camera_type' argument declaration in launch file"
+    )
+
+
+def test_find_cameras_script_exists():
+    """The find_cameras.sh helper must exist on disk."""
+    assert os.path.isfile(FIND_CAMERAS_SCRIPT), (  # nosec B101
+        f'find_cameras.sh not found: {FIND_CAMERAS_SCRIPT}'
+    )
+
+
+def test_find_cameras_script_executable():
+    """The find_cameras.sh helper must be executable."""
+    assert os.access(FIND_CAMERAS_SCRIPT, os.X_OK), (  # nosec B101
+        f'find_cameras.sh is not executable: {FIND_CAMERAS_SCRIPT}'
     )

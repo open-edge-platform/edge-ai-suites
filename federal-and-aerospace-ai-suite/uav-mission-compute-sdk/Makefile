@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 SHELL := bash -eu -o pipefail
-.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-ethernet down down-ethernet build build-nc logs ps apps apps-down apps-logs clean clean-all deps clean-venv bench bench-bridge-sweep help
+.PHONY: init up-sim-camera up-sim-camera-lean up-sim-camera-mono up-sim-camera-mono-lean up-usb-camera-lean up-realsense-camera up-realsense-camera-lean up-ethernet down down-ethernet build build-nc logs ps stats apps apps-down apps-logs clean clean-all deps clean-venv bench bench-client-sweep bench-bridge-sweep bench-all help
 
 # ── Deployment mode flag ───────────────────────────────────────────────────
 # FC_IP must be set for ethernet mode (IP of FC machine running mavlink-router)
@@ -14,26 +14,60 @@ COMPOSE_APPS    := docker compose --env-file .env -f sample-apps/docker-compose.
 
 # ── Environment file ──────────────────────────────────────────────────────
 init:
-	@# Help: Create .env from .env.example and auto-detect GPU devices
-	@if test -f .env; then \
-		echo ".env already exists — skipping"; \
-	else \
+	@# Help: Create .env from .env.example, populate required credentials, and auto-detect GPU/RealSense devices
+	@if [ ! -f .env ]; then \
 		cp .env.example .env; \
 		echo ".env created"; \
-		if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
-			GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
-			if [ -n "$$GPU_RENDER" ]; then \
-				GPU_RENDER_GID=$$(stat -c "%g" "$$GPU_RENDER" 2>/dev/null); \
-				echo "✅ GPU devices detected. Adding to .env:"; \
-				echo "   GPU_DEVICE=$$GPU_CARD"; \
-				echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
-				echo "   GPU_RENDER_GID=$$GPU_RENDER_GID"; \
-				echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
-				echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
-				echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
-			fi; \
+	fi; \
+	set_if_empty() { \
+		key="$$1"; value="$$2"; \
+		if ! grep -qE "^$$key=.+$$" .env 2>/dev/null; then \
+			sed -i "/^$$key=/d" .env; \
+			echo "$$key=$$value" >> .env; \
+		fi; \
+	}; \
+	uav_id="uav-1"; \
+	influxdb_password="$$(openssl rand -hex 16)"; \
+	influxdb_token="$$(openssl rand -hex 32)"; \
+	influxdb_org="uav-sdk"; \
+	grafana_password="$$(openssl rand -hex 12)"; \
+	set_if_empty "UAV_ID" "$$uav_id"; \
+	set_if_empty "INFLUXDB_PASSWORD" "$$influxdb_password"; \
+	set_if_empty "INFLUXDB_TOKEN" "$$influxdb_token"; \
+	set_if_empty "INFLUXDB_ORG" "$$influxdb_org"; \
+	set_if_empty "GRAFANA_PASSWORD" "$$grafana_password"; \
+	echo "Generated default credentials in .env"; \
+	if GPU_CARD=$$(ls -1 /dev/dri/card* 2>/dev/null | head -1); then \
+		GPU_RENDER=$$(ls -1 /dev/dri/renderD* 2>/dev/null | head -1); \
+		if [ -n "$$GPU_RENDER" ]; then \
+			GPU_RENDER_GID=$$(stat -c "%g" "$$GPU_RENDER" 2>/dev/null); \
+			echo "✅ GPU devices detected. Adding to .env:"; \
+			echo "   GPU_DEVICE=$$GPU_CARD"; \
+			echo "   GPU_RENDER_DEVICE=$$GPU_RENDER"; \
+			echo "   GPU_RENDER_GID=$$GPU_RENDER_GID"; \
+			sed -i '/^GPU_DEVICE=/d' .env; \
+			sed -i '/^GPU_RENDER_DEVICE=/d' .env; \
+			sed -i '/^GPU_RENDER_GID=/d' .env; \
+			echo "GPU_DEVICE=$$GPU_CARD" >> .env; \
+			echo "GPU_RENDER_DEVICE=$$GPU_RENDER" >> .env; \
+			echo "GPU_RENDER_GID=$$GPU_RENDER_GID" >> .env; \
 		fi; \
 	fi
+	@if command -v v4l2-ctl >/dev/null 2>&1; then \
+		sed -i '/^RS_VIDEO[0-9]*=/d;/^RS_MEDIA[0-9]*=/d' .env; \
+		RS_NODES="$$(v4l2-ctl --list-devices 2>/dev/null | awk '/RealSense/{grab=1;next} /^$$/{grab=0} grab && /\/dev\//{print $$1}')"; \
+		if [ -n "$$RS_NODES" ]; then \
+			echo "✅ RealSense camera detected. Adding device nodes to .env:"; \
+			i=0; j=0; \
+			for dev in $$RS_NODES; do \
+				case "$$dev" in \
+					*/video*) echo "RS_VIDEO$$i=$$dev" >> .env; echo "   RS_VIDEO$$i=$$dev"; i=$$((i+1));; \
+					*/media*) echo "RS_MEDIA$$j=$$dev" >> .env; echo "   RS_MEDIA$$j=$$dev"; j=$$((j+1));; \
+				esac; \
+			done; \
+		fi; \
+	fi
+	@bash infra/scripts/harden-permissions.sh
 
 # ── Local simulation mode (default) ───────────────────────────────────────
 # Camera mode is controlled via .env. Each target below sets every relevant
@@ -85,6 +119,18 @@ up-usb-camera-lean:
 		&& sed -i '/^VISION_CAMERA_IDS=/d' .env && echo 'VISION_CAMERA_IDS=nadir' >> .env
 	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile usb-camera up -d --build
 
+up-realsense-camera:
+	@# Help: Start core infra with Intel RealSense camera (IR + depth, beyond-visual-spectrum) + lightweight PX4 SIH
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile realsense-camera --profile observability up -d --build
+
+up-realsense-camera-lean:
+	@# Help: Start realsense-camera without observability stack (saves ~300 MB RAM)
+	@touch .env \
+		&& sed -i '/^COMPANION_BRIDGE_URL=/d' .env && echo 'COMPANION_BRIDGE_URL=http://px4-sitl:8080' >> .env
+	PX4_NETWORK_SERVICE=px4-sih $(COMPOSE_LOCAL) --profile realsense-camera up -d --build
+
 build:
 	@# Help: Build all images (core infra + apps), using Docker layer cache
 	$(COMPOSE_LOCAL) build
@@ -96,9 +142,9 @@ build-nc:
 	$(COMPOSE_APPS) build --no-cache
 
 down:
-	@# Help: Stop all containers — core infra (sim-camera/usb-camera) + apps
+	@# Help: Stop all containers — core infra (sim-camera/usb-camera/realsense-camera) + apps
 	$(COMPOSE_APPS) down --remove-orphans
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans
 
 logs:
 	@# Help: Tail logs for core infra
@@ -107,6 +153,10 @@ logs:
 ps:
 	@# Help: Show service status (core infra)
 	$(COMPOSE_LOCAL) ps
+
+stats:
+	@# Help: On-demand CPU/memory per container + host GPU/NPU/power snapshot (terminal, Grafana optional)
+	@bash infra/scripts/stats.sh
 
 # ── Sample apps + AI helpers ──────────────────────────────────────────────
 apps:
@@ -146,15 +196,16 @@ deploy-remote:
 # ── Misc ──────────────────────────────────────────────────────────────────
 clean:
 	@# Help: Remove stopped containers and dangling images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans
 	docker image prune -f
 
 clean-all:
 	@# Help: Remove containers, compose volumes, and all unused images
-	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile observability down --remove-orphans --volumes
+	$(COMPOSE_LOCAL) --profile sim-camera --profile usb-camera --profile realsense-camera --profile observability down --remove-orphans --volumes
 	docker image prune -a -f
 
 help:
+	@# Help: Show available make targets and their descriptions
 	@printf "%-20s %s\n" "Target" "Description"
 	@printf "%-20s %s\n" "------" "-----------"
 	@make -pqR : 2>/dev/null \
@@ -162,8 +213,8 @@ help:
 	    {if ($$1 !~ "^[#.]") {print $$1}}' \
 	  | sort \
 	  | grep -Ev -e '^[^[:alnum:]]' -e '^$$' \
-	  | xargs -I _ sh -c 'printf "%-20s " _; make _ -nB 2>/dev/null \
-	    | (grep -i "^# Help:" || echo "") | tail -1 | sed "s/^# Help: //g"'
+	  | xargs -I _ sh -c 'printf "%-20s " _; (make _ -nB 2>/dev/null || true) \
+	    | (grep -i "^# Help:" || echo "") | tail -1 | sed "s/^# Help: //g"' || true
 
 # Python env for host-side scripts (benchmarks, missions)
 VENV := .venv
@@ -171,7 +222,8 @@ PY   := $(VENV)/bin/python
 PIP  := $(VENV)/bin/pip
 REQ  := requirements.txt
 
-deps: $(VENV)/.installed  ## Install Python deps into a local .venv (uv if present, else python3-venv)
+deps: $(VENV)/.installed
+	@# Help: Install Python deps into a local .venv (uv if present, else python3-venv) fro benchmarks
 	@echo ""
 	@echo "Deps installed in $(VENV)."
 
@@ -194,18 +246,32 @@ $(VENV)/.installed: $(REQ)
 	fi
 	@touch $@
 
-bench:  ## Run the MAVLink->MQTT telemetry benchmark (stack must be running); pass args with ARGS="--duration 30 --clients 4"
+bench:
+	@# Help: Run the MAVLink->MQTT telemetry benchmark (stack must be running)
 	$(PY) benchmarks/benchmark_mavlink_mqtt.py $(ARGS)
 
 # SWEEP_DURATION: measurement window per tier in seconds
 SWEEP_DURATION ?= 10
 
+# CLIENT_SWEEP_COUNTS: subscriber counts for client scaling tiers
+CLIENT_SWEEP_COUNTS ?= 1,2,5,10,25,50,100
+
+bench-client-sweep:
+	@# Help: Client scaling sweep across subscriber counts; tune with CLIENT_SWEEP_COUNTS and SWEEP_DURATION
+	$(PY) benchmarks/benchmark_mavlink_mqtt.py --client-sweep $(ARGS) --client-sweep-counts $(CLIENT_SWEEP_COUNTS) --sweep-duration $(SWEEP_DURATION)
+
 # BRIDGE_SWEEP_RATES: caps applied to attitude/velocity/position on each tier
 BRIDGE_SWEEP_RATES ?= 20,50,100,200
-bench-bridge-sweep:  ## End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency. Requires `make up-sim-camera` and uav armed. Tune with BRIDGE_SWEEP_RATES="20,50,100,200" SWEEP_DURATION=15
-	$(PY) benchmarks/benchmark_mavlink_mqtt.py --bridge-sweep --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION) $(ARGS)
+bench-bridge-sweep:
+	@# Help: End-to-end stress: recreates companion-bridge with escalating RATE_*_HZ caps and measures observed rate/latency
+	$(PY) benchmarks/benchmark_mavlink_mqtt.py --bridge-sweep $(ARGS) --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION)
 
-clean-venv:  ## Remove the local .venv
+bench-all:
+	@# Help: Run client sweep + bridge sweep in one invocation
+	$(PY) benchmarks/benchmark_mavlink_mqtt.py --client-sweep --bridge-sweep $(ARGS) --client-sweep-counts $(CLIENT_SWEEP_COUNTS) --sweep-rates $(BRIDGE_SWEEP_RATES) --sweep-duration $(SWEEP_DURATION)
+
+clean-venv:
+	@# Help: Remove the local .venv
 	rm -rf $(VENV)
 
 .DEFAULT_GOAL := help

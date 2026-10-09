@@ -4,8 +4,8 @@
 from ..config import (
     LLM_MODEL_ID,
 )
-from ..llm import initialize_llm
-from ..logger import logger
+from .llm import initialize_llm
+from ..utils.logger import logger
 from .embedding import CaptionEmbeddings
 from .prompt import get_prompt_template
 from langchain_core.prompts import ChatPromptTemplate

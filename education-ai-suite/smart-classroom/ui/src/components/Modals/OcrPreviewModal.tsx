@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import closeIcon from "../../assets/images/close_frame.svg";
 import "../../assets/css/OcrPreviewModal.css";
+import { useTitleBarTheme } from "../../hooks/useTitleBarTheme";
 
 interface OcrPreviewModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
   onDownload,
 }) => {
   const { t } = useTranslation();
+  useTitleBarTheme(isOpen, 'dimmed');
 
   if (!isOpen) return null;
 

@@ -17,4 +17,5 @@ def build_diarizer():
         return CamPlusPlusDiarizer()
 
     from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
-    return PyannoteDiarizer(hf_token=config.models.asr.hf_token)
+    from utils.ensure_model import normalize_hf_token
+    return PyannoteDiarizer(hf_token=normalize_hf_token(config.models.asr.hf_token))

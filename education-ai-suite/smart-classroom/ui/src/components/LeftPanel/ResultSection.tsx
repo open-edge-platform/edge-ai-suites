@@ -5,6 +5,7 @@ import "../../assets/css/ResultSection.css";
 import searchIcon from "../../assets/images/search-icon.svg";
 import { formatSecondsToTime } from "../../utils/timeUtils";
 import { csDownloadUrl, extractFileKey } from "../../services/api";
+import { useTitleBarTheme } from "../../hooks/useTitleBarTheme";
 
 // Content Search API types
 export interface CsSearchParams {
@@ -266,6 +267,7 @@ const PreviewModal: React.FC<{ result: SearchResult; onClose: () => void }> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  useTitleBarTheme(true, 'dimmed');
   const meta = result?.meta || {};
   const fileName = meta.file_name || getFileName(result);
   const fileType = meta.type;

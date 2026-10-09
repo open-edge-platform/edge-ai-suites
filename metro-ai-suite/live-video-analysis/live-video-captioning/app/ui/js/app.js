@@ -25,6 +25,11 @@
         runsContainer: document.getElementById('runsContainer'),
         themeToggle: document.getElementById('themeToggle'),
         chatToggle: document.getElementById('chatToggle'),
+        chatPanel: document.getElementById('chatPanel'),
+        chatPanelBackdrop: document.getElementById('chatPanelBackdrop'),
+        chatPanelClose: document.getElementById('chatPanelClose'),
+        chatIframe: document.getElementById('chatIframe'),
+        chatPanelExpand: document.getElementById('chatPanelExpand'),
         detectionModelField: document.getElementById('detectionModelField'),
         detectionThresholdField: document.getElementById('detectionThresholdField'),
         detectionDeviceSelect: document.getElementById('detectionDeviceSelect'),
@@ -53,18 +58,150 @@
         hasSavedVlmDevicePreference: false,
         hasGpuDevice: null,
         hasNpuDevice: null,
+        isChatPanelExpanded: false,
     };
     const CHAT_TAB_NAME = 'Live Caption RAG Dashboard';
+    const CHATBOT_MODE_EMBEDDED = 'embedded';
+    const CHAT_PANEL_EXPANDED_STORAGE_KEY = 'lvc_chat_panel_expanded_v1';
+
+    function getChatUrl() {
+        return `http://${window.location.hostname}:${cfg.liveVideoRagHostPort}`;
+    }
+
+    function getEmbeddedChatUrl() {
+        const url = new URL(getChatUrl(), window.location.origin);
+        url.searchParams.set('theme', getCurrentTheme());
+        return url.toString();
+    }
+
+    function getChatOrigin() {
+        try {
+            return new URL(getChatUrl(), window.location.origin).origin;
+        } catch (_e) {
+            return '*';
+        }
+    }
+
+    function getCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    }
+
+    function syncThemeToChatIframe() {
+        if (!els.chatIframe?.contentWindow) return;
+        const message = { type: 'LVC_THEME_SYNC', theme: getCurrentTheme() };
+        try {
+            els.chatIframe.contentWindow.postMessage(message, getChatOrigin());
+        } catch (_e) {
+            // No-op: iframe may not be ready yet.
+        }
+    }
+
+    function isSameTabChatMode() {
+        return (cfg.ragChatbotMode || '').toLowerCase() === CHATBOT_MODE_EMBEDDED;
+    }
+
+    function openChatInNewTab() {
+        const chatWindow = window.open(getChatUrl(), CHAT_TAB_NAME);
+        if (chatWindow) {
+            chatWindow.focus();
+        }
+    }
+
+    function setChatPanelExpanded(expanded, persist = true) {
+        state.isChatPanelExpanded = expanded === true;
+        if (els.chatPanel) {
+            els.chatPanel.classList.toggle('is-expanded', state.isChatPanelExpanded);
+        }
+        if (els.chatPanelExpand) {
+            const label = state.isChatPanelExpanded ? 'Minimize' : 'Maximize';
+            els.chatPanelExpand.setAttribute('aria-pressed', state.isChatPanelExpanded ? 'true' : 'false');
+            els.chatPanelExpand.setAttribute('aria-label', label);
+            els.chatPanelExpand.setAttribute('title', label);
+        }
+        if (persist) {
+            try {
+                localStorage.setItem(CHAT_PANEL_EXPANDED_STORAGE_KEY, state.isChatPanelExpanded ? '1' : '0');
+            } catch (_e) { /* ignore localStorage failures */ }
+        }
+    }
+
+    function initChatPanelExpansionMode() {
+        let expanded = false;
+        try {
+            expanded = localStorage.getItem(CHAT_PANEL_EXPANDED_STORAGE_KEY) === '1';
+        } catch (_e) { /* ignore localStorage failures */ }
+        setChatPanelExpanded(expanded, false);
+
+        els.chatPanelExpand?.addEventListener('click', () => {
+            setChatPanelExpanded(!state.isChatPanelExpanded, true);
+        });
+    }
+
+    function setChatPanelOpen(open) {
+        if (!els.chatPanel || !els.chatToggle) return false;
+        els.chatPanel.classList.toggle('open', open);
+        els.chatPanel.setAttribute('aria-hidden', open ? 'false' : 'true');
+        els.chatToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        return true;
+    }
+
+    function openEmbeddedChatPanel() {
+        if (!els.chatPanel || !els.chatIframe) return false;
+        if (!els.chatIframe.src) {
+            els.chatIframe.src = getEmbeddedChatUrl();
+        }
+        const opened = setChatPanelOpen(true);
+        syncThemeToChatIframe();
+        return opened;
+    }
+
+    function closeEmbeddedChatPanel() {
+        return setChatPanelOpen(false);
+    }
+
+    function toggleEmbeddedChatPanel() {
+        if (!els.chatPanel) return false;
+        const isOpen = els.chatPanel.classList.contains('open');
+        if (isOpen) {
+            return closeEmbeddedChatPanel();
+        }
+        return openEmbeddedChatPanel();
+    }
+
+    function syncChatTooltip() {
+        if (!els.chatToggle) return;
+        const tooltipText = isSameTabChatMode()
+            ? 'Open RAG Chatbot'
+            : 'Open RAG Chatbot in new tab';
+        els.chatToggle.setAttribute('data-tooltip', tooltipText);
+    }
 
     (function initChatToggleVisibility() {
         if (cfg.enableEmbedding !== true) {
             setSectionVisible(els.chatToggle, false);
         } else if (els.chatToggle) {
+            initChatPanelExpansionMode();
+            syncChatTooltip();
             els.chatToggle.addEventListener('click', () => {
-                const chatUrl = `http://${window.location.hostname}:${cfg.liveVideoRagHostPort}`;
-                const chatWindow = window.open(chatUrl, CHAT_TAB_NAME);
-                if (chatWindow) {
-                    chatWindow.focus();
+                if (isSameTabChatMode()) {
+                    const handled = toggleEmbeddedChatPanel();
+                    if (!handled) {
+                        openChatInNewTab();
+                    }
+                    return;
+                }
+                openChatInNewTab();
+            });
+
+            els.chatPanelClose?.addEventListener('click', closeEmbeddedChatPanel);
+            els.chatPanelBackdrop?.addEventListener('click', closeEmbeddedChatPanel);
+            els.chatIframe?.addEventListener('load', () => {
+                syncThemeToChatIframe();
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    closeEmbeddedChatPanel();
                 }
             });
         }
@@ -1157,10 +1294,12 @@
         }
 
         ThemeManager.applyTheme(ThemeManager.detectInitialTheme(), els.themeToggle);
+        syncThemeToChatIframe();
         if (els.themeToggle) {
             els.themeToggle.addEventListener('click', () => {
                 ThemeManager.toggleTheme(els.themeToggle);
                 ChartManager.updateChartColors();
+                syncThemeToChatIframe();
             });
         }
 

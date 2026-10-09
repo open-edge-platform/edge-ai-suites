@@ -28,7 +28,7 @@ spec:
         - name: {{ .Values.vlmOpenvinoServing.name }}
           # Published upstream image, pinned deliberately. It is not built from
           # this repository, so global.registry is intentionally not applied.
-          image: "intel/vlm-openvino-serving:2026.2.0-20260807-weekly"
+          image: "intel/vlm-openvino-serving:2026.2.0"
           imagePullPolicy: {{ .Values.vlmOpenvinoServing.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.vlmOpenvinoServing.service.targetPort }}

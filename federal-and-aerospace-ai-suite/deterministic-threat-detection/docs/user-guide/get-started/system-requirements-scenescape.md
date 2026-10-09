@@ -15,4 +15,5 @@
 | **MOXA TSN Switch** | Managed switch supporting IEEE 802.1AS (gPTP), IEEE 802.1Qbv (Time-Aware Shaper), and IEEE 1588v2 |
 | **Arrow Lake Host Machine** | Linux-based system with an Intel i226 TSN-capable network card |
 
-> **Note:** You can use either Basler cameras or RTSP cameras for this workflow. Basler cameras provide hardware PTP timestamps, while RTSP cameras rely on software timestamps or NTP synchronization.
+> [!NOTE]
+> You can use either Basler cameras or RTSP cameras for this workflow. Basler cameras provide hardware PTP timestamps, while RTSP cameras rely on software timestamps or NTP synchronization.

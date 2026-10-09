@@ -12,6 +12,7 @@ import sys
 import aiohttp
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils')))
 import helm_utils
+import common_utils
 import yaml
 import secrets
 import string
@@ -153,7 +154,7 @@ def influxdb_login(namespace, chart_path):
             namespace,
             pod_name,
         )
-        result = subprocess.run(
+        result = common_utils.exec_command(
             [
                 "kubectl", "exec", "-n", namespace, pod_name, "--",
                 "influx", "-username", influxdb_username, "-password", influxdb_password,
@@ -179,7 +180,7 @@ def influxdb_login(namespace, chart_path):
 def check_pod_logs_for_creds(namespace, pod_name, creds):
     """Check pod logs for credentials."""
     try:
-        result = subprocess.run(
+        result = common_utils.exec_command(
             ["kubectl", "logs", pod_name, "-n", namespace, "--tail=100"],
             capture_output=True, text=True, check=True
         )
@@ -236,7 +237,7 @@ def find_exposed_ports_helm(namespace):
 
     # Run the kubectl command to get the services
     try:
-        result = subprocess.run(
+        result = common_utils.exec_command(
             ['kubectl', 'get', 'svc', '--namespace', namespace],
             capture_output=True,
             text=True,
@@ -263,7 +264,7 @@ def find_exposed_ports_helm(namespace):
         
 def find_exposed_ports_docker():
     # Run the docker ps command and capture the output
-    result = subprocess.run(
+    result = common_utils.exec_command(
         ["docker", "ps", "--format", "table {{.Names}}\t{{.Ports}}"],
         capture_output=True,
         text=True
@@ -295,8 +296,10 @@ def find_exposed_ports_docker():
         # Split the ports by comma and check each one
         for port in ports.split(','):
             port = port.strip()
-            # Check if the port is exposed (contains '0.0.0.0' or ':::')
-            if '0.0.0.0' in port or ':::' in port:
+            # A published port mapping always has the form <bind-address>:<host-port>-><container-port>.
+            # The bind address may be 0.0.0.0, :::, or a specific IP (e.g. HOST_IP), so match on '->'
+            # rather than a specific address.
+            if '->' in port:
                 exposed_ports[container_name].append(port)
 
     # Print the exposed ports for each container
@@ -313,7 +316,7 @@ def find_exposed_ports_docker():
 def check_open_ports(target):
     try:
         # Execute the nmap command to check for open ports
-        result = subprocess.run(['nmap', '-p-', target], capture_output=True, text=True)
+        result = common_utils.exec_command(['nmap', '-p-', target], capture_output=True, text=True)
 
         # Print the nmap command response
         logger.info(result.stdout)
@@ -345,7 +348,7 @@ def check_nmap(target, ports):
         # Execute the nmap command to check for open ports
         port_list = ','.join(port_numbers)
         logger.info(f"Scanning ports {port_list} on target {target}")
-        result = subprocess.run(['nmap', '-p', port_list, target], capture_output=True, text=True)
+        result = common_utils.exec_command(['nmap', '-p', port_list, target], capture_output=True, text=True)
 
         # Print the nmap command response
         logger.info(result.stdout)
@@ -385,15 +388,15 @@ def check_nmap_docker(target, ports):
         if not port_numbers:
             logger.warning("No ports found to scan")
             # For Docker deployments, check default exposed ports (nginx proxy)
-            # From docker-compose.yml: nginx exposes GRAFANA_PORT:443 and 1883:1883
-            default_ports = ["3000", "1883"]  # Default Docker exposed ports
+            # From docker-compose.yml: nginx exposes GRAFANA_PORT:15443 (HTTPS)
+            default_ports = ["3000"]  # Default Docker exposed ports
             logger.info(f"Using default Docker exposed ports: {default_ports}")
             port_numbers = default_ports
             
         # Execute the nmap command to check for open ports
         port_list = ','.join(port_numbers)
         logger.info(f"Scanning ports {port_list} on target {target}")
-        result = subprocess.run(['nmap', '-p', port_list, target], capture_output=True, text=True)
+        result = common_utils.exec_command(['nmap', '-p', port_list, target], capture_output=True, text=True)
 
         # Print the nmap command response
         logger.info(result.stdout)
@@ -485,7 +488,7 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
         # Step 2: Execute InfluxDB commands inside the pod to fetch data
         logger.info(f"Executing InfluxDB query inside pod: 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1;' "
                     f"with redacted credentials.")
-        result = subprocess.run(
+        result = common_utils.exec_command(
             [
                 "kubectl", "exec", "-n", namespace, pod_name, "--",
                 "influx", "-username", influxdb_username, "-password", influxdb_password,
@@ -505,7 +508,7 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         logger.info(f"Executing InfluxDB query inside pod: 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time DESC LIMIT 1;' "
                     f"with redacted credentials.")
-        result = subprocess.run(
+        result = common_utils.exec_command(
             [
                 "kubectl", "exec", "-n", namespace, pod_name, "--",
                 "influx", "-username", influxdb_username, "-password", influxdb_password,
@@ -525,7 +528,7 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
 
         logger.info(f"Executing InfluxDB query inside pod: 'SELECT COUNT(wind_speed) FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\";' "
                     f"with redacted credentials.")
-        result = subprocess.run(
+        result = common_utils.exec_command(
             [
                 "kubectl", "exec", "-n", namespace, pod_name, "--",
                 "influx", "-username", influxdb_username, "-password", influxdb_password,
@@ -868,7 +871,7 @@ def influxdb_login_docker(container_name="ia-influxdb"):
         # The InfluxDB CLI reads INFLUX_PASSWORD from environment
         logger.info(f"Executing InfluxDB command - 'SHOW MEASUREMENTS'  in container '{container_name}' with configured credentials (credentials not shown)")
         
-        result = subprocess.run(
+        result = common_utils.exec_command(
             [
                 "docker", "exec", "-e", f"INFLUX_PASSWORD={influxdb_password}", container_name,
                 "influx", "-username", influxdb_username, "-database", "datain",

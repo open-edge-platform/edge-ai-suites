@@ -293,8 +293,8 @@ from section "2. Hong Kong Dataset" of the
 either mirror it lists (Google Drive is frequently unreachable from
 corporate networks even with an account, so these are the reliable ones):
 
-- Dropbox: https://www.dropbox.com/scl/fo/zrsmoddbq96t4go1wbxwp/AJw_DGVXng06DmLx9j9iQMs?rlkey=rk11n8tt62ejbg8mbixrm6quz&e=1&st=j7sy3izj&dl=0
-- Baidu Netdisk (百度网盘): https://pan.baidu.com/s/1-5d8xM1tzfsSSueTiU6-MQ?pwd=sufc
+- Dropbox: <https://www.dropbox.com/scl/fo/zrsmoddbq96t4go1wbxwp/AJw_DGVXng06DmLx9j9iQMs?rlkey=rk11n8tt62ejbg8mbixrm6quz&e=1&st=j7sy3izj&dl=0>
+- Baidu Netdisk (百度网盘): <https://pan.baidu.com/s/1-5d8xM1tzfsSSueTiU6-MQ?pwd=sufc>
 
 (same shared folder for every Hong Kong sequence — open the
 `HK-Data20190117` entry inside it). Place the downloaded ROS1 bag at:
@@ -500,8 +500,10 @@ paper's own number.
   with an account, from more than one network. `fetch_ulhk.sh` only checks
   for the file and prints the Dropbox/Baidu Netdisk links to download it by
   hand instead.
-- UrbanLoco's terms of use should be checked on the
-  [dataset's own page](https://advdataset2019.wixsite.com/urbanloco/hong-kong)
-  before redistributing any downloaded data.
+- UrbanLoco's [home page](https://advdataset2019.wixsite.com/urbanloco)
+  states: "This work is licensed under a Creative Commons
+  Attribution-NonCommercial-ShareAlike 4.0 International License and is
+  provided for non-commercial but academic use." Check that page before
+  redistributing any downloaded data.
 - BSD-3-Clause licensing (see callout above) applies to the upstream code
   as-is; this integration does not change that.

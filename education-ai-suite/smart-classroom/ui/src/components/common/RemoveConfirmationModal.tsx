@@ -2,6 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/RemoveConfirmationModal.css";
+import { useTitleBarTheme } from "../../hooks/useTitleBarTheme";
 
 interface RemoveConfirmationModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
   isStaged = false,
 }) => {
   const { t } = useTranslation();
+  useTitleBarTheme(isOpen, 'dimmed');
 
   if (!isOpen) return null;
 

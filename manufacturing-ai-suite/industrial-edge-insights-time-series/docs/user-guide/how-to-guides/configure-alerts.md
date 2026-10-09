@@ -37,7 +37,8 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
 <!--hide_directive:::
 ::::hide_directive-->
 
-> **Note:** Setting **QoS** to `1` ensures messages are delivered at least once.
+> [!NOTE]
+> Setting **QoS** to `1` ensures messages are delivered at least once.
 > Alerts are preserved and re-sent if the MQTT broker reconnects after downtime.
 
 ### Docker - Subscribe to MQTT Alerts
@@ -100,7 +101,7 @@ data0
         .timeout(30s)
 ```
 
-> **Note:**
+> [!NOTE]
 >
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
 
@@ -118,7 +119,7 @@ tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
 curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
 ```
 
-> **Note:**
+> [!NOTE]
 > If the `curl` command fails with `502`, wait briefly and retry the command. This response can occur while the Time Series Analytics Microservice is still becoming ready.
 
 #### 3. Configuring OPC-UA Alert in config.json
@@ -215,7 +216,7 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
 
 ### Helm - Publish OPC-UA Alerts
 
-> **Note:**
+> [!NOTE]
 >
 > Ensure a sample app is deployed by following the [installation step](../get-started/deploy-with-helm.md#step-3-install-helm-charts) for OPC-UA ingestion.
 
@@ -245,7 +246,7 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow b
    curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
    ```
 
-    > **Note:**
+    > [!NOTE]
     > If the `curl` command fails with `502`, wait briefly and retry the command. This response can occur while the Time Series Analytics Microservice is still becoming ready.
 
 3. Configuring OPC-UA Alert in `config.json`

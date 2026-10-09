@@ -130,12 +130,15 @@ uv run python src/visualize_timing.py timing.csv --delays --frequencies --output
 
 ```bash
 uv run python src/visualize_resources.py resource.log --cores --heatmap --top 10 --output-dir ./plots/
+uv run python src/visualize_resources.py resource.log --core-nodes --top 8 --output-dir ./plots/
 uv run python src/visualize_resources.py resource.log --summary   # text table only
 ```
 
 > CPU% scale: 100% = 1 full core. Use the **Avg Cores** column in `--summary` output for a human-readable reading.
 >
 > A **PER-NODE ATTRIBUTION** table prints automatically alongside the per-PID summary (no flag needed) when `ros2_node_map` is present in the log; older sessions without it just skip that section.
+>
+> `--core-nodes` requires `ros2_node_map` in the log; skipped with a warning otherwise.
 
 ---
 

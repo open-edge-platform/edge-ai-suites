@@ -27,24 +27,24 @@ opening the files.
 
 Reusable **business-objective** prompts in YAML that state only an outcome (e.g.
 "detect people in my camera feeds") and hand off to the
-`metro-ai-apps-builder` orchestrator skill. Prompts carry **no** technology or
+`metro-ai-app-builder` orchestrator skill. Prompts carry **no** technology or
 parameters — the skill infers all of that.
 
 - `prompts/*.yaml` — one minimal business-objective prompt per use-case
   (object / person / vehicle / unauthorized-access / worker-safety). Schema:
   `name`, `description`, `prompt` (block scalar), `tags`.
-- `.github/skills/metro-ai-apps-builder/` — the orchestrator skill (Q&A → skill
+- `.github/skills/metro-ai-app-builder/` — the orchestrator skill (Q&A → skill
   discovery → plan → delegate). This is the only skill that ships **in this
   directory**.
 - `README.md` — full schema, architecture, and how-to.
 
 ## Skill locations (important)
 
-- **`metro-ai-apps-builder`** lives here:
-  `.github/skills/metro-ai-apps-builder/`.
-- **`metro-ai-apps-recipe`** (the vision delegate) has been **moved out** of this
+- **`metro-ai-app-builder`** lives here:
+  `.github/skills/metro-ai-app-builder/`.
+- **`metro-ai-app-recipe`** (the vision delegate) has been **moved out** of this
   directory to
-  `../metro-vision-ai-app-recipe/.github/skills/metro-ai-apps-recipe/`.
+  `../metro-vision-ai-app-recipe/.github/skills/metro-ai-app-recipe/`.
   Links from this directory to the recipe skill must point there.
 
 ## Scope & editing rules
@@ -54,6 +54,6 @@ parameters — the skill infers all of that.
 - To add a **vision** use-case: copy an existing `prompts/*.yaml`, change only the
   business-objective wording — no per-use-case config is needed.
 - To route a **new domain**: edit the routing table in
-  `.github/skills/metro-ai-apps-builder/references/SKILL_CATALOG.md`.
+  `.github/skills/metro-ai-app-builder/references/SKILL_CATALOG.md`.
 - Keep prompts **business-only** — never add a model, framework, precision, or
   device to a prompt.

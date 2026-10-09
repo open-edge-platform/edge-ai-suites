@@ -180,7 +180,8 @@ This directory is mounted from the node, not from your workstation, so the media
 to be ingested must be placed on the node the pods are scheduled on (see
 `global.nodeSelector` above).
 
-Note: supported media types: jpg, png, mp4
+> [!NOTE]
+> supported media types: jpg, png, mp4
 
 ### Step 6: Deploy the Application
 

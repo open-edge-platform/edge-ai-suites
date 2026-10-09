@@ -689,8 +689,6 @@ main() {
   echo ""
   info "Next steps:"
   info "1. Navigate to ${HOME}/oep/edge-ai-suites/federal-and-aerospace-ai-suite/uav-mission-compute-sdk to explore the SDK"
-  info "2. Run 'make apps' to start the AI vision processor and Edge AI dashboard"
-  info "3. Open http://localhost:5002 to access the Edge AI dashboard"
 
 }
 

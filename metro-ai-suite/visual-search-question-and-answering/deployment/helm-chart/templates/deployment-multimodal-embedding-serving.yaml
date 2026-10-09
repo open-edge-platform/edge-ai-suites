@@ -66,6 +66,26 @@ spec:
               mountPath: /dev/dri
           securityContext:
             readOnlyRootFilesystem: false
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.servicePorts.mme }}
+            {{- with .Values.multimodalembeddingServing.livenessProbe }}
+            initialDelaySeconds: {{ .initialDelaySeconds }}
+            periodSeconds: {{ .periodSeconds }}
+            timeoutSeconds: {{ .timeoutSeconds }}
+            failureThreshold: {{ .failureThreshold }}
+            {{- end }}
+          readinessProbe:
+            {{- if .Values.multimodalembeddingServing.readinessProbe.sameAsLiveness }}
+            httpGet:
+              path: /health
+              port: {{ .Values.servicePorts.mme }}
+            initialDelaySeconds: {{ .Values.multimodalembeddingServing.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.multimodalembeddingServing.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.multimodalembeddingServing.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.multimodalembeddingServing.livenessProbe.failureThreshold }}
+            {{- end }}
       volumes:
         - name: workspace
           persistentVolumeClaim:

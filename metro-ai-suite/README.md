@@ -1,5 +1,11 @@
 # Metro AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project has moved to (open-edge-platform/metro-ai-suite)[https://github.com/open-edge-platform/metro-ai-suite].
+
+
+
 The **Metro AI Suite** accelerates application development for sophisticated edge AI video safety, security, and smart city use cases.
 
 The Metro AI Suite includes Intel® software such as OpenVINO&trade; toolkit, Deep Learning Streamer, Intel&reg; oneAPI Toolkit, and other tools, libraries, and microservices for media analytics and AI performance optimization for the aforementioned use cases.
@@ -35,3 +41,5 @@ Metro AI Suite reference implementations and platform blueprints:
 - [Video Processing Platform](https://edgesoftwarecatalog.intel.com/details/?microserviceType=recipe&microserviceNameForUrl=metro-ai-suite-video-processing-software-development-kit): A platform blueprint for video security walls and similar applications utilizing video processing acceleration API.
 - [Sensor Fusion for Traffic Management](sensor-fusion-for-traffic-management): A platform blueprint that integrates AI inferencing with sensor fusion technology, utilizing multi-modal sensors such as cameras and radars to deliver unparalleled performance, guiding you with designing such sensor fusion capabilities in your application development.
 - [Interactive Digital Avatar](interactive-digital-avatar): A reference implementation for integrating 2D/3D avatars with a backend LLM server to provide real-time and intelligent responses to user queries through speech-based conversational interfaces.
+
+For hardware partner workflow, see the [Metro AI Suite Hardware Partner Workflow](docs/hardware-partner-workflow.md). For developer workflow, see the [Metro AI Suite Developer Workflow](docs/developer-workflow.md).

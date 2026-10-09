@@ -20,19 +20,19 @@ is wrong, data timestamps fall outside Grafana's query window.
 
 Check the date/time using the command below:
 
-``` sh
+```bash
 date
 ```
 
 Set the correct date/time manually:
 
-``` sh
+```bash
 sudo date -s 'YYYY-MM-DD HH:MM:SS'   # Replace with your actual date and time
 ```
 
 Set date/time from the internet:
 
-``` sh
+```bash
 sudo date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | sed -n 's/^ *Date: *//p')"
 ```
 
@@ -120,3 +120,55 @@ container in `docker ps`.
 PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)
 sudo nsenter -t "$PID" -m -u -i -n -p mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
+
+## 5. coturn/mediamtx -- Periodic `CreatePermission`/`CHANNEL_BIND` `error 400: Bad Request` log messages
+
+### 5.1 Issue
+
+The `coturn` container logs repeatedly show entries like:
+
+```text
+session 008000000000000292: realm <turn.local> user <mediamtx>: incoming packet CHANNEL_BIND processed, success
+session 008000000000000292: realm <turn.local> user <mediamtx>: incoming packet message processed, error 400: Bad Request
+```
+
+and the `mediamtx` container logs repeatedly show:
+
+```text
+turnc ERROR: Fail to refresh permissions: CreatePermission error response (error 400: )
+```
+
+These recur every couple of minutes, even while WebRTC/TURN video streaming continues to work correctly.
+
+### 5.2 Reason
+
+This is a long-standing, unresolved upstream interoperability issue between the `pion/turn` TURN client
+library (used internally by mediamtx's WebRTC/TURN client, `turnc`) and coturn.
+
+mediamtx's TURN client periodically resends a `CreatePermission`/`CHANNEL_BIND` request to refresh the
+permission on its TURN allocation, and coturn intermittently answers with `error 400` for that refresh. In
+practice, WebRTC peer connections in this sample app establish directly over `host` ICE candidates (the
+mediamtx and browser/client peers reach each other directly on the same network), so the TURN relay
+allocation being refreshed is a fallback path that is not actually carrying the media -- mediamtx keeps it
+alive only in case direct connectivity is ever lost. A failed refresh on that unused fallback allocation does
+not interrupt the active (direct) media path.
+
+This has only been observed when `HOST_IP` is set to a real, host-reachable, non-loopback IP address (the
+setting needed for remote UI/WebRTC access); it does not occur when `HOST_IP` is left at the default
+`127.0.0.1`. This is because `HOST_IP` is also the address that coturn advertises to WebRTC clients for
+TURN candidates (`MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}`). With `HOST_IP=127.0.0.1`,
+that TURN candidate is only reachable from the same host, so browsers/clients running on that same host
+already connect over `host`/loopback ICE candidates before ICE ever needs to gather and hold a TURN relay
+candidate -- mediamtx's TURN client has no live allocation to refresh, so the refresh cycle (and its
+intermittent `error 400`) never triggers. Once `HOST_IP` is a real network-reachable address, remote clients
+and multi-host access patterns cause mediamtx to gather and keep a TURN relay allocation alive as a fallback
+candidate, which is what exposes the periodic refresh failures described above.
+
+### 5.3 Solution
+
+No action required -- these messages are benign log noise from an unresolved upstream library issue and do
+not affect WebRTC/TURN functionality. Video streaming, permission grants for the active path, and the overall
+sample app continue to work as expected. If you want to confirm functionality is unaffected, check the
+mediamtx logs for a line such as `peer connection established, local candidate: host/..., remote candidate:
+host/...`, which indicates media flowed over a direct connection rather than through the TURN relay.
+

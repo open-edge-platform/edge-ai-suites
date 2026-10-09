@@ -292,7 +292,8 @@ def _system_info() -> dict:
 
 
 def _health_probe(host: str, port: int, uav_id: str,
-                  timeout_s: float = 3.0, compose_file: Path | None = None) -> dict:
+                  timeout_s: float = 3.0,
+                  compose_files: list[Path] | None = None) -> dict:
     """Return a snapshot of deployment health suitable for the HTML header."""
     health: dict = {
         "broker": "unknown",
@@ -333,8 +334,9 @@ def _health_probe(host: str, port: int, uav_id: str,
 
     # 2) docker compose ps (best effort — silently skipped if unavailable).
     cmd = ["docker", "compose"]
-    if compose_file is not None:
-        cmd += ["-f", str(compose_file)]
+    if compose_files:
+        for cf in compose_files:
+            cmd += ["-f", str(cf)]
     cmd += ["ps", "--format", "json"]
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
@@ -494,14 +496,76 @@ class _BridgeTierResult:
     resources:     dict
 
 
-def _recreate_companion_bridge(env_overrides: dict, compose_file: Path) -> None:
+def _docker_inspect(target: str) -> dict | None:
+    """Return the first `docker inspect` payload for *target*, or None."""
+    try:
+        result = subprocess.run(
+            ["docker", "inspect", target],
+            capture_output=True, text=True, timeout=5,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return None
+    return payload[0] if payload else None
+
+
+def _detect_bridge_deployment(container: str = "companion-bridge") -> dict:
+    """Recover the compose files + env used at `make up-*` time so we can
+    recreate companion-bridge with matching Compose interpolation.
+    """
+    out: dict = {"compose_files": [], "env": {}}
+    info = _docker_inspect(container)
+    if info is None:
+        return out
+
+    labels = (info.get("Config") or {}).get("Labels") or {}
+    for path_str in labels.get("com.docker.compose.project.config_files", "").split(","):
+        path_str = path_str.strip()
+        if path_str:
+            out["compose_files"].append(Path(path_str))
+
+    env_map: dict[str, str] = {}
+    for entry in (info.get("Config") or {}).get("Env") or []:
+        if "=" in entry:
+            key, _, value = entry.partition("=")
+            env_map[key] = value
+    if "UAV_ID" in env_map:
+        out["env"]["UAV_ID"] = env_map["UAV_ID"]
+
+    net_mode = (info.get("HostConfig") or {}).get("NetworkMode", "")
+    if net_mode.startswith("container:"):
+        peer = _docker_inspect(net_mode.split(":", 1)[1])
+        svc = ((peer or {}).get("Config") or {}).get("Labels", {}).get(
+            "com.docker.compose.service"
+        )
+        if svc:
+            out["env"]["PX4_NETWORK_SERVICE"] = svc
+    elif net_mode == "host":
+        # Ethernet mode: parse FC_IP back out of udpout://<host>:<port>.
+        px4_addr = env_map.get("PX4_ADDRESS", "")
+        if "://" in px4_addr:
+            host_only = px4_addr.split("://", 1)[1].rsplit(":", 1)[0]
+            if host_only:
+                out["env"]["FC_IP"] = host_only
+
+    return out
+
+
+def _recreate_companion_bridge(
+    env_overrides: dict, compose_files: list[Path],
+) -> None:
     """Force-recreate the companion-bridge container with new env vars."""
     env = os.environ.copy()
     env.update(env_overrides)
-    cmd = [
-        "docker", "compose", "-f", str(compose_file),
-        "up", "-d", "--no-deps", "--force-recreate", "companion-bridge",
-    ]
+    cmd: list[str] = ["docker", "compose"]
+    for cf in compose_files:
+        cmd += ["-f", str(cf)]
+    cmd += ["up", "-d", "--no-deps", "--force-recreate", "companion-bridge"]
     result = subprocess.run(cmd, env=env, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(
@@ -532,13 +596,15 @@ def _wait_for_bridge(host: str, port: int, uav_id: str, timeout_s: float) -> boo
 
 def _run_bridge_tier(
     host: str, port: int, hz: float, duration_s: float,
-    uav_id: str, compose_file: Path, restart_wait_s: float,
+    uav_id: str, compose_files: list[Path], restart_wait_s: float,
+    extra_env: dict | None = None,
 ) -> _BridgeTierResult:
     # Recreate the bridge with BRIDGE_STRESS_TOPICS capped at *hz*.
-    env_overrides = {
-        f"RATE_{t.upper()}_HZ": str(hz) for t in BRIDGE_STRESS_TOPICS
-    }
-    _recreate_companion_bridge(env_overrides, compose_file)
+    env_overrides = dict(extra_env or {})
+    env_overrides.update(
+        {f"RATE_{t.upper()}_HZ": str(hz) for t in BRIDGE_STRESS_TOPICS}
+    )
+    _recreate_companion_bridge(env_overrides, compose_files)
 
     if not _wait_for_bridge(host, port, uav_id, restart_wait_s):
         raise RuntimeError(
@@ -815,9 +881,15 @@ def main():
                         metavar="N_LIST",
                         help="Comma-separated client counts for --client-sweep "
                              "(default: 1,2,5,10,25,50,100).")
-    parser.add_argument("--compose-file", default=str(REPO_ROOT / "docker-compose.yml"),
-                        help="Path to docker-compose.yml used by --bridge-sweep "
-                             f"(default: {REPO_ROOT / 'docker-compose.yml'}).")
+    parser.add_argument("--compose-file", action="append", default=None,
+                        metavar="PATH",
+                        help="Path to a docker-compose file used by --bridge-sweep. "
+                             "May be repeated to layer overrides (e.g. "
+                             "--compose-file docker-compose.yml "
+                             "--compose-file docker-compose.ethernet.yml).  "
+                             "If omitted, the compose files, PX4_NETWORK_SERVICE, "
+                             "and FC_IP are auto-detected from the running "
+                             "companion-bridge container.")
     parser.add_argument("--restart-wait", type=float, default=30.0,
                         metavar="SECS",
                         help="Max seconds to wait after bridge recreate for the first "
@@ -834,6 +906,17 @@ def main():
 
     if args.html_report is _AUTO_HTML_PATH:
         args.html_report = str(Path.cwd() / _default_html_filename())
+
+    # Auto-detect compose files + env from the running companion-bridge so
+    # --bridge-sweep works after any `make up-*` variant.
+    _detected = _detect_bridge_deployment()
+    if args.compose_file:
+        compose_files: list[Path] = [Path(p).resolve() for p in args.compose_file]
+    elif _detected["compose_files"]:
+        compose_files = [Path(p).resolve() for p in _detected["compose_files"]]
+    else:
+        compose_files = [(REPO_ROOT / "docker-compose.yml").resolve()]
+    bridge_deploy_env: dict = dict(_detected["env"])
 
     # Structured payloads for the HTML report; each mode fills its own key.
     report_meta: dict = {
@@ -854,7 +937,7 @@ def main():
         report_system = _system_info()
         report_health = _health_probe(
             args.host, args.port, UAV_ID,
-            compose_file=Path(args.compose_file),
+            compose_files=compose_files,
         )
 
     # ── Client scaling sweep ──────────────────────────────────────────────
@@ -899,14 +982,14 @@ def main():
         sweep_rates = sorted({
             float(r.strip()) for r in args.sweep_rates.split(",") if r.strip()
         })
-        compose_file = Path(args.compose_file).resolve()
-        if not compose_file.exists():
-            print(f"ERROR: compose file not found: {compose_file}", file=sys.stderr)
+        missing = [cf for cf in compose_files if not cf.exists()]
+        if missing:
+            for cf in missing:
+                print(f"ERROR: compose file not found: {cf}", file=sys.stderr)
             sys.exit(1)
         print(f"\n{'─'*80}")
         print(f"  Bridge stress sweep: {len(sweep_rates)} tier(s) "
               f"× {args.sweep_duration:.0f}s each")
-        print(f"  Compose file: {compose_file}")
         print(f"  Will bump: {', '.join('RATE_' + t.upper() + '_HZ' for t in BRIDGE_STRESS_TOPICS)}")
         print(f"{'─'*80}")
         bridge_results: list[_BridgeTierResult] = []
@@ -917,7 +1000,8 @@ def main():
                 try:
                     r = _run_bridge_tier(
                         args.host, args.port, hz, args.sweep_duration,
-                        UAV_ID, compose_file, args.restart_wait,
+                        UAV_ID, compose_files, args.restart_wait,
+                        extra_env=bridge_deploy_env,
                     )
                     bridge_results.append(r)
                     summary = "  ".join(
@@ -932,7 +1016,7 @@ def main():
             # a stressed state for other users.
             print(f"\n  Restoring companion-bridge to default rate caps …")
             try:
-                _recreate_companion_bridge({}, compose_file)
+                _recreate_companion_bridge(bridge_deploy_env, compose_files)
             except Exception as exc:
                 print(f"  WARNING: could not restore bridge: {exc}",
                       file=sys.stderr)

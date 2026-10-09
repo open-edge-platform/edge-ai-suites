@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
@@ -7,11 +7,12 @@ import {
   uploadAudio,
   storeAudioDuration,
   createSession,
+  registerSession,
   startMonitoring,
   stopMonitoring,
-  startPipelineMonitoring,
   BACKEND_UNAVAILABLE_MESSAGE
 } from '../../services/api';
+import { declaredStages } from '../../utils/sessionStages';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
   setUploadedAudioPath,
@@ -19,6 +20,7 @@ import {
   processingFailed,
   resetFlow,
   setSessionId,
+  setSessionRegistered,
   setActiveStream,
   startStream,
   setFrontCameraStream,
@@ -60,20 +62,22 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   const [baseDirectory, setBaseDirectory] = useState(() => sessionStorage.getItem('baseDirectory') || "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // The same fact as `loading`, kept where handleApply can trust it. `disabled`
+  // on the button is not enough on its own: two clicks landing in one render
+  // both read `loading` from that render's closure, and a second run here means
+  // a second session and a second audio upload.
+  const loadingRef = useRef(false);
+  /** The stage in flight, or the closing summary once it has finished. */
   const [notification, setNotification] = useState('');
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
 
   // Check if video_analytics feature is enabled
-  const hasVideoAnalyticsFeature = featureGuard.hasFeature('video_analytics');
+  const hasVideoAnalyticsFeature = featureGuard.hasAnyFeatureForInput('video');
 
   // Check if any audio-related features are enabled
-  const hasAudioFeatures = featureGuard.hasFeature('asr') ||
-    featureGuard.hasFeature('summary') ||
-    featureGuard.hasFeature('mindmap') ||
-    featureGuard.hasFeature('topic_segmentation') ||
-    featureGuard.hasFeature('report');
+  const hasAudioFeatures = featureGuard.hasAnyFeatureForInput('audio');
 
   const isElectron = typeof window !== 'undefined' && !!window.electronAPI?.isElectron;
 
@@ -190,7 +194,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       dispatch(setVideoStatus('starting')); // This will change from 'processed' to 'starting'
 
       const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
-      startPipelineMonitoring(sessionId);
       let hasSuccessfulStreams = false;
 
       videoResponse.results.forEach((result: any) => {
@@ -256,6 +259,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
   };
 
   const handleApply = async () => {
+    if (loadingRef.current) return;
     const hasAudioFile = audioFile !== null;
     const hasVideoFiles = frontCameraPath !== null || rearCameraPath !== null || boardCameraPath !== null;
 
@@ -305,6 +309,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       console.log('🎯 Audio status set to ready - no audio file selected');
     }
 
+    loadingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -314,8 +319,32 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       const sessionId = sessionResponse.sessionId;
       console.log('✅ Session created:', sessionId);
       dispatch(setSessionId(sessionId));
+      // Same declaration Start recording makes, from the same helper, so the two
+      // entry points cannot drift apart. Best-effort: an unrecorded session
+      // still uploads and processes normally.
+      //
+      // File names, not the paths uploaded further down: this is what the
+      // history lists a session by, and the browser's File objects have no
+      // trustworthy path anyway. The backend basenames whatever it gets, so a
+      // bare name arrives unchanged. Only /sessions/process validates that the
+      // sources exist on disk; register does not.
+      const registeredVideoSources: Record<string, string> = {};
+      if (frontCameraPath) registeredVideoSources.front = frontCameraPath.name;
+      if (rearCameraPath) registeredVideoSources.back = rearCameraPath.name;
+      if (boardCameraPath) registeredVideoSources.board = boardCameraPath.name;
+      const registered = await registerSession(
+        sessionId,
+        declaredStages(featureGuard, { hasAudio: hasAudioFile, hasVideo: hasVideoFiles }),
+        {
+          audio_path: audioFile?.name,
+          video_sources: registeredVideoSources,
+        },
+      );
+      dispatch(setSessionRegistered(registered));
 
       try {
+        // Covers the handover as a whole: the stop, the 5s settle and the start.
+        setNotification(t('uploadFiles.startingMonitoring'));
         if (monitoringActive) {
           await stopMonitoring();
           dispatch(setMonitoringActive(false));
@@ -328,11 +357,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
         console.error('❌ Monitoring restart failed:', monitoringError);
       }
 
-      let audioPath = '';
       if (hasAudioFile) {
+        setNotification(t('uploadFiles.uploadingAudio'));
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
-        audioPath = audioResponse.path;
         console.log('✅ Audio uploaded successfully:', audioResponse);
 
         // Extract and store audio duration
@@ -430,6 +458,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       let videoAnalyticsStarted = false;
       let videoErrors: string[] = [];
       if (hasValidVideo && hasVideoAnalyticsFeature) {
+        setNotification(t('uploadFiles.startingVideo'));
         ({ started: videoAnalyticsStarted, errors: videoErrors } =
           await startVideoAnalyticsWithSession(sessionId, validPipelines));
         if (videoAnalyticsStarted) {
@@ -456,6 +485,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
         finalMessage: finalNotification
       });
 
+      loadingRef.current = false;
       setLoading(false);
 
       // Show the reasons and keep the modal open. Whatever did start
@@ -471,6 +501,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
       setError(describeError(err));
       setNotification('');
       dispatch(processingFailed());
+      loadingRef.current = false;
       setLoading(false);
     }
   };
@@ -586,7 +617,15 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose, fe
             </div>
           )}
           {error && <div className="error-message">{error}</div>}
-          {notification && <div className="notification-message">{notification}</div>}
+          {/* Same row for both, because it is the same line of text moving on:
+              the spinner is what distinguishes a stage still running from the
+              summary left behind once it finished. */}
+          {notification && (
+            <div className="modal-progress" role="status">
+              {loading && <span className="modal-spinner" aria-hidden="true" />}
+              {notification}
+            </div>
+          )}
         </div>
         <div className="modal-actions">
           <button

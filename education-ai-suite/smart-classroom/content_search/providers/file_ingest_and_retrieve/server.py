@@ -176,15 +176,32 @@ logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interv
 
 @app.get("/v1/dataprep/health")
 def health():
-    """
-    Health check endpoint.
-    """
-    try:
-        return JSONResponse(content={"status": "healthy"}, status_code=200)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+    """Readiness of this service: embedding models, local storage and ChromaDB."""
+    checks = {
+        "visual_embedding_model": "healthy" if _visual_model is not None else "not_loaded",
+        "document_embedding_model": "healthy" if _document_model is not None else "not_loaded",
+        "storage": "healthy" if local_store is not None else "unavailable",
+        "chromadb": "healthy" if indexer.client.ping() else "unavailable",
+    }
+    ready = all(v == "healthy" for v in checks.values())
 
-    
+    return JSONResponse(
+        content={
+            "status": "healthy" if ready else "unhealthy",
+            "checks": checks,
+            # Collections are created lazily on the first ingest, so an
+            # un-inited collection is normal on a fresh install: reported for
+            # visibility, but it does not make the service unhealthy.
+            "collections": {
+                "visual_db_inited": indexer.visual_db_inited,
+                "document_db_inited": indexer.document_db_inited,
+            },
+        },
+        status_code=200 if ready else 503,
+    )
+
+
+
 @app.get("/v1/dataprep/info")
 def info():
     """

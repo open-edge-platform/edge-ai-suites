@@ -54,7 +54,7 @@ download_artifacts() {
             exit 1
         fi
         # Download model XML and BIN files
-        if curl -kL "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
+        if curl -L "$MODEL_URL" -o "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)"; then
             echo "Model zip for $app_name downloaded successfully."
             # Unzip the downloaded model file
             if unzip_compressed_file "$LOCAL_MODEL_DIR/$(basename $MODEL_URL)" "$LOCAL_MODEL_DIR"; then
@@ -79,7 +79,7 @@ download_artifacts() {
             return 1
         fi
         echo "Downloading video artifacts for $app_name..."
-        if ! curl -kL "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
+        if ! curl -L "$VIDEO_URL" -o "$LOCAL_VIDEO_DIR/$(basename $VIDEO_URL)"; then
             err "Failed to download video for $app_name."
             return 1
         fi
@@ -99,4 +99,13 @@ if [ ! -f server.key ] || [ ! -f server.crt ]; then
     echo "Generate self-signed certificate..."
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout server.key -out server.crt -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
     chown -R "$(id -u):$(id -g)" server.key server.crt 2>/dev/null || true
+fi
+
+# Generate/refresh nginx basic auth credentials for the /storage/ (SeaweedFS filer) path
+if [ -n "$S3_STORAGE_USERNAME" ] && [ -n "$S3_STORAGE_PASSWORD" ]; then
+    echo "Generating nginx basic auth credentials for storage browsing..."
+    printf '%s:%s\n' "$S3_STORAGE_USERNAME" "$(openssl passwd -apr1 "$S3_STORAGE_PASSWORD")" > htpasswd
+    chown "$(id -u):$(id -g)" htpasswd 2>/dev/null || true
+else
+    echo "WARNING: S3_STORAGE_USERNAME/S3_STORAGE_PASSWORD not set; skipping nginx basic auth setup for /storage/ path."
 fi

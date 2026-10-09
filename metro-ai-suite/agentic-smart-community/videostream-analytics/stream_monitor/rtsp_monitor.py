@@ -38,7 +38,7 @@ from stream_monitor.base_monitor import BaseMonitor
 from stream_monitor.pipeline.motion_detector import MotionDetector
 from stream_monitor.pipeline.segment_extractor import SegmentExtractor
 from stream_monitor.pipeline.prefilter_yolo import YoloPrefilter, FramePrefilter
-from stream_monitor.pipeline.roi_processor import prepare_roi_segment, transcode_h264_in_place
+from stream_monitor.pipeline.roi_processor import prepare_roi_segment
 
 logger = logging.getLogger(__name__)
 
@@ -576,7 +576,9 @@ class StreamPipeline(BaseMonitor):
             if os.path.exists(crop_path):
                 summary_clip_input = crop_path
 
-        transcode_h264_in_place(clip_path)
+        # No transcode pass here: SegmentExtractor writes browser-playable
+        # H.264 directly via H264SegmentWriter (ROI variants transcode their
+        # own output inside prepare_roi_segment).
 
         payload: dict[str, Any] = {
             "event_file_path": clip_path,

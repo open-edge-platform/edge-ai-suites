@@ -23,7 +23,7 @@ Set up the environment variables
 
 ```bash
 source /opt/intel/vppsdk/env.sh
-source /opt/intel/openvino_2025/setupvars.sh
+source /opt/intel/openvino_2026/setupvars.sh
 export VPPLOG_LEVEL=error
 export FPS_COUNT=1
 ```

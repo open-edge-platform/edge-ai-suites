@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 #################
@@ -24,11 +23,80 @@ echo "Updating .env file..."
 sed -i 's/^SAMPLE_APP=.*/SAMPLE_APP=loitering-detection/' .env
 sed -i 's/^HOST_IP=.*/HOST_IP=127.0.0.1/' .env
 
+# This app's MQTT topic prefixes are not part of the shared .env (they're
+# loitering-detection-specific); set them here, idempotently, in a clearly
+# commented section of this script's own local .env copy.
+sed -i \
+  -e '/^# loitering-detection: MQTT topic prefixes/d' \
+  -e '/^# SOURCE_TOPIC_PREFIX -/d' \
+  -e '/^#   publishes to/d' \
+  -e '/^# DEST_TOPIC_PREFIX -/d' \
+  -e '/^#   to for the Grafana/d' \
+  -e '/^SOURCE_TOPIC_PREFIX=/d' \
+  -e '/^DEST_TOPIC_PREFIX=/d' \
+  .env
+cat >> .env <<'EOF'
+
+# loitering-detection: MQTT topic prefixes used by the mqtt-table-flattener sidecar.
+# SOURCE_TOPIC_PREFIX - prefix of the raw per-frame metadata topic gvametaconvert
+#   publishes to (<prefix>/<stream-id>); must match sample_start.sh's launch topics.
+# DEST_TOPIC_PREFIX - prefix the flattener republishes one-row-per-object summaries
+#   to for the Grafana MQTT table panel (<prefix>/<stream-id>).
+SOURCE_TOPIC_PREFIX=object_tracking
+DEST_TOPIC_PREFIX=loiter_status
+EOF
+
 # Update docker-compose.yml file
 # Remove "${SAMPLE_APP}/" from all image paths in docker-compose.yml
 echo "Updating docker-compose.yml file..."
 sed -i 's#${SAMPLE_APP}/##g' docker-compose.yml
 sed -i "s/\${DLSTREAMER_PIPELINE_SERVER_IMAGE}/$(grep "DLSTREAMER_PIPELINE_SERVER_IMAGE" .env | cut -d'=' -f2 | sed 's/\//\\\//g')/g" docker-compose.yml
+
+# This app no longer uses Node-RED (zone/dwell logic now runs in gvaanalytics); strip it here too
+# since this script keeps its own local docker-compose.yml copy.
+awk '
+    /^  node-red:/ { skip=1; next }
+    skip && /^  [^ ]/ { skip=0 }
+    skip && /^[^ ]/ { skip=0 }
+    !skip { print }
+  ' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
+sed -i '/^      - node-red$/d' docker-compose.yml
+sed -i '/^  node-red-node-modules:$/d' docker-compose.yml
+
+# Add the mqtt-table-flattener service (reshapes object_tracking/<N> into
+# loiter_status/<N> rows for the Grafana table); path has no ${SAMPLE_APP}/
+# prefix since this script flattens that prefix out of its local copy above.
+# Reuses the dlstreamer-pipeline-server image (already pulled, already has
+# paho-mqtt) instead of adding a new one; values read from the local .env
+# copy, same as the DLSTREAMER_PIPELINE_SERVER_IMAGE substitution above.
+if ! grep -q '^  mqtt-table-flattener:' docker-compose.yml; then
+  DLSPS_IMAGE=$(grep "^DLSTREAMER_PIPELINE_SERVER_IMAGE=" .env | cut -d'=' -f2)
+  SRC_TOPIC_PREFIX=$(grep "^SOURCE_TOPIC_PREFIX=" .env | cut -d'=' -f2)
+  DST_TOPIC_PREFIX=$(grep "^DEST_TOPIC_PREFIX=" .env | cut -d'=' -f2)
+  awk -v image="$DLSPS_IMAGE" -v src_prefix="$SRC_TOPIC_PREFIX" -v dst_prefix="$DST_TOPIC_PREFIX" '
+    /^networks:/ && !inserted {
+      print "  mqtt-table-flattener:"
+      print "    image: " image
+      print "    container_name: mqtt-table-flattener"
+      print "    environment:"
+      print "      - MQTT_HOST=broker"
+      print "      - MQTT_PORT=1883"
+      print "      - SOURCE_TOPIC_PREFIX=" src_prefix
+      print "      - DEST_TOPIC_PREFIX=" dst_prefix
+      print "    volumes:"
+      print "      - \"./src/mqtt-table-flattener:/app:ro\""
+      print "    entrypoint: [\"python3\", \"/app/flatten.py\"]"
+      print "    depends_on:"
+      print "      - broker"
+      print "    networks:"
+      print "      - app_network"
+      print "    restart: on-failure:5"
+      print ""
+      inserted=1
+    }
+    { print }
+  ' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
+fi
 
 # Run install.sh to download all required models and videos
 echo "Running install.sh to download models and videos..."
@@ -37,8 +105,6 @@ echo "Running install.sh to download models and videos..."
 # Run docker compose to pull all the images and download the grafana plugins
 mkdir -p ./src/grafana/plugins
 chown -R "$(id -u):$(id -g)" ./src/grafana/plugins 2>/dev/null || true
-mkdir -p ./src/node-red/node-modules
-chown -R "$(id -u):$(id -g)" ./src/node-red/node-modules 2>/dev/null || true
 
 echo "Pulling Docker images and downloading Grafana plugins..."
 docker compose up -d
@@ -46,13 +112,11 @@ echo "Waiting for services to be healthy..."
 sleep 60
 
 docker cp $(docker ps -q --filter "name=grafana"):/var/lib/grafana/plugins ./src/grafana/plugins
-docker cp $(docker ps -q --filter "name=node-red"):/usr/src/node-red/node_modules/. ./src/node-red/node-modules/
 
 docker compose down
 
 sed -i '/datasources\.yml.*datasources\.yml/a\      - "./src/grafana/plugins:/var/lib/grafana/plugins"' docker-compose.yml
 sed -i '/GF_INSTALL_PLUGINS=grafana-mqtt-datasource/d' docker-compose.yml
-sed -i 's#/data/install_package.sh#cp -r /data/node-modules/* /usr/src/node-red/node_modules/#' docker-compose.yml
 sed -i '/container_name: dlstreamer-pipeline-server/a\    extra_hosts:\n      - "stun.l.google.com:127.0.0.1"' docker-compose.yml
 
 

@@ -8,9 +8,9 @@
 #
 # Usage:   source docker/set_env.sh      # before ./setup_docker.sh / docker compose up
 
-# Auto-detect the host IP (used for no_proxy and the model-serving base URLs).
-HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7; exit}')
-export no_proxy=localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding,${HOST_IP}
+# Everything in the stack is reached over loopback or by compose service name.
+# Preserve caller-supplied hosts so an external model serving can bypass a proxy.
+export no_proxy="${no_proxy:+${no_proxy},}localhost,127.0.0.1,vllm-ipex-serving,multilevel-video-understanding"
 
 # =========================================================================
 # vLLM-IPEX model serving
@@ -24,6 +24,9 @@ export HF_HOME
 # Create if not exists, so Docker bind-mounts it as a user-owned dir instead of root-owned.
 mkdir -p "${HF_HOME}"
 
+# Uncomment this line to disable Hugging Face's online checks for new versions of transformers, accelerate, etc.
+# export HF_HUB_OFFLINE=1
+
 # Change to https://hf-mirror.com if you are in China and want to use the mirror site for Hugging Face.
 # export HF_ENDPOINT=https://hf-mirror.com
 export HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
@@ -32,7 +35,7 @@ export HF_ENDPOINT=${HF_ENDPOINT:-https://huggingface.co}
 export VLLM_IMAGE=intel/llm-scaler-vllm:0.14.0-b8.3.2
 
 # Model + context window.
-export LLM_MODEL=Qwen/Qwen3.6-35B-A3B
+export LLM_MODEL=${LLM_MODEL:-Qwen/Qwen3.6-35B-A3B}
 export MAX_MODEL_LEN=61440            # 60k context; lower (e.g. 32768) to reduce RAM.
 
 # Precision + share of system RAM the serving may reserve.
@@ -47,6 +50,11 @@ fi
 export TENSOR_PARALLEL_SIZE=1        # single integrated GPU on PTL
 export VLLM_SERVICE_PORT=41091
 
+# Interface the model services publish on — vllm (:41091) and multilevel (:8192),
+# which share this value. Loopback by default; neither authenticates. Uncomment to
+# serve other machines, with your own authentication in front.
+# export VLLM_BIND_HOST=0.0.0.0
+
 
 # =========================================================================
 # multilevel-video-understanding microservice
@@ -54,24 +62,27 @@ export VLLM_SERVICE_PORT=41091
 # Its source (edge-ai-libraries) is not vendored here — setup_docker.sh clones it
 # into the fixed path .external/edge-ai-libraries, which docker/compose.yaml
 # `extends` from. No env var needed.
-export REGISTRY_URL=intel/
+export REGISTRY_URL=${REGISTRY_URL:-intel/}
 export REGISTRY=${REGISTRY_URL}
-export TAG=latest
+export TAG=${TAG:-latest}                     # set as the latest release version
 export SERVICE_PORT=8192
 
 # Run multilevel-video-understanding as the host user
 # To ensure bind-mount directories (e.g. ~/.cache/...) are available in container
 export USER_GROUP_ID="$(id -g "$USER")"
 
-# Both roles are served by the same on-device vLLM-IPEX endpoint. The two
-# containers share `app-network`, so the microservice reaches it by service name.
-export VLM_BASE_URL=http://vllm-ipex-serving:8000/v1
-export LLM_BASE_URL=http://vllm-ipex-serving:8000/v1
-export VLM_MODEL_NAME=${LLM_MODEL}
-export LLM_MODEL_NAME=${LLM_MODEL}
+# Both roles are served by the same on-device vLLM-IPEX endpoint by default. The
+# caller may instead set these standard MLVU variables to reuse another serving.
+export VLM_BASE_URL=${VLM_BASE_URL:-http://vllm-ipex-serving:8000/v1}
+export LLM_BASE_URL=${LLM_BASE_URL:-http://vllm-ipex-serving:8000/v1}
+# Preserve the bundled-serving model defaults. setup_docker.sh verifies both
+# selected IDs against the endpoint's standard /v1/models response before the
+# application tier starts.
+export VLM_MODEL_NAME=${VLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}
+export LLM_MODEL_NAME=${LLM_MODEL_NAME:-Qwen/Qwen3.6-35B-A3B}
 
 export MAX_CONCURRENT_REQUESTS=4
-export DEFAULT_MAX_TOKENS=512
+export DEFAULT_MAX_TOKENS=1024
 export ENABLE_THINKING=false
 export VIDEO_FRAME_HEIGHT=378
 export VIDEO_FRAME_WIDTH=504

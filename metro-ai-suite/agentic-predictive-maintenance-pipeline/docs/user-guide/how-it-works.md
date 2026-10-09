@@ -1,6 +1,6 @@
 # How It Works
 
-The Agentic Predictive Maintenance (APM) blueprint follows an on-demand **detect-then-reason** model: clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the (finite) source video, and then triggers a single multi-agent reasoning pass over exactly the detections that the run produced, generating structured maintenance tickets. Detection and reasoning are two independent, decoupled services connected only by a shared `run_id` and an event-driven MQTT handoff. This section describes each stage so you can understand, verify, and debug the pipeline independently.
+The Agentic Predictive Maintenance for Critical Infrastructure (APM) blueprint follows an on-demand **detect-then-reason** model: clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the (finite) source video, and then triggers a single multi-agent reasoning pass over exactly the detections that the run produced, generating structured maintenance tickets. Detection and reasoning are two independent, decoupled services connected only by a shared `run_id` and an event-driven MQTT handoff. This section describes each stage so you can understand, verify, and debug the pipeline independently.
 
 ## System Overview
 
@@ -155,7 +155,8 @@ List available source videos:
 curl http://localhost:8080/api/detection/videos
 ```
 
-> Note: this release runs one bounded detect-then-reason cycle per click over
+> [!NOTE]
+> This release runs one bounded detect-then-reason cycle per click over
 > a finite source video. True live and continuous background detection
 > (independent of the "Run Pipeline" click) is a possible future direction;
 > see the scalable architecture diagram (`docs/apm-scalable-arch.drawio`) for
@@ -220,7 +221,7 @@ docker exec apm-mqtt-broker mosquitto_sub -t 'apm/batch-complete'
 }
 ```
 
-See the [agent-service integration guide](agent-service-integration-guide.md)
+See the [agent-service integration guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/agent-quality-handler/agent-service-integration-guide.html)
 for the full contract any application needs to satisfy for plugging its own
 detection layer into the agent-service, or vice versa.
 
@@ -465,7 +466,7 @@ curl http://localhost:8080/api/agents/results/$RUN_ID | python3 -m json.tool
 | Run reports `status: error` | `curl http://localhost:8080/api/agents/results/<run_id>` — the detection run failed (`ERROR`/`ABORTED`) or timed out; reasoning is correctly skipped in this case |
 | UI shows no runs | `curl http://localhost:8080/api/detection/runs` and `curl http://localhost:8080/api/agents/runs` — is the NGINX proxy, detection-service, or agent-service reachable? |
 | LLM/OpenVINO model server service is unhealthy | Use `LLM_MODE=fallback` to bypass the LLM service for testing |
-| `apm-storage` unhealthy | `docker logs apm-storage` — check port 5001 |
+| `apm-storage` unhealthy | `docker logs apm-storage` and `curl http://localhost:8080/api/storage/health` |
 | `apm-agent` unhealthy or unreachable | `docker logs apm-agent` — it is an externally pulled image (not built from this repo); confirm `REGISTRY`/`TAG` resolve to a real published image |
 
 For data preparation (creating a source video under `resources/videos/`):

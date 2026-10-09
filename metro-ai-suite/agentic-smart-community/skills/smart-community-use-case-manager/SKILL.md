@@ -286,7 +286,9 @@ and `overwrite: false` unless updating.
 Call `action=generate_task` with the complete `prompt_text`.
 
 - Base alerting/report-only: omit `evaluate_rules_path`.
-- Extended alerting/custom behavior: pass `evaluate_rules_path`.
+- Extended alerting/custom behavior: pass `evaluate_rules_content` when the
+  agent is remote; use `evaluate_rules_path` only for a file that already
+  exists on the MCP server host. These parameters are mutually exclusive.
 - The server checks consistency, registers/updates the VLM task, and on success
   writes `<data_dir>/use-cases/<use_case>/prompt.md`; a rule file is staged beside it.
 - It does not ALTER schema or update `use_case_dict`/config.

@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/collaborative-slam.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/components/optimized_solutions/collaborative-slam.html).
 
 ## Overview
 
@@ -27,7 +27,7 @@ Refer to [this paper](https://arxiv.org/abs/2102.03228) for more explanation of 
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/platform_foundation/getting_started.html).
 
 We support Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html) and Ubuntu 24.04 with [ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html).
 
@@ -41,7 +41,8 @@ Building Collaborative SLAM packages requires significant system resources:
 - **CPU:** Multi-core processor (4+ cores recommended)
 - **oneAPI:** Intel oneAPI 2025.x (provides `libsycl.so.8`) for SYCL/GPU support
 
-**Important:** Building with SYCL/oneAPI support is memory-intensive. Each parallel compilation job can consume 1-2GB of RAM. On systems with limited memory, use the safe build option to prevent system crashes.
+> [!IMPORTANT]
+> Building with SYCL/oneAPI support is memory-intensive. Each parallel compilation job can consume 1-2GB of RAM. On systems with limited memory, use the safe build option to prevent system crashes.
 
 ### Build
 
@@ -133,7 +134,8 @@ If Ubuntu 24.04 with Jazzy is used, then run
 source /opt/ros/jazzy/setup.bash
 ```
 
-**Important:** For systems with oneAPI 2025.x, ensure you have the SYCL 8-compatible ORB extractor installed. If you built packages with `LOCAL_ORB_PATH`, install the local ORB extractor first:
+> [!IMPORTANT]
+> For systems with oneAPI 2025.x, ensure you have the SYCL 8-compatible ORB extractor installed. If you built packages with `LOCAL_ORB_PATH`, install the local ORB extractor first:
 
 ```bash
 # If using local SYCL 8 ORB extractor

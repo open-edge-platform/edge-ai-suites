@@ -182,7 +182,7 @@ start_mock_webhook() {
     fi
     info "Starting mock webhook server on :$WEBHOOK_PORT..."
     $PYTHON -m uvicorn tests.integration.mock_webhook_server:app \
-        --host 0.0.0.0 --port $WEBHOOK_PORT --log-level warning &
+        --host 127.0.0.1 --port $WEBHOOK_PORT --log-level warning &
     PIDS_TO_KILL+=($!)
     sleep 2
     if curl -sf "http://localhost:$WEBHOOK_PORT/health" >/dev/null; then
@@ -217,7 +217,7 @@ start_analytics_local() {
     info "Starting local videostream-analytics on :$ANALYTICS_PORT..."
     cd "$PROJECT_DIR"
     WEBHOOK_URL="http://localhost:$WEBHOOK_PORT/events" \
-    $PYTHON __main__.py --host 0.0.0.0 --port $ANALYTICS_PORT --config config/config.yaml &
+    $PYTHON __main__.py --host 127.0.0.1 --port $ANALYTICS_PORT --config config/config.yaml &
     LOCAL_SERVER_PID=$!
     PIDS_TO_KILL+=($LOCAL_SERVER_PID)
     sleep 3

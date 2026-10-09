@@ -64,7 +64,9 @@ const GradingRightPanel: React.FC = () => {
       const num = (k: NumKey, parser: (s: string) => number) =>
         numInputs[k] !== '' ? parser(numInputs[k]) : null;
       const dpi = num('dpi', (s) => parseInt(s, 10));
-      const page_columns = num('page_columns', (s) => parseInt(s, 10));
+      const page_columns = numInputs.page_columns === 'auto'
+        ? 'auto'
+        : num('page_columns', (s) => parseInt(s, 10));
       const column_split_ratio = num('column_split_ratio', parseFloat);
       const force_split = boolInputs.force_split;
       let force_split_pairs: number[][] = [];
@@ -75,8 +77,8 @@ const GradingRightPanel: React.FC = () => {
         setSaveMsg(t('grading.config.invalidDpi', 'DPI must be a positive integer'));
         return;
       }
-      if (page_columns != null && ![1, 2].includes(page_columns)) {
-        setSaveMsg(t('grading.config.invalidPageColumns', 'Page columns must be 1 or 2'));
+      if (page_columns != null && page_columns !== 'auto' && ![1, 2].includes(page_columns)) {
+        setSaveMsg(t('grading.config.invalidPageColumns', 'Page columns must be 1, 2 or auto'));
         return;
       }
       if (isTwoColumnLayout && column_split_ratio != null && (isNaN(column_split_ratio) || column_split_ratio <= 0 || column_split_ratio >= 1)) {
@@ -175,6 +177,7 @@ const GradingRightPanel: React.FC = () => {
         value={numInputs.page_columns}
         onChange={(e) => setNum('page_columns', e.target.value)}
       >
+        <option value="auto">{t('grading.config.pageColumnsAuto', 'Auto')}</option>
         <option value="1">1</option>
         <option value="2">2</option>
       </select>

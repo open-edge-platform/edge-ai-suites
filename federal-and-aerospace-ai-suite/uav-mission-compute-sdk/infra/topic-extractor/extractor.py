@@ -19,7 +19,7 @@ InfluxDB measurements written:
   flight_velocity   : north_m_s, east_m_s, down_m_s
   flight_battery    : voltage_v, remaining_pct
   flight_gps        : satellites, fix_type
-  flight_status     : armed (bool), flight_mode (string tag)
+  flight_status     : armed (bool), flight_mode (string field)
 
 All measurements tagged with: uav_id, host
 """
@@ -131,7 +131,7 @@ def on_message(client, userdata, msg):
     elif suffix == "status":
         points.append(
             _tags(Point("flight_status").time(ts, WRITE_PRECISION))
-            .tag("flight_mode", str(payload.get("mode", "UNKNOWN")))
+            .field("flight_mode", str(payload.get("mode", "UNKNOWN")))
             .field("armed", 1 if payload.get("armed") else 0)
             .field("connected", 1 if payload.get("connected") else 0)
         )

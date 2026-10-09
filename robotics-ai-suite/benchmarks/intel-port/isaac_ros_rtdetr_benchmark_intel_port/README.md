@@ -62,5 +62,5 @@ This plugin is a minimal scaffold for benchmarking throughput and latency. It pu
 ## Dataset
 
 Automatically downloaded from NVIDIA® NGC:
-- Source: https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/
+- Source: <https://api.ngc.nvidia.com/v2/resources/nvidia/isaac/r2bdataset2023/versions/2/files/r2b_storage/>
 - Size: ~2.9 GB

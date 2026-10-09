@@ -9,7 +9,7 @@ By following this guide, you will learn how to:
 
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run a predefined pipeline**: Execute a pipeline to see loitering detection in action.
-- **Access the application's features and user interfaces**: Explore the Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
+- **Access the application's features and user interfaces**: Explore the Grafana dashboard and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
 
 ## Prerequisites
 
@@ -40,7 +40,8 @@ By following this guide, you will learn how to:
      ./install.sh loitering-detection
      ```
 
-   > **Note:** For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
+   > [!NOTE]
+   > For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
    > specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
    > your target IP address.)
 
@@ -67,7 +68,6 @@ By following this guide, you will learn how to:
      - Grafana Dashboard
      - DL Streamer Pipeline Server
      - MQTT Broker
-     - Node-RED (for applications without Scenescape)
      - Scenescape services (for Smart Intersection only)
 
      </details>
@@ -90,7 +90,11 @@ By following this guide, you will learn how to:
      Stop pipelines
      </summary>
      - To stop the pipelines without waiting for video streams to finish replay:
-       > **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see loitering detection
+
+       > [!NOTE]
+       > This will stop all the pipelines and the streams. **DO NOT** run this
+       > if you want to see loitering detection
+
        ```bash
        ./sample_stop.sh
        ```
@@ -120,16 +124,63 @@ By following this guide, you will learn how to:
 - In Grafana UI, the dashboard displays detected people and cars
   ![Grafana Dashboard](./_assets/grafana.png "grafana dashboard")
 
-  > **Note:** In the default pipeline, we use `gvatrack tracking-type=short-term-imageless` element. Imageless tracking forms object associations based on the movement and shape of objects, and it does not use image data. Since it does not use image features, the same object may receive different IDs over time due to lack of re-identification.
+  > [!NOTE]
+  > In the default pipeline, we use `gvatrack tracking-type=zero-term`
+  > element. Zero-term tracking assigns unique object IDs and requires object
+  > detection to run on every frame (the pipelines here already run detection
+  > on every frame, so this is a direct drop-in). It uses image data for
+  > re-identification, unlike the imageless trackers.
 
-### **NodeRED UI**
-
-- **URL**: `https://localhost/nodered/`
+  > [!NOTE]
+  > Detection (`gvadetect`) and tracking (`gvatrack`) always run on the full video frame —
+  > there is no element cropping input to the zone polygons. Only the `gvaanalytics` element
+  > restricts its output to the configured zones: objects outside every zone are still
+  > detected and tracked, just not reported as present/dwelling in a zone.
 
 ### **DL Streamer Pipeline Server**
 
 - **REST API**: `https://localhost/api/pipelines/status`
 - **WebRTC**: `https://localhost/mediamtx/object_tracking_1/`
+
+### **Tuning or disabling the dwell-time overlay**
+
+The on-screen dwell-time dashboard text (drawn by `loitering_watermark`) is controlled by two
+REST-overridable properties, set via `loitering-watermark-properties` in the launch payload used
+by `sample_start.sh` — no code or pipeline changes needed:
+
+- `loitering-threshold`: dwell time (seconds) after which the overlay turns red. Default `5.0`.
+  To change it, edit the `"loitering-threshold"` value in the payload in `sample_start.sh` (or
+  pass a different value in your own `curl` call using the same payload shape), then restart the
+  pipelines so the new value takes effect:
+
+  ```bash
+  ./sample_stop.sh
+  ./sample_start.sh
+  ```
+
+  > [!NOTE]
+  > Pipeline parameters are only read when a pipeline starts, so editing the payload value
+  > alone does not affect an already-running pipeline — it must be restarted.
+  > [!IMPORTANT]
+  > `loitering-threshold` must be a JSON number (e.g. `7.0`), not a quoted string (`"7.0"`)
+- `quiet-mode`: set to `"true"` to suppress the on-screen text entirely (e.g. to rely on the
+  Grafana table only); `"false"` to re-enable it.
+
+Example REST payload fragment (see `sample_start.sh` for the full launch payload):
+
+```json
+{
+  "parameters": {
+    "loitering-watermark-properties": {
+      "loitering-threshold": 7.0,
+      "quiet-mode": "false"
+    }
+  }
+}
+```
+
+This only affects the on-screen text; zone outlines/bounding boxes and the Grafana table are
+unaffected.
 
 ## **Stop the Application**
 

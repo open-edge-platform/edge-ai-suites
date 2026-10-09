@@ -62,6 +62,9 @@ mkdir -p "$DATA_DIR"
 DATA_DIR="$(cd "$DATA_DIR" && pwd)"
 ACTIVE_CONFIG="$DATA_DIR/config.yaml"
 ACTIVE_MONITORS="$DATA_DIR/monitors.yaml"
+RUNTIME_CONFIG="$(mktemp)"
+trap 'rm -f "$FILTERED_MONITORS" "$RUNTIME_CONFIG"' EXIT
+cp -- "$SCRIPT_DIR/config.demo.yaml" "$RUNTIME_CONFIG"
 
 persist_demo_config() {
   local source="$1"
@@ -83,9 +86,10 @@ persist_demo_config() {
   echo "updated $target from $source"
 }
 
-persist_demo_config "$SCRIPT_DIR/config.demo.yaml" "$ACTIVE_CONFIG"
+persist_demo_config "$RUNTIME_CONFIG" "$ACTIVE_CONFIG"
 persist_demo_config "$FILTERED_MONITORS" "$ACTIVE_MONITORS"
 rm -f "$FILTERED_MONITORS"
+rm -f "$RUNTIME_CONFIG"
 trap - EXIT
 
 # 4. Bring up the stack, reusing an already-warm vllm-ipex-serving. If the app tier
@@ -93,8 +97,6 @@ trap - EXIT
 #    server restarts and reloads the demo config written above. --light-down stops
 #    only the app tier (mcp + multilevel + videostream-analytics) and leaves
 #    vllm-ipex-serving running, so its 3-20 min recompile is never repaid.
-# shellcheck disable=SC1091
-source "$REPO_DIR/docker/set_env.sh"
 if [ -n "$(docker compose -f "$REPO_DIR/docker/compose.yaml" ps -q \
     smart-community-mcp-server multilevel-video-understanding videostream-analytics 2>/dev/null)" ]; then
   echo "app tier already running — bouncing it (--light-down) to reload the demo config…"

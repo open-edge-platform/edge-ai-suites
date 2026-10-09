@@ -1,4 +1,4 @@
-# VLM OpenVINO Serving — API Guide
+# VLM OpenVINO™ Serving — API Guide
 
 Base URL: `http://<host>:9900`
 

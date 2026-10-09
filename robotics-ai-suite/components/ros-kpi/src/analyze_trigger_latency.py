@@ -718,6 +718,143 @@ def _load_resource_thermal(session_dir: Path) -> dict:
     return {}
 
 
+# Default cap on how many latency spikes are surfaced in kpi.json.
+DEFAULT_MAX_LATENCY_SPIKES = 5
+
+
+def _load_resource_samples(session_dir: Path):
+    """
+    Parse ``resource_usage.json`` once and return ``(epoch_ts, samples,
+    node_map)`` sorted by time, or ``None`` if the file is absent, empty, or
+    unreadable.
+
+    epoch_ts is a list of epoch-second floats (each sample's ISO ``ts``
+    converted via ``datetime.fromisoformat(...).timestamp()``), parallel to
+    samples -- ready for a bisect-based nearest-timestamp lookup. node_map is
+    ``{pid: node_name}`` from ``ros2_node_map`` (#58), empty if absent.
+    """
+    log = session_dir / 'resource_usage.json'
+    if not log.exists():
+        return None
+    try:
+        document = json.loads(log.read_text(errors='replace'))
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    epoch_ts, samples = [], []
+    for sample in document.get('samples', []):
+        try:
+            ts = datetime.datetime.fromisoformat(sample['ts']).timestamp()
+        except (KeyError, TypeError, ValueError):
+            continue
+        epoch_ts.append(ts)
+        samples.append(sample)
+    if not epoch_ts:
+        return None
+
+    order = sorted(range(len(epoch_ts)), key=epoch_ts.__getitem__)
+    epoch_ts = [epoch_ts[i] for i in order]
+    samples = [samples[i] for i in order]
+
+    node_map = {int(pid): name for pid, name in (document.get('ros2_node_map') or {}).items()}
+    return epoch_ts, samples, node_map
+
+
+def _nearest_sample_index(epoch_ts: List[float], target: float) -> int:
+    """Return the index into a sorted epoch_ts closest to target."""
+    idx = bisect.bisect_left(epoch_ts, target)
+    if idx == 0:
+        return 0
+    if idx == len(epoch_ts):
+        return len(epoch_ts) - 1
+    before, after = epoch_ts[idx - 1], epoch_ts[idx]
+    return idx - 1 if (target - before) <= (after - target) else idx
+
+
+def _find_latency_spikes(
+    all_results: List[dict],
+    session_dir: Path,
+    max_spikes: int = DEFAULT_MAX_LATENCY_SPIKES,
+) -> List[dict]:
+    """
+    Cross-reference latency outliers against resource_usage.json to surface
+    "node X spiked CPU right before this latency outlier" root-cause hints,
+    instead of two disconnected charts (#59).
+
+    A spike is any event whose latency for its own (node, input, output)
+    pair meets or exceeds that pair's own p99_ms (reusing the percentile
+    already computed per pair rather than a second statistical pass). Each
+    surfaced spike is joined to the nearest resource_usage.json sample by
+    timestamp and annotated with its top-3 CPU consumers.
+
+    Known limitation: out_ts is wall-clock/bag-recorded epoch seconds, while
+    resource_usage.json's ts is always the resource probe's wall clock. If
+    the session used --use-sim-time, out_ts may be simulated time and
+    diverge from the probe's wall-clock samples, making the correlation
+    unreliable (same category as the sim-time bug fixed in
+    ros2_graph_monitor.py).
+
+    Returns [] if resource_usage.json is absent/unreadable or no event meets
+    its pair's p99 threshold. Sorted by latency_ms descending, capped to
+    max_spikes to keep kpi.json bounded.
+    """
+    loaded = _load_resource_samples(session_dir)
+    if loaded is None:
+        return []
+    epoch_ts, samples, node_map = loaded
+
+    candidates = []
+    for pair_result in all_results:
+        threshold = pair_result.get('p99_ms')
+        if threshold is None:
+            continue
+        in_t = pair_result['input']
+        for event in pair_result.get('events', []):
+            hit = event.get('all_inputs', {}).get(in_t)
+            if hit is None:
+                continue
+            _trigger_ts, lat_ms = hit
+            if lat_ms < threshold:
+                continue
+            candidates.append({
+                'node':       pair_result['node'],
+                'input':      in_t,
+                'output':     pair_result['output'],
+                'out_ts':     event['out_ts'],
+                'latency_ms': round(lat_ms, 3),
+            })
+
+    if not candidates:
+        return []
+
+    candidates.sort(key=lambda c: c['latency_ms'], reverse=True)
+    candidates = candidates[:max_spikes]
+
+    spikes = []
+    for c in candidates:
+        idx = _nearest_sample_index(epoch_ts, c['out_ts'])
+        sample_ts, sample = epoch_ts[idx], samples[idx]
+        top_processes = sorted(
+            sample.get('processes', []),
+            key=lambda p: p.get('cpu_pct', 0.0), reverse=True,
+        )[:3]
+        spikes.append({
+            **c,
+            'resource_sample_ts': sample_ts,
+            'time_delta_sec':     round(abs(sample_ts - c['out_ts']), 3),
+            'top_consumers': [
+                {
+                    'pid':     p.get('pid'),
+                    'node':    node_map.get(p.get('pid')),
+                    'cpu_pct': p.get('cpu_pct', 0.0),
+                }
+                for p in top_processes
+            ],
+        })
+
+    return spikes
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  JSON schema validation
 # ──────────────────────────────────────────────────────────────────────────────
@@ -773,6 +910,7 @@ def build_performance_kpi(
     all_results: List[dict],
     session_dir: Path,
     topic_times: Dict[str, List[float]],  # noqa: ARG001 — kept for API symmetry
+    max_latency_spikes: int = DEFAULT_MAX_LATENCY_SPIKES,
 ) -> dict:
     """
     Build a structured per-session KPI dict using standard benchmark metric keys.
@@ -835,6 +973,7 @@ def build_performance_kpi(
         }
 
     _cpu_mean, _cpu_max = _compute_resource_cpu_stats(session_dir)
+    _latency_spikes = _find_latency_spikes(all_results, session_dir, max_latency_spikes)
     payload = {
         'schema_version':   'level1_v1',
         'throughput_hz':    sys_fps,
@@ -847,6 +986,7 @@ def build_performance_kpi(
         'jitter_stdev_ms':  sys_jit_std,
         'cpu_mean_pct':     _cpu_mean,
         'cpu_max_pct':      _cpu_max,
+        'latency_spikes':   _latency_spikes,
         'per_node': per_node,
         'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
         'metadata': {
@@ -970,6 +1110,14 @@ def main() -> None:
         type=int,
         default=5,
         help='Minimum number of trigger events required to report a pair (default: 5).',
+    )
+    parser.add_argument(
+        '--max-latency-spikes',
+        type=int,
+        default=DEFAULT_MAX_LATENCY_SPIKES,
+        help='Max number of latency outliers to cross-reference against resource_usage.json '
+             'in the KPI output (default: 5). An outlier is an event at or above its own '
+             'pair\'s p99 latency.',
     )
     parser.add_argument(
         '--no-filter',
@@ -1150,12 +1298,18 @@ def main() -> None:
 
     # ── JSON output (for benchmark aggregation) ──────────────────────────────
     if args.json_out:
-        payload = build_performance_kpi(all_results, session_dir, topic_times)
+        payload = build_performance_kpi(
+            all_results, session_dir, topic_times,
+            max_latency_spikes=args.max_latency_spikes,
+        )
         json_path = Path(args.json_out)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         with open(json_path, 'w') as _jf:
             json.dump(payload, _jf, indent=2)
         logger.info(f'  KPI JSON written → {json_path}')
+        if not args.no_table and payload.get('latency_spikes'):
+            logger.info(f"  ⚠  {len(payload['latency_spikes'])} latency spike(s) cross-referenced "
+                        f"against resource usage — see 'latency_spikes' in the KPI JSON")
         errors = validate_kpi_json(payload)
         if errors:
             logger.warning(f'  KPI JSON failed schema validation ({len(errors)} error(s)):')
