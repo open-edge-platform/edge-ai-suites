@@ -11,7 +11,7 @@ services:
     # Pulled from the EAL agent-quality-handler microservice — no longer
     # built from this repo. See services/agent-service (removed) history
     # for the prior in-repo implementation this replaced.
-    image: ${DOCKER_REGISTRY}${AGENTIC_QUALITY_HANDLER_IMAGE}
+    image: ${DOCKER_REGISTRY}${AGENTIC_QUALITY_HANDLER_IMAGE}:${DEPS_IMAGE_SUFFIX:-2026.2.0}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     container_name: apm-agent
     hostname: apm-agent
     environment:
@@ -106,7 +106,7 @@ services:
     volumes:
       - ./configs/agentic/models:/model:ro
     ports:
-      - "${LLM_PORT:-8010}:8000"
+      - "${HOST_IP:-127.0.0.1}:${LLM_PORT:-8010}:8000"
     networks:
       - timeseries_network
     security_opt:
@@ -119,7 +119,7 @@ services:
       start_period: 30s
 
   model-download:
-    image: ${DOCKER_REGISTRY}${MODEL_DOWLOADER_IMAGE}
+    image: ${DOCKER_REGISTRY}${MODEL_DOWLOADER_IMAGE}:${DEPS_IMAGE_SUFFIX:-2026.2.0}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     container_name: apm-model-download
     hostname: model-download
     # The model-download entrypoint only accepts the plugin list via the
@@ -135,7 +135,7 @@ services:
     volumes:
       - ./configs/agentic/models:/opt/models
     ports:
-      - "${MODEL_DOWNLOAD_PORT:-8200}:8000"
+      - "${HOST_IP:-127.0.0.1}:${MODEL_DOWNLOAD_PORT:-8200}:8000"
     networks:
       - timeseries_network
     restart: unless-stopped
@@ -150,7 +150,7 @@ services:
       # ui
 
   apm-metrics:
-    image: ${DOCKER_REGISTRY}${METRICS_MANAGER_IMAGE}
+    image: ${DOCKER_REGISTRY}${METRICS_MANAGER_IMAGE}:${DEPS_IMAGE_SUFFIX:-2026.2.0}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     container_name: apm-metrics
     hostname: apm-metrics
     environment:

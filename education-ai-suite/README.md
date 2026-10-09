@@ -1,5 +1,11 @@
 # Education AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project has moved to (open-edge-platform/education-ai-suite)[https://github.com/open-edge-platform/education-ai-suite].
+
+
+
 The **Education AI Suite** is a collection of open-source reference applications, libraries,
 microservices, and benchmarking tools, helping developers accelerate AI workload development
 and select hardware that best fits their education-focused use cases.

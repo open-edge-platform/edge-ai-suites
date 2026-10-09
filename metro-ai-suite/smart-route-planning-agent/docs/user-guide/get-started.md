@@ -29,7 +29,7 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 
     Edit `src/data/config.json` to add the IP addresses and ports of the edge nodes where Smart Traffic Intersection Agents are running.
 
-    #### Example Configuration
+    ### Example Configuration
 
     ```json
     {

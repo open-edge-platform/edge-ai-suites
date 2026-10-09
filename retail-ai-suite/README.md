@@ -1,5 +1,11 @@
 # Retail AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project is now developed under its individual GitHub organization:
+> (github.com/intel-retail)[https://github.com/intel-retail].
+
+
 The **Retail AI Suite** is an open-source software framework designed to accelerate AI workload evaluation and hardware selection for retail edge use cases.
 It helps retail solution builders to:
 

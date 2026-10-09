@@ -5,6 +5,12 @@
 
 # Edge-AI-Suites
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> All its parts have been moved to individual Suite repositories.
+
+
+
 **Edge AI Suites** are collections of Intel-optimized open source AI software development kits
 (SDKs), microservices, libraries, and sample applications intended to demonstrate
 the applicability and efficiency of Intel hardware in industry-specific edge AI use cases.

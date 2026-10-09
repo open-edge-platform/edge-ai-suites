@@ -6,6 +6,8 @@ from utils.prompt_loader import load_prompt
 from utils.storage_manager import StorageManager
 from utils.session_paths import SessionPaths
 from utils import text_chunker
+from utils import overload_warnings
+from utils.overload_warnings import OverloadWarnings
 from utils.transcript_parser import parse_transcript_lines
 from model_manager import ModelManager
 import logging, os
@@ -89,7 +91,11 @@ class SummarizerComponent(PipelineComponent):
         self.session_id = session_id
         self.mode = mode.lower()
         self.board_ocr_partial = False
-        
+        # Overload conditions found while planning are collected here and
+        # streamed to the client, because a log file nobody opens is not a
+        # warning. Populated by _plan_chunks, drained by process().
+        self.warnings = OverloadWarnings(session_id, "summary")
+
         text_gen = config.models.text_gen
         SummarizerComponent._model = ModelManager.instance().text_gen()
         SummarizerComponent._config = ("vlm", text_gen.vlm_name, text_gen.device)
@@ -212,9 +218,11 @@ class SummarizerComponent(PipelineComponent):
 
         lines = [l for l in input_text.splitlines() if l and l.strip()]
         total = sum(text_chunker.count_tokens(l, tokenizer) + 1 for l in lines)
-        if total <= text_chunker.usable_tokens(budget, reserve):
+        if total <= text_chunker.usable_tokens(budget, reserve,
+                                               on_cap=self.warnings.on_cap):
             text_chunker.warn_if_short_of_memory(
-                total + reserve, device, what="summary call"
+                total + reserve, device, what="summary call",
+                on_short=self.warnings.on_short,
             )
             return [], budget, reserve, total
 
@@ -231,6 +239,8 @@ class SummarizerComponent(PipelineComponent):
                 reserve_tokens=reserve,
                 stage_reserve_tokens=stage_reserve,
                 label="segment",
+                on_cap=self.warnings.on_cap,
+                on_oversize=self.warnings.on_oversize,
             )
         else:
             chunks = text_chunker.chunk_lines(
@@ -240,6 +250,8 @@ class SummarizerComponent(PipelineComponent):
                 reserve_tokens=reserve,
                 stage_reserve_tokens=stage_reserve,
                 label="segment",
+                on_cap=self.warnings.on_cap,
+                on_oversize=self.warnings.on_oversize,
             )
 
         # The reduce call carries the notes rather than the transcript, so the
@@ -247,6 +259,7 @@ class SummarizerComponent(PipelineComponent):
         text_chunker.warn_if_short_of_memory(
             max(c.tokens for c in chunks) + stage_reserve, device,
             what="largest summary segment",
+            on_short=self.warnings.on_short,
         )
         return chunks, budget, reserve, total
 
@@ -359,6 +372,16 @@ class SummarizerComponent(PipelineComponent):
                 "%d fold round(s); the reduce prompt will be over budget and the "
                 "summary may be truncated.", size, reduce_budget, _MAX_FOLD_ROUNDS,
             )
+            # Two rounds is a cap, not a loop, so the run continues over budget.
+            # Say so before the reduce call rather than after the summary lands.
+            yield self.warnings.record(
+                overload_warnings.FOLD_INCOMPLETE,
+                f"The notes still hold {size} tokens against a {reduce_budget}-token "
+                f"reduce budget after {_MAX_FOLD_ROUNDS} fold rounds. The summary may "
+                f"be cut short; lower map_max_new_tokens for lessons this long.",
+                notes_tokens=size, reduce_budget=reduce_budget,
+                rounds=_MAX_FOLD_ROUNDS,
+            )
         return notes
 
     def _reduce_input(self, notes):
@@ -387,9 +410,14 @@ class SummarizerComponent(PipelineComponent):
             if cfg is not None and bool(getattr(cfg, "enabled", True)):
                 # input_tokens is the transcript as read; summing the chunks
                 # would count the overlap lines twice.
+                planned = len(self.warnings.records)
                 chunks, budget, reserve, run.input_tokens = self._plan_chunks(
                     input_text, board_text
                 )
+                # Planning is not a generator, so anything it found is drained
+                # here -- before the first call, which is what these warn about.
+                for warning in self.warnings.records[planned:]:
+                    yield warning
 
             if len(chunks) > 1:
                 run.strategy = "map_reduce"
