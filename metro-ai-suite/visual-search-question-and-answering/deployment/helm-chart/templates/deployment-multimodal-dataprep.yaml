@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multimodalDataprep.fullname" . }}
+  labels:
+    app: {{ include "multimodalDataprep.name" . }}
+spec:
+  replicas: {{ .Values.multimodalDataprep.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.multimodalDataprep.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.multimodalDataprep.name }}
+    spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      hostIPC: true
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        supplementalGroups:
+          - {{ .Values.multimodalDataprep.videoGroupId }}
+          - {{ .Values.multimodalDataprep.renderGroupId }}
+      containers:
+      - name: {{ .Values.multimodalDataprep.name }}
+        image: "{{ if .Values.global.registry }}{{ .Values.global.registry }}{{ end }}{{ .Values.multimodalDataprep.image.repository }}:{{ .Values.multimodalDataprep.image.tag }}"
+        imagePullPolicy: {{ .Values.multimodalDataprep.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.servicePorts.dataprep }}
+        env:
+        - name: MM_DATAPREP_APP_HOST
+          value: "0.0.0.0"
+        - name: MM_DATAPREP_MILVUS_URI
+          value: "http://{{ .Values.MILVUS_HOST }}:{{ .Values.MILVUS_PORT }}"
+        # Must match the retriever's INDEX_NAME (Milvus collection).
+        - name: MM_DATAPREP_DB_COLLECTION
+          value: {{ .Values.retrieverMilvus.env.INDEX_NAME | quote }}
+        # The embedding model must match the one served to the retriever.
+        - name: MM_DATAPREP_EMBEDDING_MODEL_NAME
+          value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
+        # Media is shared with the UI: ingest paths resolve under this root and
+        # source_path is recorded in host terms.
+        - name: MM_DATAPREP_INGEST_DATA_ROOT_HOST
+          value: {{ .Values.volumes.hostDataPath.hostPath | quote }}
+        {{- range $key, $value := .Values.multimodalDataprep.env }}
+        {{- if ne $key "HF_ENDPOINT" }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        - name: HF_ENDPOINT
+          value: {{ .Values.multimodalDataprep.env.HF_ENDPOINT | quote }}
+        - name: no_proxy
+          value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
+        - name: http_proxy
+          value: {{ .Values.global.proxy.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.global.proxy.https_proxy | quote }}
+        {{- with .Values.multimodalDataprep.resources }}
+        resources:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        volumeMounts:
+        - name: data
+          mountPath: {{ .Values.multimodalDataprep.env.MM_DATAPREP_INGEST_DATA_ROOT }}
+          readOnly: true
+        - name: dataprep-tmp
+          mountPath: /tmp/dataprep
+        - name: workspace
+          mountPath: /home/user/models
+        livenessProbe:
+          httpGet:
+            path: /v1/dataprep/health
+            port: {{ .Values.servicePorts.dataprep }}
+          {{- with .Values.multimodalDataprep.livenessProbe }}
+          initialDelaySeconds: {{ .initialDelaySeconds }}
+          periodSeconds: {{ .periodSeconds }}
+          timeoutSeconds: {{ .timeoutSeconds }}
+          failureThreshold: {{ .failureThreshold }}
+          {{- end }}
+        readinessProbe:
+          {{- if .Values.multimodalDataprep.readinessProbe.sameAsLiveness }}
+          httpGet:
+            path: /v1/dataprep/health
+            port: {{ .Values.servicePorts.dataprep }}
+          initialDelaySeconds: {{ .Values.multimodalDataprep.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.multimodalDataprep.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.multimodalDataprep.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.multimodalDataprep.livenessProbe.failureThreshold }}
+          {{- end }}
+      volumes:
+      - name: data
+        hostPath:
+          path: {{ .Values.volumes.hostDataPath.hostPath }}
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: {{ .Values.global.sharedPvcName }}
+      - name: dataprep-tmp
+        emptyDir: {}
+
+
+

@@ -16,15 +16,15 @@ Create a fully qualified app name.
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "dataprepVisualdataMilvus.name" -}}
-  {{- default .Chart.Name (default "" .Values.dataprepVisualdataMilvus.name) | trunc 63 | trimSuffix "-" -}}
+{{- define "multimodalDataprep.name" -}}
+  {{- default .Chart.Name (default "" .Values.multimodalDataprep.name) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 {{/*
 Create a fully qualified app name.
 */}}
-{{- define "dataprepVisualdataMilvus.fullname" -}}
-  {{- $name := default .Chart.Name (default "" .Values.dataprepVisualdataMilvus.name) -}}
+{{- define "multimodalDataprep.fullname" -}}
+  {{- $name := default .Chart.Name (default "" .Values.multimodalDataprep.name) -}}
   {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 

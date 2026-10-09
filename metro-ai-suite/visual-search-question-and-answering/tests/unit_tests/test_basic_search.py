@@ -5,7 +5,9 @@ import os
 import time
 from streamlit.testing.v1 import AppTest
 
-APP_TIMEOUT = 30
+# Cluster deployments run far slower than a local compose stack, so allow the
+# timeout to be raised via APP_TEST_TIMEOUT without editing the suite.
+APP_TIMEOUT = max(int(os.environ.get("APP_TEST_TIMEOUT", "0")), 30)
 
 Query_list = {"car": "car-race",
 "deer": "deer",

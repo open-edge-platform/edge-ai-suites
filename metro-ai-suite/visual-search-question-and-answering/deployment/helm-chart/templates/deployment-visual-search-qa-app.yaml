@@ -14,6 +14,10 @@ spec:
       labels:
         app: {{ .Values.visualSearchQaApp.name }}
     spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       hostIPC: true
       containers:
       - name: {{ .Values.visualSearchQaApp.name }}
@@ -24,12 +28,8 @@ spec:
         env:
         - name: EMBEDDING_MODEL_NAME
           value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
-        - name: EMBEDDING_BASE_URL
-          value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL | quote }}
         - name: VLM_MODEL_NAME
           value: {{ required "Value for `global.VLM_MODEL_NAME` is required!" .Values.global.VLM_MODEL_NAME | quote }}
-        - name: DEVICE
-          value: {{ .Values.visualSearchQaApp.env.DEVICE | quote }}
         - name: no_proxy
           value: "{{ .Values.global.proxy.no_proxy }},localhost,127.0.0.1,.svc.cluster.local"
         - name: http_proxy
@@ -38,6 +38,14 @@ spec:
           value: {{ .Values.global.proxy.https_proxy | quote }}
         - name: DATA_INGEST_WITH_DETECT
           value: {{ .Values.visualSearchQaApp.env.DATA_INGEST_WITH_DETECT | quote }}
+        - name: DATA_INGEST_FRAME_INTERVAL
+          value: {{ .Values.visualSearchQaApp.env.DATA_INGEST_FRAME_INTERVAL | quote }}
+        - name: DATAPREP_BUCKET_NAME
+          value: {{ .Values.visualSearchQaApp.env.DATAPREP_BUCKET_NAME | quote }}
+        - name: METADATA_CAMERA_FIELD
+          value: {{ .Values.visualSearchQaApp.env.METADATA_CAMERA_FIELD | quote }}
+        - name: METADATA_DATE_FIELD
+          value: {{ .Values.visualSearchQaApp.env.METADATA_DATE_FIELD | quote }}
         - name: VISUAL_SEARCH_QA_UI_PORT
           value: {{ .Values.visualSearchQaApp.env.VISUAL_SEARCH_QA_UI_PORT | quote }}
         - name: MAX_MAX_NUM_SEARCH_RESULTS
@@ -47,15 +55,17 @@ spec:
         - name: SHOW_RESULT_PER_ROW
           value: {{ .Values.visualSearchQaApp.env.SHOW_RESULT_PER_ROW | quote }}
         - name: BACKEND_VQA_BASE_URL
-          value: {{ .Values.visualSearchQaApp.env.BACKEND_VQA_BASE_URL | quote }}
+          value: {{ tpl .Values.visualSearchQaApp.env.BACKEND_VQA_BASE_URL $ | quote }}
         - name: BACKEND_SEARCH_BASE_URL
-          value: {{ .Values.visualSearchQaApp.env.BACKEND_SEARCH_BASE_URL | quote }}
+          value: {{ tpl .Values.visualSearchQaApp.env.BACKEND_SEARCH_BASE_URL $ | quote }}
         - name: BACKEND_DATAPREP_BASE_URL 
-          value: {{ .Values.visualSearchQaApp.env.BACKEND_DATAPREP_BASE_URL | quote }}
+          value: {{ tpl .Values.visualSearchQaApp.env.BACKEND_DATAPREP_BASE_URL $ | quote }}
+        - name: DATAPREP_PUBLIC_BASE_URL
+          value: {{ .Values.visualSearchQaApp.env.DATAPREP_PUBLIC_BASE_URL | default "" | quote }}
         - name: HOST_DATA_PATH
           value: {{ .Values.volumes.hostDataPath.hostPath | quote }}
         - name: host_ip
-          value: visual-search-qa-app.vsqa.svc.cluster.local
+          value: {{ .Values.visualSearchQaApp.name }}.{{ .Release.Namespace }}.svc.cluster.local
         volumeMounts:
         - name: data
           mountPath: /home/user/data
@@ -63,5 +73,4 @@ spec:
       - name: data
         hostPath:
           path: {{ .Values.volumes.hostDataPath.hostPath }}
-
 

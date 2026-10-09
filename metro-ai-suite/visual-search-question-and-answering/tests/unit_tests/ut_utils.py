@@ -27,10 +27,10 @@ def generate_fake_meta(file_dir):
                 json_file_path = os.path.join(meta_dir, f"{base_name}.json")
                 fake_label = f"camera_{cnt}"
                 timestamp = datetime.date(2025, month, cnt % 30 + 1)  # Increment day, reset to 1 if exceeds 30
-                fake_timestamp = int(timestamp.strftime("%Y%m%d"))
+                fake_capture_date = int(timestamp.strftime("%Y%m%d"))
                 fake_meta = {
                     "camera": fake_label,  
-                    "timestamp": fake_timestamp  
+                    "capture_date": fake_capture_date  
                 }
 
                 cnt += 1
