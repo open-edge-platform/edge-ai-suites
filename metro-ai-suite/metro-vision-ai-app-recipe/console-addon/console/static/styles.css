@@ -1,0 +1,255 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+:root {
+  --bg: #0c1017;
+  --panel: #151b26;
+  --panel-2: #1b2432;
+  --line: #24303f;
+  --text: #e6edf5;
+  --muted: #8ea0b5;
+  --accent: #29c19c;
+  --accent-2: #3d8bff;
+  --warn: #f5a623;
+  --danger: #ff5c6c;
+  --rail-w: 320px;
+  --head-h: 56px;
+  font-size: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Segoe UI", Roboto, system-ui, -apple-system, sans-serif;
+}
+
+.gauge .g-val, .tele-metrics b, .g-sub {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------- skeleton --- */
+
+.topbar {
+  height: var(--head-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 0 16px;
+  flex: 0 0 auto;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: var(--rail-w) 1fr;
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.rail {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  background: #090c12;
+}
+
+/* ------------------------------------------------------------- header --- */
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent), 0 0 2px var(--accent);
+}
+.brand .title { font-weight: 600; }
+.brand .subtitle { color: var(--muted); font-size: .82rem; }
+
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+
+.conn {
+  font-size: .8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+}
+.conn-ok { color: var(--accent); }
+.conn-bad { color: var(--danger); border-color: var(--danger); }
+
+/* --------------------------------------------------------------- rail --- */
+
+.card {
+  background: var(--panel-2);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.card h2 {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 10px 0;
+}
+
+/* Source/Model/Zone are <details>; summary replaces the plain h2 bar and
+   keeps the same look whether expanded or collapsed. */
+details.card summary {
+  list-style: none;
+  cursor: pointer;
+}
+details.card summary::-webkit-details-marker { display: none; }
+details.card summary h2 { margin: 0; }
+details.card[open] summary h2 { margin-bottom: 10px; }
+details.card > *:not(summary) { margin-top: 0; }
+
+details.card summary h2::before {
+  content: "\25B8";
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--muted);
+  transition: transform .15s ease;
+}
+details.card[open] summary h2::before { transform: rotate(90deg); }
+
+.info-icon {
+  color: var(--muted);
+  cursor: help;
+  font-size: .9rem;
+}
+.info-icon:hover, .info-icon:focus { color: var(--accent-2); }
+
+.field { margin-bottom: 10px; }
+.field label {
+  display: block;
+  font-size: .78rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+select, input[type="text"], input[type="number"] {
+  width: 100%;
+  background: #0f1520;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 8px;
+  font-size: .88rem;
+}
+select:focus, input[type="text"]:focus, input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent-2);
+}
+
+.hint { font-size: .74rem; color: var(--muted); margin: 8px 0 0 0; }
+
+.draw-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .85rem;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.shape-toggle { display: flex; gap: 12px; margin-bottom: 10px; }
+.radio-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .8rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.radio-inline input { width: auto; }
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: .82rem;
+  cursor: pointer;
+  margin-bottom: 4px;
+}
+.checkbox-inline input { width: auto; }
+
+/* Stream-config accordions are generated per instance; same look as the
+   other rail cards, just stacked under the "Streams" count field. */
+.stream-cfg + .stream-cfg { margin-top: 10px; }
+.stream-cfg .sc-refresh { margin-left: 6px; }
+/* A card already linked to a running pipeline is left alone by the next
+   Start click - flag that visually so it is clear while clicking Start 
+   again does not relaunch it. */
+.stream-cfg.sc-running .sc-title::after {
+  content: " Running";
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.actions { display: flex; flex-direction: column; gap: 8px; }
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 11px 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: #06231c; }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+.btn-ghost:hover { filter: brightness(1.08); }
+.btn-sm { padding: 8px 10px; font-size: .82rem; width: 100%; margin-top: 4px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+
+.mini-btn {
+  width: 24px;
+  height: 22px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+}
+.mini-btn:hover { color: var(--accent); }
+.mini-btn.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.p-apply-zone {
+  background: var(--accent-2);
+  color: #04122b;
+  border: none;
+  border-radius: 6px;
+  font-size: .76rem;
+  padding: 5px 8px;
+  cursor: pointer;
+  margin: 0 10px 8px;
+}
+.p-apply-zone:disabled { opacity: .6; cursor: not-allowed; }
+

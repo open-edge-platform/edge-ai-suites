@@ -1,6 +1,37 @@
 #!/bin/bash
 
 DLSPS_NODE_IP="localhost"
+# The pipelines bake in no model, so that a different one can be selected per
+# request without inheriting this model's post-processing.
+MODEL_DIR="/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001"
+MODEL_XML="$MODEL_DIR/FP16/pedestrian-and-vehicle-detector-adas-0001.xml"
+MODEL_PROC="$MODEL_DIR/pedestrian-and-vehicle-detector-adas-0001.json"
+
+# Zones are no longer baked into the pipeline (gvaanalytics has no
+# `config=` property set in config.json), so this script reads the same
+# zone file (src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json)
+# and passes its "zones" array through the "analytics-properties" parameter
+# on every start - every zone defined there, rectangle or polygon, any
+# count, is active exactly as if it were still baked in. Edit that file to
+# change the zones the sample pipelines evaluate.
+#
+# Detection itself runs full-frame (matching the upstream DLStreamer
+# loitering_detection sample's architecture) - gvaanalytics' zone/dwell
+# matching and draw-zones=true are what make loitering detection zone-
+# aware, not a detection-region crop; a gvaattachroi-based crop used to be
+# here but introduced a visible extra rectangle around non-rectangular
+# zones (its crop can only ever be a bounding box) with no matching upside.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ZONES_CONFIG_FILE="$SCRIPT_DIR/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json"
+ZONES_JSON=$(python3 -c "
+import json
+try:
+    with open('$ZONES_CONFIG_FILE') as f:
+        zones = json.load(f).get('zones') or []
+except Exception:
+    zones = []
+print(json.dumps(json.dumps(zones)))
+")
 
 function run_sample() {
   pipelines=$1
@@ -16,6 +47,10 @@ function run_sample() {
   pipeline_list=()
   echo
   echo -n ">>>>>Initialization..."
+  # Each camera gets its own model-instance-id: DL Streamer caches a loaded
+  # network per id, and sharing one across concurrent pipelines can wedge
+  # every later launch reusing it once any one of them stops uncleanly
+  # (console-addon/console/catalog.py's _model_instance_id has the full story).
   for x in $(seq 1 $pipelines); do
     payload=$(cat <<EOF
    {
@@ -31,16 +66,17 @@ function run_sample() {
         },
         "frame": {
             "type": "webrtc",
-            "peer-id": "object_tracking_$x",
-            "overlay-properties": {
-                "font-scale": 1.0,
-                "draw-txt-bg": false
-            }
+            "peer-id": "object_tracking_$x"
         }
     },
     "parameters": {
+        "detection-properties": {
+            "model": "$MODEL_XML",
+            "model_proc": "$MODEL_PROC",
+            "model-instance-id": "sample-${pipeline_name}-$x"
+        },
         "analytics-properties": {
-            "config": "/home/pipeline-server/zones/VIRAT_S_00010$x.json"
+            "zones": $ZONES_JSON
         },
         "loitering-watermark-properties": {
             "loitering-threshold": 5.0
@@ -104,9 +140,57 @@ function stop_all_pipelines() {
 }
 
 
+function deploy_with_gui() {
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+  echo
+  echo ">>>>>--gui requested: stopping any running pipelines first."
+  # Tolerate failure here: on a first-ever run nothing is deployed yet, so
+  # the pipeline-server this talks to does not exist and the curls below
+  # fail - that is expected, not an error worth aborting over.
+  "$SCRIPT_DIR/sample_stop.sh" || true
+
+  HOST_IP="$(grep -E '^HOST_IP=' "$REPO_ROOT/.env" 2>/dev/null | cut -d '=' -f2)"
+  HOST_IP="${HOST_IP:-$(hostname -I | cut -f1 -d' ')}"
+
+  echo ">>>>>Regenerating docker-compose.yml with the Console UI service included..."
+  (cd "$REPO_ROOT" && WITH_GUI=1 ./install.sh loitering-detection "$HOST_IP")
+  if [ $? -ne 0 ]; then
+    echo "Error: install.sh failed; see output above."
+    exit 1
+  fi
+
+  echo ">>>>>Deploying the full stack, including the Console UI..."
+  (cd "$REPO_ROOT" && docker compose up -d --build)
+  if [ $? -ne 0 ]; then
+    echo "Error: docker compose up failed; see output above."
+    exit 1
+  fi
+  echo ">>>>>Console UI available at https://$HOST_IP/console/"
+}
+
 forcedCPU=false
 forcedGPU=false
 forcedNPU=false
+withGui=false
+
+# --gui is consumed here, before the cpu/gpu/npu loop below, so it is never
+# mistaken for an unrecognised device argument (which would otherwise force
+# CPU and print a warning).
+args=()
+for arg in "$@"; do
+  if [ "$arg" == "--gui" ]; then
+    withGui=true
+  else
+    args+=("$arg")
+  fi
+done
+set -- "${args[@]}"
+
+if $withGui; then
+  deploy_with_gui
+fi
 
 for arg in "$@"; do
   if [ "$arg" == "cpu" ]; then

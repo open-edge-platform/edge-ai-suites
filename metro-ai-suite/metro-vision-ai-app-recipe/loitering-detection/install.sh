@@ -21,11 +21,53 @@ for model in "\${OMZ_MODELS[@]}"; do
   if [ ! -e "src/dlstreamer-pipeline-server/models/intel/\$model/\$model.json" ]; then
     echo "Download \$model..." && \
     mkdir -p src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/ && \
-    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.xml?raw=true" && \
-    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.bin?raw=true" && \
+    curl -k -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.xml?raw=true" && \
+    curl -k -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/FP16/\${model}.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/\${model}/FP16/\${model}.bin?raw=true" && \
     echo "Download \$model proc file..." && \
-    curl -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
+    curl -k -L -o "src/dlstreamer-pipeline-server/models/intel/\${model}/\${model}.json" "https://github.com/dlstreamer/dlstreamer/blob/master/samples/gstreamer/model_proc/intel/\${model}.json?raw=true"
 
+  fi
+done
+
+##############################################################################
+# Download and convert Ultralytics models to static-shape OpenVINO IRs.
+#
+# This is what the UI's "model comparison" mode compares the OMZ pedestrian
+# detector against. dynamic=False is required: gvadetect's GPU/NPU plugins
+# reject a dynamic spatial input shape outright, and on CPU the pipeline
+# runs but silently returns no detections. To add another Ultralytics model
+# for comparison, add its .pt name (without extension) to ULTRALYTICS_MODELS
+# below - the same export call applies to any of them.
+##############################################################################
+ULTRALYTICS_MODELS=(yolo11s)
+ULTRALYTICS_IMGSZ=640
+for model in "\${ULTRALYTICS_MODELS[@]}"; do
+  ir_dir="src/dlstreamer-pipeline-server/models/\${model}/\${model}_static/FP16"
+  if [ ! -e "\${ir_dir}/\${model}.xml" ]; then
+    echo "Installing ultralytics and exporting \$model to a static-shape OpenVINO IR..."
+    # --trusted-host and the inline requests patch below both skip TLS verification,
+    # needed on networks where a corporate proxy intercepts HTTPS with its own CA
+    # (pip and ultralytics' GitHub release download otherwise fail with
+    # SSLCertVerificationError since that CA is not in this image's trust store).
+    if pip install --break-system-packages --quiet --no-cache-dir \
+        --trusted-host pypi.org --trusted-host files.pythonhosted.org \
+        ultralytics; then
+      ( cd /tmp && python3 -c "
+import ssl, requests
+ssl._create_default_https_context = ssl._create_unverified_context
+requests.packages.urllib3.disable_warnings()
+_orig_request = requests.Session.request
+requests.Session.request = lambda self, *a, **kw: _orig_request(self, *a, **{**kw, 'verify': False})
+from ultralytics import YOLO
+YOLO('\${model}.pt').export(format='openvino', imgsz=\${ULTRALYTICS_IMGSZ}, dynamic=False, half=True)
+" && mkdir -p "/opt/project/\${ir_dir}" \
+      && mv "\${model}_openvino_model/\${model}.xml" "\${model}_openvino_model/\${model}.bin" "/opt/project/\${ir_dir}/" \
+      && mv "\${model}_openvino_model/metadata.yaml" "/opt/project/\${ir_dir}/metadata.yaml" \
+      && rm -rf "\${model}_openvino_model" "\${model}.pt" ) \
+      || echo "WARNING: \$model export failed (see above) - place a static-shape IR under \${ir_dir}/ manually if you need it."
+    else
+      echo "WARNING: could not install ultralytics - place a static-shape IR under \${ir_dir}/ manually if you need it."
+    fi
   fi
 done
 
@@ -42,9 +84,10 @@ declare -A video_urls=(
 for video_name in "\${!video_urls[@]}"; do
     if [ ! -f src/dlstreamer-pipeline-server/videos/\${video_name} ]; then
         echo "Download \${video_name}..."
-        curl -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
+        curl -k -L -o "src/dlstreamer-pipeline-server/videos/\${video_name}" "\${video_urls[\$video_name]}"
     fi
 done
+
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" src/dlstreamer-pipeline-server/models src/dlstreamer-pipeline-server/videos 2>/dev/null || true
@@ -64,83 +107,22 @@ EOF
 )"
 
 ##############################################################################
-# This app no longer uses Node-RED (zone/dwell logic now runs in gvaanalytics).
-# Strip the node-red service from the generated docker-compose.yml (one level
-# up, shared with sibling apps) rather than editing the shared compose source,
-# so smart-parking/smart-intersection are unaffected.
+# The Console UI container is opt-in (see sample_start.sh --gui): the
+# default deployment (no flag) never builds or starts it, so it is stripped
+# from the generated ../docker-compose.yml here unless WITH_GUI=1 is set in
+# the environment - sample_start.sh's --gui path re-invokes the top-level
+# install.sh with WITH_GUI=1 to regenerate the file with it included instead.
+# This edits the generated file, not compose-without-scenescape.yml itself,
+# so a plain `docker compose up -d` after a plain `./install.sh ...` keeps
+# working exactly as before for anyone not using the UI.
 ##############################################################################
-if [ -f ../docker-compose.yml ]; then
+COMPOSE_FILE="../docker-compose.yml"
+if [ -f "$COMPOSE_FILE" ] && [ "${WITH_GUI:-0}" != "1" ]; then
+  echo "Console UI not requested (WITH_GUI unset) - removing the console service from $COMPOSE_FILE..."
   awk '
-    /^  node-red:/ { skip=1; next }
+    /^  console:/ { skip=1; next }
     skip && /^  [^ ]/ { skip=0 }
     skip && /^[^ ]/ { skip=0 }
     !skip { print }
-  ' ../docker-compose.yml > ../docker-compose.yml.tmp && mv ../docker-compose.yml.tmp ../docker-compose.yml
-  sed -i '/^      - node-red$/d' ../docker-compose.yml
-  sed -i '/^  node-red-node-modules:$/d' ../docker-compose.yml
+  ' "$COMPOSE_FILE" > "$COMPOSE_FILE.tmp" && mv "$COMPOSE_FILE.tmp" "$COMPOSE_FILE"
 fi
-
-##############################################################################
-# This app's MQTT topic prefixes are not part of the shared .env (they're
-# loitering-detection-specific); set them here, idempotently, in a clearly
-# commented section rather than leaving them permanently defined for
-# sibling apps that don't use them.
-##############################################################################
-if [ -f ../.env ]; then
-  sed -i \
-    -e '/^# loitering-detection: MQTT topic prefixes/d' \
-    -e '/^# SOURCE_TOPIC_PREFIX -/d' \
-    -e '/^#   publishes to/d' \
-    -e '/^# DEST_TOPIC_PREFIX -/d' \
-    -e '/^#   to for the Grafana/d' \
-    -e '/^SOURCE_TOPIC_PREFIX=/d' \
-    -e '/^DEST_TOPIC_PREFIX=/d' \
-    ../.env
-  cat >> ../.env <<'EOF'
-
-# loitering-detection: MQTT topic prefixes used by the mqtt-table-flattener sidecar.
-# SOURCE_TOPIC_PREFIX - prefix of the raw per-frame metadata topic gvametaconvert
-#   publishes to (<prefix>/<stream-id>); must match sample_start.sh's launch topics.
-# DEST_TOPIC_PREFIX - prefix the flattener republishes one-row-per-object summaries
-#   to for the Grafana MQTT table panel (<prefix>/<stream-id>).
-SOURCE_TOPIC_PREFIX=object_tracking
-DEST_TOPIC_PREFIX=loiter_status
-EOF
-fi
-
-##############################################################################
-# Add the mqtt-table-flattener service: reshapes the raw object_tracking/<N>
-# metadata (published as-is by DLSPS/gvametaconvert, unmodified) into
-# loiter_status/<N> messages Grafana's MQTT table panel can render as rows
-# (one MQTT message = one table row). Reuses the dlstreamer-pipeline-server
-# image (already pulled, already has paho-mqtt) instead of adding a new one.
-# Loitering-detection-specific, so this is inserted only into the generated
-# compose file (before the top-level "networks:" key, since "services:" is
-# not the last section), not the shared template.
-##############################################################################
-if [ -f ../docker-compose.yml ] && ! grep -q '^  mqtt-table-flattener:' ../docker-compose.yml; then
-  awk '
-    /^networks:/ && !inserted {
-      print "  mqtt-table-flattener:"
-      print "    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}"
-      print "    container_name: mqtt-table-flattener"
-      print "    environment:"
-      print "      - MQTT_HOST=broker"
-      print "      - MQTT_PORT=1883"
-      print "      - SOURCE_TOPIC_PREFIX=${SOURCE_TOPIC_PREFIX}"
-      print "      - DEST_TOPIC_PREFIX=${DEST_TOPIC_PREFIX}"
-      print "    volumes:"
-      print "      - \"./${SAMPLE_APP}/src/mqtt-table-flattener:/app:ro\""
-      print "    entrypoint: [\"python3\", \"/app/flatten.py\"]"
-      print "    depends_on:"
-      print "      - broker"
-      print "    networks:"
-      print "      - app_network"
-      print "    restart: on-failure:5"
-      print ""
-      inserted=1
-    }
-    { print }
-  ' ../docker-compose.yml > ../docker-compose.yml.tmp && mv ../docker-compose.yml.tmp ../docker-compose.yml
-fi
-
