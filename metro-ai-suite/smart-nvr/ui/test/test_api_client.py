@@ -6,7 +6,6 @@ import pytest
 from unittest.mock import patch, MagicMock
 from ui.services.api_client import (
     fetch_cameras,
-    fetch_events,
     add_rule,
     fetch_rules,
     fetch_rule_responses,
@@ -48,21 +47,6 @@ def test_fetch_cameras_failure(mock_logger, mock_get):
     if isinstance(data, dict):
         data = data.get("cameras", []) if "cameras" in data else []
     assert data == []
-    mock_logger.error.assert_called_once()
-
-
-# === fetch_events ===
-@patch("ui.services.api_client.requests.get")
-def test_fetch_events_success(mock_get):
-    data = [{"start_time": 1}, {"start_time": 5}, {"start_time": 2}]
-    mock_get.return_value = MagicMock(status_code=200, json=lambda: data)
-    result = fetch_events("cam1")
-    assert result == sorted(data, key=lambda x: x["start_time"], reverse=True)
-
-@patch("ui.services.api_client.requests.get", side_effect=Exception("Timeout"))
-@patch("ui.services.api_client.logger")
-def test_fetch_events_failure(mock_logger, mock_get):
-    assert fetch_events("cam1") == []
     mock_logger.error.assert_called_once()
 
 

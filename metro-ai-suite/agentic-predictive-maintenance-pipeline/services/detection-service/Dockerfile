@@ -4,7 +4,7 @@
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="APM Detection Service"
-LABEL org.opencontainers.image.description="Detection-layer orchestration (DL Streamer) for agentic predictive maintenance"
+LABEL org.opencontainers.image.description="Detection-layer orchestration (DL Streamer) for agentic predictive maintenance for critical infrastructure"
 LABEL org.opencontainers.image.vendor="Intel Corporation"
 
 WORKDIR /app

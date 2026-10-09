@@ -357,7 +357,13 @@
     "anErrorOccurred": "发生了错误"
   },
   "summary": {
-    "boardOcrPartial": "板书 OCR 仍在进行中。本次摘要仅包含目前已识别的板书内容，可能不完整。"
+    "boardOcrPartial": "板书 OCR 仍在进行中。本次摘要仅包含目前已识别的板书内容，可能不完整。",
+    "overload": {
+      "memory_short": "当前可用内存低于本节课所需。摘要计划未作调整，通常仍可完成；若失败，请关闭其他程序后重试。",
+      "reserve_capped": "仅提示词与预留的回答长度就超过本设备预算的一半，回答可能被截断。请为该设备调低最大回答长度。",
+      "fold_incomplete": "本节课的笔记量超出两轮合并所能压缩的范围，摘要可能被截断。",
+      "line_oversize": "转录中有一行超过了单个分段的长度上限，因此某个分段大于计划值。"
+    }
   },
   "app": {
     "checkingBackendTitle": "正在检查后端状态",
@@ -679,7 +685,7 @@
     },
     "fields": {
       "school_name": "学校名称",
-      "class_name": "班级",
+      "class_name": "年级&班级",
       "course_name": "课程名称",
       "teacher_name": "授课教师",
       "report_time": "报告生成时间",

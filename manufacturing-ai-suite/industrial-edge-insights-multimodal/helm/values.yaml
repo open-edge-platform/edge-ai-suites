@@ -77,6 +77,9 @@ env:
   # SeaweedFS S3 Storage related config
   S3_STORAGE_USERNAME: 
   S3_STORAGE_PASSWORD: 
+  # HTTP Basic Auth credentials protecting the SeaweedFS filer web UI proxied by nginx at /image-store
+  SEAWEEDFS_WEB_AUTH_USER: 
+  SEAWEEDFS_WEB_AUTH_PASSWORD: 
   # S3_BUCKET_TTL specifies the time-to-live duration for files/objects stored in SeaweedFS S3 buckets.
   # After this duration, files/objects that have not been accessed will be automatically deleted, but the bucket itself remains.
   # The duration can be specified using a combination of time units such as hours(h), minutes(m), and seconds(s),
