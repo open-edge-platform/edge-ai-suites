@@ -96,7 +96,7 @@ class LoiteringWatermark(GstBase.BaseTransform):
     _loitering_threshold = 5.0  # seconds
     @GObject.Property(type=float, nick="loitering-threshold",
                       blurb="Time in seconds to consider an object as loitering",
-                      minimum=0.0, maximum=10.0, default=5.0)
+                      minimum=0.0, maximum=3600.0, default=5.0)
     def loitering_threshold(self):
         """
         Get the loitering threshold in seconds.
