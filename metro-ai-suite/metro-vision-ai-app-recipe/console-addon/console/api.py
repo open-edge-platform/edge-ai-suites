@@ -8,9 +8,9 @@ import time
 import requests
 from flask import jsonify, render_template, request
 
-from config import (DEFAULT_ZONE, DETECTIONS_TOPIC_PREFIX, DEVICES, LOCK,
+from config import (DETECTIONS_TOPIC_PREFIX, DEVICES, LOCK,
                     LOG, LOITER_THRESHOLD_S, MQTT_STATE, PIPELINE_SERVER_URL,
-                    PROMETHEUS_URL, SESSIONS, SOURCES, _parse_zone, app)
+                    PROMETHEUS_URL, SESSIONS, SOURCES, _parse_zone, app, default_zone)
 from snapshot import _stream_snapshot
 from catalog import discover_models
 from api_pipelines import _launch, _stop
@@ -28,7 +28,7 @@ def api_config():
     return jsonify({
         "sources": SOURCES,
         "devices": [{"id": d, "available": d in DEVICES} for d in ("CPU", "GPU", "NPU")],
-        "default_zone": DEFAULT_ZONE,
+        "default_zone": default_zone(),
         "loiter_threshold_s": LOITER_THRESHOLD_S,
         "topic_prefix": DETECTIONS_TOPIC_PREFIX,
     })

@@ -25,82 +25,53 @@
       <span class="title">Loitering Detection</span>
     </div>
     <div class="topbar-right">
-      <label class="compare-toggle">
-        <input type="checkbox" id="compareMode">
-        Model compare (side-by-side)
-      </label>
       <span id="connState" class="conn conn-ok">DLSPS: connecting&hellip;</span>
     </div>
   </header>
 
   <main class="layout">
     <aside class="rail">
-      <details class="card" data-section="source" open>
-        <summary><h2>Source</h2></summary>
+      <details class="card" data-section="streams" open>
+        <summary><h2>Pipelines</h2></summary>
         <div class="field">
-          <label for="sourceSel">Camera / stream</label>
-          <select id="sourceSel"></select>
+          <label for="streamCount">Number of pipelines</label>
+          <input id="streamCount" type="number" value="1" min="1" max="8">
         </div>
-        <div class="field">
-          <label for="rtspInput">&hellip;or RTSP URL</label>
-          <input id="rtspInput" type="text" placeholder="rtsp://...">
-        </div>
+        <p class="hint">Each pipeline gets its own source, model and zone below - expand one
+          card at a time to update its configuration.</p>
       </details>
 
-      <details class="card" data-section="model" open>
-        <summary><h2>Model <button id="refreshModels" class="mini-btn" title="Re-scan model store">&#x27F3;</button></h2></summary>
-        <div class="field">
-          <label for="modelSelA">Primary model</label>
-          <select id="modelSelA"></select>
-        </div>
-        <div class="field" id="modelBWrap" hidden>
-          <label for="modelSelB">Compare model</label>
-          <select id="modelSelB"></select>
-        </div>
-        <div class="field">
-          <label for="deviceSel">Device</label>
-          <select id="deviceSel"></select>
-        </div>
-        <p class="hint" id="modelSrcHint">Models are discovered automatically from the mounted model store.</p>
-      </details>
+      <div id="streamConfigs"></div>
 
       <details class="card" data-section="zone" open>
         <summary><h2>Zone (ROI)
           <span class="info-icon" tabindex="0"
-                title="x, y: pixel position of the rectangle's top-left corner in the source video. w, h: its width and height in pixels. All four are in source-video pixels, not screen pixels.">&#9432;</span>
+                title="A zone restricts the loitering table/outline to part of the frame - detection itself still runs on the full frame. Draw one on a live pipeline's video below - there is no manual coordinate entry.">&#9432;</span>
         </h2></summary>
+        <p class="hint" id="zoneSummary">Current zone: this deployment's own configured zone(s)</p>
         <label class="draw-toggle">
           <input type="checkbox" id="drawZone">
           &#9998; Draw zone on video
         </label>
-        <div class="roi-grid">
-          <div class="roi-field">
-            <label for="roiX">x</label>
-            <input id="roiX" type="number" value="0" placeholder="x" title="x: left edge, in source-video pixels">
-          </div>
-          <div class="roi-field">
-            <label for="roiY">y</label>
-            <input id="roiY" type="number" value="200" placeholder="y" title="y: top edge, in source-video pixels">
-          </div>
-          <div class="roi-field">
-            <label for="roiW">w</label>
-            <input id="roiW" type="number" value="300" placeholder="w" title="w: width, in source-video pixels">
-          </div>
-          <div class="roi-field">
-            <label for="roiH">h</label>
-            <input id="roiH" type="number" value="400" placeholder="h" title="h: height, in source-video pixels">
-          </div>
+        <div class="field shape-toggle" id="shapeToggleWrap" hidden>
+          <label class="radio-inline"><input type="radio" name="zoneShape" value="rect" id="shapeRect" checked> Rectangle (drag)</label>
+          <label class="radio-inline"><input type="radio" name="zoneShape" value="poly" id="shapePoly"> Polygon (click points)</label>
         </div>
-        <button id="applyZoneAll" class="btn btn-ghost btn-sm">Apply zone to live streams</button>
-        <p class="hint">These fields are pre-filled from the deployment's own zone file for
-          reference only. Starting a stream without touching them keeps that file's zones
-          exactly as configured; editing a field, drawing on video, or applying replaces them
-          entirely with this rectangle.</p>
-        <p class="hint">A track loiters once its dwell time in the zone reaches <span id="loiterThr">5.0</span>s.</p>
+        <p class="hint" id="polyHint" hidden>Click points on a live pipeline's video to place a
+          polygon's vertices; double-click, or click back on the first point, to close it
+          (3 points minimum). A point that would cross an already-placed edge is rejected.
+          Esc cancels the in-progress shape.</p>
+        <button id="applyZoneAll" class="btn btn-ghost btn-sm">Apply zone to live pipelines</button>
+        <p class="hint">Drawing on a pipeline's video previews the shape there until you apply
+          it, replacing the deployment's own zone(s) entirely once applied. Detection itself
+          always runs on the full frame - a zone only decides which detected objects count
+          toward the loiter table and dwell time, not which objects get a box drawn.</p>
+        <p class="hint">It track loiters once its dwell time in the zone reaches <span id="loiterThr">5.0</span>s.</p>
       </details>
 
+
       <div class="actions">
-        <button id="startBtn" class="btn btn-primary">&#9654; Start stream</button>
+        <button id="startBtn" class="btn btn-primary">&#9654; Start pipelines</button>
         <button id="stopAllBtn" class="btn btn-ghost">&#9632; Stop all</button>
       </div>
 
@@ -136,11 +107,37 @@
     <section class="stage">
       <div id="grid" class="grid"></div>
       <div id="emptyState" class="empty">
-        <p>No streams yet. Choose a source and model, then start a stream.</p>
+        <p>No pipelines yet. Set the number of pipelines and their source/model/zone, then start.</p>
       </div>
     </section>
   </main>
 
+
+  <template id="streamCfgTpl">
+    <details class="card stream-cfg" name="streamAccordion">
+      <summary><h2><span class="sc-title"></span>
+        <button type="button" class="mini-btn sc-refresh" title="Re-scan model store">&#x27F3;</button></h2></summary>
+      <div class="field">
+        <label>Camera / stream</label>
+        <select class="sc-source"></select>
+      </div>
+      <div class="field">
+        <label>&hellip;or RTSP URL</label>
+        <input class="sc-rtsp" type="text" placeholder="rtsp://...">
+      </div>
+      <div class="field">
+        <label>Model</label>
+        <select class="sc-model"></select>
+      </div>
+      <div class="field">
+        <label>Device</label>
+        <select class="sc-device"></select>
+      </div>
+      <p class="hint sc-hint">Models are discovered automatically from the mounted model store.</p>
+      <p class="hint">Starts on the deployment's own configured zone(s). To use a different zone,
+        draw one on this pipeline's video after it starts (see the Zone (ROI) card).</p>
+    </details>
+  </template>
 
   <template id="panelTpl">
     <div class="panel">
@@ -155,9 +152,12 @@
         <div class="roi-overlay">
           <div class="roi-current"></div>
           <div class="roi-draw"></div>
+          <svg class="roi-polygon"></svg>
         </div>
+        <div class="warming-note">Starting video&hellip;</div>
       </div>
       <div class="p-status">connecting&hellip;</div>
+      <button class="p-apply-zone" hidden>Apply to this pipeline</button>
       <div class="p-analytics">
         <div class="p-stats"></div>
         <table class="p-loiter">
@@ -175,6 +175,7 @@
   <script src="static/whep.js"></script>
   <script src="static/panels.js"></script>
   <script src="static/zones.js"></script>
+  <script src="static/streams.js"></script>
   <script src="static/telemetry.js"></script>
   <script src="static/app.js"></script>
 </body>

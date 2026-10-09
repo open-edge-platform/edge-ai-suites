@@ -45,10 +45,15 @@ window.Console = window.Console || {};
   C.renderPanelAnalytics = function (peerId, s) {
     var el = C.panelEl(peerId);
     if (!el) { return; }
+    var analytics = el.querySelector(".p-analytics");
     var stats = el.querySelector(".p-stats");
     var tbody = el.querySelector(".p-loiter tbody");
     var empty = el.querySelector(".p-empty-rows");
     if (!stats || !tbody) { return; }
+    // MQTT data can arrive before the video's first frame renders (WebRTC
+    // negotiation takes longer than a REST/MQTT round trip) - dim the
+    // numbers rather than show a confident-looking table over a black panel.
+    if (analytics) { analytics.classList.toggle("warming", !C.isVideoReady(peerId)); }
     var n = function (v, suf) { return fmtNum(v, suf); };
     stats.innerHTML =
       '<span><b>' + n(s.fps) + "</b> fps</span>" +
@@ -73,13 +78,18 @@ window.Console = window.Console || {};
       // refresh reattaches to streams that are still running. The session
       // only carries the raw model id, never the operator-facing label
       // Start shows, so look that label up from the already-loaded model
-      // list rather than printing the id verbatim.
+      // list rather than printing the id verbatim. There is no server-side
+      // concept of "pipeline number" to recover either - number reattached
+      // panels in discovery order instead, so same-model pipelines are
+      // still distinguishable after a reload even if the numbers no
+      // longer match what was typed into the rail when they were started.
       if (!C.panels[s.peer_id]) {
         var modelLabel = (C.modelLabel ? C.modelLabel(s.model) : s.model) || "?";
+        var pipelineNum = Object.keys(C.panels).length + 1;
         C.createPanel({
           peer_id: s.peer_id,
           whep_url: "whep/" + s.peer_id,
-          title: modelLabel + " \u00b7 " + (s.device || "?"),
+          title: "Pipeline " + pipelineNum + " \u00b7 " + modelLabel + " \u00b7 " + (s.device || "?"),
           zone: s.zone,
         });
         C.panels[s.peer_id].settled = true;

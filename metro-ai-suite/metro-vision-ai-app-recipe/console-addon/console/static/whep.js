@@ -117,7 +117,16 @@
 
     self._setState("connecting", "sending offer");
 
+    // The pipeline server lazily builds its WebRTC encode branch on the
+    // first request to reach it, which can take a few seconds depending on
+    // device/model load time - 404 here means "not built yet", not
+    // failure. Retry quickly at first (short gap, fast devices/cache hits
+    // are common) and back off as attempts accumulate, instead of a flat
+    // 1.5s sleep that can leave the connection idle for up to 1.5s after
+    // the destination actually becomes ready.
     var deadline = Date.now() + 30000;
+    var retryDelays = [150, 150, 300, 300, 500, 500, 1000];
+    var attempt = 0;
     var resp = null;
     while (Date.now() < deadline) {
       resp = await fetch(self.whepUrl, {
@@ -127,11 +136,10 @@
       }).catch(function () { return null; });
 
       if (resp && resp.status === 404) {
-        // 404 means the pipeline has not published yet, not that
-        // signalling failed; retry on a fixed interval until the path
-        // appears or the timeout elapses.
         self._setState("connecting", "waiting for stream...");
-        await sleep(1500);
+        var delay = retryDelays[Math.min(attempt, retryDelays.length - 1)];
+        attempt++;
+        await sleep(delay);
         continue;
       }
       break;
@@ -167,10 +175,4 @@
   // Shared namespace for the controller modules (FRONTEND-SPEC.md 0).
   global.Console = global.Console || {};
   global.Console.Whep = { WhepSession: WhepSession, discoverIceServers: discoverIceServers };
-
-  global.MissionConsoleWhep = {
-    WhepSession: WhepSession,
-    discoverIceServers: discoverIceServers,
-    parseLinkHeader: parseLinkHeader
-  };
 })(window);

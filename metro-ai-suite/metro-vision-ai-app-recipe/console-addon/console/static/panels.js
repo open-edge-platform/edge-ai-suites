@@ -19,7 +19,8 @@ window.Console = window.Console || {};
   // session table: a panel is created before its start request resolves, so
   // counting sessions leaves the placeholder visible over a live stream.
   function updateEmptyState() {
-    var n = grid() ? grid().querySelectorAll(".panel").length : 0;
+    var g = grid();
+    var n = g ? g.querySelectorAll(".panel").length : 0;
     var empty = byId("emptyState");
     if (empty) { empty.hidden = n > 0; }
     if (C.refreshApplyState) { C.refreshApplyState(); }
@@ -37,18 +38,28 @@ window.Console = window.Console || {};
   C.createPanel = function (info) {
     var existing = panels[info.peer_id];
     if (existing) {
-      if (info.title) { existing.el.querySelector(".p-title").textContent = info.title; }
+      if (info.title) {
+        var titleEl = existing.el.querySelector(".p-title");
+        titleEl.textContent = info.title;
+        titleEl.title = info.title;
+      }
       if (info.zone) { existing.zone = info.zone; C.drawCurrentZone(info.peer_id); }
       return existing;
     }
     var tpl = byId("panelTpl");
     var el = tpl.content.firstElementChild.cloneNode(true);
     var video = el.querySelector("video");
-    el.querySelector(".p-title").textContent = info.title;
+    var titleEl = el.querySelector(".p-title");
+    titleEl.textContent = info.title;
+    titleEl.title = info.title; // native tooltip
     el.dataset.peerId = info.peer_id;
-    grid().appendChild(el);
+    // A zone-reapply replacement (see applyZone) should land in the same
+    // grid slot the panel it replaces occupied, not at the end - inserting
+    // before that panel's old next-sibling preserves visual position
+    // across the swap instead of the replacement jumping to the bottom.
+    grid().insertBefore(el, info.insertBefore || null);
 
-    var rec = { el: el, video: video, whep: null, zone: info.zone || null };
+    var rec = { el: el, video: video, whep: null, zone: info.zone || null, videoReady: false };
     panels[info.peer_id] = rec;
     updateEmptyState();
 
@@ -57,10 +68,23 @@ window.Console = window.Console || {};
     });
 
     var overlay = el.querySelector(".roi-overlay");
+    if (byId("drawZone") && byId("drawZone").checked) { overlay.classList.add("draw"); }
     overlay.addEventListener("mousedown", function (e) { C.onDrawStart(info.peer_id, e); });
-    overlay.addEventListener("mousemove", function (e) { C.onDrawMove(info.peer_id, e); });
+    overlay.addEventListener("mousemove", function (e) {
+      C.onDrawMove(info.peer_id, e);
+      C.onPolyPreviewMove(info.peer_id, e);
+    });
     overlay.addEventListener("mouseup", function (e) { C.finishDraw(info.peer_id, e); });
+    overlay.addEventListener("click", function (e) { C.onPolyClick(info.peer_id, e); });
+    overlay.addEventListener("dblclick", function (e) { C.onDrawPolygonClose(info.peer_id, e); });
     video.addEventListener("loadedmetadata", function () { C.drawCurrentZone(info.peer_id); });
+    // "playing" (first rendered frame), not "loadedmetadata" (just knows
+    // dimensions) - the analytics table otherwise looks ahead of a video
+    // that is still a black box while WebRTC finishes negotiating.
+    video.addEventListener("playing", function () {
+      rec.videoReady = true;
+      el.querySelector(".warming-note").style.display = "none";
+    }, { once: true });
 
     var whep = new C.Whep.WhepSession(video, info.whep_url, function (state, detail) {
       C.setPanelStatus(info.peer_id, state, detail);
@@ -92,9 +116,32 @@ window.Console = window.Console || {};
     if (sw < 8 || sh < 8) { return; }
     sx = Math.max(0, Math.min(sx, g.vw - 1));
     sy = Math.max(0, Math.min(sy, g.vh - 1));
-    C.setZoneInputs({ x: sx, y: sy, w: Math.min(sw, g.vw - sx), h: Math.min(sh, g.vh - sy) });
+    C.setRectZone({ x: sx, y: sy, w: Math.min(sw, g.vw - sx), h: Math.min(sh, g.vh - sy) });
     C._zoneCustomized = true;
     C.refreshApplyState();
+    C.showPendingZone(peerId);
+  };
+
+  // The pending preview (zones.js) reveals this so an operator can apply a
+  // just-drawn zone to only the pipeline they drew it on, instead of every
+  // live pipeline via the rail's "Apply zone to live pipelines".
+  C.showPanelApplyButton = function (peerId) {
+    var p = panels[peerId];
+    var btn = p && p.el.querySelector(".p-apply-zone");
+    if (!btn) { return; }
+    btn.hidden = false;
+    btn.disabled = false;
+    btn.textContent = "Apply to this pipeline";
+    if (!btn.dataset.wired) {
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", function () { C.applyZone(peerId, btn); });
+    }
+  };
+
+  C.hidePanelApplyButton = function (peerId) {
+    var p = panels[peerId];
+    var btn = p && p.el.querySelector(".p-apply-zone");
+    if (btn) { btn.hidden = true; }
   };
 
   // Removes a panel whose instance the server already tore down (a zone
@@ -123,29 +170,47 @@ window.Console = window.Console || {};
       updated.forEach(function (session) {
         var old = panels[session.old_peer_id];
         var title = old ? old.el.querySelector(".p-title").textContent : (session.model + " / " + session.device);
+        // Captured before removal - the slot the replacement should land in.
+        var insertBefore = old ? old.el.nextSibling : null;
         removePanelLocal(session.old_peer_id);
+        if (C.transferCardPeerId) { C.transferCardPeerId(session.old_peer_id, session.peer_id); }
         C.createPanel({
           peer_id: session.peer_id,
           whep_url: session.whep_url,
           title: title,
           zone: session.zone,
+          insertBefore: insertBefore,
         });
       });
-      if (r && r.zone) { C.setZoneInputs(r.zone); }
-      C.markZoneApplied();
+      if (r && r.zone) { C.setRectZone(r.zone); }
       var n = (r && r.count) || 0;
-      if (btn) {
-        btn.textContent = "Applied to " + n + " stream" + (n === 1 ? "" : "s");
-        setTimeout(function () { btn.textContent = "Apply zone to live streams"; C.refreshApplyState(); }, 1500);
+      if (peerId) {
+        // Applying to one stream does not mean every OTHER live stream now
+        // runs this zone too - only "Apply zone to live streams" (no
+        // peerId) means that, so only that path marks the rail's zone as
+        // fully in sync with the deployment.
+        C.hidePendingZone(peerId);
+      } else {
+        C.markZoneApplied();
+        if (C._pendingZonePeerId) { C.hidePendingZone(C._pendingZonePeerId); }
+      }
+      if (btn && !peerId) {
+        btn.textContent = "Applied to " + n + " pipeline" + (n === 1 ? "" : "s");
+        setTimeout(function () { btn.textContent = "Apply zone to live pipelines"; C.refreshApplyState(); }, 1500);
       }
     }).catch(function () {
-      if (btn) { btn.textContent = "Apply failed"; btn.disabled = false; }
+      if (btn) { btn.textContent = peerId ? "Apply to this pipeline" : "Apply failed"; btn.disabled = false; }
     });
   };
 
   C.panelZone = function (peerId) {
     var p = panels[peerId];
     return p ? p.zone : null;
+  };
+
+  C.isVideoReady = function (peerId) {
+    var p = panels[peerId];
+    return !!(p && p.videoReady);
   };
 
   C.panelEl = function (peerId) {
@@ -168,6 +233,9 @@ window.Console = window.Console || {};
     if (p.whep) { try { p.whep.stop(); } catch (e) { /* already closed */ } }
     if (p.el && p.el.parentNode) { p.el.parentNode.removeChild(p.el); }
     updateEmptyState();
+    // Frees the rail card (if any) that started this pipeline, so a later
+    // Start click launches it again instead of treating it as still running.
+    if (C.markCardStopped) { C.markCardStopped(peerId); }
     return C.apiPost("api/pipelines/stop", { peer_id: peerId }).catch(function () { return null; });
   };
 

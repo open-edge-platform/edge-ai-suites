@@ -82,7 +82,6 @@ body {
 .brand .subtitle { color: var(--muted); font-size: .82rem; }
 
 .topbar-right { display: flex; align-items: center; gap: 14px; }
-.compare-toggle { display: flex; align-items: center; gap: 6px; font-size: .85rem; color: var(--muted); }
 
 .conn {
   font-size: .8rem;
@@ -124,6 +123,15 @@ details.card summary h2 { margin: 0; }
 details.card[open] summary h2 { margin-bottom: 10px; }
 details.card > *:not(summary) { margin-top: 0; }
 
+details.card summary h2::before {
+  content: "\25B8";
+  display: inline-block;
+  margin-right: 6px;
+  color: var(--muted);
+  transition: transform .15s ease;
+}
+details.card[open] summary h2::before { transform: rotate(90deg); }
+
 .info-icon {
   color: var(--muted);
   cursor: help;
@@ -164,18 +172,31 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   margin-bottom: 10px;
 }
 
-.roi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
-}
-.roi-field label {
-  display: block;
-  font-size: .72rem;
+.shape-toggle { display: flex; gap: 12px; margin-bottom: 10px; }
+.radio-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .8rem;
   color: var(--muted);
-  margin-bottom: 2px;
-  text-align: center;
+  cursor: pointer;
+}
+.radio-inline input { width: auto; }
+
+/* Stream-config accordions are generated per instance; same look as the
+   other rail cards, just stacked under the "Streams" count field. */
+.stream-cfg + .stream-cfg { margin-top: 10px; }
+.stream-cfg .sc-refresh { margin-left: 6px; }
+/* A card already linked to a running pipeline is left alone by the next
+   Start click - flag that visually so it is clear while clicking Start 
+   again does not relaunch it. */
+.stream-cfg.sc-running .sc-title::after {
+  content: " Running";
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .actions { display: flex; flex-direction: column; gap: 8px; }
@@ -211,7 +232,7 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
 .mini-btn.spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.p-apply {
+.p-apply-zone {
   background: var(--accent-2);
   color: #04122b;
   border: none;
@@ -219,5 +240,7 @@ select:focus, input[type="text"]:focus, input[type="number"]:focus {
   font-size: .76rem;
   padding: 5px 8px;
   cursor: pointer;
+  margin: 0 10px 8px;
 }
+.p-apply-zone:disabled { opacity: .6; cursor: not-allowed; }
 

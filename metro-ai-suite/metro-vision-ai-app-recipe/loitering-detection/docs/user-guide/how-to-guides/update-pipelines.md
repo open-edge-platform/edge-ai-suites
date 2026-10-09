@@ -58,20 +58,17 @@ pipeline-string edit; it also drops every currently-running stream (CLI and Cons
 ## The pipeline stage-by-stage
 
 ```
-{auto_source} ! <decode> ! gvaattachroi ! gvadetect ! gvapython(DropAttachRoi)
-  ! gvatrack ! gvaanalytics ! gvametaconvert ! gvawatermark ! appsink
+{auto_source} ! <decode> ! gvadetect ! gvatrack ! gvaanalytics ! gvametaconvert ! gvawatermark ! appsink
 ```
 
 | Stage | Purpose |
 | --- | --- |
 | `decodebin3` (CPU) / `parsebin ! vah264dec ! vapostproc` (GPU/NPU) | Decode the source video; GPU/NPU decode into `video/x-raw(memory:VAMemory)` for hardware-accelerated inference. |
-| `gvaattachroi` | Attaches a rectangle (`roi=x1,y1,x2,y2`) to the buffer for `gvadetect` to crop to. |
-| `gvadetect inference-region=1` | Runs the detection model **only inside that rectangle** - this is what makes detection genuinely zone-restricted (see [Getting started - Loitering Detection Console UI](../getting-started-ui.md#how-detection-and-zones-interact)). |
-| `gvapython ... class=DropAttachRoi` | Removes the leftover, unlabeled region `gvaattachroi` itself leaves behind, so it doesn't inflate the published object count (see `configs/drop_attachroi_region.py` for the full story, including its one known limitation). |
+| `gvadetect` | Runs the detection model on the **full frame** |
 | `gvatrack tracking-type=zero-term` | Assigns/keeps a stable id per object across frames. |
-| `gvaanalytics evaluation-point=bottom-center draw-zones=true` | Matches each tracked object against the active zone(s) (polygons from the zone file, or a custom rectangle - see below), computes dwell time, and draws the zone outline(s). |
+| `gvaanalytics evaluation-point=bottom-center draw-zones=true` | Matches each tracked object against the active zone(s) (polygons from the zone file, or a custom rectangle - see below), computes dwell time, and draws the zone outline(s). This is the only zone-awareness in the pipeline - it decides what counts toward the loiter table, not what gets boxed. |
 | `gvametaconvert add-empty-results=false` | Serialises detections + zone/dwell info into the JSON published to MQTT. |
-| `gvawatermark` | Draws labelled boxes for every remaining region onto the video. |
+| `gvawatermark` | Draws a labelled box for **every** detected object, zone or not. |
 | `appsink` | Hands frames+metadata to the Pipeline Server, which fans them out to the configured destinations (MQTT for metadata, WebRTC for video). |
 
 ## What overrides what, per request
@@ -84,7 +81,6 @@ matching `config.json`'s schema:
 | --- | --- | --- |
 | `detection-properties` | `detection` (`gvadetect`) | `model`, `device`, `model-instance-id`, `model_proc` |
 | `analytics-properties` | `analytics` (`gvaanalytics`) | `zones` - the file's zones, or a single custom rectangle, never both (see [Getting started - Loitering Detection Console UI](../getting-started-ui.md#changing-the-zone)) |
-| `attachroi-properties` | `attachroi` (`gvaattachroi`) | `roi` - the same zone's bounding rectangle, cropping detection to it |
 
 There is **no live-update path**: changing any of these (switching model, device, or zone)
 always stops the current pipeline instance and starts a brand new one with the new parameters -
