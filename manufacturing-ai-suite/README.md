@@ -1,5 +1,11 @@
 # Manufacturing AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project has moved to (open-edge-platform/manufacturing-ai-suite)[https://github.com/open-edge-platform/manufacturing-ai-suite].
+
+
+
 Manufacturing AI Suite is a curated and open set of software solutions intended to demonstrate
 the applicability and efficiency of Intel hardware in industry-specific edge AI use cases.
 

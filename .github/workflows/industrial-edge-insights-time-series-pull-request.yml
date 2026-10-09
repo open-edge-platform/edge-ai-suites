@@ -91,6 +91,8 @@ jobs:
             echo "❌ Not found within 30s"
             exit 1
         fi
+        make status | tee status.log
+        if grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found'; then exit 1; fi
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
         timeout 30s bash -c '
@@ -109,6 +111,8 @@ jobs:
             echo "❌ Not found within 30s"
             exit 1
         fi
+        make status | tee status.log
+        ! grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found|unlinkat /usr/share/grafana/data/plugins-bundled/elasticsearch: read-only file system'
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -129,9 +133,10 @@ jobs:
         VISUALIZER_GRAFANA_PASSWORD=${base:0:$pos}${digit}${base:$pos}
         MTX_WEBRTCICESERVERS2_0_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
-        HOST_IP=$(hostname -I | awk '{print $1}')
         S3_STORAGE_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
         S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
+        SEAWEEDFS_WEB_AUTH_USER=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+        SEAWEEDFS_WEB_AUTH_PASSWORD=$(openssl rand -hex 10)
 
         sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
         sed -i "s/INFLUXDB_PASSWORD=.*/INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD}/g" .env
@@ -141,7 +146,9 @@ jobs:
         sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
         sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
         sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
-        sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
+        sed -i "s/SEAWEEDFS_WEB_AUTH_USER=.*/SEAWEEDFS_WEB_AUTH_USER=${SEAWEEDFS_WEB_AUTH_USER}/g" .env
+        sed -i "s/SEAWEEDFS_WEB_AUTH_PASSWORD=.*/SEAWEEDFS_WEB_AUTH_PASSWORD=${SEAWEEDFS_WEB_AUTH_PASSWORD}/g" .env
+        
         make build
     - name: Deploying Multimodal Weld Defect Detection Sample App
       run: |
@@ -149,11 +156,84 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
         echo "Deploying Multimodal Weld Defect Detection Sample App"
         make up
+        make status | tee status.log
+        ! grep -i error status.log | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found|unlinkat /usr/share/grafana/data/plugins-bundled/elasticsearch: read-only file system'
     - name: Undeploying Multimodal Weld Defect Detection Sample App
       run: |
         cd "${{ github.workspace }}"
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
         make down
+
+  industrial-edge-insights-multimodal-vllm-agentic-cpu:
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-22.04-32core-128GB
+    env:
+      PLATFORM_CHECK: "false"
+      # agentic services hard-code /dev/dri and /dev/accel, absent on hosted runners.
+      AGENTIC_OVR: DOCKER_COMPOSE_FILE_AGENTIC=./docker-compose-agentic.yml -f ${{ github.workspace }}/agentic-cpu.yml
+    defaults:
+      run:
+        working-directory: timeseries/manufacturing-ai-suite/industrial-edge-insights-multimodal
+    steps:
+    - name: Checkout edge-ai-libraries (main)
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        repository: open-edge-platform/edge-ai-libraries
+        ref: main
+        path: edge-ai-libraries
+        persist-credentials: false
+    - name: Building Time Series Analytics microservices
+      working-directory: edge-ai-libraries/microservices/time-series-analytics/docker
+      run: docker compose build
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+          path: timeseries
+          persist-credentials: false
+    - name: Setup
+      run: |
+        pw=$(tr -dc 'a-zA-Z' </dev/urandom | head -c9)1
+        for v in INFLUXDB_USERNAME VISUALIZER_GRAFANA_USER MTX_WEBRTCICESERVERS2_0_USERNAME S3_STORAGE_USERNAME SEAWEEDFS_WEB_AUTH_USER; do
+          sed -i "s/^$v=.*/$v=$(tr -dc 'a-zA-Z' </dev/urandom | head -c8)/" .env
+        done
+        for v in INFLUXDB_PASSWORD VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_PASSWORD SEAWEEDFS_WEB_AUTH_PASSWORD; do
+          sed -i "s/^$v=.*/$v=$pw/" .env
+        done
+        
+        cat > "${{ github.workspace }}/agentic-cpu.yml" <<'EOF'
+        services:
+          apm-llm:
+            devices: !reset []
+          apm-metrics:
+            # privileged host-access service; not started in PR runs
+            profiles: ["disabled"]
+        EOF
+        # vllm-server is expected to fail without a GPU; check_models only needs non-empty dirs.
+        mkdir -p configs/vllm/models/placeholder configs/vllm/huggingface/placeholder
+        # model-download runs as UID 1000; the runner user is 1001.
+        mkdir -p configs/agentic/models && sudo chown 1000:1000 configs/agentic/models
+        make build
+    - name: Deploy vLLM
+      run: |
+        make up_vllm
+        make status | tee status.log
+        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found|unlinkat /usr/share/grafana/data/plugins-bundled/elasticsearch: read-only file system'
+    - name: Deploy and test agentic
+      run: |
+        source .env
+        make up_agentic "$AGENTIC_OVR"
+        timeout 20m bash -c 'until [ "$(docker inspect -f {{.State.Health.Status}} apm-llm)" = healthy ] && [ "$(docker inspect -f {{.State.Health.Status}} apm-agent)" = healthy ]; do sleep 10; done'
+        curl -sf "${HOST_IP}:8010/v3/chat/completions" -H 'Content-Type: application/json' \
+          -d '{"model":"microsoft/Phi-4-mini-instruct","messages":[{"role":"user","content":"Reply OK"}],"max_tokens":8}' | grep '"content"'
+        make status | tee status.log
+        ! sed '/container vllm-server/,/^\*/d' status.log | grep -i error | grep -viE 'catch any error|found errors in container|containers have errors|without errors|user token not found|unlinkat /usr/share/grafana/data/plugins-bundled/elasticsearch: read-only file system'
+    - name: Logs
+      if: failure()
+      run: for c in $(docker ps -a --format '{{.Names}}'); do echo "=== $c"; docker logs --tail 200 "$c"; done
+    - name: Cleanup
+      if: always()
+      run: make down "$AGENTIC_OVR"
 
   industrial-edge-insights-time-series-scans:
     permissions:

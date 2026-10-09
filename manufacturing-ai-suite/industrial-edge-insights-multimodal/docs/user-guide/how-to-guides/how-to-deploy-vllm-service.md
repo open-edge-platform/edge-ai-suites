@@ -3,12 +3,22 @@
 This section shows how to deploy the multimodal sample application with the vLLM service
 enabled using the Makefile targets.
 
-## System Requirements
+## Minimum System Requirements
 
-| Component        | Minimum Requirement                            |
-| ---------------- | ---------------------------------------------- |
-| Operating System | Ubuntu OS version 24.04 LTS or later           |
-| Hardware         | Intel® Core™ Ultra Series 3 processor or newer |
+In addition to the [minimum requirements](../get-started/system-requirements.md#minimum-requirements) and [software requirements](../get-started/system-requirements.md#software-requirements) of the sample application, the vLLM service requires the following:
+
+| Component    | Minimum Requirement                                 |
+|--------------|-----------------------------------------------------|
+| **Hardware** | Intel® Core™ Ultra Series 3 processor or newer only |
+| **RAM**      | Minimum 32 GB                                       |
+| **Storage**  | Minimum 256 GB (512 GB recommended)                 |
+
+### Validated Platforms
+
+| Product / Family                                                            | Validated inference device |
+|-----------------------------------------------------------------------------|----------------------------|
+| Intel® Core™ Ultra Processors Series 3 (Intel Core Ultra 7 356H, 16 Cores, 32GB) | iGPU                       |
+
 
 ## Prerequisites
 
@@ -18,6 +28,7 @@ enabled using the Makefile targets.
    - `VISUALIZER_GRAFANA_USER`, `VISUALIZER_GRAFANA_PASSWORD`
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`, `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `S3_STORAGE_USERNAME`, `S3_STORAGE_PASSWORD`
+   - `SEAWEEDFS_WEB_AUTH_USER`, `SEAWEEDFS_WEB_AUTH_PASSWORD`
 
 ## Download Models
 
@@ -104,8 +115,8 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
    ```
 
 4. Check the output in Grafana dashboard:
-   - Use the link `https://localhost:3000` to open the Grafana dashboard in a browser, preferably
-     the Chrome browser. For Helm deployment, use the link `https://localhost:30001`.
+   - Use the link `https://127.0.0.1:3000` to open the Grafana dashboard in a browser, preferably
+     the Chrome browser. For Helm deployment, use the link `https://127.0.0.1:30001`.
    - Log in to the Grafana dashboard using the `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
      values from the `.env` file:
 
@@ -120,6 +131,8 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
    - The following appears:
 
      ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
+
+   The insights UI can also be independently accessed at URL: `https://127.0.0.1:3000/insights-ui/`
 
 ## Stop the Deployment
 
