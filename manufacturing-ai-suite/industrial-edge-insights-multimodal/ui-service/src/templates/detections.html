@@ -31,8 +31,22 @@
     <section class="card">
       <h2>Filter Detections</h2>
       <form method="GET" action="{{ root }}/detections" class="filter-form">
-        <label>Label: <input type="text" name="label" value="{{ filter_label }}"></label>
-        <label>Min Confidence: <input type="number" name="min_confidence" step="0.01" min="0" max="1" value="{{ filter_confidence }}"></label>
+        <label>Label:
+          <select name="label">
+            <option value="">All labels</option>
+            {% for label in labels %}
+            <option value="{{ label }}" {% if filter_label == label %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Min Confidence:
+          <select name="min_confidence">
+            <option value="" {% if not filter_confidence %}selected{% endif %}>Any</option>
+            {% for threshold in [0.5, 0.6, 0.7, 0.8, 0.9, 0.95] %}
+            <option value="{{ threshold }}" {% if filter_confidence == threshold %}selected{% endif %}>{{ "%.2f"|format(threshold) }}</option>
+            {% endfor %}
+          </select>
+        </label>
         <label>Limit:
           <select name="limit">
             {% for n in [50, 100, 250, 500] %}

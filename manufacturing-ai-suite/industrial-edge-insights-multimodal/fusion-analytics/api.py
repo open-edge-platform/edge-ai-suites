@@ -12,9 +12,10 @@ stored in InfluxDB. Separated from the MQTT fusion loop for clarity.
 """
 
 import os
-import re
 import time
 import logging
+import json
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from fastapi.responses import PlainTextResponse
@@ -26,8 +27,20 @@ APM_API_KEY = os.getenv("APM_API_KEY", "")
 API_PORT = int(os.getenv("API_PORT", "8080"))
 FUSION_MEASUREMENT = "fusion_result"
 
-# Label allow-list: only alphanumeric, underscore, hyphen, dot, and space
-_SAFE_LABEL_RE = re.compile(r"^[A-Za-z0-9_\-\. ]+$")
+_PROJECT_PATH = Path(__file__).with_name("project.json")
+if not _PROJECT_PATH.exists():
+    _PROJECT_PATH = Path(__file__).resolve().parents[1] / "configs/dlstreamer-pipeline-server/models/weld-defect-classification-f16-DeiT/deployment/project.json"
+
+with _PROJECT_PATH.open(encoding="utf-8") as project_file:
+    _project = json.load(project_file)
+
+DETECTION_LABELS = tuple(
+    label["name"]
+    for task in _project["pipeline"]["tasks"]
+    if task["task_type"] == "classification"
+    for label in task.get("labels", [])
+    if not label.get("is_empty", False)
+)
 
 _api_start_time = time.time()
 _api_request_count = 0
@@ -107,6 +120,8 @@ def get_detections(
     logger.info(f"Detections request: label={label}, min_confidence={min_confidence}, min_id={min_id}, max_id={max_id}, limit={limit}")
     conditions = []
     if label is not None:
+        if label not in DETECTION_LABELS:
+            raise HTTPException(status_code=400, detail="Unsupported detection label")
         conditions.append(f"fusion_classification = '{label}'")
     if min_confidence is not None:
         conditions.append(f"fusion_confidence >= {min_confidence}")
@@ -119,6 +134,12 @@ def get_detections(
     limit_clause = f" LIMIT {limit}" if limit else ""
     query = f"SELECT fused_decision, fusion_classification as label, fusion_confidence as confidence, mode, timeseries_anomaly, timeseries_classification, timeseries_confidence, timeseries_timestamp, ts_anomaly, vision_anomaly, vision_classification, vision_confidence, vision_rtsp_ts_diff_ms, vision_timestamp FROM \"{FUSION_MEASUREMENT}\"{where_clause} ORDER BY time DESC{limit_clause}"
     return _influx_points(query)
+
+
+@api_app.get("/detections/labels")
+def get_detection_labels():
+    """Return labels available in the detections filter."""
+    return list(DETECTION_LABELS)
 
 
 @api_app.get("/detections/summary")
