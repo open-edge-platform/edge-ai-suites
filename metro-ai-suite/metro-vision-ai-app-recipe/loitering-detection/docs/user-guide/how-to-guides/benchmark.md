@@ -83,12 +83,11 @@ similar characteristics. These are configurable parameters that can be adjusted 
 specific requirements:
 
 ```
-inference-region=1 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THROUGHPUT_STREAMS=2" threshold=0.7
+inference-region=0 inference-interval=3 batch-size=8 nireq=2 ie-config="GPU_THROUGHPUT_STREAMS=2" threshold=0.7
 ```
 
 **Parameter Descriptions:**
-- `inference-region=1`: Use the region-of-interest (ROI) set by the `gvaattachroi` element for
-detection.
+- `inference-region=0`: Use full frame.
 - `inference-interval=3`: Run inference on every 3rd frame.
 - `batch-size=8`: Process 8 frames in a single batch for better GPU utilization.
 - `nireq=2`: Number of inference requests to run in parallel.

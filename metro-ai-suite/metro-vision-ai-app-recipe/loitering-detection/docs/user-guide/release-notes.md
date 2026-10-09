@@ -1,5 +1,26 @@
 # Release Notes: Loitering Detection
 
+## Version 2.0.0 (Yet to be released)
+
+**New**:
+
+- Zone presence and dwell-time are now computed natively in the pipeline via the `gvaanalytics`
+  element, with the `loitering_watermark` element rendering the dwell-time/status
+  overlay — no external low-code flow engine required.
+- Added a lightweight `mqtt-table-flattener` sidecar that reshapes per-frame MQTT metadata into
+  one-row-per-object summaries so the Grafana status table renders correctly.
+- Zones are now defined per stream as JSON polygon/circle configs, so adding or editing zones
+  requires no pipeline or dashboard changes.
+
+**Removed**:
+
+- Removed the Node-RED service and flow; its zone/dwell-time logic and Grafana data reshaping
+  are now handled natively as described above.
+
+**Improved**:
+
+- Consolidated the Grafana dashboard's per-stream tables into a single status table.
+
 ## Version 1.6.0
 
 **Release Date**: September 10, 2026

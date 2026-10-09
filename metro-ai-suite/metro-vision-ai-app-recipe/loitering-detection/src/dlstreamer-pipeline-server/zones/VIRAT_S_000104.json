@@ -1,0 +1,18 @@
+{
+    "zones": [
+        {
+            "id": "region1",
+            "type": "polygon",
+            "points": [
+                {"x": 0, "y": 200},
+                {"x": 300, "y": 200},
+                {"x": 300, "y": 400},
+                {"x": 0, "y": 400}
+            ],
+            "track-dwell-time": true,
+            "object-retention": 1.0,
+            "color": {"r": 0, "g": 255, "b": 0},
+            "thickness": 2
+        }
+    ]
+}
