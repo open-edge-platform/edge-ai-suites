@@ -19,7 +19,7 @@ Each suite is developed in its own repository
   enhances output quality and volume with automated defect detection, asset tracking,
   software-defined controls, and other capabilities, empowering smart factories with Vision,
   Time Series and Generative AI capabilities.
-* [The Retail AI Suite](https://github.com/intel-retail)
+* [The Retail AI Suite](https://github.com/open-edge-platform/retail-ai-suite)
   accelerates hardware decisions for Retail AI workloads at the edge, featuring use cases
   such as self-checkout and loss prevention.
 * [The Robotics AI Suite](https://github.com/open-edge-platform/robotics-ai-suite)
@@ -32,7 +32,7 @@ Each suite is developed in its own repository
   is a solution for supporting the healthcare field with AI software tools covering a wide
   range of monitoring and analysis features.
 * [The Federal and Aerospace AI Suite](https://github.com/open-edge-platform/federal-and-aerospace-ai-suite)
-  is a cpmprehensive set of resources designed to accelerate the development and deployment
+  is a comprehensive set of resources designed to accelerate the development and deployment
   of edge AI solutions across federal and aerospace domains.
 
 
