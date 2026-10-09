@@ -4,7 +4,7 @@
 FROM python:3.12-slim
 
 LABEL org.opencontainers.image.title="APM UI Service"
-LABEL org.opencontainers.image.description="Web UI for agentic predictive maintenance blueprint"
+LABEL org.opencontainers.image.description="Web UI for agentic predictive maintenance for critical infrastructure blueprint"
 LABEL org.opencontainers.image.vendor="Intel Corporation"
 
 WORKDIR /app

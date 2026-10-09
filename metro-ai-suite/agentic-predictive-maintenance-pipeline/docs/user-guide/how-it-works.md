@@ -1,6 +1,6 @@
 # How It Works
 
-The Agentic Predictive Maintenance (APM) blueprint follows an on-demand **detect-then-reason** model: clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the (finite) source video, and then triggers a single multi-agent reasoning pass over exactly the detections that the run produced, generating structured maintenance tickets. Detection and reasoning are two independent, decoupled services connected only by a shared `run_id` and an event-driven MQTT handoff. This section describes each stage so you can understand, verify, and debug the pipeline independently.
+The Agentic Predictive Maintenance for Critical Infrastructure (APM) blueprint follows an on-demand **detect-then-reason** model: clicking "Run Pipeline" starts the DL Streamer video-inference pipeline, waits for it to finish processing the (finite) source video, and then triggers a single multi-agent reasoning pass over exactly the detections that the run produced, generating structured maintenance tickets. Detection and reasoning are two independent, decoupled services connected only by a shared `run_id` and an event-driven MQTT handoff. This section describes each stage so you can understand, verify, and debug the pipeline independently.
 
 ## System Overview
 
