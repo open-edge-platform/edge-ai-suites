@@ -690,7 +690,7 @@
     },
     "fields": {
       "school_name": "School name",
-      "class_name": "Class",
+      "class_name": "Grade & Class",
       "course_name": "Course name",
       "teacher_name": "Teacher",
       "report_time": "Generated at",
