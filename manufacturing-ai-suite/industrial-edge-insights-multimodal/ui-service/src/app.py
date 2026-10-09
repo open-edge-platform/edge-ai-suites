@@ -363,6 +363,16 @@ async def detections_page(
 
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         try:
+            labels_r = await client.get(f"{_STORAGE_URL}/detections/labels")
+            labels = labels_r.json() if labels_r.status_code == 200 else []
+        except Exception:
+            labels = []
+
+        if label not in labels:
+            label = None
+            params.pop("label", None)
+
+        try:
             r = await client.get(f"{_STORAGE_URL}/detections", params=params)
             detections = r.json() if r.status_code == 200 else []
         except Exception:
@@ -381,6 +391,7 @@ async def detections_page(
             "use_case_id": _USE_CASE_ID,
             "detections": detections,
             "filter_label": label or "",
+            "labels": labels,
             "filter_confidence": parsed_confidence if parsed_confidence is not None else "",
             "filter_limit": limit,
             "total_count": total_count,
