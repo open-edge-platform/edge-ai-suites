@@ -1,0 +1,49 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "weld_defect_classification",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "rtspsrc add-reference-timestamp-meta=true location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false,
+                "payload": {
+                    "destination": {
+						"metadata": {
+                            "type": "mqtt",
+                            "topic": "vision_weld_defect_classification"
+                        },
+                        "frame": [{
+                            "type": "webrtc",
+                            "peer-id": "samplestream",
+                            "overlay": true
+                        },
+                        {
+                            "type": "s3_write",
+                            "bucket": "dlstreamer-pipeline-results",
+                            "folder_prefix": "weld-defect-classification",
+                            "block": false
+                        }]
+                    },
+                    "parameters": {
+                        "classification-properties": {
+                            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
+                            "device": "CPU"
+                        }
+                    }
+                }
+            }
+        ]
+    }
+}

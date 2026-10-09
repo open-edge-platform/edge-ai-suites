@@ -138,7 +138,6 @@ services:
       timeout: 10s
       retries: 5
       start_period: 20s
-
 volumes:
   vol_ui_service_tmpfs:
     driver: local

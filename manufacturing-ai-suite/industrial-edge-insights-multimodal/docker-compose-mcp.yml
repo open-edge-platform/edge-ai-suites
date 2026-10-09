@@ -1,0 +1,36 @@
+services:
+  dlstreamer-pipeline-server:
+    volumes:
+      - ./configs/dlstreamer-pipeline-server/config_auto_start_off.json:/home/pipeline-server/config.json
+
+  multimodal-mcp-server:
+    container_name: multimodal-mcp-server
+    hostname: multimodal-mcp-server
+    build:
+      context: $PWD/mcp-server
+      dockerfile: $PWD/mcp-server/Dockerfile
+    image: ${DOCKER_REGISTRY}${MULTIMODAL_MCP_SERVER_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
+    depends_on:
+      dlstreamer-pipeline-server:
+        condition: service_started
+      ia-time-series-analytics-microservice:
+        condition: service_started
+    environment:
+      PIPELINE_API_URL: http://dlstreamer-pipeline-server:8080
+      TIME_SERIES_API_URL: http://ia-time-series-analytics-microservice:5000
+      KAPACITOR_API_URL: http://ia-time-series-analytics-microservice:${KAPACITOR_PORT:-9092}
+      EXPLAIN_API_URL: http://multimodal-agentic-ui:5003
+      APM_AGENT_URL: http://apm-agent:5002
+      no_proxy: "${no_proxy:-},ia-influxdb,vllm-server,seaweedfs-filer,apm-agent,ia-fusion-analytics,ia-mqtt-broker,multimodal-agentic-ui,localhost"
+      NO_PROXY: "${no_proxy:-},ia-influxdb,vllm-server,seaweedfs-filer,apm-agent,ia-fusion-analytics,ia-mqtt-broker,multimodal-agentic-ui,localhost"
+    ports:
+      - "${HOST_IP:-127.0.0.1}:${MCP_PORT:-8001}:8000"
+    volumes:
+      - ./configs/dlstreamer-pipeline-server:/app/configs/dlstreamer-pipeline-server:ro
+      - ./configs/time-series-analytics-microservice:/app/configs/time-series-analytics-microservice:ro
+    networks:
+      - timeseries_network

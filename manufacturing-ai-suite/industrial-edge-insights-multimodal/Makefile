@@ -10,6 +10,7 @@ MAKEFLAGS += --no-print-directory
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_FILE_VLLM = ./docker-compose-vllm.yml
 DOCKER_COMPOSE_FILE_AGENTIC = ./docker-compose-agentic.yml
+DOCKER_COMPOSE_FILE_MCP = ./docker-compose-mcp.yml
 DOCKER_COMPOSE = docker compose
 SECURE_MODE='false'
 
@@ -41,12 +42,12 @@ PLATFORM_CHECK ?= true
 .PHONY: build
 build:
 	@echo "Building Docker containers...";
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) build --pull;
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_MCP) build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) build --build-arg COPYLEFT_SOURCES=true --pull;
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_MCP) build --build-arg COPYLEFT_SOURCES=true --pull;
 
 .PHONY: validate_host_ip
 validate_host_ip:
@@ -356,6 +357,19 @@ up_agentic: check_hardware check_models check_env_variables validate_host_ip dow
 
 
 
+.PHONY: up_agentic_mcp
+up_agentic_mcp: check_hardware check_models check_env_variables validate_host_ip down
+	@export TELEGRAF_INPUT_PLUGIN=mqtt_consumer; \
+	export NGINX_CONFIG_PATH=./configs/nginx/nginx_agentic.conf; \
+	export AGENTIC_UI_ENABLED=true MQTT_DISABLED=false; \
+	echo "Starting Docker containers..."; \
+	echo "GPU device path set to: $(DRI_MOUNT_PATH) based on its existence"; \
+	rm -f configs/grafana/provisioning/*.json; \
+	cp configs/grafana/dashboards_jsons/weld_defect_detection_vlm.json configs/grafana/provisioning/weld_defect_detection.json || exit 1; \
+	cp configs/grafana/dashboards_jsons/weld_defect_detection_agentic.json configs/grafana/provisioning/weld_defect_detection_agentic.json || exit 1; \
+	$(MAKE) download_model || exit 1; \
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_MCP)  up -d || exit 1;
+
 # Status of the deployed containers
 .PHONY: status
 status:
@@ -398,7 +412,7 @@ status:
 .PHONY: down
 down:
 	@echo "Stopping Docker containers...";
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) down -v --remove-orphans
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_MCP) down -v --remove-orphans
 
 # Push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
 # and have logged into that. Applies mainly when one is dealing with internal docker registry.
@@ -407,7 +421,7 @@ down:
 .PHONY: push_images
 push_images: build
 	@echo "Pushing the images to docker registry"
-	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) push
+	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_FILE_VLLM) -f $(DOCKER_COMPOSE_FILE_AGENTIC) -f $(DOCKER_COMPOSE_FILE_MCP) push
 
 
 # Generate helm packages
