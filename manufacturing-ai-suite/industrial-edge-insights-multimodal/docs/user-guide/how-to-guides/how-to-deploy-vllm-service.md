@@ -132,7 +132,6 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
 
      ![vLLM Reasoning for weld data](../_assets/vllm_response.png)
 
-   The insights UI can also be independently accessed at URL: `https://127.0.0.1:3000/insights-ui/`
 
 ## Stop the Deployment
 
