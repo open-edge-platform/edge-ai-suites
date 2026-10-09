@@ -1,0 +1,162 @@
+/* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
+/* SPDX-License-Identifier: Apache-2.0 */
+
+/* Panels, grid, telemetry and overlay rules (split from styles.css to
+   stay inside the generation budget; see BUILD.md 1.3). */
+
+/* --------------------------------------------------------- utilisation --- */
+
+.util .gauge {
+  display: grid;
+  grid-template-columns: 42px 1fr 46px;
+  align-items: center;
+  gap: 3px 8px;
+  margin-bottom: 8px;
+}
+.g-label { color: var(--muted); font-size: .78rem; }
+.bar {
+  height: 8px;
+  background: #0f1520;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.bar > i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width .4s ease;
+}
+.g-val { text-align: right; font-size: .82rem; }
+.g-sub {
+  grid-column: 1 / -1;
+  font-size: .68rem;
+  color: var(--muted);
+  text-align: right;
+  min-height: .8em;
+}
+
+/* --------------------------------------------------------------- grid --- */
+
+.grid {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  grid-auto-rows: max-content;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  overflow-y: auto;
+  height: 100%;
+}
+.grid.compare {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px;
+}
+/* .empty and [hidden] are equal specificity; without this, setting the
+   hidden property from JS does not actually hide the element. */
+.empty[hidden] { display: none; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 480px;
+}
+.panel-head {
+  background: var(--panel-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  font-size: .82rem;
+}
+.p-actions { display: flex; align-items: center; gap: 6px; }
+.p-close {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: .9rem;
+}
+.p-close:hover { color: var(--danger); }
+
+.video-wrap {
+  position: relative;
+  flex: 0 0 260px;
+  background: #000;
+}
+.video-wrap video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.roi-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.roi-overlay.draw {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+.roi-current {
+  position: absolute;
+  border: 2px solid var(--accent);
+  background: rgba(41, 193, 156, .12);
+  display: none;
+}
+.roi-current::after {
+  content: "zone";
+  position: absolute;
+  top: -18px;
+  left: 0;
+  font-size: .68rem;
+  color: var(--accent);
+}
+.roi-draw {
+  position: absolute;
+  border: 2px dashed var(--accent-2);
+  background: rgba(61, 139, 255, .14);
+  display: none;
+}
+
+.p-status {
+  font-size: .74rem;
+  color: var(--muted);
+  padding: 4px 10px 8px 10px;
+}
+.p-status.live { color: var(--accent); }
+.p-status.error { color: var(--danger); }
+
+/* ---- per-panel analytics: summary row and loiter table, directly
+   below each video stream (replaces the old global bottom bar). Fixed
+   video height above means a growing table can only scroll here, never
+   resize the video. ---- */
+.p-analytics { flex: 1 1 auto; min-height: 0; overflow-y: auto;
+                padding: 8px 10px 10px; border-top: 1px solid var(--line); }
+.p-stats { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 6px;
+           font-size: 12px; color: var(--muted); }
+.p-stats b { color: var(--text); font-size: 14px; font-variant-numeric: tabular-nums; }
+table.p-loiter { width: 100%; border-collapse: collapse; font-size: 12px;
+                 font-variant-numeric: tabular-nums; }
+table.p-loiter th { text-align: left; font-weight: 600; color: var(--muted);
+                    border-bottom: 1px solid var(--line); padding: 4px 6px; }
+table.p-loiter td { padding: 3px 6px; border-bottom: 1px solid var(--line); }
+table.p-loiter tr.row-loiter td { color: var(--warn); font-weight: 600; }
+.p-empty-rows { font-size: 12px; color: var(--muted); margin: 6px 2px 0; }

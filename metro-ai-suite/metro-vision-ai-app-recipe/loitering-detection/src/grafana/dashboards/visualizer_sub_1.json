@@ -1,220 +1,159 @@
 {
   "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "datasource",
-          "uid": "grafana"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
-        "type": "dashboard"
-      }
-    ]
+    "list": []
   },
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 8,
+  "id": null,
   "links": [],
+  "liveNow": true,
   "panels": [
     {
       "collapsed": false,
       "gridPos": {
-        "h": 1,
-        "w": 24,
+        "h": 12,
+        "w": 12,
         "x": 0,
         "y": 0
       },
-      "id": 26,
-      "panels": [],
-      "title": "Object Regional Detection",
-      "type": "row"
-    },
-    {
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 15,
-        "w": 24,
-        "x": 0,
-        "y": 1
-      },
-      "id": 22,
+      "id": 1,
+      "title": "Camera 1 - Live Stream",
+      "type": "text",
       "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<iframe src=\"${WEBRTC_URL}object_tracking_1/\" style=\"width:100%;height:500px\";  allow=\"autoplay; encrypted-media\">\n</iframe> ",
-        "mode": "html"
-      },
-      "pluginVersion": "11.5.4",
-      "title": "Zone 1",
-      "type": "text"
+        "mode": "html",
+        "content": "<iframe src=\"${WEBRTC_URL}object_tracking_1/\" width=\"100%\" height=\"100%\" frameborder=\"0\" allow=\"autoplay; fullscreen\"></iframe>"
+      }
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 12,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "title": "Camera 1 - Loitering Detection Events",
+      "type": "table",
       "datasource": {
         "type": "grafana-mqtt-datasource",
-        "uid": "PBA9FB8DAC51D59B8"
+        "uid": "mqtt-loitering"
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 24,
-        "w": 24,
-        "x": 0,
-        "y": 16
-      },
-      "id": 27,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "11.5.4",
       "targets": [
         {
           "datasource": {
             "type": "grafana-mqtt-datasource",
-            "uid": "PBA9FB8DAC51D59B8"
+            "uid": "mqtt-loitering"
           },
           "refId": "A",
-          "topic": "loiter_status_1"
+          "topic": "loitering_table"
         }
       ],
-      "title": "Loiter Table",
       "transformations": [
         {
-          "id": "reduce",
+          "id": "extractFields",
           "options": {
-            "reducers": [
-              "lastNotNull"
-            ],
-            "mode": "reduceFields",
-            "includeTimeField": false
+            "source": "Line",
+            "format": "json",
+            "replace": true
           }
         },
         {
-          "id": "partitionByValues",
+          "id": "filterByValue",
           "options": {
-            "fields": [
-              "Region 1_1 1"
-            ],
-            "keepFields": true,
-            "naming": {
-              "asLabels": true
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "camera",
+                "config": {
+                  "id": "equal",
+                  "options": {
+                    "value": "object_tracking_1"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "camera": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "object_id": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "type": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "entry_time": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "dwell_s": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              }
             }
           }
         },
         {
-          "id": "joinByLabels",
+          "id": "organize",
           "options": {
-            "value": "Region 1_1 1"
-          }
-        },
-        {
-          "id": "extractFields",
-          "options": {
-            "delimiter": ",",
-            "source": "[object Object]"
-          }
-        },
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": [
-                "Zone ID",
-                "ID",
-                "Type",
-                "Entry Time",
-                "Dwell Time"
-              ]
+            "excludeByName": {},
+            "renameByName": {
+              "camera": "Camera",
+              "object_id": "Object ID",
+              "type (lastNotNull)": "Type",
+              "entry_time (lastNotNull)": "Entry Time",
+              "dwell_s (lastNotNull)": "Dwell (s)"
             }
           }
         },
         {
           "id": "sortBy",
           "options": {
-            "fields": {},
             "sort": [
               {
-                "field": "Entry Time"
+                "field": "Dwell (s)",
+                "desc": true
               }
             ]
           }
-        },
-        {
-          "id": "filterByValue",
-          "options": {
-            "filters": [
-              {
-                "config": {
-                  "id": "isNull",
-                  "options": {}
-                },
-                "fieldName": "Type"
-              }
-            ],
-            "match": "any",
-            "type": "exclude"
-          }
         }
       ],
-      "type": "table"
+      "options": {
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "center"
+          }
+        },
+        "overrides": []
+      }
     }
   ],
-  "preload": false,
-  "refresh": "",
-  "schemaVersion": 40,
-  "tags": [],
+  "refresh": "1s",
+  "schemaVersion": 39,
+  "tags": [
+    "loitering-detection",
+    "metro-ai-suite"
+  ],
   "templating": {
     "list": [
       {
@@ -237,28 +176,12 @@
     ]
   },
   "time": {
-    "from": "now-1s",
+    "from": "now-5m",
     "to": "now"
   },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "15s",
-      "1m",
-      "10m",
-      "30m",
-      "1h",
-      "6h",
-      "12h",
-      "1d",
-      "7d",
-      "14d",
-      "30d"
-    ]
-  },
-  "timezone": "",
-  "title": "Loitering Detection - Zone 1",
-  "uid": "kzGVerJnz4",
-  "version": 2,
-  "weekStart": ""
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Camera 1 Visualizer",
+  "uid": "cam1_loitering_dashboard",
+  "version": 12
 }

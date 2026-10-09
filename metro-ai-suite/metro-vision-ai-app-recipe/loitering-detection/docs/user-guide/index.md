@@ -74,6 +74,7 @@ Validate your ideas by developing an end-to-end solution faster.
 :hidden:
 
 get-started.md
+getting-started-ui.md
 how-to-guides.md
 troubleshooting.md
 Release Notes <./release-notes.md>
