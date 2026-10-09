@@ -57,7 +57,7 @@ a per-instance MQTT topic and WebRTC peer-id (e.g. `object_tracking_1`).
     -   **Detection Model:** Uses the `pedestrian-and-vehicle-detector-adas-0001` model for
     specialized tracking. `gvadetect` runs with `inference-region=0`, so detection/tracking
     analyze the full frame, not just the configured zone polygons.
-    -   **Tracking Element:** Incorporates `gvatrack` with the setting `tracking-type=short-term-imageless` to follow objects over time.
+    -   **Tracking Element:** Incorporates `gvatrack` with the setting `tracking-type=zero-term` to follow objects over time.
     -   **Zone & Dwell-Time Analytics:** The `gvaanalytics` element evaluates each tracked
     object's position against a per-stream polygon zone config file and computes dwell time;
     it is the only stage whose output is restricted to the configured zones — an object

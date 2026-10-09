@@ -125,11 +125,11 @@ By following this guide, you will learn how to:
   ![Grafana Dashboard](./_assets/grafana.png "grafana dashboard")
 
   > [!NOTE]
-  > In the default pipeline, we use `gvatrack tracking-type=short-term-imageless`
-  > element. Imageless tracking forms object associations based on the movement
-  > and shape of objects, and it does not use image data. Since it does not use
-  > image features, the same object may receive different IDs over time due to
-  > lack of re-identification.
+  > In the default pipeline, we use `gvatrack tracking-type=zero-term`
+  > element. Zero-term tracking assigns unique object IDs and requires object
+  > detection to run on every frame (the pipelines here already run detection
+  > on every frame, so this is a direct drop-in). It uses image data for
+  > re-identification, unlike the imageless trackers.
 
   > [!NOTE]
   > Detection (`gvadetect`) and tracking (`gvatrack`) always run on the full video frame —
