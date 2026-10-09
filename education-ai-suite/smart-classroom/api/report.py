@@ -130,9 +130,28 @@ async def generate_report(request: ReportRequest):
 
 @router.get("/report/template-fields")
 def get_report_template_fields():
-    """Return the report field catalog (grouped, bilingual) for the checkboxes."""
+    """Return the report field catalog (grouped, bilingual) for the checkboxes.
+
+    Manual fields carry a bilingual ``default`` (the same example value the
+    report fills when left blank) so the UI can show it as the input placeholder
+    without maintaining its own copy.
+    """
     from components.report_generator.field_catalog import REPORT_TEMPLATE_FIELD_GROUPS
-    return {"groups": REPORT_TEMPLATE_FIELD_GROUPS}
+    from components.report_generator.raw_field_mapper import manual_field_defaults
+    defaults = manual_field_defaults()
+    groups = [
+        {
+            **group,
+            "fields": [
+                {**f, "default": defaults[f["code"]]}
+                if f.get("input") == "manual" and f["code"] in defaults
+                else f
+                for f in group["fields"]
+            ],
+        }
+        for group in REPORT_TEMPLATE_FIELD_GROUPS
+    ]
+    return {"groups": groups}
 
 
 @router.get("/report/capabilities")

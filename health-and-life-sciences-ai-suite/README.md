@@ -1,5 +1,10 @@
 # Health and Life Sciences AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project has moved to (open-edge-platform/health-and-life-sciences-ai-suite)[https://github.com/open-edge-platform/health-and-life-sciences-ai-suite].
+
+
 The **Health and Life Sciences AI Suite** is a collection of healthcare-focused AI applications, libraries, and benchmarking tools to showcase the capabilities of Intel® Core™ Ultra processors within simulated medical situations.
 
 The suite provides **multi-modal AI pipelines** accelerated with the **OpenVINO™ toolkit**, enabling high-performance deployment on **Intel® Core™ Ultra platforms** using **CPU, integrated GPU (iGPU), and NPU**.

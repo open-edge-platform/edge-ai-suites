@@ -83,16 +83,13 @@ services:
     networks:
       - timeseries_network
       
-  ia-insights-workbench:
-    container_name: ia-insights-workbench
-    hostname: ia-insights-workbench
-    image: ${DOCKER_REGISTRY}${WORKBENCH_INSIGHTS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+  multimodal-agentic-ui:
+    container_name: multimodal-agentic-ui
+    hostname: multimodal-agentic-ui
+    image: ${DOCKER_REGISTRY}${MULTIMODAL_AGENTIC_UI_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     build:
-      context: $PWD/insights-workbench
-      dockerfile: $PWD/insights-workbench/Dockerfile
-      args:
-        TIMESERIES_USER_NAME: ${TIMESERIES_USER_NAME}
-        TIMESERIES_UID: ${TIMESERIES_UID}
+      context: $PWD/ui-service
+      dockerfile: $PWD/ui-service/Dockerfile
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -100,10 +97,25 @@ services:
     - no-new-privileges
     read_only: true
     volumes:
-      - vol_insights_workbench_tmpfs:/tmp:rw
+      - vol_ui_service_tmpfs:/tmp:rw
     environment:
-      no_proxy: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
-      NO_PROXY: "ia-influxdb,vllm-server,${no_proxy},seaweedfs-filer"
+      http_proxy: ${http_proxy:-}
+      https_proxy: ${https_proxy:-}
+      no_proxy: "${no_proxy:-},ia-influxdb,vllm-server,seaweedfs-filer,apm-agent,ia-fusion-analytics,ia-mqtt-broker,localhost"
+      NO_PROXY: "${no_proxy:-},ia-influxdb,vllm-server,seaweedfs-filer,apm-agent,ia-fusion-analytics,ia-mqtt-broker,localhost"
+      AGENT_SERVICE_URL: http://apm-agent:5002
+      STORAGE_SERVICE_URL: http://ia-fusion-analytics:8080
+      MQTT_HOST: ia-mqtt-broker
+      MQTT_PORT: 1883
+      MQTT_BATCH_TOPIC: ${MQTT_BATCH_TOPIC:-apm/batch-complete}
+      MQTT_QOS: ${MQTT_QOS:-1}
+      MQTT_KEEPALIVE: ${MQTT_KEEPALIVE:-60}
+      MQTT_DISABLED: ${MQTT_DISABLED:-true}
+      HOST: 0.0.0.0
+      PORT: 5003
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      REST_API_ROOT_PATH: /agentic-ui
+      AGENTIC_UI_ENABLED: ${AGENTIC_UI_ENABLED:-false}
       INFLUX_HOST: ia-influxdb
       INFLUX_PORT: 8086
       INFLUX_USER: ${INFLUXDB_USERNAME}
@@ -120,9 +132,15 @@ services:
       VLLM_ADAPTER_NAME: ${VLLM_ADAPTER_NAME}
     networks:
       - timeseries_network
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5003/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
 volumes:
-  vol_insights_workbench_tmpfs:
+  vol_ui_service_tmpfs:
     driver: local
     driver_opts:
       type: tmpfs

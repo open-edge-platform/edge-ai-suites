@@ -16,7 +16,7 @@ CONFIG_ONLY=false
 
 # =================== Functions ======================
 show_help() {
-    echo -e "Agentic Predictive Maintenance Blueprint v1.0"
+    echo -e "Agentic Predictive Maintenance for Critical Infrastructure Blueprint v1.0"
     echo -e "Copyright (C) 2026 Intel Corporation"
     echo -e ""
     echo -e "${YELLOW}USAGE:${NC}"
@@ -293,7 +293,7 @@ case "${ACTION}" in
             echo
         fi
 
-        echo -e "${BLUE}Starting Agentic Predictive Maintenance — use case: ${USE_CASE}${NC}"
+        echo -e "${BLUE}Starting Agentic Predictive Maintenance for Critical Infrastructure — use case: ${USE_CASE}${NC}"
 
         COMPOSE_CMD="docker compose \
             -f docker/compose.base.yaml \

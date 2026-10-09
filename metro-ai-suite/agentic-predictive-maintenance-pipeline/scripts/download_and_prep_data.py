@@ -321,7 +321,7 @@ def create_video_from_images(images_dir: Path, video_path: Path, fps: int = 30) 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Download and prepare a dataset for Agentic Predictive Maintenance",
+        description="Download and prepare a dataset for Agentic Predictive Maintenance for Critical Infrastructure",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -363,7 +363,7 @@ def main():
 
     print(DISCLAIMER)
     print("=" * 70)
-    print("Agentic Predictive Maintenance — Dataset Download & Prepare")
+    print("Agentic Predictive Maintenance for Critical Infrastructure — Dataset Download & Prepare")
     print("=" * 70)
     print(f"  Use case:    {args.use_case}")
     print(f"  Dataset dir: {output_dir}")

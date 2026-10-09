@@ -32,14 +32,13 @@ FROM nginx:1.31.5-trixie
 
 ARG COPYLEFT_SOURCES=false
 
-# Security update for krb5 runtime libs (fixes CVE-2026-40356) and bsdutils (fixes util-linux CVE)
+# Apply all available Debian security updates to remediate CVEs inherited from the base
+# image.
+# A full upgrade is used instead of a hand-maintained package list so point-release
+# security fixes are picked up automatically on every rebuild.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends --only-upgrade \
-      libkrb5support0 \
-      libkrb5-3 \
-      libgssapi-krb5-2 \
-      libk5crypto3 \
-      bsdutils && \
+    DEBIAN_FRONTEND=noninteractive apt-get -y upgrade && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy built assets from builder stage
