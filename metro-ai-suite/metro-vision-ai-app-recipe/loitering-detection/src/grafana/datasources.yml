@@ -4,15 +4,28 @@ datasources:
   - name: Infinity
     type: yesoreyeram-infinity-datasource
     access: proxy
-    isDefault: true
-    jsonData:
-    
+    isDefault: false
+    editable: true
+    jsonData: {}
+
   - name: grafana-mqtt-datasource
     type: grafana-mqtt-datasource
+    # Pinned so provisioned dashboards can reference it by uid. Without an
+    # explicit uid Grafana generates a random one per install and a
+    # type-only reference in a dashboard fails to resolve, showing "No data".
+    uid: mqtt-loitering
     access: proxy
+    isDefault: true
     readOnly: false
     editable: true
-    jsonData: { "uri": "tcp://broker:1883" }
+    jsonData:
+      uri: "tcp://broker:1883"
+      keepAlive: 60
+      cleanSession: true
+      protocol: "mqtt"
+      authType: "none"
+      client:
+        clientId: "grafana-client-loitering"
 
   - name: Prometheus
     type: prometheus
@@ -21,4 +34,4 @@ datasources:
     isDefault: false
     jsonData:
       tlsSkipVerify: true  # This disables certificate verification
-
+      httpMethod: "POST"

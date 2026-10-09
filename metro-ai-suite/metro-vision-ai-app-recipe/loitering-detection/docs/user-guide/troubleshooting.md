@@ -119,6 +119,92 @@ to file new tickets there (after learning about the guidelines for
 
    This should resolve the time discrepancy in Prometheus.
 
+## Troubleshooting the Console UI
+
+See [Getting started - Loitering Detection Console UI](./getting-started-ui.md) for normal
+usage; the issues below are specific to it.
+
+
+1. **Upgrading & Purging Stale UI Images**
+
+   - When upgrading to a newer version of the Console Add-on, stale container caches or older local
+     image layers can prevent new UI features and polygon geometry tools from rendering. Follow these steps to purge existing images before deploying the update.
+
+    ```bash
+    docker compose down --remove-orphans
+    docker images | grep -E "loitering-detection-ui"
+    docker rmi -f $(docker images -q "*loitering-detection-ui*")
+    docker compose build --no-cache console
+    ```
+
+2. **No bounding boxes on a stream**
+
+   - Detection runs on the full frame and every detected object gets a box regardless of zone
+     (see [How detection and zones interact](./getting-started-ui.md#how-detection-and-zones-interact)),
+     so a missing box means the model did not detect that object that frame (confidence below
+     the pipeline's threshold), not a zone restriction. Check the stream's raw MQTT topic to
+     confirm, or try different model for better recall on some object types/angles.
+
+3. **An object is in the zone outline but never appears in the table below it**
+
+   - The table only lists objects `gvaanalytics` has matched to that zone, which depends on
+     `evaluation-point=bottom-center` (the object's bottom-center point, not its whole box, must
+     be inside the zone polygon) - an object whose box overlaps the zone but whose feet/base are
+     still outside it will not match yet. Widen or reposition the zone if the area you care
+     about needs to catch objects earlier.
+
+4. **Zone edits not taking effect**
+
+   - `gvaanalytics` cannot update a zone on a running pipeline, so **Apply zone to live
+     streams** always restarts every live stream — expect a brief reconnect of each video
+     panel.
+
+5. **Pipeline start fails with `400 ... BAD REQUEST`, or a stream connects but never shows video
+   or detections (any device, including GPU)**
+
+   - **Most likely cause**: a proxy having a bad moment during `install.sh` can return
+     its own HTML error page (e.g. "504 Gateway Timeout") with an HTTP 200 status - `curl` treats
+     that as a successful download, silently leaving an HTML file in place of a real model or
+     video file. Check for this first:
+
+     ```bash
+     file loitering-detection/src/dlstreamer-pipeline-server/videos/*.mp4 \
+          loitering-detection/src/dlstreamer-pipeline-server/models/intel/*/*.json \
+          loitering-detection/src/dlstreamer-pipeline-server/models/intel/*/FP16/*
+     ```
+
+     Any result reported as `HTML document` instead of a video/model format confirms this - every
+     device fails identically on corrupted input, so this is not a DEVICE-specific problem. Re-run 
+     `install.sh` to redownload, then restart the pipeline server so it
+     drops any model-instance-id it already marked broken from the earlier corrupted file:
+
+     ```bash
+     docker compose up -d --force-recreate dlstreamer-pipeline-server
+     ```
+
+   - **Less common cause**: DL Streamer caches a loaded model against its `model-instance-id`;
+     if a pipeline using that id is ever stopped uncleanly, a shared id can leave the cache entry
+     wedged so every later launch reusing it silently stalls. The Console UI and
+     `sample_start.sh` both generate a unique id per launch, so this should no longer happen in
+     normal use. The same restart command above clears this too.
+   - If it recurs reliably for a specific model/device combination even with valid files, check
+     the pipeline server's logs for errors around that model's load, since that points at a
+     model or device-compatibility problem rather than either cause above.
+
+6. **GPU utilization always shows "n/a" even while a GPU stream is running**
+
+   - The gauge reads Prometheus's `qmmd_gpu_engine_utilization_ratio` compute-engine series,
+     whose engine label varies by GPU generation/qmassa version (`ccs` on some, `compute` on
+     others). If it is still n/a after upgrading to a version with both labels recognized,
+     confirm Prometheus actually has GPU series at all:
+
+     ```bash
+     docker exec ui-console curl -sk 'http://prometheus:9090/prometheus/api/v1/query?query=qmmd_gpu_engine_utilization_ratio'
+     ```
+
+     An empty `result` array means the metrics pipeline itself (`metrics-manager`'s `qmassa`)
+     is not reporting for this GPU, not a Console UI bug - check `docker logs metrics-manager`.
+
 ## Troubleshooting Helm Deployments
 
 1. Deploying with Intel® GPU K8S Extension on Open Edge Platform

@@ -1,0 +1,38 @@
+{
+  "zones": [
+    {
+      "id": "Pathway",
+      "type": "polygon",
+      "points": [
+        {
+          "x": 16,
+          "y": 269
+        },
+        {
+          "x": 196,
+          "y": 476
+        },
+        {
+          "x": 499,
+          "y": 373
+        },
+        {
+          "x": 451,
+          "y": 143
+        },
+        {
+          "x": 169,
+          "y": 20
+        }
+      ],
+      "track-dwell-time": true,
+      "object-retention": 3.0,
+      "color": {
+        "r": 255,
+        "g": 0,
+        "b": 0
+      },
+      "thickness": 3
+    }
+  ]
+}

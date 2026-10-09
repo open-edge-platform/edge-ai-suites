@@ -1,6 +1,37 @@
 #!/bin/bash
 
 DLSPS_NODE_IP="localhost"
+# The pipelines bake in no model, so that a different one can be selected per
+# request without inheriting this model's post-processing.
+MODEL_DIR="/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001"
+MODEL_XML="$MODEL_DIR/FP16/pedestrian-and-vehicle-detector-adas-0001.xml"
+MODEL_PROC="$MODEL_DIR/pedestrian-and-vehicle-detector-adas-0001.json"
+
+# Zones are no longer baked into the pipeline (gvaanalytics has no
+# `config=` property set in config.json), so this script reads the same
+# zone file (src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json)
+# and passes its "zones" array through the "analytics-properties" parameter
+# on every start - every zone defined there, rectangle or polygon, any
+# count, is active exactly as if it were still baked in. Edit that file to
+# change the zones the sample pipelines evaluate.
+#
+# Detection itself runs full-frame (matching the upstream DLStreamer
+# loitering_detection sample's architecture) - gvaanalytics' zone/dwell
+# matching and draw-zones=true are what make loitering detection zone-
+# aware, not a detection-region crop; a gvaattachroi-based crop used to be
+# here but introduced a visible extra rectangle around non-rectangular
+# zones (its crop can only ever be a bounding box) with no matching upside.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ZONES_CONFIG_FILE="$SCRIPT_DIR/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json"
+ZONES_JSON=$(python3 -c "
+import json
+try:
+    with open('$ZONES_CONFIG_FILE') as f:
+        zones = json.load(f).get('zones') or []
+except Exception:
+    zones = []
+print(json.dumps(json.dumps(zones)))
+")
 
 function run_sample() {
   pipelines=$1
@@ -16,6 +47,10 @@ function run_sample() {
   pipeline_list=()
   echo
   echo -n ">>>>>Initialization..."
+  # Each camera gets its own model-instance-id: DL Streamer caches a loaded
+  # network per id, and sharing one across concurrent pipelines can wedge
+  # every later launch reusing it once any one of them stops uncleanly
+  # (console-addon/console/catalog.py's _model_instance_id has the full story).
   for x in $(seq 1 $pipelines); do
     payload=$(cat <<EOF
    {
@@ -31,11 +66,17 @@ function run_sample() {
         },
         "frame": {
             "type": "webrtc",
-            "peer-id": "object_tracking_$x",
-            "overlay-properties": {
-                "font-scale": 1.0,
-                "draw-txt-bg": false
-            }
+            "peer-id": "object_tracking_$x"
+        }
+    },
+    "parameters": {
+        "detection-properties": {
+            "model": "$MODEL_XML",
+            "model_proc": "$MODEL_PROC",
+            "model-instance-id": "sample-${pipeline_name}-$x"
+        },
+        "analytics-properties": {
+            "zones": $ZONES_JSON
         }
     }
   }
