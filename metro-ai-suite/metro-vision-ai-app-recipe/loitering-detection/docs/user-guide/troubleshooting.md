@@ -124,7 +124,20 @@ to file new tickets there (after learning about the guidelines for
 See [Getting started - Loitering Detection Console UI](./getting-started-ui.md) for normal
 usage; the issues below are specific to it.
 
-1. **No bounding boxes on a stream**
+
+1. **Upgrading & Purging Stale UI Images**
+
+   - When upgrading to a newer version of the Console Add-on, stale container caches or older local
+     image layers can prevent new UI features and polygon geometry tools from rendering. Follow these steps to purge existing images before deploying the update.
+
+    ```bash
+    docker compose down --remove-orphans
+    docker images | grep -E "loitering-detection-ui"
+    docker rmi -f $(docker images -q "*loitering-detection-ui*")
+    docker compose build --no-cache console
+    ```
+
+2. **No bounding boxes on a stream**
 
    - Detection runs on the full frame and every detected object gets a box regardless of zone
      (see [How detection and zones interact](./getting-started-ui.md#how-detection-and-zones-interact)),
@@ -132,7 +145,7 @@ usage; the issues below are specific to it.
      the pipeline's threshold), not a zone restriction. Check the stream's raw MQTT topic to
      confirm, or try different model for better recall on some object types/angles.
 
-2. **An object is in the zone outline but never appears in the table below it**
+3. **An object is in the zone outline but never appears in the table below it**
 
    - The table only lists objects `gvaanalytics` has matched to that zone, which depends on
      `evaluation-point=bottom-center` (the object's bottom-center point, not its whole box, must
@@ -140,13 +153,13 @@ usage; the issues below are specific to it.
      still outside it will not match yet. Widen or reposition the zone if the area you care
      about needs to catch objects earlier.
 
-2. **Zone edits not taking effect**
+4. **Zone edits not taking effect**
 
    - `gvaanalytics` cannot update a zone on a running pipeline, so **Apply zone to live
      streams** always restarts every live stream — expect a brief reconnect of each video
      panel.
 
-3. **Pipeline start fails with `400 ... BAD REQUEST`, or a stream connects but never shows video
+5. **Pipeline start fails with `400 ... BAD REQUEST`, or a stream connects but never shows video
    or detections (any device, including GPU)**
 
    - **Most likely cause**: a proxy having a bad moment during `install.sh` can return
@@ -178,7 +191,7 @@ usage; the issues below are specific to it.
      the pipeline server's logs for errors around that model's load, since that points at a
      model or device-compatibility problem rather than either cause above.
 
-4. **GPU utilization always shows "n/a" even while a GPU stream is running**
+6. **GPU utilization always shows "n/a" even while a GPU stream is running**
 
    - The gauge reads Prometheus's `qmmd_gpu_engine_utilization_ratio` compute-engine series,
      whose engine label varies by GPU generation/qmassa version (`ccs` on some, `compute` on

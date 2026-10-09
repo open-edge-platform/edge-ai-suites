@@ -186,7 +186,7 @@ services:
     build:
       context: ./console-addon/console
       dockerfile: Dockerfile
-    image: loitering-detection-ui:0.1.0
+    image: loitering-detection-ui:0.1.1
     container_name: ui-console
     restart: unless-stopped
     env_file:

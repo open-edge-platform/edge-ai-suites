@@ -71,8 +71,8 @@ Server's REST API directly.
      click **Start pipelines** right away to see video with live detections - no field needs to
      be touched first. Raise **Number of pipelines** to add more cards (e.g. to compare two
      models on the same source side by side).
-   - Each pipeline gets its own panel titled **Pipeline N · model · device**, with a live WebRTC
-     view and a per-object loiter table underneath it. Clicking a card's header collapses or
+   - Each pipeline gets its own panel titled **Pipeline N · source · model · device**, with a live
+     WebRTC view and a per-object loiter table underneath it. Clicking a card's header collapses or
      expands just that card - useful for focusing on one section at a time on a short screen.
    - Need a different zone first? See [Changing the zone](#changing-the-zone) below - zones are
      set by drawing on a pipeline's video after it starts, not from the rail.
