@@ -100,7 +100,27 @@ def api_events():
     now = time.time()
     with LOCK:
         streams = [_stream_snapshot(peer_id, sess, now) for peer_id, sess in SESSIONS.items()]
-    return jsonify({"streams": streams})
+        known_instance_ids = {sess["instance_id"] for sess in SESSIONS.values()}
+    # Pipelines started outside this console (sample_start.sh, a raw REST
+    # call, etc.) are real and may be worth knowing about even though this
+    # console has no panel for them (no WHEP peer-id to attach video to) -
+    # surfaced as a count only, not a guess at who started them.
+    external_count = 0
+    try:
+        r = requests.get(f"{PIPELINE_SERVER_URL}/pipelines/status", timeout=5)
+        r.raise_for_status()
+        data = r.json()
+        items = data if isinstance(data, list) else data.get("pipelines", []) if isinstance(data, dict) else []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            state = str(item.get("state", "")).upper()
+            iid = item.get("id") or item.get("instance_id")
+            if state in ("RUNNING", "QUEUED") and iid is not None and iid not in known_instance_ids:
+                external_count += 1
+    except (requests.RequestException, ValueError):
+        pass  # best-effort only; the console's own panels are unaffected
+    return jsonify({"streams": streams, "external_count": external_count})
 
 
 @app.route("/api/metrics")

@@ -104,57 +104,9 @@ function stop_all_pipelines() {
 }
 
 
-function deploy_with_gui() {
-  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-
-  echo
-  echo ">>>>>--gui requested: stopping any running pipelines first."
-  # Tolerate failure here: on a first-ever run nothing is deployed yet, so
-  # the pipeline-server this talks to does not exist and the curls below
-  # fail - that is expected, not an error worth aborting over.
-  "$SCRIPT_DIR/sample_stop.sh" || true
-
-  HOST_IP="$(grep -E '^HOST_IP=' "$REPO_ROOT/.env" 2>/dev/null | cut -d '=' -f2)"
-  HOST_IP="${HOST_IP:-$(hostname -I | cut -f1 -d' ')}"
-
-  echo ">>>>>Regenerating docker-compose.yml with the Console UI service included..."
-  (cd "$REPO_ROOT" && WITH_GUI=1 ./install.sh loitering-detection "$HOST_IP")
-  if [ $? -ne 0 ]; then
-    echo "Error: install.sh failed; see output above."
-    exit 1
-  fi
-
-  echo ">>>>>Deploying the full stack, including the Console UI..."
-  (cd "$REPO_ROOT" && docker compose up -d --build)
-  if [ $? -ne 0 ]; then
-    echo "Error: docker compose up failed; see output above."
-    exit 1
-  fi
-  echo ">>>>>Console UI available at https://$HOST_IP/console/"
-}
-
 forcedCPU=false
 forcedGPU=false
 forcedNPU=false
-withGui=false
-
-# --gui is consumed here, before the cpu/gpu/npu loop below, so it is never
-# mistaken for an unrecognised device argument (which would otherwise force
-# CPU and print a warning).
-args=()
-for arg in "$@"; do
-  if [ "$arg" == "--gui" ]; then
-    withGui=true
-  else
-    args+=("$arg")
-  fi
-done
-set -- "${args[@]}"
-
-if $withGui; then
-  deploy_with_gui
-fi
 
 for arg in "$@"; do
   if [ "$arg" == "cpu" ]; then

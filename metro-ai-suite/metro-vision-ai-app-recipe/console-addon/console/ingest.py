@@ -141,7 +141,22 @@ def _on_mqtt_message(_client, _userdata, msg):
         # holds no session for.
         _publish_table_rows(topic, objects, now)
         with LOCK:
+            # Exact match covers APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC=false
+            # (the topic this session was launched with, verbatim). That env
+            # var's own purpose is disambiguating multiple DLSPS/EVAM
+            # instances that could otherwise reuse the same pipeline names -
+            # when true, DLSPS appends the pipeline name (e.g. the launched
+            # "_<n>_object_tracking_cpu") to the topic actually published on,
+            # so also accept a topic that starts with what this session was
+            # launched with, followed by a separator, regardless of whether
+            # that separator is "_" or "/".
             sess = next((s for s in SESSIONS.values() if s["topic"] == topic), None)
+            if sess is None:
+                sess = next(
+                    (s for s in SESSIONS.values()
+                     if topic.startswith(s["topic"] + "_") or topic.startswith(s["topic"] + "/")),
+                    None,
+                )
         if sess is None:
             return
         frame_ts = _resolve_frame_time(sess, payload, metadata, now)

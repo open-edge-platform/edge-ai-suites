@@ -120,6 +120,17 @@ window.Console = window.Console || {};
         C.panels[pid].settled = true;
       });
       renderStreams(streams);
+      var note = byId("externalStreamsNote");
+      var externalCount = (d && d.external_count) || 0;
+      if (note) {
+        if (externalCount > 0) {
+          note.hidden = false;
+          note.textContent = externalCount + " additional pipeline" + (externalCount === 1 ? "" : "s") +
+            " running outside this console (e.g. sample_start.sh) - not shown as a panel below.";
+        } else {
+          note.hidden = true;
+        }
+      }
     }).catch(function () { /* transient */ });
   }
 

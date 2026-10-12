@@ -38,11 +38,19 @@ Server's REST API directly.
 ## Run the application
 
 1. **Start the Application**:
-   - Download container images with Application microservices and run with Docker Compose:
+   - Download container images with Application microservices and run with Docker Compose. The
+     Console UI service carries `profiles: ["ui"]` in `compose-without-scenescape.yml`, so it is
+     only created when the `ui` profile is requested:
 
      ```bash
-     docker compose up -d
+     docker compose --profile ui up -d
      ```
+
+     > [!NOTE]
+     > Plain `docker compose up -d` (no `--profile ui`) starts everything else exactly as before,
+     > without the Console UI. Run `./sample_start.sh` separately (no flags) if you also want the
+     > 4 fixed sample pipelines - the Console UI starts and stops its own pipelines independently
+     > of that script.
 
      <details>
      <summary>

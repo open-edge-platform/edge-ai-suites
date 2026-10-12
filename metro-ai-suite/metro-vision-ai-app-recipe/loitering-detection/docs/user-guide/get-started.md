@@ -94,8 +94,13 @@ By following this guide, you will learn how to:
 
    > [!NOTE]
    > The [Loitering Detection Console UI](#loitering-detection-console-ui) is **not** part of this
-   > default deployment. Deploy it with `./sample_start.sh --gui` (see step 2 below) instead of
-   > plain `docker compose up -d` if you want it.
+   > default deployment. It is defined with `profiles: ["ui"]` in `compose-without-scenescape.yml`,
+   > so plain `docker compose up -d` never creates or starts it; deploy it instead (alongside
+   > everything else) with:
+   >
+   > ```bash
+   > docker compose --profile ui up -d
+   > ```
 
 2. **Run Predefined Pipelines** (required):
    - Start video streams to run video inference pipelines:
@@ -110,19 +115,7 @@ By following this guide, you will learn how to:
      > starts and stops its own streams on demand - you can skip this step entirely and go
      > straight to the Console UI's URL below.
 
-   - To bring up the Console UI as well, pass `--gui` instead (this stops any already-running
-     pipelines, regenerates `docker-compose.yml` with the Console UI service included, and
-     redeploys the whole stack, then starts the 4 fixed sample pipelines as above):
 
-     ```bash
-     ./sample_start.sh --gui
-     ```
-
-     > [!NOTE]
-     > `--gui` can be combined with a device argument, e.g. `./sample_start.sh --gui gpu`.
-     > Once deployed this way, the Console UI container keeps running across later plain
-     > `./sample_start.sh`/`./sample_stop.sh` calls - `--gui` only needs to be passed again after
-     > a fresh `./install.sh` (which regenerates `docker-compose.yml` from scratch, without it).
 
    - To check the status of the pipelines:
 

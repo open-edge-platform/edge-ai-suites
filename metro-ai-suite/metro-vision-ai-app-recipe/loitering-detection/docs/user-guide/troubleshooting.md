@@ -125,16 +125,14 @@ See [Getting started - Loitering Detection Console UI](./getting-started-ui.md) 
 usage; the issues below are specific to it.
 
 
-1. **Upgrading & Purging Stale UI Images**
+1. **Console UI not reflecting a code change**
 
-   - When upgrading to a newer version of the Console Add-on, stale container caches or older local
-     image layers can prevent new UI features and polygon geometry tools from rendering. Follow these steps to purge existing images before deploying the update.
+   - The Console UI service bind-mounts `console-addon/console` directly (no build step, no
+     custom image) and installs its dependencies on container start, so a source edit only needs
+     a restart, not a rebuild:
 
     ```bash
-    docker compose down --remove-orphans
-    docker images | grep -E "loitering-detection-ui"
-    docker rmi -f $(docker images -q "*loitering-detection-ui*")
-    docker compose build --no-cache console
+    docker compose --profile ui restart console
     ```
 
 2. **No bounding boxes on a stream**

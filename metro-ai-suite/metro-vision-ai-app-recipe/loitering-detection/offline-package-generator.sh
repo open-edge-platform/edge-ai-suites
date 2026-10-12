@@ -18,6 +18,15 @@ echo "Copying Docker compose and .env files..."
 cp ../.env ./
 cp ../compose-without-scenescape.yml ./docker-compose.yml
 
+# console-addon/ is a sibling of this app, not nested under it (shared by
+# any app that enables the "ui" profile) - the generated docker-compose.yml
+# references it as a relative path, so it must exist at that same relative
+# path inside the offline package too, or the console service has nothing
+# to bind-mount.
+echo "Copying console-addon (Console UI)..."
+rm -rf ./console-addon
+cp -r ../console-addon ./console-addon
+
 # Update .env file to set SAMPLE_APP=loitering-detection and HOST_IP=127.0.0.1
 echo "Updating .env file..."
 sed -i 's/^SAMPLE_APP=.*/SAMPLE_APP=loitering-detection/' .env
@@ -98,6 +107,17 @@ if ! grep -q '^  mqtt-table-flattener:' docker-compose.yml; then
   ' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
 fi
 
+# The Console UI container has no image of its own: it runs the stock
+# python:3.12-slim image (pulled/saved below like any other image in
+# docker-compose.yml) and installs its pure-Python dependencies from
+# requirements.txt at container start. That install needs network access
+# to PyPI, which an air-gapped deployment will not have - pre-download the
+# wheels here so the container's own pip install can run fully offline
+# (console-addon/compose-without-scenescape.yml's console command already
+# switches to --no-index --find-links when it finds wheels here).
+echo "Downloading Console UI Python dependencies for offline install..."
+pip download --no-cache-dir -r ./console-addon/console/requirements.txt -d ./console-addon/console/wheels
+
 # Run install.sh to download all required models and videos
 echo "Running install.sh to download models and videos..."
 ./install.sh 127.0.0.1
@@ -107,13 +127,16 @@ mkdir -p ./src/grafana/plugins
 chown -R "$(id -u):$(id -g)" ./src/grafana/plugins 2>/dev/null || true
 
 echo "Pulling Docker images and downloading Grafana plugins..."
-docker compose up -d
+# --profile ui so python:3.12-slim (the Console UI's base image) is also
+# pulled and included in the image save step below - plain `up -d` (no
+# profile) never touches a profiled service, image included.
+docker compose --profile ui up -d
 echo "Waiting for services to be healthy..."
 sleep 60
 
 docker cp $(docker ps -q --filter "name=grafana"):/var/lib/grafana/plugins ./src/grafana/plugins
 
-docker compose down
+docker compose --profile ui down
 
 sed -i '/datasources\.yml.*datasources\.yml/a\      - "./src/grafana/plugins:/var/lib/grafana/plugins"' docker-compose.yml
 sed -i '/GF_INSTALL_PLUGINS=grafana-mqtt-datasource/d' docker-compose.yml
@@ -131,7 +154,7 @@ echo "Creating docker-images directory and saving Docker images..."
 mkdir -p offline-package/docker-images
 
 # Extract images from docker-compose.yml and save them
-docker compose config | grep -E "^\s+image:" | sed 's/.*image: //' | sort -u | while read image; do
+docker compose --profile ui config | grep -E "^\s+image:" | sed 's/.*image: //' | sort -u | while read image; do
   echo "Saving Docker image: $image"
   filename=$(echo "$image" | sed 's/[\/:]/-/g')
   docker pull "$image"
