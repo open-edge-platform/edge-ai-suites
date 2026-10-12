@@ -75,8 +75,6 @@ Otherwise, if you would like to use your own data (images and video), make sure 
 
 ### Step 3: Deploy
 
-#### Option1 (**Recommended**): Deploy with docker compose
-
 1. Go to the deployment files
 
     ``` bash
@@ -150,10 +148,6 @@ retriever-milvus             "uvicorn retriever_s…"   retriever-milvus        
 visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app         running (healthy)   0.0.0.0:17580->17580/tcp, :::17580->17580/tcp
 vlm-openvino-serving         "/bin/bash -c '/app/…"   vlm-openvino-serving         running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
 ```
-
-#### Option2: Deploy in Kubernetes
-
-Please refer to [Deploy with helm](./get-started/deploy-with-helm.md) for details.
 
 ## Try with a demo dataset
 

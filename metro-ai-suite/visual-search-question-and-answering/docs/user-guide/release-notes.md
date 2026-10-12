@@ -2,7 +2,6 @@
 
 ## Version 2025.2.0
 
-**Helm Chart Version**: 1.0.0
 **Release Date**: December 10, 2025
 
 **Features**:
