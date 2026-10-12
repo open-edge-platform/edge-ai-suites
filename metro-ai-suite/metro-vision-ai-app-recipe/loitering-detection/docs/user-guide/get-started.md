@@ -175,7 +175,6 @@ to use all of them.
   ![Grafana Dashboard](./_assets/grafana.png "grafana dashboard")
 
   > [!NOTE]
-  > [!NOTE]
   > In the default pipeline, we use `gvatrack tracking-type=zero-term`
   > element. Zero-term tracking assigns unique object IDs and requires object
   > detection to run on every frame (the pipelines here already run detection

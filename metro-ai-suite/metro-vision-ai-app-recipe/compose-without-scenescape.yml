@@ -44,6 +44,7 @@ services:
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/home/pipeline-server/videos"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/configs:/home/pipeline-server/configs"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/config.json:/home/pipeline-server/config.json"
+      - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/zones:/home/pipeline-server/zones"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/plugins:/home/pipeline-server/plugins:ro"
       - "/run/udev:/run/udev:ro"
       - "/dev:/dev"
