@@ -10,9 +10,9 @@ from collections import deque
 import requests
 from flask import jsonify, request
 
-from config import (DETECTIONS_TOPIC_PREFIX, LOCK, MQTT_HOST,
-                    MQTT_PORT, PIPELINE_SERVER_URL, SESSIONS, _parse_zone, app,
-                    analytics_zones_json)
+from config import (DETECTIONS_TOPIC_PREFIX, EMPTY_ANALYTICS_CONFIG_FILE, LOCK,
+                    MQTT_HOST, MQTT_PORT, PIPELINE_SERVER_URL, SESSIONS,
+                    _parse_zone, app, analytics_zones_json)
 from catalog import (_extract_instance_id, _model_instance_id,
                      _resolve_source_uri, _select_pipeline, discover_models)
 
@@ -56,7 +56,9 @@ def _launch(source_id, model_id, device, zone, rtsp=None, watermark=False):
         detection_props["model_proc"] = model_entry["model_proc"]
 
     zone = zone or None
-    analytics_props = {"zones": analytics_zones_json(zone)}
+    # "config" must be overridden too, not just "zones" - see
+    # EMPTY_ANALYTICS_CONFIG_FILE's comment in config.py.
+    analytics_props = {"config": EMPTY_ANALYTICS_CONFIG_FILE, "zones": analytics_zones_json(zone)}
     watermark_props = {"quiet-mode": "false" if watermark else "true"}
 
     payload = {

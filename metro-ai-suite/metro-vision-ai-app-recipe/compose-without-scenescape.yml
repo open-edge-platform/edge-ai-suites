@@ -208,11 +208,12 @@ services:
   # UI Console: operator UI to start/stop streams, draw a zone and view
   # live loitering analytics. Served over plain HTTP; nginx is the only TLS
   # termination point, same as grafana/prometheus above.
-  # Opt-in via Docker Compose profiles: only started when the "ui" profile
-  # is active (`docker compose --profile ui up -d`, or `sample_start.sh
-  # --gui`), so a plain `docker compose up -d` never builds or starts it.
+  #
+  # Reuses the dlstreamer-pipeline-server image - same precedent as the
+  # mqtt-table-flattener service, already has paho-mqtt, Flask, requests
+  # installed.
   console:
-    image: python:3.12-slim
+    image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
     container_name: ui-console
     profiles: ["ui"]
     restart: unless-stopped
@@ -238,14 +239,13 @@ services:
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models:ro"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/configs:/home/pipeline-server/configs:ro"
     working_dir: /app
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - >
-        apt-get update -qq &&
-        apt-get install -y --no-install-recommends -qq ca-certificates > /dev/null &&
-        if [ -n "$(ls /app/wheels/*.whl 2>/dev/null)" ]; then PIP_ARGS="--no-index --find-links /app/wheels"; else PIP_ARGS="--find-links /app/wheels"; fi &&
-        pip install --no-cache-dir $PIP_ARGS -r requirements.txt &&
-        exec ./entrypoint.sh
+    entrypoint: ["/bin/sh", "./entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8091/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       - app_network
     depends_on:

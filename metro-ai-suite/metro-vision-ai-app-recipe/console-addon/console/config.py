@@ -190,6 +190,15 @@ def _load_file_zones(path):
 
 ZONE_CONFIG_FILE = os.environ.get("ZONE_CONFIG_FILE", "/home/pipeline-server/configs/loitering_analytics_config.json")
 
+# gvaanalytics' `config=` property (baked into config.json's pipeline string,
+# pointing at zones/VIRAT_S_000101.json's own "region1") loads its zone
+# independently of a later `zones` property override - both stay active at
+# once (confirmed live: a session's dwell_times carried both "Pathway" and
+# "region1" even though only "Pathway" was ever sent as `zones`). Every
+# console launch points `config` at this always-empty file instead, so the
+# file's zones are the ONLY thing in effect, same mental model as above.
+EMPTY_ANALYTICS_CONFIG_FILE = os.environ.get("EMPTY_ANALYTICS_CONFIG_FILE", "/home/pipeline-server/zones/empty.json")
+
 
 def _file_zones_json():
     # Read fresh on every call, not cached at import time - editing the

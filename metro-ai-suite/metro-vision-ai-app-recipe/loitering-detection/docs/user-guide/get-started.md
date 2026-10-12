@@ -239,6 +239,14 @@ unaffected.
   docker compose down
   ```
 
+  If you started the Console UI with `--profile ui`, stop with the same flag so its container is
+  torn down too - `docker compose down` on its own leaves a profiled container running since it
+  was never part of that invocation's service set:
+
+  ```bash
+  docker compose --profile ui down
+  ```
+
 ## Other Deployment Options
 
 Choose one of the following methods to deploy the Loitering Detection Sample Application:

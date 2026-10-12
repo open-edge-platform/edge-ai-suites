@@ -165,10 +165,8 @@ def _model_instance_id(model_path, device, unique):
     model+device either: two separate pipeline instances told to share one
     cached network can starve each other's inference requests once one of
     them is stopped uncleanly, silently wedging every later launch that
-    reuses that id (observed live - fixed only by restarting the whole
-    pipeline server, which clears the cache). A fresh id per launch costs a
-    model recompile per stream instead of reusing a cached one, which is
-    the right trade for every stream actually working.
+    reuses that id. A fresh id per launch costs a model recompile per
+    stream instead of reusing a cached one.
     """
     digest = hashlib.sha256(f"{model_path}|{device}|{unique}".encode("utf-8")).hexdigest()[:12]
     return f"console-{digest}"
@@ -200,12 +198,4 @@ def _resolve_source_uri(source_id, rtsp_override=None):
     for s in SOURCES:
         if s.get("id") == source_id:
             return s.get("uri")
-    # Only pre-registered SOURCES entries or an explicit rtsp:// override may
-    # name a stream - an arbitrary source_id is never treated as a raw URI.
     return None
-
-
-# --------------------------------------------------------------------------
-# 4. Frame time (BACKEND-SPEC.md §5.1 / §11) and zone/dwell analytics (§6)
-# --------------------------------------------------------------------------
-
