@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # ==============================================================================
-# Agentic Predictive Maintenance Blueprint - Makefile
+# Agentic Predictive Maintenance for Critical Infrastructure Blueprint - Makefile
 # ==============================================================================
 #
 # Quick Start:
