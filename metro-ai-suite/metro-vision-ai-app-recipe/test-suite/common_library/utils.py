@@ -5,6 +5,7 @@ import json
 import subprocess
 import sys
 import re
+import shlex
 import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -23,7 +24,9 @@ for p in sys_path_entries:
    if p and p not in sys.path:
        sys.path.append(p)
 
-hostIP = subprocess.check_output("ip route get 1 | awk '{print $7}'|head -1", shell=True).decode('utf-8').strip()
+host_route = subprocess.check_output(["ip", "route", "get", "1"], text=True)
+host_match = re.search(r"\bsrc\s+(\S+)", host_route)
+hostIP = host_match.group(1) if host_match else ""
 
 class utils:
     def __init__(self):
@@ -97,8 +100,9 @@ class utils:
         """
         try:
             logging.info(f"Executing {description}: {command}")
-            result = subprocess.check_output(command, shell=True, executable='/bin/bash')
-            return result.decode('utf-8')
+            command_args = shlex.split(command) if isinstance(command, str) else command
+            result = subprocess.check_output(command_args, text=True)
+            return result
         except subprocess.CalledProcessError as e:
             error_msg = f"Failed to execute {description}: {e}"
             logging.error(error_msg)
@@ -153,7 +157,7 @@ class utils:
             # Execute install command
             install_command = app_config["install_command"]
             logging.info(f"Executing: {install_command}")
-            subprocess.call(install_command, shell=True)
+            subprocess.call(["./install.sh", sample_app])
             # Check 1: docker-compose.yml file exists
             if not os.path.exists("docker-compose.yml"):
                 logging.error("docker-compose.yml file not found")
@@ -221,7 +225,11 @@ class utils:
             start_time = time.time()
             while time.time() - start_time < max_wait_time:
                 # Execute docker ps to get container status
-                result = subprocess.run("docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'",   shell=True, capture_output=True, text=True)
+                result = subprocess.run(
+                    ["docker", "ps", "--format", "table {{.Names}}\t{{.Status}}\t{{.Ports}}"],
+                    capture_output=True,
+                    text=True,
+                )
                 if result.returncode != 0:
                     logging.error("Failed to execute docker ps command")
                     return False
@@ -265,7 +273,7 @@ class utils:
         logging.info("Checking pipeline status with sample_status.sh before starting pipeline")
 
         if value.get("app") == "SP" or value.get("app") == "LD":
-                status_output = subprocess.check_output("./sample_status.sh", shell=True, executable='/bin/bash').decode('utf-8')
+                status_output = subprocess.check_output(["./sample_status.sh"], text=True)
                 logging.info(f"sample_status.sh output: {status_output}")
                 if "No running pipelines" not in status_output:
                     raise Exception("Pipelines are already running")
@@ -274,8 +282,7 @@ class utils:
                 cmd = "./sample_start.sh cpu"
                 
                 # Use subprocess.run to capture both stdout and stderr
-                result = subprocess.run(cmd, shell=True, executable='/bin/bash', 
-                                      capture_output=True, text=True)
+                result = subprocess.run(["./sample_start.sh", "cpu"], capture_output=True, text=True)
                 
                 logging.info(f"sample_start.sh command: {cmd}")
                 logging.info(f"sample_start.sh return code: {result.returncode}")
@@ -316,7 +323,7 @@ class utils:
         try:
             os.chdir(self.metro_path)
             logging.info("Checking pipeline status with sample_status.sh")
-            with subprocess.Popen("./sample_status.sh", shell=True, stdout=subprocess.PIPE,  stderr=subprocess.PIPE, text=True, executable='/bin/bash') as process:
+            with subprocess.Popen(["./sample_status.sh"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
                 fps_reports = []
                 start_time = time.time()
                 # Monitor for up to 15 seconds or until we get sufficient data
@@ -413,8 +420,14 @@ class utils:
         log_file = f"logs_{container}_{tc}.txt"
         logging.info(f"Checking container: {container}")
         try:
-            subprocess.run(f"docker compose logs --tail=1000 {container} | tee {log_file}", 
-                         shell=True, executable='/bin/bash', check=True)
+            result = subprocess.run(
+                ["docker", "compose", "logs", "--tail=1000", container],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            with open(log_file, "w", encoding="utf-8") as file:
+                file.write(result.stdout)
         except subprocess.CalledProcessError as e:
             raise Exception(f"Failed to get container logs: {e}")
         keywords = value.get("dlsps_log_param", [])
@@ -640,8 +653,7 @@ class utils:
             if value.get("app") == "SI":
                 return
             logging.info("Stopping pipeline with sample_stop.sh")
-            cmd = "./sample_stop.sh"
-            output = subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8')
+            output = subprocess.check_output(["./sample_stop.sh"], text=True)
             logging.info(f"sample_stop.sh output: {output}")
             # Check for successful stop message
             success_message = "All running pipelines stopped"
@@ -670,7 +682,7 @@ class utils:
         try:
             logging.info("Verifying no pipelines are running...")
             # Check status to confirm no running pipelines
-            status_output = subprocess.check_output("./sample_status.sh", shell=True, executable='/bin/bash').decode('utf-8')
+            status_output = subprocess.check_output(["./sample_status.sh"], text=True)
             logging.info(f"Status verification output: {status_output}")
             for indicator in "No running pipelines":
                 if indicator in status_output:
@@ -848,8 +860,9 @@ class utils:
                 # Check for existing storage classes
                 logging.info("Checking for storage classes...")
                 try:
-                    storage_check = subprocess.run("kubectl get storageclass", shell=True, 
-                                                 capture_output=True, text=True, executable='/bin/bash')
+                    storage_check = subprocess.run(
+                        ["kubectl", "get", "storageclass"], capture_output=True, text=True
+                    )
                     logging.info(f"Storage class check output: {storage_check.stdout}")
                     
                     # Check if any default storage class exists
@@ -859,21 +872,24 @@ class utils:
                         logging.info("No default storage class found, installing local-path-provisioner...")
                         
                         # Install local-path-provisioner
-                        provisioner_cmd = "kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml"
-                        subprocess.run(provisioner_cmd, shell=True, executable='/bin/bash', 
-                                     check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        subprocess.run(
+                            ["kubectl", "apply", "-f", "https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml"],
+                            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                        )
                         logging.info("local-path-provisioner installed successfully")
                         
                         # Set as default storage class
-                        default_cmd = 'kubectl patch storageclass local-path -p \'{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}\''
-                        subprocess.run(default_cmd, shell=True, executable='/bin/bash',
-                                     check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        default_patch = '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+                        subprocess.run(
+                            ["kubectl", "patch", "storageclass", "local-path", "-p", default_patch],
+                            check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                        )
                         logging.info("local-path set as default storage class")
                         
                         # Verify storage class is ready
-                        verify_cmd = "kubectl get storageclass"
-                        verify_output = subprocess.run(verify_cmd, shell=True, capture_output=True, 
-                                                     text=True, executable='/bin/bash')
+                        verify_output = subprocess.run(
+                            ["kubectl", "get", "storageclass"], capture_output=True, text=True
+                        )
                         logging.info(f"Storage class verification: {verify_output.stdout}")
                     else:
                         logging.info("Storage class already configured")
@@ -882,28 +898,33 @@ class utils:
                     logging.warning(f"Storage class setup failed, continuing with deployment: {e}")
             
                 # Deploy smart-intersection with updated command
-                helm_deploy = "helm upgrade --install smart-intersection ./smart-intersection/chart --create-namespace --set global.storageClassName=\"\" -n smart-intersection"
-                logging.info(f"Executing: {helm_deploy}")
-                subprocess.run(helm_deploy, shell=True, executable='/bin/bash', 
-                               check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                helm_deploy = [
+                    "helm", "upgrade", "--install", "smart-intersection", "./smart-intersection/chart",
+                    "--create-namespace", "--set", "global.storageClassName=", "-n", "smart-intersection",
+                ]
+                logging.info("Executing: %s", " ".join(helm_deploy))
+                subprocess.run(helm_deploy, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 logging.info("Deployed SI application with cert-manager and smart-intersection helm charts")
                 
                 # Wait for all pods to be ready
                 logging.info("Waiting for all pods to be ready...")
-                wait_cmd = "kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s"
+                wait_cmd = ["kubectl", "wait", "--for=condition=ready", "pod", "--all", "-n", "smart-intersection", "--timeout=300s"]
                 try:
-                    subprocess.run(wait_cmd, shell=True, executable='/bin/bash', check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    subprocess.run(wait_cmd, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     logging.info("All pods are ready in smart-intersection namespace")
                 except subprocess.CalledProcessError as e:
                     logging.warning(f"Pod readiness wait failed, continuing: {e}")
             else:
-                helm_command = f"helm install {config['release_name']} {config['chart_path']} -n {config['namespace']} --create-namespace"
+                helm_command = [
+                    "helm", "install", config["release_name"], config["chart_path"],
+                    "-n", config["namespace"], "--create-namespace",
+                ]
                 logging.info(f"Deploying {app_name} with helm")
                 logging.info(f"Executing: {helm_command}")
                 
                 try:
                     # Execute helm install command - will raise CalledProcessError on failure
-                    output = subprocess.check_output(helm_command, shell=True, executable='/bin/bash', stderr=subprocess.STDOUT, text=True)
+                    output = subprocess.check_output(helm_command, stderr=subprocess.STDOUT, text=True)
                     logging.info(f"Helm install successful: {output}")
                     
                 except subprocess.CalledProcessError as e:
@@ -942,8 +963,7 @@ class utils:
             
             for attempt in range(30):
                 try:
-                    output = subprocess.check_output(f"kubectl get pods -n {namespace}", 
-                                                   shell=True, executable='/bin/bash').decode('utf-8')
+                    output = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace], text=True)
                     logging.info(f'Pod status in {namespace} (attempt {attempt + 1}/30):')
                     logging.info(output)
                     
@@ -1032,16 +1052,15 @@ class utils:
             config = helm_configs[app_type]
             if value.get("app") == "SI":
                 # Uninstall SI application and cert-manager
-                helm_command = "helm uninstall smart-intersection -n smart-intersection"
+                helm_command = ["helm", "uninstall", "smart-intersection", "-n", "smart-intersection"]
             else:
-                helm_command = f"helm uninstall {config['release_name']} -n {config['namespace']}"
+                helm_command = ["helm", "uninstall", config["release_name"], "-n", config["namespace"]]
                 
             logging.info(f"Uninstalling {config['release_name']} from namespace {config['namespace']}")
-            logging.info(f"Executing: {helm_command}")
+            logging.info("Executing: %s", " ".join(helm_command))
                 
             # Execute helm uninstall command
-            result = subprocess.run(helm_command, shell=True, executable='/bin/bash',
-                                    capture_output=True, text=True)
+            result = subprocess.run(helm_command, capture_output=True, text=True)
                 
             logging.info(f"Helm uninstall return code: {result.returncode}")
             logging.info(f"Helm uninstall stdout: {result.stdout}")
@@ -1081,8 +1100,7 @@ class utils:
             max_attempts = 20
             for attempt in range(max_attempts):
                 try:
-                    output = subprocess.check_output(f"kubectl get pods -n {namespace}", 
-                                                   shell=True, executable='/bin/bash').decode('utf-8')
+                    output = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace], text=True)
                     logging.info(f'Pod status check in {namespace} (attempt {attempt + 1}/{max_attempts}):')
                     logging.info(output)
                     
@@ -1247,13 +1265,12 @@ class utils:
         namespace_configs = {"LD": "ld", "SP": "sp", "SI": "smart-intersection"}
         namespace = namespace_configs.get(app_type, "ld")
         
-        pod_commands = [
-            f"kubectl get pods -n {namespace} -o jsonpath='{{.items[*].metadata.name}}' | tr ' ' '\\n' | grep dlstreamer-pipeline-server | head -n 1",
-            f"kubectl get pods -n {namespace} -o jsonpath='{{.items[*].metadata.name}}' | tr ' ' '\\n' | grep deployment-dlstreamer-pipeline-server | head -n 1"
-        ]
-        
-        pod_name = next((subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8').strip() 
-                        for cmd in pod_commands), None)
+        pod_output = subprocess.check_output(
+            ["kubectl", "get", "pods", "-n", namespace, "-o", "jsonpath={.items[*].metadata.name}"],
+            text=True,
+        )
+        pod_names = pod_output.split()
+        pod_name = next((name for name in pod_names if "dlstreamer-pipeline-server" in name), None)
         if not pod_name:
             raise Exception(f"dlstreamer-pipeline-server pod not found in namespace {namespace}")
         
@@ -1263,30 +1280,35 @@ class utils:
         
         # Determine log command based on app type
         if app_type == "SI":
-            containers = subprocess.check_output(f"kubectl get pod -n {namespace} {pod_name} -o jsonpath='{{.spec.containers[*].name}}'", 
-                                               shell=True, executable='/bin/bash').decode('utf-8').strip()
+            containers = subprocess.check_output(
+                ["kubectl", "get", "pod", "-n", namespace, pod_name, "-o", "jsonpath={.spec.containers[*].name}"],
+                text=True,
+            ).strip()
             logging.info(f"Available containers in pod {pod_name}: {containers}")
             
             dlstreamer_container = next((c for c in containers.split() if "dlstreamer" in c.lower() or "pipeline" in c.lower()), 
                                        containers.split()[0] if containers.split() else None)
             
             if dlstreamer_container:
-                log_cmd = f"kubectl logs -n {namespace} {pod_name} -c {dlstreamer_container} --tail=1000"
+                log_cmd = ["kubectl", "logs", "-n", namespace, pod_name, "-c", dlstreamer_container, "--tail=1000"]
                 logging.info(f"Using container: {dlstreamer_container}")
             else:
-                log_cmd = f"kubectl logs -n {namespace} {pod_name} --tail=1000"
+                log_cmd = ["kubectl", "logs", "-n", namespace, pod_name, "--tail=1000"]
                 logging.info("Getting logs without container specification")
         else:
-            log_cmd = f"kubectl logs -n {namespace} {pod_name} -c dlstreamer-pipeline-server --tail=1000"
+            log_cmd = ["kubectl", "logs", "-n", namespace, pod_name, "-c", "dlstreamer-pipeline-server", "--tail=1000"]
         
         # Get logs with fallback for SI
-        result = subprocess.run(log_cmd, shell=True, capture_output=True, text=True, executable='/bin/bash')
+        result = subprocess.run(log_cmd, capture_output=True, text=True)
         if result.returncode != 0:
             logging.warning(f"Warning: Failed to get logs from pod {pod_name}: {result.stderr}")
-            if app_type == "SI" and "-c " in log_cmd:
+            if app_type == "SI" and "-c" in log_cmd:
                 logging.info("Retrying without container specification...")
-                result = subprocess.run(f"kubectl logs -n {namespace} {pod_name} --tail=1000", 
-                                      shell=True, capture_output=True, text=True, executable='/bin/bash')
+                result = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod_name, "--tail=1000"],
+                    capture_output=True,
+                    text=True,
+                )
                 if result.returncode != 0:
                     logging.warning(f"Fallback log retrieval also failed: {result.stderr}")
                     return True
@@ -1392,8 +1414,8 @@ class utils:
             
             # Step 1: Uninstall the Smart Intersection application
             logging.info("Step 1: Uninstalling Smart Intersection application...")
-            helm_command = "helm uninstall smart-intersection -n smart-intersection"
-            result = subprocess.run(helm_command, shell=True, executable='/bin/bash', capture_output=True, text=True)
+            helm_command = ["helm", "uninstall", "smart-intersection", "-n", "smart-intersection"]
+            result = subprocess.run(helm_command, capture_output=True, text=True)
             logging.info(f"Helm uninstall return code: {result.returncode}")
             logging.info(f"Helm uninstall output: {result.stdout}")
             if result.stderr:
@@ -1401,63 +1423,76 @@ class utils:
             
             # Step 2: Delete PVCs in smart-intersection namespace
             logging.info("Step 2: Deleting PVCs in smart-intersection namespace...")
-            pvc_cmd = "kubectl delete pvc --all -n smart-intersection --timeout=60s"
-            pvc_result = subprocess.run(pvc_cmd, shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=90)
+            pvc_cmd = ["kubectl", "delete", "pvc", "--all", "-n", "smart-intersection", "--timeout=60s"]
+            pvc_result = subprocess.run(pvc_cmd, capture_output=True, text=True, timeout=90)
             if pvc_result.returncode == 0:
                 logging.info("PVCs deleted successfully")
             else:
                 logging.warning(f"PVC deletion failed, trying force cleanup: {pvc_result.stderr}")
                 logging.info("Attempting force cleanup of stuck PVCs...")
-                force_cmd = "kubectl get pvc -n smart-intersection --no-headers | awk '{print $1}' | xargs -I {} kubectl patch pvc {} -n smart-intersection --type merge -p '{\"metadata\":{\"finalizers\":null}}'"
-                subprocess.run(force_cmd, shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=60)
+                pvc_names = subprocess.run(
+                    ["kubectl", "get", "pvc", "-n", "smart-intersection", "--no-headers", "-o", "custom-columns=:metadata.name"],
+                    capture_output=True,
+                    text=True,
+                    timeout=60,
+                )
+                for pvc_name in pvc_names.stdout.split():
+                    subprocess.run(
+                        ["kubectl", "patch", "pvc", pvc_name, "-n", "smart-intersection", "--type", "merge", "-p", '{"metadata":{"finalizers":null}}'],
+                        capture_output=True,
+                        text=True,
+                        timeout=60,
+                    )
                 logging.info("Force PVC cleanup completed")
             
             # Step 3: Delete the smart-intersection namespace
             logging.info("Step 3: Deleting smart-intersection namespace...")
-            namespace_cmd = "kubectl delete namespace smart-intersection --timeout=120s"
-            ns_result = subprocess.run(namespace_cmd, shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=150)
+            namespace_cmd = ["kubectl", "delete", "namespace", "smart-intersection", "--timeout=120s"]
+            ns_result = subprocess.run(namespace_cmd, capture_output=True, text=True, timeout=150)
             logging.info(f"Namespace deletion return code: {ns_result.returncode}")
             logging.info("Smart-intersection namespace deleted successfully")
             
             # Step 4: Delete persistent volumes
             logging.info("Step 4: Deleting persistent volumes...")
-            subprocess.run("kubectl delete pv --all --timeout=60s", shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=90)
+            subprocess.run(["kubectl", "delete", "pv", "--all", "--timeout=60s"], capture_output=True, text=True, timeout=90)
             logging.info("Persistent volumes deleted successfully")
             
             # Step 5: Remove local-path-provisioner (if installed)
             logging.info("Step 5: Removing local-path-provisioner...")
-            provisioner_cmd = "kubectl delete -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml"
-            subprocess.run(provisioner_cmd, shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=60)
+            provisioner_cmd = ["kubectl", "delete", "-f", "https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml"]
+            subprocess.run(provisioner_cmd, capture_output=True, text=True, timeout=60)
             logging.info("Local-path-provisioner removed successfully")
             
             # Step 6: Remove additional storage classes
             logging.info("Step 6: Removing additional storage classes...")
             storage_classes = ["hostpath", "local-storage", "standard"]
             for sc in storage_classes:
-                subprocess.run(f"kubectl delete storageclass {sc} --ignore-not-found=true", shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=30)
+                subprocess.run(["kubectl", "delete", "storageclass", sc, "--ignore-not-found=true"], capture_output=True, text=True, timeout=30)
                 logging.info(f"Storage class {sc} removed")
             
             # Step 7: Remove cert-manager (optional - may be used by other applications)
             logging.info("Step 7: Checking cert-manager cleanup...")
-            cert_check = subprocess.run("kubectl get certificates --all-namespaces", shell=True, capture_output=True, text=True, executable='/bin/bash')
+            cert_check = subprocess.run(["kubectl", "get", "certificates", "--all-namespaces"], capture_output=True, text=True)
             if "No resources found" in cert_check.stdout or not cert_check.stdout.strip():
                 logging.info("No other certificates found, removing cert-manager...")
-                subprocess.run("helm uninstall cert-manager -n cert-manager", shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=60)
-                subprocess.run("kubectl delete namespace cert-manager --timeout=60s", shell=True, executable='/bin/bash', capture_output=True, text=True, timeout=90)
+                subprocess.run(["helm", "uninstall", "cert-manager", "-n", "cert-manager"], capture_output=True, text=True, timeout=60)
+                subprocess.run(["kubectl", "delete", "namespace", "cert-manager", "--timeout=60s"], capture_output=True, text=True, timeout=90)
                 logging.info("Cert-manager removed successfully")
             else:
                 logging.info("Cert-manager is being used by other applications, keeping it installed")
             
             # Step 8: Final verification
             logging.info("Step 8: Final verification...")
-            check_cmd = "kubectl get all --all-namespaces | grep smart-intersection || true"
-            result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True, executable='/bin/bash')
-            if result.stdout.strip():
-                logging.warning(f"Some smart-intersection resources may still exist: {result.stdout}")
+            result = subprocess.run(["kubectl", "get", "all", "--all-namespaces"], capture_output=True, text=True)
+            remaining_resources = "\n".join(
+                line for line in result.stdout.splitlines() if "smart-intersection" in line
+            )
+            if remaining_resources:
+                logging.warning(f"Some smart-intersection resources may still exist: {remaining_resources}")
             else:
                 logging.info("No remaining smart-intersection resources found")
             
-            sc_check = subprocess.run("kubectl get storageclass", shell=True, capture_output=True, text=True, executable='/bin/bash')
+            sc_check = subprocess.run(["kubectl", "get", "storageclass"], capture_output=True, text=True)
             logging.info(f"Remaining storage classes: {sc_check.stdout}")
             
             logging.info("Smart Intersection complete cleanup finished")

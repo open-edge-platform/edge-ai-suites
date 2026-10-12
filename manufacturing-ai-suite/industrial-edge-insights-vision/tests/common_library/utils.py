@@ -5,6 +5,10 @@ import yaml
 import logging
 import subprocess
 import sys
+import re
+import shutil
+import glob
+from pathlib import Path
 
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
@@ -15,7 +19,9 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 repo_path = os.path.abspath(os.path.join(current_dir, '../../../../'))
 sys.path.extend([current_dir, repo_path, os.path.abspath(os.path.join(current_dir, '../configs/dlsps'))])
 
-hostIP = subprocess.check_output("ip route get 1 | awk '{print $7}'|head -1", shell=True).decode('utf-8').strip()
+host_route = subprocess.check_output(["ip", "route", "get", "1"], text=True)
+host_match = re.search(r"\bsrc\s+(\S+)", host_route)
+hostIP = host_match.group(1) if host_match else ""
 
 class utils:
     def __init__(self):
@@ -54,9 +60,9 @@ class utils:
             logging.info('\n**********Setting up Docker environment**********')
             os.chdir(self.base_dir)
             if value.get("app") == "pdd":
-                subprocess.check_output("cp .env_pallet-defect-detection .env", shell=True, executable='/bin/bash')
+                shutil.copyfile(".env_pallet-defect-detection", ".env")
             elif value.get("app") == "pcb":
-                subprocess.check_output("cp .env_pcb-anomaly-detection .env", shell=True, executable='/bin/bash')
+                shutil.copyfile(".env_pcb-anomaly-detection", ".env")
 
             # Update .env file with required variables
             self._update_env_file({
@@ -70,8 +76,8 @@ class utils:
             
             # Run setup and start services
             logging.info('\n**********Running setup and starting services**********')
-            subprocess.check_output("./setup.sh", shell=True, executable='/bin/bash')
-            subprocess.check_output("docker compose up -d", shell=True, executable='/bin/bash')
+            subprocess.check_output(["./setup.sh"])
+            subprocess.check_output(["docker", "compose", "up", "-d"])
             logging.info("Services started successfully")
         except Exception as e:
             raise Exception(f"Failed to start docker services: {e}")
@@ -118,7 +124,7 @@ class utils:
             # For Helm deployment, check if pods are running first
             if deployment_type == "helm":
                 try:
-                    pod_check = subprocess.check_output("kubectl get pods -n apps", shell=True, executable='/bin/bash').decode('utf-8')
+                    pod_check = subprocess.check_output(["kubectl", "get", "pods", "-n", "apps"], text=True)
                     if "No resources found" in pod_check:
                         raise Exception("No pods are running in apps namespace. Helm deployment may have failed.")
                     logging.info("Pods found in apps namespace, proceeding with pipeline listing")
@@ -143,9 +149,9 @@ class utils:
             # Execute sample_list.sh and parse output
             try:
                 if deployment_type=="helm":
-                    output = subprocess.check_output("./sample_list.sh helm", shell=True, executable='/bin/bash').decode('utf-8')
+                    output = subprocess.check_output(["./sample_list.sh", "helm"], text=True)
                 else:
-                    output = subprocess.check_output("./sample_list.sh", shell=True, executable='/bin/bash').decode('utf-8')
+                    output = subprocess.check_output(["./sample_list.sh"], text=True)
                 logging.info(f"sample_list.sh output: {output}")
             except subprocess.CalledProcessError as e:
                 error_output = e.output.decode('utf-8') if e.output else str(e)
@@ -215,10 +221,10 @@ class utils:
         try:
             # Check initial pipeline status
             try:
-                if deployment_type=="helm":
-                    status_output = subprocess.check_output("./sample_status.sh helm", shell=True, executable='/bin/bash').decode('utf-8')
-                else:
-                    status_output = subprocess.check_output("./sample_status.sh", shell=True, executable='/bin/bash').decode('utf-8')
+                status_command = ["./sample_status.sh"]
+                if deployment_type == "helm":
+                    status_command.append("helm")
+                status_output = subprocess.check_output(status_command, text=True)
             except subprocess.CalledProcessError as e:
                 # Handle case where status command fails (e.g., server not ready)
                 error_output = e.output.decode('utf-8') if e.output else e.stderr.decode('utf-8') if e.stderr else str(e)
@@ -234,13 +240,17 @@ class utils:
             pipeline_name = value.get("pipeline")
             try:
                 if pipeline_name:
-                    if deployment_type=="helm":
-                        output = subprocess.check_output(f"./sample_start.sh helm -p {pipeline_name}", shell=True, executable='/bin/bash')
-                    else:
-                        output = subprocess.check_output(f"./sample_start.sh -p {pipeline_name}", shell=True, executable='/bin/bash')
+                    start_command = ["./sample_start.sh"]
+                    if deployment_type == "helm":
+                        start_command.append("helm")
+                    start_command.extend(["-p", pipeline_name])
+                    output = subprocess.check_output(start_command)
                     logging.info(f"Using configured pipeline: {pipeline_name}")
                 else:
-                    output = subprocess.check_output("./sample_start.sh", shell=True, executable='/bin/bash', stderr=subprocess.STDOUT)
+                    start_command = ["./sample_start.sh"]
+                    if deployment_type == "helm":
+                        start_command.append("helm")
+                    output = subprocess.check_output(start_command, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 raise e
             output = output.decode('utf-8')
@@ -273,12 +283,12 @@ class utils:
         os.chdir(self.base_dir)
         time.sleep(5)
         if deployment_type=="helm":
-            cmd = "./sample_status.sh helm"
+            cmd = ["./sample_status.sh", "helm"]
             logging.info("Checking status for all pipelines (Helm deployment)")
         else:
-            cmd = "./sample_status.sh"
+            cmd = ["./sample_status.sh"]
             logging.info("Checking status for all pipelines")
-        output = subprocess.check_output(cmd, shell=True, executable='/bin/bash').decode('utf-8')
+        output = subprocess.check_output(cmd, text=True)
         logging.info(f"Status output:\n{output}")
         if "RUNNING" not in output:
             raise Exception("No RUNNING pipelines found in output")
@@ -298,7 +308,14 @@ class utils:
         time.sleep(5)
         container = "dlstreamer-pipeline-server"
         log_file = f"logs_{container}_{tc}.txt"
-        subprocess.run(f"docker compose logs --tail=1000 {container} | tee {log_file}", shell=True, executable='/bin/bash', check=True)
+        result = subprocess.run(
+            ["docker", "compose", "logs", "--tail=1000", container],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        with open(log_file, "w", encoding="utf-8") as file:
+            file.write(result.stdout)
         keywords = value.get("dlsps_log_param", [])
         missing_keywords = [keyword for keyword in keywords if not self.search_element(log_file, keyword)]
         if missing_keywords:
@@ -368,15 +385,18 @@ class utils:
             None: Prints cleanup status to console
         """
         os.chdir(self.base_dir)
-        subprocess.check_output("docker compose down -v", shell=True, executable='/bin/bash')
+        subprocess.check_output(["docker", "compose", "down", "-v"])
         time.sleep(3)        
         try:
-            subprocess.check_output("docker compose down -v", shell=True, executable='/bin/bash')
+            subprocess.check_output(["docker", "compose", "down", "-v"])
             print("✅ Docker compose down executed successfully.")
             time.sleep(3)
             print('\n**********Verifying no services are running**********')
 
-            docker_ps_output = subprocess.check_output("docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'", shell=True, executable='/bin/bash').decode('utf-8')
+            docker_ps_output = subprocess.check_output(
+                ["docker", "ps", "--format", "table {{.Names}}\t{{.Status}}\t{{.Ports}}"],
+                text=True,
+            )
             print("Current running containers:")
             print(docker_ps_output)
             lines = docker_ps_output.strip().split('\n')[1:]
@@ -435,7 +455,7 @@ class utils:
             helm_values_path = app_paths.get(app_type, app_paths["pdd"])
             sample_app_name = app_names.get(app_type, app_names["pdd"])
             
-            subprocess.check_output(f"cp {helm_values_path} helm/values.yaml", shell=True, executable='/bin/bash')
+            shutil.copyfile(helm_values_path, "helm/values.yaml")
             logging.info(f'Copied {helm_values_path} to helm/values.yaml')
             logging.info("Updating environment variables in values.yaml")
             with open("helm/values.yaml", 'r') as file:
@@ -450,7 +470,7 @@ class utils:
             with open("helm/values.yaml", 'w') as file:
                 yaml.dump(values_data, file, default_flow_style=False, sort_keys=False)
             logging.info('Installing prerequisites')
-            subprocess.check_output("./setup.sh helm", shell=True, executable='/bin/bash')
+            subprocess.check_output(["./setup.sh", "helm"])
             logging.info('Prerequisites installed successfully using ./setup.sh helm')
         except Exception as e:
             raise Exception(f"Failed to update helm values: {e}")
@@ -468,7 +488,7 @@ class utils:
         try:
             os.chdir(os.path.join(self.path, "manufacturing-ai-suite/industrial-edge-insights-vision"))
             logging.info('Installing Helm chart: app-deploy...')
-            subprocess.check_output("helm install app-deploy helm -n apps --create-namespace", shell=True, executable='/bin/bash')
+            subprocess.check_output(["helm", "install", "app-deploy", "helm", "-n", "apps", "--create-namespace"])
             logging.info('Helm application deployed successfully')
         except subprocess.CalledProcessError as e:
             logging.error(f'Failed to deploy Helm application: {e}')
@@ -487,7 +507,7 @@ class utils:
         try:
             max_attempts = 30
             for attempt in range(max_attempts):
-                output = subprocess.check_output("kubectl get pods -n apps", shell=True, executable='/bin/bash').decode('utf-8')
+                output = subprocess.check_output(["kubectl", "get", "pods", "-n", "apps"], text=True)
                 logging.info(f'Pod status (attempt {attempt + 1}/{max_attempts}):')
                 logging.info(output)
                 # Check if all pods are running
@@ -523,8 +543,14 @@ class utils:
         logging.info('Copying resources to dlstreamer-pipeline-server pod')
         try:
             os.chdir(os.path.join(self.path, "manufacturing-ai-suite/industrial-edge-insights-vision/"))
-            pod_cmd = "kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | grep deployment-dlstreamer-pipeline-server | head -n 1"
-            pod_name = subprocess.check_output(pod_cmd, shell=True, executable='/bin/bash').decode('utf-8').strip()
+            pod_output = subprocess.check_output(
+                ["kubectl", "get", "pods", "-n", "apps", "-o", "jsonpath={.items[*].metadata.name}"],
+                text=True,
+            )
+            pod_name = next(
+                (name for name in pod_output.split() if "deployment-dlstreamer-pipeline-server" in name),
+                "",
+            )
             if not pod_name:
                 raise Exception("dlstreamer-pipeline-server pod not found")
             logging.info(f'Found pod: {pod_name}')
@@ -546,19 +572,31 @@ class utils:
             video_dest = "/home/pipeline-server/resources/videos/"
             models_dest = "/home/pipeline-server/resources/models/"
             
-            video_cmd = f"kubectl cp {paths['video_src']} {pod_name}:{video_dest} -c dlstreamer-pipeline-server -n apps"
-            subprocess.check_output(video_cmd, shell=True, executable='/bin/bash')
+            subprocess.check_output([
+                "kubectl", "cp", paths["video_src"], f"{pod_name}:{video_dest}",
+                "-c", "dlstreamer-pipeline-server", "-n", "apps",
+            ])
             logging.info(f'Copied video file: {paths["video_src"]} -> {video_dest}')
-            models_cmd = f"kubectl cp {paths['models_src']} {pod_name}:{models_dest} -c dlstreamer-pipeline-server -n apps"
-            subprocess.check_output(models_cmd, shell=True, executable='/bin/bash')
+            model_paths = glob.glob(paths["models_src"])
+            if not model_paths:
+                raise Exception(f"No model files found for {app_type}: {paths['models_src']}")
+            for model_path in model_paths:
+                subprocess.check_output([
+                    "kubectl", "cp", model_path, f"{pod_name}:{models_dest}",
+                    "-c", "dlstreamer-pipeline-server", "-n", "apps",
+                ])
             logging.info(f'Copied model files: {paths["models_src"]} -> {models_dest}')
             
             logging.info('Verifying copied resources...')
-            video_check_cmd = f"kubectl exec -n apps {pod_name} -c dlstreamer-pipeline-server -- ls -la /home/pipeline-server/resources/videos/"
-            video_output = subprocess.check_output(video_check_cmd, shell=True, executable='/bin/bash').decode('utf-8')
+            video_output = subprocess.check_output([
+                "kubectl", "exec", "-n", "apps", pod_name, "-c", "dlstreamer-pipeline-server",
+                "--", "ls", "-la", "/home/pipeline-server/resources/videos/",
+            ], text=True)
             logging.info(f'Video files in pod: {video_output}')
-            models_check_cmd = f"kubectl exec -n apps {pod_name} -c dlstreamer-pipeline-server -- ls -la /home/pipeline-server/resources/models/"
-            models_output = subprocess.check_output(models_check_cmd, shell=True, executable='/bin/bash').decode('utf-8')
+            models_output = subprocess.check_output([
+                "kubectl", "exec", "-n", "apps", pod_name, "-c", "dlstreamer-pipeline-server",
+                "--", "ls", "-la", "/home/pipeline-server/resources/models/",
+            ], text=True)
             logging.info(f'Model files in pod: {models_output}')
         except Exception as e:
             logging.error(f'Failed to copy resources to pod: {e}')
@@ -585,16 +623,23 @@ class utils:
             return True
         time.sleep(3)
         try:
-            pod_cmd = "kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\\n' | grep deployment-dlstreamer-pipeline-server | head -n 1"
-            pod_name = subprocess.check_output(pod_cmd, shell=True, executable='/bin/bash').decode('utf-8').strip()
+            pod_output = subprocess.check_output(
+                ["kubectl", "get", "pods", "-n", "apps", "-o", "jsonpath={.items[*].metadata.name}"],
+                text=True,
+            )
+            pod_name = next(
+                (name for name in pod_output.split() if "deployment-dlstreamer-pipeline-server" in name),
+                "",
+            )
             if not pod_name:
                 raise Exception("dlstreamer-pipeline-server pod not found")
             logging.info(f'Found pod: {pod_name}')
             
             log_file = f"logs_helm_{pod_name}_{tc}.txt"
             logging.info(f"Checking Helm Pod: {pod_name}")            
-            log_cmd = f"kubectl logs -n apps {pod_name} -c dlstreamer-pipeline-server --tail=1000"
-            result = subprocess.run(log_cmd, shell=True, capture_output=True, text=True, executable='/bin/bash')
+            result = subprocess.run([
+                "kubectl", "logs", "-n", "apps", pod_name, "-c", "dlstreamer-pipeline-server", "--tail=1000",
+            ], capture_output=True, text=True)
             if result.returncode != 0:
                 logging.warning(f"Warning: Failed to get logs from pod {pod_name}: {result.stderr}")
                 return True 
@@ -681,7 +726,7 @@ class utils:
         try:
             os.chdir(os.path.join(self.path, "manufacturing-ai-suite/industrial-edge-insights-vision"))
             logging.info('Uninstalling Helm chart: app-deploy...')
-            subprocess.check_output("helm uninstall app-deploy -n apps", shell=True, executable='/bin/bash')
+            subprocess.check_output(["helm", "uninstall", "app-deploy", "-n", "apps"])
             logging.info('Helm application uninstalled successfully')
         except subprocess.CalledProcessError as e:
             logging.error(f'Failed to uninstall Helm application: {e}')
@@ -694,7 +739,7 @@ class utils:
             max_attempts = 20
             for attempt in range(max_attempts):
                 try:
-                    output = subprocess.check_output("kubectl get pods -n apps", shell=True, executable='/bin/bash').decode('utf-8')
+                    output = subprocess.check_output(["kubectl", "get", "pods", "-n", "apps"], text=True)
                     logging.info(f'Pod status check (attempt {attempt + 1}/{max_attempts}):')
                     logging.info(output)
                     
@@ -743,8 +788,10 @@ class utils:
             return []
         
         try:
-            cmd_suffix = " helm" if deployment_type == "helm" else ""
-            status_output = subprocess.check_output(f"./sample_status.sh{cmd_suffix}", shell=True, executable='/bin/bash').decode('utf-8')
+            status_command = ["./sample_status.sh"]
+            if deployment_type == "helm":
+                status_command.append("helm")
+            status_output = subprocess.check_output(status_command, text=True)
             
             # Find running pipeline ID
             running_pipeline_id = next((p.get('id') for p in parse_json(status_output) 
@@ -755,7 +802,10 @@ class utils:
             
             # Execute stop command
             try:
-                output = subprocess.check_output(f"./sample_stop.sh{cmd_suffix}", shell=True, executable='/bin/bash', stderr=subprocess.STDOUT).decode('utf-8')
+                stop_command = ["./sample_stop.sh"]
+                if deployment_type == "helm":
+                    stop_command.append("helm")
+                output = subprocess.check_output(stop_command, stderr=subprocess.STDOUT, text=True)
             except subprocess.CalledProcessError as e:
                 output = e.output.decode('utf-8') if e.output else str(e)
                 logging.error(f"Command returned exit code {e.returncode}")
@@ -765,7 +815,7 @@ class utils:
                 raise Exception("Pipeline stop failed. Expected message not found: 'stopped successfully'")
             
             # Check final status and validate
-            final_status = subprocess.check_output(f"./sample_status.sh{cmd_suffix}", shell=True, executable='/bin/bash').decode('utf-8')
+            final_status = subprocess.check_output(status_command, text=True)
             aborted_count, running_count = final_status.count("ABORTED"), final_status.count("RUNNING")
             print(f"Status output:\n{final_status}")
             # Validate specific pipeline state
