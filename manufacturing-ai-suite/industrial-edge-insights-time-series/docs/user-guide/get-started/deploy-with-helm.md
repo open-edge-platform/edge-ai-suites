@@ -5,11 +5,11 @@ This guide provides step-by-step instructions for deploying the Industrial Edge 
 ## Prerequisites
 
 - [System Requirements](./system-requirements.md)
-- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to set up a Kubernetes cluster on Ubuntu, and use instructions compatible with Ubuntu 24.04 as specified in the System Requirements.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
-> **Note:**
+> [!NOTE]
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu to [install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop). The target system refers to the system where you are installing the application.
 
 ## Step 1: Generate or download the Helm charts
@@ -71,7 +71,7 @@ Choose **one** of the following approaches to get the Helm charts:
 
 ## Step 3: Install Helm charts
 
-> **Note:**
+> [!NOTE]
 >
 > 1. Uninstall the Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
@@ -151,12 +151,13 @@ To upload your own or existing model into Time Series Analytics Microservice in 
 <!--hide_directive:::
 ::::hide_directive-->
 
-> **Note:**
+> [!NOTE]
 > Run the commands only after performing the Helm install.
 
 ## Step 5: Activate the New UDF Deployment Package
 
-> **Note:** To activate the UDF inference on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
+> [!NOTE]
+> To activate the UDF inference on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
 >
 > ```sh
 > cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config

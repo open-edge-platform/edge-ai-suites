@@ -90,7 +90,7 @@ Request body (example):
 }
 ```
 
-> **Note:**
+> [!NOTE]
 >
 > - `sample_rate` must be `16000` for wake-word detection.
 > - This endpoint listens on the kiosk host microphone, not browser audio chunks.

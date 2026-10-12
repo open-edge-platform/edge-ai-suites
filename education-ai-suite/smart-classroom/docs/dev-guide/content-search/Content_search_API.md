@@ -502,7 +502,8 @@ Executes a similarity search across vector collections using either natural lang
   | `Array metadata` | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
   | `Scalar metadata` | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
 
-  > **Note:** Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be   converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to   distinguish them from native video frame results.
+  > [!NOTE]
+  > Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be   converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to   distinguish them from native video frame results.
 
 * Example:
 

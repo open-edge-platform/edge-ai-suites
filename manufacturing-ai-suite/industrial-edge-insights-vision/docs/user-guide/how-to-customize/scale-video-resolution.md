@@ -30,5 +30,5 @@ The following is a sample pipeline with image resizing using the **videoscale** 
 ::::
 hide_directive-->
 
-> **Note:**
+> [!NOTE]
 > For details on the **videoscale** element, see the [GStreamer API Reference](https://gstreamer.freedesktop.org/documentation/videoconvertscale/videoscale.html?gi-language=c#videoscale-page).

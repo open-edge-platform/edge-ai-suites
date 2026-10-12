@@ -54,7 +54,8 @@ Creates a Python virtual environment under `resources/venv/`, installs
 dependencies from `resources/requirements.txt`, downloads the `yolo11s.pt`
 checkpoint from Ultralytics, and exports it to OpenVINO FP16 IR format.
 
-> **Note:** `make pymav-up` **checks for the model** before starting containers.
+> [!NOTE]
+> `make pymav-up` **checks for the model** before starting containers.
 > If `resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml` is
 > missing it prints an error and exits — run `make model` first.
 
@@ -68,7 +69,8 @@ resources/
         └── yolo11s_openvino_model/      ← exported IR (yolo11s.xml + yolo11s.bin)
 ```
 
-> **Note:** `ultralytics` is pinned to `8.4.67`. Do not upgrade without
+> [!NOTE]
+> `ultralytics` is pinned to `8.4.67`. Do not upgrade without
 > re-verifying GPU/NPU compatibility — newer versions use a `CumSum`-based
 > detection head that fails to compile on Intel GPU and NPU OpenVINO plugins.
 

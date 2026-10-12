@@ -83,7 +83,8 @@ After unzipping `model.zip`, the following directory structure will be created:
 
 #### Ensure OpenVINO is Installed
 
-> **Note:** Make sure OpenVINO is installed by following the guide:
+> [!NOTE]
+> Make sure OpenVINO is installed by following the guide:
 > [Install OpenVINO via pip](../../developer_tools/openvino.md)
 
 Once the model is in ONNX format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, `ovc`.

@@ -38,6 +38,11 @@ interface ReportResponse {
   createdAt: string;
 }
 
+export interface RouterTokenStatsResponse {
+  status?: "configured" | "not_configured" | "unavailable";
+  token_metrics?: Record<string, unknown>;
+}
+
 export interface AgentFrameworkOption {
   id: "openclaw";
   label: string;
@@ -184,10 +189,11 @@ export const getTaskTokens = (params: Object) => {
 };
 
 export const getTokenStats = () => {
+  // The response interceptor unwraps AxiosResponse.data before this resolves.
   return request({
     url: "/api/router/stats",
     method: "get",
-  });
+  }) as unknown as Promise<RouterTokenStatsResponse>;
 };
 
 export const requestTokenRest = () => {

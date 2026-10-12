@@ -91,7 +91,8 @@ One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a
 /tf_static
 ```
 
->**Note:** Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
+> [!NOTE]
+> Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
 The ROS 2 launch file provides additional arguments, for example to run the ROS 2 node only together with a camera,
 or with rviz. These can be activated as follows:
@@ -184,7 +185,8 @@ One can view the list of running ROS 2 topics by typing ``ros2 topic list`` in a
 /tf_static
 ```
 
->**Note:** Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
+> [!NOTE]
+> Your topic list may differ, if you use additional ROS 2 nodes or other camera settings.
 
 The LiDAR node, that needs to be started in parallel, has to provide the topic ``/input/points`` otherwise the topic has to be remapped.
 

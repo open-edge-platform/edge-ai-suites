@@ -85,7 +85,8 @@ EOF
 
 ### Re-login and verify
 
-> **Note:** Changes to `/etc/environment` only take effect after a **logout and re-login**.
+> [!NOTE]
+> Changes to `/etc/environment` only take effect after a **logout and re-login**.
 > The GNOME desktop launcher reads the PAM session environment set at login time — it does not
 > inherit variables exported in a terminal. Skipping the re-login is the most common cause of
 > backend install failures on ENIs.

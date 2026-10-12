@@ -15,7 +15,8 @@ Install the RealSense SDK 2.0 packages using the official
 
 For ROS 2 Jazzy, install the required RealSense tools and ROS 2 wrapper from your configured package repositories.
 
-> **NOTE:** Prerequisites for the RealSense packages can be found in the [Getting Started](../../../../platform_foundation/getting_started.md) guide.
+> [!NOTE]
+> Prerequisites for the RealSense packages can be found in the [Getting Started](../../../../platform_foundation/getting_started.md) guide.
 
 ```bash
 sudo apt update
@@ -28,7 +29,8 @@ sudo apt install ros-jazzy-librealsense2-tools ros-jazzy-realsense2-camera
 
 For ROS 2 Humble, install the required RealSense tools and ROS 2 wrapper from your configured package repositories.
 
-> **NOTE:** Prerequisites for the RealSense packages can be found in the [Getting Started](../../../../platform_foundation/getting_started.md) guide.
+> [!NOTE]
+> Prerequisites for the RealSense packages can be found in the [Getting Started](../../../../platform_foundation/getting_started.md) guide.
 
 ```bash
 sudo apt update

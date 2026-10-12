@@ -393,7 +393,8 @@ Manually invoke an MCP tool for testing.
   }
   ```
   
-  > **Note**: The `result` field contains the raw response returned by the MCP tool; its structure varies per tool.
+  > [!NOTE]
+  > The `result` field contains the raw response returned by the MCP tool; its structure varies per tool.
 
 - **Status Codes**: `200` | `404` tool not found | `503` MCP disabled or server not connected
 

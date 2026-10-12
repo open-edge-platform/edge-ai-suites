@@ -5,7 +5,8 @@ local machine.
 
 ## (Optional) Configuring the Proxy
 
-> **Note**: If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
+> [!NOTE]
+> If not using proxy servers, skip to [Deploying the Application](#deploying-the-application).
 
 Depending on the system's network configuration, you may need an additional proxy configuration.
 Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a
@@ -72,7 +73,7 @@ docker info|grep -i PROXY
 Download the compressed file:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/handheld-multi-modal.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2.1/handheld-multi-modal.zip
 ```
 
 Decompress the downloaded file and enter the working directory:

@@ -7,7 +7,7 @@ Build a full end-to-end UAV object detection and telemetry overlay stack in
 `./uav-sim-stack/` using the uav-vision-analytics skill.
 
 **Scenario:** Simulate a UAV flight using PX4 SITL. Detect aerial objects in a
-looped Gazebo simulation video using YOLOv8n-VisDrone on CPU, GPU, and NPU.
+looped Gazebo simulation video using YOLO11s on CPU, GPU, and NPU.
 Overlay live MAVLink telemetry (altitude, speed, heading, GPS) on the annotated
 RTSP stream. Pipelines start automatically when the UAV arms and stop on disarm.
 
@@ -15,7 +15,7 @@ RTSP stream. Pipelines start automatically when the UAV arms and stop on disarm.
 - Deployment mode: `pymavlink` (self-contained with PX4 SITL)
 - Video source: `file` (gazebo.avi, looped)
 - Inference device: `all` (generate CPU, GPU, and NPU pipeline variants)
-- Model: `yolov8n-visdrone` (default)
+- Model: `yolo11s` (default)
 - Output directory: `./uav-sim-stack/`
 
 Produce:

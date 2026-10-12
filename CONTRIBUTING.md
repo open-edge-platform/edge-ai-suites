@@ -42,8 +42,10 @@ article.
 
 ### Contribute Code Changes
 
-> If you want to help improve Edge AI Suites, choose one of the issues reported in [`GitHub Issues`](https://github.com/open-edge-platform/edge-ai-suites/issues) and create a [`Pull Request`](https://github.com/open-edge-platform/edge-ai-suites/pulls) to address it.
-> Note: Please check that the change hasn't been implemented before you start working on it.
+If you want to help improve Edge AI Suites, choose one of the issues reported in [`GitHub Issues`](https://github.com/open-edge-platform/edge-ai-suites/issues) and create a [`Pull Request`](https://github.com/open-edge-platform/edge-ai-suites/pulls) to address it.
+
+> [!NOTE]
+> Please check that the change hasn't been implemented before you start working on it.
 
 ### Improve Documentation
 

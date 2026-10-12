@@ -70,7 +70,8 @@ The `make collateral` step downloads AI models and media files. Key variables:
 | `INCLUDE_MEDIA` | `True` | Download and encode media files (H.264, H.265, 1080p, 4K) |
 | `INCLUDE_GENAI` | `False` | Download GenAI models (requires Hugging Face token) |
 
-> **Note:** GenAI models require significant storage for original Hugging Face weights plus INT8/INT4 quantized artifacts. After quantization, reclaim space by removing `~/.cache/huggingface/hub/` and temporary venvs in `tools/genai-downloader/`.
+> [!NOTE]
+> GenAI models require significant storage for original Hugging Face weights plus INT8/INT4 quantized artifacts. After quantization, reclaim space by removing `~/.cache/huggingface/hub/` and temporary venvs in `tools/genai-downloader/`.
 
 ### Hugging Face Token (GenAI only)
 

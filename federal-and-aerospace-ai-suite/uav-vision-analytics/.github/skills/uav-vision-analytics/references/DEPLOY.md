@@ -223,7 +223,7 @@ DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubunt
 .PHONY: init model pymav-up pymav-down uavsdk-up uavsdk-down start-rtsp
 
 init:        ## Create .env from .env.example and auto-detect GPU/NPU device paths
-model:       ## Download and export YOLOv8n-VisDrone to OpenVINO FP16
+model:       ## Download and export YOLO11s to OpenVINO FP16
 pymav-up:    ## Start pymavlink stack (docker-compose-pymavlink.yml)
 pymav-down:  ## Stop pymavlink stack
 uavsdk-up:   ## Start UAVSDK stack (requires uav-mission-compute-sdk running first)

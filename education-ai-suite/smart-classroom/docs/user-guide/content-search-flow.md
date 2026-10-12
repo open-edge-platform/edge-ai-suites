@@ -51,7 +51,8 @@ Before uploading files, you can add tags to organize your content:
 2. Type a tag in the tag input field and press **Enter** or **comma** to add it
 3. Tags appear as chips that can be removed by clicking **x**
 
-> **Note:** Tags can be added or removed only while the file is in the **Staged** state (before
+> [!NOTE]
+> Tags can be added or removed only while the file is in the **Staged** state (before
 > upload). Once uploaded, tags are locked.
 
 ### Toggle Video Summarization

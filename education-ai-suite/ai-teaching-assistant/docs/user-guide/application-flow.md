@@ -12,11 +12,10 @@ Before you begin, make sure the services are running and the UI is open at
 The interface is a single screen divided into three columns:
 
 | Column | Contents |
-|---|---|
+| --- | --- |
 | **Left** | Microphone & wake-word controls, Knowledge base, Uploaded files |
 | **Center** | Chat conversation ("Jarvis"), status line, text/voice input |
 | **Right** | Performance metrics and session timing |
-
 
 ## Typical Flow
 

@@ -129,7 +129,8 @@ source ~/followme_env/bin/activate
 ./src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/demo_RS_audio.sh
 ```
 
-> **Note:** Allow ~10 seconds after launch for Gazebo and all nodes to initialize before the
+> [!NOTE]
+> Allow ~10 seconds after launch for Gazebo and all nodes to initialize before the
 > TurtleBot3 begins following. The guide robot trajectory runs for ~45 seconds.
 
 ---
@@ -213,7 +214,8 @@ Each demo runs in a single terminal using a two-phase launch sequence:
 | `gesture_enable` | Enable hand gesture start/stop control | `true` |
 | `audio_enable` | Enable voice command start/stop control | `true` |
 
-> **Important:** `tracking_radius` must be large enough to cover the guide's lateral movement
+> [!IMPORTANT]
+> `tracking_radius` must be large enough to cover the guide's lateral movement
 > between frames. Values that are too small (e.g. `0.2`) cause the tracker to lose the target
 > during turns, making the follower go straight instead of turning.
 >

@@ -2,12 +2,12 @@
 
 ## Version 2025.2
 
-**December 2025**
+**Release Date**: December 2025
 
 This release introduces substantial enhancements to the Time Series AI stack,
 including a new sample application and several key features detailed below.
 
-**New**
+**New**:
 
 - Introduced Makefile support for scalable processing of multiple input
   streams via OPC-UA and MQTT protocols, enabling effective benchmarking of
@@ -25,7 +25,7 @@ including a new sample application and several key features detailed below.
   - Enabled iGPU based inferencing for the machine learning model using the
     scikit-learn-intelex package.
 
-**Improved**
+**Improved**:
 
 - Refactored configuration files, codebase, and documentation to eliminate redundancy.
 - Implemented various improvements in documentation, usability, and configuration
@@ -34,14 +34,14 @@ including a new sample application and several key features detailed below.
 
 ## Version 1.0.0
 
-**August 2025**
+**Release Date**: August 2025
 
 This is
 [the first version](https://github.com/open-edge-platform/edge-ai-suites/commit/cba19ac887b61dd370e563aedb205a8458cf0eea)
 of the Wind Turbine Anomaly detection sample app showcasing a time series use
 case by detecting the anomalous power generation patterns relative to wind speed.
 
-**New**
+**New**:
 
 - Docker compose deployment on single node.
 - Helm deployment on Kubernetes single cluster node.

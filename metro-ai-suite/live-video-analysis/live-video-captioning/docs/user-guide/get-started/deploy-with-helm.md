@@ -39,7 +39,8 @@ Before you begin, ensure that you have the following:
    | affinity.enabled           | Set to true to deploy on dedicated node                                                                                 | true                                   |
    | affinity.value             | Your dedicated node name/value. Identify by running `kubectl get node`                                                  | <your_node_name>                       |
 
-   > **Note:** This chart can run on CPU‑only nodes; however, a GPU‑enabled node is strongly recommended to host the models and deliver optimal performance.
+   > [!NOTE]
+   > This chart can run on CPU‑only nodes; however, a GPU‑enabled node is strongly recommended to host the models and deliver optimal performance.
 
 3. Deploy the chart.
 
@@ -49,7 +50,8 @@ Before you begin, ensure that you have the following:
       helm install model-download . -n <your-namespace>
       ```
 
-   > **Note:** `model-download` creates and manages a shared PVC that used by live-video-captioning. Hence, do not delete or uninstall helm chart when live-video-captioning chart is running.
+   > [!NOTE]
+   > `model-download` creates and manages a shared PVC that used by live-video-captioning. Hence, do not delete or uninstall helm chart when live-video-captioning chart is running.
 
 4. Verify the deployment.
 
@@ -178,7 +180,8 @@ Here's how to find it:
        kubectl get node <node-name> -o jsonpath='{.status.addresses[?(@.type=="ExternalIP")].address}'
        ```
 
-💡 Tip: When in doubt, try Internal IP first - it works in most development setups where you're connected to the same network as your cluster.
+> [!TIP]
+> When in doubt, try Internal IP first - it works in most development setups where you're connected to the same network as your cluster.
 
 Set that value in `global.hostIP`.
 
@@ -222,14 +225,15 @@ global:
   noProxy: "<your-rtsp-camera-host-or-ip>"
 ```
 
-> **Important:** the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
+> [!IMPORTANT]
+> the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
 >
->For example:
+> For example:
 >
->- If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
->- If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
+> - If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
+> - If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
 >
->If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
+> If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
 
 ### Build Chart Dependencies
 
@@ -268,7 +272,8 @@ Before accessing the application, confirm the following:
 - All pods are in the `Running` state.
 - All containers report `Ready`. Check via `kubectl get pods` command.
 
-> **Note:** The initial deployment may take several minutes, as the chart performs multiple model downloads and conversion steps before the application pods are started.
+> [!NOTE]
+> The initial deployment may take several minutes, as the chart performs multiple model downloads and conversion steps before the application pods are started.
 
 ## Access the Application
 
@@ -336,7 +341,8 @@ helm uninstall lvc -n "$my_namespace"
    kubectl delete pvc <pvc-name> -n <namespace>
    ```
 
-> **Note:** Delete the shared PVC only after confirming no other workload or application depends on it. In such cases, uninstall the dependent application first, then clean up model-download resources, and finally delete the shared PVC if required.
+> [!NOTE]
+> Delete the shared PVC only after confirming no other workload or application depends on it. In such cases, uninstall the dependent application first, then clean up model-download resources, and finally delete the shared PVC if required.
 
 ## Related Links
 

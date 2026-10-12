@@ -205,7 +205,8 @@ ros2 launch wandering_bringup wandering_jackal_manual_nav.launch.py
 - **Nav2 Waypoint Following**: Switch Nav2 to **Waypoint mode** in the RViz Nav2 panel, click and place a sequence of goal poses across the mapped facility, and select **Start Navigation** to command the robot through all waypoints in order.
 - **Resuming Autonomous Exploration**: Click **Autonomous mode** in the **Wandering Control** panel to resume autonomous frontier wandering.
 
-> **Note:** The manual override launch file accepts the same `fusion_params_file`, `adbscan_params_file`, and `pointcloud_topic` arguments if you want to use the 360-degree LiDAR profile with interactive operator goals.
+> [!NOTE]
+> The manual override launch file accepts the same `fusion_params_file`, `adbscan_params_file`, and `pointcloud_topic` arguments if you want to use the 360-degree LiDAR profile with interactive operator goals.
 
 ### Standard 2D LiDAR Nav2 (without ADBSCAN)
 

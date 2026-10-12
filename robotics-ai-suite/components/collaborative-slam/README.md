@@ -41,7 +41,8 @@ Building Collaborative SLAM packages requires significant system resources:
 - **CPU:** Multi-core processor (4+ cores recommended)
 - **oneAPI:** Intel oneAPI 2025.x (provides `libsycl.so.8`) for SYCL/GPU support
 
-**Important:** Building with SYCL/oneAPI support is memory-intensive. Each parallel compilation job can consume 1-2GB of RAM. On systems with limited memory, use the safe build option to prevent system crashes.
+> [!IMPORTANT]
+> Building with SYCL/oneAPI support is memory-intensive. Each parallel compilation job can consume 1-2GB of RAM. On systems with limited memory, use the safe build option to prevent system crashes.
 
 ### Build
 
@@ -133,7 +134,8 @@ If Ubuntu 24.04 with Jazzy is used, then run
 source /opt/ros/jazzy/setup.bash
 ```
 
-**Important:** For systems with oneAPI 2025.x, ensure you have the SYCL 8-compatible ORB extractor installed. If you built packages with `LOCAL_ORB_PATH`, install the local ORB extractor first:
+> [!IMPORTANT]
+> For systems with oneAPI 2025.x, ensure you have the SYCL 8-compatible ORB extractor installed. If you built packages with `LOCAL_ORB_PATH`, install the local ORB extractor first:
 
 ```bash
 # If using local SYCL 8 ORB extractor

@@ -1,5 +1,7 @@
 # Unit test guidelines
-IMPORTANT: the unit tests are based on the demo DAVIS dataset. Make sure the application is successfully deployed and the demo dataset is properly prepared referring to the [get started guide](../docs/user-guide/get-started.md). You may use the script `prepare_demo_dataset.sh` for this purpose.
+
+> [!IMPORTANT]
+> The unit tests are based on the demo DAVIS dataset. Make sure the application is successfully deployed and the demo dataset is properly prepared referring to the [get started guide](../docs/user-guide/get-started.md). You may use the script `prepare_demo_dataset.sh` for this purpose.
 
 ## A list of text queries and expected search results based on demo DAVIS dataset
 
@@ -28,5 +30,5 @@ Please note that pytest does not guarantee visual correctness of the search resu
 bash run_app_ut.sh
 ```
 
-## Warning
-The vector DB will be cleared during the unit tests. DO NOT run the unit tests in the production environment.
+> [!WARNING]
+> The vector DB will be cleared during the unit tests. DO NOT run the unit tests in the production environment.

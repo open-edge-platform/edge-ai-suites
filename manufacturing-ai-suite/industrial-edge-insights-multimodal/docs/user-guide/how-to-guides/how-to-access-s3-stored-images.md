@@ -18,7 +18,7 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
     docker exec -it ia-influxdb bash
     ```
 
-    > **Note:**
+    > [!NOTE]
     > Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
     > where for `<namespace>` replace with namespace name where the application was deployed and
     > for `<influxdb-pod-name>` replace with InfluxDB pod name.
@@ -35,7 +35,8 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
     SELECT * FROM "vision-weld-classification-results"
     ```
 
-> **Note:** You may see the error `There was an error writing history file: open /.influx_history: read-only file system` in the InfluxDB shell. This is harmless and does not affect functionality.
+> [!NOTE]
+> You may see the error `There was an error writing history file: open /.influx_history: read-only file system` in the InfluxDB shell. This is harmless and does not affect functionality.
 
 ## Accessing Stored Images using SeaweedFS Filer Web Interface
 
@@ -45,7 +46,8 @@ Access the SeaweedFS Filer interface in your web browser:
 https://localhost:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
 ```
 
-> **Note:** Use link `https://localhost:30001/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/` to access the SeaweedFS Filer interface for the Helm deployment.
+> [!NOTE]
+> Use link `https://localhost:30001/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/` to access the SeaweedFS Filer interface for the Helm deployment.
 
 Images are organized by their `img_handle` identifier. Browse the directory to locate specific images, then click to view the image.
 
@@ -69,4 +71,5 @@ Follow these steps to correlate detection events in InfluxDB with stored images:
 
 4. Locate and open the file matching the `img_handle` (e.g., `X7TINNVPNX.jpg`).
 
-> **Note:** All data stored in SeaweedFS and InfluxDB is non-persistent and will be lost on container/pod restart.
+> [!NOTE]
+> All data stored in SeaweedFS and InfluxDB is non-persistent and will be lost on container/pod restart.

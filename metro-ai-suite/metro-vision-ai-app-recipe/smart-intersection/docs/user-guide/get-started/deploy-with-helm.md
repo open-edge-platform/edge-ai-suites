@@ -77,7 +77,10 @@ configured Kubernetes cluster.
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
+
+  > [!NOTE]
+  > If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
+
 ## Steps to Deploy
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
@@ -95,7 +98,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
 **Optional:** Pull the helm chart and replace the existing helm-chart folder with it.
-> **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/chart`
+
+> [!NOTE]
+> The helm chart should be downloaded when you are not using the helm chart
+> provided in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/chart`
 
 ```bash
 # Navigate to Smart Intersection directory
@@ -129,9 +135,15 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-   > **Note:** To run the pipeline on GPU, make sure to set `gpu.enabled:true` and `npu.enabled:false` in `values.yaml`. 
-   > **Note:** To run the pipeline on NPU, make sure to set `npu.enabled:true` and `gpu.enabled:false` in `values.yaml`.
-   > **Note:** For both GPU and NPU deployments, make sure the gpu.type in `values.yaml` is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"` but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
+   > [!NOTE]
+   >
+   > - To run the pipeline on GPU, make sure to set `gpu.enabled:true` and
+   >   `npu.enabled:false` in `values.yaml`.
+   > - To run the pipeline on NPU, make sure to set `npu.enabled:true` and
+   >   `gpu.enabled:false` in `values.yaml`.
+   > - For both GPU and NPU deployments, make sure the gpu.type in `values.yaml`
+   >   is set correct. By default, gpu.type is set to `"gpu.intel.com/i915"`
+   >   but for Intel Arc (Xe) discrete GPUs, set gpu.type to `"gpu.intel.com/xe"`.
 
 ### Step 3: Configure External IP and Proxy Settings
 
@@ -209,7 +221,8 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
 kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300s
 ```
 
-> **Note:** Using `global.storageClassName=""` makes the deployment use whatever default
+> [!NOTE]
+> Using `global.storageClassName=""` makes the deployment use whatever default
 > storage class exists on your cluster.
 
 ## Access Application Services
@@ -240,9 +253,11 @@ kubectl wait --for=condition=ready pod --all -n smart-intersection --timeout=300
 - **URL**: `https://<HOST_IP>:30443/api/pipelines/status`
 - **API Access**: No authentication required for status endpoints
 
-> **Note:** For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
+> [!NOTE]
+> For InfluxDB, use the direct access on port 30086 (`http://<HOST_IP>:30086/`) for login and full functionality. The proxy access through nginx (`https://<HOST_IP>:30443/influxdb/`) provides basic functionality and API access but is not recommended for the web UI login.
 
-> **Security Note:** The application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
+> [!IMPORTANT]
+> Security-wise, the application uses self-signed certificates for HTTPS. Your browser will show a security warning when first accessing the site. Click "Advanced" and "Proceed to site" (or equivalent) to continue. This is safe for local deployments.
 
 ## Deploy with Trusted Compute
 
@@ -276,7 +291,8 @@ kubectl get pvc -n smart-intersection --no-headers | awk '{print $1}' | xargs -I
 kubectl delete storageclass hostpath local-storage standard
 ```
 
-> **Note:** This complete cleanup will remove storage provisioning from your cluster. You will
+> [!NOTE]
+> This complete cleanup will remove storage provisioning from your cluster. You will
 > need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
 > **Run workload on GPU**: Set `gpu.enabled: true` in `values.yaml` file before deploying the Helm chart.

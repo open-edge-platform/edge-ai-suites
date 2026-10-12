@@ -146,7 +146,7 @@ INSTANCE_ID=$(curl -s -X POST \
     },
     "parameters": {
       "detection-properties": {
-        "model": "/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml",
+        "model": "/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml",
         "device": "CPU"
       }
     }
@@ -178,7 +178,7 @@ curl http://localhost:8081/pipelines
 
 The model must be present at:
 ```
-/home/pipeline-server/resources/models/yolov8n-visdrone/best_openvino_model/best.xml
+/home/pipeline-server/resources/models/yolo11s/yolo11s_openvino_model/yolo11s.xml
 ```
 
 The `resources/` directory is bind-mounted into the container:
@@ -204,7 +204,7 @@ For UAVSDK three-camera setup:
 
 ## Inference Notes
 
-- **YOLOv8n-VisDrone FP16** is the default model. Pin `ultralytics==8.4.67` for export
+- **YOLO11s FP16** is the default model. Pin `ultralytics==8.4.67` for export
   (newer versions use a CumSum-based detection head that fails on GPU/NPU OpenVINO plugins).
 - CPU: `model-instance-id=instcpu0`; GPU: `instgpu0`; NPU: `instnpu0`
 - GPU adds: `ie-config="GPU_THROUGHPUT_STREAMS=1"`, `batch-size=1`, `nireq=1`

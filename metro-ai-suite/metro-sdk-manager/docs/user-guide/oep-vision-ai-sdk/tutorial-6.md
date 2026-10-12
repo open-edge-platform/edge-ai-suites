@@ -50,7 +50,8 @@ export SUPASS=<your-password>
 make demo
 ```
 
-> **Note:** Choose a strong password. This is the admin password for the web UI, not your system password.
+> [!NOTE]
+> Choose a strong password. This is the admin password for the web UI, not your system password.
 
 ### Step 4: Access the Web UI
 

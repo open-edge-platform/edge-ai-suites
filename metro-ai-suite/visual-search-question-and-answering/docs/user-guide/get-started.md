@@ -70,7 +70,8 @@ If you would like to test the application with a demo dataset, please continue a
 
 Otherwise, if you would like to use your own data (images and video), make sure to put them all in the created data directory (`$HOME/data` in the example commands above) and make sure the created path matches with the `HOST_DATA_PATH` variable in `deployment/docker-compose/env.sh` BEFORE deploying the services.
 
-Note: supported media types: jpg, png, mp4
+> [!NOTE]
+> Supported media types are jpg, png, and mp4.
 
 ### Step 3: Deploy
 
@@ -91,7 +92,8 @@ Note: supported media types: jpg, png, mp4
    source env.sh
    ```
 
-   > **Important:** You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
+   > [!IMPORTANT]
+   > You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
    > [Supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for Multimodal Embedding Serving for available embedding models, and
    > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
@@ -195,7 +197,8 @@ Expected valid inputs are "car-race", "deer", "guitar-violin", "gym", "helicopte
 
 Try ticking a search result, and ask a question in the leftside chatbox about the selected media.
 
-Note: for each chat request, you may select either a single image, or multiple images, or a single video. Multiple videos or a collection of images+videos are not supported yet.
+> [!NOTE]
+> For each chat request, you may select either a single image, or multiple images, or a single video. Multiple videos or a collection of images+videos are not supported yet.
 
 ## Performance
 
@@ -214,89 +217,9 @@ In this get started guide, you learned how to:
 - Explore more functionalities in [Tutorials](./tutorials.md).
 - Understand the components, services, architecture, and data flow, in the [Overview](./index.md#overview).
 
-## Troubleshooting
-
-### Error Logs
-
-- Check the container log if a microservice shows mal-functional behaviors
-
-```bash
-docker logs <container_id>
-```
-
-- Click `showInfo` button on the web UI to get essential information about microservices
-
-### VLM Microservice Model Loading Issues
-
-**Problem**: VLM microservice fails to load or save models with permission errors, or you see errors related to model access in the logs.
-
-**Cause**: This issue occurs when the `ov-models` Docker volume was created with incorrect ownership (root user) in previous versions of the application. The VLM microservice runs as a non-root user and requires proper permissions to read/write models.
-
-**Symptoms**:
-
-- VLM microservice container fails to start or crashes during model loading
-- Permission denied errors in VLM service logs
-- Model conversion or caching failures
-- Error messages mentioning `/home/appuser/.cache/huggingface` or `/app/ov-model` access issues
-
-**Solution**:
-
-1. Stop the running application:
-
-   ```bash
-   docker compose -f compose_milvus.yaml down
-   ```
-
-2. Remove the existing `ov-models`:
-
-   ```bash
-   docker volume rm ov-models
-   ```
-
-3. Restart the application (the volume will be recreated with correct permissions):
-
-   ```bash
-   source env.sh
-   docker compose -f compose_milvus.yaml up -d
-   ```
-
-**Note**: Removing the `ov-models` volume will delete any previously cached/converted models. The VLM service will automatically re-download and convert models on the next startup, which may take additional time depending on your internet connection and the model size.
-
-### Embedding Model Changed Issues
-
-**Problem**: Dataprep microservice API fails and "mismatch" is found in logs.
-
-**Cause**: If the application is re-deployed with a different embedding model set for the multimodal embedding service other than the previous deployment, it is possible that the embedding dimension has changed as well, leading to a vector dimension mismatch in vector DB.
-
-**Solution**:
-
-1. Stop the running application:
-
-   ```bash
-   docker compose -f compose_milvus.yaml down
-   ```
-
-2. Remove the existing Milvus volumes:
-
-   ```bash
-   sudo rm -rf /volumes/milvus
-   sudo rm -rf /volumes/minio
-   sudo rm -rf /volumes/etcd
-   ```
-
-3. Restart the application:
-
-   ```bash
-   source env.sh
-   docker compose -f compose_milvus.yaml up -d
-   ```
-
-## Known Issues
-
-- Sometimes downloading the demo dataset can be slow. Try manually downloading it from
-  [the source website](https://data.vision.ee.ethz.ch/csergi/share/davis/DAVIS-2017-test-dev-480p.zip),
-  and put the zip file under your host `$HOME/data` folder.
-
+<!--hide_directive
+:::{toctree}
+:hidden:
 
 ## Troubleshooting
 

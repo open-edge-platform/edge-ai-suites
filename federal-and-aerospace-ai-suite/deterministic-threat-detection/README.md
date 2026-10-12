@@ -45,12 +45,13 @@ cd edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection
 Download and extract the standalone application package:
 
 ```bash
-curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/deterministic-threat-detection.zip
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/2026.2.1/deterministic-threat-detection.zip
 unzip deterministic-threat-detection.zip
 cd deterministic-threat-detection
 ```
 
-> **Note:** The documentation assumes paths relative to the `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection` directory. If you used the ZIP archive, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection` with the path to your extracted `deterministic-threat-detection` folder wherever it appears in the guides.
+> [!NOTE]
+> The documentation assumes paths relative to the `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection` directory. If you used the ZIP archive, replace `edge-ai-suites/federal-and-aerospace-ai-suite/deterministic-threat-detection` with the path to your extracted `deterministic-threat-detection` folder wherever it appears in the guides.
 
 ---
 

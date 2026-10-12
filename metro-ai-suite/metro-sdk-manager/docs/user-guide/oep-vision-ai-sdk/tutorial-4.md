@@ -62,33 +62,36 @@ Set up your workspace and download the required video content and AI models:
 
 ```bash
 # Create working directory structure
-mkdir -p ~/oep/oep-vision-tutorial-4/{models/intel/human-pose-estimation-0001/FP32,output}
+mkdir -p ~/oep/oep-vision-tutorial-4/{models,output}
 cd ~/oep/oep-vision-tutorial-4
 
 # Download sample video for human pose estimation
 wget -O face-demographics-walking.mp4 \
   "https://github.com/intel-iot-devkit/sample-videos/raw/master/face-demographics-walking.mp4"
 
-# Download human pose estimation model files
-wget -O models/intel/human-pose-estimation-0001/FP32/human-pose-estimation-0001.xml \
-  "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/human-pose-estimation-0001/FP32/human-pose-estimation-0001.xml"
-
-wget -O models/intel/human-pose-estimation-0001/FP32/human-pose-estimation-0001.bin \
-  "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/human-pose-estimation-0001/FP32/human-pose-estimation-0001.bin"
-
-wget -O models/intel/human-pose-estimation-0001/human-pose-estimation-0001.json \
-  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/v2026.2.0/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
+# Download and convert the YOLO26s-pose model to OpenVINO IR (FP16)
+# using the model download script shipped in the DL Streamer container
+docker run --rm --net=host \
+  -e no_proxy=$no_proxy \
+  -e https_proxy=$https_proxy \
+  -e http_proxy=$http_proxy \
+  -v ${PWD}:/home/dlstreamer/data \
+  intel/dlstreamer:2026.2.0-ubuntu24 \
+  bash -c "export MODELS_PATH=/home/dlstreamer/data/models && \
+           /opt/intel/dlstreamer/samples/download_public_models.sh yolo26s-pose"
 ```
+
+The model is saved to `models/public/yolo26s-pose/FP16/yolo26s-pose.xml`, which is the path expected by the DL Streamer human pose estimation sample.
 
 ### Step 2: Understand Human Pose Estimation Model
 
 **Model Architecture:**
 
-- **Model Name**: human-pose-estimation-0001
-- **Framework**: OpenVINO optimized model from Intel Model Zoo
-- **Input**: 256x456 RGB image
-- **Output**: 17 keypoints representing major body joints
-- **Precision**: FP32 for optimal accuracy
+- **Model Name**: yolo26s-pose
+- **Framework**: Ultralytics YOLO26 pose model converted to OpenVINO IR
+- **Input**: 640x640 RGB image
+- **Output**: Person bounding boxes with 17 COCO keypoints representing major body joints
+- **Precision**: FP16
 
 ### Step 3: Configure Environment for DL Streamer
 

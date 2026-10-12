@@ -26,6 +26,32 @@ const reportBodySchema = z.object({
   period_end: z.string().max(32).optional(),
 });
 
+type RouterMetrics = {
+  token_metrics?: {
+    by_provider?: Record<string, { total_tokens?: unknown }>;
+    overall?: unknown;
+  };
+};
+
+function adaptRouterMetrics(metrics: RouterMetrics) {
+  const byProvider = metrics.token_metrics?.by_provider ?? {};
+  const totalTokensFor = (provider: string) => Object.entries(byProvider)
+    .filter(([key]) => key.split("/", 1)[0] === provider)
+    .reduce((total, [, value]) => {
+      const tokens = Number(value.total_tokens);
+      return total + (Number.isFinite(tokens) ? tokens : 0);
+    }, 0);
+
+  return {
+    ...metrics,
+    token_metrics: {
+      ...metrics.token_metrics,
+      local_model: { total_tokens: totalTokensFor("local") },
+      cloud_model: { total_tokens: totalTokensFor("cloud") },
+    },
+  };
+}
+
 function dateRange(date: string): { start: string; end: string } {
   const next = new Date(`${date}T00:00:00Z`);
   if (Number.isNaN(next.getTime())) throw new Error("Invalid date");
@@ -136,11 +162,13 @@ export function createDashboardRouter(
       return;
     }
     try {
-      const path = reset ? "v1/stats/reset" : "v1/stats";
-      const target = new URL(path, integrations.routerUrl.href.endsWith("/") ? integrations.routerUrl : `${integrations.routerUrl.href}/`);
+      const baseUrl = new URL(integrations.routerUrl);
+      baseUrl.pathname = `${baseUrl.pathname.replace(/\/v1\/?$/, "").replace(/\/$/, "")}/`;
+      const target = new URL(reset ? "v1/metrics/reset" : "v1/metrics", baseUrl);
       const upstream = await fetch(target, { method: reset ? "POST" : "GET", signal: AbortSignal.timeout(3_000) });
       if (!upstream.ok) throw new Error(`Router returned HTTP ${upstream.status}`);
-      res.json({ status: "configured", data: await upstream.json() });
+      const data = await upstream.json();
+      res.json({ status: "configured", data: reset ? data : adaptRouterMetrics(data as RouterMetrics) });
     } catch {
       res.status(503).json({ status: "unavailable" });
     }

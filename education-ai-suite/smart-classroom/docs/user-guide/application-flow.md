@@ -8,7 +8,8 @@ The application can be initiated either by using **Upload Files** or by clicking
 
 Clicking any one of the upload file buttons will open a modal for audio and video files inputs.
 
-> **Note:** Base Directory Path should be folder path of video files (user should manually add/copy the path).
+> [!NOTE]
+> Base Directory Path should be folder path of video files (user should manually add/copy the path).
 
 Accepted file formats:
 
@@ -20,7 +21,8 @@ Accepted file formats:
 
 **After successful upload click Apply & Start Processing**
 
-> **Note:** Search is enabled only after content segmentation.
+> [!NOTE]
+> Search is enabled only after content segmentation.
 
 ## Step 2: Audio Analysis and Video Streaming
 

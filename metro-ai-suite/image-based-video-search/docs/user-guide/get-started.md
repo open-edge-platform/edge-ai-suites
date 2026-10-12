@@ -29,9 +29,10 @@ By following this guide, you will learn how to:
      cd metro-ai-suite/image-based-video-search
      ```
 
-   > **Note:** The below step is required for deployment with certain pre-release images
-   - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
-     Please remember to include `/` at the end.
+   > [!NOTE]
+   > The below step is required for deployment with certain pre-release images
+   > - Update `DOCKER_REGISTRY` variable in `.env` file present at `edge-ai-suites/metro-ai-suite/image-based-video-search/`. The recommended setting to use pre-release images is: `DOCKER_REGISTRY=docker.io/`
+   > Please remember to include `/` at the end.
 
 2. **Build from Source (Optional)**:
     - Run the below command to build the images from source
@@ -40,7 +41,8 @@ By following this guide, you will learn how to:
         docker compose build
       ```
 
-    > **Note:** You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
+    > [!NOTE]
+    > You can skip this optional step since `docker compose up -d` that is run later in this document automatically pulls the required images.
 
 3. **Download the Models**:
     - Download the models
@@ -173,7 +175,8 @@ By following this guide, you will learn how to:
       - Search UI: `https://<ip-addr>/docs`
       - MilvusDB UI: `https://<ip-addr>/ibvs-milvus-ui`
       - Stream UI: You can access https stream at `https://<ip-addr>/stream` and RTSP stream at `rtsp://<ip-addr>:8554/stream`.
-    > **Note:** Replace `<ip-addr>` with your host IP address
+    > [!NOTE]
+    > Replace `<ip-addr>` with your host IP address
 
 7. **Run the Application**:
 

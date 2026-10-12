@@ -4,7 +4,8 @@ To create VLAN interfaces on all Arrow Lake machines, execute the following comm
 machine. This example creates VLANs with IDs 1, 3, and 5, which correspond to the VLAN
 configuration on the MOXA TSN switch.
 
-> **Note:** Make sure to replace `enp1s0` with the actual network interface name associated with
+> [!NOTE]
+> Make sure to replace `enp1s0` with the actual network interface name associated with
 > the `i226` network card.
 
 ```bash

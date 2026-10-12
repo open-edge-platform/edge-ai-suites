@@ -19,7 +19,8 @@ cd linuxptp
 The TSN switch is configured to act as the PTP Grandmaster clock. On each Arrow Lake machine,
 execute the following command to synchronize the system clock using PTP.
 
-> **Note:** Make sure to replace `enp1s0` with the actual network interface name associated
+> [!NOTE]
+> Make sure to replace `enp1s0` with the actual network interface name associated
 > with the `i226` network card.
 
 1. **Start the PTP daemon (`ptp4l`).**

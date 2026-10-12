@@ -28,7 +28,8 @@ Please make sure you have finished setup steps in [Get Started](https://docs.ope
 
 Please refer to the [official ROS2 Jazzy installation](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html). The target platform for this release is Ubuntu 24.04.
 
-> **Note:** This release is maintained for ROS2 Jazzy only. If you need ROS2 Humble, please switch to the **2026.1** release.
+> [!NOTE]
+> This release is maintained for ROS2 Jazzy only. If you need ROS2 Humble, please switch to the **2026.1** release.
 
 ## ACT Setup
 
@@ -200,7 +201,8 @@ The required Mujoco module is based on the open-source Mujoco Plugin project [Mu
    If running successfully, the mujoco UI will display two opposing ALOHA robotic arms.
    If you observe collisions between the arms, don't worry; this is normal before initialization.
 
-   > **Note:** If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
+   > [!NOTE]
+   > If mujoco fails with unknown plugin, please check `ldd` and add lib path manually:
    >
    > ```bash
    > # ldd check
@@ -325,6 +327,7 @@ viewer can start before the nodes.
    `--seconds N` static run duration, `--left` / `--right` arm prefixes, and
    positional numbers or `--qpos` to force a single static target.
 
-> **Note:** The shared-memory transport currently unlinks its segment on close
+> [!NOTE]
+> The shared-memory transport currently unlinks its segment on close
 > without distinguishing creator from opener, so restarting individual processes
 > mid-session may misbehave. Restart the whole set if you hit shared-memory errors.

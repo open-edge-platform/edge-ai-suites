@@ -42,7 +42,7 @@ It also consists of the following third-party microservices:
 - [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib) is a set of receivers, exporters, processors, connectors for Open Telemetry.
 - [Prometheus](https://hub.docker.com/r/prom/prometheus) is a systems and service monitoring system used for viewing Open Telemetry.
 - [Postgres](https://hub.docker.com/_/postgres) is object-relational database system that provides reliability and data integrity.
-- [Minio](https://hub.docker.com/r/minio/minio) is high performance object storage that is API compatible with Amazon S3 cloud storage service.
+- [SeaweedFS](https://github.com/seaweedfs/seaweedfs) is a fast, S3-compatible distributed object storage system.
 
 ## Learn More
 

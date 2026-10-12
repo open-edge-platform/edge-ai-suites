@@ -35,6 +35,7 @@ services:
     user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
     environment:
       SMART_COMMUNITY_DATA_DIR: ${SMART_COMMUNITY_DATA_DIR:-${HOME}/.mcp-smart-community}
+      SMART_COMMUNITY_ROUTER_URL: ${SMART_COMMUNITY_ROUTER_URL:-}
       # Writable home for the non-root container user.
       HOME: /tmp
       LOG_LEVEL: ${LOG_LEVEL:-info}

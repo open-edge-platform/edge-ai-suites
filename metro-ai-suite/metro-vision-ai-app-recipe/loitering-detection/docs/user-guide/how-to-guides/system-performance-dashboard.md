@@ -34,5 +34,6 @@ Each panel displays a time-series graph for the last 5 minutes by default. The p
 - **GPU Frequency** — tracks `gpu_frequency` over time
 - **Memory Used** — tracks `mem_used_percent` over time
 
-> **Note:** Use the time picker in the top-right corner of Grafana to adjust the time range
+> [!NOTE]
+> Use the time picker in the top-right corner of Grafana to adjust the time range
 > (for example, last 15 minutes or last 1 hour).

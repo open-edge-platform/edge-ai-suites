@@ -83,7 +83,8 @@ Then open another terminal:
 sudo -E ./build/bin/testGRPCLocalPipeline_pred 127.0.0.1 50052 ./ai_inference/test/configs/raddet/1C1R/localMediaPipeline.json 1 1 /path/to/dataset multisensor /path/to/pred_folder
 ```
 
-**Note: Please make sure that folder `pred_folder` exists.**
+> [!NOTE]
+> Please make sure that folder `pred_folder` exists.
 
 
 The `pred_folder` contains the predication .txt files. The file name is the corresponding image frame number, and each line stores the corresponding category, confidence and detection box in `x1y1x2y2` format.

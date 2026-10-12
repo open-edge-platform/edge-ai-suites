@@ -126,7 +126,8 @@ The response body is a stream of newline-delimited JSON lines (`Content-Type: ap
 { "type": "error", "message": "RuntimeError: Object not found: ..." }
 ```
 
-> **Note:** Per-chunk errors (e.g., a single chunk VLM failure) do **not** produce an error line — they appear in the `error` field of the corresponding chunk line, and processing continues with the next chunk.
+> [!NOTE]
+> Per-chunk errors (e.g., a single chunk VLM failure) do **not** produce an error line — they appear in the `error` field of the corresponding chunk line, and processing continues with the next chunk.
 
 ---
 

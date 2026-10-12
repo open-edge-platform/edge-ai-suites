@@ -345,9 +345,10 @@ ros2 run fast_lio fastlio_mapping --ros-args \
   -p use_sim_time:=false
 ```
 
-Note this uses the pristine upstream `velodyne.yaml` (not a new/patched
-config) — see "Validate without hardware" above for why its defaults
-already fit this dataset's sensor rig.
+> [!NOTE]
+> This uses the pristine upstream `velodyne.yaml` (not a new/patched
+> config) — see "Validate without hardware" above for why its defaults
+> already fit this dataset's sensor rig.
 
 **Terminal B — bag playback + trajectory recording** (start once Terminal A
 is up and printing):

@@ -15,11 +15,13 @@ The kit is powered by an **Intel® Core™ 7 processor 350**, **Intel® Core™ 
 actively-cooled unit with onboard LPDDR5 memory and UFS storage in a compact
 95 × 70 × 42.3 mm footprint.
 
-> **Note:** This kit does not include GMSL or MIPI CSI camera connectivity. Connect
+> [!NOTE]
+> This kit does not include GMSL or MIPI CSI camera connectivity. Connect
 > cameras over USB — see the [USB Cameras](../../../components/sensors/cameras/usb/index.md)
 > guide.
 
-> **Note:** This development kit is intended for research and development purposes only.
+> [!NOTE]
+> This development kit is intended for research and development purposes only.
 
 ## What you'll need
 
@@ -42,7 +44,8 @@ Set the kit on an anti-static surface and confirm the box contains the unit and 
 DC power adapter. Refer to the packing list included with your unit for the complete
 contents.
 
-> **Warning:** The kit can be damaged if it is not placed on an anti-static surface. If any
+> [!WARNING]
+> The kit can be damaged if it is not placed on an anti-static surface. If any
 > item is missing or the kit is damaged, contact Intel before proceeding.
 
 ### Step 2: Connect peripherals

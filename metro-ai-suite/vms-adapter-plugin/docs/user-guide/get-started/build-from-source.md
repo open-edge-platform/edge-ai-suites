@@ -71,7 +71,8 @@ export REGISTRY_URL=<your-container-registry-url>    # e.g. "docker.io/username/
 export TAG=<your-tag>                                # e.g. "1.0.0" or "latest"
 ```
 
-> **Note:** If `REGISTRY_URL` or `TAG` are not set, the defaults in the Docker Compose file
+> [!NOTE]
+> If `REGISTRY_URL` or `TAG` are not set, the defaults in the Docker Compose file
 > are used.
 
 ## Step 4: Verify the Build

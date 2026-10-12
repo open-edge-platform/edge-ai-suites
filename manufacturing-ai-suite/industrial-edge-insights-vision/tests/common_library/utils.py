@@ -64,8 +64,8 @@ class utils:
                 "MTX_WEBRTCICESERVERS2_0_USERNAME": "test1234",
                 "MTX_WEBRTCICESERVERS2_0_PASSWORD": "test1234",
                 "MTX_WEBRTCICESERVERS2_0_USERNAME": "test1234", 
-                "MINIO_ACCESS_KEY": "minioadmin", 
-                "MINIO_SECRET_KEY": "minioadmin"
+                "S3_STORAGE_USERNAME": "s3user", 
+                "S3_STORAGE_PASSWORD": "s3pass"
             })
             
             # Run setup and start services
@@ -381,7 +381,7 @@ class utils:
             print(docker_ps_output)
             lines = docker_ps_output.strip().split('\n')[1:]
             running_containers = []
-            project_containers = ['dlstreamer-pipeline-server', 'prometheus', 'coturn', 'otel-collector', 'mediamtx-server', 'minio', 'industrial-edge-insights-vision_vol_minio_data', 'industrial-edge-insights-vision_vol_pipeline_root']
+            project_containers = ['dlstreamer-pipeline-server', 'prometheus', 'coturn', 'otel-collector', 'mediamtx-server', 'seaweedfs-master', 'seaweedfs-volume', 'seaweedfs-filer', 'seaweedfs-s3', 'industrial-edge-insights-vision_vol_seaweed_master_data', 'industrial-edge-insights-vision_vol_seaweed_volume_data', 'industrial-edge-insights-vision_vol_seaweed_filer_data', 'industrial-edge-insights-vision_vol_pipeline_root']
                 
             for line in lines:
                 if line.strip():
@@ -441,7 +441,7 @@ class utils:
             with open("helm/values.yaml", 'r') as file:
                 values_data = yaml.safe_load(file)
             env_updates = {
-                "HOST_IP": hostIP, "MINIO_ACCESS_KEY": "minioadmin", "MINIO_SECRET_KEY": "minioadmin", "SAMPLE_APP": sample_app_name
+                "HOST_IP": hostIP, "S3_STORAGE_USERNAME": "s3user", "S3_STORAGE_PASSWORD": "s3pass", "SAMPLE_APP": sample_app_name
             }
             values_data['env'].update(env_updates)
             if 'webrtcturnserver' not in values_data:

@@ -44,7 +44,8 @@ folder and replace the folder name with the sample app name to be created.
 
 ### Deployment
 
-> **Note:** Adjust the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/Makefile` to add the support for the new sample
+> [!NOTE]
+> Adjust the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/Makefile` to add the support for the new sample
 > app name for both Docker Compose and Helm deployments.
 
 1. For docker compose deployment, follow the [Get Started](../get-started.md) guide/

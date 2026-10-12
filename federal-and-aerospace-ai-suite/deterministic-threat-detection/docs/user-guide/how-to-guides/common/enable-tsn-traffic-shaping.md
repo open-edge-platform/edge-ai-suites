@@ -51,7 +51,7 @@ to the official documentation for detailed instructions.
 
    ![MOXA Time Aware Port Shaper](../../_assets/moxa-time-aware-shaper-port-setting.png)
 
-   > **Important Note:**
+   > [!IMPORTANT]
    > The configuration of the Gate Control List is highly specific to the application's
    > requirements, including the number of streams, data packet sizes, and desired latency.
    > The values used above are for illustrative purposes only. For precise instructions and

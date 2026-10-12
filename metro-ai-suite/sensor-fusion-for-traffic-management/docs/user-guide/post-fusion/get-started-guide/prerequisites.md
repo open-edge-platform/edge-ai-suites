@@ -76,7 +76,8 @@ Make sure you meet the [system requirements](./system-req.md).
   bash install_driver_related_libs.sh
   ```
 
-> **Note:** this step may restart the machine several times. Please rerun this script after each restart until you see the output of `All driver libs installed successfully`.
+> [!NOTE]
+> this step may restart the machine several times. Please rerun this script after each restart until you see the output of `All driver libs installed successfully`.
 
 - install project related libs
 

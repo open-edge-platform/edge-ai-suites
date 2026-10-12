@@ -19,6 +19,8 @@ export no_proxy_env=${no_proxy}
 export MILVUS_HOST=${host_ip}
 export MILVUS_PORT=19530
 export DOCKER_VOLUME_DIRECTORY="/opt"
+export MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+export MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
 
 export DATA_INGEST_WITH_DETECT=true
 

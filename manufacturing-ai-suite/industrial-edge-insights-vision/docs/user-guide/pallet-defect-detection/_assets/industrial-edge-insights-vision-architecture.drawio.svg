@@ -99,7 +99,7 @@
                         <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 97px; height: 1px; padding-top: 542px; margin-left: 488px;">
                             <div style="box-sizing: border-box; font-size: 0; text-align: left; color: #525252; ">
                                 <div style="display: inline-block; font-size: 12px; font-family: &quot;Helvetica&quot;; color: light-dark(#525252, #E9E9E9); line-height: 1.2; pointer-events: all; white-space: normal; word-wrap: normal; ">
-                                    S3-compliant storage - MinIO
+                                    S3-compliant storage - SeaweedFS
                                 </div>
                             </div>
                         </div>

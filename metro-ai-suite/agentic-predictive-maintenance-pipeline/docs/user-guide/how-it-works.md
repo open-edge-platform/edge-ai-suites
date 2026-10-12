@@ -155,7 +155,8 @@ List available source videos:
 curl http://localhost:8080/api/detection/videos
 ```
 
-> Note: this release runs one bounded detect-then-reason cycle per click over
+> [!NOTE]
+> This release runs one bounded detect-then-reason cycle per click over
 > a finite source video. True live and continuous background detection
 > (independent of the "Run Pipeline" click) is a possible future direction;
 > see the scalable architecture diagram (`docs/apm-scalable-arch.drawio`) for

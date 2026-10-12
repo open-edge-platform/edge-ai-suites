@@ -114,7 +114,8 @@ Edit `src/data/config.json` to add the IP addresses and ports of the edge nodes 
 }
 ```
 
-> **NOTE :** We can add `api_hosts` for even just one instance, however minimum three instances of Smart Traffic Intersection Agent is recommended for proper route planning in the application.
+> [!NOTE]
+> We can add `api_hosts` for even just one instance, however minimum three instances of Smart Traffic Intersection Agent is recommended for proper route planning in the application.
 
 ### Deploy the Route Planning Agent
 

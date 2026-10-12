@@ -2,7 +2,7 @@
 
 ## Version 2026.2
 
-**Release Date**: September 9, 2026
+**Release Date**: September 10, 2026
 
 This release introduces **Agentic Integration for user-triggered weld quality monitoring**,
 enabling users to initiate analysis for a selected time range. It also introduces a
@@ -44,7 +44,6 @@ documentation enhancements.
   and resolved reported vulnerabilities and security-related test failures.
 - **Documentation**: Editorial, punctuation, and formatting improvements were made throughout the
   user guide.
-
 
 ## Version 2026.1
 

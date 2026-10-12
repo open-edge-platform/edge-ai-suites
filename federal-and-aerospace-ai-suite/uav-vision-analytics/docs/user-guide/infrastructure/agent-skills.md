@@ -68,4 +68,5 @@ For every skill invocation the agent follows this fixed sequence:
 4. **Validates results** — confirms the expected artifacts or system state are present
 5. **Reports outcome** — returns artifact paths, validation status, and troubleshooting notes on failure
 
-> **Note:** The agent will never proceed past a failed precondition or skip the validation step.
+> [!NOTE]
+> The agent will never proceed past a failed precondition or skip the validation step.

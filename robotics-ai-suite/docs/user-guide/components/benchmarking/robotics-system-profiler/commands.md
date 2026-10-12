@@ -117,7 +117,8 @@ uv run python src/visualize_resources.py resource.log --summary
 | `--output-dir DIR` | Save plots as PNG |
 | `--summary` | Print statistics only, no plots |
 
-> **Note:** `pidstat` reports CPU% where 100% = 1 full core. On a 20-core
+> [!NOTE]
+> `pidstat` reports CPU% where 100% = 1 full core. On a 20-core
 > system the maximum is 2000%. Use the **Avg Cores** column in `--summary`
 > output for a human-readable reading.
 

@@ -25,7 +25,8 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
 
 1. Review and accept the [Unsloth Qwen3.5-2B license](https://huggingface.co/unsloth/Qwen3.5-2B/blob/main/LICENSE) before downloading.
 
-   > **Note:** The [Low-Rank Adaptation (LoRA) adapter](https://huggingface.co/Intel/qwen3.5-2b-vlm-weld-explainability-lora) was specifically trained on a subset of the [Intel Robotic Welding Multimodal Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset) and may not generalize to generic weld datasets.
+   > [!NOTE]
+   > The [Low-Rank Adaptation (LoRA) adapter](https://huggingface.co/Intel/qwen3.5-2b-vlm-weld-explainability-lora) was specifically trained on a subset of the [Intel Robotic Welding Multimodal Dataset](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset) and may not generalize to generic weld datasets.
 
 2. Go to the root folder of the multimodal sample app:
 
@@ -53,7 +54,8 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
 
 ## Deploy the vLLM Service
 
-> **Note:** vLLM preallocates GPU-addressable memory up to the limit specified by
+> [!NOTE]
+> vLLM preallocates GPU-addressable memory up to the limit specified by
 > `VLLM_GPU_MEMORY_UTILIZATION` (VRAM on discrete GPU; shared system memory on integrated GPU).
 > Since the optimal value varies between platforms, update `VLLM_GPU_MEMORY_UTILIZATION` in
 > the `.env` file to match your target hardware.
@@ -78,7 +80,8 @@ This section shows how to download the `Unsloth Qwen3.5-2B` model and `Unsloth Q
 
 1. Check the overall stack health:
 
-   > **Note:** The command `make status` may show errors in containers like `ia-grafana` if
+   > [!NOTE]
+   > The command `make status` may show errors in containers like `ia-grafana` if
    > you have not logged in to the Grafana dashboard for the first time, or if your session has
    > timed out. Log in to the Grafana dashboard, and if the dashboard works correctly, ignore
    > `user token not found` and other minor errors in the Grafana logs.

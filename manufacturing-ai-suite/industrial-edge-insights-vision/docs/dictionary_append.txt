@@ -51,7 +51,8 @@ Dockerfile
 microservice
 ntp
 Postgres
-Minio
+SeaweedFS
+seaweedfs
 rebranded
 evam
 kubeconfig

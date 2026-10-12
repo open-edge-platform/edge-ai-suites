@@ -4,7 +4,10 @@ UEFI Secure Boot is a security standard designed to make sure that a device boot
 
 ![Secure Boot chain of trust](../../images/secure-boot/chain-of-trust.png)
 
-Upon boot, if Secure Boot is enabled, the UEFI will verify the first stage bootloader (Shim). If verification passes, the shim will verify and launch the GRUB bootloader, which verifies and starts the Linux kernel. At this point, the system will have fully booted. As an optional measure of extra security, kernel modules can also be signed and verified by the kernel. Note: The implementation of Secure Boot described in this guide does not cover signed kernel modules.
+Upon boot, if Secure Boot is enabled, the UEFI will verify the first stage bootloader (Shim). If verification passes, the shim will verify and launch the GRUB bootloader, which verifies and starts the Linux kernel. At this point, the system will have fully booted. As an optional measure of extra security, kernel modules can also be signed and verified by the kernel.
+
+> [!NOTE]
+> The implementation of Secure Boot described in this guide does not cover signed kernel modules.
 
 ## Enabling UEFI Secure Boot
 
@@ -51,7 +54,8 @@ This guide will help you enable Secure Boot on your system a Linux kernel.
    /boot/vmlinuz-5.10.115-rt67-intel-ese-standard-lts-rt+-signed
    ```
 
-   > **NOTE:** The `$(uname -r)` command is used to capture the name of the current booted Linux kernel. If you want to use a different Linux kernel for Secure Boot, then modify the command to use the different Linux kernel name.
+   > [!NOTE]
+   > The `$(uname -r)` command is used to capture the name of the current booted Linux kernel. If you want to use a different Linux kernel for Secure Boot, then modify the command to use the different Linux kernel name.
 
 5. Update the GRUB configuration to add the signed Linux kernel to the boot menu:
 

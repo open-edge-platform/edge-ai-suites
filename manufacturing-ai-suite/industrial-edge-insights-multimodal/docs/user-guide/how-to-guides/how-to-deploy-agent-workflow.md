@@ -14,7 +14,8 @@ The agentic workflow is implemented as a **LangGraph framework-based, sequential
 | **Analysis Agent** | Policy output as the primary anchor, supplemented by fusion, vision, and time-series classifications for the detection window when available. | Policy-anchored analysis summarizing the policy finding and corroborating it with modality classification data and confidence evidence; falls back to event-level or summary-level analysis when no policy output is available. |
 | **Ticketing Agent** | Policy evaluation and root-cause analysis results. | Structured maintenance ticket containing the priority, title, description, affected component (if available), recommended action, estimated resolution time, and defect class tags. Ticket priority and escalation follow the configured ticketing rules. |
 
-> **Note:** The `[SYSTEM]` prompt provides shared domain knowledge, including the canonical defect taxonomy, label normalization rules, and available fusion data. It establishes the common reasoning context for all agents and is **not** a separate execution stage.
+> [!NOTE]
+> The `[SYSTEM]` prompt provides shared domain knowledge, including the canonical defect taxonomy, label normalization rules, and available fusion data. It establishes the common reasoning context for all agents and is **not** a separate execution stage.
 
 ## System Requirements
 
@@ -39,7 +40,7 @@ The agentic workflow is implemented as a **LangGraph framework-based, sequential
 
 Run the full agentic stack (downloads the LLM model first, then starts all containers):
 
-> **Note:**
+> [!NOTE]
 >
 > - Model download time varies depending on network speed and hardware.
 > - The service is polled every 5 seconds for up to 50 minutes.

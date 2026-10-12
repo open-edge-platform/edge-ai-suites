@@ -57,9 +57,9 @@ Robotiq Gripper setup on the UR teach pendant
 :::
 
 ### 3. Operational Safety and Speed Limits
-:::{warning}
-During initial commissioning and calibration, set the physical teach pendant **Speed Slider** and the RViz2 motion scaling to $\le 70\%$. Operating unvalidated motion trajectories at maximum velocity can cause excessive torque and stress on workstation mounting bolts and work cell fixtures.
-:::
+
+> [!WARNING]
+> During initial commissioning and calibration, set the physical teach pendant **Speed Slider** and the RViz2 motion scaling to $\le 70\%$. Operating unvalidated motion trajectories at maximum velocity can cause excessive torque and stress on workstation mounting bolts and work cell fixtures.
 
 ## Kinematics Calibration Extraction
 

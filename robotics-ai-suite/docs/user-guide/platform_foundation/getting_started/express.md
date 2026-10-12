@@ -33,7 +33,8 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
    sudo -E ./robotics-installer
    ```
 
-   > **Note:** If you are behind a network proxy, make sure you have
+   > [!NOTE]
+   > If you are behind a network proxy, make sure you have
    > defined ``http_proxy`` and ``https_proxy`` environment variables
 
    ![Installer](../../images/install/installer_1.png)
@@ -44,7 +45,8 @@ Visit the Canonical Ubuntu website to see the detailed installation instructions
 
 5. The installer will list all the steps which will be performed. 
 
-   > **Note:** The installer will first initialize the system by uninstalling any packages with names matching the following patterns:
+   > [!NOTE]
+   > The installer will first initialize the system by uninstalling any packages with names matching the following patterns:
    > ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
 
    ![Installer](../../images/install/installer_3.png)
@@ -71,7 +73,8 @@ To use ROS 2 commands in the current shell, source ROS 2 shell setup script:
 source /opt/ros/jazzy/setup.bash
 ```
 
-> **Note:** Use an individual ``ROS_DOMAIN_ID`` for every ROS 2
+> [!NOTE]
+> Use an individual ``ROS_DOMAIN_ID`` for every ROS 2
 > node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
 > in handling messages.
 

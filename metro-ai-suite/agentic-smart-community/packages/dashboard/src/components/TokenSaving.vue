@@ -164,7 +164,7 @@ interface MonitorData {
   };
 }
 
-const POLL_INTERVAL = 1000;
+const POLL_INTERVAL = 10_000;
 const embedded = computed(() => props.embedded);
 const embeddedClosable = computed(() => props.embeddedClosable);
 

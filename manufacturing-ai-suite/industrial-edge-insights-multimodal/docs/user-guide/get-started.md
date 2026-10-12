@@ -81,7 +81,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 2. Deploy the sample app, use only one of the following options.
 
-   > **NOTE:**
+   > [!NOTE]
    >
    > - The below `make up` fails if the above required fields are not populated
    >   as per the rules called out in `.env` file.
@@ -106,7 +106,8 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 3. Use the following command to verify that all containers are active and error-free.
 
-   > **Note:** The command `make status` may show errors in containers like ia-grafana when the user has not logged in
+   > [!NOTE]
+   > The command `make status` may show errors in containers like ia-grafana when the user has not logged in
    > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
    > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
@@ -152,7 +153,8 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
 - To run inference on `NPU`, use:
 
-  > **Note:** Ensure NPU support is available on your platform before running NPU inference.
+  > [!NOTE]
+  > Ensure NPU support is available on your platform before running NPU inference.
 
   ```sh
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
@@ -168,13 +170,15 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
   ```
 
 
-> **Note:** When stopping the pipeline, Grafana may display the error message: **"Error: stream not found, retrying in some seconds"**. This is expected behavior. The stream will automatically reconnect and resume in Grafana once the pipeline is started again.
+> [!NOTE]
+> When stopping the pipeline, Grafana may display the error message: **"Error: stream not found, retrying in some seconds"**. This is expected behavior. The stream will automatically reconnect and resume in Grafana once the pipeline is started again.
 
 ## Verify the Multimodal Weld Defect Detection Results
 
 1. Get into the InfluxDB* container.
 
-   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > [!NOTE]
+   > Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
    > where for \<namespace> replace with namespace name where the application was deployed and
    > for \<influxdb-pod-name> replace with InfluxDB pod name.
 
@@ -184,7 +188,7 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
 2. Run the following commands to see the data in InfluxDB*.
 
-   > **NOTE:**
+   > [!NOTE]
    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
    > This does not affect any functionality while working with the InfluxDB commands
 
@@ -206,7 +210,7 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
    - Use link `https://localhost:3000` to launch Grafana from browser (preferably, chrome browser)
 
-   > **Note:**
+   > [!NOTE]
    > - Use link `https://localhost:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
    > - For remote access, set `HOST_IP` in `.env` to the host system IP address and access `https://<HOST_IP>:3000` (or `https://<HOST_IP>:30001` for Helm).
 

@@ -3,7 +3,8 @@
 This section shows how to build the APM blueprint's application
 images from source code.
 
-> **Note**: You only need to build from source if you want to customize the application code. For
+> [!NOTE]
+> You only need to build from source if you want to customize the application code. For
 > standard deployments, the prebuilt images referenced in the Docker Compose files are sufficient.
 
 ## Prerequisites

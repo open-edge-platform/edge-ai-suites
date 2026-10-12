@@ -116,11 +116,13 @@ cd <rdt_SOURCE_CODE_PATH>/docker
 docker build -t embodied-intelligence-sdk/rdt-1b-ov:latest --build-arg http_proxy=${http_proxy}  --build-arg https_proxy=${https_proxy} .
 ```
 
-> **Note:** If you encounter any issues during the Docker pulling, please check your network settings and ensure that the proxy is correctly configured. You can refer to [Troubleshooting](../../../resources/troubleshooting.md) for more information.
+> [!NOTE]
+> If you encounter any issues during the Docker pulling, please check your network settings and ensure that the proxy is correctly configured. You can refer to [Troubleshooting](../../../resources/troubleshooting.md) for more information.
 
 Run the docker container:
 
-> **Note:** Please replace `<rdt_SOURCE_CODE_PATH>` with the actual path where you have the RDT source code.
+> [!NOTE]
+> Please replace `<rdt_SOURCE_CODE_PATH>` with the actual path where you have the RDT source code.
 
 ```bash
 docker run -it \
@@ -135,7 +137,8 @@ docker run -it \
     --name rdt_test  --rm  embodied-intelligence-sdk/rdt-1b-ov:latest bash
 ```
 
-> **Note:** Here is a brief explanation of the command options:
+> [!NOTE]
+> Here is a brief explanation of the command options:
 >
 > - `--network host` is to use host network.
 > - `--device /dev/dri` is to use host GPU device.
@@ -180,7 +183,8 @@ docker run -it \
 
 3. You can download our fine-tuned weights from this link: [Download Link](https://eci.intel.com/embodied-sdk-docs/_downloads/RDT-sim-ft-weights.zip), and then follow the instructions in `<rdt_SOURCE_CODE_PATH>/scripts/convert/README.md` to convert the model to the OpenVINO™ format.
 
-   > **Note:** For detailed instructions on the model conversion process, refer to [OpenVINO Model Guidance - RDT](../../../components/ai_resources/openvino/models/model_rdt.md).
+   > [!NOTE]
+   > For detailed instructions on the model conversion process, refer to [OpenVINO Model Guidance - RDT](../../../components/ai_resources/openvino/models/model_rdt.md).
    >
    > Of course, you can download [the pre-trained RDT-1B weights](https://hf-mirror.com/robotics-diffusion-transformer/rdt-1b) from the Hugging Face Hub, but it is recommended to fine-tune the weights with ALOHA dataset for better performance to achieve the best results in the ALOHA MUJOCO simulation tasks.
 
@@ -193,7 +197,8 @@ docker run -it \
 
 4. You can now run the inference pipeline using the converted OpenVINO™ model.
 
-   > **Note:** Here is a brief explanation of the command options:
+   > [!NOTE]
+   > Here is a brief explanation of the command options:
    >
    > - `MUJOCO_GL=egl` environment variable can be set to enable EGL rendering, which provides better performance in simulation scenarios.
    > - `--env-id` specifies the environment ID, which can be either `TransferCube-v1` or `PegInsertion-v1`.

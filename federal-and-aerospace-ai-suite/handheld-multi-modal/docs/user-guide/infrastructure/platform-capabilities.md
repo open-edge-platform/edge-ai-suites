@@ -28,7 +28,8 @@ Save output to a file:
 sudo ./system-info.sh > sys-info.txt 2>&1
 ```
 
-> **Note:** If Panther Lake is not detected (CPUID mismatch), the script still runs and reports what it finds. Some sections show "not installed" warnings when optional tools are missing.
+> [!NOTE]
+> If Panther Lake is not detected (CPUID mismatch), the script still runs and reports what it finds. Some sections show "not installed" warnings when optional tools are missing.
 
 ## Output Sections Reference
 

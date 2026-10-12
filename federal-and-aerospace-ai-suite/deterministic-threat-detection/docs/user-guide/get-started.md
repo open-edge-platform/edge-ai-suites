@@ -66,7 +66,8 @@ All machines are connected to a MOXA switch and synchronized using PTP.
    sudo phc2sys -s enp1s0 -c CLOCK_REALTIME --step_threshold=1 --transportSpecific=1 -w -m
    ```
 
-   > **Note:** Make sure to replace `enp1s0` with the actual network interface name associated
+   > [!NOTE]
+   > Make sure to replace `enp1s0` with the actual network interface name associated
    > with the `i226` network card.
 
    For detailed instructions on configuring PTP, refer to the [PTP Configuration Guide](./how-to-guides/rtsp-deterministic-inference/configure-ptp-gptp.md).
@@ -76,7 +77,8 @@ All machines are connected to a MOXA switch and synchronized using PTP.
    Set up Virtual LANs (VLANs) to segregate network traffic,
    isolating critical data from best-effort traffic.
 
-   > **Note:** Configure the VLAN on the MOXA as mentioned in the
+   > [!NOTE]
+   > Configure the VLAN on the MOXA as mentioned in the
    > [MOXA VLAN Configuration Guide](./how-to-guides/common/configure-vlan-on-moxa-switch.md)    to assign VLAN ID on TSN switch.
 
    On the Arrow Lake machines, create VLAN interfaces corresponding to the VLAN IDs
@@ -96,7 +98,7 @@ All machines are connected to a MOXA switch and synchronized using PTP.
    sudo ifconfig enp1s0.5 192.168.5.31 up
    ```
 
-   > **Note:**
+   > [!NOTE]
    >
    > - Make sure to replace `enp1s0` with the actual network interface name associated
    >   with the `i226` network card.

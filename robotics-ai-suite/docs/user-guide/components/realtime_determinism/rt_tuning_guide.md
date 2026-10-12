@@ -393,10 +393,10 @@ systemctl -t service
 
 To stop a service, run the following command (where \<service\> is the name a service):
 
-:::{warning}
-Stopping system services can be detrimental to Linux system stability. Be sure
-you understand the implications before stopping a service.
-:::
+> [!WARNING]
+> Stopping system services can be detrimental to Linux system stability. Be sure
+> you understand the implications before stopping a service.
+
 
 ```bash
 #systemctl stop <service>

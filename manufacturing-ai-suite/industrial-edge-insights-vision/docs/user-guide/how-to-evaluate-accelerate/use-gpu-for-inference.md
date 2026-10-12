@@ -44,12 +44,14 @@ If you have multiple GPUs (integrated/discrete), please follow [this](https://do
 
 ## Tutorial on how to use GPU specific pipelines
 
-> **Note:** The sample applications already provide a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
+> [!NOTE]
+> The sample applications already provide a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
 Ensure that the sample application is up and running. If not, follow
 [the steps](../get-started.md#set-up-the-application) to setup the application and then bring the services up
 
-  > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
+  > [!NOTE]
+  > If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
   ```sh
   docker compose up -d
@@ -93,4 +95,5 @@ gpu:
   count: 1
 ```
 
-> **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `"gpu.intel.com/xe"`.
+> [!NOTE]
+> If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `"gpu.intel.com/xe"`.

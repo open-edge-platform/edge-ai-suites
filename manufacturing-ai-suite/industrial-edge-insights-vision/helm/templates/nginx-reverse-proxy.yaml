@@ -24,6 +24,12 @@ data:
         -out "$SSL_DIR/server.crt" \
         -subj "/C=US/ST=CA/L=San Francisco/O=Intel/OU=Edge AI/CN=localhost"
     fi
+    if [ -n "$S3_STORAGE_USERNAME" ] && [ -n "$S3_STORAGE_PASSWORD" ]; then
+      echo "🔐 Generating nginx basic auth credentials for storage browsing..."
+      printf '%s:%s\n' "$S3_STORAGE_USERNAME" "$(openssl passwd -apr1 "$S3_STORAGE_PASSWORD")" > "$SSL_DIR/htpasswd"
+    else
+      echo "WARNING: S3_STORAGE_USERNAME/S3_STORAGE_PASSWORD not set; skipping nginx basic auth setup for /storage/ path."
+    fi
 ---
 apiVersion: v1
 kind: Service
@@ -67,6 +73,11 @@ spec:
         command: 
         - /bin/sh
         - /scripts/generate_certs.sh
+        env:
+        - name: S3_STORAGE_USERNAME
+          value: "{{ $.Values.env.S3_STORAGE_USERNAME }}"
+        - name: S3_STORAGE_PASSWORD
+          value: "{{ $.Values.env.S3_STORAGE_PASSWORD }}"
         volumeMounts:
         - name: nginx-ssl
           mountPath: /etc/nginx/ssl
