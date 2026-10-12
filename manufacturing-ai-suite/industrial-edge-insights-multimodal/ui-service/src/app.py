@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""UI service — FastAPI web application for the Agentic Weld Quality Analysis blueprint.
+"""UI service — FastAPI web application for the Agentic Weld Quality Analysis use case.
 
 Talks to the detection layer and the agent (reasoning) layer as two
 independent backends, correlated only by a shared ``run_id``:
@@ -34,11 +34,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import PlainTextResponse
 
+from .insights import router as insights_router
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
 _AGENT_URL     = os.environ.get("AGENT_SERVICE_URL",     "http://apm-agent:5002")
-_DETECTION_URL = os.environ.get("DETECTION_SERVICE_URL", "http://apm-detection:5004")
 _STORAGE_URL   = os.environ.get("STORAGE_SERVICE_URL",   "http://ia-fusion-analytics:8080")
 _USE_CASE_ID   = os.environ.get("USE_CASE_ID",           "unknown")
 _TIMEOUT       = 15.0
@@ -62,8 +63,33 @@ app = FastAPI(
     root_path=REST_API_ROOT_PATH
 )
 
+
+class InsightsRootPathMiddleware:
+    """Keep the independent /insights-ui mount outside the /agentic-ui root path."""
+
+    def __init__(self, application):
+        self.application = application
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["path"].startswith("/insights-ui/"):
+            # Starlette's StaticFiles uses root_path to find the remainder of
+            # a mounted path. The agentic root_path does not prefix this URL.
+            scope = {**scope, "root_path": ""}
+        await self.application(scope, receive, send)
+
+
+app.add_middleware(InsightsRootPathMiddleware)
+
 _src_dir = os.path.dirname(__file__)
 app.mount("/static", StaticFiles(directory=os.path.join(_src_dir, "static")), name="static")
+# The workbench also runs when only the vLLM stack is deployed. Serve its
+# assets from its own public path rather than the agentic-only /agentic-ui path.
+app.mount(
+    "/insights-ui/static",
+    StaticFiles(directory=os.path.join(_src_dir, "static")),
+    name="insights-static",
+)
+app.include_router(insights_router)
 templates = Jinja2Templates(directory=os.path.join(_src_dir, "templates"))
 
 _mqtt_client: Optional[mqtt.Client] = None
@@ -251,14 +277,6 @@ async def _fetch_summary_and_runs(client: httpx.AsyncClient):
     return summary, runs
 
 
-async def _fetch_videos(client: httpx.AsyncClient):
-    try:
-        r = await client.get(f"{_DETECTION_URL}/detection/videos")
-        return r.json().get("videos", []) if r.status_code == 200 else []
-    except Exception:
-        return []
-
-
 async def _fetch_run_view(client: httpx.AsyncClient, run_id: str) -> dict:
     """Return the merged ``{"phase", "result"}`` view of one run for the results page."""
     try:
@@ -281,7 +299,6 @@ async def _fetch_run_view(client: httpx.AsyncClient, run_id: str) -> dict:
 async def index(request: Request):
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         summary, runs = await _fetch_summary_and_runs(client)
-        videos = await _fetch_videos(client)
 
     active_run = next((r for r in reversed(runs) if r.get("status") == "running"), None)
 
@@ -292,8 +309,6 @@ async def index(request: Request):
             "summary": summary,
             "runs": runs,
             "active_run": active_run,
-            "videos": videos,
-            "devices": ["CPU", "GPU", "NPU"],
         },
     )
 

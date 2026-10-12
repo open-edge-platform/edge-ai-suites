@@ -25,6 +25,7 @@ import {
   finishSummary,
   setSummaryProgress,
   setBoardOcrPartial,
+  addSummaryWarning,
 } from './slices/summarySlice';
 import {
   startMindmap,
@@ -297,6 +298,9 @@ function useSummaryStage() {
             dispatch(setBoardOcrPartial(true));
           } else if (ev.type === 'summary_progress') {
             dispatch(setSummaryProgress({ stage: ev.stage, chunk: ev.chunk, chunks: ev.chunks }));
+          } else if (ev.type === 'summary_warning') {
+            // Not an error: the call the warning describes still runs.
+            dispatch(addSummaryWarning({ code: ev.code, detail: ev.detail }));
           } else if (ev.type === 'error') {
             window.dispatchEvent(new CustomEvent('global-error', { detail: ev.message || 'Summary error' }));
             finish();

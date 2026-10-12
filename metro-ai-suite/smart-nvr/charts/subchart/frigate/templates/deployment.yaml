@@ -96,10 +96,6 @@ spec:
               value: "{{ .Values.global.env.FRIGATE_MQTT_USER }}"
             - name: FRIGATE_MQTT_PASSWORD
               value: "{{ .Values.global.env.FRIGATE_MQTT_PASSWORD }}"
-            - name: OPENAI_BASE_URL
-              value: "{{ .Values.env.OPENAI_BASE_URL }}"
-            - name: OPENAI_API_KEY
-              value: "{{ .Values.env.OPENAI_API_KEY }}"
           livenessProbe:
             httpGet:
               path: /

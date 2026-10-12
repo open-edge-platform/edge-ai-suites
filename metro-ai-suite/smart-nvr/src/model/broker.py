@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Broker(BaseModel):
@@ -13,3 +13,6 @@ class Broker(BaseModel):
     use_tls: bool = True
     throttle_interval: float = 2.0
     enabled: bool = True
+    # Consumed by setup.sh to build the Frigate camera list; unused at runtime.
+    rtsp_host: str | None = None
+    rtsp_port: int | None = Field(default=None, ge=1, le=65535)

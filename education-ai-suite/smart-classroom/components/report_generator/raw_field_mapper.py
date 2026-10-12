@@ -57,17 +57,29 @@ def _manual_default_values(language: str) -> dict:
     """Default placeholders for manual basic-info fields when left blank."""
     if language == "zh":
         return {
-            "school_name": "XXX中学",
-            "class_name": "八（3）班",
+            "school_name": "XXX 学校",
+            "class_name": "XXX 年级 XXX 班",
             "course_name": "XXXX",
-            "teacher_name": "XX老师",
+            "teacher_name": "XXX 老师",
         }
     return {
-        "school_name": "XXX Middle School",
-        "class_name": "Grade 8 - Class 3",
+        "school_name": "XXX School",
+        "class_name": "Grade XXX - Class XXX",
         "course_name": "XXXX",
-        "teacher_name": "Teacher XX",
+        "teacher_name": "Teacher XXX",
     }
+
+
+def manual_field_defaults() -> dict:
+    """Public, bilingual view of the manual defaults: ``{code: {"en", "zh"}}``.
+
+    Single source of truth for both the filled report (``resolve_raw_fields``
+    uses ``_manual_default_values``) and the UI input placeholders (served via
+    the template-fields endpoint), so the example values live in one place.
+    """
+    en = _manual_default_values("en")
+    zh = _manual_default_values("zh")
+    return {code: {"en": en[code], "zh": zh[code]} for code in en}
 
 
 def _session_start_time(session_id: str) -> datetime | None:

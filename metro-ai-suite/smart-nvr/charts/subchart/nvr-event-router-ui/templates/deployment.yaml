@@ -31,8 +31,6 @@ spec:
               value: "{{ .Values.env.API_BASE_URL }}"
             - name: EVENT_POLL_INTERVAL
               value: "{{ .Values.env.EVENT_POLL_INTERVAL }}"
-            - name: NVR_GENAI
-              value: "{{ .Values.env.NVR_GENAI }}"
             - name: no_proxy
               value: "{{ .Values.global.proxy.no_proxy }},{{ .Values.env.VSS_SEARCH_IP }},{{ .Values.env.VSS_SUMMARY_IP }}"
           volumeMounts:

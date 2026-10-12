@@ -12,7 +12,7 @@
 hide_directive-->
 
 Smart Building Digital Twin is a complete smart-building monitoring simulation that
-includes the end-to-end deployment: inputs, processing, analytics, dashboard,
+includes end-to-end deployment: inputs, processing, analytics, dashboard,
 configuration, and startup scripts.
 
 The sample application uses synchronized cameras, YOLOX-S and ATSS-MobileNetV2 model
@@ -31,7 +31,7 @@ data, and sensor events are exchanged through the Message Queuing Telemetry Tran
 (MQTT) protocol and analyzed by Python programs.
 
 An AI analytics web dashboard shows simulated building activity, alerts, camera
-snapshots, and system health. The setup.sh script downloads required images and
+snapshots, and system health. The `setup.sh` script downloads required images and
 plugins, configures the deployment, and starts the services, while configuration
 files control the cameras, YOLOX-S and ATSS-MobileNetV2 model variants, scenes, and
 tracking behavior.

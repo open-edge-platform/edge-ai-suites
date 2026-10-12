@@ -3,6 +3,7 @@
 
 from .live_traffic import LiveTrafficController
 from .planned_events import PlannedEventsController
+from .reasoning_model import ReasoningModelController
 from .route_interface import RouteStatusInterface
 from .static_optimizer_factory import (
     RouteOptimizerConstructor,
@@ -17,6 +18,7 @@ __all__ = [
     "TrafficTrendsController",
     "WeatherReportController",
     "LiveTrafficController",
+    "ReasoningModelController",
     "ThresholdController",
     "RouteStatusInterface",
     "RouteOptimizerConstructor",

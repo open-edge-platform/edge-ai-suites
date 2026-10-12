@@ -7,6 +7,11 @@ export interface SummaryProgress {
   chunks: number;
 }
 
+export interface SummaryWarning {
+  code: string;
+  detail: string;
+}
+
 interface SummaryState {
   streamingText: string;
   finalText: string | null;
@@ -17,6 +22,9 @@ interface SummaryState {
   // tab's local state.
   progress: SummaryProgress | null;
   boardOcrPartial: boolean;
+  // Overloads the prompt budget found but did not act on. The summary still
+  // arrives, so these accumulate alongside it rather than replacing it.
+  warnings: SummaryWarning[];
 }
 const initialState: SummaryState = {
   streamingText: '',
@@ -24,6 +32,7 @@ const initialState: SummaryState = {
   status: 'idle',
   progress: null,
   boardOcrPartial: false,
+  warnings: [],
 };
 
 const summarySlice = createSlice({
@@ -37,6 +46,7 @@ const summarySlice = createSlice({
       state.finalText = null;
       state.progress = null;
       state.boardOcrPartial = false;
+      state.warnings = [];
     },
     appendSummary(state, action: PayloadAction<string>) {
       state.streamingText += action.payload;
@@ -54,6 +64,12 @@ const summarySlice = createSlice({
     setBoardOcrPartial(state, action: PayloadAction<boolean>) {
       state.boardOcrPartial = action.payload;
     },
+    addSummaryWarning(state, action: PayloadAction<SummaryWarning>) {
+      // One code says one thing; a fold that warns twice should not stack.
+      if (!state.warnings.some(w => w.code === action.payload.code)) {
+        state.warnings.push(action.payload);
+      }
+    },
   },
 });
 
@@ -64,5 +80,6 @@ export const {
   finishSummary,
   setSummaryProgress,
   setBoardOcrPartial,
+  addSummaryWarning,
 } = summarySlice.actions;
 export default summarySlice.reducer;

@@ -1,0 +1,94 @@
+<!--
+ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+ SPDX-License-Identifier: Apache-2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fusion Analytics Results — Weld Quality Analysis</title>
+  <link rel="stylesheet" href="/insights-ui/static/css/style.css">
+  <link rel="stylesheet" href="/insights-ui/static/css/insights.css">
+</head>
+<body class="insights-page">
+  <header>
+    <div class="header-wrapper">
+      <div class="header-inner">
+        <span class="logo">&#9632; Intel</span>
+        <h1>Multimodal Weld Defect Detection</h1>
+      </div>
+    </div>
+  </header>
+  <nav aria-label="Weld quality views">
+    <div class="nav-wrapper">
+      {% if agentic_ui_enabled %}
+      <a href="{{ agentic_ui_root }}/">Dashboard</a>
+      <a href="{{ agentic_ui_root }}/detections">Detections</a>
+      {% endif %}
+      <a href="/insights-ui/" class="active" aria-current="page">VLM Reasoning</a>
+    </div>
+  </nav>
+
+  <main class="workbench-wrap">
+    <section class="card workbench-card" aria-label="Fusion Analytics Results">
+      <div id="vllmOverlay" role="status" aria-live="polite">
+        <div class="vllm-spinner" aria-hidden="true"></div>
+        <div class="vllm-label" id="vllmLabel">Starting vLLM server&hellip;</div>
+        <div class="vllm-sublabel">This may take a few minutes. Checking again in 30s.</div>
+      </div>
+
+      <div class="workbench-toolbar">
+        <div>
+          <h2>Fusion Analytics Results</h2>
+          <p>Review fused weld inspections and explain a selected result with AI.</p>
+        </div>
+        <div class="workbench-actions">
+          <label for="refreshIntervalSelect">Refresh (sec)</label>
+          <select id="refreshIntervalSelect" aria-label="Auto refresh interval in seconds">
+            <option value="2">2</option>
+            <option value="5">5</option>
+            <option value="10" selected>10</option>
+            <option value="15">15</option>
+            <option value="30">30</option>
+          </select>
+          <button id="refreshTopBtn" type="button">Refresh</button>
+        </div>
+      </div>
+
+      <div class="workbench-table-wrap">
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <p id="emptyMessage" class="workbench-message" hidden>No data available.</p>
+
+      <div class="workbench-footer">
+        <span id="pageInfo">Page 1</span>
+        <span id="status" class="workbench-status" role="status" aria-live="polite">Waiting for vLLM...</span>
+        <div class="workbench-pager">
+          <button id="explainBtn" class="btn-primary" type="button" disabled>Explain</button>
+          <button id="prevBtn" type="button">Previous</button>
+          <button id="nextBtn" type="button">Next</button>
+          <button id="resetBtn" type="button">Reset</button>
+        </div>
+      </div>
+
+      <section id="explainOutput" class="explain-output" aria-label="AI explanation" hidden>
+        <h3 id="explainHeader">AI Assistant Output</h3>
+        <div id="explainBody" class="explain-body markdown-content"></div>
+      </section>
+    </section>
+  </main>
+
+  <footer><p>&#169; Intel Corporation — Multimodal Weld Defect Detection</p></footer>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js"
+          integrity="sha384-948ahk4ZmxYVYOc+rxN1H2gM1EJ2Duhp7uHtZ4WSLkV4Vtx5MUqnV+l7u9B+jFv+"
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"
+          integrity="sha384-+VfUPEb0PdtChMwmBcBmykRMDd+v6D/oFmB3rZM/puCMDYcIvF968OimRh4KQY9a"
+          crossorigin="anonymous"></script>
+  <script src="/insights-ui/static/js/insights.js"></script>
+</body>
+</html>

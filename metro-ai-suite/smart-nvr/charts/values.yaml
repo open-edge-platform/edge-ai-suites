@@ -21,9 +21,6 @@ frigate:
     tag: 0.15.1
     pullPolicy: IfNotPresent
 
-  env:
-    OPENAI_BASE_URL: ""
-    OPENAI_API_KEY: ""
   persistence:
     enabled: true
     videos:
@@ -74,7 +71,6 @@ nvr-event-router-ui:
     MODE: "ui"
     API_BASE_URL: "http://nvr-event-router:8000"
     EVENT_POLL_INTERVAL: "3000"
-    NVR_GENAI: "false"
 
 mqtt-broker:
   image:

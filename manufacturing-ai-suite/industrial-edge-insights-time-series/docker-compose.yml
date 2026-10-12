@@ -219,7 +219,7 @@ services:
     networks:
     - timeseries_network
     ports:
-    - ${OPCUA_SERVER_PORT_MAPPING:-30003}:4840
+    - ${HOST_IP:-127.0.0.1}:${OPCUA_SERVER_PORT_MAPPING:-30003}:4840
     volumes:
     - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
@@ -264,8 +264,7 @@ services:
       no_proxy: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,${no_proxy}"
     ports:
-      - "${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API 
-      - "1883:1883" # MQTT TCP Proxy
+      - "${HOST_IP:-127.0.0.1}:${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
     volumes:
       - ./configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro

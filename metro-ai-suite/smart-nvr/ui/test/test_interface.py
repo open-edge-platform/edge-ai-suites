@@ -20,7 +20,6 @@ sys.modules.setdefault("services", services_pkg)
 for sub in [
     "api_client",
     "video_processor",
-    "event_utils",
 ]:
     try:
         real_mod = importlib.import_module(f"ui.services.{sub}")

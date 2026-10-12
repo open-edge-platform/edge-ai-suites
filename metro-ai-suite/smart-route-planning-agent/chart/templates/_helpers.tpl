@@ -39,6 +39,24 @@ app.kubernetes.io/name: {{ include "smart-route-planning-agent.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{/*
+Selector labels for the OVMS pods.
+*/}}
+{{- define "smart-route-planning-agent.ovmsSelectorLabels" -}}
+app.kubernetes.io/name: {{ printf "%s-ovms" (include "smart-route-planning-agent.name" .) }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "smart-route-planning-agent.ovmsLabels" -}}
+helm.sh/chart: {{ include "smart-route-planning-agent.chart" . }}
+{{ include "smart-route-planning-agent.ovmsSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/component: ovms
+{{- end }}
+
 
 {{/* Handles optional registry prefix without double slashes */}}
 {{- define "smart-route-planning-agent.image" -}}

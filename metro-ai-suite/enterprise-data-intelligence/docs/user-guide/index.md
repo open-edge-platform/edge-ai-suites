@@ -1,4 +1,4 @@
-# Enterprise Data Intelligence
+# Enterprise Data Intelligence - Multi-Agent Enterprise Knowledge Assistant
 
 <!--hide_directive
 <div class="component_card_widget">

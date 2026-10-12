@@ -9,7 +9,8 @@ import { useAppSelector } from "../../redux/hooks";
 // whenever another tab is selected.
 const AISummaryTab: React.FC = () => {
   const { t } = useTranslation();
-  const { streamingText, finalText, progress, boardOcrPartial } = useAppSelector(s => s.summary);
+  const { streamingText, finalText, progress, boardOcrPartial, warnings } =
+    useAppSelector(s => s.summary);
   const typed = finalText ?? streamingText;
 
   // Each stage counts its own units, so they cannot share one label: a fold
@@ -37,6 +38,13 @@ const AISummaryTab: React.FC = () => {
           {t("summary.boardOcrPartial")}
         </div>
       )}
+      {/* The backend's own sentence carries the numbers that caused the
+          warning, so it is the fallback when a code has no translation yet. */}
+      {warnings.map(w => (
+        <div key={w.code} className="summary-board-warning" role="status">
+          {t(`summary.overload.${w.code}`, { defaultValue: w.detail })}
+        </div>
+      ))}
       {progress && !typed && (
         <div className="summary-progress">
           {progressLabel(progress).replace(/(?:\u2026|\.{3})\s*$/, "")}

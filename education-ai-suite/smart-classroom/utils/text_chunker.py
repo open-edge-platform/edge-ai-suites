@@ -162,11 +162,13 @@ def _free_bytes_now(device: str) -> Optional[int]:
 
 
 def warn_if_short_of_memory(tokens: int, device: str = "GPU", model_dir=None,
-                            what: str = "call") -> bool:
+                            what: str = "call", *, on_short=None) -> bool:
     """Warn when a call would not fit the memory free right now.
 
     Reports and changes nothing: the budget is sized from capacity so the plan
     stays reproducible, which is exactly why it cannot see a busy machine.
+    ``on_short(tokens, need_bytes, free_bytes, what)`` receives the same numbers
+    for a caller that wants to show them rather than log them.
     """
     device = (device or "GPU").upper()  # callers pass the config value verbatim
     free = _free_bytes_now(device)
@@ -176,6 +178,9 @@ def warn_if_short_of_memory(tokens: int, device: str = "GPU", model_dir=None,
     need = tokens * kv_bytes_per_token(model_dir, device)
     if need <= free:
         return False
+
+    if on_short is not None:
+        on_short(tokens, need, free, what)
 
     gb = 1024 ** 3
     logger.warning(
@@ -245,8 +250,14 @@ def budget_from_config(chunking_cfg, device: str = "GPU") -> int:
     )
 
 
-def usable_tokens(budget: int, reserve_tokens: int) -> int:
-    """Return budget left for content. Cap reserve at half budget so chunks remain usable."""
+def usable_tokens(budget: int, reserve_tokens: int, *, on_cap=None) -> int:
+    """Return budget left for content. Cap reserve at half budget so chunks remain usable.
+
+    ``on_cap(budget, reserve, cap)`` is called when the cap engages, so a caller
+    that knows which session this is can surface it. The log line is deduped
+    across one planning pass; the callback is not, because a caller collecting
+    warnings wants to hear about its own call either way.
+    """
     reserve = max(0, reserve_tokens)
     cap = max(0, budget) // 2
     if reserve > cap:
@@ -258,6 +269,8 @@ def usable_tokens(budget: int, reserve_tokens: int) -> int:
                 "max_new_tokens for this device, or shorten the board text.",
                 reserve, budget, cap,
             )
+        if on_cap is not None:
+            on_cap(budget, reserve, cap)
         reserve = cap
     return max(1, budget - reserve)
 
@@ -316,8 +329,13 @@ def plan_line_groups(weights: List[int], *, budget_tokens: int,
                      overlap_lines: int = DEFAULT_OVERLAP_LINES,
                      reserve_tokens: int = 0,
                      stage_reserve_tokens: Optional[int] = None,
-                     label: str = "chunk") -> List[Tuple[int, int]]:
-    """Return budget-safe line groups. Weight-only planning keeps formats aligned."""
+                     label: str = "chunk",
+                     on_cap=None, on_oversize=None) -> List[Tuple[int, int]]:
+    """Return budget-safe line groups. Weight-only planning keeps formats aligned.
+
+    ``on_cap`` and ``on_oversize`` report the two conditions this function can
+    detect but not fix; see ``usable_tokens`` and ``utils.overload_warnings``.
+    """
     n_units = len(weights)
     if not n_units:
         return []
@@ -325,11 +343,11 @@ def plan_line_groups(weights: List[int], *, budget_tokens: int,
     total = sum(weights)
     # The whole-lesson reserve decides whether one call does; a chunk's own,
     # smaller reserve decides how big each chunk may then be.
-    if total <= usable_tokens(budget_tokens, reserve_tokens):
+    if total <= usable_tokens(budget_tokens, reserve_tokens, on_cap=on_cap):
         return [(0, n_units)]
 
     stage = reserve_tokens if stage_reserve_tokens is None else stage_reserve_tokens
-    cap = usable_tokens(budget_tokens, stage)
+    cap = usable_tokens(budget_tokens, stage, on_cap=on_cap)
     # The loosest packing gives the fewest calls. Two at minimum: the text is
     # already past what one whole-lesson call holds, so a single group would
     # send the very call this is splitting to avoid.
@@ -351,6 +369,8 @@ def plan_line_groups(weights: List[int], *, budget_tokens: int,
             "Largest %s is %d tokens against the %d that fit: an unusually long "
             "line could not be packed any tighter.", label, max(sizes), ceiling,
         )
+        if on_oversize is not None:
+            on_oversize(max(sizes), ceiling, label)
 
     logger.info("Split %d lines (%d tokens) into %d %ss of %d-%d tokens (ceiling %d).",
                 n_units, total, len(groups), label, min(sizes), max(sizes), ceiling)
@@ -385,7 +405,8 @@ def chunk_lines(lines: List[str], *, budget_tokens: int,
                 times: Optional[List[tuple]] = None,
                 reserve_tokens: int = 0,
                 stage_reserve_tokens: Optional[int] = None,
-                label: str = "chunk") -> List[Chunk]:
+                label: str = "chunk",
+                on_cap=None, on_oversize=None) -> List[Chunk]:
     """Split only between lines. Optional overlap and timestamps preserve context."""
     lines = [l for l in lines if l and l.strip()]
     if not lines:
@@ -399,6 +420,8 @@ def chunk_lines(lines: List[str], *, budget_tokens: int,
         reserve_tokens=reserve_tokens,
         stage_reserve_tokens=stage_reserve_tokens,
         label=label,
+        on_cap=on_cap,
+        on_oversize=on_oversize,
     )
     return chunks_from_groups(lines, groups, times=times, weights=weights)
 
@@ -412,7 +435,8 @@ def chunk_transcript_lines(lines: List[dict], *, budget_tokens: int,
                            overlap_lines: int = DEFAULT_OVERLAP_LINES,
                            tokenizer=None, reserve_tokens: int = 0,
                            stage_reserve_tokens: Optional[int] = None,
-                           label: str = "chunk") -> List[Chunk]:
+                           label: str = "chunk",
+                           on_cap=None, on_oversize=None) -> List[Chunk]:
     """Chunk ``parse_transcript_lines`` output, tagging each chunk's time range."""
     if not lines:
         return []
@@ -425,6 +449,8 @@ def chunk_transcript_lines(lines: List[dict], *, budget_tokens: int,
         reserve_tokens=reserve_tokens,
         stage_reserve_tokens=stage_reserve_tokens,
         label=label,
+        on_cap=on_cap,
+        on_oversize=on_oversize,
     )
 
 

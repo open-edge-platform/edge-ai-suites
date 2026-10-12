@@ -52,36 +52,7 @@ them through advanced AI pipelines for both search indexing and content summariz
 
 ![AI-events](./_assets/summary_final.png)
 
-#### 2. **AI-Powered Event Viewer**
-
-The AI-Powered Event Viewer tab visibility is controlled by the `NVR_GENAI` environment
-variable (default: false). When enabled (`NVR_GENAI=true`), the application internally uses
-the Frigate GenAI configuration (`genai.enabled: true`) to power the AI features.
-
-Get intelligent summaries of detected objects and events in your video streams.
-
-This feature provides real-time AI analysis and description of events as they occur across
-your camera network:
-
-- **Vision Language Model Integration**: Connects to advanced VLM (Vision Language Model)
-services to provide natural language descriptions of visual events
-- **Multi-Camera Support**: Select and monitor events from multiple cameras through an
-intuitive interface
-- **Real-time Event Processing**: Automatically processes and analyzes events as they are
-detected by the NVR system
-- **Detailed Event Descriptions**: Generates human-readable descriptions of detected objects,
-activities, and behaviors
-- **Interactive Event Timeline**: Browse through historical events with AI-generated
-descriptions for each occurrence
-- **Contextual Analysis**: Provides not just object detection but contextual understanding of
-what is happening in the scene
-
-The system leverages the NVR's built-in detection capabilities and enhances them with
-AI-powered scene understanding to provide meaningful insights into your video surveillance data.
-
-![AI-events](./_assets/AI-events.png)
-
-#### 3. **Automated Event Routing**
+#### 2. **Automated Event Routing**
 
 Create custom rules and workflows for event handling and notifications.
 
@@ -107,7 +78,7 @@ intervention.
 
 ![Event-router](./_assets/summary_event_response.png)
 
-#### 4. **Configure Camera Streaming (Continuous Ingestion)**
+#### 3. **Configure Camera Streaming (Continuous Ingestion)**
 
 Enable or disable continuous background processing ("watchers") per camera to automatically
 stream new video segments into the Video Search pipeline.

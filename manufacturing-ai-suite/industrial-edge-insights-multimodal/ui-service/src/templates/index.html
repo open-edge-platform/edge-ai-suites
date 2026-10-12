@@ -1,9 +1,13 @@
+ <!--
+ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+ SPDX-License-Identifier: Apache-2.0
+ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title> Agentic Weld Quality Analysis </title>
+  <title> Multimodal Weld Defect Detection </title>
   {% set root = request.scope.get("root_path", "") %}
   <link rel="stylesheet" href="{{ root }}/static/css/style.css">
   <noscript><meta http-equiv="refresh" content="15"></noscript>
@@ -13,7 +17,7 @@
     <div class="header-wrapper">
       <div class="header-inner">
         <span class="logo">&#9632; Intel</span>
-        <h1>Agentic Weld Quality Analysis </h1>
+        <h1>Multimodal Weld Defect Detection </h1>
         <span id="pipeline-live-banner" class="live-banner {{ 'live-on' if active_run else 'live-off' }}">
           <span class="live-dot"></span>
           <span id="pipeline-live-text">
@@ -30,6 +34,7 @@
     <div class="nav-wrapper">
       <a href="{{ root }}/" class="active">Dashboard</a>
       <a href="{{ root }}/detections">Detections</a>
+      <a href="/insights-ui/">VLM Reasoning</a>
     </div>
   </nav>
 
@@ -171,10 +176,12 @@
   </div>
 
   <footer>
-    <p>&#169; Intel Corporation — Agentic Weld Quality Analysis Blueprint</p>
+    <p>&#169; Intel Corporation — Multimodal Weld Defect Detection</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"
+          integrity="sha384-vsrfeLOOY6KuIYKDlmVH5UiBmgIdB1oEf7p01YgWHuqmOHfZr374+odEv96n9tNC"
+          crossorigin="anonymous"></script>
   <script src="{{ root }}/static/js/live-status.js"></script>
   <script src="{{ root }}/static/js/metrics.js"></script>
   <script src="{{ root }}/static/js/system-capabilities.js"></script>

@@ -39,7 +39,7 @@ def test_index_no_data(client):
     respx.get("http://mock-detection/detection/videos").mock(return_value=httpx.Response(200, json={"videos": []}))
     r = client.get("/")
     assert r.status_code == 200
-    assert "Agentic Predictive Maintenance" in r.text
+    assert "Agentic Predictive Maintenance for Critical Infrastructure" in r.text
 
 
 @respx.mock

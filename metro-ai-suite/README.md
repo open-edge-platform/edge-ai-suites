@@ -1,5 +1,11 @@
 # Metro AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project has moved to (open-edge-platform/metro-ai-suite)[https://github.com/open-edge-platform/metro-ai-suite].
+
+
+
 The **Metro AI Suite** accelerates application development for sophisticated edge AI video safety, security, and smart city use cases.
 
 The Metro AI Suite includes Intel® software such as OpenVINO&trade; toolkit, Deep Learning Streamer, Intel&reg; oneAPI Toolkit, and other tools, libraries, and microservices for media analytics and AI performance optimization for the aforementioned use cases.

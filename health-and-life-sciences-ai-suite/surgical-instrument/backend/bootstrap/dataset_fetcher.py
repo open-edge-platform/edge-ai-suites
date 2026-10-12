@@ -26,6 +26,7 @@ We never redistribute data — the archive must come from the user.
 """
 from __future__ import annotations
 
+import os
 import random
 import shutil
 import tarfile
@@ -203,6 +204,8 @@ def _safe_tar_extract(tf: tarfile.TarFile, dst: Path) -> None:
         target = (dst / member.name).resolve()
         if not str(target).startswith(str(dst)):
             raise DatasetError(f"unsafe tar entry outside target dir: {member.name}")
+        if target.is_file() and not os.access(target, os.W_OK):
+            target.chmod(0o644)
     tf.extractall(dst)
 
 
