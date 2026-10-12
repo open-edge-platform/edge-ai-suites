@@ -1,6 +1,6 @@
 # Release Notes: Handheld (Soldier System) Blueprint
 
-## Version 2026.2.0
+## Version 2026.2.1
 
 **Release Date**: September 10, 2026
 
@@ -12,7 +12,13 @@
 
 **Known issues and limitations**:
 
-- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
+- When the virtual function is used for GPU, metrics in the
+  Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed
+  correctly when the physical function is used.
+- Users may receive pop-up notifications prompting them to upgrade from Ubuntu 24.04 LTS to
+  Ubuntu 26.04.1 LTS. Follow the
+  [Troubleshooting guide](./infrastructure/troubleshooting.md) to disable this.
+
 
 ## [Edge-Node Infrastructure software](https://github.com/open-edge-platform/edge-node-infrastructure-blueprint/releases)
 
