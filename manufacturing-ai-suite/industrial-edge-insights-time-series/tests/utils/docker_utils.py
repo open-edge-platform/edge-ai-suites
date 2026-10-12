@@ -3064,7 +3064,9 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
             "HOST_IP": "",
             "RTSP_CAMERA_IP": "",
             "S3_STORAGE_USERNAME": "",
-            "S3_STORAGE_PASSWORD": ""
+            "S3_STORAGE_PASSWORD": "",
+            "SEAWEEDFS_WEB_AUTH_USER": "",
+            "SEAWEEDFS_WEB_AUTH_PASSWORD": ""
         }
     elif case_type == "valid":
         # Generate valid S3 credentials that meet Makefile requirements
@@ -3081,7 +3083,9 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
             "HOST_IP": "127.0.0.1",
             "RTSP_CAMERA_IP": "192.168.1.100",
             "S3_STORAGE_USERNAME": s3_username,
-            "S3_STORAGE_PASSWORD": s3_password
+            "S3_STORAGE_PASSWORD": s3_password,
+            "SEAWEEDFS_WEB_AUTH_USER": generate_username(5),
+            "SEAWEEDFS_WEB_AUTH_PASSWORD": generate_password(10)
         }
 
         # Validate that S3 credentials are properly set
@@ -3096,7 +3100,9 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
             "HOST_IP": "invalid_ip",
             "RTSP_CAMERA_IP": "invalid_camera_ip",
             "S3_STORAGE_USERNAME": generate_username(2),  # Invalid: too short
-            "S3_STORAGE_PASSWORD": generate_password(2)   # Invalid: too short
+            "S3_STORAGE_PASSWORD": generate_password(2),   # Invalid: too short
+            "SEAWEEDFS_WEB_AUTH_USER": generate_username(4),
+            "SEAWEEDFS_WEB_AUTH_PASSWORD": generate_password(9)
         }
 
     else:
