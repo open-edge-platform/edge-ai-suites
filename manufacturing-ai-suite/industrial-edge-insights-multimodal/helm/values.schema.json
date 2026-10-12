@@ -66,6 +66,20 @@
             { "pattern": ".*[A-Za-z].*" }
           ],
           "description": "At least 10 alphanumeric, at least one digit."
+        },
+        "SEAWEEDFS_WEB_AUTH_USER": {
+          "type": "string",
+          "pattern": "^[A-Za-z]{5,}$",
+          "description": "At least 5 characters - only alphabets allowed"
+        },
+        "SEAWEEDFS_WEB_AUTH_PASSWORD": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9]{10,}$",
+          "allOf": [
+            { "pattern": ".*[0-9].*" },
+            { "pattern": ".*[A-Za-z].*" }
+          ],
+          "description": "At least 10 alphanumeric, at least one digit."
         }
       }
     }

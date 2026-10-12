@@ -364,6 +364,17 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
     return fallbackFieldLabel(field, lang);
   };
 
+  // Placeholder for a manual input shows the example default value (e.g.
+  // "Grade XXX - Class XXX") the report fills when left blank, so the teacher
+  // sees the expected format. The value comes from the backend (template-fields)
+  // — single source of truth — and falls back to the label when absent.
+  const getFieldPlaceholder = (field: TemplateFieldMeta) => {
+    if (field.default) {
+      return lang === 'zh' ? field.default.zh : field.default.en;
+    }
+    return getFieldLabel(field);
+  };
+
   // Enabled when either:
   // 1) the audio pipeline finished (classic path), or
   // 2) this is a video-only run and video reached playback/terminal state.
@@ -463,7 +474,7 @@ const ReportPanel: React.FC<ReportPanelProps> = ({ isOpen, onClose, featureGuard
                               className="field-manual-input"
                               type="text"
                               value={manualValues[f.code] ?? ''}
-                              placeholder={getFieldLabel(f)}
+                              placeholder={getFieldPlaceholder(f)}
                               onChange={e => setManual(f.code, e.target.value)}
                               disabled={generating || !reportAvailable || !selected.has(f.code)}
                             />

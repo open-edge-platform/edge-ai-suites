@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from dto.summarizer_dto import SummaryRequest
 from pipeline import Pipeline
+from utils import overload_warnings
 from utils.runtime_config_loader import RuntimeConfig
 from utils.scp_sender import get_scp_sender
 from utils.session_state_manager import SessionState
@@ -46,7 +47,12 @@ def content_segmentation(request: SummaryRequest):
         if scp:
             scp.send_content_package_async(request.session_id, session_dir)
 
-        return JSONResponse(content={"session_id": request.session_id})
+        warnings = [w for w in overload_warnings.read(request.session_id)
+                    if w.get("stage") == "segmentation"]
+        return JSONResponse(content={
+            "session_id": request.session_id,
+            "warnings": warnings,
+        })
 
     except HTTPException as http_exc:
         raise http_exc

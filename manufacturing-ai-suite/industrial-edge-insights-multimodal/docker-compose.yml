@@ -242,10 +242,13 @@ services:
       NO_PROXY: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,coturn,mediamtx,${no_proxy},${HOST_IP},seaweedfs-filer,apm-metrics,multimodal-agentic-ui"
       MEDIAMTX_SERVER: mediamtx
       WHIP_SERVER_PORT: ${WHIP_SERVER_PORT}
+      NGINX_PROFILE: ${NGINX_PROFILE:-base}
+      SEAWEEDFS_WEB_AUTH_USER: ${SEAWEEDFS_WEB_AUTH_USER}
+      SEAWEEDFS_WEB_AUTH_PASSWORD: ${SEAWEEDFS_WEB_AUTH_PASSWORD}
     ports:
       - "${HOST_IP:-127.0.0.1}:${GRAFANA_PORT}:15443"   # HTTPS for Grafana and TS MS Rest API
     volumes:
-      - ${NGINX_CONFIG_PATH}:/tmp/default.conf.template:ro
+      - ./configs/nginx/nginx.conf.template:/tmp/default.conf.template:ro
       - ./configs/nginx/nginx-cert-gen.sh:/usr/local/bin/nginx-cert-gen.sh:ro
       - vol_nginx_tmpfs:/opt/nginx/certs:rw
       - vol_nginx_tmpfs:/var/cache/nginx:rw

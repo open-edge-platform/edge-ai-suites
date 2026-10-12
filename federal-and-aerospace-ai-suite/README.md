@@ -1,5 +1,9 @@
 # Federal and Aerospace AI Suite
 
+> [!CAUTION]
+> 2026.2 was the last release developed in this collective repository.
+> The project has moved to (open-edge-platform/federal-and-aerospace-ai-suite)[https://github.com/open-edge-platform/federal-and-aerospace-ai-suite].
+
 AI-enabled applications and supporting components for aerospace and defense edge deployments.
 
 ## Applications

@@ -1,6 +1,6 @@
 # Get Started
 
-The Agentic Predictive Maintenance (APM) blueprint lets you deploy an end-to-end industrial defect
+The Agentic Predictive Maintenance for Critical Infrastructure (APM) blueprint lets you deploy an end-to-end industrial defect
 detection pipeline with AI-driven analysis on Intel® edge hardware. This section shows how to set up, configure, and run the application.
 
 ## Prerequisites

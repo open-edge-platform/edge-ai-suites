@@ -43,11 +43,15 @@ The DL Streamer Pipeline Server generates vision metadata for each processed fra
 Access the SeaweedFS Filer interface in your web browser:
 
 ```text
-https://localhost:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
+https://127.0.0.1:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
 ```
 
 > [!NOTE]
-> Use link `https://localhost:30001/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/` to access the SeaweedFS Filer interface for the Helm deployment.
+> Use link `https://127.0.0.1:30001/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/` to access the SeaweedFS Filer interface for the Helm deployment.
+
+> [!NOTE]
+> The Filer interface is protected with HTTP Basic Auth. When prompted, enter the `SEAWEEDFS_WEB_AUTH_USER` and
+> `SEAWEEDFS_WEB_AUTH_PASSWORD` values configured in the `.env` file (Docker Compose) or `values.yaml` (Helm).
 
 Images are organized by their `img_handle` identifier. Browse the directory to locate specific images, then click to view the image.
 
@@ -66,7 +70,7 @@ Follow these steps to correlate detection events in InfluxDB with stored images:
 3. Navigate to the Filer interface:
 
    ```text
-   https://localhost:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
+   https://127.0.0.1:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
    ```
 
 4. Locate and open the file matching the `img_handle` (e.g., `X7TINNVPNX.jpg`).

@@ -22,6 +22,13 @@ provided as part of Open Edge Platform.
 - Docker 24.0.7 or higher
 - Python 3.10+
 
+## Validated Platforms
+
+| Product / Family                          | Validated inference devices |
+|-------------------------------------------|-----------------------------|
+| Intel® Core™ Ultra Processors (Series 3, 2) | CPU, iGPU                   |
+| Intel® Core™ Processors (13th Gen)          | CPU, iGPU                   |
+
 ## Validation
 
 Ensure all required software is installed and configured before proceeding to [Get Started](../get-started.md).

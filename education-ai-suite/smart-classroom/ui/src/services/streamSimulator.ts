@@ -5,6 +5,7 @@ export type StreamEvent =
   | { type: 'summary_token'; token: string }
   | { type: 'board_ocr_partial' }
   | { type: 'summary_progress'; stage: string; chunk: number; chunks: number }
+  | { type: 'summary_warning'; code: string; detail: string }
   | { type: 'mindmap_complete'; token: string }
   | { type: 'error'; message: string }
   | { type: 'done' };

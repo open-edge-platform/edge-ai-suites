@@ -17,9 +17,11 @@ extend its functionalities to meet their specific needs.
 
 ## Key Features
 
-- **Vision Analytics Pipeline:** Detect and classify objects using pre-configured AI models.
-  Customize parameters such as thresholds and object types without requiring additional coding.
-- **Integration with MQTT, Node-RED, and Grafana:** Facilitates efficient message handling,
+- **Vision Analytics Pipeline:** Detect, track, and classify objects using pre-configured AI
+  models, with polygon zone and dwell-time analytics computed natively in the pipeline
+  (DL Streamer `gvaanalytics`). Customize parameters such as thresholds and zone polygons
+  without requiring additional coding.
+- **Integration with MQTT and Grafana:** Facilitates efficient message handling,
   real-time monitoring, and insightful data visualization.
 - **User-Friendly:** Simplifies configuration and operation through prebuilt scripts and
   configuration files.
@@ -33,17 +35,17 @@ The architecture is designed to facilitate seamless integration and operation of
 
 ### Components
 
-- **DL Streamer Pipeline Server (VA Pipeline):** Processes video frames, extracts metadata, and integrates AI inference results.
-- **Mosquitto MQTT Broker:** Facilitates message communication between components like Node-RED and DL Streamer Pipeline Server using the MQTT protocol.
-- **Node-RED:** A low-code platform for setting up application-specific rules and triggering MQTT-based events.
+- **DL Streamer Pipeline Server (VA Pipeline):** Processes video frames, runs object detection and tracking, and computes zone presence and dwell time natively via the `gvaanalytics` element and a reusable `loitering_watermark` overlay element.
+- **Mosquitto MQTT Broker:** Facilitates message communication between the DL Streamer Pipeline Server and Grafana using the MQTT protocol.
+- **MQTT Table Flattener:** A small stateless sidecar that reshapes the raw per-frame `object_tracking/<N>` metadata into one-row-per-object `loiter_status/<N>` messages for the Grafana status table (no zone/dwell computation — that remains entirely in `gvaanalytics`).
 - **WebRTC Stream Viewer:** Displays real-time video streams processed by the pipeline for end-user visualization.
 - **Grafana Dashboard:** A monitoring and visualization tool for analyzing pipeline metrics, logs, and other performance data.
 - **Inputs (Video Files and Cameras):** Provide raw video streams or files as input data for processing in the pipeline.
 - **Nginx:** is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 
-The DL Streamer Pipeline Server is a core component, designed to handle video analytics at the edge. It leverages pre-trained deep learning models to perform tasks such as object detection, classification, and tracking in real-time. The DL Streamer Pipeline Server is highly configurable, allowing users to adjust parameters like detection thresholds and object types to suit specific use cases. This flexibility ensures that users can deploy AI-driven video analytics solutions quickly and efficiently, without the need for extensive coding or deep learning expertise.
+The DL Streamer Pipeline Server is a core component, designed to handle video analytics at the edge. It leverages pre-trained deep learning models to perform tasks such as object detection, classification, and tracking in real-time, and the `gvaanalytics` element evaluates each tracked object against configurable zone polygons to compute dwell time — adding or editing zones only requires editing a JSON file, with no pipeline or code changes. This flexibility ensures that users can deploy AI-driven video analytics solutions quickly and efficiently, without the need for extensive coding or deep learning expertise.
 
-It integrates various components such as MQTT, Node-RED, and Grafana to provide a robust and flexible solution for real-time video inference pipelines. The tool is built to be user-friendly, allowing customization without the need for extensive coding knowledge. Validate your ideas by developing an end-to-end solution faster.
+It integrates MQTT and Grafana to provide a robust and flexible solution for real-time video inference pipelines. The tool is built to be user-friendly, allowing customization without the need for extensive coding knowledge. Validate your ideas by developing an end-to-end solution faster.
 
 ## Learn More
 
