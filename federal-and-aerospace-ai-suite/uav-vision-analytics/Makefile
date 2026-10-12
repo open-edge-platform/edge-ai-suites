@@ -16,7 +16,7 @@ DEVICE         ?= gpu
 SSL_DIR        := configs/nginx/ssl
 
 .PHONY: help init build model _check_model _check_certs _check_venv_pkg \
-        pymav-up pymav-down \
+        pymav-build pymav-up pymav-down \
         uavsdk-up uavsdk-down \
         start-rtsp
 
@@ -147,8 +147,15 @@ model: _check_venv_pkg ## Download YOLO11s (COCO-pretrained) and export to OpenV
 
 # ── pymavlink stack ───────────────────────────────────────────────────────────
 
-pymav-up: _check_model _check_certs ## Start standalone pymavlink stack (PX4 SITL + broker + DL Streamer Pipeline Server + mediamtx)
-	docker compose -f $(COMPOSE_PYMAV) up -d
+pymav-build: _check_model ## (Re)build the pymavlink DLSPS image (requires network access)
+	docker compose -f $(COMPOSE_PYMAV) build
+
+pymav-up: _check_model ## Start standalone pymavlink stack (PX4 SITL + broker + DLSPS + mediamtx)
+	@if ! docker image inspect $(DLSTREAMER_PIPELINE_SERVER_IMAGE)-pymavlink >/dev/null 2>&1; then \
+		echo "[pymav-up] $(DLSTREAMER_PIPELINE_SERVER_IMAGE)-pymavlink not found locally — building (requires network access)..."; \
+		docker compose -f $(COMPOSE_PYMAV) build; \
+	fi
+	docker compose -f $(COMPOSE_PYMAV) up -d --no-build
 
 pymav-down: ## Stop and remove pymavlink stack (includes volumes)
 	docker compose -f $(COMPOSE_PYMAV) down -v
