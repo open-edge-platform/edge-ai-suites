@@ -47,13 +47,7 @@ By following this guide, you will learn how to:
 
 ## Run the application
 
-> [!NOTE]
-> **Steps 1 and 2 below are required** to get the application running. **Step 3 is optional** -
-> it only verifies the pipelines are producing output via Grafana; skip it if you plan to use the
-> [Loitering Detection Console UI](#loitering-detection-console-ui) instead, and go straight to
-> [Access the Application and Components](#access-the-application-and-components).
-
-1. **Start the Application** (required):
+1. **Start the Application**:
    - Download container images with Application microservices and run with Docker Compose:
 
      ```bash
@@ -78,30 +72,12 @@ By following this guide, you will learn how to:
 
      </details>
 
-   > [!NOTE]
-   > The [Loitering Detection Console UI](#loitering-detection-console-ui) is **not** part of this
-   > default deployment. It is defined with `profiles: ["ui"]` in `compose-without-scenescape.yml`,
-   > so plain `docker compose up -d` never creates or starts it; deploy it instead (alongside
-   > everything else) with:
-   >
-   > ```bash
-   > docker compose --profile ui up -d
-   > ```
-
-2. **Run Predefined Pipelines** (required):
+2. **Run Predefined Pipelines**:
    - Start video streams to run video inference pipelines:
 
      ```bash
      ./sample_start.sh
      ```
-
-     > [!NOTE]
-     > This starts 4 fixed sample-video pipelines directly via the DL Streamer Pipeline Server
-     > API. If you only intend to use the [Console UI](#loitering-detection-console-ui) - which
-     > starts and stops its own streams on demand - you can skip this step entirely and go
-     > straight to the Console UI's URL below.
-
-
 
    - To check the status of the pipelines:
 
@@ -124,7 +100,7 @@ By following this guide, you will learn how to:
        ```
        </details>
 
-3. **View the Application Output** (optional - Grafana verification):
+3. **View the Application Output**:
    - Open a browser and go to `https://localhost/grafana` to access the Grafana dashboard.
      - Change the localhost to your host IP if you are accessing it remotely.
    - Log in with the following credentials:
@@ -132,13 +108,8 @@ By following this guide, you will learn how to:
      - **Password**: `admin`
    - Check under the Dashboards section for the application-specific preloaded dashboard.
    - **Expected Results**: The dashboard displays real-time video streams with AI overlays and detection metrics.
-   - **This step can be skipped**: it only confirms step 2's pipelines are producing output: the
-     [Loitering Detection Console UI](#loitering-detection-console-ui) does not depend on it.
 
 ## **Access the Application and Components**
-
-Every interface below is independent - open whichever one suits your workflow, you do not need
-to use all of them.
 
 ### **Nginx Dashboard**
 
@@ -165,12 +136,6 @@ to use all of them.
   > there is no element cropping input to the zone polygons. Only the `gvaanalytics` element
   > restricts its output to the configured zones: objects outside every zone are still
   > detected and tracked, just not reported as present/dwelling in a zone.
-
-### **Loitering Detection Console UI**
-
-- **URL**: `https://localhost/console/`
-- Start/stop streams, discover models, draw a zone and view live per-stream loitering analytics.
-- See [Getting started - Loitering Detection Console UI](./getting-started-ui.md) for full usage details.
 
 ### **DL Streamer Pipeline Server**
 
@@ -223,14 +188,6 @@ unaffected.
 
   ```bash
   docker compose down
-  ```
-
-  If you started the Console UI with `--profile ui`, stop with the same flag so its container is
-  torn down too - `docker compose down` on its own leaves a profiled container running since it
-  was never part of that invocation's service set:
-
-  ```bash
-  docker compose --profile ui down
   ```
 
 ## Other Deployment Options

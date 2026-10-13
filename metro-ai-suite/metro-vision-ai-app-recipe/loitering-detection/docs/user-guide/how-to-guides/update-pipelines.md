@@ -7,11 +7,9 @@ JSON file. This guide covers where it lives, what each stage does, and how to ch
 ## Where it lives
 
 - **File**: `loitering-detection/src/dlstreamer-pipeline-server/config.json`
-- **Custom Python stages**: `loitering-detection/src/dlstreamer-pipeline-server/configs/*.py`
-  (loaded by `gvapython` elements named in the pipeline string)
-- **Zone definitions**: `loitering-detection/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json`
+- **Zone definitions**: `loitering-detection/src/dlstreamer-pipeline-server/zones/*.json`
 
-All three are bind-mounted (`:ro`) into the `dlstreamer-pipeline-server` container (see
+Both are bind-mounted into the `dlstreamer-pipeline-server` container (see
 `compose-without-scenescape.yml`), so editing them on the host and recreating that one container
 is enough - no image rebuild:
 
@@ -80,7 +78,7 @@ matching `config.json`'s schema:
 | Request key | Element it targets | What it sets |
 | --- | --- | --- |
 | `detection-properties` | `detection` (`gvadetect`) | `model`, `device`, `model-instance-id`, `model_proc` |
-| `analytics-properties` | `analytics` (`gvaanalytics`) | `config` (forced to an always-empty zones file so `gvaanalytics`'s own baked default never leaks in - see `EMPTY_ANALYTICS_CONFIG_FILE` in `console-addon/console/config.py`), `zones` - the file's zones, or a single custom rectangle, never both (see [Getting started - Loitering Detection Console UI](../getting-started-ui.md#changing-the-zone)) |
+| `analytics-properties` | `analytics` (`gvaanalytics`) | `config` (a zone file under `src/dlstreamer-pipeline-server/zones/`, see [Adding a new stream](./customize-application.md#adding-a-new-stream)), or `zones` - the file's zones, or a single custom rectangle, never both (see [Getting started - Loitering Detection Console UI](../getting-started-ui.md#changing-the-zone)) |
 | `loitering-watermark-properties` | `loitering_watermark` | `quiet-mode`, `loitering-threshold` |
 
 There is **no live-update path**: changing any of these (switching model, device, or zone)

@@ -4,12 +4,20 @@
 # Script to generate an offline package for Metro Vision AI applications.
 # This package can be copied to another device or DDIL environment.
 #
-# Usage: ./offline-package-generator.sh
+# Usage: ./offline-package-generator.sh [loitering-detection-ui]
 # Example: ./offline-package-generator.sh
+# Example (include the opt-in Console UI service): ./offline-package-generator.sh loitering-detection-ui
 #
 #################
 
 set -e  # Exit on any error
+
+# Mirrors install.sh's own "loitering-detection-ui" app-name convention -
+# see its ENABLE_UI comment for why this is opt-in rather than always on.
+ENABLE_UI="false"
+if [ "$1" = "loitering-detection-ui" ]; then
+  ENABLE_UI="true"
+fi
 
 echo "Starting offline package generation..."
 
@@ -18,14 +26,14 @@ echo "Copying Docker compose and .env files..."
 cp ../.env ./
 cp ../compose-without-scenescape.yml ./docker-compose.yml
 
-# console-addon/ is a sibling of this app, not nested under it (shared by
-# any app that enables the "ui" profile) - the generated docker-compose.yml
-# references it as a relative path, so it must exist at that same relative
-# path inside the offline package too, or the console service has nothing
-# to bind-mount.
-echo "Copying console-addon (Console UI)..."
-rm -rf ./console-addon
-cp -r ../console-addon ./console-addon
+if [ "$ENABLE_UI" = "true" ]; then
+  # console-addon/ is a sibling of this app, not nested under it - the
+  # Console UI service's volumes reference it as a relative path, so it
+  # must exist at that same relative path inside the offline package too.
+  echo "Copying console-addon (Console UI)..."
+  rm -rf ./console-addon
+  cp -r ../console-addon ./console-addon
+fi
 
 # Update .env file to set SAMPLE_APP=loitering-detection and HOST_IP=127.0.0.1
 echo "Updating .env file..."
@@ -109,23 +117,20 @@ fi
 
 # Run install.sh to download all required models and videos
 echo "Running install.sh to download models and videos..."
-./install.sh 127.0.0.1
+ENABLE_UI="$ENABLE_UI" ./install.sh 127.0.0.1
 
 # Run docker compose to pull all the images and download the grafana plugins
 mkdir -p ./src/grafana/plugins
 chown -R "$(id -u):$(id -g)" ./src/grafana/plugins 2>/dev/null || true
 
 echo "Pulling Docker images and downloading Grafana plugins..."
-# --profile ui so the console service (profiled, no image of its own -
-# reuses DLSTREAMER_PIPELINE_SERVER_IMAGE already pulled above) is also
-# started - plain `up -d` (no profile) never touches a profiled service.
-docker compose --profile ui up -d
+docker compose up -d
 echo "Waiting for services to be healthy..."
 sleep 60
 
 docker cp $(docker ps -q --filter "name=grafana"):/var/lib/grafana/plugins ./src/grafana/plugins
 
-docker compose --profile ui down
+docker compose down
 
 sed -i '/datasources\.yml.*datasources\.yml/a\      - "./src/grafana/plugins:/var/lib/grafana/plugins"' docker-compose.yml
 sed -i '/GF_INSTALL_PLUGINS=grafana-mqtt-datasource/d' docker-compose.yml
@@ -143,9 +148,10 @@ echo "Creating docker-images directory and saving Docker images..."
 mkdir -p offline-package/docker-images
 
 # Extract images from docker-compose.yml and save them
-docker compose --profile ui config | grep -E "^\s+image:" | sed 's/.*image: //' | sort -u | while read image; do
+docker compose config | grep -E "^\s+image:" | sed 's/.*image: //' | sort -u | while read image; do
   echo "Saving Docker image: $image"
   filename=$(echo "$image" | sed 's/[\/:]/-/g')
+  docker pull "$image"
   docker save "$image" | gzip > "offline-package/docker-images/${filename}.tar.gz"
   echo "Saved: ${filename}.tar.gz"
 done

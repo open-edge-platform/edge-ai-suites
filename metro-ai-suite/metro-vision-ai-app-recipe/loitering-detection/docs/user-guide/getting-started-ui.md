@@ -24,33 +24,33 @@ Server's REST API directly.
    ```
 
 2. **Setup Application and Download Assets**:
-   - Use the installation script to configure the application and download required models:
+   - Use the installation script to configure the application and download required models. Use
+     the `-ui` app name variant so the Console UI service is added to the generated
+     `docker-compose.yml` (a plain `./install.sh loitering-detection` never adds it, so
+     smart-parking/smart-intersection deployments - which share the same compose template - are
+     unaffected either way):
 
      ```bash
-     ./install.sh loitering-detection
+     ./install.sh loitering-detection-ui
      ```
 
    > [!NOTE]
    > For environments requiring a specific host IP address (for example, when deploying across different network interfaces), you can explicitly
-   > specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
+   > specify the IP address: `./install.sh loitering-detection-ui <HOST_IP>` (Replace `<HOST_IP>` with
    > your target IP address.)
 
 ## Run the application
 
 1. **Start the Application**:
-   - Download container images with Application microservices and run with Docker Compose. The
-     Console UI service carries `profiles: ["ui"]` in `compose-without-scenescape.yml`, so it is
-     only created when the `ui` profile is requested:
+   - Download container images with Application microservices and run with Docker Compose:
 
      ```bash
-     docker compose --profile ui up -d
+     docker compose up -d
      ```
 
      > [!NOTE]
-     > Plain `docker compose up -d` (no `--profile ui`) starts everything else exactly as before,
-     > without the Console UI. Run `./sample_start.sh` separately (no flags) if you also want the
-     > 4 fixed sample pipelines - the Console UI starts and stops its own pipelines independently
-     > of that script.
+     > Run `./sample_start.sh` separately (no flags) if you also want the 4 fixed sample
+     > pipelines - the Console UI starts and stops its own pipelines independently of that script.
 
      <details>
      <summary>
@@ -172,7 +172,7 @@ a new pipeline without drawing anything first keeps the deployment's own zone fi
 configured.
 
 Polygon and multi-zone support exists in `gvaanalytics` and is used by the file's own zones:
-`loitering-detection/src/dlstreamer-pipeline-server/configs/loitering_analytics_config.json` can
+`loitering-detection/src/dlstreamer-pipeline-server/zones/loitering_analytics_config.json` can
 define any number of zones, each a rectangle or an arbitrary polygon - see the
 [upstream sample's config](https://github.com/open-edge-platform/dlstreamer/blob/main/samples/gstreamer/gst_launch/python-elements/loitering_detection/virat_s_000101-config.json)
 for the schema. Its contents are read fresh on every pipeline start (not baked into the

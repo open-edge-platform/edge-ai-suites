@@ -132,7 +132,7 @@ usage; the issues below are specific to it.
      Python packages the console needs), so a source edit only needs a restart, not a rebuild:
 
     ```bash
-    docker compose --profile ui restart console
+    docker compose restart console
     ```
 
 2. **No bounding boxes on a stream**

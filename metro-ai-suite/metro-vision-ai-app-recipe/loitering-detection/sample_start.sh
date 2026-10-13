@@ -41,8 +41,7 @@ function run_sample() {
     "parameters": {
         "detection-properties": {
             "model": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/FP16/pedestrian-and-vehicle-detector-adas-0001.xml",
-            "model_proc": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json",
-            "model-instance-id": "sample-${pipeline_name}-${x}-$$"
+            "model_proc": "/home/pipeline-server/models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json"
         },
         "analytics-properties": {
             "config": "/home/pipeline-server/zones/VIRAT_S_00010$x.json"
