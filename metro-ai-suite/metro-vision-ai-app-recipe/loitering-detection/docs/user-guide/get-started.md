@@ -22,20 +22,6 @@ By following this guide, you will learn how to:
 
 1. **Clone the Suite**:
 
-   > [!NOTE]
-   > The Loitering Detection Console UI described in this guide is not yet merged into
-   > `open-edge-platform/edge-ai-suites`. Until it is, clone the fork/branch it currently lives
-   > on instead of `main`:
-   >
-   > ```bash
-   > git clone --filter=blob:none --sparse --branch ld-ui-v2 https://github.com/guptagunjan/edge-ai-suites.git
-   > cd edge-ai-suites
-   > git sparse-checkout set metro-ai-suite
-   > cd metro-ai-suite/metro-vision-ai-app-recipe/
-   > ```
-   >
-   > Once merged, use the upstream clone below as normal.
-
    Go to the target directory of your choice and clone the suite.
    If you want to clone a specific release branch, replace `main` with the desired tag.
    To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).

@@ -238,6 +238,7 @@ services:
       - ./console-addon/console:/app:ro
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/models:/home/pipeline-server/models:ro"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/configs:/home/pipeline-server/configs:ro"
+      - "/dev:/dev:ro"
     working_dir: /app
     entrypoint: ["/bin/sh", "./entrypoint.sh"]
     healthcheck:

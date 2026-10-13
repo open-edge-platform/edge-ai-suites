@@ -11,8 +11,8 @@ import requests
 from flask import jsonify, request
 
 from config import (DETECTIONS_TOPIC_PREFIX, EMPTY_ANALYTICS_CONFIG_FILE, LOCK,
-                    MQTT_HOST, MQTT_PORT, PIPELINE_SERVER_URL, SESSIONS,
-                    _parse_zone, app, analytics_zones_json)
+                    LOITER_THRESHOLD_S, MQTT_HOST, MQTT_PORT, PIPELINE_SERVER_URL,
+                    SESSIONS, _parse_zone, app, analytics_zones_json)
 from catalog import (_extract_instance_id, _model_instance_id,
                      _resolve_source_uri, _select_pipeline, discover_models)
 
@@ -59,7 +59,9 @@ def _launch(source_id, model_id, device, zone, rtsp=None, watermark=False):
     # "config" must be overridden too, not just "zones" - see
     # EMPTY_ANALYTICS_CONFIG_FILE's comment in config.py.
     analytics_props = {"config": EMPTY_ANALYTICS_CONFIG_FILE, "zones": analytics_zones_json(zone)}
-    watermark_props = {"quiet-mode": "false" if watermark else "true"}
+    # Keeps the burned-in overlay's own threshold in step with the table's -
+    # otherwise an operator-changed LOITER_THRESHOLD_S only affects the table.
+    watermark_props = {"quiet-mode": "false" if watermark else "true", "loitering-threshold": LOITER_THRESHOLD_S}
 
     payload = {
         "source": {"uri": source_uri, "type": "uri"},
@@ -86,6 +88,7 @@ def _launch(source_id, model_id, device, zone, rtsp=None, watermark=False):
         "model": model_id,
         "device": device,
         "zone": zone,
+        "watermark": watermark,
         "tracks": {},
         "msg_times": deque(maxlen=120),
         "time_key": None,
@@ -113,14 +116,20 @@ def _launch(source_id, model_id, device, zone, rtsp=None, watermark=False):
 
 
 def _stop(peer_id):
+    """Stop and forget a session. Raises requests.RequestException on any
+    failure other than 404 (already gone) - the session is only dropped once
+    the instance is confirmed stopped, so a transient DLSPS error leaves the
+    session in place instead of silently orphaning a still-running pipeline.
+    """
     with LOCK:
-        sess = SESSIONS.pop(peer_id, None)
+        sess = SESSIONS.get(peer_id)
     if sess is None:
         return None
-    try:
-        requests.delete(f"{PIPELINE_SERVER_URL}/pipelines/{sess['instance_id']}", timeout=10)
-    except requests.RequestException:
-        pass  # the instance may already be gone; nothing further to do
+    r = requests.delete(f"{PIPELINE_SERVER_URL}/pipelines/{sess['instance_id']}", timeout=10)
+    if not r.ok and r.status_code != 404:
+        r.raise_for_status()
+    with LOCK:
+        SESSIONS.pop(peer_id, None)
     return sess
 
 
@@ -149,7 +158,10 @@ def api_pipelines_start():
 def api_pipelines_stop():
     body = request.get_json(force=True, silent=True) or {}
     peer_id = body.get("peer_id")
-    sess = _stop(peer_id)
+    try:
+        sess = _stop(peer_id)
+    except requests.RequestException as exc:
+        return jsonify({"error": f"pipeline stop failed: {exc}"}), 502
     if sess is None:
         return jsonify({"error": "unknown peer_id"}), 404
     return jsonify({"stopped": peer_id})

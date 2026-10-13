@@ -1,10 +1,7 @@
 // SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 // Zone concern: source-pixel mapping, overlay rendering, drag/click-to-draw
-// and application to live streams. There is no numeric coordinate entry -
-// drawing on a live stream's video is the only way to set a custom zone,
-// so the rectangle's value lives in C._rectZone (a plain object) rather
-// than form fields; the rail only ever shows a read-only summary of it.
+// and application to live streams.
 (function (C) {
   "use strict";
   function byId(id) { return document.getElementById(id); }
@@ -80,8 +77,6 @@
       : (changed ? "" : "This zone is already applied");
   }
 
-  // Map a rectangle expressed in source pixels onto the rendered <video>,
-  // accounting for the letterbox introduced by object-fit: contain.
   C.videoGeometry = function (video) {
     var vw = video.videoWidth, vh = video.videoHeight;
     var cw = video.clientWidth, ch = video.clientHeight;
@@ -90,10 +85,6 @@
     return { scale: scale, ox: (cw - vw * scale) / 2, oy: (ch - vh * scale) / 2, vw: vw, vh: vh };
   }
 
-  // The peer_id whose drawn-but-not-yet-applied zone is currently shown as
-  // a persistent preview (.roi-current for a rectangle, .roi-polygon for a
-  // polygon) - only one at a time, since the rail's zone fields (and
-  // C._zonePolygonPoints) are shared/global, not per-panel.
   C._pendingZonePeerId = null;
 
   function positionPendingRect(peerId) {
@@ -109,10 +100,6 @@
     box.style.display = "block";
   }
 
-  // Shows the rail's current (drawn, unapplied) zone on the given panel and
-  // reveals that panel's own "Apply to this stream" button. Replaces
-  // whatever was pending on any other panel - there is only ever one
-  // drawn-but-unapplied zone at a time.
   C.showPendingZone = function (peerId) {
     if (C._pendingZonePeerId && C._pendingZonePeerId !== peerId) {
       C.hidePendingZone(C._pendingZonePeerId);
@@ -134,10 +121,6 @@
     if (C._pendingZonePeerId === peerId) { C._pendingZonePeerId = null; }
   }
 
-  // Re-renders whatever is actually showing for this panel on
-  // loadedmetadata/resize: the pending draft if it is the one with one, or
-  // nothing - gvawatermark already renders an applied zone server-side, so
-  // there is never anything to draw here for a panel with no pending draft.
   C.drawCurrentZone = function (peerId) {
     if (C._pendingZonePeerId === peerId) {
       if (C._zoneShape === "poly") { renderPolyOverlay(peerId); } else { positionPendingRect(peerId); }
@@ -191,8 +174,6 @@
 
   /* ------------------------------------------------------- polygon draw --- */
 
-  // Standard orientation/on-segment test for whether two line segments
-  // properly intersect (including collinear-overlap cases).
   function orientation(p, q, r) {
     var val = (q.sy - p.sy) * (r.sx - q.sx) - (q.sx - p.sx) * (r.sy - q.sy);
     if (Math.abs(val) < 1e-9) { return 0; }
@@ -301,6 +282,7 @@
 
   C.onPolyClick = function (peerId, ev) {
     if (C._zoneShape !== "poly" || !byId("drawZone") || !byId("drawZone").checked) { return; }
+    if (ev.detail > 1) { return; }
     var el = C.panelEl(peerId);
     if (!el) { return; }
     var overlay = el.querySelector(".roi-overlay");

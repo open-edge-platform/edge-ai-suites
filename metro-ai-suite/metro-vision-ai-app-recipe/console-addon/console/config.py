@@ -43,9 +43,9 @@ TLS_KEY = os.environ.get("TLS_KEY", "/app/certs/console.key")
 
 
 def _probe_devices():
-    # Fallback only: this container does not have the accelerator device
-    # nodes mapped, so this reports GPU/NPU absent on every host. DEVICES,
-    # supplied by the deployment at deploy time, is the source of truth.
+    # Only a fallback when DEVICES is unset - /dev is bind-mounted read-only
+    # into this container (same paths dlstreamer-pipeline-server mounts)
+    # specifically so this can detect real hardware instead of guessing.
     found = ["CPU"]
     if os.path.exists("/dev/dri"):
         found.append("GPU")

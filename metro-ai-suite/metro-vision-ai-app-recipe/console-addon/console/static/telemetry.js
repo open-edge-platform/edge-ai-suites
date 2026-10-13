@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Telemetry polling, per-stream cards and utilisation gauges.
-// FRONTEND-SPEC.md part B sections B5-B6, E and G.
 
 window.Console = window.Console || {};
 
@@ -23,8 +22,6 @@ window.Console = window.Console || {};
     return used ? g(used) + " GB" : "";
   }
 
-  // A running pipeline that returns nothing is not the same as a dead one.
-  // Saying so prevents an incompatible model reading as a dashboard fault.
   function healthNote(s) {
     if (s.detection_state === "no-data") {
       return "no metadata received";
@@ -93,6 +90,11 @@ window.Console = window.Console || {};
           zone: s.zone,
         });
         C.panels[s.peer_id].settled = true;
+        // Without this, the rail's card for this slot stays un-linked
+        // (no data-peer-id), so the next "Start pipelines" click launches
+        // a duplicate of a session this block just recovered.
+        if (C.ensureStreamConfigCount) { C.ensureStreamConfigCount(pipelineNum); }
+        if (C.markCardStarted) { C.markCardStarted(pipelineNum, s.peer_id); }
       }
       // The full per-object table lives beneath its own stream window.
       C.renderPanelAnalytics(s.peer_id, s);
@@ -116,6 +118,7 @@ window.Console = window.Console || {};
       Object.keys(C.panels).forEach(function (pid) {
         if (!live[pid] && C.panels[pid].settled) {
           C.removePanel(pid);
+          return;
         }
         C.panels[pid].settled = true;
       });

@@ -78,20 +78,33 @@ def api_zone():
         return jsonify({"error": "unknown peer_id"}), 404
 
     relaunched = []
+    failed = []
     for pid in targets:
         with LOCK:
             old = SESSIONS.get(pid)
         if old is None:
             continue
-        _stop(pid)
+        # Start the replacement before touching the old one - stopping first
+        # and then hitting a transient DLSPS/model error would otherwise
+        # silently drop a live stream while the client still sees success.
         try:
-            new_session = _launch(old["source"], old["model"], old["device"], zone, old.get("rtsp"))
+            new_session = _launch(old["source"], old["model"], old["device"], zone,
+                                   old.get("rtsp"), old.get("watermark", False))
         except (ValueError, requests.RequestException) as exc:
             LOG.error("zone reapply failed for %s: %s", pid, exc)
+            failed.append({"peer_id": pid, "error": str(exc)})
             continue
+        try:
+            _stop(pid)
+        except requests.RequestException as exc:
+            # The replacement is already live; the old instance failing to
+            # stop just leaves two running for this slot rather than losing
+            # either - surfaced to the client rather than silently ignored.
+            LOG.error("old instance %s did not stop cleanly after zone reapply: %s", pid, exc)
+            failed.append({"peer_id": pid, "error": f"replacement started but old instance did not stop: {exc}"})
         relaunched.append({"old_peer_id": pid, **new_session})
 
-    return jsonify({"zone": zone, "updated": relaunched, "count": len(relaunched)})
+    return jsonify({"zone": zone, "updated": relaunched, "failed": failed, "count": len(relaunched)})
 
 
 @app.route("/api/events")

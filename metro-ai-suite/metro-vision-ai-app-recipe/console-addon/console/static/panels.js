@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Panel lifecycle, zone overlay and drag-to-draw zone selection.
-// FRONTEND-SPEC.md part B sections B1-B4 and F.
 
 window.Console = window.Console || {};
 
@@ -10,7 +9,6 @@ window.Console = window.Console || {};
   "use strict";
 
   var panels = {};      // peer_id -> { el, video, whep, zone }
-  // Drag state lives on C so zones.js (start/move) and finishDraw here agree.
 
   function grid() { return document.getElementById("grid"); }
   function byId(id) { return document.getElementById(id); }
@@ -53,7 +51,7 @@ window.Console = window.Console || {};
     titleEl.textContent = info.title;
     titleEl.title = info.title; // native tooltip
     el.dataset.peerId = info.peer_id;
-    // A zone-reapply replacement (see applyZone) should land in the same
+    // A zone-reapply replacement should land in the same
     // grid slot the panel it replaces occupied, not at the end - inserting
     // before that panel's old next-sibling preserves visual position
     // across the swap instead of the replacement jumping to the bottom.

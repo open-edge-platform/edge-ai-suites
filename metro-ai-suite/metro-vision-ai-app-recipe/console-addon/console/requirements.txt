@@ -1,3 +1,8 @@
+# Not installed by anything right now: the deployment reuses
+# dlstreamer-pipeline-server's own image, which already has these packages
+# (see compose-without-scenescape.yml's console service and entrypoint.sh).
+# Kept as a record of the versions the console is developed/tested against,
+# for anyone building a standalone image for it instead.
 Flask==3.1.0
 requests==2.32.3
 paho-mqtt==2.1.0

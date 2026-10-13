@@ -3,13 +3,29 @@
 # SPDX-License-Identifier: Apache-2.0
 """Utilisation, resolved from candidate Prometheus expressions."""
 
+import time
+
 import requests
 
 from config import PROMETHEUS_URL
 
+# collect_metrics() evaluates ~20 candidate expressions serially; with no
+# cap a down/slow Prometheus could hold one /api/metrics request for
+# minutes while the UI polls every couple of seconds, exhausting Flask's
+# threads. Once this deadline is passed, remaining candidates are skipped
+# (reported as unavailable) rather than queried.
+_QUERY_BUDGET_S = 4.0
+_deadline = [0.0]
+
+_cache = {"ts": 0.0, "data": None}
+_CACHE_TTL_S = 2.0
+
+
 def _prometheus_query(expr):
+    if time.monotonic() > _deadline[0]:
+        return None
     try:
-        r = requests.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": expr}, timeout=5)
+        r = requests.get(f"{PROMETHEUS_URL}/api/v1/query", params={"query": expr}, timeout=2)
         r.raise_for_status()
         result = r.json().get("data", {}).get("result", [])
         if not result:
@@ -41,11 +57,13 @@ def _clamp_power(v):
 
 
 def _gpu_engine_ratios():
+    if time.monotonic() > _deadline[0]:
+        return {}
     try:
         r = requests.get(
             f"{PROMETHEUS_URL}/api/v1/query",
             params={"query": "qmmd_gpu_engine_utilization_ratio"},
-            timeout=5,
+            timeout=2,
         )
         r.raise_for_status()
         result = r.json().get("data", {}).get("result", [])
@@ -75,6 +93,14 @@ def _gpu_percent(engines):
 
 
 def collect_metrics():
+    # Short cache plus a shared deadline across every candidate query below:
+    # a degraded/unreachable Prometheus would otherwise hold a request
+    # thread for as long as ~20 serial 2s-timeout attempts take, and the UI
+    # polls this every couple of seconds.
+    now = time.monotonic()
+    if _cache["data"] is not None and now - _cache["ts"] < _CACHE_TTL_S:
+        return _cache["data"]
+    _deadline[0] = now + _QUERY_BUDGET_S
     engines = _gpu_engine_ratios()
     cpu_percent = _prom_first([
         "avg(qmmd_cpu_utilization_ratio)*100",
@@ -96,7 +122,7 @@ def collect_metrics():
     mem_percent = _prom_first(["avg(qmmd_memory_utilization_ratio)*100", "avg(mem_used_percent)"])
     mem_used = _prom_first(["max(qmmd_memory_used_bytes)", "max(mem_used)"])
     mem_total = _prom_first(["max(qmmd_memory_total_bytes)", "max(mem_total)"])
-    return {
+    result = {
         "cpu": {"percent": cpu_percent, "freq_mhz": cpu_freq},
         "gpu": {
             "percent": gpu_percent,
@@ -109,9 +135,6 @@ def collect_metrics():
         "npu": {"percent": npu_percent, "mem_used_bytes": npu_mem_used, "power_w": npu_power},
         "mem": {"percent": mem_percent, "used_bytes": mem_used, "total_bytes": mem_total},
     }
-
-
-# --------------------------------------------------------------------------
-# 6. MQTT ingestion (BACKEND-SPEC.md §5)
-# --------------------------------------------------------------------------
-
+    _cache["data"] = result
+    _cache["ts"] = now
+    return result

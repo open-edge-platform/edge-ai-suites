@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // Bootstrap, control wiring, stream start and stop.
-// FRONTEND-SPEC.md part B sections B0 and B7.
 
 window.Console = window.Console || {};
 
@@ -11,8 +10,6 @@ window.Console = window.Console || {};
 
   function byId(id) { return document.getElementById(id); }
 
-  // All requests are relative to the document base, so the console works
-  // unchanged at the site root or behind any path prefix.
   C.apiGet = function (path) {
     return fetch(new URL(path, document.baseURI), { headers: { Accept: "application/json" } })
       .then(function (r) {
@@ -97,10 +94,6 @@ window.Console = window.Console || {};
 
   function onStart() {
     var btn = byId("startBtn");
-    // A card already linked to a running pipeline is left alone -
-    // otherwise raising "Number of pipelines" to add one more card 
-    // and clicking Start again would relaunch every earlier pipeline
-    // too, duplicating all of them instead of adding just the new one.
     var configs = C.collectStreamConfigs().filter(function (cfg) { return !cfg.alreadyRunning; });
     if (!configs.length) { return; }
     var watermark = byId("watermarkToggle").checked;
@@ -139,10 +132,6 @@ window.Console = window.Console || {};
         return loadModels(false);
       })
       .then(function () {
-        // Only now, not from streams.js's own DOMContentLoaded listener:
-        // creating the first stream accordion before C.SOURCES/C.MODELS/
-        // C.DEVICES exist is what stuck it with a CPU-only fallback device
-        // default forever.
         C.initStreamConfigs();
         C.startPolling();
       })

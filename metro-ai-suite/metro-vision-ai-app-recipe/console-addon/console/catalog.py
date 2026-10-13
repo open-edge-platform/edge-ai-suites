@@ -4,8 +4,11 @@
 """Model discovery, IR preflight, source and pipeline selection."""
 
 import hashlib
+import ipaddress
 import os
 import re
+import socket
+from urllib.parse import urlsplit
 import xml.etree.ElementTree as ET
 
 import requests
@@ -187,12 +190,37 @@ def _extract_instance_id(resp):
 _ALLOWED_RTSP_SCHEMES = ("rtsp://", "rtsps://")
 
 
+def _is_blocked_rtsp_host(hostname):
+    """True if every address `hostname` resolves to is loopback/link-local/
+    unspecified - defense-in-depth against pointing DLSPS at itself or at
+    another container's control-plane port under the guise of a camera.
+    """
+    try:
+        infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        return False  # unresolvable now; DLSPS's own connection attempt is the real gate
+    if not infos:
+        return False
+    for info in infos:
+        addr = info[4][0]
+        try:
+            ip = ipaddress.ip_address(addr)
+        except ValueError:
+            return False
+        if not (ip.is_loopback or ip.is_link_local or ip.is_unspecified):
+            return False
+    return True
+
+
 def _resolve_source_uri(source_id, rtsp_override=None):
     if rtsp_override:
         # Free-text input is only ever meant to be a camera RTSP URL; accepting
         # any scheme here would let a caller point the pipeline server at an
         # arbitrary internal endpoint (SSRF) under the guise of a video source.
         if not str(rtsp_override).startswith(_ALLOWED_RTSP_SCHEMES):
+            return None
+        hostname = urlsplit(str(rtsp_override)).hostname
+        if hostname and _is_blocked_rtsp_host(hostname):
             return None
         return rtsp_override
     for s in SOURCES:

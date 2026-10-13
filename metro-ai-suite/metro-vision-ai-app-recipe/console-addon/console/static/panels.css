@@ -1,8 +1,6 @@
 /* SPDX-FileCopyrightText: (C) 2026 Intel Corporation */
 /* SPDX-License-Identifier: Apache-2.0 */
 
-/* Panels, grid, telemetry and overlay rules (split from styles.css to
-   stay inside the generation budget; see BUILD.md 1.3). */
 
 /* --------------------------------------------------------- utilisation --- */
 
@@ -47,10 +45,6 @@
   overflow-y: auto;
   height: 100%;
 }
-/* A lone trailing stream (odd total count) spans both columns instead of
-   sitting half-width on one side - :last-child here only matches a last
-   position that is itself odd (1, 3, 5...), i.e. precisely the "leftover"
-   case, with no JS needed to know the total panel count. */
 .panel:last-child:nth-child(odd) {
   grid-column: span 2;
 }
@@ -65,8 +59,6 @@
   text-align: center;
   padding: 24px;
 }
-/* .empty and [hidden] are equal specificity; without this, setting the
-   hidden property from JS does not actually hide the element. */
 .empty[hidden] { display: none; }
 
 .panel {
@@ -180,13 +172,12 @@
   color: var(--muted);
   padding: 4px 10px 8px 10px;
 }
-.p-status.live { color: var(--accent); }
-.p-status.error { color: var(--danger); }
+.p-status.st-live { color: var(--accent); }
+.p-status.st-error { color: var(--danger); }
 
 /* ---- per-panel analytics: summary row and loiter table, directly
-   below each video stream (replaces the old global bottom bar). Fixed
-   video height above means a growing table can only scroll here, never
-   resize the video. ---- */
+   below each video stream. Fixed video height above means a growing
+   table can only scroll here, never resize the video. ---- */
 .p-analytics { flex: 0 0 auto; max-height: 230px; overflow-y: auto;
                 padding: 8px 10px 10px; border-top: 1px solid var(--line); }
 .p-analytics.warming { opacity: .45; }

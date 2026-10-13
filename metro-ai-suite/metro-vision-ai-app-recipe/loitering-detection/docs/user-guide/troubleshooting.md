@@ -128,8 +128,8 @@ usage; the issues below are specific to it.
 1. **Console UI not reflecting a code change**
 
    - The Console UI service bind-mounts `console-addon/console` directly (no build step, no
-     custom image) and installs its dependencies on container start, so a source edit only needs
-     a restart, not a rebuild:
+     custom image - it reuses `dlstreamer-pipeline-server`'s own image, which already has the
+     Python packages the console needs), so a source edit only needs a restart, not a rebuild:
 
     ```bash
     docker compose --profile ui restart console

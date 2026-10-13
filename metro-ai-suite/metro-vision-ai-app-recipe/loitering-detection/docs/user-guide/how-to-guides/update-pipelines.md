@@ -58,7 +58,7 @@ pipeline-string edit; it also drops every currently-running stream (CLI and Cons
 ## The pipeline stage-by-stage
 
 ```
-{auto_source} ! <decode> ! gvadetect ! gvatrack ! gvaanalytics ! gvametaconvert ! gvawatermark ! appsink
+{auto_source} ! <decode> ! gvadetect ! gvatrack ! gvaanalytics ! loitering_watermark ! gvametaconvert ! appsink
 ```
 
 | Stage | Purpose |
@@ -67,8 +67,8 @@ pipeline-string edit; it also drops every currently-running stream (CLI and Cons
 | `gvadetect` | Runs the detection model on the **full frame** |
 | `gvatrack tracking-type=zero-term` | Assigns/keeps a stable id per object across frames. |
 | `gvaanalytics evaluation-point=bottom-center draw-zones=true` | Matches each tracked object against the active zone(s) (polygons from the zone file, or a custom rectangle - see below), computes dwell time, and draws the zone outline(s). This is the only zone-awareness in the pipeline - it decides what counts toward the loiter table, not what gets boxed. |
-| `gvametaconvert add-empty-results=false` | Serialises detections + zone/dwell info into the JSON published to MQTT. |
-| `gvawatermark` | Draws a labelled box for **every** detected object, zone or not. |
+| `loitering_watermark` | Burns zone/dwell-time text onto the video itself, toggled by the Console UI's "Show dwell-time overlay" checkbox (`loitering-watermark-properties.quiet-mode`); the console's own per-panel loiter table shows the same data regardless. |
+| `gvametaconvert add-empty-results=true` | Serialises detections + zone/dwell info into the JSON published to MQTT, including empty-frame results. |
 | `appsink` | Hands frames+metadata to the Pipeline Server, which fans them out to the configured destinations (MQTT for metadata, WebRTC for video). |
 
 ## What overrides what, per request
@@ -80,7 +80,8 @@ matching `config.json`'s schema:
 | Request key | Element it targets | What it sets |
 | --- | --- | --- |
 | `detection-properties` | `detection` (`gvadetect`) | `model`, `device`, `model-instance-id`, `model_proc` |
-| `analytics-properties` | `analytics` (`gvaanalytics`) | `zones` - the file's zones, or a single custom rectangle, never both (see [Getting started - Loitering Detection Console UI](../getting-started-ui.md#changing-the-zone)) |
+| `analytics-properties` | `analytics` (`gvaanalytics`) | `config` (forced to an always-empty zones file so `gvaanalytics`'s own baked default never leaks in - see `EMPTY_ANALYTICS_CONFIG_FILE` in `console-addon/console/config.py`), `zones` - the file's zones, or a single custom rectangle, never both (see [Getting started - Loitering Detection Console UI](../getting-started-ui.md#changing-the-zone)) |
+| `loitering-watermark-properties` | `loitering_watermark` | `quiet-mode`, `loitering-threshold` |
 
 There is **no live-update path**: changing any of these (switching model, device, or zone)
 always stops the current pipeline instance and starts a brand new one with the new parameters -

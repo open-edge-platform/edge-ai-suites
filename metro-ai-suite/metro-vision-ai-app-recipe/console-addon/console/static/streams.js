@@ -108,11 +108,18 @@
   }
 
   // Adds/removes accordions at the tail to match n, without touching the
-  // values of instances that persist.
+  // values of instances that persist. A trailing card still linked to a
+  // running pipeline (data-peer-id set) is kept regardless of n - removing
+  // it would discard that linkage while deliberately leaving the pipeline
+  // running, so raising the count back up would start a duplicate for that
+  // slot instead of recognising it as already live.
   C.ensureStreamConfigCount = function (n) {
     var existing = cards();
     for (var i = existing.length; i < n; i++) { addCard(i + 1); }
-    for (var j = existing.length - 1; j >= n; j--) { existing[j].remove(); }
+    for (var j = existing.length - 1; j >= n; j--) {
+      if (existing[j].dataset.peerId) { continue; }
+      existing[j].remove();
+    }
   };
 
   // Re-populate every existing accordion's selects - called after
