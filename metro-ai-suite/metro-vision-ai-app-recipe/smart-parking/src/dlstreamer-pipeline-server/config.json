@@ -72,6 +72,54 @@
                     }
                 },
                 "auto_start": false
+            },
+            {
+                "name": "yolov11s_igpu_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect model=/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml device=GPU batch-size=1 inference-region=0 inference-interval=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.7 model-instance-id=instgc_d0 name=detection ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvaclassify model=/home/pipeline-server/models/colorcls2/colorcls2.xml device=CPU inference-interval=1 inference-region=1 model-instance-id=instgc_c0 name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        },
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                             }
+                        }
+                    }
+                },
+                "auto_start": false
+            },
+            {
+                "name": "yolov11s_igpu_npu_cpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvafpsthrottle target-fps=30 ! gvadetect model=/home/pipeline-server/models/public/yolo11s/INT8/yolo11s.xml device=GPU batch-size=1 inference-region=0 inference-interval=1 nireq=1 ie-config=\"GPU_THROUGHPUT_STREAMS=1\" threshold=0.7 model-instance-id=instnc_d0 name=detection ! queue max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvaclassify model=/home/pipeline-server/models/colorcls2/colorcls2.xml device=NPU inference-interval=1 inference-region=1 batch-size=1 nireq=4 model-instance-id=instnc_c0 name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        },
+                        "classification-properties": {
+                            "element": {
+                                "name": "classification",
+                                "format": "element-properties"
+                             }
+                        }
+                    }
+                },
+                "auto_start": false
             }
         ]
     }
