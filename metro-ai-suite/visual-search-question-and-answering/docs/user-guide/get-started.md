@@ -1,15 +1,14 @@
 # Get Started Guide
 
-- **Time to Complete:** 30 mins
-- **Programming Language:** Python
+-   **Time to Complete:** 30 mins
+-   **Programming Language:** Python
 
 ## Get Started
 
 ### Prerequisites
-
-- Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
-- Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- Install Intel Client GPU driver: [Installation Guide](https://dgpu-docs.intel.com/driver/client/overview.html).
+-    Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
+-    Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
+-    Install Intel Client GPU driver: [Installation Guide](https://dgpu-docs.intel.com/driver/client/overview.html).
 
 ### Step 1: Get the docker images
 
@@ -53,7 +52,6 @@ docker build -t visual-search-qa-app:latest --build-arg https_proxy=$https_proxy
 ```
 
 #### Option 2: use remote prebuilt images
-
 Set a remote registry by exporting environment variables:
 
 ```bash
@@ -77,8 +75,6 @@ Otherwise, if you would like to use your own data (images and video), make sure 
 
 ### Step 3: Deploy
 
-#### Option1 (**Recommended**): Deploy with docker compose
-
 1. Go to the deployment files
 
     ``` bash
@@ -99,6 +95,8 @@ Otherwise, if you would like to use your own data (images and video), make sure 
    > [Supported models](https://docs.openedgeplatform.intel.com/2026.2/edge-ai-libraries/multimodal-embedding-serving/supported-models.html) for Multimodal Embedding Serving for available embedding models, and
    > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
+    **Important**: You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for available embedding models, and [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2025.2.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
+    
    For PRC users, set up the huggingface endpoint first:
 
    ```bash
@@ -128,19 +126,18 @@ Otherwise, if you would like to use your own data (images and video), make sure 
 
    </details>
 
-3. Deploy with docker compose
+3.  Deploy with docker compose
 
-   ``` bash
-   docker compose -f compose_milvus.yaml up -d
-   ```
+    ``` bash
+    docker compose -f compose_milvus.yaml up -d
+    ```
 
 It might take a while to start the services for the first time, as there are some models to be prepared.
 
 Check if all microservices are up and runnning with `docker compose -f compose_milvus.yaml ps`
 
 Output
-
-```text
+```
 NAME                         COMMAND                  SERVICE                      STATUS              PORTS
 dataprep-visualdata-milvus   "uvicorn dataprep_vi…"   dataprep-visualdata-milvus   running (healthy)   0.0.0.0:9990->9990/tcp, :::9990->9990/tcp
 milvus-etcd                  "etcd -advertise-cli…"   milvus-etcd                  running (healthy)   2379-2380/tcp
@@ -151,10 +148,6 @@ retriever-milvus             "uvicorn retriever_s…"   retriever-milvus        
 visual-search-qa-app         "streamlit run app.p…"   visual-search-qa-app         running (healthy)   0.0.0.0:17580->17580/tcp, :::17580->17580/tcp
 vlm-openvino-serving         "/bin/bash -c '/app/…"   vlm-openvino-serving         running (healthy)   0.0.0.0:9764->8000/tcp, :::9764->8000/tcp
 ```
-
-#### Option2: Deploy in Kubernetes
-
-Please refer to [Deploy with helm](./get-started/deploy-with-helm.md) for details.
 
 ## Try with a demo dataset
 
@@ -181,7 +174,6 @@ exit 0
 ```
 
 Run the script and check your host data directory `$HOME/data`, see if `DAVIS` is there.
-
 ```bash
 bash prepare_demo_dataset.sh
 ```
@@ -191,7 +183,6 @@ In order to save time, only a subset of the dataset would be processed. They are
 This script only works when the `dataprep-visualdata-milvus` service is available.
 
 ### Use it on Web UI
-
 Go to `http://{host_ip}:17580` with a browser. Put the exact path to the subset of demo dataset (usually`/home/user/data/DAVIS/subset`, may vary according to your local username) into `file directory on host`. Click `UpdataDB` and wait for the uploading done.
 
 Try searching with query text `tractor`, see if the results are correct.
@@ -210,10 +201,9 @@ You can check the end-to-end response time for each round of question-and-answer
 ## Summary
 
 In this get started guide, you learned how to:
-
-- Build the microservice images
-- Deploy the application with the microservices
-- Try the application with a demo dataset
+-    Build the microservice images
+-    Deploy the application with the microservices
+-    Try the application with a demo dataset
 
 ## Learn More
 
@@ -226,7 +216,6 @@ In this get started guide, you learned how to:
 :hidden:
 
 ./get-started/system-requirements
-./get-started/deploy-with-helm
 
 :::
 hide_directive-->
