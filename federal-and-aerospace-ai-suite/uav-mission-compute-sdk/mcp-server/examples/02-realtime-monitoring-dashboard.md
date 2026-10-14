@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Example 4: Real-Time Monitoring with Anomaly Alerts
+# Example 2: Real-Time Monitoring with Anomaly Alerts
 
 ## Use Case
 Monitor UAV during live mission and get AI-powered alerts for abnormal behavior.

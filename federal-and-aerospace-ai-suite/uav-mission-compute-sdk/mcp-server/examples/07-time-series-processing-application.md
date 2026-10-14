@@ -3,7 +3,7 @@ SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Time Series Processing Application Development
+# Example 7: Time Series Processing Application Development
 
 Build a custom time series application on top of the UAV's telemetry stream — not just query current values, but have the agent design an ingestion → processing → visualization pipeline for your own metrics.
 
