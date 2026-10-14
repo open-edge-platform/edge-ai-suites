@@ -213,7 +213,6 @@ better recall for some object types/angles than the default
     custom rectangle has replaced the file's zones.
   - **Status** — `Present` below the loiter threshold shown under the Zone card, `Loitering`
     at or above it.
-  - **Entry Time** — fixed at first sighting; does not change as dwell grows.
   - **Dwell (s)** — `gvaanalytics`'s own measurement for the longest-running zone the object is
     currently in. This is the same figure Grafana reports.
 - **System Utilization** reports host-wide CPU/GPU/NPU/memory load, not per-stream load; the

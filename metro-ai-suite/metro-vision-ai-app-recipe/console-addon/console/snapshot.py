@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: Apache-2.0
 """Per-stream reporting: summary figures and the per-object loiter table."""
 
-import time
-
 from config import LOITER_THRESHOLD_S, TABLE_STALE_S
 
 
@@ -31,7 +29,6 @@ def _stream_snapshot(peer_id, sess, now):
             "zone": ", ".join(trk.get("zones") or []) or "-",
             "status": "Loitering" if dwell >= LOITER_THRESHOLD_S else "Present",
             "dwell_s": round(dwell, 2),
-            "entry_time": time.strftime("%H:%M:%S", time.localtime(trk.get("entry_wall", now))),
         })
     rows.sort(key=lambda r: r["dwell_s"], reverse=True)
 

@@ -61,7 +61,7 @@ window.Console = window.Console || {};
     tbody.innerHTML = rows.map(function (r) {
       var cls = r.status === "Loitering" ? ' class="row-loiter"' : "";
       return "<tr" + cls + "><td>" + escapeHtml(r.id) + "</td><td>" + escapeHtml(r.label) +
-        "</td><td>" + escapeHtml(r.zone) + "</td><td>" + escapeHtml(r.status) + "</td><td>" + escapeHtml(r.entry_time) +
+        "</td><td>" + escapeHtml(r.zone) + "</td><td>" + escapeHtml(r.status) +
         "</td><td>" + n(r.dwell_s) + "</td></tr>";
     }).join("");
     if (empty) { empty.style.display = rows.length ? "none" : "block"; }

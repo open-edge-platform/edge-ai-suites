@@ -127,7 +127,7 @@ def _update_zone_analytics(sess, objects, metadata, frame_ts, now):
         zones = _zone_ids(obj)
         if trk is None:
             sess["tracks"][tid] = {"first": frame_ts, "last": frame_ts, "wall_last": now,
-                                   "label": label, "entry_wall": now, "native_dwell_s": native_dwell,
+                                   "label": label, "native_dwell_s": native_dwell,
                                    "zones": zones}
         else:
             trk["last"] = frame_ts

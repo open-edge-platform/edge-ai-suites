@@ -119,8 +119,6 @@ class LoiteringWatermark(GstBase.BaseTransform):
         super().__init__()
         self.set_in_place(True)
         self.set_passthrough(False)
-        # labels emitted by pedestrian-and-vehicle-detector-adas-0001 (not the original sample's yolo11s "car"/"person")
-        self._allowed_types = ["vehicle", "pedestrian"]
 
     def do_transform_ip(self, buffer):
         """Process buffer, read DwellTimeMtd from gvaanalytics, and add watermark text."""
@@ -132,7 +130,7 @@ class LoiteringWatermark(GstBase.BaseTransform):
         if relation_meta:
             for od_mtd in relation_meta.iter_on_type(GstAnalytics.ODMtd):
                 obj_type = GLib.quark_to_string(od_mtd.get_obj_type())
-                if not obj_type or (obj_type.lower() not in self._allowed_types):
+                if not obj_type:
                     continue
                 for trk_mtd in od_mtd.iter_direct_related(GstAnalytics.RelTypes.RELATE_TO, GstAnalytics.TrackingMtd):
                     track_ok, track_id, _, _, _ = trk_mtd.get_info()

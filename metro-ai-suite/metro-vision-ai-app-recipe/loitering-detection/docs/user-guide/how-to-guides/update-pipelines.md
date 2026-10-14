@@ -4,6 +4,13 @@ The loitering detection pipeline is a DL Streamer Pipeline Server pipeline: a GS
 `gst-launch`-style string plus a small REST-overridable parameters schema, both defined in one
 JSON file. This guide covers where it lives, what each stage does, and how to change it safely.
 
+> [!NOTE]
+> This page is about editing the pipeline *definition* itself (`config.json` - adding/removing
+> GStreamer elements, changing what is hardcoded vs REST-overridable). To use the pipeline as-is
+> - add a zone, add a new stream, pick a different model, read the published MQTT data - see
+> [Customize the Application](./customize-application.md) instead; nothing there requires editing
+> this file.
+
 ## Where it lives
 
 - **File**: `loitering-detection/src/dlstreamer-pipeline-server/config.json`

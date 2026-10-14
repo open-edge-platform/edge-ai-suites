@@ -34,9 +34,6 @@ TRACK_TTL_S = float(os.environ.get("TRACK_TTL_S", "30.0"))
 # Mirrors stale_track_timeout_s in the application's Node-RED flow so the
 # console and the application dashboard agree on what counts as stale.
 TABLE_STALE_S = float(os.environ.get("TABLE_STALE_S", "10.0"))
-# Flat, dashboard-ready republication of the loiter table (see ingest.py).
-TABLE_TOPIC = os.environ.get("TABLE_TOPIC", "loitering_table")
-TABLE_PUBLISH_INTERVAL_S = float(os.environ.get("TABLE_PUBLISH_INTERVAL_S", "1.0"))
 UI_PORT = int(os.environ.get("UI_PORT", "9443"))
 TLS_CERT = os.environ.get("TLS_CERT", "/app/certs/console.crt")
 TLS_KEY = os.environ.get("TLS_KEY", "/app/certs/console.key")
