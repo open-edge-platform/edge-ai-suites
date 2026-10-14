@@ -274,6 +274,217 @@
         "type": "influxdb",
         "uid": "xU6Z19aVk"
       },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-reds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "No Alerts"
+                }
+              },
+              "type": "value"
+            },
+            {
+              "options": {
+                "from": 1,
+                "result": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "Wrong Way Alert"
+                },
+                "to": 100
+              },
+              "type": "range"
+            }
+          ],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 5,
+        "x": 13,
+        "y": 0
+      },
+      "id": 40,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wrong_way_alert\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"wrong_way\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"NBLANE\")\r\n  |> last()\r\n  |> map(fn: (r) => ({_time: r._time, NBLANE: r._value}))\r\n  |> yield(name: \"NBLANE\")",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wrong_way_alert\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"wrong_way\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"SBLANE\")\r\n  |> last()\r\n  |> map(fn: (r) => ({_time: r._time, SBLANE: r._value}))\r\n  |> yield(name: \"SBLANE\")",
+          "refId": "B"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wrong_way_alert\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"wrong_way\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"EBLANE\")\r\n  |> last()\r\n  |> map(fn: (r) => ({_time: r._time, EBLANE: r._value}))\r\n  |> yield(name: \"EBLANE\")",
+          "refId": "C"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wrong_way_alert\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"wrong_way\")\r\n  |> filter(fn: (r) => r[\"region\"] == \"WBLANE\")\r\n  |> last()\r\n  |> map(fn: (r) => ({_time: r._time, WBLANE: r._value}))\r\n  |> yield(name: \"WBLANE\")",
+          "refId": "D"
+        }
+      ],
+      "title": "Wrong Way Vehicle",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
+      "description": "Wrong way events over time by region",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "bars",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 7,
+        "x": 0,
+        "y": 43
+      },
+      "id": 41,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "pluginVersion": "11.5.2",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "xU6Z19aVk"
+          },
+          "query": "from(bucket: \"SS-Anthem\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"wrong_way_alert\")\r\n  |> filter(fn: (r) => r[\"location\"] == \"Anthem\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"wrong_way\")\r\n  |> group(columns: [\"region\"])\r\n  |> aggregateWindow(every: v.windowPeriod, fn: sum, createEmpty: false)\r\n  |> yield(name: \"sum\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Wrong Way Events by Region",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "xU6Z19aVk"
+      },
       "description": "SBEBLTLANE - count",
       "fieldConfig": {
         "defaults": {
