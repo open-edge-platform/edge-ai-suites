@@ -4,12 +4,20 @@
 # Script to generate an offline package for Metro Vision AI applications.
 # This package can be copied to another device or DDIL environment.
 #
-# Usage: ./offline-package-generator.sh
+# Usage: ./offline-package-generator.sh [loitering-detection-ui]
 # Example: ./offline-package-generator.sh
+# Example (include the opt-in Console UI service): ./offline-package-generator.sh loitering-detection-ui
 #
 #################
 
 set -e  # Exit on any error
+
+# Mirrors install.sh's own "loitering-detection-ui" app-name convention -
+# see its ENABLE_UI comment for why this is opt-in rather than always on.
+ENABLE_UI="false"
+if [ "$1" = "loitering-detection-ui" ]; then
+  ENABLE_UI="true"
+fi
 
 echo "Starting offline package generation..."
 
@@ -17,6 +25,15 @@ echo "Starting offline package generation..."
 echo "Copying Docker compose and .env files..."
 cp ../.env ./
 cp ../compose-without-scenescape.yml ./docker-compose.yml
+
+if [ "$ENABLE_UI" = "true" ]; then
+  # console-addon/ is a sibling of this app, not nested under it - the
+  # Console UI service's volumes reference it as a relative path, so it
+  # must exist at that same relative path inside the offline package too.
+  echo "Copying console-addon (Console UI)..."
+  rm -rf ./console-addon
+  cp -r ../console-addon ./console-addon
+fi
 
 # Update .env file to set SAMPLE_APP=loitering-detection and HOST_IP=127.0.0.1
 echo "Updating .env file..."
@@ -100,7 +117,7 @@ fi
 
 # Run install.sh to download all required models and videos
 echo "Running install.sh to download models and videos..."
-./install.sh 127.0.0.1
+ENABLE_UI="$ENABLE_UI" ./install.sh 127.0.0.1
 
 # Run docker compose to pull all the images and download the grafana plugins
 mkdir -p ./src/grafana/plugins

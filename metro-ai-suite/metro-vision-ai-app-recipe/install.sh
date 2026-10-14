@@ -13,8 +13,18 @@ fi
 SAMPLE_APP_ARG="$1"
 if [ -z "$SAMPLE_APP_ARG" ]; then
     echo "Error: First argument (SAMPLE_APP) is required."
-    echo "Usage: $0 <smart-parking|loitering-detection|smart-intersection> [HOST_IP]"
+    echo "Usage: $0 <smart-parking|loitering-detection|loitering-detection-ui|smart-intersection> [HOST_IP]"
     exit 1
+fi
+
+# "loitering-detection-ui" is loitering-detection plus the opt-in Console UI
+# service, so it maps onto the same SAMPLE_APP as the plain app and only
+# flips ENABLE_UI, which the per-app install.sh reads to decide whether to add that
+# service to docker-compose.yml.
+ENABLE_UI_ARG="false"
+if [ "$SAMPLE_APP_ARG" = "loitering-detection-ui" ]; then
+    SAMPLE_APP_ARG="loitering-detection"
+    ENABLE_UI_ARG="true"
 fi
 
 case "$SAMPLE_APP_ARG" in
@@ -27,7 +37,7 @@ case "$SAMPLE_APP_ARG" in
         fi
         ;;
     *)
-        echo "Error: Invalid SAMPLE_APP value '$SAMPLE_APP_ARG'. Must be one of: smart-parking, loitering-detection, smart-intersection."
+        echo "Error: Invalid SAMPLE_APP value '$SAMPLE_APP_ARG'. Must be one of: smart-parking, loitering-detection, loitering-detection-ui, smart-intersection."
         exit 1
         ;;
 esac
@@ -84,7 +94,7 @@ cd "$SAMPLE_APP" || exit 1
 
 if [ -f "./install.sh" ]; then
     chmod +x ./install.sh
-    ./install.sh $HOST_IP
+    ENABLE_UI="$ENABLE_UI_ARG" ./install.sh $HOST_IP
 else
     echo "Error: install.sh not found in $SAMPLE_APP directory."
     exit 1
