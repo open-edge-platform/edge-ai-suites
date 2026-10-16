@@ -60,6 +60,16 @@ spec:
               secretKeyRef:
                 name: {{ .Release.Name }}-influxdb-secrets
                 key: influxdb2-admin-token
+          - name: NODE_RED_ADMIN_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-nodered-secrets
+                key: nodered-admin-username
+          - name: NODE_RED_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-nodered-secrets
+                key: nodered-admin-password
         image: {{ .Values.nodered.repository }}:{{ .Values.nodered.tag }}
         name: {{ .Release.Name }}-nodered
         imagePullPolicy: {{ .Values.imagePullPolicy }}

@@ -3,6 +3,7 @@ src/secrets/certs
 src/secrets/django
 src/secrets/pgserver
 src/secrets/influxdb2
+src/secrets/nodered
 src/secrets/*.auth
 src/secrets/*.token
 src/secrets/supass
