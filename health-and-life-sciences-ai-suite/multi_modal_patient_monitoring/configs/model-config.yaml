@@ -29,10 +29,7 @@ pose-3d:
       target_dir: /models/3d-pose
       ir_file: human-pose-estimation-3d-0001.xml
       video_dir: /videos/3d-pose
-      video_url: https://www.pexels.com/download/video/30141958
-      
-# https://www.pexels.com/download/video/30141930
-# https://www.pexels.com/download/video/7089372
+      video_url: https://www.pexels.com/download/video/7089372
       
 
 
