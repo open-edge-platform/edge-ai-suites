@@ -534,14 +534,13 @@ export function createStreamsController(elements, { openAlertDrawer }) {
     function bindPromptTemplateShortcut(input) {
         if (!input) return;
 
-        input.addEventListener("keydown", (event) => {
-            if (event.key !== "Enter" && event.key !== "Tab") return;
+        // Placeholder text vanishes on typing, so load it as editable text on focus.
+        input.addEventListener("focus", () => {
             if ((input.value || "").trim()) return;
 
             const template = (input.getAttribute("placeholder") || "").trim();
             if (!template) return;
 
-            event.preventDefault();
             input.value = template;
             input.selectionStart = input.value.length;
             input.selectionEnd = input.value.length;
