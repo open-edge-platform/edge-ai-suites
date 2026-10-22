@@ -172,9 +172,9 @@ class TestDeepAnalyzerVLMRuntimeHelpers:
     def test_model_path_uses_deep_analyzer_device_and_model(self, monkeypatch):
         monkeypatch.setattr(vlm.settings, "VLM_MODELS_DIR", "/models")
         monkeypatch.setattr(vlm.settings, "DEEP_ANALYZER_DEVICE", "NPU")
-        monkeypatch.setattr(vlm.settings, "DEEP_ANALYZER_MODEL", "Qwen3.5-2B")
+        monkeypatch.setattr(vlm.settings, "DEEP_ANALYZER_MODEL", "Qwen/Qwen3-VL-8B-Instruct")
 
-        assert DeepAnalyzerVLMRuntime.model_path() == "/models/npu/Qwen3.5-2B"
+        assert DeepAnalyzerVLMRuntime.model_path() == "/models/npu/Qwen/Qwen3-VL-8B-Instruct"
 
     @pytest.mark.parametrize("device", ["CPU", "NPU"])
     def test_build_pipeline_uses_expected_config(self, monkeypatch, device):

@@ -92,7 +92,7 @@ You can also download and convert for multiple target devices in a single comman
 
 Downloaded VLM models are stored under per-device directories in `ov_models/`.
 
-Set `ALERT_VLM_MODEL`, `ALERT_VLM_DEVICE`, `DEEP_ANALYZER_MODEL`, and `DEEP_ANALYZER_DEVICE` in `.env` to match the downloaded directory names and device folders. The alert model is used for frame-level filtering; the deep-analyzer model must support video input.
+Set `ALERT_VLM_MODEL`, `ALERT_VLM_DEVICE`, `DEEP_ANALYZER_MODEL`, and `DEEP_ANALYZER_DEVICE` in `.env` to the full model IDs and corresponding devices. For example, use `Qwen/Qwen3-VL-2B-Instruct` for the alert model and `Qwen/Qwen3-VL-8B-Instruct` for the deep analyzer. The alert model is used for frame-level filtering; the deep-analyzer model must support video input.
 
 The application loads each VLM from the device-specific directory that matches its model and device settings in `.env`.
 
@@ -100,9 +100,9 @@ Example:
 
 | `--device` flag | Example output directory | VLM device tag |
 |---|---|---|
-| `CPU` (or omitted) | `ov_models/cpu/Qwen3-VL-2B-Instruct` | `CPU` |
-| `GPU` | `ov_models/gpu/Qwen3-VL-8B-Instruct` | `GPU` |
-| `NPU` | `ov_models/npu/Qwen3-VL-2B-Instruct` | `NPU` |
+| `CPU` (or omitted) | `ov_models/cpu/Qwen/Qwen3-VL-2B-Instruct` | `CPU` |
+| `GPU` | `ov_models/gpu/Qwen/Qwen3-VL-8B-Instruct` | `GPU` |
+| `NPU` | `ov_models/npu/Qwen/Qwen3-VL-2B-Instruct` | `NPU` |
 
 ### Models Used in This Guide
 

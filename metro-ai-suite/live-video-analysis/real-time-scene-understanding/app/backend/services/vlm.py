@@ -10,8 +10,9 @@ are served ahead of passive ones, FIFO within each tier, instead of racing for
 a lock with no ordering guarantee.
 
 The model tree is laid out per device as
-``<VLM_MODELS_DIR>/<device>/<VLM_MODEL>`` (e.g. ``/models/cpu/InternVL2-1B``),
-matching how the models are mounted into the container.
+``<VLM_MODELS_DIR>/<device>/<VLM_MODEL>`` (e.g.
+``/models/cpu/Qwen/Qwen3-VL-2B-Instruct``), matching how the models are mounted
+into the container.
 """
 
 from __future__ import annotations

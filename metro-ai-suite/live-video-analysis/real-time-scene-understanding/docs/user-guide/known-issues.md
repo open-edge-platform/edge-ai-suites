@@ -13,7 +13,7 @@ The corresponding minimum response settings are `NPU_MIN_RESPONSE_LEN` and `DEEP
 
 ## Model not found at startup
 
-The model settings in `.env` must match both the downloaded model directory and its device folder, for example `ov_models/cpu/Qwen3-VL-2B-Instruct`. Check `ALERT_VLM_MODEL`, `ALERT_VLM_DEVICE`, `DEEP_ANALYZER_MODEL`, and `DEEP_ANALYZER_DEVICE`, then confirm the corresponding directories exist. See [Model Preparation](./get-started/model-preparation.md).
+The model settings in `.env` must match both the full model ID and its device folder, for example `ALERT_VLM_MODEL=Qwen/Qwen3-VL-2B-Instruct` resolves to `ov_models/cpu/Qwen/Qwen3-VL-2B-Instruct`. Check `ALERT_VLM_MODEL`, `ALERT_VLM_DEVICE`, `DEEP_ANALYZER_MODEL`, and `DEEP_ANALYZER_DEVICE`, then confirm the corresponding directories exist. See [Model Preparation](./get-started/model-preparation.md).
 
 ## Deep analyzer rejects video input
 

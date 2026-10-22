@@ -93,7 +93,7 @@ class TestVLMLoading:
     @pytest.mark.parametrize("device", ["CPU", "NPU"])
     def test_load_builds_pipeline_for_device(self, monkeypatch, device):
         engine = object.__new__(VLMEngine)
-        engine._model_path = "/models/cpu/model"
+        engine._model_path = f"/models/{device.lower()}/Qwen/Qwen3-VL-2B-Instruct"
         calls = {}
 
         class _Config:
@@ -110,7 +110,7 @@ class TestVLMLoading:
 
         monkeypatch.setattr(vlm.os.path, "isdir", lambda path: True)
         monkeypatch.setattr(vlm.settings, "ALERT_VLM_DEVICE", device)
-        monkeypatch.setattr(vlm.settings, "ALERT_VLM_MODEL", "model")
+        monkeypatch.setattr(vlm.settings, "ALERT_VLM_MODEL", "Qwen/Qwen3-VL-2B-Instruct")
         monkeypatch.setattr(vlm.settings, "ALERT_VLM_MAX_TOKENS", 32)
         monkeypatch.setattr(vlm.settings, "ALERT_VLM_DO_SAMPLE", True)
         monkeypatch.setattr(vlm.settings, "NPU_MAX_PROMPT_LEN", 100)
@@ -132,6 +132,9 @@ class TestVLMLoading:
     def test_constructor_loads_and_starts_dispatcher(self, monkeypatch):
         loaded = []
         started = []
+        monkeypatch.setattr(vlm.settings, "VLM_MODELS_DIR", "/models")
+        monkeypatch.setattr(vlm.settings, "ALERT_VLM_DEVICE", "CPU")
+        monkeypatch.setattr(vlm.settings, "ALERT_VLM_MODEL", "Qwen/Qwen3-VL-2B-Instruct")
         monkeypatch.setattr(VLMEngine, "_load", lambda self: loaded.append(True))
 
         class _Thread:
@@ -147,6 +150,7 @@ class TestVLMLoading:
 
         assert loaded == [True]
         assert started == ["vlm-dispatch"]
+        assert engine._model_path == "/models/cpu/Qwen/Qwen3-VL-2B-Instruct"
         assert engine._metrics_debug_logged is False
 
     def test_get_vlm_engine_returns_cached_instance(self, monkeypatch):

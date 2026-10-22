@@ -39,19 +39,19 @@ Compose publishes the dashboard host port through `PORT` (default `9100`); add `
 
 ## Model Requirements
 
-The application uses two VLM models. The alert model performs frame-level alert gating, and the deep-analyzer model processes segmented clips. The deep-analyzer model must support video input. The configured models are `Qwen3-VL-2B-Instruct` for the alert pipeline and `Qwen3-VL-8B-Instruct` for deep analysis.
+The application uses two VLM models. The alert model performs frame-level alert gating, and the deep-analyzer model processes segmented clips. The deep-analyzer model must support video input. The configured models are `Qwen/Qwen3-VL-2B-Instruct` for the alert pipeline and `Qwen/Qwen3-VL-8B-Instruct` for deep analysis.
 
 Configure model selection via `.env` file as below:
 
-- ALERT_VLM_MODEL=Qwen3-VL-2B-Instruct
+- ALERT_VLM_MODEL=Qwen/Qwen3-VL-2B-Instruct
 - ALERT_VLM_DEVICE=CPU
-- DEEP_ANALYZER_MODEL=Qwen3-VL-8B-Instruct
+- DEEP_ANALYZER_MODEL=Qwen/Qwen3-VL-8B-Instruct
 - DEEP_ANALYZER_DEVICE=GPU
 
-These are the values in `.env.example` and match the model-preparation commands. Download or prepare them for the configured device and make sure their directory names match the model settings under `ov_models/<device-lowercase>/<model-name>/`. The application can use pre-converted OpenVINO models. The model directory names are:
+These are the values in `.env.example` and match the model-preparation commands. Download or prepare them for the configured device. The full model ID determines the nested directory under `ov_models/<device-lowercase>/`. The application can use pre-converted OpenVINO models. The model directories are:
 
-- `Qwen3-VL-2B-Instruct`
-- `Qwen3-VL-8B-Instruct`
+- `Qwen/Qwen3-VL-2B-Instruct`
+- `Qwen/Qwen3-VL-8B-Instruct`
 
 Model files can also be prepared using the provided scripts and model directories in this repository (for example, `model_download_scripts/download_models.sh` and `ov_models/`). Please refer to the [Model Preparation Guide](./model-preparation.md) for the steps.
 

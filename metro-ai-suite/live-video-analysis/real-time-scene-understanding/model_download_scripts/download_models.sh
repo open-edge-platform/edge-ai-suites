@@ -281,7 +281,7 @@ for DEVICE in "${DEVICE_LIST[@]}"; do
       MODEL_SRC=$(find "${NESTED_DIR}" -mindepth 1 -maxdepth 2 -type d -name "${MODEL_BASENAME}" 2>/dev/null | head -1)
     fi
 
-    TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL_BASENAME}"
+    TARGET_DIR="${FINAL_DIR}/${DEVICE_LOWER}/${MODEL}"
 
     if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
       mkdir -p "${TARGET_DIR}"

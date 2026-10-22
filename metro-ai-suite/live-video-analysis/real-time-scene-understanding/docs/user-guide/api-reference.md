@@ -141,7 +141,7 @@ Notes:
 		"ttft_ms": 70.2,
 		"throughput_tps": 50.4
 	},
-	"model": "Qwen3-VL-8B-Instruct",
+	"model": "Qwen/Qwen3-VL-8B-Instruct",
 	"device": "GPU",
 	"uploaded_at": "2026-09-07T10:17:40.100000+00:00",
 	"video_url": "/api/streams/camera-lobby/alerts/9dd96a2f-17b9-41a0-a1c5-e3f8f76b07a7/video"

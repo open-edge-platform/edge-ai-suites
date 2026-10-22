@@ -97,9 +97,9 @@ class Settings:
     # Root of the mounted model tree. Fixed to /models to match container
     # volume mounts and shared by both VLM and deep-analyzer pipelines.
     # Models are organised as
-    # <VLM_MODELS_DIR>/<device>/<VLM_MODEL>, e.g. /models/cpu/Qwen3-VL-2B-Instruct.
+    # <VLM_MODELS_DIR>/<device>/<VLM_MODEL>, e.g. /models/cpu/Qwen/Qwen3-VL-2B-Instruct.
     VLM_MODELS_DIR: str = "/models"
-    ALERT_VLM_MODEL: str = os.getenv("ALERT_VLM_MODEL", "Qwen3-VL-2B-Instruct")
+    ALERT_VLM_MODEL: str = os.getenv("ALERT_VLM_MODEL", "Qwen/Qwen3-VL-2B-Instruct")
 
     # Inference device: CPU, GPU or NPU (selects the matching model subfolder).
     ALERT_VLM_DEVICE: str = os.getenv("ALERT_VLM_DEVICE", "CPU")
@@ -155,7 +155,7 @@ class Settings:
 
     # Model tree layout reuses VLM_MODELS_DIR:
     # <VLM_MODELS_DIR>/<device>/<DEEP_ANALYZER_MODEL>.
-    DEEP_ANALYZER_MODEL: str = os.getenv("DEEP_ANALYZER_MODEL", "Qwen3-VL-8B-Instruct")
+    DEEP_ANALYZER_MODEL: str = os.getenv("DEEP_ANALYZER_MODEL", "Qwen/Qwen3-VL-8B-Instruct")
     DEEP_ANALYZER_DEVICE: str = os.getenv("DEEP_ANALYZER_DEVICE", "GPU")
 
     # Frames uniformly sampled from a finalized segment per deep-analysis run.

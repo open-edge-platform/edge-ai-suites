@@ -110,13 +110,13 @@ Run:
 The downloaded model names and devices must match the settings in `.env`. For the two example downloads above, set:
 
 ```dotenv
-ALERT_VLM_MODEL=Qwen3-VL-2B-Instruct
+ALERT_VLM_MODEL=Qwen/Qwen3-VL-2B-Instruct
 ALERT_VLM_DEVICE=CPU
-DEEP_ANALYZER_MODEL=Qwen3-VL-8B-Instruct
+DEEP_ANALYZER_MODEL=Qwen/Qwen3-VL-8B-Instruct
 DEEP_ANALYZER_DEVICE=GPU
 ```
 
-These model names and devices match the setup template. Model files must be under `ov_models/<device-lowercase>/<model-name>/`.
+These model IDs and devices match the setup template. Model files are stored under `ov_models/<device-lowercase>/<full-model-id>/`; for example, `Qwen/Qwen3-VL-2B-Instruct` is stored under `ov_models/cpu/Qwen/Qwen3-VL-2B-Instruct`.
 
 ---
 
