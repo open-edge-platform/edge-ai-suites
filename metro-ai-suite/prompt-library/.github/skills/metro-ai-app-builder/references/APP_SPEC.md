@@ -23,7 +23,7 @@ What shape should the deliverable take?
 | Value | Meaning | Typical route |
 |---|---|---|
 | `demo` / `poc` | A single lightweight app that proves a model runs and emits results — no full stack. | `dlstreamer-coding-agent` (vision); OpenVINO custom app for OV+OpenCV. |
-| `microservice` | A running REST/streaming service — e.g. the full end-to-end analytics stack (DLSPS + dashboards + alerts). | `metro-ai-apps-recipe` (vision stack); the relevant deploy skill for other domains. |
+| `microservice` | A running REST/streaming service — e.g. the full end-to-end analytics stack (DLSPS + dashboards + alerts). | `metro-ai-app-recipe` (vision stack); the relevant deploy skill for other domains. |
 | `function` | A single batch / one-shot job (process a file/folder, emit a result, exit). | `dlstreamer-coding-agent` or an OpenVINO/OVMS custom job. |
 | `port` | Migrate/convert an existing app or pipeline to the Intel stack. | `dlstreamer-coding-agent` (e.g. DeepStream → DL Streamer). |
 | `auto` *(default)* | You pick the packaging from the outcome, camera coverage, and scale answers. | — |
@@ -36,12 +36,12 @@ per-recipe detail. Summary:
 
 | Value | Routes to |
 |---|---|
-| `dls` / `dl-streamer` | **`dlstreamer-coding-agent`** (the DLS skill) — **not** `metro-ai-apps-recipe`. |
+| `dls` / `dl-streamer` | **`dlstreamer-coding-agent`** (the DLS skill) — **not** `metro-ai-app-recipe`. |
 | `ov-opencv` | OpenVINO + OpenCV custom-code path (per OpenVINO docs) + `model-download-user`. |
 | `ovms-ffmpeg` | OVMS model-serving + FFmpeg glue + `model-download-user` (OVMS-ready IR). |
 | `auto` *(default)* | You pick the recipe from packaging + outcome. |
 
-> The full end-to-end analytics **stack** (`metro-ai-apps-recipe`) is chosen by
+> The full end-to-end analytics **stack** (`metro-ai-app-recipe`) is chosen by
 > the **packaging** axis (`microservice`), *not* by picking the DL Streamer API
 > recipe. A user who asks for "a DL Streamer pipeline/app" wants
 > `dlstreamer-coding-agent`.

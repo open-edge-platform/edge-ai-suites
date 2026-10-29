@@ -15,7 +15,7 @@ catalog for media/analytics use cases.
 
 | API recipe | What it is | Route to (primary) | Supporting |
 |---|---|---|---|
-| **DL Streamer (DLS)** | GStreamer + Intel DL Streamer inference elements (`gvadetect`/`gvaclassify`/`gvawatermark`) — pipelines and sample apps. | **`dlstreamer-coding-agent`** (the DLS skill). **Not** `metro-ai-apps-recipe`. | `model-download-user` (IR) |
+| **DL Streamer (DLS)** | GStreamer + Intel DL Streamer inference elements (`gvadetect`/`gvaclassify`/`gvawatermark`) — pipelines and sample apps. | **`dlstreamer-coding-agent`** (the DLS skill). **Not** `metro-ai-app-recipe`. | `model-download-user` (IR) |
 | **OpenVINO + OpenCV** | A custom app using the OpenVINO runtime for inference and OpenCV for capture/decode/pre-post. | OpenVINO custom-code path — a minimal Python app (load → `compile_model` → infer → post-process) per the OpenVINO docs; no dedicated skill. | `model-download-user` (IR) |
 | **OVMS + FFmpeg** | Model served by OpenVINO Model Server (OVMS) over its API, with FFmpeg handling media I/O. | OVMS model-serving path — stand up OVMS with an OVMS-ready model, FFmpeg glue code for decode/encode; no dedicated skill. | `model-download-user` (OVMS-ready IR) |
 
@@ -25,17 +25,17 @@ catalog for media/analytics use cases.
   Route to **`dlstreamer-coding-agent`**.
 - **Packaging = microservice / full end-to-end stack** → the user wants the
   operable analytics **stack** (DLSPS + WebRTC + Node-RED + Grafana + alerts).
-  Route to **`metro-ai-apps-recipe`**. The recipe uses DL Streamer under the hood,
+  Route to **`metro-ai-app-recipe`**. The recipe uses DL Streamer under the hood,
   but it is selected by the **packaging** axis, not by the DLS API-recipe answer.
 
 So: choosing "DL Streamer" as the API recipe does **not** route to
-`metro-ai-apps-recipe`; choosing the microservice/end-to-end packaging does.
+`metro-ai-app-recipe`; choosing the microservice/end-to-end packaging does.
 
 ## Resolving `auto`
 
 When API recipe is `auto`, pick from packaging + outcome:
 
-- Vision **microservice / full stack** → `metro-ai-apps-recipe` (DLSPS under the
+- Vision **microservice / full stack** → `metro-ai-app-recipe` (DLSPS under the
   hood).
 - Vision **demo / function / port**, or "a pipeline/app in code" → **DL Streamer**
   → `dlstreamer-coding-agent`.

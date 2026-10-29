@@ -14,19 +14,29 @@ refresh with [`DISCOVERY.md`](DISCOVERY.md) when it drifts.
 
 | If the user wants… | Primary skill | Supporting |
 |---|---|---|
-| A full **end-to-end analytics stack** (live annotated video + dashboard + alerts) for detection/classification/counting/zone-alerting on any vertical (smart city, retail, industrial, PPE, parking, healthcare…) | **`metro-ai-apps-recipe`** *(this repo)* — production mode (`MODE=production`, the default) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (custom pipeline JSON) |
+| A full **end-to-end analytics stack** (live annotated video + dashboard + alerts) for detection/classification/counting/zone-alerting on any vertical (smart city, retail, industrial, PPE, parking, healthcare…) | **`metro-ai-app-recipe`** *(this repo)* — production mode (`MODE=production`, the default) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (custom pipeline JSON) |
 | A **quick demo / simple app** — a single lightweight app (no full stack) that just proves a model runs and emits inference: a simple DL Streamer pipeline or sample app | **`dlstreamer-coding-agent`** | `model-download-user` (model IR) |
-| **Multi-camera / spatial** cross-camera tracking & scene fusion (smart-intersection style, whole-scene view) | **`scenescape-setup`** — routed directly for multi-camera spatial analytics | `metro-ai-apps-recipe` (optional detection front-end), `model-download-user` |
+| **Multi-camera / spatial** cross-camera tracking & scene fusion (smart-intersection style, whole-scene view) | **`scenescape-setup`** — routed directly for multi-camera spatial analytics | `metro-ai-app-recipe` (optional detection front-end), `model-download-user` |
+| Vision analytics as a **managed REST microservice** the user's own software drives: start/stop/query one detection job per camera over HTTP, add a camera at runtime without redeploying, publish every detection to MQTT/OPC UA/InfluxDB/S3/ROS2, select GPU/NPU per pipeline — **no dashboard to maintain, no bespoke video code** | **`dlsps-user`** (DL Streamer Pipeline Server) | `model-download-user` (custom IR), `dlstreamer-coding-agent` (authoring a custom pipeline definition) |
 | A **custom vision pipeline / sample app in code** (Python/C/C++/GStreamer): detection, classification, tracking, VLM, recording, custom elements | **`dlstreamer-coding-agent`** | `model-download-user` |
 | **Migrate / convert / port** an existing **NVIDIA DeepStream** (or raw GStreamer) pipeline to an equivalent **Intel DL Streamer** pipeline/app | **`dlstreamer-coding-agent`** | `model-download-user` (equivalent IR model) |
 
 Deliverable shape: *end-to-end solution* (Compose stack) for
-`metro-ai-apps-recipe` (production mode); *quick single app / PoC* for
+`metro-ai-app-recipe` (production mode); *quick single app / PoC* for
 `dlstreamer-coding-agent`; *multi-camera solution* for the `scenescape-setup`
-path. Map the Step 1 **packaging** answer (Q4) to the route: `demo`/`function`/
-`port` (quick single app) → `dlstreamer-coding-agent`; `microservice` (full
-end-to-end stack) → `metro-ai-apps-recipe`; and the Step 1 **camera-coverage**
-answer to Scenescape: a multi-camera whole-scene view → `scenescape-setup`.
+path; *headless service with a REST control plane* for `dlsps-user`. Map the
+Step 1 **packaging** answer (Q4) to the route: `demo`/`function`/`port` (quick
+single app) → `dlstreamer-coding-agent`; `microservice` (full end-to-end stack)
+→ `metro-ai-app-recipe`; and the Step 1 **camera-coverage** answer to
+Scenescape: a multi-camera whole-scene view → `scenescape-setup`.
+
+The single-camera rows all detect objects in camera feeds, so disambiguate on
+the **deliverable**, not the vision task. Pick `dlsps-user` when the user's own
+system (MES/SCADA/orchestrator) must drive pipelines over an API, when cameras
+are added or removed while the service keeps running, or when the output is a
+message stream rather than a screen. Pick `metro-ai-app-recipe` when the user
+wants to *look* at dashboards and live video. Pick `dlstreamer-coding-agent`
+when the user wants a quick demo app or source code they own and edit.
 
 ### 1a. API recipe → delegate routing (Step 1, Q8)
 
@@ -35,13 +45,13 @@ precedence** for these use cases (full detail in [`API_RECIPES.md`](API_RECIPES.
 
 | API recipe | Primary | Supporting |
 |---|---|---|
-| **DL Streamer (DLS)** — a DL Streamer pipeline / app | **`dlstreamer-coding-agent`** (the DLS skill) — **not** `metro-ai-apps-recipe` | `model-download-user` (IR) |
+| **DL Streamer (DLS)** — a DL Streamer pipeline / app | **`dlstreamer-coding-agent`** (the DLS skill) — **not** `metro-ai-app-recipe` | `model-download-user` (IR) |
 | **OpenVINO + OpenCV** — minimal custom inference app | OpenVINO custom-code path (per OpenVINO docs; no dedicated skill) | `model-download-user` (IR) |
 | **OVMS + FFmpeg** — model served by OVMS, FFmpeg media I/O | OVMS model-serving path (no dedicated skill) | `model-download-user` (OVMS-ready IR) |
 
 > **DLS vs the recipe stack:** picking the **DL Streamer** API recipe routes to
 > `dlstreamer-coding-agent`. The full end-to-end **stack**
-> (`metro-ai-apps-recipe`) is selected by the **packaging** axis
+> (`metro-ai-app-recipe`) is selected by the **packaging** axis
 > (`microservice`), not by the DLS API-recipe answer — even though the recipe
 > uses DL Streamer internally.
 
@@ -56,14 +66,14 @@ precedence** for these use cases (full detail in [`API_RECIPES.md`](API_RECIPES.
 
 | If the user wants… | Primary skill | Supporting |
 |---|---|---|
-| Deploy the **Video Search & Summarization** app (summary / search / dual / unified) on Docker | **`vss-deploy`** | `vdms-dataprep-user` (ingest), `multimodal-embedding-serving-user` (embeddings) |
+| Deploy the **Video Search & Summarization** app (summary / search / dual / unified) on Docker | **`vss-deploy`** | `multimodal-dataprep-user` (ingest), `multimodal-embedding-serving-user` (embeddings) |
 | The same **on Kubernetes** (Helm) | **`vss-deploy-helm`** | — |
 | **Search** an indexed library with natural language ("find X", "when did Y happen") | **`vss-search-index`** | requires a search-capable VSS deploy |
 | **Summarize** an ingested video | **`vss-summarize-video`** | requires a summary-capable VSS deploy |
-| **Ingest** MP4s into a vector DB (VDMS + MinIO) | **`vdms-dataprep-user`** | feeds VSS / retrieval |
+| **Ingest** MP4s into a vector DB (VDMS + MinIO) | **`multimodal-dataprep-user`** | feeds VSS / retrieval |
 | **Embed** text/images/videos for similarity search (CLIP/SigLIP/… 19 models) | **`multimodal-embedding-serving-user`** | building block for retrieval apps |
 
-Typical pipeline: `vdms-dataprep-user` (ingest) → `vss-deploy` (bring up) →
+Typical pipeline: `multimodal-dataprep-user` (ingest) → `vss-deploy` (bring up) →
 `vss-search-index` / `vss-summarize-video` (use).
 
 ## 4. Model preparation
@@ -122,12 +132,12 @@ Typical robot pipeline: train (`physicalai-train-*`) → export
   vision, the **packaging** answer (Q4) picks the route: a *demo / function /
   port* single app → **`dlstreamer-coding-agent`** (a single DL Streamer pipeline
   or sample app); a *microservice / full end-to-end* stack →
-  **`metro-ai-apps-recipe`** (production mode). The **API-recipe** answer (Q8)
+  **`metro-ai-app-recipe`** (production mode). The **API-recipe** answer (Q8)
   overrides for media/analytics — see §1a (DLS → `dlstreamer-coding-agent`;
   OV+OpenCV / OVMS+FFmpeg → custom-code paths).
 - **Multi-camera / spatial** whole-scene tracking (a subject followed *across*
   cameras covering one physical space, smart-intersection style) → route
-  **directly** to **`scenescape-setup`**; add `metro-ai-apps-recipe` only if a
+  **directly** to **`scenescape-setup`**; add `metro-ai-app-recipe` only if a
   per-camera detection front-end is also wanted.
 - **"Custom model"** almost always adds `model-download-user` as a supporting
   step before a deploy/build skill.

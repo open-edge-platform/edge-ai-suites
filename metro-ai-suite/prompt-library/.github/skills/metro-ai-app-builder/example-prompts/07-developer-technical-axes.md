@@ -23,7 +23,7 @@ deferred.
 
 **Discovery (Step 2):** API recipe = **OVMS + FFmpeg** takes precedence (see
 `references/API_RECIPES.md`) → **OVMS model-serving path** (OVMS + FFmpeg glue
-code), **not** `metro-ai-apps-recipe`. Supporting: **`model-download-user`** for
+code), **not** `metro-ai-app-recipe`. Supporting: **`model-download-user`** for
 an OVMS-ready IR.
 
 **Resolved axes (Step 3 — decisions for deferred axes, choices for specified):**
