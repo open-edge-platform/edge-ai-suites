@@ -76,13 +76,12 @@ export RTSP_STREAM_PORT="${RTSP_STREAM_PORT:-8554}"
 # completely untouched. When set to a known intersection name (e.g.
 # "intersection_1", matching a subdirectory under STIA_OVERRIDES_DIR and a
 # video-file prefix at the download URL below), setup.sh will additionally:
-#   1. download that intersection's 4 demo videos,
+#   1. verify that intersection's 4 demo videos are present locally,
 #   2. apply its Scenescape scene bundle + DLSPS pipeline config overrides,
 #   3. start a local RTSP streamer built into STIA (docker/streamer-compose.yaml)
 #      unless RTSP_STREAM_IP/SI_RTSP_HOST already points at an external source,
 #   4. start the RTSP-backed DLSPS pipelines against it.
 export STIA_DEMO_INTERSECTION="${STIA_DEMO_INTERSECTION:-}"
-export STIA_DEMO_VIDEO_URL="${STIA_DEMO_VIDEO_URL:-https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos/synthetic_data}"
 export STIA_DEMO_VIDEOS_DIR="${APP_DIR}/resources/videos"
 
 if [ "$ENABLE_TC" = "true" ]; then
@@ -125,7 +124,8 @@ if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
     echo -e "                              • RTSP_STREAM_IP or SI_RTSP_HOST enables RTSP-backed Smart Intersection pipelines"
     echo -e "                              • RTSP_STREAM_PORT sets the RTSP server port (default: 8554)"
     echo -e "                              • STIA_DEMO_INTERSECTION=<name> (e.g. intersection_1) opts into the full"
-    echo -e "                                self-contained demo flow: downloads that intersection's videos, applies"
+    echo -e "                                self-contained demo flow: uses that intersection's videos (place the"
+    echo -e "                                <name>_<1-4>.ts files under resources/videos/), applies"
     echo -e "                                its scene/DLSPS overrides, and starts a local RTSP streamer automatically"
     echo -e "                                unless RTSP_STREAM_IP/SI_RTSP_HOST already points at an external source."
     echo -e "                                Unset (default): standard flow, no RTSP source required."
@@ -390,11 +390,12 @@ validate_rtsp_stream_config() {
     fi
 }
 
-# Download the demo intersection's 4 synthetic RTSP videos from the shared
-# edge-ai-resources bucket (same source smart-nvr's own streamer uses).
-# Opt-in only: no-op unless STIA_DEMO_INTERSECTION is set. Skips files
-# already present so re-running setup.sh doesn't re-download every time.
-download_stia_demo_videos() {
+# Verify the demo intersection's 4 synthetic RTSP videos are present locally
+# under STIA_DEMO_VIDEOS_DIR. These are no longer fetched automatically (the
+# upstream edge-ai-resources download URL has been taken down); place the
+# <intersection>_<camera_number>.ts files there manually before running the
+# demo flow. Opt-in only: no-op unless STIA_DEMO_INTERSECTION is set.
+check_stia_demo_videos() {
     if [ -z "$STIA_DEMO_INTERSECTION" ]; then
         return 0
     fi
@@ -403,18 +404,23 @@ download_stia_demo_videos() {
 
     local camera_number
     local video
+    local missing=()
     for camera_number in 1 2 3 4; do
         video="${STIA_DEMO_INTERSECTION}_${camera_number}.ts"
-        if [ -f "${STIA_DEMO_VIDEOS_DIR}/${video}" ]; then
-            continue
-        fi
-        echo -e "${BLUE}==> Downloading demo video ${video} ...${NC}"
-        if ! curl -fL "${STIA_DEMO_VIDEO_URL}/${video}" -o "${STIA_DEMO_VIDEOS_DIR}/${video}"; then
-            echo -e "${RED}ERROR: Failed to download demo video ${video} from ${STIA_DEMO_VIDEO_URL}.${NC}"
-            rm -f "${STIA_DEMO_VIDEOS_DIR}/${video}"
-            return 1
+        if [ ! -f "${STIA_DEMO_VIDEOS_DIR}/${video}" ]; then
+            missing+=("$video")
         fi
     done
+
+    if [ "${#missing[@]}" -gt 0 ]; then
+        echo -e "${RED}ERROR: Missing demo video(s) for '${STIA_DEMO_INTERSECTION}' in ${STIA_DEMO_VIDEOS_DIR}:${NC}"
+        local video
+        for video in "${missing[@]}"; do
+            echo -e "${RED}  - ${video}${NC}"
+        done
+        echo -e "${YELLOW}Copy the missing .ts file(s) into ${STIA_DEMO_VIDEOS_DIR} and re-run setup.${NC}"
+        return 1
+    fi
 }
 
 # Start STIA's own local RTSP streamer (mediamtx + ffmpeg publisher, defined
@@ -435,7 +441,7 @@ start_stia_rtsp_streamer() {
         return 0
     fi
 
-    download_stia_demo_videos || return 1
+    check_stia_demo_videos || return 1
 
     echo -e "${BLUE}==> Starting local RTSP streamer for demo '${STIA_DEMO_INTERSECTION}' ...${NC}"
     STIA_DEMO_INTERSECTION="$STIA_DEMO_INTERSECTION" \
